@@ -10,10 +10,16 @@ currently being generalized to other domains. INDRA draws on natural language
 processing systems and structured databases to collect mechanistic and causal
 assertions, represents them in a standardized form (INDRA Statements), and
 assembles them into various modeling formalisms including causal graphs and
-dynamical models. INDRA also provides knowledge assembly procedures that
-operate on INDRA Statements and correct certain errors, find and resolve
-redundancies, infer missing information, filter to a scope of interest and
-assess belief.
+dynamical models.
+
+At the core of INDRA are its knowledge-level assembly procedures, allowing
+sources to be assembled into coherent models, a process that involves
+correcting systematic input errors, finding and resolving redundancies,
+inferring missing information, filtering to a relevant scope and assessing the
+reliability of causal information.
+
+The detailed INDRA documentation is available at
+[http://indra.readthedocs.io](http://indra.readthedocs.io).
 
 ### Knowledge sources
 
@@ -23,62 +29,114 @@ systems and structured databases. These input modules (available in
 
 General purpose causal relation reading systems:
 
-| Reader     | Reference                                       |
-|------------|-------------------------------------------------|
-| Eidos      | https://github.com/clulab/eidos                 |
-| TRIPS/CWMS | http://trips.ihmc.us/parser/cgi/cwmsreader      |
-| Hume       | https://github.com/BBN-E/Hume                   |
-| Sofia      | https://sofia.worldmodelers.com/ui/             |
+| Reader     | Module                | Reference                                 |
+|------------|-----------------------|-------------------------------------------|
+| Eidos      | `indra.sources.eidos` | https://github.com/clulab/eidos           |
+| TRIPS/CWMS | `indra.sources.cwms`  | http://trips.ihmc.us/parser/cgi/cwmsreader|
+| Hume       | `indra.sources.hume`  | https://github.com/BBN-E/Hume             |
+| Sofia      | `indra.sources.sofia` | https://sofia.worldmodelers.com/ui/       |
 
 Biology-oriented reading systems:
 
-| Reader     | Reference                                       |
-|------------|-------------------------------------------------|
-| TRIPS/DRUM | http://trips.ihmc.us/parser/cgi/drum            |
-| REACH      | https://github.com/clulab/reach                 |
-| Sparser    | https://github.com/ddmcdonald/sparser           |
-| TEES       | https://github.com/jbjorne/TEES                 |
-| MedScan    | https://doi.org/10.1093/bioinformatics/btg207   |
-| RLIMS-P    | https://research.bioinformatics.udel.edu/rlimsp |
-| ISI/AMR    | https://github.com/sgarg87/big_mech_isi_gg      |
-| Geneways   | https://www.ncbi.nlm.nih.gov/pubmed/15016385    |
+| Reader     | Module                  | Reference                                       |
+|------------|-------------------------|-------------------------------------------------|
+| TRIPS/DRUM | `indra.sources.trips`   | http://trips.ihmc.us/parser/cgi/drum            |
+| REACH      | `indra.sources.reach`   | https://github.com/clulab/reach                 |
+| Sparser    | `indra.sources.sparser` | https://github.com/ddmcdonald/sparser           |
+| TEES       | `indra.sources.tees`    | https://github.com/jbjorne/TEES                 |
+| MedScan    | `indra.sources.medscan` | https://doi.org/10.1093/bioinformatics/btg207   |
+| RLIMS-P    | `indra.sources.rlimsp`  | https://research.bioinformatics.udel.edu/rlimsp |
+| ISI/AMR    | `indra.sources.isi`     | https://github.com/sgarg87/big_mech_isi_gg      |
+| Geneways   | `indra.sources.geneways`| https://www.ncbi.nlm.nih.gov/pubmed/15016385    |
 
 Biological pathway databases:
 
-| Database / Exchange format | Reference                           |
-|----------------------------|-------------------------------------|
-| PathwayCommons / BioPax    | http://pathwaycommons.org/ <br/> http://www.biopax.org/         |
-| Large Corpus / BEL         | https://github.com/pybel/pybel <br/> https://github.com/OpenBEL |
-| Signor                     | https://signor.uniroma2.it/         |
-| BioGRID                    | https://thebiogrid.org/             |
-| Target Affinity Spectrum   | https://doi.org/10.1101/358978      |
-| LINCS small molecules      | http://lincs.hms.harvard.edu/db/sm/ |
+| Database / Exchange format | Module                     | Reference                                                       |
+|----------------------------|----------------------------|-----------------------------------------------------------------|
+| PathwayCommons / BioPax    | `indra.sources.biopax`     | http://pathwaycommons.org/ <br/> http://www.biopax.org/         |
+| Large Corpus / BEL         | `indra.sources.bel`        | https://github.com/pybel/pybel <br/> https://github.com/OpenBEL |
+| Signor                     | `indra.sources.signor`     | https://signor.uniroma2.it/                                     |
+| BioGRID                    | `indra.sources.biogrid`    | https://thebiogrid.org/                                         |
+| Target Affinity Spectrum   | `indra.sources.tas`        | https://doi.org/10.1101/358978                                  |
+| LINCS small molecules      | `indra.sources.lincs_drug` | http://lincs.hms.harvard.edu/db/sm/                             |
 
 Custom knowledge bases:
 
-| Database / Exchange format | Reference                            |
-|----------------------------|--------------------------------------|
-| NDEx / CX                  | http://ndexbio.org                   |
-| INDRA DB / INDRA Statements| https://github.com/indralab/indra_db |
+| Database / Exchange format | Module                        | Reference                            |
+|----------------------------|-------------------------------|--------------------------------------|
+| NDEx / CX                  | `indra.sources.ndex_cx`       | http://ndexbio.org                   |
+| INDRA DB / INDRA Statements| `indra.sources.indra_db_rest` | https://github.com/indralab/indra_db |
 
 
 ### Output model assemblers
 
 INDRA also provides several model output assemblers that take INDRA Statements
-as input. INDRA can assemble into the following modeling formalisms
-- Detailed mechanistic, executable models in [PySB](http://pysb.org/)
-    which can further be exported into SBML, SBGN, Kappa, and BNGL.
-- Directed causal networks in
-    [SIF](http://wiki.cytoscape.org/Cytoscape_User_Manual/Network_Formats), 
-    [NDEx/CX](http://www.home.ndexbio.org/data-model/), 
-    [Cytoscape.js](http://js.cytoscape.org/), and
-    [Graphviz](https://www.graphviz.org/) formats.
-- English language (a human-readable summary of the information
-    collected and assembled by INDRA)
+as input. The most sophisticated model assembler is the PySB Assembler, which
+implements a policy-guided automated assembly procedure of a rule-based
+executable model (that can then be further compiled into other formats such as
+SBML, Kappa, BNGL and SBGN to connect to a vast ecosystem of downstream tools).
+Several other model assembly modules target various network formats for
+visualization, and graph/structural analysis (PyBEL, CyJS, Graphviz, SBGN,
+CX, SIF, etc.) and curation (HTML, TSV, IndexCards).
+Finally, the English Assembler produces English language descriptions of a set
+of INDRA Statements.
+
+INDRA also supports extension by outside model assembly tools which take
+INDRA Statements as input and produce models. One such example is Delphi
+(https://github.com/ml4ai/delphi), which is a Dynamic Bayesian Network
+model assembler. Similarly, outside tools that support INDRA Statements
+can implement custom visualization methods, such as CauseMos, developed
+by Uncharted Software (https://uncharted.software/).
+
+Assemblers aimed at model-driven discovery and analysis:
+
+| Modeling formalism / Exchange format           | Purpose                                              | Module                  | Reference           |
+|------------------------------------------------|------------------------------------------------------|-------------------------|---------------------|
+| PySB (-> SBML, SBGN, BNGL, Kappa, etc.)        | Detailed, mechanistic modeling, simulation, analysis | `indra.assemblers.pysb` | http://pysb.org     |
+| PyBEL                                          | Causal analysis, visualization                       | `indra.assemblers.pybel`| https://github.com/pybel/pybel <br/> https://bel-commons.scai.fraunhofer.de/ |
+| SIF                                            | Network analysis, logic modeling, visualization      | `indra.assemblers.sif`  | [SIF format](http://manual.cytoscape.org/en/stable/Supported_Network_File_Formats.html#sif-format) |
+| Figaro                                         | Bayesian network inference                           | `indra.assemblers.figaro` | https://github.com/p2t2/figaro/ |
+| KAMI                                           | Knowledge aggregation of protein sites/states and Kappa modeling | `indra.assemblers.kami` | https://github.com/Kappa-Dev/KAMI |
+
+
+Assemblers primarily aimed at visualization:
+
+| Network / Exchange format                      | Purpose                                              | Module                  | Reference           |
+|------------------------------------------------|------------------------------------------------------|-------------------------|---------------------|
+| Causal Analysis Graph                          | General causal graph visualization                   | `indra.assemblers.cag`  |                     |
+| CX                                             | Network browsing, versioning on NDEx                 | `indra.assemblers.cx`   | http://ndexbio.org  |
+| Cytoscape JS                                   | Interactive Cytoscape JS network to embed in websites| `indra.assemblers.cyjs` | http://js.cytoscape.org/ |
+| Graphviz                                       | Static PDF/PNG visualization with powerful automated layout using Graphviz | `indra.assemblers.graph` | https://www.graphviz.org/ |
+| SBGN                                           | Visualization with Systems Biology Graphical Notation| `indra.assemblers.sbgn` | http://sbgn.org     |
+
+Assemblers primarily aimed at expert curation and browsing:
+
+| Output format                                  | Purpose                                                | Module                  | Reference           |
+|------------------------------------------------|------------------------------------------------------  |-------------------------|---------------------|
+| English language                               | Human-readable descriptions, reports, dialogue         | `indra.assemblers.english` |                  |
+| HTML                                           | Web-based browsing, linking out to provenance, curation| `indra.assemblers.html` | [Curation tutorial](https://indra.readthedocs.io/<br/>en/latest/tutorials/html_curation.html) |
+| TSV (Tab/Comma Separated Values)               | Spreadsheet-based browsing and curation                | `indra.assemblers.tsv`  |                     |
+| Index Cards                                    | Custom JSON format for curating biological mechanisms  | `indra.assemblers.index_card` |               |
 
 ### Internal knowledge assembly
 
-The internal assembly steps of INDRA are exposed in the
+A key feature of INDRA is providing internal knowledge-assembly modules
+that operate on INDRA Statements and perform the following tasks:
+- Redundancy/subsumption/generalization/contradiction finding and resolution
+with respect to an ontology with the Preassembler
+(`indra.preassembler.Preassembler`)
+- Belief calculation based on evidence using the BeliefEngine
+(`indra.belief`)
+- Mapping grounding between multiple ontologies
+(`indra.preassembler.ont_mapper.OntMapper`)
+- Grounding override and disambiguation
+(`indra.preassembler.grounding_mapper.GroundingMapper`)
+- Protein sequence mapping (`indra.preassembler.site_mapper.SiteMapper`)
+
+The internal assembly steps of INDRA including the ones listed above, and also
+a large collection of filters (filter by source, belief, the presence of
+grounding information, semantic filters by entity role, etc.) are exposed
+in the
 [indra.tools.assemble_corpus](http://indra.readthedocs.io/en/latest/modules/tools/index.html#module-indra.tools.assemble_corpus) 
 submodule. This submodule contains functions that
 take Statements as input and produce processed Statements as output. They can
@@ -90,23 +148,18 @@ ontological information (e.g. UniProt, HGNC), and other resources.
 
 ## Citation
 
+Gyori B.M., Bachman J.A., Subramanian K., Muhlich J.L., Galescu L., Sorger P.K.
 [From word models to executable models of signaling networks using automated
-assembly](http://msb.embopress.org/content/13/11/954),
-Molecular Systems Biology (2017)
-
-## Documentation
-
-Documentation is available at
-[http://indra.readthedocs.io](http://indra.readthedocs.io).
-
+assembly](http://msb.embopress.org/content/13/11/954) (2017),
+Molecular Systems Biology, 13, 954.
 
 ## Installation
 
 For detailed installation instructions,
 [see the documentation](http://indra.readthedocs.io/en/latest/installation.html).
 
-INDRA works with both Python 2 and 3 (tested with 2.7 and 3.5). Note: release
-1.11 will drop Python 2 compatibility.
+INDRA currently supports Python 3.5+. The last release of INDRA compatible
+with Python 2.7 was 1.10.
 
 The preferred way to install INDRA is by pointing pip to the source repository
 as
@@ -127,6 +180,31 @@ by pip during setup.
 For certain modules and use cases, other "extra" dependencies may be needed,
 which are described in detail in the
 [documentation](http://indra.readthedocs.io/en/latest/installation.html).
+
+
+## INDRA REST API
+A REST API for INDRA is available at http://api.indra.bio:8000 with
+documentation at http://www.indra.bio/rest_api/docs. Note that the REST API
+is ideal for prototyping and for building light-weight web apps, but should
+not be used for large reading and assembly workflows.
+
+
+## INDRA Docker
+INDRA is available as a Docker image on Dockerhub and can be pulled as
+
+```
+docker pull labsyspharm/indra
+```
+
+You can run the INDRA REST API using the container as
+```
+docker run -id -p 8080:8080 --entrypoint python labsyspharm/indra /sw/indra/rest_api/api.py
+```
+
+To build the image locally, there are currently two Dockerfiles for
+INDRA and its dependencies. They are available in the following repositories:
+- https://github.com/indralab/indra_docker
+- https://github.com/indralab/indra_deps_docker
 
 ## Using INDRA
 
@@ -205,27 +283,14 @@ biopax_processor = biopax.process_pc_pathsfromto(['BRAF', 'RAF1'], ['MAP2K1', 'M
 At this point, `biopax_processor.statements` contains a list of INDRA 
 Statements extracted from the paths-from-to query.
 
+## Funding
 
-## INDRA REST API
-A REST API for INDRA is available at http://api.indra.bio:8000 with
-documentation at http://www.indra.bio/rest_api/docs. Note that the REST API
-is ideal for prototyping and for building light-weight web apps, but should
-not be used for large reading and assembly workflows.
+The development of INDRA has been funded from the following sources:
 
-
-## INDRA Docker
-INDRA is available as a Docker image on Dockerhub and can be pulled as
-
-```
-docker pull labsyspharm/indra
-```
-
-You can run the INDRA REST API using the container as
-```
-docker run -id -p 8080:8080 --entrypoint python labsyspharm/indra /sw/indra/rest_api/api.py
-```
-
-To build the image locally, there are currently two Dockerfiles for
-INDRA and its dependencies. They are available in the following repositories:
-- https://github.com/indralab/indra_docker
-- https://github.com/indralab/indra_deps_docker
+| Program                                          | Grant number         |
+|--------------------------------------------------|----------------------|
+| DARPA Big Mechanism                              | W911NF-14-1-0397     |
+| DARPA World Modelers                             | W911NF-18-1-0014     |
+| DARPA Communicating with Computers               | W911NF-15-1-0544     |
+| DARPA Automated Scientific Discovery Fraemwork   | W911NF018-1-0124     |
+| DARPA Automating Scientific Knowledge Extraction | HR00111990009        |
