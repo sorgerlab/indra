@@ -23,43 +23,43 @@ systems and structured databases. These input modules (available in
 
 General purpose causal relation reading systems:
 
-| Reader     | Reference                                       |
-|------------|-------------------------------------------------|
-| Eidos      | https://github.com/clulab/eidos                 |
-| TRIPS/CWMS | http://trips.ihmc.us/parser/cgi/cwmsreader      |
-| Hume       | https://github.com/BBN-E/Hume                   |
-| Sofia      | https://sofia.worldmodelers.com/ui/             |
+| Reader     | Module                | Reference                                 |
+|------------|-----------------------|-------------------------------------------|
+| Eidos      | `indra.sources.eidos` | https://github.com/clulab/eidos           |
+| TRIPS/CWMS | `indra.sources.cwms`  | http://trips.ihmc.us/parser/cgi/cwmsreader|
+| Hume       | `indra.sources.hume`  | https://github.com/BBN-E/Hume             |
+| Sofia      | `indra.sources.sofia` | https://sofia.worldmodelers.com/ui/       |
 
 Biology-oriented reading systems:
 
-| Reader     | Reference                                       |
-|------------|-------------------------------------------------|
-| TRIPS/DRUM | http://trips.ihmc.us/parser/cgi/drum            |
-| REACH      | https://github.com/clulab/reach                 |
-| Sparser    | https://github.com/ddmcdonald/sparser           |
-| TEES       | https://github.com/jbjorne/TEES                 |
-| MedScan    | https://doi.org/10.1093/bioinformatics/btg207   |
-| RLIMS-P    | https://research.bioinformatics.udel.edu/rlimsp |
-| ISI/AMR    | https://github.com/sgarg87/big_mech_isi_gg      |
-| Geneways   | https://www.ncbi.nlm.nih.gov/pubmed/15016385    |
+| Reader     | Module                  | Reference                                       |
+|------------|-------------------------|-------------------------------------------------|
+| TRIPS/DRUM | `indra.sources.trips`   | http://trips.ihmc.us/parser/cgi/drum            |
+| REACH      | `indra.sources.reach`   | https://github.com/clulab/reach                 |
+| Sparser    | `indra.sources.sparser` | https://github.com/ddmcdonald/sparser           |
+| TEES       | `indra.sources.tees`    | https://github.com/jbjorne/TEES                 |
+| MedScan    | `indra.sources.medscan` | https://doi.org/10.1093/bioinformatics/btg207   |
+| RLIMS-P    | `indra.sources.rlimsp`  | https://research.bioinformatics.udel.edu/rlimsp |
+| ISI/AMR    | `indra.sources.isi`     | https://github.com/sgarg87/big_mech_isi_gg      |
+| Geneways   | `indra.sources.geneways`| https://www.ncbi.nlm.nih.gov/pubmed/15016385    |
 
 Biological pathway databases:
 
-| Database / Exchange format | Reference                           |
-|----------------------------|-------------------------------------|
-| PathwayCommons / BioPax    | http://pathwaycommons.org/ <br/> http://www.biopax.org/         |
-| Large Corpus / BEL         | https://github.com/pybel/pybel <br/> https://github.com/OpenBEL |
-| Signor                     | https://signor.uniroma2.it/         |
-| BioGRID                    | https://thebiogrid.org/             |
-| Target Affinity Spectrum   | https://doi.org/10.1101/358978      |
-| LINCS small molecules      | http://lincs.hms.harvard.edu/db/sm/ |
+| Database / Exchange format | Module                     | Reference                                                       |
+|----------------------------|----------------------------|-----------------------------------------------------------------|
+| PathwayCommons / BioPax    | `indra.sources.biopax`     | http://pathwaycommons.org/ <br/> http://www.biopax.org/         |
+| Large Corpus / BEL         | `indra.sources.bel`        | https://github.com/pybel/pybel <br/> https://github.com/OpenBEL |
+| Signor                     | `indra.sources.signor`     | https://signor.uniroma2.it/                                     |
+| BioGRID                    | `indra.sources.biogrid`    | https://thebiogrid.org/                                         |
+| Target Affinity Spectrum   | `indra.sources.tas`        | https://doi.org/10.1101/358978                                  |
+| LINCS small molecules      | `indra.sources.lincs_drug` | http://lincs.hms.harvard.edu/db/sm/                             |
 
 Custom knowledge bases:
 
-| Database / Exchange format | Reference                            |
-|----------------------------|--------------------------------------|
-| NDEx / CX                  | http://ndexbio.org                   |
-| INDRA DB / INDRA Statements| https://github.com/indralab/indra_db |
+| Database / Exchange format | Module                        | Reference                            |
+|----------------------------|-------------------------------|--------------------------------------|
+| NDEx / CX                  | `indra.sources.ndex_cx`       | http://ndexbio.org                   |
+| INDRA DB / INDRA Statements| `indra.sources.indra_db_rest` | https://github.com/indralab/indra_db |
 
 
 ### Output model assemblers
@@ -127,6 +127,31 @@ by pip during setup.
 For certain modules and use cases, other "extra" dependencies may be needed,
 which are described in detail in the
 [documentation](http://indra.readthedocs.io/en/latest/installation.html).
+
+
+## INDRA REST API
+A REST API for INDRA is available at http://api.indra.bio:8000 with
+documentation at http://www.indra.bio/rest_api/docs. Note that the REST API
+is ideal for prototyping and for building light-weight web apps, but should
+not be used for large reading and assembly workflows.
+
+
+## INDRA Docker
+INDRA is available as a Docker image on Dockerhub and can be pulled as
+
+```
+docker pull labsyspharm/indra
+```
+
+You can run the INDRA REST API using the container as
+```
+docker run -id -p 8080:8080 --entrypoint python labsyspharm/indra /sw/indra/rest_api/api.py
+```
+
+To build the image locally, there are currently two Dockerfiles for
+INDRA and its dependencies. They are available in the following repositories:
+- https://github.com/indralab/indra_docker
+- https://github.com/indralab/indra_deps_docker
 
 ## Using INDRA
 
@@ -204,28 +229,3 @@ biopax_processor = biopax.process_pc_pathsfromto(['BRAF', 'RAF1'], ['MAP2K1', 'M
 ```
 At this point, `biopax_processor.statements` contains a list of INDRA 
 Statements extracted from the paths-from-to query.
-
-
-## INDRA REST API
-A REST API for INDRA is available at http://api.indra.bio:8000 with
-documentation at http://www.indra.bio/rest_api/docs. Note that the REST API
-is ideal for prototyping and for building light-weight web apps, but should
-not be used for large reading and assembly workflows.
-
-
-## INDRA Docker
-INDRA is available as a Docker image on Dockerhub and can be pulled as
-
-```
-docker pull labsyspharm/indra
-```
-
-You can run the INDRA REST API using the container as
-```
-docker run -id -p 8080:8080 --entrypoint python labsyspharm/indra /sw/indra/rest_api/api.py
-```
-
-To build the image locally, there are currently two Dockerfiles for
-INDRA and its dependencies. They are available in the following repositories:
-- https://github.com/indralab/indra_docker
-- https://github.com/indralab/indra_deps_docker
