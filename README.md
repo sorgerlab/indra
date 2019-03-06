@@ -93,7 +93,7 @@ Assemblers aimed at model-driven discovery and analysis:
 | Modeling formalism / Exchange format           | Purpose                                              | Module                  | Reference           |
 |------------------------------------------------|------------------------------------------------------|-------------------------|---------------------|
 | PySB (-> SBML, SBGN, BNGL, Kappa, etc.)        | Detailed, mechanistic modeling, simulation, analysis | [`indra.assemblers.pysb`](https://indra.readthedocs.io/en/latest/modules/assemblers/pysb_assembler.html#) | http://pysb.org     |
-| PyBEL                                          | Causal analysis, visualization                       | [`indra.assemblers.pybel`](https://indra.readthedocs.io/en/latest/modules/assemblers/pybel_assembler.html#)| https://github.com/pybel/pybel <br/> https://bel-commons.scai.fraunhofer.de/ |
+| PyBEL                                          | Causal analysis, visualization                       | `indra.assemblers.pybel`| https://github.com/pybel/pybel <br/> https://bel-commons.scai.fraunhofer.de/ |
 | SIF                                            | Network analysis, logic modeling, visualization      | [`indra.assemblers.sif`](https://indra.readthedocs.io/en/latest/modules/assemblers/sif_assembler.html)  | [SIF format](http://manual.cytoscape.org/en/stable/Supported_Network_File_Formats.html#sif-format) |
 | Figaro                                         | Bayesian network inference                           | `indra.assemblers.figaro` | https://github.com/p2t2/figaro/ |
 | KAMI                                           | Knowledge aggregation of protein sites/states and Kappa modeling | `indra.assemblers.kami` | https://github.com/Kappa-Dev/KAMI |
