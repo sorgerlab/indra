@@ -11,16 +11,12 @@ January 2016, Pages D548-D554. https://doi.org/10.1093/nar/gkv1048
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-import sys
-from io import StringIO, BytesIO
-from copy import deepcopy
-from os.path import join, dirname
-import csv
 import logging
-import requests
-from collections import namedtuple, Counter, defaultdict
+from copy import deepcopy
+from collections import Counter
+from os.path import join, dirname
 from indra.statements import *
-from indra.util import read_unicode_csv, read_unicode_csv_fileobj
+from indra.util import read_unicode_csv
 from indra.databases import hgnc_client, uniprot_client
 
 logger = logging.getLogger(__name__)
@@ -34,6 +30,8 @@ def _read_famplex_map():
     for row in raw_map:
         m[(row[0], row[1])] = row[2]
     return m
+
+
 famplex_map = _read_famplex_map()
 
 
@@ -115,21 +113,20 @@ _effect_map = {
 }
 
 
-
 class SignorProcessor(object):
     """Processor for Signor dataset, available at http://signor.uniroma2.it.
 
     Parameters
     ----------
-    signor_csv : str
-        Path to SIGNOR CSV file. If None is given (default), the
-        SignorProcessor will attempt to download the full data file
-        from http://signor.uniroma2.it/downloads.php.
-    delimiter : str
-        Field delimiter for CSV file. Defaults to semicolon ';'.
+    data : iterator
+        Iterator over rows of a SIGNOR CSV file.
+    complex_map : dict
+        A dict containing SIGNOR complexes, keyed by their IDs.
 
     Attributes
     ----------
+    statements : list[indra.statements.Statements]
+        A list of INDRA Statements extracted from the SIGNOR table.
     no_mech_rows: list of SignorRow namedtuples
         List of rows where no mechanism statements were generated.
     no_mech_ctr : collections.Counter
@@ -158,7 +155,9 @@ class SignorProcessor(object):
 
         # Add a Complex statement for each Signor complex
         for complex_id in sorted(self.complex_map.keys()):
+            print(complex_id)
             agents = self._get_complex_agents(complex_id)
+            print(agents)
             ev = Evidence(source_api='signor', source_id=complex_id,
                           text='Inferred from SIGNOR complex %s' % complex_id)
             s = Complex(agents, evidence=[ev])
