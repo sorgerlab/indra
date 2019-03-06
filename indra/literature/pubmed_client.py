@@ -196,7 +196,19 @@ def get_title(pubmed_id):
     article = get_article_xml(pubmed_id)
     if article is None:
         return None
-    title = article.find('ArticleTitle').text
+    return _get_title_from_article_element(article)
+
+
+def _get_title_from_article_element(article):
+    title_tag = article.find('ArticleTitle')
+    title = None
+    if title_tag is not None:
+        title = title_tag.text
+        if title is None and hasattr(title_tag, 'itertext'):
+            title = ' '.join(list(title_tag.itertext()))
+        if title is not None:
+            if not title.endswith('.'):
+                title += '.'
     return title
 
 
@@ -204,16 +216,14 @@ def _abstract_from_article_element(article, prepend_title=False):
     abstract = article.findall('Abstract/AbstractText')
     if abstract is None:
         return None
-    abstract_text = ' '.join(['' if abst.text is None
-                              else ' '.join([text for text in abst.itertext()])
+    abstract_text = ' '.join(['' if not hasattr(abst, 'itertext')
+                              else ' '.join(list(abst.itertext()))
                               for abst in abstract])
-    title_tag = article.find('ArticleTitle')
-    if title_tag is not None and prepend_title:
-        title = title_tag.text
+    if prepend_title:
+        title = _get_title_from_article_element(article)
         if title is not None:
-            if not title.endswith('.'):
-                title += '.'
             abstract_text = title + ' ' + abstract_text
+
     return abstract_text
 
 
