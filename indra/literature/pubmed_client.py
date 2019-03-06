@@ -206,9 +206,6 @@ def _get_title_from_article_element(article):
         title = title_tag.text
         if title is None and hasattr(title_tag, 'itertext'):
             title = ' '.join(list(title_tag.itertext()))
-        if title is not None:
-            if not title.endswith('.'):
-                title += '.'
     return title
 
 
@@ -222,6 +219,8 @@ def _abstract_from_article_element(article, prepend_title=False):
     if prepend_title:
         title = _get_title_from_article_element(article)
         if title is not None:
+            if not title.endswith('.'):
+                title += '.'
             abstract_text = title + ' ' + abstract_text
 
     return abstract_text
