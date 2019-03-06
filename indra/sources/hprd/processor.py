@@ -46,18 +46,62 @@ _ptm_map = {
 
 
 class HprdProcessor(object):
-    """Get INDRA Statements from HPRD data row objects.
+    """Get INDRA Statements from HPRD data.
+
+    See documentation for `indra.sources.hprd.api.process_flat_files.`
 
     Parameters
     ----------
+    id_df : pandas.DataFrame
+        DataFrame loaded from the HPRD_ID_MAPPINGS.txt file.
+    cplx_df :  pandas.DataFrame
+        DataFrame  loaded from the PROTEIN_COMPLEXES.txt file.
+    ptm_df : pandas.DataFrame
+        DataFrame loaded from the POST_TRANSLATIONAL_MODIFICATIONS.txt file.
+    ppi_df : pandas.DataFrame
+        DataFrame loaded from the BINARY_PROTEIN_PROTEIN_INTERACTIONS.txt file.
+    seq_dict : dict
+        Dictionary mapping RefSeq IDs to protein sequences, loaded from the
+        PROTEIN_SEQUENCES.txt file.
 
     Attributes
     ----------
     statements : list of INDRA Statements
+        INDRA Statements (Modifications and Complexes) produced from the
+        HPRD content.
+    id_df : pandas.DataFrame
+        DataFrame loaded from HPRD_ID_MAPPINGS.txt file.
+    seq_dict : 
+        Dictionary mapping RefSeq IDs to protein sequences, loaded from the
+        PROTEIN_SEQUENCES.txt file.
+    no_hgnc_for_egid: collections.Counter
+        Counter listing Entrez gene IDs reference in the HPRD content that
+        could not be mapped to a current HGNC ID, along with their frequency.
+    no_up_for_hgnc : collections.Counter
+        Counter with tuples of form (entrez_id, hgnc_symbol, hgnc_id) where
+        the HGNC ID could not be mapped to a Uniprot ID, along with their
+        frequency.
+    no_up_for_refseq : collections.Counter
+        Counter of RefSeq protein IDs that could not be mapped to any Uniprot
+        ID, along with frequency.
+    many_ups_for_refseq : collections.Counter
+        Counter of RefSeq protein IDs that yielded more than one matching
+        Uniprot ID. Note that in these cases, the Uniprot ID obtained from
+        HGNC is used.
+    invalid_site_pos : list of tuples
+        List of tuples of form (refseq_id, residue, position) indicating sites
+        of post translational modifications where the protein sequences
+        provided by HPRD did not contain the given residue at the given
+        position.
+    off_by_one : list of tuples
+        The subset of sites contained in `invalid_site_pos` where the given
+        residue can be found at position+1 in the HPRD protein sequence,
+        suggesting an off-by-one error due to numbering based on the
+        protein with initial methionine cleaved. Note that no mapping is
+        performed by the processor.
     """
-
-    def __init__(self, id_df, cplx_df=None, ptm_df=None, seq_dict=None,
-                 ppi_df=None):
+    def __init__(self, id_df, cplx_df=None, ptm_df=None, ppi_df=None,
+                 seq_dict=None):
         if cplx_df is None and ptm_df is None and ppi_df is None:
             raise ValueError('At least one of cplx_df, ptm_df, or ppi_df must '
                              'be specified.')
@@ -95,8 +139,14 @@ class HprdProcessor(object):
                     'no_hgnc_for_egid, no_up_for_hgnc, no_up_for_refseq, '
                     'many_ups_for_refseq, invalid_site_pos, and off_by_one.')
 
-
     def get_complexes(self, cplx_df):
+        """Generate Complex Statements from the HPRD protein complexes data.
+
+        Parameters
+        ----------
+        cplx_df :  pandas.DataFrame
+            DataFrame  loaded from the PROTEIN_COMPLEXES.txt file.
+        """
         # Group the agents for the complex
         logger.info('Processing complexes...')
         for cplx_id, this_cplx in cplx_df.groupby('CPLX_ID'):
@@ -117,6 +167,13 @@ class HprdProcessor(object):
             self.statements.append(stmt)
 
     def get_ptms(self, ptm_df):
+        """Generate Modification statements from the HPRD PTM data.
+
+        Parameters
+        ----------
+        ptm_df : pandas.DataFrame
+            DataFrame loaded from the POST_TRANSLATIONAL_MODIFICATIONS.txt file.
+        """
         logger.info('Processing PTMs...')
         # Iterate over the rows of the dataframe
         for ix, row in ptm_df.iterrows():
@@ -154,6 +211,14 @@ class HprdProcessor(object):
             self.statements.append(stmt)
 
     def get_ppis(self, ppi_df):
+        """Generate Complex Statements from the HPRD PPI data.
+
+        Parameters
+        ----------
+        ppi_df : pandas.DataFrame
+            DataFrame loaded from the BINARY_PROTEIN_PROTEIN_INTERACTIONS.txt
+            file.
+        """
         logger.info('Processing PPIs...')
         for ix, row in ppi_df.iterrows():
             agA = self._make_agent(row['HPRD_ID_A'])
@@ -252,19 +317,26 @@ class HprdProcessor(object):
         return ev_list
 
 
-    def _get_seq_motif(self, refseq_id, residue, position, window=7):
+    def _get_seq_motif(self, refseq_id, residue, pos_str, window=7):
         seq = self.seq_dict[refseq_id]
-        pos_ix = int(position) - 1
-        if seq[pos_ix] != residue:
-            self.invalid_site_pos.append((refseq_id, residue, position))
-            if seq[pos_ix + 1] == residue:
+        pos_1ix = int(pos_str)
+        pos_0ix = pos_1ix - 1
+        if seq[pos_0ix] != residue:
+            self.invalid_site_pos.append((refseq_id, residue, pos_str))
+            if seq[pos_0ix + 1] == residue:
                 self.off_by_one.append((refseq_id, residue, position))
-            return {}
+                motif, respos = \
+                          ProtMapper.motif_from_position_seq(seq, pos_1ix + 1)
+                return {'site_motif': {'motif': motif, 'respos': respos,
+                                       'off_by_one': True}}
+            else:
+                return {}
         else:
             # The index of the residue at the start of the window
-            start_ix = pos_ix - window
-            motif, respos = ProtMapper.motif_from_position_seq(seq, position)
-            return {'site_motif': {'motif': motif, 'respos': respos}}
+            motif, respos =\
+                        ProtMapper.motif_from_position_seq(seq, str(pos_1ix))
+            return {'site_motif': {'motif': motif, 'respos': respos,
+                                   'off_by_one': False}}
 
 
 def _hprd_url(hprd_id, isoform_id, info_type):

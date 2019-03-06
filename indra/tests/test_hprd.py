@@ -62,7 +62,8 @@ def test_process_ptms():
     assert s0.evidence[0].source_api == 'hprd'
     assert s0.evidence[0].annotations['evidence'] == ['in vivo']
     assert s0.evidence[0].annotations['site_motif'] == \
-                    {'motif': 'NFSSSPSTPVGSPQG', 'respos': 8}
+                    {'motif': 'NFSSSPSTPVGSPQG', 'respos': 8,
+                     'off_by_one': False}
 
 
 def test_process_ppis():

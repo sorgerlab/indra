@@ -20,7 +20,51 @@ _ppi_cols = ['HGNC_SYMBOL_A', 'HPRD_ID_A', 'REFSEQ_PROTEIN_A',
 
 
 def process_flat_files(id_mappings_file, complexes_file=None, ptm_file=None,
-                       seq_file=None, ppi_file=None):
+                       ppi_file=None, seq_file=None):
+    """
+    Get INDRA Statements from HPRD data.
+
+    Of the arguments, `id_mappings_file` is required, and at least one of
+    `complexes_file`, `ptm_file`, and `ppi_file` must also be given.  If
+    `ptm_file` is given, `seq_file` must also be given.
+
+    Note that many proteins (> 1,600) in the HPRD content are associated with
+    outdated RefSeq IDs that cannot be mapped to Uniprot IDs. For these, the
+    Uniprot ID obtained from the HGNC ID (itself obtained from the Entrez ID)
+    is used. Because the sequence referenced by the Uniprot ID obtained this
+    way may be different from the (outdated) RefSeq sequence included with the
+    HPRD content, it is possible that this will lead to invalid site positions
+    with respect to the Uniprot IDs.
+
+    To allow these site positions to be mapped during assembly, the
+    Modification statements produced by the HprdProcessor include an additional
+    key in the `annotations` field of their Evidence object. The annotations
+    field is called 'site_motif' and it maps to a dictionary with three
+    elements: 'motif', 'respos', and 'off_by_one'. 'motif' gives the peptide
+    sequence obtained from the RefSeq sequence included with HPRD. 'respos'
+    indicates the position in the peptide sequence containing the residue.
+    Note that these positions are ONE-INDEXED (not zero-indexed). Finally, the
+    'off-by-one' field contains a boolean value indicating whether the correct
+    position was inferred as being an off-by-one (methionine cleavage) error.
+    If True, it means that the given residue could not be found in the HPRD
+    RefSeq sequence at the given position, but a matching residue was found at
+    position+1, suggesting a sequence numbering based on the methionine-cleaved
+    sequence. The peptide included in the 'site_motif' dictionary is based on
+    this updated position.
+
+    Parameters
+    ----------
+    id_df : str
+        Path to HPRD_ID_MAPPINGS.txt file.
+    cplx_df : str
+        Path to PROTEIN_COMPLEXES.txt file.
+    ptm_df : str
+        Path to POST_TRANSLATIONAL_MODIFICATIONS.txt file.
+    ppi_df : pandas.DataFrame
+        Path to BINARY_PROTEIN_PROTEIN_INTERACTIONS.txt file.
+    seq_dict : dict
+        Path to PROTEIN_SEQUENCES.txt file.
+    """
     id_df = pd.read_csv(id_mappings_file, delimiter='\t', names=_hprd_id_cols,
                         dtype='str')
     id_df = id_df.set_index('HPRD_ID')
@@ -48,5 +92,5 @@ def process_flat_files(id_mappings_file, complexes_file=None, ptm_file=None,
         ppi_df = pd.read_csv(ppi_file, delimiter='\t', names=_ppi_cols,
                              dtype='str')
     # Create the processor
-    return HprdProcessor(id_df, cplx_df, ptm_df, seq_dict, ppi_df)
+    return HprdProcessor(id_df, cplx_df, ptm_df, ppi_df, seq_dict)
 
