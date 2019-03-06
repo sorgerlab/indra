@@ -28,5 +28,5 @@ if __name__ == '__main__':
 
     print("Pickling paper subset...")
     with open('%s_subset.pkl' % sys.argv[1], 'wb') as f:
-        pickle.dump(subset, f, protocol=2)
+        pickle.dump(subset, f)
 

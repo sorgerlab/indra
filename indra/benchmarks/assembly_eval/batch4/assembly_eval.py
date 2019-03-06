@@ -150,7 +150,7 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
 
     # Dump top-level statements in a pickle
     with open(otherout_prefix + '.pkl', 'wb') as fh:
-        pickle.dump(nonbg_stmts, fh, protocol=2)
+        pickle.dump(nonbg_stmts, fh)
 
     # Flatten evidence for statements
     flattened_evidence_stmts = flatten_evidence(nonbg_stmts)

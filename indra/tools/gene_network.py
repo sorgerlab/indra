@@ -85,7 +85,7 @@ class GeneNetwork(object):
             # Save to pickle file if we're caching
             if self.basename is not None:
                 with open(bel_stmt_path, 'wb') as f:
-                    pickle.dump(bel_statements, f, protocol=2)
+                    pickle.dump(bel_statements, f)
         # Optionally filter out statements not involving only our gene set
         if filter:
             if len(self.gene_list) > 1:
@@ -165,7 +165,7 @@ class GeneNetwork(object):
         # Save statements to pickle file if we're caching
         if self.basename is not None:
             with open(biopax_stmt_path, 'wb') as f:
-                pickle.dump(bp.statements, f, protocol=2)
+                pickle.dump(bp.statements, f)
         # Optionally filter out statements not involving only our gene set
         if filter:
             policy = 'one' if len(self.gene_list) > 1 else 'all'
@@ -272,6 +272,6 @@ class GeneNetwork(object):
         if self.basename is not None:
             results_filename = '%s_results.pkl' % self.basename
             with open(results_filename, 'wb') as f:
-                pickle.dump(self.results, f, protocol=2)
+                pickle.dump(self.results, f)
         return self.results
 

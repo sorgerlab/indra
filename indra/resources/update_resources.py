@@ -122,7 +122,7 @@ def update_uniprot_entries():
     entries = uniprot_client._build_uniprot_entries(from_pickle=False)
     fname = os.path.join(path, 'uniprot_entries.pkl')
     with open(fname, 'wb') as fh:
-        pickle.dump(entries, fh, protocol=2)
+        pickle.dump(entries, fh, protocol=4)
 
 
 def update_uniprot_sec_ac():
@@ -136,7 +136,7 @@ def update_uniprot_sec_ac():
     entries = uniprot_client._build_uniprot_sec()
     fname = os.path.join(path, 'uniprot_sec_ac.pkl')
     with open(fname, 'wb') as fh:
-        pickle.dump(entries, fh, protocol=2)
+        pickle.dump(entries, fh, protocol=4)
 
 
 def update_uniprot_subcell_loc():
@@ -446,7 +446,7 @@ def update_hierarchy_pickle():
     fname = os.path.join(path, 'bio_hierarchies.pkl')
     hierarchies = get_bio_hierarchies(from_pickle=False)
     with open(fname, 'wb') as fh:
-        pickle.dump(hierarchies, fh, protocol=2)
+        pickle.dump(hierarchies, fh, protocol=4)
 
 
 def update_lincs_small_molecules():
