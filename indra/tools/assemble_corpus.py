@@ -24,20 +24,20 @@ def _filter(kwargs, arg_list):
     return dict(filter(lambda x: x[0] in arg_list, kwargs.items()))
 
 
-def dump_statements(stmts, fname):
+def dump_statements(stmts, fname, protocol=4):
     """Dump a list of statements into a pickle file.
 
     Parameters
     ----------
     fname : str
         The name of the pickle file to dump statements into.
+    protocol : Optional[int]
+        The pickle protocol to use (use 2 for Python 2 compatibility).
+        Default: 4
     """
-    if sys.version_info[0] < 3:
-        logger.warning('Files pickled in Python 2 may be incompatible with '
-                       'Python 3')
     logger.info('Dumping %d statements into %s...' % (len(stmts), fname))
     with open(fname, 'wb') as fh:
-        pickle.dump(stmts, fh, protocol=2)
+        pickle.dump(stmts, fh, protocol=protocol)
 
 
 def load_statements(fname, as_dict=False):

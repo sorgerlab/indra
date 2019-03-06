@@ -52,7 +52,7 @@ class IncrementalModel(object):
             IncrementalModel in. Default: model.pkl
         """
         with open(model_fname, 'wb') as fh:
-            pickle.dump(self.stmts, fh, protocol=2)
+            pickle.dump(self.stmts, fh, protocol=4)
 
     def add_statements(self, pmid, stmts):
         """Add INDRA Statements to the incremental model indexed by PMID.

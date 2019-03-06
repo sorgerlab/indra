@@ -54,7 +54,7 @@ st3.belief = 0.7
 
 def test_load_stmts():
     with open('_test.pkl', 'wb') as fh:
-        pickle.dump([st1], fh, protocol=2)
+        pickle.dump([st1], fh)
     st_loaded = ac.load_statements('_test.pkl')
     assert len(st_loaded) == 1
     assert st_loaded[0].equals(st1)

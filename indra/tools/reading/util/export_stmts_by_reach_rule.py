@@ -28,7 +28,7 @@ if __name__ == '__main__':
                 stmt_list.append(stmt)
 
     with open('reach_stmts_by_rule.pkl', 'wb') as f:
-        pickle.dump(stmts_by_rule, f, protocol=2)
+        pickle.dump(stmts_by_rule, f)
 
     frequencies = [(k, len(v)) for k, v in stmts_by_rule.items()]
     frequencies.sort(key=lambda x: x[1], reverse=True)

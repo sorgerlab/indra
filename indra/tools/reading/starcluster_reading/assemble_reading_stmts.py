@@ -31,4 +31,4 @@ if __name__ == '__main__':
             all_stmts[reader].update(stmts[reader])
 
     with open('reading_stmts.pkl', 'wb') as f:
-        pickle.dump(all_stmts, f, protocol=2)
+        pickle.dump(all_stmts, f)
