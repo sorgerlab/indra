@@ -286,8 +286,10 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         # Try to get the PMCID
         pmcid = find_elem_text(pm_article, './/ArticleId[@IdType="pmc"]')
         # Title
-        title = find_elem_text(pm_article,
-                               'MedlineCitation/Article/ArticleTitle')
+        medline_article = \
+            pm_article.find('MedlineCitation/Article/ArticleTitle')
+        title = _get_title_from_article_element(medline_article)
+
         # Author list
         author_elems = pm_article.findall('MedlineCitation/Article/'
                                           'AuthorList/Author/LastName')
@@ -336,7 +338,6 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
                   'page': page}
         # Get the abstracts if requested
         if get_abstracts:
-            medline_article = pm_article.find('MedlineCitation/Article')
             abstract = _abstract_from_article_element(
                                 medline_article, prepend_title=prepend_title)
             result['abstract'] = abstract
