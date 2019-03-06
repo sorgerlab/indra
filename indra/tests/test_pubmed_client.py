@@ -118,3 +118,9 @@ def test_send_request_invalid():
 def test_abstract_with_html_embedded():
     res = pubmed_client.get_abstract('25484845')
     assert len(res) > 4, res
+
+
+@attr('webservice')
+def test_pmid_27821631():
+    res = pubmed_client.get_abstract('27821631')
+    assert len(res) > 50, res
