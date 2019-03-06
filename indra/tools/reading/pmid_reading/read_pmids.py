@@ -335,7 +335,7 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
     logger.info('Saving text sources...')
     text_source_file = os.path.join(base_dir, 'content_types.pkl')
     with open(text_source_file, 'wb') as f:
-        pickle.dump(pmids_unread, f, protocol)
+        pickle.dump(pmids_unread, f, protocol=4)
     logger.info('Text sources saved.')
 
     return base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found
@@ -789,7 +789,7 @@ def main():
                 )
             pickle_file = '%s_stmts.pkl' % args.basename
             with open(pickle_file, 'wb') as f:
-                pickle.dump(stmts, f, protocol)
+                pickle.dump(stmts, f, protocol=4)
             sys.exit()
 
         # Option -r <reader>: actually read the content.
@@ -846,7 +846,7 @@ def main():
             args.end_index
             )
         with open(pickle_file, 'wb') as f:
-            pickle.dump(stmts, f, protocol)
+            pickle.dump(stmts, f, protocol=4)
         ret = pickle_file
     finally:
         time_taken = datetime.now() - now

@@ -113,7 +113,7 @@ def read_pmc(pmcid, **drum_args):
 
 def save_results(statements, out_fname):
     with open(out_fname, 'wb') as fh:
-        pickle.dump(statements, fh)
+        pickle.dump(statements, fh, protocol=4)
 
 
 def make_parser():
