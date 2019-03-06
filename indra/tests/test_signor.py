@@ -62,6 +62,11 @@ def test_parse_csv_from_web():
     assert isinstance(sp.complex_map['SIGNOR-C1'], list)
     assert set(sp.complex_map['SIGNOR-C1']) == {'P23511', 'P25208', 'Q13952'}
     # Make sure we don't error if Complexes data is not provided
+    for stmt in sp.statements:
+        if isinstance(stmt, Complex):
+            if len(stmt.members) < 2:
+                assert False, 'Found a complex with less than 2 members: %s' %\
+                    stmt
 
 
 def test_get_agent():

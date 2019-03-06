@@ -155,9 +155,14 @@ class SignorProcessor(object):
 
         # Add a Complex statement for each Signor complex
         for complex_id in sorted(self.complex_map.keys()):
-            print(complex_id)
             agents = self._get_complex_agents(complex_id)
-            print(agents)
+            if len(agents) < 2:
+                logger.info('Skipping Complex %s with less than 2 members' %
+                            complex_id)
+                continue
+            # If we returned with None, we skip this complex
+            if not agents:
+                continue
             ev = Evidence(source_api='signor', source_id=complex_id,
                           text='Inferred from SIGNOR complex %s' % complex_id)
             s = Complex(agents, evidence=[ev])
@@ -170,7 +175,6 @@ class SignorProcessor(object):
         if database == 'SIGNOR' and id in self.complex_map:
             components = self.complex_map[id]
             agents = self._get_complex_agents(id)
-
             # Return the first agent with the remaining agents as a bound
             # condition
             agent = agents[0]
@@ -220,7 +224,7 @@ class SignorProcessor(object):
         """Looks up the constitutents of a complex. If any constituent is
         itself a complex, recursively expands until all constituents are
         not complexes."""
-        assert(complex_id in self.complex_map)
+        assert complex_id in self.complex_map
 
         expanded_agent_strings = []
         expand_these_next = [complex_id]
@@ -231,7 +235,7 @@ class SignorProcessor(object):
 
             # If a complex, add expanding it to the end of the queue
             # If an agent string, add it to the agent string list immediately
-            assert(c in self.complex_map)
+            assert c in self.complex_map
             for s in self.complex_map[c]:
                 if s in self.complex_map:
                     expand_these_next.append(s)

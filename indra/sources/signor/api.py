@@ -2,9 +2,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import sys
 import logging
+import requests
 from io import StringIO, BytesIO
 from collections import namedtuple
-import requests
 from .processor import SignorProcessor
 from indra.util import read_unicode_csv, read_unicode_csv_fileobj
 
@@ -75,8 +75,8 @@ def process_from_file(signor_data_file, signor_complexes_file=None):
 def process_from_web():
     # Get interaction data
     data_url = 'https://signor.uniroma2.it/download_entity.php'
-    res = requests.post(data_url, data={'organism':'human', 'format':'csv',
-                                        'submit':'Download'})
+    res = requests.post(data_url, data={'organism': 'human', 'format': 'csv',
+                                        'submit': 'Download'})
     data_iter = _handle_response(res, '\t')
     # Get complexes
     complexes_url = 'https://signor.uniroma2.it/download_complexes.php'
@@ -101,6 +101,7 @@ def _handle_response(res, delimiter):
         raise Exception('Could not download Signor data.')
     return data_iter
 
+
 def _processor_from_data(data_iter, complexes_iter):
     # Process into a list of SignorRow namedtuples
     # Strip off any funky \xa0 whitespace characters
@@ -110,5 +111,3 @@ def _processor_from_data(data_iter, complexes_iter):
         for crow in complexes_iter:
             complex_map[crow[0]] = crow[2].split(',  ')
     return SignorProcessor(data, complex_map)
-
-
