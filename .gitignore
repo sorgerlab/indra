@@ -118,3 +118,4 @@ models/fallahi_eval/output
 .idea/*
 
 .pytest_cache
+.DS_Store
