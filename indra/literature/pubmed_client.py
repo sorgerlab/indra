@@ -37,6 +37,8 @@ def send_request(url, data):
         logger.error(e)
         return None
     if not res.status_code == 200:
+        logger.error('Got return code %d from pubmed client.'
+                     % res.status_code)
         return None
     tree = ET.XML(res.content, parser=UTB())
     return tree
@@ -196,7 +198,16 @@ def get_title(pubmed_id):
     article = get_article_xml(pubmed_id)
     if article is None:
         return None
-    title = article.find('ArticleTitle').text
+    return _get_title_from_article_element(article)
+
+
+def _get_title_from_article_element(article):
+    title_tag = article.find('ArticleTitle')
+    title = None
+    if title_tag is not None:
+        title = title_tag.text
+        if title is None and hasattr(title_tag, 'itertext'):
+            title = ' '.join(list(title_tag.itertext()))
     return title
 
 
@@ -204,16 +215,16 @@ def _abstract_from_article_element(article, prepend_title=False):
     abstract = article.findall('Abstract/AbstractText')
     if abstract is None:
         return None
-    abstract_text = ' '.join(['' if abst.text is None
-                              else ' '.join([text for text in abst.itertext()])
+    abstract_text = ' '.join(['' if not hasattr(abst, 'itertext')
+                              else ' '.join(list(abst.itertext()))
                               for abst in abstract])
-    title_tag = article.find('ArticleTitle')
-    if title_tag is not None and prepend_title:
-        title = title_tag.text
+    if prepend_title:
+        title = _get_title_from_article_element(article)
         if title is not None:
             if not title.endswith('.'):
                 title += '.'
             abstract_text = title + ' ' + abstract_text
+
     return abstract_text
 
 
@@ -275,8 +286,10 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         # Try to get the PMCID
         pmcid = find_elem_text(pm_article, './/ArticleId[@IdType="pmc"]')
         # Title
-        title = find_elem_text(pm_article,
-                               'MedlineCitation/Article/ArticleTitle')
+        medline_article = \
+            pm_article.find('MedlineCitation/Article/ArticleTitle')
+        title = _get_title_from_article_element(medline_article)
+
         # Author list
         author_elems = pm_article.findall('MedlineCitation/Article/'
                                           'AuthorList/Author/LastName')
@@ -325,7 +338,6 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
                   'page': page}
         # Get the abstracts if requested
         if get_abstracts:
-            medline_article = pm_article.find('MedlineCitation/Article')
             abstract = _abstract_from_article_element(
                                 medline_article, prepend_title=prepend_title)
             result['abstract'] = abstract
