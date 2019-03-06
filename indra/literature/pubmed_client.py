@@ -37,6 +37,8 @@ def send_request(url, data):
         logger.error(e)
         return None
     if not res.status_code == 200:
+        logger.error('Got return code %d from pubmed client.'
+                     % res.status_code)
         return None
     tree = ET.XML(res.content, parser=UTB())
     return tree
