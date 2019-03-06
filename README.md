@@ -31,10 +31,10 @@ General purpose causal relation reading systems:
 
 | Reader     | Module                | Reference                                 |
 |------------|-----------------------|-------------------------------------------|
-| Eidos      | `indra.sources.eidos` | https://github.com/clulab/eidos           |
-| TRIPS/CWMS | `indra.sources.cwms`  | http://trips.ihmc.us/parser/cgi/cwmsreader|
-| Hume       | `indra.sources.hume`  | https://github.com/BBN-E/Hume             |
-| Sofia      | `indra.sources.sofia` | https://sofia.worldmodelers.com/ui/       |
+| Eidos      | [`indra.sources.eidos`](https://indra.readthedocs.io/en/latest/modules/sources/eidos/index.html#) | https://github.com/clulab/eidos           |
+| TRIPS/CWMS | [`indra.sources.cwms`](https://indra.readthedocs.io/en/latest/modules/sources/cwms/index.html#)  | http://trips.ihmc.us/parser/cgi/cwmsreader|
+| Hume       | [`indra.sources.hume`](https://indra.readthedocs.io/en/latest/modules/sources/hume/index.html)  | https://github.com/BBN-E/Hume             |
+| Sofia      | [`indra.sources.sofia`](https://indra.readthedocs.io/en/latest/modules/sources/sofia/index.html) | https://sofia.worldmodelers.com/ui/       |
 
 Biology-oriented reading systems:
 
