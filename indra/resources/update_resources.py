@@ -39,6 +39,7 @@ logger.setLevel(logging.INFO)
 # during this update cycle so that we don't do it more than once
 go_updated = False
 
+
 def load_latest_go():
     global go_updated
     go_fname = go_client.go_owl_path
@@ -49,6 +50,7 @@ def load_latest_go():
         go_updated = True
     return go_client.load_go_graph(go_fname)
 
+
 def load_from_http(url):
     logger.info('Downloading %s' % url)
     res = requests.get(url)
@@ -56,6 +58,7 @@ def load_from_http(url):
         logger.error('Failed to download "%s"' % url)
         return
     return res.content
+
 
 def save_from_http(url, fname):
     content = load_from_http(url)
@@ -65,11 +68,13 @@ def save_from_http(url, fname):
     with open(fname, 'wb') as fh:
         fh.write(content)
 
+
 def update_hgnc_entries():
     logger.info('--Updating HGNC entries-----')
     url = 'http://tinyurl.com/y83dx5s6'
     fname = os.path.join(path, 'hgnc_entries.tsv')
     save_from_http(url, fname)
+
 
 def update_kinases():
     logger.info('--Updating kinase list------')
@@ -81,63 +86,6 @@ def update_kinases():
     fname = os.path.join(path, 'kinases.tsv')
     save_from_http(url, fname)
 
-def update_uniprot_entries():
-    logger.info('--Updating UniProt entries--')
-    url = 'http://www.uniprot.org/uniprot/?' + \
-        'sort=id&desc=no&compress=no&query=reviewed:yes&' + \
-        'format=tab&columns=id,genes(PREFERRED),' + \
-        'entry%20name,database(RGD),database(MGI),length'
-    reviewed_entries = load_from_http(url)
-    url = 'http://www.uniprot.org/uniprot/?' + \
-        'sort=id&desc=no&compress=no&query=reviewed:no&fil=organism:' + \
-        '%22Homo%20sapiens%20(Human)%20[9606]%22&' + \
-        'format=tab&columns=id,genes(PREFERRED),entry%20name,' + \
-        'database(RGD),database(MGI),length'
-    unreviewed_human_entries = load_from_http(url)
-    if not((reviewed_entries is not None) and
-            (unreviewed_human_entries is not None)):
-            return
-    unreviewed_human_entries = unreviewed_human_entries.decode('utf-8')
-    reviewed_entries = reviewed_entries.decode('utf-8')
-    lines = reviewed_entries.strip('\n').split('\n')
-    lines += unreviewed_human_entries.strip('\n').split('\n')[1:]
-    # At this point, we need to clean up the gene names.
-    logging.info('Processing UniProt entries list.')
-    for i, line in enumerate(lines):
-        if i == 0:
-            continue
-        terms = line.split('\t')
-        # If there are multiple gene names, take the first one
-        gene_names = terms[1].split(';')
-        terms[1] = gene_names[0]
-        # Join the line again after the change
-        lines[i] = '\t'.join(terms)
-    # Join all lines into a single string
-    full_table = '\n'.join(lines)
-    fname = os.path.join(path, 'uniprot_entries.tsv')
-    logging.info('Saving into %s.' % fname)
-    with open(fname, 'wb') as fh:
-        fh.write(full_table.encode('utf-8'))
-    # Make pickle too
-    entries = uniprot_client._build_uniprot_entries(from_pickle=False)
-    fname = os.path.join(path, 'uniprot_entries.pkl')
-    with open(fname, 'wb') as fh:
-        pickle.dump(entries, fh, protocol=4)
-
-
-def update_uniprot_sec_ac():
-    logger.info('--Updating UniProt secondary accession--')
-    url = 'ftp://ftp.uniprot.org/pub/databases/uniprot/knowledgebase/' + \
-        'docs/sec_ac.txt'
-    logger.info('Downloading %s' % url)
-    fname = os.path.join(path, 'uniprot_sec_ac.txt')
-    urlretrieve(url, fname)
-    # Now make the pickle too
-    entries = uniprot_client._build_uniprot_sec()
-    fname = os.path.join(path, 'uniprot_sec_ac.pkl')
-    with open(fname, 'wb') as fh:
-        pickle.dump(entries, fh, protocol=4)
-
 
 def update_uniprot_subcell_loc():
     # TODO: This file could be stored as a tsv instead after some processing
@@ -146,6 +94,7 @@ def update_uniprot_subcell_loc():
         '%20sort=&desc=&compress=no&query=&force=no&format=tab&columns=id'
     fname = os.path.join(path, 'uniprot_subcell_loc.tsv')
     save_from_http(url, fname)
+
 
 def update_chebi_entries():
     logger.info('--Updating ChEBI entries----')
@@ -194,6 +143,7 @@ def update_chebi_entries():
     df_chembl.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI', 'CHEMBL'], index=False)
 
+
 def update_cas_to_chebi():
     logger.info('--Updating CAS to ChEBI entries----')
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
@@ -220,6 +170,7 @@ def update_cas_to_chebi():
                   columns=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                   header=['CAS', 'CHEBI'], index=False)
 
+
 def update_chebi_primary_map():
     logger.info('--Updating ChEBI primary map entries----')
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
@@ -242,6 +193,7 @@ def update_chebi_primary_map():
               columns=['CHEBI_ACCESSION', 'PARENT_ID'], 
               header=['Secondary', 'Primary'], index=False)
 
+
 def update_cellular_component_hierarchy():
     logger.info('--Updating GO cellular components----')
     g = load_latest_go()
@@ -258,9 +210,11 @@ def update_cellular_component_hierarchy():
     gg = mcch.make_component_hierarchy(component_map, component_part_map)
     mcch.save_hierarchy(gg, mcch.rdf_file)
 
+
 def update_go_id_mappings():
     g = load_latest_go()
     go_client.update_id_mappings(g)
+
 
 def update_bel_chebi_map():
     logger.info('--Updating BEL ChEBI map----')
@@ -326,18 +280,22 @@ def update_bel_chebi_map():
                                            key=lambda x: x[0]):
             fh.write(('%s\tCHEBI:%s\n' % (chebi_name, chebi_id)).encode('utf-8'))
 
+
 def update_entity_hierarchy():
     logger.info('--Updating entity hierarchy----')
     fname = os.path.join(path, 'famplex/relations.csv')
     make_ent_hierarchy(fname)
 
+
 def update_modification_hierarchy():
     logger.info('--Updating modification hierarchy----')
     make_mod_hierarchy()
 
+
 def update_activity_hierarchy():
     logger.info('--Updating activity hierarchy----')
     make_act_hierarchy()
+
 
 def update_famplex_map():
     logger.info('--Updating FamPlex map----')
@@ -348,6 +306,7 @@ def update_famplex_map():
     fname_out = os.path.join(path, 'famplex_map.tsv')
     rows = read_unicode_csv(fname_in)
     write_unicode_csv(fname_out, rows, delimiter='\t')
+
 
 def update_ncit_map():
     logger.info('--Updating NCIT map----')
@@ -413,6 +372,7 @@ def update_ncit_map():
                                             'Target Coding Scheme',
                                             'Target Code'],
                   header=['NCIT ID', 'Target NS', 'Target ID'], index=False)
+
 
 def update_chebi_names():
     logger.info('--Updating ChEBI names----')
@@ -488,8 +448,6 @@ if __name__ == '__main__':
     update_famplex_map()
     update_hgnc_entries()
     update_kinases()
-    update_uniprot_entries()
-    update_uniprot_sec_ac()
     update_uniprot_subcell_loc()
     update_chebi_entries()
     update_chebi_names()
