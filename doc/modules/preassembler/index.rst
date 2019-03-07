@@ -25,8 +25,8 @@ Hierarchy manager (:py:mod:`indra.preassembler.hierarchy_manager`)
 .. automodule:: indra.preassembler.hierarchy_manager
     :members:
 
-Ontlology mapping (:py:mod:`indra.preassembler.ontology_mapper`)
-----------------------------------------------------------------
+Ontology mapping (:py:mod:`indra.preassembler.ontology_mapper`)
+---------------------------------------------------------------
 
 .. automodule:: indra.preassembler.ontology_mapper
     :members:
