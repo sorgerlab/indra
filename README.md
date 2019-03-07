@@ -31,41 +31,41 @@ General purpose causal relation reading systems:
 
 | Reader     | Module                | Reference                                 |
 |------------|-----------------------|-------------------------------------------|
-| Eidos      | `indra.sources.eidos` | https://github.com/clulab/eidos           |
-| TRIPS/CWMS | `indra.sources.cwms`  | http://trips.ihmc.us/parser/cgi/cwmsreader|
-| Hume       | `indra.sources.hume`  | https://github.com/BBN-E/Hume             |
-| Sofia      | `indra.sources.sofia` | https://sofia.worldmodelers.com/ui/       |
+| Eidos      | [`indra.sources.eidos`](https://indra.readthedocs.io/en/latest/modules/sources/eidos/index.html#) | https://github.com/clulab/eidos           |
+| TRIPS/CWMS | [`indra.sources.cwms`](https://indra.readthedocs.io/en/latest/modules/sources/cwms/index.html#)  | http://trips.ihmc.us/parser/cgi/cwmsreader|
+| Hume       | [`indra.sources.hume`](https://indra.readthedocs.io/en/latest/modules/sources/hume/index.html)  | https://github.com/BBN-E/Hume             |
+| Sofia      | [`indra.sources.sofia`](https://indra.readthedocs.io/en/latest/modules/sources/sofia/index.html) | https://sofia.worldmodelers.com/ui/       |
 
 Biology-oriented reading systems:
 
 | Reader     | Module                  | Reference                                       |
 |------------|-------------------------|-------------------------------------------------|
-| TRIPS/DRUM | `indra.sources.trips`   | http://trips.ihmc.us/parser/cgi/drum            |
-| REACH      | `indra.sources.reach`   | https://github.com/clulab/reach                 |
-| Sparser    | `indra.sources.sparser` | https://github.com/ddmcdonald/sparser           |
-| TEES       | `indra.sources.tees`    | https://github.com/jbjorne/TEES                 |
-| MedScan    | `indra.sources.medscan` | https://doi.org/10.1093/bioinformatics/btg207   |
-| RLIMS-P    | `indra.sources.rlimsp`  | https://research.bioinformatics.udel.edu/rlimsp |
-| ISI/AMR    | `indra.sources.isi`     | https://github.com/sgarg87/big_mech_isi_gg      |
-| Geneways   | `indra.sources.geneways`| https://www.ncbi.nlm.nih.gov/pubmed/15016385    |
+| TRIPS/DRUM | [`indra.sources.trips`](https://indra.readthedocs.io/en/latest/modules/sources/trips/index.html)   | http://trips.ihmc.us/parser/cgi/drum            |
+| REACH      | [`indra.sources.reach`](https://indra.readthedocs.io/en/latest/modules/sources/reach/index.html)   | https://github.com/clulab/reach                 |
+| Sparser    | [`indra.sources.sparser`](https://indra.readthedocs.io/en/latest/modules/sources/sparser/index.html#) | https://github.com/ddmcdonald/sparser           |
+| TEES       | [`indra.sources.tees`](https://indra.readthedocs.io/en/latest/modules/sources/tees/index.html)   | https://github.com/jbjorne/TEES                 |
+| MedScan    | [`indra.sources.medscan`](https://indra.readthedocs.io/en/latest/modules/sources/medscan/index.html) | https://doi.org/10.1093/bioinformatics/btg207   |
+| RLIMS-P    | [`indra.sources.rlimsp`](https://indra.readthedocs.io/en/latest/modules/sources/rlimsp/index.html)  | https://research.bioinformatics.udel.edu/rlimsp |
+| ISI/AMR    | [`indra.sources.isi`](https://indra.readthedocs.io/en/latest/modules/sources/isi/index.html)     | https://github.com/sgarg87/big_mech_isi_gg      |
+| Geneways   | [`indra.sources.geneways`](https://indra.readthedocs.io/en/latest/modules/sources/geneways/index.html) | https://www.ncbi.nlm.nih.gov/pubmed/15016385    |
 
 Biological pathway databases:
 
 | Database / Exchange format | Module                     | Reference                                                       |
 |----------------------------|----------------------------|-----------------------------------------------------------------|
-| PathwayCommons / BioPax    | `indra.sources.biopax`     | http://pathwaycommons.org/ <br/> http://www.biopax.org/         |
-| Large Corpus / BEL         | `indra.sources.bel`        | https://github.com/pybel/pybel <br/> https://github.com/OpenBEL |
-| Signor                     | `indra.sources.signor`     | https://signor.uniroma2.it/                                     |
-| BioGRID                    | `indra.sources.biogrid`    | https://thebiogrid.org/                                         |
-| Target Affinity Spectrum   | `indra.sources.tas`        | https://doi.org/10.1101/358978                                  |
-| LINCS small molecules      | `indra.sources.lincs_drug` | http://lincs.hms.harvard.edu/db/sm/                             |
+| PathwayCommons / BioPax    | [`indra.sources.biopax`](https://indra.readthedocs.io/en/latest/modules/sources/biopax/index.html)     | http://pathwaycommons.org/ <br/> http://www.biopax.org/         |
+| Large Corpus / BEL         | [`indra.sources.bel`](https://indra.readthedocs.io/en/latest/modules/sources/bel/index.html)        | https://github.com/pybel/pybel <br/> https://github.com/OpenBEL |
+| Signor                     | [`indra.sources.signor`](https://indra.readthedocs.io/en/latest/modules/sources/signor/index.html)     | https://signor.uniroma2.it/                                     |
+| BioGRID                    | [`indra.sources.biogrid`](https://indra.readthedocs.io/en/latest/modules/sources/biogrid/index.html)    | https://thebiogrid.org/                                         |
+| Target Affinity Spectrum   | [`indra.sources.tas`](https://indra.readthedocs.io/en/latest/modules/sources/tas/index.html#)        | https://doi.org/10.1101/358978                                  |
+| LINCS small molecules      | [`indra.sources.lincs_drug`](https://indra.readthedocs.io/en/latest/modules/sources/lincs_drug/index.html) | http://lincs.hms.harvard.edu/db/sm/                             |
 
 Custom knowledge bases:
 
 | Database / Exchange format | Module                        | Reference                            |
 |----------------------------|-------------------------------|--------------------------------------|
-| NDEx / CX                  | `indra.sources.ndex_cx`       | http://ndexbio.org                   |
-| INDRA DB / INDRA Statements| `indra.sources.indra_db_rest` | https://github.com/indralab/indra_db |
+| NDEx / CX                  | [`indra.sources.ndex_cx`](https://indra.readthedocs.io/en/latest/modules/sources/ndex_cx/index.html)       | http://ndexbio.org                   |
+| INDRA DB / INDRA Statements| [`indra.sources.indra_db_rest`](https://indra.readthedocs.io/en/latest/modules/sources/indra_db_rest/index.html) | https://github.com/indralab/indra_db |
 
 
 ### Output model assemblers
@@ -92,31 +92,31 @@ Assemblers aimed at model-driven discovery and analysis:
 
 | Modeling formalism / Exchange format           | Purpose                                              | Module                  | Reference           |
 |------------------------------------------------|------------------------------------------------------|-------------------------|---------------------|
-| PySB (-> SBML, SBGN, BNGL, Kappa, etc.)        | Detailed, mechanistic modeling, simulation, analysis | `indra.assemblers.pysb` | http://pysb.org     |
-| PyBEL                                          | Causal analysis, visualization                       | `indra.assemblers.pybel`| https://github.com/pybel/pybel <br/> https://bel-commons.scai.fraunhofer.de/ |
-| SIF                                            | Network analysis, logic modeling, visualization      | `indra.assemblers.sif`  | [SIF format](http://manual.cytoscape.org/en/stable/Supported_Network_File_Formats.html#sif-format) |
+| PySB (-> SBML, SBGN, BNGL, Kappa, etc.)        | Detailed, mechanistic modeling, simulation, analysis | [`indra.assemblers.pysb`](https://indra.readthedocs.io/en/latest/modules/assemblers/pysb_assembler.html#) | http://pysb.org     |
+| PyBEL                                          | Causal analysis, visualization                       | [`indra.assemblers.pybel`](https://indra.readthedocs.io/en/latest/modules/assemblers/pybel_assembler.html)| https://github.com/pybel/pybel <br/> https://bel-commons.scai.fraunhofer.de/ |
+| SIF                                            | Network analysis, logic modeling, visualization      | [`indra.assemblers.sif`](https://indra.readthedocs.io/en/latest/modules/assemblers/sif_assembler.html)  | [SIF format](http://manual.cytoscape.org/en/stable/Supported_Network_File_Formats.html#sif-format) |
 | Figaro                                         | Bayesian network inference                           | `indra.assemblers.figaro` | https://github.com/p2t2/figaro/ |
-| KAMI                                           | Knowledge aggregation of protein sites/states and Kappa modeling | `indra.assemblers.kami` | https://github.com/Kappa-Dev/KAMI |
+| KAMI                                           | Knowledge aggregation of protein sites/states and Kappa modeling | [`indra.assemblers.kami`](https://indra.readthedocs.io/en/latest/modules/assemblers/kami_assembler.html) | https://github.com/Kappa-Dev/KAMI |
 
 
 Assemblers primarily aimed at visualization:
 
 | Network / Exchange format                      | Purpose                                              | Module                  | Reference           |
 |------------------------------------------------|------------------------------------------------------|-------------------------|---------------------|
-| Causal Analysis Graph                          | General causal graph visualization                   | `indra.assemblers.cag`  |                     |
-| CX                                             | Network browsing, versioning on NDEx                 | `indra.assemblers.cx`   | http://ndexbio.org  |
-| Cytoscape JS                                   | Interactive Cytoscape JS network to embed in websites| `indra.assemblers.cyjs` | http://js.cytoscape.org/ |
-| Graphviz                                       | Static PDF/PNG visualization with powerful automated layout using Graphviz | `indra.assemblers.graph` | https://www.graphviz.org/ |
-| SBGN                                           | Visualization with Systems Biology Graphical Notation| `indra.assemblers.sbgn` | http://sbgn.org     |
+| Causal Analysis Graph                          | General causal graph visualization                   | [`indra.assemblers.cag`](https://indra.readthedocs.io/en/latest/modules/assemblers/cag_assembler.html)  |                     |
+| CX                                             | Network browsing, versioning on NDEx                 | [`indra.assemblers.cx`](https://indra.readthedocs.io/en/latest/modules/assemblers/cx_assembler.html)   | http://ndexbio.org  |
+| Cytoscape JS                                   | Interactive Cytoscape JS network to embed in websites| [`indra.assemblers.cyjs`](https://indra.readthedocs.io/en/latest/modules/assemblers/cyjs_assembler.html) | http://js.cytoscape.org/ |
+| Graphviz                                       | Static PDF/PNG visualization with powerful automated layout using Graphviz | [`indra.assemblers.graph`](https://indra.readthedocs.io/en/latest/modules/assemblers/graph_assembler.html) | https://www.graphviz.org/ |
+| SBGN                                           | Visualization with Systems Biology Graphical Notation| [`indra.assemblers.sbgn`](https://indra.readthedocs.io/en/latest/modules/assemblers/sbgn_assembler.html) | http://sbgn.org     |
 
 Assemblers primarily aimed at expert curation and browsing:
 
 | Output format                                  | Purpose                                                | Module                  | Reference           |
 |------------------------------------------------|------------------------------------------------------  |-------------------------|---------------------|
-| English language                               | Human-readable descriptions, reports, dialogue         | `indra.assemblers.english` |                  |
-| HTML                                           | Web-based browsing, linking out to provenance, curation| `indra.assemblers.html` | [Curation tutorial](https://indra.readthedocs.io/<br/>en/latest/tutorials/html_curation.html) |
-| TSV (Tab/Comma Separated Values)               | Spreadsheet-based browsing and curation                | `indra.assemblers.tsv`  |                     |
-| Index Cards                                    | Custom JSON format for curating biological mechanisms  | `indra.assemblers.index_card` |               |
+| English language                               | Human-readable descriptions, reports, dialogue         | [`indra.assemblers.english`](https://indra.readthedocs.io/en/latest/modules/assemblers/english_assembler.html) |                  |
+| HTML                                           | Web-based browsing, linking out to provenance, curation| [`indra.assemblers.html`](https://indra.readthedocs.io/en/latest/modules/assemblers/html_assembler.html) | [Curation tutorial](https://indra.readthedocs.io/<br/>en/latest/tutorials/html_curation.html) |
+| TSV (Tab/Comma Separated Values)               | Spreadsheet-based browsing and curation                | [`indra.assemblers.tsv`](https://indra.readthedocs.io/en/latest/modules/assemblers/tsv_assembler.html)  |                     |
+| Index Cards                                    | Custom JSON format for curating biological mechanisms  | [`indra.assemblers.index_card`](https://indra.readthedocs.io/en/latest/modules/assemblers/index_card_assembler.html) |               |
 
 ### Internal knowledge assembly
 
@@ -124,14 +124,14 @@ A key feature of INDRA is providing internal knowledge-assembly modules
 that operate on INDRA Statements and perform the following tasks:
 - Redundancy/subsumption/generalization/contradiction finding and resolution
 with respect to an ontology with the Preassembler
-(`indra.preassembler.Preassembler`)
+([`indra.preassembler.Preassembler`](https://indra.readthedocs.io/en/latest/modules/preassembler/index.html#module-indra.preassembler))
 - Belief calculation based on evidence using the BeliefEngine
-(`indra.belief`)
+([`indra.belief`](https://indra.readthedocs.io/en/latest/modules/belief/index.html))
 - Mapping grounding between multiple ontologies
-(`indra.preassembler.ont_mapper.OntMapper`)
+([`indra.preassembler.ont_mapper.OntMapper`](https://indra.readthedocs.io/en/latest/modules/preassembler/index.html#module-indra.preassembler.ontology_mapper))
 - Grounding override and disambiguation
-(`indra.preassembler.grounding_mapper.GroundingMapper`)
-- Protein sequence mapping (`indra.preassembler.site_mapper.SiteMapper`)
+([`indra.preassembler.grounding_mapper.GroundingMapper`](https://indra.readthedocs.io/en/latest/modules/preassembler/index.html#module-indra.preassembler.grounding_mapper))
+- Protein sequence mapping ([`indra.preassembler.site_mapper.SiteMapper`](https://indra.readthedocs.io/en/latest/modules/preassembler/index.html#module-indra.preassembler.sitemapper))
 
 The internal assembly steps of INDRA including the ones listed above, and also
 a large collection of filters (filter by source, belief, the presence of

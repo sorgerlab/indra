@@ -16,3 +16,5 @@ Assemblers of model output (:py:mod:`indra.assemblers`)
    tsv_assembler
    html_assembler
    bmi_wrapper
+   pybel_assembler
+   kami_assembler
