@@ -287,7 +287,7 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         pmcid = find_elem_text(pm_article, './/ArticleId[@IdType="pmc"]')
         # Title
         medline_article = \
-            pm_article.find('MedlineCitation/Article/ArticleTitle')
+            pm_article.find('MedlineCitation/Article')
         title = _get_title_from_article_element(medline_article)
 
         # Author list
@@ -373,7 +373,6 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
     """
     if len(pmid_list) > 200:
         raise ValueError("Metadata query is limited to 200 PMIDs at a time.")
-    query_string=','.join(pmid_list)
     params = {'db': 'pubmed',
               'retmode': 'xml',
               'id': pmid_list}
