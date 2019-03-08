@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
+import json
 import rdflib
 import logging
 from rdflib.plugins.parsers.ntriples import ParseError
@@ -239,3 +240,9 @@ def process_json_file(file_name):
     with open(file_name, 'rt') as fh:
         pybel_graph = pybel.from_json_file(fh, False)
     return process_pybel_graph(pybel_graph)
+
+
+def process_cbn_network_file(cbn_file):
+    """Return a PybelProcessor by processing a jgif JSON file."""
+    with open(cbn_file, 'r') as cbnf:
+        return process_pybel_graph(pybel.from_jgif(json.load(cbnf)))
