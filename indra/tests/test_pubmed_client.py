@@ -122,5 +122,9 @@ def test_abstract_with_html_embedded():
 
 @attr('webservice')
 def test_pmid_27821631():
-    res = pubmed_client.get_abstract('27821631')
+    pmid = '27821631'
+    res = pubmed_client.get_abstract(pmid)
     assert len(res) > 50, res
+    res = pubmed_client.get_metadata_for_ids([pmid], get_abstracts=True)
+    assert res[pmid]['title'] is not None
+    assert len(res[pmid]['abstract']) > 50
