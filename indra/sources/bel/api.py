@@ -242,7 +242,19 @@ def process_json_file(file_name):
     return process_pybel_graph(pybel_graph)
 
 
-def process_cbn_network_file(cbn_file):
-    """Return a PybelProcessor by processing a jgif JSON file."""
-    with open(cbn_file, 'r') as cbnf:
-        return process_pybel_graph(pybel.from_jgif(json.load(cbnf)))
+def process_jgif_file(file_name):
+    """Return a PybelProcessor by processing a JGIF JSON file.
+
+    Parameters
+    ----------
+    file_name : str
+        The path to a JGIF JSON file.
+
+    Returns
+    -------
+    bp : PybelProcessor
+        A PybelProcessor object which contains INDRA Statements in
+        bp.statements.
+    """
+    with open(file_name, 'r') as jgf:
+        return process_pybel_graph(pybel.from_jgif(json.load(jgf)))
