@@ -1,15 +1,23 @@
 import re
 import os
-import codecs
+import glob
+import time
+import shutil
+import tempfile
+import logging
+import lxml.etree
+from math import floor
 import lxml.etree
 import collections
-import logging
+
 from indra.statements import *
 from indra.databases.chebi_client import get_chebi_id_from_cas
 from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id, \
         get_hgnc_name
 from indra.util import read_unicode_csv
 from indra.sources.reach.processor import ReachProcessor, Site
+
+from .fix_csxml_character_encoding import fix_character_encoding
 
 logger = logging.getLogger(__name__)
 
@@ -145,8 +153,68 @@ class MedscanProcessor(object):
         self.num_entities = 0
         self.relations = []
         self.last_site_info_in_sentence = None
+        self.log_entities = collections.defaultdict(int)
+        self.files_processed = 0
+        self.__gen = None
+        return
 
-    def process_csxml_from_file_handle(self, f, num_documents):
+    def iter_statements(self):
+        if self.__gen is None and not self.statements:
+            raise InputError("No generator has been initialized. Use "
+                             "`process_directory` or `process_file` first.")
+        if self.statements and not self.__gen:
+            for stmt in self.statements:
+                yield stmt
+        else:
+            for stmt in self.__gen:
+                self.statements.append(stmt)
+                yield stmt
+
+    def process_directory(self, directory_name, lazy=False):
+        # Create temporary directory into which to put the csxml files with
+        # normalized character encodings
+        tmp_dir = tempfile.mkdtemp('indra_medscan_processor')
+        tmp_file = os.path.join(tmp_dir, 'fixed_char_encoding')
+
+        # Process each file
+        glob_pattern = os.path.join(directory_name, '*.csxml')
+        files = glob.glob(glob_pattern)
+        self.__gen = self._iter_over_directories(tmp_file, files)
+        if not lazy:
+            for stmt in self.__gen:
+                self.statements.append(stmt)
+
+        # Delete the temporary directory
+        shutil.rmtree(tmp_dir)
+        return
+
+    def _iter_over_directories(self, tmp_file, files):
+        num_files = float(len(files))
+        percent_done = 0
+        start_time_s = time.time()
+
+        logger.info("%d files to read" % int(num_files))
+        for filename in files:
+            logger.info('Processing %s' % filename)
+            fix_character_encoding(filename, tmp_file)
+            with open(tmp_file, 'rb') as f:
+                for stmt in self._iter_through_csxml_file_from_handle(f):
+                    yield stmt
+
+            percent_done_now = floor(100.0 * self.files_processed / num_files)
+            if percent_done_now > percent_done:
+                percent_done = percent_done_now
+                ellapsed_s = time.time() - start_time_s
+                ellapsed_min = ellapsed_s / 60.0
+
+                msg = 'Processed %d of %d files (%f%% complete, %f minutes)' % \
+                      (self.files_processed, num_files, percent_done,
+                       ellapsed_min)
+                logger.info(msg)
+
+        pass
+
+    def process_csxml_file(self, filename, num_docs=None, lazy=False):
         """Processes a filehandle to MedScan csxml input into INDRA
         statements.
 
@@ -176,16 +244,26 @@ class MedscanProcessor(object):
 
         Parameters
         ----------
-        f : file object
-            A filehandle to a source of MedScan csxml data
-        num_documents : int
+        filename : string
+            The path to a Medscan csxml file.
+        num_docs : int or None
             The number of documents to process, or None to process all
             documents in the input stream
+        lazy : bool
+            If True, only create a generator which can be used by the
+            `get_statements` method. If True, populate the statements list now.
         """
+        with open(filename, 'rb') as f:
+            self.__gen = self._iter_through_csxml_file_from_handle(f, num_docs)
+            if not lazy:
+                for stmt in self.__gen:
+                    self.statements.append(stmt)
+        return
+
+    def _iter_through_csxml_file_from_handle(self, f, num_documents=None):
         pmid = None
         sec = None
         tagged_sent = None
-        svo_list = []
         doc_counter = 0
         entities = {}
         match_text = None
@@ -193,8 +271,6 @@ class MedscanProcessor(object):
         last_relation = None
         property_entities = []
         property_name = None
-
-        self.log_entities = collections.defaultdict(int)
 
         # Go through the document again and extract statements
         for event, elem in lxml.etree.iterparse(f, events=('start', 'end'),
@@ -222,13 +298,11 @@ class MedscanProcessor(object):
 
                 # Make a list of those statments in sentence_statements sans
                 # duplicates
-                statements_to_add = []
+                stmts_added = []
                 for s in self.sentence_statements:
-                    if not is_statement_in_list(s, statements_to_add):
-                        statements_to_add.append(s)
-
-                # Add deduplicated statements to the main statements list
-                self.statements.extend(statements_to_add)
+                    if not is_statement_in_list(s, stmts_added):
+                        stmts_added.append(s)
+                        yield s
 
                 # Reset sentence statements list to prepare for processing the
                 # next sentence
@@ -250,8 +324,7 @@ class MedscanProcessor(object):
                                                      match_start, match_end)
                     tuple_key = (ent_type, elem.attrib.get('name'), ent_urn)
                     if ent_type == 'Complex' or ent_type == 'FunctionalClass':
-                        self.log_entities[tuple_key] = \
-                                self.log_entities[tuple_key] + 1
+                        self.log_entities[tuple_key] += 1
                 else:
                     ent_type = elem.attrib['type']
                     ent_urn = elem.attrib['urn']
@@ -303,6 +376,8 @@ class MedscanProcessor(object):
                     logger.info("Processed %d documents" % doc_counter)
                 if num_documents is not None and doc_counter >= num_documents:
                     break
+        self.files_processed += 1
+        return
 
     def process_relation(self, relation, last_relation):
         """Process a relation into an INDRA statement.
@@ -532,7 +607,7 @@ class MedscanProcessor(object):
 
         if entity_id is None:
             return None
-        self.num_entities = self.num_entities + 1
+        self.num_entities += 1
 
         entity_id = _extract_id(entity_id)
 
@@ -541,7 +616,7 @@ class MedscanProcessor(object):
             # Could not find the entity in either the list of grounded
             # entities of the items tagged in the sentence. Happens for
             # a very small percentage of the dataset.
-            self.num_entities_not_found = self.num_entities_not_found + 1
+            self.num_entities_not_found += 1
             return None
 
         if entity_id not in relation.entities:
