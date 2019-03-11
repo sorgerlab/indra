@@ -319,12 +319,14 @@ class MedscanProcessor(object):
             (potentially more specific) verb, and is used when processing
             protein modification events.
         """
-        subj = self.agent_from_entity(relation, relation.subj)
-        obj = self.agent_from_entity(relation, relation.obj)
-        if subj is None or obj is None:
+        subj_res = self.agent_from_entity(relation, relation.subj)
+        obj_res = self.agent_from_entity(relation, relation.obj)
+        if subj_res is None or obj_res is None:
             # Don't extract a statement if the subject or object cannot
             # be resolved
             return
+        subj, subj_bounds = subj_res
+        obj, obj_bounds = obj_res
 
         # Make evidence object
         untagged_sentence = _untag_sentence(relation.tagged_sentence)
@@ -338,12 +340,8 @@ class MedscanProcessor(object):
         else:
             last_verb = None
         # Get the entity information with the character coordinates
-        subj_ent = relation.entities[_extract_id(relation.subj)]
-        obj_ent = relation.entities[_extract_id(relation.obj)]
         annotations = {'verb': relation.verb, 'last_verb': last_verb,
-                       'agents': {'coords': [
-                                    [subj_ent.ch_start, subj_ent.ch_end],
-                                    [obj_ent.ch_start, obj_ent.ch_end]]}}
+                       'agents': {'coords': [subj_bounds, obj_bounds]}}
         epistemics = dict()
         epistemics['direct'] = False  # Overridden later if needed
         ev = [Evidence(source_api='medscan', source_id=source_id, pmid=pmid,
@@ -550,12 +548,14 @@ class MedscanProcessor(object):
             # The entity is not in the grounded entity list
             # Instead, make an ungrounded entity, with TEXT corresponding to
             # the words with the given entity id tagged in the sentence.
-            entity_text = tags[entity_id]
-            db_refs = {'TEXT': entity_text}
-            return Agent(normalize_medscan_name(db_refs['TEXT']),
-                         db_refs=db_refs)
+            entity_data = tags[entity_id]
+            db_refs = {'TEXT': entity_data['text']}
+            ag = Agent(normalize_medscan_name(db_refs['TEXT']),
+                       db_refs=db_refs)
+            return ag, entity_data['bounds']
         else:
             entity = relation.entities[entity_id]
+            bounds = (entity.ch_start, entity.ch_end)
 
             prop = entity.properties
             if len(prop.keys()) == 2 and 'Protein' in prop \
@@ -603,8 +603,9 @@ class MedscanProcessor(object):
                     else:
                         try:
                             cond = MutCondition(pos, r_old, r_new)
-                            return Agent(normalize_medscan_name(agent_name),
-                                         db_refs=db_refs, mutations=[cond])
+                            ag = Agent(normalize_medscan_name(agent_name),
+                                       db_refs=db_refs, mutations=[cond])
+                            return ag, bounds
                         except BaseException:
                             logger.warning('Could not parse mutation ' +
                                            'string: ' + mutation.name)
@@ -616,8 +617,9 @@ class MedscanProcessor(object):
                     if res is None:
                         return None
                     cond = ModCondition('methylation', res, pos)
-                    return Agent(normalize_medscan_name(agent_name),
-                                 db_refs=db_refs, mods=[cond])
+                    ag = Agent(normalize_medscan_name(agent_name),
+                               db_refs=db_refs, mods=[cond])
+                    return ag, bounds
 
                     # Example:
                     # MedscanEntity(name='R457',
@@ -630,8 +632,9 @@ class MedscanProcessor(object):
                     if res is None:
                         return None
                     cond = ModCondition('phosphorylation', res, pos)
-                    return Agent(normalize_medscan_name(agent_name),
-                                 db_refs=db_refs, mods=[cond])
+                    ag = Agent(normalize_medscan_name(agent_name),
+                               db_refs=db_refs, mods=[cond])
+                    return ag, bounds
 
                     # Example:
                     # MedscanEntity(name='S455',
@@ -663,8 +666,9 @@ class MedscanProcessor(object):
                 else:
                     agent_name = db_name
 
-                return Agent(normalize_medscan_name(agent_name),
-                             db_refs=db_refs)
+                ag = Agent(normalize_medscan_name(agent_name),
+                           db_refs=db_refs)
+                return ag, bounds
 
 
 class MedscanRelation(object):
@@ -907,6 +911,9 @@ def _extract_id(id_string):
     return matches.group(1)
 
 
+TAG_PATT = re.compile('ID{([0-9,]+)=([^}]+)}')
+
+
 def _untag_sentence(s):
     """Removes all tags in the sentence, returning the original sentence
     without Medscan annotations.
@@ -921,9 +928,7 @@ def _untag_sentence(s):
     untagged_sentence : str
         Sentence with tags and annotations stripped out
     """
-    p = 'ID{[0-9,]+=([^}]+)}'
-    s = re.sub(p, '\\1', s)
-
+    s = TAG_PATT.sub('\\2', s)
     s = re.sub('CONTEXT{[^}]+}', '', s)
     s = re.sub('GLOSSARY{[^}]+}', '', s)
     return s
@@ -943,16 +948,19 @@ def _extract_sentence_tags(tagged_sentence):
     tags : dict
         A dictionary mapping tags to the words or phrases that they tag.
     """
-    p = re.compile('ID{([0-9,]+)=([^}]+)}')
+    untagged_sentence = _untag_sentence(tagged_sentence)
     tags = {}
 
     # Iteratively look for all matches of this pattern
     endpos = 0
     while True:
-        match = p.search(tagged_sentence, pos=endpos)
+        match = TAG_PATT.search(tagged_sentence, pos=endpos)
         if not match:
             break
         endpos = match.end()
+        text = match.group(2)
+        start = untagged_sentence.index(text)
+        stop = start + len(text)
 
-        tags[match.group(1)] = match.group(2)
+        tags[match.group(1)] = {'text': text, 'bounds': (start, stop)}
     return tags
