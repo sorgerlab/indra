@@ -394,3 +394,7 @@ def test_site_text_parser():
     assert sites[1].residue == 'S'
     assert sites[1].position == '20'
 
+
+def test_special_cxml():
+    mp = process_file('PMID28270211.csxml')
+    assert len(mp.statements)
