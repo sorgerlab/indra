@@ -106,17 +106,17 @@ def test_agent_from_entity():
                                svo_type=None)
 
     # Test for when an entity is in the grounded entities list
-    agent1 = mp.agent_from_entity(relation, 'ID{123}')
+    agent1, bounds = mp.agent_from_entity(relation, 'ID{123}')
     assert agent1.db_refs == {'TEXT': 'kinesin-I', 'GO': 'GO:0016938'}
 
     # Test for when an entity is in the tagged sentence but not the entity list
-    agent2 = mp.agent_from_entity(relation, 'ID{321}')
+    agent2, bounds = mp.agent_from_entity(relation, 'ID{321}')
     assert agent2.db_refs == {'TEXT': 'BRAF'}  # No grounding
 
     # Test for when an entity is neither tagged in the sentence nor in the
     # grounded entities list
-    agent3 = mp.agent_from_entity(relation, 'ID{444}')
-    assert agent3 is None
+    agent3_res = mp.agent_from_entity(relation, 'ID{444}')
+    assert agent3_res is None
 
 
 def test_expressioncontrol_positive():
@@ -151,13 +151,13 @@ def test_evidence():
                                   ' display a significant reduction in the' + \
                                   ' circulating hypoxia-induced ' + \
                                   'erythropoietin levels, number of ' + \
-                                  'red cells and hemoglobin concentration. ', \
+                                  'red cells and hemoglobin concentration.', \
         s0.evidence[0].text
     coords = s0.evidence[0].annotations['agents']['coords']
     assert isinstance(coords, list), type(coords)
-    assert len(coords) == 2
-    assert coords[0] == [90, 97]
-    assert coords[1] == [106, 120]
+    assert len(coords) == 2, len(coords)
+    assert coords[0] == (90, 97), coords[0]
+    assert coords[1] == (106, 120), coords[1]
 
 
 def test_molsynthesis_positive():
