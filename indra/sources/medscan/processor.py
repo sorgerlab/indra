@@ -160,7 +160,7 @@ class MedscanProcessor(object):
         self.__tmp_dir = None
         return
 
-    def iter_statements(self):
+    def iter_statements(self, populate=True):
         if self.__gen is None and not self.statements:
             raise InputError("No generator has been initialized. Use "
                              "`process_directory` or `process_file` first.")
@@ -169,7 +169,8 @@ class MedscanProcessor(object):
                 yield stmt
         else:
             for stmt in self.__gen:
-                self.statements.append(stmt)
+                if populate:
+                    self.statements.append(stmt)
                 yield stmt
 
     def process_directory(self, directory_name, lazy=False):
@@ -578,6 +579,7 @@ class MedscanProcessor(object):
             self.last_site_info_in_sentence = \
                     ProteinSiteInfo(site_text=subj.name,
                                     object_text=obj.db_refs['TEXT'])
+        return
 
     def agent_from_entity(self, relation, entity_id):
         """Create a (potentially grounded) INDRA Agent object from a given
