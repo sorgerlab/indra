@@ -1,11 +1,13 @@
+import os
+from urllib import request
 from pybel import BELGraph
 from pybel.dsl import *
 from pybel.examples import egf_graph
 from indra.statements import *
 from indra.sources import bel
 from indra.sources.bel import processor as pb
+from indra.sources.bel.api import process_jgif_file
 from indra.databases import hgnc_client
-
 
 mek_hgnc_id = hgnc_client.get_hgnc_id('MAP2K1')
 mek_up_id = hgnc_client.get_uniprot_id(mek_hgnc_id)
@@ -14,6 +16,19 @@ mek_up_id = hgnc_client.get_uniprot_id(mek_hgnc_id)
 def test_process_pybel():
     pbp = bel.process_pybel_graph(egf_graph)
     assert pbp.statements
+
+
+def test_process_jgif():
+    test_file_url = 'https://s3.amazonaws.com/bigmech/travis/Hox-2.0-Hs.jgf'
+    test_file = 'Hox-2.0-Hs.jgf'
+    request.urlretrieve(url=test_file_url, filename=test_file)
+    pbp = process_jgif_file(test_file)
+
+    # Clean up
+    os.remove(test_file)
+
+    assert isinstance(pbp.statements[0], Statement)
+    assert isinstance(pbp.statements[0], Activation)
 
 
 def test_get_agent_hgnc():
