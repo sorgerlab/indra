@@ -257,4 +257,4 @@ def process_jgif_file(file_name):
         bp.statements.
     """
     with open(file_name, 'r') as jgf:
-        return process_pybel_graph(pybel.from_jgif(json.load(jgf)))
+        return process_pybel_graph(pybel.from_cbn_jgif(json.load(jgf)))
