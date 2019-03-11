@@ -912,15 +912,16 @@ def _extract_id(id_string):
 
 
 TAG_PATT = re.compile('ID{([0-9,]+)=([^}]+)}')
+JUNK_PATT = re.compile('(CONTEXT|GLOSSARY){[^}]+}+')
 
 
-def _untag_sentence(s):
+def _untag_sentence(tagged_sentence):
     """Removes all tags in the sentence, returning the original sentence
     without Medscan annotations.
 
     Parameters
     ----------
-    s : str
+    tagged_sentence : str
         The tagged sentence
 
     Returns
@@ -928,10 +929,9 @@ def _untag_sentence(s):
     untagged_sentence : str
         Sentence with tags and annotations stripped out
     """
-    s = TAG_PATT.sub('\\2', s)
-    s = re.sub('CONTEXT{[^}]+}', '', s)
-    s = re.sub('GLOSSARY{[^}]+}', '', s)
-    return s
+    untagged_sentence = TAG_PATT.sub('\\2', tagged_sentence)
+    clean_sentence = JUNK_PATT.sub('', untagged_sentence)
+    return clean_sentence.strip()
 
 
 def _extract_sentence_tags(tagged_sentence):
@@ -949,16 +949,18 @@ def _extract_sentence_tags(tagged_sentence):
         A dictionary mapping tags to the words or phrases that they tag.
     """
     untagged_sentence = _untag_sentence(tagged_sentence)
+    decluttered_sentence = JUNK_PATT.sub('', tagged_sentence)
     tags = {}
 
     # Iteratively look for all matches of this pattern
     endpos = 0
     while True:
-        match = TAG_PATT.search(tagged_sentence, pos=endpos)
+        match = TAG_PATT.search(decluttered_sentence, pos=endpos)
         if not match:
             break
         endpos = match.end()
         text = match.group(2)
+        text = text.strip()
         start = untagged_sentence.index(text)
         stop = start + len(text)
 
