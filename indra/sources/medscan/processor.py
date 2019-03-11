@@ -30,6 +30,7 @@ MedscanEntity = collections.namedtuple('MedscanEntity', ['name', 'urn', 'type',
 MedscanProperty = collections.namedtuple('MedscanProperty',
                                          ['type', 'name', 'urn'])
 
+
 def _read_famplex_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          '../../resources/famplex_map.tsv')
@@ -807,7 +808,6 @@ def normalize_medscan_name(name):
         if name.endswith(suffix):
             name = name[:-len(suffix)]
     return name
-
 
 
 def _parse_mod_string(s):
