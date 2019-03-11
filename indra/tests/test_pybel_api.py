@@ -27,8 +27,10 @@ def test_process_jgif():
     # Clean up
     os.remove(test_file)
 
+    assert pbp.statements
     assert isinstance(pbp.statements[0], Statement)
     assert isinstance(pbp.statements[0], Activation)
+    assert all(s.evidence[0].source_api == 'bel' for s in pbp.statements)
 
 
 def test_get_agent_hgnc():
