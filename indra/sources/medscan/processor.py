@@ -157,6 +157,7 @@ class MedscanProcessor(object):
         self.log_entities = collections.defaultdict(int)
         self.files_processed = 0
         self.__gen = None
+        self.__tmp_dir = None
         return
 
     def iter_statements(self):
@@ -172,24 +173,22 @@ class MedscanProcessor(object):
                 yield stmt
 
     def process_directory(self, directory_name, lazy=False):
-        # Create temporary directory into which to put the csxml files with
-        # normalized character encodings
-        tmp_dir = tempfile.mkdtemp('indra_medscan_processor')
-        tmp_file = os.path.join(tmp_dir, 'fixed_char_encoding')
-
         # Process each file
         glob_pattern = os.path.join(directory_name, '*.csxml')
         files = glob.glob(glob_pattern)
-        self.__gen = self._iter_over_directories(tmp_file, files)
+        self.__gen = self._iter_over_files(files)
         if not lazy:
             for stmt in self.__gen:
                 self.statements.append(stmt)
 
-        # Delete the temporary directory
-        shutil.rmtree(tmp_dir)
         return
 
-    def _iter_over_directories(self, tmp_file, files):
+    def _iter_over_files(self, files):
+        # Create temporary directory into which to put the csxml files with
+        # normalized character encodings
+        self.__tmp_dir = tempfile.mkdtemp('indra_medscan_processor')
+        tmp_file = os.path.join(self.__tmp_dir, 'fixed_char_encoding')
+
         num_files = float(len(files))
         percent_done = 0
         start_time_s = time.time()
@@ -213,7 +212,9 @@ class MedscanProcessor(object):
                        ellapsed_min)
                 logger.info(msg)
 
-        pass
+        # Delete the temporary directory
+        shutil.rmtree(self.__tmp_dir)
+        return
 
     def process_csxml_file(self, filename, num_docs=None, lazy=False):
         """Processes a filehandle to MedScan csxml input into INDRA
