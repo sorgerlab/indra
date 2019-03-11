@@ -69,6 +69,8 @@ def is_statement_in_list(statement, statement_list):
     for s in statement_list:
         if s.equals(statement):
             return True
+        elif s.get_hash(shallow=False) == statement.get_hash(shallow=False):
+            print("Weird.")
     return False
 
 
@@ -117,6 +119,38 @@ class ProteinSiteInfo(object):
         return sites
 
 
+# These normalized verbs are mapped to IncreaseAmount statements
+INCREASE_AMOUNT_VERBS = ['ExpressionControl-positive',
+                         'MolSynthesis-positive',
+                         'CellExpression',
+                         'QuantitativeChange-positive',
+                         'PromoterBinding']
+
+# These normalized verbs are mapped to DecreaseAmount statements
+DECREASE_AMOUNT_VERBS = ['ExpressionControl-negative',
+                         'MolSynthesis-negative',
+                         'miRNAEffect-negative',
+                         'QuantitativeChange-negative']
+
+# These normalized verbs are mapped to Activation statements (indirect)
+ACTIVATION_VERBS = ['UnknownRegulation-positive',
+                    'Regulation-positive']
+# These normalized verbs are mapped to Activation statements (direct)
+D_ACTIVATION_VERBS = ['DirectRegulation-positive',
+                      'DirectRegulation-positive--direct interaction']
+# All activation verbs
+ALL_ACTIVATION_VERBS = ACTIVATION_VERBS + D_ACTIVATION_VERBS
+
+# These normalized verbs are mapped to Inhibition statements (indirect)
+INHIBITION_VERBS = ['UnknownRegulation-negative',
+                    'Regulation-negative']
+# These normalized verbs are mapped to Inhibition statements (direct)
+D_INHIBITION_VERBS = ['DirectRegulation-negative',
+                      'DirectRegulation-negative--direct interaction']
+# All inhibition verbs
+ALL_INHIBITION_VERBS = INHIBITION_VERBS + D_INHIBITION_VERBS
+
+
 class MedscanProcessor(object):
     """Processes Medscan data into INDRA statements.
 
@@ -152,23 +186,23 @@ class MedscanProcessor(object):
         self.sentence_statements = []
         self.num_entities_not_found = 0
         self.num_entities = 0
-        self.relations = []
         self.last_site_info_in_sentence = None
         self.log_entities = collections.defaultdict(int)
         self.files_processed = 0
-        self.__gen = None
-        self.__tmp_dir = None
+        self._gen = None
+        self._tmp_dir = None
+        self._stmt_hashes = set()
         return
 
     def iter_statements(self, populate=True):
-        if self.__gen is None and not self.statements:
+        if self._gen is None and not self.statements:
             raise InputError("No generator has been initialized. Use "
                              "`process_directory` or `process_file` first.")
-        if self.statements and not self.__gen:
+        if self.statements and not self._gen:
             for stmt in self.statements:
                 yield stmt
         else:
-            for stmt in self.__gen:
+            for stmt in self._gen:
                 if populate:
                     self.statements.append(stmt)
                 yield stmt
@@ -177,9 +211,9 @@ class MedscanProcessor(object):
         # Process each file
         glob_pattern = os.path.join(directory_name, '*.csxml')
         files = glob.glob(glob_pattern)
-        self.__gen = self._iter_over_files(files)
+        self._gen = self._iter_over_files(files)
         if not lazy:
-            for stmt in self.__gen:
+            for stmt in self._gen:
                 self.statements.append(stmt)
 
         return
@@ -257,9 +291,9 @@ class MedscanProcessor(object):
             `get_statements` method. If True, populate the statements list now.
         """
         with open(filename, 'rb') as f:
-            self.__gen = self._iter_through_csxml_file_from_handle(f, num_docs)
+            self._gen = self._iter_through_csxml_file_from_handle(f, num_docs)
             if not lazy:
-                for stmt in self.__gen:
+                for stmt in self._gen:
                     self.statements.append(stmt)
         return
 
@@ -276,12 +310,17 @@ class MedscanProcessor(object):
         property_name = None
 
         # Go through the document again and extract statements
+        good_relations = []
         for event, elem in lxml.etree.iterparse(f, events=('start', 'end'),
                                                 encoding='utf-8',
                                                 recover=True):
+            if elem.tag in ['attr', 'toks']:
+                continue
             # If opening up a new doc, set the PMID
             if event == 'start' and elem.tag == 'doc':
                 pmid = elem.attrib.get('uri')
+                if '26872462' in pmid:
+                    print("Take a look at this...")
             # If getting a section, set the section type
             elif event == 'start' and elem.tag == 'sec':
                 sec = elem.attrib.get('type')
@@ -299,17 +338,10 @@ class MedscanProcessor(object):
                 # End of sentence; deduplicate and copy statements from this
                 # sentence to the main statements list
 
-                # Make a list of those statments in sentence_statements sans
-                # duplicates
-                stmts_added = []
                 for s in self.sentence_statements:
-                    if not is_statement_in_list(s, stmts_added):
-                        stmts_added.append(s)
-                        yield s
-
-                # Reset sentence statements list to prepare for processing the
-                # next sentence
+                    yield s
                 self.sentence_statements = []
+                good_relations = []
 
                 # Reset site info
                 self.last_site_info_in_sentence = None
@@ -340,25 +372,15 @@ class MedscanProcessor(object):
                 verb = elem.attrib.get('verb')
                 obj = elem.attrib.get('obj')
                 svo_type = elem.attrib.get('type')
-                svo = {'uri': pmid,
-                       'sec': sec,
-                       'text': tagged_sent,
-                       'entities': entities}
-                svo.update(elem.attrib)
 
                 # Aggregate information about the relation
-                relation = MedscanRelation(
-                                       uri=pmid,
-                                       sec=sec,
-                                       tagged_sentence=tagged_sent,
-                                       entities=entities,
-                                       subj=subj,
-                                       verb=verb,
-                                       obj=obj,
-                                       svo_type=svo_type,
-                                      )
-                self.relations.append(relation)
+                relation = MedscanRelation(uri=pmid, sec=sec,
+                                           tagged_sentence=tagged_sent,
+                                           entities=entities, subj=subj,
+                                           verb=verb, obj=obj,
+                                           svo_type=svo_type)
                 if svo_type == 'CONTROL':
+                    good_relations.append(relation)
                     self.process_relation(relation, last_relation)
                 else:
                     # Sometimes a CONTROL SVO can be after an unnormalized SVO
@@ -380,6 +402,11 @@ class MedscanProcessor(object):
                 if num_documents is not None and doc_counter >= num_documents:
                     break
         self.files_processed += 1
+        return
+
+    def _add_statement(self, stmt):
+        if not is_statement_in_list(stmt, self.sentence_statements):
+            self.sentence_statements.append(stmt)
         return
 
     def process_relation(self, relation, last_relation):
@@ -426,67 +453,26 @@ class MedscanProcessor(object):
                        text=untagged_sentence, annotations=annotations,
                        epistemics=epistemics)]
 
-        # These normalized verbs are mapped to IncreaseAmount statements
-        increase_amount_verbs = ['ExpressionControl-positive',
-                                 'MolSynthesis-positive',
-                                 'CellExpression',
-                                 'QuantitativeChange-positive',
-                                 'PromoterBinding']
-
-        # These normalized verbs are mapped to DecreaseAmount statements
-        decrease_amount_verbs = ['ExpressionControl-negative',
-                                 'MolSynthesis-negative',
-                                 'miRNAEffect-negative',
-                                 'QuantitativeChange-negative']
-
-        # These normalized verbs are mapped to Activation statements (indirect)
-        activation_verbs = ['UnknownRegulation-positive',
-                            'Regulation-positive']
-        # These normalized verbs are mapped to Activation statements (direct)
-        d_activation_verbs = ['DirectRegulation-positive',
-                              'DirectRegulation-positive--direct interaction']
-        # All activation verbs
-        all_activation_verbs = list(activation_verbs)
-        all_activation_verbs.extend(d_activation_verbs)
-
-        # These normalized verbs are mapped to Inhibition statements (indirect)
-        inhibition_verbs = ['UnknownRegulation-negative',
-                            'Regulation-negative']
-        # These normalized verbs are mapped to Inhibition statements (direct)
-        d_inhibition_verbs = ['DirectRegulation-negative',
-                              'DirectRegulation-negative--direct interaction']
-        # All inhibition verbs
-        all_inhibition_verbs = list(inhibition_verbs)
-        all_inhibition_verbs.extend(d_inhibition_verbs)
-
-        if relation.verb in increase_amount_verbs:
+        if relation.verb in INCREASE_AMOUNT_VERBS:
             # If the normalized verb corresponds to an IncreaseAmount statement
             # then make one
-            self.sentence_statements.append(
-                                   IncreaseAmount(subj, obj, evidence=ev)
-                                  )
-        elif relation.verb in decrease_amount_verbs:
+            self._add_statement(IncreaseAmount(subj, obj, evidence=ev))
+        elif relation.verb in DECREASE_AMOUNT_VERBS:
             # If the normalized verb corresponds to a DecreaseAmount statement
             # then make one
-            self.sentence_statements.append(
-                                   DecreaseAmount(subj, obj, evidence=ev)
-                                  )
-        elif relation.verb in all_activation_verbs:
+            self._add_statement(DecreaseAmount(subj, obj, evidence=ev))
+        elif relation.verb in ALL_ACTIVATION_VERBS:
             # If the normalized verb corresponds to an Activation statement,
             # then make one
-            if relation.verb in d_activation_verbs:
+            if relation.verb in D_ACTIVATION_VERBS:
                 ev[0].epistemics['direction'] = True
-            self.sentence_statements.append(
-                    Activation(subj, obj, evidence=ev)
-                    )
-        elif relation.verb in all_inhibition_verbs:
+            self._add_statement(Activation(subj, obj, evidence=ev))
+        elif relation.verb in ALL_INHIBITION_VERBS:
             # If the normalized verb corresponds to an Inhibition statement,
             # then make one
-            if relation.verb in d_inhibition_verbs:
+            if relation.verb in D_INHIBITION_VERBS:
                 ev[0].epistemics['direct'] = True
-            self.sentence_statements.append(
-                    Inhibition(subj, obj, evidence=ev)
-                    )
+            self._add_statement(Inhibition(subj, obj, evidence=ev))
 
         elif relation.verb == 'ProtModification':
             # The normalized verb 'ProtModification' is too vague to make
@@ -553,15 +539,14 @@ class MedscanProcessor(object):
 
                     s = statement_type(subj, obj, residue=r, position=p,
                                        evidence=ev)
-                    self.sentence_statements.append(s)
+                    self._add_statement(s)
             else:
-                self.sentence_statements.append(statement_type(subj, obj,
-                                                evidence=ev))
+                self._add_statement(statement_type(subj, obj, evidence=ev))
 
         elif relation.verb == 'Binding':
             # The Binding normalized verb corresponds to the INDRA Complex
             # statement.
-            self.sentence_statements.append(
+            self._add_statement(
                                    Complex([subj, obj], evidence=ev)
                                   )
         elif relation.verb == 'ProtModification-negative':
@@ -570,7 +555,7 @@ class MedscanProcessor(object):
             pass  # TODO? These occur so infrequently so maybe not worth it
         elif relation.verb == 'StateEffect-positive':
             pass
-            # self.sentence_statements.append(
+            # self._add_statement(
             #                       ActiveForm(subj, obj, evidence=ev)
             #                      )
             # TODO: disabling for now, since not sure whether we should set
@@ -861,7 +846,7 @@ def _parse_mut_string(s):
         # currently supported
         return None, None, None
     else:
-        return (m.group(1), m.group(2), m.group(3))
+        return m.group(1), m.group(2), m.group(3)
 
 
 def _urn_to_db_refs(urn):
@@ -966,6 +951,11 @@ def _urn_to_db_refs(urn):
     return db_refs, db_name
 
 
+TAG_PATT = re.compile('ID{([0-9,]+)=([^}]+)}')
+JUNK_PATT = re.compile('(CONTEXT|GLOSSARY){[^}]+}+')
+ID_PATT = re.compile('ID\\{([0-9]+)\\}')
+
+
 def _extract_id(id_string):
     """Extracts the numeric ID from the representation of the subject or
     object ID that appears as an attribute of the svo element in the Medscan
@@ -983,14 +973,9 @@ def _extract_id(id_string):
         The numeric ID, extracted from the svo element's attribute
         (example: 123)
     """
-    p = 'ID\\{([0-9]+)\\}'
-    matches = re.match(p, id_string)
-    assert(matches is not None)
+    matches = ID_PATT.match(id_string)
+    assert matches is not None
     return matches.group(1)
-
-
-TAG_PATT = re.compile('ID{([0-9,]+)=([^}]+)}')
-JUNK_PATT = re.compile('(CONTEXT|GLOSSARY){[^}]+}+')
 
 
 def _untag_sentence(tagged_sentence):
@@ -1047,5 +1032,13 @@ def _extract_sentence_tags(tagged_sentence):
             print(e)
         stop = start + len(text)
 
-        tags[match.group(1)] = {'text': text, 'bounds': (start, stop)}
+        tag_key = match.group(1)
+        if ',' in tag_key:
+            for sub_key in tag_key.split(','):
+                if sub_key == '0':
+                    continue
+                tags[sub_key] = {'text': text, 'bounds': (start, stop)}
+            print("That's interesting...")
+        else:
+            tags[tag_key] = {'text': text, 'bounds': (start, stop)}
     return tags
