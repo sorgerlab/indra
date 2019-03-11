@@ -960,8 +960,13 @@ def _extract_sentence_tags(tagged_sentence):
             break
         endpos = match.end()
         text = match.group(2)
+        text = text.replace('CONTEXT', '')
+        text = text.replace('GLOSSARY', '')
         text = text.strip()
-        start = untagged_sentence.index(text)
+        try:
+            start = untagged_sentence.index(text)
+        except ValueError as e:
+            print(e)
         stop = start + len(text)
 
         tags[match.group(1)] = {'text': text, 'bounds': (start, stop)}
