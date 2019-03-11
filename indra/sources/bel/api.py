@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 import json
 import rdflib
@@ -11,15 +9,13 @@ from .rdf_processor import BelRdfProcessor
 from .processor import PybelProcessor
 import pybel
 
-try:
-    from functools import lru_cache
-except ImportError:
-    from functools32 import lru_cache
+from functools import lru_cache
 
 
 logger = logging.getLogger(__name__)
 
 ndex_bel2rdf = 'http://bel2rdf.bigmech.ndexbio.org'
+
 
 def process_ndex_neighborhood(gene_names, network_id=None,
                               rdf_out='bel_output.rdf', print_output=True):
