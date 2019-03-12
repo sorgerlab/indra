@@ -79,7 +79,7 @@ def _is_statement_in_list(statement, statement_list):
     for s in statement_list:
         if s.equals(statement):
             return True
-        elif s.get_hash(shallow=False) == statement.get_hash(shallow=False):
+        elif s.get_hash(False, True) == statement.get_hash(False, True):
             for ag_old, ag_new in zip(s.agent_list(), statement.agent_list()):
                 s_old = set(ag_old.db_refs.items())
                 s_new = set(ag_new.db_refs.items())
