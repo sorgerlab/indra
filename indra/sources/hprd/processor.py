@@ -6,7 +6,7 @@ from indra.statements import *
 from indra.databases import hgnc_client
 
 
-logger = logging.getLogger('hprd')
+logger = logging.getLogger(__name__)
 
 
 # Map of HPRD PTM types to INDRA Statement types
@@ -297,7 +297,6 @@ class HprdProcessor(object):
                    'REFSEQ_PROT': refseq_id}
         return Agent(hgnc_name, db_refs=db_refs)
 
-
     def _get_evidence(self, hprd_id, isoform_id, pmid_str, evidence_type,
                       info_type, motif_dict=None):
         pmids = pmid_str.split(',')
@@ -316,15 +315,14 @@ class HprdProcessor(object):
             ev_list.append(ev)
         return ev_list
 
-
-    def _get_seq_motif(self, refseq_id, residue, pos_str, window=7):
+    def _get_seq_motif(self, refseq_id, residue, pos_str):
         seq = self.seq_dict[refseq_id]
         pos_1ix = int(pos_str)
         pos_0ix = pos_1ix - 1
         if seq[pos_0ix] != residue:
             self.invalid_site_pos.append((refseq_id, residue, pos_str))
             if seq[pos_0ix + 1] == residue:
-                self.off_by_one.append((refseq_id, residue, position))
+                self.off_by_one.append((refseq_id, residue, pos_str))
                 motif, respos = \
                           ProtMapper.motif_from_position_seq(seq, pos_1ix + 1)
                 return {'site_motif': {'motif': motif, 'respos': respos,

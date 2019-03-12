@@ -21,8 +21,7 @@ _ppi_cols = ['HGNC_SYMBOL_A', 'HPRD_ID_A', 'REFSEQ_PROTEIN_A',
 
 def process_flat_files(id_mappings_file, complexes_file=None, ptm_file=None,
                        ppi_file=None, seq_file=None):
-    """
-    Get INDRA Statements from HPRD data.
+    """Get INDRA Statements from HPRD data.
 
     Of the arguments, `id_mappings_file` is required, and at least one of
     `complexes_file`, `ptm_file`, and `ppi_file` must also be given.  If
@@ -54,21 +53,21 @@ def process_flat_files(id_mappings_file, complexes_file=None, ptm_file=None,
 
     Parameters
     ----------
-    id_df : str
+    id_mappings_file : str
         Path to HPRD_ID_MAPPINGS.txt file.
-    cplx_df : str
+    complexes_file : Optional[str]
         Path to PROTEIN_COMPLEXES.txt file.
-    ptm_df : str
+    ptm_file : Optional[str]
         Path to POST_TRANSLATIONAL_MODIFICATIONS.txt file.
-    ppi_df : pandas.DataFrame
+    ppi_file : Optional[str]
         Path to BINARY_PROTEIN_PROTEIN_INTERACTIONS.txt file.
-    seq_dict : dict
+    seq_file : Optional[str]
         Path to PROTEIN_SEQUENCES.txt file.
     """
     id_df = pd.read_csv(id_mappings_file, delimiter='\t', names=_hprd_id_cols,
                         dtype='str')
     id_df = id_df.set_index('HPRD_ID')
-    if complexes_file is None and  ptm_file is None and ppi_file is None:
+    if complexes_file is None and ptm_file is None and ppi_file is None:
         raise ValueError('At least one of complexes_file, ptm_file, or '
                          'ppi_file must be given.')
     if ptm_file and not seq_file:
