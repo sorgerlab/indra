@@ -81,6 +81,13 @@ def is_statement_in_list(statement, statement_list):
                     ag_new.db_refs.update(ag_old.db_refs)
                     return True
 
+                if all('CHEBI' in ag.db_refs for ag in [ag_old, ag_new]) \
+                        and ag_new.db_refs['CHEBI'] != ag_old.db_refs['CHEBI']:
+                    print("The CHEBI case.")
+                    ag_new.name = ag_new.db_refs['CHEBI']
+                    ag_old.name = ag_old.db_refs['CHEBI']
+                    return False
+
             print("Weird.")
     return False
 
