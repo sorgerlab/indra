@@ -238,13 +238,13 @@ def process_json_file(file_name):
     return process_pybel_graph(pybel_graph)
 
 
-def process_jgif_file(file_name):
-    """Return a PybelProcessor by processing a JGIF JSON file.
+def process_cbn_jgif_file(file_name):
+    """Return a PybelProcessor by processing a CBN JGIF JSON file.
 
     Parameters
     ----------
     file_name : str
-        The path to a JGIF JSON file.
+        The path to a CBN JGIF JSON file.
 
     Returns
     -------
