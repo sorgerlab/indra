@@ -845,7 +845,7 @@ def _parse_mod_string(s):
     """
     m = re.match('([A-Za-z])+([0-9]+)', s)
     assert(m is not None)
-    return (m.group(1), m.group(2))
+    return m.groups()
 
 
 def _parse_mut_string(s):
@@ -1054,10 +1054,7 @@ def _extract_sentence_tags(tagged_sentence):
         text = text.replace('CONTEXT', '')
         text = text.replace('GLOSSARY', '')
         text = text.strip()
-        try:
-            start = untagged_sentence.index(text)
-        except ValueError as e:
-            print(e)
+        start = untagged_sentence.index(text)
         stop = start + len(text)
 
         tag_key = match.group(1)
