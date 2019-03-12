@@ -14,10 +14,11 @@ try:
 except ImportError:
     from functools32 import lru_cache
 
-mesh_mappings = {}
+mesh_id_to_name = {}
+mesh_name_to_id = {}
 for mesh_id, mesh_label in read_unicode_csv(mesh_file, delimiter='\t'):
-    mesh_mappings[mesh_id] = mesh_label
-
+    mesh_id_to_name[mesh_id] = mesh_label
+    mesh_name_to_id[mesh_label] = mesh_id
 
 @lru_cache(maxsize=1000)
 def get_mesh_name_from_web(mesh_id):
@@ -67,8 +68,37 @@ def get_mesh_name(mesh_id, offline=False):
         Label for the MESH ID, or None if the query failed or no label was
         found.
     """
-    indra_mesh_mapping = mesh_mappings.get(mesh_id)
+    indra_mesh_mapping = mesh_id_to_name.get(mesh_id)
     if offline or indra_mesh_mapping is not None:
         return indra_mesh_mapping
     # Look up the MESH mapping from NLM if we don't have it locally
     return get_mesh_name_from_web(mesh_id)
+
+
+def get_mesh_id(mesh_name, offline=False):
+    """Get the MESH ID for the given MESH label.
+
+    Uses the mappings table in `indra/resources`; if the MESH label is not
+    listed there, falls back on the NLM REST API.
+
+    Parameters
+    ----------
+    mesh_name : str
+        MESH Identifier, e.g. 'Glucosylceramides'.
+    offline : bool
+        Whether to allow queries to the NLM REST API if the given MESH label is
+        not contained in INDRA's internal MESH mappings file. Default is False
+        (allows REST API queries).
+
+    Returns
+    -------
+    str
+        ID corresponding to the MESH label, or None if the query failed or no
+        label was found.
+    """
+    indra_mesh_mapping = mesh_name_to_id.get(mesh_name)
+    if offline or indra_mesh_mapping is not None:
+        return indra_mesh_mapping
+    # Look up the MESH mapping from NLM if we don't have it locally
+    return get_mesh_id_from_web(mesh_id)
+

@@ -30,4 +30,8 @@ def test_mesh_id_fallback_to_rest():
     assert mesh_name == 'Ofloxacin'
 
 
+def test_mesh_name_lookup_local():
+    mesh_name = 'Glucosylceramides'
+    mesh_id = mesh_client.get_mesh_id(mesh_name, offline=True)
+    assert mesh_id == 'D005963'
 
