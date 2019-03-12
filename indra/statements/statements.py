@@ -1584,9 +1584,12 @@ class Complex(Statement):
         self.members = members
 
     def matches_key(self):
-        members = sorted(self.members, key=lambda x: x.matches_key())
-        key = (stmt_type(self, True), tuple(m.matches_key() for m in members))
+        key = (stmt_type(self, True), tuple(m.matches_key()
+                                            for m in self.sorted_members()))
         return mk_str(key)
+
+    def sorted_members(self):
+        return sorted(self.members, key=lambda x: x.matches_key())
 
     def entities_match_key(self):
         key = tuple(a.entity_matches_key() if a is not None
@@ -1627,9 +1630,17 @@ class Complex(Statement):
 
         return match_members(self.members, other.members)
 
-    def equals(self, other):
-        matches = super(Complex, self).equals(other)
-        return matches
+    def _agents_equal(self, other):
+        if len(self.agent_list()) == len(other.agent_list()):
+            for s, o in zip(self.sorted_members(), other.sorted_members()):
+                if (s is None and o is not None) or \
+                        (s is not None and o is None):
+                    return False
+                if s is not None and o is not None and not s.equals(o):
+                    return False
+        else:
+            return False
+        return True
 
     def to_json(self, use_sbo=False):
         generic = super(Complex, self).to_json(use_sbo)
