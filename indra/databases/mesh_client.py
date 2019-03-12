@@ -93,7 +93,7 @@ def get_mesh_id_name(mesh_term, offline=False):
         Returns a 2-tuple of the form `(id, name)` with the ID of the
         descriptor corresponding to the MESH label, and the descriptor name
         (which may not exactly match the name provided as an argument if it is
-        a Concept name. If the query failed, or no descriptor corresponding to
+        a Concept name). If the query failed, or no descriptor corresponding to
         the name was found, returns a tuple of (None, None).
     """
     indra_mesh_id = mesh_name_to_id.get(mesh_term)
@@ -120,7 +120,7 @@ def get_mesh_id_name_from_web(mesh_term):
         Returns a 2-tuple of the form `(id, name)` with the ID of the
         descriptor corresponding to the MESH label, and the descriptor name
         (which may not exactly match the name provided as an argument if it is
-        a Concept name. If the query failed, or no descriptor corresponding to
+        a Concept name). If the query failed, or no descriptor corresponding to
         the name was found, returns a tuple of (None, None).
     """
     url = mesh_url + 'sparql'
