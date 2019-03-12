@@ -48,7 +48,16 @@ def _read_famplex_map():
 famplex_map = _read_famplex_map()
 
 
-def is_statement_in_list(statement, statement_list):
+def _fix_different_refs(a1, a2, ref_key):
+    if all(ref_key in a.db_refs for a in [a1, a2]) \
+           and a1.db_refs[ref_key] != a2.db_refs[ref_key]:
+        a1.name = a1.db_refs[ref_key]
+        a2.name = a2.db_refs[ref_key]
+        return True
+    return False
+
+
+def _is_statement_in_list(statement, statement_list):
     """Return True of given statement is equivalent to on in a list
 
     Determines whether the statement is equivalent to any statement in the
@@ -92,11 +101,12 @@ def is_statement_in_list(statement, statement_list):
                 # If this is a case where different CHEBI ids were mapped to
                 # the same entity, set the agent name to the CHEBI id.
                 # TODO: Ideally we should get the CHEBI name.
-                if all('CHEBI' in ag.db_refs for ag in [ag_old, ag_new]) \
-                        and ag_new.db_refs['CHEBI'] != ag_old.db_refs['CHEBI']:
-                    print("The CHEBI case.")
-                    ag_new.name = ag_new.db_refs['CHEBI']
-                    ag_old.name = ag_old.db_refs['CHEBI']
+                if _fix_different_refs(ag_old, ag_new, 'CHEBI'):
+                    return False
+
+                # If this is a case, like above, but with UMLS IDs, do the same
+                # thing as above. This will likely never be improved.
+                if _fix_different_refs(ag_old, ag_new, 'UMLS'):
                     return False
 
             print("Weird.")
@@ -434,7 +444,7 @@ class MedscanProcessor(object):
         return
 
     def _add_statement(self, stmt):
-        if not is_statement_in_list(stmt, self.sentence_statements):
+        if not _is_statement_in_list(stmt, self.sentence_statements):
             self.sentence_statements.append(stmt)
         return
 
@@ -936,7 +946,7 @@ def _urn_to_db_refs(urn):
         db_refs['MESH'] = urn_id
     elif urn_type == 'agi-ncimcelltype':
         # Identifier is MESH: Actually from UMLS
-        db_refs['MESH'] = urn_id
+        db_refs['UMLS'] = urn_id
     elif urn_type == 'agi-meshdis':
         # Identifier is MESH: Actually MESH names
         mesh_id, mesh_name = mesh_client.get_mesh_id_name(urn_id)
