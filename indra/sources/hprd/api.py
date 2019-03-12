@@ -63,6 +63,12 @@ def process_flat_files(id_mappings_file, complexes_file=None, ptm_file=None,
         Path to BINARY_PROTEIN_PROTEIN_INTERACTIONS.txt file.
     seq_file : Optional[str]
         Path to PROTEIN_SEQUENCES.txt file.
+
+    Returns
+    -------
+    HprdProcessor
+        An HprdProcessor object which contains a list of extracted INDRA
+        Statements in its statements attribute.
     """
     id_df = pd.read_csv(id_mappings_file, delimiter='\t', names=_hprd_id_cols,
                         dtype='str')
@@ -92,4 +98,3 @@ def process_flat_files(id_mappings_file, complexes_file=None, ptm_file=None,
                              dtype='str')
     # Create the processor
     return HprdProcessor(id_df, cplx_df, ptm_df, ppi_df, seq_dict)
-

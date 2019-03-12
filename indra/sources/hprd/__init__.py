@@ -1,9 +1,9 @@
 """
-Get content from HPRD as INDRA Statements.
-
-Processes post-translational modifications, protein complexes, and (binary)
-protein-protein interactions from the Human Protein Reference Database, a
-curated protein data resource.
+This module implements geting content from the Human Protein Reference
+Database (HPRD), a curated protein data resource, as INDRA Statements.
+In particular, the module supports extracting post-translational
+modifications, protein complexes, and (binary) protein-protein interactions
+from HPRD.
 
 More information about HPRD can be obtained at
 `http://www.hprd.org <http://www.hprd.org>`_ and in these publications:
