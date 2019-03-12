@@ -1,6 +1,5 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
+import json
 import rdflib
 import logging
 from rdflib.plugins.parsers.ntriples import ParseError
@@ -10,15 +9,13 @@ from .rdf_processor import BelRdfProcessor
 from .processor import PybelProcessor
 import pybel
 
-try:
-    from functools import lru_cache
-except ImportError:
-    from functools32 import lru_cache
+from functools import lru_cache
 
 
 logger = logging.getLogger(__name__)
 
 ndex_bel2rdf = 'http://bel2rdf.bigmech.ndexbio.org'
+
 
 def process_ndex_neighborhood(gene_names, network_id=None,
                               rdf_out='bel_output.rdf', print_output=True):
@@ -239,3 +236,21 @@ def process_json_file(file_name):
     with open(file_name, 'rt') as fh:
         pybel_graph = pybel.from_json_file(fh, False)
     return process_pybel_graph(pybel_graph)
+
+
+def process_cbn_jgif_file(file_name):
+    """Return a PybelProcessor by processing a CBN JGIF JSON file.
+
+    Parameters
+    ----------
+    file_name : str
+        The path to a CBN JGIF JSON file.
+
+    Returns
+    -------
+    bp : PybelProcessor
+        A PybelProcessor object which contains INDRA Statements in
+        bp.statements.
+    """
+    with open(file_name, 'r') as jgf:
+        return process_pybel_graph(pybel.from_cbn_jgif(json.load(jgf)))
