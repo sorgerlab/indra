@@ -147,10 +147,13 @@ def get_mesh_id_name_from_web(mesh_term):
         ORDER BY ?d
     """ % (mesh_term, mesh_term)
     args = {'query': query, 'format': 'JSON', 'inference': 'true'}
+    # Interestingly, the following call using requests.get to package the
+    # query does not work:
+    # resp = requests.get(url, data=args)
+    # But if the query string is explicitly urlencoded using urllib, it works:
     query_string = '%s?%s' % (url, urlencode(args))
     resp = requests.get(query_string)
-    #resp = requests.get(url, data={'query': query, 'format': 'JSON',
-    #                               'inference': True})
+    # Check status
     if resp.status_code != 200:
         return (None, None)
     mesh_json = resp.json()
