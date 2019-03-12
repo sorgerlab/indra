@@ -73,14 +73,24 @@ def is_statement_in_list(statement, statement_list):
             for ag_old, ag_new in zip(s.agent_list(), statement.agent_list()):
                 s_old = set(ag_old.db_refs.items())
                 s_new = set(ag_new.db_refs.items())
+
+                # If they're equal this isn't the one we're interested in.
                 if s_old == s_new:
                     continue
+
+                # If the new statement has nothing new to offer, just ignore it
                 if s_old > s_new:
                     return True
+
+                # If the new statement does have something new, add it to the
+                # existing statement. And then ignore it.
                 if s_new > s_old:
                     ag_new.db_refs.update(ag_old.db_refs)
                     return True
 
+                # If this is a case where different CHEBI ids were mapped to
+                # the same entity, set the agent name to the CHEBI id.
+                # TODO: Ideally we should get the CHEBI name.
                 if all('CHEBI' in ag.db_refs for ag in [ag_old, ag_new]) \
                         and ag_new.db_refs['CHEBI'] != ag_old.db_refs['CHEBI']:
                     print("The CHEBI case.")
