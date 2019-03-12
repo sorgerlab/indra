@@ -6,7 +6,7 @@ from pybel.examples import egf_graph
 from indra.statements import *
 from indra.sources import bel
 from indra.sources.bel import processor as pb
-from indra.sources.bel.api import process_jgif_file
+from indra.sources.bel.api import process_cbn_jgif_file
 from indra.databases import hgnc_client
 
 mek_hgnc_id = hgnc_client.get_hgnc_id('MAP2K1')
@@ -22,12 +22,12 @@ def test_process_jgif():
     test_file_url = 'https://s3.amazonaws.com/bigmech/travis/Hox-2.0-Hs.jgf'
     test_file = 'Hox-2.0-Hs.jgf'
     request.urlretrieve(url=test_file_url, filename=test_file)
-    pbp = process_jgif_file(test_file)
+    pbp = process_cbn_jgif_file(test_file)
 
     # Clean up
     os.remove(test_file)
 
-    assert pbp.statements
+    assert pbp.statements  # check empty
     assert isinstance(pbp.statements[0], Statement)
     assert isinstance(pbp.statements[0], Activation)
     assert all(s.evidence[0].source_api == 'bel' for s in pbp.statements)
