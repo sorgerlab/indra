@@ -10,6 +10,7 @@ from math import floor
 import lxml.etree
 import collections
 
+from indra.databases import go_client
 from indra.statements import *
 from indra.databases.chebi_client import get_chebi_id_from_cas
 from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id, \
@@ -975,6 +976,8 @@ def _urn_to_db_refs(urn):
     # If there is a Famplex grounding, use Famplex for entity name
     if 'FPLX' in db_refs:
         db_name = db_refs['FPLX']
+    elif 'GO' in db_refs:
+        db_name = go_client.get_go_label(db_refs['GO'])
 
     return db_refs, db_name
 
