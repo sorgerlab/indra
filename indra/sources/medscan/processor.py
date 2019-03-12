@@ -70,6 +70,17 @@ def is_statement_in_list(statement, statement_list):
         if s.equals(statement):
             return True
         elif s.get_hash(shallow=False) == statement.get_hash(shallow=False):
+            for ag_old, ag_new in zip(s.agent_list(), statement.agent_list()):
+                s_old = set(ag_old.db_refs.items())
+                s_new = set(ag_new.db_refs.items())
+                if s_old == s_new:
+                    continue
+                if s_old > s_new:
+                    return True
+                if s_new > s_old:
+                    ag_new.db_refs.update(ag_old.db_refs)
+                    return True
+
             print("Weird.")
     return False
 
@@ -846,7 +857,7 @@ def _parse_mut_string(s):
         # currently supported
         return None, None, None
     else:
-        return m.group(1), m.group(2), m.group(3)
+        return m.groups()
 
 
 def _urn_to_db_refs(urn):
@@ -906,10 +917,10 @@ def _urn_to_db_refs(urn):
         # Identifier is MESH
         db_refs['MESH'] = urn_id
     elif urn_type == 'agi-ncimcelltype':
-        # Identifier is MESH
+        # Identifier is MESH: Actually from UMLS
         db_refs['MESH'] = urn_id
     elif urn_type == 'agi-meshdis':
-        # Identifier is MESH
+        # Identifier is MESH: Actually MESH names
         db_refs['MESHDIS'] = urn_id
     elif urn_type == 'agi-gocomplex':
         # Identifier is GO
@@ -1038,7 +1049,6 @@ def _extract_sentence_tags(tagged_sentence):
                 if sub_key == '0':
                     continue
                 tags[sub_key] = {'text': text, 'bounds': (start, stop)}
-            print("That's interesting...")
         else:
             tags[tag_key] = {'text': text, 'bounds': (start, stop)}
     return tags
