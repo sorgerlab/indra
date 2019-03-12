@@ -35,3 +35,14 @@ def test_mesh_name_lookup_local():
     mesh_id = mesh_client.get_mesh_id(mesh_name, offline=True)
     assert mesh_id == 'D005963'
 
+
+def test_mesh_name_lookup_local():
+    mesh_name = 'Glucosylceramides'
+    mesh_id = mesh_client.get_mesh_id(mesh_name, offline=True)
+    assert mesh_id == 'D005963'
+
+
+def test_mesh_name_local_missing():
+    mesh_name = 'Prostate Cancer'
+    mesh_id = mesh_client.get_mesh_id(mesh_name, offline=True)
+    assert mesh_id is None
