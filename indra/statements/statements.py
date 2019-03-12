@@ -384,17 +384,28 @@ class Statement(object):
             return str(self).encode('utf-8')
 
     def equals(self, other):
+        return self._types_equals(other) \
+            and self._agents_equal(other) \
+            and self._evidence_equals(other)
+
+    def _types_equals(self, other):
         if stmt_type(self) != stmt_type(other):
             return False
+        return True
+
+    def _agents_equal(self, other):
         if len(self.agent_list()) == len(other.agent_list()):
             for s, o in zip(self.agent_list(), other.agent_list()):
                 if (s is None and o is not None) or \
-                   (s is not None and o is None):
+                        (s is not None and o is None):
                     return False
                 if s is not None and o is not None and not s.equals(o):
                     return False
         else:
             return False
+        return True
+
+    def _evidence_equals(self, other):
         if len(self.evidence) == len(other.evidence):
             for s, o in zip(self.evidence, other.evidence):
                 if not s.equals(o):
