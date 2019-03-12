@@ -10,7 +10,7 @@ from math import floor
 import lxml.etree
 import collections
 
-from indra.databases import go_client
+from indra.databases import go_client, mesh_client
 from indra.statements import *
 from indra.databases.chebi_client import get_chebi_id_from_cas
 from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id, \
@@ -939,7 +939,9 @@ def _urn_to_db_refs(urn):
         db_refs['MESH'] = urn_id
     elif urn_type == 'agi-meshdis':
         # Identifier is MESH: Actually MESH names
-        db_refs['MESHDIS'] = urn_id
+        mesh_id, mesh_name = mesh_client.get_mesh_id_name(urn_id)
+        db_refs['MESH'] = mesh_id
+        db_name = mesh_name
     elif urn_type == 'agi-gocomplex':
         # Identifier is GO
         db_refs['GO'] = 'GO:%s' % urn_id
