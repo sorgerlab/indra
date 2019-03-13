@@ -74,8 +74,8 @@ def get_chebi_id_from_cas(cas_id):
     cas_id : str
         The CAS ID to be converted.
 
-    Parameters
-    ----------
+    Returns
+    -------
     chebi_id : str
         The ChEBI ID corresponding to the given CAS ID. If the lookup
         fails, None is returned.
@@ -91,9 +91,9 @@ def get_chebi_name_from_id(chebi_id):
     chebi_id : str
         The ChEBI ID whose name is to be returned.
 
-    Parameters
-    ----------
-    str
+    Returns
+    -------
+    chebi_name : str
         The name corresponding to the given ChEBI ID. If the lookup
         fails, None is returned.
     """
@@ -155,6 +155,19 @@ def _read_relative_csv(rel_path):
 
 @lru_cache(maxsize=50)
 def get_chebi_name_from_id_web(chebi_id):
+    """Return a ChEBI mame corresponding to a given ChEBI ID using a REST API.
+
+    Parameters
+    ----------
+    chebi_id : str
+        The ChEBI ID whose name is to be returned.
+
+    Returns
+    ----------
+    chebi_name : str
+        The name corresponding to the given ChEBI ID. If the lookup
+        fails, None is returned.
+    """
     url_base = 'http://www.ebi.ac.uk/webservices/chebi/2.0/test/'
     url_fmt = url_base + 'getCompleteEntity?chebiId=%s'
     resp = requests.get(url_fmt % chebi_id)
