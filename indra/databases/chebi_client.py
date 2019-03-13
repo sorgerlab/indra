@@ -1,11 +1,16 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 from os.path import dirname, abspath, join
-try:
-    from functools import lru_cache
-except ImportError:
-    from functools32 import lru_cache
+
+import requests
+import logging
+
+from functools import lru_cache
+
+from lxml import etree, objectify
+
 from indra.util import read_unicode_csv
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_pubchem_id(chebi_id):
@@ -69,8 +74,8 @@ def get_chebi_id_from_cas(cas_id):
     cas_id : str
         The CAS ID to be converted.
 
-    Parameters
-    ----------
+    Returns
+    -------
     chebi_id : str
         The ChEBI ID corresponding to the given CAS ID. If the lookup
         fails, None is returned.
@@ -78,21 +83,26 @@ def get_chebi_id_from_cas(cas_id):
     return cas_chebi.get(cas_id)
 
 
-def get_chebi_name_from_id(chebi_id):
+def get_chebi_name_from_id(chebi_id, offline=False):
     """Return a ChEBI mame corresponding to the given ChEBI ID.
 
     Parameters
     ----------
     chebi_id : str
         The ChEBI ID whose name is to be returned.
+    offline : bool
+        Choose whether to allow an online lookup if the local lookup fails.
 
-    Parameters
-    ----------
-    str
+    Returns
+    -------
+    chebi_name : str
         The name corresponding to the given ChEBI ID. If the lookup
         fails, None is returned.
     """
-    return chebi_id_to_name.get(chebi_id)
+    chebi_name = chebi_id_to_name.get(chebi_id)
+    if chebi_name is None and not offline:
+        chebi_name = get_chebi_name_from_id_web(chebi_id)
+    return chebi_name
 
 
 def _read_chebi_to_pubchem():
@@ -146,6 +156,45 @@ def _read_relative_csv(rel_path):
     file_path = join(dirname(abspath(__file__)), rel_path)
     csv_reader = read_unicode_csv(file_path, delimiter='\t')
     return csv_reader
+
+
+@lru_cache(maxsize=5000)
+def get_chebi_name_from_id_web(chebi_id):
+    """Return a ChEBI mame corresponding to a given ChEBI ID using a REST API.
+
+    Parameters
+    ----------
+    chebi_id : str
+        The ChEBI ID whose name is to be returned.
+
+    Returns
+    ----------
+    chebi_name : str
+        The name corresponding to the given ChEBI ID. If the lookup
+        fails, None is returned.
+    """
+    url_base = 'http://www.ebi.ac.uk/webservices/chebi/2.0/test/'
+    url_fmt = url_base + 'getCompleteEntity?chebiId=%s'
+    resp = requests.get(url_fmt % chebi_id)
+    if resp.status_code != 200:
+        logger.warning("Got bad code form CHEBI client: %s" % resp.status_code)
+        return None
+    tree = etree.fromstring(resp.content)
+
+    # Get rid of the namespaces.
+    # Credit: https://stackoverflow.com/questions/18159221/remove-namespace-and-prefix-from-xml-in-python-using-lxml
+    for elem in tree.getiterator():
+        if not hasattr(elem.tag, 'find'):
+            continue  # (1)
+        i = elem.tag.find('}')
+        if i >= 0:
+            elem.tag = elem.tag[i+1:]
+    objectify.deannotate(tree, cleanup_namespaces=True)
+
+    elem = tree.find('Body/getCompleteEntityResponse/return/chebiAsciiName')
+    if elem is not None:
+        return elem.text
+    return None
 
 
 chebi_pubchem, pubchem_chebi = _read_chebi_to_pubchem()
