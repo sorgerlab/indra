@@ -142,7 +142,7 @@ def get_mesh_id_name_from_web(mesh_term):
           ?d meshv:concept ?c .
           ?d rdfs:label ?dName .
           ?c rdfs:label ?cName
-          FILTER (REGEX(?cName,'^%s$','i') || REGEX(?cName,'^%s$','i'))
+          FILTER (REGEX(?dName,'^%s$','i') || REGEX(?cName,'^%s$','i'))
         }
         ORDER BY ?d
     """ % (mesh_term, mesh_term)
