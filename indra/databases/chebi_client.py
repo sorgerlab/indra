@@ -158,7 +158,7 @@ def _read_relative_csv(rel_path):
     return csv_reader
 
 
-@lru_cache(maxsize=50)
+@lru_cache(maxsize=5000)
 def get_chebi_name_from_id_web(chebi_id):
     """Return a ChEBI mame corresponding to a given ChEBI ID using a REST API.
 
