@@ -63,6 +63,10 @@ class HprdProcessor(object):
     seq_dict : dict
         Dictionary mapping RefSeq IDs to protein sequences, loaded from the
         PROTEIN_SEQUENCES.txt file.
+    motif_window : int
+        Number of flanking amino acids to include on each side of the
+        PTM target residue in the 'site_motif' annotations field of the
+        Evidence for Modification Statements. Default is 7.
 
     Attributes
     ----------
@@ -99,9 +103,13 @@ class HprdProcessor(object):
         suggesting an off-by-one error due to numbering based on the
         protein with initial methionine cleaved. Note that no mapping is
         performed by the processor.
+    motif_window : int
+        Number of flanking amino acids to include on each side of the
+        PTM target residue in the 'site_motif' annotations field of the
+        Evidence for Modification Statements. Default is 7.
     """
     def __init__(self, id_df, cplx_df=None, ptm_df=None, ppi_df=None,
-                 seq_dict=None):
+                 seq_dict=None, motif_window=7):
         if cplx_df is None and ptm_df is None and ppi_df is None:
             raise ValueError('At least one of cplx_df, ptm_df, or ppi_df must '
                              'be specified.')
@@ -111,6 +119,7 @@ class HprdProcessor(object):
         self.statements = []
         self.id_df = id_df
         self.seq_dict = seq_dict
+        self.motif_window = motif_window
 
         # Keep track of the ID mapping issues encountered
         self.no_hgnc_for_egid = []
@@ -324,15 +333,16 @@ class HprdProcessor(object):
             if seq[pos_0ix + 1] == residue:
                 self.off_by_one.append((refseq_id, residue, pos_str))
                 motif, respos = \
-                          ProtMapper.motif_from_position_seq(seq, pos_1ix + 1)
+                   ProtMapper.motif_from_position_seq(seq, pos_1ix + 1,
+                                                      self.motif_window)
                 return {'site_motif': {'motif': motif, 'respos': respos,
                                        'off_by_one': True}}
             else:
                 return {}
         else:
             # The index of the residue at the start of the window
-            motif, respos =\
-                        ProtMapper.motif_from_position_seq(seq, str(pos_1ix))
+            motif, respos = ProtMapper.motif_from_position_seq(seq, pos_1ix,
+                                                             self.motif_window)
             return {'site_motif': {'motif': motif, 'respos': respos,
                                    'off_by_one': False}}
 

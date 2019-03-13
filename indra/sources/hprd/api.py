@@ -20,7 +20,7 @@ _ppi_cols = ['HGNC_SYMBOL_A', 'HPRD_ID_A', 'REFSEQ_PROTEIN_A',
 
 
 def process_flat_files(id_mappings_file, complexes_file=None, ptm_file=None,
-                       ppi_file=None, seq_file=None):
+                       ppi_file=None, seq_file=None, motif_window=7):
     """Get INDRA Statements from HPRD data.
 
     Of the arguments, `id_mappings_file` is required, and at least one of
@@ -63,6 +63,10 @@ def process_flat_files(id_mappings_file, complexes_file=None, ptm_file=None,
         Path to BINARY_PROTEIN_PROTEIN_INTERACTIONS.txt file.
     seq_file : Optional[str]
         Path to PROTEIN_SEQUENCES.txt file.
+    motif_window : int
+        Number of flanking amino acids to include on each side of the
+        PTM target residue in the 'site_motif' annotations field of the
+        Evidence for Modification Statements. Default is 7.
 
     Returns
     -------
@@ -97,4 +101,4 @@ def process_flat_files(id_mappings_file, complexes_file=None, ptm_file=None,
         ppi_df = pd.read_csv(ppi_file, delimiter='\t', names=_ppi_cols,
                              dtype='str')
     # Create the processor
-    return HprdProcessor(id_df, cplx_df, ptm_df, ppi_df, seq_dict)
+    return HprdProcessor(id_df, cplx_df, ptm_df, ppi_df, seq_dict, motif_window)
