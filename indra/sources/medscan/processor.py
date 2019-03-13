@@ -5,7 +5,6 @@ import time
 import shutil
 import tempfile
 import logging
-import lxml.etree
 from math import floor
 import lxml.etree
 import collections
@@ -57,7 +56,7 @@ def _fix_different_refs(a1, a2, ref_key):
     return False
 
 
-def _is_statement_in_list(statement, statement_list):
+def _is_statement_in_list(new_stmt, old_stmt_list):
     """Return True of given statement is equivalent to on in a list
 
     Determines whether the statement is equivalent to any statement in the
@@ -66,9 +65,9 @@ def _is_statement_in_list(statement, statement_list):
 
     Parameters
     ----------
-    statement : indra.statements.Statement
+    new_stmt : indra.statements.Statement
         The statement to compare with
-    statement_list : list[indra.statements.Statement]
+    old_stmt_list : list[indra.statements.Statement]
         The statement list whose entries we compare with statement
 
     Returns
@@ -76,11 +75,19 @@ def _is_statement_in_list(statement, statement_list):
     in_list : bool
         True if statement is equivalent to any statements in the list
     """
-    for s in statement_list:
-        if s.equals(statement):
+    for old_stmt in old_stmt_list:
+        if old_stmt.equals(new_stmt):
             return True
-        elif s.get_hash(False, True) == statement.get_hash(False, True):
-            for ag_old, ag_new in zip(s.agent_list(), statement.agent_list()):
+        elif old_stmt.evidence_equals(new_stmt) and old_stmt.matches(new_stmt):
+            # If we're comparing a complex, make sure the agents are sorted.
+            if isinstance(new_stmt, Complex):
+                agent_pairs = zip(old_stmt.sorted_members(),
+                                  new_stmt.sorted_members())
+            else:
+                agent_pairs = zip(old_stmt.agent_list(), new_stmt.agent_list())
+
+            # Compare agent-by-agent.
+            for ag_old, ag_new in agent_pairs:
                 s_old = set(ag_old.db_refs.items())
                 s_new = set(ag_new.db_refs.items())
 
@@ -109,7 +116,11 @@ def _is_statement_in_list(statement, statement_list):
                 if _fix_different_refs(ag_old, ag_new, 'UMLS'):
                     return False
 
-            print("Weird.")
+                print('Weird')
+
+            # This means all the agents matched, which can happen if the
+            # original issue was the ordering of agents in a Complex.
+            return True
     return False
 
 
@@ -941,9 +952,6 @@ def _urn_to_db_refs(urn):
             # Try to lookup HGNC name; if it's available, set it to the
             # agent name
             db_name = get_hgnc_name(hgnc_id)
-    elif urn_type == 'agi-ncimorgan':
-        # Identifier is MESH
-        db_refs['MESH'] = urn_id
     elif urn_type == 'agi-ncimcelltype':
         # Identifier is MESH: Actually from UMLS
         db_refs['UMLS'] = urn_id
