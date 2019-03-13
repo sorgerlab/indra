@@ -1630,18 +1630,6 @@ class Complex(Statement):
 
         return match_members(self.members, other.members)
 
-    def agents_equal(self, other):
-        if len(self.agent_list()) == len(other.agent_list()):
-            for s, o in zip(self.sorted_members(), other.sorted_members()):
-                if (s is None and o is not None) or \
-                        (s is not None and o is None):
-                    return False
-                if s is not None and o is not None and not s.equals(o):
-                    return False
-        else:
-            return False
-        return True
-
     def to_json(self, use_sbo=False):
         generic = super(Complex, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
