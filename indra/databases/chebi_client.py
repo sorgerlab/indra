@@ -78,10 +78,25 @@ def get_chebi_id_from_cas(cas_id):
     return cas_chebi.get(cas_id)
 
 
+def get_chebi_name_from_id(chebi_id):
+    """Return a ChEBI mame corresponding to the given ChEBI ID.
+
+    Parameters
+    ----------
+    chebi_id : str
+        The ChEBI ID whose name is to be returned.
+
+    Parameters
+    ----------
+    str
+        The name corresponding to the given ChEBI ID. If the lookup
+        fails, None is returned.
+    """
+    return chebi_id_to_name.get(chebi_id)
+
+
 def _read_chebi_to_pubchem():
-    chebi_to_pubchem_file = join(dirname(abspath(__file__)),
-                                 '../resources/chebi_to_pubchem.tsv')
-    csv_reader = read_unicode_csv(chebi_to_pubchem_file, delimiter='\t')
+    csv_reader = _read_relative_csv('../resources/chebi_to_pubchem.tsv')
     chebi_pubchem = {}
     pubchem_chebi = {}
     for row in csv_reader:
@@ -91,9 +106,7 @@ def _read_chebi_to_pubchem():
 
 
 def _read_chebi_to_chembl():
-    chebi_to_chembl_file = join(dirname(abspath(__file__)),
-                                '../resources/chebi_to_chembl.tsv')
-    csv_reader = read_unicode_csv(chebi_to_chembl_file, delimiter='\t')
+    csv_reader = _read_relative_csv('../resources/chebi_to_chembl.tsv')
     chebi_chembl = {}
     for row in csv_reader:
         chebi_chembl[row[0]] = row[1]
@@ -101,9 +114,7 @@ def _read_chebi_to_chembl():
 
 
 def _read_cas_to_chebi():
-    cas_to_chebi_file = join(dirname(abspath(__file__)),
-                             '../resources/cas_to_chebi.tsv')
-    csv_reader = read_unicode_csv(cas_to_chebi_file, delimiter='\t')
+    csv_reader = _read_relative_csv('../resources/cas_to_chebi.tsv')
     cas_chebi = {}
     next(csv_reader)
     for row in csv_reader:
@@ -117,6 +128,27 @@ def _read_cas_to_chebi():
     return cas_chebi
 
 
+def _read_chebi_names():
+    csv_reader = _read_relative_csv('../resources/chebi_names.tsv')
+    next(csv_reader)
+    chebi_id_to_name = {}
+    # We should prioritize by ID here, i.e., if we already added the value,
+    # we don't add it again
+    for row in csv_reader:
+        idx, chebi_id, name_type, name = row
+        if chebi_id in chebi_id_to_name:
+            continue
+        chebi_id_to_name[chebi_id] = name
+    return chebi_id_to_name
+
+
+def _read_relative_csv(rel_path):
+    file_path = join(dirname(abspath(__file__)), rel_path)
+    csv_reader = read_unicode_csv(file_path, delimiter='\t')
+    return csv_reader
+
+
 chebi_pubchem, pubchem_chebi = _read_chebi_to_pubchem()
 chebi_chembl = _read_chebi_to_chembl()
 cas_chebi = _read_cas_to_chebi()
+chebi_id_to_name = _read_chebi_names()

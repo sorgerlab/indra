@@ -379,16 +379,31 @@ def update_chebi_names():
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
         'Flat_file_tab_delimited/names_3star.tsv.gz'
     fname = os.path.join(path, 'names_3star.tsv.gz')
+
+    # Retrieve and load the file into a DataFrame
     urlretrieve(url, fname)
     with gzip.open(fname, 'rb') as fh:
         logger.info('Loading %s' % fname)
         df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
+
+    # The basic names we want to include are of type NAME
+    df_name = df[df['TYPE'] == 'NAME']
+
+    # However, NAMEs are not enough because many compounds don't come with a
+    # standard name, and instead have INN (International Nonproprietary
+    # Name) or other names. Note that the DataFrame also contains SYNONYMs,
+    # nad BRAND NAMEs for many compounds.
+    # Here we add INNs where available, and try to get then English INN.
+    df_inn = df[(df['TYPE'] == 'INN') & (df['LANGUAGE'] == 'en')]
+    df = pandas.concat([df_name, df_inn])
+
+    # We sort by compound ID ascending
+    df.sort_values(by=['COMPOUND_ID', 'ID'], inplace=True)
+
     fname = os.path.join(path, 'chebi_names.tsv')
-    df = df[df['TYPE'] == 'NAME']
-    df.sort_values(by='COMPOUND_ID', inplace=True)
     logger.info('Saving into %s' % fname)
     df.to_csv(fname, sep='\t', header=True, index=False,
-              columns=['COMPOUND_ID', 'NAME'])
+              columns=['ID', 'COMPOUND_ID', 'TYPE', 'NAME'])
 
 
 def update_famplex():
