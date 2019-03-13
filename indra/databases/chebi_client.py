@@ -78,6 +78,23 @@ def get_chebi_id_from_cas(cas_id):
     return cas_chebi.get(cas_id)
 
 
+def get_chebi_name_from_id(chebi_id):
+    """Return a ChEBI mame corresponding to the given ChEBI ID.
+
+    Parameters
+    ----------
+    chebi_id : str
+        The ChEBI ID whose name is to be returned.
+
+    Parameters
+    ----------
+    str
+        The name corresponding to the given ChEBI ID. If the lookup
+        fails, None is returned.
+    """
+    return chebi_id_to_name.get(chebi_id)
+
+
 def _read_chebi_to_pubchem():
     csv_reader = _read_relative_csv('../resources/chebi_to_pubchem.tsv')
     chebi_pubchem = {}

@@ -22,3 +22,8 @@ def test_cas_to_chebi():
     assert chebi_client.get_chebi_id_from_cas('23261-20-3') == '18035'
     assert chebi_client.get_chebi_id_from_cas('100-51-6') == '17987'
     assert chebi_client.get_chebi_id_from_cas('-1') is None
+
+
+def test_chebi_id_to_name():
+    assert chebi_client.get_chebi_name_from_id('63637') == 'vemurafenib'
+
