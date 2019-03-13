@@ -384,17 +384,28 @@ class Statement(object):
             return str(self).encode('utf-8')
 
     def equals(self, other):
+        return self.types_equals(other) \
+            and self.agents_equal(other) \
+            and self.evidence_equals(other)
+
+    def types_equals(self, other):
         if stmt_type(self) != stmt_type(other):
             return False
+        return True
+
+    def agents_equal(self, other):
         if len(self.agent_list()) == len(other.agent_list()):
             for s, o in zip(self.agent_list(), other.agent_list()):
                 if (s is None and o is not None) or \
-                   (s is not None and o is None):
+                        (s is not None and o is None):
                     return False
                 if s is not None and o is not None and not s.equals(o):
                     return False
         else:
             return False
+        return True
+
+    def evidence_equals(self, other):
         if len(self.evidence) == len(other.evidence):
             for s, o in zip(self.evidence, other.evidence):
                 if not s.equals(o):
@@ -1573,9 +1584,12 @@ class Complex(Statement):
         self.members = members
 
     def matches_key(self):
-        members = sorted(self.members, key=lambda x: x.matches_key())
-        key = (stmt_type(self, True), tuple(m.matches_key() for m in members))
+        key = (stmt_type(self, True), tuple(m.matches_key()
+                                            for m in self.sorted_members()))
         return mk_str(key)
+
+    def sorted_members(self):
+        return sorted(self.members, key=lambda x: x.matches_key())
 
     def entities_match_key(self):
         key = tuple(a.entity_matches_key() if a is not None
@@ -1615,10 +1629,6 @@ class Complex(Statement):
             return len(match) == len(self_members)
 
         return match_members(self.members, other.members)
-
-    def equals(self, other):
-        matches = super(Complex, self).equals(other)
-        return matches
 
     def to_json(self, use_sbo=False):
         generic = super(Complex, self).to_json(use_sbo)
