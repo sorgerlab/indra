@@ -36,7 +36,7 @@ def test_process_complexes():
     assert s0.evidence[0].annotations['evidence'] == ['in vivo']
     assert s0.evidence[0].source_id == ('http://hprd.org/interactions?'
                                      'hprd_id=00011&isoform_id=00011_1'
-                                     '&isoform_name=')
+                                     '&isoform_name=Isoform_1')
     assert s0.evidence[1].pmid == '8948587'
 
 
@@ -88,7 +88,7 @@ def test_process_ppis():
     assert s0.evidence[0].annotations['evidence'] == ['in vivo']
     assert s0.evidence[0].source_id == ('http://hprd.org/interactions?'
                                      'hprd_id=02761&isoform_id=02761_1'
-                                     '&isoform_name=')
+                                     '&isoform_name=Isoform_1')
 
 
 @raises(ValueError)

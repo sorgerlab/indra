@@ -339,10 +339,14 @@ class HprdProcessor(object):
 
 def _hprd_url(hprd_id, isoform_id, info_type):
     if info_type == 'interactions':
-        return ('http://hprd.org/interactions?hprd_id=%s&isoform_id=%s_1'
-                '&isoform_name=' % (hprd_id, hprd_id))
+        return ('http://hprd.org/interactions?hprd_id=%s&isoform_id=%s'
+                '&isoform_name=Isoform_1' % (hprd_id, isoform_id))
+    elif info_type == 'ptms':
+        isoform_num = isoform_id.split('_')[1]
+        return ('http://hprd.org/ptms?hprd_id=%s&isoform_id=%s'
+                '&isoform_name=Isoform_%s' % (hprd_id, isoform_id, isoform_num))
     else:
-        return None
+        raise ValueError('info_type must be either interactions or ptms.')
 
 
 def _nan_to_none(val):
