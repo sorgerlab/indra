@@ -41,7 +41,7 @@ _signor_fields = [
 ]
 
 
-SignorRow = namedtuple('SignorRow', _signor_fields)
+_SignorRow_ = namedtuple('SignorRow', _signor_fields)
 
 
 def process_from_file(signor_data_file, signor_complexes_file=None):
@@ -105,7 +105,7 @@ def _handle_response(res, delimiter):
 def _processor_from_data(data_iter, complexes_iter):
     # Process into a list of SignorRow namedtuples
     # Strip off any funky \xa0 whitespace characters
-    data = [SignorRow(*[f.strip() for f in r]) for r in data_iter]
+    data = [_SignorRow_(*[f.strip() for f in r]) for r in data_iter]
     complex_map = {}
     if complexes_iter:
         for crow in complexes_iter:

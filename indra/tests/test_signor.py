@@ -9,10 +9,10 @@ from indra.statements import *
 from indra.databases import hgnc_client
 from indra.sources.signor.processor import SignorProcessor, \
                                            _parse_residue_positions
-from indra.sources.signor.api import SignorRow, process_from_file, \
+from indra.sources.signor.api import _SignorRow_, process_from_file, \
                                      process_from_web
 
-test_row = SignorRow(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
+test_row = _SignorRow_(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
         DATABASEA='UNIPROT', ENTITYB='MET', TYPEB='protein', IDB='P08581',
         DATABASEB='UNIPROT', EFFECT='up-regulates quantity',
         MECHANISM='transcriptional regulation', RESIDUE='', SEQUENCE='',
@@ -34,7 +34,7 @@ def test_parse_csv_from_file():
     # Should work with both data file and complexes
     sp = process_from_file(test_data_file, test_complexes_file)
     assert isinstance(sp._data, list)
-    assert isinstance(sp._data[0], SignorRow)
+    assert isinstance(sp._data[0], _SignorRow_)
     assert isinstance(sp.statements, list)
     assert isinstance(sp.statements[0], Statement)
     # Test the complex map
@@ -53,7 +53,7 @@ def test_parse_csv_from_file():
 def test_parse_csv_from_web():
     sp = process_from_web()
     assert isinstance(sp._data, list)
-    assert isinstance(sp._data[0], SignorRow)
+    assert isinstance(sp._data[0], _SignorRow_)
     assert isinstance(sp.statements, list)
     assert isinstance(sp.statements[0], Statement)
     # Test the complex map
@@ -140,7 +140,7 @@ def test_process_row():
 
 
 def test_process_row_chem_inh():
-    test_row_chem_inh = SignorRow(ENTITYA='722544-51-6', TYPEA='chemical',
+    test_row_chem_inh = _SignorRow_(ENTITYA='722544-51-6', TYPEA='chemical',
         IDA='CID:16007391', DATABASEA='PUBCHEM', ENTITYB='AURKB',
         TYPEB='protein', IDB='Q96GD4', DATABASEB='UNIPROT',
         EFFECT='down-regulates', MECHANISM='chemical inhibition', RESIDUE='',
@@ -159,7 +159,7 @@ def test_process_row_chem_inh():
 
 
 def test_process_row_chem_act():
-    test_row_chem_act = SignorRow(ENTITYA='Prostaglandin E2',
+    test_row_chem_act = _SignorRow_(ENTITYA='Prostaglandin E2',
         TYPEA='smallmolecule', IDA='CID:5280360', DATABASEA='PUBCHEM',
         ENTITYB='GNG12', TYPEB='protein', IDB='Q9UBI6', DATABASEB='UNIPROT',
         EFFECT='up-regulates', MECHANISM='chemical activation', RESIDUE='',
@@ -177,7 +177,7 @@ def test_process_row_chem_act():
 
 
 def test_process_row_stab():
-    test_row_stab = SignorRow(ENTITYA='UCHL5', TYPEA='protein', IDA='Q9Y5K5',
+    test_row_stab = _SignorRow_(ENTITYA='UCHL5', TYPEA='protein', IDA='Q9Y5K5',
             DATABASEA='UNIPROT', ENTITYB='TGFBR1', TYPEB='protein',
             IDB='P36897', DATABASEB='UNIPROT', EFFECT='up-regulates',
             MECHANISM='stabilization', RESIDUE='', SEQUENCE='', TAX_ID='9606',
@@ -195,7 +195,7 @@ def test_process_row_stab():
 
 
 def test_process_row_destab():
-    test_row_destab = SignorRow(ENTITYA='INS', TYPEA='protein', IDA='P01308',
+    test_row_destab = _SignorRow_(ENTITYA='INS', TYPEA='protein', IDA='P01308',
             DATABASEA='UNIPROT', ENTITYB='APOB', TYPEB='protein', IDB='P04114',
             DATABASEB='UNIPROT',
             EFFECT='down-regulates quantity by destabilization',
@@ -215,7 +215,7 @@ def test_process_row_destab():
 
 
 def test_process_row_binding_complex():
-    test_row = SignorRow(ENTITYA='ATG5', TYPEA='protein', IDA='Q9H1Y0',
+    test_row = _SignorRow_(ENTITYA='ATG5', TYPEA='protein', IDA='Q9H1Y0',
             DATABASEA='UNIPROT', ENTITYB='ATG12/5/16L1', TYPEB='complex',
             IDB='SIGNOR-C109', DATABASEB='SIGNOR', EFFECT='form complex',
             MECHANISM='binding', RESIDUE='', SEQUENCE='', TAX_ID='9606',
@@ -234,7 +234,7 @@ def test_process_row_binding_complex():
 
 
 def test_process_row_phos_up():
-    test_row = SignorRow(ENTITYA='CHEK2', TYPEA='protein', IDA='O96017',
+    test_row = _SignorRow_(ENTITYA='CHEK2', TYPEA='protein', IDA='O96017',
             DATABASEA='UNIPROT', ENTITYB='CHEK2', TYPEB='protein', IDB='O96017',
             DATABASEB='UNIPROT', EFFECT='up-regulates activity',
             MECHANISM='phosphorylation', RESIDUE='Thr387',
@@ -264,7 +264,7 @@ def test_process_row_phos_up():
 
 
 def test_process_row_phos_down():
-    test_row = SignorRow(ENTITYA='PRKCD', TYPEA='protein', IDA='Q05655',
+    test_row = _SignorRow_(ENTITYA='PRKCD', TYPEA='protein', IDA='Q05655',
             DATABASEA='UNIPROT', ENTITYB='PTPN22', TYPEB='protein',
             IDB='Q9Y2R2', DATABASEB='UNIPROT', EFFECT='down-regulates',
             MECHANISM='phosphorylation', RESIDUE='Ser35',
@@ -294,7 +294,7 @@ def test_process_row_phos_down():
 
 
 def test_process_row_phos_nores_up():
-    test_row = SignorRow(ENTITYA='STK11', TYPEA='protein', IDA='Q15831',
+    test_row = _SignorRow_(ENTITYA='STK11', TYPEA='protein', IDA='Q15831',
             DATABASEA='UNIPROT', ENTITYB='AMPK', TYPEB='complex',
             IDB='SIGNOR-C15', DATABASEB='SIGNOR',
             EFFECT='up-regulates activity', MECHANISM='phosphorylation',
@@ -324,7 +324,7 @@ def test_process_row_phos_nores_up():
 
 
 def test_process_row_phos_nores_down():
-    test_row = SignorRow(ENTITYA='CSNK1D', TYPEA='protein', IDA='P48730',
+    test_row = _SignorRow_(ENTITYA='CSNK1D', TYPEA='protein', IDA='P48730',
             DATABASEA='UNIPROT', ENTITYB='LEF1', TYPEB='protein', IDB='Q9UJU2',
             DATABASEB='UNIPROT', EFFECT='down-regulates',
             MECHANISM='phosphorylation', RESIDUE='', SEQUENCE='',
@@ -353,7 +353,7 @@ def test_process_row_phos_nores_down():
 
 
 def test_process_row_dephos_up():
-    test_row = SignorRow(ENTITYA='CHEK2', TYPEA='protein', IDA='O96017',
+    test_row = _SignorRow_(ENTITYA='CHEK2', TYPEA='protein', IDA='O96017',
             DATABASEA='UNIPROT', ENTITYB='CHEK2', TYPEB='protein', IDB='O96017',
             DATABASEB='UNIPROT', EFFECT='up-regulates activity',
             MECHANISM='dephosphorylation', RESIDUE='Thr387',
@@ -383,7 +383,7 @@ def test_process_row_dephos_up():
 
 
 def test_process_row_dephos_down():
-    test_row = SignorRow(ENTITYA='PRKCD', TYPEA='protein', IDA='Q05655',
+    test_row = _SignorRow_(ENTITYA='PRKCD', TYPEA='protein', IDA='Q05655',
             DATABASEA='UNIPROT', ENTITYB='PTPN22', TYPEB='protein',
             IDB='Q9Y2R2', DATABASEB='UNIPROT', EFFECT='down-regulates',
             MECHANISM='dephosphorylation', RESIDUE='Ser35',
@@ -413,7 +413,7 @@ def test_process_row_dephos_down():
 
 
 def test_mod_unknown_effect():
-    test_row = SignorRow(ENTITYA='JAK2', TYPEA='protein', IDA='O60674',
+    test_row = _SignorRow_(ENTITYA='JAK2', TYPEA='protein', IDA='O60674',
             DATABASEA='UNIPROT', ENTITYB='JAK2', TYPEB='protein', IDB='O60674',
             DATABASEB='UNIPROT', EFFECT='unknown', MECHANISM='phosphorylation',
             RESIDUE='Tyr1007', SEQUENCE='VLPQDKEyYKVKEPG', TAX_ID='-1',
@@ -433,7 +433,7 @@ def test_mod_unknown_effect():
 
 
 def test_process_row_dephos_nores_up():
-    test_row = SignorRow(ENTITYA='STK11', TYPEA='protein', IDA='Q15831',
+    test_row = _SignorRow_(ENTITYA='STK11', TYPEA='protein', IDA='Q15831',
             DATABASEA='UNIPROT', ENTITYB='AMPK', TYPEB='complex',
             IDB='SIGNOR-C15', DATABASEB='SIGNOR',
             EFFECT='up-regulates activity', MECHANISM='dephosphorylation',
@@ -463,7 +463,7 @@ def test_process_row_dephos_nores_up():
 
 
 def test_process_row_dephos_nores_down():
-    test_row = SignorRow(ENTITYA='CSNK1D', TYPEA='protein', IDA='P48730',
+    test_row = _SignorRow_(ENTITYA='CSNK1D', TYPEA='protein', IDA='P48730',
             DATABASEA='UNIPROT', ENTITYB='LEF1', TYPEB='protein', IDB='Q9UJU2',
             DATABASEB='UNIPROT', EFFECT='down-regulates',
             MECHANISM='dephosphorylation', RESIDUE='', SEQUENCE='',
@@ -492,7 +492,7 @@ def test_process_row_dephos_nores_down():
 
 
 def test_process_row_phos_multi_res():
-    test_row = SignorRow(ENTITYA='RAF1', TYPEA='protein', IDA='P04049',
+    test_row = _SignorRow_(ENTITYA='RAF1', TYPEA='protein', IDA='P04049',
             DATABASEA='UNIPROT', ENTITYB='MAP2K2', TYPEB='protein',
             IDB='P36507', DATABASEB='UNIPROT', EFFECT='up-regulates',
             MECHANISM='phosphorylation', RESIDUE='Ser218;Ser222',
@@ -528,7 +528,7 @@ def test_process_row_phos_multi_res():
 
 
 def test_process_row_complex_up():
-    test_row = SignorRow(ENTITYA='NONO', TYPEA='protein', IDA='Q15233',
+    test_row = _SignorRow_(ENTITYA='NONO', TYPEA='protein', IDA='Q15233',
             DATABASEA='UNIPROT', ENTITYB='TOP1', TYPEB='protein', IDB='P11387',
             DATABASEB='UNIPROT', EFFECT='up-regulates', MECHANISM='binding',
             RESIDUE='', SEQUENCE='', TAX_ID='9606', CELL_DATA='BTO:0000017',
@@ -559,7 +559,7 @@ def test_process_row_complex_up():
 
 
 def test_process_row_complex_down():
-    test_row = SignorRow(ENTITYA='XIAP', TYPEA='protein', IDA='P98170',
+    test_row = _SignorRow_(ENTITYA='XIAP', TYPEA='protein', IDA='P98170',
             DATABASEA='UNIPROT', ENTITYB='CASP3', TYPEB='protein',
             IDB='P42574', DATABASEB='UNIPROT', EFFECT='down-regulates activity',
             MECHANISM='binding', RESIDUE='', SEQUENCE='', TAX_ID='9606',
@@ -622,7 +622,7 @@ def test_parse_residue_positions():
 
 
 def test_signor_family_famplex_mapping():
-    test_row = SignorRow(ENTITYA='TLRs', TYPEA='proteinfamily',
+    test_row = _SignorRow_(ENTITYA='TLRs', TYPEA='proteinfamily',
             IDA='SIGNOR-PF20', DATABASEA='SIGNOR',
             ENTITYB='Interferon Production', TYPEB='phenotype',
             IDB='SIGNOR-PH16', DATABASEB='SIGNOR', EFFECT='up-regulates',
@@ -642,7 +642,7 @@ def test_signor_family_famplex_mapping():
 
 
 def test_signor_complexes():
-    test_row = SignorRow(ENTITYA='NFY',
+    test_row = _SignorRow_(ENTITYA='NFY',
         TYPEA='complex', IDA='SIGNOR-C1', DATABASEA='SIGNOR', ENTITYB='ID1',
         TYPEB='protein', IDB='P41134', DATABASEB='UNIPROT',
         EFFECT='up-regulates quantity by expression',
@@ -686,7 +686,7 @@ def test_signor_complexes():
 
 
 def test_recursive_complexes():
-    test_row = SignorRow(ENTITYA='PAX7/MLL2 complex', TYPEA='complex',
+    test_row = _SignorRow_(ENTITYA='PAX7/MLL2 complex', TYPEA='complex',
             IDA='SIGNOR-C91', DATABASEA='SIGNOR', ENTITYB='MYF5',
             TYPEB='protein', IDB='P13349', DATABASEB='UNIPROT',
             EFFECT='up-regulates quantity by expression',
@@ -731,7 +731,7 @@ def test_recursive_complexes():
 
 
 def test_complexes_with_families():
-    test_row = SignorRow(ENTITYA='MAPK1', TYPEA='protein',
+    test_row = _SignorRow_(ENTITYA='MAPK1', TYPEA='protein',
             IDA='P27361', DATABASEA='UNIPROT', ENTITYB='CDO/JLP/P38',
             TYPEB='complex', IDB='SIGNOR-C22', DATABASEB='SIGNOR',
             EFFECT='up-regulates quantity by expression',

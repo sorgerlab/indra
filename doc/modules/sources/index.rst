@@ -39,6 +39,7 @@ Standard Molecular Pathway Databases
    biopax/index
    signor/index
    biogrid/index
+   hprd/index
 
 Custom Knowledge Bases
 ----------------------
