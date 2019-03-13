@@ -182,6 +182,7 @@ def get_chebi_name_from_id_web(chebi_id):
     tree = etree.fromstring(resp.content)
 
     # Get rid of the namespaces.
+    # Credit: https://stackoverflow.com/questions/18159221/remove-namespace-and-prefix-from-xml-in-python-using-lxml
     for elem in tree.getiterator():
         if not hasattr(elem.tag, 'find'):
             continue  # (1)
