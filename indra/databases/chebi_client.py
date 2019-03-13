@@ -1,11 +1,16 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 from os.path import dirname, abspath, join
-try:
-    from functools import lru_cache
-except ImportError:
-    from functools32 import lru_cache
+
+import requests
+import logging
+
+from functools import lru_cache
+
+from lxml import etree, objectify
+
 from indra.util import read_unicode_csv
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_pubchem_id(chebi_id):
@@ -146,6 +151,31 @@ def _read_relative_csv(rel_path):
     file_path = join(dirname(abspath(__file__)), rel_path)
     csv_reader = read_unicode_csv(file_path, delimiter='\t')
     return csv_reader
+
+
+@lru_cache(maxsize=50)
+def get_chebi_data_from_web(chebi_id):
+    url_base = 'http://www.ebi.ac.uk/webservices/chebi/2.0/test/'
+    url_fmt = url_base + 'getCompleteEntity?chebiId=%s'
+    resp = requests.get(url_fmt % chebi_id)
+    if resp.status_code != 200:
+        logger.warning("Got bad code form CHEBI client: %s" % resp.status_code)
+        return None
+    tree = etree.fromstring(resp.content)
+
+    # Get rid of the namespaces.
+    for elem in tree.getiterator():
+        if not hasattr(elem.tag, 'find'):
+            continue  # (1)
+        i = elem.tag.find('}')
+        if i >= 0:
+            elem.tag = elem.tag[i+1:]
+    objectify.deannotate(tree, cleanup_namespaces=True)
+
+    elem = tree.find('Body/getCompleteEntityResponse/return/chebiAsciiName')
+    if elem is not None:
+        return elem.text
+    return None
 
 
 chebi_pubchem, pubchem_chebi = _read_chebi_to_pubchem()
