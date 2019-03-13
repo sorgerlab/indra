@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 from indra.databases import chebi_client
 from indra.util import unicode_strs
 from nose.plugins.attrib import attr
@@ -28,6 +26,7 @@ def test_chebi_id_to_name():
     assert chebi_client.get_chebi_name_from_id('63637') == 'vemurafenib'
 
 
+@attr('webservice')
 def test_chebi_name_from_web():
     name = chebi_client.get_chebi_name_from_id_web('63637')
     assert name == 'vemurafenib'
