@@ -11,7 +11,8 @@ import collections
 
 from indra.databases import go_client, mesh_client
 from indra.statements import *
-from indra.databases.chebi_client import get_chebi_id_from_cas
+from indra.databases.chebi_client import get_chebi_id_from_cas, \
+    get_chebi_name_from_id
 from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id, \
         get_hgnc_name
 from indra.util import read_unicode_csv
@@ -939,6 +940,7 @@ def _urn_to_db_refs(urn):
         chebi_id = get_chebi_id_from_cas(urn_id)
         if chebi_id:
             db_refs['CHEBI'] = 'CHEBI:%s' % chebi_id
+            db_name = get_chebi_name_from_id(chebi_id)
     elif urn_type == 'agi-llid':
         # This is an Entrez ID, convert to HGNC
         hgnc_id = get_hgnc_from_entrez(urn_id)
@@ -953,10 +955,10 @@ def _urn_to_db_refs(urn):
             # agent name
             db_name = get_hgnc_name(hgnc_id)
     elif urn_type == 'agi-ncimcelltype':
-        # Identifier is MESH: Actually from UMLS
+        # Identifier is UMLS
         db_refs['UMLS'] = urn_id
-    elif urn_type == 'agi-meshdis':
-        # Identifier is MESH: Actually MESH names
+    elif urn_type in ['agi-meshdis', 'agi-ncimorgan']:
+        # Identifier is MESH
         mesh_id, mesh_name = mesh_client.get_mesh_id_name(urn_id)
         db_refs['MESH'] = mesh_id
         db_name = mesh_name
