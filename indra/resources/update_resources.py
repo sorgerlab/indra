@@ -395,16 +395,15 @@ def update_chebi_names():
     # nad BRAND NAMEs for many compounds.
     # Here we add INNs where available, and try to get then English INN.
     df_inn = df[(df['TYPE'] == 'INN') & (df['LANGUAGE'] == 'en')]
-    import ipdb; ipdb.set_trace()
     df = pandas.concat([df_name, df_inn])
 
     # We sort by compound ID ascending
-    df.sort_values(by='COMPOUND_ID', inplace=True)
+    df.sort_values(by=['COMPOUND_ID', 'ID'], inplace=True)
 
     fname = os.path.join(path, 'chebi_names.tsv')
     logger.info('Saving into %s' % fname)
     df.to_csv(fname, sep='\t', header=True, index=False,
-              columns=['COMPOUND_ID', 'NAME'])
+              columns=['ID', 'COMPOUND_ID', 'TYPE', 'NAME'])
 
 
 def update_famplex():
