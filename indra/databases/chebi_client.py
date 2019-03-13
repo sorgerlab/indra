@@ -83,13 +83,15 @@ def get_chebi_id_from_cas(cas_id):
     return cas_chebi.get(cas_id)
 
 
-def get_chebi_name_from_id(chebi_id):
+def get_chebi_name_from_id(chebi_id, offline=False):
     """Return a ChEBI mame corresponding to the given ChEBI ID.
 
     Parameters
     ----------
     chebi_id : str
         The ChEBI ID whose name is to be returned.
+    offline : bool
+        Choose whether to allow an online lookup if the local lookup fails.
 
     Returns
     -------
@@ -97,7 +99,10 @@ def get_chebi_name_from_id(chebi_id):
         The name corresponding to the given ChEBI ID. If the lookup
         fails, None is returned.
     """
-    return chebi_id_to_name.get(chebi_id)
+    chebi_name = chebi_id_to_name.get(chebi_id)
+    if chebi_name is None and not offline:
+        chebi_name = get_chebi_name_from_id_web(chebi_id)
+    return chebi_name
 
 
 def _read_chebi_to_pubchem():

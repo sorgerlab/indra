@@ -23,7 +23,8 @@ def test_cas_to_chebi():
 
 
 def test_chebi_id_to_name():
-    assert chebi_client.get_chebi_name_from_id('63637') == 'vemurafenib'
+    name = chebi_client.get_chebi_name_from_id('63637', offline=True)
+    assert name == 'vemurafenib', name
 
 
 @attr('webservice')
