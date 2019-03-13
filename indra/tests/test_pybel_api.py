@@ -27,9 +27,8 @@ def test_process_jgif():
     # Clean up
     os.remove(test_file)
 
-    assert pbp.statements  # check empty
+    assert len(pbp.statements) == 26, len(pbp.statements)
     assert isinstance(pbp.statements[0], Statement)
-    assert isinstance(pbp.statements[0], Activation)
     assert all(s.evidence[0].source_api == 'bel' for s in pbp.statements)
 
 
