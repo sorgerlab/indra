@@ -2,11 +2,12 @@ import os
 from urllib import request
 from pybel import BELGraph
 from pybel.dsl import *
+from pybel.io import from_json_file
 from pybel.examples import egf_graph
 from indra.statements import *
 from indra.sources import bel
 from indra.sources.bel import processor as pb
-from indra.sources.bel.api import process_cbn_jgif_file
+from indra.sources.bel.api import process_cbn_jgif_file, process_pybel_graph
 from indra.databases import hgnc_client
 
 mek_hgnc_id = hgnc_client.get_hgnc_id('MAP2K1')
@@ -23,6 +24,23 @@ def test_process_jgif():
     test_file = 'Hox-2.0-Hs.jgf'
     request.urlretrieve(url=test_file_url, filename=test_file)
     pbp = process_cbn_jgif_file(test_file)
+
+    # Clean up
+    os.remove(test_file)
+
+    assert len(pbp.statements) == 26, len(pbp.statements)
+    assert isinstance(pbp.statements[0], Statement)
+    assert all(s.evidence[0].source_api == 'bel' for s in pbp.statements)
+
+
+def test_nodelink_json():
+    test_file_url = \
+        'https://s3.amazonaws.com/bigmech/travis/Hox-2.0-Hs_nljson.json'
+    test_file = 'Hox-2.0-Hs_nljson.json'
+    request.urlretrieve(url=test_file_url, filename=test_file)
+    with open(test_file) as jr:
+        pbg = from_json_file(file=jr)
+    pbp = process_pybel_graph(pbg)
 
     # Clean up
     os.remove(test_file)
