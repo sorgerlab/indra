@@ -29,7 +29,7 @@ def test_chebi_id_to_name():
 
 
 def test_chebi_name_from_web():
-    name = chebi_client.get_chebi_data_from_web('63637')
+    name = chebi_client.get_chebi_name_from_id_web('63637')
     assert name == 'vemurafenib'
-    name = chebi_client.get_chebi_data_from_web('44215')
+    name = chebi_client.get_chebi_name_from_id_web('44215')
     assert name == 'NAD zwitterion'

@@ -154,7 +154,7 @@ def _read_relative_csv(rel_path):
 
 
 @lru_cache(maxsize=50)
-def get_chebi_data_from_web(chebi_id):
+def get_chebi_name_from_id_web(chebi_id):
     url_base = 'http://www.ebi.ac.uk/webservices/chebi/2.0/test/'
     url_fmt = url_base + 'getCompleteEntity?chebiId=%s'
     resp = requests.get(url_fmt % chebi_id)
