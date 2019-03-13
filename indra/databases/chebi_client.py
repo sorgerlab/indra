@@ -115,8 +115,13 @@ def _read_chebi_names():
     csv_reader = _read_relative_csv('../resources/chebi_names.tsv')
     next(csv_reader)
     chebi_id_to_name = {}
+    # We should prioritize by ID here, i.e., if we already added the value,
+    # we don't add it again
     for row in csv_reader:
-        chebi_id_to_name[row[0]] = row[1]
+        idx, chebi_id, name_type, name = row
+        if chebi_id in chebi_id_to_name:
+            continue
+        chebi_id_to_name[chebi_id] = name
     return chebi_id_to_name
 
 
