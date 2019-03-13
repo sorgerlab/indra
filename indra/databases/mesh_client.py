@@ -1,23 +1,21 @@
-from os.path import abspath, dirname, join
+import re
 import csv
+from functools import lru_cache
+from urllib.parse import urlencode
+from os.path import abspath, dirname, join
 import requests
 from indra.util import read_unicode_csv
 
-mesh_url = 'http://id.nlm.nih.gov/mesh/'
+mesh_url = 'https://id.nlm.nih.gov/mesh/'
 mesh_file = join(dirname(abspath(__file__)), '..', 'resources',
                  'mesh_id_label_mappings.tsv')
 
-# Python3
-try:
-    from functools import lru_cache
-# Python2
-except ImportError:
-    from functools32 import lru_cache
 
-mesh_mappings = {}
+mesh_id_to_name = {}
+mesh_name_to_id = {}
 for mesh_id, mesh_label in read_unicode_csv(mesh_file, delimiter='\t'):
-    mesh_mappings[mesh_id] = mesh_label
-
+    mesh_id_to_name[mesh_id] = mesh_label
+    mesh_name_to_id[mesh_label] = mesh_id
 
 @lru_cache(maxsize=1000)
 def get_mesh_name_from_web(mesh_id):
@@ -67,8 +65,108 @@ def get_mesh_name(mesh_id, offline=False):
         Label for the MESH ID, or None if the query failed or no label was
         found.
     """
-    indra_mesh_mapping = mesh_mappings.get(mesh_id)
+    indra_mesh_mapping = mesh_id_to_name.get(mesh_id)
     if offline or indra_mesh_mapping is not None:
         return indra_mesh_mapping
     # Look up the MESH mapping from NLM if we don't have it locally
     return get_mesh_name_from_web(mesh_id)
+
+
+def get_mesh_id_name(mesh_term, offline=False):
+    """Get the MESH ID and name for the given MESH term.
+
+    Uses the mappings table in `indra/resources`; if the MESH term is not
+    listed there, falls back on the NLM REST API.
+
+    Parameters
+    ----------
+    mesh_term : str
+        MESH Descriptor or Concept name, e.g. 'Breast Cancer'.
+    offline : bool
+        Whether to allow queries to the NLM REST API if the given MESH term is
+        not contained in INDRA's internal MESH mappings file. Default is False
+        (allows REST API queries).
+
+    Returns
+    -------
+    tuple of strs
+        Returns a 2-tuple of the form `(id, name)` with the ID of the
+        descriptor corresponding to the MESH label, and the descriptor name
+        (which may not exactly match the name provided as an argument if it is
+        a Concept name). If the query failed, or no descriptor corresponding to
+        the name was found, returns a tuple of (None, None).
+    """
+    indra_mesh_id = mesh_name_to_id.get(mesh_term)
+    if offline and indra_mesh_id is None:
+        return (None, None)
+    elif offline:
+        return (indra_mesh_id, mesh_term)
+    # Look up the MESH mapping from NLM if we don't have it locally
+    return get_mesh_id_name_from_web(mesh_term)
+
+
+@lru_cache(maxsize=1000)
+def get_mesh_id_name_from_web(mesh_term):
+    """Get the MESH ID and name for the given MESH term using the NLM REST API.
+
+    Parameters
+    ----------
+    mesh_term : str
+        MESH Descriptor or Concept name, e.g. 'Breast Cancer'.
+
+    Returns
+    -------
+    tuple of strs
+        Returns a 2-tuple of the form `(id, name)` with the ID of the
+        descriptor corresponding to the MESH label, and the descriptor name
+        (which may not exactly match the name provided as an argument if it is
+        a Concept name). If the query failed, or no descriptor corresponding to
+        the name was found, returns a tuple of (None, None).
+    """
+    url = mesh_url + 'sparql'
+    query = """
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        PREFIX owl: <http://www.w3.org/2002/07/owl#>
+        PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+        PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+        PREFIX mesh2019: <http://id.nlm.nih.gov/mesh/2019/>
+        PREFIX mesh2018: <http://id.nlm.nih.gov/mesh/2018/>
+        PREFIX mesh2017: <http://id.nlm.nih.gov/mesh/2017/>
+
+        SELECT ?d ?dName ?c ?cName 
+        FROM <http://id.nlm.nih.gov/mesh>
+        WHERE {
+          ?d a meshv:Descriptor .
+          ?d meshv:concept ?c .
+          ?d rdfs:label ?dName .
+          ?c rdfs:label ?cName
+          FILTER (REGEX(?cName,'^%s$','i') || REGEX(?cName,'^%s$','i'))
+        }
+        ORDER BY ?d
+    """ % (mesh_term, mesh_term)
+    args = {'query': query, 'format': 'JSON', 'inference': 'true'}
+    # Interestingly, the following call using requests.get to package the
+    # query does not work:
+    # resp = requests.get(url, data=args)
+    # But if the query string is explicitly urlencoded using urllib, it works:
+    query_string = '%s?%s' % (url, urlencode(args))
+    resp = requests.get(query_string)
+    # Check status
+    if resp.status_code != 200:
+        return (None, None)
+    mesh_json = resp.json()
+    try:
+        # Choose the first entry (should usually be only one)
+        id_uri = mesh_json['results']['bindings'][0]['d']['value']
+        name = mesh_json['results']['bindings'][0]['dName']['value']
+    except (KeyError, IndexError) as e:
+        return (None, None)
+    # Strip the MESH prefix off the ID URI
+    m = re.match('http://id.nlm.nih.gov/mesh/([A-Za-z0-9]*)', id_uri)
+    assert m is not None
+    id = m.groups()[0]
+    return (id, name)
+
+
