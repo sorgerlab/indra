@@ -39,8 +39,7 @@ def test_nodelink_json():
     test_file = 'Hox-2.0-Hs_nljson.json'
     request.urlretrieve(url=test_file_url, filename=test_file)
     with open(test_file) as jr:
-        pbg = from_json_file(file=jr)
-    pbp = process_pybel_graph(pbg)
+        pbp = process_pybel_graph(from_json_file(file=jr))
 
     # Clean up
     os.remove(test_file)
