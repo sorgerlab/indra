@@ -79,9 +79,7 @@ def get_chebi_id_from_cas(cas_id):
 
 
 def _read_chebi_to_pubchem():
-    chebi_to_pubchem_file = join(dirname(abspath(__file__)),
-                                 '../resources/chebi_to_pubchem.tsv')
-    csv_reader = read_unicode_csv(chebi_to_pubchem_file, delimiter='\t')
+    csv_reader = _read_relative_csv('../resources/chebi_to_pubchem.tsv')
     chebi_pubchem = {}
     pubchem_chebi = {}
     for row in csv_reader:
@@ -91,9 +89,7 @@ def _read_chebi_to_pubchem():
 
 
 def _read_chebi_to_chembl():
-    chebi_to_chembl_file = join(dirname(abspath(__file__)),
-                                '../resources/chebi_to_chembl.tsv')
-    csv_reader = read_unicode_csv(chebi_to_chembl_file, delimiter='\t')
+    csv_reader = _read_relative_csv('../resources/chebi_to_chembl.tsv')
     chebi_chembl = {}
     for row in csv_reader:
         chebi_chembl[row[0]] = row[1]
@@ -101,9 +97,7 @@ def _read_chebi_to_chembl():
 
 
 def _read_cas_to_chebi():
-    cas_to_chebi_file = join(dirname(abspath(__file__)),
-                             '../resources/cas_to_chebi.tsv')
-    csv_reader = read_unicode_csv(cas_to_chebi_file, delimiter='\t')
+    csv_reader = _read_relative_csv('../resources/cas_to_chebi.tsv')
     cas_chebi = {}
     next(csv_reader)
     for row in csv_reader:
@@ -117,6 +111,22 @@ def _read_cas_to_chebi():
     return cas_chebi
 
 
+def _read_chebi_names():
+    csv_reader = _read_relative_csv('../resources/chebi_names.tsv')
+    next(csv_reader)
+    chebi_id_to_name = {}
+    for row in csv_reader:
+        chebi_id_to_name[row[0]] = row[1]
+    return chebi_id_to_name
+
+
+def _read_relative_csv(rel_path):
+    file_path = join(dirname(abspath(__file__)), rel_path)
+    csv_reader = read_unicode_csv(file_path, delimiter='\t')
+    return csv_reader
+
+
 chebi_pubchem, pubchem_chebi = _read_chebi_to_pubchem()
 chebi_chembl = _read_chebi_to_chembl()
 cas_chebi = _read_cas_to_chebi()
+chebi_id_to_name = _read_chebi_names()
