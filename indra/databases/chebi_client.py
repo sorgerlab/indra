@@ -90,8 +90,9 @@ def get_chebi_name_from_id(chebi_id, offline=False):
     ----------
     chebi_id : str
         The ChEBI ID whose name is to be returned.
-    offline : bool
-        Choose whether to allow an online lookup if the local lookup fails.
+    offline : Optional[bool]
+        Choose whether to allow an online lookup if the local lookup fails. If
+        True, the online lookup is not attempted. Default: False.
 
     Returns
     -------
@@ -142,12 +143,8 @@ def _read_chebi_names():
     csv_reader = _read_relative_csv('../resources/chebi_names.tsv')
     next(csv_reader)
     chebi_id_to_name = {}
-    # We should prioritize by ID here, i.e., if we already added the value,
-    # we don't add it again
     for row in csv_reader:
-        idx, chebi_id, name_type, name = row
-        if chebi_id in chebi_id_to_name:
-            continue
+        chebi_id, name = row
         chebi_id_to_name[chebi_id] = name
     return chebi_id_to_name
 
@@ -168,7 +165,7 @@ def get_chebi_name_from_id_web(chebi_id):
         The ChEBI ID whose name is to be returned.
 
     Returns
-    ----------
+    -------
     chebi_name : str
         The name corresponding to the given ChEBI ID. If the lookup
         fails, None is returned.
