@@ -171,27 +171,39 @@ def update_cas_to_chebi():
                   header=['CAS', 'CHEBI'], index=False)
 
 
-def update_chebi_primary_map():
-    logger.info('--Updating ChEBI primary map entries----')
+def update_chebi_primary_map_and_names():
+    logger.info('--Updating ChEBI primary map entries and names----')
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
         'Flat_file_tab_delimited/compounds.tsv.gz'
     fname = os.path.join(path, 'compounds.tsv.gz')
     urlretrieve(url, fname)
     with gzip.open(fname, 'rb') as fh:
         logger.info('Loading %s' % fname)
-        df = pandas.read_csv(fh, sep='\t', index_col=None,
-                parse_dates=True, dtype='str')
-    fname = os.path.join(path, 'chebi_to_primary.tsv')
-    logger.info('Saving into %s' % fname)
-    df = df[df['PARENT_ID'].notna()]
-    df.replace('CHEBI:([0-9]+)', r'\1', inplace=True, regex=True)
+        df_orig = pandas.read_csv(fh, sep='\t', index_col=None,
+                                  parse_dates=True, dtype='str')
+    # This df is still shared
+    df_orig.replace('CHEBI:([0-9]+)', r'\1', inplace=True, regex=True)
+
+    # First we construct mappings to primary accession IDs
+    # This df is specific to parents
+    df = df_orig[df_orig['PARENT_ID'].notna()]
     df.sort_values(['CHEBI_ACCESSION', 'PARENT_ID'], ascending=True,
                    inplace=True)
     df.drop_duplicates(subset=['CHEBI_ACCESSION', 'PARENT_ID'], inplace=True)
-    print('Writing chebi map to', fname)
+    fname = os.path.join(path, 'chebi_to_primary.tsv')
+    logger.info('Saving into %s' % fname)
     df.to_csv(fname, sep='\t',
               columns=['CHEBI_ACCESSION', 'PARENT_ID'], 
               header=['Secondary', 'Primary'], index=False)
+
+    # Second we get the ID to name mappings
+    df = df_orig[df_orig['NAME'].notna()]
+    df.sort_values(by=['CHEBI_ACCESSION', 'ID'], inplace=True)
+
+    fname = os.path.join(path, 'chebi_names.tsv')
+    logger.info('Saving into %s' % fname)
+    df.to_csv(fname, sep='\t', header=True, index=False,
+              columns=['CHEBI_ACCESSION', 'NAME'])
 
 
 def update_cellular_component_hierarchy():
@@ -374,38 +386,6 @@ def update_ncit_map():
                   header=['NCIT ID', 'Target NS', 'Target ID'], index=False)
 
 
-def update_chebi_names():
-    logger.info('--Updating ChEBI names----')
-    url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
-        'Flat_file_tab_delimited/names_3star.tsv.gz'
-    fname = os.path.join(path, 'names_3star.tsv.gz')
-
-    # Retrieve and load the file into a DataFrame
-    urlretrieve(url, fname)
-    with gzip.open(fname, 'rb') as fh:
-        logger.info('Loading %s' % fname)
-        df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
-
-    # The basic names we want to include are of type NAME
-    df_name = df[df['TYPE'] == 'NAME']
-
-    # However, NAMEs are not enough because many compounds don't come with a
-    # standard name, and instead have INN (International Nonproprietary
-    # Name) or other names. Note that the DataFrame also contains SYNONYMs,
-    # nad BRAND NAMEs for many compounds.
-    # Here we add INNs where available, and try to get then English INN.
-    df_inn = df[(df['TYPE'] == 'INN') & (df['LANGUAGE'] == 'en')]
-    df = pandas.concat([df_name, df_inn])
-
-    # We sort by compound ID ascending
-    df.sort_values(by=['COMPOUND_ID', 'ID'], inplace=True)
-
-    fname = os.path.join(path, 'chebi_names.tsv')
-    logger.info('Saving into %s' % fname)
-    df.to_csv(fname, sep='\t', header=True, index=False,
-              columns=['ID', 'COMPOUND_ID', 'TYPE', 'NAME'])
-
-
 def update_famplex():
     """Update all the CSV files that form the FamPlex resource."""
     famplex_url_pattern = \
@@ -465,8 +445,7 @@ if __name__ == '__main__':
     update_kinases()
     update_uniprot_subcell_loc()
     update_chebi_entries()
-    update_chebi_names()
-    update_chebi_primary_map()
+    update_chebi_primary_map_and_names()
     update_cas_to_chebi()
     update_bel_chebi_map()
     update_entity_hierarchy()
