@@ -179,12 +179,14 @@ def update_chebi_primary_map():
     urlretrieve(url, fname)
     with gzip.open(fname, 'rb') as fh:
         logger.info('Loading %s' % fname)
-        df = pandas.read_csv(fh, sep='\t', index_col=None,
-                parse_dates=True, dtype='str')
+        df_orig = pandas.read_csv(fh, sep='\t', index_col=None,
+                                  parse_dates=True, dtype='str')
     fname = os.path.join(path, 'chebi_to_primary.tsv')
     logger.info('Saving into %s' % fname)
-    df = df[df['PARENT_ID'].notna()]
-    df.replace('CHEBI:([0-9]+)', r'\1', inplace=True, regex=True)
+    # This df is still shared
+    df_orig.replace('CHEBI:([0-9]+)', r'\1', inplace=True, regex=True)
+    # This df is specific to parents
+    df = df_orig[df_orig['PARENT_ID'].notna()]
     df.sort_values(['CHEBI_ACCESSION', 'PARENT_ID'], ascending=True,
                    inplace=True)
     df.drop_duplicates(subset=['CHEBI_ACCESSION', 'PARENT_ID'], inplace=True)
@@ -192,6 +194,15 @@ def update_chebi_primary_map():
     df.to_csv(fname, sep='\t',
               columns=['CHEBI_ACCESSION', 'PARENT_ID'], 
               header=['Secondary', 'Primary'], index=False)
+
+    # Now move onto names
+    df = df_orig[df_orig['NAME'].notna()]
+    df.sort_values(by=['CHEBI_ACCESSION', 'ID'], inplace=True)
+
+    fname = os.path.join(path, 'chebi_names.tsv')
+    logger.info('Saving into %s' % fname)
+    df.to_csv(fname, sep='\t', header=True, index=False,
+              columns=['CHEBI_ACCESSION', 'NAME'])
 
 
 def update_cellular_component_hierarchy():
