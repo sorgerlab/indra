@@ -264,6 +264,7 @@ class MedscanProcessor(object):
         self._gen = None
         self._tmp_dir = None
         self._stmt_hashes = set()
+        self._content_handled = collections.defaultdict(set)
         return
 
     def iter_statements(self, populate=True):
@@ -383,6 +384,8 @@ class MedscanProcessor(object):
 
         # Go through the document again and extract statements
         good_relations = []
+        skipping_doc = False
+        skipping_sent = False
         for event, elem in lxml.etree.iterparse(f, events=('start', 'end'),
                                                 encoding='utf-8',
                                                 recover=True):
@@ -391,12 +394,22 @@ class MedscanProcessor(object):
             # If opening up a new doc, set the PMID
             if event == 'start' and elem.tag == 'doc':
                 pmid = elem.attrib.get('uri')
+                if pmid in self._content_handled.keys():
+                    logger.warning("Skipping repeated pmid: %s from %s."
+                                   % (pmid, f.name))
+                    skipping_doc = True
             # If getting a section, set the section type
-            elif event == 'start' and elem.tag == 'sec':
+            elif event == 'start' and elem.tag == 'sec' and not skipping_doc:
                 sec = elem.attrib.get('type')
             # Set the sentence context
-            elif event == 'start' and elem.tag == 'sent':
+            elif event == 'start' and elem.tag == 'sent' and not skipping_doc:
                 tagged_sent = elem.attrib.get('msrc')
+                h = hash(tagged_sent)
+                if h in self._content_handled.get(pmid, set()):
+                    skipping_sent = True
+                    continue
+                skipping_sent = False
+                self._content_handled[pmid].add(h)
 
                 # Reset last_relation between sentences, since we will only be
                 # interested in the relation immediately preceding a CONTROL
@@ -404,7 +417,8 @@ class MedscanProcessor(object):
                 last_relation = None
 
                 entities = {}
-            elif event == 'end' and elem.tag == 'sent':
+            elif event == 'end' and elem.tag == 'sent' and not skipping_doc \
+                    and not skipping_sent:
                 # End of sentence; deduplicate and copy statements from this
                 # sentence to the main statements list
 
@@ -415,11 +429,13 @@ class MedscanProcessor(object):
 
                 # Reset site info
                 self.last_site_info_in_sentence = None
-            elif event == 'start' and elem.tag == 'match':
+            elif event == 'start' and elem.tag == 'match' and not skipping_doc\
+                    and not skipping_sent:
                 match_text = elem.attrib.get('chars')
                 match_start = int(elem.attrib.get('coff'))
                 match_end = int(elem.attrib.get('clen')) + match_start
-            elif event == 'start' and elem.tag == 'entity':
+            elif event == 'start' and elem.tag == 'entity' \
+                    and not skipping_doc and not skipping_sent:
                 if not in_prop:
                     ent_id = elem.attrib['msid']
                     ent_urn = elem.attrib.get('urn')
@@ -437,7 +453,8 @@ class MedscanProcessor(object):
                     property_entities.append(MedscanEntity(ent_name, ent_urn,
                                                            ent_type, None,
                                                            None, None))
-            elif event == 'start' and elem.tag == 'svo':
+            elif event == 'start' and elem.tag == 'svo' and not skipping_doc \
+                    and not skipping_sent:
                 subj = elem.attrib.get('subj')
                 verb = elem.attrib.get('verb')
                 obj = elem.attrib.get('obj')
@@ -457,14 +474,16 @@ class MedscanProcessor(object):
                     # that is a more specific but less uniform version of the
                     # same extracted statement.
                     last_relation = relation
-            elif event == 'start' and elem.tag == 'prop':
+            elif event == 'start' and elem.tag == 'prop' and not skipping_doc \
+                    and not skipping_sent:
                 in_prop = True
                 property_name = elem.attrib.get('name')
                 property_entities = []
-            elif event == 'end' and elem.tag == 'prop':
+            elif event == 'end' and elem.tag == 'prop' and not skipping_doc \
+                    and not skipping_sent:
                 in_prop = False
                 entities[ent_id].properties[property_name] = property_entities
-            elif event == 'end' and elem.tag == 'doc':
+            elif event == 'end' and elem.tag == 'doc' and not skipping_doc:
                 doc_counter += 1
                 # Give a status update
                 if doc_counter % 100 == 0:
