@@ -963,8 +963,11 @@ def _urn_to_db_refs(urn):
         # Identifier is MESH
         urn_mesh_name = unquote(urn_id)
         mesh_id, mesh_name = mesh_client.get_mesh_id_name(urn_mesh_name)
-        db_refs['MESH'] = mesh_id
-        db_name = mesh_name
+        if mesh_id:
+            db_refs['MESH'] = mesh_id
+            db_name = mesh_name
+        else:
+            db_name = urn_mesh_name
     elif urn_type == 'agi-gocomplex':
         # Identifier is GO
         db_refs['GO'] = 'GO:%s' % urn_id
