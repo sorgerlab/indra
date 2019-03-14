@@ -391,8 +391,6 @@ class MedscanProcessor(object):
             # If opening up a new doc, set the PMID
             if event == 'start' and elem.tag == 'doc':
                 pmid = elem.attrib.get('uri')
-                if '26872462' in pmid:
-                    print("Take a look at this...")
             # If getting a section, set the section type
             elif event == 'start' and elem.tag == 'sec':
                 sec = elem.attrib.get('type')
