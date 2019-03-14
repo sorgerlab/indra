@@ -46,12 +46,10 @@ def perm_cache(cache_type='pkl', cache_file=None):
             try:
                 res = self.cache[key]
                 self.__cache_info['read'] += 1
-                print("Retrieving old value %s=%s" % (key, res))
             except KeyError:
                 res = self.func(*args, **kwargs)
                 self.cache[key] = res
                 self.__cache_info['added'] += 1
-                print("Adding %s=%s to the cache." % (key, res))
             return res
 
         def cache_info(self):
@@ -64,7 +62,6 @@ def perm_cache(cache_type='pkl', cache_file=None):
             elif self._cache_type == 'json':
                 with open(self._cache_file, 'w') as f:
                     json.dump(self.cache, f, indent=2)
-            print("Stashed %s." % self._cache_file)
             return
 
     return PermCache
