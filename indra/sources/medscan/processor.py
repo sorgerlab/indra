@@ -105,25 +105,44 @@ def _is_statement_in_list(new_stmt, old_stmt_list):
                 # If the new statement does have something new, add it to the
                 # existing statement. And then ignore it.
                 if s_new > s_old:
-                    ag_new.db_refs.update(ag_old.db_refs)
+                    ag_old.db_refs.update(ag_new.db_refs)
                     return True
 
                 # If this is a case where different CHEBI ids were mapped to
                 # the same entity, set the agent name to the CHEBI id.
                 # TODO: Ideally we should get the CHEBI name.
                 if _fix_different_refs(ag_old, ag_new, 'CHEBI'):
-                    return False
+                    # Check to make sure the newly described statement does
+                    # not match anything.
+                    return _is_statement_in_list(new_stmt, old_stmt_list)
 
                 # If this is a case, like above, but with UMLS IDs, do the same
                 # thing as above. This will likely never be improved.
                 if _fix_different_refs(ag_old, ag_new, 'UMLS'):
-                    return False
+                    # Check to make sure the newly described statement does
+                    # not match anything.
+                    return _is_statement_in_list(new_stmt, old_stmt_list)
 
-                print('Weird')
+                logger.warning("Found an unexpected kind of duplicate. "
+                               "Ignoring it.")
+                return True
 
             # This means all the agents matched, which can happen if the
             # original issue was the ordering of agents in a Complex.
             return True
+
+        elif old_stmt.get_hash(True, True) == new_stmt.get_hash(True, True):
+            # Check to see if we can improve the annotation of the existing
+            # statement.
+            e_old = old_stmt.evidence[0]
+            e_new = new_stmt.evidence[0]
+            if e_old.annotations['last_verb'] is None:
+                e_old.annotations['last_verb'] = e_new.annotations['last_verb']
+
+            # If the evidence is "the same", modulo annotations, just ignore it
+            if e_old.get_source_hash(True) == e_new.get_source_hash(True):
+                return True
+
     return False
 
 
