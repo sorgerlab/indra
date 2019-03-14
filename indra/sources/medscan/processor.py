@@ -1,3 +1,5 @@
+from urllib.parse import unquote
+
 import re
 import os
 import glob
@@ -959,7 +961,8 @@ def _urn_to_db_refs(urn):
         db_refs['UMLS'] = urn_id
     elif urn_type in ['agi-meshdis', 'agi-ncimorgan']:
         # Identifier is MESH
-        mesh_id, mesh_name = mesh_client.get_mesh_id_name(urn_id)
+        urn_mesh_name = unquote(urn_id)
+        mesh_id, mesh_name = mesh_client.get_mesh_id_name(urn_mesh_name)
         db_refs['MESH'] = mesh_id
         db_name = mesh_name
     elif urn_type == 'agi-gocomplex':
