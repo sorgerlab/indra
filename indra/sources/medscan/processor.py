@@ -938,13 +938,16 @@ def _parse_mut_string(s):
         return m.groups()
 
 
+URN_PATT = re.compile('urn:([^:]+):([^:]+)')
+
+
 def _urn_to_db_refs(urn):
     """Converts a Medscan URN to an INDRA db_refs dictionary with grounding
     information.
 
     Parameters
     ----------
-    url : str
+    urn : str
         A Medscan URN
 
     Returns
@@ -961,13 +964,11 @@ def _urn_to_db_refs(urn):
     if urn is None:
         return {}, None
 
-    p = 'urn:([^:]+):([^:]+)'
-    m = re.match(p, urn)
+    m = URN_PATT.match(urn)
     if m is None:
         return None, None
 
-    urn_type = m.group(1)
-    urn_id = m.group(2)
+    urn_type, urn_id = m.groups()
 
     db_refs = {}
     db_name = None
@@ -992,27 +993,26 @@ def _urn_to_db_refs(urn):
             # Try to lookup HGNC name; if it's available, set it to the
             # agent name
             db_name = get_hgnc_name(hgnc_id)
-    elif urn_type == 'agi-ncimcelltype':
-        # Identifier is UMLS
-        db_refs['UMLS'] = urn_id
-    elif urn_type in ['agi-meshdis', 'agi-ncimorgan']:
-        # Identifier is MESH
-        urn_mesh_name = unquote(urn_id)
-        mesh_id, mesh_name = mesh_client.get_mesh_id_name(urn_mesh_name)
-        if mesh_id:
-            db_refs['MESH'] = mesh_id
-            db_name = mesh_name
+    elif urn_type in ['agi-meshdis', 'agi-ncimorgan', 'agi-ncimtissue',
+                      'agi-ncimcelltype']:
+        if urn_id.startswith('C') and urn_id[1:].isdigit():
+            # Identifier is probably UMLS
+            db_refs['UMLS'] = urn_id
         else:
-            db_name = urn_mesh_name
+            # Identifier is MESH
+            urn_mesh_name = unquote(urn_id)
+            mesh_id, mesh_name = mesh_client.get_mesh_id_name(urn_mesh_name)
+            if mesh_id:
+                db_refs['MESH'] = mesh_id
+                db_name = mesh_name
+            else:
+                db_name = urn_mesh_name
     elif urn_type == 'agi-gocomplex':
         # Identifier is GO
         db_refs['GO'] = 'GO:%s' % urn_id
     elif urn_type == 'agi-go':
         # Identifier is GO
         db_refs['GO'] = 'GO:%s' % urn_id
-    elif urn_type == 'agi-ncimtissue':
-        # Identifier is MESH
-        db_refs['MESH'] = urn_id
 
     # If we have a GO or MESH grounding, see if there is a corresponding
     # Famplex grounding
