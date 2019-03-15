@@ -306,8 +306,8 @@ class MedscanProcessor(object):
         for filename in files:
             logger.info('Processing %s' % filename)
             fix_character_encoding(filename, tmp_file)
-            with open(tmp_file, 'rb') as f:
-                for stmt in self._iter_through_csxml_file_from_handle(f):
+            with open(tmp_file, 'rb') as self.__f:
+                for stmt in self._iter_through_csxml_file_from_handle():
                     yield stmt
 
             percent_done_now = floor(100.0 * self.files_processed / num_files)
@@ -364,14 +364,14 @@ class MedscanProcessor(object):
             If True, only create a generator which can be used by the
             `get_statements` method. If True, populate the statements list now.
         """
-        with open(filename, 'rb') as f:
-            self._gen = self._iter_through_csxml_file_from_handle(f, num_docs)
-            if not lazy:
-                for stmt in self._gen:
-                    self.statements.append(stmt)
+        self.__f = open(filename, 'rb')
+        self._gen = self._iter_through_csxml_file_from_handle(num_docs)
+        if not lazy:
+            for stmt in self._gen:
+                self.statements.append(stmt)
         return
 
-    def _iter_through_csxml_file_from_handle(self, f, num_documents=None):
+    def _iter_through_csxml_file_from_handle(self, num_documents=None):
         pmid = None
         sec = None
         tagged_sent = None
@@ -387,7 +387,8 @@ class MedscanProcessor(object):
         good_relations = []
         skipping_doc = False
         skipping_sent = False
-        for event, elem in lxml.etree.iterparse(f, events=('start', 'end'),
+        for event, elem in lxml.etree.iterparse(self.__f,
+                                                events=('start', 'end'),
                                                 encoding='utf-8',
                                                 recover=True):
             if elem.tag in ['attr', 'toks']:
@@ -498,6 +499,7 @@ class MedscanProcessor(object):
                 self._pmids_handled.add(pmid_num)
                 self._sentences_handled = set()
         self.files_processed += 1
+        self.__f.close()
         return
 
     def _add_statement(self, stmt):
