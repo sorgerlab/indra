@@ -110,7 +110,6 @@ def _is_statement_in_list(new_stmt, old_stmt_list):
 
                 # If this is a case where different CHEBI ids were mapped to
                 # the same entity, set the agent name to the CHEBI id.
-                # TODO: Ideally we should get the CHEBI name.
                 if _fix_different_refs(ag_old, ag_new, 'CHEBI'):
                     # Check to make sure the newly described statement does
                     # not match anything.
@@ -221,6 +220,8 @@ D_INHIBITION_VERBS = ['DirectRegulation-negative',
                       'DirectRegulation-negative--direct interaction']
 # All inhibition verbs
 ALL_INHIBITION_VERBS = INHIBITION_VERBS + D_INHIBITION_VERBS
+
+PMID_PATT = re.compile('info:pmid/(\d+)')
 
 
 class MedscanProcessor(object):
@@ -393,8 +394,15 @@ class MedscanProcessor(object):
                 continue
             # If opening up a new doc, set the PMID
             if event == 'start' and elem.tag == 'doc':
-                pmid = elem.attrib.get('uri')
-                if pmid in self._content_handled.keys():
+                uri = elem.attrib.get('uri')
+                re_pmid = PMID_PATT.match(uri)
+                if re_pmid is None:
+                    logger.warning("Could not extract pmid from: %s." % uri)
+                    skipping_doc = True
+
+                pmid = re_pmid.group(1)
+                pmid_num = int(pmid)
+                if pmid_num in self._pmids_handled:
                     logger.warning("Skipping repeated pmid: %s from %s."
                                    % (pmid, f.name))
                     skipping_doc = True
@@ -524,11 +532,6 @@ class MedscanProcessor(object):
 
         # Make evidence object
         untagged_sentence = _untag_sentence(relation.tagged_sentence)
-        source_id = relation.uri
-        m = re.match('info:pmid/([0-9]+)', source_id)
-        if m is not None:
-            # Extract the pmid from the URI if the URI refers to a pmid
-            pmid = m.group(1)
         if last_relation:
             last_verb = last_relation.verb
         else:
@@ -538,9 +541,9 @@ class MedscanProcessor(object):
                        'agents': {'coords': [subj_bounds, obj_bounds]}}
         epistemics = dict()
         epistemics['direct'] = False  # Overridden later if needed
-        ev = [Evidence(source_api='medscan', source_id=source_id, pmid=pmid,
-                       text=untagged_sentence, annotations=annotations,
-                       epistemics=epistemics)]
+        ev = [Evidence(source_api='medscan', source_id=relation.uri,
+                       pmid=relation.pmid, text=untagged_sentence,
+                       annotations=annotations, epistemics=epistemics)]
 
         if relation.verb in INCREASE_AMOUNT_VERBS:
             # If the normalized verb corresponds to an IncreaseAmount statement
@@ -830,7 +833,7 @@ class MedscanRelation(object):
 
     Attributes
     ----------
-    uri : str
+    pmid : str
         The URI of the current document (such as a PMID)
     sec : str
         The section of the document the relation occurs in
@@ -850,8 +853,9 @@ class MedscanRelation(object):
         The type of SVO relationship (for example, CONTROL indicates
         that the verb is normalized)
     """
-    def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj,
+    def __init__(self, pmid, uri, sec, entities, tagged_sentence, subj, verb, obj,
                  svo_type):
+        self.pmid = pmid
         self.uri = uri
         self.sec = sec
         self.entities = entities
@@ -887,6 +891,9 @@ def normalize_medscan_name(name):
     return name
 
 
+MOD_PATT = re.compile('([A-Za-z])+([0-9]+)')
+
+
 def _parse_mod_string(s):
     """Parses a string referring to a protein modification of the form
     (residue)(position), such as T47.
@@ -904,9 +911,12 @@ def _parse_mod_string(s):
     position : str
         The position at which the modification is happening (example: 47)
     """
-    m = re.match('([A-Za-z])+([0-9]+)', s)
-    assert(m is not None)
+    m = MOD_PATT.match(s)
+    assert m is not None
     return m.groups()
+
+
+MUT_PATT = re.compile('([A-Za-z]+)([0-9]+)([A-Za-z]+)')
 
 
 def _parse_mut_string(s):
@@ -929,7 +939,7 @@ def _parse_mut_string(s):
     new_residue : str
         The new residue, or None if the mutation string cannot be parsed
     """
-    m = re.match('([A-Za-z]+)([0-9]+)([A-Za-z]+)', s)
+    m = MUT_PATT.match(s)
     if m is None:
         # Mutation string does not fit this pattern, other patterns not
         # currently supported
