@@ -260,12 +260,12 @@ class MedscanProcessor(object):
         self.num_entities_not_found = 0
         self.num_entities = 0
         self.last_site_info_in_sentence = None
-        self.log_entities = collections.defaultdict(int)
         self.files_processed = 0
         self._gen = None
         self._tmp_dir = None
-        self._stmt_hashes = set()
-        self._content_handled = collections.defaultdict(set)
+        self._pmids_handled = set()
+        self._sentences_handled = set()
+        self.__f = None
         return
 
     def iter_statements(self, populate=True):
@@ -413,11 +413,10 @@ class MedscanProcessor(object):
             elif event == 'start' and elem.tag == 'sent' and not skipping_doc:
                 tagged_sent = elem.attrib.get('msrc')
                 h = hash(tagged_sent)
-                if h in self._content_handled.get(pmid, set()):
+                if h in self._sentences_handled:
                     skipping_sent = True
                     continue
                 skipping_sent = False
-                self._content_handled[pmid].add(h)
 
                 # Reset last_relation between sentences, since we will only be
                 # interested in the relation immediately preceding a CONTROL
@@ -433,6 +432,7 @@ class MedscanProcessor(object):
                 for s in self.sentence_statements:
                     yield s
                 self.sentence_statements = []
+                self._sentences_handled.add(h)
                 good_relations = []
 
                 # Reset site info
@@ -451,9 +451,6 @@ class MedscanProcessor(object):
                     entities[ent_id] = MedscanEntity(match_text, ent_urn,
                                                      ent_type, {},
                                                      match_start, match_end)
-                    tuple_key = (ent_type, elem.attrib.get('name'), ent_urn)
-                    if ent_type == 'Complex' or ent_type == 'FunctionalClass':
-                        self.log_entities[tuple_key] += 1
                 else:
                     ent_type = elem.attrib['type']
                     ent_urn = elem.attrib['urn']
@@ -469,7 +466,7 @@ class MedscanProcessor(object):
                 svo_type = elem.attrib.get('type')
 
                 # Aggregate information about the relation
-                relation = MedscanRelation(uri=pmid, sec=sec,
+                relation = MedscanRelation(pmid=pmid, sec=sec, uri=uri,
                                            tagged_sentence=tagged_sent,
                                            entities=entities, subj=subj,
                                            verb=verb, obj=obj,
@@ -498,6 +495,8 @@ class MedscanProcessor(object):
                     logger.info("Processed %d documents" % doc_counter)
                 if num_documents is not None and doc_counter >= num_documents:
                     break
+                self._pmids_handled.add(pmid_num)
+                self._sentences_handled = set()
         self.files_processed += 1
         return
 
