@@ -325,7 +325,7 @@ class MedscanProcessor(object):
         shutil.rmtree(self.__tmp_dir)
         return
 
-    def process_csxml_file(self, filename, num_docs=None, lazy=False):
+    def process_csxml_file(self, filename, interval=None, lazy=False):
         """Processes a filehandle to MedScan csxml input into INDRA
         statements.
 
@@ -357,25 +357,31 @@ class MedscanProcessor(object):
         ----------
         filename : string
             The path to a Medscan csxml file.
-        num_docs : int or None
-            The number of documents to process, or None to process all
-            documents in the input stream
+        interval : (start, end) or None
+            Select the interval of documents to read, starting with the
+            `start`th document and ending before the `end`th document. If
+            either is None, the value is considered undefined. If the value
+            exceeds the bounds of available documents, it will simply be
+            ignored.
         lazy : bool
             If True, only create a generator which can be used by the
             `get_statements` method. If True, populate the statements list now.
         """
+        if interval is None:
+            interval = (None, None)
+
         self.__f = open(filename, 'rb')
-        self._gen = self._iter_through_csxml_file_from_handle(num_docs)
+        self._gen = self._iter_through_csxml_file_from_handle(*interval)
         if not lazy:
             for stmt in self._gen:
                 self.statements.append(stmt)
         return
 
-    def _iter_through_csxml_file_from_handle(self, num_documents=None):
+    def _iter_through_csxml_file_from_handle(self, start=None, stop=None):
         pmid = None
         sec = None
         tagged_sent = None
-        doc_counter = 0
+        doc_idx = 0
         entities = {}
         match_text = None
         in_prop = False
@@ -395,6 +401,15 @@ class MedscanProcessor(object):
                 continue
             # If opening up a new doc, set the PMID
             if event == 'start' and elem.tag == 'doc':
+                if start is not None and doc_idx < start:
+                    logger.info("Skipping document number %d." % doc_idx)
+                    skipping_doc = True
+                    continue
+
+                if stop is not None and doc_idx >= stop:
+                    logger.info("Reach the end of the allocated docs.")
+                    break
+
                 uri = elem.attrib.get('uri')
                 re_pmid = PMID_PATT.match(uri)
                 if re_pmid is None:
@@ -405,7 +420,7 @@ class MedscanProcessor(object):
                 pmid_num = int(pmid)
                 if pmid_num in self._pmids_handled:
                     logger.warning("Skipping repeated pmid: %s from %s."
-                                   % (pmid, f.name))
+                                   % (pmid, self.__f.name))
                     skipping_doc = True
             # If getting a section, set the section type
             elif event == 'start' and elem.tag == 'sec' and not skipping_doc:
@@ -489,15 +504,14 @@ class MedscanProcessor(object):
                     and not skipping_sent:
                 in_prop = False
                 entities[ent_id].properties[property_name] = property_entities
-            elif event == 'end' and elem.tag == 'doc' and not skipping_doc:
-                doc_counter += 1
+            elif event == 'end' and elem.tag == 'doc':
+                doc_idx += 1
                 # Give a status update
-                if doc_counter % 100 == 0:
-                    logger.info("Processed %d documents" % doc_counter)
-                if num_documents is not None and doc_counter >= num_documents:
-                    break
+                if doc_idx % 100 == 0:
+                    logger.info("Processed %d documents" % doc_idx)
                 self._pmids_handled.add(pmid_num)
                 self._sentences_handled = set()
+
         self.files_processed += 1
         self.__f.close()
         return

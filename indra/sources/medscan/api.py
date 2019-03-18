@@ -81,7 +81,7 @@ def process_file_sorted_by_pmid(file_name):
     return s_dict
 
 
-def process_file(filename, num_documents=None, lazy=False):
+def process_file(filename, interval=None, lazy=False):
     """Process a CSXML file for its relevant information.
 
     Consider running the fix_csxml_character_encoding.py script in
@@ -92,9 +92,12 @@ def process_file(filename, num_documents=None, lazy=False):
     ----------
     filename : str
         The csxml file, containing Medscan XML, to process
-    num_documents : int
-        The number of documents to process, or None to process all of the
-        documents within the csxml file.
+    interval : (start, end) or None
+        Select the interval of documents to read, starting with the
+        `start`th document and ending before the `end`th document. If
+        either is None, the value is considered undefined. If the value
+        exceeds the bounds of available documents, it will simply be
+        ignored.
     lazy : bool
         If True, the statements will not be generated immediately, but rather
         a generator will be formulated, and statements can be retrieved by
@@ -107,5 +110,5 @@ def process_file(filename, num_documents=None, lazy=False):
         A MedscanProcessor object containing extracted statements
     """
     mp = MedscanProcessor()
-    mp.process_csxml_file(filename, num_documents, lazy)
+    mp.process_csxml_file(filename, interval, lazy)
     return mp
