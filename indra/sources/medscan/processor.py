@@ -1017,7 +1017,8 @@ def _urn_to_db_refs(urn):
 
             # Convert the HGNC ID to a Uniprot ID
             uniprot_id = get_uniprot_id(hgnc_id)
-            db_refs['UP'] = uniprot_id
+            if uniprot_id is not None:
+                db_refs['UP'] = uniprot_id
 
             # Try to lookup HGNC name; if it's available, set it to the
             # agent name
