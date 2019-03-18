@@ -96,7 +96,7 @@ def test_agent_from_entity():
 
     # Test relation
     tagged_sentence = '{ID{321=BRAF} is a protein, not a type of car.'
-    relation = MedscanRelation(uri=None,
+    relation = MedscanRelation(pmid=None,
                                sec=None,
                                entities={'123': entity},
                                tagged_sentence=tagged_sentence,
