@@ -109,8 +109,8 @@ def group_and_sort_statements(stmt_list, ev_totals=None):
     return sorted_groups
 
 
-def make_string_from_sort_key(key, verb):
-    """Make a Statement string via EnglishAssembler from the sort key.
+def make_stmt_from_sort_key(key, verb):
+    """Make a Statement from the sort key.
 
     Specifically, the sort key used by `group_and_sort_statements`.
     """
@@ -131,5 +131,17 @@ def make_string_from_sort_key(key, verb):
         stmt = StmtClass(make_agent(inps[0]), inps[1], inps[2])
     else:
         stmt = StmtClass(*[make_agent(name) for name in inps])
+    return stmt
+
+def stmt_to_english(stmt):
+    """Return an English assembled Statement as a sentence."""
     ea = EnglishAssembler([stmt])
     return ea.make_model()[:-1]
+
+def make_string_from_sort_key(key, verb):
+    """Make a Statement string via EnglishAssembler from the sort key.
+
+    Specifically, the sort key used by `group_and_sort_statements`.
+    """
+    stmt = make_stmt_from_sort_key(key, verb)
+    return stmt_to_english(stmt)
