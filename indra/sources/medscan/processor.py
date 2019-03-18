@@ -512,6 +512,10 @@ class MedscanProcessor(object):
                 self._pmids_handled.add(pmid_num)
                 self._sentences_handled = set()
 
+            # Solution for memory leak found here:
+            # https://stackoverflow.com/questions/12160418/why-is-lxml-etree-iterparse-eating-up-all-my-memory?lq=1
+            elem.clear()
+
         self.files_processed += 1
         self.__f.close()
         return
