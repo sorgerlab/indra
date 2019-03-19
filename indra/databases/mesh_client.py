@@ -1,21 +1,28 @@
+import json
+
 import re
-import csv
 from functools import lru_cache
 from urllib.parse import urlencode
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, join, pardir
 import requests
 from indra.util import read_unicode_csv
 
-mesh_url = 'https://id.nlm.nih.gov/mesh/'
-mesh_file = join(dirname(abspath(__file__)), '..', 'resources',
-                 'mesh_id_label_mappings.tsv')
+MESH_URL = 'https://id.nlm.nih.gov/mesh/'
+HERE = dirname(abspath(__file__))
+RESOURCES = join(HERE, pardir, 'resources')
+MESH_FILE = join(RESOURCES, 'mesh_id_label_mappings.tsv')
+MESH_REV_LOOKUPS = join(RESOURCES, 'mesh_name_id_maps.json')
 
 
 mesh_id_to_name = {}
 mesh_name_to_id = {}
-for mesh_id, mesh_label in read_unicode_csv(mesh_file, delimiter='\t'):
+for mesh_id, mesh_label in read_unicode_csv(MESH_FILE, delimiter='\t'):
     mesh_id_to_name[mesh_id] = mesh_label
     mesh_name_to_id[mesh_label] = mesh_id
+
+with open(MESH_REV_LOOKUPS, 'r') as f:
+    mesh_name_to_id_name = json.load(f)
+
 
 @lru_cache(maxsize=1000)
 def get_mesh_name_from_web(mesh_id):
@@ -32,7 +39,7 @@ def get_mesh_name_from_web(mesh_id):
         Label for the MESH ID, or None if the query failed or no label was
         found.
     """
-    url = mesh_url + mesh_id + '.json'
+    url = MESH_URL + mesh_id + '.json'
     resp = requests.get(url)
     if resp.status_code != 200:
         return None
@@ -97,10 +104,17 @@ def get_mesh_id_name(mesh_term, offline=False):
         the name was found, returns a tuple of (None, None).
     """
     indra_mesh_id = mesh_name_to_id.get(mesh_term)
-    if offline and indra_mesh_id is None:
-        return (None, None)
-    elif offline:
-        return (indra_mesh_id, mesh_term)
+    if indra_mesh_id is not None:
+        return indra_mesh_id, mesh_term
+
+    indra_mesh_id, new_term = \
+        mesh_name_to_id_name.get(mesh_term, (None, None))
+    if indra_mesh_id is not None:
+        return indra_mesh_id, new_term
+
+    if offline:
+        return None, None
+
     # Look up the MESH mapping from NLM if we don't have it locally
     return get_mesh_id_name_from_web(mesh_term)
 
@@ -123,7 +137,7 @@ def get_mesh_id_name_from_web(mesh_term):
         a Concept name). If the query failed, or no descriptor corresponding to
         the name was found, returns a tuple of (None, None).
     """
-    url = mesh_url + 'sparql'
+    url = MESH_URL + 'sparql'
     query = """
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -155,18 +169,23 @@ def get_mesh_id_name_from_web(mesh_term):
     resp = requests.get(query_string)
     # Check status
     if resp.status_code != 200:
-        return (None, None)
-    mesh_json = resp.json()
+        return None, None
+
     try:
+        # Try to parse the json response (this can raise exceptions if we
+        # got no response).
+        mesh_json = resp.json()
+
         # Choose the first entry (should usually be only one)
         id_uri = mesh_json['results']['bindings'][0]['d']['value']
         name = mesh_json['results']['bindings'][0]['dName']['value']
-    except (KeyError, IndexError) as e:
-        return (None, None)
+    except (KeyError, IndexError, json.decoder.JSONDecodeError) as e:
+        return None, None
+
     # Strip the MESH prefix off the ID URI
     m = re.match('http://id.nlm.nih.gov/mesh/([A-Za-z0-9]*)', id_uri)
     assert m is not None
     id = m.groups()[0]
-    return (id, name)
+    return id, name
 
 
