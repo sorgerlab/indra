@@ -1,5 +1,6 @@
+import json
+
 import re
-import csv
 from functools import lru_cache
 from urllib.parse import urlencode
 from os.path import abspath, dirname, join
@@ -16,6 +17,7 @@ mesh_name_to_id = {}
 for mesh_id, mesh_label in read_unicode_csv(mesh_file, delimiter='\t'):
     mesh_id_to_name[mesh_id] = mesh_label
     mesh_name_to_id[mesh_label] = mesh_id
+
 
 @lru_cache(maxsize=1000)
 def get_mesh_name_from_web(mesh_id):
@@ -98,9 +100,9 @@ def get_mesh_id_name(mesh_term, offline=False):
     """
     indra_mesh_id = mesh_name_to_id.get(mesh_term)
     if offline and indra_mesh_id is None:
-        return (None, None)
+        return None, None
     elif offline:
-        return (indra_mesh_id, mesh_term)
+        return indra_mesh_id, mesh_term
     # Look up the MESH mapping from NLM if we don't have it locally
     return get_mesh_id_name_from_web(mesh_term)
 
@@ -155,8 +157,8 @@ def get_mesh_id_name_from_web(mesh_term):
     resp = requests.get(query_string)
     # Check status
     if resp.status_code != 200:
-        return (None, None)
-    mesh_json = resp.json()
+        return None, None
+
     try:
         # Choose the first entry (should usually be only one)
         id_uri = mesh_json['results']['bindings'][0]['d']['value']
@@ -167,6 +169,6 @@ def get_mesh_id_name_from_web(mesh_term):
     m = re.match('http://id.nlm.nih.gov/mesh/([A-Za-z0-9]*)', id_uri)
     assert m is not None
     id = m.groups()[0]
-    return (id, name)
+    return id, name
 
 
