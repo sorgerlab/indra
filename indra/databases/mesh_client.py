@@ -20,8 +20,8 @@ for mesh_id, mesh_label in read_unicode_csv(MESH_FILE, delimiter='\t'):
     mesh_id_to_name[mesh_id] = mesh_label
     mesh_name_to_id[mesh_label] = mesh_id
 
-with open(mesh_rev_lookups, 'r') as f:
-    mesh_name_to_id_NAME = json.load(f)
+with open(MESH_REV_LOOKUPS, 'r') as f:
+    mesh_name_to_id_name = json.load(f)
 
 
 @lru_cache(maxsize=1000)
