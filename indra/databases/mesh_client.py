@@ -3,20 +3,21 @@ import json
 import re
 from functools import lru_cache
 from urllib.parse import urlencode
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, join, pardir
 import requests
 from indra.util import read_unicode_csv
 
-mesh_url = 'https://id.nlm.nih.gov/mesh/'
-mesh_file = join(dirname(abspath(__file__)), '..', 'resources',
-                 'mesh_id_label_mappings.tsv')
+MESH_URL = 'https://id.nlm.nih.gov/mesh/'
+HERE = dirname(abspath(__file__))
+RESOURCES = join(HERE, pardir, 'resources')
+MESH_FILE = join(RESOURCES, 'mesh_id_label_mappings.tsv')
 
 
-mesh_id_to_name = {}
-mesh_name_to_id = {}
-for mesh_id, mesh_label in read_unicode_csv(mesh_file, delimiter='\t'):
-    mesh_id_to_name[mesh_id] = mesh_label
-    mesh_name_to_id[mesh_label] = mesh_id
+MESH_ID_TO_NAME = {}
+MESH_NAME_TO_ID = {}
+for mesh_id, mesh_label in read_unicode_csv(MESH_FILE, delimiter='\t'):
+    MESH_ID_TO_NAME[mesh_id] = mesh_label
+    MESH_NAME_TO_ID[mesh_label] = mesh_id
 
 
 @lru_cache(maxsize=1000)
@@ -34,7 +35,7 @@ def get_mesh_name_from_web(mesh_id):
         Label for the MESH ID, or None if the query failed or no label was
         found.
     """
-    url = mesh_url + mesh_id + '.json'
+    url = MESH_URL + mesh_id + '.json'
     resp = requests.get(url)
     if resp.status_code != 200:
         return None
@@ -67,7 +68,7 @@ def get_mesh_name(mesh_id, offline=False):
         Label for the MESH ID, or None if the query failed or no label was
         found.
     """
-    indra_mesh_mapping = mesh_id_to_name.get(mesh_id)
+    indra_mesh_mapping = MESH_ID_TO_NAME.get(mesh_id)
     if offline or indra_mesh_mapping is not None:
         return indra_mesh_mapping
     # Look up the MESH mapping from NLM if we don't have it locally
@@ -98,7 +99,7 @@ def get_mesh_id_name(mesh_term, offline=False):
         a Concept name). If the query failed, or no descriptor corresponding to
         the name was found, returns a tuple of (None, None).
     """
-    indra_mesh_id = mesh_name_to_id.get(mesh_term)
+    indra_mesh_id = MESH_NAME_TO_ID.get(mesh_term)
     if offline and indra_mesh_id is None:
         return None, None
     elif offline:
@@ -125,7 +126,7 @@ def get_mesh_id_name_from_web(mesh_term):
         a Concept name). If the query failed, or no descriptor corresponding to
         the name was found, returns a tuple of (None, None).
     """
-    url = mesh_url + 'sparql'
+    url = MESH_URL + 'sparql'
     query = """
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
