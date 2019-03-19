@@ -160,11 +160,16 @@ def get_mesh_id_name_from_web(mesh_term):
         return None, None
 
     try:
+        # Try to parse the json response (this can raise exceptions if we
+        # got no response).
+        mesh_json = resp.json()
+
         # Choose the first entry (should usually be only one)
         id_uri = mesh_json['results']['bindings'][0]['d']['value']
         name = mesh_json['results']['bindings'][0]['dName']['value']
-    except (KeyError, IndexError) as e:
-        return (None, None)
+    except (KeyError, IndexError, json.decoder.JSONDecodeError) as e:
+        return None, None
+
     # Strip the MESH prefix off the ID URI
     m = re.match('http://id.nlm.nih.gov/mesh/([A-Za-z0-9]*)', id_uri)
     assert m is not None
