@@ -14,14 +14,14 @@ MESH_FILE = join(RESOURCES, 'mesh_id_label_mappings.tsv')
 MESH_REV_LOOKUPS = join(RESOURCES, 'mesh_name_id_maps.json')
 
 
-MESH_ID_TO_NAME = {}
-MESH_NAME_TO_ID = {}
+mesh_id_to_name = {}
+mesh_name_to_id = {}
 for mesh_id, mesh_label in read_unicode_csv(MESH_FILE, delimiter='\t'):
-    MESH_ID_TO_NAME[mesh_id] = mesh_label
-    MESH_NAME_TO_ID[mesh_label] = mesh_id
+    mesh_id_to_name[mesh_id] = mesh_label
+    mesh_name_to_id[mesh_label] = mesh_id
 
-with open(MESH_REV_LOOKUPS, 'r') as f:
-    MESH_NAME_TO_ID_NAME = json.load(f)
+with open(mesh_rev_lookups, 'r') as f:
+    mesh_name_to_id_NAME = json.load(f)
 
 
 @lru_cache(maxsize=1000)
@@ -72,7 +72,7 @@ def get_mesh_name(mesh_id, offline=False):
         Label for the MESH ID, or None if the query failed or no label was
         found.
     """
-    indra_mesh_mapping = MESH_ID_TO_NAME.get(mesh_id)
+    indra_mesh_mapping = mesh_id_to_name.get(mesh_id)
     if offline or indra_mesh_mapping is not None:
         return indra_mesh_mapping
     # Look up the MESH mapping from NLM if we don't have it locally
@@ -103,12 +103,12 @@ def get_mesh_id_name(mesh_term, offline=False):
         a Concept name). If the query failed, or no descriptor corresponding to
         the name was found, returns a tuple of (None, None).
     """
-    indra_mesh_id = MESH_NAME_TO_ID.get(mesh_term)
+    indra_mesh_id = mesh_name_to_id.get(mesh_term)
     if indra_mesh_id is not None:
         return indra_mesh_id, mesh_term
 
     indra_mesh_id, new_term = \
-        MESH_NAME_TO_ID_NAME.get(mesh_term, (None, None))
+        mesh_name_to_id_NAME.get(mesh_term, (None, None))
     if indra_mesh_id is not None:
         return indra_mesh_id, new_term
 
