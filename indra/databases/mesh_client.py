@@ -108,7 +108,7 @@ def get_mesh_id_name(mesh_term, offline=False):
         return indra_mesh_id, mesh_term
 
     indra_mesh_id, new_term = \
-        mesh_name_to_id_NAME.get(mesh_term, (None, None))
+        mesh_name_to_id_name.get(mesh_term, (None, None))
     if indra_mesh_id is not None:
         return indra_mesh_id, new_term
 
