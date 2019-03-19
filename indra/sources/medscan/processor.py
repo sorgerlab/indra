@@ -370,7 +370,10 @@ class MedscanProcessor(object):
         if interval is None:
             interval = (None, None)
 
-        self.__f = open(filename, 'rb')
+        tmp_fname = tempfile.mktemp(filename)
+        fix_character_encoding(filename, tmp_fname)
+
+        self.__f = open(tmp_fname, 'rb')
         self._gen = self._iter_through_csxml_file_from_handle(*interval)
         if not lazy:
             for stmt in self._gen:
