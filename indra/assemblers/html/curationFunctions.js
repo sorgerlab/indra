@@ -8,8 +8,6 @@ $(document).ready(function(){
 // Variables
 var pubmed_fetch = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
 var latestSubmission = {
-                        'curator': '',
-                        'api_key': '',
                         'ddSelect': '',
                         'ev_hash': '',
                         'source_hash': '',
@@ -30,19 +28,19 @@ function keySubmit (key_value) {
 }
 
 function submitButtonClick(clickEvent) {
-    // CURATOR
-    var curator = document.getElementById("curator_input").value;
-    if (!curator) {
-        alert("Please enter a curator ID");
-        return;
-    }
+    // // CURATOR
+    // var curator = document.getElementById("curator_input").value;
+    // if (!curator) {
+    //     alert("Please enter a curator ID");
+    //     return;
+    // }
 
-    // API KEY
-    var api_key = document.getElementById("api_key_input").value;
-    if (!api_key) {
-        alert("Please enter an API key!");
-        return;
-    }
+    // // API KEY
+    // var api_key = document.getElementById("api_key_input").value;
+    // if (!api_key) {
+    //     alert("Please enter an API key!");
+    //     return;
+    // }
 
     // Get mouseclick target, then parent's parent
     pn = clickEvent.target.parentNode.parentNode;
@@ -96,11 +94,10 @@ function submitButtonClick(clickEvent) {
     cur_dict = {
                 'tag': err_select, 
                 'text': user_text, 
-                'curator': curator,
+                // 'curator': curator,
                 'ev_hash': source_hash
             };
 
-    // console.log("User: " + curator);
     // console.log("source hash: " + source_hash)
     // console.log("stmt hash: " + stmt_hash)
     // console.log("Error selected: " + err_select);
@@ -112,17 +109,13 @@ function submitButtonClick(clickEvent) {
     // SPAM CONTROL: preventing multiple clicks of the same curation in a row
     // If the new submission matches latest submission AND the latest submission was
     // successfully submitted, ignore the new submission
-    if (latestSubmission['curator'] == curator &
-        latestSubmission['api_key'] == document.getElementById("api_key_input").value &
-        latestSubmission['ddSelect'] == err_select &
+    if (latestSubmission['ddSelect'] == err_select &
         latestSubmission['source_hash'] == source_hash &
         latestSubmission['stmt_hash'] == stmt_hash &
         latestSubmission['submit_status'] == 200) {
         alert('Already submitted curation successfully!');
         return;
     } else {
-        latestSubmission['curator'] = curator;
-        latestSubmission['api_key'] = document.getElementById("api_key_input").value;
         latestSubmission['ddSelect'] = err_select;
         latestSubmission['source_hash'] = source_hash;
         latestSubmission['stmt_hash'] = stmt_hash;
@@ -140,14 +133,14 @@ function submitCuration(curation_dict, hash, statusBox, icon, test) {
     var api_key = document.getElementById("api_key_input").value;
     curation_addr = "https://db.indra.bio/curation/submit/";
 
-    _url = curation_addr + hash + "?api_key=" + api_key;
+    _url = curation_addr + hash; //+ "?api_key=" + api_key;
 
     if (test) {
         console.log("Submitting test curation...");
         _url += "&test";
     };
 
-    console.log("api key: " + api_key)
+    // console.log("api key: " + api_key)
     console.log("url: " + _url);
 
     response = $.ajax({
