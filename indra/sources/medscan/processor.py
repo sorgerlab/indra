@@ -370,7 +370,7 @@ class MedscanProcessor(object):
         if interval is None:
             interval = (None, None)
 
-        tmp_fname = tempfile.mktemp(filename)
+        tmp_fname = tempfile.mktemp(os.path.basename(filename))
         fix_character_encoding(filename, tmp_fname)
 
         self.__f = open(tmp_fname, 'rb')
