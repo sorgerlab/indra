@@ -21,7 +21,7 @@ for mesh_id, mesh_label in read_unicode_csv(MESH_FILE, delimiter='\t'):
     MESH_NAME_TO_ID[mesh_label] = mesh_id
 
 with open(MESH_REV_LOOKUPS, 'r') as f:
-    MESH_NAME_TO_ID_NAME = json.loads(f)
+    MESH_NAME_TO_ID_NAME = json.load(f)
 
 
 @lru_cache(maxsize=1000)

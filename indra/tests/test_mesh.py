@@ -38,7 +38,7 @@ def test_mesh_term_lookup_local():
 
 
 def test_mesh_term_local_missing():
-    mesh_term = 'Prostate Cancer'
+    mesh_term = 'Rectal Tumors'
     mesh_id, mesh_name = mesh_client.get_mesh_id_name(mesh_term, offline=True)
     assert mesh_id is None
     assert mesh_name is None
