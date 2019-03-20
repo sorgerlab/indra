@@ -33,17 +33,17 @@ def test_urn_to_db_refs():
     # agi-ncimorgan
     urn3 = 'urn:agi-ncimorgan:C0012144'
     db_refs_3, _ = _urn_to_db_refs(urn3)
-    assert db_refs_3 == {'MESH': 'C0012144'}
+    assert db_refs_3 == {'UMLS': 'C0012144'}
 
     # agi-nicmcelltype
     urn4 = 'urn:agi-ncimcelltype:C0242633'
     db_refs_4, _ = _urn_to_db_refs(urn4)
-    assert db_refs_4 == {'MESH': 'C0242633'}
+    assert db_refs_4 == {'UMLS': 'C0242633'}
 
     # agi-meshdist
     urn5 = 'urn:agi-meshdis:Paramyotonia%20Congenita'
     db_refs_5, _ = _urn_to_db_refs(urn5)
-    assert db_refs_5 == {'MESHDIS': 'Paramyotonia%20Congenita'}
+    assert db_refs_5 == {'MESH': 'D020967'}
 
     # agi-gocomplex
     urn6 = 'urn:agi-gocomplex:0005610'
@@ -58,7 +58,7 @@ def test_urn_to_db_refs():
     # agi-ncimtissue
     urn8 = 'urn:agi-ncimtissue:C0007807'
     db_refs_8, _ = _urn_to_db_refs(urn8)
-    assert db_refs_8 == {'MESH': 'C0007807'}
+    assert db_refs_8 == {'UMLS': 'C0007807'}
 
     # Do we ground to Famplex when there is a correspondence between a GO
     # id and a Famplex id?
@@ -68,7 +68,7 @@ def test_urn_to_db_refs():
 
     # Do we ground to Famplex when there is a correspondence between a MESH
     # id and a Famplex id?
-    urn10 = 'urn:agi-ncimcelltype:D000199'
+    urn10 = 'urn:agi-ncimcelltype:Actins'
     db_refs_10, _ = _urn_to_db_refs(urn10)
     assert db_refs_10 == {'MESH': 'D000199', 'FPLX': 'Actin'}
 
@@ -96,7 +96,8 @@ def test_agent_from_entity():
 
     # Test relation
     tagged_sentence = '{ID{321=BRAF} is a protein, not a type of car.'
-    relation = MedscanRelation(uri=None,
+    relation = MedscanRelation(pmid=None,
+                               uri=None,
                                sec=None,
                                entities={'123': entity},
                                tagged_sentence=tagged_sentence,
@@ -106,17 +107,17 @@ def test_agent_from_entity():
                                svo_type=None)
 
     # Test for when an entity is in the grounded entities list
-    agent1 = mp.agent_from_entity(relation, 'ID{123}')
+    agent1, bounds = mp.agent_from_entity(relation, 'ID{123}')
     assert agent1.db_refs == {'TEXT': 'kinesin-I', 'GO': 'GO:0016938'}
 
     # Test for when an entity is in the tagged sentence but not the entity list
-    agent2 = mp.agent_from_entity(relation, 'ID{321}')
+    agent2, bounds = mp.agent_from_entity(relation, 'ID{321}')
     assert agent2.db_refs == {'TEXT': 'BRAF'}  # No grounding
 
     # Test for when an entity is neither tagged in the sentence nor in the
     # grounded entities list
-    agent3 = mp.agent_from_entity(relation, 'ID{444}')
-    assert agent3 is None
+    agent3_res = mp.agent_from_entity(relation, 'ID{444}')
+    assert agent3_res is None
 
 
 def test_expressioncontrol_positive():
@@ -151,13 +152,13 @@ def test_evidence():
                                   ' display a significant reduction in the' + \
                                   ' circulating hypoxia-induced ' + \
                                   'erythropoietin levels, number of ' + \
-                                  'red cells and hemoglobin concentration. ', \
+                                  'red cells and hemoglobin concentration.', \
         s0.evidence[0].text
     coords = s0.evidence[0].annotations['agents']['coords']
     assert isinstance(coords, list), type(coords)
-    assert len(coords) == 2
-    assert coords[0] == [90, 97]
-    assert coords[1] == [106, 120]
+    assert len(coords) == 2, len(coords)
+    assert coords[0] == (90, 97), coords[0]
+    assert coords[1] == (106, 120), coords[1]
 
 
 def test_molsynthesis_positive():
@@ -393,4 +394,3 @@ def test_site_text_parser():
     assert sites[0].position == '10'
     assert sites[1].residue == 'S'
     assert sites[1].position == '20'
-
