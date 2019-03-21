@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
-import re
 import logging
 import operator
 import itertools
@@ -1920,6 +1919,10 @@ def _get_grounding_terms(term):
                 continue
             if db_ns == 'BE':
                 db_ns = 'FPLX'
+            # Skip UP/etc grounding here
+            elif db_ns == 'UP' and db_id == 'etc':
+                continue
+            # Otherwise set the grounding as a ref
             refs[db_ns] = db_id
 
         comment = None

@@ -739,14 +739,14 @@ def test_58():
     assert isinstance(tp.statements[1], Phosphorylation)
     enzs = {st.enz.name for st in tp.statements} == {'EGF', 'NGF'}
 
-def test_58():
+
+def test_59():
     sentence = 'HRAS and KRAS convert GTP into GDP.'
     tp = process_sentence_xml(sentence)
     assert len(tp.statements) == 2
     assert isinstance(tp.statements[0], Conversion)
     assert isinstance(tp.statements[1], Conversion)
     enzs = {st.subj.name for st in tp.statements} == {'HRAS', 'KRAS'}
-
 
 def test_assoc_with():
     fname = os.path.join(path_this, 'trips_ekbs', 'ekb_assoc.ekb')
@@ -764,3 +764,12 @@ def test_increase_amount_of():
     assert isinstance(tp.statements[0], IncreaseAmount)
     assert tp.statements[0].subj.name == 'TGFBR1'
     assert tp.statements[0].obj.name == 'SMURF2'
+
+
+def test_fakeprotein():
+    fname = os.path.join(path_this, 'trips_ekbs', 'FAKEPROTEIN.ekb')
+    tp = trips.process_xml(open(fname, 'r').read())
+    agent = tp._get_agent_by_id('V38735', None)
+    assert agent is not None
+    assert agent.db_refs['UP'] == 'P04324', agent.db_refs
+    assert agent.name == 'nef', agent.name
