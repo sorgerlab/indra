@@ -1233,8 +1233,9 @@ class TripsProcessor(object):
             # to the FamPlex entry name
             elif be_id:
                 agent_name = be_id
-            # Otherwise, take the name of the term as agent name
-            else:
+            # If agent_name is still None take the name of the term as
+            # agent name
+            if agent_name is None:
                 name = term.find("name")
                 if name is not None:
                     agent_name = name.text
