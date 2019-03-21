@@ -1,0 +1,16 @@
+<?xml version="1.0"?><ekb>
+  <TERM id="V38735">
+    <type>ONT::GENE-PROTEIN</type>
+    <name>FAKEPROTEIN</name>
+    <drum-terms>
+      <drum-term dbid="XFAM:PF00469" name="F-protein" match-score="0.63779" matched-name="F-protein">
+        <xrefs>
+          <xref dbid="UP:P04324"/>
+          <xref dbid="UP:etc"/>
+        </xrefs>
+      </drum-term>
+      <drum-term dbid="UP:P12480" name="F-protein" match-score="0.49322" matched-name="F-protein"/>
+      <drum-term dbid="UP:etc" name="F-protein" match-score="0.05948" matched-name="F-protein"/>
+    </drum-terms>
+  </TERM>
+</ekb>
