@@ -503,7 +503,7 @@ def test_check_activation():
                                     ('C_kinase_active_obs', -1))]
 
 
-def test_check_activation_grounded():
+def test_check_increase_grounded():
     mmp9 = Agent('MMP9', activity=ActivityCondition('catalytic', True),
                  db_refs={'HGNC': '7176', 'UP': 'P14780'})
     tgfb1 = Agent('TGFB1', db_refs={'HGNC': '11766', 'UP': 'P01137'})
@@ -517,10 +517,28 @@ def test_check_activation_grounded():
     mc = ModelChecker(pa.model, [stmt1])
     results = mc.check_model()
     assert len(results) == 1
+    path_result = results[0][1]
+    assert path_result.path_found is False
+    assert path_result.result_code == 'SUBJECT_MONOMERS_NOT_FOUND'
 
+def test_check_activation_grounded():
+    mmp9 = Agent('MMP9', activity=ActivityCondition('catalytic', True),
+                 db_refs={'HGNC': '7176', 'UP': 'P14780'})
+    tgfb1 = Agent('TGFB1', db_refs={'HGNC': '11766', 'UP': 'P01137'})
+    mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871', 'UP': 'P28482'})
+    stmt1 = Activation(mmp9, tgfb1)
+    stmt2 = Activation(mapk1, tgfb1)
+    # Make the model out of statement 2 (mapk1), but test with stmt 1 (mmp9)
+    pa = PysbAssembler()
+    pa.add_statements([stmt2])
+    pa.make_model(policies='one_step')
+    mc = ModelChecker(pa.model, [stmt1])
+    results = mc.check_model()
+    assert len(results) == 1
+    path_result = results[0][1]
+    assert path_result.path_found is False
+    assert path_result.result_code == 'SUBJECT_MONOMERS_NOT_FOUND'
 
-def test_check_increase_grounded():
-    pass
 
 
 @with_model
