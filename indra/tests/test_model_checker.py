@@ -521,6 +521,26 @@ def test_check_increase_grounded():
     assert path_result.path_found is False
     assert path_result.result_code == 'SUBJECT_MONOMERS_NOT_FOUND'
 
+
+def test_check_increase_grounded_with_state():
+    mmp9_act = Agent('MMP9', activity=ActivityCondition('catalytic', True),
+                 db_refs={'HGNC': '7176', 'UP': 'P14780'})
+    mmp9 = Agent('MMP9', db_refs={'HGNC': '7176', 'UP': 'P14780'})
+    tgfb1 = Agent('TGFB1', db_refs={'HGNC': '11766', 'UP': 'P01137'})
+    stmt1 = IncreaseAmount(mmp9_act, tgfb1)
+    stmt2 = IncreaseAmount(mmp9, tgfb1)
+    # Make the model out of statement 2 (no activity), but test with stmt 1
+    # (has activity)
+    pa = PysbAssembler()
+    pa.add_statements([stmt2])
+    pa.make_model(policies='one_step')
+    mc = ModelChecker(pa.model, [stmt1])
+    results = mc.check_model()
+    assert len(results) == 1
+    path_result = results[0][1]
+    assert path_result.path_found is True
+
+
 def test_check_activation_grounded():
     mmp9 = Agent('MMP9', activity=ActivityCondition('catalytic', True),
                  db_refs={'HGNC': '7176', 'UP': 'P14780'})
@@ -538,7 +558,6 @@ def test_check_activation_grounded():
     path_result = results[0][1]
     assert path_result.path_found is False
     assert path_result.result_code == 'SUBJECT_MONOMERS_NOT_FOUND'
-
 
 
 @with_model
