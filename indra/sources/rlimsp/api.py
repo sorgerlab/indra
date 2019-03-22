@@ -1,5 +1,6 @@
-__all__ = ['process_from_webservice']
+__all__ = ['process_from_webservice', 'process_from_json_file']
 
+import json
 import logging
 import requests
 
@@ -9,7 +10,8 @@ from .processor import RlimspProcessor
 logger = logging.getLogger(__name__)
 
 
-RLIMSP_URL = 'https://research.bioinformatics.udel.edu/itextmine/api/data/rlims/'
+RLIMSP_URL = ('https://research.bioinformatics.udel.edu/itextmine/api/data/'
+             'rlims/')
 
 
 class RLIMSP_Error(Exception):
@@ -54,4 +56,27 @@ def process_from_webservice(id_val, id_type='pmcid', source='pmc',
 
     rp = RlimspProcessor(resp.json())
 
+    return rp
+
+
+def process_from_json_file(filename):
+    """Process RLIMSP extractions from a bulk-download JSON file.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the JSON file.
+
+    Returns
+    -------
+    :py:class:`indra.sources.rlimsp.processor.RlimspProcessor`
+        An RlimspProcessor which contains a list of extracted INDRA Statements
+        in its statements attribute.
+    """
+    with open(filename, 'rt') as f:
+        lines = f.readlines()
+        json_list = []
+        for line in lines:
+            json_list.append(json.loads(line))
+        rp = RlimspProcessor(json_list)
     return rp
