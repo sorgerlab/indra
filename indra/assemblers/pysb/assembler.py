@@ -151,6 +151,23 @@ def get_uncond_agent(agent):
 
 def grounded_monomer_patterns(model, agent, ignore_activities=False):
     """Get monomer patterns for the agent accounting for grounding information.
+
+    Parameters
+    ----------
+    model : pysb.core.Model
+        The model to search for MonomerPatterns matching the given Agent.
+    agent : indra.statements.Agent
+        The Agent to find matching MonomerPatterns for.
+    ignore_activites : bool
+        Whether to ignore any ActivityConditions on the agent when determining
+        the required site conditions for the MonomerPattern. For example, if
+        set to True, will find a match for the agent `MAPK1(activity=kinase)`
+        even if the corresponding MAPK1 Monomer in the model has no site
+        named `kinase`. Default is False (more stringent matching).
+
+    Returns
+    -------
+    generator of MonomerPatterns
     """
     # If it's not a molecular agent
     if not isinstance(agent, ist.Agent):
