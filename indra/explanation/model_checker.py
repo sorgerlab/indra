@@ -390,7 +390,8 @@ class ModelChecker(object):
         # enzyme in a rule of the appropriate activity (e.g., a phosphorylation
         # rule) FIXME
         if subj is not None:
-            subj_mps = list(pa.grounded_monomer_patterns(self.model, subj))
+            subj_mps = list(pa.grounded_monomer_patterns(self.model, subj,
+                                                    ignore_activities=True))
             if not subj_mps:
                 logger.debug('No monomers found corresponding to agent %s' %
                              subj)
@@ -418,7 +419,6 @@ class ModelChecker(object):
         # If we got here, then there was no path for any observable
         return PathResult(False, 'NO_PATHS_FOUND',
                           max_paths, max_path_length)
-
 
     def _get_input_rules(self, subj_mp):
         if subj_mp is None:
