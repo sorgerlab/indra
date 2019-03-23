@@ -40,6 +40,7 @@ Standard Molecular Pathway Databases
    signor/index
    biogrid/index
    hprd/index
+   trrust
 
 Custom Knowledge Bases
 ----------------------

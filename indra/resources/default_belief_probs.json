@@ -18,7 +18,9 @@
     "sofia": 0.05,
     "lincs_drug": 0.01,
     "tas": 0.01,
-    "rlimsp": 0.05
+    "rlimsp": 0.05,
+    "hprd": 0.01,
+    "trrust": 0.01
   },
   "rand": {
     "eidos": 0.3,
@@ -39,6 +41,8 @@
     "sofia": 0.3,
     "lincs_drug": 0.3,
     "tas": 0.1,
-    "rlimsp": 0.3
+    "rlimsp": 0.3,
+    "hprd": 0.1,
+    "trrust": 0.1
   }
 }
