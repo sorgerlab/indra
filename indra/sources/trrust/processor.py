@@ -1,5 +1,6 @@
-from indra.statements import Agent, IncreaseAmount, DecreaseAmount
+from copy import deepcopy
 from indra.databases import hgnc_client, uniprot_client
+from indra.statements import Agent, IncreaseAmount, DecreaseAmount, Evidence
 
 
 class TrrustProcessor(object):
@@ -10,15 +11,23 @@ class TrrustProcessor(object):
     def extract_statements(self):
         for _, (tf, target, effect, refs) in self.df.iterrows():
             tf_agent = get_grounded_agent(tf)
-            target_agent = get_grounded_agent(target_agent)
+            target_agent = get_grounded_agent(target)
             if effect == 'Activation':
                 stmt_cls = IncreaseAmount
             elif effect == 'Repression':
                 stmt_cls = DecreaseAmount
             else:
                 continue
-            stmt = stmt_cls(tf_agent, target_agent)
-            self.statements.append(stmt)
+            pmids = refs.split(';')
+            for pmid in pmids:
+                stmt = make_stmt(stmt_cls, tf_agent, target_agent, pmid)
+                self.statements.append(stmt)
+
+
+def make_stmt(stmt_cls, tf_agent, target_agent, pmid):
+    ev = Evidence(source_api='trrust', pmid=pmid)
+    return stmt_cls(deepcopy(tf_agent), deepcopy(target_agent),
+                    evidence=[ev])
 
 
 def get_grounded_agent(gene_name):
