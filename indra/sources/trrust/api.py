@@ -1,3 +1,5 @@
+__all__ = ['process_from_web']
+
 import io
 import pandas
 import requests
@@ -11,5 +13,7 @@ trrust_human_url = 'https://www.grnpedia.org/trrust/data/trrust_rawdata' \
 
 def process_from_web():
     res = requests.get(trrust_human_url)
-    table = res.read()
-    df = pandas.read_table(io.StringIO(table))
+    df = pandas.read_table(io.StringIO(res.text))
+    tp = TrrustProcessor(df)
+    tp.extract_statements()
+    return tp
