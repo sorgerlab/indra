@@ -44,6 +44,8 @@ def make_stmt(stmt_cls, tf_agent, target_agent, pmid):
 def get_grounded_agent(gene_name):
     """Return a grounded Agent based on an HGNC symbol."""
     db_refs = {'TEXT': gene_name}
+    if gene_name in hgnc_map:
+        gene_name = hgnc_map[gene_name]
     hgnc_id = hgnc_client.get_hgnc_id(gene_name)
     if hgnc_id:
         db_refs['HGNC'] = hgnc_id
@@ -52,3 +54,15 @@ def get_grounded_agent(gene_name):
             db_refs['UP'] = up_id
     agent = Agent(gene_name, db_refs=db_refs)
     return agent
+
+
+hgnc_map = {
+    'CTGF': 'CCN2',
+    'CYR61': 'CCN1',
+    'MKL1': 'MRTFA',
+    'NOV': 'CCN3',
+    'RFWD2': 'COP1',
+    'SALL4A': 'SALL4',
+    'STAT5': 'STAT5A',
+    'TRAP': 'ACP5',
+}
