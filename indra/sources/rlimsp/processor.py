@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class RlimspProcessor(object):
     """Convert RLIMS-P JSON into INDRA Statements."""
 
-    def __init__(self, rlimsp_json, doc_id_type):
+    def __init__(self, rlimsp_json, doc_id_type=None):
         self._json = rlimsp_json
         self.statements = []
         self.doc_id_type = doc_id_type

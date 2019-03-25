@@ -55,7 +55,7 @@ def process_from_webservice(id_val, id_type='pmcid', source='pmc',
                            % (resp.status_code, resp.reason))
 
     rp = RlimspProcessor(resp.json())
-
+    rp.extract_statements()
     return rp
 
 
