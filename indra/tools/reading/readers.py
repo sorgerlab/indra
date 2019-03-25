@@ -355,6 +355,7 @@ class ReachReader(Reader):
                                loglevel=log_level)
                     )
         self.output_dir = _get_dir(self.tmp_dir, 'output')
+        self.num_input = 0
         return
 
     @classmethod
@@ -451,6 +452,7 @@ class ReachReader(Reader):
             else:
                 # Put the content in the appropriate directory.
                 new_fpath = content.copy_to(self.input_dir)
+            self.num_input += 1
             logger.debug('%s saved for reading by reach.'
                          % new_fpath)
         return
@@ -502,9 +504,12 @@ class ReachReader(Reader):
                 (self.REACH_MEM + self.MEM_BUFFER)
                 )
             logger.info("REACH not run.")
-        elif len(read_list) > 0:
-            # Prep the content
-            self.prep_input(read_list)
+            return ret
+
+        # Prep the content
+        self.prep_input(read_list)
+
+        if self.num_input > 0:
             # Run REACH!
             logger.info("Beginning reach.")
             args = [
