@@ -67,8 +67,8 @@ class RlimspParagraph(object):
                     if 'HGNC' in refs.keys():
                         if refs['HGNC'] != hgnc_id:
                             logger.info("HGNC id for Entrez id {EGID} did not "
-                                        "match id inferred from UniProt id "
-                                        "{UP}.".format(**refs))
+                                        "match HGNC id provided "
+                                        "{HGNC}.".format(**refs))
                     else:
                         refs['HGNC'] = hgnc_id
             elif id_dict['source'] == 'UniProt':
