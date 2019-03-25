@@ -67,11 +67,13 @@ class PathResult(object):
     path_found : bool
         True if a path was found, False otherwise.
     result_code : string
-        - *STATEMENT_TYPE_NOT_HANDLED* - The provided statement type is not handled
+        - *STATEMENT_TYPE_NOT_HANDLED* - The provided statement type is not
+          handled
         - *SUBJECT_MONOMERS_NOT_FOUND* - Statement subject not found in model
         - *OBSERVABLES_NOT_FOUND* - Statement has no associated observable
         - *NO_PATHS_FOUND* - Statement has no path for any observable
-        - *MAX_PATH_LENGTH_EXCEEDED* - Statement has no path len <= MAX_PATH_LENGTH
+        - *MAX_PATH_LENGTH_EXCEEDED* - Statement has no path len <=
+          MAX_PATH_LENGTH
         - *PATHS_FOUND* - Statement has path len <= MAX_PATH_LENGTH
         - *INPUT_RULES_NOT_FOUND* - No rules with Statement subject found
         - *MAX_PATHS_ZERO* - Path found but MAX_PATHS is set to zero
@@ -366,91 +368,52 @@ class ModelChecker(object):
         """
         # Make sure the influence map is initialized
         self.get_im()
-        if isinstance(stmt, Modification):
-            return self._check_modification(stmt, max_paths, max_path_length)
-        elif isinstance(stmt, RegulateActivity):
-            return self._check_regulate_activity(stmt, max_paths,
-                                                 max_path_length)
-        elif isinstance(stmt, RegulateAmount):
-            return self._check_regulate_amount(stmt, max_paths,
-                                               max_path_length)
-        else:
+        # Check if this is one of the statement types that we can check
+        if not (isinstance(stmt, Modification) or
+                isinstance(stmt, RegulateAmount) or
+                isinstance(stmt, RegulateActivity)):
             return PathResult(False, 'STATEMENT_TYPE_NOT_HANDLED',
                               max_paths, max_path_length)
-
-    def _check_regulate_activity(self, stmt, max_paths, max_path_length):
-        """Check a RegulateActivity statement."""
-        logger.info('Checking stmt: %s' % stmt)
-        # FIXME Currently this will match rules with the corresponding monomer
-        # pattern from the Activation/Inhibition statement, which will nearly
-        # always have no state conditions on it. In future, this statement foo
-        # should also match rules in which 1) the agent is in its active form,
-        # or 2) the agent is tagged as the enzyme in a rule of the appropriate
-        # activity (e.g., a phosphorylation rule) FIXME
-        subj_mp = pa.get_monomer_pattern(self.model, stmt.subj)
-        target_polarity = 1 if stmt.is_activation else -1
-        # This may fail, since there may be no rule in the model activating the
-        # object, and the object may not have an "active" site of the
-        # appropriate type
-        obs_names = self.stmt_to_obs[stmt]
-        if not obs_names:
-            logger.debug("No observables for stmt %s, returning False" % stmt)
-            return PathResult(False, 'OBSERVABLES_NOT_FOUND',
-                              max_paths, max_path_length)
-        for obs_name in obs_names:
-            return self._find_im_paths(subj_mp, obs_name, target_polarity,
-                                       max_paths, max_path_length)
-
-    def _check_regulate_amount(self, stmt, max_paths, max_path_length):
-        """Check a RegulateAmount statement."""
-        logger.info('Checking stmt: %s' % stmt)
-        subj_mp = pa.get_monomer_pattern(self.model, stmt.subj)
-        if isinstance(stmt, Influence):
-            target_polarity = stmt.overall_polarity()
-            if target_polarity is None:
-                target_polarity = 1
-        else:
-            target_polarity = 1 if isinstance(stmt, IncreaseAmount) else -1
-        obs_names = self.stmt_to_obs[stmt]
-        if not obs_names:
-            logger.debug("No observables for stmt %s, returning False" % stmt)
-            return PathResult(False, 'OBSERVABLES_NOT_FOUND',
-                              max_paths, max_path_length)
-        for obs_name in obs_names:
-            return self._find_im_paths(subj_mp, obs_name, target_polarity,
-                                       max_paths, max_path_length)
-
-    def _check_modification(self, stmt, max_paths, max_path_length):
-        """Check a Modification statement."""
-        # Identify the observable we're looking for in the model, which
-        # may not exist!
-        # The observable is the modified form of the substrate
-        logger.info('Checking stmt: %s' % stmt)
-        # Look for an agent with the appropriate grounding in the model
-        if stmt.enz is not None:
-            enz_mps = list(pa.grounded_monomer_patterns(self.model, stmt.enz))
-            if not enz_mps:
+        # Get the polarity for the statement
+        if isinstance(stmt, Modification):
+            target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
+        elif isinstance(stmt, RegulateActivity):
+            target_polarity = 1 if stmt.is_activation else -1
+        elif isinstance(stmt, RegulateAmount):
+            target_polarity = -1 if isinstance(stmt, DecreaseAmount) else 1
+        # Get the subject and object (works also for Modifications)
+        subj, obj = stmt.agent_list()
+        # Get a list of monomer patterns matching the subject FIXME Currently
+        # this will match rules with the corresponding monomer pattern on it.
+        # In future, this statement should (possibly) also match rules in which
+        # 1) the agent is in its active form, or 2) the agent is tagged as the
+        # enzyme in a rule of the appropriate activity (e.g., a phosphorylation
+        # rule) FIXME
+        if subj is not None:
+            subj_mps = list(pa.grounded_monomer_patterns(self.model, subj,
+                                                    ignore_activities=True))
+            if not subj_mps:
                 logger.debug('No monomers found corresponding to agent %s' %
-                             stmt.enz)
+                             subj)
                 return PathResult(False, 'SUBJECT_MONOMERS_NOT_FOUND',
                                   max_paths, max_path_length)
         else:
-            enz_mps = [None]
-        # Get target polarity
-        target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
+            subj_mps = [None]
+        # Observables may not be found for an activation since there may be no
+        # rule in the model activating the object, and the object may not have
+        # an "active" site of the appropriate type
         obs_names = self.stmt_to_obs[stmt]
         if not obs_names:
             logger.debug("No observables for stmt %s, returning False" % stmt)
             return PathResult(False, 'OBSERVABLES_NOT_FOUND',
                               max_paths, max_path_length)
-
-        for enz_mp, obs_name in itertools.product(enz_mps, obs_names):
-            # FIXME Returns on the path found for the first enz_mp/obs combo
-            result = self._find_im_paths(enz_mp, obs_name, target_polarity,
+        for subj_mp, obs_name in itertools.product(subj_mps, obs_names):
+            # NOTE: Returns on the path found for the first enz_mp/obs combo
+            result = self._find_im_paths(subj_mp, obs_name, target_polarity,
                                          max_paths, max_path_length)
-            # If result for this observable is not False, then we return it;
-            # otherwise, that means there was no path for this observable, so
-            # we have to try the next one
+            # If a path was found, then we return it; otherwise, that means
+            # there was no path for this observable, so we have to try the next
+            # one
             if result.path_found:
                 return result
         # If we got here, then there was no path for any observable
@@ -604,10 +567,9 @@ class ModelChecker(object):
 
         Returns
         -------
-        boolean or list of str
-            Whether there is a path from a rule matching the subject
-            MonomerPattern to the object Observable with the appropriate
-            polarity.
+        PathResult
+            PathResult object indicating the results of the attempt to find
+            a path.
         """
         logger.info(('Running path finding with max_paths=%d,'
                      ' max_path_length=%d') % (max_paths, max_path_length))
@@ -625,7 +587,8 @@ class ModelChecker(object):
         # -- Route to the path sampling function --
         if self.do_sampling:
             if not has_pg:
-                raise Exception('The paths_graph package could not be imported.')
+                raise Exception('The paths_graph package could not be '
+                                'imported.')
             return self._sample_paths(input_rule_set, obs_name, target_polarity,
                                max_paths, max_path_length)
 
