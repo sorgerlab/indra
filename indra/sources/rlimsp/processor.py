@@ -9,23 +9,23 @@ logger = logging.getLogger(__name__)
 class RlimspProcessor(object):
     """Convert RLIMS-P JSON into INDRA Statements."""
 
-    def __init__(self, rlimsp_json):
+    def __init__(self, rlimsp_json, doc_id_type):
         self._json = rlimsp_json
         self.statements = []
-        self.extract_statements()
+        self.doc_id_type = doc_id_type
         return
 
     def extract_statements(self):
         """Extract the statements from the json."""
         for p_info in self._json:
-            para = RlimspParagraph(p_info)
+            para = RlimspParagraph(p_info, self.doc_id_type)
             self.statements.extend(para.get_statements())
         return
 
 
 class RlimspParagraph(object):
     """An object that represents a single RLIMS-P Paragraph."""
-    def __init__(self, p_info):
+    def __init__(self, p_info, doc_id_type):
         self._text = p_info['text']
         self._sentences = []
         self._sentence_starts = []
@@ -34,7 +34,13 @@ class RlimspParagraph(object):
             stop = s['charEnd']
             self._sentences.append(self._text[start:stop])
             self._sentence_starts.append(start)
-        self._text_refs = {n: p_info[n] for n in ['pmid', 'pmcid']}
+        if 'pmid' in p_info and 'pmcid' in p_info:
+            self._text_refs = {n.upper(): p_info[n] for n in ['pmid', 'pmcid']}
+        elif doc_id_type:
+            self._text_refs = {doc_id_type.upper(): p_info['docId']}
+        else:
+            logger.info('Could not establish text refs for paragraph.')
+            self._text_refs = {}
         self._relations = p_info['relation']
         self._entity_dict = p_info['entity']
         return
@@ -138,7 +144,7 @@ class RlimspParagraph(object):
             annotations['site'] = {'coords': _fix_coords(site_coords, s_start)}
 
         return Evidence(text_refs=self._text_refs.copy(), text=text,
-                        source_api='rlimsp', pmid=self._text_refs['pmid'],
+                        source_api='rlimsp', pmid=self._text_refs.get('PMID'),
                         annotations=annotations)
 
     def get_statements(self):

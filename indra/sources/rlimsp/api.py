@@ -59,13 +59,18 @@ def process_from_webservice(id_val, id_type='pmcid', source='pmc',
     return rp
 
 
-def process_from_json_file(filename):
+def process_from_json_file(filename, doc_id_type=None):
     """Process RLIMSP extractions from a bulk-download JSON file.
 
     Parameters
     ----------
     filename : str
         Path to the JSON file.
+    doc_id_type : Optional[str]
+        In some cases the RLIMS-P paragraph info doesn't contain 'pmid' or
+        'pmcid' explicitly, instead if contains a 'docId' key. This parameter
+        allows defining what ID type 'docId' sould be interpreted as. Its
+        values should be 'pmid' or 'pmcid' or None if not used.
 
     Returns
     -------
@@ -78,5 +83,6 @@ def process_from_json_file(filename):
         json_list = []
         for line in lines:
             json_list.append(json.loads(line))
-        rp = RlimspProcessor(json_list)
+        rp = RlimspProcessor(json_list, doc_id_type=doc_id_type)
+        rp.extract_statements()
     return rp
