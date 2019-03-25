@@ -114,20 +114,26 @@ class RlimspParagraph(object):
 
         # Get the sentence index from the trigger word.
         s_idx_set = {self._entity_dict[eid]['sentenceIndex']
-                     for eid in args.values()}
-        i_min = min(s_idx_set)
-        i_max = max(s_idx_set)
+                     for eid in args.values()
+                     if 'sentenceIndex' in self._entity_dict[eid]}
+        if s_idx_set:
+            i_min = min(s_idx_set)
+            i_max = max(s_idx_set)
 
-        text = '. '.join(self._sentences[i_min:(i_max+1)]) + '.'
+            text = '. '.join(self._sentences[i_min:(i_max+1)]) + '.'
 
-        s_start = self._sentence_starts[i_min]
-        annotations = {
-            'agents': {'coords': [_fix_coords(coords, s_start)
-                                  for coords in agent_coords]},
-            'trigger': {'coords': _fix_coords([trigger_info['charStart'],
-                                               trigger_info['charEnd']],
-                                              s_start)}
-            }
+            s_start = self._sentence_starts[i_min]
+            annotations = {
+                'agents': {'coords': [_fix_coords(coords, s_start)
+                                      for coords in agent_coords]},
+                'trigger': {'coords': _fix_coords([trigger_info['charStart'],
+                                                   trigger_info['charEnd']],
+                                                  s_start)}
+                }
+        else:
+            logger.info('Unable to get sentence index')
+            annotations = {}
+            text = None
         if site_coords:
             annotations['site'] = {'coords': _fix_coords(site_coords, s_start)}
 
