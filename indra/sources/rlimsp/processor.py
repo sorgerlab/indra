@@ -1,7 +1,7 @@
 import logging
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import Agent, Phosphorylation, Evidence, BioContext, \
-    RefContext
+    RefContext, get_valid_residue, InvalidResidueError
 
 logger = logging.getLogger(__name__)
 
@@ -103,16 +103,12 @@ class RlimspParagraph(object):
 
     def _get_site(self, site_id):
         def get_aa_code(residue_str):
-            if residue_str == 'Tyr':
-                residue = 'Y'
-            elif residue_str == 'Thr':
-                residue = 'T'
-            elif residue_str == 'Ser':
-                residue = 'S'
-            else:
-                logger.info('Unhandled residue: %s' % residue_str)
-                residue = None
-            return residue
+            try:
+                res = get_valid_residue(residue_str)
+                return res
+            except InvalidResidueError as e:
+                logger.info('%s' % e)
+                return None
 
         if site_id is None:
             return None, None, None
