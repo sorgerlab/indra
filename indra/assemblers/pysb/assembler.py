@@ -450,7 +450,8 @@ def parse_identifiers_url(url):
         if not len(g) == 2:
             return (None, None)
         ns_map = {'hgnc': 'HGNC', 'uniprot': 'UP', 'chebi':'CHEBI',
-                  'interpro':'IP', 'pfam':'XFAM', 'fplx': 'FPLX'}
+                  'interpro':'IP', 'pfam':'XFAM', 'fplx': 'FPLX',
+                  'go': 'GO', 'mesh': 'MESH', 'pubchem.compound': 'PUBCHEM'}
         ns = g[0]
         id = g[1]
         if not ns in ns_map.keys():
