@@ -1,4 +1,5 @@
 import logging
+from collections import Counter
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import Agent, Phosphorylation, Evidence, BioContext, \
     RefContext, get_valid_residue, InvalidResidueError
@@ -62,6 +63,14 @@ class RlimspParagraph(object):
 
         # Get the db refs.
         refs = {'TEXT': raw_text}
+
+        ref_counts = Counter([entry['source'] for entry in
+                             entity_info['entityId']])
+        for source, count in ref_counts.items():
+            if count > 1:
+                logger.info('%s has %d entries for %s'
+                            % (raw_text, count, source))
+
         for id_dict in entity_info['entityId']:
             if id_dict['source'] == 'Entrez':
                 refs['EGID'] = id_dict['idString']
@@ -72,9 +81,10 @@ class RlimspParagraph(object):
                     # from Entrez isn't as reliable.
                     if 'HGNC' in refs.keys():
                         if refs['HGNC'] != hgnc_id:
-                            logger.info("HGNC id for Entrez id {EGID} did not "
-                                        "match HGNC id provided "
-                                        "{HGNC}.".format(**refs))
+                            msg = ('HGNC:%s previously set does not'
+                                   ' match HGNC:%s from EGID:%s') % \
+                                   (refs['HGNC'], hgnc_id, refs['EGID'])
+                            logger.info(msg)
                     else:
                         refs['HGNC'] = hgnc_id
             elif id_dict['source'] == 'UniProt':
@@ -88,13 +98,20 @@ class RlimspParagraph(object):
                         # found from the Entrez id. If so, overwrite with this
                         # one, in which we have greater faith.
                         if 'HGNC' in refs.keys() and refs['HGNC'] != hgnc_id:
-                            logger.info("HGNC id for Entrez id {EGID} did not "
-                                        "match id inferred from UniProt id "
-                                        "{UP}.".format(**refs))
+                            msg = ('Inferred HGNC:%s from UP:%s does not'
+                                   ' match HGNC:%s from EGID:%s') % \
+                                   (refs['HGNC'], refs['UP'], hgnc_id,
+                                    refs['EGID'])
+                            logger.info(msg)
                         refs['HGNC'] = hgnc_id
-            elif id_dict['source'] == 'Tax':
+            elif id_dict['source'] in ('Tax', 'NCBI'):
                 refs['TAX'] = id_dict['idString']
+            elif id_dict['source'] == 'MESH':
+                refs['MESH'] = id_dict['idString']
+            elif id_dict['source'] == 'CHEBI':
+                refs['CHEBI'] = 'CHEBI:%s' % id_dict['id_string']
             else:
+                import ipdb; ipdb.set_trace()
                 logger.warning("Unhandled id type: {source}={idString}"
                                .format(**id_dict))
 
