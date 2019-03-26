@@ -106,10 +106,11 @@ class RlimspParagraph(object):
                         refs['HGNC'] = hgnc_id
             elif id_dict['source'] in ('Tax', 'NCBI'):
                 refs['TAX'] = id_dict['idString']
-            elif id_dict['source'] == 'MESH':
-                refs['MESH'] = id_dict['idString']
             elif id_dict['source'] == 'CHEBI':
-                refs['CHEBI'] = 'CHEBI:%s' % id_dict['id_string']
+                refs['CHEBI'] = 'CHEBI:%s' % id_dict['idString']
+            # These we take as is
+            elif id_dict['source'] in ('MESH', 'OMIM', 'CTD'):
+                refs[id_dict['source']] = id_dict['idString']
             else:
                 import ipdb; ipdb.set_trace()
                 logger.warning("Unhandled id type: {source}={idString}"
