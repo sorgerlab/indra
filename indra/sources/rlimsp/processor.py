@@ -102,15 +102,30 @@ class RlimspParagraph(object):
         return Agent(name, db_refs=refs), raw_coords
 
     def _get_site(self, site_id):
+        def get_aa_code(residue_str):
+            if residue_str == 'Tyr':
+                residue = 'Y'
+            elif residue_str == 'Thr':
+                residue = 'T'
+            elif residue_str == 'Ser':
+                residue = 'S'
+            else:
+                logger.info('Unhandled residue: %s' % residue_str)
+                residue = None
+            return residue
+
         if site_id is None:
             return None, None, None
         site_info = self._entity_dict[site_id]
         site_text = site_info['attribute'][0]['value']
-        residue = site_text[0]
         site_parts = site_text.split('-')
         position = None
         if len(site_parts) == 2:
+            residue_str = site_parts[0]
+            residue = get_aa_code(residue_str)
             position = site_parts[1]
+        else:
+            residue = get_aa_code(site_text)
         coords = (site_info['charStart'], site_info['charEnd'])
         return residue, position, coords
 
