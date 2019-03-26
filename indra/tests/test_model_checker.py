@@ -1389,6 +1389,28 @@ def test_weighted_sampling3():
                      ('JUN_phospho_p_obs', 1))] == 20, path_ctr
 
 
+def test_amount_vs_activation():
+    p53 = Agent('TP53', db_refs={'HGNC': '11998'})
+    pten1 = Agent('PTEN', bound_conditions=[BoundCondition(p53, True)],
+                  db_refs={'HGNC': '9588'})
+    pten2 = Agent('PTEN', mods=[ModCondition('modification')],
+                  db_refs={'HGNC': '9588'})
+    mdm2 = Agent('MDM2', db_refs={'HGNC': '6973'})
+    test_stmt = Activation(pten1, p53)
+    model_stmts = [IncreaseAmount(pten2, p53),
+                   Inhibition(mdm2, p53)]
+    # Make model
+    pa = PysbAssembler()
+    pa.add_statements(model_stmts)
+    pa.make_model(policies='one_step')
+    # Do sampling
+    mc = ModelChecker(pa.model, [test_stmt])
+    mc.prune_influence_map()
+    mc.draw_im('test.pdf')
+    results = mc.check_model(max_path_length=1, max_paths=1)
+    assert results[0][1].result_code == 'NO_PATHS_FOUND', results
+
+
 if __name__ == '__main__':
     test_prune_influence_map_subj_obj()
 

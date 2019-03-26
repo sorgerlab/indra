@@ -212,7 +212,7 @@ class ModelChecker(object):
         model_str = export.export(model, 'kappa')
         kappa.add_model_string(model_str)
         kappa.project_parse()
-        imap = kappa.analyses_influence_map()
+        imap = kappa.analyses_influence_map(accuracy='medium')
         graph = im_json_to_graph(imap)
         return graph
 
