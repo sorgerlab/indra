@@ -84,7 +84,7 @@ def get_chebi_id_from_cas(cas_id):
 
 
 def get_chebi_name_from_id(chebi_id, offline=False):
-    """Return a ChEBI mame corresponding to the given ChEBI ID.
+    """Return a ChEBI name corresponding to the given ChEBI ID.
 
     Parameters
     ----------
@@ -104,6 +104,24 @@ def get_chebi_name_from_id(chebi_id, offline=False):
     if chebi_name is None and not offline:
         chebi_name = get_chebi_name_from_id_web(chebi_id)
     return chebi_name
+
+
+def get_chebi_id_from_name(chebi_name):
+    """Return a ChEBI ID corresponding to the given ChEBI name.
+
+    Parameters
+    ----------
+    chebi_name : str
+        The ChEBI name whose ID is to be returned.
+
+    Returns
+    -------
+    chebi_id : str
+        The ID corresponding to the given ChEBI name. If the lookup
+        fails, None is returned.
+    """
+    chebi_id = chebi_name_to_id.get(chebi_name)
+    return chebi_id
 
 
 def _read_chebi_to_pubchem():
@@ -143,10 +161,12 @@ def _read_chebi_names():
     csv_reader = _read_relative_csv('../resources/chebi_names.tsv')
     next(csv_reader)
     chebi_id_to_name = {}
+    chebi_name_to_id = {}
     for row in csv_reader:
         chebi_id, name = row
         chebi_id_to_name[chebi_id] = name
-    return chebi_id_to_name
+        chebi_name_to_id[name] = chebi_id
+    return chebi_id_to_name, chebi_name_to_id
 
 
 def _read_relative_csv(rel_path):
@@ -197,4 +217,4 @@ def get_chebi_name_from_id_web(chebi_id):
 chebi_pubchem, pubchem_chebi = _read_chebi_to_pubchem()
 chebi_chembl = _read_chebi_to_chembl()
 cas_chebi = _read_cas_to_chebi()
-chebi_id_to_name = _read_chebi_names()
+chebi_id_to_name, chebi_name_to_id = _read_chebi_names()

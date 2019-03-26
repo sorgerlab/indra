@@ -27,6 +27,11 @@ def test_chebi_id_to_name():
     assert name == 'vemurafenib', name
 
 
+def test_chebi_name_to_id():
+    cid = chebi_client.get_chebi_id_from_name('vemurafenib')
+    assert cid == '63637', cid
+
+
 @attr('webservice')
 def test_chebi_name_from_web():
     name = chebi_client.get_chebi_name_from_id_web('63637')
