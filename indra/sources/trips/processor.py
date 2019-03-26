@@ -495,6 +495,8 @@ class TripsProcessor(object):
         for stmt_type, events in ((IncreaseAmount, increases),
                                   (DecreaseAmount, decreases)):
             for event in events:
+                if event.attrib['id'] in self._static_events:
+                    continue
                 # The agent has to exist and be a molecular type
                 agent = event.find(".//*[@role=':AGENT']")
                 if agent is None:
