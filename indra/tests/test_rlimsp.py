@@ -1,5 +1,5 @@
+import os
 from indra.sources import rlimsp
- 
 
 def test_simple_usage():
     rp = rlimsp.process_from_webservice('PMC3717945')
@@ -26,7 +26,7 @@ def test_ungrounded_endpoint_with_pmids():
                                             with_grounding=False)
         assert len(rp.statements) > 10, len(rp.statements)
         stmts.extend(rp.statements)
-    assert len(stmts) == 397, len(stmts)
+    assert len(stmts) == 396, len(stmts)
     return
 
 
@@ -53,3 +53,12 @@ def test_grounded_endpoint_with_pmids_on_medline():
         rp = rlimsp.process_from_webservice(pmid, id_type='pmid',
                                             source='medline',
                                             with_grounding=False)
+
+def test_tyrosine_grounding():
+    here = os.path.dirname(os.path.abspath(__file__))
+    fname = os.path.join(here, 'rlimsp_site.json')
+    rp = rlimsp.process_from_json_file(fname)
+    assert len(rp.statements) == 1
+    stmt = rp.statements[0]
+    assert stmt.residue == 'Y'
+    assert stmt.position == '705'
