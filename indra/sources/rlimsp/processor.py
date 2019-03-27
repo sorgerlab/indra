@@ -2,7 +2,7 @@ import logging
 from collections import Counter
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import Agent, Phosphorylation, Evidence, BioContext, \
-    RefContext, get_valid_residue, InvalidResidueError
+    RefContext, get_valid_residue, InvalidResidueError, MutCondition
 
 logger = logging.getLogger(__name__)
 
@@ -55,69 +55,7 @@ class RlimspParagraph(object):
         if entity_info is None:
             logger.warning("Entity key did not resolve to entity.")
             return None
-
-        # This will be the default name. If we get a gene name, it will
-        # override this rawtext name.
-        raw_text = entity_info['entityText']
-        name = raw_text
-
-        # Get the db refs.
-        refs = {'TEXT': raw_text}
-
-        ref_counts = Counter([entry['source'] for entry in
-                             entity_info['entityId']])
-        for source, count in ref_counts.items():
-            if count > 1:
-                logger.info('%s has %d entries for %s'
-                            % (raw_text, count, source))
-
-        for id_dict in entity_info['entityId']:
-            if id_dict['source'] == 'Entrez':
-                refs['EGID'] = id_dict['idString']
-                hgnc_id = hgnc_client.get_hgnc_from_entrez(id_dict['idString'])
-                if hgnc_id is not None:
-                    # Check against what we may have already inferred from
-                    # UniProt. If it disagrees with this, let it be. Inference
-                    # from Entrez isn't as reliable.
-                    if 'HGNC' in refs.keys():
-                        if refs['HGNC'] != hgnc_id:
-                            msg = ('HGNC:%s previously set does not'
-                                   ' match HGNC:%s from EGID:%s') % \
-                                   (refs['HGNC'], hgnc_id, refs['EGID'])
-                            logger.info(msg)
-                    else:
-                        refs['HGNC'] = hgnc_id
-            elif id_dict['source'] == 'UniProt':
-                refs['UP'] = id_dict['idString']
-                gene_name = uniprot_client.get_gene_name(id_dict['idString'])
-                if gene_name is not None:
-                    name = gene_name
-                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                    if hgnc_id is not None:
-                        # Check to see if we have a conflict with an HGNC id
-                        # found from the Entrez id. If so, overwrite with this
-                        # one, in which we have greater faith.
-                        if 'HGNC' in refs.keys() and refs['HGNC'] != hgnc_id:
-                            msg = ('Inferred HGNC:%s from UP:%s does not'
-                                   ' match HGNC:%s from EGID:%s') % \
-                                   (refs['HGNC'], refs['UP'], hgnc_id,
-                                    refs['EGID'])
-                            logger.info(msg)
-                        refs['HGNC'] = hgnc_id
-            elif id_dict['source'] in ('Tax', 'NCBI'):
-                refs['TAX'] = id_dict['idString']
-            elif id_dict['source'] == 'CHEBI':
-                refs['CHEBI'] = 'CHEBI:%s' % id_dict['idString']
-            # These we take as is
-            elif id_dict['source'] in ('MESH', 'OMIM', 'CTD'):
-                refs[id_dict['source']] = id_dict['idString']
-            else:
-                import ipdb; ipdb.set_trace()
-                logger.warning("Unhandled id type: {source}={idString}"
-                               .format(**id_dict))
-
-        raw_coords = (entity_info['charStart'], entity_info['charEnd'])
-        return Agent(name, db_refs=refs), raw_coords
+        return get_agent_from_entity_info(entity_info)
 
     def _get_site(self, site_id):
         def get_aa_code(residue_str):
@@ -197,6 +135,8 @@ class RlimspParagraph(object):
                 # Get the agents.
                 enz, enz_coords = entities.get('KINASE', (None, None))
                 sub, sub_coords = entities.get('SUBSTRATE', (None, None))
+                if sub is None:
+                    continue
 
                 # Get the site
                 residue, position, site_coords = self._get_site(site_id)
@@ -225,6 +165,89 @@ class RlimspParagraph(object):
                 logger.warning("Unhandled statement type: %s" % rel_type)
 
         return stmts
+
+def get_agent_from_entity_info(entity_info):
+    """Return an INDRA Agent by processing an entity_info dict."""
+    # This will be the default name. If we get a gene name, it will
+    # override this rawtext name.
+    raw_text = entity_info['entityText']
+    name = raw_text
+
+    # Get the db refs.
+    refs = {'TEXT': raw_text}
+
+    ref_counts = Counter([entry['source'] for entry in
+                          entity_info['entityId']])
+    for source, count in ref_counts.items():
+        if source in ('Entrez', 'UniProt') and count > 1:
+            logger.info('%s has %d entries for %s, skipping'
+                        % (raw_text, count, source))
+            return None, None
+    muts = []
+    for id_dict in entity_info['entityId']:
+        if id_dict['source'] == 'Entrez':
+            refs['EGID'] = id_dict['idString']
+            hgnc_id = hgnc_client.get_hgnc_from_entrez(id_dict['idString'])
+            if hgnc_id is not None:
+                # Check against what we may have already inferred from
+                # UniProt. If it disagrees with this, let it be. Inference
+                # from Entrez isn't as reliable.
+                if 'HGNC' in refs.keys():
+                    if refs['HGNC'] != hgnc_id:
+                        msg = ('HGNC:%s previously set does not'
+                               ' match HGNC:%s from EGID:%s') % \
+                               (refs['HGNC'], hgnc_id, refs['EGID'])
+                        logger.info(msg)
+                else:
+                    refs['HGNC'] = hgnc_id
+        elif id_dict['source'] == 'UniProt':
+            refs['UP'] = id_dict['idString']
+            gene_name = uniprot_client.get_gene_name(id_dict['idString'])
+            if gene_name is not None:
+                name = gene_name
+                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                if hgnc_id is not None:
+                    # Check to see if we have a conflict with an HGNC id
+                    # found from the Entrez id. If so, overwrite with this
+                    # one, in which we have greater faith.
+                    if 'HGNC' in refs.keys() and refs['HGNC'] != hgnc_id:
+                        msg = ('Inferred HGNC:%s from UP:%s does not'
+                               ' match HGNC:%s from EGID:%s') % \
+                               (refs['HGNC'], refs['UP'], hgnc_id,
+                                refs['EGID'])
+                        logger.info(msg)
+                    refs['HGNC'] = hgnc_id
+        elif id_dict['source'] in ('Tax', 'NCBI'):
+            refs['TAX'] = id_dict['idString']
+        elif id_dict['source'] == 'CHEBI':
+            refs['CHEBI'] = 'CHEBI:%s' % id_dict['idString']
+        # These we take as is
+        elif id_dict['source'] in ('MESH', 'OMIM', 'CTD'):
+            refs[id_dict['source']] = id_dict['idString']
+        # Handle mutations
+        elif id_dict['source'] == 'Unk' and \
+                id_dict['entityType'] == 'ProteinMutation':
+            # {'idString': 'p|SUB|Y|268|A', 'source': 'Unk',
+            #  'tool': 'PubTator', 'entityType': 'ProteinMutation'}
+            # Mpk1(Y268A)'
+            if id_dict['idString'].startswith('p|SUB|'):
+                try:
+                    # Handle special cases like p|SUB|A|30|P;RS#:104893878
+                    parts = id_dict['idString'].split(';')[0].split('|')
+                    residue_from, pos, residue_to = parts[2:5]
+                    mut = MutCondition(pos, residue_from, residue_to)
+                    muts.append(mut)
+                except Exception as e:
+                    logger.info('Could not process mutation %s' %
+                                id_dict['idString'])
+            else:
+                logger.info('Unhandled mutation: %s' % id_dict['idString'])
+        else:
+            logger.warning("Unhandled id type: {source}={idString}"
+                           .format(**id_dict))
+
+    raw_coords = (entity_info['charStart'], entity_info['charEnd'])
+    return Agent(name, db_refs=refs, mutations=muts), raw_coords
 
 
 def _fix_coords(coords, offset):
