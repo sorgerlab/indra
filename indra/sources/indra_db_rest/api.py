@@ -251,10 +251,12 @@ def get_statement_queries(stmts, **params):
         kwargs = {}
         if type(stmt) not in non_binary_statements:
             for pos, ag in zip(['subject', 'object'], stmt.agent_list()):
-                kwargs[pos] = pick_ns(ag)
+                if ag is not None:
+                    kwargs[pos] = pick_ns(ag)
         else:
             for i, ag in enumerate(stmt.agent_list()):
-                kwargs['agent%d' % i] = pick_ns(ag)
+                if ag is not None:
+                    kwargs['agent%d' % i] = pick_ns(ag)
         kwargs['type'] = stmt.__class__.__name__
         kwargs.update(params)
         query_str = '?' + '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()
