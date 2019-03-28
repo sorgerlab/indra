@@ -232,7 +232,16 @@ def submit_curation(hash_val, tag, curator, text=None,
 
 
 def get_statement_queries(stmts, **params):
-    """Get queries used to search based on a statement."""
+    """Get queries used to search based on a statement.
+
+    In addition to the stmts, you can enter any parameters standard to the
+    query. See https://github.com/indralab/indra_db/rest_api for a full list.
+
+    Parameters
+    ----------
+    stmts : list[Statement]
+        A list of INDRA statements.
+    """
 
     def pick_ns(ag):
         for ns in ['HGNC', 'FPLX', 'CHEMBL', 'CHEBI', 'GO', 'MESH']:
