@@ -133,10 +133,12 @@ def make_stmt_from_sort_key(key, verb):
         stmt = StmtClass(*[make_agent(name) for name in inps])
     return stmt
 
+
 def stmt_to_english(stmt):
     """Return an English assembled Statement as a sentence."""
     ea = EnglishAssembler([stmt])
     return ea.make_model()[:-1]
+
 
 def make_string_from_sort_key(key, verb):
     """Make a Statement string via EnglishAssembler from the sort key.
@@ -145,3 +147,10 @@ def make_string_from_sort_key(key, verb):
     """
     stmt = make_stmt_from_sort_key(key, verb)
     return stmt_to_english(stmt)
+
+
+def get_simplified_stmts(stmts):
+    simple_stmts = []
+    for key, s in _get_keyed_stmts(stmts):
+        simple_stmts.append(make_stmt_from_sort_key(key, s.__class__.__name__))
+    return simple_stmts

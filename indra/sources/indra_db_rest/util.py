@@ -41,9 +41,8 @@ def make_db_rest_request(meth, end_point, query_str, data=None, params=None, tri
         logger.error("Exception in submit request with args: %s"
                      % str([meth, end_point, query_str, data, params, tries]))
         raise ValueError("end_point cannot be None.")
-    url = get_config('INDRA_DB_REST_URL', failure_ok=False)
+    url_path = get_url_base(end_point)
     api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
-    url_path = url.rstrip('/') + '/' + end_point.lstrip('/')
     url_path += query_str
     headers = {}
     if data:
@@ -70,3 +69,9 @@ def make_db_rest_request(meth, end_point, query_str, data=None, params=None, tri
             logger.warning("Endpoint timed out. Trying again...")
         else:
             raise IndraDBRestAPIError(resp)
+
+
+def get_url_base(end_point):
+    url = get_config('INDRA_DB_REST_URL', failure_ok=False)
+    url_path = url.rstrip('/') + '/' + end_point.lstrip('/')
+    return url_path
