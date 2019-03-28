@@ -1,9 +1,11 @@
 from indra.util import clockit
-from indra.statements import stmts_from_json
+from indra.statements import stmts_from_json, Complex, SelfModification, \
+    ActiveForm
 
 from indra.sources.indra_db_rest.processor import IndraDBRestProcessor
 from indra.sources.indra_db_rest.util import submit_statement_request, \
-    make_db_rest_request
+    make_db_rest_request, get_url_base
+from indra.util.statement_presentation import get_simplified_stmts
 
 __all__ = ['get_statements', 'get_statements_for_paper',
            'get_statements_by_hash', 'submit_curation']
@@ -228,4 +230,35 @@ def submit_curation(hash_val, tag, curator, text=None,
         qstr = ''
     return make_db_rest_request('post', url, qstr, data=data)
 
+
+def get_statement_queries(stmts, **params):
+    """Get queries used to search based on a statement."""
+
+    def pick_ns(ag):
+        for ns in ['HGNC', 'FPLX', 'CHEMBL', 'CHEBI', 'GO', 'MESH']:
+            if ns in ag.db_refs.keys():
+                dbid = ag.db_refs[ns]
+                break
+        else:
+            ns = 'TEXT'
+            dbid = ag.name
+        return '%s@%s' % (dbid, ns)
+
+    queries = []
+    url_base = get_url_base('statements/from_agents')
+    non_binary_statements = [Complex, SelfModification, ActiveForm]
+    for stmt in stmts:
+        kwargs = {}
+        if type(stmt) not in non_binary_statements:
+            for pos, ag in zip(['subject', 'object'], stmt.agent_list()):
+                kwargs[pos] = pick_ns(ag)
+        else:
+            for i, ag in enumerate(stmt.agent_list()):
+                kwargs['agent%d' % i] = pick_ns(ag)
+        kwargs['type'] = stmt.__class__.__name__
+        kwargs.update(params)
+        query_str = '?' + '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()
+                                    if v is not None])
+        queries.append(url_base + query_str)
+    return queries
 
