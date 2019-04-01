@@ -33,7 +33,10 @@ def get_identifiers_url(db_name, db_id):
     elif db_name == 'NCIT':
         url = identifiers_url + 'ncit/%s' % db_id
     elif db_name == 'GO':
-        url = identifiers_url + 'go/%s' % db_id
+        if db_id.startswith('GO:'):
+            url = identifiers_url + 'go/%s' % db_id
+        else:
+            url = identifiers_url + 'go/GO:%s' % db_id
     elif db_name in ('PUBCHEM', 'PCID'):  # Assuming PCID = PubChem compound ID
         if db_id.startswith('PUBCHEM:'):
             db_id = db_id[8:]
