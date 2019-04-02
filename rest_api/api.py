@@ -323,10 +323,10 @@ def assemble_pysb():
 
     if not export_format:
         model_str = pa.print_model()
-    elif export_format == 'kappa_im':
-        fname = 'model_im.png'
+    elif export_format in ('kappa_im', 'kappa_cm'):
+        fname = 'model_%s.png' % export_format
         root = os.path.dirname(os.path.abspath(fname))
-        graph = pa.export_model(format='kappa_im', file_name=fname)
+        graph = pa.export_model(format=export_format, file_name=fname)
         return static_file(fname, mimetype='image/png', root=root)
     else:
         try:
