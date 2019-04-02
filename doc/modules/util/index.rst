@@ -15,13 +15,6 @@ A utility to get the INDRA version (:py:mod:`indra.util.get_version`)
     :members:
 
 
-A simple utility to get graphs from kappa (:py:mod:`indra.util.kappa_util`)
----------------------------------------------------------------------------
-
-.. automodule:: indra.util.kappa_util
-    :members:
-
-
 Define NestedDict (:py:mod:`indra.util.nested_dict`)
 ----------------------------------------------------
 

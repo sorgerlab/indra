@@ -18,7 +18,7 @@ from indra.statements import *
 from indra.assemblers.pysb import assembler as pa
 from indra.tools.expand_families import _agent_from_uri
 from collections import Counter
-from indra.util.kappa_util import im_json_to_graph
+from indra.assemblers.pysb.kappa_util import im_json_to_graph
 
 try:
     import paths_graph as pg
