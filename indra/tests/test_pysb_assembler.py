@@ -1238,3 +1238,12 @@ def test_kappa_im_export():
     graph = pa.export_model('kappa_im', '/dev/null')
     assert len(graph.nodes) == 2
     assert len(graph.edges) == 1
+
+
+def test_kappa_cm_export():
+    stmts = [Complex([Agent('a'), Agent('b')])]
+    pa = PysbAssembler(stmts)
+    pa.make_model()
+    graph = pa.export_model('kappa_cm', '/dev/null')
+    assert len(graph.nodes()) == 2
+    assert len(graph.edges()) == 1

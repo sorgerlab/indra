@@ -19,7 +19,7 @@ from .sites import *
 from .common import *
 from .base_agents import BaseAgentSet
 from .preassembler import PysbPreassembler
-from .export import export_sbgn, export_kappa_im
+from .export import export_sbgn, export_kappa_im, export_kappa_cm
 
 # Python 2
 try:

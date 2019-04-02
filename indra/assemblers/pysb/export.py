@@ -108,35 +108,38 @@ def export_kappa_im(model, fname=None):
         except:
             pass
     if fname:
-        im_agraph = networkx.nx_agraph.to_agraph(im)
-        im_agraph.draw(fname, prog='dot')
+        agraph = networkx.nx_agraph.to_agraph(im)
+        agraph.draw(fname, prog='dot')
     return im
 
 
 def export_kappa_cm(model, fname=None):
-    """Return a networkx graph representing the model's Kappa influence map.
+    """Return a networkx graph representing the model's Kappa contact map.
 
     Parameters
     ----------
     model : pysb.core.Model
-        A PySB model to be exported into a Kappa IM.
+        A PySB model to be exported into a Kappa CM.
     fname : Optional[str]
         A file name, typically with .png or .pdf extension in which
-        the IM is rendered using pygraphviz.
+        the CM is rendered using pygraphviz.
 
     Returns
     -------
-    networkx.MultiDiGraph
-        A graph object representing the influence map.
+    npygraphviz.Agraph
+        A graph object representing the contact map.
     """
     from .kappa_util import cm_json_to_graph
     kappa = _prepare_kappa(model)
     cmap = kappa.analyses_contact_map()
     cm = cm_json_to_graph(cmap)
+    if fname:
+        cm.draw(fname, prog='dot')
     return cm
 
 
 def _prepare_kappa(model):
+    """Return a Kappa STD with the model loaded."""
     import kappy
     kappa = kappy.KappaStd()
     model_str = export(model, 'kappa')
