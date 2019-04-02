@@ -1,7 +1,7 @@
 import sys
 import json
 import logging
-from bottle import route, run, request, default_app, response
+from bottle import route, run, request, default_app, response, static_file
 from indra.sources import trips, reach, bel, biopax
 from indra.sources import eidos, hume, cwms, sofia
 from indra.databases import hgnc_client
@@ -323,8 +323,9 @@ def assemble_pysb():
     if not export_format:
         model_str = pa.print_model()
     elif export_format == 'kappa_im':
-        model_str = 'model_im.png'
-        graph = pa.export_model(format='kappa_im', model_str)
+        fname = 'model_im.png'
+        graph = pa.export_model(format='kappa_im', file_name=fname)
+        return static_file(fname, mimetype='image/png')
     else:
         try:
             model_str = pa.export_model(format=export_format)
