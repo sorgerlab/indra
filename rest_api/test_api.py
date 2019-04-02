@@ -77,6 +77,11 @@ def test_pysb_assembler():
         res = requests.post(url, json=js)
         res_json = res.json()
         assert res_json.get('model')
+    for export_format in ('kappa_im', 'kappa_cm'):
+        js['export_format'] = export_format
+        res = requests.post(url, json=js)
+        res_content = res.content
+        assert res_content
 
 
 def test_cx_assembler():
