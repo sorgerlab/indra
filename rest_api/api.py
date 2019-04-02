@@ -7,6 +7,7 @@ from indra.sources import eidos, hume, cwms, sofia
 from indra.databases import hgnc_client
 from indra.statements import *
 from indra.assemblers.pysb import PysbAssembler
+import indra.assemblers.pysb.assembler as pysb_assembler
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.graph import GraphAssembler
 from indra.assemblers.cyjs import CyJSAssembler
@@ -313,6 +314,12 @@ def assemble_pysb():
     pa = PysbAssembler()
     pa.add_statements(stmts)
     pa.make_model()
+    try:
+        for m in pa.model.monomers:
+            pysb_assembler.set_extended_initial_condition(pa.model, m, 0)
+    except Exception as e:
+        logger.exception(e)
+
     if not export_format:
         model_str = pa.print_model()
     else:
