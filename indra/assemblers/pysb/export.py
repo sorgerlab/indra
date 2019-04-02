@@ -1,4 +1,7 @@
 import logging
+import networkx
+from pysb.export import export
+
 
 logger = logging.getLogger(__name__)
 
@@ -77,3 +80,69 @@ def export_sbgn(model):
 
     sbgn_str = sa.print_model().decode('utf-8')
     return sbgn_str
+
+
+def export_kappa_im(model, fname=None):
+    """Return a networkx graph representing the model's Kappa influence map.
+
+    Parameters
+    ----------
+    model : pysb.core.Model
+        A PySB model to be exported into a Kappa IM.
+    fname : Optional[str]
+        A file name, typically with .png or .pdf extension in which
+        the IM is rendered using pygraphviz.
+
+    Returns
+    -------
+    networkx.MultiDiGraph
+        A graph object representing the influence map.
+    """
+    from .kappa_util import im_json_to_graph
+    kappa = _prepare_kappa(model)
+    imap = kappa.analyses_influence_map()
+    im = im_json_to_graph(imap)
+    for param in model.parameters:
+        try:
+            im.remove_node(param.name)
+        except:
+            pass
+    if fname:
+        agraph = networkx.nx_agraph.to_agraph(im)
+        agraph.draw(fname, prog='dot')
+    return im
+
+
+def export_kappa_cm(model, fname=None):
+    """Return a networkx graph representing the model's Kappa contact map.
+
+    Parameters
+    ----------
+    model : pysb.core.Model
+        A PySB model to be exported into a Kappa CM.
+    fname : Optional[str]
+        A file name, typically with .png or .pdf extension in which
+        the CM is rendered using pygraphviz.
+
+    Returns
+    -------
+    npygraphviz.Agraph
+        A graph object representing the contact map.
+    """
+    from .kappa_util import cm_json_to_graph
+    kappa = _prepare_kappa(model)
+    cmap = kappa.analyses_contact_map()
+    cm = cm_json_to_graph(cmap)
+    if fname:
+        cm.draw(fname, prog='dot')
+    return cm
+
+
+def _prepare_kappa(model):
+    """Return a Kappa STD with the model loaded."""
+    import kappy
+    kappa = kappy.KappaStd()
+    model_str = export(model, 'kappa')
+    kappa.add_model_string(model_str)
+    kappa.project_parse()
+    return kappa

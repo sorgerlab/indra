@@ -3,7 +3,7 @@ from builtins import dict, str
 
 import json
 from os import path
-from indra.util.kappa_util import im_json_to_graph, cm_json_to_graph
+from indra.assemblers.pysb.kappa_util import im_json_to_graph, cm_json_to_graph
 
 
 def test_kappy_influence_json_to_graph():

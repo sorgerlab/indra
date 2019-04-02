@@ -1226,3 +1226,24 @@ def test_policy_multiple():
     assert model.parameters['d'].value == 10.0
     print(model.expressions['a_deactivates_b_activity_rate'])
     print(model.rules)
+
+
+def test_kappa_im_export():
+    stmts = [Activation(Agent('a'), Agent('b')),
+             Activation(Agent('b',
+                              activity=ActivityCondition('activity', True)),
+                        Agent('c'))]
+    pa = PysbAssembler(stmts)
+    pa.make_model()
+    graph = pa.export_model('kappa_im', '/dev/null')
+    assert len(graph.nodes) == 2
+    assert len(graph.edges) == 1
+
+
+def test_kappa_cm_export():
+    stmts = [Complex([Agent('a'), Agent('b')])]
+    pa = PysbAssembler(stmts)
+    pa.make_model()
+    graph = pa.export_model('kappa_cm', '/dev/null')
+    assert len(graph.nodes()) == 2
+    assert len(graph.edges()) == 1

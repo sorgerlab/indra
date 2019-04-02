@@ -1,12 +1,14 @@
+import os
 import sys
 import json
 import logging
-from bottle import route, run, request, default_app, response
+from bottle import route, run, request, default_app, response, static_file
 from indra.sources import trips, reach, bel, biopax
 from indra.sources import eidos, hume, cwms, sofia
 from indra.databases import hgnc_client
 from indra.statements import *
 from indra.assemblers.pysb import PysbAssembler
+import indra.assemblers.pysb.assembler as pysb_assembler
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.graph import GraphAssembler
 from indra.assemblers.cyjs import CyJSAssembler
@@ -313,8 +315,19 @@ def assemble_pysb():
     pa = PysbAssembler()
     pa.add_statements(stmts)
     pa.make_model()
+    try:
+        for m in pa.model.monomers:
+            pysb_assembler.set_extended_initial_condition(pa.model, m, 0)
+    except Exception as e:
+        logger.exception(e)
+
     if not export_format:
         model_str = pa.print_model()
+    elif export_format in ('kappa_im', 'kappa_cm'):
+        fname = 'model_%s.png' % export_format
+        root = os.path.dirname(os.path.abspath(fname))
+        graph = pa.export_model(format=export_format, file_name=fname)
+        return static_file(fname, mimetype='image/png', root=root)
     else:
         try:
             model_str = pa.export_model(format=export_format)
