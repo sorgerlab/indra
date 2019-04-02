@@ -116,7 +116,7 @@ Assemblers primarily aimed at expert curation and browsing:
 | Output format                                  | Purpose                                                | Module                  | Reference           |
 |------------------------------------------------|------------------------------------------------------  |-------------------------|---------------------|
 | English language                               | Human-readable descriptions, reports, dialogue         | [`indra.assemblers.english`](https://indra.readthedocs.io/en/latest/modules/assemblers/english_assembler.html) |                  |
-| HTML                                           | Web-based browsing, linking out to provenance, curation| [`indra.assemblers.html`](https://indra.readthedocs.io/en/latest/modules/assemblers/html_assembler.html) | [Curation tutorial](https://indra.readthedocs.io/<br/>en/latest/tutorials/html_curation.html) |
+| HTML                                           | Web-based browsing, linking out to provenance, curation| [`indra.assemblers.html`](https://indra.readthedocs.io/en/latest/modules/assemblers/html_assembler.html) | [Curation tutorial](https://indra.readthedocs.io/en/latest/tutorials/html_curation.html) |
 | TSV (Tab/Comma Separated Values)               | Spreadsheet-based browsing and curation                | [`indra.assemblers.tsv`](https://indra.readthedocs.io/en/latest/modules/assemblers/tsv_assembler.html)  |                     |
 | Index Cards                                    | Custom JSON format for curating biological mechanisms  | [`indra.assemblers.index_card`](https://indra.readthedocs.io/en/latest/modules/assemblers/index_card_assembler.html) |               |
 
