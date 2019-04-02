@@ -17,9 +17,9 @@ from indra.databases import context_client, get_identifiers_url
 
 from .sites import *
 from .common import *
-from .export import export_sbgn
 from .base_agents import BaseAgentSet
 from .preassembler import PysbPreassembler
+from .export import export_sbgn, export_kappa_im
 
 # Python 2
 try:
@@ -764,12 +764,15 @@ class PysbAssembler(object):
 
         Returns
         -------
-        exp_str : str
-            The exported model string
+        exp_str : str or object
+            The exported model string or object
         """
         # Handle SBGN as special case
         if format == 'sbgn':
             exp_str = export_sbgn(self.model)
+        elif format == 'kappa_im':
+            # NOTE: this export is not a str, rather a graph object
+            exp_str = export_kappa_im(self.model, file_name)
         else:
             try:
                 exp_str = pysb.export.export(self.model, format)
