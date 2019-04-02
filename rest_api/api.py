@@ -322,6 +322,9 @@ def assemble_pysb():
 
     if not export_format:
         model_str = pa.print_model()
+    elif export_format == 'kappa_im':
+        model_str = 'model_im.png'
+        graph = pa.export_model(format='kappa_im', model_str)
     else:
         try:
             model_str = pa.export_model(format=export_format)
