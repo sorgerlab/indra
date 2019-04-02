@@ -773,6 +773,9 @@ class PysbAssembler(object):
         elif format == 'kappa_im':
             # NOTE: this export is not a str, rather a graph object
             return export_kappa_im(self.model, file_name)
+        elif format == 'kappa_cm':
+            # NOTE: this export is not a str, rather a graph object
+            return export_kappa_cm(self.model, file_name)
         else:
             try:
                 exp_str = pysb.export.export(self.model, format)
