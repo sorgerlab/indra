@@ -1,4 +1,5 @@
 import logging
+import networkx
 
 logger = logging.getLogger(__name__)
 
@@ -77,3 +78,38 @@ def export_sbgn(model):
 
     sbgn_str = sa.print_model().decode('utf-8')
     return sbgn_str
+
+
+def export_kappa_im(model, fname=None):
+    """Return a networkx graph representing the model's Kappa influence map.
+
+    Parameters
+    ----------
+    model : pysb.core.Model
+        A PySB model to be exported into a Kappa IM.
+    fname : Optional[str]
+        A file name, typically with .png or .pdf extension in which
+        the IM is rendered using pygraphviz.
+
+    Returns
+    -------
+    networkx.MultiDiGraph
+        A graph object representing the influence map.
+    """
+    import kappy
+    from .kappa_util import im_json_to_graph
+    kappa = kappy.KappaStd()
+    model_str = export(pysb_model, 'kappa')
+    kappa.add_model_string(model_str)
+    kappa.project_parse()
+    imap = kappa.analyses_influence_map()
+    im = im_json_to_graph(imap)
+    for param in pysb_model.parameters:
+        try:
+            im.remove_node(param.name)
+        except:
+            pass
+    if fname:
+        im_agraph = networkx.nx_agraph.to_agraph(im)
+        im_agraph.draw(fname, prog='dot')
+    return im
