@@ -1,5 +1,7 @@
 import logging
 import networkx
+from pysb.export import export
+
 
 logger = logging.getLogger(__name__)
 
@@ -99,12 +101,12 @@ def export_kappa_im(model, fname=None):
     import kappy
     from .kappa_util import im_json_to_graph
     kappa = kappy.KappaStd()
-    model_str = export(pysb_model, 'kappa')
+    model_str = export(model, 'kappa')
     kappa.add_model_string(model_str)
     kappa.project_parse()
     imap = kappa.analyses_influence_map()
     im = im_json_to_graph(imap)
-    for param in pysb_model.parameters:
+    for param in model.parameters:
         try:
             im.remove_node(param.name)
         except:
