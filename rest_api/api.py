@@ -329,7 +329,8 @@ def assemble_pysb():
         root = os.path.dirname(os.path.abspath(fname))
         graph = pa.export_model(format=export_format, file_name=fname)
         with open(fname, 'rb') as fh:
-            data = base64.b64encode(fh.read()).decode()
+            data = 'data:image/png;base64,%s' % \
+                base64.b64encode(fh.read()).decode() 
             return {'image': data}
     else:
         try:
