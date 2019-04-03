@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import base64
 import logging
 from bottle import route, run, request, default_app, response, static_file
 from indra.sources import trips, reach, bel, biopax
@@ -327,9 +328,9 @@ def assemble_pysb():
         fname = 'model_%s.png' % export_format
         root = os.path.dirname(os.path.abspath(fname))
         graph = pa.export_model(format=export_format, file_name=fname)
-        response = static_file(fname, mimetype='image/png', root=root)
-        response.set_header('Access-Control-allow-Origin', '*')
-        return response
+        with open(fname, 'rb') as fh:
+            data = base64.b64encode(fh.read()).decode()
+            return {'image': data}
     else:
         try:
             model_str = pa.export_model(format=export_format)
