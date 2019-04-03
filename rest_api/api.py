@@ -327,7 +327,9 @@ def assemble_pysb():
         fname = 'model_%s.png' % export_format
         root = os.path.dirname(os.path.abspath(fname))
         graph = pa.export_model(format=export_format, file_name=fname)
-        return static_file(fname, mimetype='image/png', root=root)
+        response = static_file(fname, mimetype='image/png', root=root)
+        response.set_header('Access-Control-allow-Origin', '*')
+        return response
     else:
         try:
             model_str = pa.export_model(format=export_format)
