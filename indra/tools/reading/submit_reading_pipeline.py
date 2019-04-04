@@ -397,7 +397,7 @@ class Submitter(object):
         return []
 
     def submit_reading(self, input_fname, start_ix, end_ix, ids_per_job,
-                       num_tries=2):
+                       num_tries=1):
         # stash this for later.
         self.ids_per_job = ids_per_job
 
