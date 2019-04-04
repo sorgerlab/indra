@@ -241,6 +241,12 @@ class ReadingData(object):
     def get_statements(self, reprocess=False):
         """General method to create statements."""
         if self._statements is None or reprocess:
+            # Handle the case that there is no content.
+            if self.content is None:
+                self._statements = []
+                return []
+
+            # Map to the different processors.
             if self.reader == ReachReader.name:
                 if self.format == formats.JSON:
                     # Process the reach json into statements.
@@ -262,6 +268,8 @@ class ReadingData(object):
                 processor = trips.process_xml(self.content)
             else:
                 raise ReadingError("Unknown reader: %s." % self.reader)
+
+            # Get the statements from the processor, if it was resolved.
             if processor is None:
                 logger.error("Production of statements from %s failed for %s."
                              % (self.reader, self.content_id))
@@ -480,7 +488,7 @@ class ReachReader(Reader):
             except Exception as e:
                 logger.exception(e)
                 logger.error("Could not load result for prefix %s." % prefix)
-                continue
+                content = None
             self.add_result(base_prefix, content)
             logger.debug('Joined files for prefix %s.' % base_prefix)
         return self.results
@@ -615,7 +623,7 @@ class SparserReader(Reader):
                 logger.exception(e)
                 logger.error("Could not load reading content from %s."
                              % outpath)
-                continue
+                content = None
 
             self.add_result(prefix, content)
 
