@@ -7,7 +7,9 @@ from datetime import datetime
 
 from nose.plugins.attrib import attr
 from indra.sources import indra_db_rest as dbr
-from indra.sources.indra_db_rest import IndraDBRestAPIError
+
+
+EXPECTED_BATCH_SIZE = 1000
 
 
 def __check_request(seconds, *args, **kwargs):
@@ -66,7 +68,7 @@ def test_timeout_no_persist_agent():
     resp = dbr.get_statements(agents=[agent], persist=False, timeout=0)
     assert resp.is_working(), "Lookup resolved too fast."
     resp.wait_until_done(70)
-    assert len(resp.statements) == 500, len(resp.statements)
+    assert len(resp.statements) == EXPECTED_BATCH_SIZE, len(resp.statements)
 
 
 @attr('nonpublic')
@@ -78,7 +80,7 @@ def test_timeout_no_persist_type_object():
                               persist=False, timeout=0)
     assert resp.is_working(), "Lookup resolved too fast."
     resp.wait_until_done(70)
-    assert len(resp.statements) == 500, len(resp.statements)
+    assert len(resp.statements) == EXPECTED_BATCH_SIZE, len(resp.statements)
 
 
 @attr('nonpublic')
@@ -93,7 +95,7 @@ def test_too_big_request_no_persist():
 
 @attr('nonpublic', 'slow')
 def test_too_big_request_persist_and_block():
-    resp_all1 = __check_request(120, agents=['TP53'], persist=True, timeout=None,
+    resp_all1 = __check_request(200, agents=['TP53'], persist=True, timeout=None,
                                 simple_response=False)
     assert sum(resp_all1.get_ev_count(s) is not None
                for s in resp_all1.statements) > 0.9*len(resp_all1.statements), \
