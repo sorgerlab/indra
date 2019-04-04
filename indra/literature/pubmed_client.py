@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 pubmed_search = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
 pubmed_fetch = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
 
+
 # Send request can't be cached by lru_cache because it takes a dict
 # (a mutable/unhashable type) as an argument. We cache the callers instead.
 def send_request(url, data):
@@ -236,6 +237,77 @@ def get_abstract(pubmed_id, prepend_title=True):
     return _abstract_from_article_element(article, prepend_title)
 
 
+# A function to get the text for the element, or None if not found
+def find_elem_text(root, xpath_string):
+    elem = root.find(xpath_string)
+    return None if elem is None else elem.text
+
+
+def _get_journal_info(medline_citation, get_issns_from_nlm):
+    # Journal info
+    journal = medline_citation.find('Article/Journal')
+    journal_title = find_elem_text(journal, 'Title')
+    journal_abbrev = find_elem_text(journal, 'ISOAbbreviation')
+
+    # Add the ISSN from the article record
+    issn_list = []
+    issn = find_elem_text(journal, 'ISSN')
+    if issn:
+        issn_list.append(issn)
+
+    # Add the Linking ISSN from the article record
+    issn_linking = find_elem_text(medline_citation,
+                                  'MedlineJournalInfo/ISSNLinking')
+    if issn_linking:
+        issn_list.append(issn_linking)
+
+    # Now get the list of ISSNs from the NLM Catalog
+    nlm_id = find_elem_text(medline_citation,
+                            'MedlineJournalInfo/NlmUniqueID')
+    if nlm_id and get_issns_from_nlm:
+        nlm_issn_list = get_issns_for_journal(nlm_id)
+        if nlm_issn_list:
+            issn_list += nlm_issn_list
+
+    # Remove any duplicate issns
+    issn_list = list(set(issn_list))
+
+    return {'journal_title': journal_title, 'journal_abbrev': journal_abbrev,
+            'issn_list': issn_list, 'journal_nlm_id': nlm_id}
+
+
+def _get_article_info(medline_citation, pubmed_data):
+    article = medline_citation.find('Article')
+    pmid = find_elem_text(medline_citation, './PMID')
+    pii = find_elem_text(article,
+                         './ELocationID[@EIdType="pii"][@ValidYN="Y"]')
+
+    # Look for the DOI in the ELocationID field...
+    doi = find_elem_text(article,
+                         './ELocationID[@EIdType="doi"][@ValidYN="Y"]')
+
+    # ...and if that doesn't work, look in the ArticleIdList
+    if doi is None:
+        doi = find_elem_text(pubmed_data, './/ArticleId[@IdType="doi"]')
+
+    # Try to get the PMCID
+    pmcid = find_elem_text(pubmed_data, './/ArticleId[@IdType="pmc"]')
+
+    # Title
+    title = _get_title_from_article_element(article)
+
+    # Author list
+    author_elems = article.findall('AuthorList/Author/LastName')
+    author_names = None if author_elems is None \
+        else [au.text for au in author_elems]
+
+    # Get the page number entry
+    page = find_elem_text(article, 'Pagination/MedlinePgn')
+
+    return {'pmid': pmid, 'pii': pii, 'doi': doi, 'pmcid': pmcid,
+            'title': title, 'authors': author_names, 'page': page}
+
+
 def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
                                get_abstracts=False, prepend_title=False):
     """Get metadata for an XML tree containing PubmedArticle elements.
@@ -265,84 +337,32 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         following fields: 'doi', 'title', 'authors', 'journal_title',
         'journal_abbrev', 'journal_nlm_id', 'issn_list', 'page'.
     """
-    # A function to get the text for the element, or None if not found
-    def find_elem_text(root, xpath_string):
-        elem = root.find(xpath_string)
-        return None if elem is None else elem.text
-
     # Iterate over the articles and build the results dict
     results = {}
     pm_articles = tree.findall('./PubmedArticle')
     for art_ix, pm_article in enumerate(pm_articles):
-        pmid = find_elem_text(pm_article, 'MedlineCitation/PMID')
-        # Look for the DOI in the ELocationID field...
-        doi = find_elem_text(pm_article, 'MedlineCitation/Article/ELocationID'
-                                         '[@EIdType="doi"][@ValidYN="Y"]')
-        pii = find_elem_text(pm_article, 'MedlineCitation/Article/ELocationID'
-                                         '[@EIdType="pii"][@ValidYN="Y"]')
-        # ...and if that doesn't work, look in the ArticleIdList
-        if doi is None:
-            doi = find_elem_text(pm_article, './/ArticleId[@IdType="doi"]')
-        # Try to get the PMCID
-        pmcid = find_elem_text(pm_article, './/ArticleId[@IdType="pmc"]')
-        # Title
-        medline_article = \
-            pm_article.find('MedlineCitation/Article')
-        title = _get_title_from_article_element(medline_article)
+        medline_citation = pm_article.find('./MedlineCitation')
 
-        # Author list
-        author_elems = pm_article.findall('MedlineCitation/Article/'
-                                          'AuthorList/Author/LastName')
-        author_names = None if author_elems is None \
-                            else [au.text for au in author_elems]
-        # Journal info
-        journal_title = find_elem_text(pm_article, 'MedlineCitation/Article/'
-                                                   'Journal/Title')
-        journal_abbrev = find_elem_text(pm_article, 'MedlineCitation/Article/'
-                                                   'Journal/ISOAbbreviation')
-        # Add the ISSN from the article record
-        issn_list = []
-        issn = find_elem_text(pm_article, 'MedlineCitation/Article/'
-                                                   'Journal/ISSN')
-        if issn:
-            issn_list.append(issn)
-        # Add the Linking ISSN from the article record
-        issn_linking = find_elem_text(pm_article,
-                                      'MedlineCitation/MedlineJournalInfo/'
-                                      'ISSNLinking')
-        if issn_linking:
-            issn_list.append(issn_linking)
-        # Now get the list of ISSNs from the NLM Catalog
-        nlm_id = find_elem_text(pm_article,
-                                'MedlineCitation/MedlineJournalInfo/'
-                                'NlmUniqueID')
-        if nlm_id and get_issns_from_nlm:
-            nlm_issn_list = get_issns_for_journal(nlm_id)
-            if nlm_issn_list:
-                issn_list += nlm_issn_list
-        # Remove any duplicates
-        issn_list = list(set(issn_list))
-        # Get the page number entry
-        page = find_elem_text(pm_article, 'MedlineCitation/Article/Pagination/'
-                                          'MedlinePgn')
+        article_info = _get_article_info(medline_citation,
+                                         pm_article.find('PubmedData'))
+        journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
+
         # Build the result
-        result = {'doi': doi,
-                  'pmcid': pmcid,
-                  'pii': pii,
-                  'title': title,
-                  'authors': author_names,
-                  'journal_title': journal_title,
-                  'journal_abbrev': journal_abbrev,
-                  'journal_nlm_id': nlm_id,
-                  'issn_list': issn_list,
-                  'page': page}
+        result = {}
+        result.update(article_info)
+        result.update(journal_info)
+
         # Get the abstracts if requested
         if get_abstracts:
             abstract = _abstract_from_article_element(
-                                medline_article, prepend_title=prepend_title)
+                medline_citation.find('Article'),
+                prepend_title=prepend_title
+                )
             result['abstract'] = abstract
+
         # Add to dict
-        results[pmid] = result
+        results[article_info['pmid']] = result
+
     return results
 
 
