@@ -238,7 +238,7 @@ def get_abstract(pubmed_id, prepend_title=True):
 
 
 # A function to get the text for the element, or None if not found
-def find_elem_text(root, xpath_string):
+def _find_elem_text(root, xpath_string):
     elem = root.find(xpath_string)
     return None if elem is None else elem.text
 
@@ -246,24 +246,24 @@ def find_elem_text(root, xpath_string):
 def _get_journal_info(medline_citation, get_issns_from_nlm):
     # Journal info
     journal = medline_citation.find('Article/Journal')
-    journal_title = find_elem_text(journal, 'Title')
-    journal_abbrev = find_elem_text(journal, 'ISOAbbreviation')
+    journal_title = _find_elem_text(journal, 'Title')
+    journal_abbrev = _find_elem_text(journal, 'ISOAbbreviation')
 
     # Add the ISSN from the article record
     issn_list = []
-    issn = find_elem_text(journal, 'ISSN')
+    issn = _find_elem_text(journal, 'ISSN')
     if issn:
         issn_list.append(issn)
 
     # Add the Linking ISSN from the article record
-    issn_linking = find_elem_text(medline_citation,
-                                  'MedlineJournalInfo/ISSNLinking')
+    issn_linking = _find_elem_text(medline_citation,
+                                   'MedlineJournalInfo/ISSNLinking')
     if issn_linking:
         issn_list.append(issn_linking)
 
     # Now get the list of ISSNs from the NLM Catalog
-    nlm_id = find_elem_text(medline_citation,
-                            'MedlineJournalInfo/NlmUniqueID')
+    nlm_id = _find_elem_text(medline_citation,
+                             'MedlineJournalInfo/NlmUniqueID')
     if nlm_id and get_issns_from_nlm:
         nlm_issn_list = get_issns_for_journal(nlm_id)
         if nlm_issn_list:
@@ -278,20 +278,20 @@ def _get_journal_info(medline_citation, get_issns_from_nlm):
 
 def _get_article_info(medline_citation, pubmed_data):
     article = medline_citation.find('Article')
-    pmid = find_elem_text(medline_citation, './PMID')
-    pii = find_elem_text(article,
-                         './ELocationID[@EIdType="pii"][@ValidYN="Y"]')
+    pmid = _find_elem_text(medline_citation, './PMID')
+    pii = _find_elem_text(article,
+                          './ELocationID[@EIdType="pii"][@ValidYN="Y"]')
 
     # Look for the DOI in the ELocationID field...
-    doi = find_elem_text(article,
-                         './ELocationID[@EIdType="doi"][@ValidYN="Y"]')
+    doi = _find_elem_text(article,
+                          './ELocationID[@EIdType="doi"][@ValidYN="Y"]')
 
     # ...and if that doesn't work, look in the ArticleIdList
     if doi is None:
-        doi = find_elem_text(pubmed_data, './/ArticleId[@IdType="doi"]')
+        doi = _find_elem_text(pubmed_data, './/ArticleId[@IdType="doi"]')
 
     # Try to get the PMCID
-    pmcid = find_elem_text(pubmed_data, './/ArticleId[@IdType="pmc"]')
+    pmcid = _find_elem_text(pubmed_data, './/ArticleId[@IdType="pmc"]')
 
     # Title
     title = _get_title_from_article_element(article)
@@ -302,7 +302,7 @@ def _get_article_info(medline_citation, pubmed_data):
         else [au.text for au in author_elems]
 
     # Get the page number entry
-    page = find_elem_text(article, 'Pagination/MedlinePgn')
+    page = _find_elem_text(article, 'Pagination/MedlinePgn')
 
     return {'pmid': pmid, 'pii': pii, 'doi': doi, 'pmcid': pmcid,
             'title': title, 'authors': author_names, 'page': page}
