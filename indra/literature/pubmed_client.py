@@ -309,7 +309,8 @@ def _get_article_info(medline_citation, pubmed_data):
 
 
 def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
-                               get_abstracts=False, prepend_title=False):
+                               get_abstracts=False, prepend_title=False,
+                               mesh_annotations=False):
     """Get metadata for an XML tree containing PubmedArticle elements.
 
     Documentation on the XML structure can be found at:
@@ -329,6 +330,9 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     prepend_title : boolean
         If get_abstracts is True, specifies whether the article title should
         be prepended to the abstract text.
+    mesh_annotations : boolean
+        If True, extract mesh annotations from the pubmed entries and include
+        in the returned data. If false, don't.
 
     Returns
     -------
@@ -346,11 +350,13 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         article_info = _get_article_info(medline_citation,
                                          pm_article.find('PubmedData'))
         journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
+        context_info = _get_annotations(medline_citation)
 
         # Build the result
         result = {}
         result.update(article_info)
         result.update(journal_info)
+        result.update(context_info)
 
         # Get the abstracts if requested
         if get_abstracts:
@@ -364,6 +370,23 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         results[article_info['pmid']] = result
 
     return results
+
+
+def _get_annotations(medline_citation):
+    info = {}
+    for elem in medline_citation.findall('.//*[@UI]'):
+        mid = elem.attrib['UI']
+        major = elem.attrib.get('MajorTopicYN')
+        if major is not None:
+            major = True if major.upper() == 'Y' else False
+
+        if mid in info.keys():
+            if 'major_topic' in info[mid]:
+                continue
+            info[mid]['major_topic'] = major
+        else:
+            info[mid] = {'text': elem.text, 'major_topic': major}
+    return {'mesh_annotations': info}
 
 
 def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
