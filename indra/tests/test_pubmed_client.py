@@ -150,7 +150,7 @@ def test_pmid_27821631():
 
 @attr('webservice')
 def test_get_annotations():
-    pmid =  '30971'
+    pmid = '30971'
     tree = pubmed_client.send_request(pubmed_client.pubmed_fetch,
                                       dict(db='pubmed', retmode='xml',
                                            id=pmid))
@@ -159,7 +159,6 @@ def test_get_annotations():
     assert len(results) == 1, len(results)
     assert 'mesh_annotations' in results[pmid].keys(), results[pmid].keys()
     me_ans = results[pmid]['mesh_annotations']
-    assert len(me_ans) == 12, len(me_ans)
-    assert 'Q000188' in me_ans.keys()
-    assert me_ans['Q000188']['major_topic']
-    assert not me_ans['D000070']['major_topic']
+    assert len(me_ans) == 9, len(me_ans)
+    assert all(d['mesh'].startswith('D') for d in me_ans)
+    assert any(d['major_topic'] for d in me_ans)

@@ -1,18 +1,10 @@
 """
 Search and get metadata for articles in Pubmed.
 """
-
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import xml.etree.ElementTree as ET
 import requests
 import logging
-# Python 3
-try:
-    from functools import lru_cache
-# Python 2
-except ImportError:
-    from functools32 import lru_cache
+from functools import lru_cache
 from indra.databases import hgnc_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
@@ -373,19 +365,26 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
 
 
 def _get_annotations(medline_citation):
-    info = {}
-    for elem in medline_citation.findall('.//*[@UI]'):
-        mid = elem.attrib['UI']
-        major = elem.attrib.get('MajorTopicYN')
-        if major is not None:
-            major = True if major.upper() == 'Y' else False
 
-        if mid in info.keys():
-            if 'major_topic' in info[mid]:
-                continue
-            info[mid]['major_topic'] = major
+    def _major_topic(e):
+        if e is not None and e.get('MajorTopicYN').upper() == 'Y':
+            return True
+        return False
+
+    info = []
+    for elem in medline_citation.findall('.//MeshHeading'):
+        dname = elem.find('DescriptorName')
+        qname = elem.find('QualifierName')
+
+        mid = dname.attrib['UI']
+        major = _major_topic(dname) or _major_topic(qname)
+        if qname is not None:
+            qual = {'text': qname.text, 'mesh': qname.attrib['UI']}
         else:
-            info[mid] = {'text': elem.text, 'major_topic': major}
+            qual = None
+
+        info.append({'mesh': mid, 'text': dname.text, 'major_topic': major,
+                     'qualifier': qual})
     return {'mesh_annotations': info}
 
 
