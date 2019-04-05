@@ -130,15 +130,20 @@ def universal_extract_text(xml, contains=None):
     try:
         paragraphs = elsevier_client.extract_paragraphs(xml)
     except Exception:
+        print(1)
         paragraphs = None
     if paragraphs is None:
         try:
             paragraphs = pmc_client.extract_paragraphs(xml)
         except Exception:
+            print(2)
             paragraphs = [xml]
-    if isinstance(contains, str):
-        contains = [contains]
-    pattern = ''.join('(%s)' % shortform for shortform in contains)
-    pattern = '[%s]' % pattern
-    paragraphs = [p for p in paragraphs if re.match(pattern, p)]
+    if contains is None:
+        pattern = ''
+    else:
+        if isinstance(contains, str):
+            contains = [contains]
+        pattern = '|'.join(r'[^\w]%s[^\w]' % shortform
+                           for shortform in contains)
+    paragraphs = [p for p in paragraphs if re.search(pattern, p)]
     return '\n'.join(paragraphs) + '\n'
