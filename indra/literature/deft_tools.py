@@ -12,7 +12,7 @@ This is helpful because it avoids having to know in advance the source of
 text content from the database.
 """
 
-
+import re
 import time
 import logging
 
@@ -117,6 +117,10 @@ def universal_extract_text(xml, contains=None):
     xml : str
        Either an NLM xml, Elsevier xml or plaintext
 
+    contains : Optional[list of str]
+        Extract paragraphs containing at least one string from this
+        list.
+
     Returns
     -------
     plaintext : str
@@ -124,12 +128,17 @@ def universal_extract_text(xml, contains=None):
         otherwise the input is returned unchanged
     """
     try:
-        plaintext = elsevier_client.extract_text(xml, contains)
+        paragraphs = elsevier_client.extract_paragraphs(xml)
     except Exception:
-        plaintext = None
-    if plaintext is None:
+        paragraphs = None
+    if paragraphs is None:
         try:
-            plaintext = pmc_client.extract_text(xml, contains)
+            paragraphs = pmc_client.extract_paragraphs(xml)
         except Exception:
-            plaintext = xml
-    return plaintext
+            paragraphs = [xml]
+    if isinstance(contains, str):
+        contains = []
+    pattern = ''.join('(%s)' % shortform for shortform in contains)
+    pattern = '[%s]' % pattern
+    paragraphs = [p for p in paragraphs if re.match(pattern, p)]
+    return '\n'.join(paragraphs) + '\n'
