@@ -109,7 +109,7 @@ def get_xml(pmc_id):
         return xml_bytes.decode('utf-8')
 
 
-def extract_text(xml_string, contains=None):
+def extract_text(xml_string):
     """Get text from the body of the given NLM XML string.
 
     Parameters
@@ -122,6 +122,26 @@ def extract_text(xml_string, contains=None):
     str
         Extracted plaintext.
     """
+    paragraphs = extract_paragraphs(xml_string)
+    if paragraphs:
+        return '/n'.join(paragraphs) + '/n'
+    else:
+        return None
+
+
+def extract_paragraphs(xml_string):
+    """Returns list of paragraphs in an NLM XML.
+
+    Parameters
+    ----------
+    xml_string : str
+        String containing valid NLM XML.
+
+    Returns
+    -------
+    list of str
+        List of extracted paragraphs in an NLM XML
+    """
     tree = etree.fromstring(xml_string.encode('utf-8'))
 
     paragraphs = []
@@ -132,13 +152,8 @@ def extract_text(xml_string, contains=None):
         if isinstance(element.tag, basestring) and \
            re.search('(^|})[p|title]$', element.tag) and element.text:
             paragraph = ' '.join(element.itertext())
-            if contains is None or re.search(r'[^\w]%s[^\w]' % contains,
-                                             paragraph):
-                paragraphs.append(paragraph)
-    if paragraphs:
-        return ' '.join(paragraphs).strip()
-    else:
-        return None
+            paragraphs.append(paragraph)
+    return paragraphs
 
 
 def filter_pmids(pmid_list, source_type):
