@@ -130,13 +130,11 @@ def universal_extract_text(xml, contains=None):
     try:
         paragraphs = elsevier_client.extract_paragraphs(xml)
     except Exception:
-        print(1)
         paragraphs = None
     if paragraphs is None:
         try:
             paragraphs = pmc_client.extract_paragraphs(xml)
         except Exception:
-            print(2)
             paragraphs = [xml]
     if contains is None:
         pattern = ''
