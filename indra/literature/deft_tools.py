@@ -137,7 +137,7 @@ def universal_extract_text(xml, contains=None):
         except Exception:
             paragraphs = [xml]
     if isinstance(contains, str):
-        contains = []
+        contains = [contains]
     pattern = ''.join('(%s)' % shortform for shortform in contains)
     pattern = '[%s]' % pattern
     paragraphs = [p for p in paragraphs if re.match(pattern, p)]
