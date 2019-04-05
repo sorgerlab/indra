@@ -233,20 +233,29 @@ def get_article(doi, output_format='txt'):
     return xml_string
 
 
-def extract_text(xml_string, contains=None):
+def extract_text(xml_string):
     """Get text from the body of the given Elsevier xml."""
+    paragraphs = extract_paragraphs(xml_string)
+    if paragraphs:
+        return '/n'.join(paragraphs) + '/n'
+    else:
+        return None
+
+
+def extract_paragraphs(xml_string):
+    """Get paragraphs from the body of the given Elsevier xml."""
     assert isinstance(xml_string, str)
     xml_tree = ET.XML(xml_string.encode('utf-8'), parser=UTB())
     full_text = xml_tree.find('article:originalText', elsevier_ns)
     if full_text is None:
         logger.info('Could not find full text element article:originalText')
         return None
-    article_body = _get_article_body(full_text, contains)
+    article_body = _get_article_body(full_text)
     if article_body:
         return article_body
     raw_text = _get_raw_text(full_text)
     if raw_text:
-        return raw_text
+        return [raw_text]
     return None
 
 
@@ -391,7 +400,7 @@ def download_from_search(query_str, folder, do_extract_text=True,
     return
 
 
-def _get_article_body(full_text_elem, contains=None):
+def _get_article_body(full_text_elem):
     possible_paths = [
         'xocs:doc/xocs:serial-item/ja:article/ja:body',
         'xocs:doc/xocs:serial-item/ja:simple-article/ja:body',
@@ -403,12 +412,12 @@ def _get_article_body(full_text_elem, contains=None):
         main_body = full_text_elem.find(pth, elsevier_ns)
         if main_body is not None:
             logger.info("Found main body element: \"%s\"" % pth)
-            return _get_sections(main_body, contains)
+            return _get_sections(main_body)
         logger.info("Could not find main body element: \"%s\"." % pth)
     return None
 
 
-def _get_sections(main_body_elem, contains=None):
+def _get_sections(main_body_elem):
     # Get content sections
     possible_paths = ['common:sections/common:section', 'common:section',
                       'common:sections']
@@ -422,7 +431,7 @@ def _get_sections(main_body_elem, contains=None):
         return None
 
     # Concatenate the section content
-    full_txt = ''
+    paragraphs = []
     for s in sections:
         # Paragraphs that are directly under the section
         pars = s.findall('common:para', elsevier_ns)
@@ -430,9 +439,8 @@ def _get_sections(main_body_elem, contains=None):
         pars += s.findall('common:section/common:para', elsevier_ns)
         for p in pars:
             content = ' '.join(p.itertext())
-            if contains is None or re.search(r'[^\w]%s[^\w]' % contains):
-                full_txt += content + '\n'
-    return full_txt
+            paragraphs.append(content)
+    return paragraphs
 
 
 def _get_raw_text(full_text_elem):
