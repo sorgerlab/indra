@@ -133,32 +133,6 @@ nav {
         <hr>
     </div>
 
-    <div class="container theme-showcase" role="main">
-        <div>
-            <p>&nbsp;</p>
-        </div>
-        <div class="page-header">
-            <a name='index'></a>
-            <h3>Curator Information</h3>
-            <div class="user_data">
-                <div class="api_key_form" id="api_key_form" style="display:inline-block; vertical-align: top; width: 330">
-                    <form name="apiKeyForm" action="javascript:keySubmit(api_key_input.value)">
-                        <b>API key</b><br>If no key is provided your curation will be rejected.<br>
-                        <input type="text" name="api_key" id="api_key_input" placeholder="Enter key here..." style="width: 200px;">
-                        <input type="submit" name="store_button" value="submit key">
-                        <div id="ensure_user_on_api_key">No key given.</div>
-                    </form>
-                </div>
-                <div class="curator_form" id="curator_form" style="display:inline-block; vertical-align: top; width: 330">
-                    <form name="curatorForm">
-                        <b>Curator ID</b><br>Your curation will get priority if you provide your email or name.<br>
-                        <input type="text" name="curator" id="curator_input" placeholder="Enter your name or email..." style="width: 200px;">
-                    </form>
-                </div>
-            </div>
-        </div>
-        <hr>
-
     {% if metadata %}
     <div class="page-header container" style="padding: 0px;">
       <h4 class="nav-header" data-toggle="collapse" data-target="#meta_list"><a href="#" title="Click to see metadata" style="color: #000000;">Summary Metadata</a></h4>
