@@ -2157,11 +2157,16 @@ class Event(Statement):
         mk = (self.concept.matches_key(),)
         return str(mk)
 
-    def refinement_of(self):
-        concept_ref = self.concept.refinement_of(other.concept)
+    def refinement_of(self, other, hierarchies):
+        concept_ref = self.concept.refinement_of(other.concept, hierarchies)
         pol_ref = (self.delta['polarity'] and not other.delta['polarity']) or \
             self.delta['polarity'] == other.delta['polarity']
         return concept_ref and pol_ref
+
+    def equals(self, other):
+        return self.concept.equals(other.concept) and \
+            self.delta['polarity'] == other.delta['polarity'] and \
+            set(self.delta['adjectives']) == set(other.delta['adjectives'])
 
     def __str__(self):
         return '%s(%s)' % (type(self).__name__, self.concept.name)

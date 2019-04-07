@@ -3,6 +3,7 @@ from builtins import dict, str
 import os
 import json
 import unittest
+from copy import deepcopy
 from nose.tools import raises
 from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.preassembler.hierarchy_manager import hierarchies
@@ -1775,9 +1776,11 @@ def test_influence_refinement_of():
     pos_adj3 = {'polarity': 1, 'adjectives': ['significant', 'large']}
 
     def I(x, y):
-        c1.delta = x
-        c2.delta = y
-        return Influence(c1, c2)
+        cc1 = deepcopy(c1)
+        cc2 = deepcopy(c2)
+        cc1.delta = x
+        cc2.delta = y
+        return Influence(cc1, cc2)
 
     # Has polarity vs doesn't have polarity
     assert I(pos_adj, nopol_noadj).refinement_of(
