@@ -1901,8 +1901,10 @@ class Influence(Statement):
             return False
 
         # Check agent arguments
-        subj_refinement = self.subj.refinement_of(other.subj, hierarchies)
-        obj_refinement = self.obj.refinement_of(other.obj, hierarchies)
+        subj_refinement = self.subj.concept.refinement_of(
+            other.subj.concept, hierarchies)
+        obj_refinement = self.obj.concept.refinement_of(
+            other.obj.concept, hierarchies)
         op = other.overall_polarity()
         sp = self.overall_polarity()
         # If we have "less" polarity here than in other then it's
@@ -2154,6 +2156,12 @@ class Event(Statement):
     def matches_key(self):
         mk = (self.concept.matches_key(),)
         return str(mk)
+
+    def refinement_of(self):
+        concept_ref = self.concept.refinement_of(other.concept)
+        pol_ref = (self.delta['polarity'] and not other.delta['polarity']) or \
+            self.delta['polarity'] == other.delta['polarity']
+        return concept_ref and pol_ref
 
     def __str__(self):
         return '%s(%s)' % (type(self).__name__, self.concept.name)

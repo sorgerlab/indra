@@ -1651,23 +1651,23 @@ def test_bound_condition_matches():
 
 
 def test_influence_polarity():
-    st = Influence(Agent('a'), Agent('b'))
+    st = Influence(Event(Concept('a')), Event(Concept('b')))
     assert st.overall_polarity() is None
-    st.subj_delta = {'polarity': None, 'adjectives': []}
+    st.subj.delta = {'polarity': None, 'adjectives': []}
     assert st.overall_polarity() is None
-    st.obj_delta = {'polarity': None, 'adjectives': []}
+    st.obj.delta = {'polarity': None, 'adjectives': []}
     assert st.overall_polarity() is None
-    st.subj_delta['polarity'] = 1
+    st.subj.delta['polarity'] = 1
     assert st.overall_polarity() == 1
-    st.subj_delta['polarity'] = -1
+    st.subj.delta['polarity'] = -1
     assert st.overall_polarity() == -1
-    st.obj_delta['polarity'] = 1
+    st.obj.delta['polarity'] = 1
     assert st.overall_polarity() == -1
-    st.obj_delta['polarity'] = -1
+    st.obj.delta['polarity'] = -1
     assert st.overall_polarity() == 1
-    st.subj_delta['polarity'] = 1
+    st.subj.delta['polarity'] = 1
     assert st.overall_polarity() == -1
-    st.obj_delta['polarity'] = 1
+    st.obj.delta['polarity'] = 1
     assert st.overall_polarity() == 1, st
 
 
@@ -1763,8 +1763,8 @@ def test_concept_isa_hume():
 
 
 def test_influence_refinement_of():
-    c1 = Concept('production')
-    c2 = Concept('price')
+    c1 = Event(Concept('production'))
+    c2 = Event(Concept('price'))
     nopol_noadj = {'polarity': None, 'adjectives': []}
     nopol_adj = {'polarity': None, 'adjectives': ['small']}
     neg_noadj = {'polarity': -1, 'adjectives': []}
@@ -1773,7 +1773,12 @@ def test_influence_refinement_of():
     pos_adj = {'polarity': 1, 'adjectives': ['small']}
     pos_adj2 = {'polarity': 1, 'adjectives': ['small', 'tiny']}
     pos_adj3 = {'polarity': 1, 'adjectives': ['significant', 'large']}
-    I = lambda x, y: Influence(c1, c2, x, y)
+
+    def I(x, y):
+        c1.delta = x
+        c2.delta = y
+        return Influence(c1, c2)
+
     # Has polarity vs doesn't have polarity
     assert I(pos_adj, nopol_noadj).refinement_of(
            I(nopol_adj, nopol_noadj), hierarchies)
