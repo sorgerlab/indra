@@ -1,6 +1,6 @@
 import itertools
-from indra.statements import Influence, Concept, Evidence, WorldContext, \
-    TimeContext, RefContext
+from indra.statements import Influence, Concept, Event, Evidence, \
+    WorldContext, TimeContext, RefContext
 
 pos_rels = ['provide', 'led', 'lead', 'driv', 'support', 'enabl', 'develop']
 neg_rels = ['restrict', 'worsen', 'declin', 'limit', 'constrain',
@@ -43,59 +43,37 @@ class SofiaProcessor(object):
         annots = {k: rel_dict.get(k) for k in annot_keys}
         ref = rel_dict.get('Source_File')
 
-        for cause_idx, effect_idx in itertools.product(causes,
-                                                       effects):
-            cause_name = self._events[cause_idx]['Relation']
-            cause_grounding = self._events[cause_idx]['Event_Type']
-            effect_name = self._events[effect_idx]['Relation']
-            effect_grounding = self._events[effect_idx]['Event_Type']
-            cause_concept = Concept(cause_name,
-                                    db_refs={'TEXT': cause_name})
-            if cause_grounding:
-                cause_concept.db_refs['SOFIA'] = cause_grounding
-            effect_concept = Concept(effect_name,
-                                     db_refs={'TEXT': effect_name})
-            if effect_grounding:
-                effect_concept.db_refs['SOFIA'] = effect_grounding
-
-            # NOTE: Extract context. The basic issue is that
-            # time/location
-            # here is given at the event level, not at the relation
-            # level, and so we need to choose which event's context
-            # we will associate with the relation
-            def choose_context(context_type):
-                locs = [self._events[cause_idx].get(context_type),
-                        self._events[effect_idx].get(context_type)]
-                if locs[0]:
-                    return locs[0].strip()
-                elif locs[1]:
-                    return locs[1].strip()
-                else:
-                    return None
-
-            context = WorldContext()
-            location = choose_context('Location')
-            if location:
-                context.location = RefContext(name=location)
-            time = choose_context('Time')
-            if time:
-                context.time = TimeContext(text=time)
-            # Overwrite blank context
-            if not context:
-                context = None
+        for cause_idx, effect_idx in itertools.product(causes, effects):
+            subj = self.get_event(self._events[cause_idx])
+            obj = self.get_event(self._events[effect_idx])
 
             ev = Evidence(source_api='sofia', pmid=ref,
-                          annotations=annots, text=text,
-                          context=context)
-            stmt = Influence(cause_concept, effect_concept,
-                             evidence=[ev])
+                          annotations=annots, text=text)
+            stmt = Influence(subj, obj, evidence=[ev])
             # Assume unknown polarity on the subject, put the overall
             # polarity in the sign of the object
-            stmt.subj_delta['polarity'] = None
-            stmt.obj_delta['polarity'] = pol
+            stmt.subj.delta['polarity'] = None
+            stmt.obj.delta['polarity'] = pol
 
             stmt_list.append(stmt)
         return stmt_list
+
+    @staticmethod
+    def get_event(event_entry):
+        name = event_entry['Relation']
+        concept = Concept(name, db_refs={'TEXT': name})
+        grounding = event_entry['Event_Type']
+        if grounding:
+            concept.db_refs['SOFIA'] = grounding
+        context = WorldContext()
+        time = event_entry.get('Time')
+        if time:
+            context.time = TimeContext(text=time.strip())
+        loc = event_entry.get('Location')
+        if loc:
+            context.geo_location = RefContext(name=loc)
+        event = Event(concept, context=context)
+        return event
 
 
 class SofiaJsonProcessor(SofiaProcessor):

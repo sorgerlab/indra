@@ -13,8 +13,8 @@ def test_text_process_webservice():
     txt = 'rainfall causes floods'
     sp = sofia.process_text(txt)
     assert len(sp.statements) == 1
-    assert sp.statements[0].subj.name == 'rainfall'
-    assert sp.statements[0].obj.name == 'floods'
+    assert sp.statements[0].subj.concept.name == 'rainfall'
+    assert sp.statements[0].obj.concept.name == 'floods'
 
 
 def test_process_json():
@@ -24,5 +24,5 @@ def test_process_json():
         js = json.load(fh)
     sp = sofia.process_json(js)
     assert len(sp.statements) == 1
-    assert sp.statements[0].subj.name == 'rainfall'
-    assert sp.statements[0].obj.name == 'floods'
+    assert sp.statements[0].subj.concept.name == 'rainfall'
+    assert sp.statements[0].obj.concept.name == 'floods'
