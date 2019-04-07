@@ -4,10 +4,17 @@ import logging
 import objectpath
 import collections
 from datetime import datetime
-from indra.statements import *
+from indra.statements import Concept, Event, Influence, TimeContext, \
+    RefContext, WorldContext, Evidence
 
 
 logger = logging.getLogger(__name__)
+
+
+# List out relation types and their default (implied) polarities.
+polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
+              'mitigation': -1, 'prevention': -1,
+              'temporallyPrecedes': None}
 
 
 class HumeJsonLdProcessor(object):
@@ -41,22 +48,20 @@ class HumeJsonLdProcessor(object):
             subj = self._get_event_and_context(relation, 'source')
             obj = self._get_event_and_context(relation, 'destination')
 
+            if not subj.concept or not obj.concept:
+                continue
+
             # Apply the naive polarity from the type of statement. For the
             # purpose of the multiplication here, if obj_delta['polarity'] is
             # None to begin with, we assume it is positive
-            obj_pol = obj_delta['polarity']
+            obj_pol = obj.delta['polarity']
             obj_pol = obj_pol if obj_pol is not None else 1
             rel_pol = polarities[relation_type]
-            obj_delta['polarity'] = rel_pol * obj_pol if rel_pol else None
+            obj.delta['polarity'] = rel_pol * obj_pol if rel_pol else None
 
-            if not subj_concept or not obj_concept:
-                continue
+            evidence = self._get_evidence(relation, get_states(relation))
 
-            evidence = self._get_evidence(relation, get_states(relation),
-                                          context)
-
-            st = Influence(subj_concept, obj_concept, subj_delta, obj_delta,
-                           evidence=evidence)
+            st = Influence(subj, obj, evidence=evidence)
             self.eid_stmt_dict[relation['@id']] = st
             self.statements.append(st)
 
@@ -65,11 +70,6 @@ class HumeJsonLdProcessor(object):
         # Get all extractions
         extractions = \
             list(self.tree.execute("$.extractions[(@.@type is 'Extraction')]"))
-
-        # List out relation types and their default (implied) polarities.
-        polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
-                      'mitigation': -1, 'prevention': -1,
-                      'temporallyPrecedes': None}
 
         # Get relations from extractions
         relations = []
@@ -172,9 +172,9 @@ class HumeJsonLdProcessor(object):
                     'polarity': get_polarity(ev)}
         context = self._make_context(ev)
         event_obj = Event(concept, delta=ev_delta, context=context)
-        return concept, ev_delta, context
+        return event_obj
 
-    def _get_evidence(self, event, adjectives, context):
+    def _get_evidence(self, event, adjectives):
         """Return the Evidence object for the INDRA Statement."""
         provenance = event.get('provenance')
 
@@ -195,7 +195,7 @@ class HumeJsonLdProcessor(object):
             }
         location = self.document_dict[doc_id]['location']
         ev = Evidence(source_api='hume', text=text, annotations=annotations,
-                      pmid=location, context=context)
+                      pmid=location)
         return [ev]
 
     @staticmethod

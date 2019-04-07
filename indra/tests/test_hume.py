@@ -41,14 +41,13 @@ def test_for_context():
     assert len(bp.statements) == 1, len(bp.statements)
     stmt = bp.statements[0]
     assert len(stmt.evidence) == 1, len(stmt.evidence)
-    ev = stmt.evidence[0]
-    assert ev.context is not None
-    assert ev.context.time is not None
-    time = ev.context.time
+    assert stmt.obj.context is not None
+    assert stmt.obj.context.time is not None
+    time = stmt.obj.context.time
     assert time.text == '2018', ev.context.time.text
     assert isinstance(time.start, datetime), type(time.start)
     assert isinstance(time.end, datetime), type(time.end)
     assert isinstance(time.duration, int), type(time.duration)
-    assert ev.context.geo_location is not None
-    loc = ev.context.geo_location
+    assert stmt.obj.context.geo_location is not None
+    loc = stmt.obj.context.geo_location
     assert loc.name == 'South Sudan', loc.name

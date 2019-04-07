@@ -41,5 +41,5 @@ def process_jsonld(jsonld):
         as its statements attribute.
     """
     hp = processor.HumeJsonLdProcessor(jsonld)
-    hp.wztract_relations()
+    hp.extract_relations()
     return hp
