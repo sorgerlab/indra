@@ -109,6 +109,10 @@ class EidosProcessor(object):
         evidence.annotations['obj_polarity'] = obj.delta['polarity']
         evidence.annotations['subj_adjectives'] = subj.delta['adjectives']
         evidence.annotations['obj_adjectives'] = obj.delta['adjectives']
+        evidence.annotations['subj_context'] = subj.context.to_json() if \
+            subj.context else {}
+        evidence.annotations['obj_context'] = obj.context.to_json() if \
+            obj.context else {}
 
         st = Influence(subj, obj, evidence=[evidence])
         return st
