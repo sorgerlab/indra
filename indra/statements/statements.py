@@ -175,7 +175,7 @@ __all__ = [
     'Activation', 'GtpActivation', 'ActiveForm', 'HasActivity', 'Gef', 'Gap',
     'Complex', 'Translocation', 'RegulateAmount', 'DecreaseAmount',
     'IncreaseAmount', 'Influence', 'Conversion', 'Unresolved',
-    'Association',
+    'Association', 'Event',
 
     # Error classes
     'InputError', 'UnresolvedUuidError', 'InvalidLocationError',
@@ -1880,22 +1880,15 @@ class Influence(IncreaseAmount):
 
     Parameters
     ----------
-    subj : :py:class:`indra.statement.Concept`
-        The concept which acts as the influencer.
-    obj : :py:class:`indra.statement.Concept`
-        The concept which acts as the influencee
-    subj_delta : Optional[dict]
-        A dictionary specifying the polarity and magnitude of
-        change in the subject.
-    obj_delta : Optional[dict]
-        A dictionary specifying the polarity and magnitude of
-        change in the object.
+    subj : :py:class:`indra.statement.Event`
+        The event which acts as the influencer.
+    obj : :py:class:`indra.statement.Event`
+        The event which acts as the influencee.
     evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the statement.
     """
 
-    def __init__(self, subj, obj, subj_delta=None, obj_delta=None,
-                 evidence=None):
+    def __init__(self, subj, obj, evidence=None):
         super(Influence, self).__init__(subj, obj, evidence)
         if subj_delta is None:
             subj_delta = {'polarity': None, 'adjectives': []}
@@ -1931,14 +1924,12 @@ class Influence(IncreaseAmount):
 
     def equals(self, other):
         def delta_equals(dself, dother):
-            if (dself['polarity'] == dother['polarity']) and \
-                (set(dself['adjectives']) == set(dother['adjectives'])):
-                return True
-            else:
-                return False
+            return (dself['polarity'] == dother['polarity']) and \
+              (set(dself['adjectives']) == set(dother['adjectives']))
+
         matches = super(Influence, self).equals(other) and \
-            delta_equals(self.subj_delta, other.subj_delta) and \
-            delta_equals(self.obj_delta, other.obj_delta)
+            delta_equals(self.subj.delta, other.subj.delta) and \
+            delta_equals(self.obj.delta, other.obj.delta)
         return matches
 
     def matches_key(self):
@@ -1974,7 +1965,7 @@ class Influence(IncreaseAmount):
         if (subj_ref and obj_ref) or (subj_opp and obj_opp):
             if sp is not None and op is not None and sp != op:
                 return True
-        # If one entity is the oppositve and the other compatible and the
+        # If one entity is the opposite and the other compatible and the
         # polarities are the same then this is a contradiction
         if (subj_ref and obj_opp) or (subj_opp and obj_ref):
             if sp is not None and op is not None and sp == op:
@@ -1984,8 +1975,8 @@ class Influence(IncreaseAmount):
 
     def overall_polarity(self):
         # Set p1 and p2 to None / 1 / -1 depending on polarity
-        p1 = self.subj_delta['polarity']
-        p2 = self.obj_delta['polarity']
+        p1 = self.subj.delta['polarity']
+        p2 = self.obj.delta['polarity']
         if p1 is None and p2 is None:
             pol = None
         elif p2 is None:
@@ -1997,16 +1988,12 @@ class Influence(IncreaseAmount):
         return pol
 
     def polarity_count(self):
-        return ((1 if self.subj_delta['polarity'] is not None else 0) +
-                (1 if self.obj_delta['polarity'] is not None else 0))
+        return ((1 if self.subj.delta['polarity'] is not None else 0) +
+                (1 if self.obj.delta['polarity'] is not None else 0))
 
     def to_json(self, use_sbo=False):
         generic = super(Influence, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
-        json_dict['subj'] = generic['subj']
-        json_dict['subj_delta'] = self.subj_delta
-        json_dict['obj'] = generic['obj']
-        json_dict['obj_delta'] = self.obj_delta
         json_dict.update(generic)
         return json_dict
 
@@ -2014,13 +2001,11 @@ class Influence(IncreaseAmount):
     def _from_json(cls, json_dict):
         subj = json_dict.get('subj')
         obj = json_dict.get('obj')
-        subj_delta = json_dict.get('subj_delta')
-        obj_delta = json_dict.get('obj_delta')
         if subj:
             subj = Concept._from_json(subj)
         if obj:
             obj = Concept._from_json(obj)
-        stmt = cls(subj, obj, subj_delta, obj_delta)
+        stmt = cls(subj, obj)
         return stmt
 
     def __repr__(self):
@@ -2030,24 +2015,8 @@ class Influence(IncreaseAmount):
             return self.__str__().encode('utf-8')
 
     def __str__(self):
-        def _influence_concept_str(concept, delta):
-            if delta is not None:
-                pol = delta.get('polarity')
-                if pol == 1:
-                    pol_str = 'positive'
-                elif pol == -1:
-                    pol_str = 'negative'
-                else:
-                    pol_str = ''
-                concept_str = '%s(%s)' % (concept.name, pol_str)
-            else:
-                concept_str = concept.name
-            return concept_str
-        s = ("%s(%s, %s)" % (type(self).__name__,
-                             _influence_concept_str(self.subj,
-                                                    self.subj_delta),
-                             _influence_concept_str(self.obj,
-                                                    self.obj_delta)))
+        s = "%s(%s, %s)" % (type(self).__name__, str(self.subj),
+                            str(self.obj))
         return s
 
 
@@ -2178,6 +2147,15 @@ class Conversion(Statement):
         s = ("%s(%s, %s, %s)" % (type(self).__name__, self.subj, self.obj_from,
                                  self.obj_to))
         return s
+
+
+class Event(Statement):
+    def __init__(self, concept, delta=None, context=None, evidence=None,
+                 supports=None, supported_by=None):
+        super().__init__(evidence, supports, supported_by)
+        self.concept = concept
+        self.delta = delta
+        self.context = context
 
 
 class Unresolved(Statement):
