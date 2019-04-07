@@ -39,12 +39,12 @@ def test_cwmsreader_cause():
 
     s0 = statements[0]
     assert isinstance(s0, Influence), type(s0)
-    subj = s0.subj
+    subj = s0.subj.concept
     assert subj.db_refs['TEXT'] == 'government', subj.db_refs['TEXT']
     assert subj.db_refs['CWMS'] == 'ONT::FEDERAL-ORGANIZATION',\
         subj.db_refs['CWMS']
 
-    obj = s0.obj
+    obj = s0.obj.concept
     assert obj.db_refs['TEXT'] == 'agriculture', obj.db_refs['TEXT']
     assert obj.db_refs['CWMS'] == 'ONT::AGRICULTURE',\
         obj.db_refs['CWMS']
@@ -67,10 +67,10 @@ def test_cwmsreader_inhibit():
     s0 = statements[0]
     print('Statement:', s0)
     assert isinstance(s0, Influence)
-    subj = s0.subj
+    subj = s0.subj.concept
     assert subj.db_refs['TEXT'] == 'Persistent insecurity and armed conflict'
 
-    obj = s0.obj
+    obj = s0.obj.concept
     assert obj.db_refs['TEXT'] == 'livelihood activities'
 
     ev = s0.evidence[0]
@@ -89,14 +89,16 @@ def test_cwmsreader_influence():
     s0 = statements[0]
     assert isinstance(s0, Influence), type(s0)
     subj = s0.subj
-    assert subj.db_refs['TEXT'] == 'government', subj.db_refs['TEXT']
-    assert subj.db_refs['CWMS'] == 'ONT::FEDERAL-ORGANIZATION',\
-        subj.db_refs['CWMS']
+    assert subj.concept.db_refs['TEXT'] == 'government', \
+        subj.concept.db_refs['TEXT']
+    assert subj.concept.db_refs['CWMS'] == 'ONT::FEDERAL-ORGANIZATION', \
+        subj.concept.db_refs['CWMS']
 
     obj = s0.obj
-    assert obj.db_refs['TEXT'] == 'agriculture', obj.db_refs['TEXT']
-    assert obj.db_refs['CWMS'] == 'ONT::AGRICULTURE',\
-        obj.db_refs['CWMS']
+    assert obj.concept.db_refs['TEXT'] == 'agriculture', \
+        obj.concept.db_refs['TEXT']
+    assert obj.concept.db_refs['CWMS'] == 'ONT::AGRICULTURE', \
+        obj.concept.db_refs['CWMS']
 
     ev = s0.evidence[0]
     assert ev.text == 'government influences agriculture.', ev.text
@@ -195,8 +197,7 @@ def test_contextual_sentence():
     assert len(cp.statements) == 1, len(cp.statements)
     stmt = cp.statements[0]
     assert len(stmt.evidence) == 1, len(stmt.evidence)
-    ev = stmt.evidence[0]
-    cont = ev.context
+    cont = stmt.obj.context
     assert cont is not None
     assert cont.time and cont.geo_location
 

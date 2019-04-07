@@ -85,7 +85,7 @@ class CWMSProcessor(object):
 
         # In some EKBs we get two redundant relations over the same arguments,
         # we eliminate these
-        self._remove_multi_extraction_artifacts()
+        #self._remove_multi_extraction_artifacts()
 
         # Print unhandled event types
         logger.debug('Unhandled event types: %s' %
@@ -254,11 +254,10 @@ class CWMSProcessor(object):
                 return assoc_with_grounding
         return None
 
-    def _make_statement_noun_cause_effect(self, event_element,
-                                          cause_concept, affected_concept,
+    def _make_statement_noun_cause_effect(self, event_element, cause, effect,
                                           polarity, context):
         """Make the Influence statement from the component parts."""
-        if cause_concept is None or affected_concept is None:
+        if cause is None or effect is None:
             return
 
         # Construct evidence
@@ -267,8 +266,8 @@ class CWMSProcessor(object):
 
         # Make statement
         obj_delta = {'polarity': polarity, 'adjectives': []}
-        st = Influence(cause_concept, affected_concept, obj_delta=obj_delta,
-                       evidence=[ev])
+        effect.delta = obj_delta
+        st = Influence(cause, effect, evidence=[ev])
         self.statements.append(st)
         return st
 
