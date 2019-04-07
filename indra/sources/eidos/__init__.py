@@ -31,7 +31,5 @@ Next, set the property "useW2V" to true in src/main/resources/eidos.conf.
 Finally, rerun sbt assembly.
 """
 
-from .api import process_text, \
-    process_json_str, process_json_file, process_json, \
-    process_json_ld_str, process_json_ld_file, process_json_ld, \
-    initialize_reader
+from .api import process_text, process_json_str, process_json_file, \
+    process_json, initialize_reader

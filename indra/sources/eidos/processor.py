@@ -63,7 +63,14 @@ class EidosProcessor(object):
             self.statements.append(st)
 
     def extract_events(self):
-        pass
+        events = [e for e in self.doc.extractions if
+                  'Concept-Expanded' in e['labels']]
+        for event_entry in events:
+            event = self.get_event(event_entry)
+            evidence = self.get_evidence(event_entry)
+            event.evidence = [evidence]
+            self.statements.append(event)
+
 
     def get_event_by_id(self, event_id):
         # Resolve coreferences by ID
@@ -106,9 +113,9 @@ class EidosProcessor(object):
         st = Influence(subj, obj, evidence=[evidence])
         return st
 
-    def get_evidence(self, event):
+    def get_evidence(self, relation):
         """Return the Evidence object for the INDRA Statment."""
-        provenance = event.get('provenance')
+        provenance = relation.get('provenance')
 
         # First try looking up the full sentence through provenance
         text = None
@@ -145,14 +152,14 @@ class EidosProcessor(object):
                 if title:
                     provenance[0]['document']['title'] = title
 
-        annotations = {'found_by': event.get('rule'),
+        annotations = {'found_by': relation.get('rule'),
                        'provenance': provenance}
         if self.doc.dct is not None:
             annotations['document_creation_time'] = self.doc.dct.to_json()
 
         epistemics = {}
-        negations = self.get_negation(event)
-        hedgings = self.get_hedging(event)
+        negations = self.get_negation(relation)
+        hedgings = self.get_hedging(relation)
         if hedgings:
             epistemics['hedgings'] = hedgings
         if negations:
@@ -162,7 +169,7 @@ class EidosProcessor(object):
             # under annotations, just in case it's needed
             annotations['negated_texts'] = negations
 
-        # If that fails, we can still get the text of the event
+        # If that fails, we can still get the text of the relation
         if text is None:
             text = _sanitize(event.get('text'))
 

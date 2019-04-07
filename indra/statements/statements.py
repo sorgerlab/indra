@@ -2153,7 +2153,7 @@ class Event(Statement):
         self.context = context
 
     def __str__(self):
-        return self.concept.name
+        return '%s(%s)' % (type(self).__name__, self.concept.name)
 
 
 class Unresolved(Statement):
