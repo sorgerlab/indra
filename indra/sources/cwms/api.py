@@ -71,6 +71,7 @@ def process_ekb(ekb_str):
     """
     # Process EKB XML into statements
     cp = CWMSProcessor(ekb_str)
+    cp.extract_causal_relations()
     return cp
 
 

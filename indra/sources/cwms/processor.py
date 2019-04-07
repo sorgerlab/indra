@@ -78,6 +78,7 @@ class CWMSProcessor(object):
         # Keep a list of unhandled events for development purposes
         self._unhandled_events = []
 
+    def extract_causal_relations(self):
         # Extract statements
         self.extract_noun_relations('CC')
         self.extract_noun_relations('EVENT')
@@ -126,61 +127,37 @@ class CWMSProcessor(object):
         ev_time, ev_loc = self._extract_time_loc(event)
         if ev_type in POLARITY_DICT['CC'].keys():
             polarity = POLARITY_DICT['CC'][ev_type]
-            subj, subj_time, subj_loc = \
-                self._get_concept(event, "arg/[@role=':FACTOR']")
-            obj, obj_time, obj_loc = \
-                self._get_concept(event, "arg/[@role=':OUTCOME']")
+            subj = self._get_event(event, "arg/[@role=':FACTOR']")
+            obj = self._get_event(event, "arg/[@role=':OUTCOME']")
         elif ev_type in POLARITY_DICT['EVENT'].keys():
             polarity = POLARITY_DICT['EVENT'][ev_type]
-            subj, subj_time, subj_loc = \
-                self._get_concept(event, "*[@role=':AGENT']")
-            obj, obj_time, obj_loc = \
-                self._get_concept(event, "*[@role=':AFFECTED']")
+            subj = self._get_event(event, "*[@role=':AGENT']")
+            obj =self._get_event(event, "*[@role=':AFFECTED']")
         else:
             self._unhandled_events.append(ev_type)
-            return None, None, None, None
+            return None, None, None
 
-        # Choose a temporal context (if there's a choice to be made)
-        for time in [ev_time, obj_time, subj_time]:
-            if time is not None:
-                break
-        else:
-            time = None
-
-        # Choose a location context (if there's a choice to be made)
-        for loc in [ev_loc, obj_loc, subj_loc]:
-            if loc is not None:
-                break
-        else:
-            loc = None
-
-        # Construct WorldContext
-        context = None
-        if time or loc:
-            context = WorldContext(time=time, geo_location=loc)
-
-        return subj, obj, polarity, context
+        return subj, obj, polarity
 
     def extract_noun_relations(self, key):
         """Extract relationships where a term/noun affects another term/noun"""
         events = self.tree.findall("%s/[type]" % key)
         for event in events:
-            subj, obj, pol, context = self._get_subj_obj(event)
+            subj, obj, pol = self._get_subj_obj(event)
             self._make_statement_noun_cause_effect(event, subj, obj, pol,
                                                    context)
 
-    def _get_concept(self, event, find_str):
+    def _get_event(self, event, find_str):
         """Get a concept referred from the event by the given string."""
         # Get the term with the given element id
         element = event.find(find_str)
         if element is None:
-            return None, None, None
+            return None
         element_id = element.attrib.get('id')
         element_term = self.tree.find("*[@id='%s']" % element_id)
         if element_term is None:
-            return None, None, None
+            return None
         time, location = self._extract_time_loc(element_term)
-
 
         # Now see if there is a modifier like assoc-with connected
         # to the main concept
@@ -189,7 +166,7 @@ class CWMSProcessor(object):
         # Get the element's text and use it to construct a Concept
         element_text_element = element_term.find('text')
         if element_text_element is None:
-            return None, None, None
+            return None
         element_text = element_text_element.text
         element_db_refs = {'TEXT': element_text}
         element_name = sanitize_name(element_text)
@@ -201,7 +178,13 @@ class CWMSProcessor(object):
             if assoc_with is not None:
                 element_db_refs['CWMS'] += ('|%s' % assoc_with)
 
-        return Concept(element_name, db_refs=element_db_refs), time, location
+        concept = Concept(element_name, db_refs=element_db_refs)
+        if time or location:
+            context = WorldContext(time=time, geo_location=location)
+        else:
+            context = None
+        event_obj = Event(concept, context=context)
+        return event_obj
 
     def _extract_time_loc(self, term):
         """Get the location from a term (CC or TERM)"""
