@@ -106,7 +106,7 @@ class CWMSProcessor(object):
             self.statements.append(st)
         # In some EKBs we get two redundant relations over the same arguments,
         # we eliminate these
-        #self._remove_multi_extraction_artifacts()
+        self._remove_multi_extraction_artifacts()
 
         # Print unhandled event types
         logger.debug('Unhandled event types: %s' %

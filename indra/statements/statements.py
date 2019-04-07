@@ -1921,21 +1921,17 @@ class Influence(Statement):
                 delta_refinement)
 
     def equals(self, other):
-        def delta_equals(dself, dother):
-            return (dself['polarity'] == dother['polarity']) and \
-              (set(dself['adjectives']) == set(dother['adjectives']))
-
-        matches = super(Influence, self).equals(other) and \
-            delta_equals(self.subj.delta, other.subj.delta) and \
-            delta_equals(self.obj.delta, other.obj.delta)
-        return matches
+        equals = super(Influence, self).equals(other) and \
+            self.subj.equals(other.subj) and self.obj.equals(other.obj)
+        return equals
 
     def matches_key(self):
         # With polarities, here, the goal is to match overall polarity
         # if both polarities are given, i.e. +/+ matches -/-. Also, if only
         # one polarity is given, we match the overall polarity e.g.
         # None/+, +/None will match.
-        key = (stmt_type(self, True), self.subj.matches_key(),
+        key = (stmt_type(self, True),
+               self.subj.matches_key(),
                self.obj.matches_key(),
                self.polarity_count(),
                self.overall_polarity()
@@ -2154,6 +2150,10 @@ class Event(Statement):
         self.concept = concept
         self.delta = delta if delta else {'polarity': None, 'adjectives': []}
         self.context = context
+
+    def matches_key(self):
+        mk = (self.concept.matches_key(),)
+        return str(mk)
 
     def __str__(self):
         return '%s(%s)' % (type(self).__name__, self.concept.name)
