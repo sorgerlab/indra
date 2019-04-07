@@ -165,7 +165,8 @@ def test_eidos_to_pysb():
 
     # Make sure these don't error
     pa.add_statements(stmts)
-    pa.make_model()
+    model = pa.make_model()
+    assert model.rules, model.rules
     for fmt in ['kappa', 'sbml', 'sbgn']:
         exp_str = pa.export_model(fmt)
         assert exp_str, "Got no exported model from eidos->psyb to %s." % fmt

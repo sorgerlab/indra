@@ -40,7 +40,7 @@ statement_whitelist = [ist.Modification, ist.SelfModification, ist.Complex,
                        ist.RegulateActivity, ist.ActiveForm,
                        ist.Gef, ist.Gap, ist.Translocation,
                        ist.IncreaseAmount, ist.DecreaseAmount,
-                       ist.Conversion]
+                       ist.Conversion, ist.Influence]
 
 
 def _is_whitelisted(stmt):
@@ -1889,8 +1889,7 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set,
 def increaseamount_assemble_one_step(stmt, model, agent_set, parameters,
                                      rate_law=None):
     if stmt.subj is not None and (stmt.subj.name == stmt.obj.name):
-        if not isinstance(stmt, ist.Influence):
-            logger.warning('%s transcribes itself, skipping' % stmt.obj.name)
+        logger.warning('%s transcribes itself, skipping' % stmt.obj.name)
         return
     # We get the monomer pattern just to get a valid monomer
     # otherwise the patter will be replaced
@@ -1944,15 +1943,18 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, parameters,
             subj_obs = Observable(obs_name, subj_pattern)
             model.add_component(subj_obs)
             synth_rate = Expression(rule_name + '_rate',
-                kf * (subj_obs ** (n_hill-1)) / (Ka**n_hill + subj_obs**n_hill))
+                kf * (subj_obs ** (n_hill-1)) /
+                      (Ka**n_hill + subj_obs**n_hill))
             model.add_component(synth_rate)
 
         r = Rule(rule_name, subj_pattern + None >> subj_pattern + obj_pattern,
                  synth_rate)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    anns += [Annotation(rule_name, obj_pattern.monomer.name, 'rule_has_object')]
+    anns += [Annotation(rule_name, obj_pattern.monomer.name,
+                        'rule_has_object')]
     if stmt.subj:
-        anns += [Annotation(rule_name, subj_pattern.monomer.name, 'rule_has_subject')]
+        anns += [Annotation(rule_name, subj_pattern.monomer.name,
+                            'rule_has_subject')]
     add_rule_to_model(model, r, anns)
 
 
@@ -2007,22 +2009,49 @@ decreaseamount_assemble_interactions_only = \
     increaseamount_assemble_interactions_only
 decreaseamount_monomers_one_step = increaseamount_monomers_one_step
 
+
 # INFLUENCE ###################################################
 
-influence_monomers_one_step = increaseamount_monomers_one_step
-def influence_assemble_one_step(stmt, *args):
-    if stmt.overall_polarity() == -1:
-        return decreaseamount_assemble_one_step(stmt, *args)
-    else:
-        return increaseamount_assemble_one_step(stmt, *args)
+def influence_monomers_one_step(stmt, agent_set):
+    agent_set.get_create_base_agent(stmt.obj.concept)
+    agent_set.get_create_base_agent(stmt.subj.concept)
+
+
+def influence_assemble_one_step(stmt, model, agent_set, parameters):
+    obj_pattern = get_monomer_pattern(model, stmt.obj.concept)
+    rule_obj_str = get_agent_rule_str(stmt.obj.concept)
+    subj_pattern = get_monomer_pattern(model, stmt.subj.concept)
+
+    overall_polarity = stmt.overall_polarity()
+    param_suffix = 'neg' if overall_polarity == -1 else 'pos'
+    param_value = 2e-5 if overall_polarity == -1 else 2e-9
+    rule_qual = 'negatively' if overall_polarity == -1 else 'positively'
+
+    param_name = 'kf_' + stmt.subj.concept.name[0].lower() + \
+                 stmt.obj.concept.name[0].lower() + '_%s' % param_suffix
+    kfp = parameters.get('kf', Param(param_name, param_value, True))
+    kf_one_step = get_create_parameter(model, kfp)
+    rule_subj_str = get_agent_rule_str(stmt.subj.concept)
+    rule_name = '%s_%s_influences_%s' % (rule_subj_str, rule_qual,
+                                         rule_obj_str)
+    lhs = subj_pattern + obj_pattern if overall_polarity == -1 else \
+        subj_pattern + None
+    rhs = subj_pattern + None if overall_polarity == -1 else \
+        subj_pattern + obj_pattern
+    r = Rule(rule_name, lhs >> rhs, kf_one_step)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    anns += [Annotation(rule_name, obj_pattern.monomer.name,
+                        'rule_has_object')]
+    anns += [Annotation(rule_name, subj_pattern.monomer.name,
+                        'rule_has_subject')]
+    add_rule_to_model(model, r, anns)
+
+
 influence_monomers_default = influence_monomers_one_step
 influence_assemble_default = influence_assemble_one_step
+# TOOD: implement Hill-like assembly for Influence
 influence_monomers_hill = influence_monomers_one_step
-def influence_assemble_hill(stmt, *args):
-    if stmt.overall_polarity() == -1:
-        return decreaseamount_assemble_one_step(stmt, *args)
-    else:
-        return increaseamount_assemble_hill(stmt, *args)
+influence_assemble_hill = influence_assemble_one_step
 
 
 # CONVERSION ###################################################

@@ -1887,6 +1887,9 @@ class Influence(Statement):
     evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the statement.
     """
+    def agent_list(self, deep_sorted=False):
+        return [self.subj.concept, self.obj.concept]
+
     def __init__(self, subj, obj, evidence=None):
         super(Influence, self).__init__(evidence)
         self.subj = subj
