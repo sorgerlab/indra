@@ -104,6 +104,8 @@ class CxAssembler(object):
                 self._add_gef(stmt)
             elif isinstance(stmt, Gap):
                 self._add_gap(stmt)
+            elif isinstance(stmt, Influence):
+                self._add_influence(stmt)
         network_description = ''
         self.cx['networkAttributes'].append({'n': 'name',
                                              'v': self.network_name})
@@ -298,6 +300,12 @@ class CxAssembler(object):
             return
         subj_id = self._add_node(stmt.subj)
         obj_id = self._add_node(stmt.obj)
+        stmt_type = stmt.__class__.__name__
+        self._add_edge(subj_id, obj_id, stmt_type, stmt)
+
+    def _add_influence(self, stmt):
+        subj_id = self._add_node(stmt.subj.concept)
+        obj_id = self._add_node(stmt.obj.concept)
         stmt_type = stmt.__class__.__name__
         self._add_edge(subj_id, obj_id, stmt_type, stmt)
 
@@ -512,6 +520,14 @@ def _get_stmt_type(stmt):
     elif isinstance(stmt, Gap):
         edge_type = 'Gap'
         edge_polarity = 'negative'
+    elif isinstance(stmt, Influence):
+        edge_type = 'Influence'
+        if stmt.overall_polarity() == -1:
+            edge_polarity = 'negative'
+        elif stmt.overall_polarity() == 1:
+            edge_polarity = 'positive'
+        else:
+            edge_polarity = 'none'
     else:
         edge_type = stmt.__class__.__str__()
         edge_polarity = 'none'
