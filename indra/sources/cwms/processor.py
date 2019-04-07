@@ -79,10 +79,31 @@ class CWMSProcessor(object):
         self._unhandled_events = []
 
     def extract_causal_relations(self):
-        # Extract statements
-        self.extract_noun_relations('CC')
-        self.extract_noun_relations('EVENT')
+        events = self.tree.findall("CC/[type]")
+        for event in events:
+            ev_type = event.find('type').text
+            if ev_type not in POLARITY_DICT['CC']:
+                self._unhandled_events.append(ev_type)
+                continue
+            subj = self._get_event(event, "arg/[@role=':FACTOR']")
+            obj = self._get_event(event, "arg/[@role=':OUTCOME']")
+            obj.delta['polarity'] = POLARITY_DICT['CC'][ev_type]
+            ev = self._get_evidence(event, context)
+            st = Influence(subj, obj, evidence=[ev])
+            self.statements.append(st)
 
+        events = self.tree.findall("EVENT/[type]")
+        for event in events:
+            ev_type = event.find('type').text
+            if ev_type not in POLARITY_DICT['EVENT']:
+                self._unhandled_events.append(ev_type)
+                continue
+            subj = self._get_event(event, "*[@role=':AGENT']")
+            obj = self._get_event(event, "*[@role=':AFFECTED']")
+            obj.delta['polarity'] = POLARITY_DICT['EVENT'][ev_type]
+            ev = self._get_evidence(event, context)
+            st = Influence(subj, obj, evidence=[ev])
+            self.statements.append(st)
         # In some EKBs we get two redundant relations over the same arguments,
         # we eliminate these
         #self._remove_multi_extraction_artifacts()
@@ -90,62 +111,6 @@ class CWMSProcessor(object):
         # Print unhandled event types
         logger.debug('Unhandled event types: %s' %
                      (', '.join(sorted(list(set(self._unhandled_events))))))
-
-    def _remove_multi_extraction_artifacts(self):
-        # Build up a dict of evidence matches keys with statement UUIDs
-        evmks = {}
-        for stmt in self.statements:
-            evmk = stmt.evidence[0].matches_key() + \
-                stmt.subj.matches_key() + stmt.obj.matches_key()
-            if evmk not in evmks:
-                evmks[evmk] = [stmt.uuid]
-            else:
-                evmks[evmk].append(stmt.uuid)
-        # This is a list of groups of statement UUIDs that are redundant
-        multi_evmks = [v for k, v in evmks.items() if len(v) > 1]
-        # We now figure out if anything needs to be removed
-        to_remove = []
-        for uuids in multi_evmks:
-            stmts = [s for s in self.statements if (s.uuid in uuids
-                     and isinstance(s, Influence))]
-            stmts = sorted(stmts, key=lambda x: x.polarity_count(),
-                           reverse=True)
-            to_remove += [s.uuid for s in stmts[1:]]
-        if to_remove:
-            logger.info('Found %d Statements to remove' % len(to_remove))
-        self.statements = [s for s in self.statements
-                           if s.uuid not in to_remove]
-
-    def _get_subj_obj(self, event):
-        """Get the concepts for a relation given and element.
-
-        The ontological type of the event is used to infer the labels of agents
-        and the polarity of the influence (see `_positive_ccs`,
-        `_positive_events`, and `_negative_events` class attributes).
-        """
-        ev_type = event.find('type').text
-        ev_time, ev_loc = self._extract_time_loc(event)
-        if ev_type in POLARITY_DICT['CC'].keys():
-            polarity = POLARITY_DICT['CC'][ev_type]
-            subj = self._get_event(event, "arg/[@role=':FACTOR']")
-            obj = self._get_event(event, "arg/[@role=':OUTCOME']")
-        elif ev_type in POLARITY_DICT['EVENT'].keys():
-            polarity = POLARITY_DICT['EVENT'][ev_type]
-            subj = self._get_event(event, "*[@role=':AGENT']")
-            obj =self._get_event(event, "*[@role=':AFFECTED']")
-        else:
-            self._unhandled_events.append(ev_type)
-            return None, None, None
-
-        return subj, obj, polarity
-
-    def extract_noun_relations(self, key):
-        """Extract relationships where a term/noun affects another term/noun"""
-        events = self.tree.findall("%s/[type]" % key)
-        for event in events:
-            subj, obj, pol = self._get_subj_obj(event)
-            self._make_statement_noun_cause_effect(event, subj, obj, pol,
-                                                   context)
 
     def _get_event(self, event, find_str):
         """Get a concept referred from the event by the given string."""
@@ -254,27 +219,10 @@ class CWMSProcessor(object):
                 return assoc_with_grounding
         return None
 
-    def _make_statement_noun_cause_effect(self, event_element, cause, effect,
-                                          polarity, context):
-        """Make the Influence statement from the component parts."""
-        if cause is None or effect is None:
-            return
-
-        # Construct evidence
-        ev = self._get_evidence(event_element, context)
-        ev.epistemics['direct'] = False
-
-        # Make statement
-        obj_delta = {'polarity': polarity, 'adjectives': []}
-        effect.delta = obj_delta
-        st = Influence(cause, effect, evidence=[ev])
-        self.statements.append(st)
-        return st
-
     def _get_evidence(self, event_tag, context):
         text = self._get_evidence_text(event_tag)
         sec = self._get_section(event_tag)
-        epi = {}
+        epi = {'direct': False}
         if sec:
             epi['section_type'] = sec
         ev = Evidence(source_api='cwms', text=text, pmid=self.doc_id,
@@ -304,6 +252,32 @@ class CWMSProcessor(object):
         par_id = event_tag.attrib.get('paragraph')
         sec = self.par_to_sec.get(par_id)
         return sec
+
+    def _remove_multi_extraction_artifacts(self):
+        # Build up a dict of evidence matches keys with statement UUIDs
+        evmks = {}
+        for stmt in self.statements:
+            evmk = stmt.evidence[0].matches_key() + \
+                   stmt.subj.matches_key() + stmt.obj.matches_key()
+            if evmk not in evmks:
+                evmks[evmk] = [stmt.uuid]
+            else:
+                evmks[evmk].append(stmt.uuid)
+        # This is a list of groups of statement UUIDs that are redundant
+        multi_evmks = [v for k, v in evmks.items() if len(v) > 1]
+        # We now figure out if anything needs to be removed
+        to_remove = []
+        for uuids in multi_evmks:
+            stmts = [s for s in self.statements if (s.uuid in uuids
+                                                    and isinstance(s, Influence))]
+            stmts = sorted(stmts, key=lambda x: x.polarity_count(),
+                           reverse=True)
+            to_remove += [s.uuid for s in stmts[1:]]
+        if to_remove:
+            logger.info('Found %d Statements to remove' % len(to_remove))
+        self.statements = [s for s in self.statements
+                           if s.uuid not in to_remove]
+
 
 
 def sanitize_name(txt):
