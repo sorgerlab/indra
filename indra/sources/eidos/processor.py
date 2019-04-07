@@ -2,8 +2,7 @@ import re
 import logging
 import datetime
 import objectpath
-from indra.statements import Influence, Association, Concept, Evidence, \
-    WorldContext, TimeContext, RefContext, Event
+from indra.statements import *
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +38,9 @@ class EidosProcessor(object):
                 self.statements.append(stmt)
 
     def get_event_by_id(self, event_id):
+        # Resolve coreferences by ID
         event_id = self.doc.coreferences.get(event_id, event_id)
+        # Get the actual entity
         event = self.doc.entities[event_id]
         return self.get_event(event)
 
@@ -52,6 +53,7 @@ class EidosProcessor(object):
         context = WorldContext(time=timex, geo_location=geo) \
             if timex or geo else None
         stmt = Event(concept, context=context)
+        return stmt
 
     def get_causal_relation(self, relation):
         # For now, just take the first source and first destination.
@@ -61,45 +63,19 @@ class EidosProcessor(object):
         if subj_id is None or obj_id is None:
             return None
 
-        # Resolve coreferences by ID
-        subj_id = self.doc.coreferences.get(subj_id, subj_id)
-        obj_id = self.doc.coreferences.get(obj_id, obj_id)
-
-        # Get the actual entities
-        subj = self.doc.entities[subj_id]
-        obj = self.doc.entities[obj_id]
-
-        subj_delta = self.extract_entity_states(subj.get('states', []))
-        obj_delta = self.extract_entity_states(obj.get('states', []))
+        subj = self.get_event_by_id(subj_id)
+        obj = self.get_event_by_id(obj_id)
 
         evidence = self.get_evidence(relation)
 
-        # It is currently the case that time constraints and locations for
-        #  concepts are better stored as annotations and the Evidence
-        # level, we therefore move them over there.
-        subj_timex = subj_delta.pop('time_context', None)
-        obj_timex = obj_delta.pop('time_context', None)
-        subj_geo = subj_delta.pop('geo_context', None)
-        obj_geo = obj_delta.pop('geo_context', None)
-        if subj_timex or subj_geo:
-            wc = WorldContext(time=subj_timex,
-                              geo_location=subj_geo).to_json()
-            evidence.annotations['subj_context'] = wc
-        if obj_timex or obj_geo:
-            wc = WorldContext(time=obj_timex,
-                              geo_location=obj_geo).to_json()
-            evidence.annotations['obj_context'] = wc
+        # We also put the adjectives and polarities into annotations since
+        # they could otherwise get squashed upon preassembly
+        evidence.annotations['subj_polarity'] = subj.delta['polarity']
+        evidence.annotations['obj_polarity'] = obj.delta['polarity']
+        evidence.annotations['subj_adjectives'] = subj.delta['adjectives']
+        evidence.annotations['obj_adjectives'] = obj.delta['adjectives']
 
-        # In addition, for the time being we also put the adjectives and
-        # polarities into annotations since they could otherwise get
-        # squashed upon preassembly
-        evidence.annotations['subj_adjectives'] = subj_delta['adjectives']
-        evidence.annotations['obj_adjectives'] = obj_delta['adjectives']
-        evidence.annotations['subj_polarity'] = subj_delta['polarity']
-        evidence.annotations['obj_polarity'] = obj_delta['polarity']
-
-        st = Influence(self.get_concept(subj), self.get_concept(obj),
-                       subj_delta, obj_delta, evidence=[evidence])
+        st = Influence(subj, obj, evidence=[evidence])
         return st
 
     def get_correlations(self):
