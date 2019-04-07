@@ -24,7 +24,7 @@ class EidosProcessor(object):
         self.doc = EidosDocument(json_dict)
         self.statements = []
 
-    def get_causal_relations(self):
+    def extract_causal_relations(self):
         """Extract causal relations as Statements."""
         # Get the extractions that are labeled as directed and causal
         relations = [e for e in self.doc.extractions if
@@ -36,6 +36,34 @@ class EidosProcessor(object):
             stmt = self.get_causal_relation(relation)
             if stmt is not None:
                 self.statements.append(stmt)
+
+    def extract_correlations(self):
+        events = [e for e in self.doc.extractions if
+                  'UndirectedRelation' in e['labels'] and
+                  'Correlation' in e['labels']]
+        for event in events:
+            # For now, just take the first source and first destination.
+            # Later, might deal with hypergraph representation.
+            arg_ids = find_args(event, 'argument')
+            if len(arg_ids) != 2:
+                logger.warning('Skipping correlation with not 2 arguments.')
+
+            # Resolve coreferences by ID
+            arg_ids = [self.doc.coreferences.get(arg_id, arg_id)
+                       for arg_id in arg_ids]
+
+            # Get the actual entities
+            args = [self.doc.entities[arg_id] for arg_id in arg_ids]
+            # Make Concepts from the entities
+            members = [self.get_concept(arg) for arg in args]
+            # Get the evidence
+            evidence = self.get_evidence(event)
+
+            st = Association(members, evidence=[evidence])
+            self.statements.append(st)
+
+    def extract_events(self):
+        pass
 
     def get_event_by_id(self, event_id):
         # Resolve coreferences by ID
@@ -77,31 +105,6 @@ class EidosProcessor(object):
 
         st = Influence(subj, obj, evidence=[evidence])
         return st
-
-    def get_correlations(self):
-        events = [e for e in self.doc.extractions if
-                  'UndirectedRelation' in e['labels'] and
-                  'Correlation' in e['labels']]
-        for event in events:
-            # For now, just take the first source and first destination.
-            # Later, might deal with hypergraph representation.
-            arg_ids = find_args(event, 'argument')
-            if len(arg_ids) != 2:
-                logger.warning('Skipping correlation with not 2 arguments.')
-
-            # Resolve coreferences by ID
-            arg_ids = [self.doc.coreferences.get(arg_id, arg_id)
-                       for arg_id in arg_ids]
-
-            # Get the actual entities
-            args = [self.doc.entities[arg_id] for arg_id in arg_ids]
-            # Make Concepts from the entities
-            members = [self.get_concept(arg) for arg in args]
-            # Get the evidence
-            evidence = self.get_evidence(event)
-
-            st = Association(members, evidence=[evidence])
-            self.statements.append(st)
 
     def get_evidence(self, event):
         """Return the Evidence object for the INDRA Statment."""
