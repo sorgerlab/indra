@@ -1875,7 +1875,7 @@ class IncreaseAmount(RegulateAmount):
     """
 
 
-class Influence(IncreaseAmount):
+class Influence(Statement):
     """An influence on the quantity of a concept of interest.
 
     Parameters
@@ -1887,15 +1887,10 @@ class Influence(IncreaseAmount):
     evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the statement.
     """
-
     def __init__(self, subj, obj, evidence=None):
-        super(Influence, self).__init__(subj, obj, evidence)
-        if subj_delta is None:
-            subj_delta = {'polarity': None, 'adjectives': []}
-        if obj_delta is None:
-            obj_delta = {'polarity': None, 'adjectives': []}
-        self.subj_delta = subj_delta
-        self.obj_delta = obj_delta
+        super(Influence, self).__init__(evidence)
+        self.subj = subj
+        self.obj = obj
 
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
@@ -2154,8 +2149,11 @@ class Event(Statement):
                  supports=None, supported_by=None):
         super().__init__(evidence, supports, supported_by)
         self.concept = concept
-        self.delta = delta
+        self.delta = delta if delta else {'polarity': None, 'adjectives': []}
         self.context = context
+
+    def __str__(self):
+        return self.concept.name
 
 
 class Unresolved(Statement):
