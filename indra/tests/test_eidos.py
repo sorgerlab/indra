@@ -51,6 +51,22 @@ def test_process_text():
     # assert len(stmt.obj.db_refs['UN']) > 5
 
 
+def test_process_polarity():
+    test_jsonld = os.path.join(path_this, 'eidos_neg_event.json')
+    ep = eidos.process_json_file(test_jsonld)
+    assert ep is not None
+    assert len(ep.statements) == 1
+    stmt = ep.statements[0]
+    assert isinstance(stmt, Influence)
+    assert stmt.subj.concept.name == 'fuel', stmt.subj.concept.name
+    assert stmt.obj.concept.name == 'water trucking', stmt.obj.concept.name
+    assert stmt.obj.delta.get('polarity') == -1
+    assert stmt.evidence[0].annotations['found_by'] == \
+        'ported_syntax_1_verb-Causal'
+    assert 'TEXT' in stmt.subj.concept.db_refs
+    assert 'TEXT' in stmt.obj.concept.db_refs
+
+
 def test_sanitize():
     # Make sure sanitization works
     sanitized = eidos.processor._sanitize('-LRB-something-RRB-')

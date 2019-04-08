@@ -87,7 +87,7 @@ class EidosProcessor(object):
         geo = delta.pop('geo_context', None)
         context = WorldContext(time=timex, geo_location=geo) \
             if timex or geo else None
-        stmt = Event(concept, context=context)
+        stmt = Event(concept, delta=delta, context=context)
         return stmt
 
     def get_causal_relation(self, relation):
