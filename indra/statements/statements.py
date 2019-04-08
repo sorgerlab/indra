@@ -439,7 +439,7 @@ class Statement(object):
             if not hasattr(st, 'uuid'):
                 st.uuid = '%s' % uuid.uuid4()
         ##################
-        json_dict = _o({'type': stmt_type})
+        json_dict = _o(type=stmt_type)
         json_dict['belief'] = self.belief
         if self.evidence:
             evidence = [ev.to_json() for ev in self.evidence]
@@ -668,7 +668,7 @@ class Modification(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(Modification, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
             if use_sbo:
@@ -796,7 +796,7 @@ class SelfModification(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(SelfModification, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
             if use_sbo:
@@ -1041,7 +1041,7 @@ class RegulateActivity(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(RegulateActivity, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
             if use_sbo:
@@ -1266,7 +1266,7 @@ class ActiveForm(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(ActiveForm, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         json_dict.update({'agent': self.agent.to_json(),
                           'activity': self.activity,
                           'is_active': self.is_active})
@@ -1445,7 +1445,7 @@ class Gef(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(Gef, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.gef is not None:
             json_dict['gef'] = self.gef.to_json()
             if use_sbo:
@@ -1533,7 +1533,7 @@ class Gap(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(Gap, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.gap is not None:
             json_dict['gap'] = self.gap.to_json()
             if use_sbo:
@@ -1632,7 +1632,7 @@ class Complex(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(Complex, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         members = [m.to_json() for m in self.members]
         json_dict['members'] = members
         json_dict.update(generic)
@@ -1711,7 +1711,7 @@ class Translocation(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(Translocation, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         json_dict['agent'] = self.agent.to_json()
         if self.from_location is not None:
             json_dict['from_location'] = self.from_location
@@ -1764,7 +1764,7 @@ class RegulateAmount(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(RegulateAmount, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
             if use_sbo:
@@ -1992,7 +1992,9 @@ class Influence(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(Influence, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'],
+                       subj=self.subj.to_json(),
+                       obj=self.obj.to_json())
         json_dict.update(generic)
         return json_dict
 
@@ -2069,7 +2071,7 @@ class Conversion(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(Conversion, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
             if use_sbo:
@@ -2170,6 +2172,17 @@ class Event(Statement):
         return self.concept.equals(other.concept) and \
             self.delta['polarity'] == other.delta['polarity'] and \
             set(self.delta['adjectives']) == set(other.delta['adjectives'])
+
+    def to_json(self, with_evidence=True):
+        generic = super(Event, self).to_json(False)
+        json_dict = _o(type=generic['type'],
+                       concept=self.concept.to_json(),
+                       delta=self.delta)
+        if self.context:
+            json_dict['context'] = self.context.to_json()
+        if not with_evidence:
+            json_dict.pop('evidence')
+        return json_dict
 
     def __str__(self):
         return '%s(%s)' % (type(self).__name__, self.concept.name)
