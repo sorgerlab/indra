@@ -2003,9 +2003,9 @@ class Influence(Statement):
         subj = json_dict.get('subj')
         obj = json_dict.get('obj')
         if subj:
-            subj = Concept._from_json(subj)
+            subj = Event._from_json(subj)
         if obj:
-            obj = Concept._from_json(obj)
+            obj = Event._from_json(obj)
         stmt = cls(subj, obj)
         return stmt
 
@@ -2183,6 +2183,18 @@ class Event(Statement):
         if not with_evidence:
             json_dict.pop('evidence')
         return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        concept = Concept._from_json(json_dict['concept'])
+        context_entry = json_dict.get('context')
+        if context_entry:
+            context = Context.from_json(json_dict['context'])
+        else:
+            context = None
+        stmt = cls(concept, delta=json_dict.get('delta'),
+                   context=context)
+        return stmt
 
     def __str__(self):
         return '%s(%s)' % (type(self).__name__, self.concept.name)
