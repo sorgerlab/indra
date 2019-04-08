@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import time
 from indra.literature import pubmed_client
 from indra.util import unicode_strs
 from nose.plugins.attrib import attr
@@ -7,6 +8,7 @@ from nose.plugins.attrib import attr
 
 @attr('webservice')
 def test_get_ids():
+    time.sleep(0.3)
     ids = pubmed_client.get_ids('braf', retmax=10, db='pubmed')
     assert len(ids) == 10
     assert unicode_strs(ids)
@@ -14,12 +16,14 @@ def test_get_ids():
 
 @attr('webservice')
 def test_get_no_ids():
+    time.sleep(0.3)
     ids = pubmed_client.get_ids('UUuXNWMCusRpcVTX', retmax=10, db='pubmed')
     assert not ids
 
 
 @attr('webservice')
 def test_get_ids():
+    time.sleep(0.3)
     ids1 = pubmed_client.get_ids('JUN', use_text_word=False)
     ids2 = pubmed_client.get_ids('JUN', use_text_word=True)
     assert len(ids1) > len(ids2)
@@ -29,6 +33,7 @@ def test_get_ids():
 
 @attr('webservice')
 def test_get_id_count():
+    time.sleep(0.3)
     id_count = pubmed_client.get_id_count('SDLFKJSLDKJH')
     assert id_count == 0
     id_count = pubmed_client.get_id_count('KRAS')
@@ -37,6 +42,7 @@ def test_get_id_count():
 
 @attr('webservice')
 def test_get_pmc_ids():
+    time.sleep(0.3)
     ids = pubmed_client.get_ids('braf', retmax=10, db='pmc')
     assert len(ids) == 10
     assert len([i for i in ids if i.startswith('6') or
@@ -46,6 +52,7 @@ def test_get_pmc_ids():
 
 @attr('webservice')
 def test_get_title():
+    time.sleep(0.3)
     title = pubmed_client.get_title('27754804')
     assert title
     assert title.lower().startswith('targeting autophagy')
@@ -53,6 +60,7 @@ def test_get_title():
 
 @attr('webservice')
 def test_get_title_prefix():
+    time.sleep(0.3)
     title = pubmed_client.get_title('PMID27754804')
     assert title
     assert title.lower().startswith('targeting autophagy')
@@ -60,6 +68,7 @@ def test_get_title_prefix():
 
 @attr('webservice')
 def test_expand_pagination():
+    time.sleep(0.3)
     pages = '456-7'
     new_pages = pubmed_client.expand_pagination(pages)
     assert new_pages == '456-457'
@@ -67,6 +76,7 @@ def test_expand_pagination():
 
 @attr('webservice')
 def test_get_abstract_notitle():
+    time.sleep(0.3)
     abstract = pubmed_client.get_abstract('27754804', prepend_title=False)
     assert abstract.startswith('The RAF inhibitor')
     assert abstract.endswith('vemurafenib.')
@@ -75,6 +85,7 @@ def test_get_abstract_notitle():
 
 @attr('webservice')
 def test_get_abstract_title():
+    time.sleep(0.3)
     abstract = pubmed_client.get_abstract('27754804', prepend_title=True)
     assert abstract.lower().startswith('targeting autophagy')
     assert abstract.endswith('vemurafenib.')
@@ -83,6 +94,7 @@ def test_get_abstract_title():
 
 @attr('webservice')
 def test_get_abstract2():
+    time.sleep(0.3)
     # Try another one
     abstract = pubmed_client.get_abstract('27123883')
     assert unicode_strs(abstract)
@@ -90,12 +102,14 @@ def test_get_abstract2():
 
 @attr('webservice')
 def test_get_no_abstract():
+    time.sleep(0.3)
     abstract = pubmed_client.get_abstract('xx')
     assert abstract is None
 
 
 @attr('webservice')
 def test_get_ids_for_gene():
+    time.sleep(0.3)
     ids = pubmed_client.get_ids_for_gene('EXOC1')
     assert ids
     assert unicode_strs(ids)
@@ -103,6 +117,7 @@ def test_get_ids_for_gene():
 
 @attr('webservice')
 def test_get_metadata_for_ids():
+    time.sleep(0.3)
     pmids = ['27123883', '27121204', '27115606']
     metadata = pubmed_client.get_metadata_for_ids(pmids)
     assert unicode_strs(metadata)
@@ -110,18 +125,21 @@ def test_get_metadata_for_ids():
 
 @attr('webservice')
 def test_send_request_invalid():
+    time.sleep(0.3)
     res = pubmed_client.send_request('http://xxxxxxx', data={})
     assert res is None
 
 
 @attr('webservice')
 def test_abstract_with_html_embedded():
+    time.sleep(0.3)
     res = pubmed_client.get_abstract('25484845')
     assert len(res) > 4, res
 
 
 @attr('webservice')
 def test_pmid_27821631():
+    time.sleep(0.3)
     pmid = '27821631'
     res = pubmed_client.get_abstract(pmid)
     assert len(res) > 50, res
