@@ -122,10 +122,9 @@ def filter_paragraphs(paragraphs, contains=None):
     paragraphs : list of str
         List of plaintext paragraphs from an article
 
-    contains : list of str
-        Output consists only of paragraphs containing at least one string
-        in this list as a token (surrounded by nonalphanumeric characters
-        on each side.)
+    contains : str or list of str
+        Exclude paragraphs not containing this string as a token, or
+        at least one of the strings in contains if it is a list
 
     Returns
     -------
@@ -142,3 +141,26 @@ def filter_paragraphs(paragraphs, contains=None):
                            for shortform in contains)
     paragraphs = [p for p in paragraphs if re.search(pattern, p)]
     return '\n'.join(paragraphs) + '\n'
+
+
+def universal_extract_text(xml, contains=None):
+    """Extract plaintext from xml that could be from different sources
+
+    Parameters
+    ----------
+    xml : str
+        Either an NLM xml, Elsevier xml, or plaintext
+
+    contains : str or list of str
+         Exclude paragraphs not containing this string, or at least one
+         of the strings in contains if it is a list
+
+    Returns
+    -------
+    str
+        The concatentation of all paragraphs in the input xml, excluding
+        paragraphs not containing one of the tokens in the list contains.
+        Paragraphs are separated by new lines.
+    """
+    paragraphs = universal_extract_paragraphs(xml)
+    return filter_paragraphs(paragraphs, contains)
