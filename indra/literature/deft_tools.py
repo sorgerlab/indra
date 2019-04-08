@@ -84,25 +84,6 @@ def get_text_content_for_pmids(pmids):
             for text_content in source if text_content is not None]
 
 
-def get_plaintexts(text_content, contains=None):
-    """Returns a corpus of plaintexts given text content from different sources
-
-    Converts xml files into plaintext, leaves abstracts as they are.
-
-    Parameters
-    ----------
-    sources : list of str
-        lists of text content. each item should either be a plaintext, an
-        an NLM xml or an Elsevier xml
-
-    Returns
-    -------
-    plaintexts : list of str
-        list of plaintexts for input list of xml strings
-    """
-    return [universal_extract_text(article, contains)
-            for article in text_content]
-
 def universal_extract_paragraphs(xml):
     """Extract paragraphs from xml that could be from  different sources
 
