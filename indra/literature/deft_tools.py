@@ -12,7 +12,7 @@ This is helpful because it avoids having to know in advance the source of
 text content from the database.
 """
 
-
+import re
 import time
 import logging
 
@@ -84,28 +84,8 @@ def get_text_content_for_pmids(pmids):
             for text_content in source if text_content is not None]
 
 
-def get_plaintexts(text_content, contains=None):
-    """Returns a corpus of plaintexts given text content from different sources
-
-    Converts xml files into plaintext, leaves abstracts as they are.
-
-    Parameters
-    ----------
-    sources : list of str
-        lists of text content. each item should either be a plaintext, an
-        an NLM xml or an Elsevier xml
-
-    Returns
-    -------
-    plaintexts : list of str
-        list of plaintexts for input list of xml strings
-    """
-    return [universal_extract_text(article, contains)
-            for article in text_content]
-
-
-def universal_extract_text(xml, contains=None):
-    """Extract plaintext from xml
+def universal_extract_paragraphs(xml):
+    """Extract paragraphs from xml that could be from  different sources
 
     First try to parse the xml as if it came from elsevier. if we do not
     have valid elsevier xml this will throw an exception. the text extraction
@@ -119,17 +99,68 @@ def universal_extract_text(xml, contains=None):
 
     Returns
     -------
-    plaintext : str
-        for NLM or Elsevier xml as input, this is the extracted plaintext
-        otherwise the input is returned unchanged
+    paragraphs : str
+        Extracted plaintext paragraphs from NLM or Elsevier XML
     """
     try:
-        plaintext = elsevier_client.extract_text(xml, contains)
+        paragraphs = elsevier_client.extract_paragraphs(xml)
     except Exception:
-        plaintext = None
-    if plaintext is None:
+        paragraphs = None
+    if paragraphs is None:
         try:
-            plaintext = pmc_client.extract_text(xml, contains)
+            paragraphs = pmc_client.extract_paragraphs(xml)
         except Exception:
-            plaintext = xml
-    return plaintext
+            paragraphs = [xml]
+    return paragraphs
+
+
+def filter_paragraphs(paragraphs, contains=None):
+    """Filter paragraphs to only those containing one of a list of strings
+
+    Parameters
+    ----------
+    paragraphs : list of str
+        List of plaintext paragraphs from an article
+
+    contains : str or list of str
+        Exclude paragraphs not containing this string as a token, or
+        at least one of the strings in contains if it is a list
+
+    Returns
+    -------
+    str
+        Plaintext consisting of all input paragraphs containing at least
+        one of the supplied tokens.
+    """
+    if contains is None:
+        pattern = ''
+    else:
+        if isinstance(contains, str):
+            contains = [contains]
+        pattern = '|'.join(r'[^\w]%s[^\w]' % shortform
+                           for shortform in contains)
+    paragraphs = [p for p in paragraphs if re.search(pattern, p)]
+    return '\n'.join(paragraphs) + '\n'
+
+
+def universal_extract_text(xml, contains=None):
+    """Extract plaintext from xml that could be from different sources
+
+    Parameters
+    ----------
+    xml : str
+        Either an NLM xml, Elsevier xml, or plaintext
+
+    contains : str or list of str
+         Exclude paragraphs not containing this string, or at least one
+         of the strings in contains if it is a list
+
+    Returns
+    -------
+    str
+        The concatentation of all paragraphs in the input xml, excluding
+        paragraphs not containing one of the tokens in the list contains.
+        Paragraphs are separated by new lines.
+    """
+    paragraphs = universal_extract_paragraphs(xml)
+    return filter_paragraphs(paragraphs, contains)
