@@ -103,9 +103,8 @@ def get_plaintexts(text_content, contains=None):
     return [universal_extract_text(article, contains)
             for article in text_content]
 
-
-def universal_extract_text(xml, contains=None):
-    """Extract plaintext from xml
+def universal_extract_paragraphs(xml):
+    """Extract paragraphs from xml that could be from  different sources
 
     First try to parse the xml as if it came from elsevier. if we do not
     have valid elsevier xml this will throw an exception. the text extraction
@@ -117,15 +116,10 @@ def universal_extract_text(xml, contains=None):
     xml : str
        Either an NLM xml, Elsevier xml or plaintext
 
-    contains : Optional[list of str]
-        Extract paragraphs containing at least one string from this
-        list.
-
     Returns
     -------
-    plaintext : str
-        for NLM or Elsevier xml as input, this is the extracted plaintext
-        otherwise the input is returned unchanged
+    paragraphs : str
+        Extracted plaintext paragraphs from NLM or Elsevier XML
     """
     try:
         paragraphs = elsevier_client.extract_paragraphs(xml)
@@ -136,6 +130,28 @@ def universal_extract_text(xml, contains=None):
             paragraphs = pmc_client.extract_paragraphs(xml)
         except Exception:
             paragraphs = [xml]
+    return paragraphs
+
+
+def filter_paragraphs(paragraphs, contains=None):
+    """Filter paragraphs to only those containing one of a list of strings
+
+    Parameters
+    ----------
+    paragraphs : list of str
+        List of plaintext paragraphs from an article
+
+    contains : list of str
+        Output consists only of paragraphs containing at least one string
+        in this list as a token (surrounded by nonalphanumeric characters
+        on each side.)
+
+    Returns
+    -------
+    str
+        Plaintext consisting of all input paragraphs containing at least
+        one of the supplied tokens.
+    """
     if contains is None:
         pattern = ''
     else:
