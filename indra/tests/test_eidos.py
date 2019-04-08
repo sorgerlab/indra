@@ -36,9 +36,9 @@ def test_process_text():
     assert len(ep.statements) == 1
     stmt = ep.statements[0]
     assert isinstance(stmt, Influence)
-    assert stmt.subj.name == 'fuel', stmt.subj.name
-    assert stmt.obj.name == 'water trucking', stmt.obj.name
-    assert stmt.obj_delta.get('polarity') == -1
+    assert stmt.subj.concept.name == 'fuel', stmt.subj.concept.name
+    assert stmt.obj.concept.name == 'water trucking', stmt.obj.concept.name
+    assert stmt.obj.delta.get('polarity') == -1
     assert stmt.evidence[0].annotations['found_by'] == \
         'ported_syntax_1_verb-Causal'
     assert 'TEXT' in stmt.subj.concept.db_refs
