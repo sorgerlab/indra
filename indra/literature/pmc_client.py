@@ -124,7 +124,7 @@ def extract_text(xml_string):
     """
     paragraphs = extract_paragraphs(xml_string)
     if paragraphs:
-        return '/n'.join(paragraphs) + '/n'
+        return '\n'.join(paragraphs) + '\n'
     else:
         return None
 

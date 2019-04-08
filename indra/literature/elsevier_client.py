@@ -237,7 +237,7 @@ def extract_text(xml_string):
     """Get text from the body of the given Elsevier xml."""
     paragraphs = extract_paragraphs(xml_string)
     if paragraphs:
-        return '/n'.join(paragraphs) + '/n'
+        return '\n'.join(paragraphs) + '\n'
     else:
         return None
 
