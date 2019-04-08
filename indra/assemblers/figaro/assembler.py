@@ -3,6 +3,7 @@ from builtins import dict, str
 import networkx
 from indra.statements import *
 
+
 class FigaroAssembler(object):
     def __init__(self, stmts, strengths=None, readout=None):
         self.statements = stmts
@@ -14,24 +15,19 @@ class FigaroAssembler(object):
     def make_model(self):
         self.BN = networkx.DiGraph()
         for stmt in self.statements:
-            if isinstance(stmt, RegulateAmount):
-                strength = self.strengths.get((stmt.subj.name, stmt.obj.name))
+            if isinstance(stmt, Influence):
+                strength = self.strengths.get((stmt.subj.concept.name,
+                                               stmt.obj.concept.name))
                 if not strength:
                     coeff = 1
                 else:
                     coeff = self.magnitudes[strength[1]] / \
                         self.magnitudes[strength[0]]
-                if isinstance(stmt, DecreaseAmount):
-                    pol = '-'
-                elif isinstance(stmt, IncreaseAmount):
-                    pol = '+'
-                elif isinstance(stmt, Influence):
-                    pol_stmt = stmt.overall_polarity()
-                    pol = '+' if (pol_stmt is None or pol_stmt == '-1') \
-                        else '-'
-                else:
-                    pol = '+'
-                self.BN.add_edge(_n(stmt.subj.name), _n(stmt.obj.name),
+                pol_stmt = stmt.overall_polarity()
+                pol = '+' if (pol_stmt is None or pol_stmt == '-1') \
+                    else '-'
+                self.BN.add_edge(_n(stmt.subj.concept.name),
+                                 _n(stmt.obj.concept.name),
                                  pol=pol, coeff=coeff)
 
     def print_model(self, fname=None):

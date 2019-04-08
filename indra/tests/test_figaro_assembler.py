@@ -1,11 +1,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.assemblers.figaro import FigaroAssembler
-from indra.statements import Agent, Influence
+from indra.statements import Concept, Event, Influence
 
 
 def test_assemble_influence():
-    stmt = Influence(Agent('rainfall'), Agent('crop_yields'))
+    stmt = Influence(Event(Concept('rainfall')),
+                     Event(Concept('crop_yields')))
     fa = FigaroAssembler([stmt])
     fa.make_model()
     assert fa.BN is not None
@@ -14,10 +15,14 @@ def test_assemble_influence():
 
 
 def test_print_model():
-    stmt1 = Influence(Agent('rainfall'), Agent('crop_yields'))
-    stmt2 = Influence(Agent('irrigation'), Agent('crop_yields'))
-    stmt3 = Influence(Agent('temperature'), Agent('crop_yields'))
-    stmt4 = Influence(Agent('rainfall'), Agent('temperature'))
+    stmt1 = Influence(Event(Concept('rainfall')),
+                      Event(Concept('crop_yields')))
+    stmt2 = Influence(Event(Concept('irrigation')),
+                      Event(Concept('crop_yields')))
+    stmt3 = Influence(Event(Concept('temperature')),
+                      Event(Concept('crop_yields')))
+    stmt4 = Influence(Event(Concept('rainfall')),
+                      Event(Concept('temperature')))
     stmts = [stmt1, stmt2, stmt3, stmt4]
     fa = FigaroAssembler(stmts)
     fa.make_model()
