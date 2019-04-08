@@ -1946,12 +1946,15 @@ class Influence(Statement):
             return False
 
         # Determine some refinements and opposites up front
-        subj_ref = self.subj.refinement_of(other.subj, hierarchies) or \
-            other.subj.refinement_of(self.subj, hierarchies)
-        obj_ref = self.obj.refinement_of(other.obj, hierarchies) or \
-            other.obj.refinement_of(self.obj, hierarchies)
-        subj_opp = self.subj.is_opposite(other.subj, hierarchies)
-        obj_opp = self.obj.is_opposite(other.obj, hierarchies)
+        subj_ref = self.subj.concept.refinement_of(other.subj.concept,
+                                                   hierarchies) or \
+            other.subj.concept.refinement_of(self.subj.concept, hierarchies)
+        obj_ref = self.obj.concept.refinement_of(other.obj.concept,
+                                                 hierarchies) or \
+            other.obj.concept.refinement_of(self.obj.concept, hierarchies)
+        subj_opp = self.subj.concept.is_opposite(other.subj.concept,
+                                                 hierarchies)
+        obj_opp = self.obj.concept.is_opposite(other.obj.concept, hierarchies)
         sp = self.overall_polarity()
         op = other.overall_polarity()
 
