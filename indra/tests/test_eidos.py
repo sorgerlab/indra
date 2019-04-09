@@ -209,3 +209,6 @@ def test_standalone_event():
     assert ev.text is not None
     js = st.to_json()
     assert js['evidence']
+    from indra.statements import stmts_to_json
+    js2 = stmts_to_json([st])[0]
+    assert 'evidence' in js2

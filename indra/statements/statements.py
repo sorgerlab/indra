@@ -2175,7 +2175,7 @@ class Event(Statement):
             self.delta['polarity'] == other.delta['polarity'] and \
             set(self.delta['adjectives']) == set(other.delta['adjectives'])
 
-    def to_json(self, with_evidence=True):
+    def to_json(self, with_evidence=True, use_sbo=False):
         generic = super(Event, self).to_json(False)
         json_dict = _o(type=generic['type'],
                        concept=self.concept.to_json(),
