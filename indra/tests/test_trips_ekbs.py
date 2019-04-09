@@ -731,8 +731,8 @@ def test_57():
     assert sel.db_refs.get('PUBCHEM') == '10127622'
 
     agents = tp.get_agents()
-    assert agents[0].name == 'MEK', agents[0]
-    assert agents[2].db_refs.get('PUBCHEM') == '10127622', agents[1]
+    names = {a.name for a in agents}
+    assert names == {'MEK', 'SELUMETINIB', 'ERK'}
 
     agents_dict = tp.get_term_agents()
     assert 'V16439992' in agents_dict, agents_dict
