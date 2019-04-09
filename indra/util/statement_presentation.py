@@ -23,9 +23,9 @@ def _get_keyed_stmts(stmt_list):
                 continue
             key += tuple(sorted(ag_ns))
         elif verb == 'Conversion':
-            subj = name(ags[0])
-            objs_from = {name(ag) for ag in ags[1]}
-            objs_to = {name(ag) for ag in ags[2]}
+            subj = name(s.subj)
+            objs_from = {name(ag) for ag in s.obj_from}
+            objs_to = {name(ag) for ag in s.obj_to}
             key += (subj, tuple(sorted(objs_from)), tuple(sorted(objs_to)))
         elif verb == 'ActiveForm':
             key += (name(ags[0]), s.activity, s.is_active)
