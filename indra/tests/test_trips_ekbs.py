@@ -728,7 +728,15 @@ def test_57():
     sel = st.enz.bound_conditions[0].agent
     # Make sure we mapped PC to PUBCHEM correctly
     assert 'PC' not in sel.db_refs
-    assert sel.db_refs['PUBCHEM'] == '10127622'
+    assert sel.db_refs.get('PUBCHEM') == '10127622'
+
+    agents = tp.get_agents()
+    assert agents[0].name == 'MEK', agents[0]
+    assert agents[2].db_refs.get('PUBCHEM') == '10127622', agents[1]
+
+    agents_dict = tp.get_term_agents()
+    assert 'V16439992' in agents_dict, agents_dict
+    assert agents_dict['V16439916'].name == 'MEK', agents_dict
 
 
 def test_58():

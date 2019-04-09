@@ -1069,14 +1069,32 @@ class TripsProcessor(object):
         agents : list[indra.statements.Agent]
             List of INDRA Agents extracted from EKB.
         """
+        agents_dict = self.get_term_agents()
+        agents = [a for a in agents_dict.values() if a is not None]
+        return agents
+
+    def get_term_agents(self):
+        """Return dict of INDRA Agents keyed by corresponding TERMs in the EKB.
+
+        This is meant to be used when entities e.g. "phosphorylated ERK",
+        rather than events need to be extracted from processed natural
+        language. These entities with their respective states are represented
+        as INDRA Agents. Further, each key of the dictionary corresponds to
+        the ID assigned by TRIPS to the given TERM that the Agent was
+        extracted from.
+
+        Returns
+        -------
+        agents : dict[str, indra.statements.Agent]
+            Dict of INDRA Agents extracted from EKB.
+        """
         terms = self.tree.findall('TERM')
-        agents = []
+        agents = {}
         for term in terms:
             term_id = term.attrib.get('id')
             if term_id:
                 agent = self._get_agent_by_id(term_id, None)
-                if agent:
-                    agents.append(agent)
+                agents[term_id] = agent
         return agents
 
     def _get_cell_loc_by_id(self, term_id):
