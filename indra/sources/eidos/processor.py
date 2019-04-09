@@ -71,7 +71,6 @@ class EidosProcessor(object):
             event.evidence = [evidence]
             self.statements.append(event)
 
-
     def get_event_by_id(self, event_id):
         # Resolve coreferences by ID
         event_id = self.doc.coreferences.get(event_id, event_id)

@@ -1995,8 +1995,8 @@ class Influence(Statement):
     def to_json(self, use_sbo=False):
         generic = super(Influence, self).to_json(use_sbo)
         json_dict = _o(type=generic['type'],
-                       subj=self.subj.to_json(),
-                       obj=self.obj.to_json())
+                       subj=self.subj.to_json(with_evidence=False),
+                       obj=self.obj.to_json(with_evidence=False))
         json_dict.update(generic)
         return json_dict
 
@@ -2182,8 +2182,8 @@ class Event(Statement):
                        delta=self.delta)
         if self.context:
             json_dict['context'] = self.context.to_json()
-        if not with_evidence:
-            json_dict.pop('evidence')
+        if with_evidence and 'evidence' in generic:
+            json_dict['evidence'] = generic['evidence']
         return json_dict
 
     @classmethod

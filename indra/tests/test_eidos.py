@@ -4,7 +4,7 @@ import requests
 import datetime
 import unittest
 from indra.sources import eidos
-from indra.statements import Influence, Association
+from indra.statements import Influence, Association, Event
 from indra.assemblers.cag import CAGAssembler
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
@@ -196,3 +196,16 @@ def test_reground_texts():
     groundings = er.reground_texts(['rainfall', 'hunger'])
     assert groundings[0][0][0] == 'UN/events/weather/precipitation'
     assert groundings[1][0][0] == 'UN/events/human/famine'
+
+
+def test_standalone_event():
+    se_jsonld = os.path.join(path_this, 'eidos_standalone_event.json')
+    ep = eidos.process_json_file(se_jsonld)
+    assert len(ep.statements) == 1
+    st = ep.statements[0]
+    assert isinstance(st, Event)
+    assert hasattr(st, 'evidence')
+    ev = st.evidence[0]
+    assert ev.text is not None
+    js = st.to_json()
+    assert js['evidence']
