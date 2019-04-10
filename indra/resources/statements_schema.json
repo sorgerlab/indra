@@ -610,12 +610,12 @@
                             "type": ["object", "null"],
                             "description": "A dictionary specifying the polarity and adjactives of change in concept."
                         },
-                        "cotext": {
+                        "context": {
                             "$ref": "#/definitions/Context",
                             "description": "The context associated with the event"
                         }
                     },
-                    "required": ["type"]
+                    "required": ["type", "concept"]
                 }
             ]
         },
@@ -671,7 +671,8 @@
             {"$ref": "#/definitions/Translocation"},
             {"$ref": "#/definitions/RegulateAmount"},
             {"$ref": "#/definitions/Influence"},
-            {"$ref": "#/definitions/Conversion"}
+            {"$ref": "#/definitions/Conversion"},
+            {"$ref": "#/definitions/Event"}
         ]
     }
 }

@@ -2153,6 +2153,18 @@ class Conversion(Statement):
 
 
 class Event(Statement):
+    """An event representing the change of a Concept.
+
+    Attributes
+    ----------
+    concept : indra.statements.concept.Concept
+        The concept over which the event is defined.
+    delta : dict
+        Represents a change in the concept, with a polarity
+        and an adjectives entry.
+    context : indra.statements.context.Context
+        The context associated with the event.
+    """
     _agent_order = ['concept']
 
     def __init__(self, concept, delta=None, context=None, evidence=None,

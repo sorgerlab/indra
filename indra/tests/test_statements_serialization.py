@@ -1,7 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import json
 import datetime
+import jsonschema
 from indra.statements import *
+from .test_json_schema import schema
 
 ev = Evidence(source_api='bel', pmid='12345', epistemics={'direct': True},
               text='This is the evidence.')
@@ -114,6 +117,7 @@ def test_influence():
         st_deserialize.subj.context
     jd2 = st_deserialize.to_json()
     assert jd == jd2
+    assert jsonschema.validate([json.loads(json.dumps(jd))], schema)
 
 
 def __make_support_link(supporting_stmt, supported_stmt):

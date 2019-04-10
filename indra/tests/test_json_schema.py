@@ -36,6 +36,11 @@ invalid_agent3 = {'name': 'cow', 'db_refs': {'TEXT': 'RAS'},
 
 valid_concept1 = {'name': 'government', 'db_refs': {'TEXT': 'government'}}
 valid_concept2 = {'name': 'agriculture', 'db_refs': {'TEXT': 'agriculture'}}
+valid_event1 = {'type': 'Event', 'concept': valid_concept1, 'id': '2'}
+valid_event2 = {'type': 'Event',
+                'concept': valid_concept2, 'delta': {'polarity': 1,
+                                                     'adjectives': []},
+                'id': '1'}
 
 invalid_concept1 = {'name': 3, 'db_refs': {'TEXT': 'government'}}
 invalid_concept2 = {'name': 'government'}
@@ -149,8 +154,12 @@ def test_invalid_complex():
     assert_raises(ValidationError, val, s)
 
 
+def test_valid_event():
+    jsonschema.validate([valid_event1], schema)
+
+
 def test_valid_influence():
-    s = {'subj': valid_concept1, 'obj': valid_concept2, 'subj_delta': None,
+    s = {'subj': valid_event1, 'obj': valid_event2, 'subj_delta': None,
          'obj_delta': None, 'type': 'Influence', 'id': '10'}
     jsonschema.validate([s], schema)
 
