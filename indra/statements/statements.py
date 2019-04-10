@@ -2153,6 +2153,8 @@ class Conversion(Statement):
 
 
 class Event(Statement):
+    _agent_order = ['concept']
+
     def __init__(self, concept, delta=None, context=None, evidence=None,
                  supports=None, supported_by=None):
         super().__init__(evidence, supports, supported_by)

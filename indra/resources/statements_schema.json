@@ -564,7 +564,7 @@
             ]
         },
         "Influence": {
-            "description": "An influence on the quantity of a concept of interest.",
+            "description": "A causal influence between two events.",
             "allOf": [
                 {
                     "$ref": "#/definitions/Statement"
@@ -577,20 +577,42 @@
                             "pattern": "^Influence$"
                         },
                         "subj": {
-                            "$ref": "#/definitions/Concept",
-                            "description": "The concept which acts as the influencer."
+                            "$ref": "#/definitions/Event",
+                            "description": "The event which acts as the influencer."
                         },
                         "obj": {
+                            "$ref": "#/definitions/Event",
+                            "description": "The event which acts as the influencee"
+                        }
+                    },
+                    "required": ["type"]
+                }
+            ]
+        },
+        "Event": {
+            "description": "An event over a concept of interest.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Statement"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "pattern": "^Event$"
+                        },
+                        "concept": {
                             "$ref": "#/definitions/Concept",
-                            "description": "The concept which acts as the influencee"
+                            "description": "The concept which the event happens to."
                         },
-                        "subj_delta": {
+                        "delta": {
                             "type": ["object", "null"],
-                            "description": "A dictionary specifying the polarity and magnitude of change in the subject."
+                            "description": "A dictionary specifying the polarity and adjactives of change in concept."
                         },
-                        "obj_delta": {
-                            "type": ["object", "null"],
-                            "description": "A dictionary specifying the polarity and magnitude of change in the object."
+                        "cotext": {
+                            "$ref": "#/definitions/Context",
+                            "description": "The context associated with the event"
                         }
                     },
                     "required": ["type"]
