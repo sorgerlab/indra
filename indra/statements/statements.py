@@ -2005,9 +2005,9 @@ class Influence(Statement):
         subj = json_dict.get('subj')
         obj = json_dict.get('obj')
         if subj:
-            subj = Event._from_json(subj)
+            subj = Statement._from_json(subj)
         if obj:
-            obj = Event._from_json(obj)
+            obj = Statement._from_json(obj)
         stmt = cls(subj, obj)
         return stmt
 
@@ -2198,6 +2198,7 @@ class Event(Statement):
             json_dict['context'] = self.context.to_json()
         if with_evidence and 'evidence' in generic:
             json_dict['evidence'] = generic['evidence']
+        json_dict.update(generic)
         return json_dict
 
     @classmethod

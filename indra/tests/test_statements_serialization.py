@@ -101,10 +101,10 @@ def test_gef():
 
 def test_influence():
     ev1 = Event(Concept('inorganic fertilizer'),
-                delta={'adjectives': 'serious', 'polarity': 1},
+                delta={'adjectives': ['serious'], 'polarity': 1},
                 context=WorldContext(geo_location=RefContext('x')))
     ev2 = Event(Concept('farm sizes'),
-                delta={'adjectives': 'significant', 'polarity': 1})
+                delta={'adjectives': ['significant'], 'polarity': 1})
     stmt = Influence(ev1, ev2)
     jd = stmt.to_json()
     assert 'sbo' not in jd['subj']
@@ -112,12 +112,12 @@ def test_influence():
     stmt.to_graph()
     st_deserialize = Statement._from_json(jd)
     assert st_deserialize.subj.delta['polarity'] == 1
-    assert st_deserialize.obj.delta['adjectives'] == 'significant'
+    assert st_deserialize.obj.delta['adjectives'] == ['significant']
     assert st_deserialize.subj.context.geo_location.name == 'x', \
         st_deserialize.subj.context
     jd2 = st_deserialize.to_json()
-    assert jd == jd2
-    assert jsonschema.validate([json.loads(json.dumps(jd))], schema)
+    assert jd == jd2, (jd, jd2)
+    jsonschema.validate([json.loads(json.dumps(jd))], schema)
 
 
 def __make_support_link(supporting_stmt, supported_stmt):
