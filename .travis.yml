@@ -15,6 +15,7 @@ before_install:
   - sudo update-java-alternatives -s java-11-oracle
 install:
   # Install test/Travis-specific dependencies not covered elsewhere
+  - pip install cython
   - pip install pydot jsonschema coverage python-coveralls
         nose-timer doctest-ignore-unicode awscli pycodestyle
   - mkdir -p $HOME/.pybel/data
