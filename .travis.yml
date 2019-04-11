@@ -24,6 +24,8 @@ install:
   - tar xzf bionetgen.tar.gz
   - export BNGPATH=`pwd`/BioNetGen-2.2.6-stable
   - pip install git+https://github.com/pysb/pysb.git
+  # Temporary fix. Ensure cython is installed before pyjnius
+  - pip install cython
   # Now install INDRA with all its extras
   - pip install .[all]
   - aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request  --source-region us-east-1
