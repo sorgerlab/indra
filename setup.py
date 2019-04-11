@@ -9,10 +9,10 @@ def main():
 
     extras_require = {
                       # Inputs and outputs
-                      'biopax': ['cython', 'pyjnius==1.1.4'],
+                      'biopax': ['cython', 'pyjnius==1.2.0'],
                       'trips_offline': ['pykqml'],
-                      'reach_offline': ['cython', 'pyjnius==1.1.4'],
-                      'eidos_offline': ['pyyaml', 'cython', 'pyjnius==1.1.4'],
+                      'reach_offline': ['cython', 'pyjnius==1.2.0'],
+                      'eidos_offline': ['pyyaml', 'cython', 'pyjnius==1.2.0'],
                       'geneways': ['stemming', 'nltk'],
                       'sofia': ['openpyxl'],
                       'bel': ['pybel'],
