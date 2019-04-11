@@ -146,3 +146,19 @@ def test_pmid_27821631():
     res = pubmed_client.get_metadata_for_ids([pmid], get_abstracts=True)
     assert res[pmid]['title'] is not None
     assert len(res[pmid]['abstract']) > 50
+
+
+@attr('webservice')
+def test_get_annotations():
+    pmid = '30971'
+    tree = pubmed_client.send_request(pubmed_client.pubmed_fetch,
+                                      dict(db='pubmed', retmode='xml',
+                                           id=pmid))
+    results = pubmed_client.get_metadata_from_xml_tree(tree,
+                                                       mesh_annotations=True)
+    assert len(results) == 1, len(results)
+    assert 'mesh_annotations' in results[pmid].keys(), results[pmid].keys()
+    me_ans = results[pmid]['mesh_annotations']
+    assert len(me_ans) == 9, len(me_ans)
+    assert all(d['mesh'].startswith('D') for d in me_ans)
+    assert any(d['major_topic'] for d in me_ans)
