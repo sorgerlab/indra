@@ -6,13 +6,16 @@ cache:
 python:
   - "3.5"
 before_install:
-  - sudo add-apt-repository --yes ppa:linuxuprising/java
+  - sudo add-apt-repository -y ppa:webupd8team/java
   - sudo apt-get update
-  - echo debconf shared/accepted-oracle-license-v1-2 select true | sudo debconf-set-selections
-  - echo debconf shared/accepted-oracle-license-v1-2 seen true | sudo debconf-set-selections
+  - sudo apt-get install -y oracle-java8-installer
+  #- sudo add-apt-repository --yes ppa:linuxuprising/java
+  #- sudo apt-get update
+  #- echo debconf shared/accepted-oracle-license-v1-2 select true | sudo debconf-set-selections
+  #- echo debconf shared/accepted-oracle-license-v1-2 seen true | sudo debconf-set-selections
+  #- sudo apt-get install -y oracle-java11-installer || true
+  #- sudo update-java-alternatives -s java-11-oracle
   - sudo apt-get install libstdc++6 graphviz
-  - sudo apt-get install -y oracle-java11-installer || true
-  - sudo update-java-alternatives -s java-11-oracle
 install:
   # Install test/Travis-specific dependencies not covered elsewhere
   - pip install pydot jsonschema coverage python-coveralls
