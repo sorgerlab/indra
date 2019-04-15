@@ -99,11 +99,10 @@ via the REACH and Eidos APIs, an additional package called
 classes from Python. This is only strictly required in these input sources and
 the rest of INDRA will work without pyjnius.
 
-
-
 1. Install JDK from Oracle: `<https://www.oracle.com/technetwork/java/javase/downloads/index.html>`_.
-INDRA is currently tested against Java 11 but is expected to be compatible with
-versions of Java 8 or higher.
+We recommend using Java 8 (INDRA is regularly tested with Java 8),
+however, Java 11 is also expected to be compatible, with possible extra
+configuration steps needed that are not described here.
 
 4. Set JAVA\_HOME to your JDK home directory, for instance
 
