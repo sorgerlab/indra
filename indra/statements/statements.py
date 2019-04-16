@@ -2024,7 +2024,44 @@ class Influence(Statement):
 
 
 class Association(Complex):
-    pass
+    """A set of events associated with each other without causal relationship.
+
+    Parameters
+    ----------
+    members: list of :py:class:Event
+        A list of events associated with each other.
+    evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
+        Evidence objects in support of the modification.
+    """
+    _agent_order = ['members']
+
+    def __init__(self, members, evidence=None):
+        super().__init__(members, evidence)
+
+    def matches_key(self):
+        pass
+
+    def overall_polarity(self):
+        pass
+
+    def polarity_count(self):
+        pass
+
+    def agent_list(self, deep_sorted=False):
+        pass
+
+    def refinement_of(self, other, hierarchies):
+        pass
+
+    def equals(self, other):
+        pass
+
+    def to_json(self):
+        pass
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        pass
 
 
 class Conversion(Statement):
