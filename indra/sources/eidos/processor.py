@@ -54,8 +54,8 @@ class EidosProcessor(object):
 
             # Get the actual entities
             args = [self.doc.entities[arg_id] for arg_id in arg_ids]
-            # Make Concepts from the entities
-            members = [self.get_concept(arg) for arg in args]
+            # Make Events from the entities
+            members = [self.get_event(arg) for arg in args]
             # Get the evidence
             evidence = self.get_evidence(event)
 
