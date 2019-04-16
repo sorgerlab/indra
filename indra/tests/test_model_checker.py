@@ -1194,16 +1194,20 @@ def test_prune_influence_map():
 
 
 def test_prune_influence_map_subj_obj():
-    def ag(gene_name):
-        return Agent(gene_name,
-                     db_refs={'HGNC': hgnc_client.get_hgnc_id(gene_name)})
+    def ag(gene_name, delta=None):
+        return Event(Agent(gene_name,
+                           db_refs={'HGNC':
+                                    hgnc_client.get_hgnc_id(gene_name)}),
+                     delta=delta)
     mek = ag('MAP2K1')
     erk = ag('MAPK1')
+    erk_neg = ag('MAPK1', {'polarity': -1})
     mek2 = ag('MAP2K2')
+    mek2_neg = ag('MAP2K2', {'polarity': -1})
 
     s1 = Influence(mek, erk)
-    s2 = Influence(mek2, erk, obj_delta={'polarity': -1})
-    s3 = Influence(erk, mek2, obj_delta={'polarity': -1})
+    s2 = Influence(mek2, erk_neg)
+    s3 = Influence(erk, mek2_neg)
     # To check:
     s4 = Influence(mek, mek2)
     # Make the model
@@ -1213,12 +1217,12 @@ def test_prune_influence_map_subj_obj():
     # Check the model
     mc = ModelChecker(model, [s4])
     pr_before = mc.check_statement(s4)
-    assert pr_before.result_code == 'PATHS_FOUND'
+    assert pr_before.result_code == 'PATHS_FOUND', pr_before
     # Now prune the influence map
     mc.prune_influence_map()
     mc.prune_influence_map_subj_obj()
     pr_after = mc.check_statement(s4)
-    assert pr_after.result_code == 'NO_PATHS_FOUND'
+    assert pr_after.result_code == 'NO_PATHS_FOUND', pr_after
 
 
 def test_weighted_sampling1():

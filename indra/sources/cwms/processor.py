@@ -78,10 +78,32 @@ class CWMSProcessor(object):
         # Keep a list of unhandled events for development purposes
         self._unhandled_events = []
 
-        # Extract statements
-        self.extract_noun_relations('CC')
-        self.extract_noun_relations('EVENT')
+    def extract_causal_relations(self):
+        events = self.tree.findall("CC/[type]")
+        for event in events:
+            ev_type = event.find('type').text
+            if ev_type not in POLARITY_DICT['CC']:
+                self._unhandled_events.append(ev_type)
+                continue
+            subj = self._get_event(event, "arg/[@role=':FACTOR']")
+            obj = self._get_event(event, "arg/[@role=':OUTCOME']")
+            obj.delta['polarity'] = POLARITY_DICT['CC'][ev_type]
+            ev = self._get_evidence(event, context)
+            st = Influence(subj, obj, evidence=[ev])
+            self.statements.append(st)
 
+        events = self.tree.findall("EVENT/[type]")
+        for event in events:
+            ev_type = event.find('type').text
+            if ev_type not in POLARITY_DICT['EVENT']:
+                self._unhandled_events.append(ev_type)
+                continue
+            subj = self._get_event(event, "*[@role=':AGENT']")
+            obj = self._get_event(event, "*[@role=':AFFECTED']")
+            obj.delta['polarity'] = POLARITY_DICT['EVENT'][ev_type]
+            ev = self._get_evidence(event, context)
+            st = Influence(subj, obj, evidence=[ev])
+            self.statements.append(st)
         # In some EKBs we get two redundant relations over the same arguments,
         # we eliminate these
         self._remove_multi_extraction_artifacts()
@@ -90,97 +112,17 @@ class CWMSProcessor(object):
         logger.debug('Unhandled event types: %s' %
                      (', '.join(sorted(list(set(self._unhandled_events))))))
 
-    def _remove_multi_extraction_artifacts(self):
-        # Build up a dict of evidence matches keys with statement UUIDs
-        evmks = {}
-        for stmt in self.statements:
-            evmk = stmt.evidence[0].matches_key() + \
-                stmt.subj.matches_key() + stmt.obj.matches_key()
-            if evmk not in evmks:
-                evmks[evmk] = [stmt.uuid]
-            else:
-                evmks[evmk].append(stmt.uuid)
-        # This is a list of groups of statement UUIDs that are redundant
-        multi_evmks = [v for k, v in evmks.items() if len(v) > 1]
-        # We now figure out if anything needs to be removed
-        to_remove = []
-        for uuids in multi_evmks:
-            stmts = [s for s in self.statements if (s.uuid in uuids
-                     and isinstance(s, Influence))]
-            stmts = sorted(stmts, key=lambda x: x.polarity_count(),
-                           reverse=True)
-            to_remove += [s.uuid for s in stmts[1:]]
-        if to_remove:
-            logger.info('Found %d Statements to remove' % len(to_remove))
-        self.statements = [s for s in self.statements
-                           if s.uuid not in to_remove]
-
-    def _get_subj_obj(self, event):
-        """Get the concepts for a relation given and element.
-
-        The ontological type of the event is used to infer the labels of agents
-        and the polarity of the influence (see `_positive_ccs`,
-        `_positive_events`, and `_negative_events` class attributes).
-        """
-        ev_type = event.find('type').text
-        ev_time, ev_loc = self._extract_time_loc(event)
-        if ev_type in POLARITY_DICT['CC'].keys():
-            polarity = POLARITY_DICT['CC'][ev_type]
-            subj, subj_time, subj_loc = \
-                self._get_concept(event, "arg/[@role=':FACTOR']")
-            obj, obj_time, obj_loc = \
-                self._get_concept(event, "arg/[@role=':OUTCOME']")
-        elif ev_type in POLARITY_DICT['EVENT'].keys():
-            polarity = POLARITY_DICT['EVENT'][ev_type]
-            subj, subj_time, subj_loc = \
-                self._get_concept(event, "*[@role=':AGENT']")
-            obj, obj_time, obj_loc = \
-                self._get_concept(event, "*[@role=':AFFECTED']")
-        else:
-            self._unhandled_events.append(ev_type)
-            return None, None, None, None
-
-        # Choose a temporal context (if there's a choice to be made)
-        for time in [ev_time, obj_time, subj_time]:
-            if time is not None:
-                break
-        else:
-            time = None
-
-        # Choose a location context (if there's a choice to be made)
-        for loc in [ev_loc, obj_loc, subj_loc]:
-            if loc is not None:
-                break
-        else:
-            loc = None
-
-        # Construct WorldContext
-        context = None
-        if time or loc:
-            context = WorldContext(time=time, geo_location=loc)
-
-        return subj, obj, polarity, context
-
-    def extract_noun_relations(self, key):
-        """Extract relationships where a term/noun affects another term/noun"""
-        events = self.tree.findall("%s/[type]" % key)
-        for event in events:
-            subj, obj, pol, context = self._get_subj_obj(event)
-            self._make_statement_noun_cause_effect(event, subj, obj, pol,
-                                                   context)
-
-    def _get_concept(self, event, find_str):
+    def _get_event(self, event, find_str):
         """Get a concept referred from the event by the given string."""
         # Get the term with the given element id
         element = event.find(find_str)
         if element is None:
-            return None, None, None
+            return None
         element_id = element.attrib.get('id')
         element_term = self.tree.find("*[@id='%s']" % element_id)
         if element_term is None:
-            return None, None, None
+            return None
         time, location = self._extract_time_loc(element_term)
-
 
         # Now see if there is a modifier like assoc-with connected
         # to the main concept
@@ -189,7 +131,7 @@ class CWMSProcessor(object):
         # Get the element's text and use it to construct a Concept
         element_text_element = element_term.find('text')
         if element_text_element is None:
-            return None, None, None
+            return None
         element_text = element_text_element.text
         element_db_refs = {'TEXT': element_text}
         element_name = sanitize_name(element_text)
@@ -201,7 +143,13 @@ class CWMSProcessor(object):
             if assoc_with is not None:
                 element_db_refs['CWMS'] += ('|%s' % assoc_with)
 
-        return Concept(element_name, db_refs=element_db_refs), time, location
+        concept = Concept(element_name, db_refs=element_db_refs)
+        if time or location:
+            context = WorldContext(time=time, geo_location=location)
+        else:
+            context = None
+        event_obj = Event(concept, context=context)
+        return event_obj
 
     def _extract_time_loc(self, term):
         """Get the location from a term (CC or TERM)"""
@@ -271,28 +219,10 @@ class CWMSProcessor(object):
                 return assoc_with_grounding
         return None
 
-    def _make_statement_noun_cause_effect(self, event_element,
-                                          cause_concept, affected_concept,
-                                          polarity, context):
-        """Make the Influence statement from the component parts."""
-        if cause_concept is None or affected_concept is None:
-            return
-
-        # Construct evidence
-        ev = self._get_evidence(event_element, context)
-        ev.epistemics['direct'] = False
-
-        # Make statement
-        obj_delta = {'polarity': polarity, 'adjectives': []}
-        st = Influence(cause_concept, affected_concept, obj_delta=obj_delta,
-                       evidence=[ev])
-        self.statements.append(st)
-        return st
-
     def _get_evidence(self, event_tag, context):
         text = self._get_evidence_text(event_tag)
         sec = self._get_section(event_tag)
-        epi = {}
+        epi = {'direct': False}
         if sec:
             epi['section_type'] = sec
         ev = Evidence(source_api='cwms', text=text, pmid=self.doc_id,
@@ -322,6 +252,32 @@ class CWMSProcessor(object):
         par_id = event_tag.attrib.get('paragraph')
         sec = self.par_to_sec.get(par_id)
         return sec
+
+    def _remove_multi_extraction_artifacts(self):
+        # Build up a dict of evidence matches keys with statement UUIDs
+        evmks = {}
+        for stmt in self.statements:
+            evmk = stmt.evidence[0].matches_key() + \
+                   stmt.subj.matches_key() + stmt.obj.matches_key()
+            if evmk not in evmks:
+                evmks[evmk] = [stmt.uuid]
+            else:
+                evmks[evmk].append(stmt.uuid)
+        # This is a list of groups of statement UUIDs that are redundant
+        multi_evmks = [v for k, v in evmks.items() if len(v) > 1]
+        # We now figure out if anything needs to be removed
+        to_remove = []
+        for uuids in multi_evmks:
+            stmts = [s for s in self.statements if (s.uuid in uuids
+                                                    and isinstance(s, Influence))]
+            stmts = sorted(stmts, key=lambda x: x.polarity_count(),
+                           reverse=True)
+            to_remove += [s.uuid for s in stmts[1:]]
+        if to_remove:
+            logger.info('Found %d Statements to remove' % len(to_remove))
+        self.statements = [s for s in self.statements
+                           if s.uuid not in to_remove]
+
 
 
 def sanitize_name(txt):

@@ -120,34 +120,12 @@ def process_json(json_dict):
         in its statements attribute.
     """
     ep = EidosProcessor(json_dict)
-    ep.get_causal_relations()
-    ep.get_correlations()
+    ep.extract_causal_relations()
+    ep.extract_correlations()
+    ep.extract_events()
     return ep
 
 
 def initialize_reader():
     """Instantiate an Eidos reader for fast subsequent reading."""
     eidos_reader.process_text('')
-
-
-def process_json_ld_file(file_name):
-    """DEPRECATED: see process_json_file"""
-    logger.warning('This method is deprecated and will be removed in the next'
-                   ' version, please use the equivalent process_json_file'
-                   ' instead.')
-    return process_json_file(file_name)
-
-
-def process_json_ld_str(json_str):
-    """DEPRECATED: see process_json_str"""
-    logger.warning('This method is deprecated and will be removed in the next'
-                   ' version, please use the equivalent process_json_str'
-                   ' instead.')
-    return process_json_str(json_str)
-
-
-def process_json_ld(json_dict):
-    """DEPRECATED: see process_json"""
-    logger.warning('This method is deprecated and will be removed in the next'
-                   ' version, please use the equivalent process_json instead.')
-    return process_json(json_dict)

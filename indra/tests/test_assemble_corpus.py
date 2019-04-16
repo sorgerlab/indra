@@ -52,6 +52,7 @@ st1.belief = 0.9
 st2.belief = 0.8
 st3.belief = 0.7
 
+
 def test_load_stmts():
     with open('_test.pkl', 'wb') as fh:
         pickle.dump([st1], fh)
@@ -59,11 +60,13 @@ def test_load_stmts():
     assert len(st_loaded) == 1
     assert st_loaded[0].equals(st1)
 
+
 def test_dump_stmts():
     ac.dump_statements([st1], '_test.pkl')
     st_loaded = ac.load_statements('_test.pkl')
     assert len(st_loaded) == 1
     assert st_loaded[0].equals(st1)
+
 
 def test_filter_grounded_only():
     # st18 has and i, which has an ungrounded bound condition
@@ -95,15 +98,15 @@ def test_filter_grounded_only():
 
 
 def test_filter_grounded_only_score():
-    c1 = Concept('x', db_refs={'a': [('x', 0.5), ('y', 0.8)]})
-    c2 = Concept('x', db_refs={'a': [('x', 0.7), ('y', 0.9)]})
+    c1 = Event(Concept('x', db_refs={'a': [('x', 0.5), ('y', 0.8)]}))
+    c2 = Event(Concept('x', db_refs={'a': [('x', 0.7), ('y', 0.9)]}))
     st1 = Influence(c1, c2)
     assert len(ac.filter_grounded_only([st1])) == 1
     assert len(ac.filter_grounded_only([st1], score_threshold=0.4)) == 1
     assert len(ac.filter_grounded_only([st1], score_threshold=0.6)) == 1
     assert len(ac.filter_grounded_only([st1], score_threshold=0.85)) == 0
     assert len(ac.filter_grounded_only([st1], score_threshold=0.95)) == 0
-    c3 = Concept('x', db_refs={'a': []})
+    c3 = Event(Concept('x', db_refs={'a': []}))
     st2 = Influence(c1, c3)
     assert len(ac.filter_grounded_only([st2])) == 0
 
@@ -462,10 +465,10 @@ def test_rename_db_ref():
 
 def test_filter_concept_names():
     stmts = [
-        Influence(Concept('a'), Concept('b')),
-        Influence(Concept('a'), Concept('c')),
-        Influence(Concept('a'), Concept('d')),
-        Influence(Concept('c'), Concept('d'))
+        Influence(Event(Concept('a')), Event(Concept('b'))),
+        Influence(Event(Concept('a')), Event(Concept('c'))),
+        Influence(Event(Concept('a')), Event(Concept('d'))),
+        Influence(Event(Concept('c')), Event(Concept('d')))
         ]
 
     stmts_out = ac.filter_concept_names(stmts, ['a'], 'one')
@@ -480,8 +483,8 @@ def test_filter_concept_names():
 
 def test_filter_namespace_concepts_simple():
     def make_statement(a, b):
-        return Influence(Concept(a, db_refs={'TEXT': a}),
-                         Concept(b, db_refs={'TEXT': b}))
+        return Influence(Event(Concept(a, db_refs={'TEXT': a})),
+                         Event(Concept(b, db_refs={'TEXT': b})))
     stmts = [make_statement('education', 'thinking'),
              make_statement('doubt', 'government')]
     fs = ac.filter_by_db_refs(stmts, 'TEXT', ['education'], 'one')
@@ -498,8 +501,8 @@ def test_filter_namespace_concepts_simple():
 
 def test_filter_namespace_concepts_list():
     def make_statement(a, b):
-        return Influence(Concept(a, db_refs={'UN': [(a, 1.0)]}),
-                         Concept(b, db_refs={'UN': [(b, 1.0)]}))
+        return Influence(Event(Concept(a, db_refs={'UN': [(a, 1.0)]})),
+                         Event(Concept(b, db_refs={'UN': [(b, 1.0)]})))
     stmts = [make_statement('UN/entities/human/education',
                 'UN/entities/human/food/food_security'),
              make_statement('UN/entities/human/fishery',
@@ -523,29 +526,29 @@ def test_merge_groundings():
     refs2 = {'UN': [('x', 0.9), ('y', 0.6), ('z', 0.5)],
              'B': 'x',
              'D': 'z'}
-    stmts = [Influence(Concept('a', db_refs=refs1),
-                       Concept('b', db_refs=refs2),
+    stmts = [Influence(Event(Concept('a', db_refs=refs1)),
+                       Event(Concept('b', db_refs=refs2)),
                        evidence=[Evidence(source_api='eidos', text='1')]),
-             Influence(Concept('a', db_refs=refs2),
-                       Concept('b', db_refs=refs1),
+             Influence(Event(Concept('a', db_refs=refs2)),
+                       Event(Concept('b', db_refs=refs1)),
                        evidence=[Evidence(source_api='eidos', text='2')])]
     stmts = ac.run_preassembly(stmts)
     assert len(stmts) == 1
     stmts = ac.merge_groundings(stmts)
-    assert stmts[0].subj.db_refs == \
+    assert stmts[0].subj.concept.db_refs == \
            {'UN': [('x', 0.9), ('y', 0.7), ('z', 0.5)],
             'B': 'x', 'C': 'y', 'D': 'z'}, \
         stmts[0].subj.db_refs
-    assert stmts[0].obj.db_refs == stmts[0].subj.db_refs
+    assert stmts[0].obj.concept.db_refs == stmts[0].subj.concept.db_refs
 
 
 def test_merge_deltas():
     def add_annots(stmt):
         for ev in stmt.evidence:
-            ev.annotations['subj_adjectives'] = stmt.subj_delta['adjectives']
-            ev.annotations['obj_adjectives'] = stmt.obj_delta['adjectives']
-            ev.annotations['subj_polarity'] = stmt.subj_delta['polarity']
-            ev.annotations['obj_polarity'] = stmt.obj_delta['polarity']
+            ev.annotations['subj_adjectives'] = stmt.subj.delta['adjectives']
+            ev.annotations['obj_adjectives'] = stmt.obj.delta['adjectives']
+            ev.annotations['subj_polarity'] = stmt.subj.delta['polarity']
+            ev.annotations['obj_polarity'] = stmt.obj.delta['polarity']
         return stmt
     d1 = {'adjectives': ['a', 'b', 'c'], 'polarity': 1}
     d2 = {'adjectives': [], 'polarity': -1}
@@ -554,33 +557,35 @@ def test_merge_deltas():
     d5 = {'adjectives': ['d'], 'polarity': None}
     d6 = {'adjectives': [], 'polarity': None}
     d7 = {'adjectives': [], 'polarity': 1}
-    stmts = [add_annots(Influence(Concept('a'), Concept('b'),
-                                  subj_delta=sd, obj_delta=od,
+
+    def make_ev(name, delta):
+        return Event(Concept(name), delta=delta)
+
+    stmts = [add_annots(Influence(make_ev('a', sd), make_ev('b', od),
                                   evidence=[Evidence(source_api='eidos',
                                                      text='%d' % idx)]))
              for idx, (sd, od) in enumerate([(d1, d2), (d3, d4)])]
     stmts = ac.run_preassembly(stmts, return_toplevel=True)
     stmts = ac.merge_deltas(stmts)
-    assert stmts[0].subj_delta['polarity'] == 1, stmts[0].subj_delta
-    assert stmts[0].obj_delta['polarity'] == -1, stmts[0].obj_delta
-    assert set(stmts[0].subj_delta['adjectives']) == {'a', 'b', 'c', 'g'}, \
-        stmts[0].subj_delta
-    assert set(stmts[0].obj_delta['adjectives']) == {'d', 'e', 'f'}, \
-        stmts[0].obj_delta
+    assert stmts[0].subj.delta['polarity'] == 1, stmts[0].subj.delta
+    assert stmts[0].obj.delta['polarity'] == -1, stmts[0].obj.delta
+    assert set(stmts[0].subj.delta['adjectives']) == {'a', 'b', 'c', 'g'}, \
+        stmts[0].subj.delta
+    assert set(stmts[0].obj.delta['adjectives']) == {'d', 'e', 'f'}, \
+        stmts[0].obj.delta
 
-    stmts = [add_annots(Influence(Concept('a'), Concept('b'),
-                                  subj_delta=sd, obj_delta=od,
+    stmts = [add_annots(Influence(make_ev('a', sd), make_ev('b', od),
                                   evidence=[Evidence(source_api='eidos',
                                                      text='%d' % idx)]))
              for idx, (sd, od) in enumerate([(d1, d5), (d6, d7), (d6, d7)])]
     stmts = ac.run_preassembly(stmts, return_toplevel=True)
     stmts = ac.merge_deltas(stmts)
-    assert stmts[0].subj_delta['polarity'] is None, stmts[0].subj_delta
-    assert stmts[0].obj_delta['polarity'] == 1, stmts[0].obj_delta
-    assert set(stmts[0].subj_delta['adjectives']) == {'a', 'b', 'c'}, \
-        stmts[0].subj_delta
-    assert set(stmts[0].obj_delta['adjectives']) == {'d'}, \
-        stmts[0].obj_delta
+    assert stmts[0].subj.delta['polarity'] is None, stmts[0].subj.delta
+    assert stmts[0].obj.delta['polarity'] == 1, stmts[0].obj.delta
+    assert set(stmts[0].subj.delta['adjectives']) == {'a', 'b', 'c'}, \
+        stmts[0].subj.delta
+    assert set(stmts[0].obj.delta['adjectives']) == {'d'}, \
+        stmts[0].obj.delta
 
 
 def test_preassemble_flatten():

@@ -80,12 +80,12 @@ class CAGAssembler(object):
             # subj, obj = (self._node_name(s.subj), self._node_name(s.obj))
 
             # See if both subject and object have polarities given
-            has_both_polarity = (s.subj_delta['polarity'] is not None and
-                                 s.obj_delta['polarity'] is not None)
+            has_both_polarity = (s.subj.delta['polarity'] is not None and
+                                 s.obj.delta['polarity'] is not None)
 
             # Add the nodes to the graph
-            for node, delta in zip((s.subj, s.obj),
-                                   (s.subj_delta, s.obj_delta)):
+            for node, delta in zip((s.subj.concept, s.obj.concept),
+                                   (s.subj.delta, s.obj.delta)):
                 self.CAG.add_node(self._node_name(node),
                                   simulable=has_both_polarity,
                                   mods=delta['adjectives'])
@@ -93,8 +93,8 @@ class CAGAssembler(object):
             # Edge is solid if both nodes have polarity given
             linestyle = 'solid' if has_both_polarity else 'dotted'
             if has_both_polarity:
-                same_polarity = (s.subj_delta['polarity'] ==
-                                 s.obj_delta['polarity'])
+                same_polarity = (s.subj.delta['polarity'] ==
+                                 s.obj.delta['polarity'])
                 if same_polarity:
                     target_arrow_shape, linecolor = ('circle', 'green')
                 else:
@@ -109,13 +109,13 @@ class CAGAssembler(object):
                 if provenance:
                     provenance[0]['text'] = s.evidence[0].text
             self.CAG.add_edge(
-                    self._node_name(s.subj),
-                    self._node_name(s.obj),
-                    subj_polarity    = s.subj_delta['polarity'],
-                    subj_adjectives  = s.subj_delta['adjectives'],
-                    obj_polarity     = s.obj_delta['polarity'],
-                    obj_adjectives   = s.obj_delta['adjectives'],
-                    linestyle        = linestyle,
+                    self._node_name(s.subj.concept),
+                    self._node_name(s.obj.concept),
+                    subj_polarity=s.subj.delta['polarity'],
+                    subj_adjectives=s.subj.delta['adjectives'],
+                    obj_polarity=s.obj.delta['polarity'],
+                    obj_adjectives=s.obj.delta['adjectives'],
+                    linestyle=linestyle,
                     linecolor=linecolor,
                     targetArrowShape=target_arrow_shape,
                     provenance=provenance,

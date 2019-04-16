@@ -1,7 +1,6 @@
 from __future__ import print_function, unicode_literals, absolute_import
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
-import copy
 import logging
 import numbers
 import textwrap
@@ -10,13 +9,12 @@ import itertools
 import numpy as np
 import scipy.stats
 from copy import deepcopy
-from collections import deque, defaultdict, namedtuple
+from collections import deque
 import kappy
 from pysb import WILD, export, Observable, ComponentSet
 from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
 from indra.assemblers.pysb import assembler as pa
-from indra.tools.expand_families import _agent_from_uri
 from collections import Counter
 from indra.assemblers.pysb.kappa_util import im_json_to_graph
 
@@ -299,6 +297,9 @@ class ModelChecker(object):
             elif isinstance(stmt, RegulateAmount):
                 obs_list = add_obs_for_agent(stmt.obj)
                 self.stmt_to_obs[stmt] = obs_list
+            elif isinstance(stmt, Influence):
+                obs_list = add_obs_for_agent(stmt.obj.concept)
+                self.stmt_to_obs[stmt] = obs_list
         # Add observables for each agent
         for ag in self.agent_obs:
             obs_list = add_obs_for_agent(ag)
@@ -369,9 +370,8 @@ class ModelChecker(object):
         # Make sure the influence map is initialized
         self.get_im()
         # Check if this is one of the statement types that we can check
-        if not (isinstance(stmt, Modification) or
-                isinstance(stmt, RegulateAmount) or
-                isinstance(stmt, RegulateActivity)):
+        if not isinstance(stmt, (Modification, RegulateAmount,
+                                 RegulateActivity, Influence)):
             return PathResult(False, 'STATEMENT_TYPE_NOT_HANDLED',
                               max_paths, max_path_length)
         # Get the polarity for the statement
@@ -381,6 +381,8 @@ class ModelChecker(object):
             target_polarity = 1 if stmt.is_activation else -1
         elif isinstance(stmt, RegulateAmount):
             target_polarity = -1 if isinstance(stmt, DecreaseAmount) else 1
+        elif isinstance(stmt, Influence):
+            target_polarity = -1 if stmt.overall_polarity() == -1 else 1
         # Get the subject and object (works also for Modifications)
         subj, obj = stmt.agent_list()
         # Get a list of monomer patterns matching the subject FIXME Currently

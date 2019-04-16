@@ -112,10 +112,10 @@ def stmts_to_json(stmts_in, use_sbo=False):
         JSON-serialized INDRA Statements.
     """
     if not isinstance(stmts_in, list):
-        json_dict = stmts_in.to_json(use_sbo)
+        json_dict = stmts_in.to_json(use_sbo=use_sbo)
         return json_dict
     else:
-        json_dict = [st.to_json(use_sbo) for st in stmts_in]
+        json_dict = [st.to_json(use_sbo=use_sbo) for st in stmts_in]
     return json_dict
 
 

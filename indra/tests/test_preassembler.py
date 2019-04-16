@@ -13,7 +13,7 @@ from indra.statements import Agent, Phosphorylation, BoundCondition, \
     ActiveForm, MutCondition, Complex, \
     Translocation, Activation, Inhibition, \
     Deacetylation, Conversion, Concept, Influence, \
-    IncreaseAmount, DecreaseAmount, Statement
+    IncreaseAmount, DecreaseAmount, Statement, Event
 from indra.preassembler.hierarchy_manager import hierarchies
 
 
@@ -672,8 +672,8 @@ def test_conversion_refinement():
 def test_influence_duplicate():
     gov = 'UN/entities/human/government/government_entity'
     agr = 'UN/entities/natural/crop_technology'
-    cgov = Concept('government', db_refs={'UN': [(gov, 1.0)]})
-    cagr = Concept('agriculture', db_refs={'UN': [(agr, 1.0)]})
+    cgov = Event(Concept('government', db_refs={'UN': [(gov, 1.0)]}))
+    cagr = Event(Concept('agriculture', db_refs={'UN': [(agr, 1.0)]}))
     stmt1 = Influence(cgov, cagr, evidence=[Evidence(source_api='eidos1')])
     stmt2 = Influence(cagr, cgov, evidence=[Evidence(source_api='eidos2')])
     stmt3 = Influence(cgov, cagr, evidence=[Evidence(source_api='eidos3')])
@@ -695,9 +695,9 @@ def test_influence_refinement():
     truck = 'UN/entities/human/infrastructure/transportation/' + \
         'transportation_methods'
     agr = 'UN/entities/human/livelihood'
-    ctran = Concept('transportation', db_refs={'UN': [(tran, 1.0)]})
-    ctruck = Concept('trucking', db_refs={'UN': [(truck, 1.0)]})
-    cagr = Concept('agriculture', db_refs={'UN': [(agr, 1.0)]})
+    ctran = Event(Concept('transportation', db_refs={'UN': [(tran, 1.0)]}))
+    ctruck = Event(Concept('trucking', db_refs={'UN': [(truck, 1.0)]}))
+    cagr = Event(Concept('agriculture', db_refs={'UN': [(agr, 1.0)]}))
     stmt1 = Influence(ctran, cagr, evidence=[Evidence(source_api='eidos1')])
     stmt2 = Influence(ctruck, cagr, evidence=[Evidence(source_api='eidos2')])
     stmt3 = Influence(cagr, ctran, evidence=[Evidence(source_api='eidos3')])
@@ -708,9 +708,10 @@ def test_influence_refinement():
     pa = Preassembler(hierarchies, [stmt1, stmt2, stmt3])
     rel_stmts = pa.combine_related()
     assert len(rel_stmts) == 2
-    truck_stmt = [st for st in rel_stmts if st.subj.name == 'trucking'][0]
+    truck_stmt = [st for st in rel_stmts if st.subj.concept.name ==
+                  'trucking'][0]
     assert len(truck_stmt.supported_by) == 1
-    assert truck_stmt.supported_by[0].subj.name == 'transportation'
+    assert truck_stmt.supported_by[0].subj.concept.name == 'transportation'
 
 
 def test_find_contradicts():

@@ -175,7 +175,7 @@ __all__ = [
     'Activation', 'GtpActivation', 'ActiveForm', 'HasActivity', 'Gef', 'Gap',
     'Complex', 'Translocation', 'RegulateAmount', 'DecreaseAmount',
     'IncreaseAmount', 'Influence', 'Conversion', 'Unresolved',
-    'Association',
+    'Association', 'Event',
 
     # Error classes
     'InputError', 'UnresolvedUuidError', 'InvalidLocationError',
@@ -439,7 +439,7 @@ class Statement(object):
             if not hasattr(st, 'uuid'):
                 st.uuid = '%s' % uuid.uuid4()
         ##################
-        json_dict = _o({'type': stmt_type})
+        json_dict = _o(type=stmt_type)
         json_dict['belief'] = self.belief
         if self.evidence:
             evidence = [ev.to_json() for ev in self.evidence]
@@ -668,7 +668,7 @@ class Modification(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(Modification, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
             if use_sbo:
@@ -796,7 +796,7 @@ class SelfModification(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(SelfModification, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
             if use_sbo:
@@ -1041,7 +1041,7 @@ class RegulateActivity(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(RegulateActivity, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
             if use_sbo:
@@ -1266,7 +1266,7 @@ class ActiveForm(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(ActiveForm, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         json_dict.update({'agent': self.agent.to_json(),
                           'activity': self.activity,
                           'is_active': self.is_active})
@@ -1445,7 +1445,7 @@ class Gef(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(Gef, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.gef is not None:
             json_dict['gef'] = self.gef.to_json()
             if use_sbo:
@@ -1533,7 +1533,7 @@ class Gap(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(Gap, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.gap is not None:
             json_dict['gap'] = self.gap.to_json()
             if use_sbo:
@@ -1632,7 +1632,7 @@ class Complex(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(Complex, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         members = [m.to_json() for m in self.members]
         json_dict['members'] = members
         json_dict.update(generic)
@@ -1711,7 +1711,7 @@ class Translocation(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(Translocation, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         json_dict['agent'] = self.agent.to_json()
         if self.from_location is not None:
             json_dict['from_location'] = self.from_location
@@ -1764,7 +1764,7 @@ class RegulateAmount(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(RegulateAmount, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
             if use_sbo:
@@ -1875,34 +1875,27 @@ class IncreaseAmount(RegulateAmount):
     """
 
 
-class Influence(IncreaseAmount):
+class Influence(Statement):
     """An influence on the quantity of a concept of interest.
 
     Parameters
     ----------
-    subj : :py:class:`indra.statement.Concept`
-        The concept which acts as the influencer.
-    obj : :py:class:`indra.statement.Concept`
-        The concept which acts as the influencee
-    subj_delta : Optional[dict]
-        A dictionary specifying the polarity and magnitude of
-        change in the subject.
-    obj_delta : Optional[dict]
-        A dictionary specifying the polarity and magnitude of
-        change in the object.
+    subj : :py:class:`indra.statement.Event`
+        The event which acts as the influencer.
+    obj : :py:class:`indra.statement.Event`
+        The event which acts as the influencee.
     evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the statement.
     """
+    _agent_order = ['subj', 'obj']
 
-    def __init__(self, subj, obj, subj_delta=None, obj_delta=None,
-                 evidence=None):
-        super(Influence, self).__init__(subj, obj, evidence)
-        if subj_delta is None:
-            subj_delta = {'polarity': None, 'adjectives': []}
-        if obj_delta is None:
-            obj_delta = {'polarity': None, 'adjectives': []}
-        self.subj_delta = subj_delta
-        self.obj_delta = obj_delta
+    def agent_list(self, deep_sorted=False):
+        return [self.subj.concept, self.obj.concept]
+
+    def __init__(self, subj, obj, evidence=None):
+        super(Influence, self).__init__(evidence)
+        self.subj = subj
+        self.obj = obj
 
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
@@ -1910,8 +1903,10 @@ class Influence(IncreaseAmount):
             return False
 
         # Check agent arguments
-        subj_refinement = self.subj.refinement_of(other.subj, hierarchies)
-        obj_refinement = self.obj.refinement_of(other.obj, hierarchies)
+        subj_refinement = self.subj.concept.refinement_of(
+            other.subj.concept, hierarchies)
+        obj_refinement = self.obj.concept.refinement_of(
+            other.obj.concept, hierarchies)
         op = other.overall_polarity()
         sp = self.overall_polarity()
         # If we have "less" polarity here than in other then it's
@@ -1930,23 +1925,17 @@ class Influence(IncreaseAmount):
                 delta_refinement)
 
     def equals(self, other):
-        def delta_equals(dself, dother):
-            if (dself['polarity'] == dother['polarity']) and \
-                (set(dself['adjectives']) == set(dother['adjectives'])):
-                return True
-            else:
-                return False
-        matches = super(Influence, self).equals(other) and \
-            delta_equals(self.subj_delta, other.subj_delta) and \
-            delta_equals(self.obj_delta, other.obj_delta)
-        return matches
+        equals = super(Influence, self).equals(other) and \
+            self.subj.equals(other.subj) and self.obj.equals(other.obj)
+        return equals
 
     def matches_key(self):
         # With polarities, here, the goal is to match overall polarity
         # if both polarities are given, i.e. +/+ matches -/-. Also, if only
         # one polarity is given, we match the overall polarity e.g.
         # None/+, +/None will match.
-        key = (stmt_type(self, True), self.subj.matches_key(),
+        key = (stmt_type(self, True),
+               self.subj.matches_key(),
                self.obj.matches_key(),
                self.polarity_count(),
                self.overall_polarity()
@@ -1959,12 +1948,15 @@ class Influence(IncreaseAmount):
             return False
 
         # Determine some refinements and opposites up front
-        subj_ref = self.subj.refinement_of(other.subj, hierarchies) or \
-            other.subj.refinement_of(self.subj, hierarchies)
-        obj_ref = self.obj.refinement_of(other.obj, hierarchies) or \
-            other.obj.refinement_of(self.obj, hierarchies)
-        subj_opp = self.subj.is_opposite(other.subj, hierarchies)
-        obj_opp = self.obj.is_opposite(other.obj, hierarchies)
+        subj_ref = self.subj.concept.refinement_of(other.subj.concept,
+                                                   hierarchies) or \
+            other.subj.concept.refinement_of(self.subj.concept, hierarchies)
+        obj_ref = self.obj.concept.refinement_of(other.obj.concept,
+                                                 hierarchies) or \
+            other.obj.concept.refinement_of(self.obj.concept, hierarchies)
+        subj_opp = self.subj.concept.is_opposite(other.subj.concept,
+                                                 hierarchies)
+        obj_opp = self.obj.concept.is_opposite(other.obj.concept, hierarchies)
         sp = self.overall_polarity()
         op = other.overall_polarity()
 
@@ -1974,7 +1966,7 @@ class Influence(IncreaseAmount):
         if (subj_ref and obj_ref) or (subj_opp and obj_opp):
             if sp is not None and op is not None and sp != op:
                 return True
-        # If one entity is the oppositve and the other compatible and the
+        # If one entity is the opposite and the other compatible and the
         # polarities are the same then this is a contradiction
         if (subj_ref and obj_opp) or (subj_opp and obj_ref):
             if sp is not None and op is not None and sp == op:
@@ -1984,8 +1976,8 @@ class Influence(IncreaseAmount):
 
     def overall_polarity(self):
         # Set p1 and p2 to None / 1 / -1 depending on polarity
-        p1 = self.subj_delta['polarity']
-        p2 = self.obj_delta['polarity']
+        p1 = self.subj.delta['polarity']
+        p2 = self.obj.delta['polarity']
         if p1 is None and p2 is None:
             pol = None
         elif p2 is None:
@@ -1997,16 +1989,14 @@ class Influence(IncreaseAmount):
         return pol
 
     def polarity_count(self):
-        return ((1 if self.subj_delta['polarity'] is not None else 0) +
-                (1 if self.obj_delta['polarity'] is not None else 0))
+        return ((1 if self.subj.delta['polarity'] is not None else 0) +
+                (1 if self.obj.delta['polarity'] is not None else 0))
 
     def to_json(self, use_sbo=False):
         generic = super(Influence, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
-        json_dict['subj'] = generic['subj']
-        json_dict['subj_delta'] = self.subj_delta
-        json_dict['obj'] = generic['obj']
-        json_dict['obj_delta'] = self.obj_delta
+        json_dict = _o(type=generic['type'],
+                       subj=self.subj.to_json(with_evidence=False),
+                       obj=self.obj.to_json(with_evidence=False))
         json_dict.update(generic)
         return json_dict
 
@@ -2014,13 +2004,11 @@ class Influence(IncreaseAmount):
     def _from_json(cls, json_dict):
         subj = json_dict.get('subj')
         obj = json_dict.get('obj')
-        subj_delta = json_dict.get('subj_delta')
-        obj_delta = json_dict.get('obj_delta')
         if subj:
-            subj = Concept._from_json(subj)
+            subj = Statement._from_json(subj)
         if obj:
-            obj = Concept._from_json(obj)
-        stmt = cls(subj, obj, subj_delta, obj_delta)
+            obj = Statement._from_json(obj)
+        stmt = cls(subj, obj)
         return stmt
 
     def __repr__(self):
@@ -2030,24 +2018,8 @@ class Influence(IncreaseAmount):
             return self.__str__().encode('utf-8')
 
     def __str__(self):
-        def _influence_concept_str(concept, delta):
-            if delta is not None:
-                pol = delta.get('polarity')
-                if pol == 1:
-                    pol_str = 'positive'
-                elif pol == -1:
-                    pol_str = 'negative'
-                else:
-                    pol_str = ''
-                concept_str = '%s(%s)' % (concept.name, pol_str)
-            else:
-                concept_str = concept.name
-            return concept_str
-        s = ("%s(%s, %s)" % (type(self).__name__,
-                             _influence_concept_str(self.subj,
-                                                    self.subj_delta),
-                             _influence_concept_str(self.obj,
-                                                    self.obj_delta)))
+        s = "%s(%s, %s)" % (type(self).__name__, str(self.subj),
+                            str(self.obj))
         return s
 
 
@@ -2101,7 +2073,7 @@ class Conversion(Statement):
 
     def to_json(self, use_sbo=False):
         generic = super(Conversion, self).to_json(use_sbo)
-        json_dict = _o({'type': generic['type']})
+        json_dict = _o(type=generic['type'])
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
             if use_sbo:
@@ -2178,6 +2150,71 @@ class Conversion(Statement):
         s = ("%s(%s, %s, %s)" % (type(self).__name__, self.subj, self.obj_from,
                                  self.obj_to))
         return s
+
+
+class Event(Statement):
+    """An event representing the change of a Concept.
+
+    Attributes
+    ----------
+    concept : indra.statements.concept.Concept
+        The concept over which the event is defined.
+    delta : dict
+        Represents a change in the concept, with a polarity
+        and an adjectives entry.
+    context : indra.statements.context.Context
+        The context associated with the event.
+    """
+    _agent_order = ['concept']
+
+    def __init__(self, concept, delta=None, context=None, evidence=None,
+                 supports=None, supported_by=None):
+        super().__init__(evidence, supports, supported_by)
+        self.concept = concept
+        self.delta = delta if delta else {'polarity': None, 'adjectives': []}
+        self.context = context
+
+    def matches_key(self):
+        mk = (self.concept.matches_key(),)
+        return str(mk)
+
+    def refinement_of(self, other, hierarchies):
+        concept_ref = self.concept.refinement_of(other.concept, hierarchies)
+        pol_ref = (self.delta['polarity'] and not other.delta['polarity']) or \
+            self.delta['polarity'] == other.delta['polarity']
+        return concept_ref and pol_ref
+
+    def equals(self, other):
+        return self.concept.equals(other.concept) and \
+            self.delta['polarity'] == other.delta['polarity'] and \
+            set(self.delta['adjectives']) == set(other.delta['adjectives'])
+
+    def to_json(self, with_evidence=True, use_sbo=False):
+        generic = super(Event, self).to_json(False)
+        json_dict = _o(type=generic['type'],
+                       concept=self.concept.to_json(),
+                       delta=self.delta)
+        if self.context:
+            json_dict['context'] = self.context.to_json()
+        if with_evidence and 'evidence' in generic:
+            json_dict['evidence'] = generic['evidence']
+        json_dict.update(generic)
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        concept = Concept._from_json(json_dict['concept'])
+        context_entry = json_dict.get('context')
+        if context_entry:
+            context = Context.from_json(json_dict['context'])
+        else:
+            context = None
+        stmt = cls(concept, delta=json_dict.get('delta'),
+                   context=context)
+        return stmt
+
+    def __str__(self):
+        return '%s(%s)' % (type(self).__name__, self.concept.name)
 
 
 class Unresolved(Statement):

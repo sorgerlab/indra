@@ -4,7 +4,7 @@ import requests
 import datetime
 import unittest
 from indra.sources import eidos
-from indra.statements import Influence, Association
+from indra.statements import Influence, Association, Event
 from indra.assemblers.cag import CAGAssembler
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
@@ -36,19 +36,35 @@ def test_process_text():
     assert len(ep.statements) == 1
     stmt = ep.statements[0]
     assert isinstance(stmt, Influence)
-    assert stmt.subj.name == 'fuel', stmt.subj.name
-    assert stmt.obj.name == 'water trucking', stmt.obj.name
-    assert stmt.obj_delta.get('polarity') == -1
+    assert stmt.subj.concept.name == 'fuel', stmt.subj.concept.name
+    assert stmt.obj.concept.name == 'water trucking', stmt.obj.concept.name
+    assert stmt.obj.delta.get('polarity') == -1
     assert stmt.evidence[0].annotations['found_by'] == \
         'ported_syntax_1_verb-Causal'
-    assert 'TEXT' in stmt.subj.db_refs
-    assert 'TEXT' in stmt.obj.db_refs
+    assert 'TEXT' in stmt.subj.concept.db_refs
+    assert 'TEXT' in stmt.obj.concept.db_refs
     # NOTE: groundings are turned off in Travis tests so these are commented
     # out
     # assert 'UN' in stmt.subj.db_refs
     # assert 'UN' in stmt.obj.db_refs
     # assert len(stmt.subj.db_refs['UN']) > 5
     # assert len(stmt.obj.db_refs['UN']) > 5
+
+
+def test_process_polarity():
+    test_jsonld = os.path.join(path_this, 'eidos_neg_event.json')
+    ep = eidos.process_json_file(test_jsonld)
+    assert ep is not None
+    assert len(ep.statements) == 1
+    stmt = ep.statements[0]
+    assert isinstance(stmt, Influence)
+    assert stmt.subj.concept.name == 'fuel', stmt.subj.concept.name
+    assert stmt.obj.concept.name == 'water trucking', stmt.obj.concept.name
+    assert stmt.obj.delta.get('polarity') == -1
+    assert stmt.evidence[0].annotations['found_by'] == \
+        'ported_syntax_1_verb-Causal'
+    assert 'TEXT' in stmt.subj.concept.db_refs
+    assert 'TEXT' in stmt.obj.concept.db_refs
 
 
 def test_sanitize():
@@ -60,17 +76,18 @@ def test_sanitize():
 def test_process_json_ld_file():
     ep = eidos.process_json_file(test_jsonld)
     assert len(ep.statements) == 1
-    assert 'UN' in ep.statements[0].subj.db_refs
-    assert 'UN' in ep.statements[0].obj.db_refs
+    assert 'UN' in ep.statements[0].subj.concept.db_refs
+    assert 'UN' in ep.statements[0].obj.concept.db_refs
 
 
 def test_process_corefs():
     coref_jsonld = os.path.join(path_this, 'eidos_coref.json')
     ep = eidos.process_json_file(coref_jsonld)
-    assert ep.coreferences.get('_:Extraction_6') == '_:Extraction_4'
+    assert ep.doc.coreferences.get('_:Extraction_6') == '_:Extraction_4'
     assert len(ep.statements) == 2
     # Get summaru of subj/objs from statements
-    concepts = [(s.subj.name, s.obj.name) for s in ep.statements]
+    concepts = [(s.subj.concept.name, s.obj.concept.name) for s in
+                ep.statements]
     assert ('rainfall', 'flood') in concepts, concepts
     # This ensures that the coreference was successfully resolved
     assert ('flood', 'displacement') in concepts, concepts
@@ -119,12 +136,14 @@ def test_process_geoids():
     ep = eidos.process_json_file(geo_jsonld)
     # Make sure we collect all geoids up front
     ss_loc = {'name': 'South Sudan', 'db_refs': {'GEOID': '7909807'}}
-    assert len(ep.geolocs) == 5, len(ep.geoids)
-    assert ep.geolocs['_:GeoLocation_1'].to_json() == ss_loc
+    assert len(ep.doc.geolocs) == 5, len(ep.geoids)
+    assert ep.doc.geolocs['_:GeoLocation_1'].to_json() == ss_loc
     # Make sure this event has the right geoid
+    assert isinstance(ep.statements[0], Influence)
     ev = ep.statements[1].evidence[0]
     assert ev.context.geo_location.to_json() == ss_loc
     # And that the subject context is captured in annotations
+    assert 'subj_context' in ev.annotations, ev.annotations
     assert ev.annotations['subj_context']['geo_location'] == ss_loc
 
 
@@ -162,7 +181,8 @@ def test_eidos_to_pysb():
 
     # Make sure these don't error
     pa.add_statements(stmts)
-    pa.make_model()
+    model = pa.make_model()
+    assert model.rules, model.rules
     for fmt in ['kappa', 'sbml', 'sbgn']:
         exp_str = pa.export_model(fmt)
         assert exp_str, "Got no exported model from eidos->psyb to %s." % fmt
@@ -176,3 +196,19 @@ def test_reground_texts():
     groundings = er.reground_texts(['rainfall', 'hunger'])
     assert groundings[0][0][0] == 'UN/events/weather/precipitation'
     assert groundings[1][0][0] == 'UN/events/human/famine'
+
+
+def test_standalone_event():
+    se_jsonld = os.path.join(path_this, 'eidos_standalone_event.json')
+    ep = eidos.process_json_file(se_jsonld)
+    assert len(ep.statements) == 1
+    st = ep.statements[0]
+    assert isinstance(st, Event)
+    assert hasattr(st, 'evidence')
+    ev = st.evidence[0]
+    assert ev.text is not None
+    js = st.to_json()
+    assert js['evidence']
+    from indra.statements import stmts_to_json
+    js2 = stmts_to_json([st])[0]
+    assert 'evidence' in js2

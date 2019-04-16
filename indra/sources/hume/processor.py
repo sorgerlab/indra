@@ -4,11 +4,17 @@ import logging
 import objectpath
 import collections
 from datetime import datetime
-from indra.statements import Concept, Influence, Evidence, TimeContext, \
-    RefContext, WorldContext
+from indra.statements import Concept, Event, Influence, TimeContext, \
+    RefContext, WorldContext, Evidence
 
 
 logger = logging.getLogger(__name__)
+
+
+# List out relation types and their default (implied) polarities.
+polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
+              'mitigation': -1, 'prevention': -1,
+              'temporallyPrecedes': None}
 
 
 class HumeJsonLdProcessor(object):
@@ -33,82 +39,68 @@ class HumeJsonLdProcessor(object):
         self.concept_dict = {}
         self.relation_dict = {}
         self.eid_stmt_dict = {}
-        return
+        self._get_documents()
 
-    def get_documents(self):
-        """Populate the sentences attribute with a dict keyed by document id."""
-        documents = self.tree.execute("$.documents")
-        for doc in documents:
-            sentences = {s['@id']: s['text'] for s in doc.get('sentences', [])}
-            self.document_dict[doc['@id']] = {'sentences': sentences,
-                                              'location': doc['location']}
-        return
+    def extract_relations(self):
+        relations = self._find_relations()
+        for relation_type, relation in relations:
+            # Extract concepts and contexts.
+            subj = self._get_event_and_context(relation, 'source')
+            obj = self._get_event_and_context(relation, 'destination')
 
-    def get_events(self):
+            if not subj.concept or not obj.concept:
+                continue
+
+            # Apply the naive polarity from the type of statement. For the
+            # purpose of the multiplication here, if obj_delta['polarity'] is
+            # None to begin with, we assume it is positive
+            obj_pol = obj.delta['polarity']
+            obj_pol = obj_pol if obj_pol is not None else 1
+            rel_pol = polarities[relation_type]
+            obj.delta['polarity'] = rel_pol * obj_pol if rel_pol else None
+
+            evidence = self._get_evidence(relation, get_states(relation))
+
+            st = Influence(subj, obj, evidence=evidence)
+            self.eid_stmt_dict[relation['@id']] = st
+            self.statements.append(st)
+
+    def _find_relations(self):
+        """Find all relevant relation elements and return them in a list."""
         # Get all extractions
         extractions = \
             list(self.tree.execute("$.extractions[(@.@type is 'Extraction')]"))
-
-        # List out relation types and their default (implied) polarities.
-        polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
-                      'mitigation': -1, 'prevention': -1,
-                      'temporallyPrecedes': None}
 
         # Get relations from extractions
         relations = []
         for e in extractions:
             label_set = set(e.get('labels', []))
+            # If this is a DirectedRelation
             if 'DirectedRelation' in label_set:
                 self.relation_dict[e['@id']] = e
                 subtype = e.get('subtype')
                 if any(t in subtype for t in polarities.keys()):
                     relations.append((subtype, e))
+            # If this is an Event or an Entity
             if {'Event', 'Entity'} & label_set:
                 self.concept_dict[e['@id']] = e
 
         if not relations and not self.relation_dict:
             logger.info("No relations found.")
-            return
+        else:
+            logger.info('%d relations of types %s found'
+                        % (len(relations), ', '.join(polarities.keys())))
+            logger.info('%d relations in dict.' % len(self.relation_dict))
+            logger.info('%d concepts found.' % len(self.concept_dict))
+        return relations
 
-        logger.info('%d relations of types %s found'
-                    % (len(relations), ', '.join(polarities.keys())))
-        logger.info('%d relations in dict.' % len(self.relation_dict))
-        logger.info('%d concepts found.' % len(self.concept_dict))
-
-        self.get_documents()
-
-        for relation_type, relation in relations:
-            # Extract concepts and contexts.
-            subj_concept, subj_delta, subj_context = \
-                self._get_concept_and_context(relation, 'source')
-            obj_concept, obj_delta, obj_context = \
-                self._get_concept_and_context(relation, 'destination')
-
-            # Choose a context
-            # TODO: It would be nice to not have to choose.
-            context = obj_context if obj_context else subj_context
-
-            # Apply the naive polarity from the type of statement. For the
-            # purpose of the multiplication here, if obj_delta['polarity'] is
-            # None to begin with, we assume it is positive
-            obj_pol = obj_delta['polarity']
-            obj_pol = obj_pol if obj_pol is not None else 1
-            rel_pol = polarities[relation_type]
-            obj_delta['polarity'] = rel_pol * obj_pol if rel_pol else None
-
-            if not subj_concept or not obj_concept:
-                continue
-
-            evidence = self._get_evidence(relation, get_states(relation),
-                                          context)
-
-            st = Influence(subj_concept, obj_concept, subj_delta, obj_delta,
-                           evidence=evidence)
-            self.eid_stmt_dict[relation['@id']] = st
-            self.statements.append(st)
-
-        # Add temporal context to statements.
-        return
+    def _get_documents(self):
+        """Populate sentences attribute with a dict keyed by document id."""
+        documents = self.tree.execute("$.documents")
+        for doc in documents:
+            sentences = {s['@id']: s['text'] for s in doc.get('sentences', [])}
+            self.document_dict[doc['@id']] = {'sentences': sentences,
+                                              'location': doc['location']}
 
     def _make_context(self, entity):
         """Get place and time info from the json for this entity."""
@@ -170,7 +162,8 @@ class HumeJsonLdProcessor(object):
 
         return concept, metadata
 
-    def _get_concept_and_context(self, event, arg_type):
+    def _get_event_and_context(self, event, arg_type):
+        """Return an INDRA Event based on an event entry."""
         eid = _choose_id(event, arg_type)
         ev = self.concept_dict[eid]
         concept, metadata = self._make_concept(ev)
@@ -178,9 +171,10 @@ class HumeJsonLdProcessor(object):
                     'states': get_states(ev),
                     'polarity': get_polarity(ev)}
         context = self._make_context(ev)
-        return concept, ev_delta, context
+        event_obj = Event(concept, delta=ev_delta, context=context)
+        return event_obj
 
-    def _get_evidence(self, event, adjectives, context):
+    def _get_evidence(self, event, adjectives):
         """Return the Evidence object for the INDRA Statement."""
         provenance = event.get('provenance')
 
@@ -201,7 +195,7 @@ class HumeJsonLdProcessor(object):
             }
         location = self.document_dict[doc_id]['location']
         ev = Evidence(source_api='hume', text=text, annotations=annotations,
-                      pmid=location, context=context)
+                      pmid=location)
         return [ev]
 
     @staticmethod

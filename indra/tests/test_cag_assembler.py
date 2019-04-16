@@ -22,10 +22,10 @@ prov = [{
       }
     }]
 
-st1 = Influence(Agent('inorganic fertilizer', db_refs=eg1),
-                Agent('farm sizes', db_refs=eg2),
-                {'adjectives': 'serious', 'polarity': 1},
-                {'adjectives': 'significant', 'polarity': 1},
+st1 = Influence(Event(Concept('inorganic fertilizer', db_refs=eg1),
+                      delta={'adjectives': 'serious', 'polarity': 1}),
+                Event(Concept('farm sizes', db_refs=eg2),
+                      delta={'adjectives': 'significant', 'polarity': 1}),
                 evidence=[Evidence(source_api='eidos',
                                    text=('A serious increase in the use of '
                                          'incorganic fertilizers '
@@ -52,6 +52,6 @@ def test_export_to_cyjs():
 
 
 def test_assemble_no_evidence():
-    ca = CAGAssembler([Influence(Concept('a'), Concept('b'))])
+    ca = CAGAssembler([Influence(Event(Concept('a')), Event(Concept('b')))])
     ca.make_model()
     ca.generate_jupyter_js()

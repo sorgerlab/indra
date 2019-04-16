@@ -1,7 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import json
 import datetime
+import jsonschema
 from indra.statements import *
+from .test_json_schema import schema
 
 ev = Evidence(source_api='bel', pmid='12345', epistemics={'direct': True},
               text='This is the evidence.')
@@ -97,22 +100,24 @@ def test_gef():
 
 
 def test_influence():
-    stmt = Influence(Agent('inorganic fertilizer'),
-                     Agent('farm sizes'),
-                     {'adjectives': 'serious', 'polarity': 1},
-                     {'adjectives': 'significant', 'polarity': 1})
+    ev1 = Event(Concept('inorganic fertilizer'),
+                delta={'adjectives': ['serious'], 'polarity': 1},
+                context=WorldContext(geo_location=RefContext('x')))
+    ev2 = Event(Concept('farm sizes'),
+                delta={'adjectives': ['significant'], 'polarity': 1})
+    stmt = Influence(ev1, ev2)
     jd = stmt.to_json()
     assert 'sbo' not in jd['subj']
     assert 'sbo' not in jd['obj']
-    jd_sbo = stmt.to_json(use_sbo=True)
-    assert 'sbo' in jd_sbo['subj']
-    assert 'sbo' in jd_sbo['obj']
     stmt.to_graph()
     st_deserialize = Statement._from_json(jd)
-    assert st_deserialize.subj_delta['polarity'] == 1
-    assert st_deserialize.obj_delta['adjectives'] == 'significant'
+    assert st_deserialize.subj.delta['polarity'] == 1
+    assert st_deserialize.obj.delta['adjectives'] == ['significant']
+    assert st_deserialize.subj.context.geo_location.name == 'x', \
+        st_deserialize.subj.context
     jd2 = st_deserialize.to_json()
-    assert jd == jd2
+    assert jd == jd2, (jd, jd2)
+    jsonschema.validate([json.loads(json.dumps(jd))], schema)
 
 
 def __make_support_link(supporting_stmt, supported_stmt):

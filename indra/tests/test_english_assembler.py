@@ -374,22 +374,20 @@ def test_conversion():
 
 
 def test_influence():
-    st = Influence(Concept('food'), Concept('hunger'),
-                   obj_delta={'polarity': -1})
+    st = Influence(Event(Concept('food')), Event(Concept('hunger'),
+                                                 delta={'polarity': -1}))
     s = _stmt_to_text(st)
-    assert s == 'Food causes a decrease in hunger.'
+    assert s == 'Food causes a decrease in hunger.', s
 
-    st = Influence(Concept('food'), Concept('hunger'),
-                   obj_delta={'polarity': -1},
-                   subj_delta={'polarity': 1})
+    st = Influence(Event(Concept('food'), delta={'polarity': 1}),
+                   Event(Concept('hunger'), delta={'polarity': -1}))
     s = _stmt_to_text(st)
-    assert s == 'An increase in food causes a decrease in hunger.'
+    assert s == 'An increase in food causes a decrease in hunger.', s
 
-    st = Influence(Concept('food'), Concept('hunger'),
-                   obj_delta={'polarity': 1},
-                   subj_delta={'polarity': -1})
+    st = Influence(Event(Concept('food'), delta={'polarity': -1}),
+                   Event(Concept('hunger'), delta={'polarity': 1}))
     s = _stmt_to_text(st)
-    assert s == 'A decrease in food causes an increase in hunger.'
+    assert s == 'A decrease in food causes an increase in hunger.', s
 
 
 def test_association():
