@@ -2039,16 +2039,39 @@ class Association(Complex):
         super().__init__(members, evidence)
 
     def matches_key(self):
-        pass
+        key = (stmt_type(self, True),
+               tuple(m.matches_key() for m in self.sorted_members()),
+               self.polarity_count(),
+               self.overall_polarity()
+               )
+        return mk_str(key)
 
     def overall_polarity(self):
-        pass
+        polarities = [m.delta['polarity'] for m in self.members]
+        all_None = True
+        all_pos = True
+        all_neg = True
+        for p in polarities:
+            if p == 1:
+                all_None = False
+                all_neg = False
+            elif p == -1:
+                all_None = False
+                all_pos = False
+        if all_None:
+            pol = None
+        elif all_pos or all_neg:
+            pol = 1
+        else:
+            pol = -1
+        return pol
 
     def polarity_count(self):
-        pass
+        return sum(
+            1 if m.delta['polarity'] is not None else 0 for m in self.members)
 
     def agent_list(self, deep_sorted=False):
-        pass
+        return [m.concept for m in self.members]
 
     def refinement_of(self, other, hierarchies):
         pass
@@ -2057,11 +2080,20 @@ class Association(Complex):
         pass
 
     def to_json(self):
-        pass
+        # Get generic from two inheritance levels above - from Statement class
+        generic = super(Complex, self).to_json(use_sbo)
+        json_dict = _o(type=generic['type'])
+        members = [m.to_json(with_evidence=False) for m in self.members]
+        json_dict['members'] = members
+        json_dict.update(generic)
+        return json_dict
 
     @classmethod
     def _from_json(cls, json_dict):
-        pass
+        members = json_dict.get('members')
+        members = [Event._from_json(m) for m in members]
+        stmt = cls(members)
+        return stmt
 
 
 class Conversion(Statement):
