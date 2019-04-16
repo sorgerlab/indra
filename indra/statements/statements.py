@@ -2074,7 +2074,16 @@ class Association(Complex):
         return [m.concept for m in self.members]
 
     def refinement_of(self, other, hierarchies):
-        pass
+        members_refinement = super().refinement_of(other, hierarchies)
+        op = other.overall_polarity()
+        sp = self.overall_polarity()
+        if self.polarity_count() < other.polarity_count():
+            delta_refinement = False
+        elif sp is not None and op is None:
+            delta_refinement = True
+        else:
+            delta_refinement = (op == sp)
+        return (members_refinement and delta_refinement)
 
     def equals(self, other):
         pass
