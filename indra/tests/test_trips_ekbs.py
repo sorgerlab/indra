@@ -844,3 +844,12 @@ def test_fakeprotein():
     assert agent is not None
     assert agent.db_refs['UP'] == 'P04324', agent.db_refs
     assert agent.name == 'nef', agent.name
+
+
+def test_mapped_chebi_id():
+    fname = os.path.join(path_this, 'trips_ekbs', 'chebi_id_test.ekb')
+    tp = trips.process_xml(open(fname, 'r').read())
+    agents = tp.get_agents()
+    assert len(agents) == 1, agents
+    agent = agents[0]
+    assert agent.db_refs['CHEBI'] == 'CHEBI:63637', agent.db_refs
