@@ -447,6 +447,40 @@ def test_agent_entity_match():
     assert unicode_strs((nras1, nras2, nras3))
 
 
+def test_agent_entity_match_chebi():
+    vem1 = Agent('vemurafenib', db_refs={'CHEBI': 'CHEBI:63637'})
+    vem2 = Agent('Vemurafenib', db_refs={'CHEBI': 'CHEBI:63637',
+                                         'PUBCHEM': 'XXX'})
+    vem3 = Agent('vemurafenib', db_refs={'CHEBI': 'XXX',
+                                         'PUBCHEM': 'XXX'})
+    assert vem1.entity_matches(vem2)
+    assert not vem1.entity_matches(vem3)
+    assert not vem2.entity_matches(vem3)
+
+
+def test_agent_entity_match_go_mesh():
+    adh1 = Agent('ADHESION', db_refs={'GO': 'GO:0007155',
+                                      'MESH': 'D002448'})
+    adh2 = Agent('adhesion', db_refs={'GO': 'GO:0007155'})
+    adh3 = Agent('Adhesion', db_refs={'MESH': 'D002448'})
+    # These are satisfied because MESH takes priority over GO
+    assert not adh1.entity_matches(adh2)
+    assert adh1.entity_matches(adh3)
+    assert not adh2.entity_matches(adh3)
+
+
+def test_agent_entity_match_ungrounded():
+    ag1 = Agent('something', db_refs={'XXX': 'XXX'})
+    ag2 = Agent('something', db_refs={'YYY': 'YYY'})
+    ag3 = Agent('Something', db_refs={'YYY': 'YYY'})
+    ag4 = Agent('SOMETHING', db_refs={'ZZZ': 'ZZZ'})
+    assert ag1.entity_matches(ag2)
+    assert not ag1.entity_matches(ag3)
+    assert not ag1.entity_matches(ag4)
+    assert not ag2.entity_matches(ag3)
+    assert not ag3.entity_matches(ag4)
+
+
 def test_entities_match_mod():
     """Test matching of entities only, entities match on name and grounding."""
     src = Agent('SRC', db_refs={'HGNC': '11283'})
