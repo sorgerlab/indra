@@ -316,7 +316,8 @@ class GroundingMapper(object):
         logger.info('%s statements filtered out' % num_skipped)
         return mapped_stmts
 
-    def standardize_agent_name(self, agent, refs_standardized=False):
+    @staticmethod
+    def standardize_agent_name(agent, refs_standardized=False):
         """Standardize the name of an Agent based on grounding information.
 
         If an agent contains a FamPlex grounding, the FamPlex ID is used as a
@@ -343,7 +344,7 @@ class GroundingMapper(object):
 
         # If refs have not been standardized yet, we do so
         if not refs_standardized:
-            agent.db_refs = self.standardize_db_refs(agent.db_refs)
+            agent.db_refs = GroundingMapper.standardize_db_refs(agent.db_refs)
 
         # We next look for prioritized grounding, if missing, we return
         db_ns, db_id = agent.get_grounding()
@@ -353,11 +354,10 @@ class GroundingMapper(object):
         # If there's a FamPlex ID, prefer that for the name
         if db_ns == 'FPLX':
             agent.name = agent.db_refs['FPLX']
-        # Take a HGNC name from Uniprot next
+        # Importantly, HGNC here will be a symbol because that is what
+        # get_grounding returns
         elif db_ns == 'HGNC':
-            gene_name = hgnc_client.get_hgnc_name(db_id)
-            if gene_name:
-                agent.name = gene_name
+            agent.name = db_id
         elif db_ns == 'UP':
             # Try for the gene name
             gene_name = uniprot_client.get_gene_name(agent.db_refs['UP'],
@@ -378,7 +378,8 @@ class GroundingMapper(object):
                 agent.name = go_name
         return
 
-    def rename_agents(self, stmts):
+    @staticmethod
+    def rename_agents(stmts):
         """Return a list of mapped statements with updated agent names.
 
         Creates a new list of statements without modifying the original list.
@@ -399,7 +400,7 @@ class GroundingMapper(object):
         for _, stmt in enumerate(mapped_stmts):
             # Iterate over the agents
             for agent in stmt.agent_list():
-                self.standardize_agent_name(agent, False)
+                GroundingMapper.standardize_agent_name(agent, False)
         return mapped_stmts
 
 
