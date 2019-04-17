@@ -128,9 +128,12 @@ def _read_chebi_to_pubchem():
     csv_reader = _read_relative_csv('../resources/chebi_to_pubchem.tsv')
     chebi_pubchem = {}
     pubchem_chebi = {}
-    for row in csv_reader:
-        chebi_pubchem[row[0]] = row[1]
-        pubchem_chebi[row[1]] = row[0]
+    for chebi_id, pc_id in csv_reader:
+        chebi_pubchem[chebi_id] = pc_id
+        # Note: this is a one to many mapping and we prioritize mapping to
+        # smaller CHEBI IDs that appear earlier in the sorted mapping table.
+        if pc_id not in pubchem_chebi:
+            pubchem_chebi[pc_id] = chebi_id
     return chebi_pubchem, pubchem_chebi
 
 
