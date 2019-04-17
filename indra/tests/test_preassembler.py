@@ -446,14 +446,15 @@ def test_grounding_aggregation():
     braf1 = Agent('BRAF', db_refs={'TEXT': 'braf', 'HGNC': '1097'})
     braf2 = Agent('BRAF', db_refs={'TEXT': 'BRAF'})
     braf3 = Agent('BRAF', db_refs={'TEXT': 'Braf', 'UP': 'P15056'})
+    braf4 = Agent('BRAF', db_refs={'TEXT': 'B-raf', 'UP': 'P15056',
+                                   'HGNC': '1097'})
     st1 = Phosphorylation(None, braf1)
     st2 = Phosphorylation(None, braf2)
     st3 = Phosphorylation(None, braf3)
-    pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
+    st4 = Phosphorylation(None, braf4)
+    pa = Preassembler(hierarchies, stmts=[st1, st2, st3, st4])
     unique_stmts = pa.combine_duplicates()
-    # In the above, braf1 and braf3 will be combined because they have the
-    # same grounding via HGNC and UP, respectively
-    assert len(unique_stmts) == 2, unique_stmts
+    assert len(unique_stmts) == 3, unique_stmts
 
 
 def test_grounding_aggregation_complex():
@@ -466,9 +467,7 @@ def test_grounding_aggregation_complex():
     st3 = Complex([mek, braf3])
     pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
     unique_stmts = pa.combine_duplicates()
-    # In the above, braf1 and braf3 will be combined because they have the
-    # same grounding via HGNC and UP, respectively
-    assert len(unique_stmts) == 2, unique_stmts
+    assert len(unique_stmts) == 3, unique_stmts
 
 
 def test_render_stmt_graph():
