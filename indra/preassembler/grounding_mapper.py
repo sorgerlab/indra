@@ -133,10 +133,21 @@ class GroundingMapper(object):
                 # If we find an inconsistency, we explain it in an error
                 # message and fall back on the mapped ID
                 if up_id and up_id != mapped_up_id:
-                    logger.error('Inconsistent HGNC:%s and UP:%s '
-                                 'groundings found, standardizing to UP:%s' %
-                                 (hgnc_id, up_id, mapped_up_id))
-                db_refs['UP'] = mapped_up_id
+                    # We handle a special case here in which mapped_up_id is
+                    # actually a list of UP IDs that we skip and just keep
+                    # the original up_id
+                    if ', ' not in mapped_up_id:
+                        # If we got a proper single protein mapping, we use
+                        # the mapped_up_id to standardize to.
+                        msg = ('Inconsistent groundings UP:%s not equal to '
+                               'UP:%s mapped from HGNC:%s, standardizing to '
+                               'UP:%s' % (up_id, mapped_up_id, hgnc_id,
+                                          mapped_up_id))
+                        logger.warning(msg)
+                        db_refs['UP'] = mapped_up_id
+                # If there is no conflict, we can update the UP entry
+                else:
+                    db_refs['UP'] = mapped_up_id
 
         # Now try to improve chemical groundings
         pc_id = db_refs.get('PUBCHEM')
@@ -166,7 +177,7 @@ class GroundingMapper(object):
         # If we have PC and not CHEBI but can map to CHEBI, we do that
         elif pc_id and not chebi_id and mapped_chebi_id:
             db_refs['CHEBI'] = mapped_chebi_id
-        # If we have PC and not CHEBI but can map to PC, we do that
+        # If we have CHEBI and not PC but can map to PC, we do that
         elif chebi_id and not pc_id and mapped_pc_id:
             db_refs['PUBCHEM'] = mapped_pc_id
         # Otherwise there is no useful mapping that we can add and no
