@@ -43,9 +43,21 @@ class GroundingMapper(object):
         acronyms. Default: True
     """
     def __init__(self, gm, agent_map=None, use_adeft=True):
+        self.check_grounding_map(gm)
         self.gm = gm
         self.agent_map = agent_map if agent_map is not None else {}
         self.use_adeft = use_adeft
+
+    @staticmethod
+    def check_grounding_map(gm):
+        """Run sanity checks on the grounding map, raise error if needed."""
+        for key, refs in gm.items():
+            if not refs:
+                continue
+            if 'HGNC' in refs and \
+                    hgnc_client.get_hgnc_name(refs['HGNC']) is None:
+                raise ValueError('HGNC:%s for key %s in the grounding map is '
+                                 'not a valid ID' % (refs['HGNC'], key))
 
     def update_agent_db_refs(self, agent, agent_text, do_rename=True):
         """Update db_refs of agent using the grounding map
@@ -85,7 +97,7 @@ class GroundingMapper(object):
         agent.db_refs = self.standardize_db_refs(map_db_refs)
         # Finally, if renaming is needed we standardize the Agent's name
         if do_rename:
-            self.standardize_agent_name(agent, refs_standardized=True)
+            self.standardize_agent_name(agent, standardize_refs=False)
 
     @staticmethod
     def standardize_db_refs(db_refs):
@@ -380,6 +392,10 @@ def load_grounding_map(grounding_map_path, ignore_path=None,
 
     Optionally, one can specify another csv file (pointed to by ignore_path)
     containing agent texts that are degenerate and should be filtered out.
+
+    It is important to note that this function assumes that the mapping file
+    entries for the HGNC key are symbols not IDs. These symbols are converted
+    to IDs upon loading here.
 
     Parameters
     ----------

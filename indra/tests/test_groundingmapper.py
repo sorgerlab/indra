@@ -144,7 +144,7 @@ def test_save_sentences_unicode():
 def test_hgnc_sym_but_not_up():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(None, erk)
-    g_map = {'ERK1': {'TEXT': 'ERK1', 'HGNC': 'MAPK1'}}
+    g_map = {'ERK1': {'TEXT': 'ERK1', 'HGNC': '6871'}}
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
     assert len(mapped_stmts) == 1
@@ -174,7 +174,7 @@ def test_up_but_not_hgnc():
 def test_hgnc_but_not_up():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(None, erk)
-    g_map = {'ERK1': {'TEXT': 'ERK1', 'HGNC': 'MAPK1'}}
+    g_map = {'ERK1': {'TEXT': 'ERK1', 'HGNC': '6871'}}
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
     assert len(mapped_stmts) == 1
@@ -186,29 +186,27 @@ def test_hgnc_but_not_up():
     assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
 
 
+@raises(ValueError)
 def test_hgnc_sym_with_no_id():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(None, erk)
     g_map = {'ERK1': {'TEXT': 'ERK1', 'HGNC': 'foobar'}}
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
-    assert 'HGNC' not in mapped_stmts[0].sub.db_refs
 
 
+@raises(ValueError)
 def test_up_and_invalid_hgnc_sym():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(None, erk)
     g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482', 'HGNC': 'foobar'}}
     gm = GroundingMapper(g_map)
-    mapped_stmts = gm.map_agents([stmt])
-    assert mapped_stmts[0].sub.db_refs['HGNC'] == '6871', \
-        mapped_stmts[0].sub.db_refs
 
 
 def test_up_with_no_gene_name_with_hgnc_sym():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(None, erk)
-    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'A0K5Q6', 'HGNC': 'MAPK1'}}
+    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'A0K5Q6', 'HGNC': '6871'}}
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
     assert mapped_stmts[0].sub.db_refs['HGNC'] == '6871', \
@@ -220,7 +218,7 @@ def test_up_with_no_gene_name_with_hgnc_sym():
 def test_up_and_mismatched_hgnc():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(None, erk)
-    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482', 'HGNC': 'MAPK3'}}
+    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482', 'HGNC': '6877'}}
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
     assert mapped_stmts[0].sub.db_refs['HGNC'] == '6877', \
@@ -280,7 +278,7 @@ def test_map_entry_hgnc_and_up():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(erk, rela)
     g_map = {'NF-kappaB p65': {'TEXT': 'NF-kappaB p65', 'UP': 'Q04206',
-                               'HGNC': 'RELA'}}
+                               'HGNC': '9955'}}
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
     assert len(mapped_stmts) == 1
