@@ -4,6 +4,7 @@ import logging
 import argparse
 
 from time import sleep
+from threading import Thread
 from datetime import datetime
 from indra.literature import elsevier_client as ec
 from indra.literature.elsevier_client import _ensure_api_keys
@@ -442,6 +443,7 @@ class Submitter(object):
         batch_client = boto3.client('batch', region_name='us-east-1')
         job_list = []
         for job_start_ix in range(start_ix, end_ix, ids_per_job):
+            sleep(stagger)
             job_end_ix = job_start_ix + ids_per_job
             if job_end_ix > end_ix:
                 job_end_ix = end_ix
@@ -474,6 +476,24 @@ class Submitter(object):
                                  kill_on_log_timeout=kill_on_timeout,
                                  stash_log_method=stash_log_method,
                                  tag_instances=tag_instances, **kwargs)
+
+    def run(self, input_fname, ids_per_job, stagger=0, **wait_params):
+        """Run this submission all the way.
+
+        This method will run both `submit_reading` and `watch_and_wait`,
+        blocking on the latter.
+        """
+        submit_thread = Thread(target=self.submit_reading,
+                               args=(input_fname, 0, None, ids_per_job),
+                               kwargs={'stagger': stagger},
+                               daemon=True)
+        submit_thread.start()
+        self.watch_and_wait(**wait_params)
+        submit_thread.join(0)
+        if submit_thread.is_alive():
+            logger.warning("Submit thread is still running even after job"
+                           "completion.")
+        return
 
 
 class PmidSubmitter(Submitter):
