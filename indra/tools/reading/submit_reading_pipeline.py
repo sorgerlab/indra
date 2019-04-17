@@ -1,4 +1,4 @@
-mport os
+import os
 import boto3
 import logging
 import argparse
@@ -394,7 +394,29 @@ class Submitter(object):
         return []
 
     def submit_reading(self, input_fname, start_ix, end_ix, ids_per_job,
-                       num_tries=1):
+                       num_tries=1, stagger=0):
+        """Submit a batch of reading jobs
+
+        Parameters
+        ----------
+        input_fname : str
+            The name of the file containing the ids to be read.
+        start_ix : int
+            The line index of the first item in the list to read.
+        end_ix : int
+            The line index of the last item in the list to be read.
+        ids_per_job : int
+            The number of ids to be given to each job.
+        num_tries : int
+            The number of times a job may be attempted.
+        stagger : float
+            The number of seconds to wait between job submissions.
+
+        Returns
+        -------
+        job_list : list[str]
+            A list of job id strings.
+        """
         # stash this for later.
         self.ids_per_job = ids_per_job
 
