@@ -7,6 +7,7 @@ from indra.sources import trips
 
 path_this = os.path.dirname(os.path.abspath(__file__))
 
+
 def assert_if_hgnc_then_up(st):
     agents = st.agent_list()
     for a in agents:
@@ -15,6 +16,7 @@ def assert_if_hgnc_then_up(st):
             hgnc_id = a.db_refs.get('HGNC')
             if hgnc_id and not up_id:
                 assert False
+
 
 def assert_grounding_value_or_none(st):
     agents = st.agent_list()
@@ -32,22 +34,27 @@ def process_sentence_xml(sentence):
     tp = trips.process_xml_file(path)
     return tp
 
+
 def assert_onestmt(tp):
     assert tp is not None
-    assert len(tp.statements) == 1
+    assert len(tp.statements) == 1, tp.statements
+
 
 def assert_evidence(stmt):
     assert len(stmt.evidence) == 1
     assert stmt.evidence[0].source_api == 'trips'
     assert stmt.evidence[0].text
 
+
 def assert_modtype(stmt, mod_type):
     assert isinstance(stmt, mod_type)
     assert stmt.enz is not None
     assert stmt.sub is not None
 
+
 def test_1():
-    sentence = 'The receptor tyrosine kinase EGFR binds the growth factor ligand EGF.'
+    sentence = ('The receptor tyrosine kinase EGFR binds the growth factor '
+                'ligand EGF.')
     tp = process_sentence_xml(sentence)
     assert tp is not None
     assert len(tp.statements) == 1
@@ -57,6 +64,7 @@ def test_1():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
     assert_evidence(st)
+
 
 def test_2():
     sentence = 'The EGFR-EGF complex binds another EGFR-EGF complex.'
@@ -73,6 +81,7 @@ def test_2():
     assert_grounding_value_or_none(st)
     assert_evidence(st)
 
+
 def test_3():
     sentence = 'The EGFR-EGFR complex binds GRB2.'
     tp = process_sentence_xml(sentence)
@@ -87,6 +96,7 @@ def test_3():
     assert_grounding_value_or_none(st)
     assert_evidence(st)
 
+
 def test_4():
     sentence = 'EGFR-bound GRB2 binds SOS1.'
     tp = process_sentence_xml(sentence)
@@ -100,6 +110,7 @@ def test_4():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
     assert_evidence(st)
+
 
 def test_5():
     sentence = 'GRB2-bound SOS1 binds NRAS that is not bound to BRAF.'
@@ -116,6 +127,7 @@ def test_5():
     assert_grounding_value_or_none(st)
     assert_evidence(st)
 
+
 def test_6():
     sentence = 'SOS1-bound NRAS binds GTP.'
     tp = process_sentence_xml(sentence)
@@ -129,6 +141,7 @@ def test_6():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
     assert_evidence(st)
+
 
 def test_7():
     sentence = 'GTP-bound NRAS that is not bound to SOS1 binds BRAF.'
@@ -146,6 +159,7 @@ def test_7():
     assert_grounding_value_or_none(st)
     assert_evidence(st)
 
+
 def test_8():
     sentence = 'Vemurafenib binds BRAF.'
     tp = process_sentence_xml(sentence)
@@ -158,8 +172,10 @@ def test_8():
     assert_grounding_value_or_none(st)
     assert_evidence(st)
 
+
 def test_9():
-    sentence = 'BRAF V600E that is not bound to Vemurafenib phosphorylates MAP2K1.'
+    sentence = ('BRAF V600E that is not bound to Vemurafenib phosphorylates '
+                'MAP2K1.')
     tp = process_sentence_xml(sentence)
     assert tp is not None
     assert len(tp.statements) == 1
@@ -172,6 +188,7 @@ def test_9():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
     assert_evidence(st)
+
 
 def test_10():
     sentence = 'PP2A-alpha dephosphorylates MAP2K1 that is not bound to ERK2.'
@@ -187,6 +204,7 @@ def test_10():
     assert_grounding_value_or_none(st)
     assert_evidence(st)
 
+
 def test_11():
     sentence = 'Phosphorylated MAP2K1 is activated.'
     tp = process_sentence_xml(sentence)
@@ -201,8 +219,10 @@ def test_11():
     assert_grounding_value_or_none(st)
     assert_evidence(st)
 
+
 def test_12():
-    sentence = 'Active MAP2K1 that is not bound to PP2A-alpha phosphorylates ERK2.'
+    sentence = ('Active MAP2K1 that is not bound to PP2A-alpha '
+                'phosphorylates ERK2.')
     tp = process_sentence_xml(sentence)
     assert tp is not None
     assert len(tp.statements) == 1
@@ -215,6 +235,7 @@ def test_12():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
     assert_evidence(st)
+
 
 def test_13():
     sentence = 'DUSP6 dephosphorylates ERK2.'
@@ -229,6 +250,7 @@ def test_13():
     assert_grounding_value_or_none(st)
     assert_evidence(st)
 
+
 def test_14():
     sentence = 'MAP2K1 ubiquitinates MAPK1.'
     tp = process_sentence_xml(sentence)
@@ -239,6 +261,7 @@ def test_14():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
 
+
 def test_15():
     sentence = 'MAP2K1 ribosylates MAPK1.'
     tp = process_sentence_xml(sentence)
@@ -248,6 +271,7 @@ def test_15():
     assert_evidence(st)
     assert_if_hgnc_then_up(st)
 
+
 def test_16():
     sentence = 'MAP2K1 hydroxylates MAPK1.'
     tp = process_sentence_xml(sentence)
@@ -256,6 +280,7 @@ def test_16():
     assert_modtype(st, Hydroxylation)
     assert_evidence(st)
     assert_if_hgnc_then_up(st)
+
 
 def test_17():
     sentence = 'MAP2K1 acetylates MAPK1.'
@@ -267,6 +292,7 @@ def test_17():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
 
+
 def test_18():
     sentence = 'MAP2K1 farnesylates MAPK1.'
     tp = process_sentence_xml(sentence)
@@ -276,6 +302,7 @@ def test_18():
     assert_evidence(st)
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
+
 
 def test_19():
     sentence = 'MAP2K1 deubiquitinates MAPK1.'
@@ -287,6 +314,7 @@ def test_19():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
 
+
 def test_20():
     sentence = 'MAP2K1 deribosylates MAPK1.'
     tp = process_sentence_xml(sentence)
@@ -296,6 +324,7 @@ def test_20():
     assert_evidence(st)
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
+
 
 def test_21():
     sentence = 'MAP2K1 dehydroxylates MAPK1.'
@@ -307,6 +336,7 @@ def test_21():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
 
+
 def test_22():
     sentence = 'MAP2K1 deacetylates MAPK1.'
     tp = process_sentence_xml(sentence)
@@ -315,6 +345,7 @@ def test_22():
     assert_modtype(st, Deacetylation)
     assert_evidence(st)
     assert_if_hgnc_then_up(st)
+
 
 def test_23():
     sentence = 'MAP2K1 defarnesylates MAPK1.'
@@ -325,6 +356,7 @@ def test_23():
     assert_evidence(st)
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
+
 
 def test_24():
     sentence = 'Ubiquitinated MAPK1 is degraded.'
@@ -340,6 +372,7 @@ def test_24():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
 
+
 def test_25():
     sentence = 'MAPK1 is synthesized.'
     tp = process_sentence_xml(sentence)
@@ -351,6 +384,7 @@ def test_25():
     assert_evidence(st)
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
+
 
 def test_26():
     sentence = 'MAP2K1 transcribes MAPK1.'
@@ -364,6 +398,7 @@ def test_26():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
 
+
 def test_27():
     sentence = 'MAP2K1 synthesizes MAPK1.'
     tp = process_sentence_xml(sentence)
@@ -376,6 +411,7 @@ def test_27():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
 
+
 def test_28():
     sentence = 'MAP2K1 degrades MAPK1.'
     tp = process_sentence_xml(sentence)
@@ -387,6 +423,7 @@ def test_28():
     assert_evidence(st)
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
+
 
 def test_29():
     sentence = 'MAPK1 translocates to the nucleus.'
@@ -401,6 +438,7 @@ def test_29():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
 
+
 def test_30():
     sentence = 'MAPK1 translocates from the nucleus.'
     tp = process_sentence_xml(sentence)
@@ -414,6 +452,7 @@ def test_30():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
 
+
 def test_31():
     sentence = 'MAPK1 translocates from the plasma membrane to the nucleus.'
     tp = process_sentence_xml(sentence)
@@ -426,6 +465,7 @@ def test_31():
     assert_evidence(st)
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
+
 
 def test_32():
     sentence = 'EGF leads to the activation of MAPK1.'
@@ -441,8 +481,9 @@ def test_32():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
 
-'''
-TODO: put back when this is implemented
+
+"""
+# NOTE: this pattern is not implemented yet
 def test_33():
     sentence = 'Stimulation by EGF activates MAPK1.'
     tp = process_sentence_xml(sentence)
@@ -454,7 +495,8 @@ def test_33():
     assert st.is_activation
     assert not st.evidence[0].epistemics['direct']
     assert_evidence(st)
-'''
+"""
+
 
 def test_34():
     sentence = 'Vemurafenib leads to the deactivation of MAPK1.'
@@ -470,6 +512,7 @@ def test_34():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
 
+
 def test_35():
     sentence = 'EGFR autophosphorylates itself.'
     tp = process_sentence_xml(sentence)
@@ -480,6 +523,7 @@ def test_35():
     assert_evidence(st)
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
+
 
 def test_36():
     sentence = 'EGFR autophosphorylates itself on Y1234.'
@@ -494,6 +538,7 @@ def test_36():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
 
+
 def test_37():
     sentence = 'EGFR bound to EGFR transphosphorylates itself.'
     tp = process_sentence_xml(sentence)
@@ -505,6 +550,7 @@ def test_37():
     assert_evidence(st)
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
+
 
 def test_38():
     sentence = 'TCRA activates NEDD4, MEK1, CK2, PIP3 and mTORC2.'
@@ -518,17 +564,21 @@ def test_38():
         # no corresponding protein
         #assert_if_hgnc_then_up(st)
 
+
 def test_39():
     sentence = 'FGF2 activates PI3K/Akt/mTOR and MAPK/ERK.'
     tp = process_sentence_xml(sentence)
     # For now, this should not return any statements
     assert not tp.statements
 
+
 def test_40():
-    sentence = 'Ras-activated SAF-1 that binds to a bona fide SAF-1-binding element.'
+    sentence = ('Ras-activated SAF-1 that binds to a bona fide'
+                ' SAF-1-binding element.')
     tp = process_sentence_xml(sentence)
     # All events here are static so nothing should be extracted
     assert not tp.statements
+
 
 def test_41():
     sentence = 'NFKB synthesizes IKB in the nucleus.'
@@ -536,6 +586,7 @@ def test_41():
     assert_onestmt(tp)
     st = tp.statements[0]
     assert st.obj.location is not None
+
 
 def test_42():
     sentence = 'RAF1 activates MAP2K1.'
@@ -546,6 +597,7 @@ def test_42():
     assert raf1.name == 'RAF1'
     assert raf1.db_refs.get('HGNC') == '9829'
 
+
 def test_43():
     sentence = 'Phosphorylated ERK is active.'
     tp = process_sentence_xml(sentence)
@@ -555,6 +607,7 @@ def test_43():
     assert erk.name == 'ERK'
     assert erk.db_refs.get('FPLX') == 'ERK'
     assert len(erk.mods) == 1
+
 
 def test_44():
     sentence = 'p53 positively regulates the transcription of mdm2.'
@@ -567,8 +620,7 @@ def test_44():
     assert p53.name == 'TP53'
     assert mdm2.name == 'MDM2'
 
-'''
-# Not sure if this is good to extract like this so leaving out for now
+
 def test_45():
     sentence = 'p53 increases mdm2.'
     tp = process_sentence_xml(sentence)
@@ -579,7 +631,7 @@ def test_45():
     mdm2 = st.obj
     assert p53.name == 'TP53'
     assert mdm2.name == 'MDM2'
-'''
+
 
 def test_46():
     sentence = 'p53 increases the transcription of mdm2.'
@@ -592,6 +644,7 @@ def test_46():
     assert p53.name == 'TP53'
     assert mdm2.name == 'MDM2'
 
+
 def test_47():
     sentence = 'p53 decreases the transcription of mdm2.'
     tp = process_sentence_xml(sentence)
@@ -603,6 +656,7 @@ def test_47():
     assert p53.name == 'TP53'
     assert mdm2.name == 'MDM2'
 
+
 def test_48():
     sentence = 'p53 downregulates the transcription of mdm2.'
     tp = process_sentence_xml(sentence)
@@ -613,6 +667,7 @@ def test_48():
     mdm2 = st.obj
     assert p53.name == 'TP53'
     assert mdm2.name == 'MDM2'
+
 
 def test_49():
     sentence = 'Ras converts GTP into GDP.'
@@ -627,6 +682,7 @@ def test_49():
     assert gtp.name == 'GTP'
     assert gdp.name == 'GDP'
 
+
 def test_50():
     sentence = 'GTP is converted into GDP.'
     tp = process_sentence_xml(sentence)
@@ -639,6 +695,7 @@ def test_50():
     assert ras is None
     assert gtp.name == 'GTP'
     assert gdp.name == 'GDP'
+
 
 def test_51():
     sentence = 'RAS converts GTP into GDP and GMP.'
@@ -653,6 +710,7 @@ def test_51():
     assert gtp.name == 'GTP'
     assert gdp_gmp[0].name == 'GDP'
     assert gdp_gmp[1].name == 'GMP'
+
 
 def test_52():
     sentence = 'PTEN catalyzes the conversion of PIP3 to PIP2.'
@@ -669,6 +727,7 @@ def test_52():
     assert pip3.name.startswith('PIP')
     assert pip3.name.endswith('3')
 
+
 def test_53():
     sentence = 'MEK increases the phosphorylation of ERK.'
     tp = process_sentence_xml(sentence)
@@ -680,7 +739,8 @@ def test_53():
     assert mek.name == 'MEK'
     assert erk.name == 'ERK'
     for ev in st.evidence:
-        assert ev.epistemics.get('direct') == False
+        assert ev.epistemics.get('direct') is False
+
 
 def test_54():
     sentence = 'EGF leads to the phosphorylation of ERK.'
@@ -693,7 +753,8 @@ def test_54():
     assert mek.name == 'EGF'
     assert erk.name == 'ERK'
     for ev in st.evidence:
-        assert ev.epistemics.get('direct') == False
+        assert ev.epistemics.get('direct') is False
+
 
 def test_55():
     sentence = 'Unphosphorylated ERK is degraded.'
@@ -704,7 +765,8 @@ def test_55():
     erk = st.obj
     assert erk.name == 'ERK'
     assert len(erk.mods) == 1
-    assert erk.mods[0].is_modified == False
+    assert erk.mods[0].is_modified is False
+
 
 def test_56():
     sentence = 'Activated TGFBR1 phosphorylates SMURF2.'
@@ -716,7 +778,7 @@ def test_56():
     assert tgfbr1.name == 'TGFBR1'
     assert tgfbr1.activity is not None
     assert tgfbr1.activity.activity_type == 'activity'
-    assert tgfbr1.activity.is_active == True
+    assert tgfbr1.activity.is_active is True
 
 
 def test_57():
@@ -745,7 +807,7 @@ def test_58():
     assert len(tp.statements) == 2
     assert isinstance(tp.statements[0], Phosphorylation)
     assert isinstance(tp.statements[1], Phosphorylation)
-    enzs = {st.enz.name for st in tp.statements} == {'EGF', 'NGF'}
+    assert {st.enz.name for st in tp.statements} == {'EGF', 'NGF'}
 
 
 def test_59():
@@ -754,7 +816,8 @@ def test_59():
     assert len(tp.statements) == 2
     assert isinstance(tp.statements[0], Conversion)
     assert isinstance(tp.statements[1], Conversion)
-    enzs = {st.subj.name for st in tp.statements} == {'HRAS', 'KRAS'}
+    assert {st.subj.name for st in tp.statements} == {'HRAS', 'KRAS'}
+
 
 def test_assoc_with():
     fname = os.path.join(path_this, 'trips_ekbs', 'ekb_assoc.ekb')
@@ -781,3 +844,12 @@ def test_fakeprotein():
     assert agent is not None
     assert agent.db_refs['UP'] == 'P04324', agent.db_refs
     assert agent.name == 'nef', agent.name
+
+
+def test_mapped_chebi_id():
+    fname = os.path.join(path_this, 'trips_ekbs', 'chebi_id_test.ekb')
+    tp = trips.process_xml(open(fname, 'r').read())
+    agents = tp.get_agents()
+    assert len(agents) == 1, agents
+    agent = agents[0]
+    assert agent.db_refs['CHEBI'] == 'CHEBI:63637', agent.db_refs

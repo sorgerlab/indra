@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="text">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT01421_IO-1038694" id="paragraph1420">PLX-4032</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="1497" pid="paragraph1420">PLX-4032</sentence>
+		</sentences>
+	</input>
+	<TERM dbid="PC:42611257|MESH:C551177|NCIT:C64768" end="8" id="V1038705" lisp="(ONT::TERM ONT::V1038705 ONT::PHARMACOLOGIC-SUBSTANCE :NAME W::PLX-PUNC-MINUS-4032 :DRUM ((:DRUM (TERM :ID MESH::C551177 :NAME &quot;PLX4032&quot; :SCORE 0.85361 :MATCHES ((MATCH :SCORE 0.85361 :MATCHED &quot;PLX4032&quot; :STATUS &quot;NM&quot; :DASH-NO-DASH 1 :EXACT 1)) :ONT-TYPES (ONT::PHARMACOLOGIC-SUBSTANCE)) (TERM :ID NCIT::C64768 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C64768&gt;&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;PLX-4032&quot; :STATUS &quot;synonym&quot; :EXACT 1) (MATCH :SCORE 0.70727 :MATCHED &quot;PLX4032&quot; :STATUS &quot;synonym&quot; :DASH-NO-DASH 1 :EXACT 1)) :ONT-TYPES (ONT::PHARMACOLOGIC-SUBSTANCE)) (TERM :ID PC::|42611257| :NAME &quot;Vemurafenib&quot; :SCORE 0.70727 :MATCHES ((MATCH :SCORE 0.70727 :MATCHED &quot;PLX4032&quot; :STATUS &quot;Alternative Name&quot; :DASH-NO-DASH 1 :EXACT 1)) :ONT-TYPES (ONT::PHARMACOLOGIC-SUBSTANCE)))))" paragraph="paragraph1420" rule="-SIMPLE-REF" start="0" uttnum="1497">
+		<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+		<name>PLX-4032</name>
+		<drum-terms>
+			<drum-term dbid="MESH:C551177" match-score="0.85361" matched-name="PLX4032" name="PLX4032">
+				<types>
+					<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C64768" match-score="0.70732" matched-name="PLX-4032" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C64768&gt;">
+				<types>
+					<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="PC:42611257" match-score="0.70727" matched-name="PLX4032" name="Vemurafenib">
+				<types>
+					<type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>PLX-4032</text>
+	</TERM>
+</ekb>

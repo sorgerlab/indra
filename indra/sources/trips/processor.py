@@ -1869,7 +1869,7 @@ def _get_db_refs(term):
     # Now standardize db_refs to the INDRA standards
     # We need to add a prefix for CHEBI
     chebi_id = db_refs.get('CHEBI')
-    if chebi_id:
+    if chebi_id and not chebi_id.startswith('CHEBI:'):
         db_refs['CHEBI'] = 'CHEBI:%s' % chebi_id
     # We need to strip the trailing version number for XFAM and rename to PF
     pfam_id = db_refs.get('XFAM')
