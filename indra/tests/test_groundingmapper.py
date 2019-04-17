@@ -30,6 +30,18 @@ def test_simple_mapping():
     assert unicode_strs((akt, stmt, gm, mapped_akt))
 
 
+def test_map_standardize_up_hgnc():
+    a1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
+    a2 = Agent('MAPK1', db_refs={'UP': 'P28482'})
+    gm = GroundingMapper(default_grounding_map)
+    stmt = Phosphorylation(a1, a2)
+    mapped_stmts = gm.map_agents([stmt])
+    assert len(mapped_stmts) == 1
+    st = mapped_stmts[0]
+    assert st.enz.db_refs['HGNC'] == st.sub.db_refs['HGNC']
+    assert st.enz.db_refs['UP'] == st.sub.db_refs['UP']
+
+
 def test_bound_condition_mapping():
     # Verify that the grounding mapper grounds the agents within a bound
     # condition

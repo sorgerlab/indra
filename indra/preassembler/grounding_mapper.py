@@ -165,25 +165,24 @@ class GroundingMapper(object):
         for idx, agent in enumerate(agent_list):
             if agent is None:
                 continue
-            agent_txt = agent.db_refs.get('TEXT')
-            if agent_txt is None:
-                continue
 
             new_agent, maps_to_none = self.map_agent(agent, do_rename)
 
-            # Check if a adeft model exists for agent text
-            if self.use_adeft and agent_txt in adeft_disambiguators:
+            # Skip the entire statement if the agent maps to None in the
+            # grounding map
+            if maps_to_none:
+                return None
+
+            # Check if an adeft model exists for agent text
+            agent_txt = agent.db_refs.get('TEXT')
+            if self.use_adeft and agent_txt and agent_txt in \
+                    adeft_disambiguators:
                 try:
                     run_adeft_disambiguation(mapped_stmt, new_agent, idx)
                 except Exception as e:
                     logger.error('There was an error during Adeft'
                                  ' disambiguation.')
                     logger.error(e)
-
-            if maps_to_none:
-                # Skip the entire statement if the agent maps to None in the
-                # grounding map
-                return None
 
             # If the old agent had bound conditions, but the new agent does
             # not, copy the bound conditions over
@@ -231,8 +230,15 @@ class GroundingMapper(object):
         maps_to_none : bool
             True if the Agent is in the grounding map and maps to None.
         """
-
+        # We always standardize DB refs as a functionality in the
+        # GroundingMapper. If a new module is implemented which is
+        # responsible for standardizing grounding, this can be removed.
+        agent.db_refs = self.standardize_db_refs(agent.db_refs)
+        # If there is no TEXT available, we can return immediately since we
+        # can't do mapping
         agent_text = agent.db_refs.get('TEXT')
+        if not agent_text:
+            return agent, False
         mapped_to_agent_json = self.agent_map.get(agent_text)
         if mapped_to_agent_json:
             mapped_to_agent = \
@@ -806,10 +812,8 @@ def run_adeft_disambiguation(stmt, agent, idx):
         agent.name = standard_name
         logger.info('Disambiguated %s to: %s, %s:%s' %
                     (agent_txt, standard_name, db_ns, db_id))
-        if db_ns == 'HGNC':
-            standard_db_refs = \
-                GroundingMapper.standardize_mapped_refs({'HGNC': db_id})
-            new_agent.db_refs = standard_db_refs
+        GroundingMapper.standardize_agent_name(new_agent,
+                                               standardize_refs=True)
         annots['agents']['adeft'][idx] = disamb_scores
 
 

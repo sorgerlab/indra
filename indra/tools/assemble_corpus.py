@@ -108,11 +108,9 @@ def map_grounding(stmts_in, **kwargs):
     from indra.preassembler.grounding_mapper import \
         default_agent_map as agent_map
     logger.info('Mapping grounding on %d statements...' % len(stmts_in))
-    do_rename = kwargs.get('do_rename')
+    do_rename = kwargs.get('do_rename', True)
     gm = kwargs.get('grounding_map', grounding_map)
-    if do_rename is None:
-        do_rename = True
-    gm = GroundingMapper(gm, agent_map, use_adeft=kwargs.get('use_adeft', True))
+    gm = GroundingMapper(gm, agent_map, use_deft=kwargs.get('use_adeft', True))
     stmts_out = gm.map_agents(stmts_in, do_rename=do_rename)
     dump_pkl = kwargs.get('save')
     if dump_pkl:
