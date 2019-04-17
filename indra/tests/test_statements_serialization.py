@@ -122,10 +122,10 @@ def test_influence():
 
 def test_association():
     ev1 = Event(Concept('food'), 
-                delta={'adjectives':['insufficient'], 'polarity':-1})
+                delta={'adjectives': ['insufficient'], 'polarity': -1})
     ev2 = Event(Concept('hunger'),
-                delta={'adjectives':[], 'polarity':1})
-    stmt = Association([ev2, ev2])
+                delta={'adjectives': [], 'polarity': 1})
+    stmt = Association([ev1, ev2])
     jd = stmt.to_json()
     stmt.to_graph()
     assert 'members' in jd

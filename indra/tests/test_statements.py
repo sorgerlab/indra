@@ -1672,6 +1672,30 @@ def test_influence_polarity():
     assert st.overall_polarity() == 1, st
 
 
+def test_association_polarity():
+    st = Association([
+        Event(Concept('a')), Event(Concept('b')), Event(Concept('c'))])
+    assert st.overall_polarity() is None
+    st.members[0].delta['polarity'] = 1
+    assert st.overall_polarity() == 1
+    st.members[1].delta['polarity'] = 1
+    assert st.overall_polarity() == 1
+    st.members[2].delta['polarity'] = 1
+    assert st.overall_polarity() == 1
+    st.members[0].delta['polarity'] = -1
+    assert st.overall_polarity() == -1
+    st.members[1].delta['polarity'] = -1
+    assert st.overall_polarity() == -1
+    st.members[2].delta['polarity'] = -1
+    assert st.overall_polarity() == 1
+    st.members[0].delta = {'polarity': None, 'adjectives': []}
+    assert st.overall_polarity() == 1
+    st.members[1].delta = {'polarity': None, 'adjectives': []}
+    assert st.overall_polarity() == -1
+    st.members[2].delta = {'polarity': None, 'adjectives': []}
+    assert st.overall_polarity() is None
+
+
 def test_concept_init():
     c1 = Concept('x')
     assert c1.name == 'x'

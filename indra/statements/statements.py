@@ -2051,17 +2051,33 @@ class Association(Complex):
         all_None = True
         all_pos = True
         all_neg = True
+        not_None_count = 0
         for p in polarities:
             if p == 1:
                 all_None = False
                 all_neg = False
+                not_None_count += 1
+                one_pol = p
             elif p == -1:
                 all_None = False
                 all_pos = False
+                not_None_count += 1
+                one_pol = p
+        # If all members have polarity None, than overall polarity is None.
+        # If some but not all members have polarity None, than it is
+        # ignored and overall polarity is based on the rest of the members.
         if all_None:
             pol = None
+        # If there's only one member with a polarity not None, than overall
+        # polarity is equal to a polarity of this member.
+        elif not_None_count == 1:
+            pol = one_pol
+        # If all members have the identical polarity or some have None and
+        # the rest have identical polarity, than overall polarity is 1.
         elif all_pos or all_neg:
             pol = 1
+        # If members have opposite polarities, than overall polarity is -1
+        # regardless of number of members with each polarity.
         else:
             pol = -1
         return pol
@@ -2085,9 +2101,6 @@ class Association(Complex):
             delta_refinement = (op == sp)
         return (members_refinement and delta_refinement)
 
-    def equals(self, other):
-        pass
-
     def to_json(self, use_sbo=False):
         # Get generic from two inheritance levels above - from Statement class
         generic = super(Complex, self).to_json(use_sbo)
@@ -2100,7 +2113,7 @@ class Association(Complex):
     @classmethod
     def _from_json(cls, json_dict):
         members = json_dict.get('members')
-        members = [Event._from_json(m) for m in members]
+        members = [Statement._from_json(m) for m in members]
         stmt = cls(members)
         return stmt
 
