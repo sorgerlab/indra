@@ -554,32 +554,29 @@ def get_bio_hierarchies(from_pickle=True):
             hierarchies = pickle.load(fh)
         return hierarchies
 
-    # Load the default entity and modification hierarchies
-    entity_file_path = os.path.join(os.path.dirname(__file__),
-                        '../resources/entity_hierarchy.rdf')
-    mod_file_path = os.path.join(os.path.dirname(__file__),
-                        '../resources/modification_hierarchy.rdf')
-    act_file_path = os.path.join(os.path.dirname(__file__),
-                        '../resources/activity_hierarchy.rdf')
-    ccomp_file_path = os.path.join(os.path.dirname(__file__),
-                        '../resources/cellular_component_hierarchy.rdf')
+    def resource_path(fname):
+        return os.path.join(os.path.dirname(__file__), os.pardir, 'resources',
+                            fname)
 
     # Default entity hierarchy loaded from the RDF file at
     # `resources/entity_hierarchy.rdf`.
-    entity_hierarchy = HierarchyManager(entity_file_path, build_closure=True,
-                                        uri_as_name=True)
+    entity_hierarchy = HierarchyManager(resource_path('entity_hierarchy.rdf'),
+                                        build_closure=True, uri_as_name=True)
     # Default modification hierarchy loaded from the RDF file at
     # `resources/modification_hierarchy.rdf`.
-    modification_hierarchy = HierarchyManager(mod_file_path, build_closure=True,
-                                              uri_as_name=True)
+    modification_hierarchy = \
+        HierarchyManager(resource_path('modification_hierarchy.rdf'),
+                         build_closure=True, uri_as_name=True)
     # Default activity hierarchy loaded from the RDF file at
     # `resources/activity_hierarchy.rdf`.
-    activity_hierarchy = HierarchyManager(act_file_path, build_closure=True,
-                                          uri_as_name=True)
+    activity_hierarchy = \
+        HierarchyManager(resource_path('activity_hierarchy.rdf'),
+                         build_closure=True, uri_as_name=True)
     # Default cellular_component hierarchy loaded from the RDF file at
     # `resources/cellular_component_hierarchy.rdf`.
-    ccomp_hierarchy = HierarchyManager(ccomp_file_path, build_closure=False,
-                                       uri_as_name=False)
+    ccomp_hierarchy = \
+        HierarchyManager(resource_path('cellular_component_hierarchy.rdf'),
+                         build_closure=False, uri_as_name=False)
 
     hierarchies = {'entity': entity_hierarchy,
                    'modification': modification_hierarchy,
