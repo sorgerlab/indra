@@ -115,7 +115,8 @@ def test_process_correlations():
     assert len(ep.statements) == 1
     st = ep.statements[0]
     assert isinstance(st, Association)
-    names = {c.name for c in st.members}
+    assert isinstance(st.members[0], Event)
+    names = {m.concept.name for m in st.members}
     assert names == {'harvest', 'requirement'}, names
 
 
