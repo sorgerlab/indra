@@ -81,18 +81,19 @@ class Agent(Concept):
         return str(key)
 
     def entity_matches_key(self):
-        """Return a key to identify the identity of the Agent not its state."""
-        if 'FPLX' in self.db_refs:
-            return 'FPLX:%s' % self.db_refs['FPLX']
-        if 'UP' in self.db_refs or 'HGNC' in self.db_refs:
-            return 'UP:%s,HGNC:%s' % (self.db_refs.get('UP'),
-                                      self.db_refs.get('HGNC'))
-        if 'CHEBI' in self.db_refs:
-            return self.db_refs['CHEBI']
-        if 'MESH' in self.db_refs:
-            return 'MESH:%s' % self.db_refs['MESH']
-        if 'GO' in self.db_refs:
-            return self.db_refs['GO']
+        """Return a key to identify the identity of the Agent not its state.
+
+        The key is based on the preferred grounding for the Agent, or if not
+        available, the name of the Agent is used.
+
+        Returns
+        -------
+        str
+            The key used to identify the Agent.
+        """
+        db_ns, db_id = self.get_grounding()
+        if db_ns and db_id:
+            return str((db_ns, db_id))
         return self.name
 
     def state_matches_key(self):
@@ -112,16 +113,26 @@ class Agent(Concept):
 
     # Function to get the namespace to look in
     def get_grounding(self):
+        """Return a tuple of a preferred grounding namespace and ID.
+
+        Returns
+        -------
+        tuple
+            A tuple whose first element is a grounding namespace (HGNC,
+            CHEBI, etc.) and the second element is an identifier in the
+            namespace. If no preferred grounding is available, a tuple of
+            Nones is returned.
+        """
         import indra.databases.hgnc_client as hgc
         import indra.databases.uniprot_client as upc
-        be = self.db_refs.get('FPLX')
-        if be:
-            return ('FPLX', be)
+        fplx = self.db_refs.get('FPLX')
+        if fplx:
+            return 'FPLX', fplx
         hgnc = self.db_refs.get('HGNC')
         if hgnc:
             if isinstance(hgnc, list):
                 hgnc = hgnc[0]
-            return ('HGNC', hgc.get_hgnc_name(str(hgnc)))
+            return 'HGNC', hgc.get_hgnc_name(str(hgnc))
         up = self.db_refs.get('UP')
         if up:
             if isinstance(up, list):
@@ -129,10 +140,16 @@ class Agent(Concept):
             if upc.is_human(up):
                 gene_name = upc.get_gene_name(up, web_fallback=False)
                 if gene_name:
-                    return ('HGNC', gene_name)
+                    return 'HGNC', gene_name
             else:
-                return ('UP', up)
-        return (None, None)
+                return 'UP', up
+        if 'CHEBI' in self.db_refs:
+            return 'CHEBI', self.db_refs['CHEBI']
+        if 'MESH' in self.db_refs:
+            return 'MESH', self.db_refs['MESH']
+        if 'GO' in self.db_refs:
+            return 'GO', self.db_refs['GO']
+        return None, None
 
     def isa(self, other, hierarchies):
         # Get the namespaces for the comparison
