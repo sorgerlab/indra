@@ -133,7 +133,7 @@ def _agent_from_ns_id(ag_ns, ag_id):
     # If we have a proper grounding, add to db_refs
     if ag_id is not None:
         agent.db_refs[ag_ns] = ag_id
-    # Now stqndardize db_refs and set standardized name
+    # Now standardize db_refs and set standardized name
     GroundingMapper.standardize_agent_name(agent, standardize_refs=True)
     agent.db_refs['TEXT'] = agent.name
     return agent
