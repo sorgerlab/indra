@@ -2088,7 +2088,7 @@ class Association(Complex):
     def equals(self, other):
         pass
 
-    def to_json(self):
+    def to_json(self, use_sbo=False):
         # Get generic from two inheritance levels above - from Statement class
         generic = super(Complex, self).to_json(use_sbo)
         json_dict = _o(type=generic['type'])
