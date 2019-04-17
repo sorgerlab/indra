@@ -350,24 +350,25 @@ def standardize_name(agent):
     if db_ns == 'FPLX':
         agent.name = agent.db_refs['FPLX']
     # Take a HGNC name from Uniprot next
-    elif 'UP' in agent.db_refs:
+    elif db_ns == 'HGNC':
+        gene_name = hgnc_client.get_hgnc_name(db_id)
+        if gene_name:
+            agent.name = gene_name
+    elif db_ns == 'UP':
         # Try for the gene name
         gene_name = uniprot_client.get_gene_name(agent.db_refs['UP'],
                                                  web_fallback=False)
         if gene_name:
             agent.name = gene_name
-            hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-            if hgnc_id:
-                agent.db_refs['HGNC'] = hgnc_id
-    elif 'CHEBI' in agent.db_refs:
+    elif db_ns == 'CHEBI':
         chebi_name = chebi_client.chebi_id_to_name(agent.db_refs['CHEBI'])
         if chebi_name:
             agent.name = chebi_name
-    elif 'MESH' in agent.db_refs:
+    elif db_ns == 'MESH':
         mesh_name = mesh_client.get_mesh_name(agent.db_refs['MESH'])
         if mesh_name:
             agent.name = mesh_name
-    elif 'GO' in agent.db_refs:
+    elif db_ns == 'GO':
         go_name = go_client.get_go_label(agent.db_refs['GO'])
         if go_name:
             agent.name = go_name
