@@ -339,11 +339,12 @@ class GroundingMapper(object):
             if gene_name:
                 agent.name = gene_name
         elif db_ns == 'CHEBI':
-            chebi_name = chebi_client.chebi_id_to_name(agent.db_refs['CHEBI'])
+            chebi_name = \
+                chebi_client.get_chebi_name_from_id(agent.db_refs['CHEBI'])
             if chebi_name:
                 agent.name = chebi_name
         elif db_ns == 'MESH':
-            mesh_name = mesh_client.get_mesh_name(agent.db_refs['MESH'])
+            mesh_name = mesh_client.get_mesh_name(agent.db_refs['MESH'], False)
             if mesh_name:
                 agent.name = mesh_name
         elif db_ns == 'GO':

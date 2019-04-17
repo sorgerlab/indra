@@ -298,6 +298,24 @@ def test_map_agent():
     assert mapped_ag.db_refs.get('FPLX') == 'ERK'
 
 
+def test_name_standardize_chebi():
+    a1 = Agent('x', db_refs={'CHEBI': '15996'})
+    GroundingMapper.standardize_agent_name(a1, False)
+    assert a1.name == 'GTP'
+
+
+def test_name_standardize_go():
+    a1 = Agent('x', db_refs={'GO': 'GO:0006915'})
+    GroundingMapper.standardize_agent_name(a1, False)
+    assert a1.name == 'apoptotic process'
+
+
+def test_name_standardize_mesh():
+    a1 = Agent('x', db_refs={'MESH': 'D008545'})
+    GroundingMapper.standardize_agent_name(a1, False)
+    assert a1.name == 'Melanoma', a1.name
+
+
 @attr('nonpublic')
 def test_adeft_mapping():
     er1 = Agent('ER', db_refs={'TEXT': 'ER'})
