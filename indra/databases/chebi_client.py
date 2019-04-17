@@ -13,6 +13,13 @@ from indra.util import read_unicode_csv
 logger = logging.getLogger(__name__)
 
 
+def _strip_prefix(chid):
+    if chid and chid.startswith('CHEBI:'):
+        return chid[6:]
+    else:
+        return chid
+
+
 def get_pubchem_id(chebi_id):
     """Return the PubChem ID corresponding to a given ChEBI ID.
 
@@ -27,7 +34,7 @@ def get_pubchem_id(chebi_id):
         PubChem ID corresponding to the given ChEBI ID. If the lookup fails,
         None is returned.
     """
-    pubchem_id = chebi_pubchem.get(chebi_id)
+    pubchem_id = chebi_pubchem.get(_strip_prefix(chebi_id))
     return pubchem_id
 
 
@@ -63,7 +70,7 @@ def get_chembl_id(chebi_id):
         ChEMBL ID corresponding to the given ChEBI ID. If the lookup fails,
         None is returned.
     """
-    return chebi_chembl.get(chebi_id)
+    return chebi_chembl.get(_strip_prefix(chebi_id))
 
 
 def get_chebi_id_from_cas(cas_id):
@@ -100,9 +107,9 @@ def get_chebi_name_from_id(chebi_id, offline=False):
         The name corresponding to the given ChEBI ID. If the lookup
         fails, None is returned.
     """
-    chebi_name = chebi_id_to_name.get(chebi_id)
+    chebi_name = chebi_id_to_name.get(_strip_prefix(chebi_id))
     if chebi_name is None and not offline:
-        chebi_name = get_chebi_name_from_id_web(chebi_id)
+        chebi_name = get_chebi_name_from_id_web(_strip_prefix(chebi_id))
     return chebi_name
 
 
