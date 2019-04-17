@@ -82,10 +82,18 @@ class Agent(Concept):
 
     def entity_matches_key(self):
         """Return a key to identify the identity of the Agent not its state."""
-        db_refs_key = 'FPLX:%s;UP:%s;HGNC:%s' % (self.db_refs.get('FPLX'),
-                                                 self.db_refs.get('UP'),
-                                                 self.db_refs.get('HGNC'))
-        return str((self.name, db_refs_key))
+        if 'FPLX' in self.db_refs:
+            return 'FPLX:%s' % self.db_refs['FPLX']
+        if 'UP' in self.db_refs or 'HGNC' in self.db_refs:
+            return 'UP:%s,HGNC:%s' % (self.db_refs.get('UP'),
+                                      self.db_refs.get('HGNC'))
+        if 'CHEBI' in self.db_refs:
+            return self.db_refs['CHEBI']
+        if 'MESH' in self.db_refs:
+            return 'MESH:%s' % self.db_refs['MESH']
+        if 'GO' in self.db_refs:
+            return self.db_refs['GO']
+        return self.name
 
     def state_matches_key(self):
         """Return a key to identify the state of the Agent."""
