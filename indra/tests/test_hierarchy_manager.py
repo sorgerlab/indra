@@ -27,15 +27,15 @@ def test_hierarchy_unicode():
 
 
 def test_isa_entity():
-    assert ent_hierarchy.isa('HGNC', 'BRAF', 'FPLX', 'RAF')
+    assert ent_hierarchy.isa('HGNC', '1097', 'FPLX', 'RAF')
 
 
 def test_isa_entity2():
-    assert not ent_hierarchy.isa('HGNC', 'BRAF', 'HGNC', 'ARAF')
+    assert not ent_hierarchy.isa('HGNC', '1097', 'HGNC', 'ARAF')
 
 
 def test_isa_entity3():
-    assert not ent_hierarchy.isa('FPLX', 'RAF', 'HGNC', 'BRAF')
+    assert not ent_hierarchy.isa('FPLX', 'RAF', 'HGNC', '1097')
 
 
 def test_partof_entity():
@@ -43,7 +43,7 @@ def test_partof_entity():
 
 
 def test_isa_or_partof_entity():
-    assert ent_hierarchy.isa_or_partof('HGNC', 'PRKAG1', 'FPLX', 'AMPK')
+    assert ent_hierarchy.isa_or_partof('HGNC', '9385', 'FPLX', 'AMPK')
 
 
 def test_partof_entity_not():
@@ -135,14 +135,14 @@ def test_mtorc_children():
 
 
 def test_mtorc_get_parents():
-    rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
+    rictor = 'http://identifiers.org/hgnc/28611'  # RICTOR
     p = ent_hierarchy.get_parents(rictor, 'all')
     assert len(p) == 1
     assert list(p)[0] == 'http://identifiers.org/fplx/mTORC2'
 
 
 def test_mtorc_transitive_closure():
-    rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
+    rictor = 'http://identifiers.org/hgnc/28611'  # RICTOR
     p = ent_hierarchy.partof_closure.get(rictor)
     assert len(p) == 1
     assert p[0] == 'http://identifiers.org/fplx/mTORC2'
@@ -152,20 +152,20 @@ def test_mtorc_partof_no_tc():
     ent_hierarchy_no_tc = deepcopy(ent_hierarchy)
     ent_hierarchy_no_tc.isa_closure = {}
     ent_hierarchy_no_tc.partof_closure = {}
-    assert ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'FPLX', 'mTORC1')
-    assert not ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'FPLX', 'mTORC2')
+    assert ent_hierarchy_no_tc.partof('HGNC', '30287', 'FPLX', 'mTORC1')
+    assert not ent_hierarchy_no_tc.partof('HGNC', '30287', 'FPLX', 'mTORC2')
 
 
 def test_erk_isa_no_tc():
     ent_hierarchy_no_tc = deepcopy(ent_hierarchy)
     ent_hierarchy_no_tc.isa_closure = {}
     ent_hierarchy_no_tc.partof_closure = {}
-    assert ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'FPLX', 'MAPK')
-    assert not ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'FPLX', 'JNK')
+    assert ent_hierarchy_no_tc.isa('HGNC', '6871', 'FPLX', 'MAPK')
+    assert not ent_hierarchy_no_tc.isa('HGNC', '6871', 'FPLX', 'JNK')
 
 
 def test_get_parents():
-    prkaa1 = 'http://identifiers.org/hgnc.symbol/PRKAA1'
+    prkaa1 = 'http://identifiers.org/hgnc/9376'  # PRKAA1
     ampk = 'http://identifiers.org/fplx/AMPK'
     p1 = ent_hierarchy.get_parents(prkaa1, 'all')
     assert len(p1) == 8
@@ -254,7 +254,7 @@ def test_load_hume_hierarchy():
 
 
 def test_same_components():
-    uri_prkag1 = ent_hierarchy.get_uri('HGNC', 'PRKAG1')
+    uri_prkag1 = ent_hierarchy.get_uri('HGNC', '9385')  # PRKAG1
     uri_ampk = ent_hierarchy.get_uri('FPLX', 'AMPK')
 
     c1 = ent_hierarchy.components[uri_prkag1]
