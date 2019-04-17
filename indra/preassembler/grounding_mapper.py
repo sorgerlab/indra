@@ -85,7 +85,7 @@ class GroundingMapper(object):
         agent.db_refs = self.standardize_mapped_refs(map_db_refs)
         # Finally, if renaming is needed we standardize the Agent's name
         if do_rename:
-            standardize_name(agent, refs_standardized=True)
+            self.standardize_agent_name(agent, refs_standardized=True)
 
     @staticmethod
     def standardize_mapped_refs(mapped_refs):
@@ -316,6 +316,68 @@ class GroundingMapper(object):
         logger.info('%s statements filtered out' % num_skipped)
         return mapped_stmts
 
+    def standardize_agent_name(self, agent, refs_standardized=False):
+        """Standardize the name of an Agent based on grounding information.
+
+        If an agent contains a FamPlex grounding, the FamPlex ID is used as a
+        name. Otherwise if it contains a Uniprot ID, an attempt is made to find
+        the associated HGNC gene name. If one can be found it is used as the
+        agent name and the associated HGNC ID is added as an entry to the
+        db_refs. Similarly, CHEBI, MESH and GO IDs are used in this order of
+        priority to assign a standardized name to the Agent. If no relevant
+        IDs are found, the name is not changed.
+
+        Parameters
+        ----------
+        agent : indra.statements.Agent
+            An INDRA Agent whose name attribute should be standardized based
+            on grounding information.
+        refs_standardized : Optional[bool]
+            If True, this function assumes that the Agent's db_refs have
+            already been standardized, e.g., HGNC has been mapped to UP.
+            Default: False
+        """
+        # We return immediately for None Agents
+        if agent is None:
+            return
+
+        # If refs have not been standardized yet, we do so
+        if not refs_standardized:
+            agent.db_refs = self.standardize_db_refs(agent.db_refs)
+
+        # We next look for prioritized grounding, if missing, we return
+        db_ns, db_id = agent.get_grounding()
+        if not db_ns or not db_id:
+            return
+
+        # If there's a FamPlex ID, prefer that for the name
+        if db_ns == 'FPLX':
+            agent.name = agent.db_refs['FPLX']
+        # Take a HGNC name from Uniprot next
+        elif db_ns == 'HGNC':
+            gene_name = hgnc_client.get_hgnc_name(db_id)
+            if gene_name:
+                agent.name = gene_name
+        elif db_ns == 'UP':
+            # Try for the gene name
+            gene_name = uniprot_client.get_gene_name(agent.db_refs['UP'],
+                                                     web_fallback=False)
+            if gene_name:
+                agent.name = gene_name
+        elif db_ns == 'CHEBI':
+            chebi_name = chebi_client.chebi_id_to_name(agent.db_refs['CHEBI'])
+            if chebi_name:
+                agent.name = chebi_name
+        elif db_ns == 'MESH':
+            mesh_name = mesh_client.get_mesh_name(agent.db_refs['MESH'])
+            if mesh_name:
+                agent.name = mesh_name
+        elif db_ns == 'GO':
+            go_name = go_client.get_go_label(agent.db_refs['GO'])
+            if go_name:
+                agent.name = go_name
+        return
+
     def rename_agents(self, stmts):
         """Return a list of mapped statements with updated agent names.
 
@@ -337,66 +399,8 @@ class GroundingMapper(object):
         for _, stmt in enumerate(mapped_stmts):
             # Iterate over the agents
             for agent in stmt.agent_list():
-                standardize_name(agent)
+                self.standardize_agent_name(agent, False)
         return mapped_stmts
-
-
-def standardize_name(agent, refs_standardized=False):
-    """Standardize the name of an Agent based on grounding information.
-
-    If an agent contains a FamPlex grounding, the FamPlex ID is used as a
-    name. Otherwise if it contains a Uniprot ID, an attempt is made to find
-    the associated HGNC gene name. If one can be found it is used as the agent
-    name and the associated HGNC ID is added as an entry to the db_refs.
-    Similarly, CHEBI, MESH and GO IDs are used in this order of priority to
-    assign a standardized name to the Agent. If no relevant IDs are found,
-    the name is not changed.
-
-    Parameters
-    ----------
-    agent : indra.statements.Agent
-        An INDRA Agent whose name attribute should be standardized based
-        on grounding information.
-    refs_standardized : Optional[bool]
-        If True, this function assumes that the Agent's db_refs have already
-        been standardized, e.g., HGNC has been mapped to UP. Default: False
-    """
-    # We return immediately for None Agents
-    if agent is None:
-        return
-
-    # We next look for prioritized grounding, if missing, we return
-    db_ns, db_id = agent.get_grounding()
-    if not db_ns or not db_id:
-        return
-
-    # If there's a FamPlex ID, prefer that for the name
-    if db_ns == 'FPLX':
-        agent.name = agent.db_refs['FPLX']
-    # Take a HGNC name from Uniprot next
-    elif db_ns == 'HGNC':
-        gene_name = hgnc_client.get_hgnc_name(db_id)
-        if gene_name:
-            agent.name = gene_name
-    elif db_ns == 'UP':
-        # Try for the gene name
-        gene_name = uniprot_client.get_gene_name(agent.db_refs['UP'],
-                                                 web_fallback=False)
-        if gene_name:
-            agent.name = gene_name
-    elif db_ns == 'CHEBI':
-        chebi_name = chebi_client.chebi_id_to_name(agent.db_refs['CHEBI'])
-        if chebi_name:
-            agent.name = chebi_name
-    elif db_ns == 'MESH':
-        mesh_name = mesh_client.get_mesh_name(agent.db_refs['MESH'])
-        if mesh_name:
-            agent.name = mesh_name
-    elif db_ns == 'GO':
-        go_name = go_client.get_go_label(agent.db_refs['GO'])
-        if go_name:
-            agent.name = go_name
-    return
 
 
 # TODO: handle the cases when there is more than one entry for the same
