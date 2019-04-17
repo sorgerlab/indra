@@ -1,10 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import sys
-from rdflib import Graph, Namespace, Literal
 import csv
-from indra.util import read_unicode_csv
+from rdflib import Graph, Namespace, Literal
 from os.path import join, dirname, abspath
+from indra.databases import hgnc_client
+from indra.util import read_unicode_csv
 
 hierarchy_path = join(dirname(abspath(__file__)),
                       '../resources/entity_hierarchy.rdf')
@@ -12,14 +13,14 @@ hierarchy_path = join(dirname(abspath(__file__)),
 relations_file = join(dirname(abspath(__file__)),
                       '../resources/famplex/relations.csv')
 
-hgnc_ns = Namespace('http://identifiers.org/hgnc.symbol/')
+hgnc_ns = Namespace('http://identifiers.org/hgnc/')
 up_ns = Namespace('http://identifiers.org/uniprot/')
 famplex_ns = Namespace('http://identifiers.org/fplx/')
 indra_rel_ns = Namespace('http://sorger.med.harvard.edu/indra/relations/')
 
 ns_map = {'http://identifiers.org/fplx/': 'FPLX',
           'http://sorger.med.harvard.edu/indra/relations/': 'FPLX',
-          'http://identifiers.org/hgnc.symbol/': 'HGNC',
+          'http://identifiers.org/hgnc/': 'HGNC',
           'http://identifiers.org/uniprot/': 'UP',}
 
 def save_hierarchy(g, path):
@@ -35,7 +36,10 @@ def save_hierarchy(g, path):
 
 def make_term(ns_name, id):
     if ns_name == 'HGNC':
-        term = hgnc_ns.term(id)
+        hgnc_id = hgnc_client.get_hgnc_id(id)
+        if not hgnc_id:
+            raise ValueError('Invalid HGNC symbol: %s' % id)
+        term = hgnc_ns.term(hgnc_id)
     elif ns_name == 'UP':
         term = up_ns.term(id)
     elif ns_name == 'FPLX':
