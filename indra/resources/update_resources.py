@@ -402,7 +402,8 @@ def update_ncit_map():
     df_chebi.replace('ChEBI', 'CHEBI', inplace=True)
 
     # Add the old HGNC mappings
-    df_hgnc_old = pandas.read_csv('ncit_allele_map.tsv', sep='\t',
+    allele_fname = os.path.join(path, 'ncit_allele_map.tsv')
+    df_hgnc_old = pandas.read_csv(allele_fname, sep='\t',
                                   index_col=None, dtype=str)
     df_hgnc = df_hgnc.append(df_hgnc_old)
     df_hgnc.sort_values(['Source Code', 'Target Code'], ascending=True,

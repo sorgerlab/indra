@@ -1936,7 +1936,7 @@
 (2Z)-hexenal	CHEBI:18554
 (2Z,10Z,26Z)-ubiquinone	CHEBI:46240
 (2Z,3S,4S,5S,6R)-3,4,5-trihydroxy-6-(hydroxymethyl)piperidin-2-one oxime	CHEBI:42921
-(2Z,3Z)-bis\{amino[(2-aminophenyl)sulfanyl]methylidene\}butanedinitrile	CHEBI:64208
+(2Z,3Z)-bis\{amino[(2-aminophenyl)sulfanyl]methylidene\}butanedinitrile	CHEBI:90693
 (2Z,4E)-2-hydroxy-6-oxohexa-2,4-dienoate	CHEBI:71198
 (2Z,4E)-2-hydroxy-6-oxohexa-2,4-dienoic acid	CHEBI:71207
 (2Z,4E)-2-hydroxy-6-oxonona-2,4-dienedioate(2-)	CHEBI:66887
@@ -27916,7 +27916,7 @@ Sir2 inhibitor	CHEBI:71181
 Sirenin	CHEBI:9164
 Sirodesmin H	CHEBI:9165
 Sivelestat sodium hydrate	CHEBI:32133
-Sizofiran	CHEBI:32134
+Sizofiran	CHEBI:50653
 Skimmianine	CHEBI:9172
 Smardaesidin A, (rel)-	CHEBI:69487
 Smardaesidin B, (rel)-	CHEBI:69488
@@ -28589,7 +28589,7 @@ Tussilagine	CHEBI:9782
 Tutin	CHEBI:9783
 Two thymine residues (in DNA)	CHEBI:81146
 Tylophorine	CHEBI:9786
-Type A glycolipid	CHEBI:9788
+Type A glycolipid	CHEBI:62650
 Tyr-Ala	CHEBI:74879
 Tyr-FMDP	CHEBI:74501
 Tyr-Gln	CHEBI:74881
@@ -31432,7 +31432,7 @@ alpha-Neup5Gc-(2->3)-beta-D-Galp-(1->4)-D-Glcp	CHEBI:62273
 alpha-Neup5Gc-(2->3)-beta-D-Galp-(1->4)-[alpha-L-Fucp-(1->3)]-beta-D-GlcNAcp	CHEBI:72465
 alpha-Neup5Gc-(2->3)-beta-D-Galp-(1->4)-beta-D-GlcNAcp	CHEBI:72466
 alpha-Neup5Gc-(2->3)-beta-D-Galp-(1->4)-beta-D-Glcp	CHEBI:72467
-alpha-Neup5Gc-(2->3)-beta-D-Galp-(1->4)-beta-D-GlcpNAc-(1->3)-beta-D-Galp-(1->4)-beta-D-Glcp-(1<->1')-Cer	CHEBI:62831
+alpha-Neup5Gc-(2->3)-beta-D-Galp-(1->4)-beta-D-GlcpNAc-(1->3)-beta-D-Galp-(1->4)-beta-D-Glcp-(1<->1')-Cer	CHEBI:141168
 alpha-Neup5Gc-(2->6)-D-GalpNAc	CHEBI:62275
 alpha-Neup5Gc-(2->6)-alpha-D-GalpNAc	CHEBI:72468
 alpha-Neup5Gc-(2->6)-beta-D-Galp-(1->4)-beta-D-Glcp	CHEBI:85039
@@ -31616,7 +31616,7 @@ alprenolol hydrochloride	CHEBI:31191
 alstophyllan	CHEBI:35917
 alstoumerine	CHEBI:69148
 alternariol	CHEBI:64983
-alternariol monomethyl ether	CHEBI:68783
+alternariol monomethyl ether	CHEBI:141315
 alternating copolymer	CHEBI:53517
 altrarate(1-)	CHEBI:35389
 altrarate(2-)	CHEBI:37545
@@ -34906,7 +34906,7 @@ c-di-GMP(2-)	CHEBI:58805
 cPuMP	CHEBI:84626
 c[G(2',5')pA(2',5')p]	CHEBI:75948
 c[G(2',5')pA(3',5')p]	CHEBI:75947
-c[G(2',5')pA(3',5')p](2-)	CHEBI:78624
+c[G(2',5')pA(3',5')p](2-)	CHEBI:143093
 cabazitaxel	CHEBI:63584
 cabergoline	CHEBI:3286
 cabozantinib	CHEBI:72317

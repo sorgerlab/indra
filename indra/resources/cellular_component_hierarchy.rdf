@@ -49,7 +49,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0000139> <http://sorger.med.harvard.edu/indra/relations/hasName> "Golgi membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0000139> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044431> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0000139> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098588> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0000139> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098791> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0000142> <http://sorger.med.harvard.edu/indra/relations/hasName> "cellular bud neck contractile ring" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0000142> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005935> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0000142> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0110085> .
@@ -378,6 +377,7 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0000811> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031261> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0000811> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044454> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0000812> <http://sorger.med.harvard.edu/indra/relations/hasName> "Swr1 complex" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0000812> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0000118> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0000812> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0097346> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0000813> <http://sorger.med.harvard.edu/indra/relations/hasName> "ESCRT I complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0000813> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0010008> .
@@ -473,7 +473,7 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0001400> <http://sorger.med.harvard.edu/indra/relations/hasName> "mating projection base" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0001400> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005937> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0001400> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0120038> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0001401> <http://sorger.med.harvard.edu/indra/relations/hasName> "mitochondrial sorting and assembly machinery complex" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0001401> <http://sorger.med.harvard.edu/indra/relations/hasName> "SAM complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0001401> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098799> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0001405> <http://sorger.med.harvard.edu/indra/relations/hasName> "PAM complex, Tim23 associated import motor" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0001405> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005744> .
@@ -985,7 +985,7 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0005745> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031305> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0005745> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098800> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0005745> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:1905368> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0005746> <http://sorger.med.harvard.edu/indra/relations/hasName> "mitochondrial respiratory chain" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0005746> <http://sorger.med.harvard.edu/indra/relations/hasName> "mitochondrial respirasome" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0005746> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005743> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0005746> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044455> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0005746> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0070469> .
@@ -1111,11 +1111,10 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0005788> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044432> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0005788> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0070013> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0005789> <http://sorger.med.harvard.edu/indra/relations/hasName> "endoplasmic reticulum membrane" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0005789> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0016020> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0005789> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031090> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0005789> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0042175> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0005789> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044425> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0005789> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044432> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0005789> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098827> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0005790> <http://sorger.med.harvard.edu/indra/relations/hasName> "smooth endoplasmic reticulum" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0005790> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005783> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0005791> <http://sorger.med.harvard.edu/indra/relations/hasName> "rough endoplasmic reticulum" .
@@ -1939,7 +1938,7 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0009544> <http://sorger.med.harvard.edu/indra/relations/hasName> "chloroplast ATP synthase complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0009544> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098807> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0009545> <http://sorger.med.harvard.edu/indra/relations/hasName> "elaioplast" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0009545> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0009536> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0009545> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0009516> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0009546> <http://sorger.med.harvard.edu/indra/relations/hasName> "plasmodesmatal cytoplasmic sleeve" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0009546> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0009506> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0009546> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044459> .
@@ -2436,32 +2435,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0019013> <http://sorger.med.harvard.edu/indra/relations/hasName> "viral nucleocapsid" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0019013> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019028> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0019013> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044423> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019015> <http://sorger.med.harvard.edu/indra/relations/hasName> "viral genome" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019015> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044423> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019016> <http://sorger.med.harvard.edu/indra/relations/hasName> "non-segmented viral genome" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019016> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019015> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019017> <http://sorger.med.harvard.edu/indra/relations/hasName> "segmented viral genome" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019017> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019015> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019018> <http://sorger.med.harvard.edu/indra/relations/hasName> "bipartite viral genome" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019018> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019017> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019019> <http://sorger.med.harvard.edu/indra/relations/hasName> "tripartite viral genome" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019019> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019017> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019020> <http://sorger.med.harvard.edu/indra/relations/hasName> "multipartite viral genome" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019020> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019017> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019021> <http://sorger.med.harvard.edu/indra/relations/hasName> "DNA viral genome" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019021> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019015> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019022> <http://sorger.med.harvard.edu/indra/relations/hasName> "RNA viral genome" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019022> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019015> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019023> <http://sorger.med.harvard.edu/indra/relations/hasName> "dsRNA viral genome" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019023> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019022> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019024> <http://sorger.med.harvard.edu/indra/relations/hasName> "ssRNA viral genome" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019024> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019022> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019025> <http://sorger.med.harvard.edu/indra/relations/hasName> "positive sense viral genome" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019025> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019024> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019026> <http://sorger.med.harvard.edu/indra/relations/hasName> "negative sense viral genome" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019026> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019024> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019027> <http://sorger.med.harvard.edu/indra/relations/hasName> "ambisense viral genome" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019027> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019024> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0019028> <http://sorger.med.harvard.edu/indra/relations/hasName> "viral capsid" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0019028> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044423> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0019029> <http://sorger.med.harvard.edu/indra/relations/hasName> "helical viral capsid" .
@@ -2481,8 +2454,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0019036> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0032991> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0019037> <http://sorger.med.harvard.edu/indra/relations/hasName> "viral assembly intermediate" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0019037> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044444> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019038> <http://sorger.med.harvard.edu/indra/relations/hasName> "provirus" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0019038> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019015> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0019183> <http://sorger.med.harvard.edu/indra/relations/hasName> "histamine-gated chloride channel complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0019183> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005887> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0019183> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0034707> .
@@ -2833,8 +2804,8 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0030175> <http://sorger.med.harvard.edu/indra/relations/hasName> "filopodium" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0030175> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098858> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0030176> <http://sorger.med.harvard.edu/indra/relations/hasName> "integral component of endoplasmic reticulum membrane" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0030176> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0016021> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0030176> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031227> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0030176> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031301> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0030232> <http://sorger.med.harvard.edu/indra/relations/hasName> "insulin control element activator complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0030232> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0090575> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0030256> <http://sorger.med.harvard.edu/indra/relations/hasName> "type I protein secretion system complex" .
@@ -3296,7 +3267,7 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0031226> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044459> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0031227> <http://sorger.med.harvard.edu/indra/relations/hasName> "intrinsic component of endoplasmic reticulum membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0031227> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005789> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0031227> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031224> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0031227> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031300> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0031227> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044432> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0031228> <http://sorger.med.harvard.edu/indra/relations/hasName> "intrinsic component of Golgi membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0031228> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0000139> .
@@ -3933,7 +3904,7 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0031985> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005795> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0031985> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098791> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0031986> <http://sorger.med.harvard.edu/indra/relations/hasName> "proteinoplast" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0031986> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0009536> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0031986> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0009516> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032002> <http://sorger.med.harvard.edu/indra/relations/hasName> "interleukin-28 receptor complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032002> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005887> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032002> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098802> .
@@ -4190,7 +4161,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0032585> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005771> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032585> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031902> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032586> <http://sorger.med.harvard.edu/indra/relations/hasName> "protein storage vacuole membrane" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0032586> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0000326> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032586> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0009705> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032587> <http://sorger.med.harvard.edu/indra/relations/hasName> "ruffle membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032587> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0001726> .
@@ -4205,12 +4175,10 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0032589> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0043005> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032589> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0097458> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032590> <http://sorger.med.harvard.edu/indra/relations/hasName> "dendrite membrane" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0032590> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0030425> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032590> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0032589> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032591> <http://sorger.med.harvard.edu/indra/relations/hasName> "dendritic spine membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032591> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0032589> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032591> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0032590> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0032591> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0043197> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032591> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0097060> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032592> <http://sorger.med.harvard.edu/indra/relations/hasName> "integral component of mitochondrial membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0032592> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031301> .
@@ -4915,15 +4883,14 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0034750> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0032991> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0034750> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044444> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0034751> <http://sorger.med.harvard.edu/indra/relations/hasName> "aryl hydrocarbon receptor complex" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0034751> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005667> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0034751> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0043235> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0034751> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044424> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0034752> <http://sorger.med.harvard.edu/indra/relations/hasName> "cytosolic aryl hydrocarbon receptor complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0034752> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0034751> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0034752> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044445> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0034752> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044797> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0034753> <http://sorger.med.harvard.edu/indra/relations/hasName> "nuclear aryl hydrocarbon receptor complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0034753> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0034751> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0034753> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044798> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0034753> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044428> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0034774> <http://sorger.med.harvard.edu/indra/relations/hasName> "secretory granule lumen" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0034774> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0030141> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0034774> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0060205> .
@@ -6900,7 +6867,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0046860> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0020015> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0046861> <http://sorger.med.harvard.edu/indra/relations/hasName> "glyoxysomal membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0046861> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005778> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0046861> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0009514> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0046862> <http://sorger.med.harvard.edu/indra/relations/hasName> "chromoplast membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0046862> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031898> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0046862> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0042170> .
@@ -7371,6 +7337,16 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0062079> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0034045> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0062079> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044444> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0062079> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098796> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0062091> <http://sorger.med.harvard.edu/indra/relations/hasName> "Ycf2/FtsHi complex" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0062091> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:1904949> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0062092> <http://sorger.med.harvard.edu/indra/relations/hasName> "Yae1-Lto1 complex" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0062092> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0032991> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0062092> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044445> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0062113> <http://sorger.med.harvard.edu/indra/relations/hasName> "early phagosome lumen" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0062113> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0032009> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0062113> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0097013> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0062116> <http://sorger.med.harvard.edu/indra/relations/hasName> "phenyloplast" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0062116> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0009536> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0065010> <http://sorger.med.harvard.edu/indra/relations/hasName> "extracellular membrane-bounded organelle" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0065010> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0043227> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0065010> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0043230> .
@@ -7628,9 +7604,9 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0070467> <http://sorger.med.harvard.edu/indra/relations/hasName> "RC-1 DNA recombination complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0070467> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0032991> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0070467> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044428> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0070469> <http://sorger.med.harvard.edu/indra/relations/hasName> "respiratory chain" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0070469> <http://sorger.med.harvard.edu/indra/relations/hasName> "respirasome" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0070469> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044425> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0070470> <http://sorger.med.harvard.edu/indra/relations/hasName> "plasma membrane respiratory chain" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0070470> <http://sorger.med.harvard.edu/indra/relations/hasName> "plasma membrane respirasome" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0070470> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044459> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0070470> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0070469> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0070477> <http://sorger.med.harvard.edu/indra/relations/hasName> "endospore core" .
@@ -8289,7 +8265,8 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0071666> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0032992> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0071682> <http://sorger.med.harvard.edu/indra/relations/hasName> "endocytic vesicle lumen" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0071682> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0030139> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0071682> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0060205> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0071682> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044433> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0071682> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0070013> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0071683> <http://sorger.med.harvard.edu/indra/relations/hasName> "sensory dendrite" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0071683> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0030425> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0071685> <http://sorger.med.harvard.edu/indra/relations/hasName> "NADH dehydrogenase complex (plastoquinone)" .
@@ -8662,7 +8639,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0090740> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0090741> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0090741> <http://sorger.med.harvard.edu/indra/relations/hasName> "pigment granule membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0090741> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044433> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0090741> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0048770> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0090741> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098588> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0097002> <http://sorger.med.harvard.edu/indra/relations/hasName> "mitochondrial inner boundary membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0097002> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005743> .
@@ -8851,8 +8827,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0097234> <http://sorger.med.harvard.edu/indra/relations/hasName> "epidermal lamellar body membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0097234> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0097209> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0097234> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0097232> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0097249> <http://sorger.med.harvard.edu/indra/relations/hasName> "mitochondrial respiratory chain supercomplex" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0097249> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098800> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0097255> <http://sorger.med.harvard.edu/indra/relations/hasName> "R2TP complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0097255> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0032991> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0097268> <http://sorger.med.harvard.edu/indra/relations/hasName> "cytoophidium" .
@@ -9340,12 +9314,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0098017> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0046727> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098018> <http://sorger.med.harvard.edu/indra/relations/hasName> "viral capsid, minor subunit" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098018> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0046727> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0098019> <http://sorger.med.harvard.edu/indra/relations/hasName> "virus tail, major subunit" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0098019> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044423> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0098019> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098015> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0098020> <http://sorger.med.harvard.edu/indra/relations/hasName> "virus tail, minor subunit" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0098020> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044423> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0098020> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098015> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098021> <http://sorger.med.harvard.edu/indra/relations/hasName> "viral capsid, decoration" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098021> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0019028> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098021> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044423> .
@@ -9454,7 +9422,7 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0098553> <http://sorger.med.harvard.edu/indra/relations/hasName> "lumenal side of endoplasmic reticulum membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098553> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005789> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098553> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044432> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0098553> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098552> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0098553> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098576> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098554> <http://sorger.med.harvard.edu/indra/relations/hasName> "cytoplasmic side of endoplasmic reticulum membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098554> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005789> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098554> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044432> .
@@ -9462,7 +9430,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0098555> <http://sorger.med.harvard.edu/indra/relations/hasName> "lumenal side of rough endoplasmic reticulum membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098555> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0030867> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098555> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098553> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0098555> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098576> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098556> <http://sorger.med.harvard.edu/indra/relations/hasName> "cytoplasmic side of rough endoplasmic reticulum membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098556> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0030867> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098556> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098554> .
@@ -9474,7 +9441,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0098558> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0030868> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098558> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0097425> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098558> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098553> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0098558> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098576> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098559> <http://sorger.med.harvard.edu/indra/relations/hasName> "cytoplasmic side of early endosome membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098559> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0010009> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098559> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031901> .
@@ -9701,7 +9667,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0098803> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098796> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098804> <http://sorger.med.harvard.edu/indra/relations/hasName> "non-motile cilium membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098804> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0060170> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0098804> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0097730> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098805> <http://sorger.med.harvard.edu/indra/relations/hasName> "whole membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098805> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0016020> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098807> <http://sorger.med.harvard.edu/indra/relations/hasName> "chloroplast thylakoid membrane protein complex" .
@@ -9712,8 +9677,8 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0098820> <http://sorger.med.harvard.edu/indra/relations/hasName> "trans-synaptic protein complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098820> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0032991> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098826> <http://sorger.med.harvard.edu/indra/relations/hasName> "endoplasmic reticulum tubular network membrane" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0098826> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005789> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0098826> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0071782> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0098826> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0016020> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0098826> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044432> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098827> <http://sorger.med.harvard.edu/indra/relations/hasName> "endoplasmic reticulum subcompartment" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098827> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031984> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098827> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044432> .
@@ -9779,7 +9744,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0098850> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044456> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098850> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0097458> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098852> <http://sorger.med.harvard.edu/indra/relations/hasName> "lytic vacuole membrane" .
-<http://sorger.med.harvard.edu/indra/locations/GO:0098852> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0000323> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098852> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005774> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098853> <http://sorger.med.harvard.edu/indra/relations/hasName> "endoplasmic reticulum-vacuole membrane contact site" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0098853> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044232> .
@@ -10177,7 +10141,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0099401> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098857> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0099501> <http://sorger.med.harvard.edu/indra/relations/hasName> "exocytic vesicle membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0099501> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0030658> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0099501> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0070382> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0099503> <http://sorger.med.harvard.edu/indra/relations/hasName> "secretory vesicle" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0099503> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031410> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0099512> <http://sorger.med.harvard.edu/indra/relations/hasName> "supramolecular fiber" .
@@ -10250,10 +10213,8 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0101003> <http://sorger.med.harvard.edu/indra/relations/hasName> "ficolin-1-rich granule membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0101003> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0030667> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0101003> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0070820> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0101003> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0101002> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0101004> <http://sorger.med.harvard.edu/indra/relations/hasName> "cytolytic granule membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0101004> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005765> .
-<http://sorger.med.harvard.edu/indra/locations/GO:0101004> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044194> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0101019> <http://sorger.med.harvard.edu/indra/relations/hasName> "nucleolar exosome (RNase complex)" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0101019> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0000176> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0101019> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044452> .
@@ -10318,6 +10279,23 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0106139> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044217> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0106143> <http://sorger.med.harvard.edu/indra/relations/hasName> "tRNA (m7G46) methyltransferase complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0106143> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0043527> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106172> <http://sorger.med.harvard.edu/indra/relations/hasName> "COPI-coated vesicle lumen" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106172> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0030137> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106172> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0060205> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106173> <http://sorger.med.harvard.edu/indra/relations/hasName> "COPII-coated vesicle lumen" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106173> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0060205> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106174> <http://sorger.med.harvard.edu/indra/relations/hasName> "phagolysosome vesicle lumen" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106174> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005775> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106174> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0032010> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106174> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0060205> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106174> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0097013> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106175> <http://sorger.med.harvard.edu/indra/relations/hasName> "phagolysosome vesicle membrane" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106175> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0030659> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106175> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0032010> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106175> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044437> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106176> <http://sorger.med.harvard.edu/indra/relations/hasName> "clathrin-coated endocytic vesicle lumen" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106176> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0045334> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0106176> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0071682> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0110001> <http://sorger.med.harvard.edu/indra/relations/hasName> "toxin-antitoxin complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0110001> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0005667> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0110001> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0017053> .
@@ -10504,6 +10482,13 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:0140266> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0042579> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0140268> <http://sorger.med.harvard.edu/indra/relations/hasName> "endoplasmic reticulum-plasma membrane contact site" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0140268> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044232> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0140275> <http://sorger.med.harvard.edu/indra/relations/hasName> "MIB complex" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0140275> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0031305> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0140275> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098800> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0140284> <http://sorger.med.harvard.edu/indra/relations/hasName> "endoplasmic reticulum-endosome membrane contact site" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0140284> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044232> .
+<http://sorger.med.harvard.edu/indra/locations/GO:0140288> <http://sorger.med.harvard.edu/indra/relations/hasName> "GBAF complex" .
+<http://sorger.med.harvard.edu/indra/locations/GO:0140288> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0070603> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0150001> <http://sorger.med.harvard.edu/indra/relations/hasName> "primary dendrite" .
 <http://sorger.med.harvard.edu/indra/locations/GO:0150001> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0030425> .
 <http://sorger.med.harvard.edu/indra/locations/GO:0150002> <http://sorger.med.harvard.edu/indra/relations/hasName> "distal dendrite" .
@@ -10701,7 +10686,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:1903349> <http://sorger.med.harvard.edu/indra/relations/hasName> "omegasome membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:1903349> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044424> .
 <http://sorger.med.harvard.edu/indra/locations/GO:1903349> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0098588> .
-<http://sorger.med.harvard.edu/indra/locations/GO:1903349> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:1990462> .
 <http://sorger.med.harvard.edu/indra/locations/GO:1903439> <http://sorger.med.harvard.edu/indra/relations/hasName> "calcitonin family receptor complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:1903439> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0097648> .
 <http://sorger.med.harvard.edu/indra/locations/GO:1903440> <http://sorger.med.harvard.edu/indra/relations/hasName> "amylin receptor complex" .
@@ -10774,7 +10758,6 @@
 <http://sorger.med.harvard.edu/indra/locations/GO:1904856> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0060205> .
 <http://sorger.med.harvard.edu/indra/locations/GO:1904930> <http://sorger.med.harvard.edu/indra/relations/hasName> "amphisome membrane" .
 <http://sorger.med.harvard.edu/indra/locations/GO:1904930> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0000421> .
-<http://sorger.med.harvard.edu/indra/locations/GO:1904930> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:0044753> .
 <http://sorger.med.harvard.edu/indra/locations/GO:1904949> <http://sorger.med.harvard.edu/indra/relations/hasName> "ATPase complex" .
 <http://sorger.med.harvard.edu/indra/locations/GO:1904949> <http://sorger.med.harvard.edu/indra/relations/partof> <http://sorger.med.harvard.edu/indra/locations/GO:1902494> .
 <http://sorger.med.harvard.edu/indra/locations/GO:1904974> <http://sorger.med.harvard.edu/indra/relations/hasName> "heparanase complex" .
