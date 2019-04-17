@@ -2,12 +2,12 @@ from __future__ import print_function, unicode_literals, absolute_import
 from builtins import dict, str
 import logging
 import itertools
-import rdflib.namespace
 from copy import deepcopy
 from indra.preassembler.hierarchy_manager import HierarchyManager, \
-    UnknownNamespaceException, hierarchies as default_hierarchies
+    hierarchies as default_hierarchies
 from indra.databases import hgnc_client
 from indra.statements import Agent, Complex, Evidence
+from indra.preassembler.grounding_mapper import GroundingMapper
 
 logger = logging.getLogger(__name__)
 
@@ -128,16 +128,12 @@ def _agent_from_uri(uri):
 
 
 def _agent_from_ns_id(ag_ns, ag_id):
-    ag_name = ag_id
-    db_refs = {'TEXT': ag_name}
-    if ag_ns == 'HGNC':
-        hgnc_id = hgnc_client.get_hgnc_id(ag_id)
-        if hgnc_id is not None:
-            db_refs['HGNC'] = hgnc_id
-            up_id = hgnc_client.get_uniprot_id(hgnc_id)
-            if up_id is not None:
-                db_refs['UP'] = up_id
-    else:
-        if ag_id is not None:
-            db_refs[ag_ns] = ag_id
-    return Agent(ag_name, db_refs=db_refs)
+    # Add the ID as a placeholder name
+    agent = Agent(ag_id)
+    # If we have a proper grounding, add to db_refs
+    if ag_id is not None:
+        agent.db_refs[ag_ns] = ag_id
+    # Now stqndardize db_refs and set standardized name
+    GroundingMapper.standardize_agent_name(agent, standardize_refs=True)
+    agent.db_refs['TEXT'] = agent.name
+    return agent
