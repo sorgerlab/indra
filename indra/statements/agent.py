@@ -141,8 +141,7 @@ class Agent(Concept):
                 gene_name = upc.get_gene_name(up, web_fallback=False)
                 if gene_name:
                     return 'HGNC', gene_name
-            else:
-                return 'UP', up
+            return 'UP', up
         if 'CHEBI' in self.db_refs:
             return 'CHEBI', self.db_refs['CHEBI']
         if 'MESH' in self.db_refs:

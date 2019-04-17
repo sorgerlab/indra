@@ -535,19 +535,17 @@ def test_entities_match_activatingsub():
 
 def test_entities_match_gef():
     """Test matching of entities only, entities match on name and grounding."""
-    sos1 = Agent('SOS1', db_refs={'HGNC': 'sos1'})
-    sos2 = Agent('SOS1', db_refs={'HGNC': 'sos2'})
-    sos3 = Agent('SOS1', db_refs={'HGNC': 'sos1'})
+    sos1 = Agent('SOS1', db_refs={'HGNC': '123'})
+    sos2 = Agent('SOS1', db_refs={'HGNC': '234'})
     nras1 = Agent('NRAS', db_refs={'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs={'HGNC': '7989'})
-    nras3 = Agent('NRAS', db_refs={'HGNC': 'dummy'})
     st1 = Gef(sos1, nras1,
               evidence=Evidence(text='foo'))
     st2 = Gef(sos2, nras2,
               evidence=Evidence(text='bar'))
     st3 = Gef(sos1, nras2,
               evidence=Evidence(text='bar'))
-    assert not st1.entities_match(st2)
+    assert not st1.entities_match(st2), (st1.matches_key(), st2.matches_key())
     assert not st2.entities_match(st3)
     assert st1.entities_match(st3)
     assert unicode_strs((st1, st2, st3))
@@ -555,8 +553,8 @@ def test_entities_match_gef():
 
 def test_entities_match_gap():
     """Test matching of entities only, entities match on name and grounding."""
-    rasa1 = Agent('RASA1', db_refs={'HGNC': 'rasa1'})
-    rasa2 = Agent('RASA1', db_refs={'HGNC': 'rasa2'})
+    rasa1 = Agent('RASA1', db_refs={'HGNC': '123'})
+    rasa2 = Agent('RASA1', db_refs={'HGNC': '234'})
     nras1 = Agent('NRAS', db_refs={'HGNC': '7989'})
     nras2 = Agent('NRAS', db_refs={'HGNC': 'dummy'})
     st1 = Gap(rasa1, nras1,
@@ -568,12 +566,12 @@ def test_entities_match_gap():
 
 def test_entities_match_complex():
     """Test matching of entities only, entities match on name and grounding."""
-    ksr1 = Agent('KSR1', db_refs={'HGNC': 'ksr1'})
-    ksr2 = Agent('KSR1', db_refs={'HGNC': 'ksr2'})
-    braf1 = Agent('BRAF', db_refs={'HGNC': 'braf1'})
-    braf2 = Agent('BRAF', db_refs={'HGNC': 'braf2'})
-    map2k1 = Agent('MAP2K1', db_refs={'HGNC': 'map2k1'})
-    map2k2 = Agent('MAP2K1', db_refs={'HGNC': 'map2k2'})
+    ksr1 = Agent('KSR1', db_refs={'HGNC': '123'})
+    ksr2 = Agent('KSR1', db_refs={'HGNC': '234'})
+    braf1 = Agent('BRAF', db_refs={'HGNC': '345'})
+    braf2 = Agent('BRAF', db_refs={'HGNC': '456'})
+    map2k1 = Agent('MAP2K1', db_refs={'HGNC': '567'})
+    map2k2 = Agent('MAP2K1', db_refs={'HGNC': '678'})
     st1 = Complex([ksr1, braf1, map2k1], evidence=Evidence(text='foo'))
     st2 = Complex([ksr2, braf2, map2k2], evidence=Evidence(text='bar'))
     st3 = Complex([braf2, map2k2, ksr2], evidence=Evidence(text='baz'))
