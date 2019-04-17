@@ -298,6 +298,18 @@ def test_map_agent():
     assert mapped_ag.db_refs.get('FPLX') == 'ERK'
 
 
+def test_name_standardize_hgnc_up():
+    a1 = Agent('x', db_refs={'HGNC': '9387'})
+    GroundingMapper.standardize_agent_name(a1, True)
+    assert a1.name == 'PRKAG3'
+    a1 = Agent('x', db_refs={'UP': 'Q9UGI9'})
+    GroundingMapper.standardize_agent_name(a1, True)
+    assert a1.name == 'PRKAG3'
+    a1 = Agent('x', db_refs={'UP': 'Q8BGM7'})
+    GroundingMapper.standardize_agent_name(a1, True)
+    assert a1.name == 'Prkag3'
+
+
 def test_name_standardize_chebi():
     a1 = Agent('x', db_refs={'CHEBI': '15996'})
     GroundingMapper.standardize_agent_name(a1, False)

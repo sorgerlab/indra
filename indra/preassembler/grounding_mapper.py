@@ -331,7 +331,7 @@ class GroundingMapper(object):
         # Importantly, HGNC here will be a symbol because that is what
         # get_grounding returns
         elif db_ns == 'HGNC':
-            agent.name = db_id
+            agent.name = hgnc_client.get_hgnc_name(db_id)
         elif db_ns == 'UP':
             # Try for the gene name
             gene_name = uniprot_client.get_gene_name(agent.db_refs['UP'],
