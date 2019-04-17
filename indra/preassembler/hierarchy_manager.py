@@ -469,7 +469,7 @@ class HierarchyManager(object):
     @staticmethod
     def get_uri(ns, id):
         if ns == 'HGNC':
-            return 'http://identifiers.org/hgnc.symbol/' + id
+            return 'http://identifiers.org/hgnc/' + id
         elif ns == 'UP':
             return 'http://identifiers.org/uniprot/' + id
         elif ns == 'FPLX':

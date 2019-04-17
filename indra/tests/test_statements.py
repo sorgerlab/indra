@@ -463,9 +463,9 @@ def test_agent_entity_match_go_mesh():
                                       'MESH': 'D002448'})
     adh2 = Agent('adhesion', db_refs={'GO': 'GO:0007155'})
     adh3 = Agent('Adhesion', db_refs={'MESH': 'D002448'})
-    # These are satisfied because MESH takes priority over GO
-    assert not adh1.entity_matches(adh2)
-    assert adh1.entity_matches(adh3)
+    # These are satisfied because GO takes priority over MESH
+    assert adh1.entity_matches(adh2)
+    assert not adh1.entity_matches(adh3)
     assert not adh2.entity_matches(adh3)
 
 

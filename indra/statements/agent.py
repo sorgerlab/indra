@@ -138,10 +138,10 @@ class Agent(Concept):
             return 'UP', str(up)
         if 'CHEBI' in self.db_refs:
             return 'CHEBI', self.db_refs['CHEBI']
-        if 'MESH' in self.db_refs:
-            return 'MESH', self.db_refs['MESH']
         if 'GO' in self.db_refs:
             return 'GO', self.db_refs['GO']
+        if 'MESH' in self.db_refs:
+            return 'MESH', self.db_refs['MESH']
         return None, None
 
     def isa(self, other, hierarchies):
