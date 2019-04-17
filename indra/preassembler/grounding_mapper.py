@@ -78,30 +78,36 @@ class GroundingMapper(object):
             the gene in Uniprot do not match or if there is no associated gene
             name in Uniprot.
         """
+        # First we map the Agent's raw text name to get a db_refs dict
         map_db_refs = deepcopy(self.gm.get(agent_text))
-        self.standardize_agent_db_refs(agent, map_db_refs, do_rename)
+        # We then standardize the IDs in the db_refs dict and set it as the
+        # Agent's db_refs
+        agent.db_refs = self.standardize_db_refs(map_db_refs)
+        # Finally, if renaming is needed we standardize the Agent's name
+        if do_rename:
+            standardize_name(agent)
 
     @staticmethod
-    def standardize_agent_db_refs(agent, map_db_refs, do_rename=True):
-        gene_name = None
-        up_id = map_db_refs.get('UP')
-        hgnc_sym = map_db_refs.get('HGNC')
+    def standardize_db_refs(db_refs):
+        """Return a dict with Harmonized entries from a given db_refs dict."""
+        up_id = db_refs.get('UP')
+        hgnc_sym = db_refs.get('HGNC')
         if up_id and not hgnc_sym:
             gene_name = uniprot_client.get_gene_name(up_id, False)
             if gene_name:
                 hgnc_id = hgnc_client.get_hgnc_id(gene_name)
                 if hgnc_id:
-                    map_db_refs['HGNC'] = hgnc_id
+                    db_refs['HGNC'] = hgnc_id
         elif hgnc_sym and not up_id:
             # Override the HGNC symbol entry from the grounding
             # map with an HGNC ID
             hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
             if hgnc_id:
-                map_db_refs['HGNC'] = hgnc_id
+                db_refs['HGNC'] = hgnc_id
                 # Now get the Uniprot ID for the gene
                 up_id = hgnc_client.get_uniprot_id(hgnc_id)
                 if up_id:
-                    map_db_refs['UP'] = up_id
+                    db_refs['UP'] = up_id
             # If there's no HGNC ID for this symbol, raise an
             # Exception
             else:
@@ -131,20 +137,8 @@ class GroundingMapper(object):
                         logger.error('No HGNC ID corresponding to gene '
                                      'symbol %s in grounding map.' % hgnc_sym)
                     else:
-                        map_db_refs['HGNC'] = hgnc_id
-        # Assign the DB refs from the grounding map to the agent
-        agent.db_refs = map_db_refs
-        # Are we renaming right now?
-        if do_rename:
-            # If there's a FamPlex ID, prefer that for the name
-            if agent.db_refs.get('FPLX'):
-                agent.name = agent.db_refs.get('FPLX')
-            # Get the HGNC symbol or gene name (retrieved above)
-            elif hgnc_sym is not None:
-                agent.name = hgnc_sym
-            elif gene_name is not None:
-                agent.name = gene_name
-        return
+                        db_refs['HGNC'] = hgnc_id
+        return db_refs
 
     def map_agents_for_stmt(self, stmt, do_rename=True):
         """Return a new Statement whose agents have been grounding mapped.
@@ -343,10 +337,17 @@ def standardize_name(agent):
         An INDRA Agent whose name attribute should be standardized based
         on grounding information.
     """
+    # We return immediately for None Agents
     if agent is None:
         return
+
+    # We next look for prioritized grounding, if missing, we return
+    db_ns, db_id = agent.get_grounding()
+    if not db_ns or not db_id:
+        return
+
     # If there's a FamPlex ID, prefer that for the name
-    if 'FPLX' in agent.db_refs:
+    if db_ns == 'FPLX':
         agent.name = agent.db_refs['FPLX']
     # Take a HGNC name from Uniprot next
     elif 'UP' in agent.db_refs:
@@ -363,7 +364,7 @@ def standardize_name(agent):
         if chebi_name:
             agent.name = chebi_name
     elif 'MESH' in agent.db_refs:
-        mesh_name = mesh_client.get_mesh_name(agent.db_refs['MESh'])
+        mesh_name = mesh_client.get_mesh_name(agent.db_refs['MESH'])
         if mesh_name:
             agent.name = mesh_name
     elif 'GO' in agent.db_refs:
