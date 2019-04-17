@@ -137,6 +137,40 @@ class GroundingMapper(object):
                                  'groundings found, standardizing to UP:%s' %
                                  (hgnc_id, up_id, mapped_up_id))
                 db_refs['UP'] = mapped_up_id
+
+        # Now try to improve chemical groundings
+        pc_id = db_refs.get('PUBCHEM')
+        chebi_id = db_refs.get('CHEBI')
+        mapped_chebi_id = None
+        mapped_pc_id = None
+        # If we have original PUBCHEM and CHEBI IDs, we always keep those:
+        if pc_id:
+            mapped_chebi_id = chebi_client.get_chebi_id_from_pubchem(pc_id)
+            if mapped_chebi_id and not mapped_chebi_id.startswith('CHEBI:'):
+                mapped_chebi_id = 'CHEBI:%s' % mapped_chebi_id
+        if chebi_id:
+            mapped_pc_id = chebi_client.get_pubchem_id(chebi_id)
+        # We always keep originals if both are present but display warnings
+        # if there are inconsistencies
+        if pc_id and chebi_id:
+            if mapped_pc_id and pc_id != mapped_pc_id:
+                msg = ('Inconsistent groundings PUBCHEM:%s not equal to '
+                       'PUBCHEM:%s mapped from %s, standardizing to '
+                       'PUBCHEM:%s.' % (pc_id, mapped_pc_id, chebi_id, pc_id))
+                logger.warning(msg)
+            if mapped_chebi_id and chebi_id != mapped_chebi_id:
+                msg = ('Inconsistent groundings %s not equal to '
+                       '%s mapped from PUBCHEM:%s, standardizing to '
+                       '%s.' % (chebi_id, mapped_chebi_id, pc_id, chebi_id))
+                logger.warning(msg)
+        # If we have PC and not CHEBI but can map to CHEBI, we do that
+        elif pc_id and not chebi_id and mapped_chebi_id:
+            db_refs['CHEBI'] = mapped_chebi_id
+        # If we have PC and not CHEBI but can map to PC, we do that
+        elif chebi_id and not pc_id and mapped_pc_id:
+            db_refs['PUBCHEM'] = mapped_pc_id
+        # Otherwise there is no useful mapping that we can add and no
+        # further conflict to resolve.
         return db_refs
 
     def map_agents_for_stmt(self, stmt, do_rename=True):
