@@ -11,6 +11,7 @@ stmt3 = Phosphorylation(None, Agent('BRAF', db_refs={'HGNC': '1097',
 stmt4 = Phosphorylation(None, Agent('RAF', db_refs={'FPLX': 'RAF'}))
 stmt5 = Phosphorylation(Agent('X'), Agent('RAF', db_refs={'FPLX': 'RAF'}))
 
+
 def test_add_stmts_blank():
     im = IncrementalModel()
     im.add_statements('12345', stmts)
@@ -18,11 +19,13 @@ def test_add_stmts_blank():
     im.preassemble()
     assert len(im.assembled_stmts) == 2
 
+
 def test_add_stmts_blank_nofilter():
     im = IncrementalModel()
     im.add_statements('12345', stmts)
     im.preassemble(filters=None)
     assert len(im.assembled_stmts) == 2
+
 
 def test_add_stmts_blank_emptyfilter():
     im = IncrementalModel()
@@ -30,17 +33,20 @@ def test_add_stmts_blank_emptyfilter():
     im.preassemble(filters=[])
     assert len(im.assembled_stmts) == 2
 
+
 def test_add_stmts_blank_noprior():
     im = IncrementalModel()
     im.add_statements('12345', stmts)
     im.preassemble(filters=['prior_one'])
     assert len(im.assembled_stmts) == 2
 
+
 def test_add_stmts_blank_noprior2():
     im = IncrementalModel()
     im.add_statements('12345', stmts)
     im.preassemble(filters=['prior_all'])
     assert len(im.assembled_stmts) == 2
+
 
 def test_add_stmts_prior_one():
     im = IncrementalModel()
@@ -50,6 +56,7 @@ def test_add_stmts_prior_one():
     im.preassemble(filters=['prior_one'])
     assert len(im.assembled_stmts) == 2
 
+
 def test_add_stmts_prior_all():
     im = IncrementalModel()
     im.stmts['prior'] = [stmts[0]]
@@ -57,6 +64,7 @@ def test_add_stmts_prior_all():
     im.add_statements('12345', [stmts[1]])
     im.preassemble(filters=['prior_all'])
     assert len(im.assembled_stmts) == 1
+
 
 def test_grounding_not_all():
     im = IncrementalModel()
@@ -66,6 +74,7 @@ def test_grounding_not_all():
     im.preassemble(filters=['grounding'])
     assert len(im.assembled_stmts) == 0
 
+
 def test_grounding_all():
     im = IncrementalModel()
     stmt = Complex([Agent('A', db_refs={'UP': 'ABCD'}), 
@@ -74,11 +83,13 @@ def test_grounding_all():
     im.preassemble(filters=['grounding'])
     assert len(im.assembled_stmts) == 1
 
+
 def test_grounding_none():
     im = IncrementalModel()
     im.add_statements('12345', stmts)
     im.preassemble(filters=['grounding'])
     assert len(im.assembled_stmts) == 0
+
 
 def test_grounding_none_agent():
     im = IncrementalModel()
@@ -86,11 +97,12 @@ def test_grounding_none_agent():
     im.preassemble(filters=['grounding'])
     assert len(im.assembled_stmts) == 1
 
+
 def test_human_only():
     im = IncrementalModel()
     stmt1 = Phosphorylation(None, Agent('BRAF', db_refs={'UP': 'P15056'}))
     stmt2 = Phosphorylation(None, Agent('BRAF', db_refs={'UP': 'P28028'}))
-    stmt3 = Phosphorylation(None, Agent('BRAF', db_refs={'HGNC': 'BRAF'}))
+    stmt3 = Phosphorylation(None, Agent('BRAF', db_refs={'HGNC': '1097'}))
     stmt4 = Phosphorylation(None, Agent('BRAF', db_refs={}))
     im.add_statements('12345', [stmt1])
     im.preassemble(filters=['human_only'])
@@ -100,7 +112,8 @@ def test_human_only():
     assert len(im.assembled_stmts) == 1
     im.add_statements('12346', [stmt3])
     im.preassemble(filters=['human_only'])
-    assert (len(im.assembled_stmts) == 2)
+    assert len(im.assembled_stmts) == 1
     im.add_statements('12346', [stmt4])
     im.preassemble(filters=['human_only'])
-    assert (len(im.assembled_stmts) == 3)
+    assert len(im.assembled_stmts) == 2, \
+        (im.assembled_stmts[0].sub.db_refs, im.assembled_stmts[1].sub.db_refs)

@@ -374,7 +374,7 @@ class GroundingMapper(object):
         for _, stmt in enumerate(mapped_stmts):
             # Iterate over the agents
             for agent in stmt.agent_list():
-                GroundingMapper.standardize_agent_name(agent, False)
+                GroundingMapper.standardize_agent_name(agent, True)
         return mapped_stmts
 
 
