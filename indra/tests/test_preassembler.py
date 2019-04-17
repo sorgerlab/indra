@@ -270,7 +270,7 @@ def test_modification_norefinement_subsfamily():
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
     assert len(stmts) == 2
-    assert len(stmts[1].evidence)==1
+    assert len(stmts[0].evidence) == 1, stmts
 
 
 def test_modification_norefinement_enzfamily():
@@ -451,7 +451,9 @@ def test_grounding_aggregation():
     st3 = Phosphorylation(None, braf3)
     pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
     unique_stmts = pa.combine_duplicates()
-    assert len(unique_stmts) == 3
+    # In the above, braf1 and braf3 will be combined because they have the
+    # same grounding via HGNC and UP, respectively
+    assert len(unique_stmts) == 2, unique_stmts
 
 
 def test_grounding_aggregation_complex():
@@ -464,7 +466,9 @@ def test_grounding_aggregation_complex():
     st3 = Complex([mek, braf3])
     pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
     unique_stmts = pa.combine_duplicates()
-    assert len(unique_stmts) == 3
+    # In the above, braf1 and braf3 will be combined because they have the
+    # same grounding via HGNC and UP, respectively
+    assert len(unique_stmts) == 2, unique_stmts
 
 
 def test_render_stmt_graph():
