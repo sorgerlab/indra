@@ -2,15 +2,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 import csv
-import sys
 import json
-import pickle
 import logging
 from copy import deepcopy
 from collections import Counter
 from itertools import groupby, chain
 from indra.statements import Agent
-from indra.databases import uniprot_client, hgnc_client
+from indra.databases import uniprot_client, hgnc_client, chebi_client, \
+    mesh_client, go_client
 from indra.util import read_unicode_csv, write_unicode_csv
 
 logger = logging.getLogger(__name__)
@@ -305,12 +304,7 @@ class GroundingMapper(object):
         Creates a new list of statements without modifying the original list.
 
         The agents in a statement should be renamed if the grounding map has
-        updated their db_refs. If an agent contains a FamPlex grounding, the
-        FamPlex ID is used as a name. Otherwise if it contains a Uniprot ID,
-        an attempt is made to find the associated HGNC gene name. If one can
-        be found it is used as the agent name and the associated HGNC ID is
-        added as an entry to the db_refs. If neither a FamPlex ID or HGNC name
-        can be found, falls back to the original name.
+        updated their db_refs.
 
         Parameters
         ----------
@@ -328,30 +322,55 @@ class GroundingMapper(object):
         for _, stmt in enumerate(mapped_stmts):
             # Iterate over the agents
             for agent in stmt.agent_list():
-                if agent is None:
-                    continue
-                # If there's a FamPlex ID, prefer that for the name
-                if agent.db_refs.get('FPLX'):
-                    agent.name = agent.db_refs.get('FPLX')
-                # Take a HGNC name from Uniprot next
-                elif agent.db_refs.get('UP'):
-                    # Try for the gene name
-                    gene_name = uniprot_client.get_gene_name(
-                                                    agent.db_refs.get('UP'),
-                                                    web_fallback=False)
-                    if gene_name:
-                        agent.name = gene_name
-                        hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                        if hgnc_id:
-                            agent.db_refs['HGNC'] = hgnc_id
-                    # Take the text string
-                    #if agent.db_refs.get('TEXT'):
-                    #    agent.name = agent.db_refs.get('TEXT')
-                    # If this fails, then we continue with no change
-                # Fall back to the text string
-                #elif agent.db_refs.get('TEXT'):
-                #    agent.name = agent.db_refs.get('TEXT')
+                standardize_name(agent)
         return mapped_stmts
+
+
+def standardize_name(agent):
+    """Standardize the name of an Agent based on grounding information.
+
+    If an agent contains a FamPlex grounding, the FamPlex ID is used as a
+    name. Otherwise if it contains a Uniprot ID, an attempt is made to find
+    the associated HGNC gene name. If one can be found it is used as the agent
+    name and the associated HGNC ID is added as an entry to the db_refs.
+    Similarly, CHEBI, MESH and GO IDs are used in this order of priority to
+    assign a standardized name to the Agent. If no relevant IDs are found,
+    the name is not changed.
+
+    Parameters
+    ----------
+    agent : indra.statements.Agent
+        An INDRA Agent whose name attribute should be standardized based
+        on grounding information.
+    """
+    if agent is None:
+        return
+    # If there's a FamPlex ID, prefer that for the name
+    if 'FPLX' in agent.db_refs:
+        agent.name = agent.db_refs['FPLX']
+    # Take a HGNC name from Uniprot next
+    elif 'UP' in agent.db_refs:
+        # Try for the gene name
+        gene_name = uniprot_client.get_gene_name(agent.db_refs['UP'],
+                                                 web_fallback=False)
+        if gene_name:
+            agent.name = gene_name
+            hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+            if hgnc_id:
+                agent.db_refs['HGNC'] = hgnc_id
+    elif 'CHEBI' in agent.db_refs:
+        chebi_name = chebi_client.chebi_id_to_name(agent.db_refs['CHEBI'])
+        if chebi_name:
+            agent.name = chebi_name
+    elif 'MESH' in agent.db_refs:
+        mesh_name = mesh_client.get_mesh_name(agent.db_refs['MESh'])
+        if mesh_name:
+            agent.name = mesh_name
+    elif 'GO' in agent.db_refs:
+        go_name = go_client.get_go_label(agent.db_refs['GO'])
+        if go_name:
+            agent.name = go_name
+    return
 
 
 # TODO: handle the cases when there is more than one entry for the same
