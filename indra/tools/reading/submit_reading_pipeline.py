@@ -1,11 +1,8 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
-import os
+mport os
 import boto3
 import logging
 import argparse
-import botocore.session
+
 from time import sleep
 from datetime import datetime
 from indra.literature import elsevier_client as ec
