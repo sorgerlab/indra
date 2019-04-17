@@ -123,8 +123,6 @@ class Agent(Concept):
             namespace. If no preferred grounding is available, a tuple of
             Nones is returned.
         """
-        import indra.databases.hgnc_client as hgc
-        import indra.databases.uniprot_client as upc
         fplx = self.db_refs.get('FPLX')
         if fplx:
             return 'FPLX', fplx
@@ -132,16 +130,12 @@ class Agent(Concept):
         if hgnc:
             if isinstance(hgnc, list):
                 hgnc = hgnc[0]
-            return 'HGNC', hgc.get_hgnc_name(str(hgnc))
+            return 'HGNC', str(hgnc)
         up = self.db_refs.get('UP')
         if up:
             if isinstance(up, list):
                 up = up[0]
-            if upc.is_human(up):
-                gene_name = upc.get_gene_name(up, web_fallback=False)
-                if gene_name:
-                    return 'HGNC', gene_name
-            return 'UP', up
+            return 'UP', str(up)
         if 'CHEBI' in self.db_refs:
             return 'CHEBI', self.db_refs['CHEBI']
         if 'MESH' in self.db_refs:
