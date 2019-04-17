@@ -42,6 +42,20 @@ def test_map_standardize_up_hgnc():
     assert st.enz.db_refs['UP'] == st.sub.db_refs['UP']
 
 
+def test_map_standardize_chebi_pc():
+    a1 = Agent('X', db_refs={'PUBCHEM': '42611257'})
+    a2 = Agent('Y', db_refs={'CHEBI': 'CHEBI:63637'})
+    gm = GroundingMapper(default_grounding_map)
+    stmt = Phosphorylation(a1, a2)
+    mapped_stmts = gm.map_agents([stmt])
+    assert len(mapped_stmts) == 1
+    st = mapped_stmts[0]
+    assert st.enz.db_refs['PUBCHEM'] == st.sub.db_refs['PUBCHEM'], \
+        (st.enz.db_refs, st.sub.db_refs)
+    assert st.enz.db_refs['CHEBI'] == st.sub.db_refs['CHEBI'], \
+        (st.enz.db_refs, st.sub.db_refs)
+
+
 def test_bound_condition_mapping():
     # Verify that the grounding mapper grounds the agents within a bound
     # condition
@@ -225,6 +239,15 @@ def test_up_with_no_gene_name_with_hgnc_sym():
         mapped_stmts[0].sub.db_refs
     assert mapped_stmts[0].sub.db_refs['UP'] == 'P28482', \
         mapped_stmts[0].sub.db_refs
+
+
+def test_multiple_mapped_up():
+    ag = Agent('xx', db_refs={'HGNC': '377', 'UP': 'O43687'})
+    gm = GroundingMapper(default_grounding_map)
+    gm.standardize_agent_name(ag, True)
+    assert ag.db_refs['HGNC'] == '377'
+    assert ag.db_refs['UP'] == 'O43687'
+    assert ag.name == 'AKAP7'
 
 
 def test_up_and_mismatched_hgnc():
