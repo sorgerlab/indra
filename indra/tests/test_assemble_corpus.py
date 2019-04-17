@@ -115,6 +115,7 @@ def test_filter_uuid_list():
     st_out = ac.filter_uuid_list([st1, st4], [st1.uuid])
     assert len(st_out) == 1
 
+
 def test_filter_genes_only():
     st_out = ac.filter_genes_only([st1, st5])
     assert len(st_out) == 2
@@ -136,6 +137,7 @@ def test_filter_genes_only():
     assert len(st18_copy.sub.bound_conditions) == 1
     st_out = ac.filter_genes_only([st18_copy], remove_bound=True)
     assert len(st_out[0].sub.bound_conditions) == 0
+
 
 def test_filter_human_only():
     st_out = ac.filter_human_only([st1, st5])
@@ -211,6 +213,7 @@ def test_filter_gene_list_invert():
                                  invert=True)
     assert len(st_out) == 0
 
+
 def test_filter_gene_list_families():
     stmts_out = ac.filter_gene_list([st16, st17], ['MAPK1'], 'one',
                                     allow_families=False)
@@ -222,17 +225,21 @@ def test_filter_gene_list_families():
     assert st16 in stmts_out
     assert st17 in stmts_out
 
+
 def test_run_preassembly():
     st_out = ac.run_preassembly([st1, st3, st5, st6])
     assert len(st_out) == 2
+
 
 def test_run_preassembly_all_stmts():
     st_out = ac.run_preassembly([st1, st3, st5, st6], return_toplevel=False)
     assert len(st_out) == 4
 
+
 def test_expand_families():
     st_out = ac.expand_families([st10])
     assert len(st_out) == 2
+
 
 def test_strip_agent_context():
     st_out = ac.strip_agent_context([st11])
@@ -243,20 +250,24 @@ def test_strip_agent_context():
     assert not st_out[0].sub.activity
     assert not st_out[0].sub.location
 
+
 def test_filter_direct():
     st_out = ac.filter_direct([st12])
     assert len(st_out) == 1
     st_out = ac.filter_direct([st13])
     assert len(st_out) == 0
 
+
 def test_filter_belief():
     st_out = ac.filter_belief([st1, st2, st3], 0.75)
     assert len(st_out) == 2
+
 
 def test_reduce_activities():
     st_out = ac.reduce_activities([st14, st15])
     assert st_out[0].obj_activity == 'kinase'
     assert st_out[1].obj_activity == 'kinase'
+
 
 def test_filter_source():
     ev1 = Evidence(source_api='bel')
@@ -278,6 +289,7 @@ def test_filter_source():
     st_out = ac.filter_evidence_source([st1, st2, st3], ['bel', 'biopax'],
                                        'none')
     assert (len(st_out) == 1)
+
 
 def test_map_grounding():
     a = Agent('MEK', db_refs={'TEXT': 'MEK'})
@@ -340,9 +352,11 @@ def test_filter_by_type():
     st_out = ac.filter_by_type([st1, st14], Phosphorylation)
     assert len(st_out) == 1
 
+
 def test_filter_top_level():
     st_out = ac.filter_top_level([st14, st15])
     assert len(st_out) == 1
+
 
 def test_filter_no_hypothesis():
     a = Agent('MAPK1')
@@ -375,6 +389,7 @@ def test_belief_cut_plus_filter_top():
     st_top_level = ac.filter_top_level(st_high_belief)
     assert len(st_top_level) == 1
 
+
 def test_filter_inconsequential_mods():
     mc = ModCondition('phosphorylation', None, None, True)
     st1 = Phosphorylation(None, Agent('a'))
@@ -385,11 +400,13 @@ def test_filter_inconsequential_mods():
     st_out = ac.filter_inconsequential_mods([st1, st2], whitelist=whitelist)
     assert len(st_out) == 2
 
+
 def test_filter_inconsequential_mods2():
     st1 = Phosphorylation(Agent('a'), Agent('b'), 'S', '315')
     whitelist = {'b': [('phosphorylation', 'S', '315')]}
     st_out = ac.filter_inconsequential_mods([st1, st2], whitelist=whitelist)
     assert len(st_out) == 1
+
 
 def test_filter_inconsequential_activities():
     st1 = Activation(Agent('a', activity=ActivityCondition('kinase', True)),
@@ -399,6 +416,7 @@ def test_filter_inconsequential_activities():
     assert len(st_out) == 1
     st_out = ac.filter_inconsequential_acts(st_out)
     assert len(st_out) == 0
+
 
 def test_filter_mutation_status():
     braf_mut = Agent('BRAF', mutations=MutCondition('600', 'V', 'E'))
