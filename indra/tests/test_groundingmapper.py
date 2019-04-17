@@ -122,7 +122,7 @@ def test_renaming():
     # Should draw on BE first
     assert renamed_stmts[0].sub.name == 'AKT family'
     # Then on the HGNC lookup from Uniprot
-    assert renamed_stmts[1].sub.name == 'AKT1'
+    assert renamed_stmts[1].sub.name == 'AKT1', renamed_stmts[1].sub.name
     # Don't fall back on text if there's no grounding
     assert renamed_stmts[2].sub.name == 'pkbA'
     assert renamed_stmts[3].sub.name == 'tat'

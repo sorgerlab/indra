@@ -82,68 +82,86 @@ class GroundingMapper(object):
         map_db_refs = deepcopy(self.gm.get(agent_text))
         # We then standardize the IDs in the db_refs dict and set it as the
         # Agent's db_refs
-        agent.db_refs = self.standardize_db_refs(map_db_refs)
+        agent.db_refs = self.standardize_mapped_refs(map_db_refs)
         # Finally, if renaming is needed we standardize the Agent's name
         if do_rename:
-            standardize_name(agent)
+            standardize_name(agent, refs_standardized=True)
 
     @staticmethod
-    def standardize_db_refs(db_refs):
-        """Return a dict with Harmonized entries from a given db_refs dict.
+    def standardize_mapped_refs(mapped_refs):
+        """Return a standardized db refs dict from a mapped refs dict.
 
         Importantly this function assumes that the incoming db_refs dict's
         HGNC entry is an HGNC symbol, whereas the returned db_refs dict's
-        HGNC entry is an HGNC ID. Therefore this function should not be used
-        for db_refs dicts that don't satisfy this property.
+        HGNC entry is an HGNC ID. Therefore this function is specific to
+        mapped references produces by this mapper.
+
+        Parameters
+        ----------
+        mapped_refs : dict
+            A dict of refs produced by a GroundingMapper mapping.
+
+        Returns
+        -------
+        dict
+            A standard db_refs dict with harmonized entries.
+        """
+        # First we try to get an HGNC ID from the symbol
+        hgnc_sym = mapped_refs.get('HGNC')
+        if hgnc_sym:
+            hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
+            # Override the HGNC symbol entry from the grounding
+            # map with an HGNC ID
+            if hgnc_id:
+                mapped_refs['HGNC'] = hgnc_id
+            else:
+                logger.error('No HGNC ID corresponding to gene '
+                             'symbol %s in grounding map.' % hgnc_sym)
+                # Remove the HGNC symbol in this case
+                mapped_refs.pop('HGNC')
+
+        # At this point there is definitely no HGNC symbol under the HGNC key
+        # so we can proceed to the generic db_refs mapping
+        return GroundingMapper.standardize_db_refs(mapped_refs)
+
+    @staticmethod
+    def standardize_db_refs(db_refs):
+        """Return a standardized db refs dict for a given db refs dict.
+
+        Parameters
+        ----------
+        db_refs : dict
+            A dict of db refs that may not be standardized, i.e., may be
+            missing an available UP ID corresponding to an existing HGNC ID.
+
+        Returns
+        -------
+        dict
+            The db_refs dict with standardized entries.
         """
         up_id = db_refs.get('UP')
-        hgnc_sym = db_refs.get('HGNC')
-        if up_id and not hgnc_sym:
+        hgnc_id = db_refs.get('HGNC')
+        # If we have a UP ID and no HGNC ID, we try to get a gene name,
+        # and if possible, a HGNC ID from that
+        if up_id and not hgnc_id:
             gene_name = uniprot_client.get_gene_name(up_id, False)
             if gene_name:
                 hgnc_id = hgnc_client.get_hgnc_id(gene_name)
                 if hgnc_id:
                     db_refs['HGNC'] = hgnc_id
-        elif hgnc_sym and not up_id:
-            # Override the HGNC symbol entry from the grounding
-            # map with an HGNC ID
-            hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
-            if hgnc_id:
-                db_refs['HGNC'] = hgnc_id
-                # Now get the Uniprot ID for the gene
-                up_id = hgnc_client.get_uniprot_id(hgnc_id)
-                if up_id:
-                    db_refs['UP'] = up_id
-            # If there's no HGNC ID for this symbol, raise an
-            # Exception
-            else:
-                raise ValueError('No HGNC ID corresponding to gene '
-                                 'symbol %s in grounding map.' %
-                                 hgnc_sym)
-        # If we have both, check the gene symbol ID against the
-        # mapping from Uniprot
-        elif up_id and hgnc_sym:
-            # Get HGNC Symbol from Uniprot
-            gene_name = uniprot_client.get_gene_name(up_id)
-            if not gene_name:
-                raise ValueError('No gene name found for Uniprot '
-                                 'ID %s (expected %s)' %
-                                 (up_id, hgnc_sym))
-            # We got gene name, compare it to the HGNC name
-            else:
-                if gene_name != hgnc_sym:
-                    raise ValueError('Gene name %s for Uniprot ID '
-                                     '%s does not match HGNC '
-                                     'symbol %s given in grounding '
-                                     'map.' %
-                                     (gene_name, up_id, hgnc_sym))
-                else:
-                    hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
-                    if not hgnc_id:
-                        logger.error('No HGNC ID corresponding to gene '
-                                     'symbol %s in grounding map.' % hgnc_sym)
-                    else:
-                        db_refs['HGNC'] = hgnc_id
+        # Otherwise, if we don't have a UP ID but have an HGNC ID, we try to
+        # get the UP ID
+        elif hgnc_id:
+            # Now get the Uniprot ID for the gene
+            mapped_up_id = hgnc_client.get_uniprot_id(hgnc_id)
+            if mapped_up_id:
+                # If we find an inconsistency, we explain it in an error
+                # message and fall back on the mapped ID
+                if up_id and up_id != mapped_up_id:
+                    logger.error('Inconsistent HGNC:%s and UP:%s '
+                                 'groundings found, standardizing to UP:%s' %
+                                 (hgnc_id, up_id, mapped_up_id))
+                db_refs['UP'] = mapped_up_id
         return db_refs
 
     def map_agents_for_stmt(self, stmt, do_rename=True):
@@ -323,7 +341,7 @@ class GroundingMapper(object):
         return mapped_stmts
 
 
-def standardize_name(agent):
+def standardize_name(agent, refs_standardized=False):
     """Standardize the name of an Agent based on grounding information.
 
     If an agent contains a FamPlex grounding, the FamPlex ID is used as a
@@ -339,6 +357,9 @@ def standardize_name(agent):
     agent : indra.statements.Agent
         An INDRA Agent whose name attribute should be standardized based
         on grounding information.
+    refs_standardized : Optional[bool]
+        If True, this function assumes that the Agent's db_refs have already
+        been standardized, e.g., HGNC has been mapped to UP. Default: False
     """
     # We return immediately for None Agents
     if agent is None:
@@ -788,7 +809,7 @@ def run_adeft_disambiguation(stmt, agent, idx):
         if db_ns == 'HGNC':
             hgnc_sym = hgnc_client.get_hgnc_name(db_id)
             standard_db_refs = \
-                GroundingMapper.standardize_db_refs({'HGNC': hgnc_sym})
+                GroundingMapper.standardize_mapped_refs({'HGNC': hgnc_sym})
             new_agent.db_refs = standard_db_refs
         annots['agents']['adeft'][idx] = disamb_scores
 
