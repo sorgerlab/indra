@@ -82,47 +82,10 @@ class GroundingMapper(object):
         map_db_refs = deepcopy(self.gm.get(agent_text))
         # We then standardize the IDs in the db_refs dict and set it as the
         # Agent's db_refs
-        agent.db_refs = self.standardize_mapped_refs(map_db_refs)
+        agent.db_refs = self.standardize_db_refs(map_db_refs)
         # Finally, if renaming is needed we standardize the Agent's name
         if do_rename:
             self.standardize_agent_name(agent, refs_standardized=True)
-
-    @staticmethod
-    def standardize_mapped_refs(mapped_refs):
-        """Return a standardized db refs dict from a mapped refs dict.
-
-        Importantly this function assumes that the incoming db_refs dict's
-        HGNC entry is an HGNC symbol, whereas the returned db_refs dict's
-        HGNC entry is an HGNC ID. Therefore this function is specific to
-        mapped references produces by this mapper.
-
-        Parameters
-        ----------
-        mapped_refs : dict
-            A dict of refs produced by a GroundingMapper mapping.
-
-        Returns
-        -------
-        dict
-            A standard db_refs dict with harmonized entries.
-        """
-        # First we try to get an HGNC ID from the symbol
-        hgnc_sym = mapped_refs.get('HGNC')
-        if hgnc_sym:
-            hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
-            # Override the HGNC symbol entry from the grounding
-            # map with an HGNC ID
-            if hgnc_id:
-                mapped_refs['HGNC'] = hgnc_id
-            else:
-                logger.error('No HGNC ID corresponding to gene '
-                             'symbol %s in grounding map.' % hgnc_sym)
-                # Remove the HGNC symbol in this case
-                mapped_refs.pop('HGNC')
-
-        # At this point there is definitely no HGNC symbol under the HGNC key
-        # so we can proceed to the generic db_refs mapping
-        return GroundingMapper.standardize_db_refs(mapped_refs)
 
     @staticmethod
     def standardize_db_refs(db_refs):
@@ -317,7 +280,7 @@ class GroundingMapper(object):
         return mapped_stmts
 
     @staticmethod
-    def standardize_agent_name(agent, refs_standardized=False):
+    def standardize_agent_name(agent, standardize_refs=True):
         """Standardize the name of an Agent based on grounding information.
 
         If an agent contains a FamPlex grounding, the FamPlex ID is used as a
@@ -333,17 +296,16 @@ class GroundingMapper(object):
         agent : indra.statements.Agent
             An INDRA Agent whose name attribute should be standardized based
             on grounding information.
-        refs_standardized : Optional[bool]
-            If True, this function assumes that the Agent's db_refs have
-            already been standardized, e.g., HGNC has been mapped to UP.
-            Default: False
+        standardize_refs : Optional[bool]
+            If True, this function assumes that the Agent's db_refs need to
+            be standardized, e.g., HGNC mapped to UP.
+            Default: True
         """
         # We return immediately for None Agents
         if agent is None:
             return
 
-        # If refs have not been standardized yet, we do so
-        if not refs_standardized:
+        if standardize_refs:
             agent.db_refs = GroundingMapper.standardize_db_refs(agent.db_refs)
 
         # We next look for prioritized grounding, if missing, we return
@@ -467,6 +429,22 @@ def load_grounding_map(grounding_map_path, ignore_path=None,
                 g_map[key] = db_refs
             else:
                 g_map[key] = None
+    for key, mapped_refs in deepcopy(g_map).items():
+        if not mapped_refs:
+            continue
+        hgnc_sym = mapped_refs.get('HGNC')
+        if hgnc_sym:
+            hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
+            # Override the HGNC symbol entry from the grounding
+            # map with an HGNC ID
+            if hgnc_id:
+                mapped_refs['HGNC'] = hgnc_id
+            else:
+                logger.error('No HGNC ID corresponding to gene '
+                             'symbol %s in grounding map.' % hgnc_sym)
+                # Remove the HGNC symbol in this case
+                mapped_refs.pop('HGNC')
+        g_map[key] = mapped_refs
     return g_map
 
 
@@ -812,9 +790,8 @@ def run_adeft_disambiguation(stmt, agent, idx):
         logger.info('Disambiguated %s to: %s, %s:%s' %
                     (agent_txt, standard_name, db_ns, db_id))
         if db_ns == 'HGNC':
-            hgnc_sym = hgnc_client.get_hgnc_name(db_id)
             standard_db_refs = \
-                GroundingMapper.standardize_mapped_refs({'HGNC': hgnc_sym})
+                GroundingMapper.standardize_mapped_refs({'HGNC': db_id})
             new_agent.db_refs = standard_db_refs
         annots['agents']['adeft'][idx] = disamb_scores
 
