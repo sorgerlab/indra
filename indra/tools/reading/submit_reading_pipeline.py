@@ -1,12 +1,10 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
 import os
 import boto3
 import logging
 import argparse
-import botocore.session
+
 from time import sleep
+from threading import Thread
 from datetime import datetime
 from indra.literature import elsevier_client as ec
 from indra.literature.elsevier_client import _ensure_api_keys
@@ -397,7 +395,29 @@ class Submitter(object):
         return []
 
     def submit_reading(self, input_fname, start_ix, end_ix, ids_per_job,
-                       num_tries=1):
+                       num_tries=1, stagger=0):
+        """Submit a batch of reading jobs
+
+        Parameters
+        ----------
+        input_fname : str
+            The name of the file containing the ids to be read.
+        start_ix : int
+            The line index of the first item in the list to read.
+        end_ix : int
+            The line index of the last item in the list to be read.
+        ids_per_job : int
+            The number of ids to be given to each job.
+        num_tries : int
+            The number of times a job may be attempted.
+        stagger : float
+            The number of seconds to wait between job submissions.
+
+        Returns
+        -------
+        job_list : list[str]
+            A list of job id strings.
+        """
         # stash this for later.
         self.ids_per_job = ids_per_job
 
@@ -423,6 +443,7 @@ class Submitter(object):
         batch_client = boto3.client('batch', region_name='us-east-1')
         job_list = []
         for job_start_ix in range(start_ix, end_ix, ids_per_job):
+            sleep(stagger)
             job_end_ix = job_start_ix + ids_per_job
             if job_end_ix > end_ix:
                 job_end_ix = end_ix
@@ -455,6 +476,24 @@ class Submitter(object):
                                  kill_on_log_timeout=kill_on_timeout,
                                  stash_log_method=stash_log_method,
                                  tag_instances=tag_instances, **kwargs)
+
+    def run(self, input_fname, ids_per_job, stagger=0, **wait_params):
+        """Run this submission all the way.
+
+        This method will run both `submit_reading` and `watch_and_wait`,
+        blocking on the latter.
+        """
+        submit_thread = Thread(target=self.submit_reading,
+                               args=(input_fname, 0, None, ids_per_job),
+                               kwargs={'stagger': stagger},
+                               daemon=True)
+        submit_thread.start()
+        self.watch_and_wait(**wait_params)
+        submit_thread.join(0)
+        if submit_thread.is_alive():
+            logger.warning("Submit thread is still running even after job"
+                           "completion.")
+        return
 
 
 class PmidSubmitter(Submitter):
