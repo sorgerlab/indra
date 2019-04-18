@@ -2101,6 +2101,23 @@ class Association(Complex):
             delta_refinement = (op == sp)
         return (members_refinement and delta_refinement)
 
+    def equals(self, other):
+
+        def members_equal(a1, a2):
+            if len(a1.members) == len(a2.members):
+                for m1, m2 in zip(a1.members, a2.members):
+                    if (m1 is None and m2 is not None) or \
+                            (m1 is not None and m2 is None):
+                        return False
+                    if m1 is not None and m2 is not None and not m1.equals(m2):
+                        return False
+            else:
+                return False
+            return True
+
+        equals = super().equals(other) and members_equal(self, other)
+        return equals
+
     def to_json(self, use_sbo=False):
         # Get generic from two inheritance levels above - from Statement class
         generic = super(Complex, self).to_json(use_sbo)
