@@ -184,6 +184,7 @@ def _read_relative_csv(rel_path):
     return csv_reader
 
 
+@lru_cache(maxsize=5000)
 def get_chebi_entry_from_web(chebi_id):
     """Return a ChEBI entry corresponding to a given ChEBI ID using a REST API.
 
@@ -219,7 +220,6 @@ def _get_chebi_value_from_entry(entry, key):
     return None
 
 
-@lru_cache(maxsize=5000)
 def get_chebi_name_from_id_web(chebi_id):
     """Return a ChEBI name corresponding to a given ChEBI ID using a REST API.
 
@@ -238,7 +238,6 @@ def get_chebi_name_from_id_web(chebi_id):
     return _get_chebi_value_from_entry(entry, 'chebiAsciiName')
 
 
-@lru_cache(maxsize=5000)
 def get_inchikey(chebi_id):
     """Return an InChIKey corresponding to a given ChEBI ID using a REST API.
 
