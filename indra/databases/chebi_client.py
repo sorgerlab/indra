@@ -1,17 +1,16 @@
-from os.path import dirname, abspath, join
-
-import requests
 import logging
-
+import requests
+from lxml import etree
 from functools import lru_cache
-
-from lxml import etree, objectify
-
+from os.path import dirname, abspath, join
 from indra.util import read_unicode_csv
 
 
 logger = logging.getLogger(__name__)
 
+# Namespaces used in the XML
+chebi_xml_ns = {'n': 'http://schemas.xmlsoap.org/soap/envelope',
+                'c': 'https://www.ebi.ac.uk/webservices/chebi'}
 
 def _strip_prefix(chid):
     if chid and chid.startswith('CHEBI:'):
@@ -185,9 +184,34 @@ def _read_relative_csv(rel_path):
     return csv_reader
 
 
+def get_chebi_entry_from_web(chebi_id):
+    """Return a ChEBI entry corresponding to a given ChEBI ID using a REST API.
+
+    Parameters
+    ----------
+    chebi_id : str
+        The ChEBI ID whose entry is to be returned.
+
+    Returns
+    -------
+    xml.etree.ElementTree.Element
+        An ElementTree element representing the ChEBI entry.
+    """
+    url_base = 'http://www.ebi.ac.uk/webservices/chebi/2.0/test/'
+    url_fmt = url_base + 'getCompleteEntity?chebiId=%s'
+    resp = requests.get(url_fmt % chebi_id)
+    if resp.status_code != 200:
+        logger.warning("Got bad code form CHEBI client: %s" % resp.status_code)
+        return None
+    tree = etree.fromstring(resp.content)
+    path = 'n:Body/n:getCompleteEntityResponse/c:return/c:chebiAsciiName'
+    elem = tree.find(path, namespaces=chebi_xml_ns)
+    return elem
+
+
 @lru_cache(maxsize=5000)
 def get_chebi_name_from_id_web(chebi_id):
-    """Return a ChEBI mame corresponding to a given ChEBI ID using a REST API.
+    """Return a ChEBI name corresponding to a given ChEBI ID using a REST API.
 
     Parameters
     ----------
@@ -200,25 +224,11 @@ def get_chebi_name_from_id_web(chebi_id):
         The name corresponding to the given ChEBI ID. If the lookup
         fails, None is returned.
     """
-    url_base = 'http://www.ebi.ac.uk/webservices/chebi/2.0/test/'
-    url_fmt = url_base + 'getCompleteEntity?chebiId=%s'
-    resp = requests.get(url_fmt % chebi_id)
-    if resp.status_code != 200:
-        logger.warning("Got bad code form CHEBI client: %s" % resp.status_code)
+    entry = get_chebi_entry_from_web(chebi_id)
+    if entry is None:
         return None
-    tree = etree.fromstring(resp.content)
-
-    # Get rid of the namespaces.
-    # Credit: https://stackoverflow.com/questions/18159221/remove-namespace-and-prefix-from-xml-in-python-using-lxml
-    for elem in tree.getiterator():
-        if not hasattr(elem.tag, 'find'):
-            continue  # (1)
-        i = elem.tag.find('}')
-        if i >= 0:
-            elem.tag = elem.tag[i+1:]
-    objectify.deannotate(tree, cleanup_namespaces=True)
-
-    elem = tree.find('Body/getCompleteEntityResponse/return/chebiAsciiName')
+    path = 'c:chebiAsciiName'
+    elem = entry.find(path, namespaces=chebi_xml_ns)
     if elem is not None:
         return elem.text
     return None
