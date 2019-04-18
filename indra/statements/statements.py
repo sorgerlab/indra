@@ -2098,6 +2098,51 @@ class Association(Complex):
         equals = super().equals(other) and members_equal(self, other)
         return equals
 
+    def contradicts(self, other, hierarchies):
+        if stmt_type(self) != stmt_type(other):
+            return False
+        # Members can be in any order, that's why we consider every combination
+        ref1 = self.members[0].concept.refinement_of(other.members[0].concept,
+                                                     hierarchies) or \
+            other.members[0].concept.refinement_of(self.members[0].concept,
+                                                   hierarchies) or \
+            self.members[0].concept.refinement_of(other.members[1].concept,
+                                                  hierarchies) or \
+            other.members[1].concept.refinement_of(self.members[0].concept,
+                                                   hierarchies)
+        ref2 = self.members[1].concept.refinement_of(other.members[0].concept,
+                                                     hierarchies) or \
+            other.members[0].concept.refinement_of(self.members[1].concept,
+                                                   hierarchies) or \
+            self.members[1].concept.refinement_of(other.members[1].concept,
+                                                  hierarchies) or \
+            other.members[1].concept.refinement_of(self.members[1].concept,
+                                                   hierarchies)
+        opp1 = self.members[0].concept.is_opposite(other.members[0].concept,
+                                                   hierarchies) or \
+            self.members[0].concept.is_opposite(other.members[1].concept,
+                                                hierarchies)
+        opp2 = self.members[1].concept.is_opposite(other.members[0].concept,
+                                                   hierarchies) or \
+            self.members[1].concept.is_opposite(other.members[1].concept,
+                                                hierarchies)
+        sp = self.overall_polarity()
+        op = other.overall_polarity()
+
+        # If all entities are "compatible" or mutually opposites
+        # but the polarities are explicitly different then this is
+        # a contradiction
+        if (ref1 and ref2) or (opp1 and opp2):
+            if sp is not None and op is not None and sp != op:
+                return True
+        # If one entity is the opposite and the other compatible and the
+        # polarities are the same then this is a contradiction
+        if (ref1 and opp2) or (opp1 and ref2):
+            if sp is not None and op is not None and sp == op:
+                return True
+
+        return False
+
     def to_json(self, use_sbo=False):
         # Get generic from two inheritance levels above - from Statement class
         generic = super(Complex, self).to_json(use_sbo)
