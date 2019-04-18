@@ -41,6 +41,6 @@ def test_chebi_name_from_web():
 
 
 @attr('webservice')
-def test_inchikey():
-    ik = chebi_client.get_inchikey('2150')
+def test_inchi_key():
+    ik = chebi_client.get_inchi_key('2150')
     assert ik == 'NVKAWKQGWWIWPM-MISPCMORSA-N'

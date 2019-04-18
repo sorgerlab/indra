@@ -238,7 +238,7 @@ def get_chebi_name_from_id_web(chebi_id):
     return _get_chebi_value_from_entry(entry, 'chebiAsciiName')
 
 
-def get_inchikey(chebi_id):
+def get_inchi_key(chebi_id):
     """Return an InChIKey corresponding to a given ChEBI ID using a REST API.
 
     Parameters

@@ -1,8 +1,15 @@
+import logging
 import requests
+from functools import lru_cache
+
 
 pubchem_url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug'
 
 
+logger = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=5000)
 def get_inchi_key(pubchem_cid):
     """Return the InChIKey for a given PubChem CID.
 
