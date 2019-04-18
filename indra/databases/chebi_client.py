@@ -9,7 +9,7 @@ from indra.util import read_unicode_csv
 logger = logging.getLogger(__name__)
 
 # Namespaces used in the XML
-chebi_xml_ns = {'n': 'http://schemas.xmlsoap.org/soap/envelope',
+chebi_xml_ns = {'n': 'http://schemas.xmlsoap.org/soap/envelope/',
                 'c': 'https://www.ebi.ac.uk/webservices/chebi'}
 
 def _strip_prefix(chid):
@@ -204,9 +204,19 @@ def get_chebi_entry_from_web(chebi_id):
         logger.warning("Got bad code form CHEBI client: %s" % resp.status_code)
         return None
     tree = etree.fromstring(resp.content)
-    path = 'n:Body/n:getCompleteEntityResponse/c:return/c:chebiAsciiName'
+    path = 'n:Body/c:getCompleteEntityResponse/c:return'
     elem = tree.find(path, namespaces=chebi_xml_ns)
     return elem
+
+
+def _get_chebi_value_from_entry(entry, key):
+    if entry is None:
+        return None
+    path = 'c:%s' % key
+    elem = entry.find(path, namespaces=chebi_xml_ns)
+    if elem is not None:
+        return elem.text
+    return None
 
 
 @lru_cache(maxsize=5000)
@@ -225,13 +235,26 @@ def get_chebi_name_from_id_web(chebi_id):
         fails, None is returned.
     """
     entry = get_chebi_entry_from_web(chebi_id)
-    if entry is None:
-        return None
-    path = 'c:chebiAsciiName'
-    elem = entry.find(path, namespaces=chebi_xml_ns)
-    if elem is not None:
-        return elem.text
-    return None
+    return _get_chebi_value_from_entry(entry, 'chebiAsciiName')
+
+
+@lru_cache(maxsize=5000)
+def get_inchikey(chebi_id):
+    """Return an InChIKey corresponding to a given ChEBI ID using a REST API.
+
+    Parameters
+    ----------
+    chebi_id : str
+        The ChEBI ID whose InChIKey is to be returned.
+
+    Returns
+    -------
+    str
+        The InChIKey corresponding to the given ChEBI ID. If the lookup
+        fails, None is returned.
+    """
+    entry = get_chebi_entry_from_web(chebi_id)
+    return _get_chebi_value_from_entry(entry, 'inchiKey')
 
 
 chebi_pubchem, pubchem_chebi = _read_chebi_to_pubchem()

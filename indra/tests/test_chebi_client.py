@@ -38,3 +38,9 @@ def test_chebi_name_from_web():
     assert name == 'vemurafenib'
     name = chebi_client.get_chebi_name_from_id_web('44215')
     assert name == 'NAD zwitterion'
+
+
+@attr('webservice')
+def test_inchikey():
+    ik = chebi_client.get_inchikey('2150')
+    assert ik == 'NVKAWKQGWWIWPM-MISPCMORSA-N'
