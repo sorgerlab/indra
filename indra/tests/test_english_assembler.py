@@ -395,11 +395,6 @@ def test_association():
     s = _stmt_to_text(st)
     assert s == 'Food is associated with hunger.'
 
-    st = Association([Event(Concept('food')), Event(Concept('hunger')),
-                      Event(Concept('famine'))])
-    s = _stmt_to_text(st)
-    assert s == 'Food is associated with hunger and famine.'
-
 
 def _stmt_to_text(st):
     e = ea.EnglishAssembler()

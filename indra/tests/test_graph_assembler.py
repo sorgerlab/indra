@@ -86,13 +86,12 @@ def test_influence():
 
 
 def test_association():
-    st = [Association(
-        [Event(Concept('a')), Event(Concept('b')), Event(Concept('c'))])]
+    st = [Association([Event(Concept('a')), Event(Concept('b'))])]
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
-    assert len(ga.graph.nodes()) == 3
-    assert len(ga.graph.edges()) == 3
+    assert len(ga.graph.nodes()) == 2
+    assert len(ga.graph.edges()) == 1
 
 
 def test_duplicates():
