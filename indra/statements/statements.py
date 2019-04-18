@@ -2028,7 +2028,7 @@ class Association(Complex):
 
     Parameters
     ----------
-    members: list of :py:class:Event
+    members : list of :py:class:Event
         A list of events associated with each other.
     evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the modification.
@@ -2036,6 +2036,9 @@ class Association(Complex):
     _agent_order = ['members']
 
     def __init__(self, members, evidence=None):
+        if len(members) != 2:
+            raise ValueError('Association Statement can only have 2 members, '
+                             '%d were given.' % len(members))
         super().__init__(members, evidence)
 
     def matches_key(self):
@@ -2047,39 +2050,16 @@ class Association(Complex):
         return mk_str(key)
 
     def overall_polarity(self):
-        polarities = [m.delta['polarity'] for m in self.members]
-        all_None = True
-        all_pos = True
-        all_neg = True
-        not_None_count = 0
-        for p in polarities:
-            if p == 1:
-                all_None = False
-                all_neg = False
-                not_None_count += 1
-                one_pol = p
-            elif p == -1:
-                all_None = False
-                all_pos = False
-                not_None_count += 1
-                one_pol = p
-        # If all members have polarity None, than overall polarity is None.
-        # If some but not all members have polarity None, than it is
-        # ignored and overall polarity is based on the rest of the members.
-        if all_None:
+        p1 = self.members[0].delta['polarity']
+        p2 = self.members[1].delta['polarity']
+        if p1 is None and p2 is None:
             pol = None
-        # If there's only one member with a polarity not None, than overall
-        # polarity is equal to a polarity of this member.
-        elif not_None_count == 1:
-            pol = one_pol
-        # If all members have the identical polarity or some have None and
-        # the rest have identical polarity, than overall polarity is 1.
-        elif all_pos or all_neg:
-            pol = 1
-        # If members have opposite polarities, than overall polarity is -1
-        # regardless of number of members with each polarity.
+        elif p2 is None:
+            pol = p1
+        elif p1 is None:
+            pol = p2
         else:
-            pol = -1
+            pol = p1 * p2
         return pol
 
     def polarity_count(self):
