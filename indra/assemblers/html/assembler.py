@@ -60,6 +60,12 @@ class HtmlAssembler(object):
         the configuration entry indra.config.get_config('INDRA_DB_REST_URL').
         If None, the URLs are constructed as relative links.
         Default: None
+    other_scripts : Optional[list]
+        A list of links to other scripts to be added to the html document. Used
+        in advanced configurations.
+    ev_element : Optional[str]
+        A extra element that may be placed at the beginning ahead of each line
+        of evidence.
 
     Attributes
     ----------
@@ -77,13 +83,16 @@ class HtmlAssembler(object):
         The URL to a DB REST API.
     """
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
-                 title='INDRA Results', db_rest_url=None):
+                 title='INDRA Results', db_rest_url=None, other_scripts=None,
+                 ev_element=None):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
             else summary_metadata
         self.ev_totals = {} if ev_totals is None else ev_totals
         self.db_rest_url = db_rest_url
+        self.other_scripts = [] if other_scripts is None else other_scripts
+        self.ev_element = ev_element
         self.model = None
 
     def add_statements(self, statements):
@@ -138,7 +147,9 @@ class HtmlAssembler(object):
             db_rest_url = '.'
         self.model = template.render(stmt_data=stmts_formatted,
                                      metadata=metadata, title=self.title,
-                                     db_rest_url=db_rest_url)
+                                     db_rest_url=db_rest_url,
+                                     other_scripts=self.other_scripts,
+                                     ev_element=self.ev_element)
         return self.model
 
     def append_warning(self, msg):

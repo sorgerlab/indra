@@ -26,8 +26,12 @@
     <!-- TOC plugin JS: https://afeld.github.io/bootstrap-toc/ -->
     <script src="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.0/dist/bootstrap-toc.min.js" crossorigin="anonymous"></script>
 
+    {% for script_src in other_scripts %}
+      <script src="{{ script_src }}"></script>
+    {% endfor %}
     <!-- Load curationFunctions.js -->
-    <script src="https://www.indra.bio/indra/assemblers/html/curationFunctions.js"></script>
+    <!-- <script src=""></script> -->
+    <script src="http://localhost:8000/curationFunctions.js"></script>
 
     <!-- Toggle a hidden element -->
     <script>
@@ -176,10 +180,9 @@ nav {
             <tbody id="table_{{loop.index0}}">
                 {% for ev in stmt_info['evidence'] %}
                 <tr id="{{ ev['source_hash'] }}" style="border-bottom: 1px solid #FFFFFF;">
-                    <td width="6em" id="row{{loop.index0}}_click"
-                        data-clicked="false" class="curation_toggle"
-                        onclick="addCurationRow(this.closest('tr')); this.onclick=null;">&#9998;</td>
-                    <td width="25em">{{ ev['source_api'] }}</td>
+                    {% if ev_element is not None %}
+                        {{ ev_element }}
+                    {% endif %}
                     {% if ev['text'] %}
                         <td>"{{ ev['text'] }}"</td>
                     {% else %}
