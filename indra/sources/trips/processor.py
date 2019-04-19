@@ -1812,7 +1812,7 @@ def _get_db_refs(term):
             top_entry = entries[0]
             top_idx = 0
             for i, entry in enumerate(entries):
-                # We take the lowes priority entry within the score group
+                # We take the lowest priority entry within the score group
                 # as the top entry
                 if entry['priority'] < top_entry['priority']:
                     # This is a corner case in which a protein family
@@ -1960,6 +1960,16 @@ def _get_grounding_terms(term):
             comment = 'HGNC_FROM_NCIT'
         if 'NCIT' in refs and 'FPLX' not in refs and 'FPLX' in new_refs:
             comment = 'FPLX_FROM_NCIT'
+            # In a small number of corner cases, NCIT reports mappings
+            # (incorrectly) to a specific gene or protein in HGNC/UP
+            # when in fact the entry is about a protein family that FPLX
+            # also maps to. Further, NCIT sometimes maps to CHEBI entries
+            # corresponding to protein families or complexes (these
+            # are often correct), and we remove these too to make sure
+            # we don't later think that the agent is a chemical.
+            to_remove_refs = {'UP', 'HGNC', 'CHEBI'}
+            new_refs = {k: v for k, v in new_refs.items()
+                        if k not in to_remove_refs}
         for k, v in new_refs.items():
             refs[k] = v
 

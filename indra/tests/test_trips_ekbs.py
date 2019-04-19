@@ -853,3 +853,12 @@ def test_mapped_chebi_id():
     assert len(agents) == 1, agents
     agent = agents[0]
     assert agent.db_refs['CHEBI'] == 'CHEBI:63637', agent.db_refs
+
+
+def test_fplx_hgnc_redundancy():
+    fname = os.path.join(path_this, 'trips_ekbs', 'cfos_gene.ekb')
+    tp = trips.process_xml(open(fname, 'r').read())
+    agents = tp.get_agents()
+    assert len(agents) == 1, agents
+    agent = agents[0]
+    assert agent.name == 'FOS_family', agent.name

@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum-dev/etc/Data/WP/TEXT00040_IO-51777" id="paragraph39">c-fos gene</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="40" pid="paragraph39">c-fos gene</sentence>
+		</sentences>
+	</input>
+	<TERM dbid="NCIT:C52887" end="10" id="V51937" lisp="(ONT::TERM ONT::V51937 ONT::GENE :NAME W::C-PUNC-MINUS-FOS-GENE :DRUM ((:DRUM (TERM :ID NCIT::C52887 :NAME &quot;FOS&quot; :SCORE 0.71011 :MATCHES ((MATCH :SCORE 0.71011 :MATCHED &quot;c-FOS gene&quot; :STATUS &quot;synonym&quot; :EXACT 2 :NO-CAPS-ALL-CAPS 1)) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph39" rule="-SIMPLE-REF,-ADD-SPEC" start="0" uttnum="40">
+		<type>ONT::GENE</type>
+		<text normalization="">c-fos gene</text>
+		<name>C-FOS-GENE</name>
+		<drum-terms>
+			<drum-term dbid="NCIT:C52887" match-score="0.71011" matched-name="c-FOS gene" name="FOS">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+</ekb>
