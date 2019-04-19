@@ -40,9 +40,10 @@ class HierarchyManager(object):
         PREFIX rn: <http://sorger.med.harvard.edu/indra/relations/>
         """
 
-    def __init__(self, rdf_file=None, build_closure=True, uri_as_name=True):
+    def __init__(self, rdf_file=None, build_closure_namespaces=None,
+                 uri_as_name=True):
         """Initialize with the path to an RDF file"""
-        self.build_closure = build_closure
+        self.build_closure_namespaces = build_closure_namespaces
         self.uri_as_name = uri_as_name
         self.relations_prefix = \
             'http://sorger.med.harvard.edu/indra/relations/'
@@ -95,8 +96,7 @@ class HierarchyManager(object):
         self.initialize()
 
     def initialize(self):
-        if self.build_closure:
-            self.build_transitive_closures()
+        self.build_transitive_closures()
 
         # Build reverse lookup dict from the hierarchy
         # First get all URIs that correspond to parents
@@ -142,9 +142,14 @@ class HierarchyManager(object):
 
     def build_transitive_closure(self, rel, tc_set):
         """Build a transitive closure for a given relation in a given dict."""
+        # If there are no namespaces to build closures for, we
+        # return immediately
+        if not self.build_closure_namespaces:
+            return
+        nodes = self._get_build_transitive_closure_objects()
         # Make a function with the righ argument structure
         rel_fun = lambda node, graph: rel(node)
-        for x in self.graph.all_nodes():
+        for x in nodes:
             rel_closure = self.graph.transitiveClosure(rel_fun, x)
             xs = x.toPython()
             for y in rel_closure:
@@ -154,6 +159,12 @@ class HierarchyManager(object):
                 tc_set.add((xs, ys))
                 if rel == self.isa_or_partof_objects:
                     self._add_component(xs, ys)
+
+    def _get_build_transitive_closure_objects(self):
+        nodes = [node for node in self.graph.all_nodes() if
+                 any([node.startswith(ns) for ns in
+                      self.build_closure_namespaces])]
+        return nodes
 
     def _add_component(self, xs, ys):
         xcomp = self.components.get(xs)
@@ -554,22 +565,33 @@ def get_bio_hierarchies(from_pickle=True):
     # Default entity hierarchy loaded from the RDF file at
     # `resources/entity_hierarchy.rdf`.
     entity_hierarchy = HierarchyManager(resource_path('entity_hierarchy.rdf'),
-                                        build_closure=True, uri_as_name=True)
+                                        build_closure_namespaces=[
+                                            'http://identifiers.org/hgnc',
+                                            'http://identifiers.org/uniprot',
+                                            'http://identifiers.org/fplx'
+                                            ],
+                                        uri_as_name=True)
     # Default modification hierarchy loaded from the RDF file at
     # `resources/modification_hierarchy.rdf`.
     modification_hierarchy = \
         HierarchyManager(resource_path('modification_hierarchy.rdf'),
-                         build_closure=True, uri_as_name=True)
+                         build_closure_namespaces=[
+                            'http://sorger.med.harvard.edu/indra/modifications'
+                            ],
+                         uri_as_name=True)
     # Default activity hierarchy loaded from the RDF file at
     # `resources/activity_hierarchy.rdf`.
     activity_hierarchy = \
         HierarchyManager(resource_path('activity_hierarchy.rdf'),
-                         build_closure=True, uri_as_name=True)
+                         build_closure_namespaces=[
+                            'http://sorger.med.harvard.edu/indra/activities'
+                            ],
+                         uri_as_name=True)
     # Default cellular_component hierarchy loaded from the RDF file at
     # `resources/cellular_component_hierarchy.rdf`.
     ccomp_hierarchy = \
         HierarchyManager(resource_path('cellular_component_hierarchy.rdf'),
-                         build_closure=False, uri_as_name=False)
+                         build_closure_namespaces=[], uri_as_name=False)
 
     hierarchies = {'entity': entity_hierarchy,
                    'modification': modification_hierarchy,
@@ -590,7 +612,8 @@ def get_wm_hierarchies():
                              '../sources/cwms/trips_ontology.rdf')
     sofia_ont = os.path.join(os.path.dirname(__file__),
                              '../sources/sofia/sofia_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, build_closure=True, uri_as_name=True)
+    hm = HierarchyManager(eidos_ont, build_closure_namespaces=[],
+                          uri_as_name=True)
     hm.extend_with(hume_ont)
     hm.extend_with(trips_ont)
     hm.extend_with(sofia_ont)
