@@ -10,6 +10,14 @@ def test_read_chebi_to_pubchem():
     assert unicode_strs((ctop, ptoc))
 
 
+def test_chebi_pubchem_mapping():
+    # This is a non-trivial mapping since there are multiple mappings
+    # reported by ChEBI and we need to choose the right one based on
+    # InChIKey matches.
+    assert chebi_client.get_chebi_id_from_pubchem('5287993') == '3528'
+    assert chebi_client.get_pubchem_id('3528') == '5287993'
+
+
 def test_read_chebi_to_chembl():
     ctoc = chebi_client._read_chebi_to_chembl()
     assert ctoc['50729'] == 'CHEMBL58'

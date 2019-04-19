@@ -1,8 +1,8 @@
+import os
 import logging
 import requests
 from lxml import etree
 from functools import lru_cache
-from os.path import dirname, abspath, join
 from indra.util import read_unicode_csv
 
 
@@ -130,60 +130,6 @@ def get_chebi_id_from_name(chebi_name):
     return chebi_id
 
 
-def _read_chebi_to_pubchem():
-    csv_reader = _read_relative_csv('../resources/chebi_to_pubchem.tsv')
-    chebi_pubchem = {}
-    pubchem_chebi = {}
-    for chebi_id, pc_id in csv_reader:
-        chebi_pubchem[chebi_id] = pc_id
-        # Note: this is a one to many mapping and we prioritize mapping to
-        # smaller CHEBI IDs that appear earlier in the sorted mapping table.
-        if pc_id not in pubchem_chebi:
-            pubchem_chebi[pc_id] = chebi_id
-    return chebi_pubchem, pubchem_chebi
-
-
-def _read_chebi_to_chembl():
-    csv_reader = _read_relative_csv('../resources/chebi_to_chembl.tsv')
-    chebi_chembl = {}
-    for row in csv_reader:
-        chebi_chembl[row[0]] = row[1]
-    return chebi_chembl
-
-
-def _read_cas_to_chebi():
-    csv_reader = _read_relative_csv('../resources/cas_to_chebi.tsv')
-    cas_chebi = {}
-    next(csv_reader)
-    for row in csv_reader:
-        cas_chebi[row[0]] = row[1]
-    # These are missing from the resource but appear often, so we map
-    # them manually
-    extra_entries = {'24696-26-2': '17761',
-                     '23261-20-3': '18035',
-                     '165689-82-7': '16618'}
-    cas_chebi.update(extra_entries)
-    return cas_chebi
-
-
-def _read_chebi_names():
-    csv_reader = _read_relative_csv('../resources/chebi_names.tsv')
-    next(csv_reader)
-    chebi_id_to_name = {}
-    chebi_name_to_id = {}
-    for row in csv_reader:
-        chebi_id, name = row
-        chebi_id_to_name[chebi_id] = name
-        chebi_name_to_id[name] = chebi_id
-    return chebi_id_to_name, chebi_name_to_id
-
-
-def _read_relative_csv(rel_path):
-    file_path = join(dirname(abspath(__file__)), rel_path)
-    csv_reader = read_unicode_csv(file_path, delimiter='\t')
-    return csv_reader
-
-
 @lru_cache(maxsize=5000)
 def get_chebi_entry_from_web(chebi_id):
     """Return a ChEBI entry corresponding to a given ChEBI ID using a REST API.
@@ -254,6 +200,75 @@ def get_inchi_key(chebi_id):
     """
     entry = get_chebi_entry_from_web(chebi_id)
     return _get_chebi_value_from_entry(entry, 'inchiKey')
+
+
+# Read resource files into module-level variables
+
+def _read_chebi_to_pubchem():
+    csv_reader = _read_resource_csv('chebi_to_pubchem.tsv')
+    chebi_pubchem = {}
+    pubchem_chebi = {}
+    ik_matches = {}
+    for chebi_id, pc_id, ik_match in csv_reader:
+        if chebi_id not in chebi_pubchem:
+            chebi_pubchem[chebi_id] = pc_id
+            ik_matches[(chebi_id, pc_id)] = ik_match
+        elif ik_match == 'Y' and not \
+                ik_matches.get((chebi_id, chebi_pubchem[chebi_id])):
+            chebi_pubchem[chebi_id] = pc_id
+            print(pc_id, chebi_id)
+        # Note: this is a one to many mapping and we prioritize mapping to
+        # smaller CHEBI IDs that appear earlier in the sorted mapping table.
+        if pc_id not in pubchem_chebi:
+            pubchem_chebi[pc_id] = chebi_id
+            ik_matches[(chebi_id, pc_id)] = ik_match
+        elif ik_match == 'Y' and not \
+                ik_matches.get((pubchem_chebi[pc_id], pc_id)):
+            pubchem_chebi[pc_id] = chebi_id
+            print(pc_id, chebi_id)
+    return chebi_pubchem, pubchem_chebi
+
+
+def _read_chebi_to_chembl():
+    csv_reader = _read_resource_csv('chebi_to_chembl.tsv')
+    chebi_chembl = {}
+    for row in csv_reader:
+        chebi_chembl[row[0]] = row[1]
+    return chebi_chembl
+
+
+def _read_cas_to_chebi():
+    csv_reader = _read_resource_csv('cas_to_chebi.tsv')
+    cas_chebi = {}
+    next(csv_reader)
+    for row in csv_reader:
+        cas_chebi[row[0]] = row[1]
+    # These are missing from the resource but appear often, so we map
+    # them manually
+    extra_entries = {'24696-26-2': '17761',
+                     '23261-20-3': '18035',
+                     '165689-82-7': '16618'}
+    cas_chebi.update(extra_entries)
+    return cas_chebi
+
+
+def _read_chebi_names():
+    csv_reader = _read_resource_csv('chebi_names.tsv')
+    next(csv_reader)
+    chebi_id_to_name = {}
+    chebi_name_to_id = {}
+    for row in csv_reader:
+        chebi_id, name = row
+        chebi_id_to_name[chebi_id] = name
+        chebi_name_to_id[name] = chebi_id
+    return chebi_id_to_name, chebi_name_to_id
+
+
+def _read_resource_csv(fname):
+    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             os.pardir, 'resources', fname)
+    csv_reader = read_unicode_csv(file_path, delimiter='\t')
+    return csv_reader
 
 
 chebi_pubchem, pubchem_chebi = _read_chebi_to_pubchem()
