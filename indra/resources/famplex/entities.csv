@@ -146,8 +146,6 @@ EPN
 ERBB
 ERK
 ESR
-ETC_complex_II
-ETC_complex_III
 ETS
 EXOC
 FANC
@@ -277,6 +275,7 @@ MYST
 NADH_dehydrogenase
 NADPH_oxidase
 Na_K_ATPase
+Natriuretic_peptide
 NCOA
 NCOR
 NDRG
@@ -464,3 +463,10 @@ VEGF
 VEGFR
 Wnt
 YBX
+ETC_complex_I_core
+ETC_complex_I_supernumerary
+ETC_complex_I
+ETC_complex_II
+ETC_complex_III
+ETC_complex_IV
+ETC_complex_V
