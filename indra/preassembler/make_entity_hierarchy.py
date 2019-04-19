@@ -69,6 +69,7 @@ def main(relations_file):
         g.add((term1, rel_term, term2))
 
     save_hierarchy(g, hierarchy_path)
+    return g
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
