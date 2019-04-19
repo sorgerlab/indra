@@ -187,7 +187,7 @@ def test_chebi_isa():
 def test_load_eid_hierarchy():
     eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              '../sources/eidos/eidos_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, [eidos_ns], True)
+    hm = HierarchyManager(eidos_ont, True, True)
     assert hm.isa_closure
     eidos_isa = lambda a, b: hm.isa('UN', a, 'UN', b)
     assert eidos_isa('UN/events/human/conflict',
@@ -201,14 +201,13 @@ def test_load_eid_hierarchy():
     assert not eidos_isa('UN/events',
                          'UN/events/natural/weather/storm')
     # Test case where graph is not given
-    hm = HierarchyManager(None, [eidos_ns], True)
+    hm = HierarchyManager(None, True, True)
     hm.load_from_rdf_file(eidos_ont)
     assert eidos_isa('UN/events/natural_disaster/storm',
                      'UN/events')
     # Test loading from string
     with open(eidos_ont, 'r') as fh:
-        hm = HierarchyManager(None,
-            'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding', True)
+        hm = HierarchyManager(None, True, True)
         hm.load_from_rdf_string(fh.read())
     assert eidos_isa('UN/events/natural_disaster/storm',
                      'UN/events')
@@ -216,7 +215,7 @@ def test_load_eid_hierarchy():
     import rdflib
     g = rdflib.Graph()
     g.parse(eidos_ont, format='nt')
-    hm = HierarchyManager(None, [eidos_ns], True)
+    hm = HierarchyManager(None, True, True)
     hm.load_from_rdf_graph(g)
     assert eidos_isa('UN/events/natural_disaster/storm',
                      'UN/events')
@@ -225,8 +224,8 @@ def test_load_eid_hierarchy():
 def test_load_trips_hierarchy():
     trips_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              '../sources/cwms/trips_ontology.rdf')
-    hm = HierarchyManager(trips_ont, False, True)
-    # assert hm.isa_closure
+    hm = HierarchyManager(trips_ont, True, True)
+    assert hm.isa_closure
     trips_isa = lambda a, b: hm.isa('CWMS', a, 'CWMS', b)
     assert trips_isa('ONT::TRUCK', 'ONT::VEHICLE')
     assert not trips_isa('ONT::VEHICLE', 'ONT::TRUCK')
@@ -237,8 +236,8 @@ def test_load_trips_hierarchy():
 def test_load_sofia_hierarchy():
     sofia_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              '../sources/sofia/sofia_ontology.rdf')
-    hm = HierarchyManager(sofia_ont, False, True)
-    # assert hm.isa_closure
+    hm = HierarchyManager(sofia_ont, True, True)
+    assert hm.isa_closure
     sofia_isa = lambda a, b: hm.isa('SOFIA', a, 'SOFIA', b)
     assert sofia_isa('Accessibility/Accessibility', 'Accessibility')
     assert not sofia_isa('Movement/Transportation', 'Movement/Human_Migration')
@@ -248,8 +247,8 @@ def test_load_sofia_hierarchy():
 def test_load_hume_hierarchy():
     hume_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                             '../sources/hume/hume_ontology.rdf')
-    hm = HierarchyManager(hume_ont, eidos_ns, True)
-    # assert hm.isa_closure
+    hm = HierarchyManager(hume_ont, True, True)
+    assert hm.isa_closure
     hume_isa = lambda a, b: hm.isa('HUME', a, 'HUME', b)
     assert hume_isa('entity/academic_discipline', 'entity')
     assert not hume_isa('entity', 'entity/academic_discipline')
@@ -275,7 +274,7 @@ def test_bio_hierarchy_pickles():
 
 def test_yaml_hm():
     yml = load_yaml_from_url(eidos_ont_url)
-    hm = YamlHierarchyManager(yml, [eidos_ns], rdf_graph_from_yaml)
+    hm = YamlHierarchyManager(yml, rdf_graph_from_yaml)
 
     entry = 'UN/events/natural_disaster/snowpocalypse'
     hm.add_entry(entry)
