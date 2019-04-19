@@ -885,7 +885,7 @@ def test_association_refinement():
                    {'health', 'food security'} and st.members[1].concept.name
                    in {'health', 'food security'})][0]
     assert len(eh_efs_stmt.supported_by) == 1
-    assert eh_efs_stmt.supported_by[0].members[0].concept.name in
-            {'food', 'health'}
-    assert eh_efs_stmt.supported_by[0].members[1].concept.name in
-            {'food', 'health'}
+    assert (eh_efs_stmt.supported_by[0].members[0].concept.name
+            in {'food', 'health'})
+    assert (eh_efs_stmt.supported_by[0].members[1].concept.name
+            in {'food', 'health'})
