@@ -263,44 +263,6 @@ def update_cas_to_chebi():
                   header=['CAS', 'CHEBI'], index=False)
 
 
-def update_chebi_primary_map_and_names():
-    # Information about the details of each compound (e.g., name)
-    # is available in the compounds table. We get secondary to
-    # primary ID mappings from here as well as ID to name mappings.
-    logger.info('--Updating ChEBI primary map entries and names----')
-    url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
-        'Flat_file_tab_delimited/compounds.tsv.gz'
-    fname = os.path.join(path, 'compounds.tsv.gz')
-    urlretrieve(url, fname)
-    with gzip.open(fname, 'rb') as fh:
-        logger.info('Loading %s' % fname)
-        df_orig = pandas.read_csv(fh, sep='\t', index_col=None,
-                                  parse_dates=True, dtype='str')
-    # This df is still shared
-    df_orig.replace('CHEBI:([0-9]+)', r'\1', inplace=True, regex=True)
-
-    # First we construct mappings to primary accession IDs
-    # This df is specific to parents
-    df = df_orig[df_orig['PARENT_ID'].notna()]
-    df.sort_values(['CHEBI_ACCESSION', 'PARENT_ID'], ascending=True,
-                   inplace=True)
-    df.drop_duplicates(subset=['CHEBI_ACCESSION', 'PARENT_ID'], inplace=True)
-    fname = os.path.join(path, 'chebi_to_primary.tsv')
-    logger.info('Saving into %s' % fname)
-    df.to_csv(fname, sep='\t',
-              columns=['CHEBI_ACCESSION', 'PARENT_ID'], 
-              header=['Secondary', 'Primary'], index=False)
-
-    # Second we get the ID to name mappings
-    df = df_orig[df_orig['NAME'].notna()]
-    df.sort_values(by=['CHEBI_ACCESSION', 'ID'], inplace=True)
-
-    fname = os.path.join(path, 'chebi_names.tsv')
-    logger.info('Saving into %s' % fname)
-    df.to_csv(fname, sep='\t', header=True, index=False,
-              columns=['CHEBI_ACCESSION', 'NAME'])
-
-
 def update_cellular_component_hierarchy():
     logger.info('--Updating GO cellular components----')
     g = load_latest_go()
@@ -388,19 +350,24 @@ def update_bel_chebi_map():
             fh.write(('%s\tCHEBI:%s\n' % (chebi_name, chebi_id)).encode('utf-8'))
 
 
-def make_chebi_hierarchy():
+def _get_chebi_obo_terms():
     def process_term(term):
         lines = term.split('\n')[1:]
         term_id = None
         parents = []
+        secondaries = []
+        name = None
         for line in lines:
             k, v = line.split(': ', maxsplit=1)
             if k == 'id':
                 term_id = v
             elif k == 'is_a':
                 parents.append(v)
-        return term_id, parents
-
+            elif k == 'alt_id':
+                secondaries.append(v)
+            elif k == 'name':
+                name = v
+        return term_id, name, secondaries, parents
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi_lite.obo'
     fname = 'chebi_lite.obo'
     logger.info('Downloading %s' % url)
@@ -412,8 +379,23 @@ def make_chebi_hierarchy():
     terms = [c for c in chunks if c.startswith('[Term]')]
     logger.info('Found %d terms' % len(terms))
     term_entries = [process_term(term) for term in terms]
-    terms_with_parents = [(t, p) for t, p in term_entries if p]
+    return term_entries
 
+
+def update_chebi_entries():
+    term_entries = _get_chebi_obo_terms()
+    # Make the name and secondary table
+    fname = os.path.join(path, 'chebi_entries.tsv')
+    rows = [['CHEBI_ID', 'NAME', 'SECONDARIES']]
+    for term_id, name, secondaries, parents in term_entries:
+        rows.append([term_id, name, ','.join(secondaries)])
+    with open(fname, 'wb') as fh:
+        write_unicode_csv(fname, rows, '\t')
+
+
+def make_chebi_hierarchy():
+    term_entries = _get_chebi_obo_terms()
+    terms_with_parents = [(t, p) for t, _, _, p in term_entries if p]
     g = rdflib.Graph()
     indra_rn = \
         rdflib.Namespace('http://sorger.med.harvard.edu/indra/relations/')
@@ -616,7 +598,6 @@ if __name__ == '__main__':
     update_kinases()
     update_uniprot_subcell_loc()
     update_chebi_entries()
-    update_chebi_primary_map_and_names()
     update_cas_to_chebi()
     update_bel_chebi_map()
     update_entity_hierarchy()
