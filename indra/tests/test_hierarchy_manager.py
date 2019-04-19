@@ -113,12 +113,12 @@ def test_get_children():
     assert len(brafs) == 0
     assert unicode_strs(brafs)
     mapks = ent_hierarchy.get_children(mapk)
-    assert len(mapks) == 12
+    assert len(mapks) == 12, mapks
     assert unicode_strs(mapks)
     # Make sure we can also do this in a case involving both family and complex
     # relationships
     ampks = ent_hierarchy.get_children(ampk)
-    assert len(ampks) == 22
+    assert len(ampks) == 22, ampks
     ag_none = ''
     none_children = ent_hierarchy.get_children('')
     assert isinstance(none_children, list)
@@ -143,9 +143,8 @@ def test_mtorc_get_parents():
 
 def test_mtorc_transitive_closure():
     rictor = 'http://identifiers.org/hgnc/28611'  # RICTOR
-    p = ent_hierarchy.partof_closure.get(rictor)
-    assert len(p) == 1
-    assert p[0] == 'http://identifiers.org/fplx/mTORC2'
+    mtorc2 = 'http://identifiers.org/fplx/mTORC2'
+    assert (rictor, mtorc2) in ent_hierarchy.partof_closure
 
 
 def test_mtorc_partof_no_tc():
@@ -168,7 +167,7 @@ def test_get_parents():
     prkaa1 = 'http://identifiers.org/hgnc/9376'  # PRKAA1
     ampk = 'http://identifiers.org/fplx/AMPK'
     p1 = ent_hierarchy.get_parents(prkaa1, 'all')
-    assert len(p1) == 8
+    assert len(p1) == 8, p1
     assert ampk in p1
     p2 = ent_hierarchy.get_parents(prkaa1, 'immediate')
     assert len(p2) == 7, p2

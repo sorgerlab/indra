@@ -46,9 +46,9 @@ class HierarchyManager(object):
         self.uri_as_name = uri_as_name
         self.relations_prefix = \
             'http://sorger.med.harvard.edu/indra/relations/'
-        self.isa_closure = {}
-        self.partof_closure = {}
-        self.isa_or_partof_closure = {}
+        self.isa_closure = set()
+        self.partof_closure = set()
+        self.isa_or_partof_closure = set()
         self.components = {}
         self._children = {}
         self.component_counter = 0
@@ -100,8 +100,7 @@ class HierarchyManager(object):
 
         # Build reverse lookup dict from the hierarchy
         # First get all URIs that correspond to parents
-        all_parents = {parent for parents in self.isa_or_partof_closure.values()
-                       for parent in parents}
+        all_parents = {parent for parent, child in self.isa_or_partof_closure}
         # We use the inverse relation here
         rel_fun = lambda node, graph: self.isa_or_partof_objects(node,
                                                                  inverse=True)
@@ -133,13 +132,13 @@ class HierarchyManager(object):
         as values.
         """
         self.component_counter = 0
-        for rel, tc_dict in ((self.isa_objects, self.isa_closure),
+        for rel, tc_set in ((self.isa_objects, self.isa_closure),
                              (self.partof_objects, self.partof_closure),
                              (self.isa_or_partof_objects,
                                  self.isa_or_partof_closure)):
-            self.build_transitive_closure(rel, tc_dict)
+            self.build_transitive_closure(rel, tc_set)
 
-    def build_transitive_closure(self, rel, tc_dict):
+    def build_transitive_closure(self, rel, tc_set):
         """Build a transitive closure for a given relation in a given dict."""
         # Make a function with the righ argument structure
         rel_fun = lambda node, graph: rel(node)
@@ -150,10 +149,7 @@ class HierarchyManager(object):
                 ys = y.toPython()
                 if xs == ys:
                     continue
-                try:
-                    tc_dict[xs].append(ys)
-                except KeyError:
-                    tc_dict[xs] = [ys]
+                tc_set.add((xs, ys))
                 if rel == self.isa_or_partof_objects:
                     self._add_component(xs, ys)
 
@@ -237,7 +233,7 @@ class HierarchyManager(object):
         for o in self.partof_objects(node, inverse):
             yield o
 
-    def directly_or_indirectly_related(self, ns1, id1, ns2, id2, closure_dict,
+    def directly_or_indirectly_related(self, ns1, id1, ns2, id2, closure_set,
                                        relation_func):
         """Return True if two entities have the speicified relationship.
 
@@ -254,11 +250,11 @@ class HierarchyManager(object):
             Namespace code for an entity.
         id2 : str
             URI for an entity.
-        closure_dict: dict
-            A dictionary mapping node names to nodes that have the
+        closure_set : set
+            A set containing tuples of entities that have the
             specified relationship, directly or indirectly. Empty if this
             has not been precomputed.
-        relation_func: function
+        relation_func : function
             Function with arguments (node, graph) that generates objects
             with some relationship with node on the given graph.
 
@@ -275,14 +271,10 @@ class HierarchyManager(object):
         elif id1 is None:
             return False
 
-        if closure_dict:
+        if closure_set:
             term1 = self.get_uri(ns1, id1)
             term2 = self.get_uri(ns2, id2)
-            ec = closure_dict.get(term1)
-            if ec is not None and term2 in ec:
-                return True
-            else:
-                return False
+            return (term1, term2) in closure_set
         else:
             if not self.uri_as_name:
                 e1 = self.find_entity(id1)
@@ -296,12 +288,7 @@ class HierarchyManager(object):
                 u2 = self.get_uri(ns2, id2)
                 t1 = rdflib.term.URIRef(u1)
                 t2 = rdflib.term.URIRef(u2)
-
-            to = self.graph.transitiveClosure(relation_func, t1)
-            if t2 in to:
-                return True
-            else:
-                return False
+            return t2 in self.graph.transitiveClosure(relation_func, t1)
 
     def isa(self, ns1, id1, ns2, id2):
         """Return True if one entity has an "isa" relationship to another.
@@ -422,7 +409,8 @@ class HierarchyManager(object):
             'top': return only the highest level parents
         """
         # First do a quick dict lookup to see if there are any parents
-        all_parents = set(self.isa_or_partof_closure.get(uri, []))
+        all_parents = {p for p, c in self.isa_or_partof_closure
+                       if c == uri}
         # If there are no parents or we are looking for all, we can return here
         if not all_parents or type == 'all':
             return all_parents
@@ -546,6 +534,7 @@ class YamlHierarchyManager(HierarchyManager):
 
 
 def get_bio_hierarchies(from_pickle=True):
+    '''
     if from_pickle:
         import pickle
         hierarchy_file = os.path.dirname(os.path.abspath(__file__)) + \
@@ -553,7 +542,7 @@ def get_bio_hierarchies(from_pickle=True):
         with open(hierarchy_file, 'rb') as fh:
             hierarchies = pickle.load(fh)
         return hierarchies
-
+    '''
     def resource_path(fname):
         return os.path.join(os.path.dirname(__file__), os.pardir, 'resources',
                             fname)
