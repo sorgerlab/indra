@@ -3,6 +3,7 @@ import json
 import gzip
 import pickle
 import pandas
+import rdflib
 import logging
 import requests
 from collections import defaultdict
@@ -300,6 +301,48 @@ def update_chebi_primary_map_and_names():
               columns=['CHEBI_ACCESSION', 'NAME'])
 
 
+def update_chebi_ontology_relations():
+    def process_term(term):
+        lines = term.split('\n')[1:]
+        term_id = None
+        parents = []
+        for line in lines:
+            k, v = line.split(': ', maxsplit=1)
+            if k == 'id':
+                term_id = v
+            elif k == 'is_a':
+                parents.append(v)
+        return term_id, parents
+
+    url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi_lite.obo'
+    fname = 'chebi_lite.obo'
+    logger.info('Downloading %s' % url)
+    urlretrieve(url, fname)
+    with open(fname, 'r') as fh:
+        logger.info('Loading %s' % fname)
+        content = fh.read()
+    chunks = content.split('\n\n')
+    terms = [c for c in chunks if c.startswith('[Term]')]
+    logger.info('Found %d terms' % len(terms))
+    term_entries = [process_term(term) for term in terms]
+    terms_with_parents = [(t, p) for t, p in term_entries if p]
+
+    g = rdflib.Graph()
+    indra_rn = \
+        rdflib.Namespace('http://sorger.med.harvard.edu/indra/relations/')
+    chebi_ns = rdflib.Namespace('http://identifiers.org/chebi/')
+    isa = indra_rn.term('isa')
+    for child, parents in terms_with_parents:
+        for parent in parents:
+            g.add((chebi_ns.term(child), isa, chebi_ns.term(parent)))
+    gb = g.serialize(format='nt')
+    gb = gb.replace(b'\n\n', b'\n').strip()
+    rows = b'\n'.join(sorted(gb.split(b'\n')))
+    fname = os.path.join(path, 'chebi_ontology.rdf')
+    with open(fname, 'wb') as fh:
+        fh.write(gb)
+
+
 def update_cellular_component_hierarchy():
     logger.info('--Updating GO cellular components----')
     g = load_latest_go()
@@ -571,6 +614,7 @@ if __name__ == '__main__':
     update_uniprot_subcell_loc()
     update_chebi_entries()
     update_chebi_primary_map_and_names()
+    update_chebi_ontology_relations()
     update_cas_to_chebi()
     update_bel_chebi_map()
     update_entity_hierarchy()

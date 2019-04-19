@@ -209,6 +209,9 @@ def _read_chebi_to_pubchem():
     chebi_pubchem = {}
     pubchem_chebi = {}
     ik_matches = {}
+    # Here, in case there are many possible mappings, we make it so that we
+    # end up with one that has an explicit InChiKey match over one that
+    # doesn't, if such a mapping is available
     for chebi_id, pc_id, ik_match in csv_reader:
         if chebi_id not in chebi_pubchem:
             chebi_pubchem[chebi_id] = pc_id
@@ -216,16 +219,12 @@ def _read_chebi_to_pubchem():
         elif ik_match == 'Y' and not \
                 ik_matches.get((chebi_id, chebi_pubchem[chebi_id])):
             chebi_pubchem[chebi_id] = pc_id
-            print(pc_id, chebi_id)
-        # Note: this is a one to many mapping and we prioritize mapping to
-        # smaller CHEBI IDs that appear earlier in the sorted mapping table.
         if pc_id not in pubchem_chebi:
             pubchem_chebi[pc_id] = chebi_id
             ik_matches[(chebi_id, pc_id)] = ik_match
         elif ik_match == 'Y' and not \
                 ik_matches.get((pubchem_chebi[pc_id], pc_id)):
             pubchem_chebi[pc_id] = chebi_id
-            print(pc_id, chebi_id)
     return chebi_pubchem, pubchem_chebi
 
 
