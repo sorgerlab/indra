@@ -13,7 +13,7 @@ from indra.statements import Agent, Phosphorylation, BoundCondition, \
     ActiveForm, MutCondition, Complex, \
     Translocation, Activation, Inhibition, \
     Deacetylation, Conversion, Concept, Influence, \
-    IncreaseAmount, DecreaseAmount, Statement, Event
+    IncreaseAmount, DecreaseAmount, Statement, Event, Association
 from indra.preassembler.hierarchy_manager import hierarchies
 
 
@@ -835,3 +835,57 @@ def test_agent_coordinates():
     assert all(a['raw_text'] == ['MEK1', 'ERK2'] for a in agent_annots)
     assert {tuple(a['coords']) for a in agent_annots} == {((21, 25), (0, 4)),
                                                           ((0, 4), (15, 19))}
+
+
+def test_association_duplicate():
+    ev1 = Event(Concept('a'))
+    ev2 = Event(Concept('b'))
+    ev3 = Event(Concept('c'))
+    # Order of members does not matter
+    st1 = Association([ev1, ev2], evidence=[Evidence(source_api='eidos1')])
+    st2 = Association([ev1, ev3], evidence=[Evidence(source_api='eidos2')])
+    st3 = Association([ev2, ev1], evidence=[Evidence(source_api='eidos3')])
+    st4 = Association([ev2, ev3], evidence=[Evidence(source_api='eidos4')])
+    st5 = Association([ev2, ev3], evidence=[Evidence(source_api='eidos5')])
+    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '../sources/eidos/eidos_ontology.rdf')
+    hm = HierarchyManager(eidos_ont, True, True)
+    hierarchies = {'entity': hm}
+    pa = Preassembler(hierarchies, [st1, st2, st3, st4, st5])
+    unique_stmts = pa.combine_duplicates()
+    assert len(unique_stmts) == 3
+    assert len(unique_stmts[0].evidence) == 2
+    assert len(unique_stmts[1].evidence) == 1
+    assert len(unique_stmts[2].evidence) == 2
+    sources = [e.source_api for e in unique_stmts[0].evidence]
+    assert set(sources) == set(['eidos1', 'eidos3'])
+
+
+def test_association_refinement():
+    health = 'UN/entities/human/health'
+    food = 'UN/entities/human/food'
+    food_security = 'UN/entities/human/food/food_security'
+    eh = Event(Concept('health', db_refs={'UN': [(health, 1.0)]}))
+    ef = Event(Concept('food', db_refs={'UN': [(food, 1.0)]}))
+    efs = Event(Concept('food security', db_refs={'UN': [(food_security, 1.0)]}))
+    st1 = Association([eh, ef], evidence=[Evidence(source_api='eidos1')])
+    st2 = Association([ef, eh], evidence=[Evidence(source_api='eidos2')])
+    st3 = Association([eh, efs], evidence=[Evidence(source_api='eidos3')])
+    st4 = Association([ef, efs], evidence=[Evidence(source_api='eidos4')])
+    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '../sources/eidos/eidos_ontology.rdf')
+    hm = HierarchyManager(eidos_ont, True, True)
+    hierarchies = {'entity': hm}
+    pa = Preassembler(hierarchies, [st1, st2, st3, st4])
+    unique_stmts = pa.combine_duplicates() # debugging
+    assert len(unique_stmts) == 3
+    rel_stmts = pa.combine_related()
+    assert len(rel_stmts) == 2
+    eh_efs_stmt = [st for st in rel_stmts if (st.members[0].concept.name in
+                   {'health', 'food security'} and st.members[1].concept.name
+                   in {'health', 'food security'})][0]
+    assert len(eh_efs_stmt.supported_by) == 1
+    assert eh_efs_stmt.supported_by[0].members[0].concept.name in
+            {'food', 'health'}
+    assert eh_efs_stmt.supported_by[0].members[1].concept.name in
+            {'food', 'health'}
