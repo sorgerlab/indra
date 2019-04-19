@@ -1716,7 +1716,7 @@ def test_concept_get_grounding():
     assert Concept('h', db_refs=d8).get_grounding() == ('HUME', 'a')
 
 
-def test_concept_isa_eidos():
+def test_concept_isa_eid():
     eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              '../sources/eidos/eidos_ontology.rdf')
     hm = HierarchyManager(eidos_ont, True, True)
@@ -1728,7 +1728,7 @@ def test_concept_isa_eidos():
     assert not c2.refinement_of(c1, {'entity': hm})
 
 
-def test_concept_opposite_eidos():
+def test_concept_opposite_eid():
     eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              '../sources/eidos/eidos_ontology.rdf')
     hm = HierarchyManager(eidos_ont, True, True)
