@@ -175,7 +175,7 @@ def test_get_parents():
     assert unicode_strs(p2)
     assert ampk not in p2
     p3 = ent_hierarchy.get_parents(prkaa1, 'top')
-    assert len(p3) == 1
+    assert len(p3) == 1, p3
     assert ampk in p3
 
 

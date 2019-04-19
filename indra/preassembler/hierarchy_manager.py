@@ -100,7 +100,7 @@ class HierarchyManager(object):
 
         # Build reverse lookup dict from the hierarchy
         # First get all URIs that correspond to parents
-        all_parents = {parent for parent, child in self.isa_or_partof_closure}
+        all_parents = {parent for child, parent in self.isa_or_partof_closure}
         # We use the inverse relation here
         rel_fun = lambda node, graph: self.isa_or_partof_objects(node,
                                                                  inverse=True)
@@ -110,7 +110,9 @@ class HierarchyManager(object):
         for parent in all_parents:
             children = self.graph.transitiveClosure(rel_fun,
                                                     rdflib.term.URIRef(parent))
-            self._children[parent] = list(set(c.toPython() for c in children))
+            children_uris = list(set(c.toPython() for c in children))
+            if children_uris:
+                self._children[parent] = children_uris
 
     def extend_with(self, rdf_file):
         """Extend the RDF graph of this HierarchyManager with another RDF file.
@@ -408,8 +410,8 @@ class HierarchyManager(object):
             'immediate': return only the immediate parents;
             'top': return only the highest level parents
         """
-        # First do a quick dict lookup to see if there are any parents
-        all_parents = {p for p, c in self.isa_or_partof_closure
+        # First do a search in the set to see if there are any parents
+        all_parents = {p for c, p in self.isa_or_partof_closure
                        if c == uri}
         # If there are no parents or we are looking for all, we can return here
         if not all_parents or type == 'all':
@@ -422,8 +424,10 @@ class HierarchyManager(object):
             immediate_parents = list(set(self.isa_or_partof_objects(node)))
             return [p.toPython() for p in immediate_parents]
         elif type == 'top':
+            # Here we iterate over all parents and find ones that have no parents
+            # in the closure
             top_parents = [p for p in all_parents if
-                           not self.isa_or_partof_closure.get(p)]
+                           not {pp for pp, _ in self.isa_or_partof_closure if pp == p}]
             return top_parents
 
     def get_children(self, uri):
