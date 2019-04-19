@@ -159,15 +159,24 @@ class HierarchyManager(object):
                 if rel == self.isa_or_partof_objects:
                     self._add_component(xs, ys)
 
+    def _term_in_closure_namespace(self, term):
+        """Return True if term is in a namespace with a closure."""
+        if self.build_closure is True:
+            return True
+        elif isinstance(self.build_closure, (list, tuple)):
+            return any([term.startswith(ns) for ns in self.build_closure])
+        else:
+            return False
+
     def _get_build_transitive_closure_objects(self):
+        """Return objects that will be included in the transitive closures."""
         if not self.build_closure:
             nodes = []
         else:
             nodes = list(self.graph.all_nodes())
             if isinstance(self.build_closure, (list, tuple)):
                 nodes = [node for node in nodes if
-                         any([node.startswith(ns) for ns in
-                              self.build_closure])]
+                         self._term_in_closure_namespace(node)]
         return nodes
 
     def _add_component(self, xs, ys):
@@ -288,24 +297,29 @@ class HierarchyManager(object):
         elif id1 is None:
             return False
 
+        # If both terms are in the closure set then we can just look them
+        # up and return
         if closure_set:
             term1 = self.get_uri(ns1, id1)
             term2 = self.get_uri(ns2, id2)
-            return (term1, term2) in closure_set
+            if self._term_in_closure_namespace(term1) and \
+                    self._term_in_closure_namespace(term2):
+                return (term1, term2) in closure_set
+
+        # Otherwise we do an actual graph query in the RDF graph
+        if not self.uri_as_name:
+            e1 = self.find_entity(id1)
+            e2 = self.find_entity(id2)
+            if e1 is None or e2 is None:
+                return False
+            t1 = rdflib.term.URIRef(e1)
+            t2 = rdflib.term.URIRef(e2)
         else:
-            if not self.uri_as_name:
-                e1 = self.find_entity(id1)
-                e2 = self.find_entity(id2)
-                if e1 is None or e2 is None:
-                    return False
-                t1 = rdflib.term.URIRef(e1)
-                t2 = rdflib.term.URIRef(e2)
-            else:
-                u1 = self.get_uri(ns1, id1)
-                u2 = self.get_uri(ns2, id2)
-                t1 = rdflib.term.URIRef(u1)
-                t2 = rdflib.term.URIRef(u2)
-            return t2 in self.graph.transitiveClosure(relation_func, t1)
+            u1 = self.get_uri(ns1, id1)
+            u2 = self.get_uri(ns2, id2)
+            t1 = rdflib.term.URIRef(u1)
+            t2 = rdflib.term.URIRef(u2)
+        return t2 in self.graph.transitiveClosure(relation_func, t1)
 
     def isa(self, ns1, id1, ns2, id2):
         """Return True if one entity has an "isa" relationship to another.
@@ -481,6 +495,8 @@ class HierarchyManager(object):
             return 'http://identifiers.org/uniprot/' + id
         elif ns == 'FPLX':
             return 'http://identifiers.org/fplx/' + id
+        elif ns == 'CHEBI':
+            return 'http://identifiers.org/chebi/' + id
         elif ns in ['UN', 'WDI', 'FAO', 'HUME']:
             return \
                 'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#' + id
