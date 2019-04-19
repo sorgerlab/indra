@@ -1,22 +1,15 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 import json
 import gzip
 import pickle
 import pandas
-import rdflib
-from indra.util import read_unicode_csv, write_unicode_csv
-
-try:
-    from urllib import urlretrieve
-except ImportError:
-    from urllib.request import urlretrieve
 import logging
 import requests
+from collections import defaultdict
+from urllib.request import urlretrieve
 from indra.util import read_unicode_csv, write_unicode_csv
 from indra.databases import go_client
-from indra.databases import uniprot_client
+from indra.databases import chebi_client, pubchem_client
 from indra.databases.lincs_client import load_lincs_csv
 from indra.preassembler import make_cellular_component_hierarchy as mcch
 from indra.preassembler.make_entity_hierarchy import \
@@ -143,6 +136,10 @@ def update_uniprot_subcell_loc():
 
 
 def update_chebi_entries():
+    # The reference table contains all the automated mappings from ChEBI
+    # IDs to IDs in other databases, except CAS, which only has manually
+    # curated mappings available in the database_accession table
+    # (see implementation in update_cas_to_chebi).
     logger.info('--Updating ChEBI entries----')
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
         'Flat_file_tab_delimited/reference.tsv.gz'
@@ -163,8 +160,8 @@ def update_chebi_entries():
 
     # Process PubChem mapping to eliminate SID rows and strip CID: prefix
     # If the second column of the row starts with SID:, ignore the row
-    # If the second column of the row starts with CID:, strip out the CID prefix
-    # Otherwise, include the row unchanged
+    # If the second column of the row starts with CID:, strip out the CID
+    # prefix Otherwise, include the row unchanged
     original_rows = read_unicode_csv(fname, '\t')
     new_rows = []
     for original_row in original_rows:
@@ -176,9 +173,50 @@ def update_chebi_entries():
             # Skip SID rows
             continue
         else:
-            # Include other rows unchanges
+            # Include other rows unchanged
             new_rows.append(original_row)
     write_unicode_csv(fname, new_rows, '\t')
+
+    # In another round of cleanup, we try dealing with duplicate mappings in a
+    # principled way such that many-to-one mappings are allowed but one-to-many
+    # mappings are eliminated
+    original_rows = read_unicode_csv(fname, '\t')
+    chebi_pubchem = defaultdict(list)
+    pubchem_chebi = defaultdict(list)
+    for chebi_id, pc_id in original_rows:
+        chebi_pubchem[chebi_id].append(pc_id)
+        pubchem_chebi[pc_id].append(chebi_id)
+    # Looking for InChIKey matches for duplicates in the ChEBI -> PubChem
+    # direction
+    logger.info('Getting InChiKey matches for duplicates')
+    ik_matches = set()
+    for chebi_id, pc_ids in chebi_pubchem.items():
+        if len(pc_ids) > 1:
+            ck = chebi_client.get_inchi_key(chebi_id)
+            for pc_id in pc_ids:
+                pk = pubchem_client.get_inchi_key(pc_id)
+                if ck == pk:
+                    ik_matches.add((chebi_id, pc_id))
+    # Looking for InChIKey matches for duplicates in the PubChem -> ChEBI
+    # direction
+    for pc_id, chebi_ids in pubchem_chebi.items():
+        if len(chebi_ids) > 1:
+            pk = pubchem_client.get_inchi_key(pc_id)
+            for chebi_id in chebi_ids:
+                ck = chebi_client.get_inchi_key(chebi_id)
+                if ck == pk:
+                    ik_matches.add((chebi_id, pc_id))
+    rows = read_unicode_csv(fname, '\t')
+    header = next(rows)
+    header.append('IK_MATCH')
+    new_rows = [header]
+    for chebi_id, pc_id in rows:
+        if (chebi_id, pc_id) in ik_matches:
+            new_rows.append([chebi_id, pc_id, 'Y'])
+        else:
+            new_rows.append([chebi_id, pc_id, ''])
+    write_unicode_csv(fname, new_rows, '\t')
+
 
     # Save ChEMBL mapping
     fname = os.path.join(path, 'chebi_to_chembl.tsv')
@@ -191,6 +229,13 @@ def update_chebi_entries():
 
 
 def update_cas_to_chebi():
+    # The database_accession table contains manually curated mappings
+    # between ChEBI and other databases. It only contains very few mappings
+    # to e.g., PubChem, therefore the main resource for those mappings
+    # is the reference table (see implementation in update_chebi_entries).
+    # The only useful mappings we extract here from the database_accession
+    # table are the ones to CAS which are not available in the reference
+    # table.
     logger.info('--Updating CAS to ChEBI entries----')
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
         'Flat_file_tab_delimited/database_accession.tsv'
@@ -218,6 +263,9 @@ def update_cas_to_chebi():
 
 
 def update_chebi_primary_map_and_names():
+    # Information about the details of each compound (e.g., name)
+    # is available in the compounds table. We get secondary to
+    # primary ID mappings from here as well as ID to name mappings.
     logger.info('--Updating ChEBI primary map entries and names----')
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
         'Flat_file_tab_delimited/compounds.tsv.gz'
