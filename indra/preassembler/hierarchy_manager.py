@@ -43,7 +43,8 @@ class HierarchyManager(object):
     def __init__(self, rdf_file=None, build_closure_namespaces=None,
                  uri_as_name=True):
         """Initialize with the path to an RDF file"""
-        self.build_closure_namespaces = build_closure_namespaces
+        self.build_closure_namespaces = \
+            build_closure_namespaces if build_closure_namespaces else []
         self.uri_as_name = uri_as_name
         self.relations_prefix = \
             'http://sorger.med.harvard.edu/indra/relations/'
@@ -508,10 +509,12 @@ class HierarchyManager(object):
 
 
 class YamlHierarchyManager(HierarchyManager):
-    def __init__(self, root, yaml_to_rdf):
+    def __init__(self, root, build_closure_namespaces, yaml_to_rdf):
         self.yaml_root = root
         self.yaml_to_rdf = yaml_to_rdf
-        super(YamlHierarchyManager, self).__init__(None, True, True)
+        super(YamlHierarchyManager, self).__init__(None,
+                                                   build_closure_namespaces,
+                                                   True)
         G = self.yaml_to_rdf(self.yaml_root)
         self.load_from_rdf_graph(G)
 
