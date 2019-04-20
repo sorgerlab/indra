@@ -1090,11 +1090,23 @@ class TripsProcessor(object):
         """
         terms = self.tree.findall('TERM')
         agents = {}
+        assoc_links = []
         for term in terms:
             term_id = term.attrib.get('id')
             if term_id:
                 agent = self._get_agent_by_id(term_id, None)
                 agents[term_id] = agent
+                # Handle assoc-with links
+                aw = term.find('assoc-with')
+                if aw is not None:
+                    aw_id = aw.attrib.get('id')
+                    if aw_id:
+                        assoc_links.append((term_id, aw_id))
+        # We only keep the target end of assoc with links if both
+        # source and target are in the list
+        for source, target in assoc_links:
+            if target in agents and source in agents:
+                agents.pop(source)
         return agents
 
     def _get_cell_loc_by_id(self, term_id):
