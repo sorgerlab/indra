@@ -1090,11 +1090,23 @@ class TripsProcessor(object):
         """
         terms = self.tree.findall('TERM')
         agents = {}
+        assoc_links = []
         for term in terms:
             term_id = term.attrib.get('id')
             if term_id:
                 agent = self._get_agent_by_id(term_id, None)
                 agents[term_id] = agent
+                # Handle assoc-with links
+                aw = term.find('assoc-with')
+                if aw is not None:
+                    aw_id = aw.attrib.get('id')
+                    if aw_id:
+                        assoc_links.append((term_id, aw_id))
+        # We only keep the target end of assoc with links if both
+        # source and target are in the list
+        for source, target in assoc_links:
+            if target in agents and source in agents:
+                agents.pop(source)
         return agents
 
     def _get_cell_loc_by_id(self, term_id):
@@ -1812,7 +1824,7 @@ def _get_db_refs(term):
             top_entry = entries[0]
             top_idx = 0
             for i, entry in enumerate(entries):
-                # We take the lowes priority entry within the score group
+                # We take the lowest priority entry within the score group
                 # as the top entry
                 if entry['priority'] < top_entry['priority']:
                     # This is a corner case in which a protein family
@@ -1960,6 +1972,16 @@ def _get_grounding_terms(term):
             comment = 'HGNC_FROM_NCIT'
         if 'NCIT' in refs and 'FPLX' not in refs and 'FPLX' in new_refs:
             comment = 'FPLX_FROM_NCIT'
+            # In a small number of corner cases, NCIT reports mappings
+            # (incorrectly) to a specific gene or protein in HGNC/UP
+            # when in fact the entry is about a protein family that FPLX
+            # also maps to. Further, NCIT sometimes maps to CHEBI entries
+            # corresponding to protein families or complexes (these
+            # are often correct), and we remove these too to make sure
+            # we don't later think that the agent is a chemical.
+            to_remove_refs = {'UP', 'HGNC', 'CHEBI'}
+            new_refs = {k: v for k, v in new_refs.items()
+                        if k not in to_remove_refs}
         for k, v in new_refs.items():
             refs[k] = v
 
