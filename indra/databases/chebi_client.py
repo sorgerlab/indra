@@ -252,15 +252,20 @@ def _read_cas_to_chebi():
 
 
 def _read_chebi_names():
-    csv_reader = _read_resource_csv('chebi_names.tsv')
+    logger.info('Loading ChEBI resource files')
+    csv_reader = _read_resource_csv('chebi_entries.tsv')
     next(csv_reader)
     chebi_id_to_name = {}
     chebi_name_to_id = {}
+    chebi_to_primary = {}
     for row in csv_reader:
-        chebi_id, name = row
+        chebi_id, name, secondaries = row
         chebi_id_to_name[chebi_id] = name
         chebi_name_to_id[name] = chebi_id
-    return chebi_id_to_name, chebi_name_to_id
+        for secondary_id in secondaries.split(','):
+            chebi_to_primary[secondary_id] = chebi_id
+    logger.info('Loaded ChEBI resource files')
+    return chebi_id_to_name, chebi_name_to_id, chebi_to_primary
 
 
 def _read_resource_csv(fname):
@@ -270,7 +275,7 @@ def _read_resource_csv(fname):
     return csv_reader
 
 
+chebi_id_to_name, chebi_name_to_id, chebi_to_primary = _read_chebi_names()
 chebi_pubchem, pubchem_chebi = _read_chebi_to_pubchem()
 chebi_chembl = _read_chebi_to_chembl()
 cas_chebi = _read_cas_to_chebi()
-chebi_id_to_name, chebi_name_to_id = _read_chebi_names()

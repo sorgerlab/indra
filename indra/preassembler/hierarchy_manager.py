@@ -68,8 +68,11 @@ class HierarchyManager(object):
             Path to an RDF file.
         """
         self.graph = rdflib.Graph()
+        logger.info('Loading hierarchy from %s' % rdf_file)
         self.graph.parse(os.path.abspath(rdf_file), format='nt')
+        logger.info('Loaded hierarchy from %s' % rdf_file)
         self.initialize()
+        logger.info('Initialized hierarchy')
 
     def load_from_rdf_string(self, rdf_str):
         """Initialize given an RDF string representing the hierarchy."

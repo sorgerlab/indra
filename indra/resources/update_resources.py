@@ -136,7 +136,7 @@ def update_uniprot_subcell_loc():
     write_unicode_csv(fname, mappings, delimiter='\t')
 
 
-def update_chebi_entries():
+def update_chebi_references():
     # The reference table contains all the automated mappings from ChEBI
     # IDs to IDs in other databases, except CAS, which only has manually
     # curated mappings available in the database_accession table
@@ -218,7 +218,6 @@ def update_chebi_entries():
             new_rows.append([chebi_id, pc_id, ''])
     write_unicode_csv(fname, new_rows, '\t')
 
-
     # Save ChEMBL mapping
     fname = os.path.join(path, 'chebi_to_chembl.tsv')
     logger.info('Saving into %s' % fname)
@@ -226,10 +225,10 @@ def update_chebi_entries():
     df_chembl.sort_values(['COMPOUND_ID', 'REFERENCE_ID'], ascending=True,
                           inplace=True)
     df_chembl.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
-                      header=['CHEBI', 'CHEMBL'], index=False)
+                     header=['CHEBI', 'CHEMBL'], index=False)
 
 
-def update_cas_to_chebi():
+def update_chebi_accessions():
     # The database_accession table contains manually curated mappings
     # between ChEBI and other databases. It only contains very few mappings
     # to e.g., PubChem, therefore the main resource for those mappings
@@ -244,18 +243,16 @@ def update_cas_to_chebi():
     urlretrieve(url, fname)
     with open(fname, 'rb') as fh:
         logger.info('Loading %s' % fname)
-        df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
+        df = pandas.read_csv(fh, sep='\t', index_col=None,
+                             dtype=str, na_filter=False)
     fname = os.path.join(path, 'cas_to_chebi.tsv')
     logger.info('Saving into %s' % fname)
     df_cas = df[df['TYPE'] == 'CAS Registry Number']
     df_cas.sort_values(['ACCESSION_NUMBER', 'COMPOUND_ID'], ascending=True,
                        inplace=True)
     # Here we need to map to primary ChEBI IDs
-    with open(os.path.join(path, 'chebi_to_primary.tsv'), 'rb') as fh:
-        df_prim = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
-        mapping = {s: p for s, p in zip(df_prim['Secondary'].tolist(),
-                                        df_prim['Primary'].tolist())}
-    df_cas.COMPOUND_ID.replace(mapping, inplace=True)
+    from indra.databases.chebi_client import chebi_to_primary
+    df_cas.COMPOUND_ID.replace(chebi_to_primary, inplace=True)
     df_cas.drop_duplicates(subset=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                            inplace=True)
     df_cas.to_csv(fname, sep='\t',
@@ -598,7 +595,8 @@ if __name__ == '__main__':
     update_kinases()
     update_uniprot_subcell_loc()
     update_chebi_entries()
-    update_cas_to_chebi()
+    update_chebi_references()
+    update_chebi_accessions()
     update_bel_chebi_map()
     update_entity_hierarchy()
     update_modification_hierarchy()
