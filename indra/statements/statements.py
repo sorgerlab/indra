@@ -2103,43 +2103,38 @@ class Association(Complex):
     def contradicts(self, other, hierarchies):
         if stmt_type(self) != stmt_type(other):
             return False
-        # Members can be in any order, that's why we consider every combination
-        ref1 = self.members[0].concept.refinement_of(other.members[0].concept,
-                                                     hierarchies) or \
-            other.members[0].concept.refinement_of(self.members[0].concept,
-                                                   hierarchies) or \
-            self.members[0].concept.refinement_of(other.members[1].concept,
-                                                  hierarchies) or \
-            other.members[1].concept.refinement_of(self.members[0].concept,
-                                                   hierarchies)
-        ref2 = self.members[1].concept.refinement_of(other.members[0].concept,
-                                                     hierarchies) or \
-            other.members[0].concept.refinement_of(self.members[1].concept,
-                                                   hierarchies) or \
-            self.members[1].concept.refinement_of(other.members[1].concept,
-                                                  hierarchies) or \
-            other.members[1].concept.refinement_of(self.members[1].concept,
-                                                   hierarchies)
-        opp1 = self.members[0].concept.is_opposite(other.members[0].concept,
-                                                   hierarchies) or \
-            self.members[0].concept.is_opposite(other.members[1].concept,
-                                                hierarchies)
-        opp2 = self.members[1].concept.is_opposite(other.members[0].concept,
-                                                   hierarchies) or \
-            self.members[1].concept.is_opposite(other.members[1].concept,
-                                                hierarchies)
+
+        def match_members(self_members, other_members):
+            rel_types = {'refinement_of': 0, 'is_opposite': 0}
+            G = networkx.Graph()
+            for (self_idx, self_member), (other_idx, other_member) in \
+                itertools.product(enumerate(self_members),
+                                  enumerate(other_members)):
+                if ('S%d' % self_idx) in G or ('O%d' % other_idx) in G:
+                    continue
+                if self_member.concept.refinement_of(other_member.concept,
+                                                     hierarchies):
+                    G.add_edge('S%d' % self_idx, 'O%d' % other_idx)
+                    rel_types['refinement_of'] += 1
+                elif self_member.concept.is_opposite(other_member.concept,
+                                                     hierarchies):
+                    G.add_edge('S%d' % self_idx, 'O%d' % other_idx)
+                    rel_types['is_opposite'] += 1
+            return rel_types
+
+        rel_types = match_members(self.members, other.members)
         sp = self.overall_polarity()
         op = other.overall_polarity()
 
         # If all entities are "compatible" or mutually opposites
         # but the polarities are explicitly different then this is
         # a contradiction
-        if (ref1 and ref2) or (opp1 and opp2):
+        if set(rel_types.values()) == set([0, 2]):
             if sp is not None and op is not None and sp != op:
                 return True
         # If one entity is the opposite and the other compatible and the
         # polarities are the same then this is a contradiction
-        if (ref1 and opp2) or (opp1 and ref2):
+        if set(rel_types.values()) == set([1, 1]):
             if sp is not None and op is not None and sp == op:
                 return True
 
