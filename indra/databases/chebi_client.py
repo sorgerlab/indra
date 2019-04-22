@@ -2,7 +2,7 @@ import os
 import logging
 import requests
 from lxml import etree
-from functools import lru_cache
+from functools import lru_cache, cmp_to_key
 from indra.util import read_unicode_csv
 
 
@@ -200,6 +200,41 @@ def get_inchi_key(chebi_id):
     """
     entry = get_chebi_entry_from_web(chebi_id)
     return _get_chebi_value_from_entry(entry, 'inchiKey')
+
+
+def get_primary_id(chebi_id):
+    pid = chebi_to_primary.get(chebi_id)
+    if pid:
+        return pid
+    elif chebi_id in chebi_id_to_name:
+        return chebi_id
+    else:
+        return None
+
+
+def get_specific_id(chebi_ids):
+    if not chebi_ids:
+        return chebi_ids
+
+    from indra.preassembler.hierarchy_manager import hierarchies
+
+    def isa_cmp(a, b):
+        if not a.startswith('CHEBI:'):
+            a = 'CHEBI:%s' % a
+        if not b.startswith('CHEBI:'):
+            b = 'CHEBI:%s' % b
+        eh = hierarchies['entity']
+        if eh.isa('CHEBI', a, 'CHEBI', b):
+            print('%s isa %s' % (a, b))
+            return -1
+        if eh.isa('CHEBI', b, 'CHEBI', a):
+            print('%s isa %s' % (b, a))
+            return 1
+        print('%s unrelated to %s' % (a, b))
+        return 0
+
+    chebi_ids = sorted(chebi_ids, key=cmp_to_key(isa_cmp))
+    return chebi_ids[0]
 
 
 # Read resource files into module-level variables

@@ -1130,7 +1130,12 @@ class BiopaxProcessor(object):
         elif len(chebi_ids) == 1:
             return chebi_ids[0]
         else:
-            return chebi_ids
+            print(chebi_ids)
+            primary_ids = {chebi_client.get_primary_id(cid)
+                           for cid in chebi_ids}
+            print(primary_ids)
+            specific_chebi_id = chebi_client.get_specific_id(list(primary_ids))
+            return specific_chebi_id
 
     @staticmethod
     def _get_rna_grounding(bpe):

@@ -52,3 +52,9 @@ def test_chebi_name_from_web():
 def test_inchi_key():
     ik = chebi_client.get_inchi_key('2150')
     assert ik == 'NVKAWKQGWWIWPM-MISPCMORSA-N'
+
+
+def test_specific_chebi_ids():
+    ids = ['76971', '37045', '15996', '75771', '37121', '57600']
+    spec_id = chebi_client.get_specific_id(ids)
+    assert spec_id == '57600', spec_id
