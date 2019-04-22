@@ -112,6 +112,15 @@ class CWMSProcessor(object):
         logger.debug('Unhandled event types: %s' %
                      (', '.join(sorted(list(set(self._unhandled_events))))))
 
+    def extract_events(self):
+        events = self.tree.findall("EVENT/[type='ONT::INCREASE']") + (
+            self.tree.findall("EVENT/[type='ONT::DECREASE']"))
+        for event_entry in events:
+            event = self._get_event(event_entry, "*[@role=':AFFECTED']")
+            # ev = self._get_evidence(event_entry, context)
+            # event.evidence = ev
+            self.statements.append(event)
+
     def _get_event(self, event, find_str):
         """Get a concept referred from the event by the given string."""
         # Get the term with the given element id
