@@ -180,7 +180,7 @@ def test_get_parents():
     assert ampk in p3
 
 
-def test_load_eidos_hierarchy():
+def test_load_eid_hierarchy():
     eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              '../sources/eidos/eidos_ontology.rdf')
     eidos_ns = 'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#'
