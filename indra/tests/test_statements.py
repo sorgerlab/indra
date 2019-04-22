@@ -1868,6 +1868,39 @@ def influence_association_refinement_of(stmt_type):
             S(neg_adj, pos_adj, stmt_type), hierarchies)
 
 
+def test_association_contradicts():
+    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '../sources/eidos/eidos_ontology.rdf')
+    hm = HierarchyManager(eidos_ont, True, True)
+    hierarchies = {'entity': hm}
+    sn = Event(Concept('food security',
+                       db_refs={'UN': 'UN/entities/human/food/food_security'}),
+               delta={'polarity': -1})
+    sp = Event(Concept('food security',
+                       db_refs={'UN': 'UN/entities/human/food/food_security'}),
+               delta={'polarity': 1})
+    ip = Event(Concept('food insecurity',
+                       db_refs={'UN':
+                                'UN/entities/human/food/food_insecurity'}),
+               delta={'polarity': 1})
+    prp = Event(Concept('production'), delta={'polarity': 1})
+    prn = Event(Concept('production'), delta={'polarity': -1})
+    assert Association([sn, prp]).contradicts(Association([sn, prn]),
+                                              hierarchies)
+    assert Association([prp, sn]).contradicts(Association([sn, prn]),
+                                              hierarchies)
+    assert Association([prn, sp]).contradicts(Association([sn, prn]),
+                                              hierarchies)
+    assert Association([sn, prp]).contradicts(Association([ip, prn]),
+                                              hierarchies)
+    assert Association([sn, sp]).contradicts(Association([ip, sn]),
+                                             hierarchies)
+    assert Association([ip, sp]).contradicts(Association([sp, sp]),
+                                             hierarchies)
+    assert Association([ip, sp]).contradicts(Association([sn, sn]),
+                                             hierarchies)
+
+
 def test_modification_contradicts():
     st1 = Phosphorylation(Agent('a'), Agent('b'))
     st2 = Dephosphorylation(Agent('a'), Agent('b'))
