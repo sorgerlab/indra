@@ -87,6 +87,8 @@ class CWMSProcessor(object):
                 continue
             subj = self._get_event(event, "arg/[@role=':FACTOR']")
             obj = self._get_event(event, "arg/[@role=':OUTCOME']")
+            if subj is None or obj is None:
+                continue
             obj.delta['polarity'] = POLARITY_DICT['CC'][ev_type]
             ev = self._get_evidence(event, context)
             st = Influence(subj, obj, evidence=[ev])
@@ -100,6 +102,8 @@ class CWMSProcessor(object):
                 continue
             subj = self._get_event(event, "*[@role=':AGENT']")
             obj = self._get_event(event, "*[@role=':AFFECTED']")
+            if subj is None or obj is None:
+                continue
             obj.delta['polarity'] = POLARITY_DICT['EVENT'][ev_type]
             ev = self._get_evidence(event, context)
             st = Influence(subj, obj, evidence=[ev])
@@ -117,9 +121,11 @@ class CWMSProcessor(object):
             self.tree.findall("EVENT/[type='ONT::DECREASE']"))
         for event_entry in events:
             event = self._get_event(event_entry, "*[@role=':AFFECTED']")
-            # ev = self._get_evidence(event_entry, context)
-            # event.evidence = ev
+            if event is None:
+                continue
             self.statements.append(event)
+
+        self._remove_multi_extraction_artifacts()
 
     def _get_event(self, event, find_str):
         """Get a concept referred from the event by the given string."""
@@ -265,7 +271,11 @@ class CWMSProcessor(object):
     def _remove_multi_extraction_artifacts(self):
         # Build up a dict of evidence matches keys with statement UUIDs
         evmks = {}
+        logger.info('Starting with %d Statements.' % len(self.statements))
         for stmt in self.statements:
+            # Standalone Events do not have evidences, so we do not add them
+            if isinstance(stmt, Event):
+                continue
             evmk = stmt.evidence[0].matches_key() + \
                    stmt.subj.matches_key() + stmt.obj.matches_key()
             if evmk not in evmks:
@@ -276,12 +286,22 @@ class CWMSProcessor(object):
         multi_evmks = [v for k, v in evmks.items() if len(v) > 1]
         # We now figure out if anything needs to be removed
         to_remove = []
+        # Influence statements to be removed
         for uuids in multi_evmks:
             stmts = [s for s in self.statements if (s.uuid in uuids
                                                     and isinstance(s, Influence))]
             stmts = sorted(stmts, key=lambda x: x.polarity_count(),
                            reverse=True)
             to_remove += [s.uuid for s in stmts[1:]]
+        # Standalone events to be removed
+        matches_keys = ''.join([k for k in evmks.keys()])
+        for stmt in self.statements:
+            if isinstance(stmt, Event):
+                if stmt.matches_key() in matches_keys:
+                    logger.info('Found an Event that is part of '
+                                'Causal Relationship')
+                    to_remove.append(stmt.uuid)
+        # Remove all reduncdant statements
         if to_remove:
             logger.info('Found %d Statements to remove' % len(to_remove))
         self.statements = [s for s in self.statements
