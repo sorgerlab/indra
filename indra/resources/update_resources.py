@@ -360,6 +360,11 @@ def _get_chebi_obo_terms():
                 term_id = v
             elif k == 'is_a':
                 parents.append(v)
+            elif k == 'relationship':
+                rel, target = v.split(' ')
+                if rel in ('is_conjugate_base_of', 'is_conjugate_acid_of',
+                           'has_functional_parent', 'has_parent_hydride'):
+                    parents.append(target)
             elif k == 'alt_id':
                 secondaries.append(v)
             elif k == 'name':
