@@ -2067,7 +2067,9 @@ class Association(Complex):
             1 if m.delta['polarity'] is not None else 0 for m in self.members)
 
     def agent_list(self, deep_sorted=False):
-        return [m.concept for m in self.members]
+        members = self.members if not deep_sorted else \
+            sorted_agents(self.members)
+        return [m.concept for m in members]
 
     def refinement_of(self, other, hierarchies):
         members_refinement = super().refinement_of(other, hierarchies)
