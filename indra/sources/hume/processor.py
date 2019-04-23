@@ -40,13 +40,14 @@ class HumeJsonLdProcessor(object):
         self.relation_dict = {}
         self.eid_stmt_dict = {}
         self._get_documents()
+        self.relation_subj_obj_ids = []
 
     def extract_relations(self):
         relations = self._find_relations()
         for relation_type, relation in relations:
             # Extract concepts and contexts.
-            subj = self._get_event_and_context(relation, 'source')
-            obj = self._get_event_and_context(relation, 'destination')
+            subj = self._get_event_and_context(relation, arg_type='source')
+            obj = self._get_event_and_context(relation, arg_type='destination')
 
             if not subj.concept or not obj.concept:
                 continue
@@ -65,6 +66,35 @@ class HumeJsonLdProcessor(object):
             self.eid_stmt_dict[relation['@id']] = st
             self.statements.append(st)
 
+    def extract_events(self):
+        events = self._find_events()
+        for event in events:
+            stmt = self._get_event_and_context(event, eid=event['@id'])
+            self.eid_stmt_dict[event['@id']] = stmt
+            self.statements.append(stmt)
+
+    def _find_events(self):
+        """Find standalone events and return them in a list."""
+        # First populate self.concept_dict and self.relations_subj_obj_ids
+        if not self.relation_dict or not self.concept_dict or \
+           not self.relation_subj_obj_ids:
+                self._find_relations()
+
+        # Check if events are part of relations
+        events = []
+        for e in self.concept_dict.values():
+            label_set = set(e.get('labels', []))
+            if 'Event' in label_set:
+                if e['@id'] not in self.relation_subj_obj_ids:
+                    events.append(e)
+
+        if not events:
+            logger.info('No standalone events found.')
+        else:
+            logger.info('%d standalone events found.' % len(events))
+
+        return events
+
     def _find_relations(self):
         """Find all relevant relation elements and return them in a list."""
         # Get all extractions
@@ -81,6 +111,13 @@ class HumeJsonLdProcessor(object):
                 subtype = e.get('subtype')
                 if any(t in subtype for t in polarities.keys()):
                     relations.append((subtype, e))
+                    # Save IDs of relation's subject and object
+                    if e['arguments']:
+                        for a in e['arguments']:
+                            if a['type'] == 'source' or \
+                               a['type'] == 'destination':
+                                    self.relation_subj_obj_ids.append(
+                                        a['value']['@id'])
             # If this is an Event or an Entity
             if {'Event', 'Entity'} & label_set:
                 self.concept_dict[e['@id']] = e
@@ -162,9 +199,10 @@ class HumeJsonLdProcessor(object):
 
         return concept, metadata
 
-    def _get_event_and_context(self, event, arg_type):
+    def _get_event_and_context(self, event, eid=None, arg_type=None):
         """Return an INDRA Event based on an event entry."""
-        eid = _choose_id(event, arg_type)
+        if not eid:
+            eid = _choose_id(event, arg_type)
         ev = self.concept_dict[eid]
         concept, metadata = self._make_concept(ev)
         ev_delta = {'adjectives': [],
