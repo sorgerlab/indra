@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 chebi_xml_ns = {'n': 'http://schemas.xmlsoap.org/soap/envelope/',
                 'c': 'https://www.ebi.ac.uk/webservices/chebi'}
 
+
 def _strip_prefix(chid):
     if chid and chid.startswith('CHEBI:'):
         return chid[6:]

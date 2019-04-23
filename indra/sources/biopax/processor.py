@@ -1386,16 +1386,16 @@ def _match_to_array(m):
 def _is_complex(pe):
     """Return True if the physical entity is a complex"""
     val = isinstance(pe, _bp('Complex')) or \
-            isinstance(pe, _bpimpl('Complex'))
+        isinstance(pe, _bpimpl('Complex'))
     return val
 
 
 def _is_protein(pe):
     """Return True if the element is a protein"""
     val = isinstance(pe, _bp('Protein')) or \
-            isinstance(pe, _bpimpl('Protein')) or \
-            isinstance(pe, _bp('ProteinReference')) or \
-            isinstance(pe, _bpimpl('ProteinReference'))
+        isinstance(pe, _bpimpl('Protein')) or \
+        isinstance(pe, _bp('ProteinReference')) or \
+        isinstance(pe, _bpimpl('ProteinReference'))
     return val
 
 
@@ -1408,9 +1408,9 @@ def _is_rna(pe):
 def _is_small_molecule(pe):
     """Return True if the element is a small molecule"""
     val = isinstance(pe, _bp('SmallMolecule')) or \
-            isinstance(pe, _bpimpl('SmallMolecule')) or \
-            isinstance(pe, _bp('SmallMoleculeReference')) or \
-            isinstance(pe, _bpimpl('SmallMoleculeReference'))
+        isinstance(pe, _bpimpl('SmallMolecule')) or \
+        isinstance(pe, _bp('SmallMoleculeReference')) or \
+        isinstance(pe, _bpimpl('SmallMoleculeReference'))
     return val
 
 
@@ -1431,7 +1431,7 @@ def _is_activity(feature):
 
 def _is_modification_or_activity(feature):
     """Return True if the feature is a modification"""
-    if not (isinstance(feature, _bp('ModificationFeature')) or \
+    if not (isinstance(feature, _bp('ModificationFeature')) or
             isinstance(feature, _bpimpl('ModificationFeature'))):
         return None
     mf_type = feature.getModificationType()

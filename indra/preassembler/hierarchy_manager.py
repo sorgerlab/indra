@@ -141,9 +141,9 @@ class HierarchyManager(object):
         """
         self.component_counter = 0
         for rel, tc_set in ((self.isa_objects, self.isa_closure),
-                             (self.partof_objects, self.partof_closure),
-                             (self.isa_or_partof_objects,
-                                 self.isa_or_partof_closure)):
+                            (self.partof_objects, self.partof_closure),
+                            (self.isa_or_partof_objects,
+                             self.isa_or_partof_closure)):
             self.build_transitive_closure(rel, tc_set)
 
     def build_transitive_closure(self, rel, tc_set):
@@ -460,10 +460,11 @@ class HierarchyManager(object):
             immediate_parents = list(set(self.isa_or_partof_objects(node)))
             return [p.toPython() for p in immediate_parents]
         elif type == 'top':
-            # Here we iterate over all parents and find ones that have no parents
-            # in the closure
+            # Here we iterate over all parents and find ones that have no
+            # parents in the closure
             top_parents = [p for p in all_parents if
-                           not {pp for pp, _ in self.isa_or_partof_closure if pp == p}]
+                           not {pp for pp, _ in self.isa_or_partof_closure
+                                if pp == p}]
             return top_parents
 
     def get_children(self, uri):

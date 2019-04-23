@@ -344,7 +344,8 @@ def update_bel_chebi_map():
     with open(fname, 'wb') as fh:
         for chebi_name, chebi_id in sorted(name_to_id.items(),
                                            key=lambda x: x[0]):
-            fh.write(('%s\tCHEBI:%s\n' % (chebi_name, chebi_id)).encode('utf-8'))
+            fh.write(('%s\tCHEBI:%s\n' %
+                      (chebi_name, chebi_id)).encode('utf-8'))
 
 
 def _get_chebi_obo_terms():

@@ -23,6 +23,7 @@ ns_map = {'http://identifiers.org/fplx/': 'FPLX',
           'http://identifiers.org/hgnc/': 'HGNC',
           'http://identifiers.org/uniprot/': 'UP',}
 
+
 def save_hierarchy(g, path):
     with open(path, 'wb') as out_file:
         g_bytes = g.serialize(format='nt')
@@ -33,6 +34,7 @@ def save_hierarchy(g, path):
         rows.sort()
         g_bytes = b'\n'.join(rows)
         out_file.write(g_bytes)
+
 
 def make_term(ns_name, id):
     if ns_name == 'HGNC':
@@ -70,6 +72,7 @@ def main(relations_file):
 
     save_hierarchy(g, hierarchy_path)
     return g
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
