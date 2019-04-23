@@ -572,7 +572,6 @@ class YamlHierarchyManager(HierarchyManager):
 
 
 def get_bio_hierarchies(from_pickle=True):
-    '''
     if from_pickle:
         import pickle
         hierarchy_file = os.path.dirname(os.path.abspath(__file__)) + \
@@ -580,7 +579,7 @@ def get_bio_hierarchies(from_pickle=True):
         with open(hierarchy_file, 'rb') as fh:
             hierarchies = pickle.load(fh)
         return hierarchies
-    '''
+
     def resource_path(fname):
         return os.path.join(os.path.dirname(__file__), os.pardir, 'resources',
                             fname)
