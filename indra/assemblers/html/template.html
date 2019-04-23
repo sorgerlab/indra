@@ -29,9 +29,6 @@
     {% for script_src in other_scripts %}
       <script src="{{ script_src }}"></script>
     {% endfor %}
-    <!-- Load curationFunctions.js -->
-    <!-- <script src=""></script> -->
-    <script src="http://localhost:8000/curationFunctions.js"></script>
 
     <!-- Toggle a hidden element -->
     <script>
@@ -180,9 +177,10 @@ nav {
             <tbody id="table_{{loop.index0}}">
                 {% for ev in stmt_info['evidence'] %}
                 <tr id="{{ ev['source_hash'] }}" style="border-bottom: 1px solid #FFFFFF;">
-                    {% if ev_element is not None %}
-                        {{ ev_element }}
+                    {% if ev_element %}
+                        {{ ev_element.format(loop_index=loop.index0) }}
                     {% endif %}
+                    <td width="25em">{{ ev['source_api'] }}</td>
                     {% if ev['text'] %}
                         <td>"{{ ev['text'] }}"</td>
                     {% else %}
