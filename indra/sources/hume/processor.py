@@ -69,7 +69,9 @@ class HumeJsonLdProcessor(object):
     def extract_events(self):
         events = self._find_events()
         for event in events:
-            stmt = self._get_event_and_context(event, eid=event['@id'])
+            evidence = self._get_evidence(event, get_states(event))
+            stmt = self._get_event_and_context(event, eid=event['@id'],
+                                               evidence=evidence)
             self.eid_stmt_dict[event['@id']] = stmt
             self.statements.append(stmt)
 
@@ -199,7 +201,8 @@ class HumeJsonLdProcessor(object):
 
         return concept, metadata
 
-    def _get_event_and_context(self, event, eid=None, arg_type=None):
+    def _get_event_and_context(self, event, eid=None, arg_type=None,
+                               evidence=None):
         """Return an INDRA Event based on an event entry."""
         if not eid:
             eid = _choose_id(event, arg_type)
@@ -209,7 +212,8 @@ class HumeJsonLdProcessor(object):
                     'states': get_states(ev),
                     'polarity': get_polarity(ev)}
         context = self._make_context(ev)
-        event_obj = Event(concept, delta=ev_delta, context=context)
+        event_obj = Event(concept, delta=ev_delta, context=context,
+                          evidence=evidence)
         return event_obj
 
     def _get_evidence(self, event, adjectives):
