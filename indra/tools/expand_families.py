@@ -99,11 +99,10 @@ class Expander(object):
         # Iterate over the partof_closure to determine all of the complexes
         # and all of their members
         all_complexes = {}
-        for subunit, complexes in self.entities.partof_closure.items():
-            for complex in complexes:
-                complex_subunits = all_complexes.get(complex, [])
-                complex_subunits.append(subunit)
-                all_complexes[complex] = complex_subunits
+        for subunit, complex in self.entities.partof_closure:
+            complex_subunits = all_complexes.get(complex, [])
+            complex_subunits.append(subunit)
+            all_complexes[complex] = complex_subunits
         # Now iterate over all of the complexes and create Complex statements
         complex_stmts = []
         for complex, subunits in all_complexes.items():
