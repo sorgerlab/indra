@@ -25,7 +25,11 @@ class HierarchyManager(object):
         Path to the RDF file containing the hierarchy.
     build_closure : bool or list or None
         If True, the transitive closure of the hierarchy is generated
-        up front to speed up processing. Default: True
+        up front to speed up processing. If a list, the entries in the list
+        are namespaces for which a transitive closure should be built.
+        Namespaces not listed are ignored and isa/partof lookups will not use
+        the transitive closure. If False, no transitive closure is built.
+        Default: True
     uri_as_name: Optional[bool]
         If True, entries are accessed directly by their URIs. If False
         entries are accessed by finding their name through the
