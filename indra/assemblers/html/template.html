@@ -125,24 +125,20 @@ nav {
         <div class="col" style="padding-left: 0px;"> <!-- main content -->
 
     <!-- Page Header -->
-    <div class="container">
-      <div class="page-header">
-        <h1>{{ title }}</h1>
-      </div>
-        <p>This page allows you to curate the loaded statements.</p>
-        <p>For more information please see the <a href="https://indra.readthedocs.io/en/latest/tutorials/html_curation.html">manual</a>.</p>
-        <hr>
+    <div class="page-header">
+      <h1>{{ title }}</h1>
     </div>
+      <p>This page allows you to curate the loaded statements.</p>
+      <p>For more information please see the <a href="https://indra.readthedocs.io/en/latest/tutorials/html_curation.html">manual</a>.</p>
+      <hr>
 
     {% if metadata %}
-    <div class="page-header container" style="padding: 0px;">
-      <h4 class="nav-header" data-toggle="collapse" data-target="#meta_list"><a href="#" title="Click to see metadata" style="color: #000000;">Summary Metadata</a></h4>
-      <ul class="collapse" id="meta_list">
-        {% for name, value in metadata.items() %}
-        <li>{{ name }}: {{ value }}</li>
-        {% endfor %}
-      </ul>
-    </div>
+    <h4 class="nav-header" data-toggle="collapse" data-target="#meta_list"><a href="#" title="Click to see metadata" style="color: #000000;">Summary Metadata</a></h4>
+    <ul class="collapse" id="meta_list">
+      {% for name, value in metadata.items() %}
+      <li>{{ name }}: {{ value }}</li>
+      {% endfor %}
+    </ul>
     <p>&nbsp;</p>
     {% endif %}
 
