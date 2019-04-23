@@ -57,4 +57,4 @@ def test_inchi_key():
 def test_specific_chebi_ids():
     ids = ['76971', '37045', '15996', '75771', '37121', '57600']
     spec_id = chebi_client.get_specific_id(ids)
-    assert spec_id == '57600', spec_id
+    assert spec_id == '15996', spec_id

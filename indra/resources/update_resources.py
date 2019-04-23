@@ -362,8 +362,8 @@ def _get_chebi_obo_terms():
                 parents.append(v)
             elif k == 'relationship':
                 rel, target = v.split(' ')
-                if rel in ('is_conjugate_base_of', 'is_conjugate_acid_of',
-                           'has_functional_parent', 'has_parent_hydride'):
+                if rel in ('is_conjugate_acid_of', 'has_functional_parent',
+                           'has_parent_hydride', 'has_role'):
                     parents.append(target)
             elif k == 'alt_id':
                 secondaries.append(v)
