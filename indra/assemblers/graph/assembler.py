@@ -112,6 +112,11 @@ class GraphAssembler():
                isinstance(stmt, Translocation) or \
                isinstance(stmt, ActiveForm):
                 continue
+            # Special handling for Associations -- more than 1 node and members
+            # are Events
+            elif isinstance(stmt, Association):
+                for m in stmt.members:
+                    self._add_node(m.concept)
             # Special handling for Complexes -- more than 1 node
             elif isinstance(stmt, Complex):
                 for m in stmt.members:
@@ -131,6 +136,8 @@ class GraphAssembler():
                isinstance(stmt, Translocation) or \
                isinstance(stmt, ActiveForm):
                 continue
+            elif isinstance(stmt, Association):
+                self._add_complex(stmt.members, is_association=True)
             elif isinstance(stmt, Complex):
                 self._add_complex(stmt.members)
             elif all([ag is not None for ag in stmt.agent_list()]):
@@ -226,7 +233,7 @@ class GraphAssembler():
                   'dir': 'forward'}
         self._add_edge(source, target, **params)
 
-    def _add_complex(self, members):
+    def _add_complex(self, members, is_association=False):
         """Assemble a Complex statement."""
         params = {'color': '#0000ff',
                   'arrowhead': 'dot',
@@ -235,8 +242,12 @@ class GraphAssembler():
         for m1, m2 in itertools.combinations(members, 2):
             if self._has_complex_node(m1, m2):
                 continue
-            m1_key = _get_node_key(m1)
-            m2_key = _get_node_key(m2)
+            if is_association:
+                m1_key = _get_node_key(m1.concept)
+                m2_key = _get_node_key(m2.concept)
+            else:
+                m1_key = _get_node_key(m1)
+                m2_key = _get_node_key(m2)
             edge_key = (set([m1_key, m2_key]), 'complex')
             if edge_key in self.existing_edges:
                 return

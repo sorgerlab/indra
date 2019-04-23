@@ -391,14 +391,9 @@ def test_influence():
 
 
 def test_association():
-    st = Association([Concept('food'), Concept('hunger')])
+    st = Association([Event(Concept('food')), Event(Concept('hunger'))])
     s = _stmt_to_text(st)
     assert s == 'Food is associated with hunger.'
-
-    st = Association([Concept('food'), Concept('hunger'), Concept('famine')])
-    s = _stmt_to_text(st)
-    assert s == 'Food is associated with hunger and famine.'
-
 
 
 def _stmt_to_text(st):

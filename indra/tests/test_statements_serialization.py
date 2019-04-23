@@ -120,6 +120,23 @@ def test_influence():
     jsonschema.validate([json.loads(json.dumps(jd))], schema)
 
 
+def test_association():
+    ev1 = Event(Concept('food'), 
+                delta={'adjectives': ['insufficient'], 'polarity': -1})
+    ev2 = Event(Concept('hunger'),
+                delta={'adjectives': [], 'polarity': 1})
+    stmt = Association([ev1, ev2])
+    jd = stmt.to_json()
+    stmt.to_graph()
+    assert 'members' in jd
+    st_deserialize = Statement._from_json(jd)
+    assert isinstance(st_deserialize.members[0], Event)
+    assert st_deserialize.members[0].delta['polarity'] == -1
+    assert st_deserialize.members[0].delta['adjectives'] == ['insufficient']
+    jd2 = st_deserialize.to_json()
+    assert jd == jd2
+
+
 def __make_support_link(supporting_stmt, supported_stmt):
     supporting_stmt.supports.append(supported_stmt)
     supported_stmt.supported_by.append(supporting_stmt)

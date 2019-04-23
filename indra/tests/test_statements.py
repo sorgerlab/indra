@@ -1672,6 +1672,23 @@ def test_influence_polarity():
     assert st.overall_polarity() == 1, st
 
 
+def test_association_polarity():
+    st = Association([Event(Concept('a')), Event(Concept('b'))])
+    assert st.overall_polarity() is None
+    st.members[0].delta['polarity'] = 1
+    assert st.overall_polarity() == 1
+    st.members[1].delta['polarity'] = 1
+    assert st.overall_polarity() == 1
+    st.members[0].delta['polarity'] = -1
+    assert st.overall_polarity() == -1
+    st.members[1].delta['polarity'] = -1
+    assert st.overall_polarity() == 1
+    st.members[0].delta = {'polarity': None, 'adjectives': []}
+    assert st.overall_polarity() == -1
+    st.members[1].delta = {'polarity': None, 'adjectives': []}
+    assert st.overall_polarity() is None
+
+
 def test_concept_init():
     c1 = Concept('x')
     assert c1.name == 'x'
@@ -1764,6 +1781,14 @@ def test_concept_isa_hume():
 
 
 def test_influence_refinement_of():
+    influence_association_refinement_of('Influence')
+
+
+def test_association_refinement_of():
+    influence_association_refinement_of('Association')
+
+
+def influence_association_refinement_of(stmt_type):
     c1 = Event(Concept('production'))
     c2 = Event(Concept('price'))
     nopol_noadj = {'polarity': None, 'adjectives': []}
@@ -1775,69 +1800,105 @@ def test_influence_refinement_of():
     pos_adj2 = {'polarity': 1, 'adjectives': ['small', 'tiny']}
     pos_adj3 = {'polarity': 1, 'adjectives': ['significant', 'large']}
 
-    def I(x, y):
+    def S(x, y, stmt_type):
         cc1 = deepcopy(c1)
         cc2 = deepcopy(c2)
         cc1.delta = x
         cc2.delta = y
-        return Influence(cc1, cc2)
+        if stmt_type == 'Influence':
+            return Influence(cc1, cc2)
+        elif stmt_type == 'Association':
+            return Association([cc1, cc2])
 
     # Has polarity vs doesn't have polarity
-    assert I(pos_adj, nopol_noadj).refinement_of(
-           I(nopol_adj, nopol_noadj), hierarchies)
-    assert I(nopol_adj, pos_noadj).refinement_of(
-           I(nopol_adj, nopol_noadj), hierarchies)
-    assert I(nopol_adj, neg_noadj).refinement_of(
-           I(nopol_adj, nopol_noadj), hierarchies)
+    assert S(pos_adj, nopol_noadj, stmt_type).refinement_of(
+        S(nopol_adj, nopol_noadj, stmt_type), hierarchies)
+    assert S(nopol_adj, pos_noadj, stmt_type).refinement_of(
+        S(nopol_adj, nopol_noadj, stmt_type), hierarchies)
+    assert S(nopol_adj, neg_noadj, stmt_type).refinement_of(
+        S(nopol_adj, nopol_noadj, stmt_type), hierarchies)
     # Has adjective vs doesn't have adjective
-    assert I(neg_adj, nopol_adj).refinement_of(
-           I(neg_noadj, nopol_adj), hierarchies)
-    assert I(pos_adj, nopol_adj).refinement_of(
-           I(pos_noadj, nopol_adj), hierarchies)
-    assert I(nopol_adj, nopol_adj).refinement_of(
-           I(nopol_noadj, nopol_adj), hierarchies)
+    assert S(neg_adj, nopol_adj, stmt_type).refinement_of(
+        S(neg_noadj, nopol_adj, stmt_type), hierarchies)
+    assert S(pos_adj, nopol_adj, stmt_type).refinement_of(
+        S(pos_noadj, nopol_adj, stmt_type), hierarchies)
+    assert S(nopol_adj, nopol_adj, stmt_type).refinement_of(
+        S(nopol_noadj, nopol_adj, stmt_type), hierarchies)
     # Opposite polarity
-    assert not I(neg_noadj, nopol_noadj).refinement_of(
-               I(pos_noadj, nopol_noadj), hierarchies)
+    assert not S(neg_noadj, nopol_noadj, stmt_type).refinement_of(
+            S(pos_noadj, nopol_noadj, stmt_type), hierarchies)
     # Adjectives can be in any relation
-    assert I(pos_adj2, nopol_noadj).refinement_of(
-           I(pos_adj, nopol_noadj), hierarchies)
-    assert I(pos_adj3, nopol_noadj).refinement_of(
-           I(pos_adj, nopol_noadj), hierarchies)
-    assert I(pos_adj2, nopol_noadj).refinement_of(
-           I(pos_adj3, nopol_noadj), hierarchies)
+    assert S(pos_adj2, nopol_noadj, stmt_type).refinement_of(
+        S(pos_adj, nopol_noadj, stmt_type), hierarchies)
+    assert S(pos_adj3, nopol_noadj, stmt_type).refinement_of(
+        S(pos_adj, nopol_noadj, stmt_type), hierarchies)
+    assert S(pos_adj2, nopol_noadj, stmt_type).refinement_of(
+        S(pos_adj3, nopol_noadj, stmt_type), hierarchies)
 
     # Equivalences
-    assert not I(nopol_adj, neg_noadj).equals(
-               I(nopol_adj, nopol_noadj))
-    assert not I(nopol_adj, neg_noadj).equals(
-               I(nopol_noadj, neg_noadj))
+    assert not S(nopol_adj, neg_noadj, stmt_type).equals(
+            S(nopol_adj, nopol_noadj, stmt_type))
+    assert not S(nopol_adj, neg_noadj, stmt_type).equals(
+            S(nopol_noadj, neg_noadj, stmt_type))
     pos_adj4 = {'polarity': 1, 'adjectives': ['large', 'significant']}
-    assert I(pos_adj3, nopol_noadj).equals(
-           I(pos_adj4, nopol_noadj))
+    assert S(pos_adj3, nopol_noadj, stmt_type).equals(
+        S(pos_adj4, nopol_noadj, stmt_type))
 
     # Matches keys
-    assert I(nopol_adj, neg_noadj).matches_key() != \
-           I(nopol_adj, nopol_noadj).matches_key()
-    assert I(nopol_adj, neg_noadj).matches_key() == \
-           I(nopol_noadj, neg_noadj).matches_key()
+    assert S(nopol_adj, neg_noadj, stmt_type).matches_key() != \
+        S(nopol_adj, nopol_noadj, stmt_type).matches_key()
+    assert S(nopol_adj, neg_noadj, stmt_type).matches_key() == \
+        S(nopol_noadj, neg_noadj, stmt_type).matches_key()
     pos_adj4 = {'polarity': 1, 'adjectives': ['large', 'significant']}
-    assert I(pos_adj3, nopol_noadj).matches_key() == \
-           I(pos_adj4, nopol_noadj).matches_key()
-    assert I(pos_adj, neg_adj).matches_key() == \
-           I(neg_adj, pos_adj).matches_key()
-    assert I(pos_adj, pos_adj).matches_key() == \
-           I(neg_adj, neg_adj).matches_key()
+    assert S(pos_adj3, nopol_noadj, stmt_type).matches_key() == \
+        S(pos_adj4, nopol_noadj, stmt_type).matches_key()
+    assert S(pos_adj, neg_adj, stmt_type).matches_key() == \
+        S(neg_adj, pos_adj, stmt_type).matches_key()
+    assert S(pos_adj, pos_adj, stmt_type).matches_key() == \
+        S(neg_adj, neg_adj, stmt_type).matches_key()
 
     # Contradicts
-    assert I(pos_adj, neg_noadj).contradicts(
-           I(neg_adj, neg_noadj), hierarchies)
-    assert I(pos_adj, neg_noadj).contradicts(
-           I(pos_adj, pos_noadj), hierarchies)
-    assert not I(pos_adj, neg_noadj).contradicts(
-               I(pos_adj, neg_adj), hierarchies)
-    assert not I(pos_adj, neg_noadj).contradicts(
-               I(neg_adj, pos_adj), hierarchies)
+    assert S(pos_adj, neg_noadj, stmt_type).contradicts(
+        S(neg_adj, neg_noadj, stmt_type), hierarchies)
+    assert S(pos_adj, neg_noadj, stmt_type).contradicts(
+        S(pos_adj, pos_noadj, stmt_type), hierarchies)
+    assert not S(pos_adj, neg_noadj, stmt_type).contradicts(
+            S(pos_adj, neg_adj, stmt_type), hierarchies)
+    assert not S(pos_adj, neg_noadj, stmt_type).contradicts(
+            S(neg_adj, pos_adj, stmt_type), hierarchies)
+
+
+def test_association_contradicts():
+    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '../sources/eidos/eidos_ontology.rdf')
+    hm = HierarchyManager(eidos_ont, True, True)
+    hierarchies = {'entity': hm}
+    sn = Event(Concept('food security',
+                       db_refs={'UN': 'UN/entities/human/food/food_security'}),
+               delta={'polarity': -1})
+    sp = Event(Concept('food security',
+                       db_refs={'UN': 'UN/entities/human/food/food_security'}),
+               delta={'polarity': 1})
+    ip = Event(Concept('food insecurity',
+                       db_refs={'UN':
+                                'UN/entities/human/food/food_insecurity'}),
+               delta={'polarity': 1})
+    prp = Event(Concept('production'), delta={'polarity': 1})
+    prn = Event(Concept('production'), delta={'polarity': -1})
+    assert Association([sn, prp]).contradicts(Association([sn, prn]),
+                                              hierarchies)
+    assert Association([prp, sn]).contradicts(Association([sn, prn]),
+                                              hierarchies)
+    assert Association([prn, sp]).contradicts(Association([sn, prn]),
+                                              hierarchies)
+    assert Association([sn, prp]).contradicts(Association([ip, prn]),
+                                              hierarchies)
+    assert Association([sn, sp]).contradicts(Association([ip, sn]),
+                                             hierarchies)
+    assert Association([ip, sp]).contradicts(Association([sp, sp]),
+                                             hierarchies)
+    assert Association([ip, sp]).contradicts(Association([sn, sn]),
+                                             hierarchies)
 
 
 def test_modification_contradicts():

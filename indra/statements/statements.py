@@ -2024,7 +2024,137 @@ class Influence(Statement):
 
 
 class Association(Complex):
-    pass
+    """A set of events associated with each other without causal relationship.
+
+    Parameters
+    ----------
+    members : list of :py:class:Event
+        A list of events associated with each other.
+    evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
+        Evidence objects in support of the modification.
+    """
+    _agent_order = ['members']
+
+    def __init__(self, members, evidence=None):
+        if len(members) != 2:
+            raise ValueError('Association Statement can only have 2 members, '
+                             '%d were given.' % len(members))
+        super().__init__(members, evidence)
+
+    def matches_key(self):
+        key = (stmt_type(self, True),
+               tuple(m.matches_key() for m in self.sorted_members()),
+               self.polarity_count(),
+               self.overall_polarity()
+               )
+        return mk_str(key)
+
+    def overall_polarity(self):
+        p1 = self.members[0].delta['polarity']
+        p2 = self.members[1].delta['polarity']
+        if p1 is None and p2 is None:
+            pol = None
+        elif p2 is None:
+            pol = p1
+        elif p1 is None:
+            pol = p2
+        else:
+            pol = p1 * p2
+        return pol
+
+    def polarity_count(self):
+        return sum(
+            1 if m.delta['polarity'] is not None else 0 for m in self.members)
+
+    def agent_list(self, deep_sorted=False):
+        members = self.members if not deep_sorted else \
+            sorted_agents(self.members)
+        return [m.concept for m in members]
+
+    def refinement_of(self, other, hierarchies):
+        members_refinement = super().refinement_of(other, hierarchies)
+        op = other.overall_polarity()
+        sp = self.overall_polarity()
+        if self.polarity_count() < other.polarity_count():
+            delta_refinement = False
+        elif sp is not None and op is None:
+            delta_refinement = True
+        else:
+            delta_refinement = (op == sp)
+        return (members_refinement and delta_refinement)
+
+    def equals(self, other):
+
+        def members_equal(a1, a2):
+            if len(a1.members) == len(a2.members):
+                for m1, m2 in zip(a1.members, a2.members):
+                    if (m1 is None and m2 is not None) or \
+                            (m1 is not None and m2 is None):
+                        return False
+                    if m1 is not None and m2 is not None and not m1.equals(m2):
+                        return False
+            else:
+                return False
+            return True
+
+        equals = super().equals(other) and members_equal(self, other)
+        return equals
+
+    def contradicts(self, other, hierarchies):
+        if stmt_type(self) != stmt_type(other):
+            return False
+
+        def match_members(self_members, other_members):
+            rel_types = {'refinement_of': 0, 'is_opposite': 0}
+            G = networkx.Graph()
+            for (self_idx, self_member), (other_idx, other_member) in \
+                itertools.product(enumerate(self_members),
+                                  enumerate(other_members)):
+                if ('S%d' % self_idx) in G or ('O%d' % other_idx) in G:
+                    continue
+                if self_member.concept.refinement_of(other_member.concept,
+                                                     hierarchies):
+                    G.add_edge('S%d' % self_idx, 'O%d' % other_idx)
+                    rel_types['refinement_of'] += 1
+                elif self_member.concept.is_opposite(other_member.concept,
+                                                     hierarchies):
+                    G.add_edge('S%d' % self_idx, 'O%d' % other_idx)
+                    rel_types['is_opposite'] += 1
+            return rel_types
+
+        rel_types = match_members(self.members, other.members)
+        sp = self.overall_polarity()
+        op = other.overall_polarity()
+
+        # If all entities are "compatible" or mutually opposites
+        # but the polarities are explicitly different then this is
+        # a contradiction
+        if set(rel_types.values()) == set([0, 2]):
+            if sp is not None and op is not None and sp != op:
+                return True
+        # If one entity is the opposite and the other compatible and the
+        # polarities are the same then this is a contradiction
+        if set(rel_types.values()) == set([1, 1]):
+            if sp is not None and op is not None and sp == op:
+                return True
+
+        return False
+
+    def to_json(self, use_sbo=False):
+        # Get generic from two inheritance levels above - from Statement class
+        generic = super(Complex, self).to_json(use_sbo)
+        json_dict = _o(type=generic['type'])
+        members = [m.to_json(with_evidence=False) for m in self.members]
+        json_dict['members'] = members
+        json_dict.update(generic)
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        members = json_dict.get('members')
+        members = [Statement._from_json(m) for m in members]
+        stmt = cls(members)
+        return stmt
 
 
 class Conversion(Statement):
