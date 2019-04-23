@@ -213,28 +213,39 @@ def get_primary_id(chebi_id):
 
 
 def get_specific_id(chebi_ids):
+    """Return the most specific ID in a list based on the hierarchy.
+
+    Parameters
+    ----------
+    chebi_ids : list of str
+        A list of ChEBI IDs some of which may be hierarchically related.
+
+    Returns
+    -------
+    str
+        The first ChEBI ID which is at the most specific level in the
+        hierarchy with respect to the input list.
+    """
     if not chebi_ids:
         return chebi_ids
 
     from indra.preassembler.hierarchy_manager import hierarchies
 
     def isa_cmp(a, b):
+        """Compare two entries based on isa relationships for sorting."""
         if not a.startswith('CHEBI:'):
             a = 'CHEBI:%s' % a
         if not b.startswith('CHEBI:'):
             b = 'CHEBI:%s' % b
         eh = hierarchies['entity']
         if eh.isa('CHEBI', a, 'CHEBI', b):
-            print('%s isa %s' % (a, b))
             return -1
         if eh.isa('CHEBI', b, 'CHEBI', a):
-            print('%s isa %s' % (b, a))
             return 1
-        print('%s unrelated to %s' % (a, b))
         return 0
 
-    chebi_ids = sorted(chebi_ids, key=cmp_to_key(isa_cmp))
-    return chebi_ids[0]
+    chebi_id = sorted(chebi_ids, key=cmp_to_key(isa_cmp))[0]
+    return chebi_id
 
 
 # Read resource files into module-level variables

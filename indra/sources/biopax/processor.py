@@ -1130,11 +1130,9 @@ class BiopaxProcessor(object):
         elif len(chebi_ids) == 1:
             return chebi_ids[0]
         else:
-            print(chebi_ids)
-            primary_ids = {chebi_client.get_primary_id(cid)
-                           for cid in chebi_ids}
-            print(primary_ids)
-            specific_chebi_id = chebi_client.get_specific_id(list(primary_ids))
+            name = BiopaxProcessor._get_element_name(bpe)
+            specific_chebi_id = get_specific_chebi_id(frozenset(chebi_ids),
+                                                      name)
             return specific_chebi_id
 
     @staticmethod
@@ -1174,7 +1172,7 @@ class BiopaxProcessor(object):
                 continue
             dbname = dbname.upper()
             if dbname == 'PUBCHEM-COMPOUND':
-                chemical_grounding['PUBCHEM'] = 'PUBCHEM:%s' % dbid
+                chemical_grounding['PUBCHEM'] = '%s' % dbid
             elif dbname == 'MESH':
                 chemical_grounding['MESH'] = dbid
             elif dbname == 'DRUGBANK':
@@ -1255,6 +1253,7 @@ class BiopaxProcessor(object):
         print('Total covered: %d' % len(uids & stmt_uids))
         print('%.2f%% coverage' % (100.0*len(uids & stmt_uids)/len(uids)))
         return len(uids), len(uids & stmt_uids)
+
 
 _mftype_dict = {
     'phosres': ('phosphorylation', None),
@@ -1342,6 +1341,7 @@ _mftype_dict = {
     'O-palmitoyl-L-serine': ('palmitoylation', 'S')
     }
 
+
 # Functions for accessing frequently used java classes with shortened path
 def _bp(path):
     prefix = 'org.biopax.paxtools.model.level3'
@@ -1376,16 +1376,19 @@ def _cast_biopax_element(bpe):
     This is useful when a search only returns generic elements. """
     return cast(bpe.getModelInterface().getName(), bpe)
 
+
 def _match_to_array(m):
     """ Returns an array consisting of the elements obtained from a pattern
     search cast into their appropriate classes. """
     return [_cast_biopax_element(m.get(i)) for i in range(m.varSize())]
+
 
 def _is_complex(pe):
     """Return True if the physical entity is a complex"""
     val = isinstance(pe, _bp('Complex')) or \
             isinstance(pe, _bpimpl('Complex'))
     return val
+
 
 def _is_protein(pe):
     """Return True if the element is a protein"""
@@ -1395,10 +1398,12 @@ def _is_protein(pe):
             isinstance(pe, _bpimpl('ProteinReference'))
     return val
 
+
 def _is_rna(pe):
     """Return True if the element is an RNA"""
     val = isinstance(pe, _bp('Rna')) or isinstance(pe, _bpimpl('Rna'))
     return val
+
 
 def _is_small_molecule(pe):
     """Return True if the element is a small molecule"""
@@ -1408,17 +1413,21 @@ def _is_small_molecule(pe):
             isinstance(pe, _bpimpl('SmallMoleculeReference'))
     return val
 
+
 def _is_physical_entity(pe):
     """Return True if the element is a physical entity"""
     val = isinstance(pe, _bp('PhysicalEntity')) or \
             isinstance(pe, _bpimpl('PhysicalEntity'))
     return val
 
+
 def _is_modification(feature):
     return (_is_modification_or_activity(feature) == 'modification')
 
+
 def _is_activity(feature):
     return (_is_modification_or_activity(feature) == 'activity')
+
 
 def _is_modification_or_activity(feature):
     """Return True if the feature is a modification"""
@@ -1436,6 +1445,7 @@ def _is_modification_or_activity(feature):
             return 'activity'
     return 'modification'
 
+
 def _is_reference(bpe):
     """Return True if the element is an entity reference."""
     if isinstance(bpe, _bp('ProteinReference')) or \
@@ -1449,6 +1459,7 @@ def _is_reference(bpe):
         return True
     else:
         return False
+
 
 def _is_entity(bpe):
     """Return True if the element is a physical entity."""
@@ -1470,6 +1481,7 @@ def _is_entity(bpe):
     else:
         return False
 
+
 def _is_catalysis(bpe):
     """Return True if the element is Catalysis."""
     if isinstance(bpe, _bp('Catalysis')) or \
@@ -1477,6 +1489,7 @@ def _is_catalysis(bpe):
         return True
     else:
         return False
+
 
 def _has_members(bpe):
     if _is_reference(bpe):
@@ -1490,17 +1503,21 @@ def _has_members(bpe):
     else:
         return False
 
+
 def _listify(lst):
     if not isinstance(lst, collections.Iterable):
         return [lst]
     else:
         return lst
 
+
 def _list_listify(lst):
     return [l if isinstance(l, collections.Iterable) else [l] for l in lst]
 
+
 def _get_combinations(lst):
     return itertools.product(*_list_listify(lst))
+
 
 def _get_mod_intersection(mods1, mods2):
     shared_mods = []
@@ -1514,6 +1531,7 @@ def _get_mod_intersection(mods1, mods2):
             shared_mods.append(m1)
     return shared_mods
 
+
 def _get_mod_difference(mods1, mods2):
     difference_mods = []
     for m1 in mods1:
@@ -1525,6 +1543,55 @@ def _get_mod_difference(mods1, mods2):
         if not found:
             difference_mods.append(m1)
     return difference_mods
+
+
+generic_chebi_ids = {
+    '76971',  # E-coli metabolite
+    '75771',  # mouse metabolite
+    '77746',  # human metabolite
+    '27027',  # micronutrient
+    '78675',  # fundamental metabolite
+    '50860',  # organic molecular entity
+}
+
+
+manual_chebi_map = {
+    'H2O': '15377',
+    'phosphate': '18367',
+    'H+': '15378',
+    'O2': '15379'
+}
+
+
+@lru_cache(maxsize=5000)
+def get_specific_chebi_id(chebi_ids, name):
+    # NOTE: this function is mainly factored out to be able to use cacheing, it
+    # requires a frozenset as input to work.
+
+    # First, if we have a manual override, we just do that
+    manual_id = manual_chebi_map.get(name)
+    if manual_id:
+        return manual_id
+
+    # The first thing we do is eliminate the secondary IDs by mapping them to
+    # primaries
+    primary_ids = {chebi_client.get_primary_id(cid)
+                   for cid in chebi_ids}
+    # We then get rid of generic IDs which are never useful for grounding
+    non_generic_ids = primary_ids - generic_chebi_ids
+
+    # We then try name-based grounding to see if any of the names in the list
+    # match the name of the entity well enough
+    grounding_names = [chebi_client.get_chebi_name_from_id(p) for p in
+                       non_generic_ids]
+    for grounding_name, grounding_id in zip(grounding_names, non_generic_ids):
+        if name.lower() == grounding_name.lower():
+            return grounding_id
+
+    # If we still have no best grounding, we try to distill the IDs down to
+    # the most specific one based on the hierarchy
+    specific_chebi_id = chebi_client.get_specific_id(non_generic_ids)
+    return specific_chebi_id
 
 
 # Some BioPAX Pattern classes as shorthand
