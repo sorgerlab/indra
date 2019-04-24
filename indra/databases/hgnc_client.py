@@ -206,6 +206,56 @@ def get_hgnc_entry(hgnc_id):
     return xml_tree
 
 
+def is_kinase(gene_name):
+    """Return True if the given gene name is a kinase.
+
+    Parameters
+    ----------
+    gene_name : str
+        The HGNC gene symbol corresponding to the protein.
+
+    Returns
+    -------
+    bool
+        True if the given gene name corresponds to a kinase, False otherwise.
+    """
+    return gene_name in kinases
+
+
+def is_transcription_factor(gene_name):
+    """Return True if the given gene name is a transcription factor.
+
+    Parameters
+    ----------
+    gene_name : str
+        The HGNC gene symbol corresponding to the protein.
+
+    Returns
+    -------
+    bool
+        True if the given gene name corresponds to a transcription factor,
+        False otherwise.
+    """
+    return gene_name in tfs
+
+
+def is_phosphatase(gene_name):
+    """Return True if the given gene name is a phosphatase.
+
+    Parameters
+    ----------
+    gene_name : str
+        The HGNC gene symbol corresponding to the protein.
+
+    Returns
+    -------
+    bool
+        True if the given gene name corresponds to a phosphatase,
+        False otherwise.
+    """
+    return gene_name in phosphatases
+
+
 def _read_hgnc_maps():
     hgnc_file = os.path.dirname(os.path.abspath(__file__)) + \
                 '/../resources/hgnc_entries.tsv'
@@ -260,3 +310,32 @@ def _read_hgnc_maps():
 (hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids,
  entrez_ids_reverse, mouse_map, rat_map) = \
     _read_hgnc_maps()
+
+
+def _read_kinases():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir,
+                         'resources', 'kinases.tsv')
+    kinase_table = read_unicode_csv(fname, delimiter='\t')
+    gene_names = [lin[1] for lin in list(kinase_table)[1:]]
+    return gene_names
+
+
+def _read_phosphatases():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir,
+                         'resources', 'phosphatases.tsv')
+    p_table = read_unicode_csv(fname, delimiter='\t')
+    # First column is phosphatase names
+    # Second column is HGNC ids
+    p_names = [row[0] for row in p_table]
+    return p_names
+
+
+def _read_tfs():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir,
+                         'resources', 'transcription_factors.csv')
+    tf_table = read_unicode_csv(fname)
+    gene_names = [lin[1] for lin in list(tf_table)[1:]]
+    return gene_names
+
+
+kinases, phosphatases, tfs = _read_kinases(), _read_phosphatases(), _read_tfs()

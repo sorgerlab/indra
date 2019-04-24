@@ -62,3 +62,12 @@ def test_rat_map():
     assert hgnc_id2 == '44155'
     hgnc_id = hgnc_client.get_hgnc_from_rat('xxx')
     assert hgnc_id is None
+
+
+def test_is_category():
+    assert hgnc_client.is_kinase('MAPK1')
+    assert not hgnc_client.is_kinase('EGF')
+    assert hgnc_client.is_phosphatase('PTEN')
+    assert not hgnc_client.is_phosphatase('KRAS')
+    assert hgnc_client.is_transcription_factor('FOXO3')
+    assert not hgnc_client.is_transcription_factor('AKT1')
