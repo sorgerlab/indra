@@ -14,7 +14,9 @@ class SofiaProcessor(object):
         return {'Event_Type': event_dict.get('Event_Type'),
                 'Relation': event_dict.get('Relation'),
                 'Location': event_dict.get('Location'),
-                'Time': event_dict.get('Time')}
+                'Time': event_dict.get('Time'),
+                'Source': event_dict.get('Source_File'),
+                'Text': event_dict.get('Sentence')}
 
     def _build_influences(self, rel_dict):
         stmt_list = []
@@ -72,7 +74,12 @@ class SofiaProcessor(object):
         loc = event_entry.get('Location')
         if loc:
             context.geo_location = RefContext(name=loc)
-        event = Event(concept, context=context)
+
+        text = event_entry.get('Text')
+        ref = event_entry.get('Source')
+        ev = Evidence(source_api='sofia', pmid=ref, text=text)
+
+        event = Event(concept, context=context, evidence=[ev])
         return event
 
 
