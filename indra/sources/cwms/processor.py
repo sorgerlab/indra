@@ -120,14 +120,16 @@ class CWMSProcessor(object):
         events = self.tree.findall("EVENT/[type='ONT::INCREASE']") + (
             self.tree.findall("EVENT/[type='ONT::DECREASE']"))
         for event_entry in events:
-            event = self._get_event(event_entry, "*[@role=':AFFECTED']")
+            evid = self._get_evidence(event_entry, context=None)
+            event = self._get_event(event_entry, "*[@role=':AFFECTED']",
+                                    evidence=[evid])
             if event is None:
                 continue
             self.statements.append(event)
 
         self._remove_multi_extraction_artifacts()
 
-    def _get_event(self, event, find_str):
+    def _get_event(self, event, find_str, evidence=None):
         """Get a concept referred from the event by the given string."""
         # Get the term with the given element id
         element = event.find(find_str)
@@ -163,7 +165,7 @@ class CWMSProcessor(object):
             context = WorldContext(time=time, geo_location=location)
         else:
             context = None
-        event_obj = Event(concept, context=context)
+        event_obj = Event(concept, context=context, evidence=evidence)
         return event_obj
 
     def _extract_time_loc(self, term):
