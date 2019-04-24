@@ -236,23 +236,33 @@ def update_hmdb_chebi_map():
     url = 'http://www.hmdb.ca/system/downloads/current/hmdb_metabolites.zip'
     fname = os.path.join(path, 'hmdb_metabolites.zip')
     logger.info('Downloading %s' % url)
-    urlretrieve(url, fname)
+    #urlretrieve(url, fname)
+    mappings = []
     with ZipFile(fname) as input_zip:
         with input_zip.open('hmdb_metabolites.xml') as fh:
-            mappings = [['HMDB_ID', 'CHEBI_ID']]
             for event, elem in ET.iterparse(fh, events=('start', 'end')):
+                #print(elem.tag)
                 if event == 'start' and \
                         elem.tag == '{%s}metabolite' % ns['hmdb']:
-                    accession_tag = elem.find('hmdb:accession', namespaces=ns)
-                    if accession_tag is not None:
-                        hmdb_id = accession_tag.text
-                        chebi_tag = elem.find('hmdb:chebi_id', namespaces=ns)
-                        if chebi_tag is not None:
-                            chebi_id = chebi_tag.text
-                            if chebi_id is not None:
-                                mappings.append([hmdb_id, chebi_id])
+                    hmdb_id = None
+                    chebi_id = None
+                # Important: we only look at accession if there's no HMDB
+                # ID yet, otherwise we pick up secondary accession tags
+                elif event == 'start' and \
+                        elem.tag == '{%s}accession' % ns['hmdb'] and \
+                        not hmdb_id:
+                    hmdb_id = elem.text
+                elif event == 'start' and \
+                        elem.tag == '{%s}chebi_id' % ns['hmdb']:
+                    chebi_id = elem.text
+                elif event == 'end' and \
+                        elem.tag == '{%s}metabolite' % ns['hmdb']:
+                    if hmdb_id and chebi_id:
+                        print(hmdb_id, chebi_id)
+                        mappings.append([hmdb_id, chebi_id])
                 elem.clear()
     fname = os.path.join(path, 'hmdb_to_chebi.tsv')
+    mappings = [['HMDB_ID', 'CHEBI_ID']] + sorted(mappings, key=lambda x: x[0])
     write_unicode_csv(fname, mappings, delimiter='\t')
 
 
