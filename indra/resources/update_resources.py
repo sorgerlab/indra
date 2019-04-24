@@ -6,8 +6,10 @@ import pandas
 import rdflib
 import logging
 import requests
+from zipfile import ZipFile
 from collections import defaultdict
 from urllib.request import urlretrieve
+from xml.etree import ElementTree as ET
 from indra.util import read_unicode_csv, write_unicode_csv
 from indra.databases import go_client
 from indra.databases import chebi_client, pubchem_client
@@ -226,6 +228,32 @@ def update_chebi_references():
                           inplace=True)
     df_chembl.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                      header=['CHEBI', 'CHEMBL'], index=False)
+
+
+def update_hmdb_chebi_map():
+    logger.info('--Updating HMDB to ChEBI entries----')
+    ns = {'hmdb': 'http://www.hmdb.ca'}
+    url = 'http://www.hmdb.ca/system/downloads/current/hmdb_metabolites.zip'
+    fname = os.path.join(path, 'hmdb_metabolites.zip')
+    logger.info('Downloading %s' % url)
+    urlretrieve(url, fname)
+    with ZipFile(fname) as input_zip:
+        with input_zip.open('hmdb_metabolites.xml') as fh:
+            mappings = [['HMDB_ID', 'CHEBI_ID']]
+            for event, elem in ET.iterparse(fh, events=('start', 'end')):
+                if event == 'start' and \
+                        elem.tag == '{%s}metabolite' % ns['hmdb']:
+                    accession_tag = elem.find('hmdb:accession', namespaces=ns)
+                    if accession_tag is not None:
+                        hmdb_id = accession_tag.text
+                        chebi_tag = elem.find('hmdb:chebi_id', namespaces=ns)
+                        if chebi_tag is not None:
+                            chebi_id = chebi_tag.text
+                            if chebi_id is not None:
+                                mappings.append([hmdb_id, chebi_id])
+                elem.clear()
+    fname = os.path.join(path, 'hmdb_to_chebi.tsv')
+    write_unicode_csv(fname, mappings, delimiter='\t')
 
 
 def update_chebi_accessions():
@@ -603,6 +631,7 @@ if __name__ == '__main__':
     update_chebi_entries()
     update_chebi_references()
     update_chebi_accessions()
+    update_hmdb_chebi_map()
     update_bel_chebi_map()
     update_entity_hierarchy()
     update_modification_hierarchy()
