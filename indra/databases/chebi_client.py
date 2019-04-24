@@ -249,6 +249,23 @@ def get_specific_id(chebi_ids):
     return chebi_id
 
 
+def get_chebi_id_from_hmdb(hmdb_id):
+    """Return the ChEBI ID corresponding to an HMDB ID.
+
+    Parameters
+    ----------
+    hmdb_id : str
+        An HMDB ID.
+
+    Returns
+    -------
+    str
+        The ChEBI ID that the given HMDB ID maps to or None if no mapping
+        was found.
+    """
+    return hmdb_chebi.get(hmdb_id)
+
+
 # Read resource files into module-level variables
 
 def _read_chebi_to_pubchem():
@@ -313,7 +330,7 @@ def _read_chebi_names():
     return chebi_id_to_name, chebi_name_to_id, chebi_to_primary
 
 
-def _read_hmsb_to_chebi():
+def _read_hmdb_to_chebi():
     csv_reader = _read_resource_csv('hmdb_to_chebi.tsv')
     hmdb_chebi = {}
     next(csv_reader)
