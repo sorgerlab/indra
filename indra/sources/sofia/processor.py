@@ -86,7 +86,7 @@ class SofiaProcessor(object):
 class SofiaJsonProcessor(SofiaProcessor):
     def __init__(self, json_list):
         self._events = self.process_events(json_list)
-        self.statements = self.process_relations(json_list)
+        self.statements = []
 
     def process_events(self, json_list):
         event_dict = {}
@@ -107,7 +107,8 @@ class SofiaJsonProcessor(SofiaProcessor):
                 if not stmt_list:
                     continue
                 stmts = stmts + stmt_list
-        return stmts
+        for stmt in stmts:
+            self.statements.append(stmt)
 
 
 class SofiaExcelProcessor(SofiaProcessor):
