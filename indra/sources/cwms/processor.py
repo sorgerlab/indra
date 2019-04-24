@@ -90,6 +90,11 @@ class CWMSProcessor(object):
             if subj is None or obj is None:
                 continue
             obj.delta['polarity'] = POLARITY_DICT['CC'][ev_type]
+            time, location = self._extract_time_loc(event)
+            if time or location:
+                context = WorldContext(time=time, geo_location=location)
+            else:
+                context = None
             ev = self._get_evidence(event, context)
             st = Influence(subj, obj, evidence=[ev])
             self.statements.append(st)
@@ -105,6 +110,11 @@ class CWMSProcessor(object):
             if subj is None or obj is None:
                 continue
             obj.delta['polarity'] = POLARITY_DICT['EVENT'][ev_type]
+            time, location = self._extract_time_loc(event)
+            if time or location:
+                context = WorldContext(time=time, geo_location=location)
+            else:
+                context = None
             ev = self._get_evidence(event, context)
             st = Influence(subj, obj, evidence=[ev])
             self.statements.append(st)
