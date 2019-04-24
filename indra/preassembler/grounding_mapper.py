@@ -152,8 +152,10 @@ class GroundingMapper(object):
         # Now try to improve chemical groundings
         pc_id = db_refs.get('PUBCHEM')
         chebi_id = db_refs.get('CHEBI')
+        hmdb_id = db_refs.get('HMDB')
         mapped_chebi_id = None
         mapped_pc_id = None
+        hmdb_mapped_chebi_id = None
         # If we have original PUBCHEM and CHEBI IDs, we always keep those:
         if pc_id:
             mapped_chebi_id = chebi_client.get_chebi_id_from_pubchem(pc_id)
@@ -161,22 +163,35 @@ class GroundingMapper(object):
                 mapped_chebi_id = 'CHEBI:%s' % mapped_chebi_id
         if chebi_id:
             mapped_pc_id = chebi_client.get_pubchem_id(chebi_id)
+        if hmdb_id:
+            hmdb_mapped_chebi_id = chebi_client.get_chebi_id_from_hmdb(hmdb_id)
+            if hmdb_mapped_chebi_id and \
+                    not hmdb_mapped_chebi_id.startswith('CHEBI:'):
+                hmdb_mapped_chebi_id = 'CHEBI:%s' % hmdb_mapped_chebi_id
         # We always keep originals if both are present but display warnings
         # if there are inconsistencies
-        if pc_id and chebi_id:
-            if mapped_pc_id and pc_id != mapped_pc_id:
-                msg = ('Inconsistent groundings PUBCHEM:%s not equal to '
-                       'PUBCHEM:%s mapped from %s, standardizing to '
-                       'PUBCHEM:%s.' % (pc_id, mapped_pc_id, chebi_id, pc_id))
-                logger.warning(msg)
-            if mapped_chebi_id and chebi_id != mapped_chebi_id:
-                msg = ('Inconsistent groundings %s not equal to '
-                       '%s mapped from PUBCHEM:%s, standardizing to '
-                       '%s.' % (chebi_id, mapped_chebi_id, pc_id, chebi_id))
-                logger.warning(msg)
+        if pc_id and chebi_id and mapped_pc_id and pc_id != mapped_pc_id:
+            msg = ('Inconsistent groundings PUBCHEM:%s not equal to '
+                   'PUBCHEM:%s mapped from %s, standardizing to '
+                   'PUBCHEM:%s.' % (pc_id, mapped_pc_id, chebi_id, pc_id))
+            logger.warning(msg)
+        elif pc_id and chebi_id and mapped_chebi_id and chebi_id != \
+                mapped_chebi_id:
+            msg = ('Inconsistent groundings %s not equal to '
+                   '%s mapped from PUBCHEM:%s, standardizing to '
+                   '%s.' % (chebi_id, mapped_chebi_id, pc_id, chebi_id))
+            logger.warning(msg)
         # If we have PC and not CHEBI but can map to CHEBI, we do that
         elif pc_id and not chebi_id and mapped_chebi_id:
             db_refs['CHEBI'] = mapped_chebi_id
+        elif hmdb_id and chebi_id and hmdb_mapped_chebi_id and \
+                hmdb_mapped_chebi_id != chebi_id:
+            msg = ('Inconsistent groundings %s not equal to '
+                   '%s mapped from %s, standardizing to '
+                   '%s.' % (chebi_id, hmdb_mapped_chebi_id, hmdb_id, chebi_id))
+            logger.warning(msg)
+        elif hmdb_id and not chebi_id and hmdb_mapped_chebi_id:
+            db_refs['CHEBI'] = hmdb_mapped_chebi_id
         # If we have CHEBI and not PC but can map to PC, we do that
         elif chebi_id and not pc_id and mapped_pc_id:
             db_refs['PUBCHEM'] = mapped_pc_id
@@ -283,6 +298,9 @@ class GroundingMapper(object):
         # can't do mapping
         agent_text = agent.db_refs.get('TEXT')
         if not agent_text:
+            # We still do the name standardization here
+            if do_rename:
+                self.standardize_agent_name(agent, standardize_refs=False)
             return agent, False
         mapped_to_agent_json = self.agent_map.get(agent_text)
         if mapped_to_agent_json:
@@ -291,22 +309,21 @@ class GroundingMapper(object):
             return mapped_to_agent, False
         # Look this string up in the grounding map
         # If not in the map, leave agent alone and continue
-        if agent_text in self.gm.keys():
+        if agent_text in self.gm:
             map_db_refs = self.gm[agent_text]
-        else:
-            return agent, False
-
-        # If it's in the map but it maps to None, then filter out
-        # this statement by skipping it
-        if map_db_refs is None:
-            # Increase counter if this statement has not already
-            # been skipped via another agent
-            logger.debug("Skipping %s" % agent_text)
-            return None, True
-        # If it has a value that's not None, map it and add it
-        else:
-            # Otherwise, update the agent's db_refs field
-            self.update_agent_db_refs(agent, agent_text, do_rename)
+            # If it's in the map but it maps to None, then filter out
+            # this statement by skipping it
+            if map_db_refs is None:
+                logger.debug("Skipping %s" % agent_text)
+                return None, True
+            # If it has a value that's not None, map it and add it
+            else:
+                self.update_agent_db_refs(agent, agent_text, do_rename)
+        # This happens whene there is an Agent text but it is not in the
+        # grounding map. We still do the name standardization here.
+        if do_rename:
+            self.standardize_agent_name(agent, standardize_refs=False)
+        # Otherwise just return
         return agent, False
 
     def map_agents(self, stmts, do_rename=True):

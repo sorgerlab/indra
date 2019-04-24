@@ -54,6 +54,22 @@ def test_map_standardize_chebi_pc():
         (st.enz.db_refs, st.sub.db_refs)
     assert st.enz.db_refs['CHEBI'] == st.sub.db_refs['CHEBI'], \
         (st.enz.db_refs, st.sub.db_refs)
+    assert st.enz.name == 'vemurafenib'
+    assert st.sub.name == 'vemurafenib'
+
+
+def test_map_standardize_chebi_hmdb():
+    a1 = Agent('X', db_refs={'HMDB': 'HMDB0000122'})
+    a2 = Agent('Y', db_refs={'CHEBI': 'CHEBI:4167'})
+    gm = GroundingMapper(default_grounding_map)
+    stmt = Phosphorylation(a1, a2)
+    mapped_stmts = gm.map_agents([stmt])
+    assert len(mapped_stmts) == 1
+    st = mapped_stmts[0]
+    assert st.enz.db_refs['CHEBI'] == st.sub.db_refs['CHEBI'], \
+        (st.enz.db_refs, st.sub.db_refs)
+    assert st.enz.name == 'D-glucopyranose', st.enz
+    assert st.sub.name == 'D-glucopyranose', st.sub
 
 
 def test_bound_condition_mapping():
