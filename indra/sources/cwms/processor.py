@@ -285,11 +285,11 @@ class CWMSProcessor(object):
         evmks = {}
         logger.info('Starting with %d Statements.' % len(self.statements))
         for stmt in self.statements:
-            # Standalone Events do not have evidences, so we do not add them
+            # Standalone Events will be handled later, so we do not add them
             if isinstance(stmt, Event):
                 continue
-            evmk = stmt.evidence[0].matches_key() + \
-                   stmt.subj.matches_key() + stmt.obj.matches_key()
+            evmk = (stmt.evidence[0].matches_key() +
+                    stmt.subj.matches_key() + stmt.obj.matches_key())
             if evmk not in evmks:
                 evmks[evmk] = [stmt.uuid]
             else:
@@ -300,8 +300,8 @@ class CWMSProcessor(object):
         to_remove = []
         # Influence statements to be removed
         for uuids in multi_evmks:
-            stmts = [s for s in self.statements if (s.uuid in uuids
-                                                    and isinstance(s, Influence))]
+            stmts = [s for s in self.statements if (s.uuid in uuids and
+                                                    isinstance(s, Influence))]
             stmts = sorted(stmts, key=lambda x: x.polarity_count(),
                            reverse=True)
             to_remove += [s.uuid for s in stmts[1:]]
@@ -318,7 +318,6 @@ class CWMSProcessor(object):
             logger.info('Found %d Statements to remove' % len(to_remove))
         self.statements = [s for s in self.statements
                            if s.uuid not in to_remove]
-
 
 
 def sanitize_name(txt):
