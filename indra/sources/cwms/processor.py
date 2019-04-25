@@ -75,6 +75,9 @@ class CWMSProcessor(object):
         self.par_to_sec = {p.attrib['id']: p.attrib.get('sec-type')
                            for p in paragraph_tags}
 
+        # Keep a list of relation's object ids
+        self.relation_obj_ids = []
+
         # Keep a list of unhandled events for development purposes
         self._unhandled_events = []
 
@@ -109,6 +112,8 @@ class CWMSProcessor(object):
             obj = self._get_event(event, "*[@role=':AFFECTED']")
             if subj is None or obj is None:
                 continue
+            self.relation_obj_ids.append(self._get_event_id(
+                event, "*[@role=':AFFECTED']"))
             obj.delta['polarity'] = POLARITY_DICT['EVENT'][ev_type]
             time, location = self._extract_time_loc(event)
             if time or location:
@@ -127,12 +132,19 @@ class CWMSProcessor(object):
                      (', '.join(sorted(list(set(self._unhandled_events))))))
 
     def extract_events(self):
+        if not self.relation_obj_ids:
+            self.extract_causal_relations()
         events = self.tree.findall("EVENT/[type='ONT::INCREASE']") + (
             self.tree.findall("EVENT/[type='ONT::DECREASE']"))
         for event_entry in events:
-            evid = self._get_evidence(event_entry, context=None)
+            # Check if event is part of a causal relation
+            event_id = self._get_event_id(event_entry, "*[@role=':AFFECTED']")
+            if event_id in self.relation_obj_ids:
+                continue
+            # Make an Event statement if it is a standalone event
+            evidence = self._get_evidence(event_entry, context=None)
             event = self._get_event(event_entry, "*[@role=':AFFECTED']",
-                                    evidence=[evid])
+                                    evidence=[evidence])
             if event is None:
                 continue
             self.statements.append(event)
@@ -142,10 +154,9 @@ class CWMSProcessor(object):
     def _get_event(self, event, find_str, evidence=None):
         """Get a concept referred from the event by the given string."""
         # Get the term with the given element id
-        element = event.find(find_str)
-        if element is None:
+        element_id = self._get_event_id(event, find_str)
+        if element_id is None:
             return None
-        element_id = element.attrib.get('id')
         element_term = self.tree.find("*[@id='%s']" % element_id)
         if element_term is None:
             return None
@@ -177,6 +188,13 @@ class CWMSProcessor(object):
             context = None
         event_obj = Event(concept, context=context, evidence=evidence)
         return event_obj
+
+    def _get_event_id(self, event, find_str):
+        element = event.find(find_str)
+        if element is None:
+            return None
+        element_id = element.attrib.get('id')
+        return element_id
 
     def _extract_time_loc(self, term):
         """Get the location from a term (CC or TERM)"""
@@ -298,22 +316,22 @@ class CWMSProcessor(object):
         multi_evmks = [v for k, v in evmks.items() if len(v) > 1]
         # We now figure out if anything needs to be removed
         to_remove = []
-        # Influence statements to be removed
+        # Remove redundant statements
         for uuids in multi_evmks:
-            stmts = [s for s in self.statements if (s.uuid in uuids and
-                                                    isinstance(s, Influence))]
-            stmts = sorted(stmts, key=lambda x: x.polarity_count(),
-                           reverse=True)
-            to_remove += [s.uuid for s in stmts[1:]]
-        # Standalone events to be removed
-        matches_keys = ''.join([k for k in evmks.keys()])
-        for stmt in self.statements:
-            if isinstance(stmt, Event):
-                if stmt.matches_key() in matches_keys:
-                    logger.info('Found an Event that is part of '
-                                'Causal Relationship')
-                    to_remove.append(stmt.uuid)
-        # Remove all reduncdant statements
+            # Influence statements to be removed
+            infl_stmts = [s for s in self.statements if (
+                            s.uuid in uuids and isinstance(s, Influence))]
+            infl_stmts = sorted(infl_stmts, key=lambda x: x.polarity_count(),
+                                reverse=True)
+            to_remove += [s.uuid for s in infl_stmts[1:]]
+            # Standalone events to be removed
+            events = [s for s in self.statements if (
+                        s.uuid in uuids and isinstance(s, Event))]
+            events = sorted(events, key=lambda x: event_delta_score(x),
+                            reverse=True)
+            to_remove += [e.uuid for e in events[1:]]
+
+        # Remove all redundant statements
         if to_remove:
             logger.info('Found %d Statements to remove' % len(to_remove))
         self.statements = [s for s in self.statements
@@ -323,3 +341,9 @@ class CWMSProcessor(object):
 def sanitize_name(txt):
     name = txt.replace('\n', '')
     return name
+
+
+def event_delta_score(stmt):
+    pol_score = 1 if stmt.delta['polarity'] is not None else 0
+    adj_score = len(stmt.delta['adjectives'])
+    return (pol_score + adj_score)
