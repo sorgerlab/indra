@@ -1,17 +1,14 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 import re
-import csv
 import logging
-import requests
 import xml.etree.ElementTree as ET
 # Python3
 try:
-    from functools import lru_cache
-# Python2
+    import requests
 except ImportError:
-    from functools32 import lru_cache
+    requests = None
+    print("Warning: Could not import requests, only local resources available.")
+from functools import lru_cache
 from indra.util import read_unicode_csv, UnicodeXMLTreeBuilder as UTB
 
 
@@ -366,6 +363,7 @@ def _read_hgnc_maps():
     return (hgnc_names, hgnc_ids, hgnc_withdrawn,
             uniprot_ids, entrez_ids, entrez_ids_reverse, mouse_map, rat_map,
             prev_sym_map)
+
 
 (hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids,
  entrez_ids_reverse, mouse_map, rat_map, prev_sym_map) = \
