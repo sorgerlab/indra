@@ -86,6 +86,19 @@ def update_kinases():
     fname = os.path.join(path, 'kinases.tsv')
     save_from_http(url, fname)
 
+    from indra.databases import hgnc_client, uniprot_client
+    add_kinases = ['PGK1', 'PKM', 'TAF1', 'NME1', 'BCKDK', 'PDK1', 'PDK2',
+                   'PDK3', 'PDK4', 'BCR']
+    df = pandas.read_csv(fname, sep='\t')
+    for kinase in add_kinases:
+        hgnc_id = hgnc_client.get_hgnc_id(kinase)
+        up_id = hgnc_client.get_uniprot_id(hgnc_id)
+        up_mnemonic = uniprot_client.get_mnemonic(up_id)
+        df = df.append({'Entry': up_id, 'Gene names  (primary )': kinase,
+                        'Organism ID': '9606', 'Entry name': up_mnemonic},
+                       ignore_index=True)
+    df.to_csv(fname, sep='\t', index=False)
+
 
 def update_uniprot_subcell_loc():
     # TODO: This file could be stored as a tsv instead after some processing
