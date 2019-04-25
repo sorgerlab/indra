@@ -100,7 +100,7 @@ class SofiaJsonProcessor(SofiaProcessor):
     def __init__(self, json_list):
         self._events = self.process_events(json_list)
         self.statements = []
-        self.relation_event_indexes = []
+        self.relation_subj_obj_ids = []
 
     def process_events(self, json_list):
         event_dict = {}
@@ -120,7 +120,7 @@ class SofiaJsonProcessor(SofiaProcessor):
                 # Save indexes of causes and effects
                 current_relation_events = self.get_relation_events(rel_dict)
                 for ix in current_relation_events:
-                    self.relation_event_indexes.append(ix)
+                    self.relation_subj_obj_ids.append(ix)
                 # Make Influence Statements
                 stmt_list = self._build_influences(rel_dict)
                 if not stmt_list:
@@ -133,11 +133,11 @@ class SofiaJsonProcessor(SofiaProcessor):
         # First confirm we have extracted event information and relation events
         if not self._events:
             self.process_events(json_list)
-        if not self.relation_event_indexes:
+        if not self.relation_subj_obj_ids:
             self.extract_relations(json_list)
         # Only make Event Statements from standalone events
         for event_index in self._events:
-            if event_index not in self.relation_event_indexes:
+            if event_index not in self.relation_subj_obj_ids:
                 event = self.get_event(self._events[event_index])
                 self.statements.append(event)
 
@@ -146,7 +146,7 @@ class SofiaExcelProcessor(SofiaProcessor):
     def __init__(self, relation_rows, event_rows, entity_rows):
         self._events = self.process_events(event_rows)
         self.statements = []
-        self.relation_event_indexes = []
+        self.relation_subj_obj_ids = []
 
     def process_events(self, event_rows):
         header = [cell.value for cell in next(event_rows)]
@@ -167,7 +167,7 @@ class SofiaExcelProcessor(SofiaProcessor):
             # Save indexes of causes and effects
             current_relation_events = self.get_relation_events(row_dict)
             for ix in current_relation_events:
-                self.relation_event_indexes.append(ix)
+                self.relation_subj_obj_ids.append(ix)
             # Make Influence Statements
             stmt_list = self._build_influences(row_dict)
             if not stmt_list:
@@ -180,11 +180,11 @@ class SofiaExcelProcessor(SofiaProcessor):
         # First confirm we have extracted event information and relation events
         if not self._events:
             self.process_events(event_rows)
-        if not self.relation_event_indexes:
+        if not self.relation_subj_obj_ids:
             self.extract_relations(relation_rows)
         # Only make Event Statements from standalone events
         for event_index in self._events:
-            if event_index not in self.relation_event_indexes:
+            if event_index not in self.relation_subj_obj_ids:
                 event = self.get_event(self._events[event_index])
                 self.statements.append(event)
 
