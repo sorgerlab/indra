@@ -42,6 +42,23 @@
     "Patient Index": "",
     "Patient": "",
     "Sentence": "rainfall causes floods "
+   },
+   {
+    "Source_File": "userinput",
+    "Query": "None",
+    "Score": "0.0",
+    "Event Index": "E3",
+    "Relation": "inflation",
+    "Event_Type": "event1/Economy/Market",
+    "FrameNet_Frame": "",
+    "Indicator": "",
+    "Location": "South Sudan",
+    "Time": "28, JULY, 2016",
+    "Agent Index": "",
+    "Agent": "",
+    "Patient Index": "",
+    "Patient": "",
+    "Sentence": "UNICEF SOUTH SUDAN SITUATION REPORT - 28 JULY 2016 Situation Overview & Humanitarian Needs In parallel to the increasing the economic situation has severely with a dramatic drop in the value of the South Sudanese pound and inflation estimated at close to 300 per cent . "
    }
   ],
   "Causal": [
