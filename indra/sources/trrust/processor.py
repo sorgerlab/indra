@@ -65,4 +65,6 @@ hgnc_map = {
     'SALL4A': 'SALL4',
     'STAT5': 'STAT5A',
     'TRAP': 'ACP5',
+    'AES': 'TLE5',
+    'SEPT7': 'SEPTIN7'
 }

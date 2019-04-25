@@ -10,7 +10,7 @@ def test_process_from_web():
     for stmt in tp.statements:
         assert isinstance(stmt, RegulateAmount)
         assert len(stmt.evidence) == 1
-        assert stmt.obj.db_refs.get('HGNC')
-        assert stmt.subj.db_refs.get('HGNC')
+        assert stmt.obj.db_refs.get('HGNC'), stmt.obj.db_refs
+        assert stmt.subj.db_refs.get('HGNC'), stmt.subj.db_refs
         assert stmt.evidence[0].source_api == 'trrust'
         assert stmt.evidence[0].pmid is not None
