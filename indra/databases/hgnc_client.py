@@ -2,17 +2,17 @@ import os
 import re
 import logging
 import xml.etree.ElementTree as ET
-# Python3
+from functools import lru_cache
+
+from indra.util import read_unicode_csv, UnicodeXMLTreeBuilder as UTB
+
+logger = logging.getLogger(__name__)
+
 try:
     import requests
 except ImportError:
     requests = None
-    print("Warning: Could not import requests, only local resources available.")
-from functools import lru_cache
-from indra.util import read_unicode_csv, UnicodeXMLTreeBuilder as UTB
-
-
-logger = logging.getLogger(__name__)
+    logger.warning("Could not import requests: web lookups unavailable.")
 
 
 hgnc_url = 'http://rest.genenames.org/fetch/'
@@ -144,7 +144,6 @@ def get_current_hgnc_id(hgnc_name):
     return hgnc_id
 
 
-
 def get_hgnc_from_mouse(mgi_id):
     """Return the HGNC ID corresponding to the given MGI mouse gene ID.
 
@@ -232,6 +231,11 @@ def get_hgnc_entry(hgnc_id):
         The XML ElementTree corresponding to the entry for the
         given HGNC ID.
     """
+    if requests is None:
+        logger.warning("requests package could not be imported, "
+                       "web service requests are not available.")
+        return None
+
     url = hgnc_url + 'hgnc_id/%s' % hgnc_id
     headers = {'Accept': '*/*'}
     res = requests.get(url, headers=headers)
