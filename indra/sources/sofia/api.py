@@ -27,12 +27,11 @@ def process_table(fname):
         rel_sheet = book['Causal']
     event_sheet = book['Events']
     entities_sheet = book['Entities']
-    # Create a different copy of a generator for every method
-    relation_rows_1, relation_rows_2 = itertools.tee(rel_sheet.rows)
-    event_rows_1, event_rows_2 = itertools.tee(event_sheet.rows)
-    sp = SofiaExcelProcessor(event_rows_1)
-    sp.extract_relations(relation_rows_1)
-    sp.extract_events(event_rows_2, relation_rows_2)
+
+    sp = SofiaExcelProcessor(rel_sheet.rows, event_sheet.rows,
+                             entities_sheet.rows)
+    sp.extract_relations(rel_sheet.rows)
+    sp.extract_events(event_sheet.rows, rel_sheet.rows)
     return sp
 
 
@@ -99,6 +98,8 @@ def process_json(json_obj):
         Statements as its statements attribute.
     """
     sp = SofiaJsonProcessor(json_obj)
+    sp.extract_relations(json_obj)
+    sp.extract_events(json_obj)
     return sp
 
 
