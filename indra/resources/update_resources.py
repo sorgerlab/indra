@@ -88,7 +88,7 @@ def update_kinases():
 
     from indra.databases import hgnc_client, uniprot_client
     add_kinases = ['PGK1', 'PKM', 'TAF1', 'NME1', 'BCKDK', 'PDK1', 'PDK2',
-                   'PDK3', 'PDK4', 'BCR']
+                   'PDK3', 'PDK4', 'BCR', 'FAM20C', 'BAZ1B', 'PIKFYVE']
     df = pandas.read_csv(fname, sep='\t')
     for kinase in add_kinases:
         hgnc_id = hgnc_client.get_hgnc_id(kinase)
