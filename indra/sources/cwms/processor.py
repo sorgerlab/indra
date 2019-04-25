@@ -76,7 +76,7 @@ class CWMSProcessor(object):
                            for p in paragraph_tags}
 
         # Keep a list of relation's object ids
-        self.relation_obj_ids = []
+        self.relation_subj_obj_ids = []
 
         # Keep a list of unhandled events for development purposes
         self._unhandled_events = []
@@ -92,6 +92,10 @@ class CWMSProcessor(object):
             obj = self._get_event(event, "arg/[@role=':OUTCOME']")
             if subj is None or obj is None:
                 continue
+            self.relation_subj_obj_ids.append(self._get_event_id(
+                event, "arg/[@role=':FACTOR']"))
+            self.relation_subj_obj_ids.append(self._get_event_id(
+                event, "arg/[@role=':OUTCOME']"))
             obj.delta['polarity'] = POLARITY_DICT['CC'][ev_type]
             time, location = self._extract_time_loc(event)
             if time or location:
@@ -112,7 +116,9 @@ class CWMSProcessor(object):
             obj = self._get_event(event, "*[@role=':AFFECTED']")
             if subj is None or obj is None:
                 continue
-            self.relation_obj_ids.append(self._get_event_id(
+            self.relation_subj_obj_ids.append(self._get_event_id(
+                event, "*[@role=':AGENT']"))
+            self.relation_subj_obj_ids.append(self._get_event_id(
                 event, "*[@role=':AFFECTED']"))
             obj.delta['polarity'] = POLARITY_DICT['EVENT'][ev_type]
             time, location = self._extract_time_loc(event)
@@ -132,14 +138,14 @@ class CWMSProcessor(object):
                      (', '.join(sorted(list(set(self._unhandled_events))))))
 
     def extract_events(self):
-        if not self.relation_obj_ids:
+        if not self.relation_subj_obj_ids:
             self.extract_causal_relations()
         events = self.tree.findall("EVENT/[type='ONT::INCREASE']") + (
             self.tree.findall("EVENT/[type='ONT::DECREASE']"))
         for event_entry in events:
             # Check if event is part of a causal relation
             event_id = self._get_event_id(event_entry, "*[@role=':AFFECTED']")
-            if event_id in self.relation_obj_ids:
+            if event_id in self.relation_subj_obj_ids:
                 continue
             # Make an Event statement if it is a standalone event
             evidence = self._get_evidence(event_entry, context=None)
