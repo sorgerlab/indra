@@ -103,6 +103,25 @@ def process_json(json_obj):
     return sp
 
 
+def process_json_file(fname):
+    """Return processor by processing a JSON file produced by Sofia.
+
+    Parameters
+    ----------
+    fname : str
+        The name of the JSON file to process
+
+    Returns
+    -------
+    indra.sources.sofia.processor.SofiaProcessor
+        A SofiaProcessor object which has a list of extracted INDRA
+        Statements as its statements attribute.
+    """
+    with open(fname, 'r') as fh:
+        jd = json.load(fh)
+    return process_json(jd)
+
+
 def _get_sofia_auth():
     sofia_username = get_config('SOFIA_USERNAME')
     sofia_password = get_config('SOFIA_PASSWORD')
