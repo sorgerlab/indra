@@ -205,3 +205,14 @@ def test_contextual_sentence():
 def test_ekb_process():
     cp = process_ekb_file(ekb_processing_test_file)
     assert len(cp.statements) == 1
+
+
+def test_process_increase_event_ekb():
+    fname = join(data_folder, 'cwms_increase.ekb')
+    cp = process_ekb_file(fname)
+    assert len(cp.statements) == 1
+    stmt = cp.statements[0]
+    assert isinstance(stmt, Event)
+    assert stmt.delta['polarity'] == 1, stmt.delta
+    assert stmt.concept.name == 'food insecurity', stmt.concept.name
+    assert stmt.context, stmt.context
