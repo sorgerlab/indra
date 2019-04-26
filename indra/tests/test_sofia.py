@@ -16,6 +16,9 @@ Event.__test__ = False
 WorldContext.__test__ = False
 
 
+path_here = os.path.abspath(os.path.dirname(__file__))
+
+
 @attr('webservice', 'nonpublic')
 def test_text_process_webservice():
     txt = 'rainfall causes floods'
@@ -26,11 +29,8 @@ def test_text_process_webservice():
 
 
 def test_process_json():
-    path_here = os.path.abspath(os.path.dirname(__file__))
     test_file = os.path.join(path_here, 'sofia_test.json')
-    with open(test_file, 'r') as fh:
-        js = json.load(fh)
-    sp = sofia.process_json(js)
+    sp = sofia.process_json_file(test_file)
     assert len(sp.statements) == 2
     assert isinstance(sp.statements[0], Influence)
     assert sp.statements[0].subj.concept.name == 'rainfall'
@@ -41,3 +41,13 @@ def test_process_json():
     assert isinstance(sp.statements[1].context, WorldContext)
     assert sp.statements[1].context.time.text == '28, JULY, 2016'
     assert sp.statements[1].context.geo_location.name == 'South Sudan'
+
+
+def test_event_decrease():
+    test_file = os.path.join(path_here, 'sofia_event_decreased.json')
+    sp = sofia.process_json_file(test_file)
+    assert len(sp.statements) == 1, sp.statements
+    stmt = sp.statements[0]
+    assert isinstance(stmt, Event), stmt
+    assert stmt.delta['polarity'] == -1, stmt.delta
+    assert stmt.concept.name == 'rainfall', stmt.concept
