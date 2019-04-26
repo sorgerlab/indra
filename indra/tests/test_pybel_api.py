@@ -2,6 +2,7 @@ import os
 from urllib import request
 from pybel import BELGraph
 from pybel.dsl import *
+from pybel.language import Entity
 from pybel.io import from_json_file
 from pybel.examples import egf_graph
 from indra.statements import *
@@ -320,8 +321,8 @@ def test_get_agent_named_complex_go():
 def test_get_agent_with_translocation():
     node_data = protein(name='MAPK1', namespace='HGNC')
     # Some example edge data
-    edge_data = translocation(from_loc=entity('GOCC', 'intracellular'),
-                              to_loc=entity('GOCC', 'extracellular space'))
+    edge_data = translocation(from_loc=Entity('GOCC', 'intracellular'),
+                              to_loc=Entity('GOCC', 'extracellular space'))
     agent = pb.get_agent(node_data, edge_data)
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
@@ -642,8 +643,8 @@ def test_controlled_transloc_loc_cond():
     subj = protein(name='MAP2K1', namespace='HGNC')
     obj = protein(name='MAPK1', namespace='HGNC')
     g = BELGraph()
-    transloc = translocation(from_loc=entity('GOCC', 'intracellular'),
-                             to_loc=entity('GOCC', 'extracellular space'))
+    transloc = translocation(from_loc=Entity('GOCC', 'intracellular'),
+                             to_loc=Entity('GOCC', 'extracellular space'))
     g.add_increases(subj, obj, object_modifier=transloc,
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
@@ -655,8 +656,8 @@ def test_subject_transloc_loc_cond():
     subject (using the to_loc location as the condition)"""
     subj = protein(name='MAP2K1', namespace='HGNC')
     obj = protein(name='MAPK1', namespace='HGNC')
-    transloc = translocation(from_loc=entity('GOCC', 'intracellular'),
-                             to_loc=entity('GOCC', 'extracellular space'))
+    transloc = translocation(from_loc=Entity('GOCC', 'intracellular'),
+                             to_loc=Entity('GOCC', 'extracellular space'))
     g = BELGraph()
     g.add_increases(subj, obj, subject_modifier=transloc,
                     evidence="Some evidence.", citation='123456')
@@ -675,8 +676,8 @@ def test_subject_transloc_active_form():
     to-location of the subject."""
     subj = protein(name='MAP2K1', namespace='HGNC')
     obj = protein(name='MAP2K1', namespace='HGNC')
-    transloc = translocation(from_loc=entity('GOCC', 'intracellular'),
-                             to_loc=entity('GOCC', 'extracellular space'))
+    transloc = translocation(from_loc=Entity('GOCC', 'intracellular'),
+                             to_loc=Entity('GOCC', 'extracellular space'))
     g = BELGraph()
     g.add_increases(subj, obj, subject_modifier=transloc,
                     object_modifier=activity(name='kin'),
