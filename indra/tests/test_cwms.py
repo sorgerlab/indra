@@ -216,3 +216,12 @@ def test_process_increase_event_ekb():
     assert stmt.delta['polarity'] == 1, stmt.delta
     assert stmt.concept.name == 'food insecurity', stmt.concept.name
     assert stmt.context, stmt.context
+
+
+def test_process_cause_decrease_event_ekb():
+    fname = join(data_folder, 'cause_decrease_event.ekb')
+    cp = process_ekb_file(fname)
+    assert len(cp.statements) == 1
+    stmt = cp.statements[0]
+    assert isinstance(stmt, Influence)
+    assert stmt.obj.delta['polarity'] == -1, stmt.obj.delta
