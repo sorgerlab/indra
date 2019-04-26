@@ -148,11 +148,14 @@ class CWMSProcessor(object):
             if event_id in self.relation_subj_obj_ids:
                 continue
             # Make an Event statement if it is a standalone event
+            ev_type = event_entry.find('type').text
+            polarity = POLARITY_DICT['EVENT'][ev_type]
             evidence = self._get_evidence(event_entry, context=None)
             event = self._get_event(event_entry, "*[@role=':AFFECTED']",
                                     evidence=[evidence])
             if event is None:
                 continue
+            event.delta['polarity'] = polarity
             self.statements.append(event)
 
         self._remove_multi_extraction_artifacts()
