@@ -376,6 +376,7 @@ class Submitter(object):
         self.job_list = None
         self.options=options
         self.ids_per_job = None
+        self.running = False
         return
 
     def set_options(self, **kwargs):
@@ -476,10 +477,14 @@ class Submitter(object):
                     'command': command_list},
                 retryStrategy={'attempts': num_tries}
             )
+
+            # Record the job id.
             logger.info("submitted...")
-            job_list.append({'jobId': job_info['jobId']})
-        self.job_list = job_list
-        return job_list
+            self.job_list.append({'jobId': job_info['jobId']})
+            logger.info("Sleeping for %d seconds..." % stagger)
+            sleep(stagger)
+
+        return self.job_list
 
     def watch_and_wait(self, poll_interval=10, idle_log_timeout=None,
                        kill_on_timeout=False, stash_log_method=None,
@@ -499,17 +504,24 @@ class Submitter(object):
         This method will run both `submit_reading` and `watch_and_wait`,
         blocking on the latter.
         """
+
         submit_thread = Thread(target=self.submit_reading,
                                args=(input_fname, 0, None, ids_per_job),
                                kwargs={'stagger': stagger},
                                daemon=True)
         submit_thread.start()
-        self.watch_and_wait(**wait_params)
-        submit_thread.join(0)
-        if submit_thread.is_alive():
-            logger.warning("Submit thread is still running even after job"
-                           "completion.")
-        return
+        try:
+            self.watch_and_wait(**wait_params)
+            submit_thread.join(0)
+            if submit_thread.is_alive():
+                logger.warning("Submit thread is still running even after job "
+                               "completion.")
+        finally:
+            # Send a signal to the submission loop (on a thread) to stop.
+            self.running = False
+            submit_thread.join()
+
+        return submit_thread
 
 
 class PmidSubmitter(Submitter):
