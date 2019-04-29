@@ -74,8 +74,8 @@ def update_hgnc_entries():
 
     # Select relevant columns and parameters
     cols = ['gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_status',
-            'gd_prev_sym', 'gd_aliases', 'gd_mgd_id', 'md_rgd_id',
-            'gd_pub_eg_id']
+            'gd_aliases', 'md_eg_id', 'md_prot_id',
+            'md_mgd_id', 'md_rgd_id', 'gd_prev_sym']
     statuses = ['Approved', 'Entry%20Withdrawn']
     params = {
             'hgnc_dbtag': 'on',
