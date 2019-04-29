@@ -3,8 +3,9 @@ from builtins import dict, str
 import os
 import re
 import csv
-import xml.etree.ElementTree as ET
+import logging
 import requests
+import xml.etree.ElementTree as ET
 # Python3
 try:
     from functools import lru_cache
@@ -12,6 +13,10 @@ try:
 except ImportError:
     from functools32 import lru_cache
 from indra.util import read_unicode_csv, UnicodeXMLTreeBuilder as UTB
+
+
+logger = logging.getLogger(__name__)
+
 
 hgnc_url = 'http://rest.genenames.org/fetch/'
 
@@ -36,6 +41,7 @@ def get_uniprot_id(hgnc_id):
         return None
     return uniprot_id
 
+
 def get_entrez_id(hgnc_id):
     """Return the Entrez ID corresponding to the given HGNC ID.
 
@@ -56,6 +62,7 @@ def get_entrez_id(hgnc_id):
         return None
     return entrez_id
 
+
 def get_hgnc_from_entrez(entrez_id):
     """Return the HGNC ID corresponding to the given Entrez ID.
 
@@ -71,6 +78,7 @@ def get_hgnc_from_entrez(entrez_id):
     """
     hgnc_id = entrez_ids_reverse.get(entrez_id)
     return hgnc_id
+
 
 def get_hgnc_name(hgnc_id):
     """Return the HGNC symbol corresponding to the given HGNC ID.
@@ -98,6 +106,7 @@ def get_hgnc_name(hgnc_id):
         hgnc_name = hgnc_name_tag.text.strip()
     return hgnc_name
 
+
 def get_hgnc_id(hgnc_name):
     """Return the HGNC ID corresponding to the given HGNC symbol.
 
@@ -112,6 +121,32 @@ def get_hgnc_id(hgnc_name):
         The HGNC ID corresponding to the given HGNC symbol.
     """
     return hgnc_ids.get(hgnc_name)
+
+
+def get_current_hgnc_id(hgnc_name):
+    """Return the HGNC ID(s) corresponding to a current or outdate HGNC symbol.
+
+    Parameters
+    ----------
+    hgnc_name : str
+        The HGNC symbol to be converted, possibly an outdated symbol.
+
+    Returns
+    -------
+    str or list of str or None
+        If there is a single HGNC ID corresponding to the given current or
+        outdated HGNC symbol, that ID is returned as a string. If the symbol
+        is outdated and maps to multiple current IDs, a list of these
+        IDs is returned. If the given name doesn't correspond to either
+        a current or an outdated HGNC symbol, None is returned.
+    """
+    hgnc_id = get_hgnc_id(hgnc_name)
+    if hgnc_id:
+        return hgnc_id
+    hgnc_id = prev_sym_map.get(hgnc_name)
+    return hgnc_id
+
+
 
 def get_hgnc_from_mouse(mgi_id):
     """Return the HGNC ID corresponding to the given MGI mouse gene ID.
@@ -129,6 +164,7 @@ def get_hgnc_from_mouse(mgi_id):
     if mgi_id.startswith('MGI:'):
         mgi_id = mgi_id[4:]
     return mouse_map.get(mgi_id)
+
 
 def get_hgnc_from_rat(rgd_id):
     """Return the HGNC ID corresponding to the given RGD rat gene ID.
@@ -165,6 +201,7 @@ def get_rat_id(hgnc_id):
         if v == hgnc_id:
             return k
 
+
 def get_mouse_id(hgnc_id):
     """Return the MGI mouse ID corresponding to the given HGNC ID.
 
@@ -181,6 +218,7 @@ def get_mouse_id(hgnc_id):
     for k, v in mouse_map.items():
         if v == hgnc_id:
             return k
+
 
 @lru_cache(maxsize=1000)
 def get_hgnc_entry(hgnc_id):
@@ -268,6 +306,7 @@ def _read_hgnc_maps():
     entrez_ids_reverse = {}
     mouse_map = {}
     rat_map = {}
+    prev_sym_map = {}
     for row in csv_rows:
         hgnc_id = row[0][5:]
         hgnc_status = row[3]
@@ -304,11 +343,31 @@ def _read_hgnc_maps():
                 if rgd_id.startswith('RGD:'):
                     rgd_id = rgd_id[4:]
                 rat_map[rgd_id] = hgnc_id
+        # Previous symbols
+        prev_sym_entry = row[9]
+        if prev_sym_entry:
+            prev_syms = prev_sym_entry.split(', ')
+            for prev_sym in prev_syms:
+                # If we already mapped this previous symbol to another ID
+                if prev_sym in prev_sym_map:
+                    # If we already have a list here, we just extend it
+                    if isinstance(prev_sym_map[prev_sym], list):
+                        prev_sym_map[prev_sym].append(hgnc_id)
+                    # Otherwise we create a list and start it with the two
+                    # IDs we know the symbol is mapped to
+                    else:
+                        prev_sym_map[prev_sym] = [prev_sym_map[prev_sym],
+                                                  hgnc_id]
+                # Otherwise we just make a string entry here
+                else:
+                    prev_sym_map[prev_sym] = hgnc_id
+
     return (hgnc_names, hgnc_ids, hgnc_withdrawn,
-            uniprot_ids, entrez_ids, entrez_ids_reverse, mouse_map, rat_map)
+            uniprot_ids, entrez_ids, entrez_ids_reverse, mouse_map, rat_map,
+            prev_sym_map)
 
 (hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids,
- entrez_ids_reverse, mouse_map, rat_map) = \
+ entrez_ids_reverse, mouse_map, rat_map, prev_sym_map) = \
     _read_hgnc_maps()
 
 
