@@ -71,3 +71,14 @@ def test_is_category():
     assert not hgnc_client.is_phosphatase('KRAS')
     assert hgnc_client.is_transcription_factor('FOXO3')
     assert not hgnc_client.is_transcription_factor('AKT1')
+
+
+def test_get_current_id():
+    # Current symbol
+    assert hgnc_client.get_current_hgnc_id('BRAF') == '1097'
+    # Outdated symbol, one ID
+    assert hgnc_client.get_current_hgnc_id('SEPT7') == '1717'
+    # Outdated symbol, multiple IDs
+    ids = hgnc_client.get_current_hgnc_id('HOX1')
+    assert len(ids) == 10
+    assert '5101' in ids
