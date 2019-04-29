@@ -64,10 +64,12 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         raise Exception('A job_name_prefix is required to post logs on s3.')
 
     start_time = datetime.now()
+    logger.info("Given %d jobs to track" % len(job_list))
     if job_list is None:
         job_id_list = []
     else:
         job_id_list = [job['jobId'] for job in job_list]
+    logger.info("Tracking %d active jobs" % len(job_id_list))
 
     if result_record is None:
         result_record = {}
@@ -174,11 +176,15 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
 
         if job_id_list:
             if (len(failed) + len(done)) == len(job_id_list):
+                logger.info("Total failed and done equals number of original "
+                            "tracked jobs. Ending.")
                 ret = 0
                 break
         else:
             if (len(failed) + len(done) > 0) and \
                (len(pre_run) + len(running) == 0):
+                logger.info("No job_id_list, but there are new finished jobs "
+                            "and no running or pre-running jobs. Ending.")
                 ret = 0
                 break
 
@@ -441,9 +447,17 @@ class Submitter(object):
 
         # Iterate over the list of PMIDs and submit the job in chunks
         batch_client = boto3.client('batch', region_name='us-east-1')
-        job_list = []
+        self.job_list = []
+        self.running = True
         for job_start_ix in range(start_ix, end_ix, ids_per_job):
-            sleep(stagger)
+
+            # Check for a stop signal
+            if not self.running:
+                logger.info("Running was switched off, discontinuing...")
+                break
+            print(self.running)
+
+            # Generate the command for this batch.
             job_end_ix = job_start_ix + ids_per_job
             if job_end_ix > end_ix:
                 job_end_ix = end_ix
@@ -451,6 +465,8 @@ class Submitter(object):
             command_list = get_batch_command(cmd, purpose=self._purpose,
                                              project=self.project_name)
             logger.info('Command list: %s' % str(command_list))
+
+            # Submit the job.
             job_info = batch_client.submit_job(
                 jobName=job_name,
                 jobQueue=self._job_queue,
