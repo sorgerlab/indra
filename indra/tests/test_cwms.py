@@ -216,6 +216,11 @@ def test_process_increase_event_ekb():
     assert stmt.delta['polarity'] == 1, stmt.delta
     assert stmt.concept.name == 'food insecurity', stmt.concept.name
     assert stmt.context, stmt.context
+    assert len(stmt.evidence) == 1
+    ev = stmt.evidence[0]
+    assert ev.source_api == 'cwms'
+    assert ev.context is None
+    assert ev.text is not None
 
 
 def test_process_cause_decrease_event_ekb():

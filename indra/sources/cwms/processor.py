@@ -145,8 +145,8 @@ class CWMSProcessor(object):
         if ev_type not in POLARITY_DICT['EVENT']:
             self._unhandled_events.append(ev_type)
             return None
-        subj_id, subj_term = self._get_term_by_role(event, 'AGENT', True)
-        obj_id, obj_term = self._get_term_by_role(event, 'AFFECTED', True)
+        subj_id, subj_term = self._get_term_by_role(event, 'AGENT', False)
+        obj_id, obj_term = self._get_term_by_role(event, 'AFFECTED', False)
         if subj_term is None or obj_term is None:
             return None
         subj = self._get_event(subj_term)
@@ -178,6 +178,12 @@ class CWMSProcessor(object):
         event = self._get_event(arg_term, evidence=[evidence])
         if event is None:
             return None
+        time, location = self._extract_time_loc(event_term)
+        if time or location:
+            context = WorldContext(time=time, geo_location=location)
+        else:
+            context = None
+        event.context = context
         event.delta['polarity'] = polarity
         return event
 
