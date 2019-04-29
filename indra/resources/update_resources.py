@@ -71,7 +71,26 @@ def save_from_http(url, fname):
 
 def update_hgnc_entries():
     logger.info('--Updating HGNC entries-----')
-    url = 'http://tinyurl.com/y83dx5s6'
+
+    # Select relevant columns and parameters
+    cols = ['gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_status',
+            'gd_prev_sym', 'gd_aliases', 'gd_mgd_id', 'md_rgd_id',
+            'gd_pub_eg_id']
+    statuses = ['Approved', 'Entry%20Withdrawn']
+    params = {
+            'hgnc_dbtag': 'on',
+            'order_by': 'gd_app_sym_sort',
+            'format': 'text',
+            'submit': 'submit'
+            }
+
+    # Construct a download URL from the above parameters
+    url = 'https://www.genenames.org/cgi-bin/download/custom?'
+    url += '&'.join(['col=%s' % c for c in cols]) + '&'
+    url += '&'.join(['status=%s' % s for s in statuses]) + '&'
+    url += '&'.join(['%s=%s' % (k, v) for k, v in params.items()])
+
+    # Save the download into a file
     fname = os.path.join(path, 'hgnc_entries.tsv')
     save_from_http(url, fname)
 
