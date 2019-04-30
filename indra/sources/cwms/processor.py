@@ -117,21 +117,26 @@ class CWMSProcessor(object):
 
     def extract_events(self):
         """Extract standalone Events from the EKB."""
-        events = self.tree.findall("EVENT/[type='ONT::INCREASE']") + (
-            self.tree.findall("EVENT/[type='ONT::DECREASE']"))
-        for event_term in events:
-            event_id = event_term.attrib.get('id')
-            if event_id in self.subsumed_events or \
-                    event_id in self.relation_events:
-                continue
-            event = self.event_from_event(event_term)
-            if event:
-                self.statements.append(event)
+        events = [(1, self.tree.findall("EVENT/[type='ONT::INCREASE']")),
+                  (-1, self.tree.findall("EVENT/[type='ONT::DECREASE']"))]
+        for polarity, event_list in events:
+            for event_term in event_list:
+                event_id = event_term.attrib.get('id')
+                if event_id in self.subsumed_events or \
+                        event_id in self.relation_events:
+                    continue
+                event = self.event_from_event(event_term)
+                if event:
+                    # Here we set the polarity based on the polarity implied by
+                    # the increase/decrease here
+                    event.delta['polarity'] = polarity
+                    self.statements.append(event)
 
         self._remove_multi_extraction_artifacts()
 
     def _influence_from_element(self, element, element_type, subj_arg,
                                 obj_arg, is_arg):
+        element_id = element.attrib.get('id')
         rel_type = element.find('type').text
         if rel_type not in POLARITY_DICT[element_type]:
             self._unhandled_events.append(rel_type)
@@ -146,7 +151,7 @@ class CWMSProcessor(object):
         if subj is None or obj is None:
             return None
 
-        self.relation_events += [subj_id, obj_id]
+        self.relation_events += [subj_id, obj_id, element_id]
 
         # If the object polarity is not given explicitly, we set it
         # based on the one implied by the relation
