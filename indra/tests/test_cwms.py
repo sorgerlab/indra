@@ -190,16 +190,31 @@ def test_three_sentences():
 
 
 @attr('slow', 'webservice')
-def test_contextual_sentence():
-    text = "Hunger causes displacement in 2018 in South Sudan."
+def test_context_influence_obj():
+    text = 'Hunger causes displacement in 2018 in South Sudan.'
     cp = process_text(text)
-    assert cp is not None
-    assert len(cp.statements) == 1, len(cp.statements)
     stmt = cp.statements[0]
-    assert len(stmt.evidence) == 1, len(stmt.evidence)
     cont = stmt.obj.context
     assert cont is not None
     assert cont.time and cont.geo_location
+
+
+@attr('slow', 'webservice')
+def test_context_influence_subj():
+    text = 'Hunger in 2018 in South Sudan causes displacement.'
+    cp = process_text(text)
+    stmt = cp.statements[0]
+    cont = stmt.subj.context
+    assert cont is not None
+    assert cont.time and cont.geo_location, cont
+
+
+@attr('slow', 'webservice')
+def test_context_influence_subj_obj():
+    text = 'Hunger in 2018 causes displacement in South Sudan.'
+    cp = process_text(text)
+    stmt = cp.statements[0]
+    assert stmt.subj.context.time and stmt.obj.context.geo_location
 
 
 def test_ekb_process():
@@ -230,3 +245,12 @@ def test_process_cause_decrease_event_ekb():
     stmt = cp.statements[0]
     assert isinstance(stmt, Influence), stmt
     assert stmt.obj.delta['polarity'] == -1, stmt.obj.delta
+
+
+def test_process_cause_increase_event_ekb():
+    fname = join(data_folder, 'cause_increase_event.ekb')
+    cp = process_ekb_file(fname)
+    assert len(cp.statements) == 1, cp.statements
+    stmt = cp.statements[0]
+    assert isinstance(stmt, Influence), stmt
+    assert stmt.obj.delta['polarity'] == 1, stmt.obj.delta

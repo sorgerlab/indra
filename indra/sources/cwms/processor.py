@@ -152,12 +152,7 @@ class CWMSProcessor(object):
         # based on the one implied by the relation
         if obj.delta['polarity'] is None:
             obj.delta['polarity'] = POLARITY_DICT[element_type][rel_type]
-        time, location = self._extract_time_loc(element)
-        if time or location:
-            context = WorldContext(time=time, geo_location=location)
-        else:
-            context = None
-        ev = self._get_evidence(element, context)
+        ev = self._get_evidence(element)
         st = Influence(subj, obj, evidence=[ev])
         return st
 
@@ -177,17 +172,11 @@ class CWMSProcessor(object):
                                                   False)
 
         # Make an Event statement if it is a standalone event
-        evidence = self._get_evidence(event_term, context=None)
+        evidence = self._get_evidence(event_term)
         event = self._get_event(arg_term, evidence=[evidence])
         if event is None:
             return None
-        time, location = self._extract_time_loc(event_term)
-        if time or location:
-            context = WorldContext(time=time, geo_location=location)
-        else:
-            context = None
-        event.context = context
-        event.delta['polarity'] = polarity
+        event.context = self.get_context(event_term)
         return event
 
     def _get_term_by_role(self, term, role, is_arg):
@@ -230,63 +219,71 @@ class CWMSProcessor(object):
         ev_type = event_term.find('type').text
         polarity = POLARITY_DICT['EVENT'].get(ev_type)
         delta = {'polarity': polarity, 'adjectives': []}
-        time, location = self._extract_time_loc(event_term)
-
-        if time or location:
-            context = WorldContext(time=time, geo_location=location)
-        else:
-            context = None
-
+        context = self.get_context(event_term)
         event_obj = Event(concept, delta=delta, context=context,
                           evidence=evidence)
         return event_obj
 
-    def _extract_time_loc(self, term):
+    def get_context(self, element):
+        time = self._extract_time(element)
+        geoloc = self._extract_geoloc(element)
+
+        if time or geoloc:
+            context = WorldContext(time=time, geo_location=geoloc)
+        else:
+            context = None
+        return context
+
+    def _extract_time(self, term):
+        time = term.find('time')
+        if time is None:
+            time = term.find('features/time')
+            if time is None:
+                return None
+        time_id = time.attrib.get('id')
+        time_term = self.tree.find("*[@id='%s']" % time_id)
+        if time_term is None:
+            return None
+        text = time_term.findtext('text')
+        timex = time_term.find('timex')
+        if timex is not None:
+            year = timex.findtext('year')
+            try:
+                year = int(year)
+            except Exception:
+                year = None
+            month = timex.findtext('month')
+            day = timex.findtext('day')
+            if year and (month or day):
+                try:
+                    month = int(month)
+                except Exception:
+                    month = 1
+                try:
+                    day = int(day)
+                except Exception:
+                    day = 1
+                start = datetime(year, month, day)
+                time_context = TimeContext(text=text, start=start)
+            else:
+                time_context = TimeContext(text=text)
+        else:
+            time_context = TimeContext(text=text)
+        return time_context
+
+    def _extract_geoloc(self, term):
         """Get the location from a term (CC or TERM)"""
         loc = term.find('location')
         if loc is None:
-            loc_context = None
-        else:
-            loc_id = loc.attrib.get('id')
-            loc_term = self.tree.find("*[@id='%s']" % loc_id)
-            text = loc_term.findtext('text')
-            name = loc_term.findtext('name')
-            loc_context = RefContext(name=text)
-        time = term.find('time')
-        if time is None:
-            time_context = None
-        else:
-            time_id = time.attrib.get('id')
-            time_term = self.tree.find("*[@id='%s']" % time_id)
-            if time_term is not None:
-                text = time_term.findtext('text')
-                timex = time_term.find('timex')
-                if timex is not None:
-                    year = timex.findtext('year')
-                    try:
-                        year = int(year)
-                    except Exception:
-                        year = None
-                    month = timex.findtext('month')
-                    day = timex.findtext('day')
-                    if year and (month or day):
-                        try:
-                            month = int(month)
-                        except Exception:
-                            month = 1
-                        try:
-                            day = int(day)
-                        except Exception:
-                            day = 1
-                        start = datetime(year, month, day)
-                        time_context = TimeContext(text=text, start=start)
-                    else:
-                        time_context = TimeContext(text=text)
-                else:
-                    time_context = TimeContext(text=text)
-            else:
-                time_context = None
-        return time_context, loc_context
+            return None
+        loc_id = loc.attrib.get('id')
+        loc_term = self.tree.find("*[@id='%s']" % loc_id)
+        if loc_term is None:
+            return None
+        text = loc_term.findtext('text')
+        # name = loc_term.findtext('name')
+        geoloc_context = RefContext(name=text)
+        return geoloc_context
 
     def _get_assoc_with(self, element_term):
         # NOTE: there could be multiple assoc-withs here that we may
@@ -309,14 +306,14 @@ class CWMSProcessor(object):
                 return assoc_with_grounding
         return None
 
-    def _get_evidence(self, event_tag, context):
+    def _get_evidence(self, event_tag):
         text = self._get_evidence_text(event_tag)
         sec = self._get_section(event_tag)
         epi = {'direct': False}
         if sec:
             epi['section_type'] = sec
         ev = Evidence(source_api='cwms', text=text, pmid=self.doc_id,
-                      epistemics=epi, context=context)
+                      epistemics=epi)
         return ev
 
     def _get_evidence_text(self, event_tag):
