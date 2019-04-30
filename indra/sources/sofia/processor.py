@@ -16,7 +16,8 @@ class SofiaProcessor(object):
                 'Location': event_dict.get('Location'),
                 'Time': event_dict.get('Time'),
                 'Source': event_dict.get('Source_File'),
-                'Text': event_dict.get('Sentence')}
+                'Text': event_dict.get('Sentence'),
+                'Patient_index': event_dict.get('Patient Index')}
 
     def _build_influences(self, rel_dict):
         stmt_list = []
@@ -138,7 +139,18 @@ class SofiaJsonProcessor(SofiaProcessor):
         # Only make Event Statements from standalone events
         for event_index in self._events:
             if event_index not in self.relation_subj_obj_ids:
-                event = self.get_event(self._events[event_index])
+                if self._events[event_index]['Patient_index']:
+                    patient_index = self._events[event_index]['Patient_index']
+                    event = self.get_event(self._events[patient_index])
+                    if self._events[event_index]['Relation'].startswith(
+                            'increas'):
+                                pol = 1
+                    elif self._events[event_index]['Relation'].startswith(
+                            'decreas'):
+                                pol = -1
+                    event.delta['polarity'] = pol
+                else:
+                    event = self.get_event(self._events[event_index])
                 self.statements.append(event)
 
 
