@@ -82,7 +82,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         result_record = {}
 
     def get_jobs_by_status(status, job_id_filter=None, job_name_prefix=None):
-        logger.info("Specifically tracked jobs: %s" % job_id_filter)
+        logger.info("Specifically tracked jobs: %s" % len(job_id_filter))
         res = batch_client.list_jobs(jobQueue=queue_name,
                                      jobStatus=status, maxResults=10000)
         jobs = res['jobSummaryList']
