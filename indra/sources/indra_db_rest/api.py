@@ -1,6 +1,6 @@
 from indra.util import clockit
 from indra.statements import stmts_from_json, Complex, SelfModification, \
-    ActiveForm
+    ActiveForm, Translocation
 
 from indra.sources.indra_db_rest.processor import IndraDBRestProcessor
 from indra.sources.indra_db_rest.util import submit_statement_request, \
@@ -255,7 +255,8 @@ def get_statement_queries(stmts, **params):
 
     queries = []
     url_base = get_url_base('statements/from_agents')
-    non_binary_statements = [Complex, SelfModification, ActiveForm]
+    non_binary_statements = [Complex, SelfModification, ActiveForm,
+                             Translocation]
     for stmt in stmts:
         kwargs = {}
         if type(stmt) not in non_binary_statements:
