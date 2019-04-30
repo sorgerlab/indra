@@ -1044,15 +1044,16 @@ class BiopaxProcessor(object):
         # There is often more than one UniProt ID reported.
         # This usually corresponds to the primary accession ID and one or more
         # secondary accession IDs (these IDs are from deprecated entries that
-        # have been merged into the primary.
+        # have been merged into the primary).
         def map_to_up_primary(ids):
-            primary_ids = []
+            primary_ids = set()
             for up_id in ids:
                 if not uniprot_client.is_secondary(up_id):
-                    primary_ids.append(up_id)
+                    primary_ids.add(up_id)
                     continue
                 primary_id = uniprot_client.get_primary_id(up_id)
-                primary_ids.append(primary_id)
+                primary_ids.add(primary_id)
+            primary_ids = sorted(list(primary_ids))
             # If there are no primary IDs, we return None
             if not primary_ids:
                 return None
@@ -1063,8 +1064,8 @@ class BiopaxProcessor(object):
                                if uniprot_client.is_human(id)]
                 if not human_upids:
                     logger.info('More than one primary id but none human, '
-                                'choosing the first: %s'
-                                 % ','.join(primary_ids))
+                                'choosing the first: %s' %
+                                ','.join(primary_ids))
                     primary_id = primary_ids[0]
                 elif len(human_upids) > 1:
                     logger.info('More than one human primary id, choosing '
@@ -1577,6 +1578,9 @@ def get_specific_chebi_id(chebi_ids, name):
     # primaries
     primary_ids = {chebi_client.get_primary_id(cid)
                    for cid in chebi_ids}
+    # Occasinally, invalid ChEBI IDs are given that don't have corresponding
+    # primary IDs, which we can filter out
+    primary_ids = {pi for pi in primary_ids if pi is not None}
     # We then get rid of generic IDs which are never useful for grounding
     non_generic_ids = primary_ids - generic_chebi_ids
 
