@@ -78,7 +78,6 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         result_record = {}
 
     def get_jobs_by_status(status, job_id_filter=None, job_name_prefix=None):
-        logger.info("Specifically tracked jobs: %s" % len(job_id_filter))
         res = batch_client.list_jobs(jobQueue=queue_name,
                                      jobStatus=status, maxResults=10000)
         jobs = res['jobSummaryList']
@@ -155,6 +154,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     while True:
         pre_run = []
         job_id_list = get_ids(job_list)
+        logger.info("Specifically tracked jobs: %s" % len(job_id_list))
         for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
             pre_run += get_jobs_by_status(status, job_id_list, job_name_prefix)
         running = get_jobs_by_status('RUNNING', job_id_list, job_name_prefix)
@@ -508,7 +508,7 @@ class Submitter(object):
 
     def watch_and_wait(self, poll_interval=10, idle_log_timeout=None,
                        kill_on_timeout=False, stash_log_method=None,
-                       tag_instances=False, kill_on_exception=False, **kwargs):
+                       tag_instances=False, kill_on_exception=True, **kwargs):
         """This provides shortcut access to the wait_for_complete_function."""
         try:
             res = wait_for_complete(self._job_queue, job_list=self.job_list,
