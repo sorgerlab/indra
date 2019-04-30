@@ -352,11 +352,11 @@ class CWMSProcessor(object):
         evmks = {}
         logger.debug('Starting with %d Statements.' % len(self.statements))
         for stmt in self.statements:
-            # Standalone Events will be handled later, so we do not add them
             if isinstance(stmt, Event):
-                continue
-            evmk = (stmt.evidence[0].matches_key() +
-                    stmt.subj.matches_key() + stmt.obj.matches_key())
+                evmk = stmt.evidence[0].matches_key()
+            elif isinstance(stmt, Influence):
+                evmk = (stmt.evidence[0].matches_key() +
+                        stmt.subj.matches_key() + stmt.obj.matches_key())
             if evmk not in evmks:
                 evmks[evmk] = [stmt.uuid]
             else:
