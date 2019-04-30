@@ -15,7 +15,31 @@ def get_ids(job_list):
 
 
 def kill_all(job_queue, reason='None given', states=None, kill_list=None):
-    """Terminates/cancels all RUNNING, RUNNABLE, and STARTING jobs."""
+    """Terminates/cancels all jobs on the specified queue.
+
+    Parameters
+    ----------
+    job_queue : str
+        The name of the Batch job queue on which you wish to terminate/cancel
+        jobs.
+    reason : str
+        Provide a reason for the kill that will be recorded with the job's
+        record on AWS.
+    states : None or list[str]
+        A list of job states to remove. Possible states are 'STARTING',
+        'RUNNABLE', and 'RUNNING'. If None, all jobs in all states will be
+        ended (modulo the `kill_list` below).
+    kill_list : None or list[dict]
+        A list of job dictionaries (as returned by the submit function) that
+        you specifically wish to kill. All other jobs on the queue will be
+        ignored. If None, all jobs on the queue will be ended (modulo the
+        above).
+
+    Returns
+    -------
+    killed_ids : list[str]
+        A list of the job ids for jobs that were killed.
+    """
     # Default is all states.
     if states is None:
         states = ['STARTING', 'RUNNABLE', 'RUNNING']
@@ -24,7 +48,7 @@ def kill_all(job_queue, reason='None given', states=None, kill_list=None):
     batch = boto3.client('batch')
 
     # Get all other jobs, and terminate them.
-    res_list = []
+    killed_ids = []
     for status in states:
         running = batch.list_jobs(jobQueue=job_queue, jobStatus=status)
         active_job_list = running.get('jobSummaryList')
@@ -33,8 +57,8 @@ def kill_all(job_queue, reason='None given', states=None, kill_list=None):
 
         for job in active_job_list:
             # Check if this is one of the specified jobs, if any specified.
-            kill_ids = get_ids(kill_list)
-            if kill_ids is not None and job['jobId'] not in kill_ids:
+            ids_to_kill = get_ids(kill_list)
+            if ids_to_kill is not None and job['jobId'] not in ids_to_kill:
                 continue
 
             # End the job.
@@ -46,9 +70,9 @@ def kill_all(job_queue, reason='None given', states=None, kill_list=None):
                 res = batch.cancel_job(jobId=job['jobId'], reason=reason)
 
             # Record the result of the kill
-            res_list.append(res)
+            killed_ids.append(res)
 
-    return res_list
+    return killed_ids
 
 
 def tag_instance(instance_id, **tags):
