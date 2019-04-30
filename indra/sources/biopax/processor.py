@@ -1585,7 +1585,7 @@ def get_specific_chebi_id(chebi_ids, name):
     grounding_names = [chebi_client.get_chebi_name_from_id(p) for p in
                        non_generic_ids]
     for grounding_name, grounding_id in zip(grounding_names, non_generic_ids):
-        if name.lower() == grounding_name.lower():
+        if grounding_name and (name.lower() == grounding_name.lower()):
             return grounding_id
 
     # If we still have no best grounding, we try to distill the IDs down to
