@@ -130,14 +130,14 @@ class CWMSProcessor(object):
 
         self._remove_multi_extraction_artifacts()
 
-    def influence_from_relation(self, relation):
-        """Return an Influence from a CC element in the EKB."""
-        rel_type = relation.find('type').text
-        if rel_type not in POLARITY_DICT['CC']:
+    def _influence_from_element(self, element, element_type, subj_arg,
+                                obj_arg, is_arg):
+        rel_type = element.find('type').text
+        if rel_type not in POLARITY_DICT[element_type]:
             self._unhandled_events.append(rel_type)
             return None
-        subj_id, subj_term = self._get_term_by_role(relation, 'FACTOR', True)
-        obj_id, obj_term = self._get_term_by_role(relation, 'OUTCOME', True)
+        subj_id, subj_term = self._get_term_by_role(element, subj_arg, is_arg)
+        obj_id, obj_term = self._get_term_by_role(element, obj_arg, is_arg)
         if subj_term is None or obj_term is None:
             return None
 
@@ -148,40 +148,28 @@ class CWMSProcessor(object):
 
         self.relation_events += [subj_id, obj_id]
 
-        obj.delta['polarity'] = POLARITY_DICT['CC'][rel_type]
-        time, location = self._extract_time_loc(relation)
+        # If the object polarity is not given explicitly, we set it
+        # based on the one implied by the relation
+        if obj.delta['polarity'] is None:
+            obj.delta['polarity'] = POLARITY_DICT[element_type][rel_type]
+        time, location = self._extract_time_loc(element)
         if time or location:
             context = WorldContext(time=time, geo_location=location)
         else:
             context = None
-        ev = self._get_evidence(relation, context)
+        ev = self._get_evidence(element, context)
         st = Influence(subj, obj, evidence=[ev])
         return st
+
+    def influence_from_relation(self, relation):
+        """Return an Influence from a CC element in the EKB."""
+        return self._influence_from_element(relation, 'CC', 'FACTOR',
+                                            'OUTCOME', True)
 
     def influence_from_event(self, event):
         """Return an Influence from an EVENT element in the EKB."""
-        ev_type = event.find('type').text
-        if ev_type not in POLARITY_DICT['EVENT']:
-            self._unhandled_events.append(ev_type)
-            return None
-        subj_id, subj_term = self._get_term_by_role(event, 'AGENT', False)
-        obj_id, obj_term = self._get_term_by_role(event, 'AFFECTED', False)
-        if subj_term is None or obj_term is None:
-            return None
-        subj = self._get_event(subj_term)
-        obj = self._get_event(obj_term)
-        if subj is None or obj is None:
-            return None
-        self.relation_events += [subj_id, obj_id]
-        obj.delta['polarity'] = POLARITY_DICT['EVENT'][ev_type]
-        time, location = self._extract_time_loc(event)
-        if time or location:
-            context = WorldContext(time=time, geo_location=location)
-        else:
-            context = None
-        ev = self._get_evidence(event, context)
-        st = Influence(subj, obj, evidence=[ev])
-        return st
+        return self._influence_from_element(event, 'EVENT', 'AGENT',
+                                            'AFFECTED', False)
 
     def event_from_event(self, event_term):
         """Return an Event from an EVENT element in the EKB."""
@@ -189,8 +177,6 @@ class CWMSProcessor(object):
                                                   False)
 
         # Make an Event statement if it is a standalone event
-        ev_type = event_term.find('type').text
-        polarity = POLARITY_DICT['EVENT'][ev_type]
         evidence = self._get_evidence(event_term, context=None)
         event = self._get_event(arg_term, evidence=[evidence])
         if event is None:
@@ -220,8 +206,6 @@ class CWMSProcessor(object):
 
     def _get_event(self, event_term, evidence=None):
         """Extract and Event from the given EKB element."""
-        time, location = self._extract_time_loc(event_term)
-
         # Now see if there is a modifier like assoc-with connected
         # to the main concept
         assoc_with = self._get_assoc_with(event_term)
@@ -242,11 +226,19 @@ class CWMSProcessor(object):
                 element_db_refs['CWMS'] += ('|%s' % assoc_with)
 
         concept = Concept(element_name, db_refs=element_db_refs)
+
+        ev_type = event_term.find('type').text
+        polarity = POLARITY_DICT['EVENT'].get(ev_type)
+        delta = {'polarity': polarity, 'adjectives': []}
+        time, location = self._extract_time_loc(event_term)
+
         if time or location:
             context = WorldContext(time=time, geo_location=location)
         else:
             context = None
-        event_obj = Event(concept, context=context, evidence=evidence)
+
+        event_obj = Event(concept, delta=delta, context=context,
+                          evidence=evidence)
         return event_obj
 
     def _extract_time_loc(self, term):
