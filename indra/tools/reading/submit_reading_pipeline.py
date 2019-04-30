@@ -157,7 +157,6 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     stashed_id_set = set()
     found_a_job = False
     while True:
-        print('.')
         pre_run = []
         job_id_list = get_job_ids()
         for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
@@ -190,7 +189,6 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                     terminated_jobs.add(jid)
 
         # Check for end-conditions.
-        print(found_a_job, wait_for_first_job)
         if found_a_job or not wait_for_first_job:
             if job_id_list:
                 if (len(failed) + len(done)) == len(job_id_list):
