@@ -2,7 +2,8 @@ import itertools
 from indra.statements import Influence, Concept, Event, Evidence, \
     WorldContext, TimeContext, RefContext
 
-pos_rels = ['provide', 'led', 'lead', 'driv', 'support', 'enabl', 'develop']
+pos_rels = ['provide', 'led', 'lead', 'driv', 'support', 'enabl', 'develop',
+            'increas', 'ris']
 neg_rels = ['restrict', 'worsen', 'declin', 'limit', 'constrain',
             'decreas', 'hinder', 'deplet', 'reduce', 'hamper']
 neu_rels = ['affect', 'impact', 'due', 'caus', 'because']
@@ -17,6 +18,7 @@ class SofiaProcessor(object):
                 'Time': event_dict.get('Time'),
                 'Source': event_dict.get('Source_File'),
                 'Text': event_dict.get('Sentence'),
+                'Agent_index': event_dict.get('Agent Index'),
                 'Patient_index': event_dict.get('Patient Index')}
 
     def _build_influences(self, rel_dict):
@@ -53,10 +55,10 @@ class SofiaProcessor(object):
             ev = Evidence(source_api='sofia', pmid=ref,
                           annotations=annots, text=text)
             stmt = Influence(subj, obj, evidence=[ev])
-            # Assume unknown polarity on the subject, put the overall
-            # polarity in the sign of the object
-            stmt.subj.delta['polarity'] = None
-            stmt.obj.delta['polarity'] = pol
+            # Use the polarity of the events, if object does not have a
+            # polarity, use overall polarity
+            if stmt.obj.delta['polarity'] is None:
+                stmt.obj.delta['polarity'] = pol
 
             stmt_list.append(stmt)
         return stmt_list
@@ -79,8 +81,10 @@ class SofiaProcessor(object):
         text = event_entry.get('Text')
         ref = event_entry.get('Source')
         ev = Evidence(source_api='sofia', pmid=ref, text=text)
+        pol = event_entry.get('Polarity')
+        event = Event(concept, context=context, evidence=[ev],
+                      delta={'polarity': pol, 'adjectives': []})
 
-        event = Event(concept, context=context, evidence=[ev])
         return event
 
     def get_relation_events(self, rel_dict):
@@ -104,14 +108,35 @@ class SofiaJsonProcessor(SofiaProcessor):
         self.relation_subj_obj_ids = []
 
     def process_events(self, json_list):
-        event_dict = {}
+        raw_event_dict = {}
+        processed_event_dict = {}
+        # First get all events from reader output
         for _dict in json_list:
             events = _dict['Events']
             for event in events:
                 event_index = event.get('Event Index')
-                event_dict[event_index] = self.process_event(event)
-
-        return event_dict
+                raw_event_dict[event_index] = self.process_event(event)
+        # Only keep meaningful events and extract polarity information from
+        # events showing change
+        for event_index, event_info in raw_event_dict.items():
+            agent_index = event_info['Agent_index']
+            patient_index = event_info['Patient_index']
+            if _in_rels(event_info['Relation'], pos_rels):
+                pol = 1
+            elif _in_rels(event_info['Relation'], neg_rels):
+                pol = -1
+            else:
+                pol = None
+            if agent_index in raw_event_dict.keys():
+                processed_event_dict[agent_index] = raw_event_dict[agent_index]
+                processed_event_dict[agent_index]['Polarity'] = pol
+            elif patient_index in raw_event_dict.keys():
+                processed_event_dict[patient_index] = (
+                    raw_event_dict[patient_index])
+                processed_event_dict[patient_index]['Polarity'] = pol
+            else:
+                processed_event_dict[event_index] = raw_event_dict[event_index]
+        return processed_event_dict
 
     def extract_relations(self, json_list):
         stmts = []
@@ -139,18 +164,7 @@ class SofiaJsonProcessor(SofiaProcessor):
         # Only make Event Statements from standalone events
         for event_index in self._events:
             if event_index not in self.relation_subj_obj_ids:
-                if self._events[event_index]['Patient_index']:
-                    patient_index = self._events[event_index]['Patient_index']
-                    event = self.get_event(self._events[patient_index])
-                    if self._events[event_index]['Relation'].startswith(
-                            'increas'):
-                                pol = 1
-                    elif self._events[event_index]['Relation'].startswith(
-                            'decreas'):
-                                pol = -1
-                    event.delta['polarity'] = pol
-                else:
-                    event = self.get_event(self._events[event_index])
+                event = self.get_event(self._events[event_index])
                 self.statements.append(event)
 
 
@@ -204,5 +218,7 @@ class SofiaExcelProcessor(SofiaProcessor):
 def _in_rels(value, rels):
     for rel in rels:
         if value.lower().startswith(rel):
+            return True
+        if rel in value.lower():
             return True
     return False
