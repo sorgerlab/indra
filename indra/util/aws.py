@@ -8,28 +8,46 @@ from indra.util.nested_dict import NestedDict
 logger = logging.getLogger(__name__)
 
 
-def kill_all(job_queue, reason='None given', states=None):
+def get_ids(job_list):
+    if job_list is None:
+        return None
+    return [job['jobId'] for job in job_list]
+
+
+def kill_all(job_queue, reason='None given', states=None, kill_list=None):
     """Terminates/cancels all RUNNING, RUNNABLE, and STARTING jobs."""
+    # Default is all states.
     if states is None:
         states = ['STARTING', 'RUNNABLE', 'RUNNING']
+
+    # Get batch client
     batch = boto3.client('batch')
-    runnable = batch.list_jobs(jobQueue=job_queue, jobStatus='RUNNABLE')
-    job_info = runnable.get('jobSummaryList')
-    if job_info:
-        job_ids = [job['jobId'] for job in job_info]
-        # Cancel jobs
-        for job_id in job_ids:
-            batch.cancel_job(jobId=job_id, reason=reason)
+
+    # Get all other jobs, and terminate them.
     res_list = []
     for status in states:
         running = batch.list_jobs(jobQueue=job_queue, jobStatus=status)
-        job_info = running.get('jobSummaryList')
-        if job_info:
-            job_ids = [job['jobId'] for job in job_info]
-            for job_id in job_ids:
-                logger.info('Killing %s' % job_id)
-                res = batch.terminate_job(jobId=job_id, reason=reason)
-                res_list.append(res)
+        active_job_list = running.get('jobSummaryList')
+        if active_job_list is None:
+            continue
+
+        for job in active_job_list:
+            # Check if this is one of the specified jobs, if any specified.
+            kill_ids = get_ids(kill_list)
+            if kill_ids is not None and job['jobId'] not in kill_ids:
+                continue
+
+            # End the job.
+            if status == 'RUNNING':
+                logger.info('Terminating {jobName} ({jobId})'.format(**job))
+                res = batch.terminate_job(jobId=job['jobId'], reason=reason)
+            else:
+                logger.info('Canceling {jobName} ({jobId})'.format(**job))
+                res = batch.cancel_job(jobId=job['jobId'], reason=reason)
+
+            # Record the result of the kill
+            res_list.append(res)
+
     return res_list
 
 
