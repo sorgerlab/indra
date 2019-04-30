@@ -100,24 +100,10 @@ class SofiaProcessor(object):
             relation_events.append(ei)
         return relation_events
 
-
-class SofiaJsonProcessor(SofiaProcessor):
-    def __init__(self, json_list):
-        self._events = self.process_events(json_list)
-        self.statements = []
-        self.relation_subj_obj_ids = []
-
-    def process_events(self, json_list):
-        raw_event_dict = {}
-        processed_event_dict = {}
-        # First get all events from reader output
-        for _dict in json_list:
-            events = _dict['Events']
-            for event in events:
-                event_index = event.get('Event Index')
-                raw_event_dict[event_index] = self.process_event(event)
+    def get_meaningful_events(self, raw_event_dict):
         # Only keep meaningful events and extract polarity information from
         # events showing change
+        processed_event_dict = {}
         for event_index, event_info in raw_event_dict.items():
             agent_index = event_info['Agent_index']
             patient_index = event_info['Patient_index']
@@ -136,6 +122,24 @@ class SofiaJsonProcessor(SofiaProcessor):
                 processed_event_dict[patient_index]['Polarity'] = pol
             else:
                 processed_event_dict[event_index] = raw_event_dict[event_index]
+        return processed_event_dict
+
+
+class SofiaJsonProcessor(SofiaProcessor):
+    def __init__(self, json_list):
+        self._events = self.process_events(json_list)
+        self.statements = []
+        self.relation_subj_obj_ids = []
+
+    def process_events(self, json_list):
+        event_dict = {}
+        # First get all events from reader output
+        for _dict in json_list:
+            events = _dict['Events']
+            for event in events:
+                event_index = event.get('Event Index')
+                event_dict[event_index] = self.process_event(event)
+        processed_event_dict = self.get_meaningful_events(event_dict)
         return processed_event_dict
 
     def extract_relations(self, json_list):
@@ -182,7 +186,8 @@ class SofiaExcelProcessor(SofiaProcessor):
             row_dict = {h: v for h, v in zip(header, row_values)}
             event_index = row_dict.get('Event Index')
             event_dict[event_index] = self.process_event(row_dict)
-        return event_dict
+        processed_event_dict = self.get_meaningful_events(event_dict)
+        return processed_event_dict
 
     def extract_relations(self, relation_rows):
         header = [cell.value for cell in next(relation_rows)]
