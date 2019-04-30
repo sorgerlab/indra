@@ -255,11 +255,11 @@ def get_statement_queries(stmts, **params):
 
     queries = []
     url_base = get_url_base('statements/from_agents')
-    non_binary_statements = [Complex, SelfModification, ActiveForm,
-                             Translocation, Conversion]
+    non_binary_statements = (Complex, SelfModification, ActiveForm,
+                             Translocation, Conversion)
     for stmt in stmts:
         kwargs = {}
-        if type(stmt) not in non_binary_statements:
+        if not isinstance(stmt, non_binary_statements):
             for pos, ag in zip(['subject', 'object'], stmt.agent_list()):
                 if ag is not None:
                     kwargs[pos] = pick_ns(ag)
