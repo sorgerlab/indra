@@ -544,6 +544,7 @@ class Submitter(object):
             logger.info("Waiting for just a sec...")
             sleep(1)
             wait_params['wait_for_first_job'] = True
+            wait_params['kill_on_exception'] = True
             self.watch_and_wait(**wait_params)
             submit_thread.join(0)
             if submit_thread.is_alive():
