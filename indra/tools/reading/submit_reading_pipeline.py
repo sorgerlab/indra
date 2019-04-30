@@ -374,9 +374,9 @@ class Submitter(object):
             self.readers = readers
         self.project_name = project_name
         self.job_list = None
-        self.options=options
+        self.options = options
         self.ids_per_job = None
-        self.running = False
+        self.running = None
         return
 
     def set_options(self, **kwargs):
@@ -449,14 +449,19 @@ class Submitter(object):
         # Iterate over the list of PMIDs and submit the job in chunks
         batch_client = boto3.client('batch', region_name='us-east-1')
         self.job_list = []
-        self.running = True
+
+        # Check to see if we've already been given a signal to quit.
+        if self.running is None:
+            self.running = True
+        elif not self.running:
+            return None
+
         for job_start_ix in range(start_ix, end_ix, ids_per_job):
 
             # Check for a stop signal
             if not self.running:
                 logger.info("Running was switched off, discontinuing...")
                 break
-            print(self.running)
 
             # Generate the command for this batch.
             job_end_ix = job_start_ix + ids_per_job
@@ -516,11 +521,17 @@ class Submitter(object):
             if submit_thread.is_alive():
                 logger.warning("Submit thread is still running even after job "
                                "completion.")
+        except BaseException as e:
+            logger.error("Watch and wait failed...")
+            logger.exception(e)
         finally:
+            logger.info("Aborting jobs...")
             # Send a signal to the submission loop (on a thread) to stop.
             self.running = False
             submit_thread.join()
+            print(submit_thread.is_alive())
 
+        self.running = None
         return submit_thread
 
 
