@@ -8,7 +8,8 @@ from threading import Thread
 from datetime import datetime
 from indra.literature import elsevier_client as ec
 from indra.literature.elsevier_client import _ensure_api_keys
-from indra.util.aws import get_job_log, tag_instance, get_batch_command
+from indra.util.aws import get_job_log, tag_instance, get_batch_command, \
+    kill_all, get_ids
 
 bucket_name = 'bigmech'
 
@@ -72,11 +73,6 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     logger.info("Given %s jobs to track"
                 % ('no' if job_list is None else len(job_list)))
     start_time = datetime.now()
-
-    def get_job_ids():
-        if job_list is None:
-            return None
-        return [job['jobId'] for job in job_list]
 
     if result_record is None:
         result_record = {}
@@ -158,7 +154,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     found_a_job = False
     while True:
         pre_run = []
-        job_id_list = get_job_ids()
+        job_id_list = get_ids(job_list)
         for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
             pre_run += get_jobs_by_status(status, job_id_list, job_name_prefix)
         running = get_jobs_by_status('RUNNING', job_id_list, job_name_prefix)
@@ -512,15 +508,25 @@ class Submitter(object):
 
     def watch_and_wait(self, poll_interval=10, idle_log_timeout=None,
                        kill_on_timeout=False, stash_log_method=None,
-                       tag_instances=False, **kwargs):
+                       tag_instances=False, kill_on_exception=False, **kwargs):
         """This provides shortcut access to the wait_for_complete_function."""
-        return wait_for_complete(self._job_queue, job_list=self.job_list,
-                                 job_name_prefix=self.basename,
-                                 poll_interval=poll_interval,
-                                 idle_log_timeout=idle_log_timeout,
-                                 kill_on_log_timeout=kill_on_timeout,
-                                 stash_log_method=stash_log_method,
-                                 tag_instances=tag_instances, **kwargs)
+        try:
+            res = wait_for_complete(self._job_queue, job_list=self.job_list,
+                                    job_name_prefix=self.basename,
+                                    poll_interval=poll_interval,
+                                    idle_log_timeout=idle_log_timeout,
+                                    kill_on_log_timeout=kill_on_timeout,
+                                    stash_log_method=stash_log_method,
+                                    tag_instances=tag_instances, **kwargs)
+        except (BaseException, KeyboardInterrupt) as e:
+            logger.error("Exception in wait_for_complete:")
+            logger.exception(e)
+            if kill_on_exception:
+                logger.info("Killing all my jobs...")
+                kill_all(self._job_queue, kill_list=self.job_list,
+                         reason='Exception in monitor, jobs aborted.')
+            raise e
+        return res
 
     def run(self, input_fname, ids_per_job, stagger=0, **wait_params):
         """Run this submission all the way.
