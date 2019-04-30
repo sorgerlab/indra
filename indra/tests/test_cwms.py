@@ -226,7 +226,7 @@ def test_process_increase_event_ekb():
 def test_process_cause_decrease_event_ekb():
     fname = join(data_folder, 'cause_decrease_event.ekb')
     cp = process_ekb_file(fname)
-    assert len(cp.statements) == 1
+    assert len(cp.statements) == 1, cp.statements
     stmt = cp.statements[0]
-    assert isinstance(stmt, Influence)
+    assert isinstance(stmt, Influence), stmt
     assert stmt.obj.delta['polarity'] == -1, stmt.obj.delta

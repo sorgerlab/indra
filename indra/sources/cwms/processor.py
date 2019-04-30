@@ -75,13 +75,27 @@ class CWMSProcessor(object):
         self.par_to_sec = {p.attrib['id']: p.attrib.get('sec-type')
                            for p in paragraph_tags}
 
-        # Keep a list of relation's object ids
-        self.relation_subj_obj_ids = []
+        # Keep a list of events that are part of relations and events
+        # subsumed by other events
+        self.relation_events = []
+        self.subsumed_events = []
 
         # Keep a list of unhandled events for development purposes
         self._unhandled_events = []
 
+        self._preprocess_events()
+
+    def _preprocess_events(self):
+        events = self.tree.findall("EVENT/[type]")
+        for event in events:
+            affected = event.find("*[@role=':AFFECTED']")
+            if affected is not None:
+                affected_id = affected.attrib.get('id')
+                if affected_id:
+                    self.subsumed_events.append(affected_id)
+
     def extract_causal_relations(self):
+        """Extract Influence Statements from the EKB."""
         relations = self.tree.findall("CC/[type]")
         for relation in relations:
             st = self.influence_from_relation(relation)
@@ -102,11 +116,14 @@ class CWMSProcessor(object):
                      (', '.join(sorted(list(set(self._unhandled_events))))))
 
     def extract_events(self):
-        if not self.relation_subj_obj_ids:
-            self.extract_causal_relations()
+        """Extract standalone Events from the EKB."""
         events = self.tree.findall("EVENT/[type='ONT::INCREASE']") + (
             self.tree.findall("EVENT/[type='ONT::DECREASE']"))
         for event_term in events:
+            event_id = event_term.attrib.get('id')
+            if event_id in self.subsumed_events or \
+                    event_id in self.relation_events:
+                continue
             event = self.event_from_event(event_term)
             if event:
                 self.statements.append(event)
@@ -114,6 +131,7 @@ class CWMSProcessor(object):
         self._remove_multi_extraction_artifacts()
 
     def influence_from_relation(self, relation):
+        """Return an Influence from a CC element in the EKB."""
         rel_type = relation.find('type').text
         if rel_type not in POLARITY_DICT['CC']:
             self._unhandled_events.append(rel_type)
@@ -128,7 +146,7 @@ class CWMSProcessor(object):
         if subj is None or obj is None:
             return None
 
-        self.relation_subj_obj_ids += [subj_id, obj_id]
+        self.relation_events += [subj_id, obj_id]
 
         obj.delta['polarity'] = POLARITY_DICT['CC'][rel_type]
         time, location = self._extract_time_loc(relation)
@@ -141,6 +159,7 @@ class CWMSProcessor(object):
         return st
 
     def influence_from_event(self, event):
+        """Return an Influence from an EVENT element in the EKB."""
         ev_type = event.find('type').text
         if ev_type not in POLARITY_DICT['EVENT']:
             self._unhandled_events.append(ev_type)
@@ -153,7 +172,7 @@ class CWMSProcessor(object):
         obj = self._get_event(obj_term)
         if subj is None or obj is None:
             return None
-        self.relation_subj_obj_ids += [subj_id, obj_id]
+        self.relation_events += [subj_id, obj_id]
         obj.delta['polarity'] = POLARITY_DICT['EVENT'][ev_type]
         time, location = self._extract_time_loc(event)
         if time or location:
@@ -165,11 +184,9 @@ class CWMSProcessor(object):
         return st
 
     def event_from_event(self, event_term):
+        """Return an Event from an EVENT element in the EKB."""
         arg_id, arg_term = self._get_term_by_role(event_term, 'AFFECTED',
                                                   False)
-        # Check if event is part of a causal relation
-        if arg_id in self.relation_subj_obj_ids:
-            return None
 
         # Make an Event statement if it is a standalone event
         ev_type = event_term.find('type').text
@@ -188,6 +205,7 @@ class CWMSProcessor(object):
         return event
 
     def _get_term_by_role(self, term, role, is_arg):
+        """Return the ID and the element corresponding to a role in a term."""
         element = term.find("%s[@role=':%s']" % ('arg/' if is_arg else '*',
                                                  role))
         if element is None:
@@ -201,7 +219,7 @@ class CWMSProcessor(object):
         return element_id, element_term
 
     def _get_event(self, event_term, evidence=None):
-        """Extract and Event corresponding to the given term."""
+        """Extract and Event from the given EKB element."""
         time, location = self._extract_time_loc(event_term)
 
         # Now see if there is a modifier like assoc-with connected
