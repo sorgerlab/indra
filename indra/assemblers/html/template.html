@@ -53,6 +53,7 @@
   <style>
 a {
   color: #256DC5;
+  target-new: tab;
 }
 nav[data-toggle=toc] .nav>li>a {
   font-size: 0.72em;
@@ -129,7 +130,7 @@ nav {
       <h1>{{ title }}</h1>
     </div>
       <p>This page allows you to curate the loaded statements.</p>
-      <p>For more information please see the <a href="https://indra.readthedocs.io/en/latest/tutorials/html_curation.html">manual</a>.</p>
+      <p>For more information please see the <a href="https://indra.readthedocs.io/en/latest/tutorials/html_curation.html" target="_blank">manual</a>.</p>
       <hr>
 
     {% if metadata %}
@@ -164,7 +165,7 @@ nav {
         <a name="{{ stmt_info['hash'] }}"></a>
         <div class="statement" style="padding-bottom: 10px;">
           <h5 class="align-middle">{{ stmt_info['english'] }}</h5>
-          <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html">
+          <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html" target="_blank">
             <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span>
           </a>
         </div>
@@ -187,22 +188,22 @@ nav {
                         <a class="pmid_link"
                 title="Hover again to see info"
                 onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
-                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}'>
+                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}' target="_blank">
                         {{ ev['pmid'] }}</a>
                         {% elif 'pmid' in ev['text_refs'] and ev['text_refs']['pmid'] %}
                         <a class="pmid_link"
                 title="Hover again to see info"
                 onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
-                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}'>
+                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}' target="_blank">
                         {{ ev['text_refs']['pmid'] }}</a>
                        {% endif %}
                        {% if 'pmcid' in ev['text_refs'] and ev['text_refs']['pmcid'] %}
                        | <a class="pmcid_link"
-                href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'>PMC</a>
+                href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'target="_blank">PMC</a>
                         {% endif %}
                        {% if 'doi' in ev['text_refs'] and ev['text_refs']['doi'] %}
                        | <a class="doi_link"
-                href='https://dx.doi.org/{{ ev["text_refs"]["doi"] }}'>DOI</a>
+                href='https://dx.doi.org/{{ ev["text_refs"]["doi"] }}' target="_blank">DOI</a>
                        {% endif %}
                     </td>
                 </tr>
