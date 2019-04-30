@@ -175,6 +175,8 @@ class CWMSProcessor(object):
         """Return an Event from an EVENT element in the EKB."""
         arg_id, arg_term = self._get_term_by_role(event_term, 'AFFECTED',
                                                   False)
+        if arg_term is None:
+            return None
 
         # Make an Event statement if it is a standalone event
         evidence = self._get_evidence(event_term)
@@ -249,7 +251,7 @@ class CWMSProcessor(object):
         time_term = self.tree.find("*[@id='%s']" % time_id)
         if time_term is None:
             return None
-        text = time_term.findtext('text')
+        text = sanitize_name(time_term.findtext('text'))
         timex = time_term.find('timex')
         if timex is not None:
             year = timex.findtext('year')
@@ -348,7 +350,7 @@ class CWMSProcessor(object):
     def _remove_multi_extraction_artifacts(self):
         # Build up a dict of evidence matches keys with statement UUIDs
         evmks = {}
-        logger.info('Starting with %d Statements.' % len(self.statements))
+        logger.debug('Starting with %d Statements.' % len(self.statements))
         for stmt in self.statements:
             # Standalone Events will be handled later, so we do not add them
             if isinstance(stmt, Event):
@@ -380,7 +382,7 @@ class CWMSProcessor(object):
 
         # Remove all redundant statements
         if to_remove:
-            logger.info('Found %d Statements to remove' % len(to_remove))
+            logger.debug('Found %d Statements to remove' % len(to_remove))
         self.statements = [s for s in self.statements
                            if s.uuid not in to_remove]
 
