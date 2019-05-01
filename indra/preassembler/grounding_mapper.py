@@ -143,7 +143,7 @@ class GroundingMapper(object):
                                'UP:%s mapped from HGNC:%s, standardizing to '
                                'UP:%s' % (up_id, mapped_up_id, hgnc_id,
                                           mapped_up_id))
-                        logger.warning(msg)
+                        logger.debug(msg)
                         db_refs['UP'] = mapped_up_id
                 # If there is no conflict, we can update the UP entry
                 else:
@@ -174,13 +174,13 @@ class GroundingMapper(object):
             msg = ('Inconsistent groundings PUBCHEM:%s not equal to '
                    'PUBCHEM:%s mapped from %s, standardizing to '
                    'PUBCHEM:%s.' % (pc_id, mapped_pc_id, chebi_id, pc_id))
-            logger.warning(msg)
+            logger.debug(msg)
         elif pc_id and chebi_id and mapped_chebi_id and chebi_id != \
                 mapped_chebi_id:
             msg = ('Inconsistent groundings %s not equal to '
                    '%s mapped from PUBCHEM:%s, standardizing to '
                    '%s.' % (chebi_id, mapped_chebi_id, pc_id, chebi_id))
-            logger.warning(msg)
+            logger.debug(msg)
         # If we have PC and not CHEBI but can map to CHEBI, we do that
         elif pc_id and not chebi_id and mapped_chebi_id:
             db_refs['CHEBI'] = mapped_chebi_id
@@ -189,7 +189,7 @@ class GroundingMapper(object):
             msg = ('Inconsistent groundings %s not equal to '
                    '%s mapped from %s, standardizing to '
                    '%s.' % (chebi_id, hmdb_mapped_chebi_id, hmdb_id, chebi_id))
-            logger.warning(msg)
+            logger.debug(msg)
         elif hmdb_id and not chebi_id and hmdb_mapped_chebi_id:
             db_refs['CHEBI'] = hmdb_mapped_chebi_id
         # If we have CHEBI and not PC but can map to PC, we do that
