@@ -933,9 +933,9 @@ class BiopaxProcessor(object):
         if sources:
             if len(sources) > 1:
                 logger.warning('More than one data source for %s' % bpe.uri)
-            if sources[0].uri:
-                entry = sources[0].uri.split('/')[-1]
-                annotations['source_sub_id'] = entry
+            db_name = sources[0].displayName
+            if db_name:
+                annotations['source_sub_id'] = db_name.lower()
         ev = [Evidence(source_api='biopax', pmid=cit,
                        source_id=source_id, epistemics=epi,
                        annotations=annotations)
