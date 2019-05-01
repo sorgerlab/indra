@@ -391,6 +391,10 @@ class CWMSProcessor(object):
             elif isinstance(stmt, Influence):
                 evmk = (stmt.evidence[0].matches_key() +
                         stmt.subj.matches_key() + stmt.obj.matches_key())
+            elif isinstance(stmt, Association):
+                evmk = (stmt.evidence[0].matches_key() +
+                        stmt.members[0].matches_key() +
+                        stmt.members[1].matches_key())
             if evmk not in evmks:
                 evmks[evmk] = [stmt.uuid]
             else:
@@ -407,6 +411,11 @@ class CWMSProcessor(object):
             infl_stmts = sorted(infl_stmts, key=lambda x: x.polarity_count(),
                                 reverse=True)
             to_remove += [s.uuid for s in infl_stmts[1:]]
+            # Association statements to be removed
+            assn_stmts = [s for s in self.statements if (
+                            s.uuid in uuids and isinstance(s, Association))]
+            assn_stmts = sorted(assn_stmts, key=lambda x: x.polarity_count(),
+                                reverse=True)
             # Standalone events to be removed
             events = [s for s in self.statements if (
                         s.uuid in uuids and isinstance(s, Event))]
