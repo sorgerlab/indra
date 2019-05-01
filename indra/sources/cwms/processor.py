@@ -138,7 +138,7 @@ class CWMSProcessor(object):
     def extract_correlations(self):
         correlations = self.tree.findall("EPI/[type='ONT::ASSOCIATE']")
         for cor in correlations:
-            st = self.association_from_element(cor, 'EPI', 'NEUTRAL1',
+            st = self._association_from_element(cor, 'EPI', 'NEUTRAL1',
                                                'NEUTRAL2', False)
             if st:
                 self.statements.append(st)
@@ -147,29 +147,17 @@ class CWMSProcessor(object):
 
     def _influence_from_element(self, element, element_type, subj_arg,
                                 obj_arg, is_arg):
-        element_id = element.attrib.get('id')
-        rel_type = element.find('type').text
-        if rel_type not in POLARITY_DICT[element_type]:
-            self._unhandled_events.append(rel_type)
+        components = self._statement_components_from_element(
+            element, element_type, subj_arg, obj_arg, is_arg)
+        if components is None:
             return None
-        subj_id, subj_term = self._get_term_by_role(element, subj_arg, is_arg)
-        obj_id, obj_term = self._get_term_by_role(element, obj_arg, is_arg)
-        if subj_term is None or obj_term is None:
-            return None
-
-        subj = self._get_event(subj_term)
-        obj = self._get_event(obj_term)
-        if subj is None or obj is None:
-            return None
-
-        self.relation_events += [subj_id, obj_id, element_id]
-
+        subj, obj, evidence, rel_type = components
         # If the object polarity is not given explicitly, we set it
         # based on the one implied by the relation
         if obj.delta['polarity'] is None:
             obj.delta['polarity'] = POLARITY_DICT[element_type][rel_type]
-        ev = self._get_evidence(element)
-        st = Influence(subj, obj, evidence=[ev])
+
+        st = Influence(subj, obj, evidence=[evidence])
         return st
 
     def influence_from_relation(self, relation):
@@ -182,8 +170,8 @@ class CWMSProcessor(object):
         return self._influence_from_element(event, 'EVENT', 'AGENT',
                                             'AFFECTED', False)
 
-    def association_from_element(self, element, element_type, member1_arg,
-                                 member2_arg, is_arg):
+    def _statement_components_from_element(self, element, element_type,
+                                           member1_arg, member2_arg, is_arg):
         element_id = element.attrib.get('id')
         rel_type = element.find('type').text
         if rel_type not in POLARITY_DICT[element_type]:
@@ -203,8 +191,18 @@ class CWMSProcessor(object):
 
         self.relation_events += [member1_id, member2_id, element_id]
 
-        ev = self._get_evidence(element)
-        st = Association([member1, member2], evidence=[ev])
+        evidence = self._get_evidence(element)
+
+        return member1, member2, evidence, rel_type
+
+    def _association_from_element(self, element, element_type, member1_arg,
+                                  member2_arg, is_arg):
+        components = self._statement_components_from_element(
+            element, element_type, member1_arg, member2_arg, is_arg)
+        if components is None:
+            return None
+        member1, member2, evidence, _ = components
+        st = Association([member1, member2], evidence=[evidence])
         return st
 
     def event_from_event(self, event_term):
