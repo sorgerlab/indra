@@ -21,7 +21,8 @@ POLARITY_DICT = {'CC': {'ONT::CAUSE': 1,
                            'ONT::DECREASE': -1,
                            'ONT::INHIBIT': -1,
                            'ONT::TRANSFORM': None,
-                           'ONT::STIMULATE': 1}}
+                           'ONT::STIMULATE': 1},
+                 'EPI': {'ONT::ASSOCIATE': None}}
 
 
 class CWMSProcessor(object):
@@ -134,6 +135,16 @@ class CWMSProcessor(object):
 
         self._remove_multi_extraction_artifacts()
 
+    def extract_correlations(self):
+        correlations = self.tree.findall("EPI/[type='ONT::ASSOCIATE']")
+        for cor in correlations:
+            st = self.association_from_element(cor, 'EPI', 'NEUTRAL1',
+                                               'NEUTRAL2', False)
+            if st:
+                self.statements.append(st)
+
+        # self._remove_multi_extraction_artifacts()
+
     def _influence_from_element(self, element, element_type, subj_arg,
                                 obj_arg, is_arg):
         element_id = element.attrib.get('id')
@@ -170,6 +181,31 @@ class CWMSProcessor(object):
         """Return an Influence from an EVENT element in the EKB."""
         return self._influence_from_element(event, 'EVENT', 'AGENT',
                                             'AFFECTED', False)
+
+    def association_from_element(self, element, element_type, member1_arg,
+                                 member2_arg, is_arg):
+        element_id = element.attrib.get('id')
+        rel_type = element.find('type').text
+        if rel_type not in POLARITY_DICT[element_type]:
+            self._unhandled_events.append(rel_type)
+            return None
+        member1_id, member1_term = self._get_term_by_role(
+            element, member1_arg, is_arg)
+        member2_id, member2_term = self._get_term_by_role(
+            element, member2_arg, is_arg)
+        if member1_term is None or member2_term is None:
+            return None
+
+        member1 = self._get_event(member1_term)
+        member2 = self._get_event(member2_term)
+        if member1 is None or member2 is None:
+            return None
+
+        self.relation_events += [member1_id, member2_id, element_id]
+
+        ev = self._get_evidence(element)
+        st = Association([member1, member2], evidence=[ev])
+        return st
 
     def event_from_event(self, event_term):
         """Return an Event from an EVENT element in the EKB."""
