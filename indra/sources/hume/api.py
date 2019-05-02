@@ -42,4 +42,5 @@ def process_jsonld(jsonld):
     """
     hp = processor.HumeJsonLdProcessor(jsonld)
     hp.extract_relations()
+    hp.extract_events()
     return hp

@@ -190,18 +190,78 @@ def test_three_sentences():
 
 
 @attr('slow', 'webservice')
-def test_contextual_sentence():
-    text = "Hunger causes displacement in 2018 in South Sudan."
+def test_context_influence_obj():
+    text = 'Hunger causes displacement in 2018 in South Sudan.'
     cp = process_text(text)
-    assert cp is not None
-    assert len(cp.statements) == 1, len(cp.statements)
     stmt = cp.statements[0]
-    assert len(stmt.evidence) == 1, len(stmt.evidence)
     cont = stmt.obj.context
     assert cont is not None
     assert cont.time and cont.geo_location
 
 
+@attr('slow', 'webservice')
+def test_context_influence_subj():
+    text = 'Hunger in 2018 in South Sudan causes displacement.'
+    cp = process_text(text)
+    stmt = cp.statements[0]
+    cont = stmt.subj.context
+    assert cont is not None
+    assert cont.time and cont.geo_location, cont
+
+
+@attr('slow', 'webservice')
+def test_context_influence_subj_obj():
+    text = 'Hunger in 2018 causes displacement in South Sudan.'
+    cp = process_text(text)
+    stmt = cp.statements[0]
+    assert stmt.subj.context.time and stmt.obj.context.geo_location
+
+
 def test_ekb_process():
     cp = process_ekb_file(ekb_processing_test_file)
     assert len(cp.statements) == 1
+
+
+def test_process_increase_event_ekb():
+    fname = join(data_folder, 'cwms_increase.ekb')
+    cp = process_ekb_file(fname)
+    assert len(cp.statements) == 1
+    stmt = cp.statements[0]
+    assert isinstance(stmt, Event)
+    assert stmt.delta['polarity'] == 1, stmt.delta
+    assert stmt.concept.name == 'food insecurity', stmt.concept.name
+    assert stmt.context, stmt.context
+    assert len(stmt.evidence) == 1
+    ev = stmt.evidence[0]
+    assert ev.source_api == 'cwms'
+    assert ev.context is None
+    assert ev.text is not None
+
+
+def test_process_cause_decrease_event_ekb():
+    fname = join(data_folder, 'cause_decrease_event.ekb')
+    cp = process_ekb_file(fname)
+    assert len(cp.statements) == 1, cp.statements
+    stmt = cp.statements[0]
+    assert isinstance(stmt, Influence), stmt
+    assert stmt.obj.delta['polarity'] == -1, stmt.obj.delta
+
+
+def test_process_cause_increase_event_ekb():
+    fname = join(data_folder, 'cause_increase_event.ekb')
+    cp = process_ekb_file(fname)
+    assert len(cp.statements) == 1, cp.statements
+    stmt = cp.statements[0]
+    assert isinstance(stmt, Influence), stmt
+    assert stmt.obj.delta['polarity'] == 1, stmt.obj.delta
+
+
+def test_process_correlation():
+    fname = join(data_folder, 'association.ekb')
+    cp = process_ekb_file(fname)
+    assert len(cp.statements) == 1, cp.statements
+    stmt = cp.statements[0]
+    assert isinstance(stmt, Association), stmt
+    assert stmt.members[0].concept.db_refs['CWMS'] == 'ONT::PRECIPITATION'
+    assert stmt.members[1].concept.db_refs['CWMS'] == 'ONT::FLOODING'
+    assert stmt.overall_polarity() is None

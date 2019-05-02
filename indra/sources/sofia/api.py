@@ -27,8 +27,11 @@ def process_table(fname):
         rel_sheet = book['Causal']
     event_sheet = book['Events']
     entities_sheet = book['Entities']
+
     sp = SofiaExcelProcessor(rel_sheet.rows, event_sheet.rows,
                              entities_sheet.rows)
+    sp.extract_relations(rel_sheet.rows)
+    sp.extract_events(event_sheet.rows, rel_sheet.rows)
     return sp
 
 
@@ -95,7 +98,28 @@ def process_json(json_obj):
         Statements as its statements attribute.
     """
     sp = SofiaJsonProcessor(json_obj)
+    sp.extract_relations(json_obj)
+    sp.extract_events(json_obj)
     return sp
+
+
+def process_json_file(fname):
+    """Return processor by processing a JSON file produced by Sofia.
+
+    Parameters
+    ----------
+    fname : str
+        The name of the JSON file to process
+
+    Returns
+    -------
+    indra.sources.sofia.processor.SofiaProcessor
+        A SofiaProcessor object which has a list of extracted INDRA
+        Statements as its statements attribute.
+    """
+    with open(fname, 'r') as fh:
+        jd = json.load(fh)
+    return process_json(jd)
 
 
 def _get_sofia_auth():
