@@ -344,7 +344,10 @@ class ModelChecker(object):
             a PathResult object describing the results of model checking.
         """
         results = []
-        for stmt in self.statements:
+        for idx, stmt in enumerate(self.statements):
+            logger.info('---')
+            logger.info('Checking statement (%d/%d): %s' % \
+                (idx + 1, len(self.statements), stmt))
             result = self.check_statement(stmt, max_paths, max_path_length)
             results.append((stmt, result))
         return results
@@ -372,6 +375,8 @@ class ModelChecker(object):
         # Check if this is one of the statement types that we can check
         if not isinstance(stmt, (Modification, RegulateAmount,
                                  RegulateActivity, Influence)):
+            logger.info('Statement type %s not handled' %
+                        stmt.__class__.__name__)
             return PathResult(False, 'STATEMENT_TYPE_NOT_HANDLED',
                               max_paths, max_path_length)
         # Get the polarity for the statement
@@ -395,8 +400,6 @@ class ModelChecker(object):
             subj_mps = list(pa.grounded_monomer_patterns(self.model, subj,
                                                     ignore_activities=True))
             if not subj_mps:
-                logger.debug('No monomers found corresponding to agent %s' %
-                             subj)
                 return PathResult(False, 'SUBJECT_MONOMERS_NOT_FOUND',
                                   max_paths, max_path_length)
         else:
@@ -406,7 +409,7 @@ class ModelChecker(object):
         # an "active" site of the appropriate type
         obs_names = self.stmt_to_obs[stmt]
         if not obs_names:
-            logger.debug("No observables for stmt %s, returning False" % stmt)
+            logger.info("No observables for stmt %s, returning False" % stmt)
             return PathResult(False, 'OBSERVABLES_NOT_FOUND',
                               max_paths, max_path_length)
         for subj_mp, obs_name in itertools.product(subj_mps, obs_names):
@@ -417,8 +420,10 @@ class ModelChecker(object):
             # there was no path for this observable, so we have to try the next
             # one
             if result.path_found:
+                logger.info('Found paths for %s' % stmt)
                 return result
         # If we got here, then there was no path for any observable
+        logger.info('No paths found for %s' % stmt)
         return PathResult(False, 'NO_PATHS_FOUND',
                           max_paths, max_path_length)
 
@@ -581,6 +586,7 @@ class ModelChecker(object):
         else:
             input_rule_set = self._get_input_rules(subj_mp)
             if not input_rule_set:
+                logger.info('Input rules not found for %s' % subj_mp)
                 return PathResult(False, 'INPUT_RULES_NOT_FOUND',
                                   max_paths, max_path_length)
         logger.info('Checking path metrics between %s and %s with polarity %s' %
@@ -755,7 +761,7 @@ class ModelChecker(object):
         remove_im_params(self.model, im)
 
         # Now compare nodes pairwise and look for overlap between child nodes
-        logger.info('Get successorts of each node')
+        logger.info('Get successors of each node')
         succ_dict = {}
         for node in im.nodes():
             succ_dict[node] = set(im.successors(node))
@@ -806,6 +812,31 @@ class ModelChecker(object):
             if r1_info['object'] != r2_info['subject']:
                 logger.info("Removing edge %s --> %s" % (r1, r2))
                 edges_to_prune.append((r1, r2))
+        logger.info('Removing %d edges from influence map' %
+                    len(edges_to_prune))
+        im.remove_edges_from(edges_to_prune)
+
+    def prune_influence_map_degrade_bind_positive(self, model_stmts):
+        """Prune positive edges between X degrading and X forming a
+        complex with Y."""
+        im = self.get_im()
+        edges_to_prune = []
+        for r1, r2, data in im.edges(data=True):
+            s1 = stmt_from_rule(r1, self.model, model_stmts)
+            s2 = stmt_from_rule(r2, self.model, model_stmts)
+            # Make sure this is a degradation/binding combo
+            s1_is_degrad = (s1 and isinstance(s1, DecreaseAmount))
+            s2_is_bind = (s2 and isinstance(s2, Complex) and 'bind' in r2)
+            if not s1_is_degrad or not s2_is_bind:
+                continue
+            # Make sure what is degraded is part of the complex
+            if s1.obj.name not in [m.name for m in s2.members]:
+                continue
+            # Make sure we're dealing with a positive influence
+            if data['sign'] == 1:
+                edges_to_prune.append((r1, r2))
+        logger.info('Removing %d edges from influence map' %
+                    len(edges_to_prune))
         im.remove_edges_from(edges_to_prune)
 
 
