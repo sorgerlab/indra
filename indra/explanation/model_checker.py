@@ -344,7 +344,10 @@ class ModelChecker(object):
             a PathResult object describing the results of model checking.
         """
         results = []
-        for stmt in self.statements:
+        for idx, stmt in enumerate(self.statements):
+            logger.info('---')
+            logger.info('Checking statement (%d/%d): %s' % \
+                (idx + 1, len(self.statements), stmt))
             result = self.check_statement(stmt, max_paths, max_path_length)
             results.append((stmt, result))
         return results
@@ -372,6 +375,8 @@ class ModelChecker(object):
         # Check if this is one of the statement types that we can check
         if not isinstance(stmt, (Modification, RegulateAmount,
                                  RegulateActivity, Influence)):
+            logger.info('Statement type %s not handled' %
+                        stmt.__class__.__name__)
             return PathResult(False, 'STATEMENT_TYPE_NOT_HANDLED',
                               max_paths, max_path_length)
         # Get the polarity for the statement
@@ -395,8 +400,6 @@ class ModelChecker(object):
             subj_mps = list(pa.grounded_monomer_patterns(self.model, subj,
                                                     ignore_activities=True))
             if not subj_mps:
-                logger.debug('No monomers found corresponding to agent %s' %
-                             subj)
                 return PathResult(False, 'SUBJECT_MONOMERS_NOT_FOUND',
                                   max_paths, max_path_length)
         else:
@@ -406,7 +409,7 @@ class ModelChecker(object):
         # an "active" site of the appropriate type
         obs_names = self.stmt_to_obs[stmt]
         if not obs_names:
-            logger.debug("No observables for stmt %s, returning False" % stmt)
+            logger.info("No observables for stmt %s, returning False" % stmt)
             return PathResult(False, 'OBSERVABLES_NOT_FOUND',
                               max_paths, max_path_length)
         for subj_mp, obs_name in itertools.product(subj_mps, obs_names):
@@ -583,6 +586,7 @@ class ModelChecker(object):
         else:
             input_rule_set = self._get_input_rules(subj_mp)
             if not input_rule_set:
+                logger.info('Input rules not found for %s' % subj_mp)
                 return PathResult(False, 'INPUT_RULES_NOT_FOUND',
                                   max_paths, max_path_length)
         logger.info('Checking path metrics between %s and %s with polarity %s' %
