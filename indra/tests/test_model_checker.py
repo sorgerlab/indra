@@ -1225,6 +1225,21 @@ def test_prune_influence_map_subj_obj():
     assert pr_after.result_code == 'NO_PATHS_FOUND', pr_after
 
 
+def test_prune_influence_map_degrade_bind():
+    deg = DecreaseAmount(None, Agent('X'))
+    bind = Complex([Agent('X'), Agent('Y')])
+    pa = PysbAssembler([deg, bind])
+    model = pa.make_model()
+    # Check the model
+    mc = ModelChecker(model)
+    mc.prune_influence_map()
+    im = mc.get_im()
+    assert len(im.edges()) == 3, im.edges()
+    mc.prune_influence_map_degrade_bind_positive([deg, bind])
+    im = mc.get_im()
+    assert len(im.edges()) == 2, im.edges()
+
+
 def test_weighted_sampling1():
     """Test sampling with different path lengths but no data."""
     os.environ['TEST_FLAG'] = 'TRUE'
