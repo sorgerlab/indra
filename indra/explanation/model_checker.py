@@ -417,9 +417,10 @@ class ModelChecker(object):
             # there was no path for this observable, so we have to try the next
             # one
             if result.path_found:
-                logger.info('Found path(s) for %s' % stmt)
+                logger.info('Found paths for %s' % stmt)
                 return result
         # If we got here, then there was no path for any observable
+        logger.info('No paths found for %s' % stmt)
         return PathResult(False, 'NO_PATHS_FOUND',
                           max_paths, max_path_length)
 
