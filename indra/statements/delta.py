@@ -1,3 +1,6 @@
+from collections import OrderedDict as _o
+
+
 class Delta(object):
     """The parent class of all delta types."""
     pass
@@ -27,3 +30,16 @@ class QualitativeDelta(Delta):
     def is_opposite(self, other):
         return ((self.polarity == 1 and other.polarity == -1) or
                 (self.polarity == -1 and other.polarity == 1))
+
+    def to_json(self):
+        json_dict = _o({'polarity': self.polarity})
+        if self.adjectives:
+            json_dict['adjectives'] = self.adjectives
+        return json_dict
+
+    @classmethod
+    def from_json(cls, json_dict):
+        polarity = json_dict.get('polarity')
+        adjectives = json_dict.get('adjectives')
+        delta = QualitativeDelta(polarity=polarity, adjectives=adjectives)
+        return delta

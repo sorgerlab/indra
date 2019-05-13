@@ -2324,7 +2324,7 @@ class Event(Statement):
         generic = super(Event, self).to_json(False)
         json_dict = _o(type=generic['type'],
                        concept=self.concept.to_json(),
-                       delta=self.delta)
+                       delta=self.delta.to_json())
         if self.context:
             json_dict['context'] = self.context.to_json()
         if with_evidence and 'evidence' in generic:
@@ -2335,12 +2335,13 @@ class Event(Statement):
     @classmethod
     def _from_json(cls, json_dict):
         concept = Concept._from_json(json_dict['concept'])
+        delta = QualitativeDelta.from_json(json_dict['delta'])
         context_entry = json_dict.get('context')
         if context_entry:
             context = Context.from_json(json_dict['context'])
         else:
             context = None
-        stmt = cls(concept, delta=json_dict.get('delta'),
+        stmt = cls(concept, delta=delta,
                    context=context)
         return stmt
 
