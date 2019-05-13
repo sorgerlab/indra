@@ -6,7 +6,7 @@ import collections
 from datetime import datetime
 from indra.statements import Concept, Event, Influence, TimeContext, \
     RefContext, WorldContext, Evidence
-
+from indra.statements.delta import QualitativeDelta
 
 logger = logging.getLogger(__name__)
 
@@ -53,12 +53,12 @@ class HumeJsonLdProcessor(object):
                 continue
 
             # Apply the naive polarity from the type of statement. For the
-            # purpose of the multiplication here, if obj_delta['polarity'] is
+            # purpose of the multiplication here, if obj.delta.polarity is
             # None to begin with, we assume it is positive
-            obj_pol = obj.delta['polarity']
+            obj_pol = obj.delta.polarity
             obj_pol = obj_pol if obj_pol is not None else 1
             rel_pol = polarities[relation_type]
-            obj.delta['polarity'] = rel_pol * obj_pol if rel_pol else None
+            obj.delta.polarity = rel_pol * obj_pol if rel_pol else None
 
             evidence = self._get_evidence(relation, get_states(relation))
 
@@ -208,9 +208,7 @@ class HumeJsonLdProcessor(object):
             eid = _choose_id(event, arg_type)
         ev = self.concept_dict[eid]
         concept, metadata = self._make_concept(ev)
-        ev_delta = {'adjectives': [],
-                    'states': get_states(ev),
-                    'polarity': get_polarity(ev)}
+        ev_delta = QualitativeDelta(polarity=get_polarity(ev), adjectives=None)
         context = self._make_context(ev)
         event_obj = Event(concept, delta=ev_delta, context=context,
                           evidence=evidence)
