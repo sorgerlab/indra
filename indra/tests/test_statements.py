@@ -8,6 +8,7 @@ from nose.tools import raises
 from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.statements import *
+from indra.statements.delta import QualitativeDelta
 from indra.util import unicode_strs
 
 # Argument checking for ActiveForms ----------------------------
@@ -1654,38 +1655,38 @@ def test_bound_condition_matches():
 def test_influence_polarity():
     st = Influence(Event(Concept('a')), Event(Concept('b')))
     assert st.overall_polarity() is None
-    st.subj.delta = {'polarity': None, 'adjectives': []}
+    st.subj.delta = QualitativeDelta(polarity=None, adjectives=None)
     assert st.overall_polarity() is None
-    st.obj.delta = {'polarity': None, 'adjectives': []}
+    st.obj.delta = QualitativeDelta(polarity=None, adjectives=None)
     assert st.overall_polarity() is None
-    st.subj.delta['polarity'] = 1
+    st.subj.delta.set_polarity(1)
     assert st.overall_polarity() == 1
-    st.subj.delta['polarity'] = -1
+    st.subj.delta.set_polarity(-1)
     assert st.overall_polarity() == -1
-    st.obj.delta['polarity'] = 1
+    st.obj.delta.set_polarity(1)
     assert st.overall_polarity() == -1
-    st.obj.delta['polarity'] = -1
+    st.obj.delta.set_polarity(-1)
     assert st.overall_polarity() == 1
-    st.subj.delta['polarity'] = 1
+    st.subj.delta.set_polarity(1)
     assert st.overall_polarity() == -1
-    st.obj.delta['polarity'] = 1
+    st.obj.delta.set_polarity(1)
     assert st.overall_polarity() == 1, st
 
 
 def test_association_polarity():
     st = Association([Event(Concept('a')), Event(Concept('b'))])
     assert st.overall_polarity() is None
-    st.members[0].delta['polarity'] = 1
+    st.members[0].delta.set_polarity(1)
     assert st.overall_polarity() == 1
-    st.members[1].delta['polarity'] = 1
+    st.members[1].delta.set_polarity(1)
     assert st.overall_polarity() == 1
-    st.members[0].delta['polarity'] = -1
+    st.members[0].delta.set_polarity(-1)
     assert st.overall_polarity() == -1
-    st.members[1].delta['polarity'] = -1
+    st.members[1].delta.set_polarity(-1)
     assert st.overall_polarity() == 1
-    st.members[0].delta = {'polarity': None, 'adjectives': []}
+    st.members[0].delta = QualitativeDelta(polarity=None, adjectives=None)
     assert st.overall_polarity() == -1
-    st.members[1].delta = {'polarity': None, 'adjectives': []}
+    st.members[1].delta = QualitativeDelta(polarity=None, adjectives=None)
     assert st.overall_polarity() is None
 
 
@@ -1791,14 +1792,14 @@ def test_association_refinement_of():
 def influence_association_refinement_of(stmt_type):
     c1 = Event(Concept('production'))
     c2 = Event(Concept('price'))
-    nopol_noadj = {'polarity': None, 'adjectives': []}
-    nopol_adj = {'polarity': None, 'adjectives': ['small']}
-    neg_noadj = {'polarity': -1, 'adjectives': []}
-    neg_adj = {'polarity': -1, 'adjectives': ['small']}
-    pos_noadj = {'polarity': 1, 'adjectives': []}
-    pos_adj = {'polarity': 1, 'adjectives': ['small']}
-    pos_adj2 = {'polarity': 1, 'adjectives': ['small', 'tiny']}
-    pos_adj3 = {'polarity': 1, 'adjectives': ['significant', 'large']}
+    nopol_noadj = QualitativeDelta(polarity=None, adjectives=None)
+    nopol_adj = QualitativeDelta(polarity=None, adjectives=['small'])
+    neg_noadj = QualitativeDelta(polarity=-1, adjectives=None)
+    neg_adj = QualitativeDelta(polarity=-1, adjectives=['small'])
+    pos_noadj = QualitativeDelta(polarity=1, adjectives=None)
+    pos_adj = QualitativeDelta(polarity=1, adjectives=['small'])
+    pos_adj2 = QualitativeDelta(polarity=1, adjectives=['small', 'tiny'])
+    pos_adj3 = QualitativeDelta(polarity=1, adjectives=['significant', 'large'])
 
     def S(x, y, stmt_type):
         cc1 = deepcopy(c1)
@@ -1840,7 +1841,7 @@ def influence_association_refinement_of(stmt_type):
             S(nopol_adj, nopol_noadj, stmt_type))
     assert not S(nopol_adj, neg_noadj, stmt_type).equals(
             S(nopol_noadj, neg_noadj, stmt_type))
-    pos_adj4 = {'polarity': 1, 'adjectives': ['large', 'significant']}
+    pos_adj4 = QualitativeDelta(polarity=1, adjectives=['large', 'significant'])
     assert S(pos_adj3, nopol_noadj, stmt_type).equals(
         S(pos_adj4, nopol_noadj, stmt_type))
 
@@ -1849,7 +1850,7 @@ def influence_association_refinement_of(stmt_type):
         S(nopol_adj, nopol_noadj, stmt_type).matches_key()
     assert S(nopol_adj, neg_noadj, stmt_type).matches_key() == \
         S(nopol_noadj, neg_noadj, stmt_type).matches_key()
-    pos_adj4 = {'polarity': 1, 'adjectives': ['large', 'significant']}
+    pos_adj4 = QualitativeDelta(polarity=1, adjectives=['large', 'significant'])
     assert S(pos_adj3, nopol_noadj, stmt_type).matches_key() == \
         S(pos_adj4, nopol_noadj, stmt_type).matches_key()
     assert S(pos_adj, neg_adj, stmt_type).matches_key() == \
@@ -1875,16 +1876,16 @@ def test_association_contradicts():
     hierarchies = {'entity': hm}
     sn = Event(Concept('food security',
                        db_refs={'UN': 'UN/entities/human/food/food_security'}),
-               delta={'polarity': -1})
+               delta=QualitativeDelta(polarity=-1))
     sp = Event(Concept('food security',
                        db_refs={'UN': 'UN/entities/human/food/food_security'}),
-               delta={'polarity': 1})
+               delta=QualitativeDelta(polarity=1))
     ip = Event(Concept('food insecurity',
                        db_refs={'UN':
                                 'UN/entities/human/food/food_insecurity'}),
-               delta={'polarity': 1})
-    prp = Event(Concept('production'), delta={'polarity': 1})
-    prn = Event(Concept('production'), delta={'polarity': -1})
+               delta=QualitativeDelta(polarity=1))
+    prp = Event(Concept('production'), delta=QualitativeDelta(polarity=1))
+    prn = Event(Concept('production'), delta=QualitativeDelta(polarity=-1))
     assert Association([sn, prp]).contradicts(Association([sn, prn]),
                                               hierarchies)
     assert Association([prp, sn]).contradicts(Association([sn, prn]),
