@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import indra.assemblers.english.assembler as ea
 from indra.statements import *
+from indra.statements.delta import QualitativeDelta
 
 
 def test_agent_basic():
@@ -375,17 +376,22 @@ def test_conversion():
 
 def test_influence():
     st = Influence(Event(Concept('food')), Event(Concept('hunger'),
-                                                 delta={'polarity': -1}))
+                                                 delta=QualitativeDelta(
+                                                     polarity=-1)))
     s = _stmt_to_text(st)
     assert s == 'Food causes a decrease in hunger.', s
 
-    st = Influence(Event(Concept('food'), delta={'polarity': 1}),
-                   Event(Concept('hunger'), delta={'polarity': -1}))
+    st = Influence(Event(Concept('food'), delta=QualitativeDelta(
+                                            polarity=1)),
+                   Event(Concept('hunger'), delta=QualitativeDelta(
+                                            polarity=-1)))
     s = _stmt_to_text(st)
     assert s == 'An increase in food causes a decrease in hunger.', s
 
-    st = Influence(Event(Concept('food'), delta={'polarity': -1}),
-                   Event(Concept('hunger'), delta={'polarity': 1}))
+    st = Influence(Event(Concept('food'), delta=QualitativeDelta(
+                                            polarity=-1)),
+                   Event(Concept('hunger'), delta=QualitativeDelta(
+                                            polarity=1)))
     s = _stmt_to_text(st)
     assert s == 'A decrease in food causes an increase in hunger.', s
 
