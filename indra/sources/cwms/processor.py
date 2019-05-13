@@ -6,7 +6,7 @@ from datetime import datetime
 
 from indra.statements import *
 from indra.util import UnicodeXMLTreeBuilder as UTB
-from indra.statements.delta import QualitativeDelta
+
 
 logger = logging.getLogger(__name__)
 

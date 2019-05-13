@@ -8,7 +8,6 @@ from nose.tools import raises
 from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.statements import *
-from indra.statements.delta import QualitativeDelta
 from indra.util import unicode_strs
 
 # Argument checking for ActiveForms ----------------------------

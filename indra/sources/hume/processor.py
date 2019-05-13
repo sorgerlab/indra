@@ -5,8 +5,8 @@ import objectpath
 import collections
 from datetime import datetime
 from indra.statements import Concept, Event, Influence, TimeContext, \
-    RefContext, WorldContext, Evidence
-from indra.statements.delta import QualitativeDelta
+    RefContext, WorldContext, Evidence, QualitativeDelta
+
 
 logger = logging.getLogger(__name__)
 

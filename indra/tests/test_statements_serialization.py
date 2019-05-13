@@ -4,7 +4,6 @@ import json
 import datetime
 import jsonschema
 from indra.statements import *
-from indra.statements.delta import QualitativeDelta
 from .test_json_schema import schema
 
 ev = Evidence(source_api='bel', pmid='12345', epistemics={'direct': True},

@@ -1,7 +1,7 @@
 import itertools
 from indra.statements import Influence, Concept, Event, Evidence, \
-    WorldContext, TimeContext, RefContext
-from indra.statements.delta import QualitativeDelta
+    WorldContext, TimeContext, RefContext, QualitativeDelta
+
 
 pos_rels = ['provide', 'led', 'lead', 'driv', 'support', 'enabl', 'develop',
             'increas', 'ris']

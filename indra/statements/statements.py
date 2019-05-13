@@ -182,7 +182,7 @@ __all__ = [
     'InvalidResidueError', 'NotAStatementName',
 
     # Other classes
-    'Concept', 'Agent', 'Evidence',
+    'Concept', 'Agent', 'Evidence', 'QualitativeDelta',
 
     # Context classes
     'BioContext', 'WorldContext', 'TimeContext', 'RefContext', 'Context',

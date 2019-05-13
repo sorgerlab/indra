@@ -3,7 +3,6 @@ import logging
 import datetime
 import objectpath
 from indra.statements import *
-from indra.statements.delta import QualitativeDelta
 
 
 logger = logging.getLogger(__name__)

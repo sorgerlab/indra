@@ -7,7 +7,6 @@ from nose.plugins.attrib import attr
 
 from indra.statements import *
 from indra.sources.cwms import *
-from indra.statements.delta import QualitativeDelta
 
 # Path to the CWMS test/dummy data folder
 path_this = dirname(abspath(__file__))
