@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.statements import *
+from indra.statements.delta import QualitativeDelta
 from indra.assemblers.cag import CAGAssembler
 
 eg1 = {'UN': [('a/b/c', 0.123)]}
@@ -23,9 +24,9 @@ prov = [{
     }]
 
 st1 = Influence(Event(Concept('inorganic fertilizer', db_refs=eg1),
-                      delta={'adjectives': 'serious', 'polarity': 1}),
+                      delta=QualitativeDelta(polarity=1, adjectives=['serious'])),
                 Event(Concept('farm sizes', db_refs=eg2),
-                      delta={'adjectives': 'significant', 'polarity': 1}),
+                      delta=QualitativeDelta(polarity=1, adjectives=['significant'])),
                 evidence=[Evidence(source_api='eidos',
                                    text=('A serious increase in the use of '
                                          'incorganic fertilizers '
