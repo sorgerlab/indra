@@ -31,6 +31,10 @@ class QualitativeDelta(Delta):
         return ((self.polarity == 1 and other.polarity == -1) or
                 (self.polarity == -1 and other.polarity == 1))
 
+    def equals(self, other):
+        return (self.polarity == other.polarity and
+                set(self.adjectives) == set(other.adjectives))
+
     def to_json(self):
         json_dict = _o({'polarity': self.polarity})
         if self.adjectives:
@@ -43,3 +47,8 @@ class QualitativeDelta(Delta):
         adjectives = json_dict.get('adjectives')
         delta = QualitativeDelta(polarity=polarity, adjectives=adjectives)
         return delta
+
+    def __str__(self):
+        return "%s(polarity=%d, adjectives=%s)" % (type(self).__name__,
+                                                   self.polarity,
+                                                   self.adjectives)
