@@ -2317,8 +2317,7 @@ class Event(Statement):
 
     def equals(self, other):
         return self.concept.equals(other.concept) and \
-            self.delta.polarity == other.delta.polarity and \
-            set(self.delta.adjectives) == set(other.delta.adjectives)
+            self.delta.equals(other.delta)
 
     def to_json(self, with_evidence=True, use_sbo=False):
         generic = super(Event, self).to_json(False)
