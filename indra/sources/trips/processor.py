@@ -2065,6 +2065,16 @@ def _get_db_mappings(dbname, dbid):
         target = ncit_map.get(dbid)
         if target is not None:
             db_mappings.append((target[0], target[1]))
+            if target[0] == 'UP':
+                gene_name = up_client.get_gene_name(target[1])
+                if gene_name:
+                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                    if hgnc_id:
+                        db_mappings.append(('HGNC', hgnc_id))
+            elif target[0] == 'HGNC':
+                standard_up_id = hgnc_client.get_uniprot_id(target[1])
+                if standard_up_id:
+                    db_mappings.append(('UP', standard_up_id))
     elif dbname == 'HGNC':
         standard_up_id = hgnc_client.get_uniprot_id(dbid)
         # standard_up_id will be None if the gene doesn't have a corresponding
