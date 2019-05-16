@@ -13,18 +13,14 @@ from protmapper.uniprot_client import *
 def _build_uniprot_subcell_loc():
     fname = os.path.dirname(os.path.abspath(__file__)) +\
                 '/../resources/uniprot_subcell_loc.tsv'
-    try:
-        csv_rows = read_unicode_csv(fname, delimiter='\t')
-        # Skip the header row
-        next(csv_rows)
-        subcell_loc = {}
-        for row in csv_rows:
-            loc_id = row[0]
-            loc_alias = row[3]
-            subcell_loc[loc_id] = loc_alias
-    except IOError:
-        subcell_loc = {}
-    return subcell_loc
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    # Skip the header row
+    up_to_go = {}
+    for row in csv_rows:
+        upid = row[0]
+        goid = row[1]
+        up_to_go[upid] = goid
+    return up_to_go
 
 
 uniprot_subcell_loc = _build_uniprot_subcell_loc()
