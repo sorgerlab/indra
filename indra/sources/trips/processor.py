@@ -1126,17 +1126,16 @@ class TripsProcessor(object):
         dbid = term.attrib.get('dbid')
         dbids = dbid.split('|')
         db_refs_dict = dict([d.split(':') for d in dbids])
+        upid = db_refs_dict.get('UP')
         goid = db_refs_dict.get('GO')
+        if not goid and upid is not None and upid.startswith('SL'):
+            goid = up_client.uniprot_subcell_loc.get(upid)
         if goid is not None:
             try:
                 loc_name = get_valid_location('GO:' + goid)
                 return loc_name
             except InvalidLocationError:
                 pass
-        # Try to get the same from UP
-        upid = db_refs_dict.get('UP')
-        if upid is not None and upid.startswith('SL'):
-            loc_name = up_client.uniprot_subcell_loc.get(upid)
             if loc_name is not None:
                 try:
                     loc_name = get_valid_location(loc_name.lower())
@@ -2083,12 +2082,18 @@ def _get_db_mappings(dbname, dbid):
             db_mappings.append(('UP', standard_up_id))
     elif dbname == 'UP':
         # Handle special case of UP:etc
-        if not dbid == 'etc' and up_client.is_human(dbid):
-            gene_name = up_client.get_gene_name(dbid)
-            if gene_name:
-                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                if hgnc_id:
-                    db_mappings.append(('HGNC', hgnc_id))
+        if not dbid == 'etc':
+            if dbid.startswith('SL-'):
+                goid = up_client.uniprot_subcell_loc.get(dbid)
+                if goid:
+                    db_mappings.append(('GO', goid))
+            elif up_client.is_human(dbid):
+                gene_name = up_client.get_gene_name(dbid)
+                if gene_name:
+                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                    if hgnc_id:
+                        db_mappings.append(('HGNC', hgnc_id))
+
     # TODO: we could do some chemical mappings here i.e. CHEBI/PUBCHEM/CHEMBL
     return db_mappings
 
