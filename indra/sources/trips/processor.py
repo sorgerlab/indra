@@ -1128,20 +1128,16 @@ class TripsProcessor(object):
         db_refs_dict = dict([d.split(':') for d in dbids])
         upid = db_refs_dict.get('UP')
         goid = db_refs_dict.get('GO')
+        if goid and not goid.startswith('GO:'):
+            goid = 'GO:%s' % goid
         if not goid and upid is not None and upid.startswith('SL'):
             goid = up_client.uniprot_subcell_loc.get(upid)
         if goid is not None:
             try:
-                loc_name = get_valid_location('GO:' + goid)
+                loc_name = get_valid_location(goid)
                 return loc_name
             except InvalidLocationError:
                 pass
-            if loc_name is not None:
-                try:
-                    loc_name = get_valid_location(loc_name.lower())
-                    return loc_name
-                except InvalidLocationError:
-                    pass
         # Check if the raw name is a valid cellular component
         if name is not None:
             try:

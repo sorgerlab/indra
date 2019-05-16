@@ -120,7 +120,6 @@ def update_kinases():
 
 
 def update_uniprot_subcell_loc():
-    # TODO: This file could be stored as a tsv instead after some processing
     logger.info('--Updating UniProt subcellular location--')
     url = 'https://www.uniprot.org/docs/subcell.txt'
     res = requests.get(url)
