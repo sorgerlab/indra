@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum-dev/etc/Data/WP/TEXT00019_IO-37270" id="paragraph18">estrogen-receptor alpha</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="19" pid="paragraph18">estrogen-receptor alpha</sentence>
+		</sentences>
+	</input>
+	<TERM dbid="NCIT:C38361" end="23" id="V37353" lisp="(ONT::TERM ONT::V37353 ONT::PROTEIN :NAME W::ESTROGEN-PUNC-MINUS-RECEPTOR-ALPHA :DRUM ((:DRUM (TERM :ID NCIT::C38361 :NAME &quot;estrogen receptor&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;estrogen receptor alpha&quot; :STATUS &quot;synonym&quot; :EXACT 3)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph18" rule="-SIMPLE-REF,-ADD-SPEC" start="0" uttnum="19">
+		<type>ONT::PROTEIN</type>
+		<text normalization="">estrogen-receptor alpha</text>
+		<name>ESTROGEN-RECEPTOR-ALPHA</name>
+		<drum-terms>
+			<drum-term dbid="NCIT:C38361" match-score="0.71084" matched-name="estrogen receptor alpha" name="estrogen receptor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+</ekb>

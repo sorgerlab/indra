@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum-dev/etc/Data/WP/TEXT00018_IO-37204" id="paragraph17">endoplasmic reticulum</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="18" pid="paragraph17">endoplasmic reticulum</sentence>
+		</sentences>
+	</input>
+	<TERM dbid="GO:0005783|UP:SL-0095" end="21" id="V37220" lisp="(ONT::TERM ONT::V37220 ONT::CELL-PART :NAME W::ENDOPLASMIC-RETICULUM :DRUM ((:DRUM (TERM :ID UP::SL-0095 :NAME &quot;Endoplasmic reticulum&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;endoplasmic reticulum&quot; :STATUS &quot;I*&quot; :EXACT 2) (MATCH :SCORE 0.85267 :MATCHED &quot;endoplasmic reticulum&quot; :STATUS &quot;I*&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.35435992 :EXACT 1 :MIXED-CAPS-NO-CAPS 1)) :ONT-TYPES (ONT::CELL-PART)) (TERM :ID GO::|0005783| :NAME &quot;endoplasmic reticulum&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;endoplasmic reticulum&quot; :STATUS &quot;name&quot; :EXACT 2) (MATCH :SCORE 0.85267 :MATCHED &quot;endoplasmic reticulum&quot; :STATUS &quot;name&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.35435992 :EXACT 1 :MIXED-CAPS-NO-CAPS 1)) :ONT-TYPES (ONT::CELL-PART)))))" paragraph="paragraph17" rule="-SIMPLE-REF,-ADD-SPEC" start="0" uttnum="18">
+		<type>ONT::CELL-PART</type>
+		<text normalization="">endoplasmic reticulum</text>
+		<name>ENDOPLASMIC-RETICULUM</name>
+		<drum-terms>
+			<drum-term dbid="UP:SL-0095" match-score="0.85542" matched-name="endoplasmic reticulum" name="Endoplasmic reticulum">
+				<types>
+					<type>ONT::CELL-PART</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="GO:0005783" match-score="0.85542" matched-name="endoplasmic reticulum" name="endoplasmic reticulum">
+				<types>
+					<type>ONT::CELL-PART</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+</ekb>

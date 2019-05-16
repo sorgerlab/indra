@@ -872,3 +872,22 @@ def test_gene_assoc_with_gene():
     assert len(agents) == 1, agents
     agent = agents[0]
     assert agent.name == 'EGFR', agent.name
+
+
+def test_up_go_location():
+    fname = os.path.join(path_this, 'trips_ekbs', 'endoplasmic_reticulum.ekb')
+    tp = trips.process_xml(open(fname, 'r').read())
+    agents = tp.get_agents()
+    assert len(agents) == 1, agents
+    agent = agents[0]
+    assert 'GO' in agent.db_refs, agent.db_refs
+
+
+def test_ncit_up_hgnc_mapping():
+    fname = os.path.join(path_this, 'trips_ekbs',
+                         'estrogen_receptor_alpha.ekb')
+    tp = trips.process_xml(open(fname, 'r').read())
+    agents = tp.get_agents()
+    assert len(agents) == 1, agents
+    agent = agents[0]
+    assert 'HGNC' in agent.db_refs, agent.db_refs
