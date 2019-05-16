@@ -1,14 +1,8 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import re
-import sys
 import logging
 import itertools
 import collections
-try:
-    from functools import lru_cache
-except ImportError:
-    from functools32 import lru_cache
+from functools import lru_cache
 
 from indra.java_vm import autoclass, JavaException, cast
 from indra.databases import hgnc_client, uniprot_client, chebi_client
@@ -81,7 +75,6 @@ class BiopaxProcessor(object):
         # we effectively keep only one Statement with a given deep hash
         self.statements = list({stmt.get_hash(shallow=False, refresh=True): stmt
                                 for stmt in self.statements}.values())
-
 
     def get_complexes(self):
         """Extract INDRA Complex Statements from the BioPAX model.
