@@ -122,10 +122,25 @@ def update_kinases():
 def update_uniprot_subcell_loc():
     # TODO: This file could be stored as a tsv instead after some processing
     logger.info('--Updating UniProt subcellular location--')
-    url = 'http://www.uniprot.org/locations/?' + \
-        '%20sort=&desc=&compress=no&query=&force=no&format=tab&columns=id'
+    url = 'https://www.uniprot.org/docs/subcell.txt'
+    res = requests.get(url)
+    res.raise_for_status()
+    header, entry_block = res.text.split('_' * 75)
+    entries = entry_block.split('//')
+    mappings = []
+    for entry in entries:
+        slid = None
+        goid = None
+        lines = entry.split('\n')
+        for line in lines:
+            if line.startswith('AC'):
+                slid = line[5:].strip()
+            if line.startswith('GO'):
+                goid = line[5:].split(';')[0]
+        if slid and goid:
+            mappings.append((slid, goid))
     fname = os.path.join(path, 'uniprot_subcell_loc.tsv')
-    save_from_http(url, fname)
+    write_unicode_csv(fname, mappings, delimiter='\t')
 
 
 def update_chebi_entries():
