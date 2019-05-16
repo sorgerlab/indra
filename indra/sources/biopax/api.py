@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import itertools
-from indra.java_vm import autoclass, JavaException
 from . import pathway_commons_client as pcc
 from .processor import BiopaxProcessor
 
@@ -159,6 +158,23 @@ def process_owl(owl_filename):
     model = pcc.owl_to_model(owl_filename)
     if model is None:
         return None
+    return process_model(model)
+
+
+def process_owl_str(owl_str):
+    """Returns a BiopaxProcessor for a BioPAX OWL file.
+
+    Parameters
+    ----------
+    owl_str : string
+        The string of an owl file to process.
+
+    Returns
+    -------
+    bp : BiopaxProcessor
+        A BiopaxProcessor containing the obtained BioPAX model in bp.model.
+    """
+    model = pcc.owl_str_to_model(owl_str)
     return process_model(model)
 
 
