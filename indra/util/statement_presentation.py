@@ -59,10 +59,11 @@ def group_and_sort_statements(stmt_list, ev_totals=None):
         arguements and type, and then the statement type.
     """
     def _count(stmt):
-        if ev_totals is None:
+        sh = stmt.get_hash()
+        if ev_totals is None or sh not in ev_totals:
             return len(stmt.evidence)
         else:
-            return ev_totals[stmt.get_hash()]
+            return ev_totals[sh]
 
     stmt_rows = defaultdict(list)
     stmt_counts = defaultdict(lambda: 0)
