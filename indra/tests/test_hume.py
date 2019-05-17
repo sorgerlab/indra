@@ -64,7 +64,7 @@ def test_standalone_events():
     assert isinstance(food_stmt, Event)
     assert food_stmt.context.geo_location.name == 'South Sudan', food_stmt.context.geo_location.name
     assert food_stmt.context.time.text == '2019', food_stmt.context.time.text
-    assert food_stmt.delta['polarity'] == 1
+    assert food_stmt.delta.polarity == 1
     assert len(food_stmt.evidence) == 1, len(stmt.evidence)
     assert isinstance(conflict_stmt, Event)
     assert conflict_stmt.context.time.text == 'May 2017', conflict_stmt.context.time.text

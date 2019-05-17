@@ -1201,9 +1201,9 @@ def test_prune_influence_map_subj_obj():
                      delta=delta)
     mek = ag('MAP2K1')
     erk = ag('MAPK1')
-    erk_neg = ag('MAPK1', {'polarity': -1})
+    erk_neg = ag('MAPK1', QualitativeDelta(polarity=-1))
     mek2 = ag('MAP2K2')
-    mek2_neg = ag('MAP2K2', {'polarity': -1})
+    mek2_neg = ag('MAP2K2', QualitativeDelta(polarity=-1))
 
     s1 = Influence(mek, erk)
     s2 = Influence(mek2, erk_neg)

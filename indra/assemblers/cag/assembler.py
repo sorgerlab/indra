@@ -80,21 +80,21 @@ class CAGAssembler(object):
             # subj, obj = (self._node_name(s.subj), self._node_name(s.obj))
 
             # See if both subject and object have polarities given
-            has_both_polarity = (s.subj.delta['polarity'] is not None and
-                                 s.obj.delta['polarity'] is not None)
+            has_both_polarity = (s.subj.delta.polarity is not None and
+                                 s.obj.delta.polarity is not None)
 
             # Add the nodes to the graph
             for node, delta in zip((s.subj.concept, s.obj.concept),
                                    (s.subj.delta, s.obj.delta)):
                 self.CAG.add_node(self._node_name(node),
                                   simulable=has_both_polarity,
-                                  mods=delta['adjectives'])
+                                  mods=delta.adjectives)
 
             # Edge is solid if both nodes have polarity given
             linestyle = 'solid' if has_both_polarity else 'dotted'
             if has_both_polarity:
-                same_polarity = (s.subj.delta['polarity'] ==
-                                 s.obj.delta['polarity'])
+                same_polarity = (s.subj.delta.polarity ==
+                                 s.obj.delta.polarity)
                 if same_polarity:
                     target_arrow_shape, linecolor = ('circle', 'green')
                 else:
@@ -111,10 +111,10 @@ class CAGAssembler(object):
             self.CAG.add_edge(
                     self._node_name(s.subj.concept),
                     self._node_name(s.obj.concept),
-                    subj_polarity=s.subj.delta['polarity'],
-                    subj_adjectives=s.subj.delta['adjectives'],
-                    obj_polarity=s.obj.delta['polarity'],
-                    obj_adjectives=s.obj.delta['adjectives'],
+                    subj_polarity=s.subj.delta.polarity,
+                    subj_adjectives=s.subj.delta.adjectives,
+                    obj_polarity=s.obj.delta.polarity,
+                    obj_adjectives=s.obj.delta.adjectives,
                     linestyle=linestyle,
                     linecolor=linecolor,
                     targetArrowShape=target_arrow_shape,
@@ -137,10 +137,10 @@ class CAGAssembler(object):
             elif evidence.source_api == 'sofia':
                 # TODO extract ontology catgory here
                 factor_norm = concept.name
-            mods = ', '.join(delta.get('adjectives', []))
-            if delta.get('polarity') == -1:
+            mods = ', '.join(delta.adjectives)
+            if delta.polarity == -1:
                 pol = 'decrease'
-            elif delta.get('polarity') == 1:
+            elif delta.polarity == 1:
                 pol = 'increase'
             else:
                 pol = ''
@@ -180,10 +180,10 @@ class CAGAssembler(object):
                 source, system, sent_id, location, time, text = \
                     _get_evidence(evidence)
                 factor_a, factor_a_norm, mod_a, pol_a = \
-                    _get_factor(stmt, stmt.subj, stmt.subj_delta, evidence,
+                    _get_factor(stmt, stmt.subj, stmt.subj.delta, evidence,
                                 evidence.annotations['subj_text'])
                 factor_b, factor_b_norm, mod_b, pol_b = \
-                    _get_factor(stmt, stmt.obj, stmt.obj_delta, evidence,
+                    _get_factor(stmt, stmt.obj, stmt.obj.delta, evidence,
                                 evidence.annotations['obj_text'])
                 relation_text = 'influences'
                 # Can we get a more specific relation type here?

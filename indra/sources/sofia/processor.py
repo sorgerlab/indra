@@ -1,6 +1,7 @@
 import itertools
 from indra.statements import Influence, Concept, Event, Evidence, \
-    WorldContext, TimeContext, RefContext
+    WorldContext, TimeContext, RefContext, QualitativeDelta
+
 
 pos_rels = ['provide', 'led', 'lead', 'driv', 'support', 'enabl', 'develop',
             'increas', 'ris']
@@ -57,8 +58,8 @@ class SofiaProcessor(object):
             stmt = Influence(subj, obj, evidence=[ev])
             # Use the polarity of the events, if object does not have a
             # polarity, use overall polarity
-            if stmt.obj.delta['polarity'] is None:
-                stmt.obj.delta['polarity'] = pol
+            if stmt.obj.delta.polarity is None:
+                stmt.obj.delta.set_polarity(pol)
 
             stmt_list.append(stmt)
         return stmt_list
@@ -83,7 +84,7 @@ class SofiaProcessor(object):
         ev = Evidence(source_api='sofia', pmid=ref, text=text)
         pol = event_entry.get('Polarity')
         event = Event(concept, context=context, evidence=[ev],
-                      delta={'polarity': pol, 'adjectives': []})
+                      delta=QualitativeDelta(polarity=pol, adjectives=None))
 
         return event
 

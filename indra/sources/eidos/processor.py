@@ -4,6 +4,7 @@ import datetime
 import objectpath
 from indra.statements import *
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -81,9 +82,12 @@ class EidosProcessor(object):
     def get_event(self, event):
         concept = self.get_concept(event)
         states = event.get('states', [])
-        delta = self.extract_entity_states(states)
-        timex = delta.pop('time_context', None)
-        geo = delta.pop('geo_context', None)
+        extracted_states = self.extract_entity_states(states)
+        polarity = extracted_states.get('polarity')
+        adjectives = extracted_states.get('adjectives')
+        delta = QualitativeDelta(polarity=polarity, adjectives=adjectives)
+        timex = extracted_states.get('time_context', None)
+        geo = extracted_states.get('geo_context', None)
         context = WorldContext(time=timex, geo_location=geo) \
             if timex or geo else None
         stmt = Event(concept, delta=delta, context=context)
@@ -104,10 +108,10 @@ class EidosProcessor(object):
 
         # We also put the adjectives and polarities into annotations since
         # they could otherwise get squashed upon preassembly
-        evidence.annotations['subj_polarity'] = subj.delta['polarity']
-        evidence.annotations['obj_polarity'] = obj.delta['polarity']
-        evidence.annotations['subj_adjectives'] = subj.delta['adjectives']
-        evidence.annotations['obj_adjectives'] = obj.delta['adjectives']
+        evidence.annotations['subj_polarity'] = subj.delta.polarity
+        evidence.annotations['obj_polarity'] = obj.delta.polarity
+        evidence.annotations['subj_adjectives'] = subj.delta.adjectives
+        evidence.annotations['obj_adjectives'] = obj.delta.adjectives
         evidence.annotations['subj_context'] = subj.context.to_json() if \
             subj.context else {}
         evidence.annotations['obj_context'] = obj.context.to_json() if \

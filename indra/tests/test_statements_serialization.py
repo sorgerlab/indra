@@ -101,18 +101,18 @@ def test_gef():
 
 def test_influence():
     ev1 = Event(Concept('inorganic fertilizer'),
-                delta={'adjectives': ['serious'], 'polarity': 1},
+                delta=QualitativeDelta(polarity=1, adjectives=['serious']),
                 context=WorldContext(geo_location=RefContext('x')))
     ev2 = Event(Concept('farm sizes'),
-                delta={'adjectives': ['significant'], 'polarity': 1})
+                delta=QualitativeDelta(polarity=1, adjectives=['significant']))
     stmt = Influence(ev1, ev2)
     jd = stmt.to_json()
     assert 'sbo' not in jd['subj']
     assert 'sbo' not in jd['obj']
     stmt.to_graph()
     st_deserialize = Statement._from_json(jd)
-    assert st_deserialize.subj.delta['polarity'] == 1
-    assert st_deserialize.obj.delta['adjectives'] == ['significant']
+    assert st_deserialize.subj.delta.polarity == 1
+    assert st_deserialize.obj.delta.adjectives == ['significant']
     assert st_deserialize.subj.context.geo_location.name == 'x', \
         st_deserialize.subj.context
     jd2 = st_deserialize.to_json()
@@ -122,17 +122,17 @@ def test_influence():
 
 def test_association():
     ev1 = Event(Concept('food'), 
-                delta={'adjectives': ['insufficient'], 'polarity': -1})
+                delta=QualitativeDelta(polarity=-1, adjectives=['insufficient']))
     ev2 = Event(Concept('hunger'),
-                delta={'adjectives': [], 'polarity': 1})
+                delta=QualitativeDelta(polarity=1, adjectives=None))
     stmt = Association([ev1, ev2])
     jd = stmt.to_json()
     stmt.to_graph()
     assert 'members' in jd
     st_deserialize = Statement._from_json(jd)
     assert isinstance(st_deserialize.members[0], Event)
-    assert st_deserialize.members[0].delta['polarity'] == -1
-    assert st_deserialize.members[0].delta['adjectives'] == ['insufficient']
+    assert st_deserialize.members[0].delta.polarity == -1
+    assert st_deserialize.members[0].delta.adjectives == ['insufficient']
     jd2 = st_deserialize.to_json()
     assert jd == jd2
 

@@ -545,18 +545,26 @@ def test_merge_groundings():
 def test_merge_deltas():
     def add_annots(stmt):
         for ev in stmt.evidence:
-            ev.annotations['subj_adjectives'] = stmt.subj.delta['adjectives']
-            ev.annotations['obj_adjectives'] = stmt.obj.delta['adjectives']
-            ev.annotations['subj_polarity'] = stmt.subj.delta['polarity']
-            ev.annotations['obj_polarity'] = stmt.obj.delta['polarity']
+            ev.annotations['subj_adjectives'] = stmt.subj.delta.adjectives
+            ev.annotations['obj_adjectives'] = stmt.obj.delta.adjectives
+            ev.annotations['subj_polarity'] = stmt.subj.delta.polarity
+            ev.annotations['obj_polarity'] = stmt.obj.delta.polarity
         return stmt
-    d1 = {'adjectives': ['a', 'b', 'c'], 'polarity': 1}
-    d2 = {'adjectives': [], 'polarity': -1}
-    d3 = {'adjectives': ['g'], 'polarity': 1}
-    d4 = {'adjectives': ['d', 'e', 'f'], 'polarity': -1}
-    d5 = {'adjectives': ['d'], 'polarity': None}
-    d6 = {'adjectives': [], 'polarity': None}
-    d7 = {'adjectives': [], 'polarity': 1}
+    # d1 = {'adjectives': ['a', 'b', 'c'], 'polarity': 1}
+    # d2 = {'adjectives': [], 'polarity': -1}
+    # d3 = {'adjectives': ['g'], 'polarity': 1}
+    # d4 = {'adjectives': ['d', 'e', 'f'], 'polarity': -1}
+    # d5 = {'adjectives': ['d'], 'polarity': None}
+    # d6 = {'adjectives': [], 'polarity': None}
+    # d7 = {'adjectives': [], 'polarity': 1}
+
+    d1 = QualitativeDelta(polarity=1, adjectives=['a', 'b', 'c'])
+    d2 = QualitativeDelta(polarity=-1, adjectives=None)
+    d3 = QualitativeDelta(polarity=1, adjectives=['g'])
+    d4 = QualitativeDelta(polarity=-1, adjectives=['d', 'e', 'f'])
+    d5 = QualitativeDelta(polarity=None, adjectives=['d'])
+    d6 = QualitativeDelta(polarity=None, adjectives=None)
+    d7 = QualitativeDelta(polarity=1, adjectives=None)
 
     def make_ev(name, delta):
         return Event(Concept(name), delta=delta)
@@ -567,11 +575,11 @@ def test_merge_deltas():
              for idx, (sd, od) in enumerate([(d1, d2), (d3, d4)])]
     stmts = ac.run_preassembly(stmts, return_toplevel=True)
     stmts = ac.merge_deltas(stmts)
-    assert stmts[0].subj.delta['polarity'] == 1, stmts[0].subj.delta
-    assert stmts[0].obj.delta['polarity'] == -1, stmts[0].obj.delta
-    assert set(stmts[0].subj.delta['adjectives']) == {'a', 'b', 'c', 'g'}, \
+    assert stmts[0].subj.delta.polarity == 1, stmts[0].subj.delta
+    assert stmts[0].obj.delta.polarity == -1, stmts[0].obj.delta
+    assert set(stmts[0].subj.delta.adjectives) == {'a', 'b', 'c', 'g'}, \
         stmts[0].subj.delta
-    assert set(stmts[0].obj.delta['adjectives']) == {'d', 'e', 'f'}, \
+    assert set(stmts[0].obj.delta.adjectives) == {'d', 'e', 'f'}, \
         stmts[0].obj.delta
 
     stmts = [add_annots(Influence(make_ev('a', sd), make_ev('b', od),
@@ -580,11 +588,11 @@ def test_merge_deltas():
              for idx, (sd, od) in enumerate([(d1, d5), (d6, d7), (d6, d7)])]
     stmts = ac.run_preassembly(stmts, return_toplevel=True)
     stmts = ac.merge_deltas(stmts)
-    assert stmts[0].subj.delta['polarity'] is None, stmts[0].subj.delta
-    assert stmts[0].obj.delta['polarity'] == 1, stmts[0].obj.delta
-    assert set(stmts[0].subj.delta['adjectives']) == {'a', 'b', 'c'}, \
+    assert stmts[0].subj.delta.polarity is None, stmts[0].subj.delta
+    assert stmts[0].obj.delta.polarity == 1, stmts[0].obj.delta
+    assert set(stmts[0].subj.delta.adjectives) == {'a', 'b', 'c'}, \
         stmts[0].subj.delta
-    assert set(stmts[0].obj.delta['adjectives']) == {'d'}, \
+    assert set(stmts[0].obj.delta.adjectives) == {'d'}, \
         stmts[0].obj.delta
 
 

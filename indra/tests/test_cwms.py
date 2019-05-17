@@ -228,7 +228,7 @@ def test_process_increase_event_ekb():
     assert len(cp.statements) == 1
     stmt = cp.statements[0]
     assert isinstance(stmt, Event)
-    assert stmt.delta['polarity'] == 1, stmt.delta
+    assert stmt.delta.polarity == 1, stmt.delta
     assert stmt.concept.name == 'food insecurity', stmt.concept.name
     assert stmt.context, stmt.context
     assert len(stmt.evidence) == 1
@@ -244,7 +244,7 @@ def test_process_cause_decrease_event_ekb():
     assert len(cp.statements) == 1, cp.statements
     stmt = cp.statements[0]
     assert isinstance(stmt, Influence), stmt
-    assert stmt.obj.delta['polarity'] == -1, stmt.obj.delta
+    assert stmt.obj.delta.polarity == -1, stmt.obj.delta
 
 
 def test_process_cause_increase_event_ekb():
@@ -253,7 +253,7 @@ def test_process_cause_increase_event_ekb():
     assert len(cp.statements) == 1, cp.statements
     stmt = cp.statements[0]
     assert isinstance(stmt, Influence), stmt
-    assert stmt.obj.delta['polarity'] == 1, stmt.obj.delta
+    assert stmt.obj.delta.polarity == 1, stmt.obj.delta
 
 
 def test_process_correlation():

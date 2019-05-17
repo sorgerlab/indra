@@ -7,6 +7,7 @@ from datetime import datetime
 from indra.statements import *
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -130,7 +131,7 @@ class CWMSProcessor(object):
                 if event:
                     # Here we set the polarity based on the polarity implied by
                     # the increase/decrease here
-                    event.delta['polarity'] = polarity
+                    event.delta.set_polarity(polarity)
                     self.statements.append(event)
 
         self._remove_multi_extraction_artifacts()
@@ -154,8 +155,8 @@ class CWMSProcessor(object):
         subj, obj, evidence, rel_type = components
         # If the object polarity is not given explicitly, we set it
         # based on the one implied by the relation
-        if obj.delta['polarity'] is None:
-            obj.delta['polarity'] = POLARITY_DICT[element_type][rel_type]
+        if obj.delta.polarity is None:
+            obj.delta.set_polarity(POLARITY_DICT[element_type][rel_type])
 
         st = Influence(subj, obj, evidence=[evidence])
         return st
@@ -259,7 +260,7 @@ class CWMSProcessor(object):
 
         ev_type = event_term.find('type').text
         polarity = POLARITY_DICT['EVENT'].get(ev_type)
-        delta = {'polarity': polarity, 'adjectives': []}
+        delta = QualitativeDelta(polarity=polarity)
         context = self.get_context(event_term)
         event_obj = Event(concept, delta=delta, context=context,
                           evidence=evidence)
@@ -436,6 +437,6 @@ def sanitize_name(txt):
 
 
 def event_delta_score(stmt):
-    pol_score = 1 if stmt.delta['polarity'] is not None else 0
-    adj_score = len(stmt.delta['adjectives'])
+    pol_score = 1 if stmt.delta.polarity is not None else 0
+    adj_score = len(stmt.delta.adjectives)
     return (pol_score + adj_score)

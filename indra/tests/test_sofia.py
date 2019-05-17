@@ -49,7 +49,7 @@ def test_event_decrease():
     assert len(sp.statements) == 1, sp.statements
     stmt = sp.statements[0]
     assert isinstance(stmt, Event), stmt
-    assert stmt.delta['polarity'] == -1, stmt.delta
+    assert stmt.delta.polarity == -1, stmt.delta
     assert stmt.concept.name == 'rainfall', stmt.concept
 
 
@@ -59,5 +59,5 @@ def test_influence_event_polarity():
     assert len(sp.statements) == 1, sp.statements
     stmt = sp.statements[0]
     assert isinstance(stmt, Influence)
-    assert stmt.subj.delta['polarity'] == 1, stmt.subj.delta
-    assert stmt.obj.delta['polarity'] == -1, stmt.obj.delta
+    assert stmt.subj.delta.polarity == 1, stmt.subj.delta
+    assert stmt.obj.delta.polarity == -1, stmt.obj.delta

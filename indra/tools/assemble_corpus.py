@@ -247,8 +247,8 @@ def merge_deltas(stmts_in):
                      pair[1] is not None]
         if both_pols:
             subj_pol, obj_pol = max(set(both_pols), key=both_pols.count)
-            stmt.subj.delta['polarity'] = subj_pol
-            stmt.obj.delta['polarity'] = obj_pol
+            stmt.subj.delta.polarity = subj_pol
+            stmt.obj.delta.polarity = obj_pol
         # Otherwise we prefer the case when at least one entry of the
         # pair is given
         else:
@@ -256,8 +256,8 @@ def merge_deltas(stmts_in):
                        pair[1] is not None]
             if one_pol:
                 subj_pol, obj_pol = max(set(one_pol), key=one_pol.count)
-                stmt.subj.delta['polarity'] = subj_pol
-                stmt.obj.delta['polarity'] = obj_pol
+                stmt.subj.delta.polarity = subj_pol
+                stmt.obj.delta.polarity = obj_pol
 
         # ADJECTIVES
         for attr, role in ((stmt.subj.delta, 'subj'), (stmt.obj.delta, 'obj')):
@@ -267,7 +267,7 @@ def merge_deltas(stmts_in):
                     all_adjectives += adj
                 elif adj is not None:
                     all_adjectives.append(adj)
-            attr['adjectives'] = all_adjectives
+            attr.adjectives = all_adjectives
         stmts_out.append(stmt)
     return stmts_out
 

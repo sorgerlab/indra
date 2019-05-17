@@ -182,7 +182,7 @@ __all__ = [
     'InvalidResidueError', 'NotAStatementName',
 
     # Other classes
-    'Concept', 'Agent', 'Evidence',
+    'Concept', 'Agent', 'Evidence', 'QualitativeDelta',
 
     # Context classes
     'BioContext', 'WorldContext', 'TimeContext', 'RefContext', 'Context',
@@ -211,7 +211,7 @@ from .concept import *
 from .context import *
 from .evidence import *
 from .resources import *
-
+from .delta import *
 
 logger = logging.getLogger(__name__)
 
@@ -1976,8 +1976,8 @@ class Influence(Statement):
 
     def overall_polarity(self):
         # Set p1 and p2 to None / 1 / -1 depending on polarity
-        p1 = self.subj.delta['polarity']
-        p2 = self.obj.delta['polarity']
+        p1 = self.subj.delta.polarity
+        p2 = self.obj.delta.polarity
         if p1 is None and p2 is None:
             pol = None
         elif p2 is None:
@@ -1989,8 +1989,8 @@ class Influence(Statement):
         return pol
 
     def polarity_count(self):
-        return ((1 if self.subj.delta['polarity'] is not None else 0) +
-                (1 if self.obj.delta['polarity'] is not None else 0))
+        return ((1 if self.subj.delta.polarity is not None else 0) +
+                (1 if self.obj.delta.polarity is not None else 0))
 
     def to_json(self, use_sbo=False):
         generic = super(Influence, self).to_json(use_sbo)
@@ -2050,8 +2050,8 @@ class Association(Complex):
         return mk_str(key)
 
     def overall_polarity(self):
-        p1 = self.members[0].delta['polarity']
-        p2 = self.members[1].delta['polarity']
+        p1 = self.members[0].delta.polarity
+        p2 = self.members[1].delta.polarity
         if p1 is None and p2 is None:
             pol = None
         elif p2 is None:
@@ -2064,7 +2064,7 @@ class Association(Complex):
 
     def polarity_count(self):
         return sum(
-            1 if m.delta['polarity'] is not None else 0 for m in self.members)
+            1 if m.delta.polarity is not None else 0 for m in self.members)
 
     def agent_list(self, deep_sorted=False):
         members = self.members if not deep_sorted else \
@@ -2289,7 +2289,7 @@ class Event(Statement):
     ----------
     concept : indra.statements.concept.Concept
         The concept over which the event is defined.
-    delta : dict
+    delta : indra.statements.delta.Delta
         Represents a change in the concept, with a polarity
         and an adjectives entry.
     context : indra.statements.context.Context
@@ -2301,7 +2301,8 @@ class Event(Statement):
                  supports=None, supported_by=None):
         super().__init__(evidence, supports, supported_by)
         self.concept = concept
-        self.delta = delta if delta else {'polarity': None, 'adjectives': []}
+        self.delta = delta if delta else QualitativeDelta(
+                polarity=None, adjectives=None)
         self.context = context
 
     def matches_key(self):
@@ -2310,20 +2311,19 @@ class Event(Statement):
 
     def refinement_of(self, other, hierarchies):
         concept_ref = self.concept.refinement_of(other.concept, hierarchies)
-        pol_ref = (self.delta['polarity'] and not other.delta['polarity']) or \
-            self.delta['polarity'] == other.delta['polarity']
+        pol_ref = (self.delta.polarity and not other.delta.polarity) or \
+            self.delta.polarity == other.delta.polarity
         return concept_ref and pol_ref
 
     def equals(self, other):
         return self.concept.equals(other.concept) and \
-            self.delta['polarity'] == other.delta['polarity'] and \
-            set(self.delta['adjectives']) == set(other.delta['adjectives'])
+            self.delta.equals(other.delta)
 
     def to_json(self, with_evidence=True, use_sbo=False):
         generic = super(Event, self).to_json(False)
         json_dict = _o(type=generic['type'],
                        concept=self.concept.to_json(),
-                       delta=self.delta)
+                       delta=self.delta.to_json())
         if self.context:
             json_dict['context'] = self.context.to_json()
         if with_evidence and 'evidence' in generic:
@@ -2334,12 +2334,13 @@ class Event(Statement):
     @classmethod
     def _from_json(cls, json_dict):
         concept = Concept._from_json(json_dict['concept'])
+        delta = QualitativeDelta.from_json(json_dict['delta'])
         context_entry = json_dict.get('context')
         if context_entry:
             context = Context.from_json(json_dict['context'])
         else:
             context = None
-        stmt = cls(concept, delta=json_dict.get('delta'),
+        stmt = cls(concept, delta=delta,
                    context=context)
         return stmt
 
