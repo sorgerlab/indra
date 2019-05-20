@@ -400,8 +400,10 @@ def test_adeft_mapping():
     assert mapped_stmts1[0].sub.db_refs['UP'] == 'P03372'
 
     mapped_stmts2 = gm.map_agents([stmt2])
-    assert mapped_stmts2[0].obj.name == 'Endoplasmic Reticulum', mapped_stmts2
-    assert mapped_stmts2[0].obj.db_refs['GO'] == 'GO:0005783'
+    assert mapped_stmts2[0].obj.name == 'Endoplasmic Reticulum', \
+        mapped_stmts2[0].obj.name
+    assert mapped_stmts2[0].obj.db_refs['GO'] == 'GO:0005783', \
+        mapped_stmts2[0].obj.db_refs
 
     annotations = mapped_stmts2[0].evidence[0].annotations
     assert 'GO:GO:0005783' in annotations['agents']['adeft'][1]

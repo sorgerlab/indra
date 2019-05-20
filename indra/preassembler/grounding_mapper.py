@@ -864,19 +864,23 @@ def run_adeft_disambiguation(stmt, agent, idx):
         res = adeft_disambiguators[agent_txt].disambiguate(
                                                 [grounding_text])
         ns_and_id, standard_name, disamb_scores = res[0]
-        # If the highest score is ungrounded we don't do anything
-        # TODO: should we explicitly remove grounding if we conclude it
-        # doesn't match any of the choices?
+        # If the highest score is ungrounded we explicitly remove grounding
+        # and reset the (potentially incorrectly standardized) name to the
+        # original text value.
         if ns_and_id == 'ungrounded':
-            return
-        db_ns, db_id = ns_and_id.split(':', maxsplit=1)
-        agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
-        agent.name = standard_name
-        logger.info('Disambiguated %s to: %s, %s:%s' %
-                    (agent_txt, standard_name, db_ns, db_id))
-        GroundingMapper.standardize_agent_name(new_agent,
-                                               standardize_refs=True)
-        annots['agents']['adeft'][idx] = disamb_scores
+            new_agent,name = agent_txt
+            new_agent.db_refs = {'TEXT': agent_txt}
+        # Otherwise we update the db_refs with what we got from DEFT
+        # and set the standard name
+        else:
+            db_ns, db_id = ns_and_id.split(':')
+            new_agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
+            new_agent.name = standard_name
+            logger.info('Disambiguated %s to: %s, %s:%s' %
+                        (agent_txt, standard_name, db_ns, db_id))
+            GroundingMapper.standardize_agent_name(new_agent,
+                                                   standardize_refs=True)
+            annots['agents']['adeft'][idx] = disamb_scores
 
 
 def _get_text_for_grounding(stmt, agent_text):
