@@ -71,7 +71,7 @@ def graph_query(kind, source, target=None, neighbor_limit=1,
         neighbor_limit = int(neighbor_limit)
         params['limit'] = neighbor_limit
     except (TypeError, ValueError):
-        logger.warn('Invalid neighborhood limit %s' % neighbor_limit)
+        logger.warning('Invalid neighborhood limit %s' % neighbor_limit)
         return None
     if target is not None:
         if isinstance(target, basestring):
