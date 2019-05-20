@@ -157,6 +157,8 @@ def process_owl(owl_filename):
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
     model = pcc.owl_to_model(owl_filename)
+    if model is None:
+        return None
     return process_model(model)
 
 
