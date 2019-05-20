@@ -2040,7 +2040,8 @@ def _get_grounding_terms(term):
                         'FPLX' in t['refs']:
                         it['comment'] = None
                     for k, v in t['refs'].items():
-                        it['refs'][k] = v
+                        if k not in it['refs'].keys():
+                            it['refs'][k] = v
             if not any_match:
                 independent_terms.append(t)
         terms = independent_terms
