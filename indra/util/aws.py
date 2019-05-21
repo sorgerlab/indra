@@ -8,29 +8,71 @@ from indra.util.nested_dict import NestedDict
 logger = logging.getLogger(__name__)
 
 
-def kill_all(job_queue, reason='None given', states=None):
-    """Terminates/cancels all RUNNING, RUNNABLE, and STARTING jobs."""
+def get_ids(job_list):
+    if job_list is None:
+        return None
+    return [job['jobId'] for job in job_list]
+
+
+def kill_all(job_queue, reason='None given', states=None, kill_list=None):
+    """Terminates/cancels all jobs on the specified queue.
+
+    Parameters
+    ----------
+    job_queue : str
+        The name of the Batch job queue on which you wish to terminate/cancel
+        jobs.
+    reason : str
+        Provide a reason for the kill that will be recorded with the job's
+        record on AWS.
+    states : None or list[str]
+        A list of job states to remove. Possible states are 'STARTING',
+        'RUNNABLE', and 'RUNNING'. If None, all jobs in all states will be
+        ended (modulo the `kill_list` below).
+    kill_list : None or list[dict]
+        A list of job dictionaries (as returned by the submit function) that
+        you specifically wish to kill. All other jobs on the queue will be
+        ignored. If None, all jobs on the queue will be ended (modulo the
+        above).
+
+    Returns
+    -------
+    killed_ids : list[str]
+        A list of the job ids for jobs that were killed.
+    """
+    # Default is all states.
     if states is None:
         states = ['STARTING', 'RUNNABLE', 'RUNNING']
+
+    # Get batch client
     batch = boto3.client('batch')
-    runnable = batch.list_jobs(jobQueue=job_queue, jobStatus='RUNNABLE')
-    job_info = runnable.get('jobSummaryList')
-    if job_info:
-        job_ids = [job['jobId'] for job in job_info]
-        # Cancel jobs
-        for job_id in job_ids:
-            batch.cancel_job(jobId=job_id, reason=reason)
-    res_list = []
+
+    # Get all other jobs, and terminate them.
+    killed_ids = []
     for status in states:
         running = batch.list_jobs(jobQueue=job_queue, jobStatus=status)
-        job_info = running.get('jobSummaryList')
-        if job_info:
-            job_ids = [job['jobId'] for job in job_info]
-            for job_id in job_ids:
-                logger.info('Killing %s' % job_id)
-                res = batch.terminate_job(jobId=job_id, reason=reason)
-                res_list.append(res)
-    return res_list
+        active_job_list = running.get('jobSummaryList')
+        if active_job_list is None:
+            continue
+
+        for job in active_job_list:
+            # Check if this is one of the specified jobs, if any specified.
+            ids_to_kill = get_ids(kill_list)
+            if ids_to_kill is not None and job['jobId'] not in ids_to_kill:
+                continue
+
+            # End the job.
+            if status == 'RUNNING':
+                logger.info('Terminating {jobName} ({jobId})'.format(**job))
+                res = batch.terminate_job(jobId=job['jobId'], reason=reason)
+            else:
+                logger.info('Canceling {jobName} ({jobId})'.format(**job))
+                res = batch.cancel_job(jobId=job['jobId'], reason=reason)
+
+            # Record the result of the kill
+            killed_ids.append(res)
+
+    return killed_ids
 
 
 def tag_instance(instance_id, **tags):

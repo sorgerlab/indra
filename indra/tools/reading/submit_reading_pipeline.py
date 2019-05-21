@@ -8,7 +8,8 @@ from threading import Thread
 from datetime import datetime
 from indra.literature import elsevier_client as ec
 from indra.literature.elsevier_client import _ensure_api_keys
-from indra.util.aws import get_job_log, tag_instance, get_batch_command
+from indra.util.aws import get_job_log, tag_instance, get_batch_command, \
+    kill_all, get_ids
 
 bucket_name = 'bigmech'
 
@@ -22,7 +23,8 @@ class BatchReadingError(Exception):
 def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                       poll_interval=10, idle_log_timeout=None,
                       kill_on_log_timeout=False, stash_log_method=None,
-                      tag_instances=False, result_record=None):
+                      tag_instances=False, result_record=None,
+                      wait_for_first_job=False):
     """Return when all jobs in the given list finished.
 
     If not job list is given, return when all jobs in queue finished.
@@ -58,16 +60,19 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         Default is False. If True, apply tags to the instances. This is toady
         typically done by each job, so in most cases this should not be needed.
     result_record : dict
-        A dict which will be modified in place to record the results of the job.
+        A dict which will be modified in place to record the results of the job
+    wait_for_first_job : bool
+        Don't exit until at least one job has been found. This is good if you
+        are monitoring jobs that are submitted periodically, but can be a
+        problem if there is a chance you might call this when no jobs will
+        ever be run.
     """
     if stash_log_method == 's3' and job_name_prefix is None:
         raise Exception('A job_name_prefix is required to post logs on s3.')
 
+    logger.info("Given %s jobs to track"
+                % ('no' if job_list is None else len(job_list)))
     start_time = datetime.now()
-    if job_list is None:
-        job_id_list = []
-    else:
-        job_id_list = [job['jobId'] for job in job_list]
 
     if result_record is None:
         result_record = {}
@@ -79,7 +84,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         if job_name_prefix:
             jobs = [job for job in jobs if
                     job['jobName'].startswith(job_name_prefix)]
-        if job_id_filter:
+        if job_id_filter is not None:
             jobs = [job_def for job_def in jobs
                     if job_def['jobId'] in job_id_filter]
         return jobs
@@ -106,8 +111,9 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                     job_log_dict[jid] = {'log': log_lines,
                                          'last change time': now}
                 elif len(job_log_dict[jid]['log']) == len(log_lines):
-                    # If the job log hasn't changed, announce as such, and check
-                    # to see if it has been the same for longer than stall time.
+                    # If the job log hasn't changed, announce as such, and
+                    # check to see if it has been the same for longer than
+                    # stall time.
                     check_dt = now - job_log_dict[jid]['last change time']
                     logger.warning(('Job \'%s\' has not produced output for '
                                     '%d seconds.')
@@ -117,13 +123,13 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                                        % job_def['jobName'])
                         stalled_jobs.add(jid)
                 else:
-                    # If the job is known, and the logs have changed, update the
-                    # "last change time".
+                    # If the job is known, and the logs have changed, update
+                    # the "last change time".
                     old_log = job_log_dict[jid]['log']
                     old_log += log_lines[len(old_log):]
                     job_log_dict[jid]['last change time'] = now
             except Exception as e:
-                # Sometimes due to sync et al. issues, a part of this will fail.
+                # Sometimes due to sync et al. issues, a part of this will fail
                 # Such things are usually transitory issues so we keep trying.
                 logger.error("Failed to check log for: %s" % str(job_def))
                 logger.exception(e)
@@ -144,13 +150,19 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     terminate_msg = 'Job log has stalled for at least %f minutes.'
     terminated_jobs = set()
     stashed_id_set = set()
+    found_a_job = False
     while True:
         pre_run = []
+        job_id_list = get_ids(job_list)
+        logger.info("Specifically tracked jobs: %s" % len(job_id_list))
         for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
             pre_run += get_jobs_by_status(status, job_id_list, job_name_prefix)
         running = get_jobs_by_status('RUNNING', job_id_list, job_name_prefix)
         failed = get_jobs_by_status('FAILED', job_id_list, job_name_prefix)
         done = get_jobs_by_status('SUCCEEDED', job_id_list, job_name_prefix)
+
+        if len(pre_run + running):
+            found_a_job = True
 
         observed_job_def_dict.update(get_dict_of_job_tuples(pre_run + running))
 
@@ -172,15 +184,22 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                     logger.info('Terminating %s.' % jid)
                     terminated_jobs.add(jid)
 
-        if job_id_list:
-            if (len(failed) + len(done)) == len(job_id_list):
-                ret = 0
-                break
-        else:
-            if (len(failed) + len(done) > 0) and \
-               (len(pre_run) + len(running) == 0):
-                ret = 0
-                break
+        # Check for end-conditions.
+        if found_a_job or not wait_for_first_job:
+            if job_id_list:
+                if (len(failed) + len(done)) == len(job_id_list):
+                    logger.info("Total failed and done equals number of "
+                                "original tracked jobs. Ending.")
+                    ret = 0
+                    break
+            else:
+                if (len(failed) + len(done) > 0) and \
+                   (len(pre_run) + len(running) == 0):
+                    logger.info("No job_id_list, but there are new finished "
+                                "jobs and no running or pre-running jobs. "
+                                "Ending.")
+                    ret = 0
+                    break
 
         if tag_instances:
             tag_instances_on_cluster(ecs_cluster_name)
@@ -192,6 +211,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                        stash_log_method, job_name_prefix,
                        start_time.strftime('%Y%m%d_%H%M%S'),
                        ids_stashed=stashed_id_set)
+
         sleep(poll_interval)
 
     # Pick up any stragglers
@@ -368,8 +388,9 @@ class Submitter(object):
             self.readers = readers
         self.project_name = project_name
         self.job_list = None
-        self.options=options
+        self.options = options
         self.ids_per_job = None
+        self.running = None
         return
 
     def set_options(self, **kwargs):
@@ -418,6 +439,8 @@ class Submitter(object):
         job_list : list[str]
             A list of job id strings.
         """
+        self.job_list = []
+
         # stash this for later.
         self.ids_per_job = ids_per_job
 
@@ -441,9 +464,21 @@ class Submitter(object):
 
         # Iterate over the list of PMIDs and submit the job in chunks
         batch_client = boto3.client('batch', region_name='us-east-1')
-        job_list = []
+
+        # Check to see if we've already been given a signal to quit.
+        if self.running is None:
+            self.running = True
+        elif not self.running:
+            return None
+
         for job_start_ix in range(start_ix, end_ix, ids_per_job):
-            sleep(stagger)
+
+            # Check for a stop signal
+            if not self.running:
+                logger.info("Running was switched off, discontinuing...")
+                break
+
+            # Generate the command for this batch.
             job_end_ix = job_start_ix + ids_per_job
             if job_end_ix > end_ix:
                 job_end_ix = end_ix
@@ -451,6 +486,8 @@ class Submitter(object):
             command_list = get_batch_command(cmd, purpose=self._purpose,
                                              project=self.project_name)
             logger.info('Command list: %s' % str(command_list))
+
+            # Submit the job.
             job_info = batch_client.submit_job(
                 jobName=job_name,
                 jobQueue=self._job_queue,
@@ -460,22 +497,36 @@ class Submitter(object):
                     'command': command_list},
                 retryStrategy={'attempts': num_tries}
             )
+
+            # Record the job id.
             logger.info("submitted...")
-            job_list.append({'jobId': job_info['jobId']})
-        self.job_list = job_list
-        return job_list
+            self.job_list.append({'jobId': job_info['jobId']})
+            logger.info("Sleeping for %d seconds..." % stagger)
+            sleep(stagger)
+
+        return self.job_list
 
     def watch_and_wait(self, poll_interval=10, idle_log_timeout=None,
                        kill_on_timeout=False, stash_log_method=None,
-                       tag_instances=False, **kwargs):
+                       tag_instances=False, kill_on_exception=True, **kwargs):
         """This provides shortcut access to the wait_for_complete_function."""
-        return wait_for_complete(self._job_queue, job_list=self.job_list,
-                                 job_name_prefix=self.basename,
-                                 poll_interval=poll_interval,
-                                 idle_log_timeout=idle_log_timeout,
-                                 kill_on_log_timeout=kill_on_timeout,
-                                 stash_log_method=stash_log_method,
-                                 tag_instances=tag_instances, **kwargs)
+        try:
+            res = wait_for_complete(self._job_queue, job_list=self.job_list,
+                                    job_name_prefix=self.basename,
+                                    poll_interval=poll_interval,
+                                    idle_log_timeout=idle_log_timeout,
+                                    kill_on_log_timeout=kill_on_timeout,
+                                    stash_log_method=stash_log_method,
+                                    tag_instances=tag_instances, **kwargs)
+        except (BaseException, KeyboardInterrupt) as e:
+            logger.error("Exception in wait_for_complete:")
+            logger.exception(e)
+            if kill_on_exception:
+                logger.info("Killing all my jobs...")
+                kill_all(self._job_queue, kill_list=self.job_list,
+                         reason='Exception in monitor, jobs aborted.')
+            raise e
+        return res
 
     def run(self, input_fname, ids_per_job, stagger=0, **wait_params):
         """Run this submission all the way.
@@ -483,17 +534,34 @@ class Submitter(object):
         This method will run both `submit_reading` and `watch_and_wait`,
         blocking on the latter.
         """
+
         submit_thread = Thread(target=self.submit_reading,
                                args=(input_fname, 0, None, ids_per_job),
                                kwargs={'stagger': stagger},
                                daemon=True)
         submit_thread.start()
-        self.watch_and_wait(**wait_params)
-        submit_thread.join(0)
-        if submit_thread.is_alive():
-            logger.warning("Submit thread is still running even after job"
-                           "completion.")
-        return
+        try:
+            logger.info("Waiting for just a sec...")
+            sleep(1)
+            wait_params['wait_for_first_job'] = True
+            wait_params['kill_on_exception'] = True
+            self.watch_and_wait(**wait_params)
+            submit_thread.join(0)
+            if submit_thread.is_alive():
+                logger.warning("Submit thread is still running even after job "
+                               "completion.")
+        except BaseException as e:
+            logger.error("Watch and wait failed...")
+            logger.exception(e)
+        finally:
+            logger.info("Aborting jobs...")
+            # Send a signal to the submission loop (on a thread) to stop.
+            self.running = False
+            submit_thread.join()
+            print(submit_thread.is_alive())
+
+        self.running = None
+        return submit_thread
 
 
 class PmidSubmitter(Submitter):

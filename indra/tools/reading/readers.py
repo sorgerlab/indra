@@ -248,22 +248,12 @@ class ReadingData(object):
 
             # Map to the different processors.
             if self.reader == ReachReader.name:
-                if self.format == formats.JSON:
-                    # Process the reach json into statements.
-                    json_str = json.dumps(self.content)
-                    processor = reach.process_json_str(json_str)
-                else:
-                    raise ReadingError("Incorrect format for Reach output: %s."
-                                       % self.format)
+                json_str = json.dumps(self.content)
+                processor = reach.process_json_str(json_str)
             elif self.reader == SparserReader.name:
-                if self.format == formats.JSON:
-                    # Process the sparser content into statements
-                    processor = sparser.process_json_dict(self.content)
-                    if processor is not None:
-                        processor.set_statements_pmid(None)
-                else:
-                    raise ReadingError("Sparser should only ever be JSON, not "
-                                       "%s." % self.format)
+                processor = sparser.process_json_dict(self.content)
+                if processor is not None:
+                    processor.set_statements_pmid(None)
             elif self.reader == TripsReader.name:
                 processor = trips.process_xml(self.content)
             else:
