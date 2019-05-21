@@ -62,7 +62,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     result_record : dict
         A dict which will be modified in place to record the results of the job
     wait_for_first_job : bool
-        Don't exit until at least on job has been found. This is good if you
+        Don't exit until at least one job has been found. This is good if you
         are monitoring jobs that are submitted periodically, but can be a
         problem if there is a chance you might call this when no jobs will
         ever be run.
