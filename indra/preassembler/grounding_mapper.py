@@ -868,7 +868,7 @@ def run_adeft_disambiguation(stmt, agent, idx):
         # and reset the (potentially incorrectly standardized) name to the
         # original text value.
         if ns_and_id == 'ungrounded':
-            new_agent,name = agent_txt
+            new_agent.name = agent_txt
             new_agent.db_refs = {'TEXT': agent_txt}
         # Otherwise we update the db_refs with what we got from DEFT
         # and set the standard name
