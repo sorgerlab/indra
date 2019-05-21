@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 import csv
 import json
@@ -241,7 +239,7 @@ class GroundingMapper(object):
                     run_adeft_disambiguation(mapped_stmt, new_agent, idx)
                 except Exception as e:
                     logger.error('There was an error during Adeft'
-                                 ' disambiguation.')
+                                 ' disambiguation of %s.' % agent_txt)
                     logger.error(e)
 
             # If the old agent had bound conditions, but the new agent does
