@@ -1,0 +1,57 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum-dev/etc/Data/WP/TEXT00004_IO-48813" id="paragraph3">MEK1</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="4" pid="paragraph3">MEK1</sentence>
+		</sentences>
+	</input>
+	<TERM dbid="XFAM:PF00069|NCIT:C17808|UP:Q05116|UP:Q02750|HGNC:6840|NCIT:C52823|NCIT:C105947|UP:Q91447" end="4" id="V48829" lisp="(ONT::TERM ONT::V48829 ONT::GENE-PROTEIN :NAME W::MEK-1 :DRUM ((:DRUM (TERM :ID NCIT::C52823 :NAME &quot;MAP2K1&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;MEK1&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C105947 :NAME &quot;mitogen-activated protein kinase kinase&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;MEK1&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C17808 :NAME &quot;dual specificity mitogen-activated protein kinase kinase 1&quot; :SCORE 0.71082 :MATCHES ((MATCH :SCORE 0.71082 :MATCHED &quot;MEK-1&quot; :STATUS &quot;synonym&quot; :NO-DASH-DASH 1 :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID HGNC::|6840| :NAME &quot;mitogen-activated protein kinase kinase 1&quot; :SCORE 0.56627 :MATCHES ((MATCH :SCORE 0.56627 :MATCHED &quot;MEK1&quot; :STATUS &quot;Synonym&quot; :EXACT 1)) :DBXREFS (UP::Q02750) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::Q91447 :NAME &quot;Dual specificity mitogen-activated protein kinase kinase 1&quot; :SCORE 0.56627 :MATCHES ((MATCH :SCORE 0.56627 :MATCHED &quot;MEK1&quot; :STATUS &quot;AltName: Short&quot; :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::Q05116 :NAME &quot;Dual specificity mitogen-activated protein kinase kinase 1&quot; :SCORE 0.56627 :MATCHES ((MATCH :SCORE 0.56627 :MATCHED &quot;MEK1&quot; :STATUS &quot;AltName: Short&quot; :EXACT 1)) :DBXREFS (XFAM::PF00069) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph3" rule="-SIMPLE-REF,-ADD-SPEC" start="0" uttnum="4">
+		<type>ONT::GENE-PROTEIN</type>
+		<text normalization="">MEK1</text>
+		<name>MEK-1</name>
+		<drum-terms>
+			<drum-term dbid="NCIT:C52823" match-score="0.71084" matched-name="MEK1" name="MAP2K1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C105947" match-score="0.71084" matched-name="MEK1" name="mitogen-activated protein kinase kinase">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17808" match-score="0.71082" matched-name="MEK-1" name="dual specificity mitogen-activated protein kinase kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:6840" match-score="0.56627" matched-name="MEK1" name="mitogen-activated protein kinase kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:Q02750"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:Q91447" match-score="0.56627" matched-name="MEK1" name="Dual specificity mitogen-activated protein kinase kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:Q05116" match-score="0.56627" matched-name="MEK1" name="Dual specificity mitogen-activated protein kinase kinase 1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00069"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+</ekb>

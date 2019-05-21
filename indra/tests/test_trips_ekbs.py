@@ -891,3 +891,12 @@ def test_ncit_up_hgnc_mapping():
     assert len(agents) == 1, agents
     agent = agents[0]
     assert 'HGNC' in agent.db_refs, agent.db_refs
+
+
+def test_ncit_multiple_mappings():
+    fname = os.path.join(path_this, 'trips_ekbs', 'mek1.ekb')
+    tp = trips.process_xml(open(fname, 'r').read())
+    agents = tp.get_agents()
+    assert len(agents) == 1, agents
+    agent = agents[0]
+    agent.db_refs['NCIT'] == 'C52823'
