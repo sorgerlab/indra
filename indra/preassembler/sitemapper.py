@@ -126,6 +126,10 @@ class SiteMapper(ProtMapper):
         self.do_methionine_offset = do_methionine_offset
         self.do_orthology_mapping = do_orthology_mapping
         self.do_isoform_mapping = do_isoform_mapping
+        self._failed_agents = []
+        self._failed_agent_pickle = ('sitemapper_failed_agents_%d.pkl'
+                                     % int(datetime.now().timestamp()))
+        return
 
     def map_stmt_sites(self, stmt, ):
         stmt_copy = deepcopy(stmt)
@@ -307,13 +311,21 @@ class SiteMapper(ProtMapper):
         if mod_condition.position is None or mod_condition.residue is None:
             return None
         # Otherwise, try to map it and return the mapped site
-        mapped_site = \
-            self.map_to_human_ref(up_id, 'uniprot',
-                mod_condition.residue,
-                mod_condition.position,
-                do_methionine_offset=self.do_methionine_offset,
-                do_orthology_mapping=self.do_orthology_mapping,
-                do_isoform_mapping=self.do_isoform_mapping)
+        try:
+            mapped_site = \
+                self.map_to_human_ref(up_id, 'uniprot',
+                    mod_condition.residue,
+                    mod_condition.position,
+                    do_methionine_offset=self.do_methionine_offset,
+                    do_orthology_mapping=self.do_orthology_mapping,
+                    do_isoform_mapping=self.do_isoform_mapping)
+        except Exception as e:
+            logger.exception(e)
+            logger.error('Failed to map %s' % up_id)
+            self._failed_agents.append(agent)
+            with open(self._failed_agent_pickle, 'wb') as f:
+                pickle.dump(self._failed_agents, f)
+            mapped_site = None
         return mapped_site
 
 
