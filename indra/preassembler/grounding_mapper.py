@@ -727,7 +727,7 @@ def run_deft_disambiguation(stmt, agent_list, idx, new_agent, agent_txt):
         # doesn't match any of the choices?
         if ns_and_id == 'ungrounded':
             return
-        db_ns, db_id = ns_and_id.split(':')
+        db_ns, db_id = ns_and_id.split(':', maxsplit=1)
         new_agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
         new_agent.name = standard_name
         logger.info('Disambiguated %s to: %s, %s:%s' %
