@@ -121,14 +121,16 @@ class SiteMapper(ProtMapper):
     """
     def __init__(self, site_map=None, use_cache=False, cache_path=None,
                  do_methionine_offset=True, do_orthology_mapping=True,
-                 do_isoform_mapping=True):
+                 do_isoform_mapping=True, log_errors=False):
         super(SiteMapper, self).__init__(site_map, use_cache, cache_path)
         self.do_methionine_offset = do_methionine_offset
         self.do_orthology_mapping = do_orthology_mapping
         self.do_isoform_mapping = do_isoform_mapping
-        self._failed_agents = []
-        self._failed_agent_pickle = ('sitemapper_failed_agents_%d.pkl'
-                                     % int(datetime.now().timestamp()))
+        self.log_errors = log_errors
+        if self.log_errors:
+            self._failed_agents = []
+            self._failed_agent_pickle = ('sitemapper_failed_agents_%d.pkl'
+                                         % int(datetime.now().timestamp()))
         return
 
     def map_stmt_sites(self, stmt, ):
@@ -320,11 +322,12 @@ class SiteMapper(ProtMapper):
                     do_orthology_mapping=self.do_orthology_mapping,
                     do_isoform_mapping=self.do_isoform_mapping)
         except Exception as e:
-            logger.exception(e)
             logger.error('Failed to map %s' % up_id)
-            self._failed_agents.append(agent)
-            with open(self._failed_agent_pickle, 'wb') as f:
-                pickle.dump(self._failed_agents, f)
+            logger.exception(e)
+            if self.log_errors:
+                self._failed_agents.append((agent, mod_condition, e))
+                with open(self._failed_agent_pickle, 'wb') as f:
+                    pickle.dump(self._failed_agents, f)
             mapped_site = None
         return mapped_site
 
