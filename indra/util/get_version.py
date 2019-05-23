@@ -48,8 +48,10 @@ def get_version(with_git_hash=True, refresh_hash=False):
                     ret = check_output(['git', 'rev-parse', 'HEAD'],
                                        cwd=dirname(__file__), stderr=nul)
                 except CalledProcessError:
-                    ret = 'UNHASHED'
-            INDRA_GITHASH = ret.strip().decode('utf-8')
+                    ret = b'UNHASHED'
+            INDRA_GITHASH = ret.strip()
+            if isinstance(INDRA_GITHASH, bytes):
+                INDRA_GITHASH = INDRA_GITHASH.decode('utf-8')
         version = '%s-%s' % (version, INDRA_GITHASH)
     return version
 
