@@ -313,7 +313,7 @@ def test_deft_mapping():
 
     mapped_stmts2 = gm.map_agents([stmt2])
     assert mapped_stmts2[0].obj.name == 'Endoplasmic Reticulum'
-    assert mapped_stmts2[0].obj.db_refs['GO'] == '0005783'
+    assert mapped_stmts2[0].obj.db_refs['GO'] == 'GO:0005783'
 
     annotations = mapped_stmts2[0].evidence[0].annotations
-    assert 'GO:0005783' in annotations['agents']['deft'][1]
+    assert 'GO:GO:0005783' in annotations['agents']['deft'][1]
