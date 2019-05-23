@@ -1,20 +1,14 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-from future.utils import python_2_unicode_compatible
+import pickle
 import logging
 import textwrap
-import requests
 from copy import deepcopy
+from datetime import datetime
 from functools import lru_cache
+
 from protmapper.api import ProtMapper, default_site_map
+
 from indra.statements import *
 from indra.databases import hgnc_client
-# Python 2
-try:
-    basestring
-# Python 3
-except:
-    basestring = str
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +31,6 @@ class MappedStatement(object):
         self.mapped_mods = mapped_mods
         self.mapped_stmt = mapped_stmt
 
-    @python_2_unicode_compatible
     def __str__(self):
         if not self.mapped_mods:
             mm_str = str(self.mapped_mods)
@@ -169,8 +162,8 @@ class SiteMapper(ProtMapper):
             isinstance(stmt, SelfModification)) and \
            stmt.residue is not None and stmt.position is not None:
             # Make sure we didn't end up with lists by accident
-            assert isinstance(stmt.residue, basestring) and \
-                   isinstance(stmt.position, basestring)
+            assert isinstance(stmt.residue, str) and \
+                   isinstance(stmt.position, str)
             # Get the right agent depending on whether this is a
             # Modification or SelfModification statement
             agent_to_check = (stmt_copy.sub
@@ -348,7 +341,6 @@ def _get_uniprot_id(agent):
         if up_id is None:
             return None
     # If the UniProt ID is a list then choose the first one.
-    if not isinstance(up_id, basestring) and \
-       isinstance(up_id[0], basestring):
+    if not isinstance(up_id, str) and isinstance(up_id[0], str):
         up_id = up_id[0]
     return up_id
