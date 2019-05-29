@@ -482,6 +482,20 @@ def update_lincs_proteins():
         json.dump(prot_dict, fh, indent=1)
 
 
+def update_mesh_names():
+    url = 'ftp://nlmpubs.nlm.nih.gov/online/mesh/2018/xmlmesh/desc2018.xml'
+    urlretrieve(url, 'desc2018.xml')
+    et = ET.parse('desc2018.xml')
+    records = et.findall('DescriptorRecord')
+    rows = []
+    for record in records:
+        uid = record.find('DescriptorUI').text
+        name = record.find('DescriptorName/String').text
+        rows.append((uid, name))
+    fname = os.path.join(path, 'mesh_id_label_mappings.tsv')
+    write_unicode_csv(fname, rows, delimiter='\t')
+
+
 if __name__ == '__main__':
     update_go_id_mappings()
     update_cellular_component_hierarchy()
@@ -501,3 +515,4 @@ if __name__ == '__main__':
     update_ncit_map()
     update_lincs_small_molecules()
     update_lincs_proteins()
+    update_mesh_names()
