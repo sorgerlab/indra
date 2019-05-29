@@ -316,4 +316,4 @@ def test_deft_mapping():
     assert mapped_stmts2[0].obj.db_refs['GO'] == 'GO:0005783'
 
     annotations = mapped_stmts2[0].evidence[0].annotations
-    assert 'GO:GO:0005783' in annotations['agents']['deft'][1]
+    assert 'GO:GO:0005783' in annotations['agents']['adeft'][1]
