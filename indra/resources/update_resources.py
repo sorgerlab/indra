@@ -482,6 +482,36 @@ def update_lincs_proteins():
         json.dump(prot_dict, fh, indent=1)
 
 
+def update_mesh_names():
+    url = 'ftp://nlmpubs.nlm.nih.gov/online/mesh/2018/xmlmesh/desc2018.xml'
+    urlretrieve(url, 'desc2018.xml')
+    # Process the XML and find descriptor records
+    et = ET.parse('desc2018.xml')
+    records = et.findall('DescriptorRecord')
+    rows = []
+    for record in records:
+        # We first get the ID and the name
+        uid = record.find('DescriptorUI').text
+        name = record.find('DescriptorName/String').text
+        # We then need to look for additional terms related to the
+        # preferred concept to get additional names
+        concepts = record.findall('ConceptList/Concept')
+        all_term_names = []
+        for concept in concepts:
+            # We only look at the preferred concept here
+            if concept.attrib['PreferredConceptYN'] == 'Y':
+                terms = concept.findall('TermList/Term')
+                for term in terms:
+                    term_name = term.find('String').text
+                    if term_name != name:
+                        all_term_names.append(term_name)
+        # Append a list of term names separated by pipes to the table
+        term_name_str = '|'.join(all_term_names)
+        rows.append((uid, name, term_name_str))
+    fname = os.path.join(path, 'mesh_id_label_mappings.tsv')
+    write_unicode_csv(fname, rows, delimiter='\t')
+
+
 if __name__ == '__main__':
     update_go_id_mappings()
     update_cellular_component_hierarchy()
@@ -501,3 +531,4 @@ if __name__ == '__main__':
     update_ncit_map()
     update_lincs_small_molecules()
     update_lincs_proteins()
+    update_mesh_names()
