@@ -88,7 +88,7 @@ class TripsProcessor(object):
         self._subsumed_events = []
         self.all_events = {}
         self.get_all_events()
-        self.extracted_events = {k: [] for k in self.all_events.keys()}
+        self.extracted_events = {}
         logger.debug('All events by type')
         logger.debug('------------------')
         for k, v in self.all_events.items():
@@ -1684,7 +1684,10 @@ class TripsProcessor(object):
         return isolated_terms
 
     def _add_extracted(self, event_type, event_id):
-        self.extracted_events[event_type].append(event_id)
+        if event_type in self.extracted_events:
+            self.extracted_events[event_type].append(event_id)
+        else:
+            self.extracted_events[event_type] = [event_id]
 
 
 def _get_type(element):
