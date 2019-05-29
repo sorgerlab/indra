@@ -46,7 +46,7 @@ def get_mesh_name_from_web(mesh_id):
         return None
     mesh_json = resp.json()
     try:
-        label = mesh_json['@graph'][0]['label']['@value']
+        label = mesh_json['label']['@value']
     except (KeyError, IndexError) as e:
         return None
     return label

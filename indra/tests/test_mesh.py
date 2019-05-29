@@ -4,7 +4,7 @@ from indra.databases import mesh_client
 def test_mesh_id_lookup_from_web():
     mesh_id = 'D003094'
     mesh_name = mesh_client.get_mesh_name_from_web(mesh_id)
-    assert mesh_name == 'Collagen'
+    assert mesh_name == 'Collagen', mesh_name
 
 
 def test_invalid_id():
@@ -19,7 +19,7 @@ def test_mesh_id_lookup_local():
 
 
 def test_mesh_id_local_missing():
-    mesh_id = 'D015242'
+    mesh_id = 'XXXX'  # dummy name to make sure we don't have it offline
     mesh_name = mesh_client.get_mesh_name(mesh_id, offline=True)
     assert mesh_name is None
 
@@ -38,7 +38,7 @@ def test_mesh_term_lookup_local():
 
 
 def test_mesh_term_local_missing():
-    mesh_term = 'Rectal Tumors'
+    mesh_term = 'XXXX'  # dummy term to make sure we don't have it offline
     mesh_id, mesh_name = mesh_client.get_mesh_id_name(mesh_term, offline=True)
     assert mesh_id is None
     assert mesh_name is None
