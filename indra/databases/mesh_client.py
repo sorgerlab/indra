@@ -11,17 +11,18 @@ MESH_URL = 'https://id.nlm.nih.gov/mesh/'
 HERE = dirname(abspath(__file__))
 RESOURCES = join(HERE, pardir, 'resources')
 MESH_FILE = join(RESOURCES, 'mesh_id_label_mappings.tsv')
-MESH_REV_LOOKUPS = join(RESOURCES, 'mesh_name_id_maps.json')
 
 
 mesh_id_to_name = {}
 mesh_name_to_id = {}
-for mesh_id, mesh_label in read_unicode_csv(MESH_FILE, delimiter='\t'):
+mesh_name_to_id_name = {}
+for mesh_id, mesh_label, mesh_terms_str in read_unicode_csv(MESH_FILE,
+                                                            delimiter='\t'):
     mesh_id_to_name[mesh_id] = mesh_label
     mesh_name_to_id[mesh_label] = mesh_id
-
-with open(MESH_REV_LOOKUPS, 'r') as f:
-    mesh_name_to_id_name = json.load(f)
+    mesh_terms = mesh_terms_str.split('|')
+    for term in mesh_terms:
+        mesh_name_to_id_name[term] = [mesh_id, mesh_label]
 
 
 @lru_cache(maxsize=1000)
