@@ -16,17 +16,17 @@ from indra.util import read_unicode_csv, write_unicode_csv
 logger = logging.getLogger(__name__)
 
 
-# If the deft disambiguator is installed, load deft models to
+# If the adeft disambiguator is installed, load adeft models to
 # disambiguate acronyms and shortforms
 try:
-    from deft import available_shortforms as available_deft_models
-    from deft.disambiguate import load_disambiguator
-    deft_disambiguators = {}
-    for shortform in available_deft_models:
-        deft_disambiguators[shortform] = load_disambiguator(shortform)
+    from adeft import available_shortforms as available_adeft_models
+    from adeft.disambiguate import load_disambiguator
+    adeft_disambiguators = {}
+    for shortform in available_adeft_models:
+        adeft_disambiguators[shortform] = load_disambiguator(shortform)
 except Exception:
     logger.info('DEFT will not be available for grounding disambiguation.')
-    deft_disambiguators = {}
+    adeft_disambiguators = {}
 
 
 class GroundingMapper(object):
@@ -39,14 +39,14 @@ class GroundingMapper(object):
         a dictionary of database identifiers.
     agent_map : Optional[dict]
         A dictionary mapping strings to grounded INDRA Agents with given state.
-    use_deft : Optional[bool]
-        If True, Deft will be attempted to be used for disambiguation of
+    use_adeft : Optional[bool]
+        If True, Adeft will be attempted to be used for disambiguation of
         acronyms. Default: True
     """
-    def __init__(self, gm, agent_map=None, use_deft=True):
+    def __init__(self, gm, agent_map=None, use_adeft=True):
         self.gm = gm
         self.agent_map = agent_map if agent_map is not None else {}
-        self.use_deft = use_deft
+        self.use_adeft = use_adeft
 
     def update_agent_db_refs(self, agent, agent_text, do_rename=True):
         """Update db_refs of agent using the grounding map
@@ -179,13 +179,13 @@ class GroundingMapper(object):
 
             new_agent, maps_to_none = self.map_agent(agent, do_rename)
 
-            # Check if a deft model exists for agent text
-            if self.use_deft and agent_txt in deft_disambiguators:
+            # Check if a adeft model exists for agent text
+            if self.use_adeft and agent_txt in adeft_disambiguators:
                 try:
-                    run_deft_disambiguation(mapped_stmt, agent_list, idx,
-                                            new_agent, agent_txt)
+                    run_adeft_disambiguation(mapped_stmt, agent_list, idx,
+                                             new_agent, agent_txt)
                 except Exception as e:
-                    logger.error('There was an error during Deft'
+                    logger.error('There was an error during Adeft'
                                  ' disambiguation.')
                     logger.error(e)
 
@@ -707,19 +707,19 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
                       quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
 
 
-def run_deft_disambiguation(stmt, agent_list, idx, new_agent, agent_txt):
-    # Initialize annotations if needed so Deft predicted
+def run_adeft_disambiguation(stmt, agent_list, idx, new_agent, agent_txt):
+    # Initialize annotations if needed so Adeft predicted
     # probabilities can be added to Agent annotations
     annots = stmt.evidence[0].annotations if stmt.evidence else {}
     if 'agents' in annots:
-        if 'deft' not in annots['agents']:
-            annots['agents']['deft'] = \
-                {'deft': [None for _ in agent_list]}
+        if 'adeft' not in annots['agents']:
+            annots['agents']['adeft'] = \
+                {'adeft': [None for _ in agent_list]}
     else:
-        annots['agents'] = {'deft': [None for _ in agent_list]}
+        annots['agents'] = {'adeft': [None for _ in agent_list]}
     grounding_text = _get_text_for_grounding(stmt, agent_txt)
     if grounding_text:
-        res = deft_disambiguators[agent_txt].disambiguate(
+        res = adeft_disambiguators[agent_txt].disambiguate(
                                                 [grounding_text])
         ns_and_id, standard_name, disamb_scores = res[0]
         # If the highest score is ungrounded we don't do anything
@@ -737,11 +737,11 @@ def run_deft_disambiguation(stmt, agent_list, idx, new_agent, agent_txt):
             GroundingMapper.standardize_agent_db_refs(new_agent,
                                                       {'HGNC': hgnc_sym},
                                                       do_rename=False)
-        annots['agents']['deft'][idx] = disamb_scores
+        annots['agents']['adeft'][idx] = disamb_scores
 
 
 def _get_text_for_grounding(stmt, agent_text):
-    """Get text context for Deft disambiguation
+    """Get text context for Adeft disambiguation
 
     If the INDRA database is available, attempts to get the fulltext from
     which the statement was extracted. If the fulltext is not available, the
@@ -760,14 +760,14 @@ def _get_text_for_grounding(stmt, agent_text):
     Returns
     -------
     text : str
-        Text for Feft disambiguation
+        Text for Adeft disambiguation
     """
     text = None
     # First we will try to get content from the DB
     try:
         from indra_db.util.content_scripts \
             import get_text_content_from_text_refs
-        from indra.literature.deft_tools import universal_extract_text
+        from indra.literature.adeft_tools import universal_extract_text
         refs = stmt.evidence[0].text_refs
         # Prioritize the pmid attribute if given
         if stmt.evidence[0].pmid:
