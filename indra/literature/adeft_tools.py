@@ -1,5 +1,5 @@
 """
-This file provides several functions helpful for acquiring texts for deft
+This file provides several functions helpful for acquiring texts for Adeft
 disambiguation.
 
 It offers the ability to get text content for articles containing a

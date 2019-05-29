@@ -91,8 +91,8 @@ def map_grounding(stmts_in, **kwargs):
         A user supplied grounding map which maps a string to a
         dictionary of database IDs (in the format used by Agents'
         db_refs).
-    use_deft : Optional[bool]
-        If True, Deft will be attempted to be used for acronym disambiguation.
+    use_adeft : Optional[bool]
+        If True, Adeft will be attempted to be used for acronym disambiguation.
         Default: True
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
@@ -111,7 +111,7 @@ def map_grounding(stmts_in, **kwargs):
     gm = kwargs.get('grounding_map', grounding_map)
     if do_rename is None:
         do_rename = True
-    gm = GroundingMapper(gm, agent_map, use_deft=kwargs.get('use_deft', True))
+    gm = GroundingMapper(gm, agent_map, use_adeft=kwargs.get('use_adeft', True))
     stmts_out = gm.map_agents(stmts_in, do_rename=do_rename)
     dump_pkl = kwargs.get('save')
     if dump_pkl:

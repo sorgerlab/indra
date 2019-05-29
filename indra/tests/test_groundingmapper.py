@@ -292,7 +292,7 @@ def test_map_agent():
     assert mapped_ag.db_refs.get('FPLX') == 'ERK'
 
 
-def test_deft_mapping():
+def test_adeft_mapping():
     er1 = Agent('ER', db_refs={'TEXT': 'ER'})
     pmid1 = '30775882'
     stmt1 = Phosphorylation(None, er1, evidence=[Evidence(pmid=pmid1,
@@ -316,4 +316,4 @@ def test_deft_mapping():
     assert mapped_stmts2[0].obj.db_refs['GO'] == 'GO:0005783'
 
     annotations = mapped_stmts2[0].evidence[0].annotations
-    assert 'GO:GO:0005783' in annotations['agents']['deft'][1]
+    assert 'GO:GO:0005783' in annotations['agents']['adeft'][1]

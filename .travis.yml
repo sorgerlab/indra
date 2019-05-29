@@ -48,9 +48,8 @@ install:
   - mkdir $HOME/.nose_notify;
   - git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
   - export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
-  # Install deft and download deft models
-  - pip install git+https://github.com/indralab/deft.git
-  - python -m deft.download
+  # Download adeft models
+  - python -m adeft.download
 before_script:
   # Enable plotting on fake display
   - "export DISPLAY=:99.0"

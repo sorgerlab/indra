@@ -1,7 +1,7 @@
 import re
 from nose.plugins.attrib import attr
 
-from indra.literature.deft_tools import universal_extract_paragraphs, \
+from indra.literature.adeft_tools import universal_extract_paragraphs, \
     filter_paragraphs
 from indra.literature import pmc_client, elsevier_client, pubmed_client
 
