@@ -21,6 +21,7 @@ def main():
                       'machine': ['pytz', 'tzlocal', 'tweepy', 'pyyaml',
                                   'click'],
                       'explanation': ['kappy==4.0.0rc1', 'paths-graph'],
+                      'adeft': ['adeft'],
                       # AWS interface and database
                       'aws': ['boto3', 'reportlab'],
                       # Utilities
