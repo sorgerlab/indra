@@ -230,14 +230,16 @@ class HprdProcessor(object):
         """
         logger.info('Processing PPIs...')
         for ix, row in ppi_df.iterrows():
-            agA = self._make_agent(row['HPRD_ID_A'])
-            agB = self._make_agent(row['HPRD_ID_B'])
+            hprd_id_a = row['HPRD_ID_A'].strip()
+            hprd_id_b = row['HPRD_ID_B'].strip()
+            agA = self._make_agent(hprd_id_a)
+            agB = self._make_agent(hprd_id_b)
             # If don't get valid agents for both, skip this PPI
             if agA is None or agB is None:
                 continue
-            isoform_id = '%s_1' % row['HPRD_ID_A']
+            isoform_id = '%s_1' % hprd_id_a
             ev_list = self._get_evidence(
-                    row['HPRD_ID_A'], isoform_id, row['PMIDS'],
+                    hprd_id_a, isoform_id, row['PMIDS'],
                     row['EVIDENCE'], 'interactions')
             stmt = Complex([agA, agB], evidence=ev_list)
             self.statements.append(stmt)
