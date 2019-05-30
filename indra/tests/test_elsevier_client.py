@@ -1,7 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import logging
 from indra.literature import elsevier_client as ec
 from nose.plugins.attrib import attr
+
+logger = logging.getLogger(__name__)
 
 
 @attr('nonpublic', 'webservice')
@@ -33,6 +36,9 @@ def test_get_converted_article_body():
     doi = '10.1006/jmbi.2001.5334'
     xml_str = ec.download_article(doi)
     body = ec.extract_text(xml_str)
+    if not body:
+        logger.warning('Unable to extract text from XML string:\n'
+                       '%s' % xml_str[:2000])
     assert body
 
 
@@ -44,6 +50,9 @@ def test_get_rawtext():
     doi = '10.1593/neo.91196'
     xml_str = ec.download_article(doi)
     body = ec.extract_text(xml_str)
+    if not body:
+        logger.warning('Unable to extract text from XML string:\n'
+                       '%s' % xml_str[:2000])
     assert body
 
 
