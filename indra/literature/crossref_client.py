@@ -138,6 +138,9 @@ def doi_query(pmid, search_limit=10):
         xref_doi_url = result['doi']
         # Strip the URL prefix off of the DOI
         m = re.match('^http://dx.doi.org/(.*)$', xref_doi_url)
+        if not m:
+            logger.error('Could not match %s with DOI pattern.' % xref_doi_url)
+            return None
         xref_doi = m.groups()[0]
         # Get the XREF metadata using the DOI
         xref_meta = get_metadata(xref_doi)
