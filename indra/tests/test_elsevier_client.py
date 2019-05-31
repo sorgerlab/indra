@@ -38,7 +38,7 @@ def test_get_converted_article_body():
     body = ec.extract_text(xml_str)
     if not body:
         logger.warning('Unable to extract text from XML string:\n'
-                       '%s' % xml_str[:2000])
+                       '%s...' % xml_str[:2000])
     assert body
 
 
@@ -52,7 +52,7 @@ def test_get_rawtext():
     body = ec.extract_text(xml_str)
     if not body:
         logger.warning('Unable to extract text from XML string:\n'
-                       '%s' % xml_str[:2000])
+                       '%s...' % xml_str[:2000])
     assert body
 
 
