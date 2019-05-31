@@ -1,9 +1,12 @@
 import re
+import logging
 from nose.plugins.attrib import attr
 
 from indra.literature.adeft_tools import universal_extract_paragraphs, \
     filter_paragraphs
 from indra.literature import pmc_client, elsevier_client, pubmed_client
+
+logger = logging.getLogger(__name__)
 
 
 @attr('nonpublic', 'webservice')
@@ -11,6 +14,9 @@ def test_universal_extract_paragraphs_elsevier():
     doi = '10.1016/B978-0-12-416673-8.00004-6'
     xml_str = elsevier_client.download_article(doi)
     paragraphs = universal_extract_paragraphs(xml_str)
+    if len(paragraphs) <= 1:
+        logger.warning('Unable to extract paragraphs from XML string:\n'
+                       '%s...' % xml_str[:2000])
     assert len(paragraphs) > 1
 
 
