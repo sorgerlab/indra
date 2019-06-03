@@ -5,6 +5,9 @@ cache:
     - $HOME/.pybel
 python:
   - "3.5"
+services:
+  # Enable plotting on fake display
+  - xvfb
 before_install:
   - sudo apt-get update
   - sudo apt-get install openjdk-8-jdk
@@ -50,11 +53,6 @@ install:
   - export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
   # Download adeft models
   - python -m adeft.download
-before_script:
-  # Enable plotting on fake display
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
-  - sleep 3
 script:
   # Credit: https://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
   - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
