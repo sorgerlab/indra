@@ -436,7 +436,7 @@ def mod_state_prefix(mod_type):
     # If there is no specific rule, then we generate the state from the type
     if not prefix:
         # In general, the mod type will be '*ion' which we have to map to
-        # '*ed' e.g. 'phosphorylat[ion]' -> 'phosphorylat[ed]'
+        # '*ed' e.g., 'phosphorylat[ion]' -> 'phosphorylat[ed]'
         prefix = mod_type[:-3] + 'ed'
     return prefix
 
@@ -447,8 +447,19 @@ def mod_process_prefix(mod_type):
     # If there is no specific rule, then we generate the process from the type
     if not prefix:
         # In general, the mod type will be '*ion' which we have to map to
-        # '*es' e.g. 'phosphorylat[ion]' -> 'phosphorylat[es]'
+        # '*es' e.g., 'phosphorylat[ion]' -> 'phosphorylat[es]'
         prefix = mod_type[:-3] + 'es'
+    return prefix
+
+
+def statement_base_verb(stmt_type):
+    # Handle explicit overrides first
+    prefix = statement_base_verb_override.get(stmt_type)
+    # If there is no specific rule, then we generate the process from the type
+    if not prefix:
+        # In general, the mod type will be '*ion' which we have to map to
+        # '*e' e.g., 'phosphorylat[ion]' -> 'phosphorylat[e]'
+        prefix = stmt_type[:-3] + 'e'
     return prefix
 
 
@@ -460,6 +471,20 @@ mod_state_prefix_override = {
 mod_process_prefix_override = {
     'modification': 'modifies',
     }
+
+
+statement_base_verb_override = {
+    'modification': 'modify',
+    'inhibition': 'inhibit',
+    'complex': 'bind',
+    'increaseamount': 'increase the amount of',
+    'decreaseamount': 'decrease the amount of',
+    'gef': 'act as a GEF for',
+    'gap': 'act as a GAP for',
+    'gtpactivation': 'activate when bound to GTP',
+    'conversion': 'convert',
+    'influence': 'influence'
+}
 
 
 activity_type_prefix = {
