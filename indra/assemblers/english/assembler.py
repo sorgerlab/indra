@@ -143,7 +143,7 @@ def _assemble_agent_str(agent):
                 residue_str =\
                     ist.amino_acids[agent.mods[0].residue]['full_name']
                 prefix = residue_str + '-' + prefix
-            agent_str =  prefix + ' ' + agent_str
+            agent_str = prefix + ' ' + agent_str
         else:
             if agent.bound_conditions:
                 agent_str += ' and'
@@ -238,6 +238,8 @@ def _assemble_modification(stmt):
             mod_str = 'on ' + ist.amino_acids[stmt.residue]['full_name']
         else:
             mod_str = 'on ' + stmt.residue + stmt.position
+    elif stmt.position is not None:
+        mod_str = 'at position %s' % stmt.position
     else:
         mod_str = ''
     stmt_str += ' ' + mod_str
