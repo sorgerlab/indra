@@ -453,14 +453,21 @@ def mod_process_prefix(mod_type):
 
 
 def statement_base_verb(stmt_type):
-    # Handle explicit overrides first
-    prefix = statement_base_verb_override.get(stmt_type)
-    # If there is no specific rule, then we generate the process from the type
-    if not prefix:
-        # In general, the mod type will be '*ion' which we have to map to
-        # '*e' e.g., 'phosphorylat[ion]' -> 'phosphorylat[e]'
-        prefix = stmt_type[:-3] + 'e'
-    return prefix
+    """Return the base verb form of a statement type.
+
+    Parameters
+    ----------
+    stmt_type : str
+        The lower case string form of a statement type, for instance,
+        'phosphorylation'.
+
+    Returns
+    -------
+    str
+        The base verb form of a statement type, for instance, 'phosphorylate'.
+    """
+    return statement_base_verb_override.get(stmt_type) \
+        if stmt_type in statement_base_verb_override else stmt_type[:-3] + 'e'
 
 
 mod_state_prefix_override = {

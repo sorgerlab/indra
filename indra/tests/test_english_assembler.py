@@ -401,6 +401,12 @@ def test_association():
     assert s == 'Food is associated with hunger.'
 
 
+def test_get_base_verb():
+    assert ea.statement_base_verb('inhibition') == 'inhibit'
+    assert ea.statement_base_verb('dephosphorylation') == 'dephosphorylate'
+    assert ea.statement_base_verb('complex') == 'bind'
+
+
 def _stmt_to_text(st):
     e = ea.EnglishAssembler()
     e.add_statements([st])
