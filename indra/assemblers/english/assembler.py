@@ -143,7 +143,7 @@ def _assemble_agent_str(agent):
                 residue_str =\
                     ist.amino_acids[agent.mods[0].residue]['full_name']
                 prefix = residue_str + '-' + prefix
-            agent_str =  prefix + ' ' + agent_str
+            agent_str = prefix + ' ' + agent_str
         else:
             if agent.bound_conditions:
                 agent_str += ' and'
@@ -238,6 +238,8 @@ def _assemble_modification(stmt):
             mod_str = 'on ' + ist.amino_acids[stmt.residue]['full_name']
         else:
             mod_str = 'on ' + stmt.residue + stmt.position
+    elif stmt.position is not None:
+        mod_str = 'at position %s' % stmt.position
     else:
         mod_str = ''
     stmt_str += ' ' + mod_str
@@ -436,7 +438,7 @@ def mod_state_prefix(mod_type):
     # If there is no specific rule, then we generate the state from the type
     if not prefix:
         # In general, the mod type will be '*ion' which we have to map to
-        # '*ed' e.g. 'phosphorylat[ion]' -> 'phosphorylat[ed]'
+        # '*ed' e.g., 'phosphorylat[ion]' -> 'phosphorylat[ed]'
         prefix = mod_type[:-3] + 'ed'
     return prefix
 
@@ -447,9 +449,27 @@ def mod_process_prefix(mod_type):
     # If there is no specific rule, then we generate the process from the type
     if not prefix:
         # In general, the mod type will be '*ion' which we have to map to
-        # '*es' e.g. 'phosphorylat[ion]' -> 'phosphorylat[es]'
+        # '*es' e.g., 'phosphorylat[ion]' -> 'phosphorylat[es]'
         prefix = mod_type[:-3] + 'es'
     return prefix
+
+
+def statement_base_verb(stmt_type):
+    """Return the base verb form of a statement type.
+
+    Parameters
+    ----------
+    stmt_type : str
+        The lower case string form of a statement type, for instance,
+        'phosphorylation'.
+
+    Returns
+    -------
+    str
+        The base verb form of a statement type, for instance, 'phosphorylate'.
+    """
+    return statement_base_verb_override.get(stmt_type) \
+        if stmt_type in statement_base_verb_override else stmt_type[:-3] + 'e'
 
 
 mod_state_prefix_override = {
@@ -460,6 +480,20 @@ mod_state_prefix_override = {
 mod_process_prefix_override = {
     'modification': 'modifies',
     }
+
+
+statement_base_verb_override = {
+    'modification': 'modify',
+    'inhibition': 'inhibit',
+    'complex': 'bind',
+    'increaseamount': 'increase the amount of',
+    'decreaseamount': 'decrease the amount of',
+    'gef': 'act as a GEF for',
+    'gap': 'act as a GAP for',
+    'gtpactivation': 'activate when bound to GTP',
+    'conversion': 'convert',
+    'influence': 'influence'
+}
 
 
 activity_type_prefix = {

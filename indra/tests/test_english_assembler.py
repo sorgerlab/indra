@@ -61,6 +61,14 @@ def test_agent_mods3():
     assert (s == 'EGFR phosphorylated on Y1111 and an unknown residue')
 
 
+def test_agent_mods_pos_only():
+    mc1 = ModCondition('phosphorylation', None, '1111')
+    a = Agent('EGFR', mods=[mc1])
+    s = ea._assemble_agent_str(a)
+    print(s)
+    assert (s == 'EGFR phosphorylated on amino acid 1111')
+
+
 def test_agent_bound():
     bc = BoundCondition(Agent('EGF'), True)
     a = Agent('EGFR', bound_conditions=[bc])
@@ -145,6 +153,15 @@ def test_phos_enz2():
     s = ea._assemble_modification(st)
     print(s)
     assert s == 'PP2A dephosphorylates MAP2K1 on S222.'
+
+
+def test_dephos_no_residue():
+    a = Agent('MAP2K1')
+    b = Agent('PP2A')
+    st = Dephosphorylation(b, a, None, '222')
+    s = ea._assemble_modification(st)
+    print(s)
+    assert s == 'PP2A dephosphorylates MAP2K1 at position 222.'
 
 
 def test_ubiq_stmt():
@@ -399,6 +416,12 @@ def test_association():
     st = Association([Event(Concept('food')), Event(Concept('hunger'))])
     s = _stmt_to_text(st)
     assert s == 'Food is associated with hunger.'
+
+
+def test_get_base_verb():
+    assert ea.statement_base_verb('inhibition') == 'inhibit'
+    assert ea.statement_base_verb('dephosphorylation') == 'dephosphorylate'
+    assert ea.statement_base_verb('complex') == 'bind'
 
 
 def _stmt_to_text(st):
