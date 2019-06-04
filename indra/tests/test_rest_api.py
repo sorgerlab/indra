@@ -5,7 +5,7 @@ from datetime import datetime
 
 from nose.plugins.attrib import attr
 
-from indra.statements import stmts_from_json
+from indra.statements import stmts_from_json, Phosphorylation
 
 BASE = 'http://api.indra.bio:8000/'
 HERE = path.dirname(path.abspath(__file__))
@@ -50,6 +50,7 @@ def test_trips_process_text():
     stmts = stmts_from_json(res_json['statements'])
     assert len(stmts) == 1, len(stmts)
     stmt = stmts[0]
+    assert isinstance(stmt, Phosphorylation), type(stmt)
     assert stmt.enz.name == 'MEK', stmt.enz
     assert stmt.sub.name == 'ERK', stmt.sub
 
@@ -65,6 +66,22 @@ def test_trips_process_xml():
     stmts = stmts_from_json(res_json['statements'])
     assert len(stmts) == 1, len(stmts)
     stmt = stmts[0]
+    assert isinstance(stmt, Phosphorylation), type(stmt)
+    assert stmt.enz.name == 'MEK', stmt.enz
+    assert stmt.sub.name == 'ERK', stmt.sub
+
+
+@attr('webservice')
+def test_reach_process_text():
+    res = _call_api('post', 'reach/process_text',
+                    json={'text': 'MEK phosphorylates ERK.'})
+    res_json = res.json()
+    assert 'statements' in res_json.keys(), res_json
+    print(res_json.keys())
+    stmts = stmts_from_json(res_json['statements'])
+    assert len(stmts) == 1, len(stmts)
+    stmt = stmts[0]
+    assert isinstance(stmt, Phosphorylation), type(stmt)
     assert stmt.enz.name == 'MEK', stmt.enz
     assert stmt.sub.name == 'ERK', stmt.sub
 
