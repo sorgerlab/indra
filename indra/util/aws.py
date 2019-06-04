@@ -99,6 +99,10 @@ def tag_instance(instance_id, **tags):
         logger.info('Adding project tags "%s" to instance %s'
                     % (filtered_tags, instance_id))
         instance.create_tags(Tags=tag_list)
+        vols = instance.volumes.all()
+        for page in vols.pages():
+            for vol in page:
+                vol.create_tags(Tags=tag_list)
     else:
         logger.info('No new tags from: %s' % str(tags))
     return
