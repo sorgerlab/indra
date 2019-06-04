@@ -1,5 +1,6 @@
 import json
 import requests
+from os import path
 from datetime import datetime
 
 from nose.plugins.attrib import attr
@@ -7,6 +8,7 @@ from nose.plugins.attrib import attr
 from indra.statements import stmts_from_json
 
 BASE = 'http://api.indra.bio:8000/'
+HERE = path.dirname(path.abspath(__file__))
 
 
 def _call_api(method, route, *args, **kwargs):
@@ -42,6 +44,21 @@ def test_options():
 def test_trips_process_text():
     res = _call_api('post', 'trips/process_text',
                     json={'text': 'MEK phosphorylates ERK.'})
+    res_json = res.json()
+    assert 'statements' in res_json.keys(), res_json
+    print(res_json.keys())
+    stmts = stmts_from_json(res_json['statements'])
+    assert len(stmts) == 1, len(stmts)
+    stmt = stmts[0]
+    assert stmt.enz.name == 'MEK', stmt.enz
+    assert stmt.sub.name == 'ERK', stmt.sub
+
+
+@attr('webservice')
+def test_trips_process_xml():
+    with open(path.join(HERE, 'test_trips_ekb.xml'), 'r') as f:
+        xml_str = f.read()
+    res = _call_api('post', 'trips/process_xml', json={'xml_str': xml_str})
     res_json = res.json()
     assert 'statements' in res_json.keys(), res_json
     print(res_json.keys())
