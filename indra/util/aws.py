@@ -102,7 +102,7 @@ def tag_instance(instance_id, **tags):
         vols = instance.volumes.all()
         for page in vols.pages():
             for vol in page:
-                vol.create_tages(Tags=tag_list)
+                vol.create_tags(Tags=tag_list)
     else:
         logger.info('No new tags from: %s' % str(tags))
     return
