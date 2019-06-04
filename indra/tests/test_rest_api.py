@@ -87,6 +87,20 @@ def test_reach_process_text():
 
 
 @attr('webservice')
+def test_reach_process_json():
+    # TODO: Add test of reach process json
+    return
+
+
+@attr('webservice')
+def test_reach_process_pmcid():
+    res = _call_api('post', 'reach/process_pmc', json={'pmcid': 'PMC1234335'})
+    res_json = res.json()
+    print(json.dumps(res_json, indent=2))
+    assert len(res_json['statements']), len(res_json['statements'])
+
+
+@attr('webservice')
 def test_assemblers_cyjs():
     stmt_json = {
         "statements": [{
