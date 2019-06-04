@@ -4,6 +4,8 @@ from datetime import datetime
 
 from nose.plugins.attrib import attr
 
+from indra.statements import stmts_from_json
+
 BASE = 'http://api.indra.bio:8000/'
 
 
@@ -25,7 +27,29 @@ def _call_api(method, route, *args, **kwargs):
 @attr('webservice')
 def test_responsive():
     res = _call_api('get', '')
-    assert res.content.startswith(b'This is the INDRA REST API.')
+    assert res.content.startswith(b'This is the INDRA REST API.'), \
+        "Unexpected content: %s" % res.content
+
+
+@attr('webservice')
+def test_options():
+    res = _call_api('options', '')
+    assert res.content == b'{}', \
+        "Unexpected content: %s" % res.content
+
+
+@attr('webservice')
+def test_trips_process_text():
+    res = _call_api('post', 'trips/process_text',
+                    json={'text': 'MEK phosphorylates ERK.'})
+    res_json = res.json()
+    assert 'statements' in res_json.keys(), res_json
+    print(res_json.keys())
+    stmts = stmts_from_json(res_json['statements'])
+    assert len(stmts) == 1, len(stmts)
+    stmt = stmts[0]
+    assert stmt.enz.name == 'MEK', stmt.enz
+    assert stmt.sub.name == 'ERK', stmt.sub
 
 
 @attr('webservice')
