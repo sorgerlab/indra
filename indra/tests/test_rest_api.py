@@ -100,23 +100,32 @@ def test_reach_process_pmcid():
     assert len(res_json['statements']), len(res_json['statements'])
 
 
+STMT_JSON = {
+    "id": "acc6d47c-f622-41a4-8ae9-d7b0f3d24a2f",
+    "type": "Complex",
+    "members": [
+        {"db_refs": {"TEXT": "MEK", "FPLX": "MEK"}, "name": "MEK"},
+        {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"}
+    ],
+    "sbo": "http://identifiers.org/sbo/SBO:0000526",
+    "evidence": [{"text": "MEK binds ERK", "source_api": "trips"}]
+}
+
+
 @attr('webservice')
 def test_assemblers_cyjs():
-    stmt_json = {
-        "statements": [{
-            "sbo": "http://identifiers.org/sbo/SBO:0000526",
-            "type": "Complex",
-            "id": "acc6d47c-f622-41a4-8ae9-d7b0f3d24a2f",
-            "members": [
-                {"db_refs": {"TEXT": "MEK", "FPLX": "MEK"}, "name": "MEK"},
-                {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"}
-            ],
-            "evidence": [{"text": "MEK binds ERK", "source_api": "trips"}]
-        }]
-    }
-    stmt_str = json.dumps(stmt_json)
+    stmt_str = json.dumps({'statements': [STMT_JSON]})
     res = _call_api('post', 'assemblers/cyjs', stmt_str)
     res_json = res.json()
     assert len(res_json['edges']) == 1, len(res_json['edges'])
     assert len(res_json['nodes']) == 2, len(res_json['nodes'])
+    return
+
+
+@attr('webservice')
+def test_assemblers_pysb_no_format():
+    stmt_str = json.dumps({'statements': [STMT_JSON]})
+    res = _call_api('post', 'assemblers/pysb', stmt_str)
+    res_json = res.json()
+    assert 'model' in res_json.keys()
     return
