@@ -46,7 +46,6 @@ def test_trips_process_text():
                     json={'text': 'MEK phosphorylates ERK.'})
     res_json = res.json()
     assert 'statements' in res_json.keys(), res_json
-    print(res_json.keys())
     stmts = stmts_from_json(res_json['statements'])
     assert len(stmts) == 1, len(stmts)
     stmt = stmts[0]
@@ -57,12 +56,13 @@ def test_trips_process_text():
 
 @attr('webservice')
 def test_trips_process_xml():
-    with open(path.join(HERE, 'test_trips_ekb.xml'), 'r') as f:
+    test_ekb_path = path.join(HERE, 'trips_ekbs',
+                              'MEK_increases_the_phosphorylation_of_ERK.ekb')
+    with open(test_ekb_path, 'r') as f:
         xml_str = f.read()
     res = _call_api('post', 'trips/process_xml', json={'xml_str': xml_str})
     res_json = res.json()
     assert 'statements' in res_json.keys(), res_json
-    print(res_json.keys())
     stmts = stmts_from_json(res_json['statements'])
     assert len(stmts) == 1, len(stmts)
     stmt = stmts[0]
@@ -77,7 +77,6 @@ def test_reach_process_text():
                     json={'text': 'MEK phosphorylates ERK.'})
     res_json = res.json()
     assert 'statements' in res_json.keys(), res_json
-    print(res_json.keys())
     stmts = stmts_from_json(res_json['statements'])
     assert len(stmts) == 1, len(stmts)
     stmt = stmts[0]
