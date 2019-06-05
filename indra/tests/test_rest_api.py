@@ -174,3 +174,10 @@ def test_assemblers_graph():
     res = _call_api('post', 'assemblers/graph', stmt_str)
     res_json = res.json()
     assert 'model' in res_json.keys()
+
+
+def test_assemblers_english():
+    stmt_str = json.dumps({'statements': [STMT_JSON]})
+    res = _call_api('post', 'assemblers/english', stmt_str)
+    res_json = res.json()
+    assert 'sentences' in res_json.keys()
