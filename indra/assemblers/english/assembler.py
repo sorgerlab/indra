@@ -182,7 +182,24 @@ def _assemble_agent_str(agent):
     return agent_str
 
 
-def _join_list(lst, oxford=False):
+def english_join(lst):
+    """Join a list of strings according to English grammar.
+
+    Parameters
+    ----------
+    lst : list of str
+        A list of strings to join.
+
+    Returns
+    -------
+    str
+        A string which describes the list of elements, e.g.,
+        "apples, pears, and bananas".
+    """
+    return _join_list(lst, oxford=True)
+
+
+def _join_list(lst, oxford=True):
     """Join a list of words in a gramatically correct way."""
     if len(lst) > 2:
         s = ', '.join(lst[:-1])
