@@ -176,8 +176,17 @@ def test_assemblers_graph():
     assert 'model' in res_json.keys()
 
 
+@attr('webservice')
 def test_assemblers_english():
     stmt_str = json.dumps({'statements': [STMT_JSON]})
     res = _call_api('post', 'assemblers/english', stmt_str)
     res_json = res.json()
     assert 'sentences' in res_json.keys()
+
+
+@attr('webservice')
+def test_assemblers_loopy():
+    stmt_str = json.dumps({'statements': [STMT_JSON]})
+    res = _call_api('post', 'assemblers/sif/loopy', stmt_str)
+    res_json = res.json()
+    assert 'loopy_url' in res_json.keys()
