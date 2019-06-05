@@ -483,16 +483,23 @@ mod_process_prefix_override = {
 
 
 statement_base_verb_override = {
-    'modification': 'modify',
-    'inhibition': 'inhibit',
     'complex': 'bind',
+    'regulateamount': 'regulate the amount of',
     'increaseamount': 'increase the amount of',
     'decreaseamount': 'decrease the amount of',
     'gef': 'act as a GEF for',
     'gap': 'act as a GAP for',
+    'inhibition': 'inhibit',
     'gtpactivation': 'activate when bound to GTP',
+    'regulateactivity': 'regulate the activity of',
+    'activeform': 'have active form',
     'conversion': 'convert',
-    'influence': 'influence'
+    'influence': 'influence',
+    'modification': 'modify',
+    'addmodification': 'add a modification to',
+    'removemodification': 'remove a modification of',
+    'selfmodification': 'modify itself',
+    'event': 'happen'
 }
 
 
