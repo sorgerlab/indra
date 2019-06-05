@@ -157,3 +157,10 @@ def test_assemblers_pysb_kappa_other_formats():
         assert 'model' in res_json.keys()
     return
 
+
+@attr('webservice')
+def test_assemblers_cx():
+    stmt_str = json.dumps({'statements': [STMT_JSON]})
+    res = _call_api('post', 'assemblers/cx', stmt_str)
+    res_json = res.json()
+    assert 'model' in res_json.keys()
