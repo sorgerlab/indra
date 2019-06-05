@@ -164,3 +164,11 @@ def test_assemblers_cx():
     res = _call_api('post', 'assemblers/cx', stmt_str)
     res_json = res.json()
     assert 'model' in res_json.keys()
+
+
+@attr('webservice')
+def test_assemblers_graph():
+    stmt_str = json.dumps({'statements': [STMT_JSON]})
+    res = _call_api('post', 'assemblers/graph', stmt_str)
+    res_json = res.json()
+    assert 'model' in res_json.keys()
