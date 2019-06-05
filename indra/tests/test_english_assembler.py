@@ -144,6 +144,16 @@ def test_phos_enz():
     assert s == 'BRAF phosphorylates MAP2K1 on S222.'
 
 
+def test_phos_indirect():
+    a = Agent('MAP2K1')
+    b = Agent('BRAF')
+    ev = Evidence(epistemics={'direct': False})
+    st = Phosphorylation(b, a, 'serine', '222', evidence=[ev])
+    s = ea._assemble_modification(st)
+    print(s)
+    assert s == 'BRAF leads to the phosphorylation of MAP2K1 on S222.'
+
+
 def test_phos_enz2():
     a = Agent('MAP2K1')
     b = Agent('PP2A')
@@ -414,6 +424,14 @@ def test_association():
     st = Association([Event(Concept('food')), Event(Concept('hunger'))])
     s = _stmt_to_text(st)
     assert s == 'Food is associated with hunger.'
+
+
+def test_active_form():
+    st = ActiveForm(Agent('BRAF',
+                          mods=[ModCondition('phosphorylation', 'T', '396')]),
+                    'kinase', True)
+    s = _stmt_to_text(st)
+    assert s == 'BRAF phosphorylated on T396 is kinase-active.'
 
 
 def test_get_base_verb():
