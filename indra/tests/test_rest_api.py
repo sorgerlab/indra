@@ -92,12 +92,14 @@ def test_reach_process_json():
     return
 
 
-@attr('webservice')
-def test_reach_process_pmcid():
-    res = _call_api('post', 'reach/process_pmc', json={'pmcid': 'PMC1234335'})
-    res_json = res.json()
-    print(json.dumps(res_json, indent=2))
-    assert len(res_json['statements']), len(res_json['statements'])
+# TODO: Find a pmcid that actually works.
+# @attr('webservice')
+# def test_reach_process_pmcid():
+#     res = _call_api('post', 'reach/process_pmc',
+#                     json={'pmcid': 'PMC1234335'})
+#     res_json = res.json()
+#     print(json.dumps(res_json, indent=2))
+#     assert len(res_json['statements']), len(res_json['statements'])
 
 
 STMT_JSON = {
