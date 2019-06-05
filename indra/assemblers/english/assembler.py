@@ -406,7 +406,7 @@ def _get_is_hypothesis(stmt):
 
 
 def _get_is_hypothesis_adverb(stmt):
-    '''Returns the string associated with a statement being hypothetical.'''
+    """Returns the string associated with a statement being hypothetical."""
     if _get_is_hypothesis(stmt):
         return ' hypothetically '
     else:
@@ -415,7 +415,7 @@ def _get_is_hypothesis_adverb(stmt):
 
 def _mod_process_verb(stmt):
     mod_name = stmt.__class__.__name__.lower()
-    return mod_process_prefix(mod_name)
+    return statement_present_verb(mod_name)
 
 
 def _mod_process_noun(stmt):
@@ -433,25 +433,49 @@ def _mod_state_str(s):
 
 
 def mod_state_prefix(mod_type):
-    # Handle explicit overrides first
-    prefix = mod_state_prefix_override.get(mod_type)
-    # If there is no specific rule, then we generate the state from the type
-    if not prefix:
-        # In general, the mod type will be '*ion' which we have to map to
-        # '*ed' e.g., 'phosphorylat[ion]' -> 'phosphorylat[ed]'
-        prefix = mod_type[:-3] + 'ed'
-    return prefix
+    override = {
+        'modification': 'modified',
+    }
+    return override.get(mod_type) if mod_type in override else \
+        mod_type[:3] + 'ed'
 
 
-def mod_process_prefix(mod_type):
-    # Handle explicit overrides first
-    prefix = mod_process_prefix_override.get(mod_type)
-    # If there is no specific rule, then we generate the process from the type
-    if not prefix:
-        # In general, the mod type will be '*ion' which we have to map to
-        # '*es' e.g., 'phosphorylat[ion]' -> 'phosphorylat[es]'
-        prefix = mod_type[:-3] + 'es'
-    return prefix
+def statement_present_verb(stmt_type):
+    """Return the present verb form of a statement type.
+
+    Parameters
+    ----------
+    stmt_type : str
+        The lower case string form of a statement type, for instance,
+        'phosphorylation'.
+
+    Returns
+    -------
+    str
+        The present verb form of a statement type, for instance,
+        'phosphorylates'.
+    """
+    override = {
+        'complex': 'binds',
+        'regulateamount': 'regulates the amount of',
+        'increaseamount': 'increases the amount of',
+        'decreaseamount': 'decreases the amount of',
+        'gef': 'acts as a GEF for',
+        'gap': 'acts as a GAP for',
+        'inhibition': 'inhibits',
+        'gtpactivation': 'activates when bound to GTP',
+        'regulateactivity': 'regulates the activity of',
+        'activeform': 'has active form',
+        'conversion': 'converts',
+        'influence': 'influences',
+        'modification': 'modifies',
+        'addmodification': 'adds a modification to',
+        'removemodification': 'removes a modification of',
+        'selfmodification': 'modifies itself',
+        'event': 'happens'
+    }
+    return override.get(stmt_type) if stmt_type in override else \
+        stmt_type[:3] + 'es'
 
 
 def statement_base_verb(stmt_type):
@@ -468,39 +492,27 @@ def statement_base_verb(stmt_type):
     str
         The base verb form of a statement type, for instance, 'phosphorylate'.
     """
-    return statement_base_verb_override.get(stmt_type) \
-        if stmt_type in statement_base_verb_override else stmt_type[:-3] + 'e'
-
-
-mod_state_prefix_override = {
-    'modification': 'modified',
-}
-
-
-mod_process_prefix_override = {
-    'modification': 'modifies',
+    override = {
+        'complex': 'bind',
+        'regulateamount': 'regulate the amount of',
+        'increaseamount': 'increase the amount of',
+        'decreaseamount': 'decrease the amount of',
+        'gef': 'act as a GEF for',
+        'gap': 'act as a GAP for',
+        'inhibition': 'inhibit',
+        'gtpactivation': 'activate when bound to GTP',
+        'regulateactivity': 'regulate the activity of',
+        'activeform': 'have active form',
+        'conversion': 'convert',
+        'influence': 'influence',
+        'modification': 'modify',
+        'addmodification': 'add a modification to',
+        'removemodification': 'remove a modification of',
+        'selfmodification': 'modify itself',
+        'event': 'happen'
     }
-
-
-statement_base_verb_override = {
-    'complex': 'bind',
-    'regulateamount': 'regulate the amount of',
-    'increaseamount': 'increase the amount of',
-    'decreaseamount': 'decrease the amount of',
-    'gef': 'act as a GEF for',
-    'gap': 'act as a GAP for',
-    'inhibition': 'inhibit',
-    'gtpactivation': 'activate when bound to GTP',
-    'regulateactivity': 'regulate the activity of',
-    'activeform': 'have active form',
-    'conversion': 'convert',
-    'influence': 'influence',
-    'modification': 'modify',
-    'addmodification': 'add a modification to',
-    'removemodification': 'remove a modification of',
-    'selfmodification': 'modify itself',
-    'event': 'happen'
-}
+    return override.get(stmt_type) if stmt_type in override \
+        else stmt_type[:-3] + 'e'
 
 
 activity_type_prefix = {
