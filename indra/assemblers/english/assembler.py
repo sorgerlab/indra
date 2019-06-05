@@ -412,10 +412,10 @@ def _get_is_direct(stmt):
 
 
 def _get_is_hypothesis(stmt):
-    '''Returns true if there is evidence that the statement is only
+    """Returns true if there is evidence that the statement is only
     hypothetical. If all of the evidences associated with the statement
     indicate a hypothetical interaction then we assume the interaction
-    is hypothetical.'''
+    is hypothetical."""
     for ev in stmt.evidence:
         if not ev.epistemics.get('hypothesis') is True:
             return True
@@ -423,7 +423,7 @@ def _get_is_hypothesis(stmt):
 
 
 def _get_is_hypothesis_adverb(stmt):
-    """Returns the string associated with a statement being hypothetical."""
+    """Return the string associated with a statement being hypothetical."""
     if _get_is_hypothesis(stmt):
         return ' hypothetically '
     else:
@@ -454,7 +454,7 @@ def mod_state_prefix(mod_type):
         'modification': 'modified',
     }
     return override.get(mod_type) if mod_type in override else \
-        mod_type[:3] + 'ed'
+        mod_type[:-3] + 'ed'
 
 
 def statement_present_verb(stmt_type):
@@ -492,7 +492,7 @@ def statement_present_verb(stmt_type):
         'event': 'happens'
     }
     return override.get(stmt_type) if stmt_type in override else \
-        stmt_type[:3] + 'es'
+        stmt_type[:-3] + 'es'
 
 
 def statement_base_verb(stmt_type):

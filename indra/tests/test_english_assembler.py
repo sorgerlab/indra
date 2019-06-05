@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import indra.assemblers.english.assembler as ea
 from indra.statements import *
 
@@ -101,7 +99,7 @@ def test_agent_bound_three():
     a = Agent('EGFR', bound_conditions=[bc, bc2, bc3])
     s = ea._assemble_agent_str(a)
     print(s)
-    assert (s == 'EGFR bound to EGF, EGFR and GRB2')
+    assert (s == 'EGFR bound to EGF, EGFR, and GRB2')
 
 
 def test_agent_bound_mixed():
