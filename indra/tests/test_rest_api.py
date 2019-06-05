@@ -132,11 +132,28 @@ def test_assemblers_pysb_no_format():
 
 
 @attr('webservice')
-def test_assemblers_pysb_kappa_format():
+def test_assemblers_pysb_kappa_img_format():
     for exp_format in ['kappa_im', 'kappa_cm']:
+        print("Testing", exp_format)
         stmt_str = json.dumps({'statements': [STMT_JSON],
                                'export_format': exp_format})
         res = _call_api('post', 'assemblers/pysb', stmt_str)
         res_json = res.json()
         assert 'image' in res_json.keys()
     return
+
+
+@attr('webservice')
+def test_assemblers_pysb_kappa_other_formats():
+    # All the formats defined in PysbAssembler.export_model doc string.
+    formats = ['bngl', 'kappa', 'sbml', 'matplab', 'mathematica',
+               'potterswheel']
+    for exp_format in formats:
+        print("Testing", exp_format)
+        stmt_str = json.dumps({'statements': [STMT_JSON],
+                               'export_format': exp_format})
+        res = _call_api('post', 'assemblers/pysb', stmt_str)
+        res_json = res.json()
+        assert 'model' in res_json.keys()
+    return
+
