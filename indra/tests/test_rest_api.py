@@ -171,11 +171,32 @@ def test_assemblers_english():
     res = _call_api('post', 'assemblers/english', stmt_str)
     res_json = res.json()
     assert 'sentences' in res_json.keys()
+    assert len(res_json['sentences']) == 1, len(res_json['sentences'])
+    sentence = list(res_json['sentences'].values())[0]
+    assert 'MEK' in sentence, sentence
 
 
 @attr('webservice')
 def test_assemblers_loopy():
-    stmt_str = json.dumps({'statements': [STMT_JSON]})
+    stmt_jsons = [{
+            "id": "acc6d47c-f622-41a4-8ae9-d7b0f3d24a2f",
+            "type": "Phosphorylation",
+            "enz": {"db_refs": {"TEXT": "MEK", "FPLX": "MEK"}, "name": "MEK"},
+            "sub": {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"},
+            "sbo": "http://identifiers.org/sbo/SBO:0000526",
+            "evidence": [{"text": "MEK phosphorylates ERK", "source_api": "trips"}]
+        },
+        {
+            "id": "bcc6d47c-f622-41a4-8ae9-d7b0f3d24a2f",
+            "type": "Activation",
+            "subj": {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"},
+            "obj": {"db_refs": {"TEXT": "EGFR", "HGNC": "3236"}, "name": "EGFR"},
+            "sbo": "http://identifiers.org/sbo/SBO:0000526",
+            "evidence": [{"text": "ERK activates EGFR", "source_api": "trips"}]
+        }
+    ]
+    stmt_str = json.dumps({'statements': stmt_jsons})
     res = _call_api('post', 'assemblers/sif/loopy', stmt_str)
     res_json = res.json()
     assert 'loopy_url' in res_json.keys()
+    assert "ERK" in res_json['loopy_url']
