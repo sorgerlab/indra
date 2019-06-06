@@ -142,6 +142,7 @@ class GraphAssembler():
                 self._add_complex(stmt.members)
             elif all([ag is not None for ag in stmt.agent_list()]):
                 self._add_stmt_edge(stmt)
+        return self.get_string()
 
     def get_string(self):
         """Return the assembled graph as a string.

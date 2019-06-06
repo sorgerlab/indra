@@ -8,7 +8,8 @@ def test_phosphorylation():
     st = [Phosphorylation(Agent('MAP2K1'), Agent('MAPK1'))]
     ga = GraphAssembler()
     ga.add_statements(st)
-    ga.make_model()
+    model = ga.make_model()
+    assert 'MAP2K1' in model
     assert len(ga.graph.nodes()) == 2
     assert len(ga.graph.edges()) == 1
 
