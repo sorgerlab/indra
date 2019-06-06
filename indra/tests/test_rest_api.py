@@ -40,7 +40,7 @@ def test_options():
         "Unexpected content: %s" % res.content
 
 
-@attr('webservice')
+@attr('webservice', 'notravis')
 def test_trips_process_text():
     res = _call_api('post', 'trips/process_text',
                     json={'text': 'MEK phosphorylates ERK.'})
@@ -71,7 +71,7 @@ def test_trips_process_xml():
     assert stmt.sub.name == 'ERK', stmt.sub
 
 
-@attr('webservice')
+@attr('webservice', 'notravis')
 def test_reach_process_text():
     res = _call_api('post', 'reach/process_text',
                     json={'text': 'MEK phosphorylates ERK.'})
@@ -89,16 +89,6 @@ def test_reach_process_text():
 def test_reach_process_json():
     # TODO: Add test of reach process json
     return
-
-
-# TODO: Find a pmcid that actually works.
-# @attr('webservice')
-# def test_reach_process_pmcid():
-#     res = _call_api('post', 'reach/process_pmc',
-#                     json={'pmcid': 'PMC1234335'})
-#     res_json = res.json()
-#     print(json.dumps(res_json, indent=2))
-#     assert len(res_json['statements']), len(res_json['statements'])
 
 
 STMT_JSON = {
