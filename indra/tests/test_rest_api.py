@@ -119,6 +119,8 @@ def test_assemblers_pysb_no_format():
     res = _call_api('post', 'assemblers/pysb', stmt_str)
     res_json = res.json()
     assert 'model' in res_json.keys()
+    assert res_json['model'] is not None
+    assert 'MEK' in res_json['model'], res_json['model']
     return
 
 
@@ -131,13 +133,15 @@ def test_assemblers_pysb_kappa_img_format():
         res = _call_api('post', 'assemblers/pysb', stmt_str)
         res_json = res.json()
         assert 'image' in res_json.keys()
+        assert 'image' in res_json.keys()
+        assert res_json['image'] is not None
     return
 
 
 @attr('webservice')
 def test_assemblers_pysb_kappa_other_formats():
     # All the formats defined in PysbAssembler.export_model doc string.
-    formats = ['bngl', 'kappa', 'sbml', 'matplab', 'mathematica',
+    formats = ['bngl', 'kappa', 'sbml', 'matlab', 'mathematica',
                'potterswheel']
     for exp_format in formats:
         print("Testing", exp_format)
@@ -146,6 +150,8 @@ def test_assemblers_pysb_kappa_other_formats():
         res = _call_api('post', 'assemblers/pysb', stmt_str)
         res_json = res.json()
         assert 'model' in res_json.keys()
+        assert res_json['model'] is not None
+        assert 'MEK' in res_json['model'], res_json['model']
     return
 
 
@@ -155,6 +161,8 @@ def test_assemblers_cx():
     res = _call_api('post', 'assemblers/cx', stmt_str)
     res_json = res.json()
     assert 'model' in res_json.keys()
+    assert res_json['model'] is not None
+    assert 'MEK' in res_json['model'], res_json['model']
 
 
 @attr('webservice')
@@ -163,6 +171,8 @@ def test_assemblers_graph():
     res = _call_api('post', 'assemblers/graph', stmt_str)
     res_json = res.json()
     assert 'model' in res_json.keys()
+    assert res_json['model'] is not None
+    assert 'MEK' in res_json['model'], res_json['model']
 
 
 @attr('webservice')
