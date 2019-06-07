@@ -32,6 +32,11 @@ class Preassembler(object):
     stmts : list of :py:class:`indra.statements.Statement` or None
         A set of statements to perform pre-assembly on. If None, statements
         should be added using the :py:meth:`add_statements` method.
+    matches_fun : Optional[function]
+        A functon which takes a Statement object as argument and
+        returns a string key that is used for duplicate recognition. If
+        supplied, it overrides the use of the built-in matches_key method of
+        each Statement being assembled.
 
     Attributes
     ----------
@@ -45,7 +50,7 @@ class Preassembler(object):
         A dictionary of hierarchies with keys such as 'entity' and
         'modification' pointing to HierarchyManagers
     """
-    def __init__(self, hierarchies, stmts=None):
+    def __init__(self, hierarchies, stmts=None, matches_fun=None):
         self.hierarchies = hierarchies
         if stmts:
             logger.debug("Deepcopying stmts in __init__")
@@ -54,6 +59,8 @@ class Preassembler(object):
             self.stmts = []
         self.unique_stmts = None
         self.related_stmts = None
+        self.matches_fun = matches_fun if matches_fun else \
+            lambda stmt: stmt.matches_key()
 
     def add_statements(self, stmts):
         """Add to the current list of statements.
@@ -68,17 +75,14 @@ class Preassembler(object):
     def combine_duplicates(self):
         """Combine duplicates among `stmts` and save result in `unique_stmts`.
 
-        A wrapper around the static method :py:meth:`combine_duplicate_stmts`.
+        A wrapper around the method :py:meth:`combine_duplicate_stmts`.
         """
         if self.unique_stmts is None:
             self.unique_stmts = self.combine_duplicate_stmts(self.stmts)
         return self.unique_stmts
 
-    @staticmethod
-    def _get_stmt_matching_groups(stmts):
-        """Use the matches_key method to get sets of matching statements."""
-        def match_func(x): return x.matches_key()
-
+    def _get_stmt_matching_groups(self, stmts):
+        """Use the matches_fun method to get sets of matching statements."""
         # Remove exact duplicates using a set() call, then make copies:
         logger.debug('%d statements before removing object duplicates.' %
                      len(stmts))
@@ -88,12 +92,11 @@ class Preassembler(object):
         # Group statements according to whether they are matches (differing
         # only in their evidence).
         # Sort the statements in place by matches_key()
-        st.sort(key=match_func)
+        st.sort(key=self.matches_fun)
 
-        return itertools.groupby(st, key=match_func)
+        return itertools.groupby(st, key=self.matches_fun)
 
-    @staticmethod
-    def combine_duplicate_stmts(stmts):
+    def combine_duplicate_stmts(self, stmts):
         """Combine evidence from duplicate Statements.
 
         Statements are deemed to be duplicates if they have the same key
@@ -120,13 +123,15 @@ class Preassembler(object):
         De-duplicate and combine evidence for two statements differing only
         in their evidence lists:
 
+        >>> from indra.preassembler.hierarchy_manager import hierarchies
         >>> map2k1 = Agent('MAP2K1')
         >>> mapk1 = Agent('MAPK1')
         >>> stmt1 = Phosphorylation(map2k1, mapk1, 'T', '185',
         ... evidence=[Evidence(text='evidence 1')])
         >>> stmt2 = Phosphorylation(map2k1, mapk1, 'T', '185',
         ... evidence=[Evidence(text='evidence 2')])
-        >>> uniq_stmts = Preassembler.combine_duplicate_stmts([stmt1, stmt2])
+        >>> pa = Preassembler(hierarchies)
+        >>> uniq_stmts = pa.combine_duplicate_stmts([stmt1, stmt2])
         >>> uniq_stmts
         [Phosphorylation(MAP2K1(), MAPK1(), T, 185)]
         >>> sorted([e.text for e in uniq_stmts[0].evidence]) # doctest:+IGNORE_UNICODE
@@ -141,7 +146,7 @@ class Preassembler(object):
             return ev_keys
         # Iterate over groups of duplicate statements
         unique_stmts = []
-        for _, duplicates in Preassembler._get_stmt_matching_groups(stmts):
+        for _, duplicates in self._get_stmt_matching_groups(stmts):
             ev_keys = set()
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
