@@ -373,6 +373,10 @@ if __name__ == '__main__':
     parser.add_argument('--corpus_id', default='1')
     parser.add_argument('--host', default='0.0.0.0')
     parser.add_argument('--port', default=8001, type=int)
+    parser.add_argument('--aws-cred', type=str, default='default',
+                        help='The name of the credential set to use when '
+                             'connecting to AWS services. If the name is not '
+                             'found in your AWS config, `[default]`  is used.')
     args = parser.parse_args()
 
     # Load the corpus
@@ -388,7 +392,7 @@ if __name__ == '__main__':
 
     logger.info('Loaded corpus %s with %d statements.' %
                 (args.corpus_id, len(stmts)))
-    curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts)
+    curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts, args.aws_cred)
 
     # Run the app
     app.run(host=args.host, port=args.port, threaded=False)
