@@ -52,3 +52,34 @@ class QualitativeDelta(Delta):
         return "%s(polarity=%d, adjectives=%s)" % (type(self).__name__,
                                                    self.polarity,
                                                    self.adjectives)
+
+
+class QuantitativeState(Delta):
+    """An object representing numerical value of something.
+
+    Parameters
+    ----------
+    unit : str
+        A unit to capture the quantity of.
+    value : float or int or str
+        Quantity of a unit.
+    """
+    def __init__(self, unit=None, value=None):
+        self.unit = unit
+        self.value = value
+
+    def equals(self, other):
+        return (self.unit == other.unit and self.value == other.value)
+
+    def to_json(self):
+        json_dict = {'unit': self.unit if self.unit else None,
+                     'value': self.value if self.value else None}
+
+    @classmethod
+    def from_json(cls, json_dict):
+        unit = json_dict.get('unit')
+        value = json_dict.get('value')
+        return cls(unit=unit, value=value)
+
+    def __str__(self):
+        return f"QuantitativeState(unit={self.unit}, value={self.value})"
