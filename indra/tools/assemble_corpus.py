@@ -360,6 +360,9 @@ def run_preassembly(stmts_in, **kwargs):
         Dict of hierarchy managers to use for preassembly
     matches_fun : function
         A function to override the built-in matches_key function of statements.
+    refinement_fun : function
+        A function to override the built-in refinement_of function of
+        statements.
     flatten_evidence : Optional[bool]
         If True, evidences are collected and flattened via supports/supported_by
         links. Default: False
@@ -381,12 +384,13 @@ def run_preassembly(stmts_in, **kwargs):
     dump_pkl_unique = kwargs.get('save_unique')
     belief_scorer = kwargs.get('belief_scorer')
     matches_fun = kwargs.get('matches_fun')
+    refinement_fun = kwargs.get('refinement_fun')
     use_hierarchies = kwargs['hierarchies'] if 'hierarchies' in kwargs else \
         hierarchies
     be = BeliefEngine(scorer=belief_scorer)
-    pa = Preassembler(hierarchies, stmts_in)
-    run_preassembly_duplicate(pa, be, save=dump_pkl_unique,
-                              matches_fun=matches_fun)
+    pa = Preassembler(hierarchies, stmts_in, matches_fun=matches_fun,
+                      refinement_fun=refinement_fun)
+    run_preassembly_duplicate(pa, be, save=dump_pkl_unique)
 
     dump_pkl = kwargs.get('save')
     return_toplevel = kwargs.get('return_toplevel', True)

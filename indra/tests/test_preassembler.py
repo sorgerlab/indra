@@ -894,10 +894,15 @@ def test_association_refinement():
 def test_matches_key_fun():
     from indra.statements import WorldContext, RefContext
 
+    def has_location(stmt):
+        if not stmt.context or not stmt.context.geo_location or \
+                not stmt.context.geo_location.db_refs.get('GEOID'):
+            return False
+        return True
+
     def event_location_matches(stmt):
         if isinstance(stmt, Event):
-            if not stmt.context or not stmt.context.geo_location or \
-                    not stmt.context.geo_location.db_refs.get('GEOID'):
+            if not has_location(stmt):
                 context_key = None
             else:
                 context_key = stmt.context.geo_location.db_refs['GEOID']
@@ -907,6 +912,20 @@ def test_matches_key_fun():
             matches_key = stmt.matches_key()
         return matches_key
 
+    def event_location_refinement(st1, st2, hierarchies):
+        if isinstance(st1, Event) and isinstance(st2, Event):
+            ref = st1.refinement_of(st2, hierarchies)
+            if not ref:
+                return False
+            if not has_location(st2):
+                return True
+            elif not has_location(st1) and has_location(st2):
+                return False
+            else:
+                return st1.context.geo_location.db_refs['GEOID'] == \
+                    st2.context.geo_location.db_refs['GEOID']
+
+
     context1 = WorldContext(geo_location=RefContext('x',
                                                     db_refs={'GEOID': '1'}))
     context2 = WorldContext(geo_location=RefContext('x',
@@ -914,14 +933,23 @@ def test_matches_key_fun():
 
     health = 'UN/entities/human/health'
     e1 = Event(Concept('health', db_refs={'UN': [(health, 1.0)]}),
-               context=context1, evidence=Evidence(text='1'))
+               context=context1,
+               evidence=Evidence(text='1', source_api='eidos'))
     e2 = Event(Concept('health', db_refs={'UN': [(health, 1.0)]}),
-               context=context2, evidence=Evidence(text='2'))
+               context=context2,
+               evidence=Evidence(text='2', source_api='eidos'))
     e3 = Event(Concept('health', db_refs={'UN': [(health, 1.0)]}),
-               context=context2, evidence=Evidence(text='3'))
+               context=context2,
+               evidence=Evidence(text='3', source_api='eidos'))
 
     pa = Preassembler(hierarchies, [e1, e2, e3],
-                      matches_fun=event_location_matches)
+                      matches_fun=event_location_matches,
+                      refinement_fun=event_location_refinement)
 
     unique_stmts = pa.combine_duplicates()
-    assert len(unique_stmts) == 2
+    assert len(unique_stmts) == 2, unique_stmts
+
+    from indra.tools.assemble_corpus import run_preassembly
+    stmts = run_preassembly([e1, e2, e3], matches_fun=event_location_matches,
+                            refinement_fun=event_location_refinement)
+    assert len(stmts) == 2, stmts
