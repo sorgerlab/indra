@@ -143,7 +143,7 @@ class WorldContext(Context):
         return self.__str__()
 
 
-class RefContext(Context):
+class RefContext(object):
     """An object representing a context with a name and references.
 
     Parameters
@@ -287,3 +287,67 @@ class TimeContext(object):
         return self.__str__()
 
 
+class MovementContext(Context):
+    """An object representing the context of a movement between start and end
+    points in time. 
+
+    Parameters
+    ----------
+    origin : Optional[RefContext]
+        A RefContext object representing geographical location context of an
+        origin.
+    destination : Optional[RefContext]
+        A RefContext object representing the geographical location context of a
+        destination.
+    time : Optional[TimeContext]
+        A TimeContext object representing the temporal context of the
+        Statement.
+    """
+    def __init__(self, origin=None, destination=None, time=None):
+        self.origin = origin
+        self.destination = destination
+        self.time = time
+
+    def __eq__(self, other):
+        return (self.origin == other.origin) and \
+               (self.destination == other.destination) and \
+               (self.time == other.time)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __bool__(self):
+        return self.origin is not None or self.destination is not None or \
+                    self.time is not None
+
+    def __nonzero__(self):
+        return self.__bool__()
+
+    @classmethod
+    def from_json(cls, jd):
+        from_entry = jd.get('origin')
+        origin = RefContext.from_json(from_entry)
+        to_entry = jd.get('destination')
+        destination = RefContext.from_json(to_entry)
+        time_entry = jd.get('time')
+        time = TimeContext.from_json(time_entry)
+        return cls(origin=origin, destination=destination, time=time)
+
+    def to_json(self):
+        jd = {'type': 'movement',
+              'origin': self.origin.to_json() if self.origin else None,
+              'destination': (self.destination.to_json() if
+                              self.destination else None),
+              'time': self.time.to_json() if self.time else None}
+        return jd
+
+    def __str__(self):
+        pieces = []
+        if self.origin:
+            pieces.append('origin=%s' % self.origin)
+        if self.destination:
+            pieces.append('origin=%s' % self.destination)
+        if self.time:
+            pieces.append('time=%s' % self.time)
+        args = ', '.join(pieces)
+        return 'MovementContext(%s)' % args
