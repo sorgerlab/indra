@@ -193,7 +193,7 @@ __all__ = [
     'InvalidResidueError', 'NotAStatementName',
 
     # Other classes
-    'Concept', 'Agent', 'Evidence', 'QualitativeDelta',
+    'Concept', 'Agent', 'Evidence', 'QualitativeDelta', 'QuantitativeState',
 
     # Context classes
     'BioContext', 'WorldContext', 'TimeContext', 'RefContext', 'Context',
@@ -2357,6 +2357,30 @@ class Event(Statement):
 
     def __str__(self):
         return '%s(%s)' % (type(self).__name__, self.concept.name)
+
+
+class Migration(Event):
+    """A special class of Event representing Migration."""
+    _agent_order = ['concept']
+
+    def __init__(self, concept, delta=None, context=None, evidence=None,
+                 supports=None, supported_by=None):
+        self.delta = (
+            delta if delta else QuantitativeState(unit='person', value=None))
+        super.__init__(concept, self.delta, context, evidence, supports,
+                       supported_by)
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        concept = Concept._from_json(json_dict['concept'])
+        delta = QuantitativeState.from_json(json_dict['delta'])
+        context_entry = json_dict.get('context')
+        if context_entry:
+            context = Context.from_json(json_dict['context'])
+        else:
+            context = None
+        stmt = cls(concept, delta=delta, context=context)
+        return stmt
 
 
 class Unresolved(Statement):
