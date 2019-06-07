@@ -13,6 +13,8 @@ class Context(object):
             return BioContext.from_json(jd)
         elif context_type == 'world':
             return WorldContext.from_json(jd)
+        elif context_type == 'movement':
+            return MovementContext.from_json(jd)
         else:
             raise ValueError('Unknown context type %s' % context_type)
 
