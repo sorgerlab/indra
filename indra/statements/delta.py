@@ -61,25 +61,33 @@ class QuantitativeState(Delta):
     ----------
     unit : str
         A unit to capture the quantity of.
-    value : float or int or str
+    value : float or int
         Quantity of a unit.
+    text : str
+        Natural language text describing quantitative state.
     """
-    def __init__(self, unit=None, value=None):
+    def __init__(self, unit=None, value=None, text=None):
         self.unit = unit
         self.value = value
+        self.text = text
 
     def equals(self, other):
-        return (self.unit == other.unit and self.value == other.value)
+        return (self.unit == other.unit and self.value == other.value and
+                self.text == other.text)
 
     def to_json(self):
         json_dict = {'unit': self.unit if self.unit else None,
-                     'value': self.value if self.value else None}
+                     'value': self.value if self.value else None,
+                     'text': self.text if self.text else None}
 
     @classmethod
     def from_json(cls, json_dict):
         unit = json_dict.get('unit')
         value = json_dict.get('value')
-        return cls(unit=unit, value=value)
+        text = json_dict.get('text')
+        return cls(unit=unit, value=value, text=text)
 
     def __str__(self):
-        return f"QuantitativeState(unit={self.unit}, value={self.value})"
+        return "QuantitativeState(unit=%s, value=%d, text=%s)" % (self.unit,
+                                                                  self.value,
+                                                                  self.text)
