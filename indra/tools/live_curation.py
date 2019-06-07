@@ -1,17 +1,20 @@
 """This REST service allows real-time curation and belief updates for
 a corpus of INDRA Statements."""
+import json
 import yaml
 import boto3
 import pickle
 import logging
 import argparse
+from botocore.exceptions import ClientError
 from flask import Flask, request, jsonify, abort, Response
 # Note: preserve EidosReader install as first one from indra
 from indra.sources.eidos.reader import EidosReader
 from indra.belief import BeliefEngine
 from indra.tools import assemble_corpus as ac
 from indra.belief.wm_scorer import get_eidos_bayesian_scorer
-from indra.statements import stmts_from_json_file, stmts_to_json
+from indra.statements import stmts_from_json_file, stmts_to_json, \
+    stmts_from_json, Statement
 from indra.preassembler.hierarchy_manager import YamlHierarchyManager
 from indra.preassembler.make_eidos_hume_ontologies import eidos_ont_url, \
     load_yaml_from_url, rdf_graph_from_yaml
@@ -50,6 +53,45 @@ class Corpus(object):
 
     def __repr__(self):
         return str(self)
+
+    def s3_put(self, name, bucket='world-modelers'):
+        """Pushes a corpus object to S3 in the form of three json files"""
+        key_base = 'indra_models/' + name + '/'
+        try:
+            self._s3.put_object(
+                Body=json.dumps(stmts_to_json(self.raw_statements)),
+                Bucket=bucket, Key=key_base+'raw_statements.json')
+            self._s3.put_object(
+                Body=json.dumps(
+                    {uid: s.to_json() for uid, s in self.statements.items()}),
+                Bucket=bucket, Key=key_base + 'statements.json')
+            self._s3.put_object(
+                Body=json.dumps(self.curations),
+                Bucket=bucket, Key=key_base + 'curations.json')
+
+        # FixMe Use appropriate S3 exception and make the logger less verbose
+        except Exception as e:
+            logger.exception('Failed to put on s3: %s' % e)
+
+    def s3_get(self, name, bucket='world-modelers'):
+        key_base = 'indra_models/' + name + '/'
+        try:
+            self.raw_statements = stmts_from_json(self._s3.get_object(
+                    Bucket=bucket,
+                    Key=key_base+'raw_statements.json')['Body'].read())
+            stmt_jsons = json.loads(self._s3.get_object(
+                Bucket=bucket,
+                Key=key_base+'statements.json')['Body'].read())
+            self.statements = {uid: Statement._from_json(s)
+                               for uid, s in stmt_jsons.items()}
+            curation_jsons = json.loads(self._s3.get_object(
+                Bucket=bucket,
+                Key=key_base+'curations.json')['Body'].read())
+            self.curations = {uid: c for uid, c in curation_jsons.items()}
+
+        # FixMe Use appropriate S3 exception and make the logger less verbose
+        except Exception as e:
+            logger.exception('Failed to get from s3: %s' % e)
 
 
 class InvalidCorpusError(Exception):
