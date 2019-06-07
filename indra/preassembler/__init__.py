@@ -37,6 +37,10 @@ class Preassembler(object):
         returns a string key that is used for duplicate recognition. If
         supplied, it overrides the use of the built-in matches_key method of
         each Statement being assembled.
+    refinement_fun : Optional[function]
+        A function which takes two Statement objects and a hierarchies dict
+        as an argument and returns True or False. If supplied, it overrides
+        the built-in refinement_of method of each Statement being assembled.
 
     Attributes
     ----------
@@ -50,7 +54,8 @@ class Preassembler(object):
         A dictionary of hierarchies with keys such as 'entity' and
         'modification' pointing to HierarchyManagers
     """
-    def __init__(self, hierarchies, stmts=None, matches_fun=None):
+    def __init__(self, hierarchies, stmts=None, matches_fun=None,
+                 refinement_fun=None):
         self.hierarchies = hierarchies
         if stmts:
             logger.debug("Deepcopying stmts in __init__")
@@ -61,6 +66,8 @@ class Preassembler(object):
         self.related_stmts = None
         self.matches_fun = matches_fun if matches_fun else \
             lambda stmt: stmt.matches_key()
+        self.refinement_fun = refinement_fun if refinement_fun else \
+            lambda st1, st2, hierarchies: st1.refinement_of(st2, hierarchies)
 
     def add_statements(self, stmts):
         """Add to the current list of statements.
@@ -382,7 +389,8 @@ class Preassembler(object):
         supports_func = functools.partial(_set_supports_stmt_pairs,
                                           hierarchies=self.hierarchies,
                                           split_idx=split_idx,
-                                          check_entities_match=False)
+                                          check_entities_match=False,
+                                          refinement_fun=self.refinement_fun)
 
         # Check if we are running any groups in child processes; note that if
         # use_mp is False, child_proc_groups will be empty
@@ -614,7 +622,7 @@ class Preassembler(object):
 
 
 def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
-                             check_entities_match=False):
+                             check_entities_match=False, refinement_fun=None):
     # This is useful when deep-debugging, but even for normal debug is too much.
     # logger.debug("Getting support pairs for %d tuples with idx %s and stmts "
     #              "%s split at %s."
@@ -622,6 +630,10 @@ def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
     #                 [(s.get_hash(shallow=True), s) for _, s in stmt_tuples],
     #                 split_idx))
     #  Make the iterator by one of two methods, depending on the case
+    if not refinement_fun:
+        refinement_fun = \
+            lambda stmt1, stmt2, hierarchies: stmt1.refinement_of(stmt2,
+                                                                  hierarchies)
     if split_idx is None:
         stmt_pair_iter = itertools.combinations(stmt_tuples, 2)
     else:
@@ -641,9 +653,9 @@ def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
         stmt_ix2, stmt2 = stmt_tuple2
         if check_entities_match and not stmt1.entities_match(stmt2):
             continue
-        if stmt1.refinement_of(stmt2, hierarchies):
+        if refinement_fun(stmt1, stmt2, hierarchies):
             ix_map.append((stmt_ix1, stmt_ix2))
-        elif stmt2.refinement_of(stmt1, hierarchies):
+        elif refinement_fun(stmt2, stmt1, hierarchies):
             ix_map.append((stmt_ix2, stmt_ix1))
     return ix_map
 
