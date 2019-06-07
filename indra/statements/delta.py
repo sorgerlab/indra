@@ -91,3 +91,44 @@ class QuantitativeState(Delta):
         return "QuantitativeState(unit=%s, value=%d, text=%s)" % (self.unit,
                                                                   self.value,
                                                                   self.text)
+
+    # Arithmetic operations
+    def __add__(self, other):
+        if not self.unit == other.unit:
+            raise ValueError("Units have to be the same for addition")
+        return (self.value + other.value)
+
+    def __sub__(self, other):
+        if not self.unit == other.unit:
+            raise ValueError("Units have to be the same for subtraction")
+        return (self.value - other.value)
+
+    def __gt__(self, other):
+        if not self.unit == other.unit:
+            raise ValueError("Units have to be the same for comparison")
+        return (self.value > other.value)
+
+    def __ge__(self, other):
+        if not self.unit == other.unit:
+            raise ValueError("Units have to be the same for comparison")
+        return (self.value >= other.value)
+
+    def __lt__(self, other):
+        if not self.unit == other.unit:
+            raise ValueError("Units have to be the same for comparison")
+        return (self.value < other.value)
+
+    def __le__(self, other):
+        if not self.unit == other.unit:
+            raise ValueError("Units have to be the same for comparison")
+        return (self.value <= other.value)
+
+    def __eq__(self, other):
+        if not self.unit == other.unit:
+            raise ValueError("Units have to be the same for comparison")
+        return (self.value == other.value)
+
+    def __ne__(self, other):
+        if not self.unit == other.unit:
+            raise ValueError("Units have to be the same for comparison")
+        return (self.value != other.value)
