@@ -1,6 +1,7 @@
 """This REST service allows real-time curation and belief updates for
 a corpus of INDRA Statements."""
 import yaml
+import boto3
 import pickle
 import logging
 import argparse
@@ -37,10 +38,12 @@ class Corpus(object):
         A dict keeping track of the curations submitted so far for Statement
         UUIDs in the corpus.
     """
-    def __init__(self, statements, raw_statements=None):
+    def __init__(self, statements, raw_statements=None, model_name=None,
+                 aws_name='default'):
         self.statements = {st.uuid: st for st in statements}
         self.raw_statements = [] if not raw_statements else raw_statements
         self.curations = {}
+        self._s3 = boto3.session.Session(profile_name=aws_name).client('s3')
 
     def __str__(self):
         return 'Corpus(%s -> %s)' % (str(self.statements), str(self.curations))
