@@ -76,9 +76,10 @@ class Corpus(object):
     def s3_get(self, name, bucket='world-modelers'):
         key_base = 'indra_models/' + name + '/'
         try:
-            self.raw_statements = stmts_from_json(self._s3.get_object(
-                    Bucket=bucket,
-                    Key=key_base+'raw_statements.json')['Body'].read())
+            raw_stmt_jsons = self._s3.get_object(
+                Bucket=bucket,
+                Key=key_base+'raw_statements.json')['Body'].read()
+            self.raw_statements = stmts_from_json(json.loads(raw_stmt_jsons))
             stmt_jsons = json.loads(self._s3.get_object(
                 Bucket=bucket,
                 Key=key_base+'statements.json')['Body'].read())
