@@ -387,7 +387,7 @@ def run_preassembly(stmts_in, **kwargs):
     refinement_fun = kwargs.get('refinement_fun')
     use_hierarchies = kwargs['hierarchies'] if 'hierarchies' in kwargs else \
         hierarchies
-    be = BeliefEngine(scorer=belief_scorer)
+    be = BeliefEngine(scorer=belief_scorer, matches_fun=matches_fun)
     pa = Preassembler(hierarchies, stmts_in, matches_fun=matches_fun,
                       refinement_fun=refinement_fun)
     run_preassembly_duplicate(pa, be, save=dump_pkl_unique)
