@@ -423,7 +423,7 @@ def _get_belief_package(stmt, matches_fun):
     # Iterate over all the support parents
     for st in stmt.supports:
         # Recursively get all the belief packages of the parent
-        parent_packages = _get_belief_package(st)
+        parent_packages = _get_belief_package(st, matches_fun)
         package_stmt_keys = [pkg.statement_key for pkg in belief_packages]
         for package in parent_packages:
             # Only add this belief package if it hasn't already been added
