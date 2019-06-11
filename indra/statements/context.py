@@ -1,7 +1,8 @@
 import datetime
 
 
-__all__ = ['Context', 'BioContext', 'WorldContext', 'RefContext', 'TimeContext']
+__all__ = ['Context', 'BioContext', 'WorldContext', 'RefContext', 'TimeContext',
+           'MovementContext']
 
 
 class Context(object):
