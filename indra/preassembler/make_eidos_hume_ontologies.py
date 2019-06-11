@@ -96,13 +96,13 @@ def load_yaml_from_url(ont_url):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process hume or eidos '
-        'ontologies. With arguments, only the ontology at the given url is '
-        'processed and saved to <fname>. Otherwise the script will process the '
-        'default eidos and hume ontologies.')
-    parser.add_argument('--url', help='Specify a url to download and ontology '
-                                      'from')
-    parser.add_argument('--fname', help='Specify filename to save new '
-                                        'ontology mapping to')
+        'ontologies. With arguments, only the ontology at <url> is processed '
+        'and saved to <fname>. Otherwise the script will process the default '
+        'eidos and hume ontologies.')
+    parser.add_argument('--url', help='Specify a url to download an ontology '
+                                      'from.')
+    parser.add_argument('--fname', help='Filename to save new ontology '
+                                        'mapping from <url>')
     args = parser.parse_args()
 
     # Update with from given url to given fname
@@ -112,6 +112,8 @@ if __name__ == '__main__':
     # Specifying only a URL or only a filename is ambiguous, don't execute
     elif bool(args.fname) ^ bool(args.url):
         print('Must specify both --fname and --url or run without arguments.')
+
+    # Default script execution, backwards compatible
     else:
         # Eidos
         eidos_rdf_path = join(dirname(abspath(eidos.__file__)),
