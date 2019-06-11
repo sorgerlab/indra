@@ -7,6 +7,7 @@ def has_location(stmt):
         return False
     return True
 
+
 def has_time(stmt):
     if not stmt.context or not stmt.context.time:
         return False
@@ -76,7 +77,7 @@ def event_location_time_matches(event):
     mk = location_matches(event)
     if not has_time(event):
         return mk
-    time = get_time(stmt)
+    time = get_time(event)
     matches_key = str((mk, time.start, time.end, time.duration))
     return matches_key
 
@@ -98,7 +99,7 @@ def event_location_time_refinement(st1, st2, hierarchies):
         return False
     if not has_time(st2):
         return True
-    elif not has_time(st1) :
+    elif not has_time(st1):
         return False
     else:
         return st1.context.time.refinement_of(st2.context.time)
