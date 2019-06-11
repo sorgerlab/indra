@@ -2365,10 +2365,9 @@ class Migration(Event):
 
     def __init__(self, concept, delta=None, context=None, evidence=None,
                  supports=None, supported_by=None):
-        self.delta = (delta if delta else
-                      QuantitativeState(unit='person', value=None, text=None))
-        super.__init__(concept, self.delta, context, evidence, supports,
-                       supported_by)
+        self.delta = delta if delta else QuantitativeState(entity='person')
+        super().__init__(concept, self.delta, context, evidence, supports,
+                         supported_by)
 
     @classmethod
     def _from_json(cls, json_dict):
