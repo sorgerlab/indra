@@ -176,6 +176,7 @@ class QuantitativeState(Delta):
     # Unit conversions
     def convert_unit(self, days, target_unit='per_second'):
         # convert between different units
+        # TODO: enable conversions to other units
         if target_unit == 'per_second':
             return self.value_per_second(self.value, days)
 
