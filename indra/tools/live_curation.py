@@ -68,10 +68,18 @@ class Corpus(object):
             self._s3.put_object(
                 Body=json.dumps(self.curations),
                 Bucket=bucket, Key=key_base + 'curations.json')
+            keys = tuple(s + '.json' for s in ['raw_statements',
+                                                          'statements',
+                                                          'curations'])
+            logger.info('Corpus uploaded as %s, %s and %s at %s.' %
+                        (*keys, key_base))
+            return keys
 
-        # FixMe Use appropriate S3 exception and make the logger less verbose
+        # Todo
+        #  Add metadata option?
         except Exception as e:
             logger.exception('Failed to put on s3: %s' % e)
+            return None
 
     def s3_get(self, name, bucket='world-modelers'):
         key_base = 'indra_models/' + name + '/'
