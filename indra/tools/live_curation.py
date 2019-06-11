@@ -63,7 +63,7 @@ class Corpus(object):
                 Bucket=bucket, Key=key_base+'raw_statements.json')
             self._s3.put_object(
                 Body=json.dumps(
-                    {uid: s.to_json() for uid, s in self.statements.items()}),
+                    [s.to_json() for uid, s in self.statements.items()]),
                 Bucket=bucket, Key=key_base + 'statements.json')
             self._s3.put_object(
                 Body=json.dumps(self.curations),
@@ -91,8 +91,10 @@ class Corpus(object):
             stmt_jsons = json.loads(self._s3.get_object(
                 Bucket=bucket,
                 Key=key_base+'statements.json')['Body'].read())
-            self.statements = {uid: Statement._from_json(s)
-                               for uid, s in stmt_jsons.items()}
+            stmts = [Statement._from_json(s) for s in stmt_jsons]
+            self.statements = {s.uuid: s for s in stmts}
+
+            # Get and process curations if any
             curation_jsons = json.loads(self._s3.get_object(
                 Bucket=bucket,
                 Key=key_base+'curations.json')['Body'].read())
