@@ -2,9 +2,19 @@ from collections import OrderedDict as _o
 from datetime import timedelta
 
 
+__all__ = ['Delta', 'QualitativeDelta', 'QuantitativeState']
+
+
 class Delta(object):
     """The parent class of all delta types."""
-    pass
+    def from_json(json_dict):
+        delta_type = json_dict.get('type')
+        if delta_type == 'qualitative':
+            return QualitativeDelta.from_json(json_dict)
+        elif delta_type == 'quantitative':
+            return QuantitativeState.from_json(json_dict)
+        else:
+            raise ValueError('Unknown delta type %s' % delta_type)
 
 
 class QualitativeDelta(Delta):
@@ -37,7 +47,7 @@ class QualitativeDelta(Delta):
                 set(self.adjectives) == set(other.adjectives))
 
     def to_json(self):
-        json_dict = _o({'polarity': self.polarity})
+        json_dict = _o({'type': 'qualitative', 'polarity': self.polarity})
         if self.adjectives:
             json_dict['adjectives'] = self.adjectives
         return json_dict
@@ -85,7 +95,8 @@ class QuantitativeState(Delta):
                 self.text == other.text)
 
     def to_json(self):
-        json_dict = {'entity': self.entity if self.entity else None,
+        json_dict = {'type': 'quantitative',
+                     'entity': self.entity if self.entity else None,
                      'value': self.value if self.value else None,
                      'unit': self.unit if self.unit else None,
                      'modifier': self.modifier if self.modifier else None,
@@ -108,20 +119,22 @@ class QuantitativeState(Delta):
                                                                   self.text)
 
     # Arithmetic operations
-    def __add__(self, other, target_days=1):
+    def __add__(self, other):
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for addition")
         values = self._standardize_units(other, target_unit='per_second')
         total_per_second = values[0] + values[1]
-        total = self.from_seconds(total_per_second, target_days)
+        total = self.from_seconds(total_per_second, days=1)
+        # result is daily
         return total
 
-    def __sub__(self, other, target_days=1):
+    def __sub__(self, other):
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for subtraction")
         values = self._standardize_units(other, target_unit='per_second')
         diff_per_second = values[0] - values[1]
-        diff = self.from_seconds(diff_per_second, target_days)
+        diff = self.from_seconds(diff_per_second, days=1)
+        # result is daily
         return diff
 
     def __gt__(self, other):
@@ -192,6 +205,7 @@ class QuantitativeState(Delta):
             values.append(other_new_value)
         else:
             values.append(other.value)
+        return values
 
     def _get_days(self):
         if self.unit == 'daily':
