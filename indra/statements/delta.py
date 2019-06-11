@@ -90,6 +90,7 @@ class QuantitativeState(Delta):
                      'unit': self.unit if self.unit else None,
                      'modifier': self.modifier if self.modifier else None,
                      'text': self.text if self.text else None}
+        return json_dict
 
     @classmethod
     def from_json(cls, json_dict):
