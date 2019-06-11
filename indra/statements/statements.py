@@ -5,6 +5,8 @@ Statement classes follow an inheritance hierarchy, with all Statement types
 inheriting from the parent class :py:class:`Statement`. At
 the next level in the hierarchy are the following classes:
 
+** Biological Domain **
+
 - :py:class:`Complex`
 - :py:class:`Modification`
 - :py:class:`SelfModification`
@@ -15,6 +17,12 @@ the next level in the hierarchy are the following classes:
 - :py:class:`Gef`
 - :py:class:`Gap`
 - :py:class:`Conversion`
+
+** Open Domain **
+
+- :py:class:`Event`
+- :py:class:`Influence`
+- :py:class:`Association`
 
 There are several types of Statements representing post-translational
 modifications that further inherit from
@@ -65,7 +73,10 @@ while the :py:class:`RegulateAmount` abstract base class has subtypes
 
 Statements involve one or more *Concepts*, which, depending on the
 semantics of the Statement, are typically biological *Agents*,
-such as proteins, represented by the class :py:class:`Agent`.
+such as proteins, represented by the class :py:class:`Agent`. (However,
+:py:class`Influence` statements involve two or more :py:class`Event` objects,
+each of which takes a :py:class`Concept` as an argument.)
+
 Agents can have several types of context specified on them including
 
 - a specific post-translational modification state (indicated by one or
