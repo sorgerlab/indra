@@ -345,7 +345,7 @@ class Statement(object):
         return l
 
     def agent_list(self, deep_sorted=False):
-        """Get the canonicallized agent list."""
+        """Get the canonicalized agent list."""
         ag_list = []
         for ag_name in self._agent_order:
             ag_attr = getattr(self, ag_name)
