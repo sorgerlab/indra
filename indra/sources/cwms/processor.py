@@ -148,8 +148,6 @@ class CWMSProcessor(object):
             events += evs
 
         for event_term in events:
-            print(event_term)
-            import ipdb; ipdb.set_trace()
             event = self.migration_from_event(event_term)
             if event is not None:
                 print(event)
@@ -229,6 +227,8 @@ class CWMSProcessor(object):
         """Return an Event from an EVENT element in the EKB."""
         arg_id, arg_term = self._get_term_by_role(event_term, 'AFFECTED',
                                                   False)
+        if arg_term is None:
+            return None
         # Make an Event statement if it is a standalone event
         evidence = self._get_evidence(event_term)
         event = self._get_event(arg_term, evidence=[evidence])
@@ -247,8 +247,7 @@ class CWMSProcessor(object):
         # Try to get the quantitative state associated with the event
         size_arg = arg_term.find('size')
         if size_arg is not None:
-            value = self._get_size(size_arg.attrib['id'])
-            size = QuantitativeState(value=value)
+            size = self._get_size(size_arg.attrib['id'])
         else:
             size = None
 
@@ -259,10 +258,23 @@ class CWMSProcessor(object):
         locs = []
         if neutral_term is not None:
             text = neutral_term.find('text').text
-            locs.append(RefContext(name=text))
-        context = MovementContext(locations=locs)
+            locs.append({'location': RefContext(name=text),
+                         'role': 'destination'})
+        loc = self._extract_geoloc(event_term)
+        if loc is not None:
+            locs.append({'location': loc,
+                         'role': 'destination'})
+        # Note that this is a bug in the EKB, to-location is an origin
+        loc = self._extract_geoloc(event_term, arg_link='to-location')
+        if loc is not None:
+            locs.append({'location': loc,
+                         'role': 'origin'})
 
-        migration_grounding = 'causal_factor/social_and_political/migration'
+        time = self._extract_time(event_term)
+
+        context = MovementContext(locations=locs, time=time)
+
+        migration_grounding = 'WM/causal_factor/social_and_political/migration'
         concept = Concept('Migration',
                           db_refs={'UN': migration_grounding})
         event = Migration(concept, delta=size, context=context)
@@ -272,7 +284,12 @@ class CWMSProcessor(object):
         size_term = self.tree.find("*[@id='%s']" % size_term_id)
         value = size_term.find('value')
         if value is not None:
-            return value.text
+            mod = value.attrib.get('mod')
+            if mod and mod.lower() == 'almost':
+                mod = 'less_than'
+            size = QuantitativeState(value=value.text, unit='absolute',
+                                     modifier=mod)
+            return size
 
     def _get_term_by_role(self, term, role, is_arg):
         """Return the ID and the element corresponding to a role in a term."""
