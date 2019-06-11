@@ -65,8 +65,7 @@ class Corpus(object):
 
             # Structure and upload assembled statements
             self._s3.put_object(
-                Body=json.dumps(
-                    [s.to_json() for uid, s in self.statements.items()]),
+                Body=_stmts_dict_to_json_str(self.statements),
                 Bucket=bucket, Key=key_base + 'statements.json')
 
             # Structure and upload curations
@@ -96,11 +95,9 @@ class Corpus(object):
             self.raw_statements = stmts_from_json(json.loads(raw_stmt_jsons))
 
             # Get and process assembled statements from list to dict
-            stmt_jsons = json.loads(self._s3.get_object(
+            self.statements = _json_str_to_stmts_dict(self._s3.get_object(
                 Bucket=bucket,
                 Key=key_base+'statements.json')['Body'].read())
-            stmts = [Statement._from_json(s) for s in stmt_jsons]
-            self.statements = {s.uuid: s for s in stmts}
 
             # Get and process curations if any
             curation_jsons = json.loads(self._s3.get_object(
