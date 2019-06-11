@@ -138,6 +138,40 @@ def _make_un_ontology():
                                 rdf_graph_from_yaml)
 
 
+def _stmts_dict_to_json_str(stmt_dict):
+    """Make a json representation from dict of statements keyed by their uuid's
+
+    Parameters
+    ----------
+    stmt_dict : dict
+        Dict with statements keyed by their uuid's: {uuid: stmt}
+
+    Returns
+    -------
+    json_str : str
+        A json compatible string
+    """
+    return json.dumps([s.to_json() for _, s in stmt_dict.items()])
+
+
+def _json_str_to_stmts_dict(json_str):
+    """Make a dict of statements keyed by their uuid's from json representation
+
+    Parameters
+    ----------
+    json_str : str
+        A json compatible string
+
+    Returns
+    -------
+    stmt_dict : dict
+        Dict with statements keyed by their uuid's: {uuid: stmt}
+    """
+    stmt_jsons = json.loads(json_str)
+    stmts = [Statement._from_json(s) for s in stmt_jsons]
+    return {s.uuid: s for s in stmts}
+
+
 class LiveCurator(object):
     """Class coordinating the real-time curation of a corpus of Statements.
 
