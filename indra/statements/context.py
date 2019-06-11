@@ -343,7 +343,7 @@ class MovementContext(Context):
                 {'location': location['location'].to_json(),
                  'role': location['role']} for location in self.locations]
         else:
-            locations_json = None
+            locations_json = []
         jd = {'type': 'movement',
               'locations': locations_json,
               'time': self.time.to_json() if self.time else None}
