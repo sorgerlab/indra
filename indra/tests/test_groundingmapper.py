@@ -5,6 +5,7 @@ from indra.statements import Agent, Phosphorylation, Complex, Inhibition, \
     Evidence, BoundCondition
 from indra.util import unicode_strs
 from nose.tools import raises
+from nose.plugins.attrib import attr
 
 # The grounding map
 # Format:
@@ -292,6 +293,7 @@ def test_map_agent():
     assert mapped_ag.db_refs.get('FPLX') == 'ERK'
 
 
+@attr('nonpublic')
 def test_adeft_mapping():
     er1 = Agent('ER', db_refs={'TEXT': 'ER'})
     pmid1 = '30775882'
