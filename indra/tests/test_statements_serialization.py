@@ -137,6 +137,24 @@ def test_association():
     assert jd == jd2
 
 
+def test_migration():
+    m = Migration(Concept('migration'), 
+                  QuantitativeState('person', 500, 'absolute'),
+                  MovementContext(locations=[
+                      {'location': RefContext('South Sudan'), 'role': 'origin'},
+                      {'location': RefContext('Ethiopia'), 'role': 'destination'}],
+                      time=TimeContext(text='beginning of 2019')))
+    jd = m.to_json()
+    m.to_graph()
+    assert jd
+    st_deserialize = Statement._from_json(jd)
+    assert isinstance(st_deserialize, Migration)
+    assert isinstance(st_deserialize.delta, QuantitativeState)
+    assert isinstance(st_deserialize.context, MovementContext)
+    jd2 = st_deserialize.to_json()
+    assert jd == jd2
+
+
 def __make_support_link(supporting_stmt, supported_stmt):
     supporting_stmt.supports.append(supported_stmt)
     supported_stmt.supported_by.append(supporting_stmt)

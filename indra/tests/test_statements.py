@@ -2009,3 +2009,18 @@ def test_ev_str():
 def test_draw_statements():
     stmt = Phosphorylation(None, Agent('x'))
     draw_stmt_graph([stmt])
+
+
+def test_migration():
+    m = Migration(Concept('migration'), 
+                  QuantitativeState('person', 500, 'absolute'),
+                  MovementContext(locations=[
+                      {'location': RefContext('South Sudan'), 'role': 'origin'},
+                      {'location': RefContext('Ethiopia'), 'role': 'destination'}],
+                      time=TimeContext(text='beginning of 2019')))
+    assert m
+    assert isinstance(m, Migration)
+    assert isinstance(m.delta, QuantitativeState)
+    assert isinstance(m.context, MovementContext)
+    assert m.context.locations[0]['location'].name == 'South Sudan'
+    assert m.context.locations[0]['role'] == 'origin'
