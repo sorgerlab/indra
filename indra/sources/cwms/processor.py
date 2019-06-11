@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 
 from indra.statements import *
+from indra.statements.statements import Migration
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
 
@@ -22,7 +23,9 @@ POLARITY_DICT = {'CC': {'ONT::CAUSE': 1,
                            'ONT::DECREASE': -1,
                            'ONT::INHIBIT': -1,
                            'ONT::TRANSFORM': None,
-                           'ONT::STIMULATE': 1},
+                           'ONT::STIMULATE': 1,
+                           'ONT::ARRIVE': None,
+                           'ONT::DEPART': None},
                  'EPI': {'ONT::ASSOCIATE': None}}
 
 
@@ -136,11 +139,26 @@ class CWMSProcessor(object):
 
         self._remove_multi_extraction_artifacts()
 
+    def extract_migrations(self):
+        ev_types = ['ONT::MOVE', 'ONT::DEPART', 'ONT::ARRIVE']
+        events = []
+        for et in ev_types:
+            evs = self.tree.findall("EVENT/[type='%s']" % et)
+            events += evs
+
+        for event_term in events:
+            print(event_term)
+            import ipdb; ipdb.set_trace()
+            event = self.migration_from_event(event_term)
+            if event is not None:
+                print(event)
+                self.statements.append(event)
+
     def extract_correlations(self):
         correlations = self.tree.findall("EPI/[type='ONT::ASSOCIATE']")
         for cor in correlations:
             st = self._association_from_element(cor, 'EPI', 'NEUTRAL1',
-                                               'NEUTRAL2', False)
+                                                'NEUTRAL2', False)
             if st:
                 self.statements.append(st)
 
@@ -210,9 +228,6 @@ class CWMSProcessor(object):
         """Return an Event from an EVENT element in the EKB."""
         arg_id, arg_term = self._get_term_by_role(event_term, 'AFFECTED',
                                                   False)
-        if arg_term is None:
-            return None
-
         # Make an Event statement if it is a standalone event
         evidence = self._get_evidence(event_term)
         event = self._get_event(arg_term, evidence=[evidence])
@@ -220,6 +235,30 @@ class CWMSProcessor(object):
             return None
         event.context = self.get_context(event_term)
         return event
+
+    def migration_from_event(self, event_term):
+        """Return a Migration event from an EVENT element in the EKB."""
+        arg_id, arg_term = self._get_term_by_role(event_term, 'AGENT',
+                                                  False)
+        if arg_term is None:
+            return None
+        size_arg = arg_term.find('size')
+        if size_arg is not None:
+            value = self._get_size(size_arg.attrib['id'])
+            size = QuantitativeState(value=value)
+        else:
+            size = None
+        migration_grounding = 'causal_factor/social_and_political/migration'
+        concept = Concept('Migration',
+                          db_refs={'UN': migration_grounding})
+        event = Migration(concept, delta=size)
+        return event
+
+    def _get_size(self, size_term_id):
+        size_term = self.tree.find("*[@id='%s']" % size_term_id)
+        value = size_term.find('value')
+        if value is not None:
+            return value.text
 
     def _get_term_by_role(self, term, role, is_arg):
         """Return the ID and the element corresponding to a role in a term."""
