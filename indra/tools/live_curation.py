@@ -58,19 +58,24 @@ class Corpus(object):
         """Pushes a corpus object to S3 in the form of three json files"""
         key_base = 'indra_models/' + name + '/'
         try:
+            # Structure and upload raw statements
             self._s3.put_object(
                 Body=json.dumps(stmts_to_json(self.raw_statements)),
                 Bucket=bucket, Key=key_base+'raw_statements.json')
+
+            # Structure and upload assembled statements
             self._s3.put_object(
                 Body=json.dumps(
                     [s.to_json() for uid, s in self.statements.items()]),
                 Bucket=bucket, Key=key_base + 'statements.json')
+
+            # Structure and upload curations
             self._s3.put_object(
                 Body=json.dumps(self.curations),
                 Bucket=bucket, Key=key_base + 'curations.json')
             keys = tuple(s + '.json' for s in ['raw_statements',
-                                                          'statements',
-                                                          'curations'])
+                                               'statements',
+                                               'curations'])
             logger.info('Corpus uploaded as %s, %s and %s at %s.' %
                         (*keys, key_base))
             return keys
@@ -84,10 +89,13 @@ class Corpus(object):
     def s3_get(self, name, bucket='world-modelers'):
         key_base = 'indra_models/' + name + '/'
         try:
+            # Get and process raw statements
             raw_stmt_jsons = self._s3.get_object(
                 Bucket=bucket,
                 Key=key_base+'raw_statements.json')['Body'].read()
             self.raw_statements = stmts_from_json(json.loads(raw_stmt_jsons))
+
+            # Get and process assembled statements from list to dict
             stmt_jsons = json.loads(self._s3.get_object(
                 Bucket=bucket,
                 Key=key_base+'statements.json')['Body'].read())
