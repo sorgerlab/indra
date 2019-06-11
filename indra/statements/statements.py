@@ -186,7 +186,7 @@ __all__ = [
     'Activation', 'GtpActivation', 'ActiveForm', 'HasActivity', 'Gef', 'Gap',
     'Complex', 'Translocation', 'RegulateAmount', 'DecreaseAmount',
     'IncreaseAmount', 'Influence', 'Conversion', 'Unresolved',
-    'Association', 'Event',
+    'Association', 'Event', 'Migration',
 
     # Error classes
     'InputError', 'UnresolvedUuidError', 'InvalidLocationError',
@@ -197,6 +197,7 @@ __all__ = [
 
     # Context classes
     'BioContext', 'WorldContext', 'TimeContext', 'RefContext', 'Context',
+    'MovementContext',
 
     # Functions and values
     'stmts_from_json', 'get_unresolved_support_uuids', 'stmts_to_json',
