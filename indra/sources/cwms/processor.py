@@ -6,6 +6,7 @@ from datetime import datetime
 
 from indra.statements import *
 from indra.statements.statements import Migration
+from indra.statements.context import MovementContext
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
 
@@ -242,16 +243,29 @@ class CWMSProcessor(object):
                                                   False)
         if arg_term is None:
             return None
+
+        # Try to get the quantitative state associated with the event
         size_arg = arg_term.find('size')
         if size_arg is not None:
             value = self._get_size(size_arg.attrib['id'])
             size = QuantitativeState(value=value)
         else:
             size = None
+
+        # Try to get the locations associated with the event
+        neutral_id, neutral_term = self._get_term_by_role(event_term,
+                                                          'NEUTRAL',
+                                                          is_arg=False)
+        locs = []
+        if neutral_term is not None:
+            text = neutral_term.find('text').text
+            locs.append(RefContext(name=text))
+        context = MovementContext(locations=locs)
+
         migration_grounding = 'causal_factor/social_and_political/migration'
         concept = Concept('Migration',
                           db_refs={'UN': migration_grounding})
-        event = Migration(concept, delta=size)
+        event = Migration(concept, delta=size, context=context)
         return event
 
     def _get_size(self, size_term_id):
@@ -352,9 +366,9 @@ class CWMSProcessor(object):
             time_context = TimeContext(text=text)
         return time_context
 
-    def _extract_geoloc(self, term):
+    def _extract_geoloc(self, term, arg_link='location'):
         """Get the location from a term (CC or TERM)"""
-        loc = term.find('location')
+        loc = term.find(arg_link)
         if loc is None:
             return None
         loc_id = loc.attrib.get('id')
