@@ -4,7 +4,8 @@ import logging
 import unittest
 from nose.plugins.attrib import attr
 from indra.statements import *
-from indra.tools.live_curation import app, curator, Corpus, LiveCurator
+from indra.tools.live_curation import app, curator, Corpus, LiveCurator, \
+    _json_str_to_stmts_dict, _stmts_dict_to_json_str
 
 
 logger = logging.getLogger(__name__)
@@ -125,6 +126,16 @@ def test_sofia_incorrect():
                 '5': 0}
     beliefs = curator.update_beliefs(corpus_id='1')
     assert close_enough(beliefs, expected), (beliefs, expected)
+
+
+def test_json_formatters():
+    corpus = _make_corpus()
+    jssj = _json_str_to_stmts_dict(_stmts_dict_to_json_str(corpus.statements))
+    assert set(jssj.keys()) == set(corpus.statements.keys())
+    for k, v in jssj.items():
+        assert v == corpus.statements[k]
+        assert jssj[k].get_hash() == corpus.statements[k].get_hash()
+        assert jssj[k].to_json() == corpus.statements[k].to_json()
 
 
 class LiveCurationTestCase(unittest.TestCase):
