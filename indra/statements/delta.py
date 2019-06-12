@@ -114,9 +114,8 @@ class QuantitativeState(Delta):
                    text=text)
 
     def __str__(self):
-        return "QuantitativeState(unit=%s, value=%d, text=%s)" % (self.unit,
-                                                                  self.value,
-                                                                  self.text)
+        return ("QuantitativeState(entity=%s, value=%d, unit=%s, modifier=%s, text=%s)"
+                % (self.entity, self.value, self.unit, self.modifier, self.text))
 
     # Arithmetic operations
     def __add__(self, other):
