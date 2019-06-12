@@ -34,7 +34,7 @@ def main():
                                   for dep in deps})
 
     setup(name='indra',
-          version='1.12.0',
+          version='1.13.0',
           description='Integrated Network and Dynamical Reasoning Assembler',
           long_description='INDRA is a framework '
               'for assembling rule-based mathematical models and '
