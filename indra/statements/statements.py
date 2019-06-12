@@ -5,7 +5,13 @@ Statement classes follow an inheritance hierarchy, with all Statement types
 inheriting from the parent class :py:class:`Statement`. At
 the next level in the hierarchy are the following classes:
 
-** Biological Domain **
+Open Domain
+
+- :py:class:`Event`
+- :py:class:`Influence`
+- :py:class:`Association`
+
+Biological Domain
 
 - :py:class:`Complex`
 - :py:class:`Modification`
@@ -17,12 +23,6 @@ the next level in the hierarchy are the following classes:
 - :py:class:`Gef`
 - :py:class:`Gap`
 - :py:class:`Conversion`
-
-** Open Domain **
-
-- :py:class:`Event`
-- :py:class:`Influence`
-- :py:class:`Association`
 
 There are several types of Statements representing post-translational
 modifications that further inherit from
