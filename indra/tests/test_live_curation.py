@@ -133,7 +133,8 @@ def test_json_formatters():
     jssj = _json_str_to_stmts_dict(_stmts_dict_to_json_str(corpus.statements))
     assert set(jssj.keys()) == set(corpus.statements.keys())
     for k, v in jssj.items():
-        assert v == corpus.statements[k]
+        assert jssj[k].matches(corpus.statements[k])
+        assert jssj[k].equals(corpus.statements[k])
         assert jssj[k].get_hash() == corpus.statements[k].get_hash()
         assert jssj[k].to_json() == corpus.statements[k].to_json()
 
