@@ -298,7 +298,7 @@ class LiveGroundingTestCase(unittest.TestCase):
         resp = self._send_request('update_groundings', {'corpus_id': '1'})
         res = json.loads(resp.data.decode('utf-8'))
         stmts = stmts_from_json(res)
-        assert stmts[0].subj.db_refs['UN'][0][0] == 'UN/animal/dog'
+        assert stmts[0].subj.concept.db_refs['UN'][0][0] == 'UN/animal/dog'
 
 
 def close_enough(probs, ref):
