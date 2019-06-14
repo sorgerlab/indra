@@ -56,9 +56,30 @@ class Corpus(object):
     def __repr__(self):
         return str(self)
 
-    def s3_put(self, name, bucket='world-modelers'):
-        """Pushes a corpus object to S3 in the form of three json files"""
-        key_base = 'indra_models/' + name + '/'
+    def s3_put(self, name, bucket='world-modelers',
+               key_base_name='indra_models'):
+        """Push a corpus object to S3 in the form of three json files
+
+        The json files representing the object have S3 keys of the format
+        <key_base_name>/<name>/<file>.json
+
+        Parameters
+        ----------
+        name : str
+            The name of the model to upload. Is part of the S3 key.
+        bucket : str
+            The S3 bucket to upload the Corpus to. Default: 'world-modelers'.
+        key_base_name : str
+            The base object path to upload the json files to. Is part of the
+            S3 key. Default: 'indra_models'.
+
+        Returns
+        -------
+        keys : tuple(str)
+            A tuple of three strings giving the S3 key to the pushed objects
+        """
+        key_base = key_base_name + '/' + name + '/'
+        key_base = key_base.replace('//', '/')  # # replace double slashes
         try:
             # Structure and upload raw statements
             self._s3.put_object(
@@ -74,9 +95,9 @@ class Corpus(object):
             self._s3.put_object(
                 Body=json.dumps(self.curations),
                 Bucket=bucket, Key=key_base + 'curations.json')
-            keys = tuple(s + '.json' for s in ['raw_statements',
-                                               'statements',
-                                               'curations'])
+            keys = tuple(key_base + s + '.json' for s in ['raw_statements',
+                                                          'statements',
+                                                          'curations'])
             logger.info('Corpus uploaded as %s, %s and %s at %s.' %
                         (*keys, key_base))
             return keys
@@ -87,8 +108,26 @@ class Corpus(object):
             logger.exception('Failed to put on s3: %s' % e)
             return None
 
-    def s3_get(self, name, bucket='world-modelers'):
-        key_base = 'indra_models/' + name + '/'
+    def s3_get(self, name, bucket='world-modelers',
+               key_base_name='indra_models'):
+        """Fetch a corpus object from S3 in the form of three json files
+
+        The json files representing the object have S3 keys of the format
+        <key_base_name>/<name>/<file>.json
+
+        Parameters
+        ----------
+        name : str
+            The name of the model to fetch. Is part of the S3 key.
+        bucket : str
+            The S3 bucket to fetch the Corpus from. Default: 'world-modelers'.
+        key_base_name : str
+            The base object path to fetch the json files from. Is part of the
+            S3 key. Default: 'indra_models'.
+
+        """
+        key_base = key_base_name + '/' + name + '/'
+        key_base = key_base.replace('//', '/')  # replace double slashes
         try:
             # Get and process raw statements
             raw_stmt_jsons = self._s3.get_object(
