@@ -32,6 +32,9 @@ class Corpus(object):
     ----------
     statements : list[indra.statement.Statement]
         A list of INDRA Statements to embed in the corpus.
+    aws_name : str
+        The name of the profile in the AWS credential file to use. 'default' is
+        used by default.
 
     Attributes
     ----------
@@ -41,8 +44,7 @@ class Corpus(object):
         A dict keeping track of the curations submitted so far for Statement
         UUIDs in the corpus.
     """
-    def __init__(self, statements, raw_statements=None, model_name=None,
-                 aws_name='default'):
+    def __init__(self, statements, raw_statements=None, aws_name='default'):
         self.statements = {st.uuid: st for st in statements}
         self.raw_statements = [] if not raw_statements else raw_statements
         self.curations = {}
@@ -138,6 +140,8 @@ def _make_un_ontology():
 def _stmts_dict_to_json_str(stmt_dict):
     """Make a json representation from dict of statements keyed by their uuid's
 
+    This function is the inverse of _json_str_to_stmts_dict()
+
     Parameters
     ----------
     stmt_dict : dict
@@ -153,6 +157,8 @@ def _stmts_dict_to_json_str(stmt_dict):
 
 def _json_str_to_stmts_dict(json_str):
     """Make a dict of statements keyed by their uuid's from json representation
+
+    This function is the inverse of _stmts_dict_to_json_str()
 
     Parameters
     ----------
