@@ -102,8 +102,6 @@ class Corpus(object):
                         (*keys, key_base))
             return keys
 
-        # Todo
-        #  Add metadata option?
         except Exception as e:
             logger.exception('Failed to put on s3: %s' % e)
             return None
@@ -146,7 +144,6 @@ class Corpus(object):
                 Key=key_base+'curations.json')['Body'].read())
             self.curations = {uid: c for uid, c in curation_jsons.items()}
 
-        # FixMe Use appropriate S3 exception and make the logger less verbose
         except Exception as e:
             logger.exception('Failed to get from s3: %s' % e)
 
