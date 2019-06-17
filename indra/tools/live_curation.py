@@ -25,6 +25,11 @@ app = Flask(__name__)
 corpora = {}
 
 
+default_bucket = 'world-modelers'
+default_base_name = 'indra_models'
+default_profile = 'wm'
+
+
 class Corpus(object):
     """Represent a corpus of statements with curation.
 
@@ -44,7 +49,8 @@ class Corpus(object):
         A dict keeping track of the curations submitted so far for Statement
         UUIDs in the corpus.
     """
-    def __init__(self, statements, raw_statements=None, aws_name='default'):
+    def __init__(self, statements, raw_statements=None,
+                 aws_name=default_profile):
         self.statements = {st.uuid: st for st in statements}
         self.raw_statements = [] if not raw_statements else raw_statements
         self.curations = {}
@@ -64,13 +70,14 @@ class Corpus(object):
         return str(self)
 
     @classmethod
-    def load_from_s3(cls, aws_name, name, bucket, key_base_name):
+    def load_from_s3(cls, name, aws_name=default_profile,
+                     bucket=default_bucket, key_base_name=default_base_name):
         corpus = cls([], aws_name=aws_name)
         corpus.s3_get(name, bucket, key_base_name)
         return corpus
 
-    def s3_put(self, name, bucket='world-modelers',
-               key_base_name='indra_models'):
+    def s3_put(self, name, bucket=default_bucket,
+               key_base_name=default_base_name):
         """Push a corpus object to S3 in the form of three json files
 
         The json files representing the object have S3 keys of the format
@@ -120,8 +127,8 @@ class Corpus(object):
             logger.exception('Failed to put on s3: %s' % e)
             return None
 
-    def s3_get(self, name, bucket='world-modelers',
-               key_base_name='indra_models'):
+    def s3_get(self, name, bucket=default_bucket,
+               key_base_name=default_profile):
         """Fetch a corpus object from S3 in the form of three json files
 
         The json files representing the object have S3 keys of the format
