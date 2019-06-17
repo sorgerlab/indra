@@ -63,6 +63,12 @@ class Corpus(object):
     def __repr__(self):
         return str(self)
 
+    @classmethod
+    def load_from_s3(cls, aws_name, name, bucket, key_base_name):
+        corpus = cls([], aws_name=aws_name)
+        corpus.s3_get(name, bucket, key_base_name)
+        return corpus
+
     def s3_put(self, name, bucket='world-modelers',
                key_base_name='indra_models'):
         """Push a corpus object to S3 in the form of three json files
