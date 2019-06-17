@@ -4,6 +4,7 @@ The script can handle any ontology which uses the same format (yaml ontology
 following the namespace defined at `eidos_ns`).
 """
 import yaml
+import argparse
 import requests
 from os.path import join, dirname, abspath
 from rdflib import Graph, Namespace, Literal
@@ -16,7 +17,8 @@ indra_ns = 'http://sorger.med.harvard.edu/indra/'
 indra_rel_ns = Namespace(indra_ns + 'relations/')
 isa = indra_rel_ns.term('isa')
 
-
+wm_ont_url = ('https://raw.githubusercontent.com/WorldModelers/'
+              'Ontologies/master/wm.yml')
 eidos_ont_url = ('https://raw.githubusercontent.com/clulab/eidos/master/'
                  'src/main/resources/org/clulab/wm/eidos/english/'
                  'ontologies/un_ontology.yml')
@@ -93,11 +95,32 @@ def load_yaml_from_url(ont_url):
 
 
 if __name__ == '__main__':
-    # Eidos
-    eidos_rdf_path = join(dirname(abspath(eidos.__file__)),
-                          'eidos_ontology.rdf')
-    update_ontology(eidos_ont_url, eidos_rdf_path)
+    parser = argparse.ArgumentParser(description='Process hume or eidos '
+        'ontologies. With arguments, only the ontology at <url> is processed '
+        'and saved to <fname>. Otherwise the script will process the default '
+        'eidos and hume ontologies.')
+    parser.add_argument('--url', help='Specify a url to download an ontology '
+                                      'from.')
+    parser.add_argument('--fname', help='Filename to save new ontology '
+                                        'mapping from <url>')
+    args = parser.parse_args()
 
-    # Hume
-    hume_rdf_path = join(dirname(abspath(hume.__file__)), 'hume_ontology.rdf')
-    update_ontology(hume_ont_url, hume_rdf_path)
+    # Update with from given url to given fname
+    if args.fname and args.url:
+        update_ontology(args.url, args.fname)
+
+    # Specifying only a URL or only a filename is ambiguous, don't execute
+    elif bool(args.fname) ^ bool(args.url):
+        print('Must specify both --fname and --url or run without arguments.')
+
+    # Default script execution, backwards compatible
+    else:
+        # Eidos
+        eidos_rdf_path = join(dirname(abspath(eidos.__file__)),
+                              'eidos_ontology.rdf')
+        update_ontology(eidos_ont_url, eidos_rdf_path)
+
+        # Hume
+        hume_rdf_path = join(dirname(abspath(hume.__file__)),
+                             'hume_ontology.rdf')
+        update_ontology(hume_ont_url, hume_rdf_path)
