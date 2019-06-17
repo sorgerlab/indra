@@ -4,7 +4,8 @@ import logging
 import unittest
 from nose.plugins.attrib import attr
 from indra.statements import *
-from indra.tools.live_curation import app, curator, Corpus, LiveCurator
+from indra.tools.live_curation import app, curator, Corpus, LiveCurator, \
+    _json_str_to_stmts_dict, _stmts_dict_to_json_str
 
 
 logger = logging.getLogger(__name__)
@@ -19,8 +20,8 @@ def _make_corpus():
     ev4 = Evidence(source_api='cwms', text='D')
     ev5 = Evidence(source_api='sofia', text='E')
     ev6 = Evidence(source_api='sofia', text='F')
-    x = Concept('x', db_refs={'TEXT': 'dog'})
-    y = Concept('y', db_refs={'TEXT': 'cat'})
+    x = Event(Concept('x', db_refs={'TEXT': 'dog'}))
+    y = Event(Concept('y', db_refs={'TEXT': 'cat'}))
     stmt1 = Influence(x, y, evidence=[ev1, ev2])
     stmt2 = Influence(x, y, evidence=[ev1, ev3])
     stmt3 = Influence(x, y, evidence=[ev3, ev4, ev5])
@@ -125,6 +126,17 @@ def test_sofia_incorrect():
                 '5': 0}
     beliefs = curator.update_beliefs(corpus_id='1')
     assert close_enough(beliefs, expected), (beliefs, expected)
+
+
+def test_json_formatters():
+    corpus = _make_corpus()
+    jssj = _json_str_to_stmts_dict(_stmts_dict_to_json_str(corpus.statements))
+    assert set(jssj.keys()) == set(corpus.statements.keys())
+    for k, v in jssj.items():
+        assert jssj[k].matches(corpus.statements[k])
+        assert jssj[k].equals(corpus.statements[k])
+        assert jssj[k].get_hash() == corpus.statements[k].get_hash()
+        assert jssj[k].to_json() == corpus.statements[k].to_json()
 
 
 class LiveCurationTestCase(unittest.TestCase):
@@ -286,7 +298,7 @@ class LiveGroundingTestCase(unittest.TestCase):
         resp = self._send_request('update_groundings', {'corpus_id': '1'})
         res = json.loads(resp.data.decode('utf-8'))
         stmts = stmts_from_json(res)
-        assert stmts[0].subj.db_refs['UN'][0][0] == 'UN/animal/dog'
+        assert stmts[0].subj.concept.db_refs['UN'][0][0] == 'UN/animal/dog'
 
 
 def close_enough(probs, ref):

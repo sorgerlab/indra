@@ -1,16 +1,20 @@
 """This REST service allows real-time curation and belief updates for
 a corpus of INDRA Statements."""
+import json
 import yaml
+import boto3
 import pickle
 import logging
 import argparse
+from botocore.exceptions import ClientError
 from flask import Flask, request, jsonify, abort, Response
 # Note: preserve EidosReader install as first one from indra
 from indra.sources.eidos.reader import EidosReader
 from indra.belief import BeliefEngine
 from indra.tools import assemble_corpus as ac
 from indra.belief.wm_scorer import get_eidos_bayesian_scorer
-from indra.statements import stmts_from_json_file, stmts_to_json
+from indra.statements import stmts_from_json_file, stmts_to_json, \
+    stmts_from_json, Statement
 from indra.preassembler.hierarchy_manager import YamlHierarchyManager
 from indra.preassembler.make_eidos_hume_ontologies import eidos_ont_url, \
     load_yaml_from_url, rdf_graph_from_yaml
@@ -21,6 +25,11 @@ app = Flask(__name__)
 corpora = {}
 
 
+default_bucket = 'world-modelers'
+default_base_name = 'indra_models'
+default_profile = 'wm'
+
+
 class Corpus(object):
     """Represent a corpus of statements with curation.
 
@@ -28,6 +37,9 @@ class Corpus(object):
     ----------
     statements : list[indra.statement.Statement]
         A list of INDRA Statements to embed in the corpus.
+    aws_name : str
+        The name of the profile in the AWS credential file to use. 'default' is
+        used by default.
 
     Attributes
     ----------
@@ -37,16 +49,125 @@ class Corpus(object):
         A dict keeping track of the curations submitted so far for Statement
         UUIDs in the corpus.
     """
-    def __init__(self, statements, raw_statements=None):
+    def __init__(self, statements, raw_statements=None,
+                 aws_name=default_profile):
         self.statements = {st.uuid: st for st in statements}
         self.raw_statements = [] if not raw_statements else raw_statements
         self.curations = {}
+        self.aws_name = aws_name
+        self._s3 = None
+
+    def _get_s3_client(self):
+        if self._s3 is None:
+            self._s3 = boto3.session.Session(
+                profile_name=self.aws_name).client('s3')
+        return self._s3
 
     def __str__(self):
         return 'Corpus(%s -> %s)' % (str(self.statements), str(self.curations))
 
     def __repr__(self):
         return str(self)
+
+    @classmethod
+    def load_from_s3(cls, name, aws_name=default_profile,
+                     bucket=default_bucket, key_base_name=default_base_name):
+        corpus = cls([], aws_name=aws_name)
+        corpus.s3_get(name, bucket, key_base_name)
+        return corpus
+
+    def s3_put(self, name, bucket=default_bucket,
+               key_base_name=default_base_name):
+        """Push a corpus object to S3 in the form of three json files
+
+        The json files representing the object have S3 keys of the format
+        <key_base_name>/<name>/<file>.json
+
+        Parameters
+        ----------
+        name : str
+            The name of the model to upload. Is part of the S3 key.
+        bucket : str
+            The S3 bucket to upload the Corpus to. Default: 'world-modelers'.
+        key_base_name : str
+            The base object path to upload the json files to. Is part of the
+            S3 key. Default: 'indra_models'.
+
+        Returns
+        -------
+        keys : tuple(str)
+            A tuple of three strings giving the S3 key to the pushed objects
+        """
+        key_base = key_base_name + '/' + name + '/'
+        key_base = key_base.replace('//', '/')  # # replace double slashes
+        try:
+            s3 = self._get_s3_client()
+            # Structure and upload raw statements
+            s3.put_object(
+                Body=json.dumps(stmts_to_json(self.raw_statements)),
+                Bucket=bucket, Key=key_base+'raw_statements.json')
+
+            # Structure and upload assembled statements
+            s3.put_object(
+                Body=_stmts_dict_to_json_str(self.statements),
+                Bucket=bucket, Key=key_base + 'statements.json')
+
+            # Structure and upload curations
+            s3.put_object(
+                Body=json.dumps(self.curations),
+                Bucket=bucket, Key=key_base + 'curations.json')
+            keys = tuple(key_base + s + '.json' for s in ['raw_statements',
+                                                          'statements',
+                                                          'curations'])
+            logger.info('Corpus uploaded as %s, %s and %s at %s.' %
+                        (*keys, key_base))
+            return keys
+
+        except Exception as e:
+            logger.exception('Failed to put on s3: %s' % e)
+            return None
+
+    def s3_get(self, name, bucket=default_bucket,
+               key_base_name=default_profile):
+        """Fetch a corpus object from S3 in the form of three json files
+
+        The json files representing the object have S3 keys of the format
+        <key_base_name>/<name>/<file>.json
+
+        Parameters
+        ----------
+        name : str
+            The name of the model to fetch. Is part of the S3 key.
+        bucket : str
+            The S3 bucket to fetch the Corpus from. Default: 'world-modelers'.
+        key_base_name : str
+            The base object path to fetch the json files from. Is part of the
+            S3 key. Default: 'indra_models'.
+
+        """
+        key_base = key_base_name + '/' + name + '/'
+        key_base = key_base.replace('//', '/')  # replace double slashes
+        try:
+            s3 = self._get_s3_client()
+            # Get and process raw statements
+            raw_stmt_jsons = s3.get_object(
+                Bucket=bucket,
+                Key=key_base+'raw_statements.json')['Body'].read()
+            self.raw_statements = stmts_from_json(json.loads(raw_stmt_jsons))
+
+            # Get and process assembled statements from list to dict
+            self.statements = _json_str_to_stmts_dict(s3.get_object(
+                Bucket=bucket,
+                Key=key_base+'statements.json')['Body'].read())
+
+            # Get and process curations if any
+            curation_jsons = json.loads(s3.get_object(
+                Bucket=bucket,
+                Key=key_base+'curations.json')['Body'].read())
+            self.curations = {uid: c for uid, c in curation_jsons.items()}
+
+        except Exception as e:
+            logger.exception('Failed to get from s3: %s' % e)
 
 
 class InvalidCorpusError(Exception):
@@ -72,6 +193,44 @@ def default_assembly(stmts):
 def _make_un_ontology():
     return YamlHierarchyManager(load_yaml_from_url(eidos_ont_url),
                                 rdf_graph_from_yaml)
+
+
+def _stmts_dict_to_json_str(stmt_dict):
+    """Make a json representation from dict of statements keyed by their uuid's
+
+    This function is the inverse of _json_str_to_stmts_dict()
+
+    Parameters
+    ----------
+    stmt_dict : dict
+        Dict with statements keyed by their uuid's: {uuid: stmt}
+
+    Returns
+    -------
+    json_str : str
+        A json compatible string
+    """
+    return json.dumps([s.to_json() for _, s in stmt_dict.items()])
+
+
+def _json_str_to_stmts_dict(json_str):
+    """Make a dict of statements keyed by their uuid's from json representation
+
+    This function is the inverse of _stmts_dict_to_json_str()
+
+    Parameters
+    ----------
+    json_str : str
+        A json compatible string
+
+    Returns
+    -------
+    stmt_dict : dict
+        Dict with statements keyed by their uuid's: {uuid: stmt}
+    """
+    stmt_jsons = json.loads(json_str)
+    stmts = [Statement._from_json(s) for s in stmt_jsons]
+    return {s.uuid: s for s in stmts}
 
 
 class LiveCurator(object):
@@ -328,6 +487,10 @@ if __name__ == '__main__':
     parser.add_argument('--corpus_id', default='1')
     parser.add_argument('--host', default='0.0.0.0')
     parser.add_argument('--port', default=8001, type=int)
+    parser.add_argument('--aws-cred', type=str, default='default',
+                        help='The name of the credential set to use when '
+                             'connecting to AWS services. If the name is not '
+                             'found in your AWS config, `[default]`  is used.')
     args = parser.parse_args()
 
     # Load the corpus
@@ -343,7 +506,7 @@ if __name__ == '__main__':
 
     logger.info('Loaded corpus %s with %d statements.' %
                 (args.corpus_id, len(stmts)))
-    curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts)
+    curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts, args.aws_cred)
 
     # Run the app
     app.run(host=args.host, port=args.port, threaded=False)
