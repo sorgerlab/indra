@@ -48,7 +48,14 @@ class Corpus(object):
         self.statements = {st.uuid: st for st in statements}
         self.raw_statements = [] if not raw_statements else raw_statements
         self.curations = {}
-        self._s3 = boto3.session.Session(profile_name=aws_name).client('s3')
+        self.aws_name = aws_name
+        self._s3 = None
+
+    def _get_s3_client(self):
+        if self._s3 is None:
+            self._s3 = boto3.session.Session(
+                profile_name=self.aws_name).client('s3')
+        return self._s3
 
     def __str__(self):
         return 'Corpus(%s -> %s)' % (str(self.statements), str(self.curations))
@@ -81,18 +88,19 @@ class Corpus(object):
         key_base = key_base_name + '/' + name + '/'
         key_base = key_base.replace('//', '/')  # # replace double slashes
         try:
+            s3 = self._get_s3_client()
             # Structure and upload raw statements
-            self._s3.put_object(
+            s3.put_object(
                 Body=json.dumps(stmts_to_json(self.raw_statements)),
                 Bucket=bucket, Key=key_base+'raw_statements.json')
 
             # Structure and upload assembled statements
-            self._s3.put_object(
+            s3.put_object(
                 Body=_stmts_dict_to_json_str(self.statements),
                 Bucket=bucket, Key=key_base + 'statements.json')
 
             # Structure and upload curations
-            self._s3.put_object(
+            s3.put_object(
                 Body=json.dumps(self.curations),
                 Bucket=bucket, Key=key_base + 'curations.json')
             keys = tuple(key_base + s + '.json' for s in ['raw_statements',
@@ -127,19 +135,20 @@ class Corpus(object):
         key_base = key_base_name + '/' + name + '/'
         key_base = key_base.replace('//', '/')  # replace double slashes
         try:
+            s3 = self._get_s3_client()
             # Get and process raw statements
-            raw_stmt_jsons = self._s3.get_object(
+            raw_stmt_jsons = s3.get_object(
                 Bucket=bucket,
                 Key=key_base+'raw_statements.json')['Body'].read()
             self.raw_statements = stmts_from_json(json.loads(raw_stmt_jsons))
 
             # Get and process assembled statements from list to dict
-            self.statements = _json_str_to_stmts_dict(self._s3.get_object(
+            self.statements = _json_str_to_stmts_dict(s3.get_object(
                 Bucket=bucket,
                 Key=key_base+'statements.json')['Body'].read())
 
             # Get and process curations if any
-            curation_jsons = json.loads(self._s3.get_object(
+            curation_jsons = json.loads(s3.get_object(
                 Bucket=bucket,
                 Key=key_base+'curations.json')['Body'].read())
             self.curations = {uid: c for uid, c in curation_jsons.items()}
