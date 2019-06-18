@@ -1,8 +1,12 @@
+import logging
 from collections import OrderedDict as _o
 from datetime import timedelta
 
 
 __all__ = ['Delta', 'QualitativeDelta', 'QuantitativeState']
+
+
+logger = logging.getLogger(__name__)
 
 
 class Delta(object):
@@ -178,7 +182,8 @@ class QuantitativeState(Delta):
         return (values[0] != values[1])
 
     # Unit conversions
-    def convert_unit(self, source_unit, target_unit, source_value,
+    @staticmethod
+    def convert_unit(source_unit, target_unit, source_value,
                      source_period=None, target_period=None):
         """Convert value per unit from source to target unit. If a unit is
         absolute, total timedelta period has to be provided. If a unit is a
@@ -190,14 +195,17 @@ class QuantitativeState(Delta):
                 raise ValueError('Absolute period needs to be provided.')
                 return
         if not source_period:
-            source_period = self._get_period_from_unit(source_unit)
+            source_period = QuantitativeState._get_period_from_unit(
+                source_unit)
         if not target_period:
-            target_period = self._get_period_from_unit(target_unit)
+            target_period = QuantitativeState._get_period_from_unit(
+                target_unit)
         if source_unit == 'second':
-            return self.from_seconds(source_value, target_period)
+            return QuantitativeState.from_seconds(source_value, target_period)
         if target_unit == 'second':
-            return self.value_per_second(source_value, source_period)
-        return source_value * (target_period / source_period)
+            return QuantitativeState.value_per_second(
+                source_value, source_period)
+        return round(source_value * (target_period / source_period))
 
     @staticmethod
     def value_per_second(value, period):
@@ -220,9 +228,10 @@ class QuantitativeState(Delta):
         values = []
         for state in [self, other]:
             if state.unit != target_unit:
-                new_value = self.convert_unit(
-                    state.unit, target_unit, state.value,
-                    target_period=target_period)
+                new_value = self.convert_unit(source_unit=state.unit, 
+                                              target_unit=target_unit, 
+                                              source_value=state.value,
+                                              target_period=target_period)
             values.append(new_value)
         return values
 

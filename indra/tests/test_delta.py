@@ -1,5 +1,6 @@
 from indra.statements.delta import *
 from nose.tools import assert_raises
+from datetime import date, timedelta
 
 
 def test_quantitative_serialization():
@@ -14,31 +15,65 @@ def test_quantitative_serialization():
 
 
 def test_quantitative_conversions():
-    qs = QuantitativeState()
-    assert qs.value_per_second(86400, 1) == 1
-    assert qs.from_seconds(1, 1) == 86400
-    qs2 = QuantitativeState(value=86400, unit='daily')
-    qs3 = QuantitativeState(value=302400, unit='weekly')
-    values = qs2._standardize_units(qs3, target_unit='per_second')
+    day = QuantitativeState._get_period_from_unit('day')
+    assert QuantitativeState.value_per_second(86400, day) == 1
+    assert QuantitativeState.from_seconds(1, day) == 86400
+    qs1 = QuantitativeState(value=86400, unit='day')
+    qs2 = QuantitativeState(value=302400, unit='week')
+    values = qs1._standardize_units(qs2, target_unit='second')
     assert values[0] == 1.0  # 86400 / 86400 sec/day
     assert values[1] == 0.5  # 302400 / 604800 sec/week
+    # Convert between different rates
+    assert QuantitativeState.convert_unit('day', 'week', 10) == 70
+    assert QuantitativeState.convert_unit('week', 'day', 21) == 3
+    # Use given periods versus approximate values
+    jan = date(2019, 2, 1) - date(2019, 1, 1)
+    feb = date(2019, 3, 1) - date(2019, 2, 1)
+    feb_leap = date(2016, 3, 1) - date(2016, 2, 1)
+    assert QuantitativeState.convert_unit(
+        'day', 'month', 1, target_period=jan) == 31
+    assert QuantitativeState.convert_unit(
+        'day', 'month', 1, target_period=feb) == 28
+    assert QuantitativeState.convert_unit(
+        'day', 'month', 1, target_period=feb_leap) == 29
+    assert QuantitativeState.convert_unit('day', 'month', 1) == 30
+    # Convert to absolute value
+    abs_period = timedelta(weeks=5)
+    assert QuantitativeState.convert_unit(
+        'day', 'absolute', 2, day, abs_period) == 70
+    assert QuantitativeState.convert_unit(
+        'week', 'absolute', 25, target_period=abs_period) == 125
+    # Get rate from absolute value
+    assert QuantitativeState.convert_unit(
+        'absolute', 'day', 70, source_period=abs_period) == 2
+    assert QuantitativeState.convert_unit(
+        'absolute', 'week', 70, source_period=abs_period) == 14
 
 
 def test_arithmetic_operations():
-    qs1 = QuantitativeState('person', 15, 'daily')
-    qs2 = QuantitativeState('person', 10, 'daily')
-    qs3 = QuantitativeState('person', 100, 'weekly')
-    qs4 = QuantitativeState('person', 70, 'weekly')
-    qs5 = QuantitativeState('box', 100, 'daily')
+    qs1 = QuantitativeState('person', 15, 'day')
+    qs2 = QuantitativeState('person', 10, 'day')
+    qs3 = QuantitativeState('person', 100, 'week')
+    qs4 = QuantitativeState('person', 70, 'week')
+    qs5 = QuantitativeState('box', 100, 'day')
+    day = QuantitativeState._get_period_from_unit('day')
     # Operations with the same entity and unit
-    assert (qs1 + qs2) == 25
-    assert (qs1 - qs2) == 5
+    sum_per_second = qs1 + qs2
+    sum_per_day = QuantitativeState.from_seconds(sum_per_second, day)
+    assert sum_per_day == 25, sum_per_day
+    diff_per_second = qs1 - qs2
+    diff_per_day = QuantitativeState.from_seconds(diff_per_second, day)
+    assert diff_per_day == 5, diff_per_day
     assert qs1 > qs2
     assert qs2 < qs1
     assert qs1 != qs2
     # Operations with different units
-    assert (qs1 + qs4) == 25  # daily
-    assert (qs1 - qs4) == 5  # daily
+    sum_per_second = qs1 + qs4
+    sum_per_day = QuantitativeState.from_seconds(sum_per_second, day)
+    assert sum_per_day == 25, sum_per_day
+    diff_per_second = qs1 - qs4
+    diff_per_day = QuantitativeState.from_seconds(diff_per_second, day)
+    assert diff_per_day == 5, diff_per_day
     assert qs1 > qs4
     assert qs2 < qs3
     assert qs2 == qs4
