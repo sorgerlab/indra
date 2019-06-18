@@ -361,3 +361,6 @@ class MovementContext(Context):
             pieces.append('time=%s' % self.time)
         args = ', '.join(pieces)
         return 'MovementContext(%s)' % args
+
+    def __repr__(self):
+        return self.__str__()
