@@ -64,6 +64,9 @@ class QualitativeDelta(Delta):
                                                    self.polarity,
                                                    self.adjectives)
 
+    def __repr__(self):
+        return self.__str__()
+
 
 class QuantitativeState(Delta):
     """An object representing numerical value of something.
@@ -114,105 +117,134 @@ class QuantitativeState(Delta):
                    text=text)
 
     def __str__(self):
-        return ("QuantitativeState(entity=%s, value=%d, unit=%s, modifier=%s, text=%s)"
-                % (self.entity, self.value, self.unit, self.modifier, self.text))
+        return ("QuantitativeState(entity=%s, value=%d, unit=%s, modifier=%s,"
+                " text=%s)" % (self.entity, self.value, self.unit,
+                               self.modifier, self.text))
+
+    def __repr__(self):
+        return self.__str__()
 
     # Arithmetic operations
     def __add__(self, other):
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for addition")
-        values = self._standardize_units(other, target_unit='per_second')
+        values = self._standardize_units(other, target_unit='second')
         total_per_second = values[0] + values[1]
-        total = self.from_seconds(total_per_second, days=1)
-        # result is daily
-        return total
+        # result is per second
+        return total_per_second
 
     def __sub__(self, other):
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for subtraction")
-        values = self._standardize_units(other, target_unit='per_second')
+        values = self._standardize_units(other, target_unit='second')
         diff_per_second = values[0] - values[1]
-        diff = self.from_seconds(diff_per_second, days=1)
-        # result is daily
-        return diff
+        # result is per second
+        return diff_per_second
 
     def __gt__(self, other):
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for comparison")
-        values = self._standardize_units(other, target_unit='per_second')
+        values = self._standardize_units(other, target_unit='second')
         return (values[0] > values[1])
 
     def __ge__(self, other):
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for comparison")
-        values = self._standardize_units(other, target_unit='per_second')
+        values = self._standardize_units(other, target_unit='second')
         return (values[0] >= values[1])
 
     def __lt__(self, other):
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for comparison")
-        values = self._standardize_units(other, target_unit='per_second')
+        values = self._standardize_units(other, target_unit='second')
         return (values[0] < values[1])
 
     def __le__(self, other):
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for comparison")
-        values = self._standardize_units(other, target_unit='per_second')
+        values = self._standardize_units(other, target_unit='second')
         return (values[0] <= values[1])
 
     def __eq__(self, other):
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for comparison")
-        values = self._standardize_units(other, target_unit='per_second')
+        values = self._standardize_units(other, target_unit='second')
         return (values[0] == values[1])
 
     def __ne__(self, other):
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for comparison")
-        values = self._standardize_units(other, target_unit='per_second')
+        values = self._standardize_units(other, target_unit='second')
         return (values[0] != values[1])
 
     # Unit conversions
-    def convert_unit(self, days, target_unit='per_second'):
-        # convert between different units
-        # TODO: enable conversions to other units
-        if target_unit == 'per_second':
-            return self.value_per_second(self.value, days)
+    def convert_unit(self, source_unit, target_unit, source_value,
+                     source_period=None, target_period=None):
+        """Convert value per unit from source to target unit. If a unit is
+        absolute, total timedelta period has to be provided. If a unit is a
+        month or a year, it is recommended to pass timedelta period object
+        directly, if not provided, the approximation will be used.
+        """
+        if (target_unit == 'absolute' and not target_period) or \
+           (source_unit == 'absolute' and not source_period):
+                raise ValueError('Absolute period needs to be provided.')
+                return
+        if not source_period:
+            source_period = self._get_period_from_unit(source_unit)
+        if not target_period:
+            target_period = self._get_period_from_unit(target_unit)
+        if source_unit == 'second':
+            return self.from_seconds(source_value, target_period)
+        if target_unit == 'second':
+            return self.value_per_second(source_value, source_period)
+        return source_value * (target_period / source_period)
 
-    def value_per_second(self, value, days):
-        period = timedelta(days=days)
+    @staticmethod
+    def value_per_second(value, period):
+        """Get value per second given total value per period and a timedelta
+        period object."""
         seconds = period.total_seconds()
         per_second = value / seconds
         return per_second
 
-    def from_seconds(self, value_per_second, days):
-        period = timedelta(days=days)
+    @staticmethod
+    def from_seconds(value_per_second, period):
+        """Get total value per given period given timedelta period object and
+        value per second."""
         seconds = period.total_seconds()
         total_value = value_per_second * seconds
         return total_value
 
-    def _standardize_units(self, other, target_unit='per_second'):
+    def _standardize_units(self, other, target_unit='second',
+                           target_period=None):
         values = []
-        if self.unit != target_unit:
-            days = self._get_days()
-            self_new_value = self.convert_unit(days, target_unit)
-            values.append(self_new_value)
-        else:
-            values.append(self.value)
-        if other.unit != target_unit:
-            days = other._get_days()
-            other_new_value = other.convert_unit(days, target_unit)
-            values.append(other_new_value)
-        else:
-            values.append(other.value)
+        for state in [self, other]:
+            if state.unit != target_unit:
+                new_value = self.convert_unit(
+                    state.unit, target_unit, state.value,
+                    target_period=target_period)
+            values.append(new_value)
         return values
 
-    def _get_days(self):
-        if self.unit == 'daily':
-            return 1
-        if self.unit == 'weekly':
-            return 7
-        if self.unit == 'monthly':
-            return 30
-        if self.unit == 'yearly':
-            return 365
+    @staticmethod
+    def _get_period_from_unit(unit):
+        if unit == 'day':
+            return timedelta(days=1)
+        if unit == 'week':
+            return timedelta(weeks=1)
+        if unit == 'hour':
+            return timedelta(hours=1)
+        if unit == 'minute':
+            return timedelta(minutes=1)
+        if unit == 'second':
+            return timedelta(seconds=1)
+        if unit == 'month':
+            logger.warning('Using approximate value 30 days for a month.')
+            return timedelta(days=30)
+        if unit == 'year':
+            logger.warning('Using approximate value 365 days for a year.')
+            return timedelta(days=365)
+        if unit == 'absolute':
+            logger.warning('Cannot derive absolute period, '
+                           'it needs to be provided.')
+            return None
