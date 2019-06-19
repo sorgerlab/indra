@@ -431,30 +431,60 @@ def _get_is_hypothesis_adverb(stmt):
 
 
 def _mod_process_verb(stmt):
+    # Example: Phosphorylation -> phosphorylates
     mod_name = stmt.__class__.__name__.lower()
     return statement_present_verb(mod_name)
 
 
 def _mod_process_noun(stmt):
+    # Example: Phosphorylation -> phosphorylation
     mod_name = stmt.__class__.__name__.lower()
     return mod_name
 
 
 def _mod_state_stmt(stmt):
+    # Example: Phosphorylation -> phosphorylated
     mod_name = stmt.__class__.__name__.lower()
-    return mod_state_prefix(mod_name)
+    return statement_passive_verb(mod_name)
 
 
 def _mod_state_str(s):
-    return mod_state_prefix(s)
+    return statement_passive_verb(s)
 
 
-def mod_state_prefix(mod_type):
+def statement_passive_verb(stmt_type):
+    """Return the passive / state verb form of a statement type.
+
+    Parameters
+    ----------
+    stmt_type : str
+        The lower case string form of a statement type, for instance,
+        'phosphorylation'.
+
+    Returns
+    -------
+    str
+        The passive/state verb form of a statement type, for instance,
+        'phosphorylated'.
+    """
     override = {
+        'complex': 'bound',
+        'regulateamount': 'amount regulated',
+        'decreaseamount': 'decreased',
+        'increaseamount': 'increased',
+        'gap': 'GAP-regulated',
+        'gef': 'GEF-regulated',
+        'gtpactivation': 'GTP-activated',
+        'influence': 'influenced',
+        'event': 'happened',
+        'conversion': 'converted',
         'modification': 'modified',
+        'addmodification': 'modified',
+        'removemodification': 'unmodified',
+        'regulateactivity': 'activity regulated',
     }
-    return override.get(mod_type) if mod_type in override else \
-        mod_type[:-3] + 'ed'
+    return override.get(stmt_type) if stmt_type in override else \
+        stmt_type[:-3] + 'ed'
 
 
 def statement_present_verb(stmt_type):
