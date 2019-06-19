@@ -3,10 +3,52 @@ from nose.tools import assert_raises
 from datetime import date, timedelta
 
 
+def test_qualitative_serialization():
+    qd = QualitativeDelta(polarity=1, adjectives=['strong', 'significant'])
+    qdj = qd.to_json()
+    assert qdj['type'] == 'qualitative'
+    assert qdj['polarity'] == 1
+    assert qdj['adjectives'] == ['strong', 'significant']
+    assert qdj == Delta.from_json(qdj).to_json()
+
+
+def test_change_parameters():
+    qd = QualitativeDelta(polarity=None, adjectives=None)
+    assert qd.polarity is None
+    assert qd.adjectives == []
+    # Set polarity
+    qd.set_polarity(1)
+    assert qd.polarity == 1
+    qd.set_polarity(-1)
+    assert qd.polarity == -1
+    qd.set_polarity(None)
+    assert qd.polarity is None
+    # Add adjectives
+    qd.add_adjectives(['strong'])
+    assert qd.adjectives == ['strong']
+    qd.add_adjectives(['significant', 'severe'])
+    assert qd.adjectives == ['strong', 'significant', 'severe']
+
+
+def test_qualitative_delta_comparisons():
+    qd1 = QualitativeDelta(polarity=1, adjectives=['strong', 'significant'])
+    qd2 = QualitativeDelta(polarity=1, adjectives=['strong', 'significant'])
+    qd3 = QualitativeDelta(polarity=-1, adjectives=['strong', 'significant'])
+    qd4 = QualitativeDelta(polarity=1, adjectives=['weak', 'insignificant'])
+    qd5 = QualitativeDelta(polarity=None, adjectives=None)
+    assert qd1.equals(qd2)
+    assert not qd1.equals(qd3)
+    assert not qd1.equals(qd4)
+    assert qd1.is_opposite(qd3)
+    assert not qd1.is_opposite(qd5)
+    assert not qd1.is_opposite(qd4)
+
+
 def test_quantitative_serialization():
     qs = QuantitativeState('person', 100, 'absolute', 'more than',
                            'More than 100 people arrived to Ethiopia.')
     qsj = qs.to_json()
+    assert qsj['type'] == 'quantitative'
     assert qsj['entity'] == 'person', qsj['entity']
     assert qsj['value'] == 100, qsj['value']
     assert qsj['unit'] == 'absolute', qsj['unit']
