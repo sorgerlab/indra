@@ -277,7 +277,9 @@ class CWMSProcessor(object):
         migration_grounding = 'WM/causal_factor/social_and_political/migration'
         concept = Concept('Migration',
                           db_refs={'UN': migration_grounding})
-        event = Migration(concept, delta=size, context=context)
+        evidence = self._get_evidence(event_term)
+        event = Migration(
+            concept, delta=size, context=context, evidence=[evidence])
         return event
 
     def _get_size(self, size_term_id):
@@ -287,7 +289,10 @@ class CWMSProcessor(object):
             mod = value.attrib.get('mod')
             if mod and mod.lower() == 'almost':
                 mod = 'less_than'
-            size = QuantitativeState(value=value.text, unit='absolute',
+            value_str = value.text.strip()
+            if not value_str:
+                value_str = None
+            size = QuantitativeState(value=value_str, unit='absolute',
                                      modifier=mod)
             return size
 
