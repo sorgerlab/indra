@@ -48,6 +48,11 @@ def test_quantitative_conversions():
         'absolute', 'day', 70, source_period=abs_period) == 2
     assert QuantitativeState.convert_unit(
         'absolute', 'week', 70, source_period=abs_period) == 14
+    # Convert to or from absolute value without providing a total period
+    assert_raises(ValueError, QuantitativeState.convert_unit,
+                  'absolute', 'week', 70)
+    assert_raises(ValueError, QuantitativeState.convert_unit,
+                  'day', 'absolute', 2)
 
 
 def test_arithmetic_operations():
