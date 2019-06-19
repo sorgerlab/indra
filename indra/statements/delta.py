@@ -91,7 +91,8 @@ class QuantitativeState(Delta):
     def __init__(self, entity=None, value=None, unit=None, modifier=None,
                  text=None):
         self.entity = entity
-        self.value = value
+        self.value = int(value)
+
         self.unit = unit
         self.modifier = modifier
         self.text = text
@@ -121,8 +122,8 @@ class QuantitativeState(Delta):
                    text=text)
 
     def __str__(self):
-        return ("QuantitativeState(entity=%s, value=%d, unit=%s, modifier=%s,"
-                " text=%s)" % (self.entity, self.value, self.unit,
+        return ("QuantitativeState(entity=%s, value=%s, unit=%s, modifier=%s,"
+                " text=%s)" % (self.entity, str(self.value), self.unit,
                                self.modifier, self.text))
 
     def __repr__(self):
@@ -130,54 +131,96 @@ class QuantitativeState(Delta):
 
     # Arithmetic operations
     def __add__(self, other):
+        # Return value and unit
+        # Only proceed if entities are the same
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for addition")
+        # If original units are the same, return the result in same unit
+        if self.unit == other.unit:
+            return ((self.value + other.value), self.unit)
+        # Otherwise, return result per second
         values = self._standardize_units(other, target_unit='second')
         total_per_second = values[0] + values[1]
         # result is per second
-        return total_per_second
+        return (total_per_second, 'second')
 
     def __sub__(self, other):
+        # Return value and unit
+        # Only proceed if entities are the same
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for subtraction")
+        # If original units are the same, return the result in same unit
+        if self.unit == other.unit:
+            return ((self.value - other.value), self.unit)
+        # Otherwise, return result per second
         values = self._standardize_units(other, target_unit='second')
         diff_per_second = values[0] - values[1]
         # result is per second
-        return diff_per_second
+        return (diff_per_second, 'second')
 
     def __gt__(self, other):
+        # Only proceed if entities are the same
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for comparison")
+        # Compare values right away if units are the same
+        if self.unit == other.unit:
+            return self.value > other.value
+        # If units are different, convert to seconds first
         values = self._standardize_units(other, target_unit='second')
         return (values[0] > values[1])
 
     def __ge__(self, other):
+        # Only proceed if entities are the same
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for comparison")
+        # Compare values right away if units are the same
+        if self.unit == other.unit:
+            return self.value >= other.value
+        # If units are different, convert to seconds first
         values = self._standardize_units(other, target_unit='second')
         return (values[0] >= values[1])
 
     def __lt__(self, other):
+        # Only proceed if entities are the same
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for comparison")
+        # Compare values right away if units are the same
+        if self.unit == other.unit:
+            return self.value < other.value
+        # If units are different, convert to seconds first
         values = self._standardize_units(other, target_unit='second')
         return (values[0] < values[1])
 
     def __le__(self, other):
+        # Only proceed if entities are the same
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for comparison")
+        # Compare values right away if units are the same
+        if self.unit == other.unit:
+            return self.value <= other.value
+        # If units are different, convert to seconds first
         values = self._standardize_units(other, target_unit='second')
         return (values[0] <= values[1])
 
     def __eq__(self, other):
+        # Only proceed if entities are the same
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for comparison")
+        # Compare values right away if units are the same
+        if self.unit == other.unit:
+            return self.value == other.value
+        # If units are different, convert to seconds first
         values = self._standardize_units(other, target_unit='second')
         return (values[0] == values[1])
 
     def __ne__(self, other):
+        # Only proceed if entities are the same
         if not self.entity == other.entity:
             raise ValueError("Entities have to be the same for comparison")
+        # Compare values right away if units are the same
+        if self.unit == other.unit:
+            return self.value != other.value
+        # If units are different, convert to seconds first
         values = self._standardize_units(other, target_unit='second')
         return (values[0] != values[1])
 
@@ -228,8 +271,8 @@ class QuantitativeState(Delta):
         values = []
         for state in [self, other]:
             if state.unit != target_unit:
-                new_value = self.convert_unit(source_unit=state.unit, 
-                                              target_unit=target_unit, 
+                new_value = self.convert_unit(source_unit=state.unit,
+                                              target_unit=target_unit,
                                               source_value=state.value,
                                               target_period=target_period)
             values.append(new_value)
