@@ -127,8 +127,9 @@ def test_hierarchy_probs4():
 
 
 def test_get_belief_package1():
+    matches_fun = lambda st: st.matches_key()
     st1 = Phosphorylation(None, Agent('a'), evidence=[ev1])
-    package = _get_belief_package(st1)
+    package = _get_belief_package(st1, matches_fun)
     assert len(package) == 1
     assert package[0][0] == st1.matches_key()
 
@@ -138,18 +139,20 @@ def test_get_belief_package2():
     st2 = Phosphorylation(None, Agent('A'), evidence=[ev2])
     st1.supported_by = [st2]
     st2.supports = [st1]
-    package = _get_belief_package(st1)
+    matches_fun = lambda st: st.matches_key()
+    package = _get_belief_package(st1, matches_fun)
     assert len(package) == 1
     assert package[0].statement_key == st1.matches_key()
     assert len(package[0].evidences) == 1, package[0][1]
     assert package[0].evidences[0].source_api == 'reach'
-    package = _get_belief_package(st2)
+    package = _get_belief_package(st2, matches_fun)
     assert len(package) == 2, package
     assert package[0].statement_key == st1.matches_key()
     assert package[1].statement_key == st2.matches_key()
 
 
 def test_get_belief_package3():
+    matches_fun = lambda st: st.matches_key()
     st1 = Phosphorylation(Agent('B'), Agent('A1'), evidence=[ev1])
     st2 = Phosphorylation(None, Agent('A1'), evidence=[ev2])
     st3 = Phosphorylation(None, Agent('A'), evidence=[ev4])
@@ -157,11 +160,11 @@ def test_get_belief_package3():
     st2.supported_by = [st3]
     st2.supports = [st1]
     st3.supports = [st1, st2]
-    package = _get_belief_package(st1)
+    package = _get_belief_package(st1, matches_fun)
     assert len(package) == 1
-    package = _get_belief_package(st2)
+    package = _get_belief_package(st2, matches_fun)
     assert len(package) == 2
-    package = _get_belief_package(st3)
+    package = _get_belief_package(st3, matches_fun)
     assert len(package) == 3
     sources = [pkg.evidences[0].source_api for pkg in package]
     assert sources == ['reach', 'trips', 'biopax']
