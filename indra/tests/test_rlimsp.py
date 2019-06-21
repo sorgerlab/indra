@@ -54,6 +54,7 @@ def test_grounded_endpoint_with_pmids_on_medline():
                                             source='medline',
                                             with_grounding=False)
 
+
 def test_tyrosine_grounding():
     here = os.path.dirname(os.path.abspath(__file__))
     fname = os.path.join(here, 'rlimsp_site.json')

@@ -1,8 +1,9 @@
 import logging
 from collections import Counter
 from indra.databases import hgnc_client, uniprot_client
-from indra.statements import Agent, Phosphorylation, Evidence, BioContext, \
-    RefContext, get_valid_residue, InvalidResidueError, MutCondition
+from indra.statements import Agent, Phosphorylation, Autophosphorylation, \
+    Evidence, BioContext, RefContext, get_valid_residue, \
+    InvalidResidueError, MutCondition
 
 logger = logging.getLogger(__name__)
 
@@ -81,10 +82,8 @@ class RlimspParagraph(object):
         coords = (site_info['charStart'], site_info['charEnd'])
         return residue, position, coords
 
-    def _get_evidence(self, trigger_id, args, agent_coords, site_coords):
+    def _get_evidence(self, trigger_info, args, agent_coords, site_coords):
         """Get the evidence using the info in the trigger entity."""
-        trigger_info = self._entity_dict[trigger_id]
-
         # Get the sentence index from the trigger word.
         s_idx_set = {self._entity_dict[eid]['sentenceIndex']
                      for eid in args.values()
@@ -101,7 +100,8 @@ class RlimspParagraph(object):
                                       for coords in agent_coords]},
                 'trigger': {'coords': _fix_coords([trigger_info['charStart'],
                                                    trigger_info['charEnd']],
-                                                  s_start)}
+                                                  s_start),
+                            'text': trigger_info['entityText']}
                 }
         else:
             logger.info('Unable to get sentence index')
@@ -123,6 +123,7 @@ class RlimspParagraph(object):
 
             # Remove some special cases.
             trigger_id = entity_args.pop('TRIGGER')
+            trigger_info = self._entity_dict[trigger_id]
             site_id = entity_args.pop('SITE', None)
 
             # Get the entity ids.
@@ -138,11 +139,18 @@ class RlimspParagraph(object):
                 if sub is None:
                     continue
 
+                trigger_text = trigger_info.get('entityText')
+                if enz is not None and enz.name == sub.name and \
+                        'auto' in trigger_text:
+                    is_autophos = True
+                else:
+                    is_autophos = False
+
                 # Get the site
                 residue, position, site_coords = self._get_site(site_id)
 
                 # Get the evidence
-                ev = self._get_evidence(trigger_id, args,
+                ev = self._get_evidence(trigger_info, args,
                                         [enz_coords, sub_coords],
                                         site_coords)
 
@@ -158,13 +166,20 @@ class RlimspParagraph(object):
                                                       {'TAXONOMY': tax}))
                     ev.context = context
 
-                stmts.append(Phosphorylation(enz, sub, residue=residue,
-                                             position=position,
-                                             evidence=[ev]))
+                if is_autophos:
+                    stmt = Autophosphorylation(sub, residue=residue,
+                                               position=position,
+                                               evidence=[ev])
+                else:
+                    stmt = Phosphorylation(enz, sub, residue=residue,
+                                           position=position,
+                                           evidence=[ev])
+                stmts.append(stmt)
             else:
                 logger.warning("Unhandled statement type: %s" % rel_type)
 
         return stmts
+
 
 def get_agent_from_entity_info(entity_info):
     """Return an INDRA Agent by processing an entity_info dict."""
