@@ -65,9 +65,9 @@ class Preassembler(object):
         self.unique_stmts = None
         self.related_stmts = None
         self.matches_fun = matches_fun if matches_fun else \
-            lambda stmt: stmt.matches_key()
+            default_matches_fun
         self.refinement_fun = refinement_fun if refinement_fun else \
-            lambda st1, st2, hierarchies: st1.refinement_of(st2, hierarchies)
+            default_refinement_fun
 
     def add_statements(self, stmts):
         """Add to the current list of statements.
@@ -420,8 +420,14 @@ class Preassembler(object):
                 logger.debug('Child process group comparisons successful? %s' %
                              res.successful())
                 if not res.successful():
-                    raise Exception("Sorry, there was a problem with "
-                                    "preassembly in the child processes.")
+                    # The get method re-raises the underlying error that we can
+                    # now catch and print.
+                    try:
+                        res.get()
+                    except Exception as e:
+                        raise Exception("Sorry, there was a problem with "
+                                        "preassembly in the child processes: %s"
+                                        % e)
                 else:
                     stmt_ix_map += res.get()
                 logger.debug("Closing pool...")
@@ -631,9 +637,7 @@ def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
     #                 split_idx))
     #  Make the iterator by one of two methods, depending on the case
     if not refinement_fun:
-        refinement_fun = \
-            lambda stmt1, stmt2, hierarchies: stmt1.refinement_of(stmt2,
-                                                                  hierarchies)
+        refinement_fun = default_refinement_fun
     if split_idx is None:
         stmt_pair_iter = itertools.combinations(stmt_tuples, 2)
     else:
@@ -898,3 +902,10 @@ def _flatten_evidence_for_stmt(stmt, collect_from):
         total_evidence = total_evidence.union(child_evidence)
     return list(total_evidence)
 
+
+def default_refinement_fun(st1, st2, hierarchies):
+    return st1.refinement_of(st2, hierarchies)
+
+
+def default_matches_fun(st):
+    return st.matches_key()
