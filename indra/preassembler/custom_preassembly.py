@@ -2,6 +2,7 @@ from indra.statements import *
 
 
 def has_location(stmt):
+    """Return True if a Statement has grounded geo-location context."""
     if not stmt.context or not stmt.context.geo_location or \
             not stmt.context.geo_location.db_refs.get('GEOID'):
         return False
@@ -9,12 +10,14 @@ def has_location(stmt):
 
 
 def has_time(stmt):
+    """Return True if a Statement has time context."""
     if not stmt.context or not stmt.context.time:
         return False
     return True
 
 
 def get_location(stmt):
+    """Return the grounded geo-location context associated with a Statement."""
     if not has_location(stmt):
         loc = None
     else:
@@ -23,6 +26,7 @@ def get_location(stmt):
 
 
 def get_time(stmt):
+    """Return the time context associated with a Statement."""
     if not has_time(stmt):
         time = None
     else:
@@ -31,6 +35,7 @@ def get_time(stmt):
 
 
 def location_matches(stmt):
+    """Return a matches_key which takes geo-location into account."""
     if isinstance(stmt, Event):
         context_key = get_location(stmt)
         matches_key = str((stmt.concept.matches_key(), context_key))
@@ -45,6 +50,7 @@ def location_matches(stmt):
 
 
 def event_location_refinement(st1, st2, hierarchies):
+    """Return True if there is a location-aware refinement between Events."""
     ref = st1.refinement_of(st2, hierarchies)
     if not ref:
         return False
@@ -58,6 +64,7 @@ def event_location_refinement(st1, st2, hierarchies):
 
 
 def location_refinement(st1, st2, hierarchies):
+    """Return True if there is a location-aware refinement between stmts."""
     if type(st1) != type(st2):
         return False
     if isinstance(st1, Event):
@@ -74,6 +81,7 @@ def location_refinement(st1, st2, hierarchies):
 
 
 def event_location_time_matches(event):
+    """Return Event matches key which takes location and time into account."""
     mk = location_matches(event)
     if not has_time(event):
         return mk
@@ -83,6 +91,7 @@ def event_location_time_matches(event):
 
 
 def location_time_matches(stmt):
+    """Return matches key which takes location and time into account."""
     if isinstance(stmt, Event):
         return event_location_time_matches(stmt)
     elif isinstance(stmt, Influence):
@@ -94,6 +103,7 @@ def location_time_matches(stmt):
 
 
 def event_location_time_refinement(st1, st2, hierarchies):
+    """Return True if there is a location/time refinement between Events."""
     ref = location_refinement(st1, st2, hierarchies)
     if not ref:
         return False
@@ -106,6 +116,7 @@ def event_location_time_refinement(st1, st2, hierarchies):
 
 
 def location_time_refinement(st1, st2, hierarchies):
+    """Return True if there is a location/time refinement between stmts."""
     if type(st1) != type(st2):
         return False
     if isinstance(st1, Event):
