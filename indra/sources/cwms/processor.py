@@ -241,13 +241,22 @@ class CWMSProcessor(object):
         """Return a Migration event from an EVENT element in the EKB."""
         arg_id, arg_term = self._get_term_by_role(event_term, 'AGENT',
                                                   False)
+        affected_arg_id, affected_arg_term = self._get_term_by_role(event_term,
+                                                                    'AFFECTED',
+                                                                    False)
         if arg_term is None:
             return None
 
         # Try to get the quantitative state associated with the event
         size_arg = arg_term.find('size')
+        if affected_arg_term is not None:
+            other_size_arg = affected_arg_term.find('size')
+        else:
+            other_size_arg = None
         if size_arg is not None:
             size = self._get_size(size_arg.attrib['id'])
+        elif other_size_arg is not None:
+            size = self._get_size(other_size_arg.attrib['id'])
         else:
             size = None
 
@@ -259,16 +268,24 @@ class CWMSProcessor(object):
         if neutral_term is not None:
             text = neutral_term.find('text').text
             locs.append({'location': RefContext(name=text),
-                         'role': 'destination'})
-        loc = self._extract_geoloc(event_term)
-        if loc is not None:
-            locs.append({'location': loc,
-                         'role': 'destination'})
-        # Note that this is a bug in the EKB, to-location is an origin
+                         'role': 'origin'})
+
         loc = self._extract_geoloc(event_term, arg_link='to-location')
         if loc is not None:
             locs.append({'location': loc,
+                         'role': 'destination'})
+
+        loc = self._extract_geoloc(event_term, arg_link='from-location')
+        if loc is not None:
+            locs.append({'location': loc,
                          'role': 'origin'})
+
+        # There are some locations at arg level, often duplicate
+        loc = self._extract_geoloc(arg_term)
+        if loc is not None:
+            if loc not in [location['location'] for location in locs]:
+                locs.append({'location': loc,
+                            'role': 'destination'})
 
         time = self._extract_time(event_term)
 
@@ -290,9 +307,11 @@ class CWMSProcessor(object):
             if mod and mod.lower() == 'almost':
                 mod = 'less_than'
             value_str = value.text.strip()
-            if not value_str:
-                value_str = None
-            size = QuantitativeState(value=value_str, unit='absolute',
+            if value_str:
+                value = int(value_str)
+            else:
+                value = None
+            size = QuantitativeState(value=value, unit='absolute',
                                      modifier=mod)
             return size
 

@@ -91,7 +91,7 @@ class QuantitativeState(Delta):
     def __init__(self, entity=None, value=None, unit=None, modifier=None,
                  text=None):
         self.entity = entity
-        self.value = float(value) if value else None
+        self.value = value if value else None
         self.unit = unit
         self.modifier = modifier
         self.text = text
