@@ -32,6 +32,15 @@ class Preassembler(object):
     stmts : list of :py:class:`indra.statements.Statement` or None
         A set of statements to perform pre-assembly on. If None, statements
         should be added using the :py:meth:`add_statements` method.
+    matches_fun : Optional[function]
+        A functon which takes a Statement object as argument and
+        returns a string key that is used for duplicate recognition. If
+        supplied, it overrides the use of the built-in matches_key method of
+        each Statement being assembled.
+    refinement_fun : Optional[function]
+        A function which takes two Statement objects and a hierarchies dict
+        as an argument and returns True or False. If supplied, it overrides
+        the built-in refinement_of method of each Statement being assembled.
 
     Attributes
     ----------
@@ -45,7 +54,8 @@ class Preassembler(object):
         A dictionary of hierarchies with keys such as 'entity' and
         'modification' pointing to HierarchyManagers
     """
-    def __init__(self, hierarchies, stmts=None):
+    def __init__(self, hierarchies, stmts=None, matches_fun=None,
+                 refinement_fun=None):
         self.hierarchies = hierarchies
         if stmts:
             logger.debug("Deepcopying stmts in __init__")
@@ -54,6 +64,10 @@ class Preassembler(object):
             self.stmts = []
         self.unique_stmts = None
         self.related_stmts = None
+        self.matches_fun = matches_fun if matches_fun else \
+            default_matches_fun
+        self.refinement_fun = refinement_fun if refinement_fun else \
+            default_refinement_fun
 
     def add_statements(self, stmts):
         """Add to the current list of statements.
@@ -68,17 +82,14 @@ class Preassembler(object):
     def combine_duplicates(self):
         """Combine duplicates among `stmts` and save result in `unique_stmts`.
 
-        A wrapper around the static method :py:meth:`combine_duplicate_stmts`.
+        A wrapper around the method :py:meth:`combine_duplicate_stmts`.
         """
         if self.unique_stmts is None:
             self.unique_stmts = self.combine_duplicate_stmts(self.stmts)
         return self.unique_stmts
 
-    @staticmethod
-    def _get_stmt_matching_groups(stmts):
-        """Use the matches_key method to get sets of matching statements."""
-        def match_func(x): return x.matches_key()
-
+    def _get_stmt_matching_groups(self, stmts):
+        """Use the matches_fun method to get sets of matching statements."""
         # Remove exact duplicates using a set() call, then make copies:
         logger.debug('%d statements before removing object duplicates.' %
                      len(stmts))
@@ -88,12 +99,11 @@ class Preassembler(object):
         # Group statements according to whether they are matches (differing
         # only in their evidence).
         # Sort the statements in place by matches_key()
-        st.sort(key=match_func)
+        st.sort(key=self.matches_fun)
 
-        return itertools.groupby(st, key=match_func)
+        return itertools.groupby(st, key=self.matches_fun)
 
-    @staticmethod
-    def combine_duplicate_stmts(stmts):
+    def combine_duplicate_stmts(self, stmts):
         """Combine evidence from duplicate Statements.
 
         Statements are deemed to be duplicates if they have the same key
@@ -120,13 +130,15 @@ class Preassembler(object):
         De-duplicate and combine evidence for two statements differing only
         in their evidence lists:
 
+        >>> from indra.preassembler.hierarchy_manager import hierarchies
         >>> map2k1 = Agent('MAP2K1')
         >>> mapk1 = Agent('MAPK1')
         >>> stmt1 = Phosphorylation(map2k1, mapk1, 'T', '185',
         ... evidence=[Evidence(text='evidence 1')])
         >>> stmt2 = Phosphorylation(map2k1, mapk1, 'T', '185',
         ... evidence=[Evidence(text='evidence 2')])
-        >>> uniq_stmts = Preassembler.combine_duplicate_stmts([stmt1, stmt2])
+        >>> pa = Preassembler(hierarchies)
+        >>> uniq_stmts = pa.combine_duplicate_stmts([stmt1, stmt2])
         >>> uniq_stmts
         [Phosphorylation(MAP2K1(), MAPK1(), T, 185)]
         >>> sorted([e.text for e in uniq_stmts[0].evidence]) # doctest:+IGNORE_UNICODE
@@ -141,7 +153,7 @@ class Preassembler(object):
             return ev_keys
         # Iterate over groups of duplicate statements
         unique_stmts = []
-        for _, duplicates in Preassembler._get_stmt_matching_groups(stmts):
+        for _, duplicates in self._get_stmt_matching_groups(stmts):
             ev_keys = set()
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
@@ -377,7 +389,8 @@ class Preassembler(object):
         supports_func = functools.partial(_set_supports_stmt_pairs,
                                           hierarchies=self.hierarchies,
                                           split_idx=split_idx,
-                                          check_entities_match=False)
+                                          check_entities_match=False,
+                                          refinement_fun=self.refinement_fun)
 
         # Check if we are running any groups in child processes; note that if
         # use_mp is False, child_proc_groups will be empty
@@ -407,8 +420,14 @@ class Preassembler(object):
                 logger.debug('Child process group comparisons successful? %s' %
                              res.successful())
                 if not res.successful():
-                    raise Exception("Sorry, there was a problem with "
-                                    "preassembly in the child processes.")
+                    # The get method re-raises the underlying error that we can
+                    # now catch and print.
+                    try:
+                        res.get()
+                    except Exception as e:
+                        raise Exception("Sorry, there was a problem with "
+                                        "preassembly in the child processes: %s"
+                                        % e)
                 else:
                     stmt_ix_map += res.get()
                 logger.debug("Closing pool...")
@@ -609,7 +628,7 @@ class Preassembler(object):
 
 
 def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
-                             check_entities_match=False):
+                             check_entities_match=False, refinement_fun=None):
     # This is useful when deep-debugging, but even for normal debug is too much.
     # logger.debug("Getting support pairs for %d tuples with idx %s and stmts "
     #              "%s split at %s."
@@ -617,6 +636,8 @@ def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
     #                 [(s.get_hash(shallow=True), s) for _, s in stmt_tuples],
     #                 split_idx))
     #  Make the iterator by one of two methods, depending on the case
+    if not refinement_fun:
+        refinement_fun = default_refinement_fun
     if split_idx is None:
         stmt_pair_iter = itertools.combinations(stmt_tuples, 2)
     else:
@@ -636,9 +657,9 @@ def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
         stmt_ix2, stmt2 = stmt_tuple2
         if check_entities_match and not stmt1.entities_match(stmt2):
             continue
-        if stmt1.refinement_of(stmt2, hierarchies):
+        if refinement_fun(stmt1, stmt2, hierarchies):
             ix_map.append((stmt_ix1, stmt_ix2))
-        elif stmt2.refinement_of(stmt1, hierarchies):
+        elif refinement_fun(stmt2, stmt1, hierarchies):
             ix_map.append((stmt_ix2, stmt_ix1))
     return ix_map
 
@@ -881,3 +902,10 @@ def _flatten_evidence_for_stmt(stmt, collect_from):
         total_evidence = total_evidence.union(child_evidence)
     return list(total_evidence)
 
+
+def default_refinement_fun(st1, st2, hierarchies):
+    return st1.refinement_of(st2, hierarchies)
+
+
+def default_matches_fun(st):
+    return st.matches_key()

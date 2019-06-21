@@ -211,6 +211,27 @@ class TimeContext(object):
         self.end = end
         self.duration = duration
 
+    def refinement_of(self, other):
+        # If both starts are given
+        if self.start and other.start:
+            # If this started earlier, it can't be a refinement
+            if self.start <= other.start:
+                return False
+            # If it ended later, it can't be a refinement
+            elif self.end and other.end:
+                if self.end >= other.end:
+                    return False
+            # If the other end is not given, it's a refinement
+            elif self.end and not other.end:
+                return True
+            # If neither end is given, it's also a refinement at this point
+            return True
+        # If we have a start time and other doesn't, it's a refinement
+        elif self.start and not other.start:
+            return True
+        # Otherwise it's not a refinement
+        return False
+
     def __eq__(self, other):
         return (self.text == other.text) and \
                (self.start == other.start) and \

@@ -302,11 +302,14 @@ class BeliefEngine(object):
         verifies that the scorer has all the information it needs to score
         every statement in the list, and raises an exception if not.
     """
-    def __init__(self, scorer=None):
+    def __init__(self, scorer=None, matches_fun=None):
         if scorer is None:
             scorer = default_scorer
         assert(isinstance(scorer, BeliefScorer))
         self.scorer = scorer
+
+        self.matches_fun = matches_fun if matches_fun else \
+            lambda stmt: stmt.matches_key()
 
     def set_prior_probs(self, statements):
         """Sets the prior belief probabilities for a list of INDRA Statements.
@@ -349,10 +352,11 @@ class BeliefEngine(object):
             """Return a DiGraph based on matches keys and Statement supports"""
             g = networkx.DiGraph()
             for st1 in stmts:
-                g.add_node(st1.matches_key(), stmt=st1)
+                g.add_node(self.matches_fun(st1), stmt=st1)
                 for st2 in st1.supported_by:
-                    g.add_node(st2.matches_key(), stmt=st2)
-                    g.add_edge(st2.matches_key(), st1.matches_key())
+                    g.add_node(self.matches_fun(st2), stmt=st2)
+                    g.add_edge(self.matches_fun(st2),
+                               self.matches_fun(st1))
             return g
 
         def get_ranked_stmts(g):
@@ -376,7 +380,7 @@ class BeliefEngine(object):
         assert_no_cycle(g)
         ranked_stmts = get_ranked_stmts(g)
         for st in ranked_stmts:
-            bps = _get_belief_package(st)
+            bps = _get_belief_package(st, self.matches_fun)
             supporting_evidences = []
             # NOTE: the last belief package in the list is this statement's own
             for bp in bps[:-1]:
@@ -412,21 +416,21 @@ class BeliefEngine(object):
 BeliefPackage = namedtuple('BeliefPackage', 'statement_key evidences')
 
 
-def _get_belief_package(stmt):
+def _get_belief_package(stmt, matches_fun):
     """Return the belief packages of a given statement recursively."""
     # This list will contain the belief packages for the given statement
     belief_packages = []
     # Iterate over all the support parents
     for st in stmt.supports:
         # Recursively get all the belief packages of the parent
-        parent_packages = _get_belief_package(st)
+        parent_packages = _get_belief_package(st, matches_fun)
         package_stmt_keys = [pkg.statement_key for pkg in belief_packages]
         for package in parent_packages:
             # Only add this belief package if it hasn't already been added
             if package.statement_key not in package_stmt_keys:
                 belief_packages.append(package)
     # Now make the Statement's own belief package and append it to the list
-    belief_package = BeliefPackage(stmt.matches_key(), stmt.evidence)
+    belief_package = BeliefPackage(matches_fun(stmt), stmt.evidence)
     belief_packages.append(belief_package)
     return belief_packages
 
