@@ -711,7 +711,10 @@ def run_adeft_disambiguation(stmt, agent, idx):
 
     This function looks at the evidence of the given Statement and attempts
     to look up the full paper or the abstract for the evidence. If both of
-    topse fail, the evidence sentence itself is used for disambiguation.
+    those fail, the evidence sentence itself is used for disambiguation.
+    The disambiguation model corresponding to the Agent text is then called,
+    and the highest scoring returned grounding is set as the Agent's new
+    grounding.
 
     The Statement's annotations as well as the Agent are modified in place
     and no value is returned.
