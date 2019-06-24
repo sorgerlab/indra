@@ -265,3 +265,44 @@ def test_process_correlation():
     assert stmt.members[0].concept.db_refs['CWMS'] == 'ONT::PRECIPITATION'
     assert stmt.members[1].concept.db_refs['CWMS'] == 'ONT::FLOODING'
     assert stmt.overall_polarity() is None
+
+
+def test_process_migration1():
+    fname = join(data_folder, 'migration_sentence1.ekb')
+    cp = process_ekb_file(fname)
+    assert len(cp.statements) == 1
+    stmt = cp.statements[0]
+    assert isinstance(stmt, Migration)
+    assert stmt.concept.name == 'Migration'
+    assert len(stmt.context.locations) == 1
+    assert isinstance(stmt.context.locations[0]['location'], RefContext)
+    assert stmt.context.locations[0]['location'].name == "Sudan"
+    assert stmt.context.locations[0]['role'] == "destination"
+    assert isinstance(stmt.context.time, TimeContext)
+    assert stmt.context.time.text == "the month of April"
+    assert isinstance(stmt.delta, QuantitativeState)
+    assert stmt.delta.value == 23000
+    assert stmt.delta.unit == "absolute"
+    assert stmt.delta.modifier == "MORE"
+
+
+def test_process_migration2():
+    fname = join(data_folder, 'migration_sentence2.ekb')
+    cp = process_ekb_file(fname)
+    assert len(cp.statements) == 1
+    stmt = cp.statements[0]
+    assert isinstance(stmt, Migration)
+    assert stmt.concept.name == 'Migration'
+    assert len(stmt.context.locations) == 2
+    assert isinstance(stmt.context.locations[0]['location'], RefContext)
+    assert stmt.context.locations[0]['location'].name == "Ethiopia"
+    assert stmt.context.locations[0]['role'] == "destination"
+    assert isinstance(stmt.context.locations[1]['location'], RefContext)
+    assert stmt.context.locations[1]['location'].name == "South Sudan"
+    assert stmt.context.locations[1]['role'] == "origin"
+    assert isinstance(stmt.context.time, TimeContext)
+    assert stmt.context.time.text == "the beginning of September 2016"
+    assert isinstance(stmt.delta, QuantitativeState)
+    assert stmt.delta.value == 40000
+    assert stmt.delta.unit == "absolute"
+    assert stmt.delta.modifier == "less_than"
