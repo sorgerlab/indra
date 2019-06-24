@@ -182,8 +182,7 @@ class GroundingMapper(object):
             # Check if a adeft model exists for agent text
             if self.use_adeft and agent_txt in adeft_disambiguators:
                 try:
-                    run_adeft_disambiguation(mapped_stmt, agent_list, idx,
-                                             new_agent, agent_txt)
+                    run_adeft_disambiguation(mapped_stmt, new_agent, idx)
                 except Exception as e:
                     logger.error('There was an error during Adeft'
                                  ' disambiguation.')
@@ -707,16 +706,43 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
                       quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
 
 
-def run_adeft_disambiguation(stmt, agent_list, idx, new_agent, agent_txt):
+def run_adeft_disambiguation(stmt, agent, idx):
+    """Run Adeft disambiguation on an Agent in a given Statement.
+
+    This function looks at the evidence of the given Statement and attempts
+    to look up the full paper or the abstract for the evidence. If both of
+    topse fail, the evidence sentence itself is used for disambiguation.
+
+    The Statement's annotations as well as the Agent are modified in place
+    and no value is returned.
+
+    Parameters
+    ----------
+    stmt : indra.statements.Statement
+        An INDRA Statement in which the Agent to be disambiguated appears.
+    agent : indra.statements.Agent
+        The Agent (potentially grounding mapped) which we want to
+        disambiguate in the context of the evidence of the given Statement.
+    idx : int
+        The index of the new Agent's position in the Statement's agent list
+        (needed to set annotations correctly).
+    """
+    # If the Statement doesn't have evidence for some reason, then there is
+    # no text to disambiguate by
+    # NOTE: we might want to try disambiguating by other agents in the
+    # Statement
+    if not stmt.evidence:
+        return
     # Initialize annotations if needed so Adeft predicted
     # probabilities can be added to Agent annotations
-    annots = stmt.evidence[0].annotations if stmt.evidence else {}
+    annots = stmt.evidence[0].annotations
+    agent_txt = agent.db_refs['TEXT']
     if 'agents' in annots:
         if 'adeft' not in annots['agents']:
             annots['agents']['adeft'] = \
-                {'adeft': [None for _ in agent_list]}
+                {'adeft': [None for _ in stmt.agent_list()]}
     else:
-        annots['agents'] = {'adeft': [None for _ in agent_list]}
+        annots['agents'] = {'adeft': [None for _ in stmt.agent_list()]}
     grounding_text = _get_text_for_grounding(stmt, agent_txt)
     if grounding_text:
         res = adeft_disambiguators[agent_txt].disambiguate(
@@ -728,13 +754,13 @@ def run_adeft_disambiguation(stmt, agent_list, idx, new_agent, agent_txt):
         if ns_and_id == 'ungrounded':
             return
         db_ns, db_id = ns_and_id.split(':', maxsplit=1)
-        new_agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
-        new_agent.name = standard_name
+        agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
+        agent.name = standard_name
         logger.info('Disambiguated %s to: %s, %s:%s' %
                     (agent_txt, standard_name, db_ns, db_id))
         if db_ns == 'HGNC':
             hgnc_sym = hgnc_client.get_hgnc_name(db_id)
-            GroundingMapper.standardize_agent_db_refs(new_agent,
+            GroundingMapper.standardize_agent_db_refs(agent,
                                                       {'HGNC': hgnc_sym},
                                                       do_rename=False)
         annots['agents']['adeft'][idx] = disamb_scores
