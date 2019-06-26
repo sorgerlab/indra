@@ -234,6 +234,16 @@ def _find_elem_text(root, xpath_string):
     elem = root.find(xpath_string)
     return None if elem is None else elem.text
 
+# Function to convert month abbreviation to corresponding integer 1-12
+def _convert_month_abbv_to_int(month_abbrv):
+    int_month = None
+    try:
+        int_month = int(month_abbrv)
+    except ValueError:
+        months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+        int_month =  months.index(month_abbrv.lower()) + 1
+    finally:
+        return int_month
 
 def _get_journal_info(medline_citation, get_issns_from_nlm):
     # Journal info
@@ -242,11 +252,19 @@ def _get_journal_info(medline_citation, get_issns_from_nlm):
     journal_abbrev = _find_elem_text(journal, 'ISOAbbreviation')
 
     # Add publish date from JournalIssue/PubDate in Journal info
-    pub_date = {}
     journal_pub_date = journal.find('JournalIssue/PubDate')
-    pub_date['year'] = _find_elem_text(journal_pub_date, 'Year')
-    pub_date['month'] = _find_elem_text(journal_pub_date, 'Month')
-    pub_date['day'] = _find_elem_text(journal_pub_date, 'Day')
+    # Get details from XML
+    year = _find_elem_text(journal_pub_date, 'Year')
+    month = _find_elem_text(journal_pub_date, 'Month')
+    day = _find_elem_text(journal_pub_date, 'Day')
+    medline_date = _find_elem_text(journal_pub_date, 'MedlineDate')
+    # Build publication date dictionary
+    pub_date = {
+        "year"  : None if (year  is None) else int(year),
+        "month" : None if (month is None) else _convert_month_abbv_to_int(month),
+        "day"   : None if (day   is None) else int(day),
+        "medline_date" : medline_date
+    }
 
     # Add the ISSN from the article record
     issn_list = []
