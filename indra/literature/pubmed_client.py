@@ -243,10 +243,10 @@ def _get_journal_info(medline_citation, get_issns_from_nlm):
 
     # Add publish date from JournalIssue/PubDate in Journal info
     pub_date = {}
-    journal_pubDate = journal.find('JournalIssue/PubDate')
-    pub_date['year'] = _find_elem_text(journal_pubDate, 'Year')
-    pub_date['month'] = _find_elem_text(journal_pubDate, 'Month')
-    pub_date['day'] = _find_elem_text(journal_pubDate, 'Day')
+    journal_pub_date = journal.find('JournalIssue/PubDate')
+    pub_date['year'] = _find_elem_text(journal_pub_date, 'Year')
+    pub_date['month'] = _find_elem_text(journal_pub_date, 'Month')
+    pub_date['day'] = _find_elem_text(journal_pub_date, 'Day')
 
     # Add the ISSN from the article record
     issn_list = []
