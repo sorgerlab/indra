@@ -241,6 +241,13 @@ def _get_journal_info(medline_citation, get_issns_from_nlm):
     journal_title = _find_elem_text(journal, 'Title')
     journal_abbrev = _find_elem_text(journal, 'ISOAbbreviation')
 
+    # Add publish date from JournalIssue/PubDate in Journal info
+    pub_date = {}
+    journal_pubDate = journal.find('JournalIssue/PubDate')
+    pub_date['year'] = _find_elem_text(journal_pubDate, 'Year')
+    pub_date['month'] = _find_elem_text(journal_pubDate, 'Month')
+    pub_date['day'] = _find_elem_text(journal_pubDate, 'Day')
+
     # Add the ISSN from the article record
     issn_list = []
     issn = _find_elem_text(journal, 'ISSN')
@@ -265,7 +272,7 @@ def _get_journal_info(medline_citation, get_issns_from_nlm):
     issn_list = list(set(issn_list))
 
     return {'journal_title': journal_title, 'journal_abbrev': journal_abbrev,
-            'issn_list': issn_list, 'journal_nlm_id': nlm_id}
+            'issn_list': issn_list, 'journal_nlm_id': nlm_id, 'publication_date': pub_date}
 
 
 def _get_article_info(medline_citation, pubmed_data):
