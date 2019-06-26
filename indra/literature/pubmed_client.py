@@ -272,7 +272,8 @@ def _get_journal_info(medline_citation, get_issns_from_nlm):
     issn_list = list(set(issn_list))
 
     return {'journal_title': journal_title, 'journal_abbrev': journal_abbrev,
-            'issn_list': issn_list, 'journal_nlm_id': nlm_id, 'publication_date': pub_date}
+            'issn_list': issn_list, 'journal_nlm_id': nlm_id,
+            'publication_date': pub_date}
 
 
 def _get_article_info(medline_citation, pubmed_data):

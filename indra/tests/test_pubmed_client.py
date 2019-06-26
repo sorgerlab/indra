@@ -112,6 +112,22 @@ def test_get_metadata_for_ids():
 
 
 @attr('webservice')
+def test_get_pub_date():
+    time.sleep(0.5)
+    pmids = ['27123883', '27121204', '27115606']
+    metadata = pubmed_client.get_metadata_for_ids(pmids)
+    assert metadata[pmids[0]]['publication_date']['year'] == 2016
+    assert metadata[pmids[0]]['publication_date']['month'] == 8
+    assert metadata[pmids[0]]['publication_date']['day'] == None
+    assert metadata[pmids[1]]['publication_date']['year'] == 2016
+    assert metadata[pmids[1]]['publication_date']['month'] == 5
+    assert metadata[pmids[1]]['publication_date']['day'] == 31
+    assert metadata[pmids[2]]['publication_date']['year'] == 2016
+    assert metadata[pmids[2]]['publication_date']['month'] == None
+    assert metadata[pmids[2]]['publication_date']['day'] == None
+
+
+@attr('webservice')
 def test_send_request_invalid():
     time.sleep(0.5)
     res = pubmed_client.send_request('http://xxxxxxx', data={})
