@@ -1,8 +1,5 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import time
 from indra.literature import pubmed_client
-from indra.util import unicode_strs
 from nose.plugins.attrib import attr
 
 
@@ -11,7 +8,6 @@ def test_get_ids():
     time.sleep(0.5)
     ids = pubmed_client.get_ids('braf', retmax=10, db='pubmed')
     assert len(ids) == 10
-    assert unicode_strs(ids)
 
 
 @attr('webservice')
@@ -27,8 +23,6 @@ def test_get_ids():
     ids1 = pubmed_client.get_ids('JUN', use_text_word=False)
     ids2 = pubmed_client.get_ids('JUN', use_text_word=True)
     assert len(ids1) > len(ids2)
-    assert unicode_strs(ids1)
-    assert unicode_strs(ids2)
 
 
 @attr('webservice')
@@ -47,7 +41,6 @@ def test_get_pmc_ids():
     assert len(ids) == 10
     assert len([i for i in ids if i.startswith('6') or
                 i.startswith('5')]) == 10
-    assert unicode_strs(ids)
 
 
 @attr('webservice')
@@ -80,7 +73,6 @@ def test_get_abstract_notitle():
     abstract = pubmed_client.get_abstract('27754804', prepend_title=False)
     assert abstract.startswith('The RAF inhibitor')
     assert abstract.endswith('vemurafenib.')
-    assert unicode_strs(abstract)
 
 
 @attr('webservice')
@@ -89,7 +81,6 @@ def test_get_abstract_title():
     abstract = pubmed_client.get_abstract('27754804', prepend_title=True)
     assert abstract.lower().startswith('targeting autophagy')
     assert abstract.endswith('vemurafenib.')
-    assert unicode_strs(abstract)
 
 
 @attr('webservice')
@@ -97,7 +88,6 @@ def test_get_abstract2():
     time.sleep(0.5)
     # Try another one
     abstract = pubmed_client.get_abstract('27123883')
-    assert unicode_strs(abstract)
 
 
 @attr('webservice')
@@ -112,7 +102,6 @@ def test_get_ids_for_gene():
     time.sleep(0.5)
     ids = pubmed_client.get_ids_for_gene('EXOC1')
     assert ids
-    assert unicode_strs(ids)
 
 
 @attr('webservice')
@@ -120,7 +109,6 @@ def test_get_metadata_for_ids():
     time.sleep(0.5)
     pmids = ['27123883', '27121204', '27115606']
     metadata = pubmed_client.get_metadata_for_ids(pmids)
-    assert unicode_strs(metadata)
 
 
 @attr('webservice')
@@ -163,3 +151,4 @@ def test_get_annotations():
     assert len(me_ans) == 9, len(me_ans)
     assert all(d['mesh'].startswith('D') for d in me_ans)
     assert any(d['major_topic'] for d in me_ans)
+
