@@ -277,7 +277,7 @@ class Statement(object):
     def matches(self, other):
         return self.matches_key() == other.matches_key()
 
-    def get_hash(self, shallow=True, refresh=False):
+    def get_hash(self, shallow=True, refresh=False, matches_fun=None):
         """Get a hash for this Statement.
 
         There are two types of hash, "shallow" and "full". A shallow hash is
@@ -307,6 +307,10 @@ class Statement(object):
             Used to get a new copy of the hash. Default is false, so the hash,
             if it has been already created, will be read from the attribute.
             This is primarily used for speed testing.
+        matches_fun : Optional[function]
+            A function which takes a Statement as argument and returns a string
+            matches key which is then hashed. If not provided the Statement's
+            built-in matches_key method is used.
 
         Returns
         -------
@@ -316,7 +320,11 @@ class Statement(object):
         if shallow:
             if not hasattr(self, '_shallow_hash') or self._shallow_hash is None\
                     or refresh:
-                self._shallow_hash = make_hash(self.matches_key(), 14)
+                if not matches_fun:
+                    matches_key = self.matches_key()
+                else:
+                    matches_key = matches_fun(self)
+                self._shallow_hash = make_hash(matches_key, 14)
             ret = self._shallow_hash
         else:
             if not hasattr(self, '_full_hash') or self._full_hash is None \
@@ -429,7 +437,7 @@ class Statement(object):
         # Placeholder for implementation in subclasses
         return False
 
-    def to_json(self, use_sbo=False):
+    def to_json(self, use_sbo=False, matches_fun=None):
         """Return serialized Statement as a JSON dict.
 
         Parameters
@@ -437,6 +445,10 @@ class Statement(object):
         use_sbo : Optional[bool]
             If True, SBO annotations are added to each applicable element of
             the JSON. Default: False
+        matches_fun : Optional[function]
+            A custom function which, if provided, is used to construct the
+            matches key which is then hashed and put into the return value.
+            Default: None
 
         Returns
         -------
@@ -456,6 +468,8 @@ class Statement(object):
             evidence = [ev.to_json() for ev in self.evidence]
             json_dict['evidence'] = evidence
         json_dict['id'] = '%s' % self.uuid
+        json_dict['matches_hash'] = \
+            '%s' % self.get_hash(shallow=True, matches_fun=matches_fun)
         if self.supports:
             json_dict['supports'] = \
                 ['%s' % st.uuid for st in self.supports]
@@ -677,8 +691,8 @@ class Modification(Statement):
         mc = ModCondition(mod_type, self.residue, self.position, True)
         return mc
 
-    def to_json(self, use_sbo=False):
-        generic = super(Modification, self).to_json(use_sbo)
+    def to_json(self, use_sbo=False, matches_fun=None):
+        generic = super(Modification, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'])
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
@@ -805,8 +819,8 @@ class SelfModification(Statement):
         mc = ModCondition(mod_type, self.residue, self.position, True)
         return mc
 
-    def to_json(self, use_sbo=False):
-        generic = super(SelfModification, self).to_json(use_sbo)
+    def to_json(self, use_sbo=False, matches_fun=None):
+        generic = super(SelfModification, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'])
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
@@ -1050,8 +1064,8 @@ class RegulateActivity(Statement):
         # Otherwise they are contradicting
         return True
 
-    def to_json(self, use_sbo=False):
-        generic = super(RegulateActivity, self).to_json(use_sbo)
+    def to_json(self, use_sbo=False, matches_fun=None):
+        generic = super(RegulateActivity, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'])
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
@@ -1275,8 +1289,8 @@ class ActiveForm(Statement):
                 return True
         return False
 
-    def to_json(self, use_sbo=False):
-        generic = super(ActiveForm, self).to_json(use_sbo)
+    def to_json(self, use_sbo=False, matches_fun=None):
+        generic = super(ActiveForm, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'])
         json_dict.update({'agent': self.agent.to_json(),
                           'activity': self.activity,
@@ -1454,8 +1468,8 @@ class Gef(Statement):
         matches = super(Gef, self).equals(other)
         return matches
 
-    def to_json(self, use_sbo=False):
-        generic = super(Gef, self).to_json(use_sbo)
+    def to_json(self, use_sbo=False, matches_fun=None):
+        generic = super(Gef, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'])
         if self.gef is not None:
             json_dict['gef'] = self.gef.to_json()
@@ -1542,8 +1556,8 @@ class Gap(Statement):
         matches = super(Gap, self).equals(other)
         return matches
 
-    def to_json(self, use_sbo=False):
-        generic = super(Gap, self).to_json(use_sbo)
+    def to_json(self, use_sbo=False, matches_fun=None):
+        generic = super(Gap, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'])
         if self.gap is not None:
             json_dict['gap'] = self.gap.to_json()
@@ -1641,8 +1655,8 @@ class Complex(Statement):
 
         return match_members(self.members, other.members)
 
-    def to_json(self, use_sbo=False):
-        generic = super(Complex, self).to_json(use_sbo)
+    def to_json(self, use_sbo=False, matches_fun=None):
+        generic = super(Complex, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'])
         members = [m.to_json() for m in self.members]
         json_dict['members'] = members
@@ -1720,8 +1734,8 @@ class Translocation(Statement):
                str(self.from_location), str(self.to_location))
         return mk_str(key)
 
-    def to_json(self, use_sbo=False):
-        generic = super(Translocation, self).to_json(use_sbo)
+    def to_json(self, use_sbo=False, matches_fun=None):
+        generic = super(Translocation, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'])
         json_dict['agent'] = self.agent.to_json()
         if self.from_location is not None:
@@ -1773,8 +1787,8 @@ class RegulateAmount(Statement):
         self.subj = agent_list[0]
         self.obj = agent_list[1]
 
-    def to_json(self, use_sbo=False):
-        generic = super(RegulateAmount, self).to_json(use_sbo)
+    def to_json(self, use_sbo=False, matches_fun=None):
+        generic = super(RegulateAmount, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'])
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
@@ -2003,8 +2017,8 @@ class Influence(Statement):
         return ((1 if self.subj.delta.polarity is not None else 0) +
                 (1 if self.obj.delta.polarity is not None else 0))
 
-    def to_json(self, use_sbo=False):
-        generic = super(Influence, self).to_json(use_sbo)
+    def to_json(self, use_sbo=False, matches_fun=None):
+        generic = super(Influence, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'],
                        subj=self.subj.to_json(with_evidence=False),
                        obj=self.obj.to_json(with_evidence=False))
@@ -2151,9 +2165,9 @@ class Association(Complex):
 
         return False
 
-    def to_json(self, use_sbo=False):
+    def to_json(self, use_sbo=False, matches_fun=None):
         # Get generic from two inheritance levels above - from Statement class
-        generic = super(Complex, self).to_json(use_sbo)
+        generic = super(Complex, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'])
         members = [m.to_json(with_evidence=False) for m in self.members]
         json_dict['members'] = members
@@ -2212,8 +2226,8 @@ class Conversion(Statement):
         self.obj_from = agent_list[1:num_obj_from+1]
         self.obj_to = agent_list[num_obj_from+1:]
 
-    def to_json(self, use_sbo=False):
-        generic = super(Conversion, self).to_json(use_sbo)
+    def to_json(self, use_sbo=False, matches_fun=None):
+        generic = super(Conversion, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'])
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
@@ -2330,8 +2344,8 @@ class Event(Statement):
         return self.concept.equals(other.concept) and \
             self.delta.equals(other.delta)
 
-    def to_json(self, with_evidence=True, use_sbo=False):
-        generic = super(Event, self).to_json(False)
+    def to_json(self, with_evidence=True, use_sbo=False, matches_fun=None):
+        generic = super(Event, self).to_json(False, matches_fun)
         json_dict = _o(type=generic['type'],
                        concept=self.concept.to_json(),
                        delta=self.delta.to_json())

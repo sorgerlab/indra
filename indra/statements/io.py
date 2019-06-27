@@ -81,7 +81,7 @@ def stmts_from_json_file(fname):
         return stmts_from_json(json.load(fh))
 
 
-def stmts_to_json_file(stmts, fname):
+def stmts_to_json_file(stmts, fname, **kwargs):
     """Serialize a list of INDRA Statements into a JSON file.
 
     Parameters
@@ -92,10 +92,10 @@ def stmts_to_json_file(stmts, fname):
         Path to the JSON file to serialize Statements into.
     """
     with open(fname, 'w') as fh:
-        json.dump(stmts_to_json(stmts), fh, indent=1)
+        json.dump(stmts_to_json(stmts, **kwargs), fh, indent=1)
 
 
-def stmts_to_json(stmts_in, use_sbo=False):
+def stmts_to_json(stmts_in, use_sbo=False, matches_fun=None):
     """Return the JSON-serialized form of one or more INDRA Statements.
 
     Parameters
@@ -105,6 +105,10 @@ def stmts_to_json(stmts_in, use_sbo=False):
     use_sbo : Optional[bool]
         If True, SBO annotations are added to each applicable element of the
         JSON. Default: False
+    matches_fun : Optional[function]
+        A custom function which, if provided, is used to construct the
+        matches key which is then hashed and put into the return value.
+        Default: None
 
     Returns
     -------
@@ -115,7 +119,8 @@ def stmts_to_json(stmts_in, use_sbo=False):
         json_dict = stmts_in.to_json(use_sbo=use_sbo)
         return json_dict
     else:
-        json_dict = [st.to_json(use_sbo=use_sbo) for st in stmts_in]
+        json_dict = [st.to_json(use_sbo=use_sbo, matches_fun=matches_fun)
+                     for st in stmts_in]
     return json_dict
 
 
