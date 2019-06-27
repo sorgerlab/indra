@@ -42,8 +42,8 @@ def location_matches(stmt):
     elif isinstance(stmt, Influence):
         subj_context_key = get_location(stmt.subj)
         obj_context_key = get_location(stmt.obj)
-        matches_key = str(stmt.matches_key(), subj_context_key,
-                          obj_context_key)
+        matches_key = str((stmt.matches_key(), subj_context_key,
+                           obj_context_key))
     else:
         matches_key = stmt.matches_key()
     return matches_key
