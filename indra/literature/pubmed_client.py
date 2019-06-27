@@ -268,6 +268,22 @@ def _get_journal_info(medline_citation, get_issns_from_nlm):
             'issn_list': issn_list, 'journal_nlm_id': nlm_id}
 
 
+def _get_pubmed_publication_date(pubmed_data):
+    # Look for pubmed as PubStatus in PubmedPubDate
+    pubmed_pub_date = \
+                pubmed_data.find('./History/PubMedPubDate[@PubStatus="pubmed"]')
+    # Get date elements from extracted pubmed_pub_date element
+    year = _find_elem_text(pubmed_pub_date, 'Year')
+    month = _find_elem_text(pubmed_pub_date, 'Month')
+    day = _find_elem_text(pubmed_pub_date, 'Day')
+    # Build and return result
+    return {
+        "year"  : None if (year is None) else int(year),
+        "month" : None if (month is None) else int(month),
+        "day"   : None if (day is None) else int(day)
+    }
+
+
 def _get_article_info(medline_citation, pubmed_data):
     article = medline_citation.find('Article')
     pmid = _find_elem_text(medline_citation, './PMID')
@@ -338,17 +354,18 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     pm_articles = tree.findall('./PubmedArticle')
     for art_ix, pm_article in enumerate(pm_articles):
         medline_citation = pm_article.find('./MedlineCitation')
+        pubmed_data = pm_article.find('PubmedData')
 
-        article_info = _get_article_info(medline_citation,
-                                         pm_article.find('PubmedData'))
+        article_info = _get_article_info(medline_citation, pubmed_data)
         journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
         context_info = _get_annotations(medline_citation)
-
+        publication_date = _get_pubmed_publication_date(pubmed_data)
         # Build the result
         result = {}
         result.update(article_info)
         result.update(journal_info)
         result.update(context_info)
+        result['publication_date'] = publication_date
 
         # Get the abstracts if requested
         if get_abstracts:
