@@ -267,19 +267,22 @@ def _get_journal_info(medline_citation, get_issns_from_nlm):
     return {'journal_title': journal_title, 'journal_abbrev': journal_abbrev,
             'issn_list': issn_list, 'journal_nlm_id': nlm_id}
 
+
 def _get_pubmed_publication_date(pubmed_data):
     # Look for pubmed as PubStatus in PubmedPubDate
-    pubmed_pub_date =  pubmed_data.find('./History/PubMedPubDate[@PubStatus="pubmed"]')
+    pubmed_pub_date = \
+                pubmed_data.find('./History/PubMedPubDate[@PubStatus="pubmed"]')
     # Get date elements from extracted pubmed_pub_date element
     year = _find_elem_text(pubmed_pub_date, 'Year')
     month = _find_elem_text(pubmed_pub_date, 'Month')
     day = _find_elem_text(pubmed_pub_date, 'Day')
     # Build and return result
     return {
-        "year"  : None if (year  is None) else int(year),
+        "year"  : None if (year is None) else int(year),
         "month" : None if (month is None) else int(month),
-        "day"   : None if (day   is None) else int(day)
+        "day"   : None if (day is None) else int(day)
     }
+
 
 def _get_article_info(medline_citation, pubmed_data):
     article = medline_citation.find('Article')
