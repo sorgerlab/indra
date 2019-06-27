@@ -234,37 +234,12 @@ def _find_elem_text(root, xpath_string):
     elem = root.find(xpath_string)
     return None if elem is None else elem.text
 
-# Function to convert month abbreviation to corresponding integer 1-12
-def _convert_month_abbv_to_int(month_abbrv):
-    int_month = None
-    try:
-        int_month = int(month_abbrv)
-    except ValueError:
-        months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
-        int_month =  months.index(month_abbrv.lower()) + 1
-    finally:
-        return int_month
 
 def _get_journal_info(medline_citation, get_issns_from_nlm):
     # Journal info
     journal = medline_citation.find('Article/Journal')
     journal_title = _find_elem_text(journal, 'Title')
     journal_abbrev = _find_elem_text(journal, 'ISOAbbreviation')
-
-    # Add publish date from JournalIssue/PubDate in Journal info
-    journal_pub_date = journal.find('JournalIssue/PubDate')
-    # Get details from XML
-    year = _find_elem_text(journal_pub_date, 'Year')
-    month = _find_elem_text(journal_pub_date, 'Month')
-    day = _find_elem_text(journal_pub_date, 'Day')
-    medline_date = _find_elem_text(journal_pub_date, 'MedlineDate')
-    # Build publication date dictionary
-    pub_date = {
-        "year"  : None if (year  is None) else int(year),
-        "month" : None if (month is None) else _convert_month_abbv_to_int(month),
-        "day"   : None if (day   is None) else int(day),
-        "medline_date" : medline_date
-    }
 
     # Add the ISSN from the article record
     issn_list = []
@@ -290,9 +265,21 @@ def _get_journal_info(medline_citation, get_issns_from_nlm):
     issn_list = list(set(issn_list))
 
     return {'journal_title': journal_title, 'journal_abbrev': journal_abbrev,
-            'issn_list': issn_list, 'journal_nlm_id': nlm_id,
-            'publication_date': pub_date}
+            'issn_list': issn_list, 'journal_nlm_id': nlm_id}
 
+def _get_pubmed_publication_date(pubmed_data):
+    # Look for pubmed as PubStatus in PubmedPubDate
+    pubmed_pub_date =  pubmed_data.find('./History/PubMedPubDate[@PubStatus="pubmed"]')
+    # Get date elements from extracted pubmed_pub_date element
+    year = _find_elem_text(pubmed_pub_date, 'Year')
+    month = _find_elem_text(pubmed_pub_date, 'Month')
+    day = _find_elem_text(pubmed_pub_date, 'Day')
+    # Build and return result
+    return {
+        "year"  : None if (year  is None) else int(year),
+        "month" : None if (month is None) else int(month),
+        "day"   : None if (day   is None) else int(day)
+    }
 
 def _get_article_info(medline_citation, pubmed_data):
     article = medline_citation.find('Article')
@@ -364,17 +351,18 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     pm_articles = tree.findall('./PubmedArticle')
     for art_ix, pm_article in enumerate(pm_articles):
         medline_citation = pm_article.find('./MedlineCitation')
+        pubmed_data = pm_article.find('PubmedData')
 
-        article_info = _get_article_info(medline_citation,
-                                         pm_article.find('PubmedData'))
+        article_info = _get_article_info(medline_citation, pubmed_data)
         journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
         context_info = _get_annotations(medline_citation)
-
+        publication_date = _get_pubmed_publication_date(pubmed_data)
         # Build the result
         result = {}
         result.update(article_info)
         result.update(journal_info)
         result.update(context_info)
+        result['publication_date'] = publication_date
 
         # Get the abstracts if requested
         if get_abstracts:
