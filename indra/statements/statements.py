@@ -469,7 +469,8 @@ class Statement(object):
             json_dict['evidence'] = evidence
         json_dict['id'] = '%s' % self.uuid
         json_dict['matches_hash'] = \
-            '%s' % self.get_hash(shallow=True, matches_fun=matches_fun)
+            '%s' % self.get_hash(shallow=True, refresh=True,
+                                 matches_fun=matches_fun)
         if self.supports:
             json_dict['supports'] = \
                 ['%s' % st.uuid for st in self.supports]
@@ -2020,8 +2021,10 @@ class Influence(Statement):
     def to_json(self, use_sbo=False, matches_fun=None):
         generic = super(Influence, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'],
-                       subj=self.subj.to_json(with_evidence=False),
-                       obj=self.obj.to_json(with_evidence=False))
+                       subj=self.subj.to_json(with_evidence=False,
+                                              matches_fun=matches_fun),
+                       obj=self.obj.to_json(with_evidence=False,
+                                            matches_fun=matches_fun))
         json_dict.update(generic)
         return json_dict
 
@@ -2169,7 +2172,8 @@ class Association(Complex):
         # Get generic from two inheritance levels above - from Statement class
         generic = super(Complex, self).to_json(use_sbo, matches_fun)
         json_dict = _o(type=generic['type'])
-        members = [m.to_json(with_evidence=False) for m in self.members]
+        members = [m.to_json(with_evidence=False, matches_fun=matches_fun)
+                   for m in self.members]
         json_dict['members'] = members
         json_dict.update(generic)
         return json_dict
