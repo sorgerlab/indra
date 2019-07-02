@@ -1074,6 +1074,21 @@ class PysbModelChecker(ModelChecker):
         im.remove_edges_from(edges_to_prune)
 
 
+class UnsignedDiGraphModelChecker(ModelChecker):
+    def __init__(self, model, statements=None):
+        super().__init__()
+
+    def get_graph(self):
+        return self.model
+
+    def process_statement(self, stmt):
+        subj, obj = stmt.agent_list()
+        return ([subj], [obj], 1, None)
+
+    def process_subject(self, subj):
+        return [subj], None
+
+
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
                          agent_to_obs, agents_values):
     # Build up dict mapping observables to values
