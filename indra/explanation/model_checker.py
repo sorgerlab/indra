@@ -141,7 +141,226 @@ class PathResult(object):
     def __repr__(self):
         return str(self)
 
+
 class ModelChecker(object):
+    """The parent class of all ModelCheckers.
+
+    Parameters
+    ----------
+    model : pysb.Model or NetworkX DiGraph or PyBEL.Model
+        Depending on the ModelChecker class, can be different type.
+    statements : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements to check the model against.
+    """    
+    def __init__(self, model, statements=None):
+        self.model = model
+        if statements:
+            self.statements = statements
+        else:
+            self.statements = []  
+        # do we need other parameters here?
+
+    def add_statements(self, stmts):
+        """Add to the list of statements to check against the model.
+
+        Parameters
+        ----------
+        stmts : list[indra.statements.Statement]
+            The list of Statements to be added for checking.
+        """
+        self.statements += stmts
+
+    def check_model(self, max_paths=1, max_path_length=5):
+        """Check all the statements added to the ModelChecker.
+
+        Parameters
+        ----------
+        max_paths : Optional[int]
+            The maximum number of specific paths to return for each Statement
+            to be explained. Default: 1
+        max_path_length : Optional[int]
+            The maximum length of specific paths to return. Default: 5
+
+        Returns
+        -------
+        list of (Statement, PathResult)
+            Each tuple contains the Statement checked against the model and
+            a PathResult object describing the results of model checking.
+        """
+        results = []
+        for idx, stmt in enumerate(self.statements):
+            logger.info('---')
+            logger.info('Checking statement (%d/%d): %s' %
+                        (idx + 1, len(self.statements), stmt))
+            result = self.check_statement(stmt, max_paths, max_path_length)
+            results.append((stmt, result))
+        return results
+
+    def check_statement(self, stmt, max_paths=1, max_path_length=5):
+        """Check a single Statement against the model.
+
+        Parameters
+        ----------
+        stmt : indra.statements.Statement
+            The Statement to check.
+        max_paths : Optional[int]
+            The maximum number of specific paths to return for each Statement
+            to be explained. Default: 1
+        max_path_length : Optional[int]
+            The maximum length of specific paths to return. Default: 5
+
+        Returns
+        -------
+        result : indra.explanation.modelchecker.PathResult
+            A PathResult object containing the result of a test.
+        """
+        # rewrite generic check statement
+        subj_list, obj_list, target_polarity, result_code = (
+            self.process_statement(stmt))
+        if result_code:
+            return self.make_false_result(result_code, max_paths,
+                                          max_path_length)
+        for subj, obj in itertools.product(subj_list, obj_list):
+            result = self.find_paths(subj, obj, target_polarity,
+                                     max_paths, max_path_length)
+            # If a path was found, then we return it; otherwise, that means
+            # there was no path for this observable, so we have to try the next
+            # one
+            if result.path_found:
+                logger.info('Found paths for %s' % stmt)
+                return result
+        # If we got here, then there was no path for any observable
+        logger.info('No paths found for %s' % stmt)
+        return self.make_false_result('NO_PATHS_FOUND',
+                                      max_paths, max_path_length)
+
+    def find_paths(self, subj, obj, target_polarity,
+                   max_paths=1, max_path_length=5):
+        """Check for a source/target path in the model.
+
+        Parameters
+        ----------
+        subj : str or pysb.MonomerPattern
+            Relevant to the model information about the subject of the
+            Statement being checked.
+        obj : str
+            Name of the object or PySB model Observable corresponding to the
+            object/target of the Statement being checked.
+        target_polarity : int
+            Whether the influence in the Statement is positive (1) or negative
+            (-1).
+
+        Returns
+        -------
+        PathResult
+            PathResult object indicating the results of the attempt to find
+            a path.
+        """
+        # rewrite find_im_paths
+        source_set, result_code = self.process_subject(subj)
+        if result_code:
+            return self.make_false_result(result_code,
+                                          max_paths, max_path_length)
+        graph = self.get_graph()
+        # do sampling?
+
+        #         # -- Do Breadth-First Enumeration --
+        # Generate the predecessors to our observable and count the paths
+        path_lengths = []
+        path_metrics = []
+        for source, polarity, path_length in \
+                _find_sources(graph, obj, source_set, target_polarity):
+
+            pm = PathMetric(source, obj, polarity, path_length)
+            path_metrics.append(pm)
+            path_lengths.append(path_length)
+        logger.info('Finding paths between %s and %s with polarity %s' %
+                    (subj, obj, target_polarity))
+        # Now, look for paths
+        paths = []
+        if path_metrics and max_paths == 0:
+            pr = PathResult(True, 'MAX_PATHS_ZERO',
+                            max_paths, max_path_length)
+            pr.path_metrics = path_metrics
+            return pr
+        elif path_metrics:
+            if min(path_lengths) <= max_path_length:
+                pr = PathResult(True, 'PATHS_FOUND',
+                                max_paths, max_path_length)
+                pr.path_metrics = path_metrics
+                # Get the first path
+                path_iter = enumerate(_find_sources_with_paths(
+                                           graph, obj, sources,
+                                           target_polarity))
+                for path_ix, path in path_iter:
+                    flipped = _flip(graph, path)
+                    pr.add_path(flipped)
+                    if len(pr.paths) >= max_paths:
+                        break
+                return pr
+            # There are no paths shorter than the max path length, so we
+            # don't bother trying to get them
+            else:
+                pr = PathResult(True, 'MAX_PATH_LENGTH_EXCEEDED',
+                                max_paths, max_path_length)
+                pr.path_metrics = path_metrics
+                return pr
+        else:
+            return PathResult(False, 'NO_PATHS_FOUND',
+                              max_paths, max_path_length)
+
+    def make_false_result(self, result_code, max_paths, max_path_length):
+        return PathResult(False, result_code, max_paths, max_path_length)
+
+    def get_graph(self):
+        """
+        Return a graph to run the path finding algorithm. Depending on the
+        model, different child classes can return different objects, e.g.
+        PysbModelChecker.get_graph() should call self.get_im() method, while graph
+        based ModelChecker classes will return self.model.
+        """
+        raise NotImplementedError("Method must be implemented in child class.")
+
+    def process_statement(self, stmt):
+        """
+        This method processes the test statement to get the data about subject,
+        object, and statement target polarity, according to the specific
+        model requirements for model checking, e.g. PysbModelChecker gets
+        subject monomer patterns and observables, while graph based
+        ModelCheckers will just get subject and object. Target polarity is
+        either determined by statement type or defaults to 1 (depending on the
+        model). If any of the requirements are not satisfied, result code is
+        also returned to construct PathResult object.
+
+        Parameters
+        ----------
+        stmt : indra.statements.Statement
+            A statement to process.
+
+        Returns
+        -------
+        subj_data : list or None
+            Data about statement subject to be used as source nodes.
+        obj_data : list or None
+            Data about statement object to be used as target nodes.
+        target_polarity : int or None
+            Target polarity of the statement.
+        result_code : str or None
+            Result code to construct PathResult.
+        """
+        raise NotImplementedError("Method must be implemented in child class.")
+
+    def process_subject(self, subj_data):
+        """This method processes the subject of the test statement and returns
+        the neccessary information to run the tests. In case of
+        PysbModelChecker, method returns input_rule_set. If any of the
+        requirements are not satisfied, result code is also returned to
+        construct PathResult object.
+        """
+        raise NotImplementedError("Method must be implemented in child class.")
+
+
+class PysbModelChecker(ModelChecker):
     """Check a PySB model against a set of INDRA statements.
 
     Parameters
@@ -161,11 +380,7 @@ class ModelChecker(object):
 
     def __init__(self, model, statements=None, agent_obs=None,
                  do_sampling=False, seed=None):
-        self.model = model
-        if statements:
-            self.statements = statements
-        else:
-            self.statements = []
+        super().__init__(model, statements)
         if agent_obs:
             self.agent_obs = agent_obs
         else:
@@ -182,16 +397,6 @@ class ModelChecker(object):
         self.agent_to_obs = {}
         # Map between rules and downstream observables
         self.rule_obs_dict = {}
-
-    def add_statements(self, stmts):
-        """Add to the list of statements to check against the model.
-
-        Parameters
-        ----------
-        stmts : list[indra.statements.Statement]
-            The list of Statements to be added for checking.
-        """
-        self.statements += stmts
 
     def generate_im(self, model):
         """Return a graph representing the influence map generated by Kappa
@@ -326,59 +531,16 @@ class ModelChecker(object):
             self.rule_obs_dict[rule.name] = obs_list
         return self._im
 
-    def check_model(self, max_paths=1, max_path_length=5):
-        """Check all the statements added to the ModelChecker.
+    def get_graph(self):
+        return self.get_im()
 
-        Parameters
-        ----------
-        max_paths : Optional[int]
-            The maximum number of specific paths to return for each Statement
-            to be explained. Default: 1
-        max_path_length : Optional[int]
-            The maximum length of specific paths to return. Default: 5
-
-        Returns
-        -------
-        list of (Statement, PathResult)
-            Each tuple contains the Statement checked against the model and
-            a PathResult object describing the results of model checking.
-        """
-        results = []
-        for idx, stmt in enumerate(self.statements):
-            logger.info('---')
-            logger.info('Checking statement (%d/%d): %s' % \
-                (idx + 1, len(self.statements), stmt))
-            result = self.check_statement(stmt, max_paths, max_path_length)
-            results.append((stmt, result))
-        return results
-
-    def check_statement(self, stmt, max_paths=1, max_path_length=5):
-        """Check a single Statement against the model.
-
-        Parameters
-        ----------
-        stmt : indra.statements.Statement
-            The Statement to check.
-        max_paths : Optional[int]
-            The maximum number of specific paths to return for each Statement
-            to be explained. Default: 1
-        max_path_length : Optional[int]
-            The maximum length of specific paths to return. Default: 5
-
-        Returns
-        -------
-        boolean
-            True if the model satisfies the Statement.
-        """
-        # Make sure the influence map is initialized
-        self.get_im()
+    def process_statement(self, stmt):
         # Check if this is one of the statement types that we can check
         if not isinstance(stmt, (Modification, RegulateAmount,
                                  RegulateActivity, Influence)):
             logger.info('Statement type %s not handled' %
                         stmt.__class__.__name__)
-            return PathResult(False, 'STATEMENT_TYPE_NOT_HANDLED',
-                              max_paths, max_path_length)
+            return (None, None, None, 'STATEMENT_TYPE_NOT_HANDLED')
         # Get the polarity for the statement
         if isinstance(stmt, Modification):
             target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
@@ -397,11 +559,10 @@ class ModelChecker(object):
         # enzyme in a rule of the appropriate activity (e.g., a phosphorylation
         # rule) FIXME
         if subj is not None:
-            subj_mps = list(pa.grounded_monomer_patterns(self.model, subj,
-                                                    ignore_activities=True))
+            subj_mps = list(pa.grounded_monomer_patterns(
+                self.model, subj, ignore_activities=True))
             if not subj_mps:
-                return PathResult(False, 'SUBJECT_MONOMERS_NOT_FOUND',
-                                  max_paths, max_path_length)
+                return (None, None, None, 'SUBJECT_MONOMERS_NOT_FOUND')
         else:
             subj_mps = [None]
         # Observables may not be found for an activation since there may be no
@@ -410,22 +571,95 @@ class ModelChecker(object):
         obs_names = self.stmt_to_obs[stmt]
         if not obs_names:
             logger.info("No observables for stmt %s, returning False" % stmt)
-            return PathResult(False, 'OBSERVABLES_NOT_FOUND',
-                              max_paths, max_path_length)
-        for subj_mp, obs_name in itertools.product(subj_mps, obs_names):
-            # NOTE: Returns on the path found for the first enz_mp/obs combo
-            result = self._find_im_paths(subj_mp, obs_name, target_polarity,
-                                         max_paths, max_path_length)
-            # If a path was found, then we return it; otherwise, that means
-            # there was no path for this observable, so we have to try the next
-            # one
-            if result.path_found:
-                logger.info('Found paths for %s' % stmt)
-                return result
-        # If we got here, then there was no path for any observable
-        logger.info('No paths found for %s' % stmt)
-        return PathResult(False, 'NO_PATHS_FOUND',
-                          max_paths, max_path_length)
+            return (None, None, None, 'OBSERVABLES_NOT_FOUND')
+        result_code = None
+        return subj_mps, obs_names, target_polarity, result_code
+
+    def process_subject(self, subj_mp):
+        if subj_mp is None:
+            input_rule_set = None
+        else:
+            input_rule_set = self._get_input_rules(subj_mp)
+            if not input_rule_set:
+                logger.info('Input rules not found for %s' % subj_mp)
+                return (None, 'INPUT_RULES_NOT_FOUND')
+        return input_rule_set, None
+
+    # def check_statement(self, stmt, max_paths=1, max_path_length=5):
+    #     # After reimplementing remove the method from child class
+    #     """Check a single Statement against the model.
+
+    #     Parameters
+    #     ----------
+    #     stmt : indra.statements.Statement
+    #         The Statement to check.
+    #     max_paths : Optional[int]
+    #         The maximum number of specific paths to return for each Statement
+    #         to be explained. Default: 1
+    #     max_path_length : Optional[int]
+    #         The maximum length of specific paths to return. Default: 5
+
+    #     Returns
+    #     -------
+    #     boolean
+    #         True if the model satisfies the Statement.
+    #     """
+    #     # Make sure the influence map is initialized
+    #     self.get_im()
+    #     # Check if this is one of the statement types that we can check
+    #     if not isinstance(stmt, (Modification, RegulateAmount,
+    #                              RegulateActivity, Influence)):
+    #         logger.info('Statement type %s not handled' %
+    #                     stmt.__class__.__name__)
+    #         return PathResult(False, 'STATEMENT_TYPE_NOT_HANDLED',
+    #                           max_paths, max_path_length)
+    #     # Get the polarity for the statement
+    #     if isinstance(stmt, Modification):
+    #         target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
+    #     elif isinstance(stmt, RegulateActivity):
+    #         target_polarity = 1 if stmt.is_activation else -1
+    #     elif isinstance(stmt, RegulateAmount):
+    #         target_polarity = -1 if isinstance(stmt, DecreaseAmount) else 1
+    #     elif isinstance(stmt, Influence):
+    #         target_polarity = -1 if stmt.overall_polarity() == -1 else 1
+    #     # Get the subject and object (works also for Modifications)
+    #     subj, obj = stmt.agent_list()
+    #     # Get a list of monomer patterns matching the subject FIXME Currently
+    #     # this will match rules with the corresponding monomer pattern on it.
+    #     # In future, this statement should (possibly) also match rules in which
+    #     # 1) the agent is in its active form, or 2) the agent is tagged as the
+    #     # enzyme in a rule of the appropriate activity (e.g., a phosphorylation
+    #     # rule) FIXME
+    #     if subj is not None:
+    #         subj_mps = list(pa.grounded_monomer_patterns(self.model, subj,
+    #                                                 ignore_activities=True))
+    #         if not subj_mps:
+    #             return PathResult(False, 'SUBJECT_MONOMERS_NOT_FOUND',
+    #                               max_paths, max_path_length)
+    #     else:
+    #         subj_mps = [None]
+    #     # Observables may not be found for an activation since there may be no
+    #     # rule in the model activating the object, and the object may not have
+    #     # an "active" site of the appropriate type
+    #     obs_names = self.stmt_to_obs[stmt]
+    #     if not obs_names:
+    #         logger.info("No observables for stmt %s, returning False" % stmt)
+    #         return PathResult(False, 'OBSERVABLES_NOT_FOUND',
+    #                           max_paths, max_path_length)
+    #     for subj_mp, obs_name in itertools.product(subj_mps, obs_names):
+    #         # NOTE: Returns on the path found for the first enz_mp/obs combo
+    #         result = self._find_im_paths(subj_mp, obs_name, target_polarity,
+    #                                      max_paths, max_path_length)
+    #         # If a path was found, then we return it; otherwise, that means
+    #         # there was no path for this observable, so we have to try the next
+    #         # one
+    #         if result.path_found:
+    #             logger.info('Found paths for %s' % stmt)
+    #             return result
+    #     # If we got here, then there was no path for any observable
+    #     logger.info('No paths found for %s' % stmt)
+    #     return PathResult(False, 'NO_PATHS_FOUND',
+    #                       max_paths, max_path_length)
 
     def _get_input_rules(self, subj_mp):
         if subj_mp is None:
@@ -556,94 +790,94 @@ class ModelChecker(object):
             pr.paths = []
         return pr
 
-    def _find_im_paths(self, subj_mp, obs_name, target_polarity,
-                       max_paths=1, max_path_length=5):
-        """Check for a source/target path in the influence map.
+    # def _find_im_paths(self, subj_mp, obs_name, target_polarity,
+    #                    max_paths=1, max_path_length=5):
+    #     """Check for a source/target path in the influence map.
 
-        Parameters
-        ----------
-        subj_mp : pysb.MonomerPattern
-            MonomerPattern corresponding to the subject of the Statement
-            being checked.
-        obs_name : str
-            Name of the PySB model Observable corresponding to the
-            object/target of the Statement being checked.
-        target_polarity : int
-            Whether the influence in the Statement is positive (1) or negative
-            (-1).
+    #     Parameters
+    #     ----------
+    #     subj_mp : pysb.MonomerPattern
+    #         MonomerPattern corresponding to the subject of the Statement
+    #         being checked.
+    #     obs_name : str
+    #         Name of the PySB model Observable corresponding to the
+    #         object/target of the Statement being checked.
+    #     target_polarity : int
+    #         Whether the influence in the Statement is positive (1) or negative
+    #         (-1).
 
-        Returns
-        -------
-        PathResult
-            PathResult object indicating the results of the attempt to find
-            a path.
-        """
-        logger.info(('Running path finding with max_paths=%d,'
-                     ' max_path_length=%d') % (max_paths, max_path_length))
-        # Find rules in the model corresponding to the input
-        if subj_mp is None:
-            input_rule_set = None
-        else:
-            input_rule_set = self._get_input_rules(subj_mp)
-            if not input_rule_set:
-                logger.info('Input rules not found for %s' % subj_mp)
-                return PathResult(False, 'INPUT_RULES_NOT_FOUND',
-                                  max_paths, max_path_length)
-        logger.info('Checking path metrics between %s and %s with polarity %s' %
-                    (subj_mp, obs_name, target_polarity))
+    #     Returns
+    #     -------
+    #     PathResult
+    #         PathResult object indicating the results of the attempt to find
+    #         a path.
+    #     """
+    #     logger.info(('Running path finding with max_paths=%d,'
+    #                  ' max_path_length=%d') % (max_paths, max_path_length))
+    #     # Find rules in the model corresponding to the input
+    #     if subj_mp is None:
+    #         input_rule_set = None
+    #     else:
+    #         input_rule_set = self._get_input_rules(subj_mp)
+    #         if not input_rule_set:
+    #             logger.info('Input rules not found for %s' % subj_mp)
+    #             return PathResult(False, 'INPUT_RULES_NOT_FOUND',
+    #                               max_paths, max_path_length)
+    #     logger.info('Checking path metrics between %s and %s with polarity %s' %
+    #                 (subj_mp, obs_name, target_polarity))
 
-        # -- Route to the path sampling function --
-        if self.do_sampling:
-            if not has_pg:
-                raise Exception('The paths_graph package could not be '
-                                'imported.')
-            return self._sample_paths(input_rule_set, obs_name, target_polarity,
-                               max_paths, max_path_length)
+    #     # -- Route to the path sampling function --
+    #     if self.do_sampling:
+    #         if not has_pg:
+    #             raise Exception('The paths_graph package could not be '
+    #                             'imported.')
+    #         return self._sample_paths(input_rule_set, obs_name, target_polarity,
+    #                            max_paths, max_path_length)
 
-        # -- Do Breadth-First Enumeration --
-        # Generate the predecessors to our observable and count the paths
-        path_lengths = []
-        path_metrics = []
-        for source, polarity, path_length in \
-                    _find_sources(self.get_im(), obs_name, input_rule_set,
-                                  target_polarity):
+    #     # -- Do Breadth-First Enumeration --
+    #     # Generate the predecessors to our observable and count the paths
+    #     path_lengths = []
+    #     path_metrics = []
+    #     for source, polarity, path_length in \
+    #                 _find_sources(self.get_im(), obs_name, input_rule_set,
+    #                               target_polarity):
 
-            pm = PathMetric(source, obs_name, polarity, path_length)
-            path_metrics.append(pm)
-            path_lengths.append(path_length)
-        logger.info('Finding paths between %s and %s with polarity %s' %
-                    (subj_mp, obs_name, target_polarity))
-        # Now, look for paths
-        paths = []
-        if path_metrics and max_paths == 0:
-            pr = PathResult(True, 'MAX_PATHS_ZERO',
-                            max_paths, max_path_length)
-            pr.path_metrics = path_metrics
-            return pr
-        elif path_metrics:
-            if min(path_lengths) <= max_path_length:
-                pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)
-                pr.path_metrics = path_metrics
-                # Get the first path
-                path_iter = enumerate(_find_sources_with_paths(
-                                           self.get_im(), obs_name,
-                                           input_rule_set, target_polarity))
-                for path_ix, path in path_iter:
-                    flipped = _flip(self.get_im(), path)
-                    pr.add_path(flipped)
-                    if len(pr.paths) >= max_paths:
-                        break
-                return pr
-            # There are no paths shorter than the max path length, so we
-            # don't bother trying to get them
-            else:
-                pr = PathResult(True, 'MAX_PATH_LENGTH_EXCEEDED',
-                                max_paths, max_path_length)
-                pr.path_metrics = path_metrics
-                return pr
-        else:
-            return PathResult(False, 'NO_PATHS_FOUND',
-                              max_paths, max_path_length)
+    #         pm = PathMetric(source, obs_name, polarity, path_length)
+    #         path_metrics.append(pm)
+    #         path_lengths.append(path_length)
+    #     logger.info('Finding paths between %s and %s with polarity %s' %
+    #                 (subj_mp, obs_name, target_polarity))
+    #     # Now, look for paths
+    #     paths = []
+    #     if path_metrics and max_paths == 0:
+    #         pr = PathResult(True, 'MAX_PATHS_ZERO',
+    #                         max_paths, max_path_length)
+    #         pr.path_metrics = path_metrics
+    #         return pr
+    #     elif path_metrics:
+    #         if min(path_lengths) <= max_path_length:
+    #             pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)
+    #             pr.path_metrics = path_metrics
+    #             # Get the first path
+    #             path_iter = enumerate(_find_sources_with_paths(
+    #                                        self.get_im(), obs_name,
+    #                                        input_rule_set, target_polarity))
+    #             for path_ix, path in path_iter:
+    #                 flipped = _flip(self.get_im(), path)
+    #                 pr.add_path(flipped)
+    #                 if len(pr.paths) >= max_paths:
+    #                     break
+    #             return pr
+    #         # There are no paths shorter than the max path length, so we
+    #         # don't bother trying to get them
+    #         else:
+    #             pr = PathResult(True, 'MAX_PATH_LENGTH_EXCEEDED',
+    #                             max_paths, max_path_length)
+    #             pr.path_metrics = path_metrics
+    #             return pr
+    #     else:
+    #         return PathResult(False, 'NO_PATHS_FOUND',
+    #                           max_paths, max_path_length)
 
     def score_paths(self, paths, agents_values, loss_of_function=False,
                     sigma=0.15, include_final_node=False):
