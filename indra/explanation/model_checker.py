@@ -306,7 +306,7 @@ class ModelChecker(object):
                                            graph, obj, input_set,
                                            target_polarity))
                 for path_ix, path in path_iter:
-                    flipped = _flip(graph, path)
+                    flipped = self._flip(graph, path)
                     pr.add_path(flipped)
                     if len(pr.paths) >= max_paths:
                         break
@@ -437,7 +437,7 @@ class ModelChecker(object):
             # Don't allow trivial paths consisting only of the target node
             if (sources is None or node in sources) and node_sign == polarity \
                     and len(path) > 1:
-                logger.debug('Found path: %s' % str(_flip(graph, path)))
+                logger.debug('Found path: %s' % str(self._flip(graph, path)))
                 yield tuple(path)
             for predecessor, sign in self._get_signed_predecessors(
                     graph, node, node_sign):
@@ -539,6 +539,34 @@ class ModelChecker(object):
     def _sample_paths(self, input_set, obj_name, target_polarity,
                       max_paths=1, max_path_length=5):
         raise NotImplementedError("Method must be implemented in child class.")
+
+    def _flip(self, graph, path):
+        # Reverse the path and the polarities associated with each node
+        rev = tuple(reversed(path))
+        return self._path_with_polarities(graph, rev)
+
+    def _path_with_polarities(self, graph, path):
+        # This doesn't address the effect of the rules themselves on the
+        # observables of interest--just the effects of the rules on each other
+        edge_polarities = []
+        path_list = list(path)
+        edges = zip(path_list[0:-1], path_list[1:])
+        for from_tup, to_tup in edges:
+            from_rule = from_tup[0]
+            to_rule = to_tup[0]
+            edge = (from_rule, to_rule)
+            edge_polarities.append(self._get_edge_sign(graph, edge))
+        # Compute and return the overall path polarity
+        # path_polarity = np.prod(edge_polarities)
+        # Calculate left product of edge polarities return
+        polarities_lprod = [1]
+        for ep_ix, ep in enumerate(edge_polarities):
+            polarities_lprod.append(polarities_lprod[-1] * ep)
+        assert len(path) == len(polarities_lprod)
+        return tuple(zip([node for node, sign in path], polarities_lprod))
+        # assert path_polarity == 1 or path_polarity == -1
+        # return True if path_polarity == 1 else False
+        # return path_polarity
 
 
 class PysbModelChecker(ModelChecker):
@@ -702,7 +730,7 @@ class PysbModelChecker(ModelChecker):
                 if node_attributes[neighb] != 'variable':
                     continue
                 # Get the edge and check the polarity
-                edge_sign = _get_edge_sign(self._im, (rule.name, neighb))
+                edge_sign = self._get_edge_sign(self._im, (rule.name, neighb))
                 obs_list.append((neighb, edge_sign))
             self.rule_obs_dict[rule.name] = obs_list
         return self._im
@@ -814,7 +842,7 @@ class PysbModelChecker(ModelChecker):
                     for path in path_list]
 
         pg_polarity = 0 if target_polarity > 0 else 1
-        nx_graph = _im_to_signed_digraph(self.get_im())
+        nx_graph = self._im_to_signed_digraph(self.get_im())
         # Add edges from dummy node to input rules
         source_node = 'SOURCE_NODE'
         for rule in input_rule_set:
@@ -1105,6 +1133,16 @@ class PysbModelChecker(ModelChecker):
                     len(edges_to_prune))
         im.remove_edges_from(edges_to_prune)
 
+    def _im_to_signed_digraph(self, im):
+        edges = []
+        for e in im.edges():
+            edge_sign = self._get_edge_sign(im, e)
+            polarity = 0 if edge_sign > 0 else 1
+            edges.append((e[0], e[1], {'sign': polarity}))
+        dg = nx.DiGraph()
+        dg.add_edges_from(edges)
+        return dg
+
 
 class UnsignedDiGraphModelChecker(ModelChecker):
     def __init__(self, model, statements=None):
@@ -1297,36 +1335,6 @@ def find_consumption_rules(cp, rules):
 """
 
 
-def _flip(im, path):
-    # Reverse the path and the polarities associated with each node
-    rev = tuple(reversed(path))
-    return _path_with_polarities(im, rev)
-
-
-def _path_with_polarities(im, path):
-    # This doesn't address the effect of the rules themselves on the
-    # observables of interest--just the effects of the rules on each other
-    edge_polarities = []
-    path_list = list(path)
-    edges = zip(path_list[0:-1], path_list[1:])
-    for from_tup, to_tup in edges:
-        from_rule = from_tup[0]
-        to_rule = to_tup[0]
-        edge = (from_rule, to_rule)
-        edge_polarities.append(_get_edge_sign(im, edge))
-    # Compute and return the overall path polarity
-    # path_polarity = np.prod(edge_polarities)
-    # Calculate left product of edge polarities return
-    polarities_lprod = [1]
-    for ep_ix, ep in enumerate(edge_polarities):
-        polarities_lprod.append(polarities_lprod[-1] * ep)
-    assert len(path) == len(polarities_lprod)
-    return tuple(zip([node for node, sign in path], polarities_lprod))
-    # assert path_polarity == 1 or path_polarity == -1
-    # return True if path_polarity == 1 else False
-    # return path_polarity
-
-
 def stmt_from_rule(rule_name, model, stmts):
     """Return the source INDRA Statement corresponding to a rule in a model.
 
@@ -1372,17 +1380,6 @@ def _monomer_pattern_label(mp):
             site_str = '%s_%s' % (site, cond)
         site_strs.append(site_str)
     return '%s_%s' % (mp.monomer.name, '_'.join(site_strs))
-
-
-def _im_to_signed_digraph(im):
-    edges = []
-    for e in im.edges():
-        edge_sign = _get_edge_sign(im, e)
-        polarity = 0 if edge_sign > 0 else 1
-        edges.append((e[0], e[1], {'sign': polarity}))
-    dg = nx.DiGraph()
-    dg.add_edges_from(edges)
-    return dg
 
 
 def stmts_for_path(path, model, stmts):
