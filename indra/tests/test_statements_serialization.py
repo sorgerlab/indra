@@ -137,6 +137,24 @@ def test_association():
     assert jd == jd2
 
 
+def test_migration():
+    m = Migration(Concept('migration'), 
+                  QuantitativeState('person', 500, 'absolute'),
+                  MovementContext(locations=[
+                      {'location': RefContext('South Sudan'), 'role': 'origin'},
+                      {'location': RefContext('Ethiopia'), 'role': 'destination'}],
+                      time=TimeContext(text='beginning of 2019')))
+    jd = m.to_json()
+    m.to_graph()
+    assert jd
+    st_deserialize = Statement._from_json(jd)
+    assert isinstance(st_deserialize, Migration)
+    assert isinstance(st_deserialize.delta, QuantitativeState)
+    assert isinstance(st_deserialize.context, MovementContext)
+    jd2 = st_deserialize.to_json()
+    assert jd == jd2
+
+
 def __make_support_link(supporting_stmt, supported_stmt):
     supporting_stmt.supports.append(supported_stmt)
     supported_stmt.supported_by.append(supporting_stmt)
@@ -296,6 +314,26 @@ def test_world_context():
     assert wcj['geo_location']['name'] == 'x'
     assert wcj['geo_location']['db_refs'] == {'y': '1', 'z': '2'}
     assert wc.to_json() == Context.from_json(wc.to_json()).to_json()
+
+
+def test_movement_context():
+    origin = RefContext(name='x', db_refs={'a': '1', 'b': '2'})
+    interim = RefContext(name='y', db_refs={'c': '3', 'd': '4'})
+    destination = RefContext(name='z', db_refs={'e': '5', 'f': '6'})
+    tc = TimeContext(text='2018')
+    mc = MovementContext(
+        locations=[
+            {'location': origin, 'role': 'origin'},
+            {'location': interim, 'role': 'interim'},
+            {'location': destination, 'role': 'destination'}],
+        time=tc)
+    mcj = mc.to_json()
+    assert mcj['type'] == 'movement'
+    assert mcj['locations'][0]['location']['name'] == 'x'
+    assert mcj['locations'][0]['location']['db_refs'] == {'a': '1', 'b': '2'}
+    assert mcj['locations'][0]['role'] == 'origin'
+    assert mcj['time']['text'] == '2018'
+    assert mc.to_json() == Context.from_json(mcj).to_json()
 
 
 def test_evidence_context():

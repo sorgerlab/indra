@@ -1,7 +1,8 @@
 import datetime
 
 
-__all__ = ['Context', 'BioContext', 'WorldContext', 'RefContext', 'TimeContext']
+__all__ = ['Context', 'BioContext', 'WorldContext', 'RefContext', 'TimeContext',
+           'MovementContext']
 
 
 class Context(object):
@@ -13,6 +14,8 @@ class Context(object):
             return BioContext.from_json(jd)
         elif context_type == 'world':
             return WorldContext.from_json(jd)
+        elif context_type == 'movement':
+            return MovementContext.from_json(jd)
         else:
             raise ValueError('Unknown context type %s' % context_type)
 
@@ -143,7 +146,7 @@ class WorldContext(Context):
         return self.__str__()
 
 
-class RefContext(Context):
+class RefContext(object):
     """An object representing a context with a name and references.
 
     Parameters
@@ -287,3 +290,77 @@ class TimeContext(object):
         return self.__str__()
 
 
+class MovementContext(Context):
+    """An object representing the context of a movement between start and end
+    points in time.
+
+    Parameters
+    ----------
+    locations : Optional[list[dict]
+        A list of dictionaries each containing a RefContext object representing
+        geographical location context and its role (e.g. 'origin',
+        'destination', etc.)
+    time : Optional[TimeContext]
+        A TimeContext object representing the temporal context of the
+        Statement.
+    """
+    def __init__(self, locations=None, time=None):
+        self.locations = locations if locations else []
+        self.time = time
+
+    def __eq__(self, other):
+        return (self.locations == other.locations) and \
+               (self.time == other.time)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __bool__(self):
+        return self.locations is not None or self.time is not None
+
+    def __nonzero__(self):
+        return self.__bool__()
+
+    @classmethod
+    def from_json(cls, jd):
+        locations_entry = jd.get('locations')
+        if locations_entry:
+            locations = [
+                {'location': RefContext.from_json(location['location']),
+                 'role': location['role']} for location in locations_entry]
+        else:
+            locations = None
+        time_entry = jd.get('time')
+        if time_entry:
+            time = TimeContext.from_json(time_entry)
+        else:
+            time = None
+        return cls(locations=locations, time=time)
+
+    def to_json(self):
+        if self.locations:
+            locations_json = [
+                {'location': location['location'].to_json(),
+                 'role': location['role']} for location in self.locations]
+        else:
+            locations_json = []
+        jd = {'type': 'movement',
+              'locations': locations_json,
+              'time': self.time.to_json() if self.time else None}
+        return jd
+
+    def __str__(self):
+        pieces = []
+        if self.locations:
+            locs = []
+            for location in self.locations:
+                locs.append('%s(%s)' % (location['location'], location['role']))
+            locations = ', '.join(locs)
+            pieces.append('locations=%s' % locations)
+        if self.time:
+            pieces.append('time=%s' % self.time)
+        args = ', '.join(pieces)
+        return 'MovementContext(%s)' % args
+
+    def __repr__(self):
+        return self.__str__()
