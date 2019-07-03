@@ -739,6 +739,7 @@ class PysbModelChecker(ModelChecker):
         return self.get_im()
 
     def process_statement(self, stmt):
+        self.get_im()
         # Check if this is one of the statement types that we can check
         if not isinstance(stmt, (Modification, RegulateAmount,
                                  RegulateActivity, Influence)):
