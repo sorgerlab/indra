@@ -74,6 +74,7 @@ def process_ekb(ekb_str):
     cp.extract_causal_relations()
     cp.extract_correlations()
     cp.extract_events()
+    cp.extract_migrations()
     return cp
 
 
