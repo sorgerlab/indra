@@ -11,10 +11,9 @@ from pysb import *
 from pysb.core import SelfExporter
 from pysb.tools import render_reactions
 from indra.databases import hgnc_client
-from indra.explanation.model_checker import ModelChecker, _mp_embeds_into, \
-                                      _cp_embeds_into, _match_lhs, \
-                                      stmt_from_rule, PathResult, \
-                                      remove_im_params
+from indra.explanation.model_checker import ModelChecker, PysbModelChecker, \
+    _mp_embeds_into, _cp_embeds_into, _match_lhs, stmt_from_rule, PathResult, \
+    remove_im_params
 from indra.assemblers.pysb.assembler import PysbAssembler, \
                                             set_base_initial_condition
 from pysb.tools import species_graph
@@ -125,7 +124,7 @@ def test_one_step_phosphorylation():
         Annotation('T185', 'T', 'is_residue'),
         Annotation('T185', '185', 'is_position'),
     ]
-    mc = ModelChecker(model, [st])
+    mc = PysbModelChecker(model, [st])
     results = mc.check_model()
     assert len(results) == 1
     assert isinstance(results[0], tuple)
@@ -134,6 +133,7 @@ def test_one_step_phosphorylation():
     assert isinstance(pr, PathResult)
     assert pr.paths == [(('A_phos_B', 1), ('B_T185_p_obs', 1))]
 
+test_one_step_phosphorylation()
 
 @with_model
 def test_two_step_phosphorylation():
@@ -170,7 +170,7 @@ def test_two_step_phosphorylation():
     #    f.write(species_graph.run(model))
     #generate_equations(model)
     # Now check the model
-    mc = ModelChecker(model, [st])
+    mc = PysbModelChecker(model, [st])
     results = mc.check_model()
     assert len(results) == 1
     assert isinstance(results[0], tuple)
@@ -187,7 +187,7 @@ def test_pysb_assembler_phospho_policies():
     pa.add_statements([st])
     # Try two step
     pa.make_model(policies='two_step')
-    mc = ModelChecker(pa.model, [st])
+    mc = PysbModelChecker(pa.model, [st])
     results = mc.check_model()
     assert len(results) == 1
     assert isinstance(results[0], tuple)
@@ -196,7 +196,7 @@ def test_pysb_assembler_phospho_policies():
     assert pr.paths == [(('A_phosphorylation_B_T185', 1), ('B_T185_p_obs', 1))]
     # Try one step
     pa.make_model(policies='one_step')
-    mc = ModelChecker(pa.model, [st])
+    mc = PysbModelChecker(pa.model, [st])
     results = mc.check_model()
     assert len(results) == 1
     assert isinstance(results[0], tuple)
@@ -206,7 +206,7 @@ def test_pysb_assembler_phospho_policies():
     assert pr.paths == [(('A_phosphorylation_B_T185', 1), ('B_T185_p_obs', 1))]
     # Try interactions_only
     pa.make_model(policies='interactions_only')
-    mc = ModelChecker(pa.model, [st])
+    mc = PysbModelChecker(pa.model, [st])
     results = mc.check_model()
     assert len(results) == 1
     assert isinstance(results[0], tuple)
@@ -329,7 +329,7 @@ def test_consumption_rule():
             Annotation('T185', '185', 'is_position'),
         ]
     # Now check the model against the statement
-    mc = ModelChecker(model, [stmt])
+    mc = PysbModelChecker(model, [stmt])
     checks = mc.check_model()
     assert len(checks) == 1
     assert isinstance(checks[0], tuple)
@@ -350,7 +350,7 @@ def test_dephosphorylation():
         pysba = PysbAssembler()
         pysba.add_statements([stmt])
         pysba.make_model(policies=policy)
-        mc = ModelChecker(pysba.model, [stmt])
+        mc = PysbModelChecker(pysba.model, [stmt])
         checks = mc.check_model()
         assert len(checks) == 1
         assert isinstance(checks[0], tuple)
@@ -384,7 +384,7 @@ def test_invalid_modification():
     #with open('species_1step.dot', 'w') as f:
     #    f.write(species_graph.run(model))
     # Now check the model
-    mc = ModelChecker(model, [st])
+    mc = PysbModelChecker(model, [st])
     results = mc.check_model()
     assert len(results) == 1
     #assert isinstance(results[0], tuple)
@@ -431,7 +431,7 @@ def test_distinguish_path_polarity1():
         ]
     # Create the model checker
     stmts = _path_polarity_stmt_list()
-    mc = ModelChecker(model, stmts)
+    mc = PysbModelChecker(model, stmts)
     results = mc.check_model()
     assert len(results) == len(stmts)
     assert isinstance(results[0], tuple)
@@ -470,7 +470,7 @@ def test_distinguish_path_polarity2():
         ]
     # Create the model checker
     stmts = _path_polarity_stmt_list()
-    mc = ModelChecker(model, stmts)
+    mc = PysbModelChecker(model, stmts)
     results = mc.check_model()
     assert len(results) == len(stmts)
     assert isinstance(results[0], tuple)
@@ -493,7 +493,7 @@ def test_check_activation():
     pa = PysbAssembler()
     pa.add_statements(stmts)
     pa.make_model(policies='one_step')
-    mc = ModelChecker(pa.model, stmts)
+    mc = PysbModelChecker(pa.model, stmts)
     results = mc.check_model()
     assert len(results) == len(stmts)
     assert isinstance(results[0], tuple)
@@ -514,7 +514,7 @@ def test_check_increase_grounded():
     pa = PysbAssembler()
     pa.add_statements([stmt2])
     pa.make_model(policies='one_step')
-    mc = ModelChecker(pa.model, [stmt1])
+    mc = PysbModelChecker(pa.model, [stmt1])
     results = mc.check_model()
     assert len(results) == 1
     path_result = results[0][1]
@@ -534,7 +534,7 @@ def test_check_increase_grounded_with_state():
     pa = PysbAssembler()
     pa.add_statements([stmt2])
     pa.make_model(policies='one_step')
-    mc = ModelChecker(pa.model, [stmt1])
+    mc = PysbModelChecker(pa.model, [stmt1])
     results = mc.check_model()
     assert len(results) == 1
     path_result = results[0][1]
@@ -552,7 +552,7 @@ def test_check_activation_grounded():
     pa = PysbAssembler()
     pa.add_statements([stmt2])
     pa.make_model(policies='one_step')
-    mc = ModelChecker(pa.model, [stmt1])
+    mc = PysbModelChecker(pa.model, [stmt1])
     results = mc.check_model()
     assert len(results) == 1
     path_result = results[0][1]
@@ -584,7 +584,7 @@ def test_none_phosphorylation_stmt():
         Annotation('Y187', 'Y', 'is_residue'),
         Annotation('Y187', '187', 'is_position'),
     ]
-    mc = ModelChecker(model, stmts)
+    mc = PysbModelChecker(model, stmts)
     results = mc.check_model()
     assert len(results) == 2
     assert isinstance(results[0], tuple)
@@ -626,7 +626,7 @@ def test_phosphorylation_annotations():
         Annotation(('Y187', 'p'), 'phosphorylation', 'is_modification'),
     ]
     B_monomer.site_annotations = B_annot
-    mc = ModelChecker(model, [st1, st2, st3])
+    mc = PysbModelChecker(model, [st1, st2, st3])
     results = mc.check_model()
     assert len(results) == 3
     assert isinstance(results[0], tuple)
@@ -673,7 +673,7 @@ def test_activation_annotations():
         Annotation(('Y187', 'p'), 'phosphorylation', 'is_modification'),
     ]
     B_monomer.site_annotations = B_annot
-    mc = ModelChecker(model, [st1, st2, st3])
+    mc = PysbModelChecker(model, [st1, st2, st3])
     results = mc.check_model()
     assert len(results) == 3
     assert isinstance(results[0], tuple)
@@ -711,7 +711,7 @@ def test_multitype_path():
                 Activation(egfr, kras, 'gtpbound'),
                 Activation(egfr, braf, 'kinase')
             ]
-        mc = ModelChecker(pa.model, stmts_to_check)
+        mc = PysbModelChecker(pa.model, stmts_to_check)
         results = mc.check_model()
         assert len(results) == len(stmts_to_check)
         assert isinstance(results[0], tuple)
@@ -761,7 +761,7 @@ def test_grounded_modified_enzyme():
     pa = PysbAssembler()
     pa.add_statements([stmt_to_model])
     pa.make_model(policies='one_step')
-    mc = ModelChecker(pa.model, [stmt_to_check])
+    mc = PysbModelChecker(pa.model, [stmt_to_check])
     results = mc.check_model()
     assert len(results) == 1
     assert results[0][0] == stmt_to_check
@@ -777,7 +777,7 @@ def test_check_ubiquitination():
     pysba = PysbAssembler()
     pysba.add_statements([stmt])
     pysba.make_model(policies='one_step')
-    mc = ModelChecker(pysba.model, [stmt])
+    mc = PysbModelChecker(pysba.model, [stmt])
     checks = mc.check_model()
     assert len(checks) == 1
     assert isinstance(checks[0], tuple)
@@ -795,7 +795,7 @@ def test_check_rule_subject1():
     pysba.make_model(policies='one_step')
     # Check against stmt: should not validate ERK phosphorylates ERK
     stmt_to_check = Phosphorylation(erk, erk)
-    mc = ModelChecker(pysba.model, [stmt_to_check])
+    mc = PysbModelChecker(pysba.model, [stmt_to_check])
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
@@ -811,7 +811,7 @@ def test_gef_activation():
     pysba = PysbAssembler()
     pysba.add_statements([gef_stmt])
     pysba.make_model(policies='one_step')
-    mc = ModelChecker(pysba.model, [act_stmt])
+    mc = PysbModelChecker(pysba.model, [act_stmt])
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
@@ -845,7 +845,7 @@ def test_gef_rasgtp():
     pysba = PysbAssembler()
     pysba.add_statements([gef_stmt, rasgtp_stmt])
     pysba.make_model(policies='one_step')
-    mc = ModelChecker(pysba.model, [act_stmt])
+    mc = PysbModelChecker(pysba.model, [act_stmt])
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
@@ -873,7 +873,7 @@ def test_gef_rasgtp_phos():
     pysba = PysbAssembler()
     pysba.add_statements([gef_stmt, rasgtp_stmt, phos])
     pysba.make_model(policies='one_step')
-    mc = ModelChecker(pysba.model, [stmt_to_check])
+    mc = PysbModelChecker(pysba.model, [stmt_to_check])
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
@@ -893,7 +893,7 @@ def test_gap_activation():
     pysba = PysbAssembler()
     pysba.add_statements([gap_stmt])
     pysba.make_model(policies='one_step')
-    mc = ModelChecker(pysba.model, [act_stmt])
+    mc = PysbModelChecker(pysba.model, [act_stmt])
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
@@ -928,7 +928,7 @@ def test_gap_rasgtp():
     pysba = PysbAssembler()
     pysba.add_statements([gap_stmt, rasgtp_stmt])
     pysba.make_model(policies='one_step')
-    mc = ModelChecker(pysba.model, [act_stmt])
+    mc = PysbModelChecker(pysba.model, [act_stmt])
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
@@ -955,7 +955,7 @@ def test_gap_rasgtp_phos():
     pysba = PysbAssembler()
     pysba.add_statements([gap_stmt, rasgtp_stmt, phos])
     pysba.make_model(policies='one_step')
-    mc = ModelChecker(pysba.model, [stmt_to_check])
+    mc = PysbModelChecker(pysba.model, [stmt_to_check])
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
@@ -975,7 +975,7 @@ def test_increase_amount():
     pysba = PysbAssembler()
     pysba.add_statements(stmts)
     pysba.make_model(policies='one_step')
-    mc = ModelChecker(pysba.model, [stmt_to_check])
+    mc = PysbModelChecker(pysba.model, [stmt_to_check])
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
@@ -995,7 +995,7 @@ def test_decrease_amount():
     pysba = PysbAssembler()
     pysba.add_statements(stmts)
     pysba.make_model(policies='one_step')
-    mc = ModelChecker(pysba.model, [stmt_to_check])
+    mc = PysbModelChecker(pysba.model, [stmt_to_check])
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
@@ -1028,7 +1028,7 @@ def test_activate_via_mod():
     pa = PysbAssembler()
     pa.add_statements([st1, st2])
     pa.make_model()
-    mc = ModelChecker(pa.model, [st3])
+    mc = PysbModelChecker(pa.model, [st3])
     checks = mc.check_model()
     # Make sure it checks out to True
     assert checks[0][1].path_found
@@ -1045,7 +1045,7 @@ def test_observables():
     pa = PysbAssembler()
     pa.add_statements([st1, st2])
     pa.make_model()
-    mc = ModelChecker(pa.model, [st1, st3], agent_obs=[erkp])
+    mc = PysbModelChecker(pa.model, [st1, st3], agent_obs=[erkp])
     checks = mc.check_model()
     assert checks[0][1].path_found
     assert checks[1][1].path_found
@@ -1146,7 +1146,7 @@ def test_model_check_data():
     pa = PysbAssembler()
     pa.add_statements([st1, st2, st3, st4])
     pa.make_model(policies='one_step')
-    mc = ModelChecker(pa.model, [stmt_to_check], agent_obs)
+    mc = PysbModelChecker(pa.model, [stmt_to_check], agent_obs)
     results = mc.check_model(max_paths=5)
     # Create observable
     assert len(results) == 1
@@ -1182,7 +1182,7 @@ def test_prune_influence_map():
     pa = PysbAssembler()
     pa.add_statements([st1, st2])
     pa.make_model(policies='one_step')
-    mc = ModelChecker(pa.model, [st1])
+    mc = PysbModelChecker(pa.model, [st1])
     im = mc.get_im()
     remove_im_params(pa.model, im)
     mc.prune_influence_map()
@@ -1215,7 +1215,7 @@ def test_prune_influence_map_subj_obj():
     pa.add_statements([s1, s2, s3])
     model = pa.make_model()
     # Check the model
-    mc = ModelChecker(model, [s4])
+    mc = PysbModelChecker(model, [s4])
     pr_before = mc.check_statement(s4)
     assert pr_before.result_code == 'PATHS_FOUND', pr_before
     # Now prune the influence map
@@ -1231,7 +1231,7 @@ def test_prune_influence_map_degrade_bind():
     pa = PysbAssembler([deg, bind])
     model = pa.make_model()
     # Check the model
-    mc = ModelChecker(model)
+    mc = PysbModelChecker(model)
     mc.prune_influence_map()
     im = mc.get_im()
     assert len(im.edges()) == 3, im.edges()
@@ -1261,7 +1261,7 @@ def test_weighted_sampling1():
     pa.add_statements(stmts)
     pa.make_model(policies='one_step')
     # Make the model checker and prune the influence map
-    mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
+    mc = PysbModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
     mc.prune_influence_map()
     # Seed the random number generator
     np.random.seed(1)
@@ -1279,7 +1279,8 @@ def test_weighted_sampling1():
     assert len(set(path_result.paths)) == 3
     path_ctr = Counter(path_result.paths)
     assert path_ctr[(('BRAF_phosphorylation_JUN_phospho', 1),
-                     ('JUN_phospho_p_obs', 1))] == 46, path_ctr
+                     ('JUN_phospho_p_obs', 1))] == 46, path_ctr[(('BRAF_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))]
     assert path_ctr[(('BRAF_phosphorylation_MAP2K1_phospho', 1),
                      ('MAP2K1_phospho_phosphorylation_JUN_phospho', 1),
                      ('JUN_phospho_p_obs', 1))] == 22, path_ctr
@@ -1316,14 +1317,14 @@ def test_weighted_sampling2():
     # Make the model checker and prune the influence map
     # Setting do_sampling to False should yield the default enumeration
     # behavior
-    mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=False)
+    mc = PysbModelChecker(pa.model, [stmt_to_check], do_sampling=False)
     mc.prune_influence_map()
     results = mc.check_model(max_paths=5)
     path_result = results[0][1]
     assert len(path_result.paths) == 2
     enum_paths = path_result.paths
     # Now, try sampling
-    mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
+    mc = PysbModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
     mc.prune_influence_map()
     results = mc.check_model(max_path_length=5, max_paths=1000)
     assert type(results) == list
@@ -1382,7 +1383,7 @@ def test_weighted_sampling3():
     set_base_initial_condition(pa.model, mapk1_monomer, 50)
     set_base_initial_condition(pa.model, mapk3_monomer, 50)
     # Do sampling
-    mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
+    mc = PysbModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
     mc.prune_influence_map()
     results = mc.check_model(max_path_length=5, max_paths=100)
     assert type(results) == list
@@ -1423,7 +1424,7 @@ def test_amount_vs_activation():
     pa.add_statements(model_stmts)
     pa.make_model(policies='one_step')
     # Do sampling
-    mc = ModelChecker(pa.model, [test_stmt])
+    mc = PysbModelChecker(pa.model, [test_stmt])
     mc.prune_influence_map()
     mc.draw_im('test.pdf')
     results = mc.check_model(max_path_length=1, max_paths=1)
