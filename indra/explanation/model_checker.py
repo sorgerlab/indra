@@ -57,6 +57,7 @@ class PathMetric(object):
                 (self.source_node, self.target_node, self.polarity,
                  self.length))
 
+
 class PathResult(object):
     """Describes results of running the ModelChecker on a single Statement.
 
@@ -119,7 +120,7 @@ class PathResult(object):
             pm_str = str(self.path_metrics)
         else:
             pm_str = ws + ws.join(['%d: %s' % (pm_ix, pm) for pm_ix, pm in
-                                            enumerate(self.path_metrics)])
+                                   enumerate(self.path_metrics)])
 
         def format_path(path, num_spaces=11):
             path_ws = '\n' + (' ' * num_spaces)
@@ -133,10 +134,10 @@ class PathResult(object):
                                      for p_ix, p in enumerate(self.paths)])
 
         return summary.format(path_found=self.path_found,
-                       result_code=self.result_code,
-                       max_paths=self.max_paths,
-                       max_path_length=self.max_path_length,
-                       path_metrics=pm_str, paths=path_str)
+                              result_code=self.result_code,
+                              max_paths=self.max_paths,
+                              max_path_length=self.max_path_length,
+                              path_metrics=pm_str, paths=path_str)
 
     def __repr__(self):
         return str(self)
@@ -147,17 +148,21 @@ class ModelChecker(object):
 
     Parameters
     ----------
-    model : pysb.Model or NetworkX DiGraph or PyBEL.Model
+    model : pysb.Model or networkx.DiGraph or PyBEL.Model
         Depending on the ModelChecker class, can be different type.
     statements : Optional[list[indra.statements.Statement]]
         A list of INDRA Statements to check the model against.
-    """    
-    def __init__(self, model, statements=None):
+    """
+    def __init__(self, model, statements=None, do_sampling=False, seed=None):
         self.model = model
         if statements:
             self.statements = statements
         else:
-            self.statements = []  
+            self.statements = []
+        if seed is not None:
+            np.random.seed(seed)
+        # Whether to do sampling
+        self.do_sampling = do_sampling
         # do we need other parameters here?
 
     def add_statements(self, stmts):
@@ -257,19 +262,27 @@ class ModelChecker(object):
             a path.
         """
         # rewrite find_im_paths
-        source_set, result_code = self.process_subject(subj)
+        input_set, result_code = self.process_subject(subj)
         if result_code:
             return self.make_false_result(result_code,
                                           max_paths, max_path_length)
         graph = self.get_graph()
-        # do sampling?
 
-        #         # -- Do Breadth-First Enumeration --
+        # # -- Route to the path sampling function --
+        # NOTE this is not generic at this point!
+        # if self.do_sampling:
+        #     if not has_pg:
+        #         raise Exception('The paths_graph package could not be '
+        #                         'imported.')
+        #     return self._sample_paths(input_set, obj, target_polarity,
+        #                               max_paths, max_path_length)
+
+        # -- Do Breadth-First Enumeration --
         # Generate the predecessors to our observable and count the paths
         path_lengths = []
         path_metrics = []
         for source, polarity, path_length in \
-                _find_sources(graph, obj, source_set, target_polarity):
+                self._find_sources(graph, obj, input_set, target_polarity):
 
             pm = PathMetric(source, obj, polarity, path_length)
             path_metrics.append(pm)
@@ -289,8 +302,8 @@ class ModelChecker(object):
                                 max_paths, max_path_length)
                 pr.path_metrics = path_metrics
                 # Get the first path
-                path_iter = enumerate(_find_sources_with_paths(
-                                           graph, obj, sources,
+                path_iter = enumerate(self._find_sources_with_paths(
+                                           graph, obj, input_set,
                                            target_polarity))
                 for path_ix, path in path_iter:
                     flipped = _flip(graph, path)
@@ -309,6 +322,170 @@ class ModelChecker(object):
             return PathResult(False, 'NO_PATHS_FOUND',
                               max_paths, max_path_length)
 
+    def _find_sources(self, graph, target, sources, polarity):
+        """Get the subset of source nodes with paths to the target.
+
+        Given a target, a list of sources, and a path polarity, perform a
+        breadth-first search upstream from the target to determine whether
+        any of the queried sources have paths to the target with the
+        appropriate polarity. For efficiency, does not return the full path,
+        but identifies the upstream sources and the length of the path.
+
+        Parameters
+        ----------
+        graph : one of the networkx graph types
+            Graph representing the model.
+        target : str
+            The node (object or rule name) in the graph to start looking
+            upstream for marching sources.
+        sources : list of str
+            The nodes corresponding to the subject or upstream influence being
+            checked.
+        polarity : int
+            Required polarity of the path between source and target.
+
+        Returns
+        -------
+        generator of (source, polarity, path_length)
+            Yields tuples of source node (string), polarity (int) and path
+            length (int). If there are no paths to any of the given source
+            nodes, the generator is empty.
+        """
+        # First, create a list of visited nodes
+        # Adapted from
+        # networkx.algorithms.traversal.breadth_first_search.bfs_edges
+        visited = set([(target, 1)])
+        # Generate list of predecessor nodes with a sign updated according to
+        # the sign of the target node
+        target_tuple = (target, 1)
+        # The queue holds tuples of "parents" (in this case downstream nodes)
+        # and their "children" (in this case their upstream influencers)
+        queue = deque([(target_tuple,
+                        self._get_signed_predecessors(graph, target, 1), 0)])
+        while queue:
+            parent, children, path_length = queue[0]
+            try:
+                # Get the next child in the list
+                (child, sign) = next(children)
+                # Is this child one of the source nodes we're looking for? If
+                # so, yield it along with path length.
+                if (sources is None or child in sources) and sign == polarity:
+                    logger.debug("Found path to %s from %s with desired sign "
+                                 "%s with length %d" %
+                                 (target, child, polarity, path_length+1))
+                    yield (child, sign, path_length+1)
+                # Check this child against the visited list. If we haven't
+                # visited it already (accounting for the path to the node),
+                # then add it to the queue.
+                if (child, sign) not in visited:
+                    visited.add((child, sign))
+                    queue.append(((child, sign),
+                                 self._get_signed_predecessors(
+                                     graph, child, sign), path_length + 1))
+            # Once we've finished iterating over the children of the current
+            # node, pop the node off and go to the next one in the queue
+            except StopIteration:
+                queue.popleft()
+        # There was no path; this will produce an empty generator
+        return
+
+    def _find_sources_with_paths(self, graph, target, sources, polarity):
+        """Get the subset of source nodes with paths to the target.
+
+        Given a target, a list of sources, and a path polarity, perform a
+        breadth-first search upstream from the target to find paths to any of
+        the upstream sources.
+
+        Parameters
+        ----------
+        graph : one of the networkx graph types
+            Graph representing the model.
+        target : str
+            The node (object or rule name) in the graph to start looking
+            upstream for marching sources.
+        sources : list of str
+            The nodes corresponding to the subject or upstream influence being
+            checked.
+        polarity : int
+            Required polarity of the path between source and target.
+
+        Returns
+        -------
+        generator of path
+            Yields paths as lists of nodes (agent or rule names).  If there are
+            no paths to any of the given source nodes, the generator is empty.
+        """
+        # First, create a list of visited nodes
+        # Adapted from
+        # http://stackoverflow.com/questions/8922060/
+        #                       how-to-trace-the-path-in-a-breadth-first-search
+        # FIXME: the sign information for the target should be associated with
+        # the observable itself
+        queue = deque([[(target, 1)]])
+        while queue:
+            # Get the first path in the queue
+            path = queue.popleft()
+            node, node_sign = path[-1]
+            # If there's only one node in the path, it's the observable we're
+            # starting from, so the path is positive
+            # if len(path) == 1:
+            #    sign = 1
+            # Because the path runs from target back to source, we have to
+            # reverse the path to calculate the overall polarity
+            # else:
+            #    sign = _path_polarity(graph, reversed(path))
+            # Don't allow trivial paths consisting only of the target node
+            if (sources is None or node in sources) and node_sign == polarity \
+                    and len(path) > 1:
+                logger.debug('Found path: %s' % str(_flip(graph, path)))
+                yield tuple(path)
+            for predecessor, sign in self._get_signed_predecessors(
+                    graph, node, node_sign):
+                # Only add predecessors to the path if it's not already in the
+                # path--prevents loops
+                if (predecessor, sign) in path:
+                    continue
+                # Otherwise, the new path is a copy of the old one plus the new
+                # predecessor
+                new_path = list(path)
+                new_path.append((predecessor, sign))
+                queue.append(new_path)
+        return
+
+    def _get_signed_predecessors(self, graph, node, polarity):
+        """Get upstream nodes in the graph.
+
+        Return the upstream nodes along with the overall polarity of the path
+        to that node by account for the polarity of the path to the given node
+        and the polarity of the edge between the given node and its immediate
+        predecessors.
+
+        Parameters
+        ----------
+        graph : one of the networkx graph types
+            Graph representing the model.
+        node : str
+            The node (agent or rule name) in the graph to get predecessors
+            (upstream nodes) for.
+        polarity : int
+            Polarity of the overall path to the given node.
+
+
+        Returns
+        -------
+        generator of tuples, (node, polarity)
+            Each tuple returned contains two elements, a node (string) and the
+            polarity of the overall path (int) to that node.
+        """
+        signed_pred_list = []
+        for pred in graph.predecessors(node):
+            pred_edge = (pred, node)
+            yield (pred, self._get_edge_sign(graph, pred_edge) * polarity)
+
+    def _get_edge_sign(im, edge):
+        """Get the polarity of the influence by examining the edge sign."""
+        raise NotImplementedError("Method must be implemented in child class.")
+
     def make_false_result(self, result_code, max_paths, max_path_length):
         return PathResult(False, result_code, max_paths, max_path_length)
 
@@ -316,8 +493,8 @@ class ModelChecker(object):
         """
         Return a graph to run the path finding algorithm. Depending on the
         model, different child classes can return different objects, e.g.
-        PysbModelChecker.get_graph() should call self.get_im() method, while graph
-        based ModelChecker classes will return self.model.
+        PysbModelChecker.get_graph() should call self.get_im() method, while
+        graph based ModelChecker classes will return self.model.
         """
         raise NotImplementedError("Method must be implemented in child class.")
 
@@ -359,6 +536,10 @@ class ModelChecker(object):
         """
         raise NotImplementedError("Method must be implemented in child class.")
 
+    def _sample_paths(self, input_set, obj_name, target_polarity,
+                      max_paths=1, max_path_length=5):
+        raise NotImplementedError("Method must be implemented in child class.")
+
 
 class PysbModelChecker(ModelChecker):
     """Check a PySB model against a set of INDRA statements.
@@ -380,15 +561,11 @@ class PysbModelChecker(ModelChecker):
 
     def __init__(self, model, statements=None, agent_obs=None,
                  do_sampling=False, seed=None):
-        super().__init__(model, statements)
+        super().__init__(model, statements, do_sampling, seed)
         if agent_obs:
             self.agent_obs = agent_obs
         else:
             self.agent_obs = []
-        if seed is not None:
-            np.random.seed(seed)
-        # Whether to do sampling
-        self.do_sampling = do_sampling
         # Influence map
         self._im = None
         # Map from statements to associated observables
@@ -585,82 +762,6 @@ class PysbModelChecker(ModelChecker):
                 return (None, 'INPUT_RULES_NOT_FOUND')
         return input_rule_set, None
 
-    # def check_statement(self, stmt, max_paths=1, max_path_length=5):
-    #     # After reimplementing remove the method from child class
-    #     """Check a single Statement against the model.
-
-    #     Parameters
-    #     ----------
-    #     stmt : indra.statements.Statement
-    #         The Statement to check.
-    #     max_paths : Optional[int]
-    #         The maximum number of specific paths to return for each Statement
-    #         to be explained. Default: 1
-    #     max_path_length : Optional[int]
-    #         The maximum length of specific paths to return. Default: 5
-
-    #     Returns
-    #     -------
-    #     boolean
-    #         True if the model satisfies the Statement.
-    #     """
-    #     # Make sure the influence map is initialized
-    #     self.get_im()
-    #     # Check if this is one of the statement types that we can check
-    #     if not isinstance(stmt, (Modification, RegulateAmount,
-    #                              RegulateActivity, Influence)):
-    #         logger.info('Statement type %s not handled' %
-    #                     stmt.__class__.__name__)
-    #         return PathResult(False, 'STATEMENT_TYPE_NOT_HANDLED',
-    #                           max_paths, max_path_length)
-    #     # Get the polarity for the statement
-    #     if isinstance(stmt, Modification):
-    #         target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
-    #     elif isinstance(stmt, RegulateActivity):
-    #         target_polarity = 1 if stmt.is_activation else -1
-    #     elif isinstance(stmt, RegulateAmount):
-    #         target_polarity = -1 if isinstance(stmt, DecreaseAmount) else 1
-    #     elif isinstance(stmt, Influence):
-    #         target_polarity = -1 if stmt.overall_polarity() == -1 else 1
-    #     # Get the subject and object (works also for Modifications)
-    #     subj, obj = stmt.agent_list()
-    #     # Get a list of monomer patterns matching the subject FIXME Currently
-    #     # this will match rules with the corresponding monomer pattern on it.
-    #     # In future, this statement should (possibly) also match rules in which
-    #     # 1) the agent is in its active form, or 2) the agent is tagged as the
-    #     # enzyme in a rule of the appropriate activity (e.g., a phosphorylation
-    #     # rule) FIXME
-    #     if subj is not None:
-    #         subj_mps = list(pa.grounded_monomer_patterns(self.model, subj,
-    #                                                 ignore_activities=True))
-    #         if not subj_mps:
-    #             return PathResult(False, 'SUBJECT_MONOMERS_NOT_FOUND',
-    #                               max_paths, max_path_length)
-    #     else:
-    #         subj_mps = [None]
-    #     # Observables may not be found for an activation since there may be no
-    #     # rule in the model activating the object, and the object may not have
-    #     # an "active" site of the appropriate type
-    #     obs_names = self.stmt_to_obs[stmt]
-    #     if not obs_names:
-    #         logger.info("No observables for stmt %s, returning False" % stmt)
-    #         return PathResult(False, 'OBSERVABLES_NOT_FOUND',
-    #                           max_paths, max_path_length)
-    #     for subj_mp, obs_name in itertools.product(subj_mps, obs_names):
-    #         # NOTE: Returns on the path found for the first enz_mp/obs combo
-    #         result = self._find_im_paths(subj_mp, obs_name, target_polarity,
-    #                                      max_paths, max_path_length)
-    #         # If a path was found, then we return it; otherwise, that means
-    #         # there was no path for this observable, so we have to try the next
-    #         # one
-    #         if result.path_found:
-    #             logger.info('Found paths for %s' % stmt)
-    #             return result
-    #     # If we got here, then there was no path for any observable
-    #     logger.info('No paths found for %s' % stmt)
-    #     return PathResult(False, 'NO_PATHS_FOUND',
-    #                       max_paths, max_path_length)
-
     def _get_input_rules(self, subj_mp):
         if subj_mp is None:
             raise ValueError("Cannot take None as an argument for subj_mp.")
@@ -684,15 +785,34 @@ class PysbModelChecker(ModelChecker):
                      len(input_rule_set))
         return input_rule_set
 
+    def _get_edge_sign(self, im, edge):
+        """Get the polarity of the influence by examining the edge sign."""
+        edge_data = im[edge[0]][edge[1]]
+        # Handle possible multiple edges between nodes
+        signs = list(set([v['sign'] for v in edge_data.values()
+                          if v.get('sign')]))
+        if len(signs) > 1:
+            logger.warning("Edge %s has conflicting polarities; choosing "
+                           "positive polarity by default" % str(edge))
+            sign = 1
+        else:
+            sign = signs[0]
+        if sign is None:
+            raise Exception('No sign attribute for edge.')
+        elif abs(sign) == 1:
+            return sign
+        else:
+            raise Exception('Unexpected edge sign: %s' % edge.attr['sign'])
+
     def _sample_paths(self, input_rule_set, obs_name, target_polarity,
                       max_paths=1, max_path_length=5):
         if max_paths == 0:
             raise ValueError("max_paths cannot be 0 for path sampling.")
         # Convert path polarity representation from 0/1 to 1/-1
+
         def convert_polarities(path_list):
-            return [tuple((n[0], 0 if n[1] > 0 else 1)
-                          for n in path)
-                          for path in path_list]
+            return [tuple((n[0], 0 if n[1] > 0 else 1) for n in path)
+                    for path in path_list]
 
         pg_polarity = 0 if target_polarity > 0 else 1
         nx_graph = _im_to_signed_digraph(self.get_im())
@@ -714,7 +834,8 @@ class PysbModelChecker(ModelChecker):
         combined_pg = pg.CombinedCFPG(pg_list)
         # Make sure the combined paths graph is not empty
         if not combined_pg.graph:
-            pr = PathResult(False, 'NO_PATHS_FOUND', max_paths, max_path_length)
+            pr = PathResult(
+                False, 'NO_PATHS_FOUND', max_paths, max_path_length)
             pr.path_metrics = None
             pr.paths = []
             return pr
@@ -789,95 +910,6 @@ class PysbModelChecker(ModelChecker):
             pr.path_metrics = None
             pr.paths = []
         return pr
-
-    # def _find_im_paths(self, subj_mp, obs_name, target_polarity,
-    #                    max_paths=1, max_path_length=5):
-    #     """Check for a source/target path in the influence map.
-
-    #     Parameters
-    #     ----------
-    #     subj_mp : pysb.MonomerPattern
-    #         MonomerPattern corresponding to the subject of the Statement
-    #         being checked.
-    #     obs_name : str
-    #         Name of the PySB model Observable corresponding to the
-    #         object/target of the Statement being checked.
-    #     target_polarity : int
-    #         Whether the influence in the Statement is positive (1) or negative
-    #         (-1).
-
-    #     Returns
-    #     -------
-    #     PathResult
-    #         PathResult object indicating the results of the attempt to find
-    #         a path.
-    #     """
-    #     logger.info(('Running path finding with max_paths=%d,'
-    #                  ' max_path_length=%d') % (max_paths, max_path_length))
-    #     # Find rules in the model corresponding to the input
-    #     if subj_mp is None:
-    #         input_rule_set = None
-    #     else:
-    #         input_rule_set = self._get_input_rules(subj_mp)
-    #         if not input_rule_set:
-    #             logger.info('Input rules not found for %s' % subj_mp)
-    #             return PathResult(False, 'INPUT_RULES_NOT_FOUND',
-    #                               max_paths, max_path_length)
-    #     logger.info('Checking path metrics between %s and %s with polarity %s' %
-    #                 (subj_mp, obs_name, target_polarity))
-
-    #     # -- Route to the path sampling function --
-    #     if self.do_sampling:
-    #         if not has_pg:
-    #             raise Exception('The paths_graph package could not be '
-    #                             'imported.')
-    #         return self._sample_paths(input_rule_set, obs_name, target_polarity,
-    #                            max_paths, max_path_length)
-
-    #     # -- Do Breadth-First Enumeration --
-    #     # Generate the predecessors to our observable and count the paths
-    #     path_lengths = []
-    #     path_metrics = []
-    #     for source, polarity, path_length in \
-    #                 _find_sources(self.get_im(), obs_name, input_rule_set,
-    #                               target_polarity):
-
-    #         pm = PathMetric(source, obs_name, polarity, path_length)
-    #         path_metrics.append(pm)
-    #         path_lengths.append(path_length)
-    #     logger.info('Finding paths between %s and %s with polarity %s' %
-    #                 (subj_mp, obs_name, target_polarity))
-    #     # Now, look for paths
-    #     paths = []
-    #     if path_metrics and max_paths == 0:
-    #         pr = PathResult(True, 'MAX_PATHS_ZERO',
-    #                         max_paths, max_path_length)
-    #         pr.path_metrics = path_metrics
-    #         return pr
-    #     elif path_metrics:
-    #         if min(path_lengths) <= max_path_length:
-    #             pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)
-    #             pr.path_metrics = path_metrics
-    #             # Get the first path
-    #             path_iter = enumerate(_find_sources_with_paths(
-    #                                        self.get_im(), obs_name,
-    #                                        input_rule_set, target_polarity))
-    #             for path_ix, path in path_iter:
-    #                 flipped = _flip(self.get_im(), path)
-    #                 pr.add_path(flipped)
-    #                 if len(pr.paths) >= max_paths:
-    #                     break
-    #             return pr
-    #         # There are no paths shorter than the max path length, so we
-    #         # don't bother trying to get them
-    #         else:
-    #             pr = PathResult(True, 'MAX_PATH_LENGTH_EXCEEDED',
-    #                             max_paths, max_path_length)
-    #             pr.path_metrics = path_metrics
-    #             return pr
-    #     else:
-    #         return PathResult(False, 'NO_PATHS_FOUND',
-    #                           max_paths, max_path_length)
 
     def score_paths(self, paths, agents_values, loss_of_function=False,
                     sigma=0.15, include_final_node=False):
@@ -1133,68 +1165,6 @@ def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
         pred = _sample_pred(im, target, rule_obs_dict, obs_model)
         preds.append(pred[0])
 
-def _find_sources_with_paths(im, target, sources, polarity):
-    """Get the subset of source nodes with paths to the target.
-
-    Given a target, a list of sources, and a path polarity, perform a
-    breadth-first search upstream from the target to find paths to any of the
-    upstream sources.
-
-    Parameters
-    ----------
-    im : networkx.MultiDiGraph
-        Graph containing the influence map.
-    target : str
-        The node (rule name) in the influence map to start looking upstream for
-        marching sources.
-    sources : list of str
-        The nodes (rules) corresponding to the subject or upstream influence
-        being checked.
-    polarity : int
-        Required polarity of the path between source and target.
-
-    Returns
-    -------
-    generator of path
-        Yields paths as lists of nodes (rule names).  If there are no paths
-        to any of the given source nodes, the generator is empty.
-    """
-    # First, create a list of visited nodes
-    # Adapted from
-    # http://stackoverflow.com/questions/8922060/
-    #                       how-to-trace-the-path-in-a-breadth-first-search
-    # FIXME: the sign information for the target should be associated with
-    # the observable itself
-    queue = deque([[(target, 1)]])
-    while queue:
-        # Get the first path in the queue
-        path = queue.popleft()
-        node, node_sign = path[-1]
-        # If there's only one node in the path, it's the observable we're
-        # starting from, so the path is positive
-        # if len(path) == 1:
-        #    sign = 1
-        # Because the path runs from target back to source, we have to reverse
-        # the path to calculate the overall polarity
-        #else:
-        #    sign = _path_polarity(im, reversed(path))
-        # Don't allow trivial paths consisting only of the target observable
-        if (sources is None or node in sources) and node_sign == polarity \
-           and len(path) > 1:
-            logger.debug('Found path: %s' % str(_flip(im, path)))
-            yield tuple(path)
-        for predecessor, sign in _get_signed_predecessors(im, node, node_sign):
-            # Only add predecessors to the path if it's not already in the
-            # path--prevents loops
-            if (predecessor, sign) in path:
-                continue
-            # Otherwise, the new path is a copy of the old one plus the new
-            # predecessor
-            new_path = list(path)
-            new_path.append((predecessor, sign))
-            queue.append(new_path)
-    return
-
 
 def remove_im_params(model, im):
     """Remove parameter nodes from the influence map.
@@ -1218,123 +1188,6 @@ def remove_im_params(model, im):
             im.remove_node(param.name)
         except:
             pass
-
-def _find_sources(im, target, sources, polarity):
-    """Get the subset of source nodes with paths to the target.
-
-    Given a target, a list of sources, and a path polarity, perform a
-    breadth-first search upstream from the target to determine whether any of
-    the queried sources have paths to the target with the appropriate polarity.
-    For efficiency, does not return the full path, but identifies the upstream
-    sources and the length of the path.
-
-    Parameters
-    ----------
-    im : networkx.MultiDiGraph
-        Graph containing the influence map.
-    target : str
-        The node (rule name) in the influence map to start looking upstream for
-        marching sources.
-    sources : list of str
-        The nodes (rules) corresponding to the subject or upstream influence
-        being checked.
-    polarity : int
-        Required polarity of the path between source and target.
-
-    Returns
-    -------
-    generator of (source, polarity, path_length)
-        Yields tuples of source node (string), polarity (int) and path length
-        (int). If there are no paths to any of the given source nodes, the
-        generator isignempty.
-    """
-    # First, create a list of visited nodes
-    # Adapted from
-    # networkx.algorithms.traversal.breadth_first_search.bfs_edges
-    visited = set([(target, 1)])
-    # Generate list of predecessor nodes with a sign updated according to the
-    # sign of the target node
-    target_tuple = (target, 1)
-    # The queue holds tuples of "parents" (in this case downstream nodes) and
-    # their "children" (in this case their upstream influencers)
-    queue = deque([(target_tuple, _get_signed_predecessors(im, target, 1), 0)])
-    while queue:
-        parent, children, path_length = queue[0]
-        try:
-            # Get the next child in the list
-            (child, sign) = next(children)
-            # Is this child one of the source nodes we're looking for? If so,
-            # yield it along with path length.
-            if (sources is None or child in sources) and sign == polarity:
-                logger.debug("Found path to %s from %s with desired sign %s "
-                             "with length %d" %
-                             (target, child, polarity, path_length+1))
-                yield (child, sign, path_length+1)
-            # Check this child against the visited list. If we haven't visited
-            # it already (accounting for the path to the node), then add it
-            # to the queue.
-            if (child, sign) not in visited:
-                visited.add((child, sign))
-                queue.append(((child, sign),
-                              _get_signed_predecessors(im, child, sign),
-                              path_length + 1))
-        # Once we've finished iterating over the children of the current node,
-        # pop the node off and go to the next one in the queue
-        except StopIteration:
-            queue.popleft()
-    # There was no path; this will produce an empty generator
-    return
-
-
-def _get_signed_predecessors(im, node, polarity):
-    """Get upstream nodes in the influence map.
-
-    Return the upstream nodes along with the overall polarity of the path
-    to that node by account for the polarity of the path to the given node
-    and the polarity of the edge between the given node and its immediate
-    predecessors.
-
-    Parameters
-    ----------
-    im : networkx.MultiDiGraph
-        Graph containing the influence map.
-    node : str
-        The node (rule name) in the influence map to get predecessors (upstream
-        nodes) for.
-    polarity : int
-        Polarity of the overall path to the given node.
-
-
-    Returns
-    -------
-    generator of tuples, (node, polarity)
-        Each tuple returned contains two elements, a node (string) and the
-        polarity of the overall path (int) to that node.
-    """
-    signed_pred_list = []
-    for pred in im.predecessors(node):
-        pred_edge = (pred, node)
-        yield (pred, _get_edge_sign(im, pred_edge) * polarity)
-
-
-def _get_edge_sign(im, edge):
-    """Get the polarity of the influence by examining the edge sign."""
-    edge_data = im[edge[0]][edge[1]]
-    # Handle possible multiple edges between nodes
-    signs = list(set([v['sign'] for v in edge_data.values()
-                                  if v.get('sign')]))
-    if len(signs) > 1:
-        logger.warning("Edge %s has conflicting polarities; choosing "
-                       "positive polarity by default" % str(edge))
-        sign = 1
-    else:
-        sign = signs[0]
-    if sign is None:
-        raise Exception('No sign attribute for edge.')
-    elif abs(sign) == 1:
-        return sign
-    else:
-        raise Exception('Unexpected edge sign: %s' % edge.attr['sign'])
 
 
 def _add_modification_to_agent(agent, mod_type, residue, position):
