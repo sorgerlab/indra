@@ -637,8 +637,8 @@ class PysbModelChecker(ModelChecker):
         def add_obs_for_agent(agent):
             obj_mps = list(pa.grounded_monomer_patterns(self.model, agent))
             if not obj_mps:
-                logger.debug('No monomer patterns found in model for agent %s, '
-                            'skipping' % agent)
+                logger.debug('No monomer patterns found in model for agent %s,'
+                             ' skipping' % agent)
                 return
             obs_list = []
             for obj_mp in obj_mps:
@@ -662,9 +662,8 @@ class PysbModelChecker(ModelChecker):
                 if isinstance(stmt, RemoveModification):
                     mod_condition_name = modtype_to_inverse[mod_condition_name]
                 # Add modification to substrate agent
-                modified_sub = _add_modification_to_agent(stmt.sub,
-                                    mod_condition_name, stmt.residue,
-                                    stmt.position)
+                modified_sub = _add_modification_to_agent(
+                    stmt.sub, mod_condition_name, stmt.residue, stmt.position)
                 obs_list = add_obs_for_agent(modified_sub)
                 # Associate this statement with this observable
                 self.stmt_to_obs[stmt] = obs_list
@@ -689,7 +688,7 @@ class PysbModelChecker(ModelChecker):
 
         logger.info("Generating influence map")
         self._im = self.generate_im(self.model)
-        #self._im.is_multigraph = lambda: False
+        # self._im.is_multigraph = lambda: False
         # Now, for every rule in the model, check if there are any observables
         # downstream; alternatively, for every observable in the model, get a
         # list of rules.
@@ -772,7 +771,7 @@ class PysbModelChecker(ModelChecker):
         # subject (i.e., don't pick up upstream rules where the subject
         # is itself a substrate/object)
         # FIXME: Note that this will eliminate rules where the subject
-        # being checked is included on the left hand side as 
+        # being checked is included on the left hand side as
         # a bound condition rather than as an enzyme.
         subj_rules = pa.rules_with_annotation(self.model,
                                               subj_mp.monomer.name,
@@ -906,7 +905,8 @@ class PysbModelChecker(ModelChecker):
             pr.paths = [p[1:] for p in pr.paths]
         else:
             assert False
-            pr = PathResult(False, 'NO_PATHS_FOUND', max_paths, max_path_length)
+            pr = PathResult(
+                False, 'NO_PATHS_FOUND', max_paths, max_path_length)
             pr.path_metrics = None
             pr.paths = []
         return pr
@@ -987,7 +987,7 @@ class PysbModelChecker(ModelChecker):
                                 (prob_correct))
                     path_score += prob_correct
             # Normalized path
-            #path_score = path_score / len(path)
+            # path_score = path_score / len(path)
             logger.info("Path score: %s" % path_score)
             path_scores.append(path_score)
         path_tuples = list(zip(paths, path_scores))
@@ -1131,6 +1131,7 @@ def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
             obs_dict[obs] = val
 
     sigma = 0.2
+
     def obs_model(x):
         return scipy.stats.norm(x, sigma)
 
@@ -1295,6 +1296,7 @@ def find_consumption_rules(cp, rules):
     return cons_rules
 """
 
+
 def _flip(im, path):
     # Reverse the path and the polarities associated with each node
     rev = tuple(reversed(path))
@@ -1313,16 +1315,16 @@ def _path_with_polarities(im, path):
         edge = (from_rule, to_rule)
         edge_polarities.append(_get_edge_sign(im, edge))
     # Compute and return the overall path polarity
-    #path_polarity = np.prod(edge_polarities)
+    # path_polarity = np.prod(edge_polarities)
     # Calculate left product of edge polarities return
     polarities_lprod = [1]
     for ep_ix, ep in enumerate(edge_polarities):
         polarities_lprod.append(polarities_lprod[-1] * ep)
     assert len(path) == len(polarities_lprod)
     return tuple(zip([node for node, sign in path], polarities_lprod))
-    #assert path_polarity == 1 or path_polarity == -1
-    #return True if path_polarity == 1 else False
-    #return path_polarity
+    # assert path_polarity == 1 or path_polarity == -1
+    # return True if path_polarity == 1 else False
+    # return path_polarity
 
 
 def stmt_from_rule(rule_name, model, stmts):
