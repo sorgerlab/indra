@@ -1,14 +1,8 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import re
-import sys
 import logging
 import itertools
 import collections
-try:
-    from functools import lru_cache
-except ImportError:
-    from functools32 import lru_cache
+from functools import lru_cache
 
 from indra.java_vm import autoclass, JavaException, cast
 from indra.databases import hgnc_client, uniprot_client, chebi_client
@@ -81,7 +75,6 @@ class BiopaxProcessor(object):
         # we effectively keep only one Statement with a given deep hash
         self.statements = list({stmt.get_hash(shallow=False, refresh=True): stmt
                                 for stmt in self.statements}.values())
-
 
     def get_complexes(self):
         """Extract INDRA Complex Statements from the BioPAX model.
@@ -665,8 +658,8 @@ class BiopaxProcessor(object):
         for r in res_array:
             controller_pe = r[p.indexOf('controller PE')]
             input_pe = r[p.indexOf('input PE')]
-            input_spe = r[p.indexOf('input simple PE')]
-            output_spe = r[p.indexOf('output simple PE')]
+            input_spe = to_impl(r[p.indexOf('input simple PE')])
+            output_spe = to_impl(r[p.indexOf('output simple PE')])
             reaction = r[p.indexOf('Conversion')]
             control = r[p.indexOf('Control')]
 
@@ -693,7 +686,7 @@ class BiopaxProcessor(object):
             '''
             subs = BiopaxProcessor._get_agents_from_entity(input_spe,
                                                            expand_pe=False)
- 
+            control = to_impl(control)
             ev = self._get_evidence(control)
             for enz, sub in itertools.product(_listify(enzs), _listify(subs)):
                 # Get the modifications
@@ -840,6 +833,8 @@ class BiopaxProcessor(object):
     def _get_agents_from_entity(bpe, expand_pe=True, expand_er=True):
         # If the entity has members (like a protein family),
         # we iterate over them
+        bpe = to_impl(bpe)
+
         if expand_pe:
             members = bpe.getMemberPhysicalEntity().toArray()
             if members:
@@ -879,6 +874,7 @@ class BiopaxProcessor(object):
         mf_type = mf.getModificationType()
         if mf_type is None:
             return None
+        mf_type = to_impl(mf_type)
         mf_type_terms = mf_type.getTerm().toArray()
         known_mf_type = None
         for t in mf_type_terms:
@@ -901,6 +897,7 @@ class BiopaxProcessor(object):
         # the sequence position.
         mf_pos = mf.getFeatureLocation()
         if mf_pos is not None:
+            mf_pos = to_impl(mf_pos)
             # If it is not a SequenceSite we can't handle it
             if not mf_pos.modelInterface.getName() == \
                 'org.biopax.paxtools.model.level3.SequenceSite':
@@ -1231,6 +1228,8 @@ class BiopaxProcessor(object):
         if not _is_reference(bpe):
             try:
                 er = bpe.getEntityReference()
+                if er is not None:
+                    er = to_impl(er)
             except AttributeError:
                 return None
             return er
@@ -1435,7 +1434,7 @@ def _is_modification_or_activity(feature):
     if not (isinstance(feature, _bp('ModificationFeature')) or
             isinstance(feature, _bpimpl('ModificationFeature'))):
         return None
-    mf_type = feature.getModificationType()
+    mf_type = to_impl(feature.getModificationType())
     if mf_type is None:
         return None
     mf_type_terms = mf_type.getTerm().toArray()
@@ -1596,6 +1595,17 @@ def get_specific_chebi_id(chebi_ids, name):
     # the most specific one based on the hierarchy
     specific_chebi_id = chebi_client.get_specific_id(non_generic_ids)
     return specific_chebi_id
+
+
+def to_impl(x):
+    """Return an Impl instance casted version the given biopax object."""
+    if x is None:
+        return None
+    name = x.__class__.__name__.split('.')[-1]
+    if not name.endswith('Impl'):
+        impl = cast(_bpimpl(name), x)
+        return impl
+    return x
 
 
 # Some BioPAX Pattern classes as shorthand

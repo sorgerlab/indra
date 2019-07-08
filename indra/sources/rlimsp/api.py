@@ -1,4 +1,5 @@
-__all__ = ['process_from_webservice', 'process_from_json_file']
+__all__ = ['process_from_webservice', 'process_from_json_file',
+           'process_from_jsonish_str']
 
 import json
 import logging
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 RLIMSP_URL = ('https://research.bioinformatics.udel.edu/itextmine/api/data/'
-             'rlims/')
+              'rlims/')
 
 
 class RLIMSP_Error(Exception):
@@ -85,4 +86,33 @@ def process_from_json_file(filename, doc_id_type=None):
             json_list.append(json.loads(line))
         rp = RlimspProcessor(json_list, doc_id_type=doc_id_type)
         rp.extract_statements()
+    return rp
+
+
+def process_from_jsonish_str(jsonish_str, doc_id_type=None):
+    """Process RLIMSP extractions from a bulk-download JSON file.
+
+    Parameters
+    ----------
+    jsonish_str : str
+        The contents of one of the not-quite-json files you can find here:
+        https://hershey.dbi.udel.edu/textmining/export
+    doc_id_type : Optional[str]
+        In some cases the RLIMS-P paragraph info doesn't contain 'pmid' or
+        'pmcid' explicitly, instead if contains a 'docId' key. This parameter
+        allows defining what ID type 'docId' sould be interpreted as. Its
+        values should be 'pmid' or 'pmcid' or None if not used.
+
+    Returns
+    -------
+    :py:class:`indra.sources.rlimsp.processor.RlimspProcessor`
+        An RlimspProcessor which contains a list of extracted INDRA Statements
+        in its statements attribute.
+    """
+    lines = jsonish_str.splitlines()
+    json_list = []
+    for line in lines:
+        json_list.append(json.loads(line))
+    rp = RlimspProcessor(json_list, doc_id_type=doc_id_type)
+    rp.extract_statements()
     return rp

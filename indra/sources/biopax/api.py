@@ -1,9 +1,11 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
+__all__ = ['process_pc_neighborhood', 'process_pc_pathsbetween',
+           'process_pc_pathsfromto', 'process_owl', 'process_owl_str',
+           'process_model']
+
 import itertools
-from indra.java_vm import autoclass, JavaException
 from . import pathway_commons_client as pcc
 from .processor import BiopaxProcessor
+
 
 def process_pc_neighborhood(gene_names, neighbor_limit=1,
                             database_filter=None):
@@ -148,7 +150,7 @@ def process_owl(owl_filename):
 
     Parameters
     ----------
-    owl_filename : string
+    owl_filename : str
         The name of the OWL file to process.
 
     Returns
@@ -157,6 +159,25 @@ def process_owl(owl_filename):
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
     model = pcc.owl_to_model(owl_filename)
+    if model is None:
+        return None
+    return process_model(model)
+
+
+def process_owl_str(owl_str):
+    """Returns a BiopaxProcessor for a BioPAX OWL file.
+
+    Parameters
+    ----------
+    owl_str : str
+        The string content of an OWL file to process.
+
+    Returns
+    -------
+    bp : BiopaxProcessor
+        A BiopaxProcessor containing the obtained BioPAX model in bp.model.
+    """
+    model = pcc.owl_str_to_model(owl_str)
     return process_model(model)
 
 
