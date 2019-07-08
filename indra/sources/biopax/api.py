@@ -150,7 +150,7 @@ def process_owl(owl_filename):
 
     Parameters
     ----------
-    owl_filename : string
+    owl_filename : str
         The name of the OWL file to process.
 
     Returns
@@ -169,8 +169,8 @@ def process_owl_str(owl_str):
 
     Parameters
     ----------
-    owl_str : string
-        The string of an owl file to process.
+    owl_str : str
+        The string content of an OWL file to process.
 
     Returns
     -------
