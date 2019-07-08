@@ -165,7 +165,7 @@ def test_regulate_amount():
 
 @attr('nonpublic')
 def test_get_statements_by_hash():
-    hash_list = [-36028793042562873, -12978096432588272, -12724735151233845]
+    hash_list = [30674674032092136, -22289282229858243, -25056605420392180]
     stmts = dbr.get_statements_by_hash(hash_list)
     print({s.get_hash(shallow=True): s for s in stmts})
     assert len(stmts) == len(hash_list), \
@@ -181,5 +181,5 @@ def test_get_statements_by_hash_no_hash():
 
 @attr('nonpublic')
 def test_curation_submission():
-    dbr.submit_curation(-36028793042562873, 'TEST', 'This is a test.',
+    dbr.submit_curation(32760831642168299, 'TEST', 'This is a test.',
                         'tester', is_test=True)
