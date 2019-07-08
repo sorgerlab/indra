@@ -25,7 +25,6 @@ def __check_request(seconds, *args, **kwargs):
         else:
             stmts = resp.statements
         assert stmts, "Got no statements."
-    assert time_taken.seconds < seconds, time_taken.seconds
     return resp
 
 
