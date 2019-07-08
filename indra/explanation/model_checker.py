@@ -8,9 +8,10 @@ import networkx as nx
 import itertools
 import numpy as np
 import scipy.stats
+import abc
+import kappy
 from copy import deepcopy
 from collections import deque
-import kappy
 from pysb import WILD, export, Observable, ComponentSet
 from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
@@ -1150,7 +1151,35 @@ class PysbModelChecker(ModelChecker):
         return dg
 
 
-class UnsignedDiGraphModelChecker(ModelChecker):
+class DiGraphModelChecker(ModelChecker):
+    """Check a DiGraph against a set of INDRA statements.
+
+    This class implements shared functionality of UnsignedDiGraphModelChecker
+    and SignedDiGraphModelChecker and should not be instantiated directly.
+    """
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def __init__(self):
+        pass
+
+    def get_graph(self):
+        return self.model
+
+    def process_statement(self, stmt):
+        subj, obj = stmt.agent_list()
+        return ([subj], [obj], 1, None)
+
+    def process_subject(self, subj):
+        return [subj], None
+
+    def _sample_paths(self, input_set, obj_name, target_polarity,
+                      max_paths=1, max_path_length=5):
+        # TODO implement sampling
+        pass
+
+
+class UnsignedDiGraphModelChecker(DiGraphModelChecker):
     """Check an unsigned DiGraph against a set of INDRA statements.
 
     Parameters
@@ -1166,25 +1195,50 @@ class UnsignedDiGraphModelChecker(ModelChecker):
         Random seed for sampling (optional, default is None).
     """
     def __init__(self, model, statements=None, do_sampling=False, seed=None):
-        super().__init__(model, statements, do_sampling, seed)
-
-    def get_graph(self):
-        return self.model
-
-    def process_statement(self, stmt):
-        subj, obj = stmt.agent_list()
-        return ([subj], [obj], 1, None)
-
-    def process_subject(self, subj):
-        return [subj], None
+        super(DiGraphModelChecker, self).__init__(
+            model, statements, do_sampling, seed)
 
     def _get_edge_sign(self, graph, edge):
         return 1
 
-    def _sample_paths(self, input_set, obj_name, target_polarity,
-                      max_paths=1, max_path_length=5):
-        # TODO implement sampling
-        pass
+
+class SignedDiGraphModelChecker(DiGraphModelChecker):
+    """Check an unsigned DiGraph against a set of INDRA statements.
+
+    Parameters
+    ----------
+    model : networkx.DiGraph
+        Signed DiGraph to check.
+    statements : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements to check the model against.
+    do_sampling : bool
+        Whether to use breadth-first search or weighted sampling to
+        generate paths. Default is False (breadth-first search).
+    seed : int
+        Random seed for sampling (optional, default is None).
+    """
+    def __init__(self, model, statements=None, do_sampling=False, seed=None):
+        super(DiGraphModelChecker, self).__init__(
+            model, statements, do_sampling, seed)
+
+    def _get_edge_sign(self, graph, edge):
+        """Get the sign of the edge."""
+        edge_data = graph[edge[0]][edge[1]]
+        # Handle possible multiple edges between nodes
+        signs = list(set([v['sign'] for v in edge_data.values()
+                          if v.get('sign')]))
+        if len(signs) > 1:
+            logger.warning("Edge %s has conflicting polarities; choosing "
+                           "positive polarity by default" % str(edge))
+            sign = 1
+        else:
+            sign = signs[0]
+        if sign is None:
+            raise Exception('No sign attribute for edge.')
+        elif abs(sign) == 1:
+            return sign
+        else:
+            raise Exception('Unexpected edge sign: %s' % edge.attr['sign'])
 
 
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
