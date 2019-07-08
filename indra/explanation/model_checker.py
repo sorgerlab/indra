@@ -1166,10 +1166,6 @@ class DiGraphModelChecker(ModelChecker):
     def get_graph(self):
         return self.model
 
-    def process_statement(self, stmt):
-        subj, obj = stmt.agent_list()
-        return ([subj], [obj], 1, None)
-
     def process_subject(self, subj):
         return [subj], None
 
@@ -1200,6 +1196,10 @@ class UnsignedDiGraphModelChecker(DiGraphModelChecker):
 
     def _get_edge_sign(self, graph, edge):
         return 1
+
+    def process_statement(self, stmt):
+        subj, obj = stmt.agent_list()
+        return ([subj], [obj], 1, None)
 
 
 class SignedDiGraphModelChecker(DiGraphModelChecker):
@@ -1239,6 +1239,22 @@ class SignedDiGraphModelChecker(DiGraphModelChecker):
             return sign
         else:
             raise Exception('Unexpected edge sign: %s' % edge.attr['sign'])
+
+    def process_statement(self, stmt):
+        # Get the polarity for the statement
+        if isinstance(stmt, Modification):
+            target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
+        elif isinstance(stmt, RegulateActivity):
+            target_polarity = 1 if stmt.is_activation else -1
+        elif isinstance(stmt, RegulateAmount):
+            target_polarity = -1 if isinstance(stmt, DecreaseAmount) else 1
+        elif isinstance(stmt, Influence):
+            target_polarity = -1 if stmt.overall_polarity() == -1 else 1
+        # If it is a different type of statement, use positive polarity
+        else:
+            target_polarity = 1
+        subj, obj = stmt.agent_list()
+        return ([subj], [obj], target_polarity, None)
 
 
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
