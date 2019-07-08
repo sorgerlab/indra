@@ -52,12 +52,12 @@ def test_null_request():
 
 @attr('nonpublic')
 def test_large_request():
-    __check_request(25, agents=['AKT1'])
+    __check_request(40, agents=['AKT1'])
 
 
 @attr('nonpublic')
 def test_bigger_request():
-    __check_request(30, agents=['MAPK1'])
+    __check_request(60, agents=['MAPK1'])
 
 
 @attr('nonpublic')
