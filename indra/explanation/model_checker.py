@@ -152,6 +152,11 @@ class ModelChecker(object):
         Depending on the ModelChecker class, can be different type.
     statements : Optional[list[indra.statements.Statement]]
         A list of INDRA Statements to check the model against.
+    do_sampling : bool
+        Whether to use breadth-first search or weighted sampling to
+        generate paths. Default is False (breadth-first search).
+    seed : int
+        Random seed for sampling (optional, default is None).
     """
     def __init__(self, model, statements=None, do_sampling=False, seed=None):
         self.model = model
@@ -482,7 +487,7 @@ class ModelChecker(object):
             pred_edge = (pred, node)
             yield (pred, self._get_edge_sign(graph, pred_edge) * polarity)
 
-    def _get_edge_sign(im, edge):
+    def _get_edge_sign(self, graph, edge):
         """Get the polarity of the influence by examining the edge sign."""
         raise NotImplementedError("Method must be implemented in child class.")
 
@@ -1146,8 +1151,22 @@ class PysbModelChecker(ModelChecker):
 
 
 class UnsignedDiGraphModelChecker(ModelChecker):
-    def __init__(self, model, statements=None):
-        super().__init__()
+    """Check an unsigned DiGraph against a set of INDRA statements.
+
+    Parameters
+    ----------
+    model : networkx.DiGraph
+        Unsigned DiGraph to check.
+    statements : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements to check the model against.
+    do_sampling : bool
+        Whether to use breadth-first search or weighted sampling to
+        generate paths. Default is False (breadth-first search).
+    seed : int
+        Random seed for sampling (optional, default is None).
+    """
+    def __init__(self, model, statements=None, do_sampling=False, seed=None):
+        super().__init__(model, statements, do_sampling, seed)
 
     def get_graph(self):
         return self.model
@@ -1158,6 +1177,14 @@ class UnsignedDiGraphModelChecker(ModelChecker):
 
     def process_subject(self, subj):
         return [subj], None
+
+    def _get_edge_sign(self, graph, edge):
+        return 1
+
+    def _sample_paths(self, input_set, obj_name, target_polarity,
+                      max_paths=1, max_path_length=5):
+        # TODO implement sampling
+        pass
 
 
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
