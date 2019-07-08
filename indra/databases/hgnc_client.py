@@ -322,7 +322,8 @@ def _read_hgnc_maps():
             hgnc_names[hgnc_id] = new_name
         # Uniprot
         uniprot_id = row[6]
-        uniprot_ids[hgnc_id] = uniprot_id
+        if uniprot_id:
+            uniprot_ids[hgnc_id] = uniprot_id
         # Entrez
         entrez_id = row[5]
         entrez_ids[hgnc_id] = entrez_id

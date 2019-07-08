@@ -1,22 +1,18 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 import json
 import gzip
 import pickle
 import pandas
 import rdflib
-from indra.util import read_unicode_csv, write_unicode_csv
-
-try:
-    from urllib import urlretrieve
-except ImportError:
-    from urllib.request import urlretrieve
 import logging
 import requests
+from zipfile import ZipFile
+from collections import defaultdict
+from urllib.request import urlretrieve
+from xml.etree import ElementTree as ET
 from indra.util import read_unicode_csv, write_unicode_csv
 from indra.databases import go_client
-from indra.databases import uniprot_client
+from indra.databases import chebi_client, pubchem_client
 from indra.databases.lincs_client import load_lincs_csv
 from indra.preassembler import make_cellular_component_hierarchy as mcch
 from indra.preassembler.make_entity_hierarchy import \
@@ -142,7 +138,11 @@ def update_uniprot_subcell_loc():
     write_unicode_csv(fname, mappings, delimiter='\t')
 
 
-def update_chebi_entries():
+def update_chebi_references():
+    # The reference table contains all the automated mappings from ChEBI
+    # IDs to IDs in other databases, except CAS, which only has manually
+    # curated mappings available in the database_accession table
+    # (see implementation in update_cas_to_chebi).
     logger.info('--Updating ChEBI entries----')
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
         'Flat_file_tab_delimited/reference.tsv.gz'
@@ -163,8 +163,8 @@ def update_chebi_entries():
 
     # Process PubChem mapping to eliminate SID rows and strip CID: prefix
     # If the second column of the row starts with SID:, ignore the row
-    # If the second column of the row starts with CID:, strip out the CID prefix
-    # Otherwise, include the row unchanged
+    # If the second column of the row starts with CID:, strip out the CID
+    # prefix Otherwise, include the row unchanged
     original_rows = read_unicode_csv(fname, '\t')
     new_rows = []
     for original_row in original_rows:
@@ -176,8 +176,48 @@ def update_chebi_entries():
             # Skip SID rows
             continue
         else:
-            # Include other rows unchanges
+            # Include other rows unchanged
             new_rows.append(original_row)
+    write_unicode_csv(fname, new_rows, '\t')
+
+    # In another round of cleanup, we try dealing with duplicate mappings in a
+    # principled way such that many-to-one mappings are allowed but one-to-many
+    # mappings are eliminated
+    original_rows = read_unicode_csv(fname, '\t')
+    chebi_pubchem = defaultdict(list)
+    pubchem_chebi = defaultdict(list)
+    for chebi_id, pc_id in original_rows:
+        chebi_pubchem[chebi_id].append(pc_id)
+        pubchem_chebi[pc_id].append(chebi_id)
+    # Looking for InChIKey matches for duplicates in the ChEBI -> PubChem
+    # direction
+    logger.info('Getting InChiKey matches for duplicates')
+    ik_matches = set()
+    for chebi_id, pc_ids in chebi_pubchem.items():
+        if len(pc_ids) > 1:
+            ck = chebi_client.get_inchi_key(chebi_id)
+            for pc_id in pc_ids:
+                pk = pubchem_client.get_inchi_key(pc_id)
+                if ck == pk:
+                    ik_matches.add((chebi_id, pc_id))
+    # Looking for InChIKey matches for duplicates in the PubChem -> ChEBI
+    # direction
+    for pc_id, chebi_ids in pubchem_chebi.items():
+        if len(chebi_ids) > 1:
+            pk = pubchem_client.get_inchi_key(pc_id)
+            for chebi_id in chebi_ids:
+                ck = chebi_client.get_inchi_key(chebi_id)
+                if ck == pk:
+                    ik_matches.add((chebi_id, pc_id))
+    rows = read_unicode_csv(fname, '\t')
+    header = next(rows)
+    header.append('IK_MATCH')
+    new_rows = [header]
+    for chebi_id, pc_id in rows:
+        if (chebi_id, pc_id) in ik_matches:
+            new_rows.append([chebi_id, pc_id, 'Y'])
+        else:
+            new_rows.append([chebi_id, pc_id, ''])
     write_unicode_csv(fname, new_rows, '\t')
 
     # Save ChEMBL mapping
@@ -187,10 +227,53 @@ def update_chebi_entries():
     df_chembl.sort_values(['COMPOUND_ID', 'REFERENCE_ID'], ascending=True,
                           inplace=True)
     df_chembl.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
-                      header=['CHEBI', 'CHEMBL'], index=False)
+                     header=['CHEBI', 'CHEMBL'], index=False)
 
 
-def update_cas_to_chebi():
+def update_hmdb_chebi_map():
+    logger.info('--Updating HMDB to ChEBI entries----')
+    ns = {'hmdb': 'http://www.hmdb.ca'}
+    url = 'http://www.hmdb.ca/system/downloads/current/hmdb_metabolites.zip'
+    fname = os.path.join(path, 'hmdb_metabolites.zip')
+    logger.info('Downloading %s' % url)
+    #urlretrieve(url, fname)
+    mappings = []
+    with ZipFile(fname) as input_zip:
+        with input_zip.open('hmdb_metabolites.xml') as fh:
+            for event, elem in ET.iterparse(fh, events=('start', 'end')):
+                #print(elem.tag)
+                if event == 'start' and \
+                        elem.tag == '{%s}metabolite' % ns['hmdb']:
+                    hmdb_id = None
+                    chebi_id = None
+                # Important: we only look at accession if there's no HMDB
+                # ID yet, otherwise we pick up secondary accession tags
+                elif event == 'start' and \
+                        elem.tag == '{%s}accession' % ns['hmdb'] and \
+                        not hmdb_id:
+                    hmdb_id = elem.text
+                elif event == 'start' and \
+                        elem.tag == '{%s}chebi_id' % ns['hmdb']:
+                    chebi_id = elem.text
+                elif event == 'end' and \
+                        elem.tag == '{%s}metabolite' % ns['hmdb']:
+                    if hmdb_id and chebi_id:
+                        print(hmdb_id, chebi_id)
+                        mappings.append([hmdb_id, chebi_id])
+                elem.clear()
+    fname = os.path.join(path, 'hmdb_to_chebi.tsv')
+    mappings = [['HMDB_ID', 'CHEBI_ID']] + sorted(mappings, key=lambda x: x[0])
+    write_unicode_csv(fname, mappings, delimiter='\t')
+
+
+def update_chebi_accessions():
+    # The database_accession table contains manually curated mappings
+    # between ChEBI and other databases. It only contains very few mappings
+    # to e.g., PubChem, therefore the main resource for those mappings
+    # is the reference table (see implementation in update_chebi_entries).
+    # The only useful mappings we extract here from the database_accession
+    # table are the ones to CAS which are not available in the reference
+    # table.
     logger.info('--Updating CAS to ChEBI entries----')
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
         'Flat_file_tab_delimited/database_accession.tsv'
@@ -198,58 +281,21 @@ def update_cas_to_chebi():
     urlretrieve(url, fname)
     with open(fname, 'rb') as fh:
         logger.info('Loading %s' % fname)
-        df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
+        df = pandas.read_csv(fh, sep='\t', index_col=None,
+                             dtype=str, na_filter=False)
     fname = os.path.join(path, 'cas_to_chebi.tsv')
     logger.info('Saving into %s' % fname)
     df_cas = df[df['TYPE'] == 'CAS Registry Number']
     df_cas.sort_values(['ACCESSION_NUMBER', 'COMPOUND_ID'], ascending=True,
                        inplace=True)
     # Here we need to map to primary ChEBI IDs
-    with open(os.path.join(path, 'chebi_to_primary.tsv'), 'rb') as fh:
-        df_prim = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
-        mapping = {s: p for s, p in zip(df_prim['Secondary'].tolist(),
-                                        df_prim['Primary'].tolist())}
-    df_cas.COMPOUND_ID.replace(mapping, inplace=True)
+    from indra.databases.chebi_client import chebi_to_primary
+    df_cas.COMPOUND_ID.replace(chebi_to_primary, inplace=True)
     df_cas.drop_duplicates(subset=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                            inplace=True)
     df_cas.to_csv(fname, sep='\t',
                   columns=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                   header=['CAS', 'CHEBI'], index=False)
-
-
-def update_chebi_primary_map_and_names():
-    logger.info('--Updating ChEBI primary map entries and names----')
-    url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
-        'Flat_file_tab_delimited/compounds.tsv.gz'
-    fname = os.path.join(path, 'compounds.tsv.gz')
-    urlretrieve(url, fname)
-    with gzip.open(fname, 'rb') as fh:
-        logger.info('Loading %s' % fname)
-        df_orig = pandas.read_csv(fh, sep='\t', index_col=None,
-                                  parse_dates=True, dtype='str')
-    # This df is still shared
-    df_orig.replace('CHEBI:([0-9]+)', r'\1', inplace=True, regex=True)
-
-    # First we construct mappings to primary accession IDs
-    # This df is specific to parents
-    df = df_orig[df_orig['PARENT_ID'].notna()]
-    df.sort_values(['CHEBI_ACCESSION', 'PARENT_ID'], ascending=True,
-                   inplace=True)
-    df.drop_duplicates(subset=['CHEBI_ACCESSION', 'PARENT_ID'], inplace=True)
-    fname = os.path.join(path, 'chebi_to_primary.tsv')
-    logger.info('Saving into %s' % fname)
-    df.to_csv(fname, sep='\t',
-              columns=['CHEBI_ACCESSION', 'PARENT_ID'], 
-              header=['Secondary', 'Primary'], index=False)
-
-    # Second we get the ID to name mappings
-    df = df_orig[df_orig['NAME'].notna()]
-    df.sort_values(by=['CHEBI_ACCESSION', 'ID'], inplace=True)
-
-    fname = os.path.join(path, 'chebi_names.tsv')
-    logger.info('Saving into %s' % fname)
-    df.to_csv(fname, sep='\t', header=True, index=False,
-              columns=['CHEBI_ACCESSION', 'NAME'])
 
 
 def update_cellular_component_hierarchy():
@@ -336,13 +382,84 @@ def update_bel_chebi_map():
     with open(fname, 'wb') as fh:
         for chebi_name, chebi_id in sorted(name_to_id.items(),
                                            key=lambda x: x[0]):
-            fh.write(('%s\tCHEBI:%s\n' % (chebi_name, chebi_id)).encode('utf-8'))
+            fh.write(('%s\tCHEBI:%s\n' %
+                      (chebi_name, chebi_id)).encode('utf-8'))
+
+
+def _get_chebi_obo_terms():
+    def process_term(term):
+        lines = term.split('\n')[1:]
+        term_id = None
+        parents = []
+        secondaries = []
+        name = None
+        for line in lines:
+            k, v = line.split(': ', maxsplit=1)
+            if k == 'id':
+                term_id = v
+            elif k == 'is_a':
+                parents.append(v)
+            elif k == 'relationship':
+                rel, target = v.split(' ')
+                if rel in ('is_conjugate_acid_of', 'has_functional_parent',
+                           'has_parent_hydride', 'has_role'):
+                    parents.append(target)
+            elif k == 'alt_id':
+                secondaries.append(v)
+            elif k == 'name':
+                name = v
+        return term_id, name, secondaries, parents
+    url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/ontology/chebi_lite.obo'
+    fname = 'chebi_lite.obo'
+    logger.info('Downloading %s' % url)
+    urlretrieve(url, fname)
+    with open(fname, 'r') as fh:
+        logger.info('Loading %s' % fname)
+        content = fh.read()
+    chunks = content.split('\n\n')
+    terms = [c for c in chunks if c.startswith('[Term]')]
+    logger.info('Found %d terms' % len(terms))
+    term_entries = [process_term(term) for term in terms]
+    return term_entries
+
+
+def update_chebi_entries():
+    term_entries = _get_chebi_obo_terms()
+    # Make the name and secondary table
+    fname = os.path.join(path, 'chebi_entries.tsv')
+    rows = [['CHEBI_ID', 'NAME', 'SECONDARIES']]
+    for term_id, name, secondaries, parents in term_entries:
+        rows.append([term_id, name, ','.join(secondaries)])
+    with open(fname, 'wb') as fh:
+        write_unicode_csv(fname, rows, '\t')
+
+
+def make_chebi_hierarchy():
+    term_entries = _get_chebi_obo_terms()
+    terms_with_parents = [(t, p) for t, _, _, p in term_entries if p]
+    g = rdflib.Graph()
+    indra_rn = \
+        rdflib.Namespace('http://sorger.med.harvard.edu/indra/relations/')
+    chebi_ns = rdflib.Namespace('http://identifiers.org/chebi/')
+    isa = indra_rn.term('isa')
+    for child, parents in terms_with_parents:
+        for parent in parents:
+            g.add((chebi_ns.term(child), isa, chebi_ns.term(parent)))
+    return g
 
 
 def update_entity_hierarchy():
     logger.info('--Updating entity hierarchy----')
     fname = os.path.join(path, 'famplex/relations.csv')
-    make_ent_hierarchy(fname)
+    g = make_ent_hierarchy(fname)
+    g_chebi = make_chebi_hierarchy()
+    g += g_chebi
+    gb = g.serialize(format='nt')
+    gb = gb.replace(b'\n\n', b'\n').strip()
+    rows = b'\n'.join(sorted(gb.split(b'\n')))
+    fname = os.path.join(path, 'entity_hierarchy.rdf')
+    with open(fname, 'wb') as fh:
+        fh.write(rows)
 
 
 def update_modification_hierarchy():
@@ -402,7 +519,8 @@ def update_ncit_map():
     df_chebi.replace('ChEBI', 'CHEBI', inplace=True)
 
     # Add the old HGNC mappings
-    df_hgnc_old = pandas.read_csv('ncit_allele_map.tsv', sep='\t',
+    allele_fname = os.path.join(path, 'ncit_allele_map.tsv')
+    df_hgnc_old = pandas.read_csv(allele_fname, sep='\t',
                                   index_col=None, dtype=str)
     df_hgnc = df_hgnc.append(df_hgnc_old)
     df_hgnc.sort_values(['Source Code', 'Target Code'], ascending=True,
@@ -521,8 +639,9 @@ if __name__ == '__main__':
     update_kinases()
     update_uniprot_subcell_loc()
     update_chebi_entries()
-    update_chebi_primary_map_and_names()
-    update_cas_to_chebi()
+    update_chebi_references()
+    update_chebi_accessions()
+    update_hmdb_chebi_map()
     update_bel_chebi_map()
     update_entity_hierarchy()
     update_modification_hierarchy()

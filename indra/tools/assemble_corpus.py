@@ -14,6 +14,7 @@ from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.util import read_unicode_csv
 from indra.mechlinker import MechLinker
+from indra.databases import hgnc_client
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import Preassembler, flatten_evidence
 
@@ -107,11 +108,10 @@ def map_grounding(stmts_in, **kwargs):
     from indra.preassembler.grounding_mapper import \
         default_agent_map as agent_map
     logger.info('Mapping grounding on %d statements...' % len(stmts_in))
-    do_rename = kwargs.get('do_rename')
+    do_rename = kwargs.get('do_rename', True)
     gm = kwargs.get('grounding_map', grounding_map)
-    if do_rename is None:
-        do_rename = True
-    gm = GroundingMapper(gm, agent_map, use_adeft=kwargs.get('use_adeft', True))
+    gm = GroundingMapper(gm, agent_map,
+                         use_adeft=kwargs.get('use_adeft', True))
     stmts_out = gm.map_agents(stmts_in, do_rename=do_rename)
     dump_pkl = kwargs.get('save')
     if dump_pkl:
@@ -841,7 +841,10 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
     filter_list = copy(gene_list)
     if allow_families:
         for hgnc_name in gene_list:
-            gene_uri = hierarchies['entity'].get_uri('HGNC', hgnc_name)
+            hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
+            if not hgnc_id:
+                logger.warning('Could not get HGNC ID for %s.' % hgnc_name)
+            gene_uri = hierarchies['entity'].get_uri('HGNC', hgnc_id)
             parents = hierarchies['entity'].get_parents(gene_uri)
             for par_uri in parents:
                 ns, id = hierarchies['entity'].ns_id_from_uri(par_uri)

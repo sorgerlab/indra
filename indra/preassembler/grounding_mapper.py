@@ -1,16 +1,13 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 import csv
-import sys
 import json
-import pickle
 import logging
 from copy import deepcopy
 from collections import Counter
 from itertools import groupby, chain
 from indra.statements import Agent
-from indra.databases import uniprot_client, hgnc_client
+from indra.databases import uniprot_client, hgnc_client, chebi_client, \
+    mesh_client, go_client
 from indra.util import read_unicode_csv, write_unicode_csv
 
 logger = logging.getLogger(__name__)
@@ -44,9 +41,21 @@ class GroundingMapper(object):
         acronyms. Default: True
     """
     def __init__(self, gm, agent_map=None, use_adeft=True):
+        self.check_grounding_map(gm)
         self.gm = gm
         self.agent_map = agent_map if agent_map is not None else {}
         self.use_adeft = use_adeft
+
+    @staticmethod
+    def check_grounding_map(gm):
+        """Run sanity checks on the grounding map, raise error if needed."""
+        for key, refs in gm.items():
+            if not refs:
+                continue
+            if 'HGNC' in refs and \
+                    hgnc_client.get_hgnc_name(refs['HGNC']) is None:
+                raise ValueError('HGNC:%s for key %s in the grounding map is '
+                                 'not a valid ID' % (refs['HGNC'], key))
 
     def update_agent_db_refs(self, agent, agent_text, do_rename=True):
         """Update db_refs of agent using the grounding map
@@ -79,73 +88,114 @@ class GroundingMapper(object):
             the gene in Uniprot do not match or if there is no associated gene
             name in Uniprot.
         """
+        # First we map the Agent's raw text name to get a db_refs dict
         map_db_refs = deepcopy(self.gm.get(agent_text))
-        self.standardize_agent_db_refs(agent, map_db_refs, do_rename)
+        # We then standardize the IDs in the db_refs dict and set it as the
+        # Agent's db_refs
+        agent.db_refs = self.standardize_db_refs(map_db_refs)
+        # Finally, if renaming is needed we standardize the Agent's name
+        if do_rename:
+            self.standardize_agent_name(agent, standardize_refs=False)
 
     @staticmethod
-    def standardize_agent_db_refs(agent, map_db_refs, do_rename=True):
-        gene_name = None
-        up_id = map_db_refs.get('UP')
-        hgnc_sym = map_db_refs.get('HGNC')
-        if up_id and not hgnc_sym:
+    def standardize_db_refs(db_refs):
+        """Return a standardized db refs dict for a given db refs dict.
+
+        Parameters
+        ----------
+        db_refs : dict
+            A dict of db refs that may not be standardized, i.e., may be
+            missing an available UP ID corresponding to an existing HGNC ID.
+
+        Returns
+        -------
+        dict
+            The db_refs dict with standardized entries.
+        """
+        up_id = db_refs.get('UP')
+        hgnc_id = db_refs.get('HGNC')
+        # If we have a UP ID and no HGNC ID, we try to get a gene name,
+        # and if possible, a HGNC ID from that
+        if up_id and not hgnc_id:
             gene_name = uniprot_client.get_gene_name(up_id, False)
             if gene_name:
                 hgnc_id = hgnc_client.get_hgnc_id(gene_name)
                 if hgnc_id:
-                    map_db_refs['HGNC'] = hgnc_id
-        elif hgnc_sym and not up_id:
-            # Override the HGNC symbol entry from the grounding
-            # map with an HGNC ID
-            hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
-            if hgnc_id:
-                map_db_refs['HGNC'] = hgnc_id
-                # Now get the Uniprot ID for the gene
-                up_id = hgnc_client.get_uniprot_id(hgnc_id)
-                if up_id:
-                    map_db_refs['UP'] = up_id
-            # If there's no HGNC ID for this symbol, raise an
-            # Exception
-            else:
-                raise ValueError('No HGNC ID corresponding to gene '
-                                 'symbol %s in grounding map.' %
-                                 hgnc_sym)
-        # If we have both, check the gene symbol ID against the
-        # mapping from Uniprot
-        elif up_id and hgnc_sym:
-            # Get HGNC Symbol from Uniprot
-            gene_name = uniprot_client.get_gene_name(up_id)
-            if not gene_name:
-                raise ValueError('No gene name found for Uniprot '
-                                 'ID %s (expected %s)' %
-                                 (up_id, hgnc_sym))
-            # We got gene name, compare it to the HGNC name
-            else:
-                if gene_name != hgnc_sym:
-                    raise ValueError('Gene name %s for Uniprot ID '
-                                     '%s does not match HGNC '
-                                     'symbol %s given in grounding '
-                                     'map.' %
-                                     (gene_name, up_id, hgnc_sym))
+                    db_refs['HGNC'] = hgnc_id
+        # Otherwise, if we don't have a UP ID but have an HGNC ID, we try to
+        # get the UP ID
+        elif hgnc_id:
+            # Now get the Uniprot ID for the gene
+            mapped_up_id = hgnc_client.get_uniprot_id(hgnc_id)
+            if mapped_up_id:
+                # If we find an inconsistency, we explain it in an error
+                # message and fall back on the mapped ID
+                if up_id and up_id != mapped_up_id:
+                    # We handle a special case here in which mapped_up_id is
+                    # actually a list of UP IDs that we skip and just keep
+                    # the original up_id
+                    if ', ' not in mapped_up_id:
+                        # If we got a proper single protein mapping, we use
+                        # the mapped_up_id to standardize to.
+                        msg = ('Inconsistent groundings UP:%s not equal to '
+                               'UP:%s mapped from HGNC:%s, standardizing to '
+                               'UP:%s' % (up_id, mapped_up_id, hgnc_id,
+                                          mapped_up_id))
+                        logger.debug(msg)
+                        db_refs['UP'] = mapped_up_id
+                # If there is no conflict, we can update the UP entry
                 else:
-                    hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
-                    if not hgnc_id:
-                        logger.error('No HGNC ID corresponding to gene '
-                                     'symbol %s in grounding map.' % hgnc_sym)
-                    else:
-                        map_db_refs['HGNC'] = hgnc_id
-        # Assign the DB refs from the grounding map to the agent
-        agent.db_refs = map_db_refs
-        # Are we renaming right now?
-        if do_rename:
-            # If there's a FamPlex ID, prefer that for the name
-            if agent.db_refs.get('FPLX'):
-                agent.name = agent.db_refs.get('FPLX')
-            # Get the HGNC symbol or gene name (retrieved above)
-            elif hgnc_sym is not None:
-                agent.name = hgnc_sym
-            elif gene_name is not None:
-                agent.name = gene_name
-        return
+                    db_refs['UP'] = mapped_up_id
+
+        # Now try to improve chemical groundings
+        pc_id = db_refs.get('PUBCHEM')
+        chebi_id = db_refs.get('CHEBI')
+        hmdb_id = db_refs.get('HMDB')
+        mapped_chebi_id = None
+        mapped_pc_id = None
+        hmdb_mapped_chebi_id = None
+        # If we have original PUBCHEM and CHEBI IDs, we always keep those:
+        if pc_id:
+            mapped_chebi_id = chebi_client.get_chebi_id_from_pubchem(pc_id)
+            if mapped_chebi_id and not mapped_chebi_id.startswith('CHEBI:'):
+                mapped_chebi_id = 'CHEBI:%s' % mapped_chebi_id
+        if chebi_id:
+            mapped_pc_id = chebi_client.get_pubchem_id(chebi_id)
+        if hmdb_id:
+            hmdb_mapped_chebi_id = chebi_client.get_chebi_id_from_hmdb(hmdb_id)
+            if hmdb_mapped_chebi_id and \
+                    not hmdb_mapped_chebi_id.startswith('CHEBI:'):
+                hmdb_mapped_chebi_id = 'CHEBI:%s' % hmdb_mapped_chebi_id
+        # We always keep originals if both are present but display warnings
+        # if there are inconsistencies
+        if pc_id and chebi_id and mapped_pc_id and pc_id != mapped_pc_id:
+            msg = ('Inconsistent groundings PUBCHEM:%s not equal to '
+                   'PUBCHEM:%s mapped from %s, standardizing to '
+                   'PUBCHEM:%s.' % (pc_id, mapped_pc_id, chebi_id, pc_id))
+            logger.debug(msg)
+        elif pc_id and chebi_id and mapped_chebi_id and chebi_id != \
+                mapped_chebi_id:
+            msg = ('Inconsistent groundings %s not equal to '
+                   '%s mapped from PUBCHEM:%s, standardizing to '
+                   '%s.' % (chebi_id, mapped_chebi_id, pc_id, chebi_id))
+            logger.debug(msg)
+        # If we have PC and not CHEBI but can map to CHEBI, we do that
+        elif pc_id and not chebi_id and mapped_chebi_id:
+            db_refs['CHEBI'] = mapped_chebi_id
+        elif hmdb_id and chebi_id and hmdb_mapped_chebi_id and \
+                hmdb_mapped_chebi_id != chebi_id:
+            msg = ('Inconsistent groundings %s not equal to '
+                   '%s mapped from %s, standardizing to '
+                   '%s.' % (chebi_id, hmdb_mapped_chebi_id, hmdb_id, chebi_id))
+            logger.debug(msg)
+        elif hmdb_id and not chebi_id and hmdb_mapped_chebi_id:
+            db_refs['CHEBI'] = hmdb_mapped_chebi_id
+        # If we have CHEBI and not PC but can map to PC, we do that
+        elif chebi_id and not pc_id and mapped_pc_id:
+            db_refs['PUBCHEM'] = mapped_pc_id
+        # Otherwise there is no useful mapping that we can add and no
+        # further conflict to resolve.
+        return db_refs
 
     def map_agents_for_stmt(self, stmt, do_rename=True):
         """Return a new Statement whose agents have been grounding mapped.
@@ -173,25 +223,24 @@ class GroundingMapper(object):
         for idx, agent in enumerate(agent_list):
             if agent is None:
                 continue
-            agent_txt = agent.db_refs.get('TEXT')
-            if agent_txt is None:
-                continue
 
             new_agent, maps_to_none = self.map_agent(agent, do_rename)
 
-            # Check if a adeft model exists for agent text
-            if self.use_adeft and agent_txt in adeft_disambiguators:
+            # Skip the entire statement if the agent maps to None in the
+            # grounding map
+            if maps_to_none:
+                return None
+
+            # Check if an adeft model exists for agent text
+            agent_txt = agent.db_refs.get('TEXT')
+            if self.use_adeft and agent_txt and agent_txt in \
+                    adeft_disambiguators:
                 try:
                     run_adeft_disambiguation(mapped_stmt, new_agent, idx)
                 except Exception as e:
                     logger.error('There was an error during Adeft'
-                                 ' disambiguation.')
+                                 ' disambiguation of %s.' % agent_txt)
                     logger.error(e)
-
-            if maps_to_none:
-                # Skip the entire statement if the agent maps to None in the
-                # grounding map
-                return None
 
             # If the old agent had bound conditions, but the new agent does
             # not, copy the bound conditions over
@@ -239,8 +288,18 @@ class GroundingMapper(object):
         maps_to_none : bool
             True if the Agent is in the grounding map and maps to None.
         """
-
+        # We always standardize DB refs as a functionality in the
+        # GroundingMapper. If a new module is implemented which is
+        # responsible for standardizing grounding, this can be removed.
+        agent.db_refs = self.standardize_db_refs(agent.db_refs)
+        # If there is no TEXT available, we can return immediately since we
+        # can't do mapping
         agent_text = agent.db_refs.get('TEXT')
+        if not agent_text:
+            # We still do the name standardization here
+            if do_rename:
+                self.standardize_agent_name(agent, standardize_refs=False)
+            return agent, False
         mapped_to_agent_json = self.agent_map.get(agent_text)
         if mapped_to_agent_json:
             mapped_to_agent = \
@@ -248,22 +307,21 @@ class GroundingMapper(object):
             return mapped_to_agent, False
         # Look this string up in the grounding map
         # If not in the map, leave agent alone and continue
-        if agent_text in self.gm.keys():
+        if agent_text in self.gm:
             map_db_refs = self.gm[agent_text]
-        else:
-            return agent, False
-
-        # If it's in the map but it maps to None, then filter out
-        # this statement by skipping it
-        if map_db_refs is None:
-            # Increase counter if this statement has not already
-            # been skipped via another agent
-            logger.debug("Skipping %s" % agent_text)
-            return None, True
-        # If it has a value that's not None, map it and add it
-        else:
-            # Otherwise, update the agent's db_refs field
-            self.update_agent_db_refs(agent, agent_text, do_rename)
+            # If it's in the map but it maps to None, then filter out
+            # this statement by skipping it
+            if map_db_refs is None:
+                logger.debug("Skipping %s" % agent_text)
+                return None, True
+            # If it has a value that's not None, map it and add it
+            else:
+                self.update_agent_db_refs(agent, agent_text, do_rename)
+        # This happens whene there is an Agent text but it is not in the
+        # grounding map. We still do the name standardization here.
+        if do_rename:
+            self.standardize_agent_name(agent, standardize_refs=False)
+        # Otherwise just return
         return agent, False
 
     def map_agents(self, stmts, do_rename=True):
@@ -299,18 +357,73 @@ class GroundingMapper(object):
         logger.info('%s statements filtered out' % num_skipped)
         return mapped_stmts
 
-    def rename_agents(self, stmts):
+    @staticmethod
+    def standardize_agent_name(agent, standardize_refs=True):
+        """Standardize the name of an Agent based on grounding information.
+
+        If an agent contains a FamPlex grounding, the FamPlex ID is used as a
+        name. Otherwise if it contains a Uniprot ID, an attempt is made to find
+        the associated HGNC gene name. If one can be found it is used as the
+        agent name and the associated HGNC ID is added as an entry to the
+        db_refs. Similarly, CHEBI, MESH and GO IDs are used in this order of
+        priority to assign a standardized name to the Agent. If no relevant
+        IDs are found, the name is not changed.
+
+        Parameters
+        ----------
+        agent : indra.statements.Agent
+            An INDRA Agent whose name attribute should be standardized based
+            on grounding information.
+        standardize_refs : Optional[bool]
+            If True, this function assumes that the Agent's db_refs need to
+            be standardized, e.g., HGNC mapped to UP.
+            Default: True
+        """
+        # We return immediately for None Agents
+        if agent is None:
+            return
+
+        if standardize_refs:
+            agent.db_refs = GroundingMapper.standardize_db_refs(agent.db_refs)
+
+        # We next look for prioritized grounding, if missing, we return
+        db_ns, db_id = agent.get_grounding()
+        if not db_ns or not db_id:
+            return
+
+        # If there's a FamPlex ID, prefer that for the name
+        if db_ns == 'FPLX':
+            agent.name = agent.db_refs['FPLX']
+        # Importantly, HGNC here will be a symbol because that is what
+        # get_grounding returns
+        elif db_ns == 'HGNC':
+            agent.name = hgnc_client.get_hgnc_name(db_id)
+        elif db_ns == 'UP':
+            # Try for the gene name
+            gene_name = uniprot_client.get_gene_name(agent.db_refs['UP'],
+                                                     web_fallback=False)
+            if gene_name:
+                agent.name = gene_name
+        elif db_ns == 'CHEBI':
+            chebi_name = \
+                chebi_client.get_chebi_name_from_id(agent.db_refs['CHEBI'])
+            if chebi_name:
+                agent.name = chebi_name
+        elif db_ns == 'MESH':
+            mesh_name = mesh_client.get_mesh_name(agent.db_refs['MESH'], False)
+            if mesh_name:
+                agent.name = mesh_name
+        elif db_ns == 'GO':
+            go_name = go_client.get_go_label(agent.db_refs['GO'])
+            if go_name:
+                agent.name = go_name
+        return
+
+    @staticmethod
+    def rename_agents(stmts):
         """Return a list of mapped statements with updated agent names.
 
         Creates a new list of statements without modifying the original list.
-
-        The agents in a statement should be renamed if the grounding map has
-        updated their db_refs. If an agent contains a FamPlex grounding, the
-        FamPlex ID is used as a name. Otherwise if it contains a Uniprot ID,
-        an attempt is made to find the associated HGNC gene name. If one can
-        be found it is used as the agent name and the associated HGNC ID is
-        added as an entry to the db_refs. If neither a FamPlex ID or HGNC name
-        can be found, falls back to the original name.
 
         Parameters
         ----------
@@ -328,29 +441,7 @@ class GroundingMapper(object):
         for _, stmt in enumerate(mapped_stmts):
             # Iterate over the agents
             for agent in stmt.agent_list():
-                if agent is None:
-                    continue
-                # If there's a FamPlex ID, prefer that for the name
-                if agent.db_refs.get('FPLX'):
-                    agent.name = agent.db_refs.get('FPLX')
-                # Take a HGNC name from Uniprot next
-                elif agent.db_refs.get('UP'):
-                    # Try for the gene name
-                    gene_name = uniprot_client.get_gene_name(
-                                                    agent.db_refs.get('UP'),
-                                                    web_fallback=False)
-                    if gene_name:
-                        agent.name = gene_name
-                        hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                        if hgnc_id:
-                            agent.db_refs['HGNC'] = hgnc_id
-                    # Take the text string
-                    #if agent.db_refs.get('TEXT'):
-                    #    agent.name = agent.db_refs.get('TEXT')
-                    # If this fails, then we continue with no change
-                # Fall back to the text string
-                #elif agent.db_refs.get('TEXT'):
-                #    agent.name = agent.db_refs.get('TEXT')
+                GroundingMapper.standardize_agent_name(agent, True)
         return mapped_stmts
 
 
@@ -368,6 +459,10 @@ def load_grounding_map(grounding_map_path, ignore_path=None,
 
     Optionally, one can specify another csv file (pointed to by ignore_path)
     containing agent texts that are degenerate and should be filtered out.
+
+    It is important to note that this function assumes that the mapping file
+    entries for the HGNC key are symbols not IDs. These symbols are converted
+    to IDs upon loading here.
 
     Parameters
     ----------
@@ -417,6 +512,22 @@ def load_grounding_map(grounding_map_path, ignore_path=None,
                 g_map[key] = db_refs
             else:
                 g_map[key] = None
+    for key, mapped_refs in deepcopy(g_map).items():
+        if not mapped_refs:
+            continue
+        hgnc_sym = mapped_refs.get('HGNC')
+        if hgnc_sym:
+            hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
+            # Override the HGNC symbol entry from the grounding
+            # map with an HGNC ID
+            if hgnc_id:
+                mapped_refs['HGNC'] = hgnc_id
+            else:
+                logger.error('No HGNC ID corresponding to gene '
+                             'symbol %s in grounding map.' % hgnc_sym)
+                # Remove the HGNC symbol in this case
+                mapped_refs.pop('HGNC')
+        g_map[key] = mapped_refs
     return g_map
 
 
@@ -751,22 +862,23 @@ def run_adeft_disambiguation(stmt, agent, idx):
         res = adeft_disambiguators[agent_txt].disambiguate(
                                                 [grounding_text])
         ns_and_id, standard_name, disamb_scores = res[0]
-        # If the highest score is ungrounded we don't do anything
-        # TODO: should we explicitly remove grounding if we conclude it
-        # doesn't match any of the choices?
+        # If the highest score is ungrounded we explicitly remove grounding
+        # and reset the (potentially incorrectly standardized) name to the
+        # original text value.
         if ns_and_id == 'ungrounded':
-            return
-        db_ns, db_id = ns_and_id.split(':', maxsplit=1)
-        agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
-        agent.name = standard_name
-        logger.info('Disambiguated %s to: %s, %s:%s' %
-                    (agent_txt, standard_name, db_ns, db_id))
-        if db_ns == 'HGNC':
-            hgnc_sym = hgnc_client.get_hgnc_name(db_id)
-            GroundingMapper.standardize_agent_db_refs(agent,
-                                                      {'HGNC': hgnc_sym},
-                                                      do_rename=False)
-        annots['agents']['adeft'][idx] = disamb_scores
+            agent.name = agent_txt
+            agent.db_refs = {'TEXT': agent_txt}
+        # Otherwise we update the db_refs with what we got from DEFT
+        # and set the standard name
+        else:
+            db_ns, db_id = ns_and_id.split(':', maxsplit=1)
+            agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
+            agent.name = standard_name
+            logger.info('Disambiguated %s to: %s, %s:%s' %
+                        (agent_txt, standard_name, db_ns, db_id))
+            GroundingMapper.standardize_agent_name(agent,
+                                                   standardize_refs=True)
+            annots['agents']['adeft'][idx] = disamb_scores
 
 
 def _get_text_for_grounding(stmt, agent_text):

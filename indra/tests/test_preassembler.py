@@ -270,7 +270,7 @@ def test_modification_norefinement_subsfamily():
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
     assert len(stmts) == 2
-    assert len(stmts[1].evidence)==1
+    assert len(stmts[0].evidence) == 1, stmts
 
 
 def test_modification_norefinement_enzfamily():
@@ -446,12 +446,15 @@ def test_grounding_aggregation():
     braf1 = Agent('BRAF', db_refs={'TEXT': 'braf', 'HGNC': '1097'})
     braf2 = Agent('BRAF', db_refs={'TEXT': 'BRAF'})
     braf3 = Agent('BRAF', db_refs={'TEXT': 'Braf', 'UP': 'P15056'})
+    braf4 = Agent('BRAF', db_refs={'TEXT': 'B-raf', 'UP': 'P15056',
+                                   'HGNC': '1097'})
     st1 = Phosphorylation(None, braf1)
     st2 = Phosphorylation(None, braf2)
     st3 = Phosphorylation(None, braf3)
-    pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
+    st4 = Phosphorylation(None, braf4)
+    pa = Preassembler(hierarchies, stmts=[st1, st2, st3, st4])
     unique_stmts = pa.combine_duplicates()
-    assert len(unique_stmts) == 3
+    assert len(unique_stmts) == 3, unique_stmts
 
 
 def test_grounding_aggregation_complex():
@@ -464,7 +467,7 @@ def test_grounding_aggregation_complex():
     st3 = Complex([mek, braf3])
     pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
     unique_stmts = pa.combine_duplicates()
-    assert len(unique_stmts) == 3
+    assert len(unique_stmts) == 3, unique_stmts
 
 
 def test_render_stmt_graph():

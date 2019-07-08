@@ -20,7 +20,8 @@
     "tas": 0.01,
     "rlimsp": 0.05,
     "hprd": 0.01,
-    "trrust": 0.01
+    "trrust": 0.01,
+    "medscan": 0.05
   },
   "rand": {
     "eidos": 0.3,
@@ -43,6 +44,7 @@
     "tas": 0.1,
     "rlimsp": 0.3,
     "hprd": 0.1,
-    "trrust": 0.1
+    "trrust": 0.1,
+    "medscan": 0.3
   }
 }

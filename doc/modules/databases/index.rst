@@ -73,4 +73,9 @@ GO client (:py:mod:`indra.databases.go_client`)
 .. automodule:: indra.databases.go_client
     :members:
 
+PubChem client (:py:mod:`indra.databases.pubchem_client`)
+---------------------------------------------------------
+
+.. automodule:: indra.databases.pubchem_client
+    :members:
 

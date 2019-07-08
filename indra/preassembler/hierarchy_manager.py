@@ -23,9 +23,13 @@ class HierarchyManager(object):
     ----------
     rdf_file : string
         Path to the RDF file containing the hierarchy.
-    build_closure : Optional[bool]
+    build_closure : bool or list or None
         If True, the transitive closure of the hierarchy is generated
-        up from to speed up processing. Default: True
+        up front to speed up processing. If a list, the entries in the list
+        are namespaces for which a transitive closure should be built.
+        Namespaces not listed are ignored and isa/partof lookups will not use
+        the transitive closure. If False, no transitive closure is built.
+        Default: True
     uri_as_name: Optional[bool]
         If True, entries are accessed directly by their URIs. If False
         entries are accessed by finding their name through the
@@ -40,15 +44,15 @@ class HierarchyManager(object):
         PREFIX rn: <http://sorger.med.harvard.edu/indra/relations/>
         """
 
-    def __init__(self, rdf_file=None, build_closure=True, uri_as_name=True):
+    def __init__(self, rdf_file=None, build_closure=None, uri_as_name=True):
         """Initialize with the path to an RDF file"""
         self.build_closure = build_closure
         self.uri_as_name = uri_as_name
         self.relations_prefix = \
             'http://sorger.med.harvard.edu/indra/relations/'
-        self.isa_closure = {}
-        self.partof_closure = {}
-        self.isa_or_partof_closure = {}
+        self.isa_closure = set()
+        self.partof_closure = set()
+        self.isa_or_partof_closure = set()
         self.components = {}
         self._children = {}
         self.component_counter = 0
@@ -68,8 +72,11 @@ class HierarchyManager(object):
             Path to an RDF file.
         """
         self.graph = rdflib.Graph()
+        logger.info('Loading hierarchy from %s' % rdf_file)
         self.graph.parse(os.path.abspath(rdf_file), format='nt')
+        logger.info('Loaded hierarchy from %s' % rdf_file)
         self.initialize()
+        logger.info('Initialized hierarchy')
 
     def load_from_rdf_string(self, rdf_str):
         """Initialize given an RDF string representing the hierarchy."
@@ -95,13 +102,11 @@ class HierarchyManager(object):
         self.initialize()
 
     def initialize(self):
-        if self.build_closure:
-            self.build_transitive_closures()
+        self.build_transitive_closures()
 
         # Build reverse lookup dict from the hierarchy
         # First get all URIs that correspond to parents
-        all_parents = {parent for parents in self.isa_or_partof_closure.values()
-                       for parent in parents}
+        all_parents = {parent for child, parent in self.isa_or_partof_closure}
         # We use the inverse relation here
         rel_fun = lambda node, graph: self.isa_or_partof_objects(node,
                                                                  inverse=True)
@@ -111,7 +116,9 @@ class HierarchyManager(object):
         for parent in all_parents:
             children = self.graph.transitiveClosure(rel_fun,
                                                     rdflib.term.URIRef(parent))
-            self._children[parent] = list(set(c.toPython() for c in children))
+            children_uris = list(set(c.toPython() for c in children))
+            if children_uris:
+                self._children[parent] = children_uris
 
     def extend_with(self, rdf_file):
         """Extend the RDF graph of this HierarchyManager with another RDF file.
@@ -133,29 +140,51 @@ class HierarchyManager(object):
         as values.
         """
         self.component_counter = 0
-        for rel, tc_dict in ((self.isa_objects, self.isa_closure),
-                             (self.partof_objects, self.partof_closure),
-                             (self.isa_or_partof_objects,
-                                 self.isa_or_partof_closure)):
-            self.build_transitive_closure(rel, tc_dict)
+        for rel, tc_set in ((self.isa_objects, self.isa_closure),
+                            (self.partof_objects, self.partof_closure),
+                            (self.isa_or_partof_objects,
+                             self.isa_or_partof_closure)):
+            self.build_transitive_closure(rel, tc_set)
 
-    def build_transitive_closure(self, rel, tc_dict):
+    def build_transitive_closure(self, rel, tc_set):
         """Build a transitive closure for a given relation in a given dict."""
+        # If there are no namespaces to build closures for, we
+        # return immediately
+        if not self.build_closure:
+            return
+        nodes = self._get_build_transitive_closure_objects()
         # Make a function with the righ argument structure
         rel_fun = lambda node, graph: rel(node)
-        for x in self.graph.all_nodes():
+        for x in nodes:
             rel_closure = self.graph.transitiveClosure(rel_fun, x)
             xs = x.toPython()
             for y in rel_closure:
                 ys = y.toPython()
                 if xs == ys:
                     continue
-                try:
-                    tc_dict[xs].append(ys)
-                except KeyError:
-                    tc_dict[xs] = [ys]
+                tc_set.add((xs, ys))
                 if rel == self.isa_or_partof_objects:
                     self._add_component(xs, ys)
+
+    def _term_in_closure_namespace(self, term):
+        """Return True if term is in a namespace with a closure."""
+        if self.build_closure is True:
+            return True
+        elif isinstance(self.build_closure, (list, tuple)):
+            return any([term.startswith(ns) for ns in self.build_closure])
+        else:
+            return False
+
+    def _get_build_transitive_closure_objects(self):
+        """Return objects that will be included in the transitive closures."""
+        if not self.build_closure:
+            nodes = []
+        else:
+            nodes = list(self.graph.all_nodes())
+            if isinstance(self.build_closure, (list, tuple)):
+                nodes = [node for node in nodes if
+                         self._term_in_closure_namespace(node)]
+        return nodes
 
     def _add_component(self, xs, ys):
         xcomp = self.components.get(xs)
@@ -237,7 +266,7 @@ class HierarchyManager(object):
         for o in self.partof_objects(node, inverse):
             yield o
 
-    def directly_or_indirectly_related(self, ns1, id1, ns2, id2, closure_dict,
+    def directly_or_indirectly_related(self, ns1, id1, ns2, id2, closure_set,
                                        relation_func):
         """Return True if two entities have the speicified relationship.
 
@@ -254,11 +283,11 @@ class HierarchyManager(object):
             Namespace code for an entity.
         id2 : str
             URI for an entity.
-        closure_dict: dict
-            A dictionary mapping node names to nodes that have the
+        closure_set : set
+            A set containing tuples of entities that have the
             specified relationship, directly or indirectly. Empty if this
             has not been precomputed.
-        relation_func: function
+        relation_func : function
             Function with arguments (node, graph) that generates objects
             with some relationship with node on the given graph.
 
@@ -275,33 +304,29 @@ class HierarchyManager(object):
         elif id1 is None:
             return False
 
-        if closure_dict:
+        # If both terms are in the closure set then we can just look them
+        # up and return
+        if closure_set:
             term1 = self.get_uri(ns1, id1)
             term2 = self.get_uri(ns2, id2)
-            ec = closure_dict.get(term1)
-            if ec is not None and term2 in ec:
-                return True
-            else:
-                return False
-        else:
-            if not self.uri_as_name:
-                e1 = self.find_entity(id1)
-                e2 = self.find_entity(id2)
-                if e1 is None or e2 is None:
-                    return False
-                t1 = rdflib.term.URIRef(e1)
-                t2 = rdflib.term.URIRef(e2)
-            else:
-                u1 = self.get_uri(ns1, id1)
-                u2 = self.get_uri(ns2, id2)
-                t1 = rdflib.term.URIRef(u1)
-                t2 = rdflib.term.URIRef(u2)
+            if self._term_in_closure_namespace(term1) and \
+                    self._term_in_closure_namespace(term2):
+                return (term1, term2) in closure_set
 
-            to = self.graph.transitiveClosure(relation_func, t1)
-            if t2 in to:
-                return True
-            else:
+        # Otherwise we do an actual graph query in the RDF graph
+        if not self.uri_as_name:
+            e1 = self.find_entity(id1)
+            e2 = self.find_entity(id2)
+            if e1 is None or e2 is None:
                 return False
+            t1 = rdflib.term.URIRef(e1)
+            t2 = rdflib.term.URIRef(e2)
+        else:
+            u1 = self.get_uri(ns1, id1)
+            u2 = self.get_uri(ns2, id2)
+            t1 = rdflib.term.URIRef(u1)
+            t2 = rdflib.term.URIRef(u2)
+        return t2 in self.graph.transitiveClosure(relation_func, t1)
 
     def isa(self, ns1, id1, ns2, id2):
         """Return True if one entity has an "isa" relationship to another.
@@ -421,8 +446,9 @@ class HierarchyManager(object):
             'immediate': return only the immediate parents;
             'top': return only the highest level parents
         """
-        # First do a quick dict lookup to see if there are any parents
-        all_parents = set(self.isa_or_partof_closure.get(uri, []))
+        # First do a search in the set to see if there are any parents
+        all_parents = {p for c, p in self.isa_or_partof_closure
+                       if c == uri}
         # If there are no parents or we are looking for all, we can return here
         if not all_parents or type == 'all':
             return all_parents
@@ -434,8 +460,11 @@ class HierarchyManager(object):
             immediate_parents = list(set(self.isa_or_partof_objects(node)))
             return [p.toPython() for p in immediate_parents]
         elif type == 'top':
+            # Here we iterate over all parents and find ones that have no
+            # parents in the closure
             top_parents = [p for p in all_parents if
-                           not self.isa_or_partof_closure.get(p)]
+                           not {pp for pp, _ in self.isa_or_partof_closure
+                                if pp == p}]
             return top_parents
 
     def get_children(self, uri):
@@ -469,11 +498,13 @@ class HierarchyManager(object):
     @staticmethod
     def get_uri(ns, id):
         if ns == 'HGNC':
-            return 'http://identifiers.org/hgnc.symbol/' + id
+            return 'http://identifiers.org/hgnc/' + id
         elif ns == 'UP':
             return 'http://identifiers.org/uniprot/' + id
         elif ns == 'FPLX':
             return 'http://identifiers.org/fplx/' + id
+        elif ns == 'CHEBI':
+            return 'http://identifiers.org/chebi/' + id
         elif ns in ['UN', 'WDI', 'FAO', 'HUME']:
             return \
                 'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#' + id
@@ -554,32 +585,34 @@ def get_bio_hierarchies(from_pickle=True):
             hierarchies = pickle.load(fh)
         return hierarchies
 
-    # Load the default entity and modification hierarchies
-    entity_file_path = os.path.join(os.path.dirname(__file__),
-                        '../resources/entity_hierarchy.rdf')
-    mod_file_path = os.path.join(os.path.dirname(__file__),
-                        '../resources/modification_hierarchy.rdf')
-    act_file_path = os.path.join(os.path.dirname(__file__),
-                        '../resources/activity_hierarchy.rdf')
-    ccomp_file_path = os.path.join(os.path.dirname(__file__),
-                        '../resources/cellular_component_hierarchy.rdf')
+    def resource_path(fname):
+        return os.path.join(os.path.dirname(__file__), os.pardir, 'resources',
+                            fname)
 
     # Default entity hierarchy loaded from the RDF file at
     # `resources/entity_hierarchy.rdf`.
-    entity_hierarchy = HierarchyManager(entity_file_path, build_closure=True,
+    entity_hierarchy = HierarchyManager(resource_path('entity_hierarchy.rdf'),
+                                        build_closure=[
+                                            'http://identifiers.org/hgnc',
+                                            'http://identifiers.org/uniprot',
+                                            'http://identifiers.org/fplx'
+                                            ],
                                         uri_as_name=True)
     # Default modification hierarchy loaded from the RDF file at
     # `resources/modification_hierarchy.rdf`.
-    modification_hierarchy = HierarchyManager(mod_file_path, build_closure=True,
-                                              uri_as_name=True)
+    modification_hierarchy = \
+        HierarchyManager(resource_path('modification_hierarchy.rdf'),
+                         build_closure=True, uri_as_name=True)
     # Default activity hierarchy loaded from the RDF file at
     # `resources/activity_hierarchy.rdf`.
-    activity_hierarchy = HierarchyManager(act_file_path, build_closure=True,
-                                          uri_as_name=True)
+    activity_hierarchy = \
+        HierarchyManager(resource_path('activity_hierarchy.rdf'),
+                         build_closure=True, uri_as_name=True)
     # Default cellular_component hierarchy loaded from the RDF file at
     # `resources/cellular_component_hierarchy.rdf`.
-    ccomp_hierarchy = HierarchyManager(ccomp_file_path, build_closure=False,
-                                       uri_as_name=False)
+    ccomp_hierarchy = \
+        HierarchyManager(resource_path('cellular_component_hierarchy.rdf'),
+                         build_closure=False, uri_as_name=False)
 
     hierarchies = {'entity': entity_hierarchy,
                    'modification': modification_hierarchy,
@@ -600,7 +633,8 @@ def get_wm_hierarchies():
                              '../sources/cwms/trips_ontology.rdf')
     sofia_ont = os.path.join(os.path.dirname(__file__),
                              '../sources/sofia/sofia_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, build_closure=True, uri_as_name=True)
+    hm = HierarchyManager(eidos_ont, build_closure_namespaces=[],
+                          uri_as_name=True)
     hm.extend_with(hume_ont)
     hm.extend_with(trips_ont)
     hm.extend_with(sofia_ont)

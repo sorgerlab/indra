@@ -1,6 +1,3 @@
-from .api import process_ndex_neighborhood
-from .api import process_belrdf
-from .api import process_belscript
-from .api import process_pybel_graph
-from .api import process_json_file
-from .api import process_pybel_neighborhood
+from .api import process_ndex_neighborhood, process_belrdf, \
+    process_belscript, process_pybel_graph, process_json_file, \
+    process_pybel_neighborhood, process_cbn_jgif_file

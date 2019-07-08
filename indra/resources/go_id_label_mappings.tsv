@@ -46,8 +46,8 @@ GO:0000054	ribosomal subunit export from nucleus
 GO:0000055	ribosomal large subunit export from nucleus
 GO:0000056	ribosomal small subunit export from nucleus
 GO:0000059	obsolete protein import into nucleus, docking
-GO:0000060	protein import into nucleus, translocation
-GO:0000061	protein import into nucleus, substrate release
+GO:0000060	obsolete protein import into nucleus, translocation
+GO:0000061	obsolete protein import into nucleus, substrate release
 GO:0000062	fatty-acyl-CoA binding
 GO:0000064	L-ornithine transmembrane transporter activity
 GO:0000067	obsolete DNA replication and chromosome cycle
@@ -433,10 +433,7 @@ GO:0000492	box C/D snoRNP assembly
 GO:0000493	box H/ACA snoRNP assembly
 GO:0000494	box C/D snoRNA 3'-end processing
 GO:0000495	box H/ACA snoRNA 3'-end processing
-GO:0000496	base pairing
-GO:0000497	base pairing with DNA
-GO:0000498	base pairing with RNA
-GO:0000499	base pairing with mRNA
+GO:0000497	DNA template activity
 GO:0000500	RNA polymerase I upstream activating factor complex
 GO:0000501	flocculation via cell wall protein-carbohydrate interaction
 GO:0000502	proteasome complex
@@ -623,9 +620,6 @@ GO:0000940	condensed chromosome outer kinetochore
 GO:0000941	condensed nuclear chromosome inner kinetochore
 GO:0000942	condensed nuclear chromosome outer kinetochore
 GO:0000943	retrotransposon nucleocapsid
-GO:0000944	base pairing with rRNA
-GO:0000945	base pairing with snRNA
-GO:0000946	base pairing with tRNA
 GO:0000947	amino acid catabolic process to alcohol via Ehrlich pathway
 GO:0000948	amino acid catabolic process to carboxylic acid via Ehrlich pathway
 GO:0000949	aromatic amino acid family catabolic process to alcohol via Ehrlich pathway
@@ -689,7 +683,7 @@ GO:0001016	RNA polymerase III regulatory region DNA binding
 GO:0001017	bacterial-type RNA polymerase regulatory region DNA binding
 GO:0001018	mitochondrial promoter sequence-specific DNA binding
 GO:0001019	plastid RNA polymerase regulatory region DNA binding
-GO:0001025	RNA polymerase III transcription factor binding
+GO:0001025	RNA polymerase III general transcription initiation factor binding
 GO:0001026	obsolete TFIIIB-type transcription factor activity
 GO:0001027	obsolete RNA polymerase III type 1 promoter TFIIIB-type transcription factor activity
 GO:0001028	obsolete RNA polymerase III type 2 promoter TFIIIB-type transcription factor activity
@@ -727,7 +721,7 @@ GO:0001069	regulatory region RNA binding
 GO:0001070	RNA-binding transcription regulator activity
 GO:0001072	transcription antitermination factor activity, RNA binding
 GO:0001073	transcription antitermination factor activity, DNA binding
-GO:0001074	transcription factor activity, RNA polymerase II proximal promoter sequence-specific DNA binding involved in preinitiation complex assembly
+GO:0001074	obsolete transcription factor activity, RNA polymerase II proximal promoter sequence-specific DNA binding involved in preinitiation complex assembly
 GO:0001076	obsolete transcription factor activity, RNA polymerase II transcription factor binding
 GO:0001079	nitrogen catabolite regulation of transcription from RNA polymerase II promoter
 GO:0001080	nitrogen catabolite activation of transcription from RNA polymerase II promoter
@@ -741,7 +735,7 @@ GO:0001087	obsolete transcription factor activity, TFIIB-class binding
 GO:0001088	obsolete transcription factor activity, TFIIE-class binding
 GO:0001089	obsolete transcription factor activity, TFIIF-class transcription factor binding
 GO:0001090	obsolete transcription factor activity, TFIIH-class binding
-GO:0001091	RNA polymerase II basal transcription factor binding
+GO:0001091	RNA polymerase II general transcription initiation factor binding
 GO:0001092	TFIIA-class transcription factor complex binding
 GO:0001093	TFIIB-class transcription factor binding
 GO:0001094	TFIID-class transcription factor complex binding
@@ -774,22 +768,17 @@ GO:0001124	transcription elongation from bacterial-type RNA polymerase promoter
 GO:0001125	transcription termination from bacterial-type RNA polymerase promoter
 GO:0001126	bacterial-type RNA polymerase preinitiation complex assembly
 GO:0001127	transcriptional open complex formation at bacterial-type RNA polymerase promoter
-GO:0001128	RNA polymerase II transcription coactivator activity involved in preinitiation complex assembly
+GO:0001128	obsolete RNA polymerase II transcription coactivator activity involved in preinitiation complex assembly
 GO:0001129	obsolete RNA polymerase II transcription factor activity, TBP-class protein binding, involved in preinitiation complex assembly
-GO:0001130	bacterial-type RNA polymerase transcription factor activity, sequence-specific DNA binding
-GO:0001131	transcription factor activity, bacterial-type RNA polymerase proximal promoter sequence-specific DNA binding
 GO:0001132	obsolete RNA polymerase II transcription factor activity, TBP-class protein binding
 GO:0001134	transcription regulator recruiting activity
 GO:0001135	RNA polymerase II transcription regulator recruiting activity
 GO:0001139	RNA polymerase II complex recruiting activity
-GO:0001140	transcriptional activator activity, bacterial-type RNA polymerase proximal promoter sequence-specific DNA binding
-GO:0001141	transcriptional repressor activity, bacterial-type RNA polymerase proximal promoter sequence-specific DNA binding
 GO:0001145	mitochondrial RNA polymerase termination site sequence-specific DNA binding
 GO:0001147	transcription termination site sequence-specific DNA binding
 GO:0001148	bacterial-type RNA polymerase termination site sequence-specific DNA binding
-GO:0001149	transcription factor activity, bacterial-type RNA polymerase termination site sequence-specific binding
+GO:0001149	obsolete transcription factor activity, bacterial-type RNA polymerase termination site sequence-specific binding
 GO:0001150	bacterial-type RNA polymerase enhancer sequence-specific DNA binding
-GO:0001151	transcription factor activity, bacterial-type RNA polymerase transcription enhancer sequence-specific binding
 GO:0001152	obsolete transcription factor activity, RNA polymerase III type 1 promoter sequence-specific binding, TFIIIC recruiting
 GO:0001153	obsolete transcription factor activity, RNA polymerase III transcription factor recruiting
 GO:0001154	TFIIIB-class transcription factor complex binding
@@ -815,7 +804,7 @@ GO:0001175	transcriptional start site selection at RNA polymerase III promoter
 GO:0001176	transcriptional start site selection at bacterial-type RNA polymerase promoter
 GO:0001177	regulation of transcriptional open complex formation at RNA polymerase II promoter
 GO:0001178	regulation of transcriptional start site selection at RNA polymerase II promoter
-GO:0001179	RNA polymerase I transcription factor binding
+GO:0001179	RNA polymerase I general transcription initiation factor binding
 GO:0001181	RNA polymerase I general transcription initiation factor activity
 GO:0001182	promoter clearance from RNA polymerase I promoter
 GO:0001183	transcription elongation from RNA polymerase I promoter for nuclear large rRNA transcript
@@ -831,26 +820,10 @@ GO:0001195	maintenance of transcriptional fidelity during DNA-templated transcri
 GO:0001196	regulation of mating-type specific transcription from RNA polymerase II promoter
 GO:0001197	positive regulation of mating-type specific transcription from RNA polymerase II promoter
 GO:0001198	negative regulation of mating-type specific transcription from RNA polymerase II promoter
-GO:0001199	transcription factor activity, metal ion regulated sequence-specific DNA binding
-GO:0001200	RNA polymerase II transcription factor activity, metal ion regulated sequence-specific DNA binding
-GO:0001201	RNA polymerase II transcription factor activity, metal ion regulated proximal promoter sequence-specific DNA binding
-GO:0001202	RNA polymerase II transcription factor activity, copper ion regulated proximal promoter sequence-specific DNA binding
-GO:0001203	RNA polymerase II transcription factor activity, zinc ion regulated proximal promoter sequence-specific DNA binding
-GO:0001204	bacterial-type RNA polymerase transcription factor activity, metal ion regulated sequence-specific DNA binding
 GO:0001207	histone displacement
 GO:0001208	histone H2A-H2B dimer displacement
-GO:0001209	transcriptional activator activity, metal ion regulated sequence-specific DNA binding
-GO:0001210	transcriptional repressor activity, metal ion regulated sequence-specific DNA binding
-GO:0001211	RNA polymerase II transcriptional activator activity, copper ion regulated proximal promoter sequence-specific DNA binding
-GO:0001212	RNA polymerase II transcriptional activator activity, zinc ion regulated proximal promoter sequence-specific DNA binding
-GO:0001213	RNA polymerase II transcriptional activator activity, metal ion regulated proximal promoter sequence-specific DNA binding
-GO:0001214	RNA polymerase II transcriptional repressor activity, metal ion regulated proximal promoter sequence-specific DNA binding
-GO:0001215	bacterial-type RNA polymerase transcriptional activator activity, metal ion regulated sequence-specific DNA binding
-GO:0001216	bacterial-type RNA polymerase transcriptional activator activity, sequence-specific DNA binding
-GO:0001217	bacterial-type RNA polymerase transcriptional repressor activity, sequence-specific DNA binding
-GO:0001218	bacterial-type RNA polymerase transcriptional repressor activity, metal ion regulated sequence-specific DNA binding
-GO:0001219	bacterial-type RNA polymerase transcriptional repressor activity, copper ion regulated sequence-specific DNA binding
-GO:0001220	bacterial-type RNA polymerase transcriptional repressor activity, cadmium ion regulated sequence-specific DNA binding
+GO:0001216	DNA-binding transcription activator activity
+GO:0001217	DNA-binding transcription repressor activity
 GO:0001221	transcription cofactor binding
 GO:0001222	transcription corepressor binding
 GO:0001223	transcription coactivator binding
@@ -887,7 +860,7 @@ GO:0001324	age-dependent response to oxidative stress involved in chronological 
 GO:0001325	formation of extrachromosomal circular DNA
 GO:0001326	replication of extrachromosomal circular DNA
 GO:0001400	mating projection base
-GO:0001401	mitochondrial sorting and assembly machinery complex
+GO:0001401	SAM complex
 GO:0001402	signal transduction involved in filamentous growth
 GO:0001403	invasive growth in response to glucose limitation
 GO:0001404	obsolete invasive growth
@@ -1234,7 +1207,7 @@ GO:0001867	complement activation, lectin pathway
 GO:0001868	regulation of complement activation, lectin pathway
 GO:0001869	negative regulation of complement activation, lectin pathway
 GO:0001870	positive regulation of complement activation, lectin pathway
-GO:0001871	pattern binding
+GO:0001871	obsolete pattern binding
 GO:0001872	(1->3)-beta-D-glucan binding
 GO:0001873	polysaccharide receptor activity
 GO:0001874	(1->3)-beta-D-glucan receptor activity
@@ -2758,7 +2731,6 @@ GO:0003702	obsolete RNA polymerase II transcription factor activity
 GO:0003704	obsolete specific RNA polymerase II transcription factor activity
 GO:0003706	obsolete ligand-regulated transcription factor activity
 GO:0003707	steroid hormone receptor activity
-GO:0003708	retinoic acid receptor activity
 GO:0003709	obsolete RNA polymerase III transcription factor activity
 GO:0003711	transcription elongation regulator activity
 GO:0003712	transcription coregulator activity
@@ -3770,18 +3742,13 @@ GO:0004868	obsolete serpin
 GO:0004869	cysteine-type endopeptidase inhibitor activity
 GO:0004871	obsolete signal transducer activity
 GO:0004873	asialoglycoprotein receptor activity
-GO:0004874	aryl hydrocarbon receptor activity
+GO:0004874	obsolete aryl hydrocarbon receptor activity
 GO:0004875	complement receptor activity
 GO:0004876	complement component C3a receptor activity
 GO:0004877	complement component C3b receptor activity
 GO:0004878	complement component C5a receptor activity
 GO:0004879	nuclear receptor activity
-GO:0004880	juvenile hormone receptor activity
-GO:0004882	androgen receptor activity
 GO:0004883	glucocorticoid receptor activity
-GO:0004884	ecdysteroid hormone receptor activity
-GO:0004886	9-cis retinoic acid receptor activity
-GO:0004887	thyroid hormone receptor activity
 GO:0004888	transmembrane signaling receptor activity
 GO:0004890	GABA-A receptor activity
 GO:0004892	obsolete B cell receptor activity
@@ -3913,7 +3880,6 @@ GO:0005035	death receptor activity
 GO:0005037	obsolete death receptor adaptor protein activity
 GO:0005038	obsolete death receptor interacting protein activity
 GO:0005039	obsolete death receptor-associated factor activity
-GO:0005040	decoy death receptor activity
 GO:0005041	low-density lipoprotein particle receptor activity
 GO:0005042	netrin receptor activity
 GO:0005043	netrin receptor activity involved in chemorepulsion
@@ -4441,7 +4407,7 @@ GO:0005742	mitochondrial outer membrane translocase complex
 GO:0005743	mitochondrial inner membrane
 GO:0005744	TIM23 mitochondrial import inner membrane translocase complex
 GO:0005745	m-AAA complex
-GO:0005746	mitochondrial respiratory chain
+GO:0005746	mitochondrial respirasome
 GO:0005747	mitochondrial respiratory chain complex I
 GO:0005749	mitochondrial respiratory chain complex II, succinate dehydrogenase complex (ubiquinone)
 GO:0005750	mitochondrial respiratory chain complex III
@@ -5797,7 +5763,7 @@ GO:0007254	JNK cascade
 GO:0007256	activation of JNKK activity
 GO:0007257	activation of JUN kinase activity
 GO:0007258	JUN phosphorylation
-GO:0007259	JAK-STAT cascade
+GO:0007259	receptor signaling pathway via JAK-STAT
 GO:0007260	tyrosine phosphorylation of STAT protein
 GO:0007261	obsolete JAK-induced STAT protein dimerization
 GO:0007263	nitric oxide mediated signal transduction
@@ -6396,9 +6362,9 @@ GO:0008277	regulation of G protein-coupled receptor signaling pathway
 GO:0008278	cohesin complex
 GO:0008281	sulfonylurea receptor activity
 GO:0008282	inward rectifying potassium channel
-GO:0008283	cell proliferation
-GO:0008284	positive regulation of cell proliferation
-GO:0008285	negative regulation of cell proliferation
+GO:0008283	cell population proliferation
+GO:0008284	positive regulation of cell population proliferation
+GO:0008285	negative regulation of cell population proliferation
 GO:0008286	insulin receptor signaling pathway
 GO:0008287	protein serine/threonine phosphatase complex
 GO:0008288	boss receptor activity
@@ -6529,7 +6495,6 @@ GO:0008429	phosphatidylethanolamine binding
 GO:0008430	selenium binding
 GO:0008431	vitamin E binding
 GO:0008432	JUN kinase binding
-GO:0008434	calcitriol receptor activity
 GO:0008435	obsolete anticoagulant activity
 GO:0008436	obsolete heterogeneous nuclear ribonucleoprotein
 GO:0008437	thyrotropin-releasing hormone activity
@@ -8689,9 +8654,9 @@ GO:0010742	macrophage derived foam cell differentiation
 GO:0010743	regulation of macrophage derived foam cell differentiation
 GO:0010744	positive regulation of macrophage derived foam cell differentiation
 GO:0010745	negative regulation of macrophage derived foam cell differentiation
-GO:0010746	regulation of plasma membrane long-chain fatty acid transport
-GO:0010747	positive regulation of plasma membrane long-chain fatty acid transport
-GO:0010748	negative regulation of plasma membrane long-chain fatty acid transport
+GO:0010746	regulation of long-chain fatty acid import across plasma membrane
+GO:0010747	positive regulation of long-chain fatty acid import across plasma membrane
+GO:0010748	negative regulation of long-chain fatty acid import across plasma membrane
 GO:0010749	regulation of nitric oxide mediated signal transduction
 GO:0010750	positive regulation of nitric oxide mediated signal transduction
 GO:0010751	negative regulation of nitric oxide mediated signal transduction
@@ -9380,7 +9345,7 @@ GO:0015215	nucleotide transmembrane transporter activity
 GO:0015216	purine nucleotide transmembrane transporter activity
 GO:0015217	ADP transmembrane transporter activity
 GO:0015218	pyrimidine nucleotide transmembrane transporter activity
-GO:0015219	protein-DNA complex transmembrane transporter activity
+GO:0015219	obsolete protein-DNA complex transmembrane transporter activity
 GO:0015220	choline transmembrane transporter activity
 GO:0015221	lipopolysaccharide transmembrane transporter activity
 GO:0015223	obsolete vitamin or cofactor transporter activity
@@ -9662,7 +9627,6 @@ GO:0015552	propionate transmembrane transporter activity
 GO:0015553	xanthosine transmembrane transporter activity
 GO:0015554	tartrate transmembrane transporter activity
 GO:0015556	C4-dicarboxylate transmembrane transporter activity
-GO:0015557	arginine targeting transmembrane transporter activity
 GO:0015558	secondary active p-aminobenzoyl-glutamate transmembrane transporter activity
 GO:0015560	obsolete L-idonate/D-gluconate:hydrogen symporter activity
 GO:0015561	rhamnose:proton symporter activity
@@ -9970,8 +9934,8 @@ GO:0015905	bicyclomycin transport
 GO:0015906	sulfathiazole transport
 GO:0015908	fatty acid transport
 GO:0015909	long-chain fatty acid transport
-GO:0015910	peroxisomal long-chain fatty acid import
-GO:0015911	plasma membrane long-chain fatty acid transport
+GO:0015910	long-chain fatty acid import into peroxisome
+GO:0015911	long-chain fatty acid import across plasma membrane
 GO:0015912	short-chain fatty acid transport
 GO:0015913	short-chain fatty acid import
 GO:0015914	phospholipid transport
@@ -10480,7 +10444,6 @@ GO:0016530	metallochaperone activity
 GO:0016531	copper chaperone activity
 GO:0016532	superoxide dismutase copper chaperone activity
 GO:0016533	protein kinase 5 complex
-GO:0016534	cyclin-dependent protein kinase 5 activator activity
 GO:0016536	obsolete cyclin-dependent protein kinase 5 activator regulator activity
 GO:0016538	cyclin-dependent protein serine/threonine kinase regulator activity
 GO:0016539	intein-mediated protein splicing
@@ -10633,7 +10596,7 @@ GO:0016702	oxidoreductase activity, acting on single donors with incorporation o
 GO:0016703	oxidoreductase activity, acting on single donors with incorporation of molecular oxygen, incorporation of one atom of oxygen (internal monooxygenases or internal mixed function oxidases)
 GO:0016704	obsolete oxidoreductase activity, acting on single donors with incorporation of molecular oxygen, miscellaneous
 GO:0016705	oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen
-GO:0016706	oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen, 2-oxoglutarate as one donor, and incorporation of one atom each of oxygen into both donors
+GO:0016706	2-oxoglutarate-dependent dioxygenase activity
 GO:0016707	gibberellin 3-beta-dioxygenase activity
 GO:0016708	oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen, NAD(P)H as one donor, and incorporation of two atoms of oxygen into one donor
 GO:0016709	oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen, NAD(P)H as one donor, and incorporation of one atom of oxygen
@@ -10953,7 +10916,7 @@ GO:0017077	oxidative phosphorylation uncoupler activity
 GO:0017078	obsolete Hsc70 protein regulator activity
 GO:0017080	sodium channel regulator activity
 GO:0017081	chloride channel regulator activity
-GO:0017082	mineralocorticoid receptor activity
+GO:0017082	obsolete mineralocorticoid receptor activity
 GO:0017083	4-galactosyl-N-acetylglucosaminide 3-alpha-L-fucosyltransferase activity
 GO:0017084	delta1-pyrroline-5-carboxylate synthetase activity
 GO:0017085	response to insecticide
@@ -11990,19 +11953,19 @@ GO:0019010	farnesoic acid O-methyltransferase activity
 GO:0019011	obsolete DNA replication accessory factor
 GO:0019012	virion
 GO:0019013	viral nucleocapsid
-GO:0019015	viral genome
-GO:0019016	non-segmented viral genome
-GO:0019017	segmented viral genome
-GO:0019018	bipartite viral genome
-GO:0019019	tripartite viral genome
-GO:0019020	multipartite viral genome
-GO:0019021	DNA viral genome
-GO:0019022	RNA viral genome
-GO:0019023	dsRNA viral genome
-GO:0019024	ssRNA viral genome
-GO:0019025	positive sense viral genome
-GO:0019026	negative sense viral genome
-GO:0019027	ambisense viral genome
+GO:0019015	obsolete viral genome
+GO:0019016	obsolete non-segmented viral genome
+GO:0019017	obsolete segmented viral genome
+GO:0019018	obsolete bipartite viral genome
+GO:0019019	obsolete tripartite viral genome
+GO:0019020	obsolete multipartite viral genome
+GO:0019021	obsolete DNA viral genome
+GO:0019022	obsolete RNA viral genome
+GO:0019023	obsolete dsRNA viral genome
+GO:0019024	obsolete ssRNA viral genome
+GO:0019025	obsolete positive sense viral genome
+GO:0019026	obsolete negative sense viral genome
+GO:0019027	obsolete ambisense viral genome
 GO:0019028	viral capsid
 GO:0019029	helical viral capsid
 GO:0019030	icosahedral viral capsid
@@ -12013,7 +11976,7 @@ GO:0019034	viral replication complex
 GO:0019035	viral integration complex
 GO:0019036	viral transcriptional complex
 GO:0019037	viral assembly intermediate
-GO:0019038	provirus
+GO:0019038	obsolete provirus
 GO:0019039	obsolete viral-cell fusion molecule activity
 GO:0019040	obsolete viral host shutoff protein
 GO:0019042	viral latency
@@ -13185,7 +13148,7 @@ GO:0021773	striatal medium spiny neuron differentiation
 GO:0021774	retinoic acid receptor signaling pathway involved in ventral spinal cord interneuron specification
 GO:0021775	smoothened signaling pathway involved in ventral spinal cord interneuron specification
 GO:0021776	smoothened signaling pathway involved in spinal cord motor neuron cell fate specification
-GO:0021777	BMP signaling pathway involved in spinal cord association neuron specification
+GO:0021777	obsolete BMP signaling pathway involved in spinal cord association neuron specification
 GO:0021778	oligodendrocyte cell fate specification
 GO:0021779	oligodendrocyte cell fate commitment
 GO:0021780	glial cell fate specification
@@ -13509,7 +13472,6 @@ GO:0022832	voltage-gated channel activity
 GO:0022834	ligand-gated channel activity
 GO:0022835	transmitter-gated channel activity
 GO:0022836	gated channel activity
-GO:0022838	substrate-specific channel activity
 GO:0022839	ion gated channel activity
 GO:0022840	leak channel activity
 GO:0022841	potassium ion leak channel activity
@@ -13761,7 +13723,7 @@ GO:0030155	regulation of cell adhesion
 GO:0030156	benzodiazepine receptor binding
 GO:0030157	pancreatic juice secretion
 GO:0030158	protein xylosyltransferase activity
-GO:0030159	receptor signaling complex scaffold activity
+GO:0030159	receptor signaling complex adaptor activity
 GO:0030160	GKAP/Homer scaffold activity
 GO:0030161	obsolete calpain inhibitor activity
 GO:0030162	regulation of proteolysis
@@ -14151,7 +14113,7 @@ GO:0030587	sorocarp development
 GO:0030588	pseudocleavage
 GO:0030589	pseudocleavage involved in syncytial blastoderm formation
 GO:0030590	first cell cycle pseudocleavage
-GO:0030591	NAD DNA ADP-ribosyltransferase activity
+GO:0030591	2'-deoxyguanosine DNA ADP-ribosyltransferase activity
 GO:0030592	DNA ADP-ribosylation
 GO:0030593	neutrophil chemotaxis
 GO:0030594	neurotransmitter receptor activity
@@ -16377,7 +16339,6 @@ GO:0032943	mononuclear cell proliferation
 GO:0032944	regulation of mononuclear cell proliferation
 GO:0032945	negative regulation of mononuclear cell proliferation
 GO:0032946	positive regulation of mononuclear cell proliferation
-GO:0032947	protein-containing complex scaffold activity
 GO:0032948	regulation of alpha-glucan metabolic process
 GO:0032949	regulation of alpha-glucan biosynthetic process
 GO:0032950	regulation of beta-glucan metabolic process
@@ -16409,7 +16370,7 @@ GO:0032975	amino acid transmembrane import into vacuole
 GO:0032976	release of matrix enzymes from mitochondria
 GO:0032977	membrane insertase activity
 GO:0032978	protein insertion into membrane from inner side
-GO:0032979	protein insertion into mitochondrial inner membrane from matrix side
+GO:0032979	protein insertion into mitochondrial inner membrane from matrix
 GO:0032980	keratinocyte activation
 GO:0032981	mitochondrial respiratory chain complex I assembly
 GO:0032982	myosin filament
@@ -16584,9 +16545,9 @@ GO:0033154	oligogalacturonide-transporting ATPase activity
 GO:0033155	oligogalacturonide transmembrane transporter activity
 GO:0033156	oligogalacturonide transport
 GO:0033157	regulation of intracellular protein transport
-GO:0033158	regulation of protein import into nucleus, translocation
-GO:0033159	negative regulation of protein import into nucleus, translocation
-GO:0033160	positive regulation of protein import into nucleus, translocation
+GO:0033158	obsolete regulation of protein import into nucleus, translocation
+GO:0033159	obsolete negative regulation of protein import into nucleus, translocation
+GO:0033160	obsolete positive regulation of protein import into nucleus, translocation
 GO:0033161	mitogen-activated protein kinase kinase kinase kinase binding
 GO:0033162	melanosome membrane
 GO:0033163	microneme membrane
@@ -17281,7 +17242,7 @@ GO:0033864	positive regulation of NAD(P)H oxidase activity
 GO:0033865	nucleoside bisphosphate metabolic process
 GO:0033866	nucleoside bisphosphate biosynthetic process
 GO:0033867	Fas-activated serine/threonine kinase activity
-GO:0033868	Goodpasture-antigen-binding protein kinase activity
+GO:0033868	obsolete Goodpasture-antigen-binding protein kinase activity
 GO:0033869	nucleoside bisphosphate catabolic process
 GO:0033870	thiol sulfotransferase activity
 GO:0033871	[heparan sulfate]-glucosamine 3-sulfotransferase 2 activity
@@ -18826,7 +18787,7 @@ GO:0035455	response to interferon-alpha
 GO:0035456	response to interferon-beta
 GO:0035457	cellular response to interferon-alpha
 GO:0035458	cellular response to interferon-beta
-GO:0035459	cargo loading into vesicle
+GO:0035459	vesicle cargo loading
 GO:0035460	L-ascorbate 6-phosphate lactonase activity
 GO:0035461	vitamin transmembrane transport
 GO:0035462	determination of left/right asymmetry in diencephalon
@@ -19016,9 +18977,9 @@ GO:0035648	circadian mating behavior
 GO:0035649	Nrd1 complex
 GO:0035650	AP-1 adaptor complex binding
 GO:0035651	AP-3 adaptor complex binding
-GO:0035652	cargo loading into clathrin-coated vesicle
-GO:0035653	cargo loading into clathrin-coated vesicle, AP-1-mediated
-GO:0035654	cargo loading into clathrin-coated vesicle, AP-3-mediated
+GO:0035652	clathrin-coated vesicle cargo loading
+GO:0035653	clathrin-coated vesicle cargo loading, AP-1-mediated
+GO:0035654	clathrin-coated vesicle cargo loading, AP-3-mediated
 GO:0035655	interleukin-18-mediated signaling pathway
 GO:0035656	kinesin-associated melanosomal adaptor activity
 GO:0035657	eRF1 methyltransferase complex
@@ -19930,9 +19891,7 @@ GO:0038045	large latent transforming growth factor-beta complex
 GO:0038046	enkephalin receptor activity
 GO:0038047	morphine receptor activity
 GO:0038048	dynorphin receptor activity
-GO:0038050	RNA polymerase II transcription factor activity, glucocorticoid-activated sequence-specific DNA binding
-GO:0038052	RNA polymerase II transcription factor activity, estrogen-activated sequence-specific DNA binding
-GO:0038053	transcription factor activity, estrogen-activated RNA polymerase II transcription factor binding
+GO:0038053	obsolete transcription factor activity, estrogen-activated RNA polymerase II transcription factor binding
 GO:0038054	G protein-coupled estrogen receptor activity
 GO:0038055	BMP secretion
 GO:0038056	negative regulation of BMP signaling pathway by negative regulation of BMP secretion
@@ -20471,7 +20430,7 @@ GO:0042123	glucanosyltransferase activity
 GO:0042124	1,3-beta-glucanosyltransferase activity
 GO:0042125	protein galactosylation
 GO:0042126	nitrate metabolic process
-GO:0042127	regulation of cell proliferation
+GO:0042127	regulation of cell population proliferation
 GO:0042128	nitrate assimilation
 GO:0042129	regulation of T cell proliferation
 GO:0042130	negative regulation of T cell proliferation
@@ -20902,7 +20861,7 @@ GO:0042620	poly(3-hydroxyalkanoate) metabolic process
 GO:0042621	poly(3-hydroxyalkanoate) biosynthetic process
 GO:0042622	photoreceptor outer segment membrane
 GO:0042623	ATPase activity, coupled
-GO:0042624	ATPase activity, uncoupled
+GO:0042624	obsolete ATPase activity, uncoupled
 GO:0042625	ATPase coupled ion transmembrane transporter activity
 GO:0042626	ATPase activity, coupled to transmembrane movement of substances
 GO:0042627	chylomicron
@@ -22112,7 +22071,7 @@ GO:0043922	negative regulation by host of viral transcription
 GO:0043923	positive regulation by host of viral transcription
 GO:0043924	suramin binding
 GO:0043927	exonucleolytic nuclear-transcribed mRNA catabolic process involved in endonucleolytic cleavage-dependent decay
-GO:0043928	exonucleolytic nuclear-transcribed mRNA catabolic process involved in deadenylation-dependent decay
+GO:0043928	exonucleolytic catabolism of deadenylated mRNA
 GO:0043929	primary ovarian follicle growth involved in double layer follicle stage
 GO:0043930	primary ovarian follicle growth involved in primary follicle stage
 GO:0043931	ossification involved in bone maturation
@@ -22361,7 +22320,7 @@ GO:0044179	hemolysis in other organism
 GO:0044180	filamentous growth of a unicellular organism
 GO:0044181	filamentous growth of a multicellular organism
 GO:0044182	filamentous growth of a population of unicellular organisms
-GO:0044183	protein binding involved in protein folding
+GO:0044183	protein folding chaperone
 GO:0044184	host cell late endosome
 GO:0044185	host cell late endosome membrane
 GO:0044186	host cell lipid droplet
@@ -22697,7 +22656,7 @@ GO:0044535	very-long-chain fatty acyl-CoA oxidase activity
 GO:0044536	envenomation resulting in depletion of circulating fibrinogen in other organism
 GO:0044537	regulation of circulating fibrinogen levels
 GO:0044538	host cell periphery
-GO:0044539	long-chain fatty acid import
+GO:0044539	long-chain fatty acid import into cell
 GO:0044540	L-cystine L-cysteine-lyase (deaminating)
 GO:0044541	zymogen activation in other organism
 GO:0044542	plasminogen activation in other organism
@@ -22941,8 +22900,6 @@ GO:0044806	G-quadruplex DNA unwinding
 GO:0044807	macrophage migration inhibitory factor production
 GO:0044808	Oncostatin M production
 GO:0044809	chemokine (C-C motif) ligand 17 production
-GO:0044810	Dma1-dependent checkpoint
-GO:0044811	response to Dma1-dependent checkpoint signaling
 GO:0044812	fermentative hydrogen production
 GO:0044813	glycolytic fermentation via PFOR pathway
 GO:0044814	glycolytic fermentation via PFL pathway
@@ -23046,8 +23003,8 @@ GO:0045035	sensory organ precursor cell division
 GO:0045036	protein targeting to chloroplast
 GO:0045037	protein import into chloroplast stroma
 GO:0045038	protein import into chloroplast thylakoid membrane
-GO:0045039	protein import into mitochondrial inner membrane
-GO:0045040	protein import into mitochondrial outer membrane
+GO:0045039	protein insertion into mitochondrial inner membrane
+GO:0045040	protein insertion into mitochondrial outer membrane
 GO:0045041	protein import into mitochondrial intermembrane space
 GO:0045042	obsolete protein import into mitochondrial intermembrane space, conservative
 GO:0045045	obsolete secretory pathway
@@ -24376,9 +24333,9 @@ GO:0046421	methylisocitrate lyase activity
 GO:0046422	violaxanthin de-epoxidase activity
 GO:0046423	allene-oxide cyclase activity
 GO:0046424	ferulate 5-hydroxylase activity
-GO:0046425	regulation of JAK-STAT cascade
-GO:0046426	negative regulation of JAK-STAT cascade
-GO:0046427	positive regulation of JAK-STAT cascade
+GO:0046425	regulation of receptor signaling pathway via JAK-STAT
+GO:0046426	negative regulation of receptor signaling pathway via JAK-STAT
+GO:0046427	positive regulation of receptor signaling pathway via JAK-STAT
 GO:0046428	1,4-dihydroxy-2-naphthoate octaprenyltransferase activity
 GO:0046429	4-hydroxy-3-methylbut-2-en-1-yl diphosphate synthase activity
 GO:0046430	non-phosphorylated glucose metabolic process
@@ -25658,7 +25615,7 @@ GO:0047760	butyrate-CoA ligase activity
 GO:0047761	butyrate kinase activity
 GO:0047762	caffeate 3,4-dioxygenase activity
 GO:0047763	caffeate O-methyltransferase activity
-GO:0047764	caldesmon kinase activity
+GO:0047764	obsolete caldesmon kinase activity
 GO:0047765	caldesmon-phosphatase activity
 GO:0047766	carbamoyl-serine ammonia-lyase activity
 GO:0047768	carboxy-cis,cis-muconate cyclase activity
@@ -26789,7 +26746,7 @@ GO:0050059	lombricine kinase activity
 GO:0050060	long-chain-alcohol dehydrogenase activity
 GO:0050061	long-chain-aldehyde dehydrogenase activity
 GO:0050062	long-chain-fatty-acyl-CoA reductase activity
-GO:0050063	low-density-lipoprotein particle receptor kinase activity
+GO:0050063	obsolete low-density-lipoprotein particle receptor kinase activity
 GO:0050064	luteolin 7-O-glucuronosyltransferase activity
 GO:0050065	lysine-pyruvate 6-transaminase activity
 GO:0050066	lysine 2,3-aminomutase activity
@@ -27540,7 +27497,7 @@ GO:0050820	positive regulation of coagulation
 GO:0050821	protein stabilization
 GO:0050822	peptide stabilization
 GO:0050823	peptide antigen stabilization
-GO:0050824	water binding
+GO:0050824	obsolete water binding
 GO:0050825	ice binding
 GO:0050826	response to freezing
 GO:0050828	regulation of liquid surface tension
@@ -28959,11 +28916,11 @@ GO:0052301	modulation by organism of defense-related calcium ion flux in other o
 GO:0052302	modulation by organism of defense-related nitric oxide production in other organism involved in symbiotic interaction
 GO:0052303	modulation by organism of defense-related reactive oxygen species production in other organism involved in symbiotic interaction
 GO:0052304	modulation by organism of phytoalexin production in other organism involved in symbiotic interaction
-GO:0052305	positive regulation by organism of innate immune response in other organism involved in symbiotic interaction
+GO:0052305	positive regulation of innate immune response in other organism
 GO:0052306	modulation by organism of innate immune response in other organism involved in symbiotic interaction
 GO:0052307	modulation by organism of defense-related calcium-dependent protein kinase pathway in other organism involved in symbiotic interaction
 GO:0052308	pathogen-associated molecular pattern dependent modulation by organism of innate immune response in other organism involved in symbiotic interaction
-GO:0052309	negative regulation by organism of innate immune response in other organism involved in symbiotic interaction
+GO:0052309	negative regulation of innate immune response in other organism
 GO:0052310	modulation by organism of defense-related cell wall callose deposition in other organism involved in symbiotic interaction
 GO:0052311	negative regulation by organism of defense-related cell wall callose deposition in other organism involved in symbiotic interaction
 GO:0052312	modulation of transcription in other organism involved in symbiotic interaction
@@ -30103,7 +30060,7 @@ GO:0060393	regulation of pathway-restricted SMAD protein phosphorylation
 GO:0060394	negative regulation of pathway-restricted SMAD protein phosphorylation
 GO:0060395	SMAD protein signal transduction
 GO:0060396	growth hormone receptor signaling pathway
-GO:0060397	JAK-STAT cascade involved in growth hormone signaling pathway
+GO:0060397	growth hormone receptor signaling pathway via JAK-STAT
 GO:0060398	regulation of growth hormone receptor signaling pathway
 GO:0060399	positive regulation of growth hormone receptor signaling pathway
 GO:0060400	negative regulation of growth hormone receptor signaling pathway
@@ -31311,7 +31268,7 @@ GO:0061625	glycolytic process through fructose-1-phosphate
 GO:0061626	pharyngeal arch artery morphogenesis
 GO:0061627	S-methylmethionine-homocysteine S-methyltransferase activity
 GO:0061628	H3K27me3 modified histone binding
-GO:0061629	RNA polymerase II sequence-specific DNA-binding transcription factor binding
+GO:0061629	RNA polymerase II-specific DNA-binding transcription factor binding
 GO:0061630	ubiquitin protein ligase activity
 GO:0061631	ubiquitin conjugating enzyme activity
 GO:0061632	RNA lariat debranching enzyme activator activity
@@ -31456,7 +31413,7 @@ GO:0061773	eNoSc complex
 GO:0061774	cohesin unloading
 GO:0061775	cohesin ATPase activity
 GO:0061776	topological DNA entrapment activity
-GO:0061777	DNA clamp activity
+GO:0061777	obsolete DNA clamp activity
 GO:0061778	intracellular chloride channel activity
 GO:0061779	Tapasin-ERp57 complex
 GO:0061780	mitotic cohesin loading
@@ -31725,6 +31682,36 @@ GO:0062080	inhibitory MHC class Ib receptor activity
 GO:0062081	activating MHC class Ib receptor activity
 GO:0062082	HLA-E specific inhibitory MHC class Ib receptor activity
 GO:0062083	HLA-G specific inhibitory MHC class Ib receptor activity
+GO:0062084	regulation of capsule polysaccharide biosynthetic process
+GO:0062085	positive regulation of capsule polysaccharide biosynthetic process
+GO:0062086	regulation of vein smooth muscle contraction
+GO:0062087	positive regulation of vein smooth muscle contraction
+GO:0062088	negative regulation of vein smooth muscle contraction
+GO:0062089	regulation of taurine biosynthetic process
+GO:0062090	positive regulation of taurine biosynthetic process
+GO:0062091	Ycf2/FtsHi complex
+GO:0062092	Yae1-Lto1 complex
+GO:0062093	lysophagy
+GO:0062094	stomach development
+GO:0062095	endoplasmic reticulum-peroxisome tethering
+GO:0062096	kinetochore disassembly
+GO:0062097	chemosynthesis
+GO:0062098	regulation of programmed necrotic cell death
+GO:0062099	negative regulation of programmed necrotic cell death
+GO:0062100	positive regulation of programmed necrotic cell death
+GO:0062101	peptidyl-aspartic acid 3-dioxygenase activity
+GO:0062102	female germline stem cell symmetric division
+GO:0062103	double-stranded RNA biosynthetic process
+GO:0062104	pumilio-response element binding
+GO:0062105	RNA 2'-O-methyltransferase activity
+GO:0062107	regulation of protein localization to non-growing cell tip
+GO:0062108	negative regulation of protein localization to non-growing cell tip
+GO:0062109	regulation of DNA recombinase disassembly
+GO:0062110	negative regulation of DNA recombinase disassembly
+GO:0062111	zinc ion import into organelle
+GO:0062112	fatty acid primary amide biosynthetic process
+GO:0062113	early phagosome lumen
+GO:0062116	phenyloplast
 GO:0065001	specification of axis polarity
 GO:0065002	intracellular protein transmembrane transport
 GO:0065003	protein-containing complex assembly
@@ -31768,8 +31755,8 @@ GO:0070031	alphav-beta5 integrin-osteopontin complex
 GO:0070032	synaptobrevin 2-SNAP-25-syntaxin-1a-complexin I complex
 GO:0070033	synaptobrevin 2-SNAP-25-syntaxin-1a-complexin II complex
 GO:0070034	telomerase RNA binding
-GO:0070035	purine NTP-dependent helicase activity
-GO:0070036	GTP-dependent helicase activity
+GO:0070035	obsolete purine NTP-dependent helicase activity
+GO:0070036	obsolete GTP-dependent helicase activity
 GO:0070037	rRNA (pseudouridine) methyltransferase activity
 GO:0070038	rRNA (pseudouridine-N3-)-methyltransferase activity
 GO:0070039	rRNA (guanosine-2'-O-)-methyltransferase activity
@@ -32194,8 +32181,8 @@ GO:0070465	alpha1-beta1 integrin-alpha3(VI) complex
 GO:0070466	alpha2-beta1 integrin-alpha3(VI) complex
 GO:0070467	RC-1 DNA recombination complex
 GO:0070468	dentin secretion
-GO:0070469	respiratory chain
-GO:0070470	plasma membrane respiratory chain
+GO:0070469	respirasome
+GO:0070470	plasma membrane respirasome
 GO:0070471	uterine smooth muscle contraction
 GO:0070472	regulation of uterine smooth muscle contraction
 GO:0070473	negative regulation of uterine smooth muscle contraction
@@ -33236,22 +33223,22 @@ GO:0071519	actomyosin contractile ring actin filament bundle assembly
 GO:0071520	actomyosin contractile ring assembly actin filament bundle convergence
 GO:0071521	Cdc42 GTPase complex
 GO:0071522	ureidoglycine aminohydrolase activity
-GO:0071523	TIR domain-mediated complex assembly
+GO:0071523	obsolete TIR domain-mediated complex assembly
 GO:0071524	pyrrolysine biosynthetic process
 GO:0071525	pyrrolysine metabolic process
 GO:0071526	semaphorin-plexin signaling pathway
 GO:0071527	semaphorin-plexin signaling pathway involved in outflow tract morphogenesis
 GO:0071528	tRNA re-export from nucleus
 GO:0071529	cementum mineralization
-GO:0071530	FHA domain-mediated complex assembly
-GO:0071531	Rel homology domain-mediated complex assembly
+GO:0071530	obsolete FHA domain-mediated complex assembly
+GO:0071531	obsolete Rel homology domain-mediated complex assembly
 GO:0071532	ankyrin repeat binding
-GO:0071533	ankyrin repeat-mediated complex assembly
-GO:0071534	zf-TRAF domain-mediated complex assembly
+GO:0071533	obsolete ankyrin repeat-mediated complex assembly
+GO:0071534	obsolete zf-TRAF domain-mediated complex assembly
 GO:0071535	RING-like zinc finger domain binding
-GO:0071536	RING-like zinc finger domain-mediated complex assembly
-GO:0071537	C3HC4-type RING finger domain-mediated complex assembly
-GO:0071538	SH2 domain-mediated complex assembly
+GO:0071536	obsolete RING-like zinc finger domain-mediated complex assembly
+GO:0071537	obsolete C3HC4-type RING finger domain-mediated complex assembly
+GO:0071538	obsolete SH2 domain-mediated complex assembly
 GO:0071539	protein localization to centrosome
 GO:0071540	eukaryotic translation initiation factor 3 complex, eIF3e
 GO:0071541	eukaryotic translation initiation factor 3 complex, eIF3m
@@ -33265,7 +33252,7 @@ GO:0071548	response to dexamethasone
 GO:0071549	cellular response to dexamethasone stimulus
 GO:0071550	death-inducing signaling complex assembly
 GO:0071551	RIP homotypic interaction motif binding
-GO:0071552	RIP homotypic interaction motif-mediated complex assembly
+GO:0071552	obsolete RIP homotypic interaction motif-mediated complex assembly
 GO:0071553	G protein-coupled pyrimidinergic nucleotide receptor activity
 GO:0071554	cell wall organization or biogenesis
 GO:0071555	cell wall organization
@@ -33284,7 +33271,7 @@ GO:0071567	UFM1 hydrolase activity
 GO:0071568	UFM1 transferase activity
 GO:0071569	protein ufmylation
 GO:0071570	cement gland development
-GO:0071571	LRR domain-mediated complex assembly
+GO:0071571	obsolete LRR domain-mediated complex assembly
 GO:0071572	histone H3-K56 deacetylation
 GO:0071573	shelterin complex assembly
 GO:0071574	protein localization to medial cortex
@@ -35253,7 +35240,7 @@ GO:0090106	pancreatic E cell fate commitment
 GO:0090107	regulation of high-density lipoprotein particle assembly
 GO:0090108	positive regulation of high-density lipoprotein particle assembly
 GO:0090109	regulation of cell-substrate junction assembly
-GO:0090110	cargo loading into COPII-coated vesicle
+GO:0090110	COPII-coated vesicle cargo loading
 GO:0090111	regulation of COPII vesicle uncoating
 GO:0090112	COPII vesicle uncoating
 GO:0090113	regulation of ER to Golgi vesicle-mediated transport by GTP hydrolysis
@@ -36108,8 +36095,7 @@ GO:0097245	flavanol binding
 GO:0097246	catechin binding
 GO:0097247	epigallocatechin 3-gallate binding
 GO:0097248	maintenance of protein location in cell cortex of cell tip
-GO:0097249	mitochondrial respiratory chain supercomplex
-GO:0097250	mitochondrial respiratory chain supercomplex assembly
+GO:0097250	mitochondrial respirasome assembly
 GO:0097251	leukotriene B4 biosynthetic process
 GO:0097252	oligodendrocyte apoptotic process
 GO:0097253	beta-hydroxybutyrate transmembrane transporter activity
@@ -36541,7 +36527,7 @@ GO:0097692	histone H3-K4 monomethylation
 GO:0097693	ocelloid
 GO:0097694	establishment of RNA localization to telomere
 GO:0097695	establishment of protein-containing complex localization to telomere
-GO:0097696	STAT cascade
+GO:0097696	receptor signaling pathway via STAT
 GO:0097697	tRNA 5-carboxymethoxyuridine methyltransferase activity
 GO:0097698	telomere maintenance via base-excision repair
 GO:0097699	vascular endothelial cell response to fluid shear stress
@@ -36612,8 +36598,8 @@ GO:0098009	viral terminase, large subunit
 GO:0098015	virus tail
 GO:0098017	viral capsid, major subunit
 GO:0098018	viral capsid, minor subunit
-GO:0098019	virus tail, major subunit
-GO:0098020	virus tail, minor subunit
+GO:0098019	obsolete virus tail, major subunit
+GO:0098020	obsolete virus tail, minor subunit
 GO:0098021	viral capsid, decoration
 GO:0098022	viral capsid, fiber
 GO:0098023	virus tail, tip
@@ -37739,7 +37725,7 @@ GO:0102196	cortisol dehydrogenase activity
 GO:0102197	vinylacetate caboxylester hydrolase activity
 GO:0102198	L-idonate 5-dehydrogenase activity (NAD-dependent)
 GO:0102199	nitric oxide reductase activity (NAD(P)H-dependent) activity
-GO:0102200	N-acetylphosphatidylethanolamine-hydrolysing phospholipas activity
+GO:0102200	N-acetylphosphatidylethanolamine-hydrolysing phospholipase activity
 GO:0102201	(+)-2-epi-prezizaene synthase activity
 GO:0102202	soladodine glucosyltransferase activity
 GO:0102203	brassicasterol glucosyltransferase activity
@@ -38603,7 +38589,7 @@ GO:0103116	alpha-D-galactofuranose transporter activity
 GO:0103117	UDP-3-O-acyl-N-acetylglucosamine deacetylase activity
 GO:0103118	UDP-3-O-(R-3-hydroxymyristoyl)-glucosamine N-acyltransferase activity
 GO:0104004	cellular response to environmental stimulus
-GO:0104005	hijacked molecular function
+GO:0104005	obsolete hijacked molecular function
 GO:0106001	intestinal hexose absorption
 GO:0106002	mCRD-mediated mRNA stability complex
 GO:0106003	amyloid-beta complex
@@ -38739,6 +38725,25 @@ GO:0106150	zearalenone biosynthetic process
 GO:0106151	CNBH domain intrinsic ligand binding
 GO:0106153	phosphorylated histone binding
 GO:0106154	perithecium formation
+GO:0106155	peptidyl-lysine 3-dioxygenase activity
+GO:0106156	peptidyl-lysine 4-dioxygenase activity
+GO:0106157	peptidyl-arginine 3-dioxygenase activity
+GO:0106158	glycero-3-phosphocholine acyltransferase activity
+GO:0106159	regulation of small RNA loading onto RISC
+GO:0106160	negative regulation of small RNA loading onto RISC
+GO:0106161	positive regulation of small RNA loading onto RISC
+GO:0106162	mRNA N-acetyltransferase activity
+GO:0106163	regulation of exonucleolytic catabolism of deadenylated mRNA
+GO:0106164	positive regulation of exonucleolytic catabolism of deadenylated mRNA
+GO:0106165	negative regulation of exonucleolytic catabolism of deadenylated mRNA
+GO:0106166	spindle pole body anchor
+GO:0106167	extracellular ATP signaling
+GO:0106172	COPI-coated vesicle lumen
+GO:0106173	COPII-coated vesicle lumen
+GO:0106174	phagolysosome vesicle lumen
+GO:0106175	phagolysosome vesicle membrane
+GO:0106176	clathrin-coated endocytic vesicle lumen
+GO:0106177	cyclic-GMP-AMP hydrolase activity
 GO:0110001	toxin-antitoxin complex
 GO:0110002	regulation of tRNA methylation
 GO:0110003	regulation of tRNA C5-cytosine methylation
@@ -38863,6 +38868,15 @@ GO:0110128	phloem sucrose unloading
 GO:0110129	SHREC2 complex
 GO:0110130	ribitol-5-phosphatase activity
 GO:0110131	Aim21-Tda2 complex
+GO:0110132	regulation of CRISPR-cas system
+GO:0110133	negative regulation of CRISPR-cas system
+GO:0110134	meiotic drive
+GO:0110135	Norrin signaling pathway
+GO:0110136	protein-RNA complex remodeling
+GO:0110137	regulation of imaginal disc-derived leg joint morphogenesis
+GO:0110138	positive regulation of imaginal disc-derived leg joint morphogenesis
+GO:0110139	negative regulation of imaginal disc-derived leg joint morphogenesis
+GO:0110140	flagellum attachment zone organization
 GO:0120001	apical plasma membrane urothelial plaque
 GO:0120002	fusiform vesicle
 GO:0120003	hinge region between urothelial plaques of apical plasma membrane
@@ -39202,11 +39216,29 @@ GO:0140271	hexose import across plasma membrane
 GO:0140272	exogenous protein binding
 GO:0140273	repair of mitotic kinetochore microtubule attachment defect
 GO:0140274	repair of kinetochore microtubule attachment defect
+GO:0140275	MIB complex
 GO:0140278	mitotic division septum assembly
 GO:0140279	regulation of mitotic division septum assembly
 GO:0140280	negative regulation of mitotic division septum assembly
 GO:0140281	positive regulation of mitotic division septum assembly
-GO:0140282	undecaprenyldiphospho-N-acetyl-(N-acetylglucosaminyl)muramoyl pentapeptide amidotransferase (glutamine-hydrolyzing) activity
+GO:0140282	carbon-nitrogen ligase activity on lipid II
+GO:0140284	endoplasmic reticulum-endosome membrane contact site
+GO:0140285	endosome fission
+GO:0140288	GBAF complex
+GO:0140289	protein mono-ADP-ribosylation
+GO:0140290	peptidyl-serine ADP-deribosylation
+GO:0140291	peptidyl-glutamate ADP-deribosylation
+GO:0140292	ADP-ribosylserine hydrolase activity
+GO:0140293	ADP-ribosylglutamate hydrolase activity
+GO:0140294	NAD DNA ADP-ribosyltransferase activity
+GO:0140295	pathogen-derived receptor ligand activity
+GO:0140296	general transcription initiation factor binding
+GO:0140297	DNA-binding transcription factor binding
+GO:0140298	endocytic iron import into cell
+GO:0140299	small molecule sensor activity
+GO:0140300	serine import into mitochondrion
+GO:0140301	pollen-stigma interaction
+GO:0140302	pollen-style interaction
 GO:0150001	primary dendrite
 GO:0150002	distal dendrite
 GO:0150003	regulation of spontaneous synaptic transmission
@@ -39281,6 +39313,9 @@ GO:0150091	multiple spine synapse organization, multiple dendrites
 GO:0150092	regulation of synaptic scaling
 GO:0150093	amyloid-beta clearance by transcytosis
 GO:0150094	amyloid-beta clearance by cellular catabolic process
+GO:0150098	glial cell-neuron signaling
+GO:0150099	neuron-glial cell signaling
+GO:0150100	RNA binding involved in posttranscriptional gene silencing
 GO:0198738	cell-cell signaling by wnt
 GO:1900000	regulation of anthocyanin catabolic process
 GO:1900001	negative regulation of anthocyanin catabolic process
@@ -41643,8 +41678,6 @@ GO:1902415	regulation of mRNA binding
 GO:1902416	positive regulation of mRNA binding
 GO:1902417	(+)-abscisic acid D-glucopyranosyl ester transmembrane transporter activity
 GO:1902418	(+)-abscisic acid D-glucopyranosyl ester transmembrane transport
-GO:1902419	detection of stimulus involved in Dma1-dependent checkpoint
-GO:1902420	signal transduction involved in Dma1-dependent checkpoint
 GO:1902421	hydrogen metabolic process
 GO:1902422	hydrogen biosynthetic process
 GO:1902423	regulation of attachment of mitotic spindle microtubules to kinetochore
@@ -42072,9 +42105,9 @@ GO:1902874	positive regulation of horizontal cell localization
 GO:1902875	regulation of embryonic pattern specification
 GO:1902876	negative regulation of embryonic pattern specification
 GO:1902877	positive regulation of embryonic pattern specification
-GO:1902878	regulation of BMP signaling pathway involved in spinal cord association neuron specification
-GO:1902879	negative regulation of BMP signaling pathway involved in spinal cord association neuron specification
-GO:1902880	positive regulation of BMP signaling pathway involved in spinal cord association neuron specification
+GO:1902878	obsolete regulation of BMP signaling pathway involved in spinal cord association neuron specification
+GO:1902879	obsolete negative regulation of BMP signaling pathway involved in spinal cord association neuron specification
+GO:1902880	obsolete positive regulation of BMP signaling pathway involved in spinal cord association neuron specification
 GO:1902882	regulation of response to oxidative stress
 GO:1902883	negative regulation of response to oxidative stress
 GO:1902884	positive regulation of response to oxidative stress
@@ -43155,8 +43188,8 @@ GO:1904008	response to monosodium glutamate
 GO:1904009	cellular response to monosodium glutamate
 GO:1904010	response to Aroclor 1254
 GO:1904011	cellular response to Aroclor 1254
-GO:1904012	platinum binding
-GO:1904013	xenon atom binding
+GO:1904012	obsolete platinum binding
+GO:1904013	obsolete xenon atom binding
 GO:1904014	response to serotonin
 GO:1904015	cellular response to serotonin
 GO:1904016	response to Thyroglobulin triiodothyronine
@@ -43310,9 +43343,6 @@ GO:1904163	obsolete regulation of triglyceride homeostasis
 GO:1904164	obsolete negative regulation of triglyceride homeostasis
 GO:1904165	obsolete positive regulation of triglyceride homeostasis
 GO:1904166	obsolete negative regulation of cholesterol homeostasis
-GO:1904167	regulation of thyroid hormone receptor activity
-GO:1904168	negative regulation of thyroid hormone receptor activity
-GO:1904169	positive regulation of thyroid hormone receptor activity
 GO:1904170	regulation of bleb assembly
 GO:1904171	negative regulation of bleb assembly
 GO:1904172	positive regulation of bleb assembly
@@ -44027,9 +44057,9 @@ GO:1904888	cranial skeletal system development
 GO:1904889	regulation of excitatory synapse assembly
 GO:1904890	negative regulation of excitatory synapse assembly
 GO:1904891	positive regulation of excitatory synapse assembly
-GO:1904892	regulation of STAT cascade
-GO:1904893	negative regulation of STAT cascade
-GO:1904894	positive regulation of STAT cascade
+GO:1904892	regulation of receptor signaling pathway via STAT
+GO:1904893	negative regulation of receptor signaling pathway via STAT
+GO:1904894	positive regulation of receptor signaling pathway via STAT
 GO:1904895	ESCRT complex assembly
 GO:1904896	ESCRT complex disassembly
 GO:1904897	regulation of hepatic stellate cell proliferation
@@ -44329,8 +44359,8 @@ GO:1905191	positive regulation of metaphase/anaphase transition of meiosis II
 GO:1905192	regulation of chloroplast fission
 GO:1905193	negative regulation of chloroplast fission
 GO:1905194	positive regulation of chloroplast fission
-GO:1905195	regulation of ATPase activity, uncoupled
-GO:1905196	positive regulation of ATPase activity, uncoupled
+GO:1905195	obsolete regulation of ATPase activity, uncoupled
+GO:1905196	obsolete positive regulation of ATPase activity, uncoupled
 GO:1905197	endocannabinoid signaling pathway involved in retrograde trans-synaptic signaling
 GO:1905198	manchette assembly
 GO:1905199	manchette disassembly
@@ -46841,8 +46871,6 @@ GO:2000819	regulation of nucleotide-excision repair
 GO:2000820	negative regulation of transcription from RNA polymerase II promoter involved in smooth muscle cell differentiation
 GO:2000821	regulation of grooming behavior
 GO:2000822	regulation of behavioral fear response
-GO:2000823	regulation of androgen receptor activity
-GO:2000824	negative regulation of androgen receptor activity
 GO:2000825	positive regulation of androgen receptor activity
 GO:2000826	regulation of heart morphogenesis
 GO:2000827	mitochondrial RNA surveillance
@@ -47333,8 +47361,8 @@ GO:2001315	UDP-4-deoxy-4-formamido-beta-L-arabinopyranose biosynthetic process
 GO:2001316	kojic acid metabolic process
 GO:2001317	kojic acid biosynthetic process
 ends_during	ends_during
-happens_during	happens_during
-has_part	has_part
+happens_during	happens during
+has_part	has part
 negatively_regulates	negatively regulates
 never_in_taxon	never_in_taxon
 occurs_in	occurs in

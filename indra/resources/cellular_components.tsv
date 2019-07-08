@@ -156,7 +156,7 @@ GO:0000943	retrotransposon nucleocapsid
 GO:0000974	Prp19 complex
 GO:0001114	protein-DNA-RNA complex
 GO:0001400	mating projection base
-GO:0001401	mitochondrial sorting and assembly machinery complex
+GO:0001401	SAM complex
 GO:0001405	PAM complex, Tim23 associated import motor
 GO:0001411	hyphal tip
 GO:0001518	voltage-gated sodium channel complex
@@ -341,7 +341,7 @@ GO:0005742	mitochondrial outer membrane translocase complex
 GO:0005743	mitochondrial inner membrane
 GO:0005744	TIM23 mitochondrial import inner membrane translocase complex
 GO:0005745	m-AAA complex
-GO:0005746	mitochondrial respiratory chain
+GO:0005746	mitochondrial respirasome
 GO:0005747	mitochondrial respiratory chain complex I
 GO:0005749	mitochondrial respiratory chain complex II, succinate dehydrogenase complex (ubiquinone)
 GO:0005750	mitochondrial respiratory chain complex III
@@ -841,19 +841,6 @@ GO:0019005	SCF ubiquitin ligase complex
 GO:0019008	molybdopterin synthase complex
 GO:0019012	virion
 GO:0019013	viral nucleocapsid
-GO:0019015	viral genome
-GO:0019016	non-segmented viral genome
-GO:0019017	segmented viral genome
-GO:0019018	bipartite viral genome
-GO:0019019	tripartite viral genome
-GO:0019020	multipartite viral genome
-GO:0019021	DNA viral genome
-GO:0019022	RNA viral genome
-GO:0019023	dsRNA viral genome
-GO:0019024	ssRNA viral genome
-GO:0019025	positive sense viral genome
-GO:0019026	negative sense viral genome
-GO:0019027	ambisense viral genome
 GO:0019028	viral capsid
 GO:0019029	helical viral capsid
 GO:0019030	icosahedral viral capsid
@@ -863,7 +850,6 @@ GO:0019034	viral replication complex
 GO:0019035	viral integration complex
 GO:0019036	viral transcriptional complex
 GO:0019037	viral assembly intermediate
-GO:0019038	provirus
 GO:0019183	histamine-gated chloride channel complex
 GO:0019185	snRNA-activating protein complex
 GO:0019197	phosphoenolpyruvate-dependent sugar phosphotransferase complex
@@ -2563,6 +2549,10 @@ GO:0062073	histone mRNA stem-loop binding complex
 GO:0062074	pollen aperture
 GO:0062077	phenylacetyl-CoA 1,2-epoxidase complex
 GO:0062079	ATG2-ATG18 complex
+GO:0062091	Ycf2/FtsHi complex
+GO:0062092	Yae1-Lto1 complex
+GO:0062113	early phagosome lumen
+GO:0062116	phenyloplast
 GO:0065010	extracellular membrane-bounded organelle
 GO:0070013	intracellular organelle lumen
 GO:0070014	sucrase-isomaltase complex
@@ -2663,8 +2653,8 @@ GO:0070464	alphav-beta3 integrin-collagen alpha3(VI) complex
 GO:0070465	alpha1-beta1 integrin-alpha3(VI) complex
 GO:0070466	alpha2-beta1 integrin-alpha3(VI) complex
 GO:0070467	RC-1 DNA recombination complex
-GO:0070469	respiratory chain
-GO:0070470	plasma membrane respiratory chain
+GO:0070469	respirasome
+GO:0070470	plasma membrane respirasome
 GO:0070477	endospore core
 GO:0070505	pollen coat
 GO:0070514	SRF-myogenin-E12 complex
@@ -3153,7 +3143,6 @@ GO:0097229	sperm end piece
 GO:0097232	lamellar body membrane
 GO:0097233	alveolar lamellar body membrane
 GO:0097234	epidermal lamellar body membrane
-GO:0097249	mitochondrial respiratory chain supercomplex
 GO:0097255	R2TP complex
 GO:0097268	cytoophidium
 GO:0097311	bacterial biofilm matrix
@@ -3355,8 +3344,6 @@ GO:0098009	viral terminase, large subunit
 GO:0098015	virus tail
 GO:0098017	viral capsid, major subunit
 GO:0098018	viral capsid, minor subunit
-GO:0098019	virus tail, major subunit
-GO:0098020	virus tail, minor subunit
 GO:0098021	viral capsid, decoration
 GO:0098022	viral capsid, fiber
 GO:0098023	virus tail, tip
@@ -3668,6 +3655,11 @@ GO:0106125	reservosome matrix
 GO:0106126	reservosome membrane
 GO:0106139	symbiont cell surface
 GO:0106143	tRNA (m7G46) methyltransferase complex
+GO:0106172	COPI-coated vesicle lumen
+GO:0106173	COPII-coated vesicle lumen
+GO:0106174	phagolysosome vesicle lumen
+GO:0106175	phagolysosome vesicle membrane
+GO:0106176	clathrin-coated endocytic vesicle lumen
 GO:0110001	toxin-antitoxin complex
 GO:0110016	B-WICH complex
 GO:0110067	ammonium transmembrane transporter complex
@@ -3736,6 +3728,9 @@ GO:0140240	perforant pathway to dendrate granule cell synapse
 GO:0140261	BCOR complex
 GO:0140266	Woronin body
 GO:0140268	endoplasmic reticulum-plasma membrane contact site
+GO:0140275	MIB complex
+GO:0140284	endoplasmic reticulum-endosome membrane contact site
+GO:0140288	GBAF complex
 GO:0150001	primary dendrite
 GO:0150002	distal dendrite
 GO:0150004	dendritic spine origin
