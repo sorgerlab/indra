@@ -866,17 +866,17 @@ def run_adeft_disambiguation(stmt, agent, idx):
         # and reset the (potentially incorrectly standardized) name to the
         # original text value.
         if ns_and_id == 'ungrounded':
-            new_agent.name = agent_txt
-            new_agent.db_refs = {'TEXT': agent_txt}
+            agent.name = agent_txt
+            agent.db_refs = {'TEXT': agent_txt}
         # Otherwise we update the db_refs with what we got from DEFT
         # and set the standard name
         else:
-            db_ns, db_id = ns_and_id.split(':')
-            new_agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
-            new_agent.name = standard_name
+            db_ns, db_id = ns_and_id.split(':', maxsplit=1)
+            agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
+            agent.name = standard_name
             logger.info('Disambiguated %s to: %s, %s:%s' %
                         (agent_txt, standard_name, db_ns, db_id))
-            GroundingMapper.standardize_agent_name(new_agent,
+            GroundingMapper.standardize_agent_name(agent,
                                                    standardize_refs=True)
             annots['agents']['adeft'][idx] = disamb_scores
 
