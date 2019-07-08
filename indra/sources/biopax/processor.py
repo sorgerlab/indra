@@ -1598,6 +1598,9 @@ def get_specific_chebi_id(chebi_ids, name):
 
 
 def to_impl(x):
+    """Return an Impl instance casted version the given biopax object."""
+    if x is None:
+        return None
     name = x.__class__.__name__.split('.')[-1]
     if not name.endswith('Impl'):
         impl = cast(_bpimpl(name), x)
