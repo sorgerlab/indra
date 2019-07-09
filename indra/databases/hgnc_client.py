@@ -1,19 +1,11 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 import re
-import csv
 import logging
 import requests
 import xml.etree.ElementTree as ET
-# Python3
-try:
-    from functools import lru_cache
-# Python2
-except ImportError:
-    from functools32 import lru_cache
-from indra.util import read_unicode_csv, UnicodeXMLTreeBuilder as UTB
+from functools import lru_cache
 
+from indra.util import read_unicode_csv, UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +137,6 @@ def get_current_hgnc_id(hgnc_name):
         return hgnc_id
     hgnc_id = prev_sym_map.get(hgnc_name)
     return hgnc_id
-
 
 
 def get_hgnc_from_mouse(mgi_id):
@@ -366,6 +357,7 @@ def _read_hgnc_maps():
     return (hgnc_names, hgnc_ids, hgnc_withdrawn,
             uniprot_ids, entrez_ids, entrez_ids_reverse, mouse_map, rat_map,
             prev_sym_map)
+
 
 (hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids,
  entrez_ids_reverse, mouse_map, rat_map, prev_sym_map) = \
