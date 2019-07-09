@@ -1,18 +1,13 @@
 import os
 import re
 import logging
+import requests
 import xml.etree.ElementTree as ET
 from functools import lru_cache
 
 from indra.util import read_unicode_csv, UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger(__name__)
-
-try:
-    import requests
-except ImportError:
-    requests = None
-    logger.warning("Could not import requests: web lookups unavailable.")
 
 
 hgnc_url = 'http://rest.genenames.org/fetch/'
@@ -231,11 +226,6 @@ def get_hgnc_entry(hgnc_id):
         The XML ElementTree corresponding to the entry for the
         given HGNC ID.
     """
-    if requests is None:
-        logger.warning("requests package could not be imported, "
-                       "web service requests are not available.")
-        return None
-
     url = hgnc_url + 'hgnc_id/%s' % hgnc_id
     headers = {'Accept': '*/*'}
     res = requests.get(url, headers=headers)
