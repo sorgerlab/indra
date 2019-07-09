@@ -1257,6 +1257,26 @@ class SignedDiGraphModelChecker(DiGraphModelChecker):
         return ([subj], [obj], target_polarity, None)
 
 
+class PybelModelChecker(ModelChecker):
+    """Check a PyBEL model against a set of INDRA statements.
+
+    Parameters
+    ----------
+    model : pysb.Model
+        A PySB model to check.
+    statements : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements to check the model against.
+    agent_obs: Optional[list[indra.statements.Agent]]
+        A list of INDRA Agents in a given state to be observed.
+    do_sampling : bool
+        Whether to use breadth-first search or weighted sampling to
+        generate paths. Default is False (breadth-first search).
+    seed : int
+        Random seed for sampling (optional, default is None).
+    """
+    pass
+
+
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
                          agent_to_obs, agents_values):
     # Build up dict mapping observables to values
