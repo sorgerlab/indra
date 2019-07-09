@@ -4,6 +4,7 @@ import random
 from builtins import dict, str
 
 from datetime import datetime
+from unittest import SkipTest
 
 from nose.plugins.attrib import attr
 from indra.sources import indra_db_rest as dbr
@@ -147,6 +148,7 @@ def test_famplex_namespace():
 
 @attr('nonpublic')
 def test_paper_query():
+    raise SkipTest("Paper query currently not supported.")
     stmts_1 = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
                                             ('pmid', '27014235')])
     assert len(stmts_1)
@@ -180,5 +182,6 @@ def test_get_statements_by_hash_no_hash():
 
 @attr('nonpublic')
 def test_curation_submission():
+    raise SkipTest("Curation currently not working.")
     dbr.submit_curation(32760831642168299, 'TEST', 'This is a test.',
                         'tester', is_test=True)
