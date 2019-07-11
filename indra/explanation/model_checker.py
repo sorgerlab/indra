@@ -458,6 +458,56 @@ class ModelChecker(object):
                 queue.append(new_path)
         return
 
+    def signed_edges_to_signed_nodes(self, graph, prune_negative_sources=True):
+        """Convert a graph with signed edges to a graph with signed nodes. The
+        Each pair of nodes and edge in an input graph are represented as four
+        nodes and two edges in the new graph. For example, an edge (a, b, 0),
+        where a and b are nodes and 0 is a sign of an edge (positive),
+        will be represented as edges ((a, 0), (b, 0)) and ((a, 1), (b, 1)),
+        where (a, 0), (a, 1), (b, 0), (b, 1) are signed nodes. An edge
+        (a, b, 1) with a sign 1 (negative) will be represented as edges
+        ((a, 0), (b, 1)) and ((a, 1), (b, 0)).
+
+        Parameters
+        ----------
+        graph : networkx.MultiDiGraph
+            Graph with signed edges to convert. Can have multiple edges between
+            a pair of nodes.
+        prune_negative_sources : Optional(boolean)
+            If True, iteratively prunes negative (with sign 1) nodes without
+            predecessors.
+        Returns
+        -------
+        signed_nodes_graph : networkx.DiGraph
+        """
+        signed_nodes_graph = nx.DiGraph()
+        edges = set()
+        for u, v, edge_data in graph.edges(data=True):
+            edge_sign = edge_data.get('sign')
+            if edge_sign == 0:
+                edges.add(((u, 0), (v, 0)))
+                edges.add(((u, 1), (v, 1)))
+            elif edge_sign == 1:
+                edges.add(((u, 0), (v, 1)))
+                edges.add(((u, 1), (v, 0)))
+        signed_nodes_graph.add_edges_from(edges)
+        if prune_negative_sources:
+            signed_nodes_graph = self.prune_nodes(signed_nodes_graph)
+        return signed_nodes_graph
+
+    def prune_nodes(self, graph):
+        """Prune nodes with sign (1) if they do not have predecessors."""
+        nodes_to_prune = [node for node, in_deg
+                          in graph.in_degree()
+                          if in_deg == 0 and node[1] == 1]
+        while nodes_to_prune:
+            graph.remove_nodes_from(nodes_to_prune)
+            # Make a list of nodes whose in degree is now 0
+            nodes_to_prune = [node for node, in_deg
+                              in graph.in_degree()
+                              if in_deg == 0 and node[1] == 1]
+        return graph
+
     def _get_signed_predecessors(self, graph, node, polarity):
         """Get upstream nodes in the graph.
 
@@ -1262,8 +1312,8 @@ class PybelModelChecker(ModelChecker):
 
     Parameters
     ----------
-    model : pysb.Model
-        A PySB model to check.
+    model : pybel.BELGraph
+        A Pybel model to check.
     statements : Optional[list[indra.statements.Statement]]
         A list of INDRA Statements to check the model against.
     agent_obs: Optional[list[indra.statements.Agent]]

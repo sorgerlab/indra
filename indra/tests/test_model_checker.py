@@ -5,6 +5,7 @@ import pickle
 import random
 import numpy as np
 import pygraphviz as pgv
+import networkx as nx
 from indra.statements import *
 from collections import Counter
 from pysb import *
@@ -1429,6 +1430,36 @@ def test_amount_vs_activation():
     mc.draw_im('test.pdf')
     results = mc.check_model(max_path_length=1, max_paths=1)
     assert results[0][1].result_code == 'NO_PATHS_FOUND', results
+
+
+def test_signed_edges_to_nodes():
+    g = nx.MultiDiGraph()
+    g.add_edge('A', 'B', sign=0)
+    g.add_edge('A', 'C', sign=0)
+    g.add_edge('B', 'D', sign=1)
+    g.add_edge('C', 'D', sign=0)
+    g.add_edge('E', 'B', sign=1)
+    assert len(g.edges) == 5
+    assert len(g.nodes) == 5
+    mc = ModelChecker(g)
+    # Create a signed nodes graph without pruning
+    sng = mc.signed_edges_to_signed_nodes(g, prune_negative_sources=False)
+    assert len(sng.nodes) == 10
+    assert len(sng.edges) == 10
+    assert set(sng.nodes) == set(
+        [('A', 0), ('A', 1), ('B', 0), ('B', 1), ('C', 0), ('C', 1), ('D', 0),
+         ('D', 1), ('E', 0), ('E', 1)])
+    assert (('A', 0), ('B', 0)) in sng.edges
+    assert (('A', 1), ('B', 1)) in sng.edges
+    assert (('B', 0), ('D', 1)) in sng.edges
+    assert (('B', 1), ('D', 0)) in sng.edges
+    # Create a signed nodes graph with pruning
+    psng = mc.signed_edges_to_signed_nodes(g, prune_negative_sources=True)
+    assert len(psng.nodes) == 7
+    assert ('A', 1) not in psng.nodes
+    assert ('C', 1) not in psng.nodes
+    assert ('E', 1) not in psng.nodes
+    assert len(psng.edges) == 6
 
 
 if __name__ == '__main__':
