@@ -223,30 +223,7 @@ class PybelAssembler(object):
                 else: # output_format == 'bel':
                     pybel.to_bel(self.model, fh)
 
-
-    def to_signed_graph(self, symmetric_variant_links=False):
-        edge_set = set()
-        for u, v, edge_data in self.model.edges(data=True):
-            rel = edge_data.get('relation')
-            if rel in pc.CAUSAL_INCREASE_RELATIONS:
-                edge_set.add((u, v, 0))
-            elif rel in (pc.HAS_VARIANT, pc.HAS_COMPONENT):
-                edge_set.add((u, v, 0))
-                if symmetric_variant_links:
-                    edge_set.add((v, u, 0))
-            elif rel in pc.CAUSAL_DECREASE_RELATIONS:
-                edge_set.add((u, v, 1))
-            else:
-                continue
-        # Turn the tuples into dicts
-        graph = nx.MultiDiGraph()
-        graph.add_edges_from(
-            (u, v, dict(sign=sign))
-            for u, v, sign in edge_set
-        )
-        return graph
-
-    def _add_nodes_edges(self, subj_agent, obj_agent, relation, stmt_hash, 
+    def _add_nodes_edges(self, subj_agent, obj_agent, relation, stmt_hash,
                          evidences):
         """Given subj/obj agents, relation, and evidence, add nodes/edges."""
         subj_data, subj_edge = _get_agent_node(subj_agent)
@@ -286,7 +263,7 @@ class PybelAssembler(object):
         """Example: p(HGNC:ELK1) => p(HGNC:FOS)"""
         activates = isinstance(stmt, IncreaseAmount)
         relation = get_causal_edge(stmt, activates)
-        self._add_nodes_edges(stmt.subj, stmt.obj, relation, 
+        self._add_nodes_edges(stmt.subj, stmt.obj, relation,
                               stmt.get_hash(refresh=True), stmt.evidence)
 
     def _assemble_gef(self, stmt):
@@ -385,6 +362,28 @@ class PybelAssembler(object):
         #cyto_go = cyto_uri.rsplit('/')[-1]
         pass
 
+
+def belgraph_to_signed_graph(belgrpah, symmetric_variant_links=False):
+        edge_set = set()
+        for u, v, edge_data in belgrpah.edges(data=True):
+            rel = edge_data.get('relation')
+            if rel in pc.CAUSAL_INCREASE_RELATIONS:
+                edge_set.add((u, v, 0))
+            elif rel in (pc.HAS_VARIANT, pc.HAS_COMPONENT):
+                edge_set.add((u, v, 0))
+                if symmetric_variant_links:
+                    edge_set.add((v, u, 0))
+            elif rel in pc.CAUSAL_DECREASE_RELATIONS:
+                edge_set.add((u, v, 1))
+            else:
+                continue
+        # Turn the tuples into dicts
+        graph = nx.MultiDiGraph()
+        graph.add_edges_from(
+            (u, v, dict(sign=sign))
+            for u, v, sign in edge_set
+        )
+        return graph
 
 def _combine_edge_data(relation, subj_edge, obj_edge, stmt_hash, evidences):
     edge_data = {pc.RELATION: relation}
