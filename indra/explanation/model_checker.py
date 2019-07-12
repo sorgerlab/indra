@@ -18,6 +18,7 @@ from indra.statements import *
 from indra.assemblers.pysb import assembler as pa
 from collections import Counter
 from indra.assemblers.pysb.kappa_util import im_json_to_graph
+from indra.assemblers.pybel.assembler import belgraph_to_signed_graph
 
 try:
     import paths_graph as pg
@@ -458,7 +459,7 @@ class ModelChecker(object):
                 queue.append(new_path)
         return
 
-    def signed_edges_to_signed_nodes(self, graph, prune_negative_sources=True):
+    def signed_edges_to_signed_nodes(self, graph, prune_nodes=True):
         """Convert a graph with signed edges to a graph with signed nodes. The
         Each pair of nodes and edge in an input graph are represented as four
         nodes and two edges in the new graph. For example, an edge (a, b, 0),
@@ -546,12 +547,7 @@ class ModelChecker(object):
         return PathResult(False, result_code, max_paths, max_path_length)
 
     def get_graph(self):
-        """
-        Return a graph to run the path finding algorithm. Depending on the
-        model, different child classes can return different objects, e.g.
-        PysbModelChecker.get_graph() should call self.get_im() method, while
-        graph based ModelChecker classes will return self.model.
-        """
+        """Return a graph  with signed nodes to find the path."""
         raise NotImplementedError("Method must be implemented in child class.")
 
     def process_statement(self, stmt):
@@ -792,7 +788,10 @@ class PysbModelChecker(ModelChecker):
         return self._im
 
     def get_graph(self):
-        return self.get_im()
+        """Get influence map and convert it to a graph with signed nodes."""
+        im = self.get_im()
+        graph = self.signed_edges_to_signed_nodes(im, prune_nodes=True)
+        return graph
 
     def process_statement(self, stmt):
         self.get_im()
@@ -804,13 +803,13 @@ class PysbModelChecker(ModelChecker):
             return (None, None, None, 'STATEMENT_TYPE_NOT_HANDLED')
         # Get the polarity for the statement
         if isinstance(stmt, Modification):
-            target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
+            target_polarity = 1 if isinstance(stmt, RemoveModification) else 0
         elif isinstance(stmt, RegulateActivity):
-            target_polarity = 1 if stmt.is_activation else -1
+            target_polarity = 0 if stmt.is_activation else 1
         elif isinstance(stmt, RegulateAmount):
-            target_polarity = -1 if isinstance(stmt, DecreaseAmount) else 1
+            target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
         elif isinstance(stmt, Influence):
-            target_polarity = -1 if stmt.overall_polarity() == -1 else 1
+            target_polarity = 1 if stmt.overall_polarity() == -1 else 0
         # Get the subject and object (works also for Modifications)
         subj, obj = stmt.agent_list()
         # Get a list of monomer patterns matching the subject FIXME Currently
@@ -1201,31 +1200,7 @@ class PysbModelChecker(ModelChecker):
         return dg
 
 
-class DiGraphModelChecker(ModelChecker):
-    """Check a DiGraph against a set of INDRA statements.
-
-    This class implements shared functionality of UnsignedDiGraphModelChecker
-    and SignedDiGraphModelChecker and should not be instantiated directly.
-    """
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
-    def __init__(self):
-        pass
-
-    def get_graph(self):
-        return self.model
-
-    def process_subject(self, subj):
-        return [subj], None
-
-    def _sample_paths(self, input_set, obj_name, target_polarity,
-                      max_paths=1, max_path_length=5):
-        # TODO implement sampling
-        pass
-
-
-class UnsignedDiGraphModelChecker(DiGraphModelChecker):
+class UnsignedModelChecker(ModelChecker):
     """Check an unsigned DiGraph against a set of INDRA statements.
 
     Parameters
@@ -1241,24 +1216,37 @@ class UnsignedDiGraphModelChecker(DiGraphModelChecker):
         Random seed for sampling (optional, default is None).
     """
     def __init__(self, model, statements=None, do_sampling=False, seed=None):
-        super(DiGraphModelChecker, self).__init__(
-            model, statements, do_sampling, seed)
+        super().__init__(model, statements, do_sampling, seed)
+
+    def get_graph(self):
+        new_graph = nx.DiGraph()
+        for (u, v) in self.model.edges:
+            new_graph.add_edge((u, 0), (v, 0))
+        return new_graph
 
     def _get_edge_sign(self, graph, edge):
         return 1
 
     def process_statement(self, stmt):
         subj, obj = stmt.agent_list()
-        return ([subj], [obj], 1, None)
+        return ([subj.name], [obj.name], 1, None)
+
+    def process_subject(self, subj):
+        return [subj], None
+
+    def _sample_paths(self, input_set, obj_name, target_polarity,
+                      max_paths=1, max_path_length=5):
+        # TODO implement sampling
+        pass
 
 
-class SignedDiGraphModelChecker(DiGraphModelChecker):
-    """Check an unsigned DiGraph against a set of INDRA statements.
+class SignedGraphModelChecker(ModelChecker):
+    """Check an signed MultiDiGraph against a set of INDRA statements.
 
     Parameters
     ----------
-    model : networkx.DiGraph
-        Signed DiGraph to check.
+    model : networkx.MultiDiGraph
+        Signed MultiDiGraph to check.
     statements : Optional[list[indra.statements.Statement]]
         A list of INDRA Statements to check the model against.
     do_sampling : bool
@@ -1268,8 +1256,10 @@ class SignedDiGraphModelChecker(DiGraphModelChecker):
         Random seed for sampling (optional, default is None).
     """
     def __init__(self, model, statements=None, do_sampling=False, seed=None):
-        super(DiGraphModelChecker, self).__init__(
-            model, statements, do_sampling, seed)
+        super().__init__(model, statements, do_sampling, seed)
+
+    def get_graph(self):
+        return self.signed_edges_to_signed_nodes(self.model)
 
     def _get_edge_sign(self, graph, edge):
         """Get the sign of the edge."""
@@ -1293,18 +1283,18 @@ class SignedDiGraphModelChecker(DiGraphModelChecker):
     def process_statement(self, stmt):
         # Get the polarity for the statement
         if isinstance(stmt, Modification):
-            target_polarity = -1 if isinstance(stmt, RemoveModification) else 1
+            target_polarity = 1 if isinstance(stmt, RemoveModification) else 0
         elif isinstance(stmt, RegulateActivity):
-            target_polarity = 1 if stmt.is_activation else -1
+            target_polarity = 0 if stmt.is_activation else 1
         elif isinstance(stmt, RegulateAmount):
-            target_polarity = -1 if isinstance(stmt, DecreaseAmount) else 1
+            target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
         elif isinstance(stmt, Influence):
-            target_polarity = -1 if stmt.overall_polarity() == -1 else 1
+            target_polarity = 1 if stmt.overall_polarity() == -1 else 0
         # If it is a different type of statement, use positive polarity
         else:
-            target_polarity = 1
+            target_polarity = 0
         subj, obj = stmt.agent_list()
-        return ([subj], [obj], target_polarity, None)
+        return ([subj.name], [obj.name], target_polarity, None)
 
 
 class PybelModelChecker(ModelChecker):
@@ -1316,15 +1306,20 @@ class PybelModelChecker(ModelChecker):
         A Pybel model to check.
     statements : Optional[list[indra.statements.Statement]]
         A list of INDRA Statements to check the model against.
-    agent_obs: Optional[list[indra.statements.Agent]]
-        A list of INDRA Agents in a given state to be observed.
     do_sampling : bool
         Whether to use breadth-first search or weighted sampling to
         generate paths. Default is False (breadth-first search).
     seed : int
         Random seed for sampling (optional, default is None).
     """
-    pass
+    def __init__(self, model, statements=None, do_sampling=False, seed=None):
+        super().__init__(model, statements, do_sampling, seed)
+
+    def get_graph(self):
+        """Convert a PyBELGraph to a graph with signed nodes."""
+        signed_edges = belgraph_to_signed_graph(self.model)
+        graph = self.signed_edges_to_signed_nodes(signed_edges)
+        return graph
 
 
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
