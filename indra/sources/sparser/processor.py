@@ -218,8 +218,15 @@ def _fix_agent(agent):
     # Check what entries we have
     up_id = agent.db_refs.get('UP')
     hgnc_id = agent.db_refs.get('HGNC')
+    # This is a special case that happens sometimes where agent.name is 'UP:
+    # db_refs['UP'] is an empty string, and there is no other grounding.
+    # In this case, we remove the empty UP grounding and reset the name to the
+    # agent text.
+    if not be_id and not hgnc_id and up_id == '':
+        agent.name = agent.db_refs.get('TEXT', agent.name)
+        agent.db_refs.pop('UP')
     # FPLX takes precedence if we have it
-    if be_id:
+    elif be_id:
         agent.db_refs['FPLX'] = be_id
         agent.name = be_id
     elif hgnc_id:
