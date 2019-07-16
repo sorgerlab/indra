@@ -1,223 +1,158 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="../../favicon.ico">
+{% extends "indra_template.html" %}
 
-    <title>INDRA Results</title>
+{% block scripts %}
+  <!-- Toggle a hidden element -->
+  <script>
+    function toggle_corner(div, side) {
+      var prop = "border-bottom-" + side + "-radius";
+      var bl_radius = $(div).css(prop);
+      if (bl_radius == "8px") {
+        $(div).css(prop, "1px");
+      } else {
+        $(div).css(prop, "8px");
+      }
+    }
 
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    function toggler(short_name_key) {
+      $("#" + short_name_key + "_group").toggle();
+      var header = "#" + short_name_key + "_heading";
+      toggle_corner(header, "left");
+      toggle_corner(header, "right");
+      $(header).show();
+    }
+  </script>
+{% endblock %}
 
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-    <!-- TOC plugin: https://afeld.github.io/bootstrap-toc/ -->
-    <link rel="stylesheet" href="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.0/dist/bootstrap-toc.min.css" crossorigin="anonymous">
 
-    <!-- Optional theme -->
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
-
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
-    <!-- TOC plugin JS: https://afeld.github.io/bootstrap-toc/ -->
-    <script src="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.0/dist/bootstrap-toc.min.js" crossorigin="anonymous"></script>
-
-    {% for script_src in other_scripts %}
-      <script src="{{ script_src }}"></script>
-    {% endfor %}
-
-    <!-- Toggle a hidden element -->
-    <script>
-        function toggle_corner(div, side) {
-            var prop = "border-bottom-" + side + "-radius";
-            var bl_radius = $(div).css(prop);
-            if (bl_radius == "8px") {
-               $(div).css(prop, "1px");
-            } else {
-               $(div).css(prop, "8px");
-            }
-        }
-        function toggler(short_name_key) {
-            $("#" + short_name_key + "_group").toggle();
-            var header = "#" + short_name_key + "_heading"
-            toggle_corner(header, "left");
-            toggle_corner(header, "right");
-            $(header).show();
-         }
-    </script>
-
-  <style>
-a {
-  color: #256DC5;
-  target-new: tab;
-}
-nav[data-toggle=toc] .nav>li>a {
-  font-size: 0.72em;
-  padding-right: 10px;
-}
-nav[data-toggle=toc] .nav .nav>li>a {
-  font-size: 0.68em;
-}
-p {
-  margin-bottom: 0px;
-}
-h5 {
-  display: inline-block;
-  margin: 0px;
-}
-nav {
-  overflow-y: auto;
-  height: 100vh;
-  display: block;
-}
-.group {
-  display: none;
-  border-top-left-radius: 1px;
-  border-top-right-radius: 1px;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-  padding: 5px;
-  margin: 5px;
-}
-.group_heading {
-  cursor: pointer;
-  color: #2F4F4F;
-  padding: 5px;
-  padding-left: 10px;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-  border: 1px solid #C0C0C0;
-  margin: 5px;
-  position: sticky;
-}
-.badge-subject {
-  background-color: #4a36aa;
-  color: #FFFFFF;
-}
-.badge-object {
-  background-color: #2d8e4c;
-  color: #FFFFFF;
-}
-.badge-other {
-  background-color: #606060;
-  color: #FFFFFF;
-}
-.curation_toggle {
-  cursor: pointer;
-}
-  </style>
-
-  </head>
-
+{% block body %}
   <body data-spy="scroll" data-target="#toc">
 
-    <!-- Needed for sidebar -->
-    <div class="container" style="max-width: 90%;">
-      <div class="row">
-        <div class="col-2" style="padding-right: 0px;"> <!-- sidebar -->
-          <nav id="toc" data-toggle="toc" class="sticky-top"></nav>
-        </div> <!-- /sidebar -->
-        <div class="col" style="padding-left: 0px;"> <!-- main content -->
+  <!-- Needed for sidebar -->
+  <div class="container" style="max-width: 90%;">
+    <div class="row">
+      <div class="col-2" style="padding-right: 0px;"> <!-- sidebar -->
+        <nav id="toc" data-toggle="toc" class="sticky-top"></nav>
+      </div> <!-- /sidebar -->
+      <div class="col" style="padding-left: 0px;"> <!-- main content -->
 
-    <!-- Page Header -->
-    <div class="page-header">
-      <h1>{{ title }}</h1>
-    </div>
-      <p>This page allows you to curate the loaded statements.</p>
-      <p>For more information please see the <a href="https://indra.readthedocs.io/en/latest/tutorials/html_curation.html" target="_blank">manual</a>.</p>
-      <hr>
+        <!-- Page Header -->
+        <div class="page-header">
+          <h1>{{ title }}</h1>
+        </div>
+        <p>This page allows you to curate the loaded statements.</p>
+        <p>For more information please see the <a
+            href="https://indra.readthedocs.io/en/latest/tutorials/html_curation.html"
+            target="_blank">manual</a>.</p>
+        <hr>
 
-    {% if metadata %}
-    <h4 class="nav-header" data-toggle="collapse" data-target="#meta_list"><a href="#" title="Click to see metadata" style="color: #000000;">Summary Metadata</a></h4>
-    <ul class="collapse" id="meta_list">
-      {% for name, value in metadata.items() %}
-      <li>{{ name }}: {{ value }}</li>
-      {% endfor %}
-    </ul>
-    <p>&nbsp;</p>
-    {% endif %}
+        {% if metadata %}
+          <h4 class="nav-header" data-toggle="collapse"
+            data-target="#meta_list"><a href="#"
+                          title="Click to see metadata"
+                          style="color: #000000;">Summary
+            Metadata</a></h4>
+          <ul class="collapse" id="meta_list">
+            {% for name, value in metadata.items() %}
+              <li>{{ name }}: {{ value }}</li>
+            {% endfor %}
+          </ul>
+          <p>&nbsp;</p>
+        {% endif %}
 
-    <h3>Statements <button id="expand-collapse-all" type="button" class="btn btn-primary" onclick="expandCollapseAll()">Expand All</button></h3>
-    <p>&nbsp;</p>
-    <table class="table" id="heading" style="border-collapse: collapse; position: sticky;">
-        <thead>
-        <tr>
-            <th width="6em"> </th>
+        <h3>Statements
+          <button id="expand-collapse-all" type="button"
+              class="btn btn-primary"
+              onclick="expandCollapseAll()">Expand All
+          </button>
+        </h3>
+        <p>&nbsp;</p>
+        <table class="table" id="heading"
+             style="border-collapse: collapse; position: sticky;">
+          <thead>
+          <tr>
+            <th width="6em"></th>
             <th width="25em">Source</th>
             <th>Evidence</th>
-            <th width="25em" align="left" style="white-space: nowrap">Source Refs</th>
-        </tr>
-        </thead>
-    </table>
-    {% for short_name, short_name_key, stmt_info_list in stmt_data %}
-        <div class="group_heading" onclick="toggler('{{ short_name_key }}');"
+            <th width="25em" align="left"
+              style="white-space: nowrap">Source Refs
+            </th>
+          </tr>
+          </thead>
+        </table>
+        {% for short_name, short_name_key, stmt_info_list in stmt_data %}
+          <div class="group_heading"
+             onclick="toggler('{{ short_name_key }}');"
              id="{{ short_name_key }}_heading">
             <h4 class="align-middle">{{ short_name }}</h4>
-        </div>
-        <div class="group" id="{{ short_name_key }}_group">
-        {% for stmt_info in stmt_info_list %}
-        <a name="{{ stmt_info['hash'] }}"></a>
-        <div class="statement" style="padding-bottom: 10px;">
-          <h5 class="align-middle">{{ stmt_info['english'] }}</h5>
-          <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html" target="_blank">
-            <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span>
-          </a>
-        </div>
-        <div class="evidence">
-        <table class="table" id="{{ stmt_info['hash'] }}" style="border-collapse: collapse;">
-            <tbody id="table_{{loop.index0}}">
-                {% for ev in stmt_info['evidence'] %}
-                <tr id="{{ ev['source_hash'] }}" style="border-bottom: 1px solid #FFFFFF;">
-                    {% if ev_element %}
+          </div>
+          <div class="group" id="{{ short_name_key }}_group">
+            {% for stmt_info in stmt_info_list %}
+              <a name="{{ stmt_info['hash'] }}"></a>
+              <div class="statement"
+                 style="padding-bottom: 10px;">
+                <h5 class="align-middle">{{ stmt_info['english'] }}</h5>
+                <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html"
+                   target="_blank">
+                  <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span>
+                </a>
+              </div>
+              <div class="evidence">
+                <table class="table"
+                     id="{{ stmt_info['hash'] }}"
+                     style="border-collapse: collapse;">
+                  <tbody id="table_{{ loop.index0 }}">
+                  {% for ev in stmt_info['evidence'] %}
+                    <tr id="{{ ev['source_hash'] }}"
+                      style="border-bottom: 1px solid #FFFFFF;">
+                      {% if ev_element %}
                         {{ ev_element.format(loop_index=loop.index0) }}
-                    {% endif %}
-                    <td width="25em">{{ ev['source_api'] }}</td>
-                    {% if ev['text'] %}
+                      {% endif %}
+                      <td width="25em">{{ ev['source_api'] }}</td>
+                      {% if ev['text'] %}
                         <td>"{{ ev['text'] }}"</td>
-                    {% else %}
+                      {% else %}
                         <td><i>None available</i></td>
-                    {% endif %}
-                    <td width="25em" align="left" style="white-space: nowrap">
-                       {% if ev['pmid'] %}
-                        <a class="pmid_link"
-                title="Hover again to see info"
-                onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
-                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}' target="_blank">
-                        {{ ev['pmid'] }}</a>
+                      {% endif %}
+                      <td width="25em" align="left"
+                        style="white-space: nowrap">
+                        {% if ev['pmid'] %}
+                          <a class="pmid_link"
+                             title="Hover again to see info"
+                             onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                             href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}'
+                             target="_blank">
+                            {{ ev['pmid'] }}</a>
                         {% elif 'pmid' in ev['text_refs'] and ev['text_refs']['pmid'] %}
-                        <a class="pmid_link"
-                title="Hover again to see info"
-                onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
-                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}' target="_blank">
-                        {{ ev['text_refs']['pmid'] }}</a>
-                       {% endif %}
-                       {% if 'pmcid' in ev['text_refs'] and ev['text_refs']['pmcid'] %}
-                       | <a class="pmcid_link"
-                href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'target="_blank">PMC</a>
+                          <a class="pmid_link"
+                             title="Hover again to see info"
+                             onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                             href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}'
+                             target="_blank">
+                            {{ ev['text_refs']['pmid'] }}</a>
                         {% endif %}
-                       {% if 'doi' in ev['text_refs'] and ev['text_refs']['doi'] %}
-                       | <a class="doi_link"
-                href='https://dx.doi.org/{{ ev["text_refs"]["doi"] }}' target="_blank">DOI</a>
-                       {% endif %}
-                    </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div> <!-- evidence -->
-        {% endfor %}
-        </div> <!-- statement group presentation -->
+                        {% if 'pmcid' in ev['text_refs'] and ev['text_refs']['pmcid'] %}
+                          | <a class="pmcid_link"
+                             href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'
+                             target="_blank">PMC</a>
+                        {% endif %}
+                        {% if 'doi' in ev['text_refs'] and ev['text_refs']['doi'] %}
+                          | <a class="doi_link"
+                             href='https://dx.doi.org/{{ ev["text_refs"]["doi"] }}'
+                             target="_blank">DOI</a>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div> <!-- evidence -->
+            {% endfor %}
+          </div> <!-- statement group presentation -->
         {% endfor %}
 
-        </div> <!-- /main content -->
-      </div> <!-- /row for sidebar -->
-    </div> <!-- /container for sidebar -->
+      </div> <!-- /main content -->
+    </div> <!-- /row for sidebar -->
+  </div> <!-- /container for sidebar -->
   </body>
-</html>
+{% endblock %}
 

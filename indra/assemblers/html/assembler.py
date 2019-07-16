@@ -7,12 +7,11 @@ from builtins import dict, str
 
 import re
 import uuid
-import itertools
-from os.path import abspath, dirname, join
-from jinja2 import Template
 import logging
+import itertools
 
-logger = logging.getLogger(__name__)
+from os.path import abspath, dirname, join, exists, getmtime
+from jinja2 import Environment, BaseLoader, TemplateNotFound
 
 from indra.statements import *
 from indra.assemblers.english import EnglishAssembler
@@ -20,12 +19,30 @@ from indra.databases import get_identifiers_url
 from indra.util.statement_presentation import group_and_sort_statements,\
     make_string_from_sort_key
 
+logger = logging.getLogger(__name__)
+HERE = dirname(abspath(__file__))
 
-# Create a template object from the template file, load once
-template_path = join(dirname(abspath(__file__)), 'template.html')
-with open(template_path, 'rt') as f:
-    template_str = f.read()
-    template = Template(template_str)
+
+class IndraHTMLLoader(BaseLoader):
+    """A home-grown template loader to load the INDRA templates.
+
+    Based on the example found here:
+    http://jinja.pocoo.org/docs/2.10/api/#loaders
+    """
+
+    def get_source(self, environment, template):
+        path = join(HERE, 'templates', template)
+        if not exists(path):
+            raise TemplateNotFound(template)
+        mtime = getmtime(path)
+        with open(path, 'r') as f:
+            source = f.read()
+        return source, path, lambda: mtime == getmtime(path)
+
+
+env = Environment(loader=IndraHTMLLoader())
+
+template = env.get_template('statements_view.html')
 
 
 class HtmlAssembler(object):
