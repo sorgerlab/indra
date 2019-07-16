@@ -409,6 +409,28 @@ def get_agent(node_data, node_modifier_data=None):
             mirbase_id = mirbase_client.get_mirbase_id_from_hgnc_id(hgnc_id)
             if mirbase_id:
                 db_refs['MIRBASE'] = mirbase_id
+        elif ns in ('UNIPROT', 'UP'):
+            up_id = None
+            gene_name = uniprot_client.get_gene_name(name)
+            if gene_name:
+                up_id = name
+            else:
+                up_id_from_mnem = uniprot_client.get_id_from_mnemonic(name)
+                if up_id_from_mnem:
+                    up_id = up_id_from_mnem
+                    gene_name = uniprot_client.get_gene_name(up_id)
+            if not up_id:
+                logger.info('Couldn\'t get UP ID from %s' % name)
+                return None
+            db_refs = {'UP': up_id}
+            if uniprot_client.is_human(up_id):
+                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                if not hgnc_id:
+                    logger.info('Uniprot ID linked to invalid human gene '
+                                'name %s' % name)
+                else:
+                    db_refs['HGNC'] = hgnc_id
+
         # FIXME: Look up go ID in ontology lookup service
         # FIXME: Look up MESH IDs from name
         # FIXME: For now, just use node name
@@ -476,6 +498,8 @@ def get_agent(node_data, node_modifier_data=None):
         # Get the name, overwriting existing name if necessary
         if ns == 'HGNC':
             name = hgnc_client.get_hgnc_name(ident)
+            if not name:
+                return None
             db_refs = {'HGNC': ident}
             up_id = _get_up_id(ident)
             if up_id:
@@ -486,7 +510,8 @@ def get_agent(node_data, node_modifier_data=None):
         elif ns == 'UP':
             db_refs = {'UP': ident}
             name = uniprot_client.get_gene_name(ident)
-            assert name
+            if not name:
+                return None
             if uniprot_client.is_human(ident):
                 hgnc_id = hgnc_client.get_hgnc_id(name)
                 if not hgnc_id:
@@ -498,9 +523,13 @@ def get_agent(node_data, node_modifier_data=None):
             db_refs = {'MIRBASE': ident}
         elif ns in ('MGI', 'RGD', 'CHEBI'):
             db_refs = {ns: ident}
+        elif ns == 'PUBCHEM.COMPOUND':
+            db_refs = {'PUBCHEM': ident}
         else:
-            print("Unhandled namespace with identifier: %s: %s (%s)" %
-                  (ns, name, node_data))
+            logger.info("Unhandled namespace %s with name %s and "
+                        "identifier %s (%s)." % (ns, name,
+                                                 node_data.identifier,
+                                                 node_data))
     if db_refs is None:
         logger.info('Unable to get identifier information for node: %s',
                     node_data)
@@ -512,6 +541,8 @@ def get_agent(node_data, node_modifier_data=None):
     to_loc = _get_translocation_target(node_modifier_data)
     # Check for unhandled node modifiers, skip if so
     if _has_unhandled_modifiers(node_modifier_data):
+        return None
+    if not name:
         return None
     # Make the agent
     ag = Agent(name, db_refs=db_refs, mods=mods, mutations=muts, activity=ac,
