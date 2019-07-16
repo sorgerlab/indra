@@ -1,1 +1,1 @@
-from .assembler import HtmlAssembler
+from .assembler import HtmlAssembler, IndraHTMLLoader

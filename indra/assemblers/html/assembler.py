@@ -10,7 +10,7 @@ import uuid
 import logging
 import itertools
 
-from os.path import abspath, dirname, join, exists, getmtime
+from os.path import abspath, dirname, join, exists, getmtime, sep
 from jinja2 import Environment, BaseLoader, TemplateNotFound
 
 from indra.statements import *
@@ -28,10 +28,32 @@ class IndraHTMLLoader(BaseLoader):
 
     Based on the example found here:
     http://jinja.pocoo.org/docs/2.10/api/#loaders
+
+    Parameters
+    ----------
+    root_paths : dict
+        A dict of strings indicating possible roots for template directories,
+        keyed by basename. To be more specific, an entry
+        {'indra': '/path/to/module'} would mean that you expect to have
+        'indra/template.html' mapped to '/path/to/module/templates/template.html'.
+        The default is {None: HERE}.
     """
+    native_path = HERE
+
+    def __init__(self, root_paths=None):
+        self.root_paths = root_paths
+        if root_paths is None:
+            self.root_paths = {None: HERE}
 
     def get_source(self, environment, template):
-        path = join(HERE, 'templates', template)
+        path_parts = template.split(sep)
+        if len(path_parts) == 1 or not path_parts[0]:
+            root = self.root_paths[None]
+        else:
+            path_parts = path_parts[1:]
+            root = self.root_paths[path_parts[0]]
+
+        path = join(root, 'templates', *path_parts)
         if not exists(path):
             raise TemplateNotFound(template)
         mtime = getmtime(path)
