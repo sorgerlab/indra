@@ -448,8 +448,10 @@ def _get_agent_node_no_bcs(agent):
     for mut in agent.mutations:
         var = hgvs(mut.to_hgvs())
         variants.append(var)
-
-    if variants:
+    
+    if variants and not isinstance(node_data, CentralDogma):
+        logger.warning('Node should not have variants: %s, %s', node_data, variants)
+    elif variants:
         node_data = node_data.with_variants(variants)
 
     if isinstance(node_data, (bioprocess, pathology)):
