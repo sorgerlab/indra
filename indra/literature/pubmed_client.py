@@ -269,19 +269,33 @@ def _get_journal_info(medline_citation, get_issns_from_nlm):
 
 
 def _get_pubmed_publication_date(pubmed_data):
-    # Look for pubmed as PubStatus in PubmedPubDate
-    pubmed_pub_date = \
-                pubmed_data.find('./History/PubMedPubDate[@PubStatus="pubmed"]')
+    date_dict = dict.fromkeys(['year', 'month', 'day'])
+
+    # Order potential statuses in order of preferences
+    status_list = ['pubmed', 'accepted', 'revised', 'received', 'entrez']
+
+    # Look for various statuses, in order of preference as PubStatus in
+    # PubmedPubDate
+    for status in status_list:
+        pubmed_pub_date = \
+                    pubmed_data.find('./History/PubMedPubDate[@PubStatus="%s"]'
+                                     % status)
+        if pubmed_pub_date is not None:
+            break
+    else:
+        logger.warning("Could not find pub date in: \n%s"
+                       % ET.tostring(pubmed_data).decode('utf-8'))
+        return date_dict
+
+    def _find_date(element):
+        value = _find_elem_text(pubmed_pub_date, element)
+        return int(value) if value else None
+
     # Get date elements from extracted pubmed_pub_date element
-    year = _find_elem_text(pubmed_pub_date, 'Year')
-    month = _find_elem_text(pubmed_pub_date, 'Month')
-    day = _find_elem_text(pubmed_pub_date, 'Day')
-    # Build and return result
-    return {
-        "year"  : None if (year is None) else int(year),
-        "month" : None if (month is None) else int(month),
-        "day"   : None if (day is None) else int(day)
-    }
+    for date_elem in ['Year', 'Month', 'Day']:
+        date_dict[date_elem.lower()] = _find_date(date_elem)
+
+    return date_dict
 
 
 def _get_article_info(medline_citation, pubmed_data):
@@ -360,6 +374,7 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
         context_info = _get_annotations(medline_citation)
         publication_date = _get_pubmed_publication_date(pubmed_data)
+
         # Build the result
         result = {}
         result.update(article_info)
