@@ -50,8 +50,8 @@ class IndraHTMLLoader(BaseLoader):
         if len(path_parts) == 1 or not path_parts[0]:
             root = self.root_paths[None]
         else:
-            path_parts = path_parts[1:]
             root = self.root_paths[path_parts[0]]
+            path_parts = path_parts[1:]
 
         path = join(root, 'templates', *path_parts)
         if not exists(path):
