@@ -576,7 +576,7 @@ def test_gap():
 
 def test_activation_bioprocess():
     bax = protein(name='BAX', namespace='HGNC')
-    apoptosis = bioprocess(name='apoptosis', namespace='GOBP')
+    apoptosis = bioprocess(name='apoptotic process', namespace='GOBP')
     g = BELGraph()
     g.add_increases(bax, apoptosis, evidence="Some evidence.",
                     citation='123456')
@@ -586,7 +586,7 @@ def test_activation_bioprocess():
     stmt = pbp.statements[0]
     assert isinstance(stmt, Activation)
     assert stmt.subj.name == 'BAX'
-    assert stmt.obj.name == 'apoptosis'
+    assert stmt.obj.name == 'apoptotic process'
     assert 'GO' in stmt.obj.db_refs
     assert len(pbp.statements[0].evidence) == 1
 
