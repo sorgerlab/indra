@@ -184,19 +184,19 @@ class PybelProcessor(object):
             self.unhandled.append((u_data, v_data, edge_data))
             return
         obj_mod = edge_data.get(pc.OBJECT)
-        deg_polarity = (
-            -1
-            if obj_mod and obj_mod.get(pc.MODIFIER) == pc.DEGRADATION else
-            1
-        )
-        rel_polarity = (1 if edge_data[pc.RELATION] in
-                        pc.CAUSAL_INCREASE_RELATIONS else -1)
-        # Set polarity accordingly based on the relation type and whether
-        # the object is a degradation node
-        if deg_polarity * rel_polarity > 0:
-            stmt_class = IncreaseAmount
+        has_deg = (obj_mod and obj_mod.get(pc.MODIFIER) == pc.DEGRADATION)
+        rel = edge_data[pc.RELATION]
+        if rel == pc.REGULATES:
+            # TODO: once generic regulations work, we can make this an
+            #  actual statement
+            # stmt_class = RegulateAmount
+            return
+        elif has_deg:
+            stmt_class = (DecreaseAmount if rel in
+                          pc.CAUSAL_INCREASE_RELATIONS else IncreaseAmount)
         else:
-            stmt_class = DecreaseAmount
+            stmt_class = (IncreaseAmount if rel in
+                          pc.CAUSAL_INCREASE_RELATIONS else DecreaseAmount)
         ev = self._get_evidence(u_data, v_data, k, edge_data)
         stmt = stmt_class(subj_agent, obj_agent, evidence=[ev])
         self.statements.append(stmt)
@@ -246,6 +246,11 @@ class PybelProcessor(object):
             stmt_class = GtpActivation
         elif edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
             stmt_class = Activation
+        elif edge_data[pc.RELATION] == pc.REGULATES:
+            # TODO: once generic regulations work, we can make this an
+            #  actual statement
+            # stmt_class = RegulateActivity
+            return
         else:
             stmt_class = Inhibition
         ev = self._get_evidence(u_data, v_data, k, edge_data)
@@ -289,9 +294,15 @@ class PybelProcessor(object):
         # Get the nodes for the reactants and products
         reactant_agents = [get_agent(r) for r in v_data[pc.REACTANTS]]
         product_agents = [get_agent(p) for p in v_data[pc.PRODUCTS]]
-        if subj_agent is None or \
-           any([r is None for r in reactant_agents]) or \
-           any([p is None for p in product_agents]):
+        # We are not handling the following degenerate cases:
+        # If there is no subject agent
+        if (subj_agent is None or
+                # If get_agent returned None for any of the reactants or
+                # products
+                any(r is None for r in reactant_agents) or
+                any(p is None for p in product_agents) or
+                # If there are no reactants and or no products
+                (not reactant_agents and not product_agents)):
             self.unhandled.append((u_data, v_data, k, edge_data))
             return
         ev = self._get_evidence(u_data, v_data, k, edge_data)
@@ -344,7 +355,7 @@ def get_agent(node_data, node_modifier_data=None):
     # Check the node type/function
     node_func = node_data[pc.FUNCTION]
     if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX,
-                         pc.PATHOLOGY, pc.ABUNDANCE, pc.MIRNA):
+                         pc.PATHOLOGY, pc.ABUNDANCE, pc.MIRNA, pc.GENE):
         mod_data = node_modifier_data or 'No node data'
         logger.info("Nodes of type %s not handled: %s",
                     node_func, mod_data)
@@ -485,9 +496,8 @@ def get_agent(node_data, node_modifier_data=None):
                     db_refs['HGNC'] = hgnc_id
         elif ns == 'MIRBASE':
             db_refs = {'MIRBASE': ident}
-        elif ns in ('MGI', 'RGD'):
-            raise ValueError('Identifiers for MGI and RGD databases are not '
-                             'currently handled: %s' % node_data)
+        elif ns in ('MGI', 'RGD', 'CHEBI'):
+            db_refs = {ns: ident}
         else:
             print("Unhandled namespace with identifier: %s: %s (%s)" %
                   (ns, name, node_data))
@@ -574,6 +584,7 @@ def _rel_is_direct(d):
 
 
 def _get_up_id(hgnc_id):
+    hgnc_id = str(hgnc_id)
     up_id = hgnc_client.get_uniprot_id(hgnc_id)
     if not up_id:
         logger.info("No Uniprot ID for HGNC ID %s" % hgnc_id)
@@ -602,6 +613,7 @@ class AnnotationManager(object):
                        key, value)
         self.failures[key].add(value)
 
+
 def _get_all_pmods(node_data):
     mods = []
     muts = []
@@ -610,7 +622,9 @@ def _get_all_pmods(node_data):
         return mods, muts
 
     for var in variants:
-        if var[pc.KIND] == pc.HGVS:
+        if var[pc.KIND] == pc.HGVS and node_data[pc.FUNCTION] == pc.GENE:
+            logger.debug('Unhandled genetic variant: %s' % node_data)
+        elif var[pc.KIND] == pc.HGVS:
             hgvs_str = var[pc.IDENTIFIER]
             position, res_from, res_to = _parse_mutation(hgvs_str)
             if position is None and res_from is None and res_to is None:
