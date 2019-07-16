@@ -29,7 +29,7 @@ def test_process_jgif():
     # Clean up
     os.remove(test_file)
 
-    assert len(pbp.statements) == 26, len(pbp.statements)
+    assert len(pbp.statements) == 20, len(pbp.statements)
     assert isinstance(pbp.statements[0], Statement)
     assert all(s.evidence[0].source_api == 'bel' for s in pbp.statements)
 
@@ -45,7 +45,7 @@ def test_nodelink_json():
     # Clean up
     os.remove(test_file)
 
-    assert len(pbp.statements) == 26, len(pbp.statements)
+    assert len(pbp.statements) == 20, len(pbp.statements)
     assert isinstance(pbp.statements[0], Statement)
     assert all(s.evidence[0].source_api == 'bel' for s in pbp.statements)
 
@@ -202,7 +202,7 @@ def test_get_agent_meshpp():
     agent = pb.get_agent(apoptosis)
     assert isinstance(agent, Agent)
     assert agent.name == 'Apoptosis'
-    assert agent.db_refs == {}
+    assert 'MESH' in agent.db_refs
 
 
 def test_get_agent_meshd():
@@ -210,7 +210,7 @@ def test_get_agent_meshd():
     agent = pb.get_agent(hyperoxia)
     assert isinstance(agent, Agent)
     assert agent.name == 'Hyperoxia'
-    assert agent.db_refs == {}
+    assert 'MESH' in agent.db_refs
 
 
 def test_get_agent_with_mods():
@@ -578,7 +578,8 @@ def test_activation_bioprocess():
     bax = protein(name='BAX', namespace='HGNC')
     apoptosis = bioprocess(name='apoptosis', namespace='GOBP')
     g = BELGraph()
-    g.add_increases(bax, apoptosis, evidence="Some evidence.", citation='123456')
+    g.add_increases(bax, apoptosis, evidence="Some evidence.",
+                    citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -586,7 +587,7 @@ def test_activation_bioprocess():
     assert isinstance(stmt, Activation)
     assert stmt.subj.name == 'BAX'
     assert stmt.obj.name == 'apoptosis'
-    assert stmt.obj.db_refs == {}  # FIXME: Update when GO lookup is implemented
+    assert 'GO' in stmt.obj.db_refs
     assert len(pbp.statements[0].evidence) == 1
 
 
