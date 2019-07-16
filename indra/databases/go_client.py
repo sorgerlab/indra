@@ -19,8 +19,10 @@ go_owl_path = join(dirname(abspath(__file__)), '..', '..', 'data', 'go.owl')
 
 # Dictionary to store GO ID->Label mappings
 go_mappings = {}
+go_label_to_id = {}
 for go_id, go_label in read_unicode_csv(go_mappings_file, delimiter='\t'):
     go_mappings[go_id] = go_label
+    go_label_to_id[go_label] = go_id
 
 
 _prefixes = """
@@ -31,7 +33,6 @@ _prefixes = """
     PREFIX oboInOwl: <http://www.geneontology.org/formats/oboInOwl#>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     """
-
 
 
 # Lazily initialize the GO RDF graph because parsing the RDF is expensive
@@ -75,6 +76,22 @@ def get_go_label(go_id):
         Label corresponding to the GO ID.
     """
     return go_mappings.get(go_id)
+
+
+def get_go_id_from_label(label):
+    """Get ID corresponding to a given GO label.
+
+    Parameters
+    ----------
+    label : str
+        The GO label to get the ID for.
+
+    Returns
+    -------
+    str
+        Identifier corresponding to the GO label, starts with GO:.
+    """
+    return go_label_to_id.get(label)
 
 
 def update_id_mappings(g):
