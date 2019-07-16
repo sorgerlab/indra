@@ -7,7 +7,8 @@ from pybel.canonicalize import edge_to_bel
 from pybel.resources import get_bel_resource
 from indra.statements import *
 from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
-from indra.databases import hgnc_client, mirbase_client, uniprot_client
+from indra.databases import hgnc_client, uniprot_client, chebi_client, \
+    go_client, mesh_client
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 
 __all__ = [
@@ -391,7 +392,7 @@ def get_agent(node_data, node_modifier_data=None):
     # OTHER NODE TYPES -----
     # Get node identifier information
     name = node_data.get(pc.NAME)
-    ns = node_data[pc.NAMESPACE]
+    ns = node_data[pc.NAMESPACE].upper()
     ident = node_data.get(pc.IDENTIFIER)
     # No ID present, get identifier using the name, namespace
     db_refs = None
@@ -430,12 +431,20 @@ def get_agent(node_data, node_modifier_data=None):
                                 'name %s' % name)
                 else:
                     db_refs['HGNC'] = hgnc_id
-
-        # FIXME: Look up go ID in ontology lookup service
-        # FIXME: Look up MESH IDs from name
-        # FIXME: For now, just use node name
-        elif ns in ('GOBP', 'MESHPP', 'MESHD'):
-            db_refs = {}
+        elif ns == 'FPLX':
+            db_refs = {'FPLX': name}
+        elif ns in ('GO', 'GOBP', 'GOCC'):
+            go_id = go_client.get_go_id_from_label(name)
+            if not go_id:
+                logger.info('Could not find GO ID for %s' % name)
+                return
+            db_refs = {'GO': go_id}
+        elif ns in ('MESHPP', 'MESHD', 'MESH'):
+            mesh_id = mesh_client.get_mesh_id_name(name)
+            if not mesh_id:
+                logger.info('Could not find MESH ID fro %s' % name)
+                return
+            db_refs = {'MESH': mesh_id}
         # For now, handle MGI/RGD but putting the name into the db_refs so
         # it's clear what namespace the name belongs to
         # FIXME: Full implementation would look up MGI/RGD identifiers from
@@ -453,7 +462,7 @@ def get_agent(node_data, node_modifier_data=None):
                 db_refs['FPLX'] = indra_name
                 name = indra_name
         # Map Entrez genes to HGNC/UP
-        elif ns == 'EGID':
+        elif ns in ('EGID', 'ENTREZ', 'NCBIGENE'):
             hgnc_id = hgnc_client.get_hgnc_from_entrez(name)
             db_refs = {'EGID': name}
             if hgnc_id is not None:
@@ -484,6 +493,8 @@ def get_agent(node_data, node_modifier_data=None):
         # CHEBI
         elif ns == 'CHEBI':
             chebi_id = chebi_name_id.get(name)
+            if not chebi_id:
+                chebi_id = chebi_client.get_chebi_id_from_name(name)
             if chebi_id:
                 db_refs = {'CHEBI': chebi_id}
             else:
@@ -492,7 +503,8 @@ def get_agent(node_data, node_modifier_data=None):
         elif ns in ('SDIS', 'SCHEM'):
             db_refs = {ns: name}
         else:
-            print("Unhandled namespace: %s: %s (%s)" % (ns, name, node_data))
+            logger.info("Unhandled namespace: %s: %s (%s)" % (ns, name,
+                                                              node_data))
     # We've already got an identifier, look up other identifiers if necessary
     else:
         # Get the name, overwriting existing name if necessary
@@ -521,7 +533,7 @@ def get_agent(node_data, node_modifier_data=None):
                     db_refs['HGNC'] = hgnc_id
         elif ns == 'MIRBASE':
             db_refs = {'MIRBASE': ident}
-        elif ns in ('MGI', 'RGD', 'CHEBI'):
+        elif ns in ('MGI', 'RGD', 'CHEBI', 'HMDB', 'MESH'):
             db_refs = {ns: ident}
         elif ns == 'PUBCHEM.COMPOUND':
             db_refs = {'PUBCHEM': ident}
