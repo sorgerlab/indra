@@ -23,136 +23,118 @@
   </script>
 {% endblock %}
 
+{% block header_desc %}
+  <p>This page allows you to curate the loaded statements.</p>
+  <p>For more information please see the <a
+      href="https://indra.readthedocs.io/en/latest/tutorials/html_curation.html"
+      target="_blank">manual</a>.</p>
+  {% if metadata %}
+      <h4 class="nav-header" data-toggle="collapse"
+          data-target="#meta_list"><a href="#"
+                                      title="Click to see metadata"
+                                      style="color: #000000;">Summary
+          Metadata</a></h4>
+      <ul class="collapse" id="meta_list">
+          {% for name, value in metadata.items() %}
+              <li>{{ name }}: {{ value }}</li>
+          {% endfor %}
+      </ul>
+      <p>&nbsp;</p>
+  {% endif %}
+{% endblock %}
 
 {% block body %}
-  <body data-spy="scroll" data-target="#toc">
 
-  <!-- Needed for sidebar -->
-  <div class="container" style="max-width: 90%;">
-    <div class="row">
-      <div class="col-2" style="padding-right: 0px;"> <!-- sidebar -->
-        <nav id="toc" data-toggle="toc" class="sticky-top"></nav>
-      </div> <!-- /sidebar -->
-      <div class="col" style="padding-left: 0px;"> <!-- main content -->
-
-        <!-- Page Header -->
-        <div class="page-header">
-          <h1>{{ title }}</h1>
+  <h3>Statements
+    <button id="expand-collapse-all" type="button"
+        class="btn btn-primary"
+        onclick="expandCollapseAll()">Expand All
+    </button>
+  </h3>
+  <p>&nbsp;</p>
+  <table class="table" id="heading"
+       style="border-collapse: collapse; position: sticky;">
+    <thead>
+    <tr>
+      <th width="6em"></th>
+      <th width="25em">Source</th>
+      <th>Evidence</th>
+      <th width="25em" align="left"
+        style="white-space: nowrap">Source Refs
+      </th>
+    </tr>
+    </thead>
+  </table>
+  {% for short_name, short_name_key, stmt_info_list in stmt_data %}
+    <div class="group_heading"
+       onclick="toggler('{{ short_name_key }}');"
+       id="{{ short_name_key }}_heading">
+      <h4 class="align-middle">{{ short_name }}</h4>
+    </div>
+    <div class="group" id="{{ short_name_key }}_group">
+      {% for stmt_info in stmt_info_list %}
+        <a name="{{ stmt_info['hash'] }}"></a>
+        <div class="statement"
+           style="padding-bottom: 10px;">
+          <h5 class="align-middle">{{ stmt_info['english'] }}</h5>
+          <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html"
+             target="_blank">
+            <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span>
+          </a>
         </div>
-        <p>This page allows you to curate the loaded statements.</p>
-        <p>For more information please see the <a
-            href="https://indra.readthedocs.io/en/latest/tutorials/html_curation.html"
-            target="_blank">manual</a>.</p>
-        <hr>
-
-        {% if metadata %}
-          <h4 class="nav-header" data-toggle="collapse"
-            data-target="#meta_list"><a href="#"
-                          title="Click to see metadata"
-                          style="color: #000000;">Summary
-            Metadata</a></h4>
-          <ul class="collapse" id="meta_list">
-            {% for name, value in metadata.items() %}
-              <li>{{ name }}: {{ value }}</li>
+        <div class="evidence">
+          <table class="table"
+               id="{{ stmt_info['hash'] }}"
+               style="border-collapse: collapse;">
+            <tbody id="table_{{ loop.index0 }}">
+            {% for ev in stmt_info['evidence'] %}
+              <tr id="{{ ev['source_hash'] }}"
+                style="border-bottom: 1px solid #FFFFFF;">
+                {% if ev_element %}
+                  {{ ev_element.format(loop_index=loop.index0) }}
+                {% endif %}
+                <td width="25em">{{ ev['source_api'] }}</td>
+                {% if ev['text'] %}
+                  <td>"{{ ev['text'] }}"</td>
+                {% else %}
+                  <td><i>None available</i></td>
+                {% endif %}
+                <td width="25em" align="left"
+                  style="white-space: nowrap">
+                  {% if ev['pmid'] %}
+                    <a class="pmid_link"
+                       title="Hover again to see info"
+                       onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                       href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}'
+                       target="_blank">
+                      {{ ev['pmid'] }}</a>
+                  {% elif 'pmid' in ev['text_refs'] and ev['text_refs']['pmid'] %}
+                    <a class="pmid_link"
+                       title="Hover again to see info"
+                       onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                       href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}'
+                       target="_blank">
+                      {{ ev['text_refs']['pmid'] }}</a>
+                  {% endif %}
+                  {% if 'pmcid' in ev['text_refs'] and ev['text_refs']['pmcid'] %}
+                    | <a class="pmcid_link"
+                       href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'
+                       target="_blank">PMC</a>
+                  {% endif %}
+                  {% if 'doi' in ev['text_refs'] and ev['text_refs']['doi'] %}
+                    | <a class="doi_link"
+                       href='https://dx.doi.org/{{ ev["text_refs"]["doi"] }}'
+                       target="_blank">DOI</a>
+                  {% endif %}
+                </td>
+              </tr>
             {% endfor %}
-          </ul>
-          <p>&nbsp;</p>
-        {% endif %}
+            </tbody>
+          </table>
+        </div> <!-- evidence -->
+      {% endfor %}
+    </div> <!-- statement group presentation -->
+  {% endfor %}
 
-        <h3>Statements
-          <button id="expand-collapse-all" type="button"
-              class="btn btn-primary"
-              onclick="expandCollapseAll()">Expand All
-          </button>
-        </h3>
-        <p>&nbsp;</p>
-        <table class="table" id="heading"
-             style="border-collapse: collapse; position: sticky;">
-          <thead>
-          <tr>
-            <th width="6em"></th>
-            <th width="25em">Source</th>
-            <th>Evidence</th>
-            <th width="25em" align="left"
-              style="white-space: nowrap">Source Refs
-            </th>
-          </tr>
-          </thead>
-        </table>
-        {% for short_name, short_name_key, stmt_info_list in stmt_data %}
-          <div class="group_heading"
-             onclick="toggler('{{ short_name_key }}');"
-             id="{{ short_name_key }}_heading">
-            <h4 class="align-middle">{{ short_name }}</h4>
-          </div>
-          <div class="group" id="{{ short_name_key }}_group">
-            {% for stmt_info in stmt_info_list %}
-              <a name="{{ stmt_info['hash'] }}"></a>
-              <div class="statement"
-                 style="padding-bottom: 10px;">
-                <h5 class="align-middle">{{ stmt_info['english'] }}</h5>
-                <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html"
-                   target="_blank">
-                  <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span>
-                </a>
-              </div>
-              <div class="evidence">
-                <table class="table"
-                     id="{{ stmt_info['hash'] }}"
-                     style="border-collapse: collapse;">
-                  <tbody id="table_{{ loop.index0 }}">
-                  {% for ev in stmt_info['evidence'] %}
-                    <tr id="{{ ev['source_hash'] }}"
-                      style="border-bottom: 1px solid #FFFFFF;">
-                      {% if ev_element %}
-                        {{ ev_element.format(loop_index=loop.index0) }}
-                      {% endif %}
-                      <td width="25em">{{ ev['source_api'] }}</td>
-                      {% if ev['text'] %}
-                        <td>"{{ ev['text'] }}"</td>
-                      {% else %}
-                        <td><i>None available</i></td>
-                      {% endif %}
-                      <td width="25em" align="left"
-                        style="white-space: nowrap">
-                        {% if ev['pmid'] %}
-                          <a class="pmid_link"
-                             title="Hover again to see info"
-                             onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
-                             href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}'
-                             target="_blank">
-                            {{ ev['pmid'] }}</a>
-                        {% elif 'pmid' in ev['text_refs'] and ev['text_refs']['pmid'] %}
-                          <a class="pmid_link"
-                             title="Hover again to see info"
-                             onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
-                             href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}'
-                             target="_blank">
-                            {{ ev['text_refs']['pmid'] }}</a>
-                        {% endif %}
-                        {% if 'pmcid' in ev['text_refs'] and ev['text_refs']['pmcid'] %}
-                          | <a class="pmcid_link"
-                             href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'
-                             target="_blank">PMC</a>
-                        {% endif %}
-                        {% if 'doi' in ev['text_refs'] and ev['text_refs']['doi'] %}
-                          | <a class="doi_link"
-                             href='https://dx.doi.org/{{ ev["text_refs"]["doi"] }}'
-                             target="_blank">DOI</a>
-                        {% endif %}
-                      </td>
-                    </tr>
-                  {% endfor %}
-                  </tbody>
-                </table>
-              </div> <!-- evidence -->
-            {% endfor %}
-          </div> <!-- statement group presentation -->
-        {% endfor %}
-
-      </div> <!-- /main content -->
-    </div> <!-- /row for sidebar -->
-  </div> <!-- /container for sidebar -->
-  </body>
 {% endblock %}
 

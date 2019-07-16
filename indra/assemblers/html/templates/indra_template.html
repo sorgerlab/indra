@@ -118,7 +118,50 @@
 
 </head>
 
-{% block body %}
-{% endblock %}
+<body data-spy="scroll" data-target="#toc">
+<!-- Needed for sidebar -->
+<div class="container" style="max-width: 90%;">
+    <div class="row">
+        <div class="col-2" style="padding-right: 0px;"> <!-- sidebar -->
+            <nav id="toc" data-toggle="toc" class="sticky-top"></nav>
+        </div> <!-- /sidebar -->
+        <div class="col" style="padding-left: 0px;"> <!-- main content -->
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>{{ title }}</h1>
+            </div>
+            {%  block header_desc %}
+            {% endblock %}
+            <hr>
+
+            {% block body %}
+            {% endblock %}
+
+            <hr>
+
+            <!-- Footer -->
+            <footer class="footer text-muted" id="about"
+                    style="background: #F5F5F5;">
+                <div class="container"
+                     style="margin-left: 10px; margin-right: 10px">
+                    <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
+
+                    <p>
+                    <small>
+                        INDRA is developed by <a
+                            href="https://indralab.github.io/">indralabs</a>,
+                        a part of the Harvard Medical School Laboratory of
+                        Systems Pharmacology.
+                    </small>
+                    </p>
+
+                    {% block additonal_footer %}
+                    {% endblock %}
+                </div>
+            </footer>
+        </div> <!-- /main content -->
+    </div> <!-- /row for sidebar -->
+</div> <!-- /container for sidebar -->
+</body>
 
 </html>
