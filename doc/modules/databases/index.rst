@@ -79,3 +79,7 @@ PubChem client (:py:mod:`indra.databases.pubchem_client`)
 .. automodule:: indra.databases.pubchem_client
     :members:
 
+miRBase client (:py:mod:`indra.databases.mirbase_client`)
+---------------------------------------------------------
+.. automodule:: indra.databases.mirbase_client
+    :members:
