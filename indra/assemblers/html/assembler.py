@@ -36,14 +36,14 @@ class IndraHTMLLoader(BaseLoader):
         keyed by basename. To be more specific, an entry
         {'indra': '/path/to/module'} would mean that you expect to have
         'indra/template.html' mapped to '/path/to/module/templates/template.html'.
-        The default is {None: HERE}.
+        The default is {'indra': HERE}.
     """
     native_path = HERE
 
     def __init__(self, root_paths=None):
         self.root_paths = root_paths
         if root_paths is None:
-            self.root_paths = {None: HERE}
+            self.root_paths = {'indra': HERE}
 
     def get_source(self, environment, template):
         path_parts = template.split(sep)
@@ -64,7 +64,7 @@ class IndraHTMLLoader(BaseLoader):
 
 env = Environment(loader=IndraHTMLLoader())
 
-template = env.get_template('statements_view.html')
+default_template = env.get_template('indra/statements_view.html')
 
 
 class HtmlAssembler(object):
@@ -99,12 +99,6 @@ class HtmlAssembler(object):
         the configuration entry indra.config.get_config('INDRA_DB_REST_URL').
         If None, the URLs are constructed as relative links.
         Default: None
-    other_scripts : Optional[list]
-        A list of links to other scripts to be added to the html document. Used
-        in advanced configurations.
-    ev_element : Optional[str]
-        A extra element that may be placed at the beginning ahead of each line
-        of evidence.
 
     Attributes
     ----------
@@ -122,16 +116,13 @@ class HtmlAssembler(object):
         The URL to a DB REST API.
     """
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
-                 title='INDRA Results', db_rest_url=None, other_scripts=None,
-                 ev_element=None):
+                 title='INDRA Results', db_rest_url=None):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
             else summary_metadata
         self.ev_totals = {} if ev_totals is None else ev_totals
         self.db_rest_url = db_rest_url
-        self.other_scripts = [] if other_scripts is None else other_scripts
-        self.ev_element = ev_element
         self.model = None
 
     def add_statements(self, statements):
@@ -144,7 +135,7 @@ class HtmlAssembler(object):
         """
         self.statements += statements
 
-    def make_model(self):
+    def make_model(self, template=None):
         """Return the assembled HTML content as a string.
 
         Returns
@@ -184,11 +175,13 @@ class HtmlAssembler(object):
             db_rest_url = self.db_rest_url + '/statements'
         else:
             db_rest_url = '.'
+
+        # Fill the template.
+        if template is None:
+            template = default_template
         self.model = template.render(stmt_data=stmts_formatted,
                                      metadata=metadata, title=self.title,
-                                     db_rest_url=db_rest_url,
-                                     other_scripts=self.other_scripts,
-                                     ev_element=self.ev_element)
+                                     db_rest_url=db_rest_url)
         return self.model
 
     def append_warning(self, msg):

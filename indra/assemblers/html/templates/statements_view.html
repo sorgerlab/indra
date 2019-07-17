@@ -1,4 +1,4 @@
-{% extends "indra_template.html" %}
+{% extends "indra/indra_template.html" %}
 
 {% block scripts %}
   <!-- Toggle a hidden element -->
@@ -6,7 +6,7 @@
     function toggle_corner(div, side) {
       let prop = "border-bottom-" + side + "-radius";
       let bl_radius = $(div).css(prop);
-      if (bl_radius == "8px") {
+      if (bl_radius === "8px") {
         $(div).css(prop, "1px");
       } else {
         $(div).css(prop, "8px");
@@ -125,9 +125,6 @@
         }
     }
   </script>
-  {% for script_src in other_scripts %}
-    <script src="{{ script_src }}"></script>
-  {% endfor %}
 {% endblock %}
 
 {% block header_desc %}
@@ -197,9 +194,13 @@
             {% for ev in stmt_info['evidence'] %}
               <tr id="{{ ev['source_hash'] }}"
                 style="border-bottom: 1px solid #FFFFFF;">
-                {% if ev_element %}
-                  {{ ev_element.format(loop_index=loop.index0) }}
-                {% endif %}
+
+                <td width="6em" id="row{{ loop.index0 }}_click"
+                    data-clicked="false" class="curation_toggle"
+                    style="display: none">
+                  &#9998;
+                </td>
+
                 <td width="25em">{{ ev['source_api'] }}</td>
                 {% if ev['text'] %}
                   <td>"{{ ev['text'] }}"</td>
