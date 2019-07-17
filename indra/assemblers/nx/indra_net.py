@@ -10,13 +10,6 @@ class IndraNet(nx.MultiDiGraph):
         super().__init__(incoming_graph_data, **attr)
         self._is_multi = True
 
-    def _add_node(self, name, ns, id, **attr):
-        all_attr = {'ns': ns, 'id': id, **attr}
-        self.add_node(node_for_adding=name, **all_attr)
-
-    def _add_edge(self, u, v, key=None, **attr):
-        self.add_edge(u_for_edge=u, v_for_edge=v, key=key, **attr)
-
     @classmethod
     def from_df(cls, df=pd.DataFrame(), belief_dict=None, strat_ev_dict=None,
                 multi=True):
@@ -67,12 +60,3 @@ class IndraNet(nx.MultiDiGraph):
         if skipped:
             logger.warning('Skipped %d edges with None as node' % skipped)
         return cls
-
-    @classmethod
-    def to_type_graph(cls):
-        # Will wrap 'from_df' and collapse edges as necessary
-        cls.from_df()
-        return cls
-
-    def is_multigraph(self):
-        return self._is_multi
