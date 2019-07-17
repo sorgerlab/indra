@@ -11,17 +11,7 @@ class IndraNet(nx.MultiDiGraph):
         self._is_multi = True
 
     @classmethod
-    def from_df(cls, df=pd.DataFrame(), belief_dict=None, strat_ev_dict=None,
-                multi=True):
-        """idea: enforce pair of ('agA_<attribute>', 'agB_<attribute>') for
-        node attributes, otherwise considered edge attribute
-
-        :param df: pd.DataFrame
-        :param belief_dict:
-        :param strat_ev_dict:
-        :param multi:
-        :return:
-        """
+    def from_df(cls, df):
         mandatory_columns = ['agA_name', 'agB_name', 'agA_ns', 'agA_id',
                              'agB_ns', 'agB_id', 'stmt_type', 'evidence_count',
                              'hash', 'belief']
