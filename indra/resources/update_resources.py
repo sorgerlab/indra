@@ -630,6 +630,39 @@ def update_mesh_names():
     write_unicode_csv(fname, rows, delimiter='\t')
 
 
+def update_mirbase():
+    url = 'ftp://mirbase.org/pub/mirbase/CURRENT/miRNA.dat.gz'
+
+    mirbase_gz_path = os.path.join(path, 'mirbase.gz')
+    if not os.path.exists(mirbase_gz_path):
+        urlretrieve(url, mirbase_gz_path)
+
+    mirbase_json_path = os.path.join(path, 'mirbase.tsv')
+    with gzip.open(mirbase_gz_path, 'rt') as in_file, open(mirbase_json_path, 'w') as out_file:
+        print('mirbase_id', 'mirbase_name', 'database', 'identifier', 'label', sep='\t', file=out_file)
+        for line in _process_mirbase_file(in_file):
+            print(*line, sep='\t', file=out_file)
+
+
+def _process_mirbase_file(lines):
+    """Process the lines of the miRBase definitions file."""
+    groups = []
+
+    for line in lines:
+        if line.startswith('ID'):
+            groups.append([])
+        groups[-1].append(line)
+
+    for group in groups:
+        mirbase_name = group[0][5:23].strip()
+        mirbase_id = group[2][3:-2].strip()
+        for element in group:
+            if not element.startswith('DR'):
+                continue
+            db, identifier, name = [e.strip() for e in element[len('DR'):].lstrip().split(';')]
+            yield mirbase_id, mirbase_name, db, identifier, name.rstrip('.')
+
+
 if __name__ == '__main__':
     update_go_id_mappings()
     update_cellular_component_hierarchy()
@@ -651,3 +684,4 @@ if __name__ == '__main__':
     update_lincs_small_molecules()
     update_lincs_proteins()
     update_mesh_names()
+    update_mirbase()
