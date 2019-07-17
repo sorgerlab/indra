@@ -44,19 +44,37 @@ class IndraNet(nx.MultiDiGraph):
                 skipped += 1
                 logger.warning('None found as node (index %d)' % index)
                 continue
+            # Check and get node/edge attributes
+            nodeA_attr = {}
+            nodeB_attr = {}
+            edge_attr = {}
+            if node_keys['agA']:
+                for key in node_keys['agA']:
+                    nodeA_attr[key] = row[key]
+            if node_keys['agB']:
+                for key in node_keys['agB']:
+                    nodeB_attr[key] = row[key]
+            if edge_keys:
+                for key in edge_keys:
+                    edge_attr[key] = row[key]
+
             # Add non-existing nodes
             if row['agA_name'] not in cls.nodes:
-                cls._add_node(row['agA_name'], row['agA_ns'], row['agA_id'])
+                cls.add_node(node=row['agA_name'], ns=row['agA_ns'],
+                             id=row['agA_id'], **nodeA_attr)
             if row['agB_name'] not in cls.nodes:
-                cls._add_node(row['agB_name'], row['agB_ns'], row['agB_id'])
+                cls.add_node(node=row['agB_name'], ns=row['agB_ns'],
+                             id=row['agB_id'], **nodeB_attr)
             # Add edges
-            ed = {'u': row['agA_name'],
-                  'v': row['agB_name'],
+            ed = {'u_for_edge': row['agA_name'],
+                  'v_for_edge': row['agB_name'],
+                  'key': row['hash'],
                   'stmt_type': row['stmt_type'],
                   'evidence_count': row['evidence_count'],
                   'evidence': row['evidence'],
-                  'belief': row['belief']}
-            cls._add_edge(**ed)
+                  'belief': row['belief'],
+                  **edge_attr}
+            cls.add_edge(**ed)
         if skipped:
             logger.warning('Skipped %d edges with None as node' % skipped)
         return cls
