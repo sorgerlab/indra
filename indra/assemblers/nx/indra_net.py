@@ -6,6 +6,12 @@ logger = logging.getLogger(__name__)
 
 
 class IndraNet(nx.MultiDiGraph):
+    """IndraNet network object
+
+    Methods
+    -------
+
+    """
     def __init__(self, incoming_graph_data=None, **attr):
         super().__init__(incoming_graph_data, **attr)
         self._is_multi = True
