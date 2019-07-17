@@ -24,9 +24,28 @@ class IndraNet(nx.MultiDiGraph):
         """
         mandatory_columns = ['agA_name', 'agB_name', 'agA_ns', 'agA_id',
                              'agB_ns', 'agB_id', 'stmt_type', 'evidence_count',
-                             'hash', 'belief', 'evidence']
+                             'hash', 'belief']
+        """Create an IndraNet MultiDiGraph from a pandas DataFrame
+        
+        Parameters
+        ----------
+        df: pd.DataFrame
+            A data frame with each row containing node and edge data for one 
+            edge. Mandatory columns are {m}. Hashes are used to distinguish 
+            multiedges between a pair of nodes. Any other columns are 
+            considered extra node or edge attributes. Any columns starting 
+            with 'agA_' or 'agB_' (excluding the mandatory agA/B_name) will 
+            be added to its respective nodes as node attributes. Columns not 
+            starting with 'agA_' or 'agB_' will be added as edge attributes.
+                
+        Returns
+        -------
+        in : IndraNet
+            An IndraNet object
+        """.format(m=mandatory_columns)
         if not set(mandatory_columns).issubset(set(df.columns)):
-            raise ValueError('Missing required columns in data frame')
+            raise ValueError('Missing one or more columns of %s in data '
+                             'frame' % mandatory_columns)
         node_keys = {'agA': set(), 'agB': set()}
         edge_keys = set()
         for key in df.columns:
