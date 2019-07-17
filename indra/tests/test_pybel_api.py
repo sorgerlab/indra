@@ -159,17 +159,26 @@ def test_get_agent_schem():
 
 
 def test_get_agent_mirna():
-    node_data = {
-            'cname': 'MIR218-1',
-            'function': 'miRNA',
-            'name': 'MIR218-1',
-            'namespace': 'HGNC'}
-    agent = pb.get_agent(node_data)
+    m = MicroRna(namespace='HGNC', name='MIRLET7A1')
+    agent = pb.get_agent(m, {})
     assert isinstance(agent, Agent)
-    assert agent.name == 'MIR218-1'
-    assert len(agent.db_refs) == 1
-    assert agent.db_refs['HGNC'] == '31595'
+    assert agent.name == 'MIRLET7A1'
+    assert agent.db_refs.get('MIRBASE') == 'MI0000060'
+    assert agent.db_refs.get('HGNC') == '31476'
 
+    m = MicroRna(namespace='HGNC', name='MIRLET7A1', identifier='31476')
+    agent = pb.get_agent(m, {})
+    assert isinstance(agent, Agent)
+    assert agent.name == 'MIRLET7A1'
+    assert agent.db_refs.get('MIRBASE') == 'MI0000060'
+    assert agent.db_refs.get('HGNC') == '31476'
+
+    m = MicroRna(namespace='MIRBASE', name='hsa-let-7a-1')
+    agent = pb.get_agent(m, {})
+    assert isinstance(agent, Agent)
+    assert agent.name == 'hsa-let-7a-1'
+    assert agent.db_refs.get('MIRBASE') == 'MI0000060'
+    assert agent.db_refs.get('HGNC') == '31476'
 
 def test_get_agent_fusion():
     node_data = {'function': 'Protein',

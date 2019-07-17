@@ -7,7 +7,7 @@ from pybel.canonicalize import edge_to_bel
 from pybel.resources import get_bel_resource
 from indra.statements import *
 from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
-from indra.databases import hgnc_client, uniprot_client
+from indra.databases import hgnc_client, mirbase_client, uniprot_client
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 
 __all__ = [
@@ -395,6 +395,9 @@ def get_agent(node_data, node_modifier_data=None):
             up_id = _get_up_id(hgnc_id)
             if up_id:
                 db_refs['UP'] = up_id
+            mirbase_id = mirbase_client.get_mirbase_id_from_hgnc_id(hgnc_id)
+            if mirbase_id:
+                db_refs['MIRBASE'] = mirbase_id
         # FIXME: Look up go ID in ontology lookup service
         # FIXME: Look up MESH IDs from name
         # FIXME: For now, just use node name
@@ -430,9 +433,21 @@ def get_agent(node_data, node_modifier_data=None):
                     logger.info('HGNC entity %s with HGNC ID %s has no '
                                 'corresponding Uniprot ID.',
                                 name, hgnc_id)
+                mirbase_id = mirbase_client.get_mirbase_id_from_hgnc_id(hgnc_id)
+                if mirbase_id:
+                    db_refs['MIRBASE'] = mirbase_id
             else:
                 logger.info('Could not map EGID%s to HGNC.' % name)
                 name = 'E%s' % name
+        elif ns == 'MIRBASE':
+            mirbase_id = mirbase_client.get_mirbase_id_from_mirbase_name(name)
+            if not mirbase_id:
+                logger.info('Could not map miRBase name %s to ID', name)
+                return
+            db_refs = {'MIRBASE': mirbase_id}
+            hgnc_id = mirbase_client.get_hgnc_id_from_mirbase_id(mirbase_id)
+            if hgnc_id:
+                db_refs['HGNC'] = hgnc_id
         # CHEBI
         elif ns == 'CHEBI':
             chebi_id = chebi_name_id.get(name)
@@ -454,6 +469,9 @@ def get_agent(node_data, node_modifier_data=None):
             up_id = _get_up_id(ident)
             if up_id:
                 db_refs['UP'] = up_id
+            mirbase_id = mirbase_client.get_mirbase_id_from_hgnc_id(ident)
+            if mirbase_id:
+                db_refs['MIRBASE'] = mirbase_id
         elif ns == 'UP':
             db_refs = {'UP': ident}
             name = uniprot_client.get_gene_name(ident)
@@ -465,6 +483,8 @@ def get_agent(node_data, node_modifier_data=None):
                                 'name %s' % name)
                 else:
                     db_refs['HGNC'] = hgnc_id
+        elif ns == 'MIRBASE':
+            db_refs = {'MIRBASE': ident}
         elif ns in ('MGI', 'RGD'):
             raise ValueError('Identifiers for MGI and RGD databases are not '
                              'currently handled: %s' % node_data)
