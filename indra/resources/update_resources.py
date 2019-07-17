@@ -638,8 +638,10 @@ def update_mirbase():
         urlretrieve(url, mirbase_gz_path)
 
     mirbase_json_path = os.path.join(path, 'mirbase.tsv')
-    with gzip.open(mirbase_gz_path, 'rt') as in_file, open(mirbase_json_path, 'w') as out_file:
-        print('mirbase_id', 'mirbase_name', 'database', 'identifier', 'label', sep='\t', file=out_file)
+    with gzip.open(mirbase_gz_path, 'rt') as in_file, \
+              open(mirbase_json_path, 'w') as out_file:
+        print('mirbase_id', 'mirbase_name', 'database', 'identifier', 'label',
+              sep='\t', file=out_file)
         for line in _process_mirbase_file(in_file):
             print(*line, sep='\t', file=out_file)
 
@@ -662,11 +664,13 @@ def _process_mirbase_file(lines):
         for element in group:
             if not element.startswith('DR'):
                 continue
-            db, identifier, name = [e.strip() for e in element[len('DR'):].lstrip().split(';')]
+            db, identifier, name = [e.strip() for e in \
+                                       element[len('DR'):].lstrip().split(';')]
             yield mirbase_id, mirbase_name, db, identifier, name.rstrip('.')
 
 
 if __name__ == '__main__':
+    """
     update_go_id_mappings()
     update_cellular_component_hierarchy()
     update_famplex()
@@ -686,5 +690,6 @@ if __name__ == '__main__':
     update_ncit_map()
     update_lincs_small_molecules()
     update_lincs_proteins()
-    update_mesh_names()
+    update_mesh_names()a
+    """
     update_mirbase()

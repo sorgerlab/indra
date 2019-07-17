@@ -109,7 +109,8 @@ def _read():
         next(file)
         for line in file:
             try:
-                mirbase_id, mirbase_name, db, identifier, name = line.strip().split('\t')
+                mirbase_id, mirbase_name, db, identifier, name = \
+                                                line.strip().split('\t')
             except ValueError:  # fails on WORMBASE since no names
                 continue
 
