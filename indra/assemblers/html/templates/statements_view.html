@@ -4,8 +4,8 @@
   <!-- Toggle a hidden element -->
   <script>
     function toggle_corner(div, side) {
-      var prop = "border-bottom-" + side + "-radius";
-      var bl_radius = $(div).css(prop);
+      let prop = "border-bottom-" + side + "-radius";
+      let bl_radius = $(div).css(prop);
       if (bl_radius == "8px") {
         $(div).css(prop, "1px");
       } else {
@@ -15,12 +15,15 @@
 
     function toggler(short_name_key) {
       $("#" + short_name_key + "_group").toggle();
-      var header = "#" + short_name_key + "_heading";
+      let header = "#" + short_name_key + "_heading";
       toggle_corner(header, "left");
       toggle_corner(header, "right");
       $(header).show();
     }
   </script>
+  {% for script_src in other_scripts %}
+    <script src="{{ script_src }}"></script>
+  {% endfor %}
 {% endblock %}
 
 {% block header_desc %}
