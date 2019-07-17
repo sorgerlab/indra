@@ -670,7 +670,6 @@ def _process_mirbase_file(lines):
 
 
 if __name__ == '__main__':
-    """
     update_go_id_mappings()
     update_cellular_component_hierarchy()
     update_famplex()
@@ -691,5 +690,4 @@ if __name__ == '__main__':
     update_lincs_small_molecules()
     update_lincs_proteins()
     update_mesh_names()a
-    """
     update_mirbase()
