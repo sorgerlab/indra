@@ -18,6 +18,7 @@ class IndraNet(nx.MultiDiGraph):
 
     @classmethod
     def from_df(cls, df):
+        graph = cls()
         mandatory_columns = ['agA_name', 'agB_name', 'agA_ns', 'agA_id',
                              'agB_ns', 'agB_id', 'stmt_type', 'evidence_count',
                              'hash', 'belief']
@@ -74,22 +75,21 @@ class IndraNet(nx.MultiDiGraph):
                     edge_attr[key] = row[key]
 
             # Add non-existing nodes
-            if row['agA_name'] not in cls.nodes:
-                cls.add_node(node=row['agA_name'], ns=row['agA_ns'],
-                             id=row['agA_id'], **nodeA_attr)
-            if row['agB_name'] not in cls.nodes:
-                cls.add_node(node=row['agB_name'], ns=row['agB_ns'],
-                             id=row['agB_id'], **nodeB_attr)
+            if row['agA_name'] not in graph.nodes:
+                graph.add_node(row['agA_name'], ns=row['agA_ns'],
+                               id=row['agA_id'], **nodeA_attr)
+            if row['agB_name'] not in graph.nodes:
+                graph.add_node(row['agB_name'], ns=row['agB_ns'],
+                               id=row['agB_id'], **nodeB_attr)
             # Add edges
             ed = {'u_for_edge': row['agA_name'],
                   'v_for_edge': row['agB_name'],
                   'key': row['hash'],
                   'stmt_type': row['stmt_type'],
                   'evidence_count': row['evidence_count'],
-                  'evidence': row['evidence'],
                   'belief': row['belief'],
                   **edge_attr}
-            cls.add_edge(**ed)
+            graph.add_edge(**ed)
         if skipped:
             logger.warning('Skipped %d edges with None as node' % skipped)
-        return cls
+        return graph
