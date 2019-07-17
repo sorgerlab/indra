@@ -643,6 +643,9 @@ def update_mirbase():
         for line in _process_mirbase_file(in_file):
             print(*line, sep='\t', file=out_file)
 
+    # This is a big intermediate file, so don't keep it
+    os.remove(mirbase_gz_path)
+
 
 def _process_mirbase_file(lines):
     """Process the lines of the miRBase definitions file."""
