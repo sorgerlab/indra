@@ -117,15 +117,15 @@ class IndranetAssembler():
 
                 def get_ag_ns_id(ag):
                     # get one pair of ns-id from agent db_refs
-                    ns = None
+                    ag_ns, ag_id = None, None
                     for ns, id in ag.db_refs.items():
                         if ns in NS_PRIORITY_LIST:
-                            ns, id = ns, id
+                            ag_ns, ag_id = ns, id
                             break
                         if not ns:
-                            ns = 'TEXT'
-                            id = agent.name
-                    return ns, id
+                            ag_ns = 'TEXT'
+                            ag_id = agent.name
+                    return ag_ns, ag_id
 
                 agA_ns, agA_id = get_ag_ns_id(agA)
                 agB_ns, agB_id = get_ag_ns_id(agB)
