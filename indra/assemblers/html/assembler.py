@@ -9,6 +9,7 @@ import re
 import uuid
 import logging
 import itertools
+from collections import OrderedDict
 
 from os.path import abspath, dirname, join, exists, getmtime, sep
 from jinja2 import Environment, BaseLoader, TemplateNotFound
@@ -156,15 +157,21 @@ class HtmlAssembler(object):
             self.source_counts if self.source_counts else None)
 
         # Do some extra formatting.
-        stmts_formatted = []
+        tl_stmts = OrderedDict()
         for row in stmt_rows:
-
             # Distinguish between the cases with
             if self.source_counts:
-                key, verb, stmts, _, src_counts = row
+                key, verb, stmts, tl_counts, src_counts = row
             else:
                 key, verb, stmts = row
                 src_counts = None
+                tl_counts = None
+
+            tl_key = str(key[1])
+
+            if tl_key not in tl_stmts.keys():
+                tl_stmts[tl_key] = {'source_counts': tl_counts,
+                                    'stmts_formatted': []}
 
             # This will now be ordered by prevalence and entity pairs.
             stmt_info_list = []
@@ -190,8 +197,8 @@ class HtmlAssembler(object):
             short_name = make_string_from_sort_key(key, verb)
             short_name_key = str(uuid.uuid4())
 
-            stmts_formatted.append((short_name, short_name_key,
-                                   stmt_info_list, src_counts))
+            new_tpl = (short_name, short_name_key, stmt_info_list, src_counts)
+            tl_stmts[tl_key]['stmts_formatted'].append(new_tpl)
 
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()}
@@ -203,7 +210,7 @@ class HtmlAssembler(object):
         # Fill the template.
         if template is None:
             template = default_template
-        self.model = template.render(stmt_data=stmts_formatted,
+        self.model = template.render(stmt_data=tl_stmts,
                                      metadata=metadata, title=self.title,
                                      db_rest_url=db_rest_url)
         return self.model
