@@ -492,7 +492,7 @@ class ModelChecker(object):
                 edges.add(((u, 0), (v, 1)))
                 edges.add(((u, 1), (v, 0)))
         signed_nodes_graph.add_edges_from(edges)
-        if prune_negative_sources:
+        if prune_nodes:
             signed_nodes_graph = self.prune_nodes(signed_nodes_graph)
         return signed_nodes_graph
 
