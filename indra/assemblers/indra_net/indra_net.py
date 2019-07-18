@@ -23,18 +23,18 @@ class IndraNet(nx.MultiDiGraph):
                              'agB_ns', 'agB_id', 'stmt_type', 'evidence_count',
                              'hash', 'belief']
         """Create an IndraNet MultiDiGraph from a pandas DataFrame
-        
+
         Parameters
         ----------
         df: pd.DataFrame
-            A data frame with each row containing node and edge data for one 
-            edge. Mandatory columns are {m}. Hashes are used to distinguish 
-            multiedges between a pair of nodes. Any other columns are 
-            considered extra node or edge attributes. Any columns starting 
-            with 'agA_' or 'agB_' (excluding the mandatory agA/B_name) will 
-            be added to its respective nodes as node attributes. Columns not 
+            A data frame with each row containing node and edge data for one
+            edge. Mandatory columns are {m}. Hashes are used to distinguish
+            multiedges between a pair of nodes. Any other columns are
+            considered extra node or edge attributes. Any columns starting
+            with 'agA_' or 'agB_' (excluding the mandatory agA/B_name) will
+            be added to its respective nodes as node attributes. Columns not
             starting with 'agA_' or 'agB_' will be added as edge attributes.
-                
+
         Returns
         -------
         in : IndraNet
