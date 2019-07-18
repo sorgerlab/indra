@@ -29,12 +29,64 @@ class IndranetAssembler():
         self.statements = statements if statements else []
         self.model = None
 
+    def add_statements(self, stmts):
+        """Add INDRA Statements to the assembler's list of statements.
+
+        Parameters
+        ----------
+        stmts : list[indra.statements.Statement]
+            A list of :py:class:`indra.statements.Statement`
+            to be added to the statement list of the assembler.
+        """
+        for stmt in stmts:
+            self.statements.append(stmt)
+
     def make_model(self, signed=False, exclude_stmts=None, complex_members=3):
+        """Assemble an IndraNet graph object.
+
+        Parameters
+        ----------
+        signed : bool
+            Whether the edges of a returned graph should be signed.
+        exclude_stmts : list[str]
+            A list of statement type names to not include into a graph.
+        complex_members : int
+            A maximum allowed size of a complex to be included in the graph.
+            All complexes larger than complex_members will be rejected. For
+            accepted complexes, all permutation of their members will be added
+            as edges.
+
+        Returns
+        -------
+        model : IndraNet
+            IndraNet graph object.
+        """
         df = self.make_df(signed, exclude_stmts, complex_members)
         model = IndraNet.from_df(df)
         return model
 
     def make_df(self, signed=False, exclude_stmts=None, complex_members=3):
+        """Create a data frame containing information extracted from assembler's
+        list of statements necessary to build an IndraNet.
+
+        Parameters
+        ----------
+        signed : bool
+            Whether the data frame should contain 'sign' column.
+        exclude_stmts : list[str]
+            A list of statement type names to not include into a data frame.
+        complex_members : int
+            A maximum allowed size of a complex to be included in the data
+            frame. All complexes larger than complex_members will be rejected.
+            For accepted complexes, all permutation of their members will be
+            added as data frame records.
+
+        Returns
+        -------
+        df : pd.DataFrame
+            Pandas DataFrame object containing information extracted from
+            statements.
+        """
         rows = []
         if exclude_stmts:
             exclude_types = tuple(
