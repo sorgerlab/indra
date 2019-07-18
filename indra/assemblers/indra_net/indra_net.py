@@ -10,7 +10,9 @@ class IndraNet(nx.MultiDiGraph):
 
     Methods
     -------
-
+    from_df(df): (classmethod)
+        Return an instance of IndraNet, with graph data filled out from a
+        dataframe (df) containing pairwise interactions.
     """
     def __init__(self, incoming_graph_data=None, **attr):
         super().__init__(incoming_graph_data, **attr)
