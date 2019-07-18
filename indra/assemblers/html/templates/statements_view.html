@@ -125,6 +125,33 @@
         }
     }
   </script>
+  <style>
+    /* Readers */
+    .source-medscan {color: white; background-color: #7fc97f}
+    .source-rlimsp {color: white; background-color: #beaed4}
+    .source-trips {color: white; background-color: #fdc086}
+    .source-sparser {color: darkgreen; background-color: #ffff99}
+    .source-reach {color: white; background-color: #386cb0}
+    .source-isi {color: white; background-color: #f0027f}
+
+    /* databases */
+    .source-phosphosite {color: white; background-color: #a6cee3}
+    .source-cbn {color: white; background-color: #1f78b4}
+    .source-pc11 {color: white; background-color: #b2df8a}
+    .source-tees {color: white; background-color: #33a02c}
+    .source-geneways {color: white; background-color: #fb9a99}
+    .source-biopax {color: white; background-color: #e31a1c}
+    .source-bel {color: white; background-color: #fdbf6f}
+    .source-bel_lc {color: white; background-color: #fdbf6f}
+    .source-signor {color: white; background-color: #ff7f00}
+    .source-biogrid {color: white; background-color: #cab2d6}
+    .source-tas {color: white; background-color: #6a3d9a}
+    .source-lincs_drug {color: navy; background-color: #ffff99}
+    .source-hprd {color: white; background-color: #b15928}
+    .source-trrust {color: white; background-color: #ff4612}
+
+    .badge-source {margin: 2px; float: right;}
+  </style>
 {% endblock %}
 
 {% block header_desc %}
@@ -169,11 +196,19 @@
     </tr>
     </thead>
   </table>
-  {% for short_name, short_name_key, stmt_info_list in stmt_data %}
+  {% for short_name, short_name_key, stmt_info_list, src_counts in stmt_data %}
     <div class="group_heading"
        onclick="toggler('{{ short_name_key }}');"
        id="{{ short_name_key }}_heading">
-      <h4 class="align-middle">{{ short_name }}</h4>
+      <h4 class="align-middle">{{ short_name }}
+      {% if src_counts %}
+        {% for src, count in src_counts.items() %}
+          {% if count > 0 %}
+            <span class="badge badge-source source-{{ src }}">{{ src }}: {{ count }}</span>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+      </h4>
     </div>
     <div class="group" id="{{ short_name_key }}_group">
       {% for stmt_info in stmt_info_list %}

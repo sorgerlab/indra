@@ -92,6 +92,11 @@ class HtmlAssembler(object):
     ev_totals : Optional[dict]
         A dictionary of the total evidence available for each
         statement indexed by hash. Default: None
+    source_counts : Optional[dict]
+        A dictionary of the itemized evidence counts, by source, available for
+        each statement, indexed by hash. Default: None.
+    title : str
+        The title to be printed at the top of the page.
     db_rest_url : Optional[str]
         The URL to a DB REST API to use for links out to further evidence.
         If given, this URL will be prepended to links that load additional
@@ -116,12 +121,13 @@ class HtmlAssembler(object):
         The URL to a DB REST API.
     """
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
-                 title='INDRA Results', db_rest_url=None):
+                 source_counts=None, title='INDRA Results', db_rest_url=None):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
             else summary_metadata
         self.ev_totals = {} if ev_totals is None else ev_totals
+        self.source_counts = {} if source_counts is None else source_counts
         self.db_rest_url = db_rest_url
         self.model = None
 
@@ -143,10 +149,23 @@ class HtmlAssembler(object):
         str
             The assembled HTML as a string.
         """
+        # Get an iterator over the statements, carefully grouped.
+        stmt_rows = group_and_sort_statements(
+            self.statements,
+            self.ev_totals if self.ev_totals else None,
+            self.source_counts if self.source_counts else None)
+
+        # Do some extra formatting.
         stmts_formatted = []
-        stmt_rows = group_and_sort_statements(self.statements,
-                                              self.ev_totals if self.ev_totals else None)
-        for key, verb, stmts in stmt_rows:
+        for row in stmt_rows:
+
+            # Distinguish between the cases with
+            if self.source_counts:
+                key, verb, stmts, _, src_counts = row
+            else:
+                key, verb, stmts = row
+                src_counts = None
+
             # This will now be ordered by prevalence and entity pairs.
             stmt_info_list = []
             for stmt in stmts:
@@ -166,9 +185,14 @@ class HtmlAssembler(object):
                     'english': english,
                     'evidence': ev_list,
                     'evidence_count': evidence_count_str})
+
+            # Generate the short name for the statement and a unique key.
             short_name = make_string_from_sort_key(key, verb)
             short_name_key = str(uuid.uuid4())
-            stmts_formatted.append((short_name, short_name_key, stmt_info_list))
+
+            stmts_formatted.append((short_name, short_name_key,
+                                   stmt_info_list, src_counts))
+
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()}
         if self.db_rest_url and not self.db_rest_url.endswith('statements'):
