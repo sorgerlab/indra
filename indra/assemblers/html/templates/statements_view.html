@@ -238,6 +238,17 @@
   </style>
 {% endblock %}
 
+
+{% macro badges(src_counts) -%}
+    {% if src_counts %}
+        {% for src, count in src_counts.items() %}
+            {% if count > 0 %}
+                <span class="badge badge-source source-{{ src }}">{{ src }}: {{ count }}</span>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+{%- endmacro %}
+
 {% block header_desc %}
   <p>This page allows you to curate the loaded statements.</p>
   <p>For more information please see the <a
@@ -285,15 +296,7 @@
       <div class="super-group-heading"
          id="tl-{{ results['html_key'] }}"
          onclick="toggler('tl-{{ results['html_key'] }}')">
-        <h3>{{ results['label'] }}
-          {% if results['source_counts'] %}
-            {% for src, count in results['source_counts'].items() %}
-              {% if count > 0 %}
-                <span class="badge badge-source source-{{ src }}">{{ src }}: {{ count }}</span>
-              {% endif %}
-            {% endfor %}
-          {% endif %}
-        </h3>
+        <h3>{{ results['label'] }}{{ badges(results['source_counts']) }}</h3>
       </div>
       <div class="group" id="tl-{{ results['html_key'] }}_group">
     {% else %}
@@ -304,15 +307,7 @@
         <div class="group_heading"
            onclick="toggler('{{ short_name_key }}');"
            id="{{ short_name_key }}_heading">
-          <h4 class="align-middle">{{ short_name }}
-            {% if src_counts %}
-              {% for src, count in src_counts.items() %}
-                {% if count > 0 %}
-                  <span class="badge badge-source source-{{ src }}">{{ src }}: {{ count }}</span>
-                {% endif %}
-              {% endfor %}
-            {% endif %}
-          </h4>
+          <h4 class="align-middle">{{ short_name }}{{ badges(src_counts) }}</h4>
         </div>
         <div class="group" id="{{ short_name_key }}_group">
       {% else %}
@@ -327,13 +322,7 @@
            target="_blank">
           <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span>
         </a>
-        {% if stmt_info['source_count'] %}
-          {% for src, count in stmt_info['source_count'].items() %}
-            {% if count > 0 %}
-              <span class="badge badge-source source-{{ src }}">{{ src }}: {{ count }}</span>
-            {% endif %}
-          {% endfor %}
-        {% endif %}
+        {{ badges(stmt_info['source_count']) }}
       </div>
       <div class="evidence">
         <table class="table"
