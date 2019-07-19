@@ -1,6 +1,6 @@
 import logging
 import pandas as pd
-from .indra_net import IndraNet
+from .net import IndraNet
 from indra.statements import *
 from itertools import permutations
 from collections import OrderedDict
@@ -12,7 +12,7 @@ SIGN_DICT = {'Activation': 0, 'Inhibition': 1, 'IncreaseAmount': 0,
              'DecreaseAmount': 1}
 
 
-class IndranetAssembler():
+class IndraNetAssembler():
     """Assembler to create an IndraNet object from a list of INDRA statements.
 
     Parameters

@@ -1,5 +1,5 @@
 import pandas as pd
-from indra.assemblers.indra_net import IndranetAssembler
+from indra.assemblers.indranet import IndraNetAssembler
 from indra.statements import *
 
 
@@ -22,7 +22,7 @@ hash_hi = st6.get_hash()
 
 
 def test_simple_assembly():
-    ia = IndranetAssembler([st1, st2, st3, st4, st5, st6])
+    ia = IndraNetAssembler([st1, st2, st3, st4, st5, st6])
     g = ia.make_model()
     assert len(g.nodes) == 6
     assert len(g.edges) == 9
@@ -44,7 +44,7 @@ def test_simple_assembly():
 
 
 def test_signed_assembly():
-    ia = IndranetAssembler([st1, st2])
+    ia = IndraNetAssembler([st1, st2])
     g = ia.make_model(signed=True)
     assert len(g.nodes) == 3
     assert len(g.edges) == 2
@@ -53,7 +53,7 @@ def test_signed_assembly():
 
 
 def test_exclude_stmts():
-    ia = IndranetAssembler([st1, st2, st3])
+    ia = IndraNetAssembler([st1, st2, st3])
     g = ia.make_model(exclude_stmts=['Inhibition'])
     assert len(g.nodes) == 3
     assert len(g.edges) == 2
@@ -62,7 +62,7 @@ def test_exclude_stmts():
 
 
 def test_complex_members():
-    ia = IndranetAssembler([st1, st6])
+    ia = IndraNetAssembler([st1, st6])
     g = ia.make_model(complex_members=4)
     assert len(g.nodes) == 5
     assert len(g.edges) == 13, len(g.edges)
@@ -71,7 +71,7 @@ def test_complex_members():
 
 
 def test_make_df():
-    ia = IndranetAssembler([st1, st2, st3, st4, st5, st6])
+    ia = IndraNetAssembler([st1, st2, st3, st4, st5, st6])
     df = ia.make_df()
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 9
