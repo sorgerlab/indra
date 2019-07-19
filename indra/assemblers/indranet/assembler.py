@@ -8,8 +8,6 @@ from collections import OrderedDict
 
 logger = logging.getLogger(__name__)
 NS_PRIORITY_LIST = ('FPLX', 'HGNC', 'GO', 'MESH', 'HMDB', 'CHEBI', 'PUBCHEM')
-SIGN_DICT = {'Activation': 0, 'Inhibition': 1, 'IncreaseAmount': 0,
-             'DecreaseAmount': 1}
 
 
 class IndraNetAssembler():
@@ -41,13 +39,11 @@ class IndraNetAssembler():
         for stmt in stmts:
             self.statements.append(stmt)
 
-    def make_model(self, signed=False, exclude_stmts=None, complex_members=3):
+    def make_model(self, exclude_stmts=None, complex_members=3):
         """Assemble an IndraNet graph object.
 
         Parameters
         ----------
-        signed : bool
-            Whether the edges of a returned graph should be signed.
         exclude_stmts : list[str]
             A list of statement type names to not include in the graph.
         complex_members : int
@@ -61,18 +57,16 @@ class IndraNetAssembler():
         model : IndraNet
             IndraNet graph object.
         """
-        df = self.make_df(signed, exclude_stmts, complex_members)
+        df = self.make_df(exclude_stmts, complex_members)
         model = IndraNet.from_df(df)
         return model
 
-    def make_df(self, signed=False, exclude_stmts=None, complex_members=3):
+    def make_df(self, exclude_stmts=None, complex_members=3):
         """Create a dataframe containing information extracted from assembler's
         list of statements necessary to build an IndraNet.
 
         Parameters
         ----------
-        signed : bool
-            Whether the dataframe should contain 'sign' column.
         exclude_stmts : list[str]
             A list of statement type names to not include into a dataframe.
         complex_members : int
@@ -148,14 +142,6 @@ class IndraNetAssembler():
                     ('evidence_count', len(stmt.evidence)),
                     ('hash', stmt.get_hash(refresh=True)),
                     ('belief', stmt.belief)])
-                if signed:
-                    try:
-                        sign = SIGN_DICT[stmt_type]
-                    except KeyError:
-                        logger.warning('Could not find a sign for %s. '
-                                       'Using sign=0 by default.' % stmt)
-                        sign = 0
-                    row['sign'] = sign
                 rows.append(row)
         df = pd.DataFrame.from_dict(rows)
         return df
