@@ -6,7 +6,7 @@ from itertools import permutations
 from collections import OrderedDict
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 NS_PRIORITY_LIST = ('FPLX', 'HGNC', 'GO', 'MESH', 'HMDB', 'CHEBI', 'PUBCHEM')
 SIGN_DICT = {'Activation': 0, 'Inhibition': 1, 'IncreaseAmount': 0,
              'DecreaseAmount': 1}
@@ -96,15 +96,20 @@ class IndranetAssembler():
         for stmt in self.statements:
             # Exclude statements from given exclude list
             if isinstance(stmt, exclude_types):
+                logger.warning('Skipping a statement of a type %s.'
+                               % type(stmt).__name__)
                 continue
             agents = stmt.agent_list()
             # Exclude statements with less than 2 agents
             if len(agents) < 2:
+                logger.warning('Skipping a statement with less than 2 agents.')
                 continue
             # Handle complexes
             if isinstance(stmt, Complex):
                 # Do not add complexes with more members than complex_members
                 if len(agents) > complex_members:
+                    logger.warning('Skipping a complex with %d members.'
+                                   % len(agents))
                     continue
                 else:
                     # add every permutation
@@ -113,6 +118,8 @@ class IndranetAssembler():
                 pairs = [agents]
             for (agA, agB) in pairs:
                 if agA is None or agB is None:
+                    logger.warning(
+                        'Skipping a statement because agent is None.')
                     continue
 
                 def get_ag_ns_id(ag):
@@ -146,7 +153,7 @@ class IndranetAssembler():
                         sign = SIGN_DICT[stmt_type]
                     except KeyError:
                         logger.warning('Could not find a sign for %s. '
-                                       'Using sign=0 by default.')
+                                       'Using sign=0 by default.' % stmt)
                         sign = 0
                     row['sign'] = sign
                 rows.append(row)
