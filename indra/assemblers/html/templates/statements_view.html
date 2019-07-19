@@ -16,7 +16,7 @@
     function toggler(short_name_key) {
       $("#" + short_name_key + "_group").toggle();
       let header = "#" + short_name_key + "_heading";
-      if (short_name_key.slice(0,2) != 'tl-'){
+      if (short_name_key.slice(0,3) != 'tl-') {
             toggle_corner(header, "left");
             toggle_corner(header, "right");
       }
@@ -284,7 +284,7 @@
     <div class="super-group-heading"
        id="tl-{{ tl_key }}"
        onclick="toggler('tl-{{ tl_key }}')">
-      <h3>{{ tl_key }}
+      <h3>{{ results['label'] }}
           {% if results['source_counts'] %}
               {% for src, count in results['source_counts'].items() %}
                   {% if count > 0 %}

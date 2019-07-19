@@ -9,7 +9,7 @@ import re
 import uuid
 import logging
 import itertools
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 
 from os.path import abspath, dirname, join, exists, getmtime, sep
 from jinja2 import Environment, BaseLoader, TemplateNotFound
@@ -167,10 +167,12 @@ class HtmlAssembler(object):
                 src_counts = None
                 tl_counts = None
 
-            tl_key = str(key[1])
+            tl_key = '-'.join(key[1])
+            tl_label = ' &#8594 ' .join(key[1])
 
             if tl_key not in tl_stmts.keys():
-                tl_stmts[tl_key] = {'source_counts': tl_counts,
+                tl_stmts[tl_key] = {'label': tl_label,
+                                    'source_counts': tl_counts,
                                     'stmts_formatted': []}
 
             # This will now be ordered by prevalence and entity pairs.
@@ -201,7 +203,8 @@ class HtmlAssembler(object):
             tl_stmts[tl_key]['stmts_formatted'].append(new_tpl)
 
         metadata = {k.replace('_', ' ').title(): v
-                    for k, v in self.metadata.items()}
+                    for k, v in self.metadata.items()
+                    if not isinstance(v, list) and not isinstance(v, dict)}
         if self.db_rest_url and not self.db_rest_url.endswith('statements'):
             db_rest_url = self.db_rest_url + '/statements'
         else:
