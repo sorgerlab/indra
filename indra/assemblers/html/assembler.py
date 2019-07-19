@@ -12,6 +12,8 @@ import itertools
 from collections import OrderedDict, Iterable
 
 from os.path import abspath, dirname, join, exists, getmtime, sep
+
+from flask import url_for
 from jinja2 import Environment, BaseLoader, TemplateNotFound
 
 from indra.statements import *
