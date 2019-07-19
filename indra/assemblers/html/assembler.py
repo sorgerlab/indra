@@ -169,9 +169,9 @@ class HtmlAssembler(object):
                 src_counts = None
                 tl_counts = None
 
-            tl_key = '-'.join(key[1])
-            tl_label = ' &#8594 ' .join(['?' if name is 'None' or name is None
-                                         else name
+            tl_key = '-'.join([str(name) for name in key[1]])
+            tl_label = ' &#8594 ' .join(['?' if str(name) is 'None'
+                                         else str(name)
                                          for name in key[1]])
 
             if tl_key not in tl_stmts.keys():
