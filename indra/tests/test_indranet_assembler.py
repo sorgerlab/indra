@@ -43,15 +43,6 @@ def test_simple_assembly():
     assert g['b']['d'][hash_bd]['evidence_count'] == 0
 
 
-def test_signed_assembly():
-    ia = IndraNetAssembler([st1, st2])
-    g = ia.make_model(signed=True)
-    assert len(g.nodes) == 3
-    assert len(g.edges) == 2
-    assert g['a']['b'][hash_ab]['sign'] == 0
-    assert g['a']['c'][hash_ac]['sign'] == 1
-
-
 def test_exclude_stmts():
     ia = IndraNetAssembler([st1, st2, st3])
     g = ia.make_model(exclude_stmts=['Inhibition'])
