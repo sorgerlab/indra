@@ -16,9 +16,9 @@
     function toggler(short_name_key) {
       $("#" + short_name_key + "_group").toggle();
       let header = "#" + short_name_key + "_heading";
-      if (short_name_key.slice(0,3) != 'tl-') {
-            toggle_corner(header, "left");
-            toggle_corner(header, "right");
+      if (short_name_key.slice(0, 3) != 'tl-') {
+        toggle_corner(header, "left");
+        toggle_corner(header, "right");
       }
       $(header).show();
     }
@@ -285,13 +285,13 @@
        id="tl-{{ tl_key }}"
        onclick="toggler('tl-{{ tl_key }}')">
       <h3>{{ results['label'] }}
-          {% if results['source_counts'] %}
-              {% for src, count in results['source_counts'].items() %}
-                  {% if count > 0 %}
-                      <span class="badge badge-source source-{{ src }}">{{ src }}: {{ count }}</span>
-                  {% endif %}
-              {% endfor %}
-          {% endif %}
+        {% if results['source_counts'] %}
+          {% for src, count in results['source_counts'].items() %}
+            {% if count > 0 %}
+              <span class="badge badge-source source-{{ src }}">{{ src }}: {{ count }}</span>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
       </h3>
     </div>
     <div class="group" id="tl-{{ tl_key }}_group">
@@ -319,6 +319,13 @@
                  target="_blank">
                 <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span>
               </a>
+              {% if stmt_info['source_count'] %}
+                {% for src, count in stmt_info['source_count'].items() %}
+                  {% if count > 0 %}
+                    <span class="badge badge-source source-{{ src }}">{{ src }}: {{ count }}</span>
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
             </div>
             <div class="evidence">
               <table class="table"

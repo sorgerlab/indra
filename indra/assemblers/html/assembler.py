@@ -168,7 +168,8 @@ class HtmlAssembler(object):
                 tl_counts = None
 
             tl_key = '-'.join(key[1])
-            tl_label = ' &#8594 ' .join(key[1])
+            tl_label = ' &#8594 ' .join(['?' if name is None else name
+                                         for name in key[1]])
 
             if tl_key not in tl_stmts.keys():
                 tl_stmts[tl_key] = {'label': tl_label,
@@ -182,18 +183,19 @@ class HtmlAssembler(object):
                 ev_list = self._format_evidence_text(stmt)
                 english = self._format_stmt_text(stmt)
                 if self.ev_totals:
-                    total_evidence = self.ev_totals.get(int(stmt_hash), '?')
-                    if total_evidence == '?':
+                    tot_ev = self.ev_totals.get(int(stmt_hash), '?')
+                    if tot_ev == '?':
                         logger.warning('The hash %s was not found in the '
                                        'evidence totals dict.' % stmt_hash)
-                    evidence_count_str = '%s / %s' % (len(ev_list), total_evidence)
+                    evidence_count_str = '%s / %s' % (len(ev_list), tot_ev)
                 else:
                     evidence_count_str = str(len(ev_list))
                 stmt_info_list.append({
                     'hash': stmt_hash,
                     'english': english,
                     'evidence': ev_list,
-                    'evidence_count': evidence_count_str})
+                    'evidence_count': evidence_count_str,
+                    'source_count': self.source_counts.get(stmt_hash)})
 
             # Generate the short name for the statement and a unique key.
             short_name = make_string_from_sort_key(key, verb)
