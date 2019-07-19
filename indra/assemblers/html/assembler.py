@@ -70,6 +70,29 @@ env = Environment(loader=IndraHTMLLoader())
 default_template = env.get_template('indra/statements_view.html')
 
 
+colors = ['#8dd3c7',  '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462',
+          '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd', '#ccebc5', '#ffed6f']
+
+
+def color_gen():
+    while True:
+        for color in colors:
+            yield color
+
+
+SOURCE_COLORS = {
+    'reading': {'color': 'white',
+                'sources': dict(zip(['reach', 'medscan', 'rlimsp', 'trips',
+                                     'sparser', 'isi', 'tees'], color_gen()))},
+    'databases': {'color': 'black',
+                  'sources': dict(zip(['phosphosite', 'cbn', 'pc11',
+                                       'geneways', 'biopax', 'bel_lc',
+                                       'signor', 'biogrid', 'tas',
+                                       'lincs_drug', 'hprd', 'trrust'],
+                                      color_gen()))}
+}
+
+
 class HtmlAssembler(object):
     """Generates an HTML-formatted report from INDRA Statements.
 
@@ -221,7 +244,8 @@ class HtmlAssembler(object):
             template = default_template
         self.model = template.render(stmt_data=tl_stmts,
                                      metadata=metadata, title=self.title,
-                                     db_rest_url=db_rest_url)
+                                     db_rest_url=db_rest_url,
+                                     source_colors=SOURCE_COLORS)
         return self.model
 
     def append_warning(self, msg):
