@@ -6,14 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 class IndraNet(nx.MultiDiGraph):
-    """IndraNet network object
-
-    Methods
-    -------
-    from_df(df): (classmethod)
-        Return an instance of IndraNet, with graph data filled out from a
-        dataframe (df) containing pairwise interactions.
-    """
+    """Network representation of INDRA Statements."""
     def __init__(self, incoming_graph_data=None, **attr):
         super().__init__(incoming_graph_data, **attr)
         self._is_multi = True
@@ -24,7 +17,10 @@ class IndraNet(nx.MultiDiGraph):
         mandatory_columns = ['agA_name', 'agB_name', 'agA_ns', 'agA_id',
                              'agB_ns', 'agB_id', 'stmt_type', 'evidence_count',
                              'hash', 'belief']
-        """Create an IndraNet MultiDiGraph from a pandas DataFrame
+        """Create an IndraNet MultiDiGraph from a pandas DataFrame.
+
+        Returns an instance of IndraNet with graph data filled out from a
+        dataframe containing pairwise interactions.
 
         Parameters
         ----------
@@ -42,6 +38,7 @@ class IndraNet(nx.MultiDiGraph):
         in : IndraNet
             An IndraNet object
         """.format(m=mandatory_columns)
+
         if not set(mandatory_columns).issubset(set(df.columns)):
             raise ValueError('Missing one or more columns of %s in data '
                              'frame' % mandatory_columns)

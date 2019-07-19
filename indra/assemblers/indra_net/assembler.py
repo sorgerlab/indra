@@ -49,11 +49,11 @@ class IndranetAssembler():
         signed : bool
             Whether the edges of a returned graph should be signed.
         exclude_stmts : list[str]
-            A list of statement type names to not include into a graph.
+            A list of statement type names to not include in the graph.
         complex_members : int
-            A maximum allowed size of a complex to be included in the graph.
+            Maximum allowed size of a complex to be included in the graph.
             All complexes larger than complex_members will be rejected. For
-            accepted complexes, all permutation of their members will be added
+            accepted complexes, all permutations of their members will be added
             as edges.
 
         Returns
@@ -66,20 +66,20 @@ class IndranetAssembler():
         return model
 
     def make_df(self, signed=False, exclude_stmts=None, complex_members=3):
-        """Create a data frame containing information extracted from assembler's
+        """Create a dataframe containing information extracted from assembler's
         list of statements necessary to build an IndraNet.
 
         Parameters
         ----------
         signed : bool
-            Whether the data frame should contain 'sign' column.
+            Whether the dataframe should contain 'sign' column.
         exclude_stmts : list[str]
-            A list of statement type names to not include into a data frame.
+            A list of statement type names to not include into a dataframe.
         complex_members : int
-            A maximum allowed size of a complex to be included in the data
+            Maximum allowed size of a complex to be included in the data
             frame. All complexes larger than complex_members will be rejected.
-            For accepted complexes, all permutation of their members will be
-            added as data frame records.
+            For accepted complexes, all permutations of their members will be
+            added as dataframe records.
 
         Returns
         -------
