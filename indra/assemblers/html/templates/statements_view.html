@@ -280,10 +280,10 @@
     </tr>
     </thead>
   </table>
-  {% for tl_key, results in stmt_data.items() %}
+  {% for results in stmt_data.values() %}
     <div class="super-group-heading"
-       id="tl-{{ tl_key }}"
-       onclick="toggler('tl-{{ tl_key }}')">
+       id="tl-{{ results['html_key'] }}"
+       onclick="toggler('tl-{{ results['html_key'] }}')">
       <h3>{{ results['label'] }}
         {% if results['source_counts'] %}
           {% for src, count in results['source_counts'].items() %}
@@ -294,7 +294,7 @@
         {% endif %}
       </h3>
     </div>
-    <div class="group" id="tl-{{ tl_key }}_group">
+    <div class="group" id="tl-{{ results['html_key'] }}_group">
       {% for short_name, short_name_key, stmt_info_list, src_counts in results['stmts_formatted'] %}
         <div class="group_heading"
            onclick="toggler('{{ short_name_key }}');"

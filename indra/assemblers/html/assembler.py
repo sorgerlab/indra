@@ -168,11 +168,13 @@ class HtmlAssembler(object):
                 tl_counts = None
 
             tl_key = '-'.join(key[1])
-            tl_label = ' &#8594 ' .join(['?' if name is None else name
+            tl_label = ' &#8594 ' .join(['?' if name is 'None' or name is None
+                                         else name
                                          for name in key[1]])
 
             if tl_key not in tl_stmts.keys():
-                tl_stmts[tl_key] = {'label': tl_label,
+                tl_stmts[tl_key] = {'html_key': str(uuid.uuid4()),
+                                    'label': tl_label,
                                     'source_counts': tl_counts,
                                     'stmts_formatted': []}
 
