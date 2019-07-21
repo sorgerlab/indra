@@ -76,7 +76,7 @@ class MirtarbaseProcessor:
             statement = DecreaseAmount(
                 mirna_agent,
                 target_agent,
-                evidence=evidence
+                evidence=evidence,
             )
             self.statements.append(statement)
 
