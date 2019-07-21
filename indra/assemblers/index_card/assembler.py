@@ -64,6 +64,8 @@ class IndexCardAssembler(object):
                 continue
             if card is not None:
                 card.card['meta'] = {'id': stmt.uuid, 'belief': stmt.belief}
+                card.card['interaction']['hypothesis_information'] = _get_hypothesis_information(stmt)
+                card.card['interaction']['context'] = _get_context_information(stmt)
                 if self.pmc_override is not None:
                     card.card['pmc_id'] = self.pmc_override
                 else:
@@ -105,6 +107,7 @@ class IndexCard(object):
             'submitter': None,
             'interaction': {
                 'negative_information': False,
+                'hypothesis_information' : None,
                 'interaction_type': None,
                 'participant_a': {
                     'entity_type': None,
@@ -396,6 +399,55 @@ def get_pmc_id(stmt):
         else:
             pmc_id = ''
     return str(pmc_id)
+
+def _get_hypothesis_information(stmt):
+    '''Returns hypothesis information of the evidences in same order as in evidence field'''
+
+    ev_txts = get_evidence_text(stmt)
+    if len(ev_txts) == 0:
+        return None
+
+    hypothesis_array = []
+    for ev_txt in ev_txts:
+        if(ev_txt.startswith('PARTIAL: ')):
+            evidence = next((ev for ev in stmt.partial_evidence if ev.text == ev_txt), None)
+        else:
+            evidence = next((ev for ev in stmt.evidence if ev.text == ev_txt), None)
+
+        try:
+            hypothesis = evidence.epistemics.get('hypothesis')
+        except:
+            hypothesis = None
+
+        hypothesis_array.append(hypothesis)
+
+    return hypothesis_array
+
+def _get_context_information(stmt):
+    '''Returns context information of the evidences in same order as in evidence field'''
+
+    ev_txts = get_evidence_text(stmt)
+    if len(ev_txts) == 0:
+        return None
+
+    context_array = []
+    for ev_txt in ev_txts:
+        if(ev_txt.startswith('PARTIAL: ')):
+            evidence = next((ev for ev in stmt.partial_evidence if ev.text == ev_txt), None)
+        else:
+            evidence = next((ev for ev in stmt.evidence if ev.text == ev_txt), None)
+
+        if evidence.context and evidence.context.species:
+            species = evidence.context.species
+            obj = {}
+            obj['name'] = species.name
+            obj['taxonomy']  = species.db_refs.get('TAXONOMY') if species.db_refs is not None else None
+        else:
+            obj = None
+
+        context_array.append(obj)
+
+    return context_array
 
 def get_evidence_text(stmt):
     ev_txts = [ev.text for ev in stmt.evidence if ev.text]
