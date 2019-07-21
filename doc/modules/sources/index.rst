@@ -41,6 +41,7 @@ Standard Molecular Pathway Databases
    biogrid/index
    hprd/index
    trrust
+   mirtarbase/index
 
 Custom Knowledge Bases
 ----------------------
