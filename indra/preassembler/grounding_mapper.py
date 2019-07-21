@@ -7,7 +7,7 @@ from collections import Counter
 from itertools import groupby, chain
 from indra.statements import Agent
 from indra.databases import uniprot_client, hgnc_client, chebi_client, \
-    mesh_client, go_client
+    mesh_client, go_client, mirbase_client
 from indra.util import read_unicode_csv, write_unicode_csv
 
 logger = logging.getLogger(__name__)
@@ -114,6 +114,7 @@ class GroundingMapper(object):
         """
         up_id = db_refs.get('UP')
         hgnc_id = db_refs.get('HGNC')
+        mirbase_id = db_refs.get('MIRBASE')
         # If we have a UP ID and no HGNC ID, we try to get a gene name,
         # and if possible, a HGNC ID from that
         if up_id and not hgnc_id:
@@ -122,6 +123,10 @@ class GroundingMapper(object):
                 hgnc_id = hgnc_client.get_hgnc_id(gene_name)
                 if hgnc_id:
                     db_refs['HGNC'] = hgnc_id
+        elif mirbase_id and not hgnc_id:
+            hgnc_id = mirbase_client.get_hgnc_id_from_mirbase_id(mirbase_id)
+            if hgnc_id:
+                db_refs['HGNC'] = hgnc_id
         # Otherwise, if we don't have a UP ID but have an HGNC ID, we try to
         # get the UP ID
         elif hgnc_id:
@@ -146,6 +151,17 @@ class GroundingMapper(object):
                 # If there is no conflict, we can update the UP entry
                 else:
                     db_refs['UP'] = mapped_up_id
+
+            mapped_mirbase_id = \
+                mirbase_client.get_mirbase_id_from_hgnc_id(hgnc_id)
+            if mapped_mirbase_id:
+                if mirbase_id and mapped_mirbase_id != mirbase_id:
+                    msg = 'Inconsistent groundings MIRBASE:%s not equal to ' \
+                          'MIRBASE:%s mapped from HGNC:%s, standardizing ' \
+                          'to MIRBASE:%s'
+                    logger.debug(msg, mirbase_id, mapped_mirbase_id,
+                                 hgnc_id, mapped_mirbase_id)
+                db_refs['MIRBASE'] = mapped_mirbase_id
 
         # Now try to improve chemical groundings
         pc_id = db_refs.get('PUBCHEM')
@@ -357,8 +373,8 @@ class GroundingMapper(object):
         logger.info('%s statements filtered out' % num_skipped)
         return mapped_stmts
 
-    @staticmethod
-    def standardize_agent_name(agent, standardize_refs=True):
+    @classmethod
+    def standardize_agent_name(cls, agent, standardize_refs=True):
         """Standardize the name of an Agent based on grounding information.
 
         If an agent contains a FamPlex grounding, the FamPlex ID is used as a
@@ -384,7 +400,7 @@ class GroundingMapper(object):
             return
 
         if standardize_refs:
-            agent.db_refs = GroundingMapper.standardize_db_refs(agent.db_refs)
+            agent.db_refs = cls.standardize_db_refs(agent.db_refs)
 
         # We next look for prioritized grounding, if missing, we return
         db_ns, db_id = agent.get_grounding()
@@ -417,10 +433,16 @@ class GroundingMapper(object):
             go_name = go_client.get_go_label(agent.db_refs['GO'])
             if go_name:
                 agent.name = go_name
+        elif db_ns == 'MIRBASE':
+            mirbase_id = agent.db_refs['MIRBASE']
+            mirbase_name = \
+                mirbase_client.get_mirbase_name_from_mirbase_id(mirbase_id)
+            if mirbase_name:
+                agent.name = mirbase_name
         return
 
-    @staticmethod
-    def rename_agents(stmts):
+    @classmethod
+    def rename_agents(cls, stmts):
         """Return a list of mapped statements with updated agent names.
 
         Creates a new list of statements without modifying the original list.
@@ -441,7 +463,7 @@ class GroundingMapper(object):
         for _, stmt in enumerate(mapped_stmts):
             # Iterate over the agents
             for agent in stmt.agent_list():
-                GroundingMapper.standardize_agent_name(agent, True)
+                cls.standardize_agent_name(agent, True)
         return mapped_stmts
 
 
