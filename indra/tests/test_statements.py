@@ -1998,12 +1998,18 @@ def test_agent_list_with_bound_condition_agents():
     assert agents[2].name == 'EGF'
 
 
-def test_context_bool():
+def test_context_bool_equal():
     assert not BioContext()
     assert BioContext(cell_type=RefContext(name='x'))
     assert not WorldContext()
     assert WorldContext(time=TimeContext())
     assert WorldContext(geo_location=RefContext(name='x'))
+    c1 = BioContext(cell_type=RefContext(name='x'))
+    c2 = BioContext(cell_type=RefContext(name='y'))
+    assert c1 != c2
+    assert not c1 == c2
+    assert c1 == c1
+    assert not c1 != c1
 
 
 def test_deprecated_cellular_location():
