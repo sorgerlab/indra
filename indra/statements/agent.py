@@ -126,6 +126,9 @@ class Agent(Concept):
         fplx = self.db_refs.get('FPLX')
         if fplx:
             return 'FPLX', fplx
+        mirbase = self.db_refs.get('MIRBASE')
+        if mirbase:
+            return 'MIRBASE', mirbase
         hgnc = self.db_refs.get('HGNC')
         if hgnc:
             if isinstance(hgnc, list):
