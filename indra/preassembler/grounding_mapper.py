@@ -410,7 +410,7 @@ class GroundingMapper(object):
         # If there's a FamPlex ID, prefer that for the name
         if db_ns == 'FPLX':
             agent.name = agent.db_refs['FPLX']
-        if db_ns == 'MIRBASE':
+        elif db_ns == 'MIRBASE':
             mirbase_id = agent.db_refs['MIRBASE']
             mirbase_name = \
                 mirbase_client.get_mirbase_name_from_mirbase_id(mirbase_id)
