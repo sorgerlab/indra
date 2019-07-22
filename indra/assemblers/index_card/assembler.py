@@ -29,7 +29,7 @@ class IndexCardAssembler(object):
 
     def __init__(self, statements=None, pmc_override=None):
         if statements is None:
-            self.statements =  []
+            self.statements = []
         else:
             self.statements = statements
         self.cards = []
@@ -64,8 +64,10 @@ class IndexCardAssembler(object):
                 continue
             if card is not None:
                 card.card['meta'] = {'id': stmt.uuid, 'belief': stmt.belief}
-                card.card['interaction']['hypothesis_information'] = _get_hypothesis_information(stmt)
-                card.card['interaction']['context'] = _get_context_information(stmt)
+                card.card['interaction']['hypothesis_information'] = \
+                    _get_hypothesis_information(stmt)
+                card.card['interaction']['context'] = \
+                    _get_context_information(stmt)
                 if self.pmc_override is not None:
                     card.card['pmc_id'] = self.pmc_override
                 else:
@@ -100,6 +102,7 @@ class IndexCardAssembler(object):
         with open(file_name, 'wt') as fh:
             fh.write(self.print_model())
 
+
 class IndexCard(object):
     def __init__(self):
         self.card  = {
@@ -124,6 +127,7 @@ class IndexCard(object):
 
     def get_string(self):
         return json.dumps(self.card)
+
 
 def assemble_complex(stmt):
     card = IndexCard()
@@ -169,6 +173,7 @@ def assemble_regulate_activity(stmt):
     else:
         return None
     return card
+
 
 def assemble_regulate_amount(stmt):
     # Top level card
@@ -226,6 +231,7 @@ def assemble_modification(stmt):
 
     return card
 
+
 def assemble_selfmodification(stmt):
     card = IndexCard()
     card.card['submitter'] = global_submitter
@@ -259,6 +265,7 @@ def assemble_selfmodification(stmt):
 
     return card
 
+
 def assemble_translocation(stmt):
     # Index cards don't allow missing to_location
     if stmt.to_location is None:
@@ -281,6 +288,7 @@ def assemble_translocation(stmt):
     card.card['interaction'] = interaction
     return card
 
+
 def get_generic(entity_type='protein'):
     participant = {
         'entity_text': [''],
@@ -288,6 +296,7 @@ def get_generic(entity_type='protein'):
         'identifier': 'GENERIC'
         }
     return participant
+
 
 def get_participant(agent):
     # Handle missing Agent as generic protein
@@ -389,6 +398,7 @@ def get_participant(agent):
         participant['not_features'] = not_features
     return participant
 
+
 def get_pmc_id(stmt):
     pmc_id = ''
     for ev in stmt.evidence:
@@ -400,8 +410,10 @@ def get_pmc_id(stmt):
             pmc_id = ''
     return str(pmc_id)
 
+
 def _get_hypothesis_information(stmt):
-    '''Returns hypothesis information of the evidences in same order as in evidence field'''
+    """Returns hypothesis information of the evidences in the same order as in
+    the evidence field."""
 
     ev_txts = get_evidence_text(stmt)
     if len(ev_txts) == 0:
@@ -409,22 +421,22 @@ def _get_hypothesis_information(stmt):
 
     hypothesis_array = []
     for ev_txt in ev_txts:
-        if(ev_txt.startswith('PARTIAL: ')):
-            evidence = next((ev for ev in stmt.partial_evidence if ev.text == ev_txt), None)
+        if ev_txt.startswith('PARTIAL: '):
+            evidence = next((ev for ev in stmt.partial_evidence
+                             if ev.text == ev_txt), None)
         else:
-            evidence = next((ev for ev in stmt.evidence if ev.text == ev_txt), None)
-
-        try:
-            hypothesis = evidence.epistemics.get('hypothesis')
-        except:
-            hypothesis = None
+            evidence = next((ev for ev in stmt.evidence if ev.text == ev_txt),
+                            None)
+        hypothesis = evidence.epistemics.get('hypothesis')
 
         hypothesis_array.append(hypothesis)
 
     return hypothesis_array
 
+
 def _get_context_information(stmt):
-    '''Returns context information of the evidences in same order as in evidence field'''
+    """Returns context information of the evidences in same order as in
+    evidence field."""
 
     ev_txts = get_evidence_text(stmt)
     if len(ev_txts) == 0:
@@ -433,21 +445,25 @@ def _get_context_information(stmt):
     context_array = []
     for ev_txt in ev_txts:
         if(ev_txt.startswith('PARTIAL: ')):
-            evidence = next((ev for ev in stmt.partial_evidence if ev.text == ev_txt), None)
+            evidence = next((ev for ev in stmt.partial_evidence
+                             if ev.text == ev_txt), None)
         else:
-            evidence = next((ev for ev in stmt.evidence if ev.text == ev_txt), None)
+            evidence = next((ev for ev in stmt.evidence if ev.text == ev_txt),
+                            None)
 
         if evidence.context and evidence.context.species:
             species = evidence.context.species
             obj = {}
             obj['name'] = species.name
-            obj['taxonomy']  = species.db_refs.get('TAXONOMY') if species.db_refs is not None else None
+            obj['taxonomy'] = species.db_refs.get('TAXONOMY') \
+                if species.db_refs is not None else None
         else:
             obj = None
 
         context_array.append(obj)
 
     return context_array
+
 
 def get_evidence_text(stmt):
     ev_txts = [ev.text for ev in stmt.evidence if ev.text]
@@ -467,12 +483,13 @@ def get_evidence_text(stmt):
                 ev_txts.append(txt)
     return ev_txts
 
+
 def _get_is_direct(stmt):
-    '''Returns true if there is evidence that the statement is a direct
+    """Returns true if there is evidence that the statement is a direct
     interaction. If any of the evidences associated with the statement
     indicates a direct interatcion then we assume the interaction
     is direct. If there is no evidence for the interaction being indirect
-    then we default to direct.'''
+    then we default to direct."""
     any_indirect = False
     for ev in stmt.evidence:
         if ev.epistemics.get('direct') is True:
