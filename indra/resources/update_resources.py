@@ -689,5 +689,5 @@ if __name__ == '__main__':
     update_ncit_map()
     update_lincs_small_molecules()
     update_lincs_proteins()
-    update_mesh_names()a
+    update_mesh_names()
     update_mirbase()
