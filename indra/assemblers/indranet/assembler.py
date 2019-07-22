@@ -7,7 +7,8 @@ from collections import OrderedDict
 
 
 logger = logging.getLogger(__name__)
-NS_PRIORITY_LIST = ('FPLX', 'HGNC', 'GO', 'MESH', 'HMDB', 'CHEBI', 'PUBCHEM')
+NS_PRIORITY_LIST = (
+    'FPLX', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH', 'HMDB', 'PUBCHEM')
 
 
 class IndraNetAssembler():
