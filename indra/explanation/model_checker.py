@@ -833,9 +833,10 @@ class PysbModelChecker(ModelChecker):
         obs_names = self.stmt_to_obs[stmt]
         if not obs_names:
             logger.info("No observables for stmt %s, returning False" % stmt)
-            return (None, None, None, 'OBSERVABLES_NOT_FOUND')
+            return (None, None, 'OBSERVABLES_NOT_FOUND')
+        obs_signed = [(obs, target_polarity) for obs in obs_names]
         result_code = None
-        return subj_mps, obs_names, target_polarity, result_code
+        return subj_mps, obs_signed, target_polarity, result_code
 
     def process_subject(self, subj_mp):
         if subj_mp is None:
@@ -845,7 +846,8 @@ class PysbModelChecker(ModelChecker):
             if not input_rule_set:
                 logger.info('Input rules not found for %s' % subj_mp)
                 return (None, 'INPUT_RULES_NOT_FOUND')
-        return input_rule_set, None
+            input_set_signed = {(rule, 0) for rule in input_rule_set}
+        return input_set_signed, None
 
     def _get_input_rules(self, subj_mp):
         if subj_mp is None:
