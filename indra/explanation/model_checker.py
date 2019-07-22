@@ -637,12 +637,13 @@ class PysbModelChecker(ModelChecker):
     """
 
     def __init__(self, model, statements=None, agent_obs=None,
-                 do_sampling=False, seed=None):
+                 do_sampling=False, seed=None, model_stmts=None):
         super().__init__(model, statements, do_sampling, seed)
         if agent_obs:
             self.agent_obs = agent_obs
         else:
             self.agent_obs = []
+        self.model_stmts = model_stmts if model_stmts else []
         # Influence map
         self._im = None
         # Map from statements to associated observables
