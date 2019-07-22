@@ -44,12 +44,13 @@ def test_map_standardize_up_hgnc():
 
 def test_map_standardize_mirbase_hgnc():
     a1 = Agent('MIRLET7A1', db_refs={'HGNC': '31476'})
-    a2 = Agent('hsa-let-7a-1L', db_refs={'MIRBASE': 'MI0000060'})
+    a2 = Agent('hsa-let-7a-1', db_refs={'MIRBASE': 'MI0000060'})
     gm = GroundingMapper(default_grounding_map)
     stmt = Phosphorylation(a1, a2) # not real statement
     mapped_stmts = gm.map_agents([stmt])
     assert len(mapped_stmts) == 1
     st = mapped_stmts[0]
+    assert 'hsa-let-7a-1' == st.enz.name == st.sub.name
     assert st.enz.db_refs['HGNC'] == st.sub.db_refs['HGNC']
     assert st.enz.db_refs['MIRBASE'] == st.sub.db_refs['MIRBASE']
 
