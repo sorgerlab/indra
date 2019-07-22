@@ -459,7 +459,8 @@ class ModelChecker(object):
                 queue.append(new_path)
         return
 
-    def signed_edges_to_signed_nodes(self, graph, prune_nodes=True):
+    def signed_edges_to_signed_nodes(self, graph, prune_nodes=True,
+                                     edge_signs={'pos': 0, 'neg': 1}):
         """Convert a graph with signed edges to a graph with signed nodes. The
         Each pair of nodes and edge in an input graph are represented as four
         nodes and two edges in the new graph. For example, an edge (a, b, 0),
@@ -485,10 +486,10 @@ class ModelChecker(object):
         edges = set()
         for u, v, edge_data in graph.edges(data=True):
             edge_sign = edge_data.get('sign')
-            if edge_sign == 0:
+            if edge_sign == edge_signs['pos']:
                 edges.add(((u, 0), (v, 0)))
                 edges.add(((u, 1), (v, 1)))
-            elif edge_sign == 1:
+            elif edge_sign == edge_signs['neg']:
                 edges.add(((u, 0), (v, 1)))
                 edges.add(((u, 1), (v, 0)))
         signed_nodes_graph.add_edges_from(edges)
@@ -790,7 +791,8 @@ class PysbModelChecker(ModelChecker):
     def get_graph(self):
         """Get influence map and convert it to a graph with signed nodes."""
         im = self.get_im()
-        graph = self.signed_edges_to_signed_nodes(im, prune_nodes=True)
+        graph = self.signed_edges_to_signed_nodes(
+            im, prune_nodes=True, edge_signs={'pos': 1, 'neg': -1})
         return graph
 
     def process_statement(self, stmt):
