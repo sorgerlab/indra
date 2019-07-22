@@ -39,15 +39,12 @@ class PathMetric(object):
         The source node of the path
     target_node : str
         The target node of the path
-    polarity : int
-        The polarity of the path between source and target
     length : int
         The length of the path
     """
-    def __init__(self, source_node, target_node, polarity, length):
+    def __init__(self, source_node, target_node, length):
         self.source_node = source_node
         self.target_node = target_node
-        self.polarity = polarity
         self.length = length
 
     def __repr__(self):
@@ -55,9 +52,8 @@ class PathMetric(object):
 
     @python_2_unicode_compatible
     def __str__(self):
-        return ('source_node: %s, target_node: %s, polarity: %s, length: %d' %
-                (self.source_node, self.target_node, self.polarity,
-                 self.length))
+        return ('source_node: %s, target_node: %s, length: %d' %
+                (self.source_node, self.target_node, self.length))
 
 
 class PathResult(object):
