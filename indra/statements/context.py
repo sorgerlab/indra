@@ -51,7 +51,7 @@ class BioContext(Context):
              'species']
 
     def __eq__(self, other):
-        return all([getattr(self, attr, None) == getattr(self, attr, None)
+        return all([getattr(self, attr, None) == getattr(other, attr, None)
                     for attr in self.attrs])
 
     def __ne__(self, other):
