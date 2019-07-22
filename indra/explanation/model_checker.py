@@ -991,9 +991,10 @@ class PysbModelChecker(ModelChecker):
 
     def get_graph(self):
         """Get influence map and convert it to a graph with signed nodes."""
-        self.get_im()
+        self.get_im(force_update=True)
         self.prune_influence_map()
-        self.prune_influence_map_degrade_bind_positive(model_stmts)
+        self.prune_influence_map_degrade_bind_positive(self.model_stmts)
+        im = self.get_im(force_update=False)
         graph = self.signed_edges_to_signed_nodes(
             im, prune_nodes=True, edge_signs={'pos': 1, 'neg': -1})
         return graph
