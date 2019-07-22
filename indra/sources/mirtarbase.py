@@ -2,6 +2,8 @@
 
 """An INDRA processor for miRTarBase."""
 
+import logging
+
 import pandas as pd
 
 from indra.databases import hgnc_client, mirbase_client
@@ -11,9 +13,11 @@ __all__ = [
     'MirtarbaseProcessor',
 ]
 
+logger = logging.getLogger(__name__)
+
 VERSION = '7.0'
-DATA_URL = f'http://mirtarbase.mbc.nctu.edu.tw/' \
-    f'cache/download/{VERSION}/miRTarBase_MTI.xlsx'
+DATA_URL = 'http://mirtarbase.mbc.nctu.edu.tw/' \
+           'cache/download/{}/miRTarBase_MTI.xlsx'.format(VERSION)
 
 
 class MirtarbaseProcessor:
@@ -39,8 +43,10 @@ class MirtarbaseProcessor:
             from tqdm import tqdm
         except ImportError:
             it = df.values
+            write = logger.info
         else:
             it = tqdm(df.values, total=len(df.index))
+            write = it.write
 
         self.statements = []
         for row in it:
@@ -48,14 +54,15 @@ class MirtarbaseProcessor:
                 (mirtarbase_id, mirna_name, mirna_species, gene_name,
                  entrez_id, target_species, exp, sup_type, pmid) = row
             except ValueError:
-                it.write(f'Issue with row: {row}')
+                write('Issue with row: {row}'.format(row=row))
                 continue
 
             try:
                 entrez_id = str(int(entrez_id))
             except ValueError:
-                it.write(f'Issue on {mirtarbase_id} with'
-                         f' Entrez ID {entrez_id}')
+                write('Issue on {mirtarbase_id} with Entrez ID'
+                      '{entrez_id}'.format(mirtarbase_id=mirtarbase_id,
+                                           entrez_id=entrez_id))
                 continue
 
             target_db_refs = self._make_target_db_refs(entrez_id)
