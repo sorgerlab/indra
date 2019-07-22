@@ -223,14 +223,12 @@ class ModelChecker(object):
             A PathResult object containing the result of a test.
         """
         # rewrite generic check statement
-        subj_list, obj_list, target_polarity, result_code = (
-            self.process_statement(stmt))
+        subj_list, obj_list, result_code = self.process_statement(stmt)
         if result_code:
             return self.make_false_result(result_code, max_paths,
                                           max_path_length)
         for subj, obj in itertools.product(subj_list, obj_list):
-            result = self.find_paths(subj, obj, target_polarity,
-                                     max_paths, max_path_length)
+            result = self.find_paths(subj, obj, max_paths, max_path_length)
             # If a path was found, then we return it; otherwise, that means
             # there was no path for this observable, so we have to try the next
             # one
@@ -242,8 +240,7 @@ class ModelChecker(object):
         return self.make_false_result('NO_PATHS_FOUND',
                                       max_paths, max_path_length)
 
-    def find_paths(self, subj, obj, target_polarity,
-                   max_paths=1, max_path_length=5):
+    def find_paths(self, subj, obj, max_paths=1, max_path_length=5):
         """Check for a source/target path in the model.
 
         Parameters
@@ -284,14 +281,11 @@ class ModelChecker(object):
         # Generate the predecessors to our observable and count the paths
         path_lengths = []
         path_metrics = []
-        for source, polarity, path_length in \
-                self._find_sources(graph, obj, input_set, target_polarity):
-
-            pm = PathMetric(source, obj, polarity, path_length)
+        for source, path_length in self._find_sources(graph, obj, input_set):
+            pm = PathMetric(source, obj, path_length)
             path_metrics.append(pm)
             path_lengths.append(path_length)
-        logger.info('Finding paths between %s and %s with polarity %s' %
-                    (subj, obj, target_polarity))
+        logger.info('Finding paths between %s and %s' % (subj, obj))
         # Now, look for paths
         paths = []
         if path_metrics and max_paths == 0:
@@ -306,8 +300,7 @@ class ModelChecker(object):
                 pr.path_metrics = path_metrics
                 # Get the first path
                 path_iter = enumerate(self._find_sources_with_paths(
-                                           graph, obj, input_set,
-                                           target_polarity))
+                                           graph, obj, input_set))
                 for path_ix, path in path_iter:
                     flipped = self._flip(graph, path)
                     pr.add_path(flipped)
@@ -325,7 +318,7 @@ class ModelChecker(object):
             return PathResult(False, 'NO_PATHS_FOUND',
                               max_paths, max_path_length)
 
-    def _find_sources(self, graph, target, sources, polarity):
+    def _find_sources(self, graph, target, sources):
         """Get the subset of source nodes with paths to the target.
 
         Given a target, a list of sources, and a path polarity, perform a
@@ -357,34 +350,32 @@ class ModelChecker(object):
         # First, create a list of visited nodes
         # Adapted from
         # networkx.algorithms.traversal.breadth_first_search.bfs_edges
-        visited = set([(target, 1)])
+        visited = set([target])
         # Generate list of predecessor nodes with a sign updated according to
         # the sign of the target node
-        target_tuple = (target, 1)
+
         # The queue holds tuples of "parents" (in this case downstream nodes)
         # and their "children" (in this case their upstream influencers)
-        queue = deque([(target_tuple,
-                        self._get_signed_predecessors(graph, target, 1), 0)])
+        queue = deque([(target, graph.predecessors(target), 0)])
         while queue:
             parent, children, path_length = queue[0]
             try:
                 # Get the next child in the list
-                (child, sign) = next(children)
+                child = next(children)
                 # Is this child one of the source nodes we're looking for? If
                 # so, yield it along with path length.
-                if (sources is None or child in sources) and sign == polarity:
-                    logger.debug("Found path to %s from %s with desired sign "
-                                 "%s with length %d" %
-                                 (target, child, polarity, path_length+1))
-                    yield (child, sign, path_length+1)
+                if (sources is None or child in sources) and \
+                        child[1] == target[1]:
+                    logger.debug("Found path to %s from %s with length %d"
+                                 % (target, child, path_length+1))
+                    yield (child, path_length+1)
                 # Check this child against the visited list. If we haven't
                 # visited it already (accounting for the path to the node),
                 # then add it to the queue.
-                if (child, sign) not in visited:
-                    visited.add((child, sign))
-                    queue.append(((child, sign),
-                                 self._get_signed_predecessors(
-                                     graph, child, sign), path_length + 1))
+                if child not in visited:
+                    visited.add(child)
+                    queue.append(
+                        (child, graph.predecessors(child), path_length + 1))
             # Once we've finished iterating over the children of the current
             # node, pop the node off and go to the next one in the queue
             except StopIteration:
@@ -392,7 +383,7 @@ class ModelChecker(object):
         # There was no path; this will produce an empty generator
         return
 
-    def _find_sources_with_paths(self, graph, target, sources, polarity):
+    def _find_sources_with_paths(self, graph, target, sources):
         """Get the subset of source nodes with paths to the target.
 
         Given a target, a list of sources, and a path polarity, perform a
@@ -424,11 +415,11 @@ class ModelChecker(object):
         #                       how-to-trace-the-path-in-a-breadth-first-search
         # FIXME: the sign information for the target should be associated with
         # the observable itself
-        queue = deque([[(target, 1)]])
+        queue = deque([[target]])
         while queue:
             # Get the first path in the queue
             path = queue.popleft()
-            node, node_sign = path[-1]
+            node = path[-1]
             # If there's only one node in the path, it's the observable we're
             # starting from, so the path is positive
             # if len(path) == 1:
@@ -438,22 +429,234 @@ class ModelChecker(object):
             # else:
             #    sign = _path_polarity(graph, reversed(path))
             # Don't allow trivial paths consisting only of the target node
-            if (sources is None or node in sources) and node_sign == polarity \
+            if (sources is None or node in sources) and node[1] == target[1] \
                     and len(path) > 1:
                 logger.debug('Found path: %s' % str(self._flip(graph, path)))
                 yield tuple(path)
-            for predecessor, sign in self._get_signed_predecessors(
-                    graph, node, node_sign):
+            for predecessor in graph.predecessors(node):
                 # Only add predecessors to the path if it's not already in the
                 # path--prevents loops
-                if (predecessor, sign) in path:
+                if predecessor in path:
                     continue
                 # Otherwise, the new path is a copy of the old one plus the new
                 # predecessor
                 new_path = list(path)
-                new_path.append((predecessor, sign))
+                new_path.append(predecessor)
                 queue.append(new_path)
         return
+
+    # def find_paths(self, subj, obj, target_polarity,
+
+    #                max_paths=1, max_path_length=5):
+    #     """Check for a source/target path in the model.
+
+    #     Parameters
+    #     ----------
+    #     subj : str or pysb.MonomerPattern
+    #         Relevant to the model information about the subject of the
+    #         Statement being checked.
+    #     obj : str
+    #         Name of the object or PySB model Observable corresponding to the
+    #         object/target of the Statement being checked.
+    #     target_polarity : int
+    #         Whether the influence in the Statement is positive (1) or negative
+    #         (-1).
+
+    #     Returns
+    #     -------
+    #     PathResult
+    #         PathResult object indicating the results of the attempt to find
+    #         a path.
+    #     """
+    #     # rewrite find_im_paths
+    #     input_set, result_code = self.process_subject(subj)
+    #     if result_code:
+    #         return self.make_false_result(result_code,
+    #                                       max_paths, max_path_length)
+    #     graph = self.get_graph()
+
+    #     # # -- Route to the path sampling function --
+    #     # NOTE this is not generic at this point!
+    #     # if self.do_sampling:
+    #     #     if not has_pg:
+    #     #         raise Exception('The paths_graph package could not be '
+    #     #                         'imported.')
+    #     #     return self._sample_paths(input_set, obj, target_polarity,
+    #     #                               max_paths, max_path_length)
+
+    #     # -- Do Breadth-First Enumeration --
+    #     # Generate the predecessors to our observable and count the paths
+    #     path_lengths = []
+    #     path_metrics = []
+    #     for source, polarity, path_length in \
+    #             self._find_sources(graph, obj, input_set, target_polarity):
+
+    #         pm = PathMetric(source, obj, polarity, path_length)
+    #         path_metrics.append(pm)
+    #         path_lengths.append(path_length)
+    #     logger.info('Finding paths between %s and %s with polarity %s' %
+    #                 (subj, obj, target_polarity))
+    #     # Now, look for paths
+    #     paths = []
+    #     if path_metrics and max_paths == 0:
+    #         pr = PathResult(True, 'MAX_PATHS_ZERO',
+    #                         max_paths, max_path_length)
+    #         pr.path_metrics = path_metrics
+    #         return pr
+    #     elif path_metrics:
+    #         if min(path_lengths) <= max_path_length:
+    #             pr = PathResult(True, 'PATHS_FOUND',
+    #                             max_paths, max_path_length)
+    #             pr.path_metrics = path_metrics
+    #             # Get the first path
+    #             path_iter = enumerate(self._find_sources_with_paths(
+    #                                        graph, obj, input_set,
+    #                                        target_polarity))
+    #             for path_ix, path in path_iter:
+    #                 flipped = self._flip(graph, path)
+    #                 pr.add_path(flipped)
+    #                 if len(pr.paths) >= max_paths:
+    #                     break
+    #             return pr
+    #         # There are no paths shorter than the max path length, so we
+    #         # don't bother trying to get them
+    #         else:
+    #             pr = PathResult(True, 'MAX_PATH_LENGTH_EXCEEDED',
+    #                             max_paths, max_path_length)
+    #             pr.path_metrics = path_metrics
+    #             return pr
+    #     else:
+    #         return PathResult(False, 'NO_PATHS_FOUND',
+    #                           max_paths, max_path_length)
+    # def _find_sources(self, graph, target, sources, polarity):
+    #     """Get the subset of source nodes with paths to the target.
+
+    #     Given a target, a list of sources, and a path polarity, perform a
+    #     breadth-first search upstream from the target to determine whether
+    #     any of the queried sources have paths to the target with the
+    #     appropriate polarity. For efficiency, does not return the full path,
+    #     but identifies the upstream sources and the length of the path.
+
+    #     Parameters
+    #     ----------
+    #     graph : one of the networkx graph types
+    #         Graph representing the model.
+    #     target : str
+    #         The node (object or rule name) in the graph to start looking
+    #         upstream for marching sources.
+    #     sources : list of str
+    #         The nodes corresponding to the subject or upstream influence being
+    #         checked.
+    #     polarity : int
+    #         Required polarity of the path between source and target.
+
+    #     Returns
+    #     -------
+    #     generator of (source, polarity, path_length)
+    #         Yields tuples of source node (string), polarity (int) and path
+    #         length (int). If there are no paths to any of the given source
+    #         nodes, the generator is empty.
+    #     """
+    #     # First, create a list of visited nodes
+    #     # Adapted from
+    #     # networkx.algorithms.traversal.breadth_first_search.bfs_edges
+    #     visited = set([(target, 1)])
+    #     # Generate list of predecessor nodes with a sign updated according to
+    #     # the sign of the target node
+    #     target_tuple = (target, 1)
+    #     # The queue holds tuples of "parents" (in this case downstream nodes)
+    #     # and their "children" (in this case their upstream influencers)
+    #     queue = deque([(target_tuple,
+    #                     self._get_signed_predecessors(graph, target, 1), 0)])
+    #     while queue:
+    #         parent, children, path_length = queue[0]
+    #         try:
+    #             # Get the next child in the list
+    #             (child, sign) = next(children)
+    #             # Is this child one of the source nodes we're looking for? If
+    #             # so, yield it along with path length.
+    #             if (sources is None or child in sources) and sign == polarity:
+    #                 logger.debug("Found path to %s from %s with desired sign "
+    #                              "%s with length %d" %
+    #                              (target, child, polarity, path_length+1))
+    #                 yield (child, sign, path_length+1)
+    #             # Check this child against the visited list. If we haven't
+    #             # visited it already (accounting for the path to the node),
+    #             # then add it to the queue.
+    #             if (child, sign) not in visited:
+    #                 visited.add((child, sign))
+    #                 queue.append(((child, sign),
+    #                              self._get_signed_predecessors(
+    #                                  graph, child, sign), path_length + 1))
+    #         # Once we've finished iterating over the children of the current
+    #         # node, pop the node off and go to the next one in the queue
+    #         except StopIteration:
+    #             queue.popleft()
+    #     # There was no path; this will produce an empty generator
+    #     return
+
+    # def _find_sources_with_paths(self, graph, target, sources, polarity):
+    #     """Get the subset of source nodes with paths to the target.
+
+    #     Given a target, a list of sources, and a path polarity, perform a
+    #     breadth-first search upstream from the target to find paths to any of
+    #     the upstream sources.
+
+    #     Parameters
+    #     ----------
+    #     graph : one of the networkx graph types
+    #         Graph representing the model.
+    #     target : str
+    #         The node (object or rule name) in the graph to start looking
+    #         upstream for marching sources.
+    #     sources : list of str
+    #         The nodes corresponding to the subject or upstream influence being
+    #         checked.
+    #     polarity : int
+    #         Required polarity of the path between source and target.
+
+    #     Returns
+    #     -------
+    #     generator of path
+    #         Yields paths as lists of nodes (agent or rule names).  If there are
+    #         no paths to any of the given source nodes, the generator is empty.
+    #     """
+    #     # First, create a list of visited nodes
+    #     # Adapted from
+    #     # http://stackoverflow.com/questions/8922060/
+    #     #                       how-to-trace-the-path-in-a-breadth-first-search
+    #     # FIXME: the sign information for the target should be associated with
+    #     # the observable itself
+    #     queue = deque([[(target, 1)]])
+    #     while queue:
+    #         # Get the first path in the queue
+    #         path = queue.popleft()
+    #         node, node_sign = path[-1]
+    #         # If there's only one node in the path, it's the observable we're
+    #         # starting from, so the path is positive
+    #         # if len(path) == 1:
+    #         #    sign = 1
+    #         # Because the path runs from target back to source, we have to
+    #         # reverse the path to calculate the overall polarity
+    #         # else:
+    #         #    sign = _path_polarity(graph, reversed(path))
+    #         # Don't allow trivial paths consisting only of the target node
+    #         if (sources is None or node in sources) and node_sign == polarity \
+    #                 and len(path) > 1:
+    #             logger.debug('Found path: %s' % str(self._flip(graph, path)))
+    #             yield tuple(path)
+    #         for predecessor, sign in self._get_signed_predecessors(
+    #                 graph, node, node_sign):
+    #             # Only add predecessors to the path if it's not already in the
+    #             # path--prevents loops
+    #             if (predecessor, sign) in path:
+    #                 continue
+    #             # Otherwise, the new path is a copy of the old one plus the new
+    #             # predecessor
+    #             new_path = list(path)
+    #             new_path.append((predecessor, sign))
+    #             queue.append(new_path)
+    #     return
 
     def signed_edges_to_signed_nodes(self, graph, prune_nodes=True,
                                      edge_signs={'pos': 0, 'neg': 1}):
@@ -592,7 +795,8 @@ class ModelChecker(object):
     def _flip(self, graph, path):
         # Reverse the path and the polarities associated with each node
         rev = tuple(reversed(path))
-        return self._path_with_polarities(graph, rev)
+        # return self._path_with_polarities(graph, rev)
+        return rev
 
     def _path_with_polarities(self, graph, path):
         # This doesn't address the effect of the rules themselves on the
@@ -801,7 +1005,7 @@ class PysbModelChecker(ModelChecker):
                                  RegulateActivity, Influence)):
             logger.info('Statement type %s not handled' %
                         stmt.__class__.__name__)
-            return (None, None, None, 'STATEMENT_TYPE_NOT_HANDLED')
+            return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
         # Get the polarity for the statement
         if isinstance(stmt, Modification):
             target_polarity = 1 if isinstance(stmt, RemoveModification) else 0
@@ -823,7 +1027,7 @@ class PysbModelChecker(ModelChecker):
             subj_mps = list(pa.grounded_monomer_patterns(
                 self.model, subj, ignore_activities=True))
             if not subj_mps:
-                return (None, None, None, 'SUBJECT_MONOMERS_NOT_FOUND')
+                return (None, None, 'SUBJECT_MONOMERS_NOT_FOUND')
         else:
             subj_mps = [None]
         # Observables may not be found for an activation since there may be no
@@ -835,7 +1039,7 @@ class PysbModelChecker(ModelChecker):
             return (None, None, 'OBSERVABLES_NOT_FOUND')
         obs_signed = [(obs, target_polarity) for obs in obs_names]
         result_code = None
-        return subj_mps, obs_signed, target_polarity, result_code
+        return subj_mps, obs_signed, result_code
 
     def process_subject(self, subj_mp):
         if subj_mp is None:
