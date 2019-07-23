@@ -190,10 +190,18 @@ class HtmlAssembler(object):
                 src_counts = None
                 tl_counts = None
 
-            tl_key = '-'.join([str(name) for name in key[1]])
-            tl_label = ' &#8594 '.join(['?' if str(name) is 'None'
-                                        else str(name)
-                                        for name in key[1]])
+            names = key[1]
+            tl_key = '-'.join([str(name) for name in names])
+            if len(names) == 1:
+                tl_label = names[0]
+            elif len(names) == 2:
+                if names[0] is None or names[0] == 'None':
+                    tl_label = names[1] + " is modified"
+                else:
+                    tl_label = names[0] + " affects " + names[1]
+            else:
+                tl_label = names[0] + " affects "
+                tl_label += ", and ".join(names[1:])
 
             if tl_key not in tl_stmts.keys():
                 tl_stmts[tl_key] = {'html_key': str(uuid.uuid4()),
