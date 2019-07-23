@@ -141,7 +141,7 @@ class IndraNetAssembler():
                     ('agB_id', agB_id),
                     ('stmt_type', stmt_type),
                     ('evidence_count', len(stmt.evidence)),
-                    ('hash', stmt.get_hash(refresh=True)),
+                    ('stmt_hash', stmt.get_hash(refresh=True)),
                     ('belief', stmt.belief)])
                 rows.append(row)
         df = pd.DataFrame.from_dict(rows)
