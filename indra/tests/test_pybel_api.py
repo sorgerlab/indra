@@ -54,7 +54,7 @@ def test_get_agent_hgnc():
     mek = protein(name='MAP2K1', namespace='HGNC')
     agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
-    assert agent.name == 'MAP2K1'
+    assert agent.name == 'MAP2K1', agent
     assert agent.db_refs.get('HGNC') == mek_hgnc_id
     assert agent.db_refs.get('UP') == mek_up_id
 
@@ -62,7 +62,7 @@ def test_get_agent_hgnc():
     mek = protein(name='Foo', namespace='HGNC', identifier='6840')
     agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
-    assert agent.name == 'MAP2K1'
+    assert agent.name == 'MAP2K1', agent
     assert agent.db_refs.get('HGNC') == mek_hgnc_id
     assert agent.db_refs.get('UP') == mek_up_id
 

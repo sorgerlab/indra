@@ -398,12 +398,14 @@ def get_agent(node_data, node_modifier_data=None):
     if not ident:
         assert name, "Node must have a name if lacking an identifier."
         name, db_refs = get_db_refs_by_name(name, ns, node_data)
+    # We've already got an identifier, look up other identifiers if necessary
     else:
-        name, db_refs = None
+        name, db_refs = get_db_refs_by_ident(ns, ident, node_data)
     if db_refs is None:
         logger.info('Unable to get identifier information for node: %s',
                     node_data)
         return None
+
     # Get modification conditions
     mods, muts = _get_all_pmods(node_data)
     # Get activity condition
@@ -444,7 +446,7 @@ def get_db_refs_by_name(ns, name, node_data):
         hgnc_id = hgnc_client.get_hgnc_id(name)
         if not hgnc_id:
             logger.info("Invalid HGNC name: %s (%s)" % (name, node_data))
-            return None
+            return name, None
         db_refs = {'HGNC': hgnc_id}
         up_id = _get_up_id(hgnc_id)
         if up_id:
@@ -465,7 +467,7 @@ def get_db_refs_by_name(ns, name, node_data):
                 gene_name = uniprot_client.get_gene_name(up_id)
         if not up_id:
             logger.info('Couldn\'t get UP ID from %s' % name)
-            return None
+            return name, None
         db_refs = {'UP': up_id}
         if uniprot_client.is_human(up_id):
             hgnc_id = hgnc_client.get_hgnc_id(gene_name)
@@ -480,13 +482,13 @@ def get_db_refs_by_name(ns, name, node_data):
         go_id = go_client.get_go_id_from_label(name)
         if not go_id:
             logger.info('Could not find GO ID for %s' % name)
-            return
+            return name, None
         db_refs = {'GO': go_id}
     elif ns in ('MESHPP', 'MESHD', 'MESH'):
         mesh_id = mesh_client.get_mesh_id_name(name)
         if not mesh_id:
             logger.info('Could not find MESH ID fro %s' % name)
-            return
+            return name, None
         db_refs = {'MESH': mesh_id}
     # For now, handle MGI/RGD but putting the name into the db_refs so
     # it's clear what namespace the name belongs to
@@ -570,11 +572,12 @@ def get_db_refs_by_ident(ns, ident, node_data):
     db_refs : dict
         The grounding for the given entity.
     """
+    name = node_data.get(pc.NAME)
     db_refs = None
     if ns == 'HGNC':
         name = hgnc_client.get_hgnc_name(ident)
         if not name:
-            return None
+            return None, None
         db_refs = {'HGNC': ident}
         up_id = _get_up_id(ident)
         if up_id:
@@ -586,7 +589,7 @@ def get_db_refs_by_ident(ns, ident, node_data):
         db_refs = {'UP': ident}
         name = uniprot_client.get_gene_name(ident)
         if not name:
-            return None
+            return None, None
         if uniprot_client.is_human(ident):
             hgnc_id = hgnc_client.get_hgnc_id(name)
             if not hgnc_id:
@@ -604,13 +607,9 @@ def get_db_refs_by_ident(ns, ident, node_data):
         db_refs = {'PUBCHEM': ident}
     else:
         logger.info("Unhandled namespace %s with name %s and "
-                    "identifier %s (%s)." % (ns, node_data.get(pc.NAME),
+                    "identifier %s (%s)." % (ns, name,
                                              node_data.identifier,
                                              node_data))
-    if db_refs is None:
-        logger.info('Unable to get identifier information for node: %s',
-                    node_data)
-        return None
     return name, db_refs
 
 
