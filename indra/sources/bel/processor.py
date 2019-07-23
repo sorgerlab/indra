@@ -8,7 +8,7 @@ from pybel.resources import get_bel_resource
 from indra.statements import *
 from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
-    go_client, mesh_client
+    go_client, mesh_client, mirbase_client
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 
 __all__ = [
@@ -397,7 +397,7 @@ def get_agent(node_data, node_modifier_data=None):
     # No ID present, get identifier using the name, namespace
     if not ident:
         assert name, "Node must have a name if lacking an identifier."
-        name, db_refs = get_db_refs_by_name(name, ns, node_data)
+        name, db_refs = get_db_refs_by_name(ns, name, node_data)
     # We've already got an identifier, look up other identifiers if necessary
     else:
         name, db_refs = get_db_refs_by_ident(ns, ident, node_data)
