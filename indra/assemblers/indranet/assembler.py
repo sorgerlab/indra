@@ -126,7 +126,7 @@ class IndraNetAssembler():
                             break
                         if not ns:
                             ag_ns = 'TEXT'
-                            ag_id = agent.name
+                            ag_id = ag.name
                     return ag_ns, ag_id
 
                 agA_ns, agA_id = get_ag_ns_id(agA)
