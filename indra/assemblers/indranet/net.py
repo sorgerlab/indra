@@ -16,7 +16,7 @@ class IndraNet(nx.MultiDiGraph):
         graph = cls()
         mandatory_columns = ['agA_name', 'agB_name', 'agA_ns', 'agA_id',
                              'agB_ns', 'agB_id', 'stmt_type', 'evidence_count',
-                             'hash', 'belief']
+                             'stmt_hash', 'belief']
         """Create an IndraNet MultiDiGraph from a pandas DataFrame.
 
         Returns an instance of IndraNet with graph data filled out from a
@@ -83,7 +83,7 @@ class IndraNet(nx.MultiDiGraph):
             # Add edges
             ed = {'u_for_edge': row['agA_name'],
                   'v_for_edge': row['agB_name'],
-                  'stmt_hash': row['hash'],
+                  'stmt_hash': row['stmt_hash'],
                   'stmt_type': row['stmt_type'],
                   'evidence_count': row['evidence_count'],
                   'belief': row['belief'],
