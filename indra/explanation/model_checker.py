@@ -682,6 +682,11 @@ class ModelChecker(object):
         signed_nodes_graph : networkx.DiGraph
         """
         signed_nodes_graph = nx.DiGraph()
+        nodes = []
+        for node, node_data in graph.nodes(data=True):
+            nodes.append(((node, 0), node_data))
+            nodes.append(((node, 1), node_data))
+        signed_nodes_graph.add_nodes_from(nodes)
         edges = set()
         for u, v, edge_data in graph.edges(data=True):
             edge_sign = edge_data.get('sign')
@@ -991,12 +996,11 @@ class PysbModelChecker(ModelChecker):
 
     def get_graph(self):
         """Get influence map and convert it to a graph with signed nodes."""
-        self.get_im(force_update=True)
+        im = self.get_im(force_update=True)
         self.prune_influence_map()
         self.prune_influence_map_degrade_bind_positive(self.model_stmts)
-        im = self.get_im(force_update=False)
         graph = self.signed_edges_to_signed_nodes(
-            im, prune_nodes=True, edge_signs={'pos': 1, 'neg': -1})
+            im, prune_nodes=False, edge_signs={'pos': 1, 'neg': -1})
         return graph
 
     def process_statement(self, stmt):
