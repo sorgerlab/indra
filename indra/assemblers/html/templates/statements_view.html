@@ -132,8 +132,8 @@
     {% for category, data in source_colors.items() %}
       {% for source, font_color in data['sources'].items() %}
         .source-{{ source }} {
-            background-color: {{ font_color }};
-            color: {{ data['color'] }};
+          background-color: {{ font_color }};
+          color: {{ data['color'] }};
         }
       {% endfor %}
     {% endfor %}
@@ -147,13 +147,21 @@
 
 
 {% macro badges(src_counts) -%}
-    {% if src_counts %}
-        {% for src, count in src_counts.items() %}
-            {% if count > 0 %}
-                <span class="badge badge-source source-{{ src }}" title="{{ src }}">{{ count }}</span>
-            {% endif %}
-        {% endfor %}
-    {% endif %}
+  {% if src_counts %}
+    {% for color_dict in source_colors.values() %}
+      {% if loop.index0 > 0 %}
+        <span class="badge badge-source">|</span>
+      {% endif %}
+      {% for src in color_dict['sources'].keys() %}
+        {% if src_counts.get(src) %}
+          <span class="badge badge-source source-{{ src }}"
+              title="{{ src }}">
+      {{ src_counts.get(src) }}
+      </span>
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+  {% endif %}
 {%- endmacro %}
 
 {% block header_desc %}
