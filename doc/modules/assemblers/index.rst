@@ -18,3 +18,4 @@ Assemblers of model output (:py:mod:`indra.assemblers`)
    bmi_wrapper
    pybel_assembler
    kami_assembler
+   indranet_assembler
