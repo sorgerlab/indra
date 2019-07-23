@@ -193,19 +193,7 @@
     </button>
   </h3>
   <p>&nbsp;</p>
-  <table class="table" id="heading"
-       style="border-collapse: collapse; position: sticky;">
-    <thead>
-    <tr>
-      <th width="6em"></th>
-      <th width="25em">Source</th>
-      <th>Evidence</th>
-      <th width="25em" align="left"
-        style="white-space: nowrap">Source Refs
-      </th>
-    </tr>
-    </thead>
-  </table>
+  <hr>
   {% for results in stmt_data.values() %}
     {% if stmt_data.values()|length > 1 %}
       <div class="super-group-heading"
