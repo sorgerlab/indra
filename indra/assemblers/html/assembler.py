@@ -9,11 +9,9 @@ import re
 import uuid
 import logging
 import itertools
-from collections import OrderedDict, Iterable
-
+from collections import OrderedDict
 from os.path import abspath, dirname, join, exists, getmtime, sep
 
-from flask import url_for
 from jinja2 import Environment, BaseLoader, TemplateNotFound
 
 from indra.statements import *
@@ -69,8 +67,7 @@ env = Environment(loader=IndraHTMLLoader())
 
 default_template = env.get_template('indra/statements_view.html')
 
-
-colors = ['#8dd3c7',  '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462',
+colors = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462',
           '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd', '#ccebc5', '#ffed6f']
 
 
@@ -146,6 +143,7 @@ class HtmlAssembler(object):
     db_rest_url : str
         The URL to a DB REST API.
     """
+
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
                  source_counts=None, title='INDRA Results', db_rest_url=None):
         self.title = title
@@ -193,9 +191,9 @@ class HtmlAssembler(object):
                 tl_counts = None
 
             tl_key = '-'.join([str(name) for name in key[1]])
-            tl_label = ' &#8594 ' .join(['?' if str(name) is 'None'
-                                         else str(name)
-                                         for name in key[1]])
+            tl_label = ' &#8594 '.join(['?' if str(name) is 'None'
+                                        else str(name)
+                                        for name in key[1]])
 
             if tl_key not in tl_stmts.keys():
                 tl_stmts[tl_key] = {'html_key': str(uuid.uuid4()),
@@ -288,6 +286,7 @@ class HtmlAssembler(object):
             Evidence objects. The text entry of the dict includes
             `<span>` tags identifying the agents referenced by the Statement.
         """
+
         def get_role(ag_ix):
             if isinstance(stmt, Complex) or \
                isinstance(stmt, SelfModification) or \
@@ -415,6 +414,7 @@ def tag_text(text, tag_info_list):
         String where the specified substrings have been surrounded by the
         given start and close tags.
     """
+
     # Check to tags for overlap and if there is any, return the subsumed
     # range. Return None if no overlap.
     def overlap(t1, t2):
@@ -425,6 +425,7 @@ def tag_text(text, tag_info_list):
                 return t1
         else:
             return None
+
     # Remove subsumed tags
     for t1, t2 in list(itertools.combinations(tag_info_list, 2)):
         subsumed_tag = overlap(t1, t2)
