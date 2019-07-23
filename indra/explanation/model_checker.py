@@ -167,6 +167,7 @@ class ModelChecker(object):
         # Whether to do sampling
         self.do_sampling = do_sampling
         # do we need other parameters here?
+        self.graph = None
 
     def add_statements(self, stmts):
         """Add to the list of statements to check against the model.
@@ -223,6 +224,7 @@ class ModelChecker(object):
             A PathResult object containing the result of a test.
         """
         # rewrite generic check statement
+        self.get_graph()
         subj_list, obj_list, result_code = self.process_statement(stmt)
         if result_code:
             return self.make_false_result(result_code, max_paths,
@@ -266,7 +268,6 @@ class ModelChecker(object):
         if result_code:
             return self.make_false_result(result_code,
                                           max_paths, max_path_length)
-        graph = self.get_graph()
 
         # # -- Route to the path sampling function --
         # NOTE this is not generic at this point!
@@ -281,7 +282,8 @@ class ModelChecker(object):
         # Generate the predecessors to our observable and count the paths
         path_lengths = []
         path_metrics = []
-        for source, path_length in self._find_sources(graph, obj, input_set):
+        for source, path_length in self._find_sources(
+                self.graph, obj, input_set):
             pm = PathMetric(source, obj, path_length)
             path_metrics.append(pm)
             path_lengths.append(path_length)
@@ -300,9 +302,9 @@ class ModelChecker(object):
                 pr.path_metrics = path_metrics
                 # Get the first path
                 path_iter = enumerate(self._find_sources_with_paths(
-                                           graph, obj, input_set))
+                                           self.graph, obj, input_set))
                 for path_ix, path in path_iter:
-                    flipped = self._flip(graph, path)
+                    flipped = self._flip(self.graph, path)
                     pr.add_path(flipped)
                     if len(pr.paths) >= max_paths:
                         break
@@ -329,7 +331,7 @@ class ModelChecker(object):
 
         Parameters
         ----------
-        graph : one of the networkx graph types
+        graph : nx.DiGraph
             Graph representing the model.
         target : str
             The node (object or rule name) in the graph to start looking
@@ -391,7 +393,7 @@ class ModelChecker(object):
 
         Parameters
         ----------
-        graph : one of the networkx graph types
+        graph : nx.DiGraph
             Graph representing the model.
         target : str
             The node (object or rule name) in the graph to start looking
@@ -638,6 +640,7 @@ class PysbModelChecker(ModelChecker):
         else:
             self.agent_obs = []
         self.model_stmts = model_stmts if model_stmts else []
+        self.graph = None
         # Influence map
         self._im = None
         # Map from statements to associated observables
@@ -781,12 +784,14 @@ class PysbModelChecker(ModelChecker):
 
     def get_graph(self):
         """Get influence map and convert it to a graph with signed nodes."""
+        if self.graph:
+            return self.graph
         im = self.get_im(force_update=True)
         self.prune_influence_map()
         self.prune_influence_map_degrade_bind_positive(self.model_stmts)
-        graph = self.signed_edges_to_signed_nodes(
+        self.graph = self.signed_edges_to_signed_nodes(
             im, prune_nodes=False, edge_signs={'pos': 1, 'neg': -1})
-        return graph
+        return self.graph
 
     def process_statement(self, stmt):
         self.get_im()
