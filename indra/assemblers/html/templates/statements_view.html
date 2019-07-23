@@ -196,10 +196,11 @@
   <hr>
   {% for results in stmt_data.values() %}
     {% if stmt_data.values()|length > 1 %}
-      <div class="super-group-heading"
+      <div class="super_group_heading"
          id="tl-{{ results['html_key'] }}"
          onclick="toggler('tl-{{ results['html_key'] }}')">
-        <h3>{{ results['label'] }}{{ badges(results['source_counts']) }}</h3>
+        <h3 class="align-middle">
+          {{ results['label'] }}{{ badges(results['source_counts']) }}</h3>
       </div>
       <div class="group" id="tl-{{ results['html_key'] }}_group">
     {% else %}
@@ -210,7 +211,8 @@
         <div class="group_heading"
            onclick="toggler('{{ short_name_key }}');"
            id="{{ short_name_key }}_heading">
-          <h4 class="align-middle">{{ short_name }}{{ badges(src_counts) }}</h4>
+          <h4 class="align-middle">
+            {{ short_name }}{{ badges(src_counts) }}</h4>
         </div>
         <div class="group" id="{{ short_name_key }}_group">
       {% else %}
@@ -218,14 +220,15 @@
       {% endif %}
     {% for stmt_info in stmt_info_list %}
       <a name="{{ stmt_info['hash'] }}"></a>
-      <div class="statement"
-         style="padding-bottom: 10px;">
-        <h5 class="align-middle">{{ stmt_info['english'] }}</h5>
-        <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html"
-           target="_blank">
-          <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span>
-        </a>
-        {{ badges(stmt_info['source_count']) }}
+      <div class="statement">
+        <h5 class="align-middle">
+          {{ stmt_info['english'] }}
+          <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html"
+             target="_blank">
+            <small class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</small>
+          </a>
+          {{ badges(stmt_info['source_count']) }}
+        </h5>
       </div>
       <div class="evidence">
         <table class="table"

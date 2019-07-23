@@ -39,9 +39,6 @@
     <script src="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.0/dist/bootstrap-toc.min.js"
             crossorigin="anonymous"></script>
 
-    {% block scripts %}
-    {% endblock %}
-
     <style>
         a {
             color: #256DC5;
@@ -59,11 +56,6 @@
 
         p {
             margin-bottom: 0px;
-        }
-
-        h5 {
-            display: inline-block;
-            margin: 0px;
         }
 
         nav {
@@ -91,6 +83,18 @@
             margin: 5px;
         }
 
+        .statement {
+            color: #2F4F4F;
+            padding: 5px;
+            padding-left: 10px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            margin: 5px;
+            position: sticky;
+        }
+
         .group_heading {
             cursor: pointer;
             color: #2F4F4F;
@@ -100,7 +104,19 @@
             border-top-right-radius: 8px;
             border-bottom-left-radius: 8px;
             border-bottom-right-radius: 8px;
-            border: 1px solid #C0C0C0;
+            margin: 5px;
+            position: sticky;
+        }
+
+        .super_group_heading {
+            cursor: pointer;
+            color: #2F4F4F;
+            padding: 5px;
+            padding-left: 10px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
             margin: 5px;
             position: sticky;
         }
@@ -124,6 +140,9 @@
             cursor: pointer;
         }
     </style>
+
+    {% block scripts %}
+    {% endblock %}
 
 </head>
 
