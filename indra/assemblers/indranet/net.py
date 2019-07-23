@@ -83,7 +83,7 @@ class IndraNet(nx.MultiDiGraph):
             # Add edges
             ed = {'u_for_edge': row['agA_name'],
                   'v_for_edge': row['agB_name'],
-                  'key': row['hash'],
+                  'stmt_hash': row['hash'],
                   'stmt_type': row['stmt_type'],
                   'evidence_count': row['evidence_count'],
                   'belief': row['belief'],
