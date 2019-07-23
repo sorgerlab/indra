@@ -267,7 +267,7 @@ class PybelProcessor(object):
             self.unhandled.append((u_data, v_data, edge_data))
             return
         obj_activity_condition = \
-                            _get_activity_condition(edge_data.get(pc.OBJECT))
+            _get_activity_condition(edge_data.get(pc.OBJECT))
         activity_type = obj_activity_condition.activity_type
         # If the relation is DECREASES, this means that this agent state
         # is inactivating
@@ -395,153 +395,11 @@ def get_agent(node_data, node_modifier_data=None):
     ns = node_data[pc.NAMESPACE].upper()
     ident = node_data.get(pc.IDENTIFIER)
     # No ID present, get identifier using the name, namespace
-    db_refs = None
     if not ident:
         assert name, "Node must have a name if lacking an identifier."
-        if ns == 'HGNC':
-            hgnc_id = hgnc_client.get_hgnc_id(name)
-            if not hgnc_id:
-                logger.info("Invalid HGNC name: %s (%s)" % (name, node_data))
-                return None
-            db_refs = {'HGNC': hgnc_id}
-            up_id = _get_up_id(hgnc_id)
-            if up_id:
-                db_refs['UP'] = up_id
-            mirbase_id = mirbase_client.get_mirbase_id_from_hgnc_id(hgnc_id)
-            if mirbase_id:
-                db_refs['MIRBASE'] = mirbase_id
-        elif ns in ('UNIPROT', 'UP'):
-            up_id = None
-            gene_name = uniprot_client.get_gene_name(name)
-            if gene_name:
-                up_id = name
-            else:
-                up_id_from_mnem = uniprot_client.get_id_from_mnemonic(name)
-                if up_id_from_mnem:
-                    up_id = up_id_from_mnem
-                    gene_name = uniprot_client.get_gene_name(up_id)
-            if not up_id:
-                logger.info('Couldn\'t get UP ID from %s' % name)
-                return None
-            db_refs = {'UP': up_id}
-            if uniprot_client.is_human(up_id):
-                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                if not hgnc_id:
-                    logger.info('Uniprot ID linked to invalid human gene '
-                                'name %s' % name)
-                else:
-                    db_refs['HGNC'] = hgnc_id
-        elif ns == 'FPLX':
-            db_refs = {'FPLX': name}
-        elif ns in ('GO', 'GOBP', 'GOCC'):
-            go_id = go_client.get_go_id_from_label(name)
-            if not go_id:
-                logger.info('Could not find GO ID for %s' % name)
-                return
-            db_refs = {'GO': go_id}
-        elif ns in ('MESHPP', 'MESHD', 'MESH'):
-            mesh_id = mesh_client.get_mesh_id_name(name)
-            if not mesh_id:
-                logger.info('Could not find MESH ID fro %s' % name)
-                return
-            db_refs = {'MESH': mesh_id}
-        # For now, handle MGI/RGD but putting the name into the db_refs so
-        # it's clear what namespace the name belongs to
-        # FIXME: Full implementation would look up MGI/RGD identifiers from
-        # the names, and obtain corresponding Uniprot IDs
-        elif ns in ('MGI', 'RGD'):
-            db_refs = {ns: name}
-        # Map Selventa families to FamPlexes
-        elif ns == 'SFAM':
-            db_refs = {'SFAM': name}
-            indra_name = bel_to_indra.get(name)
-            if indra_name is None:
-                logger.info('Could not find mapping for BEL/SFAM family: '
-                            '%s (%s)' % (name, node_data))
-            else:
-                db_refs['FPLX'] = indra_name
-                name = indra_name
-        # Map Entrez genes to HGNC/UP
-        elif ns in ('EGID', 'ENTREZ', 'NCBIGENE'):
-            hgnc_id = hgnc_client.get_hgnc_from_entrez(name)
-            db_refs = {'EGID': name}
-            if hgnc_id is not None:
-                db_refs['HGNC'] = hgnc_id
-                name = hgnc_client.get_hgnc_name(hgnc_id)
-                up_id = hgnc_client.get_uniprot_id(hgnc_id)
-                if up_id:
-                    db_refs['UP'] = up_id
-                else:
-                    logger.info('HGNC entity %s with HGNC ID %s has no '
-                                'corresponding Uniprot ID.',
-                                name, hgnc_id)
-                mirbase_id = mirbase_client.get_mirbase_id_from_hgnc_id(hgnc_id)
-                if mirbase_id:
-                    db_refs['MIRBASE'] = mirbase_id
-            else:
-                logger.info('Could not map EGID%s to HGNC.' % name)
-                name = 'E%s' % name
-        elif ns == 'MIRBASE':
-            mirbase_id = mirbase_client.get_mirbase_id_from_mirbase_name(name)
-            if not mirbase_id:
-                logger.info('Could not map miRBase name %s to ID', name)
-                return
-            db_refs = {'MIRBASE': mirbase_id}
-            hgnc_id = mirbase_client.get_hgnc_id_from_mirbase_id(mirbase_id)
-            if hgnc_id:
-                db_refs['HGNC'] = hgnc_id
-        # CHEBI
-        elif ns == 'CHEBI':
-            chebi_id = chebi_name_id.get(name)
-            if not chebi_id:
-                chebi_id = chebi_client.get_chebi_id_from_name(name)
-            if chebi_id:
-                db_refs = {'CHEBI': chebi_id}
-            else:
-                logger.info('CHEBI name %s not found in map.' % name)
-        # SDIS, SCHEM: Include the name as the ID for the namespace
-        elif ns in ('SDIS', 'SCHEM'):
-            db_refs = {ns: name}
-        else:
-            logger.info("Unhandled namespace: %s: %s (%s)" % (ns, name,
-                                                              node_data))
-    # We've already got an identifier, look up other identifiers if necessary
+        name, db_refs = get_db_refs_by_name(name, ns, node_data)
     else:
-        # Get the name, overwriting existing name if necessary
-        if ns == 'HGNC':
-            name = hgnc_client.get_hgnc_name(ident)
-            if not name:
-                return None
-            db_refs = {'HGNC': ident}
-            up_id = _get_up_id(ident)
-            if up_id:
-                db_refs['UP'] = up_id
-            mirbase_id = mirbase_client.get_mirbase_id_from_hgnc_id(ident)
-            if mirbase_id:
-                db_refs['MIRBASE'] = mirbase_id
-        elif ns == 'UP':
-            db_refs = {'UP': ident}
-            name = uniprot_client.get_gene_name(ident)
-            if not name:
-                return None
-            if uniprot_client.is_human(ident):
-                hgnc_id = hgnc_client.get_hgnc_id(name)
-                if not hgnc_id:
-                    logger.info('Uniprot ID linked to invalid human gene '
-                                'name %s' % name)
-                else:
-                    db_refs['HGNC'] = hgnc_id
-        elif ns == 'MIRBASE':
-            db_refs = {'MIRBASE': ident}
-        elif ns in ('MGI', 'RGD', 'CHEBI', 'HMDB', 'MESH'):
-            db_refs = {ns: ident}
-        elif ns == 'PUBCHEM.COMPOUND':
-            db_refs = {'PUBCHEM': ident}
-        else:
-            logger.info("Unhandled namespace %s with name %s and "
-                        "identifier %s (%s)." % (ns, name,
-                                                 node_data.identifier,
-                                                 node_data))
+        name, db_refs = None
     if db_refs is None:
         logger.info('Unable to get identifier information for node: %s',
                     node_data)
@@ -560,6 +418,200 @@ def get_agent(node_data, node_modifier_data=None):
     ag = Agent(name, db_refs=db_refs, mods=mods, mutations=muts, activity=ac,
                location=to_loc)
     return ag
+
+
+def get_db_refs_by_name(ns, name, node_data):
+    """Return standard name and grounding based on a namespace and a name.
+
+    Parameters
+    ----------
+    ns : str
+        A name space in which the given name is interpreted.
+    name : str
+        The name in the given name space to get grounding for.
+    node_data : dict
+        Node data for logging purposes.
+
+    Returns
+    -------
+    name : str
+        The standardized name for the given entity.
+    db_refs : dict
+        The grounding for the given entity.
+    """
+    db_refs = None
+    if ns == 'HGNC':
+        hgnc_id = hgnc_client.get_hgnc_id(name)
+        if not hgnc_id:
+            logger.info("Invalid HGNC name: %s (%s)" % (name, node_data))
+            return None
+        db_refs = {'HGNC': hgnc_id}
+        up_id = _get_up_id(hgnc_id)
+        if up_id:
+            db_refs['UP'] = up_id
+        mirbase_id = mirbase_client.get_mirbase_id_from_hgnc_id(hgnc_id)
+        if mirbase_id:
+            db_refs['MIRBASE'] = mirbase_id
+
+    elif ns in ('UNIPROT', 'UP'):
+        up_id = None
+        gene_name = uniprot_client.get_gene_name(name)
+        if gene_name:
+            up_id = name
+        else:
+            up_id_from_mnem = uniprot_client.get_id_from_mnemonic(name)
+            if up_id_from_mnem:
+                up_id = up_id_from_mnem
+                gene_name = uniprot_client.get_gene_name(up_id)
+        if not up_id:
+            logger.info('Couldn\'t get UP ID from %s' % name)
+            return None
+        db_refs = {'UP': up_id}
+        if uniprot_client.is_human(up_id):
+            hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+            if not hgnc_id:
+                logger.info('Uniprot ID linked to invalid human gene '
+                            'name %s' % name)
+            else:
+                db_refs['HGNC'] = hgnc_id
+    elif ns == 'FPLX':
+        db_refs = {'FPLX': name}
+    elif ns in ('GO', 'GOBP', 'GOCC'):
+        go_id = go_client.get_go_id_from_label(name)
+        if not go_id:
+            logger.info('Could not find GO ID for %s' % name)
+            return
+        db_refs = {'GO': go_id}
+    elif ns in ('MESHPP', 'MESHD', 'MESH'):
+        mesh_id = mesh_client.get_mesh_id_name(name)
+        if not mesh_id:
+            logger.info('Could not find MESH ID fro %s' % name)
+            return
+        db_refs = {'MESH': mesh_id}
+    # For now, handle MGI/RGD but putting the name into the db_refs so
+    # it's clear what namespace the name belongs to
+    # FIXME: Full implementation would look up MGI/RGD identifiers from
+    # the names, and obtain corresponding Uniprot IDs
+    elif ns in ('MGI', 'RGD'):
+        db_refs = {ns: name}
+    # Map Selventa families to FamPlexes
+    elif ns == 'SFAM':
+        db_refs = {'SFAM': name}
+        indra_name = bel_to_indra.get(name)
+        if indra_name is None:
+            logger.info('Could not find mapping for BEL/SFAM family: '
+                        '%s (%s)' % (name, node_data))
+        else:
+            db_refs['FPLX'] = indra_name
+            name = indra_name
+    # Map Entrez genes to HGNC/UP
+    elif ns in ('EGID', 'ENTREZ', 'NCBIGENE'):
+        hgnc_id = hgnc_client.get_hgnc_from_entrez(name)
+        db_refs = {'EGID': name}
+        if hgnc_id is not None:
+            db_refs['HGNC'] = hgnc_id
+            name = hgnc_client.get_hgnc_name(hgnc_id)
+            up_id = hgnc_client.get_uniprot_id(hgnc_id)
+            if up_id:
+                db_refs['UP'] = up_id
+            else:
+                logger.info('HGNC entity %s with HGNC ID %s has no '
+                            'corresponding Uniprot ID.',
+                            name, hgnc_id)
+            mirbase_id = mirbase_client.get_mirbase_id_from_hgnc_id(hgnc_id)
+            if mirbase_id:
+                db_refs['MIRBASE'] = mirbase_id
+        else:
+            logger.info('Could not map EGID%s to HGNC.' % name)
+            name = 'E%s' % name
+    elif ns == 'MIRBASE':
+        mirbase_id = mirbase_client.get_mirbase_id_from_mirbase_name(name)
+        if not mirbase_id:
+            logger.info('Could not map miRBase name %s to ID', name)
+            return
+        db_refs = {'MIRBASE': mirbase_id}
+        hgnc_id = mirbase_client.get_hgnc_id_from_mirbase_id(mirbase_id)
+        if hgnc_id:
+            db_refs['HGNC'] = hgnc_id
+    # CHEBI
+    elif ns == 'CHEBI':
+        chebi_id = chebi_name_id.get(name)
+        if not chebi_id:
+            chebi_id = chebi_client.get_chebi_id_from_name(name)
+        if chebi_id:
+            db_refs = {'CHEBI': chebi_id}
+        else:
+            logger.info('CHEBI name %s not found in map.' % name)
+    # SDIS, SCHEM: Include the name as the ID for the namespace
+    elif ns in ('SDIS', 'SCHEM'):
+        db_refs = {ns: name}
+    else:
+        logger.info("Unhandled namespace: %s: %s (%s)" % (ns, name,
+                                                          node_data))
+    return name, db_refs
+
+
+def get_db_refs_by_ident(ns, ident, node_data):
+    """Return standard name and grounding based on a namespace and an ID.
+
+    Parameters
+    ----------
+    ns : str
+        A name space in which the given identifier is interpreted.
+    ident : str
+        The identifier in the given name space to get grounding for.
+    node_data : dict
+        Node data for logging purposes.
+
+    Returns
+    -------
+    name : str
+        The standardized name for the given entity.
+    db_refs : dict
+        The grounding for the given entity.
+    """
+    db_refs = None
+    if ns == 'HGNC':
+        name = hgnc_client.get_hgnc_name(ident)
+        if not name:
+            return None
+        db_refs = {'HGNC': ident}
+        up_id = _get_up_id(ident)
+        if up_id:
+            db_refs['UP'] = up_id
+        mirbase_id = mirbase_client.get_mirbase_id_from_hgnc_id(ident)
+        if mirbase_id:
+            db_refs['MIRBASE'] = mirbase_id
+    elif ns == 'UP':
+        db_refs = {'UP': ident}
+        name = uniprot_client.get_gene_name(ident)
+        if not name:
+            return None
+        if uniprot_client.is_human(ident):
+            hgnc_id = hgnc_client.get_hgnc_id(name)
+            if not hgnc_id:
+                logger.info('Uniprot ID linked to invalid human gene '
+                            'name %s' % name)
+            else:
+                db_refs['HGNC'] = hgnc_id
+    elif ns == 'MIRBASE':
+        db_refs = {'MIRBASE': ident}
+    elif ns in ('MGI', 'RGD', 'CHEBI', 'HMDB', 'MESH'):
+        db_refs = {ns: ident}
+        # raise ValueError('Identifiers for MGI and RGD databases are not '
+        #                 'currently handled: %s' % node_data)
+    elif ns == 'PUBCHEM.COMPOUND':
+        db_refs = {'PUBCHEM': ident}
+    else:
+        logger.info("Unhandled namespace %s with name %s and "
+                    "identifier %s (%s)." % (ns, node_data.get(pc.NAME),
+                                             node_data.identifier,
+                                             node_data))
+    if db_refs is None:
+        logger.info('Unable to get identifier information for node: %s',
+                    node_data)
+        return None
+    return name, db_refs
 
 
 def extract_context(annotations, annot_manager):
