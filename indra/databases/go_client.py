@@ -1,8 +1,7 @@
 import os
-import csv
+import rdflib
 import logging
 from os.path import abspath, dirname, join
-import rdflib
 from indra.util import read_unicode_csv, write_unicode_csv
 
 
@@ -10,10 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 go_mappings_file = join(dirname(abspath(__file__)), '..', 'resources',
-                 'go_id_label_mappings.tsv')
+                        'go_id_label_mappings.tsv')
 
 
-# This file can be donwloaded from: http://geneontology.org/ontology/go.owl
+# This file can be downloaded from: http://geneontology.org/ontology/go.owl
 go_owl_path = join(dirname(abspath(__file__)), '..', '..', 'data', 'go.owl')
 
 
@@ -33,7 +32,6 @@ _prefixes = """
     PREFIX oboInOwl: <http://www.geneontology.org/formats/oboInOwl#>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     """
-
 
 # Lazily initialize the GO RDF graph because parsing the RDF is expensive
 _go_graph = None
@@ -165,6 +163,3 @@ def get_cellular_components(g):
         except KeyError:
             component_part_map[comp_id] = [sup_id]
     return component_map, component_part_map
-
-
-
