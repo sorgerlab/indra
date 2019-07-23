@@ -364,8 +364,7 @@ class ModelChecker(object):
                 child = next(children)
                 # Is this child one of the source nodes we're looking for? If
                 # so, yield it along with path length.
-                if (sources is None or child in sources) and \
-                        child[1] == target[1]:
+                if sources is None or child in sources:
                     logger.debug("Found path to %s from %s with length %d"
                                  % (target, child, path_length+1))
                     yield (child, path_length+1)
@@ -429,8 +428,7 @@ class ModelChecker(object):
             # else:
             #    sign = _path_polarity(graph, reversed(path))
             # Don't allow trivial paths consisting only of the target node
-            if (sources is None or node in sources) and node[1] == target[1] \
-                    and len(path) > 1:
+            if (sources is None or node in sources) and len(path) > 1:
                 logger.debug('Found path: %s' % str(self._flip(graph, path)))
                 yield tuple(path)
             for predecessor in graph.predecessors(node):
