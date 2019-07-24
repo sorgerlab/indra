@@ -7,21 +7,35 @@ from indra.util import read_unicode_csv, write_unicode_csv
 
 logger = logging.getLogger(__name__)
 
-
-go_mappings_file = join(dirname(abspath(__file__)), '..', 'resources',
-                        'go_id_label_mappings.tsv')
-
-
 # This file can be downloaded from: http://geneontology.org/ontology/go.owl
 go_owl_path = join(dirname(abspath(__file__)), '..', '..', 'data', 'go.owl')
+go_mappings_file = join(dirname(abspath(__file__)), '..', 'resources',
+                        'go_id_label_mappings.tsv')
+secondary_mappings_file = join(dirname(abspath(__file__)), '..', 'resources',
+                               'go_secondary_mappings.tsv')
+
+
+def _load_label_id_mappings():
+    go_label_to_id = {}
+    go_id_to_label = {}
+    for go_id, go_label in read_unicode_csv(go_mappings_file, delimiter='\t'):
+        go_id_to_label[go_id] = go_label
+        go_label_to_id[go_label] = go_id
+    return go_mappings, go_label_to_id
+
+
+def _load_secondary_mappings():
+    go_secondary_to_id = {}
+    for sec_id, prim_id in read_unicode_csv(secondary_mappings_file,
+                                            delimiter='\t'):
+        go_secondary_to_id[sec_id] = prim_id
+    return go_secondary_to_id
 
 
 # Dictionary to store GO ID->Label mappings
-go_mappings = {}
-go_label_to_id = {}
-for go_id, go_label in read_unicode_csv(go_mappings_file, delimiter='\t'):
-    go_mappings[go_id] = go_label
-    go_label_to_id[go_label] = go_id
+go_mappings, go_label_to_id = _load_label_id_mappings()
+# Dictionary to store secondary GO ID->primary GO ID mappings
+secondary_mappings = _load_secondary_mappings()
 
 
 _prefixes = """
@@ -116,6 +130,10 @@ def update_id_mappings(g):
         mappings.append((id_lit.value, label_lit.value))
     # Write to file
     write_unicode_csv(go_mappings_file, mappings, delimiter='\t')
+
+
+def get_primary_id(go_id):
+    return secondary_mappings.get(go_id)
 
 
 def get_cellular_components(g):

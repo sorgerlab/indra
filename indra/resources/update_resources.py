@@ -318,6 +318,7 @@ def update_cellular_component_hierarchy():
 def update_go_id_mappings():
     g = load_latest_go()
     go_client.update_id_mappings(g)
+    go_client.update_secondary_mappings(g)
 
 
 def update_bel_chebi_map():
