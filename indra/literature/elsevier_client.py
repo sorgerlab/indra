@@ -347,7 +347,6 @@ def get_piis_for_date(query_str, year=None, loaded_after=None):
             break
         res_json = res.json()
         total_results = res_json['resultsFound']
-        logger.info(total_results)
         if total_results == 0:
             logger.info('Search result was empty')
             return []
@@ -358,9 +357,7 @@ def get_piis_for_date(query_str, year=None, loaded_after=None):
         cont = False
         # We can only set offset up to 6000
         if (params['display']['offset'] + count) <= min(total_results, 6000):
-            logger.info('Getting results from next batch.')
             params['display']['offset'] += count
-            logger.info(params)
             cont = True
             # There is a quota on number of requests, wait to continue
             sleep(1)
