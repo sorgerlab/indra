@@ -8,7 +8,7 @@ import objectpath
 
 from indra.statements import *
 from indra.util import read_unicode_csv
-from indra.databases import hgnc_client
+from indra.databases import hgnc_client, go_client
 import indra.databases.uniprot_client as up_client
 from collections import namedtuple
 
@@ -425,7 +425,12 @@ class ReachProcessor(object):
             elif ns == 'pubchem':
                 db_refs['PUBCHEM'] = xr['id']
             elif ns == 'go':
-                db_refs['GO'] = xr['id']
+                go_id = xr['id']
+                # Handle secondary to primary mapping if necessary
+                pri = go_client.get_primary_id(go_id)
+                if pri:
+                    go_id = pri
+                db_refs['GO'] = go_id
             elif ns == 'mesh':
                 db_refs['MESH'] = xr['id']
             elif ns == 'hmdb':
