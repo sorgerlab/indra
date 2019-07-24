@@ -198,7 +198,7 @@ def make_top_level_label_from_names_key(names):
         else:
             b_names = ['<b>%s</b>' % name for name in names]
             if len(names) == 1:
-                tl_label = names[0]
+                tl_label = b_names[0]
             elif len(names) == 2:  # Singleton Modifications
                 if names[0] is None or names[0] == 'None':
                     tl_label = b_names[1] + " is modified"
