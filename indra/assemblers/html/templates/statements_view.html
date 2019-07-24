@@ -176,11 +176,12 @@
               {% endif %}>
             Statements
         </span>
-        <button id="expand-collapse-all" type="button"
-                class="btn btn-primary float-right"
-                onclick="expandCollapseAll()">Expand All
-        </button>
+          <button id="expand-collapse-all" type="button"
+                  class="btn btn-primary float-right"
+                  onclick="expandCollapseAll()">Expand All
+          </button>
       </h3>
+      <h6>databases<span class="badge-source">readers</span>{{ badges(source_key_dict) }}</h6>
       <hr>
     </div>
   {% for results in stmt_data.values() %}

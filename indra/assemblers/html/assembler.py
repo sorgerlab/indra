@@ -67,8 +67,8 @@ env = Environment(loader=IndraHTMLLoader())
 
 default_template = env.get_template('indra/statements_view.html')
 
-colors = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462',
-          '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd', '#ccebc5', '#ffed6f']
+colors = ['#8dd3c7', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69',
+          '#fccde5', '#d9d9d9', '#bc80bd', '#ccebc5', '#ffffb3', '#ffed6f']
 
 
 def color_gen():
@@ -83,11 +83,14 @@ SOURCE_COLORS = {
                                      'sparser', 'isi', 'tees'], color_gen()))},
     'databases': {'color': 'black',
                   'sources': dict(zip(['phosphosite', 'cbn', 'pc11',
-                                       'geneways', 'biopax', 'bel_lc',
+                                       'biopax', 'bel_lc', 'geneways',
                                        'signor', 'biogrid', 'tas',
                                        'lincs_drug', 'hprd', 'trrust'],
                                       color_gen()))}
 }
+
+SRC_KEY_DICT = {src: src for d in SOURCE_COLORS.values()
+                for src in d['sources'].keys()}
 
 
 class HtmlAssembler(object):
@@ -242,7 +245,8 @@ class HtmlAssembler(object):
         self.model = template.render(stmt_data=tl_stmts,
                                      metadata=metadata, title=self.title,
                                      db_rest_url=db_rest_url,
-                                     source_colors=SOURCE_COLORS)
+                                     source_colors=SOURCE_COLORS,
+                                     source_key_dict=SRC_KEY_DICT)
         return self.model
 
     def append_warning(self, msg):
