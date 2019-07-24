@@ -308,7 +308,7 @@ def get_piis(query_str):
 
 @lru_cache(maxsize=100)
 @_ensure_api_keys('perform search')
-def get_piis_for_date(query_str, date):
+def get_piis_for_date(query_str, year=None, loaded_after=None):
     """Search ScienceDirect with a query string constrained to a given year.
 
     Parameters
@@ -317,42 +317,51 @@ def get_piis_for_date(query_str, date):
         The query string to search with
     date : str
         The year to constrain the search to
+    loaded_after : str
+        Date formatted as 'yyyy-MM-dd'T'HH:mm:ssX' to constrain the search
+        to articles loaded after this date
 
     Returns
     -------
     piis : list[str]
         The list of PIIs identifying the papers returned by the search
     """
-    count = 200
-    params = {'query': query_str,
-              'count': count,
-              'start': 0,
-              'sort': '-coverdate',
-              'date': date,
+    count = 100
+    params = {'qs': query_str,
+              'display': {
+                  'offset': 0,
+                  'show': count},
               'field': 'pii'}
+    if year:
+        params['date'] = year
+    if loaded_after:
+        params['loadedAfter'] = loaded_after
     all_piis = []
     while True:
-        res = requests.get(elsevier_search_url, params, headers=ELSEVIER_KEYS)
+        res = requests.put(
+            elsevier_search_url, json=params, headers=ELSEVIER_KEYS)
         if not res.status_code == 200:
             logger.info('Got status code: %d' % res.status_code)
             break
         res_json = res.json()
-        entries = res_json['search-results']['entry']
-        logger.info(res_json['search-results']['opensearch:totalResults'])
-        if entries == [{'@_fa': 'true', 'error': 'Result set was empty'}]:
+        total_results = res_json['resultsFound']
+        logger.info(total_results)
+        if total_results == 0:
             logger.info('Search result was empty')
             return []
+        entries = res_json['results']
         piis = [entry['pii'] for entry in entries]
         all_piis += piis
         # Get next batch
-        links = res_json['search-results'].get('link', [])
         cont = False
-        for link in links:
-            if link.get('@ref') == 'next':
-                logger.info('Found link to next batch of results.')
-                params['start'] += count
-                cont = True
-                break
+        # We can only set offset up to 6000
+        if (params['display']['offset'] + count) <= min(total_results, 6000):
+            logger.info('Getting results from next batch.')
+            params['display']['offset'] += count
+            logger.info(params)
+            cont = True
+            # There is a quota on number of requests, wait to continue
+            sleep(1)
         if not cont:
             break
     return all_piis
