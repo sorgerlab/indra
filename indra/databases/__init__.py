@@ -102,6 +102,8 @@ def get_identifiers_url(db_name, db_id):
         url = identifiers_url + 'chembl.compound/%s' % db_id
     elif db_name == 'NONCODE':
         url = 'http://www.noncode.org/show_gene.php?id=NONHSAG%s' % db_id
+    elif db_name == 'REFSEQ_PROT':
+        url = '	https://identifiers.org/refseq:%s' % db_id
     elif db_name == 'TEXT':
         return None
     else:
