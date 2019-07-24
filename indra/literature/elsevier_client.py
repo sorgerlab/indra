@@ -330,7 +330,8 @@ def get_piis_for_date(query_str, year=None, loaded_after=None):
     params = {'qs': query_str,
               'display': {
                   'offset': 0,
-                  'show': count},
+                  'show': count,
+                  'sortBy': 'date'},
               'field': 'pii'}
     if year:
         params['date'] = year
