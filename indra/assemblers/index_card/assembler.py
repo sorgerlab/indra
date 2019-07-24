@@ -48,12 +48,13 @@ class IndexCardAssembler(object):
     def make_model(self):
         """Assemble statements into index cards."""
         for stmt in self.statements:
-            card = self.assemble_one_card(stmt)
+            card = self.assemble_one_card(stmt, self.pmc_override)
             if card is not None:
                 self.cards.append(card)
         return self.cards
 
-    def assemble_one_card(self, stmt):
+    @staticmethod
+    def assemble_one_card(stmt, pmc_override):
         if isinstance(stmt, Modification):
             card = assemble_modification(stmt)
         elif isinstance(stmt, SelfModification):
@@ -76,8 +77,8 @@ class IndexCardAssembler(object):
             card.card['interaction']['context'] = ev_info['context']
             card.card['evidence'] = ev_info['text']
             card.card['submitter'] = global_submitter
-            if self.pmc_override is not None:
-                card.card['pmc_id'] = self.pmc_override
+            if pmc_override is not None:
+                card.card['pmc_id'] = pmc_override
             else:
                 card.card['pmc_id'] = get_pmc_id(stmt)
         return card
