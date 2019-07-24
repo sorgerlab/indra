@@ -192,6 +192,8 @@ class HtmlAssembler(object):
 
             names = key[1]
             tl_key = '-'.join([str(name) for name in names])
+
+            names = ['<b>%s</b>' % name for name in names]
             if len(names) == 1:
                 tl_label = names[0]
             elif len(names) == 2:
