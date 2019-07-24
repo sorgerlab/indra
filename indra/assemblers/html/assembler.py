@@ -193,17 +193,22 @@ class HtmlAssembler(object):
             names = key[1]
             tl_key = '-'.join([str(name) for name in names])
 
-            names = ['<b>%s</b>' % name for name in names]
+            b_names = ['<b>%s</b>' % name for name in names]
             if len(names) == 1:
                 tl_label = names[0]
             elif len(names) == 2:
                 if names[0] is None or names[0] == 'None':
-                    tl_label = names[1] + " is modified"
+                    tl_label = b_names[1] + " is modified"
                 else:
-                    tl_label = names[0] + " affects " + names[1]
+                    tl_label = b_names[0] + " affects " + b_names[1]
+            elif names[1] == "activity":
+                if names[2] or names[2] == "True":
+                    tl_label = b_names[0] + " is active"
+                else:
+                    tl_label = b_names[0] + " is not active"
             else:
-                tl_label = names[0] + " affects "
-                tl_label += ", and ".join(names[1:])
+                tl_label = b_names[0] + " affects "
+                tl_label += ", ".join(b_names[1:-1]) + ', and ' + b_names[-1]
 
             if tl_key not in tl_stmts.keys():
                 tl_stmts[tl_key] = {'html_key': str(uuid.uuid4()),
