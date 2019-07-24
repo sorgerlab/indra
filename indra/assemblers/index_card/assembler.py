@@ -430,7 +430,9 @@ def get_evidence_info(stmt):
                 obj['name'] = species.name
                 obj['taxonomy'] = species.db_refs.get('TAXONOMY') \
                     if species.db_refs is not None else None
-                contexts.append(obj)
+            else:
+                obj = None
+            contexts.append(obj)
 
             hypothesis = ev.epistemics.get('hypothesis')
             hypotheses.append(hypothesis)
