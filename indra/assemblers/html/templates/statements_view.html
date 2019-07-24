@@ -129,6 +129,15 @@
       margin: 2px;
       float: right;
     }
+
+    .statements-header {
+        position: -webkit-sticky;
+        position: sticky;
+        top: 0;
+        background-color: white;
+        z-index: 10;
+        padding-top: 5px;
+    }
   </style>
 {% endblock %}
 
@@ -159,20 +168,21 @@
 {% endblock %}
 
 {% block body %}
-
-  <h3>
-    <span {% if metadata %}
-        title="{% for name, value in metadata.items() %}{{ name }}: {{ value }}
+    <div class="statements-header">
+      <h3>
+        <span {% if metadata %}
+            title="{% for name, value in metadata.items() %}{{ name }}: {{ value }}
 {% endfor %}"
-          {% endif %}>
-        Statements
-    </span>
-    <button id="expand-collapse-all" type="button"
-              class="btn btn-primary float-right"
-              onclick="expandCollapseAll()">Expand All
-    </button>
-  </h3>
-  <hr>
+              {% endif %}>
+            Statements
+        </span>
+        <button id="expand-collapse-all" type="button"
+                class="btn btn-primary float-right"
+                onclick="expandCollapseAll()">Expand All
+        </button>
+      </h3>
+      <hr>
+    </div>
   {% for results in stmt_data.values() %}
     {% if stmt_data.values()|length > 1 %}
       <div class="super_group_heading"
