@@ -64,10 +64,12 @@ class IndexCardAssembler(object):
                 continue
             if card is not None:
                 card.card['meta'] = {'id': stmt.uuid, 'belief': stmt.belief}
+                ev_info = get_evidence_info(stmt)
                 card.card['interaction']['hypothesis_information'] = \
-                    _get_hypothesis_information(stmt)
+                    ev_info['hypothesis']
                 card.card['interaction']['context'] = \
-                    _get_context_information(stmt)
+                    ev_info['context']
+                card.card['evidence'] = ev_info['text']
                 if self.pmc_override is not None:
                     card.card['pmc_id'] = self.pmc_override
                 else:
@@ -465,23 +467,35 @@ def _get_context_information(stmt):
     return context_array
 
 
-def get_evidence_text(stmt):
-    ev_txts = [ev.text for ev in stmt.evidence if ev.text]
-    ev_txts = list(set(ev_txts))
-    if not ev_txts:
-        for ev in stmt.evidence:
-            txt = 'Evidence text not available for %s entry: %s' % \
-                (ev.source_api, ev.source_id)
-            if txt not in ev_txts:
-                ev_txts.append(txt)
-    if hasattr(stmt, 'partial_evidence'):
-        for ev in stmt.partial_evidence:
+def get_evidence_info(stmt):
+    ev_txts = []
+    contexts = []
+    hypotheses = []
+    evs = (('', stmt.evidence), 'PARTIAL: ', ([] if not
+                                              hasattr(stmt, 'partial_evidence')
+                                              else stmt.partial_evidence))
+    for prefix, ev_list in evs:
+        for ev in ev_list:
             if ev.text is None:
-                continue
-            txt = 'PARTIAL: %s' % ev.text
-            if txt not in ev_txts:
-                ev_txts.append(txt)
-    return ev_txts
+                ev_txts.append(
+                    '%sEvidence text not available for %s entry: %s' % \
+                    (prefix, ev.source_api, ev.source_id))
+            else:
+                ev_txts.append('%s%s' % (prefix, ev.text))
+
+            if ev.context and ev.context.species:
+                species = ev.context.species
+                obj = {}
+                obj['name'] = species.name
+                obj['taxonomy'] = species.db_refs.get('TAXONOMY') \
+                    if species.db_refs is not None else None
+                contexts.append(obj)
+
+            hypothesis = ev.epistemics.get('hypothesis')
+            hypotheses.append(hypothesis)
+    return {'text': ev_txts,
+            'context': contexts,
+            'hypothesis': hypotheses}
 
 
 def _get_is_direct(stmt):
