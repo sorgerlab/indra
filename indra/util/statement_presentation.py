@@ -177,3 +177,23 @@ def get_simplified_stmts(stmts):
     for key, s in _get_keyed_stmts(stmts):
         simple_stmts.append(make_stmt_from_sort_key(key, s.__class__.__name__))
     return simple_stmts
+
+
+def make_top_level_label_from_names_key(names):
+    b_names = ['<b>%s</b>' % name for name in names]
+    if len(names) == 1:
+        tl_label = names[0]
+    elif len(names) == 2:
+        if names[0] is None or names[0] == 'None':
+            tl_label = b_names[1] + " is modified"
+        else:
+            tl_label = b_names[0] + " affects " + b_names[1]
+    elif names[1] == "activity":
+        if names[2] or names[2] == "True":
+            tl_label = b_names[0] + " is active"
+        else:
+            tl_label = b_names[0] + " is not active"
+    else:
+        tl_label = b_names[0] + " affects "
+        tl_label += ", ".join(b_names[1:-1]) + ', and ' + b_names[-1]
+    return tl_label
