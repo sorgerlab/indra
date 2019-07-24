@@ -15,3 +15,7 @@ def test_go_id_lookup():
 def test_go_label_to_id():
     assert go_client.get_go_id_from_label('mitochondrion inheritance') == \
         'GO:0000001'
+
+
+def test_go_secondary_to_primary():
+    assert go_client.get_primary_id('GO:0007067') == 'GO:0000278'

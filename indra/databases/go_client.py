@@ -21,7 +21,7 @@ def _load_label_id_mappings():
     for go_id, go_label in read_unicode_csv(go_mappings_file, delimiter='\t'):
         go_id_to_label[go_id] = go_label
         go_label_to_id[go_label] = go_id
-    return go_mappings, go_label_to_id
+    return go_id_to_label, go_label_to_id
 
 
 def _load_secondary_mappings():
@@ -106,16 +106,18 @@ def get_go_id_from_label(label):
     return go_label_to_id.get(label)
 
 
+def get_primary_id(go_id):
+    return secondary_mappings.get(go_id)
+
+
 def update_id_mappings(g):
-    """Compile all ID->label mappings and save to a TSV file.
+    """Compile all ID->label0007067 mappings and save to a TSV file.
 
     Parameters
     ----------
     g : rdflib.Graph
         RDF graph containing GO data.
     """
-    g = load_go_graph(go_owl_path)
-
     query = _prefixes + """
         SELECT ?id ?label
         WHERE {
@@ -132,8 +134,28 @@ def update_id_mappings(g):
     write_unicode_csv(go_mappings_file, mappings, delimiter='\t')
 
 
-def get_primary_id(go_id):
-    return secondary_mappings.get(go_id)
+def update_secondary_mappings(g):
+    """Compile all secondary ID->primary ID mappings and save to a TSV file.
+
+    Parameters
+    ----------
+    g : rdflib.Graph
+        RDF graph containing GO data.
+    """
+    query = _prefixes + """
+        SELECT ?id ?secid
+        WHERE {
+            ?class oboInOwl:id ?id .
+            ?class oboInOwl:hasAlternativeId ?secid
+        }
+    """
+    logger.info("Querying for GO secondary ID mappings")
+    res = g.query(query)
+    mappings = []
+    for id_lit, sec_id_lit in sorted(res, key=lambda x: x[0]):
+        mappings.append((sec_id_lit.value, id_lit.value))
+    # Write to file
+    write_unicode_csv(secondary_mappings_file, mappings, delimiter='\t')
 
 
 def get_cellular_components(g):
