@@ -1,3 +1,4 @@
+"""The IndraNet class"""
 import networkx as nx
 import pandas as pd
 import logging
@@ -10,13 +11,12 @@ class IndraNet(nx.MultiDiGraph):
     def __init__(self, incoming_graph_data=None, **attr):
         super().__init__(incoming_graph_data, **attr)
         self._is_multi = True
+        self.mandatory_columns = ['agA_name', 'agB_name', 'agA_ns', 'agA_id',
+                                  'agB_ns', 'agB_id', 'stmt_type',
+                                  'evidence_count', 'stmt_hash', 'belief']
 
     @classmethod
     def from_df(cls, df):
-        graph = cls()
-        mandatory_columns = ['agA_name', 'agB_name', 'agA_ns', 'agA_id',
-                             'agB_ns', 'agB_id', 'stmt_type', 'evidence_count',
-                             'stmt_hash', 'belief']
         """Create an IndraNet MultiDiGraph from a pandas DataFrame.
 
         Returns an instance of IndraNet with graph data filled out from a
@@ -25,20 +25,21 @@ class IndraNet(nx.MultiDiGraph):
         Parameters
         ----------
         df: pd.DataFrame
-            A data frame with each row containing node and edge data for one
-            edge. Mandatory columns are {m}. Hashes are used to distinguish
-            multiedges between a pair of nodes. Any other columns are
-            considered extra node or edge attributes. Any columns starting
-            with 'agA_' or 'agB_' (excluding the mandatory agA/B_name) will
-            be added to its respective nodes as node attributes. Columns not
-            starting with 'agA_' or 'agB_' will be added as edge attributes.
+            A :py:class:`pandas.DataFrame` with each row containing node and
+            edge data for one edge. Indices are used to distinguish
+            multiedges between a pair of nodes. Any columns not part of the
+            mandatory columns are considered extra attributes. Columns
+            starting with 'agA_' or 'agB_' (excluding the agA/B_name) will
+            be added to its respective nodes as node attributes. Any other
+            columns will be added as edge attributes.
 
         Returns
         -------
         in : IndraNet
             An IndraNet object
-        """.format(m=mandatory_columns)
-
+        """
+        graph = cls()
+        mandatory_columns = graph.mandatory_columns
         if not set(mandatory_columns).issubset(set(df.columns)):
             raise ValueError('Missing one or more columns of %s in data '
                              'frame' % mandatory_columns)
