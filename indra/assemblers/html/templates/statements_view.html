@@ -199,8 +199,8 @@
       <div class="super_group_heading"
          id="tl-{{ results['html_key'] }}"
          onclick="toggler('tl-{{ results['html_key'] }}')">
-        <h3 class="align-middle">
-          {{ results['label'] }}{{ badges(results['source_counts']) }}</h3>
+        <h5 class="align-middle">
+          {{ results['label'] }}{{ badges(results['source_counts']) }}</h5>
       </div>
       <div class="group" id="tl-{{ results['html_key'] }}_group">
     {% else %}
@@ -211,8 +211,8 @@
         <div class="group_heading"
            onclick="toggler('{{ short_name_key }}');"
            id="{{ short_name_key }}_heading">
-          <h4 class="align-middle">
-            {{ short_name }}{{ badges(src_counts) }}</h4>
+          <h5 class="align-middle">
+            {{ short_name }}{{ badges(src_counts) }}</h5>
         </div>
         <div class="group" id="{{ short_name_key }}_group">
       {% else %}
