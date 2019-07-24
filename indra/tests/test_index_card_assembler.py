@@ -31,14 +31,17 @@ ev2 = Evidence(source_api='reach', text='BRAF phosphorylates MAP2K1.',
 stmt_phos_indirect = Phosphorylation(brafmut, map2k1, evidence=ev2)
 stmt_autophos = Autophosphorylation(brafmut, 'S', '564', evidence=ev)
 
+
 def test_get_pmc_id():
     pmc_id = get_pmc_id(stmt_phos)
     assert pmc_id == 'PMC4849135'
+
 
 def test_get_evidence_text():
     ev_txt = get_evidence_text(stmt_phos)
     assert len(ev_txt) == 1
     assert ev_txt[0] == 'BRAF phosphorylates MAP2K1.'
+
 
 def test_assemble_phosphorylation():
     card = assemble_modification(stmt_phos)
@@ -47,12 +50,14 @@ def test_assemble_phosphorylation():
     print()
     jsonschema.validate(card.card, schema)
 
+
 def test_assemble_phosphorylation2():
     card = assemble_modification(stmt_phos2)
     card.card['pmc_id'] = get_pmc_id(stmt_phos2)
     print(card.get_string())
     print()
     jsonschema.validate(card.card, schema)
+
 
 def test_assemble_phosphorylation_indirect():
     card = assemble_modification(stmt_phos_indirect)
@@ -61,6 +66,7 @@ def test_assemble_phosphorylation_indirect():
     print()
     jsonschema.validate(card.card, schema)
 
+
 def test_assemble_dephosphorylation():
     card = assemble_modification(stmt_dephos)
     card.card['pmc_id'] = get_pmc_id(stmt_dephos)
@@ -68,12 +74,14 @@ def test_assemble_dephosphorylation():
     print()
     jsonschema.validate(card.card, schema)
 
+
 def test_assemble_autophosphorylation():
     card = assemble_selfmodification(stmt_autophos)
     card.card['pmc_id'] = get_pmc_id(stmt_autophos)
     print(card.get_string())
     print()
     jsonschema.validate(card.card, schema)
+
 
 def test_assemble_complex():
     st_complex = Complex([braf, brafmut, map2k1], evidence=ev)
@@ -83,6 +91,7 @@ def test_assemble_complex():
     print()
     jsonschema.validate(card.card, schema)
 
+
 def test_assemble_multiple():
     ia = IndexCardAssembler(pmc_override='PMC1234567')
     ia.add_statements([stmt_phos, stmt_dephos])
@@ -90,9 +99,11 @@ def test_assemble_multiple():
     ia.print_model()
     ia.save_model('/dev/null')
 
+
 def test_get_participant():
     participant = get_participant(brafmut)
     print(participant)
+
 
 def test_chemical():
     card = assemble_complex(stmt_complex)
@@ -100,6 +111,7 @@ def test_chemical():
     print(card.get_string())
     print()
     jsonschema.validate(card.card, schema)
+
 
 def test_assemble_regulateactivity_kin():
     stmt = Activation(braf, map2k1, 'kinase', evidence=ev)
@@ -109,6 +121,7 @@ def test_assemble_regulateactivity_kin():
     print()
     jsonschema.validate(card.card, schema)
 
+
 def test_assemble_regulateactivity_trans():
     stmt = Activation(braf, map2k1, 'transcription', evidence=ev)
     card = assemble_regulate_activity(stmt)
@@ -116,6 +129,7 @@ def test_assemble_regulateactivity_trans():
     print(card.get_string())
     print()
     jsonschema.validate(card.card, schema)
+
 
 def test_assemble_regulateamount():
     stmt = IncreaseAmount(braf, map2k1, evidence=ev)

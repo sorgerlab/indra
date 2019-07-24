@@ -48,33 +48,39 @@ class IndexCardAssembler(object):
     def make_model(self):
         """Assemble statements into index cards."""
         for stmt in self.statements:
-            if isinstance(stmt, Modification):
-                card = assemble_modification(stmt)
-            elif isinstance(stmt, SelfModification):
-                card = assemble_selfmodification(stmt)
-            elif isinstance(stmt, Complex):
-                card = assemble_complex(stmt)
-            elif isinstance(stmt, Translocation):
-                card = assemble_translocation(stmt)
-            elif isinstance(stmt, RegulateActivity):
-                card = assemble_regulate_activity(stmt)
-            elif isinstance(stmt, RegulateAmount):
-                card = assemble_regulate_amount(stmt)
-            else:
-                continue
+            card = self.assemble_one_card(stmt)
             if card is not None:
-                card.card['meta'] = {'id': stmt.uuid, 'belief': stmt.belief}
-                ev_info = get_evidence_info(stmt)
-                card.card['interaction']['hypothesis_information'] = \
-                    ev_info['hypothesis']
-                card.card['interaction']['context'] = \
-                    ev_info['context']
-                card.card['evidence'] = ev_info['text']
-                if self.pmc_override is not None:
-                    card.card['pmc_id'] = self.pmc_override
-                else:
-                    card.card['pmc_id'] = get_pmc_id(stmt)
                 self.cards.append(card)
+        return self.cards
+
+    def assemble_one_card(self, stmt):
+        if isinstance(stmt, Modification):
+            card = assemble_modification(stmt)
+        elif isinstance(stmt, SelfModification):
+            card = assemble_selfmodification(stmt)
+        elif isinstance(stmt, Complex):
+            card = assemble_complex(stmt)
+        elif isinstance(stmt, Translocation):
+            card = assemble_translocation(stmt)
+        elif isinstance(stmt, RegulateActivity):
+            card = assemble_regulate_activity(stmt)
+        elif isinstance(stmt, RegulateAmount):
+            card = assemble_regulate_amount(stmt)
+        else:
+            return None
+        if card is not None:
+            card.card['meta'] = {'id': stmt.uuid, 'belief': stmt.belief}
+            ev_info = get_evidence_info(stmt)
+            card.card['interaction']['hypothesis_information'] = \
+                ev_info['hypothesis']
+            card.card['interaction']['context'] = ev_info['context']
+            card.card['evidence'] = ev_info['text']
+            card.card['submitter'] = global_submitter
+            if self.pmc_override is not None:
+                card.card['pmc_id'] = self.pmc_override
+            else:
+                card.card['pmc_id'] = get_pmc_id(stmt)
+        return card
 
     def print_model(self):
         """Return the assembled cards as a JSON string.
@@ -133,7 +139,6 @@ class IndexCard(object):
 
 def assemble_complex(stmt):
     card = IndexCard()
-    card.card['submitter'] = global_submitter
     card.card['interaction']['interaction_type'] = 'complexes_with'
     card.card['interaction'].pop('participant_b', None)
     # NOTE: fill out entity_text
@@ -150,7 +155,6 @@ def assemble_complex(stmt):
 def assemble_regulate_activity(stmt):
     # Top level card
     card = IndexCard()
-    card.card['submitter'] = global_submitter
     int_type = ('increases' if stmt.is_activation else 'decreases')
     card.card['interaction']['interaction_type'] = int_type
     card.card['interaction']['participant_a'] = get_participant(stmt.subj)
@@ -178,7 +182,6 @@ def assemble_regulate_activity(stmt):
 def assemble_regulate_amount(stmt):
     # Top level card
     card = IndexCard()
-    card.card['submitter'] = global_submitter
     if isinstance(stmt, IncreaseAmount):
         int_type = 'increases'
     else:
@@ -191,7 +194,6 @@ def assemble_regulate_amount(stmt):
 
 def assemble_modification(stmt):
     card = IndexCard()
-    card.card['submitter'] = global_submitter
 
     mod_type = modclass_to_modtype[stmt.__class__]
     interaction = {}
@@ -232,7 +234,6 @@ def assemble_modification(stmt):
 
 def assemble_selfmodification(stmt):
     card = IndexCard()
-    card.card['submitter'] = global_submitter
 
     mod_type = stmt.__class__.__name__.lower()
     if mod_type.endswith('phosphorylation'):
@@ -268,7 +269,6 @@ def assemble_translocation(stmt):
     if stmt.to_location is None:
         return None
     card = IndexCard()
-    card.card['submitter'] = global_submitter
     interaction = {}
     interaction['negative_information'] = False
     interaction['interaction_type'] = 'translocates'
