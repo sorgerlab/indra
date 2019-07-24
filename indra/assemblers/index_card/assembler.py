@@ -134,7 +134,6 @@ class IndexCard(object):
 def assemble_complex(stmt):
     card = IndexCard()
     card.card['submitter'] = global_submitter
-    card.card['evidence'] = get_evidence_text(stmt)
     card.card['interaction']['interaction_type'] = 'complexes_with'
     card.card['interaction'].pop('participant_b', None)
     # NOTE: fill out entity_text
@@ -152,7 +151,6 @@ def assemble_regulate_activity(stmt):
     # Top level card
     card = IndexCard()
     card.card['submitter'] = global_submitter
-    card.card['evidence'] = get_evidence_text(stmt)
     int_type = ('increases' if stmt.is_activation else 'decreases')
     card.card['interaction']['interaction_type'] = int_type
     card.card['interaction']['participant_a'] = get_participant(stmt.subj)
@@ -181,7 +179,6 @@ def assemble_regulate_amount(stmt):
     # Top level card
     card = IndexCard()
     card.card['submitter'] = global_submitter
-    card.card['evidence'] = get_evidence_text(stmt)
     if isinstance(stmt, IncreaseAmount):
         int_type = 'increases'
     else:
@@ -195,7 +192,6 @@ def assemble_regulate_amount(stmt):
 def assemble_modification(stmt):
     card = IndexCard()
     card.card['submitter'] = global_submitter
-    card.card['evidence'] = get_evidence_text(stmt)
 
     mod_type = modclass_to_modtype[stmt.__class__]
     interaction = {}
@@ -237,7 +233,6 @@ def assemble_modification(stmt):
 def assemble_selfmodification(stmt):
     card = IndexCard()
     card.card['submitter'] = global_submitter
-    card.card['evidence'] = get_evidence_text(stmt)
 
     mod_type = stmt.__class__.__name__.lower()
     if mod_type.endswith('phosphorylation'):
@@ -274,7 +269,6 @@ def assemble_translocation(stmt):
         return None
     card = IndexCard()
     card.card['submitter'] = global_submitter
-    card.card['evidence'] = get_evidence_text(stmt)
     interaction = {}
     interaction['negative_information'] = False
     interaction['interaction_type'] = 'translocates'
@@ -411,60 +405,6 @@ def get_pmc_id(stmt):
         else:
             pmc_id = ''
     return str(pmc_id)
-
-
-def _get_hypothesis_information(stmt):
-    """Returns hypothesis information of the evidences in the same order as in
-    the evidence field."""
-
-    ev_txts = get_evidence_text(stmt)
-    if len(ev_txts) == 0:
-        return None
-
-    hypothesis_array = []
-    for ev_txt in ev_txts:
-        if ev_txt.startswith('PARTIAL: '):
-            evidence = next((ev for ev in stmt.partial_evidence
-                             if ev.text == ev_txt), None)
-        else:
-            evidence = next((ev for ev in stmt.evidence if ev.text == ev_txt),
-                            None)
-        hypothesis = evidence.epistemics.get('hypothesis')
-
-        hypothesis_array.append(hypothesis)
-
-    return hypothesis_array
-
-
-def _get_context_information(stmt):
-    """Returns context information of the evidences in same order as in
-    evidence field."""
-
-    ev_txts = get_evidence_text(stmt)
-    if len(ev_txts) == 0:
-        return None
-
-    context_array = []
-    for ev_txt in ev_txts:
-        if(ev_txt.startswith('PARTIAL: ')):
-            evidence = next((ev for ev in stmt.partial_evidence
-                             if ev.text == ev_txt), None)
-        else:
-            evidence = next((ev for ev in stmt.evidence if ev.text == ev_txt),
-                            None)
-
-        if evidence.context and evidence.context.species:
-            species = evidence.context.species
-            obj = {}
-            obj['name'] = species.name
-            obj['taxonomy'] = species.db_refs.get('TAXONOMY') \
-                if species.db_refs is not None else None
-        else:
-            obj = None
-
-        context_array.append(obj)
-
-    return context_array
 
 
 def get_evidence_info(stmt):
