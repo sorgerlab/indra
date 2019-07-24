@@ -1,10 +1,6 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-import json
 import jsonschema
-from indra.statements import *
-from indra.assemblers.index_card.assembler import *
 from os.path import dirname, abspath, join
+from indra.assemblers.index_card.assembler import *
 
 schema_path = join(dirname(abspath(__file__)),
                    '../resources/index_card_schema.json')
@@ -38,13 +34,13 @@ def test_get_pmc_id():
 
 
 def test_get_evidence_text():
-    ev_txt = get_evidence_text(stmt_phos)
-    assert len(ev_txt) == 1
-    assert ev_txt[0] == 'BRAF phosphorylates MAP2K1.'
+    ev_info = get_evidence_info(stmt_phos)
+    assert len(ev_info['text']) == 1
+    assert ev_info['text'][0] == 'BRAF phosphorylates MAP2K1.'
 
 
 def test_assemble_phosphorylation():
-    card = assemble_modification(stmt_phos)
+    card = IndexCardAssembler.assemble_one_card(stmt_phos)
     card.card['pmc_id'] = get_pmc_id(stmt_phos)
     print(card.get_string())
     print()
@@ -52,7 +48,7 @@ def test_assemble_phosphorylation():
 
 
 def test_assemble_phosphorylation2():
-    card = assemble_modification(stmt_phos2)
+    card = IndexCardAssembler.assemble_one_card(stmt_phos2)
     card.card['pmc_id'] = get_pmc_id(stmt_phos2)
     print(card.get_string())
     print()
@@ -60,7 +56,7 @@ def test_assemble_phosphorylation2():
 
 
 def test_assemble_phosphorylation_indirect():
-    card = assemble_modification(stmt_phos_indirect)
+    card = IndexCardAssembler.assemble_one_card(stmt_phos_indirect)
     card.card['pmc_id'] = get_pmc_id(stmt_phos_indirect)
     print(card.get_string())
     print()
@@ -68,7 +64,7 @@ def test_assemble_phosphorylation_indirect():
 
 
 def test_assemble_dephosphorylation():
-    card = assemble_modification(stmt_dephos)
+    card = IndexCardAssembler.assemble_one_card(stmt_dephos)
     card.card['pmc_id'] = get_pmc_id(stmt_dephos)
     print(card.get_string())
     print()
@@ -76,7 +72,7 @@ def test_assemble_dephosphorylation():
 
 
 def test_assemble_autophosphorylation():
-    card = assemble_selfmodification(stmt_autophos)
+    card = IndexCardAssembler.assemble_one_card(stmt_autophos)
     card.card['pmc_id'] = get_pmc_id(stmt_autophos)
     print(card.get_string())
     print()
@@ -85,7 +81,7 @@ def test_assemble_autophosphorylation():
 
 def test_assemble_complex():
     st_complex = Complex([braf, brafmut, map2k1], evidence=ev)
-    card = assemble_complex(st_complex)
+    card = IndexCardAssembler.assemble_one_card(st_complex)
     card.card['pmc_id'] = get_pmc_id(st_complex)
     print(card.get_string())
     print()
@@ -106,7 +102,7 @@ def test_get_participant():
 
 
 def test_chemical():
-    card = assemble_complex(stmt_complex)
+    card = IndexCardAssembler.assemble_one_card(stmt_complex)
     card.card['pmc_id'] = get_pmc_id(stmt_complex)
     print(card.get_string())
     print()
@@ -115,7 +111,7 @@ def test_chemical():
 
 def test_assemble_regulateactivity_kin():
     stmt = Activation(braf, map2k1, 'kinase', evidence=ev)
-    card = assemble_regulate_activity(stmt)
+    card = IndexCardAssembler.assemble_one_card(stmt)
     card.card['pmc_id'] = get_pmc_id(stmt)
     print(card.get_string())
     print()
@@ -124,7 +120,7 @@ def test_assemble_regulateactivity_kin():
 
 def test_assemble_regulateactivity_trans():
     stmt = Activation(braf, map2k1, 'transcription', evidence=ev)
-    card = assemble_regulate_activity(stmt)
+    card = IndexCardAssembler.assemble_one_card(stmt)
     card.card['pmc_id'] = get_pmc_id(stmt)
     print(card.get_string())
     print()
@@ -133,7 +129,7 @@ def test_assemble_regulateactivity_trans():
 
 def test_assemble_regulateamount():
     stmt = IncreaseAmount(braf, map2k1, evidence=ev)
-    card = assemble_regulate_amount(stmt)
+    card = IndexCardAssembler.assemble_one_card(stmt)
     card.card['pmc_id'] = get_pmc_id(stmt)
     print(card.get_string())
     print()

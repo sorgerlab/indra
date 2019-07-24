@@ -54,7 +54,7 @@ class IndexCardAssembler(object):
         return self.cards
 
     @staticmethod
-    def assemble_one_card(stmt, pmc_override):
+    def assemble_one_card(stmt, pmc_override=None):
         if isinstance(stmt, Modification):
             card = assemble_modification(stmt)
         elif isinstance(stmt, SelfModification):
@@ -412,14 +412,14 @@ def get_evidence_info(stmt):
     ev_txts = []
     contexts = []
     hypotheses = []
-    evs = (('', stmt.evidence), 'PARTIAL: ', ([] if not
-                                              hasattr(stmt, 'partial_evidence')
-                                              else stmt.partial_evidence))
+    evs = (('', stmt.evidence),
+           ('PARTIAL: ', ([] if not hasattr(stmt, 'partial_evidence')
+                          else stmt.partial_evidence)))
     for prefix, ev_list in evs:
         for ev in ev_list:
             if ev.text is None:
                 ev_txts.append(
-                    '%sEvidence text not available for %s entry: %s' % \
+                    '%sEvidence text not available for %s entry: %s' %
                     (prefix, ev.source_api, ev.source_id))
             else:
                 ev_txts.append('%s%s' % (prefix, ev.text))
