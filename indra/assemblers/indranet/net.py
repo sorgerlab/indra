@@ -1,13 +1,13 @@
-"""The IndraNet class"""
-import networkx as nx
+"""IndraNet: a Networkx representation of INDRA Statements"""
+from networkx import MultiDiGraph
 import pandas as pd
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class IndraNet(nx.MultiDiGraph):
-    """Network representation of INDRA Statements."""
+class IndraNet(MultiDiGraph):
+    """A Networkx representation of INDRA Statements."""
     def __init__(self, incoming_graph_data=None, **attr):
         super().__init__(incoming_graph_data, **attr)
         self._is_multi = True
