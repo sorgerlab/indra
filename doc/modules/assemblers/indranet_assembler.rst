@@ -1,12 +1,11 @@
-A Networkx Representation of INDRA Statements (:py:mod:`indra.assemblers.indranet.assembler`)
-=============================================================================================
+IndraNet Graphs (:py:mod:`indra.assemblers.indranet`)
+=====================================================
 
-IndraNet Assembler
-------------------
-.. automodule:: indra.assemblers.indranet.assembler
+.. automodule:: indra.assemblers.indranet
     :members:
 
-classmethod to get an IndraNet instance from a dataframe
---------------------------------------------------------
 .. automodule:: indra.assemblers.indranet.net
+    :members:
+
+.. automodule:: indra.assemblers.indranet.assembler
     :members:
