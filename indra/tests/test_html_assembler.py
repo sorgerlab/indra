@@ -43,7 +43,7 @@ def test_assembler():
     # Read from the template file and make sure the beginning and end of the
     # content matches
     loader = IndraHTMLLoader()
-    template, _, _ = loader.get_source(None, 'indra_template.html')
+    template, _, _ = loader.get_source(None, 'indra/indra_template.html')
     assert result.startswith(template[0:100])
 
 
