@@ -1,4 +1,5 @@
 import re
+import copy
 import logging
 import datetime
 import objectpath
@@ -70,6 +71,9 @@ class EidosProcessor(object):
             event = self.get_event(event_entry)
             evidence = self.get_evidence(event_entry)
             event.evidence = [evidence]
+            if not event.context and evidence.context:
+                event.context = copy.deepcopy(evidence.context)
+                evidence.context = None
             self.statements.append(event)
 
     def get_event_by_id(self, event_id):
@@ -178,7 +182,7 @@ class EidosProcessor(object):
 
         # If that fails, we can still get the text of the relation
         if text is None:
-            text = _sanitize(event.get('text'))
+            text = _sanitize(relation.get('text'))
 
         ev = Evidence(source_api='eidos', text=text, annotations=annotations,
                       context=context, epistemics=epistemics)

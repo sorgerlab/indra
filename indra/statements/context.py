@@ -282,7 +282,7 @@ class TimeContext(object):
         if self.end:
             pieces.append('end=%s' % self.end)
         if self.duration:
-            pieces.append('end=%s' % self.duration)
+            pieces.append('duration=%s' % self.duration)
         args = ', '.join(pieces)
         return 'TimeContext(%s)' % args
 
