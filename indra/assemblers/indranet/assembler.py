@@ -1,3 +1,5 @@
+"""IndraNet Assembler: create an IndraNet object from a list of INDRA
+statements"""
 import logging
 import pandas as pd
 from .net import IndraNet
