@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 # THE ELSEVIER API URL: ***MUST BE HTTPS FOR SECURITY***
 elsevier_api_url = 'https://api.elsevier.com/content' # <--- HTTPS
 elsevier_article_url_fmt = '%s/article/%%s' % elsevier_api_url
-elsevier_search_url = '%s/search/scidir' % elsevier_api_url
+elsevier_search_url = '%s/search/sciencedirect' % elsevier_api_url
 elsevier_entitlement_url = '%s/article/entitlement/doi' % elsevier_api_url
 
 # Namespaces for Elsevier XML elements
