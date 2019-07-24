@@ -152,34 +152,26 @@
 {%- endmacro %}
 
 {% block header_desc %}
-  <p>This page allows you to curate the loaded statements.</p>
-  <p>For more information please see the <a
-      href="https://indra.readthedocs.io/en/latest/tutorials/html_curation.html"
-      target="_blank">manual</a>.</p>
-  {% if metadata %}
-    <h4 class="nav-header" data-toggle="collapse"
-      data-target="#meta_list"><a href="#"
-                    title="Click to see metadata"
-                    style="color: #000000;">Summary
-      Metadata</a></h4>
-    <ul class="collapse" id="meta_list">
-      {% for name, value in metadata.items() %}
-        <li>{{ name }}: {{ value }}</li>
-      {% endfor %}
-    </ul>
-    <p>&nbsp;</p>
-  {% endif %}
+  This page allows you to curate the loaded statements. For more information
+  please see the
+  <a href="https://indra.readthedocs.io/en/latest/tutorials/html_curation.html"
+     target="_blank">manual</a>.
 {% endblock %}
 
 {% block body %}
 
-  <h3>Statements
+  <h3>
+    <span {% if metadata %}
+        title="{% for name, value in metadata.items() %}{{ name }}: {{ value }}
+{% endfor %}"
+          {% endif %}>
+        Statements
+    </span>
     <button id="expand-collapse-all" type="button"
-        class="btn btn-primary"
-        onclick="expandCollapseAll()">Expand All
+              class="btn btn-primary float-right"
+              onclick="expandCollapseAll()">Expand All
     </button>
   </h3>
-  <p>&nbsp;</p>
   <hr>
   {% for results in stmt_data.values() %}
     {% if stmt_data.values()|length > 1 %}
