@@ -1,9 +1,13 @@
+import logging
 from collections import defaultdict
 from itertools import permutations
 from numpy import array, concatenate, zeros
 
 from indra.assemblers.english import EnglishAssembler
 from indra.statements import Agent, get_statement_by_name
+
+
+logger = logging.getLogger(__name__)
 
 
 def _get_keyed_stmts(stmt_list):
@@ -179,21 +183,36 @@ def get_simplified_stmts(stmts):
     return simple_stmts
 
 
+def _str_conversion_bits(tpl):
+    bolds = ['<b>%s</b>' % el for el in tpl]
+    return ', '.join(bolds[:-1]) + ', and ' + bolds[-1]
+
+
 def make_top_level_label_from_names_key(names):
-    b_names = ['<b>%s</b>' % name for name in names]
-    if len(names) == 1:
-        tl_label = names[0]
-    elif len(names) == 2:
-        if names[0] is None or names[0] == 'None':
-            tl_label = b_names[1] + " is modified"
+    try:
+        if len(names) == 3 and isinstance(names[1], tuple):  # Conversions
+            el_from = _str_conversion_bits(names[1])
+            el_to = _str_conversion_bits(names[2])
+            tl_label = ("<b>%s</b> converts %s to %s"
+                        % (names[0], el_from, el_to))
         else:
-            tl_label = b_names[0] + " affects " + b_names[1]
-    elif names[1] == "activity":
-        if names[2] or names[2] == "True":
-            tl_label = b_names[0] + " is active"
-        else:
-            tl_label = b_names[0] + " is not active"
-    else:
-        tl_label = b_names[0] + " affects "
-        tl_label += ", ".join(b_names[1:-1]) + ', and ' + b_names[-1]
-    return tl_label
+            b_names = ['<b>%s</b>' % name for name in names]
+            if len(names) == 1:
+                tl_label = names[0]
+            elif len(names) == 2:  # Singleton Modifications
+                if names[0] is None or names[0] == 'None':
+                    tl_label = b_names[1] + " is modified"
+                else:
+                    tl_label = b_names[0] + " affects " + b_names[1]
+            elif names[1] == "activity":  # ActiveForms
+                if names[2] or names[2] == "True":
+                    tl_label = b_names[0] + " is active"
+                else:
+                    tl_label = b_names[0] + " is not active"
+            else:  # Large Complexes
+                tl_label = b_names[0] + " affects "
+                tl_label += ", ".join(b_names[1:-1]) + ', and ' + b_names[-1]
+        return tl_label
+    except Exception as e:
+        logger.error("Could not handle: %s" % names)
+        raise e
