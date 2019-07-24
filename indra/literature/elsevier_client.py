@@ -262,6 +262,7 @@ def extract_paragraphs(xml_string):
 @lru_cache(maxsize=100)
 @_ensure_api_keys('perform search')
 def get_dois(query_str, count=100):
+    # TODO This code is deprecated, need to update this function
     """Search ScienceDirect through the API for articles.
 
     See http://api.elsevier.com/content/search/fields/scidir for constructing a
