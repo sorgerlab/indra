@@ -1,5 +1,3 @@
-"""IndraNet Assembler: create an IndraNet object from a list of INDRA
-statements"""
 import logging
 import pandas as pd
 from .net import IndraNet
@@ -39,8 +37,7 @@ class IndraNetAssembler():
             A list of :py:class:`indra.statements.Statement`
             to be added to the statement list of the assembler.
         """
-        for stmt in stmts:
-            self.statements.append(stmt)
+        self.statements += stmts
 
     def make_model(self, exclude_stmts=None, complex_members=3):
         """Assemble an IndraNet graph object.

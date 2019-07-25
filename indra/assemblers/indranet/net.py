@@ -1,4 +1,3 @@
-"""IndraNet: a Networkx representation of INDRA Statements"""
 from networkx import MultiDiGraph
 import pandas as pd
 import logging
@@ -24,18 +23,18 @@ class IndraNet(MultiDiGraph):
 
         Parameters
         ----------
-        df: pd.DataFrame
+        df : pd.DataFrame
             A :py:class:`pandas.DataFrame` with each row containing node and
             edge data for one edge. Indices are used to distinguish
             multiedges between a pair of nodes. Any columns not part of the
             mandatory columns are considered extra attributes. Columns
-            starting with 'agA_' or 'agB_' (excluding the agA/B_name) will
+            starting with 'agA\_' or 'agB\_' (excluding the agA/B_name) will
             be added to its respective nodes as node attributes. Any other
             columns will be added as edge attributes.
 
         Returns
         -------
-        in : IndraNet
+        IndraNet
             An IndraNet object
         """
         graph = cls()
