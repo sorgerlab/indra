@@ -261,26 +261,26 @@ def extract_paragraphs(xml_string):
 
 @lru_cache(maxsize=100)
 @_ensure_api_keys('perform search')
-def get_dois(query_str, count=100):
-    # TODO This code is deprecated, need to update this function
-    """Search ScienceDirect through the API for articles.
+def get_dois(query_str, year=None, loaded_after=None):
+    """Search ScienceDirect through the API for articles and return DOIs.
 
-    See http://api.elsevier.com/content/search/fields/scidir for constructing a
-    query string to pass here.  Example: 'abstract(BRAF) AND all("colorectal
-    cancer")'
+    Parameters
+    ----------
+    query_str : str
+        The query string to search with.
+    date : Optional[str]
+        The year to constrain the search to.
+    loaded_after : Optional[str]
+        Date formatted as 'yyyy-MM-dd'T'HH:mm:ssX' to constrain the search
+        to articles loaded after this date.
+
+    Returns
+    -------
+    DOIs : list[str]
+        The list of DOIs identifying the papers returned by the search.
     """
-    url = '%s/%s' % (elsevier_search_url, query_str)
-    params = {'query': query_str,
-              'count': count,
-              'httpAccept': 'application/xml',
-              'sort': '-coverdate',
-              'field': 'doi'}
-    res = requests.get(url, params)
-    if not res.status_code == 200:
-        return None
-    tree = ET.XML(res.content, parser=UTB())
-    doi_tags = tree.findall('atom:entry/prism:doi', elsevier_ns)
-    dois = [dt.text for dt in doi_tags]
+    dois = search_science_direct(
+        query_str, field_name='doi', year=year, loaded_after=loaded_after)
     return dois
 
 
@@ -310,21 +310,28 @@ def get_piis(query_str):
 @lru_cache(maxsize=100)
 @_ensure_api_keys('perform search')
 def get_piis_for_date(query_str, year=None, loaded_after=None):
-    """Search ScienceDirect with a query string constrained to a given year.
+    """Search ScienceDirect through the API for articles and return PIIs.
 
     Parameters
     ----------
     query_str : str
-        The query string to search with
-    date : str
-        The year to constrain the search to
-    loaded_after : str
+        The query string to search with.
+    date : Optional[str]
+        The year to constrain the search to.
+    loaded_after : Optional[str]
         Date formatted as 'yyyy-MM-dd'T'HH:mm:ssX' to constrain the search
-        to articles loaded after this date
+        to articles loaded after this date.
 
     Returns
     -------
     piis : list[str]
+        The list of PIIs identifying the papers returned by the search.
+    """
+    piis = search_science_direct(
+        query_str, field_name='pii', year=year, loaded_after=loaded_after)
+    return piis
+
+
 @lru_cache(maxsize=100)
 @_ensure_api_keys('perform search')
 def search_science_direct(query_str, field_name, year=None, loaded_after=None):
