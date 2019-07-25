@@ -11,6 +11,14 @@ NS_PRIORITY_LIST = (
     'FPLX', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH', 'HMDB', 'PUBCHEM')
 
 
+def get_ag_ns_id(ag):
+    """Return a tuple of name space, id from an Agent's db_refs."""
+    for ns in NS_PRIORITY_LIST:
+        if ns in ag.db_refs:
+            return ag.db_refs[ns]
+    return 'TEXT', ag.name
+
+
 class IndraNetAssembler():
     """Assembler to create an IndraNet object from a list of INDRA statements.
 
@@ -94,40 +102,23 @@ class IndraNetAssembler():
                                % type(stmt).__name__)
                 continue
             agents = stmt.agent_list()
+            not_none_agents = [a for a in agents if a is not None]
             # Exclude statements with less than 2 agents
-            if len(agents) < 2:
-                logger.warning('Skipping a statement with less than 2 agents.')
+            if len(not_none_agents) < 2:
                 continue
             # Handle complexes
             if isinstance(stmt, Complex):
                 # Do not add complexes with more members than complex_members
-                if len(agents) > complex_members:
-                    logger.warning('Skipping a complex with %d members.'
-                                   % len(agents))
+                if len(not_none_agents) > complex_members:
+                    logger.debug('Skipping a complex with %d members.'
+                                 % len(not_none_agents))
                     continue
                 else:
                     # add every permutation
-                    pairs = permutations(agents, 2)
+                    pairs = permutations(not_none_agents, 2)
             else:
-                pairs = [agents]
+                pairs = [not_none_agents]
             for (agA, agB) in pairs:
-                if agA is None or agB is None:
-                    logger.warning(
-                        'Skipping a statement because agent is None.')
-                    continue
-
-                def get_ag_ns_id(ag):
-                    # get one pair of ns-id from agent db_refs
-                    ag_ns, ag_id = None, None
-                    for ns, id in ag.db_refs.items():
-                        if ns in NS_PRIORITY_LIST:
-                            ag_ns, ag_id = ns, id
-                            break
-                        if not ns:
-                            ag_ns = 'TEXT'
-                            ag_id = ag.name
-                    return ag_ns, ag_id
-
                 agA_ns, agA_id = get_ag_ns_id(agA)
                 agB_ns, agB_id = get_ag_ns_id(agB)
                 stmt_type = type(stmt).__name__

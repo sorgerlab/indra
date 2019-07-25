@@ -14,10 +14,11 @@ st3 = Activation(Agent('b'), Agent('d'))
 st4 = ActiveForm(Agent('e'), None, True)  # 1 agent
 st5 = Complex([Agent('c'), Agent('f'), Agent('g')])
 st6 = Complex([Agent('h'), Agent('i'), Agent('j'), Agent('b')])
+st7 = Phosphorylation(None, Agent('x'))
 
 
 def test_simple_assembly():
-    ia = IndraNetAssembler([st1, st2, st3, st4, st5, st6])
+    ia = IndraNetAssembler([st1, st2, st3, st4, st5, st6, st7])
     g = ia.make_model()
     assert len(g.nodes) == 6
     assert len(g.edges) == 9
