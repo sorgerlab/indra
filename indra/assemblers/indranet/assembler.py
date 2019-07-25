@@ -98,8 +98,8 @@ class IndraNetAssembler():
         for stmt in self.statements:
             # Exclude statements from given exclude list
             if isinstance(stmt, exclude_types):
-                logger.warning('Skipping a statement of a type %s.'
-                               % type(stmt).__name__)
+                logger.debug('Skipping a statement of a type %s.'
+                             % type(stmt).__name__)
                 continue
             agents = stmt.agent_list()
             not_none_agents = [a for a in agents if a is not None]
