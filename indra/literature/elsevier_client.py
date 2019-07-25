@@ -325,7 +325,35 @@ def get_piis_for_date(query_str, year=None, loaded_after=None):
     Returns
     -------
     piis : list[str]
-        The list of PIIs identifying the papers returned by the search
+@lru_cache(maxsize=100)
+@_ensure_api_keys('perform search')
+def search_science_direct(query_str, field_name, year=None, loaded_after=None):
+    """Search ScienceDirect for a given field with a query string.
+
+    Users can specify which field they are interested in and only values from
+    that field will be returned. It is also possible to restrict the search
+    either to a specific year of publication or to papers published after a
+    specific date.
+
+    Parameters
+    ----------
+    query_str : str
+        The query string to search with.
+    field_name : str
+        A name of the field of interest to be returned. Accepted values are:
+        authors, doi, loadDate, openAccess, pages, pii, publicationDate,
+        sourceTitle, title, uri, volumeIssue.
+    date : Optional[str]
+        The year to constrain the search to.
+    loaded_after : Optional[str]
+        Date formatted as 'yyyy-MM-dd'T'HH:mm:ssX' to constrain the search
+        to articles loaded after this date.
+
+    Returns
+    -------
+    all_parts : list[str]
+        The list of values from the field of interest identifying the papers
+        returned by the search.
     """
     count = 100
     params = {'qs': query_str,
@@ -338,7 +366,7 @@ def get_piis_for_date(query_str, year=None, loaded_after=None):
         params['date'] = year
     if loaded_after:
         params['loadedAfter'] = loaded_after
-    all_piis = []
+    all_parts = []
     while True:
         res = requests.put(
             elsevier_search_url, json=params, headers=ELSEVIER_KEYS)
@@ -351,8 +379,8 @@ def get_piis_for_date(query_str, year=None, loaded_after=None):
             logger.info('Search result was empty')
             return []
         entries = res_json['results']
-        piis = [entry['pii'] for entry in entries]
-        all_piis += piis
+        parts = [entry[field_name] for entry in entries]
+        all_parts += parts
         # Get next batch
         cont = False
         # We can only set offset up to 6000
@@ -363,7 +391,7 @@ def get_piis_for_date(query_str, year=None, loaded_after=None):
             sleep(1)
         if not cont:
             break
-    return all_piis
+    return all_parts
 
 
 def download_from_search(query_str, folder, do_extract_text=True,
