@@ -6,8 +6,8 @@ from indra.statements import *
 ev1 = Evidence(pmid='1')
 ev2 = Evidence(pmid='2')
 ev3 = Evidence(pmid='3')
-st1 = Activation(Agent('a', db_refs={'HGNC': 1}), Agent('b'), evidence=[ev1])
-st2 = Inhibition(Agent('a', db_refs={'HGNC': 1}), Agent('c'),
+st1 = Activation(Agent('a', db_refs={'HGNC': '1'}), Agent('b'), evidence=[ev1])
+st2 = Inhibition(Agent('a', db_refs={'HGNC': '1'}), Agent('c'),
                  evidence=[ev1, ev2, ev3])
 st2.belief = 0.76
 st3 = Activation(Agent('b'), Agent('d'))
@@ -30,7 +30,7 @@ def test_simple_assembly():
     assert ('h', 'i', 0) not in g.edges
     # Test node attributes
     assert g.nodes['a']['ns'] == 'HGNC', g.nodes['a']['ns']
-    assert g.nodes['a']['id'] == 1
+    assert g.nodes['a']['id'] == '1'
     # Test edge attributes
     e = g['a']['c'][0]
     assert e['stmt_type'] == 'Inhibition'

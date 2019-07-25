@@ -15,7 +15,7 @@ def get_ag_ns_id(ag):
     """Return a tuple of name space, id from an Agent's db_refs."""
     for ns in NS_PRIORITY_LIST:
         if ns in ag.db_refs:
-            return ag.db_refs[ns]
+            return ns, ag.db_refs[ns]
     return 'TEXT', ag.name
 
 
