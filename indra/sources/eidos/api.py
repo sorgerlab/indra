@@ -53,6 +53,8 @@ def process_text(text, out_format='json_ld', save_json='eidos_output.json',
             return None
         json_dict = eidos_reader.process_text(text, out_format)
     else:
+        if webservice.endswith('/'):
+            webservice = webservice[:-1]
         res = requests.post('%s/process_text' % webservice,
                             json={'text': text})
         json_dict = res.json()
