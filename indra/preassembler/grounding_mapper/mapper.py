@@ -7,7 +7,6 @@ from indra.statements import Agent
 from indra.databases import uniprot_client, hgnc_client, chebi_client, \
     mesh_client, go_client
 from indra.util import read_unicode_csv
-from .adeft import adeft_disambiguators, run_adeft_disambiguation
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +224,10 @@ class GroundingMapper(object):
         """
         # Standardize the IDs in the db_refs dict and set it as the Agent's
         # db_refs
+        txt = agent.db_refs.get('TEXT')
         agent.db_refs = self.standardize_db_refs(deepcopy(db_refs))
+        if txt:
+            agent.db_refs['TEXT'] = txt
         # Finally, if renaming is needed we standardize the Agent's name
         if do_rename:
             self.standardize_agent_name(agent, standardize_refs=False)
@@ -519,20 +521,25 @@ def _load_default_grounding_mapper():
         agent_map = json.load(fh)
     with open(default_ignore_path, 'r') as fh:
         ignores = [l.strip() for l in fh.readlines()]
-    misgmap = load_grounding_map(default_misgrounding_map_path)
+    misgmap = load_grounding_map(default_misgrounding_map_path,
+                                 hgnc_symbols=False)
     gm = GroundingMapper(gmap, agent_map=agent_map, ignores=ignores,
                          misgrounding_map=misgmap)
     return gm
 
 
 def _get_resource_path(*suffixes):
-    return os.path.join(os.path.dirname(__file__), os.pardir, 'resources',
-                        *suffixes)
+    return os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
+                        'resources', *suffixes)
 
 
-default_grounding_map_path = _get_resource_path('famplex', 'grounding_map.tsv')
+default_grounding_map_path = _get_resource_path('famplex', 'grounding_map.csv')
 default_ignore_path = _get_resource_path('grounding', 'ignore.csv')
 default_agent_grounding_path = _get_resource_path('grounding', 'agents.json')
 default_misgrounding_map_path = _get_resource_path('grounding',
-                                                   'misgrounding_map.tsv')
+                                                   'misgrounding_map.csv')
 default_mapper = _load_default_grounding_mapper()
+
+
+from .adeft import adeft_disambiguators, run_adeft_disambiguation
+
