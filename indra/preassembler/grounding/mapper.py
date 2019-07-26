@@ -230,6 +230,21 @@ class GroundingMapper(object):
         if do_rename:
             self.standardize_agent_name(agent, standardize_refs=False)
 
+    def remove_agent_db_refs(self, agent, db_refs):
+        # Standardize the IDs in the db_refs dict and set it as the Agent's
+        # db_refs
+        standard_refs = self.standardize_db_refs(deepcopy(db_refs))
+        # If there is any overlap between the Agent's db_refs and the db_refs
+        # that are to be eliminated, we consider the Agent's db_refs to be
+        # invalid and remove them. We then reset the Agent's name to
+        # its TEXT value if available.
+        agent_txt = agent.db_refs.get('TEXT')
+        if set(standard_refs.items()) & set(agent.db_refs.items()):
+            agent.db_refs = {}
+            if agent_txt:
+                agent.db_regs['TEXT'] = agent_txt
+                agent.name = agent_txt
+
     @staticmethod
     def standardize_db_refs(db_refs):
         """Return a standardized db refs dict for a given db refs dict.
