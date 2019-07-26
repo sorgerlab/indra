@@ -219,8 +219,8 @@ class GroundingMapper(object):
             The mapped Statement.
         """
         mapped_stmt = deepcopy(stmt)
-        # Iterate over the agents
 
+        # Iterate over the agents
         # Update agents directly participating in the statement
         agent_list = mapped_stmt.agent_list()
         for idx, agent in enumerate(agent_list):
@@ -936,21 +936,24 @@ def _get_text_for_grounding(stmt, agent_text):
     return None
 
 
-default_grounding_map_path = \
-    os.path.join(os.path.dirname(__file__),
-                 '../resources/famplex/grounding_map.csv')
-default_ignore_path = \
-    os.path.join(os.path.dirname(__file__),
-                 '../resources/famplex/ignore.csv')
-default_agent_grounding_path = \
-    os.path.join(os.path.dirname(__file__),
-                 '../resources/grounding_agents.json')
-default_grounding_map = \
-    load_grounding_map(default_grounding_map_path, default_ignore_path)
+def _load_default_grounding_maper():
+    gmap = load_grounding_map(default_grounding_map_path)
+    with open(default_agent_grounding_path, 'r') as fh:
+        agent_map = json.load(fh)
+    with open(default_ignore_path, 'r') as fh:
+        ignores = [l.strip() for l in fh.readlines()]
+    with open(default_misgrounding_map_path, 'r') as fh:
+        # CSV reading
+
+    gm = GroundingMapper(gmap, agent_map=default_agent_map)
 
 
-gm = default_grounding_map
-with open(default_agent_grounding_path, 'r') as fh:
-    default_agent_map = json.load(fh)
+def _get_resource_path(*suffixes):
+    return os.path.join(os.path.dirname(__file__), os.pardir, 'resources',
+                        *suffixes)
 
-default_grounding_mapper = GroundingMapper(gm, agent_map=default_agent_map)
+default_grounding_map_path = _get_resource_path('famplex', 'grounding_map.tsv')
+default_ignore_path = _get_resource_path('grounding', 'ignore.csv')
+default_agent_grounding_path = _get_resource_path('grounding', 'agents.json')
+default_misgrounding_map_path = _get_resource_path('grounding',
+                                                   'misgrounding_map.tsv')
