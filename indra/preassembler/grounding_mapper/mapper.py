@@ -244,7 +244,7 @@ class GroundingMapper(object):
         if set(standard_refs.items()) & set(agent.db_refs.items()):
             agent.db_refs = {}
             if agent_txt:
-                agent.db_regs['TEXT'] = agent_txt
+                agent.db_refs['TEXT'] = agent_txt
                 agent.name = agent_txt
 
     @staticmethod
@@ -515,30 +515,48 @@ def replace_hgnc_symbols(gmap):
     return gmap
 
 
-def _load_default_grounding_mapper():
-    gmap = load_grounding_map(default_grounding_map_path, hgnc_symbols=True)
-    with open(default_agent_grounding_path, 'r') as fh:
-        agent_map = json.load(fh)
-    with open(default_ignore_path, 'r') as fh:
-        ignores = [l.strip() for l in fh.readlines()]
-    misgmap = load_grounding_map(default_misgrounding_map_path,
-                                 hgnc_symbols=False)
-    gm = GroundingMapper(gmap, agent_map=agent_map, ignores=ignores,
-                         misgrounding_map=misgmap)
-    return gm
-
-
 def _get_resource_path(*suffixes):
     return os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
                         'resources', *suffixes)
 
 
-default_grounding_map_path = _get_resource_path('famplex', 'grounding_map.csv')
-default_ignore_path = _get_resource_path('grounding', 'ignore.csv')
-default_agent_grounding_path = _get_resource_path('grounding', 'agents.json')
-default_misgrounding_map_path = _get_resource_path('grounding',
-                                                   'misgrounding_map.csv')
-default_mapper = _load_default_grounding_mapper()
+def _load_default_grounding_map():
+    default_grounding_map_path = \
+        _get_resource_path('famplex', 'grounding_map.csv')
+    gmap = load_grounding_map(default_grounding_map_path, hgnc_symbols=True)
+    return gmap
+
+
+def _load_default_misgrounding_map():
+    default_misgrounding_map_path = \
+        _get_resource_path('grounding', 'misgrounding_map.csv')
+    gmap = load_grounding_map(default_misgrounding_map_path, hgnc_symbols=False)
+    return gmap
+
+
+def _load_default_agent_map():
+    default_agent_grounding_path = \
+        _get_resource_path('grounding', 'agents.json')
+    with open(default_agent_grounding_path, 'r') as fh:
+        agent_map = json.load(fh)
+    return agent_map
+
+
+def _load_default_ignores():
+    default_ignore_path = _get_resource_path('grounding', 'ignore.csv')
+    with open(default_ignore_path, 'r') as fh:
+        ignores = [l.strip() for l in fh.readlines()]
+    return ignores
+
+
+default_grounding_map = _load_default_grounding_map()
+default_misgrounding_map = _load_default_misgrounding_map()
+default_agent_map = _load_default_agent_map()
+default_ignores = _load_default_ignores()
+default_mapper = GroundingMapper(default_grounding_map,
+                                 agent_map=default_agent_map,
+                                 ignores=default_ignores,
+                                 misgrounding_map=default_misgrounding_map)
 
 
 from .adeft import adeft_disambiguators, run_adeft_disambiguation

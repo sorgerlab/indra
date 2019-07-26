@@ -92,6 +92,12 @@ def map_grounding(stmts_in, **kwargs):
         A user supplied grounding map which maps a string to a
         dictionary of database IDs (in the format used by Agents'
         db_refs).
+    misgrounding_map : Optional[dict]
+        A user supplied misgrounding map which maps a string to a known
+        misgrounding which can be eliminated by the grounding mapper.
+    ignores : Optional[list]
+        A user supplied list of ignorable strings which, if present as an
+        Agent text in a Statement, the Statement is filtered out.
     use_adeft : Optional[bool]
         If True, Adeft will be attempted to be used for acronym disambiguation.
         Default: True
@@ -109,8 +115,9 @@ def map_grounding(stmts_in, **kwargs):
         default_agent_map as agent_map
     logger.info('Mapping grounding on %d statements...' % len(stmts_in))
     do_rename = kwargs.get('do_rename', True)
+    ignores = kwargs.get('ignores')
     gm = kwargs.get('grounding_map', grounding_map)
-    gm = GroundingMapper(gm, agent_map,
+    gm = GroundingMapper(gm, agent_map=agent_map,
                          use_adeft=kwargs.get('use_adeft', True))
     stmts_out = gm.map_agents(stmts_in, do_rename=do_rename)
     dump_pkl = kwargs.get('save')

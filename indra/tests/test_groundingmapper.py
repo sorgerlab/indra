@@ -385,3 +385,12 @@ def test_adeft_mapping():
 
     annotations = mapped_stmts2[0].evidence[0].annotations
     assert 'GO:GO:0005783' in annotations['agents']['adeft'][1]
+
+
+def test_misgrounding():
+    baz1 = Agent('ZNF214', db_refs={'TEXT': 'baz1', 'HGNC': '13006'})
+    stmt = Phosphorylation(None, baz1)
+    gm.map_stmts([stmt])
+    assert len(stmt.sub.db_refs) == 1
+    assert stmt.sub.db_refs['TEXT'] == 'baz1'
+    assert stmt.sub.name == 'baz1'
