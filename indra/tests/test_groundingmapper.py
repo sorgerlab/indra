@@ -390,7 +390,8 @@ def test_adeft_mapping():
 def test_misgrounding():
     baz1 = Agent('ZNF214', db_refs={'TEXT': 'baz1', 'HGNC': '13006'})
     stmt = Phosphorylation(None, baz1)
-    gm.map_stmts([stmt])
-    assert len(stmt.sub.db_refs) == 1
+    stmts = gm.map_stmts([stmt])
+    stmt = stmts[0]
+    assert len(stmt.sub.db_refs) == 1, stmt.sub.db_refs
     assert stmt.sub.db_refs['TEXT'] == 'baz1'
     assert stmt.sub.name == 'baz1'

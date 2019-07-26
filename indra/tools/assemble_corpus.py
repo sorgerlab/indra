@@ -109,17 +109,19 @@ def map_grounding(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of mapped statements.
     """
-    from indra.preassembler.grounding_mapper import GroundingMapper
-    from indra.preassembler.grounding_mapper import gm as grounding_map
-    from indra.preassembler.grounding_mapper import \
-        default_agent_map as agent_map
+    from indra.preassembler.grounding_mapper import GroundingMapper,\
+        default_agent_map, default_grounding_map, default_ignores, \
+        default_misgrounding_map
     logger.info('Mapping grounding on %d statements...' % len(stmts_in))
     do_rename = kwargs.get('do_rename', True)
-    ignores = kwargs.get('ignores')
-    gm = kwargs.get('grounding_map', grounding_map)
+    ignores = kwargs.get('ignores', default_ignores)
+    gm = kwargs.get('grounding_map', default_grounding_map)
+    misgm = kwargs.get('misgrounding_map', default_misgrounding_map)
+    agent_map = kwargs.get('agent_map', default_agent_map)
     gm = GroundingMapper(gm, agent_map=agent_map,
+                         misgrounding_map=misgm, ignores=ignores,
                          use_adeft=kwargs.get('use_adeft', True))
-    stmts_out = gm.map_agents(stmts_in, do_rename=do_rename)
+    stmts_out = gm.map_stmts(stmts_in, do_rename=do_rename)
     dump_pkl = kwargs.get('save')
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
