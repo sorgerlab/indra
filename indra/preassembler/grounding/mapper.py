@@ -3,27 +3,14 @@ import csv
 import json
 import logging
 from copy import deepcopy
-from collections import Counter
-from itertools import groupby, chain
+from itertools import chain
 from indra.statements import Agent
 from indra.databases import uniprot_client, hgnc_client, chebi_client, \
     mesh_client, go_client
-from indra.util import read_unicode_csv, write_unicode_csv
+from indra.util import read_unicode_csv
+from .adeft import adeft_disambiguators, run_adeft_disambiguation
 
 logger = logging.getLogger(__name__)
-
-
-# If the adeft disambiguator is installed, load adeft models to
-# disambiguate acronyms and shortforms
-try:
-    from adeft import available_shortforms as available_adeft_models
-    from adeft.disambiguate import load_disambiguator
-    adeft_disambiguators = {}
-    for shortform in available_adeft_models:
-        adeft_disambiguators[shortform] = load_disambiguator(shortform)
-except Exception:
-    logger.info('DEFT will not be available for grounding disambiguation.')
-    adeft_disambiguators = {}
 
 
 class GroundingMapper(object):
@@ -450,9 +437,8 @@ class GroundingMapper(object):
 
 # TODO: handle the cases when there is more than one entry for the same
 # key (e.g., ROS, ER)
-def load_grounding_map(grounding_map_path, ignore_path=None,
-                       misgrounding_map_path=None,
-                       lineterminator='\r\n'):
+def load_grounding_map(grounding_map_path, lineterminator='\r\n',
+                       hgnc_symbols=True):
     """Return a grounding map dictionary loaded from a csv file.
 
     In the file pointed to by grounding_map_path, the number of name_space ID
@@ -474,44 +460,42 @@ def load_grounding_map(grounding_map_path, ignore_path=None,
         Path to csv file containing grounding map information. Rows of the file
         should be of the form <agent_text>,<name_space_1>,<ID_1>,...
         <name_space_n>,<ID_n>
-    ignore_path : Optional[str]
-        Path to csv file containing terms that should be filtered out during
-        the grounding mapping process, with each line containing a single
-        string to be filtered out. Default: None
     lineterminator : Optional[str]
         Line terminator used in input csv file. Default: \r\n
+    hgnc_symbols : Optional[bool]
+        Set to True if the grounding map file contains HGNC symbols rather than
+        IDs. In this case, the entries are replaced by IDs. Default: True
 
     Returns
     -------
     g_map : dict
         The grounding map constructed from the given files.
     """
-    g_map = {}
+    gmap = {}
     map_rows = read_unicode_csv(grounding_map_path, delimiter=',',
                                 quotechar='"',
                                 quoting=csv.QUOTE_MINIMAL,
                                 lineterminator=lineterminator)
-    if ignore_path and os.path.exists(ignore_path):
-        with open(ignore_path) as fh:
-            ignore_rows = [l.strip() for l in fh.readlines()]
-    else:
-        ignore_rows = []
-    csv_rows = chain(map_rows, ignore_rows)
-    for row in csv_rows:
-        key = row[0]
-        db_refs = {'TEXT': key}
-        keys = [entry for entry in row[1::2] if entry != '']
-        values = [entry for entry in row[2::2] if entry != '']
+    for row in map_rows:
+        txt = row[0]
+        keys = [entry for entry in row[1::2] if entry]
+        values = [entry for entry in row[2::2] if entry]
+        if not keys or not values:
+            logger.warning('Missing grounding entries for %s, skipping.' % txt)
+            continue
         if len(keys) != len(values):
-            logger.info('ERROR: Mismatched keys and values in row %s' %
-                        str(row))
+            logger.warning('Mismatched keys and values in row %s, skipping.' %
+                           str(row))
             continue
-        else:
-            db_refs.update(dict(zip(keys, values)))
-            g_map[key] = db_refs if len(db_refs) > 1 else None
-    for key, mapped_refs in deepcopy(g_map).items():
-        if not mapped_refs:
-            continue
+        gmap[txt] = dict(zip(keys, values))
+    if hgnc_symbols:
+        gmap = replace_hgnc_symbols(gmap)
+    return gmap
+
+
+def replace_hgnc_symbols(gmap):
+    """Replace HGNC symbols with IDs in a grounding map."""
+    for txt, mapped_refs in deepcopy(gmap).items():
         hgnc_sym = mapped_refs.get('HGNC')
         if hgnc_sym:
             hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
@@ -524,436 +508,33 @@ def load_grounding_map(grounding_map_path, ignore_path=None,
                              'symbol %s in grounding map.' % hgnc_sym)
                 # Remove the HGNC symbol in this case
                 mapped_refs.pop('HGNC')
-        g_map[key] = mapped_refs
-    return g_map
+        # In case the only grounding was eliminated, we remove the entry
+        # completely
+        if mapped_refs:
+            gmap[txt] = mapped_refs
+    return gmap
 
 
-# Some useful functions for analyzing the grounding of sets of statements
-# Put together all agent texts along with their grounding
-def all_agents(stmts):
-    """Return a list of all of the agents from a list of statements.
-
-    Only agents that are not None and have a TEXT entry are returned.
-
-    Parameters
-    ----------
-    stmts : list of :py:class:`indra.statements.Statement`
-
-    Returns
-    -------
-    agents : list of :py:class:`indra.statements.Agent`
-        List of agents that appear in the input list of indra statements.
-    """
-    agents = []
-    for stmt in stmts:
-        for agent in stmt.agent_list():
-            # Agents don't always have a TEXT db_refs entry (for instance
-            # in the case of Statements from databases) so we check for this.
-            if agent is not None and agent.db_refs.get('TEXT') is not None:
-                agents.append(agent)
-    return agents
-
-
-def agent_texts(agents):
-    """Return a list of all agent texts from a list of agents.
-
-    None values are associated to agents without agent texts
-
-    Parameters
-    ----------
-    agents : list of :py:class:`indra.statements.Agent`
-
-    Returns
-    -------
-    list of str/None
-        agent texts from input list of agents
-    """
-    return [ag.db_refs.get('TEXT') for ag in agents]
-
-
-def get_sentences_for_agent(text, stmts, max_sentences=None):
-    """Returns evidence sentences with a given agent text from a list of statements
-
-    Parameters
-    ----------
-    text : str
-        An agent text
-
-    stmts : list of :py:class:`indra.statements.Statement`
-        INDRA Statements to search in for evidence statements.
-
-    max_sentences : Optional[int/None]
-        Cap on the number of evidence sentences to return. Default: None
-
-    Returns
-    -------
-    sentences : list of str
-        Evidence sentences from the list of statements containing
-        the given agent text.
-    """
-    sentences = []
-    for stmt in stmts:
-        for agent in stmt.agent_list():
-            if agent is not None and agent.db_refs.get('TEXT') == text:
-                sentences.append((stmt.evidence[0].pmid,
-                                  stmt.evidence[0].text))
-                if max_sentences is not None and \
-                   len(sentences) >= max_sentences:
-                    return sentences
-    return sentences
-
-
-def agent_texts_with_grounding(stmts):
-    """Return agent text groundings in a list of statements with their counts
-
-    Parameters
-    ----------
-    stmts: list of :py:class:`indra.statements.Statement`
-
-    Returns
-    -------
-    list of tuple
-        List of tuples of the form
-        (text: str, ((name_space: str, ID: str, count: int)...),
-        total_count: int)
-
-        Where the counts within the tuple of groundings give the number of
-        times an agent with the given agent_text appears grounded with the
-        particular name space and ID. The total_count gives the total number
-        of times an agent with text appears in the list of statements.
-    """
-    allag = all_agents(stmts)
-    # Convert PFAM-DEF lists into tuples so that they are hashable and can
-    # be tabulated with a Counter
-    for ag in allag:
-        pfam_def = ag.db_refs.get('PFAM-DEF')
-        if pfam_def is not None:
-            ag.db_refs['PFAM-DEF'] = tuple(pfam_def)
-    refs = [tuple(ag.db_refs.items()) for ag in allag]
-    refs_counter = Counter(refs)
-    refs_counter_dict = [(dict(entry[0]), entry[1])
-                         for entry in refs_counter.items()]
-    # First, sort by text so that we can do a groupby
-    refs_counter_dict.sort(key=lambda x: x[0].get('TEXT'))
-
-    # Then group by text
-    grouped_by_text = []
-    for k, g in groupby(refs_counter_dict, key=lambda x: x[0].get('TEXT')):
-        # Total occurrences of this agent text
-        total = 0
-        entry = [k]
-        db_ref_list = []
-        for db_refs, count in g:
-            # Check if TEXT is our only key, indicating no grounding
-            if list(db_refs.keys()) == ['TEXT']:
-                db_ref_list.append((None, None, count))
-            # Add any other db_refs (not TEXT)
-            for db, db_id in db_refs.items():
-                if db == 'TEXT':
-                    continue
-                else:
-                    db_ref_list.append((db, db_id, count))
-            total += count
-        # Sort the db_ref_list by the occurrences of each grounding
-        entry.append(tuple(sorted(db_ref_list, key=lambda x: x[2],
-                     reverse=True)))
-        # Now add the total frequency to the entry
-        entry.append(total)
-        # And add the entry to the overall list
-        grouped_by_text.append(tuple(entry))
-    # Sort the list by the total number of occurrences of each unique key
-    grouped_by_text.sort(key=lambda x: x[2], reverse=True)
-    return grouped_by_text
-
-
-# List of all ungrounded entities by number of mentions
-def ungrounded_texts(stmts):
-    """Return a list of all ungrounded entities ordered by number of mentions
-
-    Parameters
-    ----------
-    stmts : list of :py:class:`indra.statements.Statement`
-
-    Returns
-    -------
-    ungroundc : list of tuple
-       list of tuples of the form (text: str, count: int) sorted in descending
-       order by count.
-    """
-    ungrounded = [ag.db_refs['TEXT']
-                  for s in stmts
-                  for ag in s.agent_list()
-                  if ag is not None and list(ag.db_refs.keys()) == ['TEXT']]
-    ungroundc = Counter(ungrounded)
-    ungroundc = ungroundc.items()
-    ungroundc = sorted(ungroundc, key=lambda x: x[1], reverse=True)
-    return ungroundc
-
-
-def get_agents_with_name(name, stmts):
-    """Return all agents within a list of statements with a particular name."""
-    return [ag for stmt in stmts for ag in stmt.agent_list()
-            if ag is not None and ag.name == name]
-
-
-def save_base_map(filename, grouped_by_text):
-    """Dump a list of agents along with groundings and counts into a csv file
-
-    Parameters
-    ----------
-    filename : str
-        Filepath for output file
-    grouped_by_text : list of tuple
-        List of tuples of the form output by agent_texts_with_grounding
-    """
-    rows = []
-    for group in grouped_by_text:
-        text_string = group[0]
-        for db, db_id, count in group[1]:
-            if db == 'UP':
-                name = uniprot_client.get_mnemonic(db_id)
-            else:
-                name = ''
-            row = [text_string, db, db_id, count, name]
-            rows.append(row)
-
-    write_unicode_csv(filename, rows, delimiter=',', quotechar='"',
-                      quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
-
-
-def protein_map_from_twg(twg):
-    """Build  map of entity texts to validate protein grounding.
-
-    Looks at the grounding of the entity texts extracted from the statements
-    and finds proteins where there is grounding to a human protein that maps to
-    an HGNC name that is an exact match to the entity text. Returns a dict that
-    can be used to update/expand the grounding map.
-
-    Parameters
-    ----------
-    twg : list of tuple
-        list of tuples of the form output by agent_texts_with_grounding
-
-    Returns
-    -------
-    protein_map : dict
-        dict keyed on agent text with associated values
-        {'TEXT': agent_text, 'UP': uniprot_id}. Entries are for agent texts
-        where the grounding map was able to find human protein grounded to
-        this agent_text in Uniprot.
-    """
-
-    protein_map = {}
-    unmatched = 0
-    matched = 0
-    logger.info('Building grounding map for human proteins')
-    for agent_text, grounding_list, _ in twg:
-        # If 'UP' (Uniprot) not one of the grounding entries for this text,
-        # then we skip it.
-        if 'UP' not in [entry[0] for entry in grounding_list]:
-            continue
-        # Otherwise, collect all the Uniprot IDs for this protein.
-        uniprot_ids = [entry[1] for entry in grounding_list
-                       if entry[0] == 'UP']
-        # For each Uniprot ID, look up the species
-        for uniprot_id in uniprot_ids:
-            # If it's not a human protein, skip it
-            mnemonic = uniprot_client.get_mnemonic(uniprot_id)
-            if mnemonic is None or not mnemonic.endswith('_HUMAN'):
-                continue
-            # Otherwise, look up the gene name in HGNC and match against the
-            # agent text
-            gene_name = uniprot_client.get_gene_name(uniprot_id)
-            if gene_name is None:
-                unmatched += 1
-                continue
-            if agent_text.upper() == gene_name.upper():
-                matched += 1
-                protein_map[agent_text] = {'TEXT': agent_text,
-                                           'UP': uniprot_id}
-            else:
-                unmatched += 1
-    logger.info('Exact matches for %d proteins' % matched)
-    logger.info('No match (or no gene name) for %d proteins' % unmatched)
-    return protein_map
-
-
-def save_sentences(twg, stmts, filename, agent_limit=300):
-    """Write evidence sentences for stmts with ungrounded agents to csv file.
-
-    Parameters
-    ----------
-    twg: list of tuple
-        list of tuples of ungrounded agent_texts with counts of the
-        number of times they are mentioned in the list of statements.
-        Should be sorted in descending order by the counts.
-        This is of the form output by the function ungrounded texts.
-
-    stmts: list of :py:class:`indra.statements.Statement`
-
-    filename : str
-        Path to output file
-
-    agent_limit : Optional[int]
-        Number of agents to include in output file. Takes the top agents
-        by count.
-    """
-    sentences = []
-    unmapped_texts = [t[0] for t in twg]
-    counter = 0
-    logger.info('Getting sentences for top %d unmapped agent texts.' %
-                agent_limit)
-    for text in unmapped_texts:
-        agent_sentences = get_sentences_for_agent(text, stmts)
-        sentences += map(lambda tup: (text,) + tup, agent_sentences)
-        counter += 1
-        if counter >= agent_limit:
-            break
-    # Write sentences to CSV file
-    write_unicode_csv(filename, sentences, delimiter=',', quotechar='"',
-                      quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
-
-
-def run_adeft_disambiguation(stmt, agent, idx):
-    """Run Adeft disambiguation on an Agent in a given Statement.
-
-    This function looks at the evidence of the given Statement and attempts
-    to look up the full paper or the abstract for the evidence. If both of
-    those fail, the evidence sentence itself is used for disambiguation.
-    The disambiguation model corresponding to the Agent text is then called,
-    and the highest scoring returned grounding is set as the Agent's new
-    grounding.
-
-    The Statement's annotations as well as the Agent are modified in place
-    and no value is returned.
-
-    Parameters
-    ----------
-    stmt : indra.statements.Statement
-        An INDRA Statement in which the Agent to be disambiguated appears.
-    agent : indra.statements.Agent
-        The Agent (potentially grounding mapped) which we want to
-        disambiguate in the context of the evidence of the given Statement.
-    idx : int
-        The index of the new Agent's position in the Statement's agent list
-        (needed to set annotations correctly).
-    """
-    # If the Statement doesn't have evidence for some reason, then there is
-    # no text to disambiguate by
-    # NOTE: we might want to try disambiguating by other agents in the
-    # Statement
-    if not stmt.evidence:
-        return
-    # Initialize annotations if needed so Adeft predicted
-    # probabilities can be added to Agent annotations
-    annots = stmt.evidence[0].annotations
-    agent_txt = agent.db_refs['TEXT']
-    if 'agents' in annots:
-        if 'adeft' not in annots['agents']:
-            annots['agents']['adeft'] = \
-                {'adeft': [None for _ in stmt.agent_list()]}
-    else:
-        annots['agents'] = {'adeft': [None for _ in stmt.agent_list()]}
-    grounding_text = _get_text_for_grounding(stmt, agent_txt)
-    if grounding_text:
-        res = adeft_disambiguators[agent_txt].disambiguate(
-                                                [grounding_text])
-        ns_and_id, standard_name, disamb_scores = res[0]
-        # If the highest score is ungrounded we explicitly remove grounding
-        # and reset the (potentially incorrectly standardized) name to the
-        # original text value.
-        if ns_and_id == 'ungrounded':
-            agent.name = agent_txt
-            agent.db_refs = {'TEXT': agent_txt}
-        # Otherwise we update the db_refs with what we got from DEFT
-        # and set the standard name
-        else:
-            db_ns, db_id = ns_and_id.split(':', maxsplit=1)
-            agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
-            agent.name = standard_name
-            logger.info('Disambiguated %s to: %s, %s:%s' %
-                        (agent_txt, standard_name, db_ns, db_id))
-            GroundingMapper.standardize_agent_name(agent,
-                                                   standardize_refs=True)
-            annots['agents']['adeft'][idx] = disamb_scores
-
-
-def _get_text_for_grounding(stmt, agent_text):
-    """Get text context for Adeft disambiguation
-
-    If the INDRA database is available, attempts to get the fulltext from
-    which the statement was extracted. If the fulltext is not available, the
-    abstract is returned. If the indra database is not available, uses the
-    pubmed client to get the abstract. If no abstract can be found, falls back
-    on returning the evidence text for the statement.
-
-    Parameters
-    ----------
-    stmt : py:class:`indra.statements.Statement`
-        Statement with agent we seek to disambiguate.
-
-    agent_text : str
-       Agent text that needs to be disambiguated
-
-    Returns
-    -------
-    text : str
-        Text for Adeft disambiguation
-    """
-    text = None
-    # First we will try to get content from the DB
-    try:
-        from indra_db.util.content_scripts \
-            import get_text_content_from_text_refs
-        from indra.literature.adeft_tools import universal_extract_text
-        refs = stmt.evidence[0].text_refs
-        # Prioritize the pmid attribute if given
-        if stmt.evidence[0].pmid:
-            refs['PMID'] = stmt.evidence[0].pmid
-        logger.info('Obtaining text for disambiguation with refs: %s' %
-                    refs)
-        content = get_text_content_from_text_refs(refs)
-        text = universal_extract_text(content, contains=agent_text)
-        if text:
-            return text
-    except Exception as e:
-        logger.info('Could not get text for disambiguation from DB.')
-    # If that doesn't work, we try PubMed next
-    if text is None:
-        from indra.literature import pubmed_client
-        pmid = stmt.evidence[0].pmid
-        if pmid:
-            logger.info('Obtaining abstract for disambiguation for PMID%s' %
-                        pmid)
-            text = pubmed_client.get_abstract(pmid)
-            if text:
-                return text
-    # Finally, falling back on the evidence sentence
-    if text is None:
-        logger.info('Falling back on sentence-based disambiguation')
-        text = stmt.evidence[0].text
-        return text
-    return None
-
-
-def _load_default_grounding_maper():
-    gmap = load_grounding_map(default_grounding_map_path)
+def _load_default_grounding_mapper():
+    gmap = load_grounding_map(default_grounding_map_path, hgnc_symbols=True)
     with open(default_agent_grounding_path, 'r') as fh:
         agent_map = json.load(fh)
     with open(default_ignore_path, 'r') as fh:
         ignores = [l.strip() for l in fh.readlines()]
-    with open(default_misgrounding_map_path, 'r') as fh:
-        # CSV reading
-
-    gm = GroundingMapper(gmap, agent_map=default_agent_map)
+    misgmap = load_grounding_map(default_misgrounding_map_path)
+    gm = GroundingMapper(gmap, agent_map=agent_map, ignores=ignores,
+                         misgrounding_map=misgmap)
+    return gm
 
 
 def _get_resource_path(*suffixes):
     return os.path.join(os.path.dirname(__file__), os.pardir, 'resources',
                         *suffixes)
 
+
 default_grounding_map_path = _get_resource_path('famplex', 'grounding_map.tsv')
 default_ignore_path = _get_resource_path('grounding', 'ignore.csv')
 default_agent_grounding_path = _get_resource_path('grounding', 'agents.json')
 default_misgrounding_map_path = _get_resource_path('grounding',
                                                    'misgrounding_map.tsv')
+default_mapper = _load_default_grounding_mapper()
