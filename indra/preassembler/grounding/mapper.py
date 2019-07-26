@@ -141,9 +141,8 @@ class GroundingMapper(object):
         for agent in agent_list:
             if agent is not None:
                 for bc in agent.bound_conditions:
-                    bc.agent, maps_to_none = self.map_agent(bc.agent,
-                                                            do_rename)
-                    if maps_to_none:
+                    bc.agent = self.map_agent(bc.agent, do_rename)
+                    if not bc.agent:
                         # Skip the entire statement if the agent maps to None
                         # in the grounding map
                         return None
@@ -184,15 +183,21 @@ class GroundingMapper(object):
             if do_rename:
                 self.standardize_agent_name(agent, standardize_refs=False)
             return agent
-        mapped_to_agent_json = self.agent_map.get(agent_text)
-        if mapped_to_agent_json:
+
+        # 1. Check if there is a full agent mapping and apply if there is
+        if agent_text in self.agent_map:
             mapped_to_agent = \
-                Agent._from_json(mapped_to_agent_json['agent'])
+                Agent._from_json(self.agent_map[agent_text]['agent'])
             return mapped_to_agent
-        # Look this string up in the grounding map
-        # If not in the map, leave agent alone and continue
+
+        # 2. Look agent text up in the grounding map
         if agent_text in self.grounding_map:
-            self.update_agent_db_refs(agent, agent_text, do_rename)
+            self.update_agent_db_refs(agent, self.grounding_map[agent_text],
+                                      do_rename)
+
+        # 3. Look agent text up in the misgrounding map
+        if agent_text in self.misgrounding_map:
+            self.remove_agent_db_refs(agent, self.misgrounding_map[agent_text])
         # This happens when there is an Agent text but it is not in the
         # grounding map. We still do the name standardization here.
         if do_rename:
@@ -200,7 +205,7 @@ class GroundingMapper(object):
         # Otherwise just return
         return agent
 
-    def update_agent_db_refs(self, agent, agent_text, do_rename=True):
+    def update_agent_db_refs(self, agent, db_refs, do_rename=True):
         """Update db_refs of agent using the grounding map
 
         If the grounding map is missing one of the HGNC symbol or Uniprot ID,
@@ -210,32 +215,17 @@ class GroundingMapper(object):
         ----------
         agent : :py:class:`indra.statements.Agent`
             The agent whose db_refs will be updated
-        agent_text : str
-            The agent_text to find a grounding for in the grounding map
-            dictionary. Typically this will be agent.db_refs['TEXT'] but
-            there may be situations where a different value should be used.
+        db_refs : dict
+            The db_refs so set for the agent.
         do_rename: Optional[bool]
             If True, the Agent name is updated based on the mapped grounding.
             If do_rename is True the priority for setting the name is
             FamPlex ID, HGNC symbol, then the gene name
             from Uniprot. Default: True
-
-        Raises
-        ------
-        ValueError
-            If the the grounding map contains and HGNC symbol for
-            agent_text but no HGNC ID can be found for it.
-        ValueError
-            If the grounding map contains both an HGNC symbol and a
-            Uniprot ID, but the HGNC symbol and the gene name associated with
-            the gene in Uniprot do not match or if there is no associated gene
-            name in Uniprot.
         """
-        # First we map the Agent's raw text name to get a db_refs dict
-        map_db_refs = deepcopy(self.grounding_map.get(agent_text))
-        # We then standardize the IDs in the db_refs dict and set it as the
-        # Agent's db_refs
-        agent.db_refs = self.standardize_db_refs(map_db_refs)
+        # Standardize the IDs in the db_refs dict and set it as the Agent's
+        # db_refs
+        agent.db_refs = self.standardize_db_refs(deepcopy(db_refs))
         # Finally, if renaming is needed we standardize the Agent's name
         if do_rename:
             self.standardize_agent_name(agent, standardize_refs=False)
