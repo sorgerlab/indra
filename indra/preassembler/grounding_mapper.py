@@ -31,7 +31,7 @@ class GroundingMapper(object):
 
     Parameters
     ----------
-    gm : dict
+    grounding_map : dict
         The grounding map, a dictionary mapping strings (entity names) to
         a dictionary of database identifiers.
     agent_map : Optional[dict]
@@ -40,10 +40,13 @@ class GroundingMapper(object):
         If True, Adeft will be attempted to be used for disambiguation of
         acronyms. Default: True
     """
-    def __init__(self, gm, agent_map=None, use_adeft=True):
-        self.check_grounding_map(gm)
-        self.gm = gm
+    def __init__(self, grounding_map, agent_map=None, ignores=None,
+                 misgrounding_map=None, use_adeft=True):
+        self.check_grounding_map(grounding_map)
+        self.grounding_map = grounding_map
         self.agent_map = agent_map if agent_map is not None else {}
+        self.ignores = set(ignores) if ignores else set()
+        self.misgrounding_map = misgrounding_map if misgrounding_map else {}
         self.use_adeft = use_adeft
 
     @staticmethod
@@ -89,7 +92,7 @@ class GroundingMapper(object):
             name in Uniprot.
         """
         # First we map the Agent's raw text name to get a db_refs dict
-        map_db_refs = deepcopy(self.gm.get(agent_text))
+        map_db_refs = deepcopy(self.grounding_map.get(agent_text))
         # We then standardize the IDs in the db_refs dict and set it as the
         # Agent's db_refs
         agent.db_refs = self.standardize_db_refs(map_db_refs)
@@ -307,8 +310,8 @@ class GroundingMapper(object):
             return mapped_to_agent, False
         # Look this string up in the grounding map
         # If not in the map, leave agent alone and continue
-        if agent_text in self.gm:
-            map_db_refs = self.gm[agent_text]
+        if agent_text in self.grounding_map:
+            map_db_refs = self.grounding_map[agent_text]
             # If it's in the map but it maps to None, then filter out
             # this statement by skipping it
             if map_db_refs is None:
@@ -448,6 +451,7 @@ class GroundingMapper(object):
 # TODO: handle the cases when there is more than one entry for the same
 # key (e.g., ROS, ER)
 def load_grounding_map(grounding_map_path, ignore_path=None,
+                       misgrounding_map_path=None,
                        lineterminator='\r\n'):
     """Return a grounding map dictionary loaded from a csv file.
 
@@ -472,10 +476,8 @@ def load_grounding_map(grounding_map_path, ignore_path=None,
         <name_space_n>,<ID_n>
     ignore_path : Optional[str]
         Path to csv file containing terms that should be filtered out during
-        the grounding mapping process. The file Should be of the form
-        <agent_text>,,..., where the number of commas that
-        appear is the same as in the csv file at grounding_map_path.
-        Default: None
+        the grounding mapping process, with each line containing a single
+        string to be filtered out. Default: None
     lineterminator : Optional[str]
         Line terminator used in input csv file. Default: \r\n
 
@@ -488,12 +490,10 @@ def load_grounding_map(grounding_map_path, ignore_path=None,
     map_rows = read_unicode_csv(grounding_map_path, delimiter=',',
                                 quotechar='"',
                                 quoting=csv.QUOTE_MINIMAL,
-                                lineterminator='\r\n')
+                                lineterminator=lineterminator)
     if ignore_path and os.path.exists(ignore_path):
-        ignore_rows = read_unicode_csv(ignore_path, delimiter=',',
-                                       quotechar='"',
-                                       quoting=csv.QUOTE_MINIMAL,
-                                       lineterminator=lineterminator)
+        with open(ignore_path) as fh:
+            ignore_rows = [l.strip() for l in fh.readlines()]
     else:
         ignore_rows = []
     csv_rows = chain(map_rows, ignore_rows)
@@ -508,10 +508,7 @@ def load_grounding_map(grounding_map_path, ignore_path=None,
             continue
         else:
             db_refs.update(dict(zip(keys, values)))
-            if len(db_refs.keys()) > 1:
-                g_map[key] = db_refs
-            else:
-                g_map[key] = None
+            g_map[key] = db_refs if len(db_refs) > 1 else None
     for key, mapped_refs in deepcopy(g_map).items():
         if not mapped_refs:
             continue
@@ -955,3 +952,5 @@ default_grounding_map = \
 gm = default_grounding_map
 with open(default_agent_grounding_path, 'r') as fh:
     default_agent_map = json.load(fh)
+
+default_grounding_mapper = GroundingMapper(gm, agent_map=default_agent_map)

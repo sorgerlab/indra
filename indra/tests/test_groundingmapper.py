@@ -318,7 +318,7 @@ def test_in_place_overwrite_of_gm():
     g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482'}}
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
-    gmap_after_mapping = gm.gm
+    gmap_after_mapping = gm.grounding_map
     assert set(gmap_after_mapping['ERK1'].keys()) == set(['TEXT', 'UP'])
 
 
