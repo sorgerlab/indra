@@ -3,7 +3,6 @@ import csv
 import json
 import logging
 from copy import deepcopy
-from itertools import chain
 from indra.statements import Agent
 from indra.databases import uniprot_client, hgnc_client, chebi_client, \
     mesh_client, go_client
@@ -46,6 +45,160 @@ class GroundingMapper(object):
                     hgnc_client.get_hgnc_name(refs['HGNC']) is None:
                 raise ValueError('HGNC:%s for key %s in the grounding map is '
                                  'not a valid ID' % (refs['HGNC'], key))
+
+    def map_stmts(self, stmts, do_rename=True):
+        """Return a new list of statements whose agents have been mapped
+
+        Parameters
+        ----------
+        stmts : list of :py:class:`indra.statements.Statement`
+            The statements whose agents need mapping
+        do_rename: Optional[bool]
+            If True, the Agent name is updated based on the mapped grounding.
+            If do_rename is True the priority for setting the name is
+            FamPlex ID, HGNC symbol, then the gene name
+            from Uniprot. Default: True
+
+        Returns
+        -------
+        mapped_stmts : list of :py:class:`indra.statements.Statement`
+            A list of statements given by mapping the agents from each
+            statement in the input list
+        """
+        # Make a copy of the stmts
+        mapped_stmts = []
+        num_skipped = 0
+        # Iterate over the statements
+        for stmt in stmts:
+            mapped_stmt = self.map_agents_for_stmt(stmt, do_rename)
+            # Check if we should skip the statement
+            if mapped_stmt is not None:
+                mapped_stmts.append(mapped_stmt)
+            else:
+                num_skipped += 1
+        logger.info('%s statements filtered out' % num_skipped)
+        return mapped_stmts
+
+    def map_agents_for_stmt(self, stmt, do_rename=True):
+        """Return a new Statement whose agents have been grounding mapped.
+
+        Parameters
+        ----------
+        stmt : :py:class:`indra.statements.Statement`
+            The Statement whose agents need mapping.
+        do_rename: Optional[bool]
+            If True, the Agent name is updated based on the mapped grounding.
+            If do_rename is True the priority for setting the name is
+            FamPlex ID, HGNC symbol, then the gene name
+            from Uniprot. Default: True
+
+        Returns
+        -------
+        mapped_stmt : :py:class:`indra.statements.Statement`
+            The mapped Statement.
+        """
+        mapped_stmt = deepcopy(stmt)
+
+        # Iterate over the agents
+        # Update agents directly participating in the statement
+        agent_list = mapped_stmt.agent_list()
+        for idx, agent in enumerate(agent_list):
+            # If the agent is None, we do nothing
+            if agent is None:
+                continue
+            # If the agent's TEXT is in the ignores list, we return None to
+            # then filter out the Statement
+            agent_txt = agent.db_refs.get('TEXT')
+            if agent_txt and agent_txt in self.ignores:
+                return None
+
+            # Check if an adeft model exists for agent text
+            adeft_used = False
+            if self.use_adeft and agent_txt and agent_txt in \
+                    adeft_disambiguators:
+                try:
+                    run_adeft_disambiguation(mapped_stmt, agent, idx)
+                    adeft_used = True
+                except Exception as e:
+                    logger.error('There was an error during Adeft'
+                                 ' disambiguation of %s.' % agent_txt)
+                    logger.error(e)
+
+            # If adeft was not used, we do grounding mapping
+            if not adeft_used:
+                new_agent = self.map_agent(agent, do_rename)
+
+            # If the old agent had bound conditions, but the new agent does
+            # not, copy the bound conditions over
+            if new_agent is not None and len(new_agent.bound_conditions) == 0:
+                new_agent.bound_conditions = agent.bound_conditions
+
+            agent_list[idx] = new_agent
+
+        mapped_stmt.set_agent_list(agent_list)
+
+        # Update agents in the bound conditions
+        for agent in agent_list:
+            if agent is not None:
+                for bc in agent.bound_conditions:
+                    bc.agent, maps_to_none = self.map_agent(bc.agent,
+                                                            do_rename)
+                    if maps_to_none:
+                        # Skip the entire statement if the agent maps to None
+                        # in the grounding map
+                        return None
+
+        return mapped_stmt
+
+    def map_agent(self, agent, do_rename):
+        """Return the given Agent with its grounding mapped.
+
+        This function grounds a single agent. It returns the new Agent object
+        (which might be a different object if we load a new agent state
+        from json) or the same object otherwise.
+
+        Parameters
+        ----------
+        agent : :py:class:`indra.statements.Agent`
+            The Agent to map.
+        do_rename: bool
+            If True, the Agent name is updated based on the mapped grounding.
+            If do_rename is True the priority for setting the name is
+            FamPlex ID, HGNC symbol, then the gene name
+            from Uniprot.
+
+        Returns
+        -------
+        grounded_agent : :py:class:`indra.statements.Agent`
+            The grounded Agent.
+        """
+        # We always standardize DB refs as a functionality in the
+        # GroundingMapper. If a new module is implemented which is
+        # responsible for standardizing grounding, this can be removed.
+        agent.db_refs = self.standardize_db_refs(agent.db_refs)
+        # If there is no TEXT available, we can return immediately since we
+        # can't do mapping
+        agent_text = agent.db_refs.get('TEXT')
+        if not agent_text:
+            # We still do the name standardization here
+            if do_rename:
+                self.standardize_agent_name(agent, standardize_refs=False)
+            return agent
+        mapped_to_agent_json = self.agent_map.get(agent_text)
+        if mapped_to_agent_json:
+            mapped_to_agent = \
+                Agent._from_json(mapped_to_agent_json['agent'])
+            return mapped_to_agent
+        # Look this string up in the grounding map
+        # If not in the map, leave agent alone and continue
+        if agent_text in self.grounding_map:
+            self.update_agent_db_refs(agent, agent_text, do_rename)
+        # This happens when there is an Agent text but it is not in the
+        # grounding map. We still do the name standardization here.
+        if do_rename:
+            self.standardize_agent_name(agent, standardize_refs=False)
+        # Otherwise just return
+        return agent
 
     def update_agent_db_refs(self, agent, agent_text, do_rename=True):
         """Update db_refs of agent using the grounding map
@@ -186,166 +339,6 @@ class GroundingMapper(object):
         # Otherwise there is no useful mapping that we can add and no
         # further conflict to resolve.
         return db_refs
-
-    def map_agents_for_stmt(self, stmt, do_rename=True):
-        """Return a new Statement whose agents have been grounding mapped.
-
-        Parameters
-        ----------
-        stmt : :py:class:`indra.statements.Statement`
-            The Statement whose agents need mapping.
-        do_rename: Optional[bool]
-            If True, the Agent name is updated based on the mapped grounding.
-            If do_rename is True the priority for setting the name is
-            FamPlex ID, HGNC symbol, then the gene name
-            from Uniprot. Default: True
-
-        Returns
-        -------
-        mapped_stmt : :py:class:`indra.statements.Statement`
-            The mapped Statement.
-        """
-        mapped_stmt = deepcopy(stmt)
-
-        # Iterate over the agents
-        # Update agents directly participating in the statement
-        agent_list = mapped_stmt.agent_list()
-        for idx, agent in enumerate(agent_list):
-            if agent is None:
-                continue
-
-            new_agent, maps_to_none = self.map_agent(agent, do_rename)
-
-            # Skip the entire statement if the agent maps to None in the
-            # grounding map
-            if maps_to_none:
-                return None
-
-            # Check if an adeft model exists for agent text
-            agent_txt = agent.db_refs.get('TEXT')
-            if self.use_adeft and agent_txt and agent_txt in \
-                    adeft_disambiguators:
-                try:
-                    run_adeft_disambiguation(mapped_stmt, new_agent, idx)
-                except Exception as e:
-                    logger.error('There was an error during Adeft'
-                                 ' disambiguation of %s.' % agent_txt)
-                    logger.error(e)
-
-            # If the old agent had bound conditions, but the new agent does
-            # not, copy the bound conditions over
-            if new_agent is not None and len(new_agent.bound_conditions) == 0:
-                new_agent.bound_conditions = agent.bound_conditions
-
-            agent_list[idx] = new_agent
-
-        mapped_stmt.set_agent_list(agent_list)
-
-        # Update agents in the bound conditions
-        for agent in agent_list:
-            if agent is not None:
-                for bc in agent.bound_conditions:
-                    bc.agent, maps_to_none = self.map_agent(bc.agent,
-                                                            do_rename)
-                    if maps_to_none:
-                        # Skip the entire statement if the agent maps to None
-                        # in the grounding map
-                        return None
-
-        return mapped_stmt
-
-    def map_agent(self, agent, do_rename):
-        """Return the given Agent with its grounding mapped.
-
-        This function grounds a single agent. It returns the new Agent object
-        (which might be a different object if we load a new agent state
-        from json) or the same object otherwise.
-
-        Parameters
-        ----------
-        agent : :py:class:`indra.statements.Agent`
-            The Agent to map.
-        do_rename: bool
-            If True, the Agent name is updated based on the mapped grounding.
-            If do_rename is True the priority for setting the name is
-            FamPlex ID, HGNC symbol, then the gene name
-            from Uniprot.
-
-        Returns
-        -------
-        grounded_agent : :py:class:`indra.statements.Agent`
-            The grounded Agent.
-        maps_to_none : bool
-            True if the Agent is in the grounding map and maps to None.
-        """
-        # We always standardize DB refs as a functionality in the
-        # GroundingMapper. If a new module is implemented which is
-        # responsible for standardizing grounding, this can be removed.
-        agent.db_refs = self.standardize_db_refs(agent.db_refs)
-        # If there is no TEXT available, we can return immediately since we
-        # can't do mapping
-        agent_text = agent.db_refs.get('TEXT')
-        if not agent_text:
-            # We still do the name standardization here
-            if do_rename:
-                self.standardize_agent_name(agent, standardize_refs=False)
-            return agent, False
-        mapped_to_agent_json = self.agent_map.get(agent_text)
-        if mapped_to_agent_json:
-            mapped_to_agent = \
-                Agent._from_json(mapped_to_agent_json['agent'])
-            return mapped_to_agent, False
-        # Look this string up in the grounding map
-        # If not in the map, leave agent alone and continue
-        if agent_text in self.grounding_map:
-            map_db_refs = self.grounding_map[agent_text]
-            # If it's in the map but it maps to None, then filter out
-            # this statement by skipping it
-            if map_db_refs is None:
-                logger.debug("Skipping %s" % agent_text)
-                return None, True
-            # If it has a value that's not None, map it and add it
-            else:
-                self.update_agent_db_refs(agent, agent_text, do_rename)
-        # This happens whene there is an Agent text but it is not in the
-        # grounding map. We still do the name standardization here.
-        if do_rename:
-            self.standardize_agent_name(agent, standardize_refs=False)
-        # Otherwise just return
-        return agent, False
-
-    def map_agents(self, stmts, do_rename=True):
-        """Return a new list of statements whose agents have been mapped
-
-        Parameters
-        ----------
-        stmts : list of :py:class:`indra.statements.Statement`
-            The statements whose agents need mapping
-        do_rename: Optional[bool]
-            If True, the Agent name is updated based on the mapped grounding.
-            If do_rename is True the priority for setting the name is
-            FamPlex ID, HGNC symbol, then the gene name
-            from Uniprot. Default: True
-
-        Returns
-        -------
-        mapped_stmts : list of :py:class:`indra.statements.Statement`
-            A list of statements given by mapping the agents from each
-            statement in the input list
-        """
-        # Make a copy of the stmts
-        mapped_stmts = []
-        num_skipped = 0
-        # Iterate over the statements
-        for stmt in stmts:
-            mapped_stmt = self.map_agents_for_stmt(stmt, do_rename)
-            # Check if we should skip the statement
-            if mapped_stmt is not None:
-                mapped_stmts.append(mapped_stmt)
-            else:
-                num_skipped += 1
-        logger.info('%s statements filtered out' % num_skipped)
-        return mapped_stmts
 
     @staticmethod
     def standardize_agent_name(agent, standardize_refs=True):
