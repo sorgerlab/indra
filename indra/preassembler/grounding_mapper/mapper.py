@@ -124,8 +124,8 @@ class GroundingMapper(object):
                     logger.error(e)
 
             # If adeft was not used, we do grounding mapping
-            if not adeft_used:
-                new_agent = self.map_agent(agent, do_rename)
+            new_agent = self.map_agent(agent, do_rename) if not adeft_used \
+                else agent
 
             # If the old agent had bound conditions, but the new agent does
             # not, copy the bound conditions over

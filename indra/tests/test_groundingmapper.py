@@ -240,7 +240,6 @@ def test_up_with_no_gene_name_with_hgnc_sym():
 
 def test_multiple_mapped_up():
     ag = Agent('xx', db_refs={'HGNC': '377', 'UP': 'O43687'})
-    gm = GroundingMapper(default_grounding_map)
     gm.standardize_agent_name(ag, True)
     assert ag.db_refs['HGNC'] == '377'
     assert ag.db_refs['UP'] == 'O43687'
@@ -323,7 +322,6 @@ def test_map_agent():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     p_erk = Agent('P-ERK', db_refs={'TEXT': 'p-ERK'})
     stmt = Complex([erk, p_erk])
-    gm = GroundingMapper(default_grounding_map, default_agent_map)
     mapped_stmts = gm.map_stmts([stmt])
     mapped_ag = mapped_stmts[0].members[1]
     assert mapped_ag.name == 'ERK'
