@@ -8,14 +8,14 @@ from indra.databases import hgnc_client
 from indra.statements import Phosphorylation, Agent, Evidence
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
-from indra.preassembler.grounding_mapper import GroundingMapper
-from indra.preassembler.grounding_mapper import gm as grounding_map
+from indra.preassembler.grounding_mapper import default_mapper
 from indra.preassembler.sitemapper import SiteMapper, default_site_map
 
 psite_fname = 'phosphosite_kin_sub_2016.csv'
 stmts_fname = 'model.pkl'
 
 logger = logging.getLogger('indra.benchmarks.phosphorylations')
+
 
 def phosphosite_to_indra():
     df = pandas.DataFrame.from_csv(psite_fname, index_col=None)
@@ -46,6 +46,7 @@ def phosphosite_to_indra():
     with open('phosphosite_indra.pkl', 'wb') as fh:
         pickle.dump(stmts, fh)
     return stmts
+
 
 def extract_phos():
     with open(stmts_fname, 'rb') as fh:
@@ -92,6 +93,7 @@ def extract_phos():
 
     return stmts
 
+
 def filter_belief(stmts):
     # As a proxy here, we just look for > 1 evidence
     believed_stmts = []
@@ -100,12 +102,14 @@ def filter_belief(stmts):
             believed_stmts.append(stmt)
     return believed_stmts
 
+
 def filter_direct(stmts):
     direct_stmts = []
     for stmt in stmts:
         if get_is_direct(stmt):
             direct_stmts.append(stmt)
     return direct_stmts
+
 
 def filter_non_hypothesis(stmts):
     non_hyp_stmts = []
@@ -114,8 +118,9 @@ def filter_non_hypothesis(stmts):
             non_hyp_stmts.append(stmt)
     return non_hyp_stmts
 
+
 def filter_grounded(stmts):
-    gm = GroundingMapper(grounding_map)
+    gm = default_mapper
     stmts_mapped = gm.map_agents(stmts, do_rename=True)
 
     stmts_grounded = []
@@ -129,6 +134,7 @@ def filter_grounded(stmts):
         if all_grounded:
             stmts_grounded.append(stmt)
     return stmts_grounded
+
 
 def filter_enzkinase(stmts):
     kinase_activities = get_kinase_activities()
@@ -145,6 +151,7 @@ def filter_enzkinase(stmts):
         if is_kinase:
             stmts_enzkinase.append(stmt)
     return stmts_enzkinase
+
 
 def compare_overlap(stmts_pred, stmts_ref):
     # Ras Machine statements that are in Phosphosite
@@ -182,6 +189,7 @@ def get_kinase_activities():
         kin_activities.append(stmt)
     return kin_activities
 
+
 def get_is_direct(stmt):
     '''Returns true if there is evidence that the statement is a direct
     interaction. If any of the evidences associated with the statement
@@ -200,6 +208,7 @@ def get_is_direct(stmt):
         return False
     return True
 
+
 def get_is_not_hypothesis(stmt):
     hyps = [ev.epistemics.get('hypothesis') for ev in stmt.evidence]
     for hyp in hyps:
@@ -207,8 +216,8 @@ def get_is_not_hypothesis(stmt):
             return True
     return False
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     use_pkl = False
     if use_pkl:
         stmts_file = 'filtered_phos.pkl'
