@@ -633,8 +633,7 @@ def get_wm_hierarchies():
                              '../sources/cwms/trips_ontology.rdf')
     sofia_ont = os.path.join(os.path.dirname(__file__),
                              '../sources/sofia/sofia_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, build_closure_namespaces=[],
-                          uri_as_name=True)
+    hm = HierarchyManager(eidos_ont, build_closure=False, uri_as_name=True)
     hm.extend_with(hume_ont)
     hm.extend_with(trips_ont)
     hm.extend_with(sofia_ont)
