@@ -1,21 +1,9 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 from indra.preassembler.grounding_mapper import *
 from indra.statements import Agent, Phosphorylation, Complex, Inhibition, \
     Evidence, BoundCondition
 from indra.util import unicode_strs
 from nose.tools import raises
 from nose.plugins.attrib import attr
-
-# The grounding map
-# Format:
-#   - text string
-#   - ID
-#   - species (optional)
-#   - namespace: uniprot, mesh, go, pfam, etc. (MIRIAM namespace names)
-#   - type: BioProcess, Gene_or_gene_product, Family, Simple_chemical
-
-gm = [['Akt1', 'P31749', None, 'uniprot', 'Gene_or_gene_product']]
 
 
 def test_simple_mapping():

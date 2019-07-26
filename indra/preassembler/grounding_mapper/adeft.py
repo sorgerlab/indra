@@ -1,4 +1,5 @@
 import logging
+from .mapper import GroundingMapper
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,7 @@ try:
     for shortform in available_adeft_models:
         adeft_disambiguators[shortform] = load_disambiguator(shortform)
 except Exception:
-    logger.info('DEFT will not be available for grounding disambiguation.')
+    logger.info('Adeft will not be available for grounding disambiguation.')
     adeft_disambiguators = {}
 
 
@@ -135,5 +136,3 @@ def _get_text_for_grounding(stmt, agent_text):
         text = stmt.evidence[0].text
         return text
     return None
-
-
