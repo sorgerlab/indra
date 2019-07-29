@@ -3,11 +3,7 @@ For information on the Elsevier API, see:
   - API Specification: http://dev.elsevier.com/api_docs.html
   - Authentication: https://dev.elsevier.com/tecdoc_api_authentication.html
 """
-
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
-import re
 import logging
 import textwrap
 import datetime
@@ -16,13 +12,7 @@ import requests
 from time import sleep
 from indra.util import flatten
 from indra import has_config, get_config
-# Python3
-try:
-    from functools import lru_cache, wraps
-# Python2
-except ImportError:
-    from functools32 import lru_cache, wraps
-from indra.util import read_unicode_csv
+from functools import lru_cache, wraps
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger(__name__)
@@ -164,9 +154,9 @@ def download_article_from_ids(**id_dict):
     Parameters
     ----------
     <id_type> : str
-        You can enter any combination of eid, doi, pmid, and/or pii. Ids will be
-        checked in that order, until either content has been found or all ids
-        have been checked.
+        You can enter any combination of eid, doi, pmid, and/or pii. Ids will
+        be checked in that order, until either content has been found or all
+        ids have been checked.
 
     Returns
     -------
@@ -268,15 +258,15 @@ def get_dois(query_str, year=None, loaded_after=None):
     ----------
     query_str : str
         The query string to search with.
-    date : Optional[str]
+    year : Optional[str]
         The year to constrain the search to.
     loaded_after : Optional[str]
         Date formatted as 'yyyy-MM-dd'T'HH:mm:ssX' to constrain the search
-        to articles loaded after this date.
+        to articles loaded after this date. Example: 2019-06-01T00:00:00Z
 
     Returns
     -------
-    DOIs : list[str]
+    dois : list[str]
         The list of DOIs identifying the papers returned by the search.
     """
     dois = search_science_direct(
@@ -316,11 +306,11 @@ def get_piis_for_date(query_str, year=None, loaded_after=None):
     ----------
     query_str : str
         The query string to search with.
-    date : Optional[str]
+    year : Optional[str]
         The year to constrain the search to.
     loaded_after : Optional[str]
         Date formatted as 'yyyy-MM-dd'T'HH:mm:ssX' to constrain the search
-        to articles loaded after this date.
+        to articles loaded after this date. Example: 2019-06-01T00:00:00Z
 
     Returns
     -------
