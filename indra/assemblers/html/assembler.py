@@ -80,10 +80,11 @@ def color_gen():
 SOURCE_COLORS = {
     'reading': {'color': 'white',
                 'sources': dict(zip(['reach', 'medscan', 'rlimsp', 'trips',
-                                     'sparser', 'isi', 'tees'], color_gen()))},
+                                     'sparser', 'isi', 'tees', 'geneways'],
+                                     color_gen()))},
     'databases': {'color': 'black',
                   'sources': dict(zip(['phosphosite', 'cbn', 'pc11',
-                                       'biopax', 'bel_lc', 'geneways',
+                                       'biopax', 'bel_lc',
                                        'signor', 'biogrid', 'tas',
                                        'lincs_drug', 'hprd', 'trrust'],
                                       color_gen()))}
