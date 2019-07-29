@@ -126,17 +126,17 @@
     {% endfor %}
 
     .badge-source {
-      margin: 2px;
-      float: right;
+      font-size: 8pt;
+      margin: 0;
     }
 
     .statements-header {
-        position: -webkit-sticky;
-        position: sticky;
-        top: 0;
-        background-color: white;
-        z-index: 10;
-        padding-top: 5px;
+      position: -webkit-sticky;
+      position: sticky;
+      top: 0;
+      background-color: white;
+      z-index: 10;
+      padding-top: 5px;
     }
   </style>
 {% endblock %}
@@ -152,8 +152,8 @@
         {% if src_counts.get(src) %}
           <span class="badge badge-source source-{{ src }}"
               title="{{ src }}">
-      {{ src_counts.get(src) }}
-      </span>
+            {{ src_counts.get(src) }}
+          </span>
         {% endif %}
       {% endfor %}
     {% endfor %}
@@ -168,29 +168,49 @@
 {% endblock %}
 
 {% block body %}
-    <div class="statements-header">
-      <h3>
-        <span {% if metadata %}
-            title="{% for name, value in metadata.items() %}{{ name }}: {{ value }}
-{% endfor %}"
-              {% endif %}>
-            Statements
-        </span>
-          <button id="expand-collapse-all" type="button"
-                  class="btn btn-primary float-right"
-                  onclick="expandCollapseAll()">Expand All
-          </button>
-      </h3>
-      <h6>databases<span class="badge-source">readers</span>{{ badges(source_key_dict) }}</h6>
-      <hr>
+  <div class="statements-header">
+    <div class="row">
+      <div class="col">
+        <h3 {% if metadata %}
+          title="{% for n, v in metadata.items() %}{{ n }}: {{ v }}\n{% endfor %}"
+          {% endif %}>
+          Statements
+        </h3>
+      </div>
+      <div class="col text-right">
+        <button id="expand-collapse-all" type="button"
+            class="btn btn-primary"
+            onclick="expandCollapseAll()">
+          Expand All
+        </button>
+      </div>
     </div>
+    <div class="row justify-content-md-center">
+      <div class="col-1 text-right">
+        readers
+      </div>
+      <div class="col col-auto text-center">
+        {{ badges(source_key_dict) }}
+      </div>
+      <div class="col-1 text-left">
+        databases
+      </div>
+    </div>
+    <hr>
+  </div>
   {% for results in stmt_data.values() %}
     {% if stmt_data.values()|length > 1 %}
-      <div class="super_group_heading"
+      <div class="row super_group_heading"
          id="tl-{{ results['html_key'] }}"
          onclick="toggler('tl-{{ results['html_key'] }}')">
-        <h5 class="align-middle">
-          {{ results['label'] }}{{ badges(results['source_counts']) }}</h5>
+        <div class="col">
+          <h5 class="align-middle">
+            {{ results['label'] }}
+          </h5>
+        </div>
+        <div class="col text-right">
+          {{ badges(results['source_counts']) }}
+        </div>
       </div>
       <div class="group" id="tl-{{ results['html_key'] }}_group">
     {% else %}
@@ -198,27 +218,35 @@
     {% endif %}
     {% for short_name, short_name_key, stmt_info_list, src_counts in results['stmts_formatted'] %}
       {% if results['stmts_formatted']|length > 1 %}
-        <div class="group_heading"
+        <div class="row group_heading"
            onclick="toggler('{{ short_name_key }}');"
            id="{{ short_name_key }}_heading">
-          <h5 class="align-middle">
-            {{ short_name }}{{ badges(src_counts) }}</h5>
+          <div class="col">
+            <h5 class="align-middle">{{ short_name }}</h5>
+          </div>
+          <div class="col text-right">
+            {{ badges(src_counts) }}
+          </div>
         </div>
-        <div class="group" id="{{ short_name_key }}_group">
+        <div class="row group" id="{{ short_name_key }}_group">
       {% else %}
-        <div class="group-shown" id="{{ short_name_key }}_group">
+        <div class="row group-shown" id="{{ short_name_key }}_group">
       {% endif %}
     {% for stmt_info in stmt_info_list %}
       <a name="{{ stmt_info['hash'] }}"></a>
-      <div class="statement">
-        <h5 class="align-middle">
-          {{ stmt_info['english'] }}
-          <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html"
-             target="_blank">
-            <small class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</small>
-          </a>
+      <div class="row statement">
+        <div class="col text-left">
+          <h5 class="align-middle">
+            {{ stmt_info['english'] }}
+            <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html"
+               target="_blank">
+              <small class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</small>
+            </a>
+          </h5>
+        </div>
+        <div class="col text-right">
           {{ badges(stmt_info['source_count']) }}
-        </h5>
+        </div>
       </div>
       <div class="evidence">
         <table class="table"
@@ -229,10 +257,8 @@
             <tr id="{{ ev['source_hash'] }}"
               style="border-bottom: 1px solid #FFFFFF;">
 
-              <td width="6em"
-                id="row{{ loop.index0 }}_click"
-                data-clicked="false"
-                class="curation_toggle"
+              <td width="6em" id="row{{ loop.index0 }}_click"
+                data-clicked="false" class="curation_toggle"
                 style="display: none">
                 &#9998;
               </td>
@@ -241,7 +267,8 @@
               {% if ev['text'] %}
                 <td width="100%">"{{ ev['text'] }}"</td>
               {% else %}
-                <td width="100%"><i>None evidence text available</i></td>
+                <td width="100%"><i>None evidence text
+                  available</i></td>
               {% endif %}
               <td width="25em" align="left"
                 style="white-space: nowrap">
