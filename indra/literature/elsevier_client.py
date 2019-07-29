@@ -3,11 +3,7 @@ For information on the Elsevier API, see:
   - API Specification: http://dev.elsevier.com/api_docs.html
   - Authentication: https://dev.elsevier.com/tecdoc_api_authentication.html
 """
-
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
-import re
 import logging
 import textwrap
 import datetime
@@ -16,13 +12,7 @@ import requests
 from time import sleep
 from indra.util import flatten
 from indra import has_config, get_config
-# Python3
-try:
-    from functools import lru_cache, wraps
-# Python2
-except ImportError:
-    from functools32 import lru_cache, wraps
-from indra.util import read_unicode_csv
+from functools import lru_cache, wraps
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger(__name__)
@@ -31,7 +21,7 @@ logger = logging.getLogger(__name__)
 # THE ELSEVIER API URL: ***MUST BE HTTPS FOR SECURITY***
 elsevier_api_url = 'https://api.elsevier.com/content' # <--- HTTPS
 elsevier_article_url_fmt = '%s/article/%%s' % elsevier_api_url
-elsevier_search_url = '%s/search/scidir' % elsevier_api_url
+elsevier_search_url = '%s/search/sciencedirect' % elsevier_api_url
 elsevier_entitlement_url = '%s/article/entitlement/doi' % elsevier_api_url
 
 # Namespaces for Elsevier XML elements
@@ -164,9 +154,9 @@ def download_article_from_ids(**id_dict):
     Parameters
     ----------
     <id_type> : str
-        You can enter any combination of eid, doi, pmid, and/or pii. Ids will be
-        checked in that order, until either content has been found or all ids
-        have been checked.
+        You can enter any combination of eid, doi, pmid, and/or pii. Ids will
+        be checked in that order, until either content has been found or all
+        ids have been checked.
 
     Returns
     -------
@@ -261,25 +251,26 @@ def extract_paragraphs(xml_string):
 
 @lru_cache(maxsize=100)
 @_ensure_api_keys('perform search')
-def get_dois(query_str, count=100):
-    """Search ScienceDirect through the API for articles.
+def get_dois(query_str, year=None, loaded_after=None):
+    """Search ScienceDirect through the API for articles and return DOIs.
 
-    See http://api.elsevier.com/content/search/fields/scidir for constructing a
-    query string to pass here.  Example: 'abstract(BRAF) AND all("colorectal
-    cancer")'
+    Parameters
+    ----------
+    query_str : str
+        The query string to search with.
+    year : Optional[str]
+        The year to constrain the search to.
+    loaded_after : Optional[str]
+        Date formatted as 'yyyy-MM-dd'T'HH:mm:ssX' to constrain the search
+        to articles loaded after this date. Example: 2019-06-01T00:00:00Z
+
+    Returns
+    -------
+    dois : list[str]
+        The list of DOIs identifying the papers returned by the search.
     """
-    url = '%s/%s' % (elsevier_search_url, query_str)
-    params = {'query': query_str,
-              'count': count,
-              'httpAccept': 'application/xml',
-              'sort': '-coverdate',
-              'field': 'doi'}
-    res = requests.get(url, params)
-    if not res.status_code == 200:
-        return None
-    tree = ET.XML(res.content, parser=UTB())
-    doi_tags = tree.findall('atom:entry/prism:doi', elsevier_ns)
-    dois = [dt.text for dt in doi_tags]
+    dois = search_science_direct(
+        query_str, field_name='doi', year=year, loaded_after=loaded_after)
     return dois
 
 
@@ -308,54 +299,96 @@ def get_piis(query_str):
 
 @lru_cache(maxsize=100)
 @_ensure_api_keys('perform search')
-def get_piis_for_date(query_str, date):
-    """Search ScienceDirect with a query string constrained to a given year.
+def get_piis_for_date(query_str, year=None, loaded_after=None):
+    """Search ScienceDirect through the API for articles and return PIIs.
 
     Parameters
     ----------
     query_str : str
-        The query string to search with
-    date : str
-        The year to constrain the search to
+        The query string to search with.
+    year : Optional[str]
+        The year to constrain the search to.
+    loaded_after : Optional[str]
+        Date formatted as 'yyyy-MM-dd'T'HH:mm:ssX' to constrain the search
+        to articles loaded after this date. Example: 2019-06-01T00:00:00Z
 
     Returns
     -------
     piis : list[str]
-        The list of PIIs identifying the papers returned by the search
+        The list of PIIs identifying the papers returned by the search.
     """
-    count = 200
-    params = {'query': query_str,
-              'count': count,
-              'start': 0,
-              'sort': '-coverdate',
-              'date': date,
+    piis = search_science_direct(
+        query_str, field_name='pii', year=year, loaded_after=loaded_after)
+    return piis
+
+
+@lru_cache(maxsize=100)
+@_ensure_api_keys('perform search')
+def search_science_direct(query_str, field_name, year=None, loaded_after=None):
+    """Search ScienceDirect for a given field with a query string.
+
+    Users can specify which field they are interested in and only values from
+    that field will be returned. It is also possible to restrict the search
+    either to a specific year of publication or to papers published after a
+    specific date.
+
+    Parameters
+    ----------
+    query_str : str
+        The query string to search with.
+    field_name : str
+        A name of the field of interest to be returned. Accepted values are:
+        authors, doi, loadDate, openAccess, pages, pii, publicationDate,
+        sourceTitle, title, uri, volumeIssue.
+    date : Optional[str]
+        The year to constrain the search to.
+    loaded_after : Optional[str]
+        Date formatted as 'yyyy-MM-dd'T'HH:mm:ssX' to constrain the search
+        to articles loaded after this date.
+
+    Returns
+    -------
+    all_parts : list[str]
+        The list of values from the field of interest identifying the papers
+        returned by the search.
+    """
+    count = 100
+    params = {'qs': query_str,
+              'display': {
+                  'offset': 0,
+                  'show': count,
+                  'sortBy': 'date'},
               'field': 'pii'}
-    all_piis = []
+    if year:
+        params['date'] = year
+    if loaded_after:
+        params['loadedAfter'] = loaded_after
+    all_parts = []
     while True:
-        res = requests.get(elsevier_search_url, params, headers=ELSEVIER_KEYS)
+        res = requests.put(
+            elsevier_search_url, json=params, headers=ELSEVIER_KEYS)
         if not res.status_code == 200:
             logger.info('Got status code: %d' % res.status_code)
             break
         res_json = res.json()
-        entries = res_json['search-results']['entry']
-        logger.info(res_json['search-results']['opensearch:totalResults'])
-        if entries == [{'@_fa': 'true', 'error': 'Result set was empty'}]:
+        total_results = res_json['resultsFound']
+        if total_results == 0:
             logger.info('Search result was empty')
             return []
-        piis = [entry['pii'] for entry in entries]
-        all_piis += piis
+        entries = res_json['results']
+        parts = [entry[field_name] for entry in entries]
+        all_parts += parts
         # Get next batch
-        links = res_json['search-results'].get('link', [])
         cont = False
-        for link in links:
-            if link.get('@ref') == 'next':
-                logger.info('Found link to next batch of results.')
-                params['start'] += count
-                cont = True
-                break
+        # We can only set offset up to 6000
+        if (params['display']['offset'] + count) <= min(total_results, 6000):
+            params['display']['offset'] += count
+            cont = True
+            # There is a quota on number of requests, wait to continue
+            sleep(1)
         if not cont:
             break
-    return all_piis
+    return all_parts
 
 
 def download_from_search(query_str, folder, do_extract_text=True,
