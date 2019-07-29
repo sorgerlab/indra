@@ -116,7 +116,7 @@
     }
   </script>
   <style>
-    {% for category, data in source_colors.items() %}
+    {% for category, data in source_colors %}
       {% for source, font_color in data['sources'].items() %}
         .source-{{ source }} {
           background-color: {{ font_color }};
@@ -144,7 +144,7 @@
 
 {% macro badges(src_counts) -%}
   {% if src_counts %}
-    {% for color_dict in source_colors.values() %}
+    {% for _, color_dict in source_colors %}
       {% if loop.index0 > 0 %}
         <span class="badge badge-source">|</span>
       {% endif %}
@@ -187,13 +187,13 @@
     </div>
     <div class="row justify-content-md-center">
       <div class="col-1 text-right">
-        readers
+        {{ source_colors[0][0] }}
       </div>
       <div class="col col-auto text-center">
         {{ badges(source_key_dict) }}
       </div>
       <div class="col-1 text-left">
-        databases
+        {{ source_colors[1][0] }}
       </div>
     </div>
     <hr>

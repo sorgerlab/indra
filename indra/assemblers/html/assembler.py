@@ -68,7 +68,7 @@ env = Environment(loader=IndraHTMLLoader())
 default_template = env.get_template('indra/statements_view.html')
 
 colors = ['#8dd3c7', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69',
-          '#fccde5', '#d9d9d9', '#bc80bd', '#ccebc5', '#ffffb3', '#ffed6f']
+          '#fccde5', '#bc80bd', '#ccebc5', '#ffffb3', '#d9d9d9', '#ffed6f']
 
 
 def color_gen():
@@ -77,20 +77,20 @@ def color_gen():
             yield color
 
 
-SOURCE_COLORS = {
-    'reading': {'color': 'white',
-                'sources': dict(zip(['reach', 'medscan', 'rlimsp', 'trips',
-                                     'sparser', 'isi', 'tees', 'geneways'],
-                                     color_gen()))},
-    'databases': {'color': 'black',
-                  'sources': dict(zip(['phosphosite', 'cbn', 'pc11',
-                                       'biopax', 'bel_lc',
-                                       'signor', 'biogrid', 'tas',
-                                       'lincs_drug', 'hprd', 'trrust'],
-                                      color_gen()))}
-}
+SOURCE_COLORS = [
+    ('databases', {'color': 'black',
+                   'sources': dict(zip(['phosphosite', 'cbn', 'pc11',
+                                        'biopax', 'bel_lc',
+                                        'signor', 'biogrid', 'tas',
+                                        'lincs_drug', 'hprd', 'trrust'],
+                                       color_gen()))}),
+    ('reading', {'color': 'white',
+                 'sources': dict(zip(['reach', 'medscan', 'rlimsp', 'trips',
+                                      'sparser', 'isi', 'tees', 'geneways'],
+                                     color_gen()))}),
+]
 
-SRC_KEY_DICT = {src: src for d in SOURCE_COLORS.values()
+SRC_KEY_DICT = {src: src for _, d in SOURCE_COLORS
                 for src in d['sources'].keys()}
 
 
