@@ -17,24 +17,38 @@ logger = logging.getLogger(__name__)
 class GroundingMapper(object):
     """Maps grounding of INDRA Agents based on a given grounding map.
 
+    Each parameter, if not provided will result in loading the corresponding
+    built-in grounding resource. To explicitly avoid loading the default,
+    pass in an empty data structure as the given parameter, e.g., ignores=[].
+
     Parameters
     ----------
-    grounding_map : dict
+    grounding_map : Optional[dict]
         The grounding map, a dictionary mapping strings (entity names) to
         a dictionary of database identifiers.
     agent_map : Optional[dict]
         A dictionary mapping strings to grounded INDRA Agents with given state.
+    ignores : Optional[list]
+        A list of entity strings that, if encountered will result in the
+        corresponding Statement being discarded.
+    misgrounding_map : Optional[dict]
+        A mapping dict similar to the grounding map which maps entity strings
+        to a given grounding which is known to be incorrect and should be
+        removed if encountered (making the remaining Agent ungrounded).
     use_adeft : Optional[bool]
         If True, Adeft will be attempted to be used for disambiguation of
         acronyms. Default: True
     """
-    def __init__(self, grounding_map, agent_map=None, ignores=None,
+    def __init__(self, grounding_map=None, agent_map=None, ignores=None,
                  misgrounding_map=None, use_adeft=True):
         self.check_grounding_map(grounding_map)
-        self.grounding_map = grounding_map
-        self.agent_map = agent_map if agent_map is not None else {}
-        self.ignores = set(ignores) if ignores else set()
-        self.misgrounding_map = misgrounding_map if misgrounding_map else {}
+        self.grounding_map = grounding_map if grounding_map is not None \
+            else default_grounding_map
+        self.agent_map = agent_map if agent_map is not None \
+            else default_agent_map
+        self.ignores = set(ignores) if ignores else default_ignores
+        self.misgrounding_map = misgrounding_map if misgrounding_map \
+            else default_misgrounding_map
         self.use_adeft = use_adeft
 
     @staticmethod
