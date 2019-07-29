@@ -91,7 +91,7 @@ SOURCE_COLORS = [
     ('reading', {'color': 'white',
                  'sources': dict(zip(['reach', 'medscan', 'rlimsp', 'trips',
                                       'sparser', 'isi', 'tees', 'geneways'],
-                                     color_gen('dark')))}),
+                                     color_gen('light')))}),
 ]
 
 SRC_KEY_DICT = {src: src for _, d in SOURCE_COLORS
