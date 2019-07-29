@@ -340,7 +340,7 @@ def search_science_direct(query_str, field_name, year=None, loaded_after=None):
         A name of the field of interest to be returned. Accepted values are:
         authors, doi, loadDate, openAccess, pages, pii, publicationDate,
         sourceTitle, title, uri, volumeIssue.
-    date : Optional[str]
+    year : Optional[str]
         The year to constrain the search to.
     loaded_after : Optional[str]
         Date formatted as 'yyyy-MM-dd'T'HH:mm:ssX' to constrain the search
