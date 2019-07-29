@@ -67,13 +67,17 @@ env = Environment(loader=IndraHTMLLoader())
 
 default_template = env.get_template('indra/statements_view.html')
 
-colors = ['#8dd3c7', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69',
-          '#fccde5', '#bc80bd', '#ccebc5', '#ffffb3', '#d9d9d9', '#ffed6f']
+color_schemes = {
+    'dark': ['#b2df8a', '#000099', '#6a3d9a', '#1f78b4', '#fdbf6f', '#ff7f00',
+             '#cab2d6', '#fb9a99', '#a6cee3', '#33a02c', '#b15928', '#e31a1c'],
+    'light': ['#8dd3c7', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69',
+              '#fccde5', '#bc80bd', '#ccebc5', '#ffffb3', '#d9d9d9', '#ffed6f']
+}
 
 
-def color_gen():
+def color_gen(scheme):
     while True:
-        for color in colors:
+        for color in color_schemes[scheme]:
             yield color
 
 
@@ -83,11 +87,11 @@ SOURCE_COLORS = [
                                         'biopax', 'bel_lc',
                                         'signor', 'biogrid', 'tas',
                                         'lincs_drug', 'hprd', 'trrust'],
-                                       color_gen()))}),
+                                       color_gen('light')))}),
     ('reading', {'color': 'white',
                  'sources': dict(zip(['reach', 'medscan', 'rlimsp', 'trips',
                                       'sparser', 'isi', 'tees', 'geneways'],
-                                     color_gen()))}),
+                                     color_gen('dark')))}),
 ]
 
 SRC_KEY_DICT = {src: src for _, d in SOURCE_COLORS
