@@ -173,6 +173,8 @@ def grounded_monomer_patterns(model, agent, ignore_activities=False):
     if not isinstance(agent, ist.Agent):
         monomer = model.monomers.get(agent.name)
         if not monomer:
+            monomer = model.monomers.get('_'.join(agent.name.split()))
+        if not monomer:
             return
         yield monomer()
     # Iterate over all model annotations to identify the monomer associated
