@@ -172,6 +172,7 @@ def grounded_monomer_patterns(model, agent, ignore_activities=False):
     # If it's not a molecular agent
     if not isinstance(agent, ist.Agent):
         monomer = model.monomers.get(agent.name)
+        # monomers have underscores between words
         if not monomer:
             monomer = model.monomers.get('_'.join(agent.name.split()))
         if not monomer:
