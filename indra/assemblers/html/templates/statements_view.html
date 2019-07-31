@@ -153,8 +153,8 @@
         {% if src_counts.get(src) %}
           <span class="badge badge-source source-{{ src }}"
               title="{{ src }}">
-            {{ src_counts.get(src) }}
-          </span>
+      {{ src_counts.get(src) }}
+      </span>
         {% endif %}
       {% endfor %}
     {% endfor %}
@@ -173,8 +173,9 @@
     <div class="row">
       <div class="col">
         <h3 {% if metadata %}
-          title="{% for n, v in metadata.items() %}{{ n }}: {{ v }}\n{% endfor %}"
-          {% endif %}>
+          title="
+              {% for n, v in metadata.items() %}{{ n }}: {{ v }}\n{% endfor %}"
+        {% endif %}>
           Statements
         </h3>
       </div>
@@ -234,6 +235,7 @@
         <div class="row group-shown" id="{{ short_name_key }}_group">
       {% endif %}
     {% for stmt_info in stmt_info_list %}
+      <div class="container">
       <a name="{{ stmt_info['hash'] }}"></a>
       <div class="row statement">
         <div class="col text-left">
@@ -249,7 +251,7 @@
           {{ badges(stmt_info['source_count']) }}
         </div>
       </div>
-      <div class="evidence">
+      <div class="row evidence">
         <table class="table"
              id="{{ stmt_info['hash'] }}"
              style="border-collapse: collapse;">
@@ -305,6 +307,7 @@
         </table>
       </div> <!-- evidence -->
     {% endfor %}
+    </div>
     </div> <!-- statement group presentation -->
     {% endfor %}
   </div>

@@ -92,28 +92,28 @@
 
 <body>
 <div class="container">
-  <!-- Page Header -->
-  <div class="page-header">
-    {% block header %}
-      <h1>{{ title }}</h1>
+    <!-- Page Header -->
+    <div class="page-header">
+        {% block header %}
+            <h1>{{ title }}</h1>
+        {% endblock %}
+    </div>
+    {% block header_desc %}
     {% endblock %}
-  </div>
-  {% block header_desc %}
-  {% endblock %}
-  <hr>
-  {% block body %}
-  {% endblock %}
-  <hr>
-  <!-- Footer -->
-  <footer class="footer text-muted" id="about">
-    <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
-
-    INDRA is developed by <a href="https://indralab.github.io/">indralabs</a>,
-    a part of the Harvard Medical School Laboratory of Systems Pharmacology.
-
-    {% block additional_footer %}
+    <hr>
+    {% block body %}
     {% endblock %}
-  </footer>
+    <hr>
+    <!-- Footer -->
+    <footer class="footer text-muted" id="about">
+        <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
+
+        INDRA is developed by <a href="https://indralab.github.io/">indralabs</a>,
+        a part of the Harvard Medical School Laboratory of Systems Pharmacology.
+
+        {% block additional_footer %}
+        {% endblock %}
+    </footer>
 </div>
 </body>
 </html>
