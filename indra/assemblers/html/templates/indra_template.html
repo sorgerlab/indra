@@ -94,7 +94,9 @@
 <div class="container">
   <!-- Page Header -->
   <div class="page-header">
-    <h1>{{ title }}</h1>
+    {% block header %}
+      <h1>{{ title }}</h1>
+    {% endblock %}
   </div>
   {% block header_desc %}
   {% endblock %}
