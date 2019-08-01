@@ -173,8 +173,8 @@
     <div class="row">
       <div class="col">
         <h3 {% if metadata %}
-          title="
-              {% for n, v in metadata.items() %}{{ n }}: {{ v }}\n{% endfor %}"
+          title="{% for n, v in metadata.items() %}{{ n }}: {{ v }}
+{% endfor %}"
         {% endif %}>
           Statements
         </h3>
