@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
 import json
+import time
 import logging
 import itertools
 from collections import OrderedDict
@@ -206,6 +207,7 @@ class CxAssembler(object):
         network_id = ndex_client.create_network(cx_str, ndex_cred, private)
         if network_id and style:
             template_id = None if style == 'default' else style
+            time.sleep(0.5)
             ndex_client.set_style(network_id, ndex_cred, template_id)
         return network_id
 

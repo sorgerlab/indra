@@ -125,10 +125,29 @@ def create_network(cx_str, ndex_cred=None, private=True):
 
     network_id = network_uri.rsplit('/')[-1]
     if not private:
+        time.sleep(0.5)
         nd.make_network_public(network_id)
     logger.info('The UUID for the uploaded network is: %s' % network_id)
     logger.info('View at: http://ndexbio.org/#/network/%s' % network_id)
     return network_id
+
+
+def add_to_network_set(network_id, set_id, ndex_cred=None):
+    username, password = get_default_ndex_cred(ndex_cred)
+    nd = ndex2.client.Ndex2('http://public.ndexbio.org',
+                            username=username,
+                            password=password)
+    logger.info('Adding network %s to network set %s' % (network_id, set_id))
+    nd.add_networks_to_networkset(set_id, [network_id])
+
+
+def set_network_name(network_id, name, ndex_cred=None):
+    username, password = get_default_ndex_cred(ndex_cred)
+    nd = ndex2.client.Ndex2('http://public.ndexbio.org',
+                            username=username,
+                            password=password)
+    nd.set_network_properties(network_id,
+                              [{'predicateString': 'name', 'value': name}])
 
 
 def update_network(cx_str, network_id, ndex_cred=None):
