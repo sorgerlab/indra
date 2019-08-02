@@ -173,7 +173,7 @@ class HtmlAssembler(object):
         """
         self.statements += statements
 
-    def make_model(self, template=None):
+    def make_model(self, template=None, **template_kwargs):
         """Return the assembled HTML content as a string.
 
         Returns
@@ -251,7 +251,8 @@ class HtmlAssembler(object):
                                      metadata=metadata, title=self.title,
                                      db_rest_url=db_rest_url,
                                      source_colors=SOURCE_COLORS,
-                                     source_key_dict=SRC_KEY_DICT)
+                                     source_key_dict=SRC_KEY_DICT,
+                                     **template_kwargs)
         return self.model
 
     def append_warning(self, msg):
