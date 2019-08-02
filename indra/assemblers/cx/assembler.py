@@ -1,22 +1,43 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import re
 import json
 import time
 import logging
 import itertools
+from ndex2.nice_cx_network import NiceCXNetwork
 from collections import OrderedDict
 from indra.statements import *
 from indra.databases import context_client, ndex_client, get_identifiers_url
 
-# Python 2
-try:
-    basestring
-# Python 3
-except:
-    basestring = str
 
 logger = logging.getLogger(__name__)
+
+
+class NiceCxAssembler(object):
+    def __init__(self, statements=None):
+        self.statements = statements if statements else []
+        self.network = NiceCXNetwork()
+
+    def make_model(self):
+        for stmt in self.statements:
+            agents = stmt.agent_list()
+            not_none_agents = [a for a in agents if a is not None]
+            if len(not_none_agents) < 2:
+                continue
+            for a1, a2 in itertools.combinations(not_none_agents, 2):
+                a1_id = self.add_node(a1)
+                a2_id = self.add_node(a2)
+                edge_id = self.add_edge(a1_id, a2_id, stmt)
+
+    def add_node(self, agent):
+        # TODO: figure out how to represent db_refs
+        # TODO: add any other node metadata if needed
+        node_id = self.network.create_node(agent.name, str(agent.db_refs))
+        return node_id
+
+    def add_edge(self, a1_id, a2_id, stmt):
+        stmt_type = stmt.__class__.__name__
+        edge_id = self.network.create_edge(a1_id, a2_id, stmt_type)
+        return edge_id
 
 
 class CxAssembler(object):

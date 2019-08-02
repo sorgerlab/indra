@@ -1,1 +1,1 @@
-from .assembler import CxAssembler
+from .assembler import CxAssembler, NiceCxAssembler
