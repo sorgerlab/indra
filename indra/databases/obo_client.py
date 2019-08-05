@@ -14,6 +14,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RESOURCES = os.path.join(HERE, os.pardir, 'resources')
 
 
+def _make_resource_path(directory, prefix):
+    return os.path.join(directory, '{prefix}.tsv'.format(prefix=prefix))
+
+
 class OboClient:
     """A base client for data that's been grabbed via OBO"""
 
@@ -21,7 +25,7 @@ class OboClient:
         """Read the OBO file export at the given path."""
         self.prefix = prefix
         self.directory = directory
-        self.mapping_path = os.path.join(directory, f'{self.prefix}.tsv')
+        self.mapping_path = _make_resource_path(self.directory, self.prefix)
         self.id_to_name = {}
         self.name_to_id = {}
         with open(self.mapping_path) as file:
@@ -32,12 +36,21 @@ class OboClient:
                 self.name_to_id[db_name] = db_id
 
     @staticmethod
-    def update_resource(directory, url, prefix, *, remove_prefix: bool = False):
+    def update_resource(
+            directory,
+            url,
+            prefix,
+            *,
+            remove_prefix: bool = False,
+    ) -> None:
         """Write the OBO information to files in the given directory."""
         prefix_upper = prefix.upper()
 
-        tsv_path = os.path.join(directory, f'{prefix}.tsv')
-        obo_path = os.path.join(directory, f'{prefix}.obo.pickle')
+        tsv_path = _make_resource_path(directory, prefix)
+        obo_path = os.path.join(
+            directory,
+            '{prefix}.obo.pickle'.format(prefix=prefix),
+        )
         if os.path.exists(obo_path):
             with open(obo_path, 'rb') as file:
                 g = pickle.load(file)
@@ -47,7 +60,12 @@ class OboClient:
                 pickle.dump(g, file)
 
         with open(tsv_path, 'w') as file:
-            print(f'{prefix}_id', 'name', sep='\t', file=file)
+            print(
+                '{prefix}_id'.format(prefix=prefix),
+                'name',
+                sep='\t',
+                file=file,
+            )
             for node, data in g.nodes(data=True):
                 if node.startswith(prefix_upper):
                     if remove_prefix:
