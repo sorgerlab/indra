@@ -26,7 +26,7 @@ OBO_SYNONYM = re.compile('EXACT|RELATED')
 class OboClient:
     """A base client for data that's been grabbed via OBO"""
 
-    def __init__(self, prefix, *, directory: str = RESOURCES):
+    def __init__(self, prefix, *, directory=RESOURCES):
         """Read the OBO file export at the given path."""
         self.prefix = prefix
         self.directory = directory
@@ -42,13 +42,7 @@ class OboClient:
             self.name_to_id[db_name] = db_id
 
     @staticmethod
-    def update_resource(
-            directory,
-            url,
-            prefix,
-            *,
-            remove_prefix: bool = False,
-    ) -> None:
+    def update_resource(directory, url, prefix, *args, remove_prefix=False):
         """Write the OBO information to files in the given directory."""
         prefix_upper = prefix.upper()
 
