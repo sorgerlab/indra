@@ -126,14 +126,14 @@ class Agent(Concept):
         fplx = self.db_refs.get('FPLX')
         if fplx:
             return 'FPLX', fplx
-        mirbase = self.db_refs.get('MIRBASE')
-        if mirbase:
-            return 'MIRBASE', mirbase
         hgnc = self.db_refs.get('HGNC')
         if hgnc:
             if isinstance(hgnc, list):
                 hgnc = hgnc[0]
             return 'HGNC', str(hgnc)
+        mirbase = self.db_refs.get('MIRBASE')
+        if mirbase:
+            return 'MIRBASE', mirbase
         up = self.db_refs.get('UP')
         if up:
             if isinstance(up, list):
