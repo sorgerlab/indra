@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 import requests
 import logging
 from functools import lru_cache
-from indra.databases import hgnc_client
+from indra.databases import hgnc_client, mesh_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger(__name__)
@@ -167,6 +167,31 @@ def get_ids_for_gene(hgnc_name, **kwargs):
         return []
     # Use a set to remove duplicate IDs
     ids = list(set([idt.text for idt in id_terms]))
+    return ids
+
+
+def get_ids_for_mesh(mesh_id, major_topic=False, **kwargs):
+    """Return PMIDs that are annotated with a given MeSH ID.
+
+    Parameters
+    ----------
+    mesh_id : str
+        The MeSH ID of a term to search for, e.g., D009101.
+    major_topic : bool
+        If True, only papers for which the given MeSH ID is annotated as
+        a major topic are returned. Otherwise all annotations are considered.
+        Default: False
+    **kwargs
+        Any further PudMed search arguments that are passed to
+        get_ids.
+    """
+    mesh_name = mesh_client.get_mesh_name(mesh_id)
+    if not mesh_name:
+        logger.error('Could not get MeSH name for ID %s' % mesh_id)
+        return []
+    suffix = 'majr' if major_topic else 'mh'
+    search_term = '%s [%s]' % (mesh_name, suffix)
+    ids = get_ids(search_term, use_text_word=False, **kwargs)
     return ids
 
 
@@ -352,7 +377,7 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     prepend_title : boolean
         If get_abstracts is True, specifies whether the article title should
         be prepended to the abstract text.
-    mesh_annotations : boolean
+    mesh_annotations : bool
         If True, extract mesh annotations from the pubmed entries and include
         in the returned data. If false, don't.
 
