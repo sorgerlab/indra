@@ -1,5 +1,4 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
+import time
 from indra.literature import id_lookup, get_full_text
 from indra.util import unicode_strs
 from nose.plugins.attrib import attr
@@ -32,6 +31,7 @@ def test_get_full_text_pubmed_abstract():
 
 @attr('webservice')
 def test_id_lookup():
+    time.sleep(0.5)
     res = id_lookup('17513615', 'pmid')
     assert res['doi'] == '10.1158/1535-7163.MCT-06-0807'
 
@@ -39,6 +39,7 @@ def test_id_lookup():
 @attr('webservice')
 def test_id_lookup_no_pmid():
     """Look up a paper that has a PMCID and DOI but not PMID."""
+    time.sleep(0.5)
     res = id_lookup('10.1083/jcb.1974if', 'doi')
     assert res['pmcid'] == 'PMC3352949'
     res = id_lookup('PMC3352949', 'pmcid')

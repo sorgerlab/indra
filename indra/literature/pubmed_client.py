@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 import requests
 import logging
 from functools import lru_cache
-from indra.databases import hgnc_client
+from indra.databases import hgnc_client, mesh_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger(__name__)
@@ -136,7 +136,7 @@ def get_ids_for_gene(hgnc_name, **kwargs):
 
     Parameters
     ----------
-    hgnc_name : string
+    hgnc_name : str
         The HGNC name of the gene. This is used to obtain the HGNC ID
         (using the hgnc_client module) and in turn used to obtain the Entrez
         ID associated with the gene. Entrez is then queried for that ID.
@@ -167,6 +167,31 @@ def get_ids_for_gene(hgnc_name, **kwargs):
         return []
     # Use a set to remove duplicate IDs
     ids = list(set([idt.text for idt in id_terms]))
+    return ids
+
+
+def get_ids_for_mesh(mesh_id, major_topic=False, **kwargs):
+    """Return PMIDs that are annotated with a given MeSH ID.
+
+    Parameters
+    ----------
+    mesh_id : str
+        The MeSH ID of a term to search for, e.g., D009101.
+    major_topic : bool
+        If True, only papers for which the given MeSH ID is annotated as
+        a major topic are returned. Otherwise all annotations are considered.
+        Default: False
+    **kwargs
+        Any further PudMed search arguments that are passed to
+        get_ids.
+    """
+    mesh_name = mesh_client.get_mesh_name(mesh_id)
+    if not mesh_name:
+        logger.error('Could not get MeSH name for ID %s' % mesh_id)
+        return []
+    suffix = 'majr' if major_topic else 'mh'
+    search_term = '%s [%s]' % (mesh_name, suffix)
+    ids = get_ids(search_term, use_text_word=False, **kwargs)
     return ids
 
 
@@ -343,16 +368,16 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     ----------
     tree : xml.etree.ElementTree
         ElementTree containing one or more PubmedArticle elements.
-    get_issns_from_nlm : boolean
+    get_issns_from_nlm : bool
         Look up the full list of ISSN number for the journal associated with
         the article, which helps to match articles to CrossRef search results.
         Defaults to False, since it slows down performance.
-    get_abstracts : boolean
+    get_abstracts : bool
         Indicates whether to include the Pubmed abstract in the results.
-    prepend_title : boolean
+    prepend_title : bool
         If get_abstracts is True, specifies whether the article title should
         be prepended to the abstract text.
-    mesh_annotations : boolean
+    mesh_annotations : bool
         If True, extract mesh annotations from the pubmed entries and include
         in the returned data. If false, don't.
 
@@ -426,15 +451,15 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
 
     Parameters
     ----------
-    pmid_list : list of PMIDs as strings
+    pmid_list : list of str
         Can contain 1-200 PMIDs.
-    get_issns_from_nlm : boolean
+    get_issns_from_nlm : bool
         Look up the full list of ISSN number for the journal associated with
         the article, which helps to match articles to CrossRef search results.
         Defaults to False, since it slows down performance.
-    get_abstracts : boolean
+    get_abstracts : bool
         Indicates whether to include the Pubmed abstract in the results.
-    prepend_title : boolean
+    prepend_title : bool
         If get_abstracts is True, specifies whether the article title should
         be prepended to the abstract text.
 
