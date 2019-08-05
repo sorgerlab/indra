@@ -199,6 +199,12 @@
         color: #FFFFFF;
     }
 
+    .curation-row {
+        overflow-y: hidden;
+        -webkit-transition: all 0.5s ease-in-out;
+        transition: all 0.5s ease-in-out;
+    }
+
     .curation_toggle {
         cursor: pointer;
     }
@@ -264,6 +270,7 @@
     <hr>
   </div>
   {% for results in stmt_data.values() %}
+    {% set i_pair = loop.index0 %}
     {% if stmt_data.values()|length > 1 %}
       <div class="row super_group_heading"
          id="tl-{{ results['html_key'] }}"
@@ -283,6 +290,7 @@
     {% endif %}
         <div class="container nvp">
         {% for short_name, short_name_key, stmt_info_list, src_counts in results['stmts_formatted'] %}
+          {% set i_type = loop.index0 %}
           {% if results['stmts_formatted']|length > 1 %}
             <div class="row group_heading"
                onclick="toggler('{{ short_name_key }}');"
@@ -300,6 +308,7 @@
           {% endif %}
               <div class="container nvp">
               {% for stmt_info in stmt_info_list %}
+                {% set i_stmt = loop.index0 %}
                 <a name="{{ stmt_info['hash'] }}"></a>
                 <div class="row statement">
                   <div class="col text-left nvp">
@@ -316,16 +325,18 @@
                   </div>
                 </div>
                 <div class="row evidence">
-                  <div class="container" id="{{ stmt_info['hash'] }}">
+                  <div class="container" id="stmt-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}"
+                       data-stmt_hash="{{ stmt_info['hash'] }}">
                     {% for ev in stmt_info['evidence'] %}
-                      <div class="row evidence-text" id="{{ ev['source_hash'] }}"
-                           style="border-bottom: 1px solid #FFFFFF;">
+                      <div class="row evidence-text" data-source_hash="{{ ev['source_hash'] }}"
+                           style="border-bottom: 1px solid #FFFFFF;"
+                           id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}">
 
                         <div class="col-1">
                             <div class="row">
                                 <div class="col-2 nvp curation_toggle"
-                                     id="row{{ loop.index0 }}_click"
-                                     data-clicked="false"
+                                     id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}-click"
+                                     data-parent_id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}"
                                      style="display: none">
                                     &#9998;
                                 </div>
