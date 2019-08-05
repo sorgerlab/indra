@@ -1,6 +1,6 @@
 __all__ = ['GroundingMapper', 'load_grounding_map', 'default_grounding_map',
            'default_agent_map', 'default_ignores', 'default_misgrounding_map',
-           'default_mapper']
+           'default_mapper', 'gm']
 import os
 import csv
 import json
@@ -567,6 +567,7 @@ def _load_default_ignores():
 
 
 default_grounding_map = _load_default_grounding_map()
+gm = default_grounding_map  # For backwards compatibility, redundant
 default_misgrounding_map = _load_default_misgrounding_map()
 default_agent_map = _load_default_agent_map()
 default_ignores = _load_default_ignores()
