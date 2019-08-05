@@ -17,6 +17,7 @@ def main():
                       'sofia': ['openpyxl'],
                       'bel': ['pybel'],
                       'sbml': ['python-libsbml'],
+                      'obo': ['obonet'],
                       # Tools and analysis
                       'machine': ['pytz', 'tzlocal', 'tweepy', 'pyyaml',
                                   'click'],
@@ -48,6 +49,7 @@ def main():
                     'indra.assemblers.english', 'indra.assemblers.figaro',
                     'indra.assemblers.graph', 'indra.assemblers.html',
                     'indra.assemblers.index_card',
+                    'indra.assemblers.indranet',
                     'indra.assemblers.kami', 'indra.assemblers.pybel',
                     'indra.assemblers.pysb', 'indra.assemblers.sbgn',
                     'indra.assemblers.sif', 'indra.assemblers.tsv',

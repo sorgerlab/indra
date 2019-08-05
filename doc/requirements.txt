@@ -12,3 +12,4 @@ rdflib==4.2.1
 jinja2
 protmapper
 pyyaml
+networkx>=2.1

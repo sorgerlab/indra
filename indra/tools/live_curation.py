@@ -100,29 +100,29 @@ class Corpus(object):
         """
         key_base = key_base_name + '/' + name + '/'
         key_base = key_base.replace('//', '/')  # # replace double slashes
+        keys = tuple(key_base + s + '.json' for s in ['raw_statements',
+                                                      'statements',
+                                                      'curations'])
         try:
             s3 = self._get_s3_client()
             # Structure and upload raw statements
+            logger.info('Uploading %s to S3' % keys[0])
             s3.put_object(
                 Body=json.dumps(stmts_to_json(self.raw_statements)),
-                Bucket=bucket, Key=key_base+'raw_statements.json')
+                Bucket=bucket, Key=keys[0])
 
             # Structure and upload assembled statements
+            logger.info('Uploading %s to S3' % keys[1])
             s3.put_object(
                 Body=_stmts_dict_to_json_str(self.statements),
-                Bucket=bucket, Key=key_base + 'statements.json')
+                Bucket=bucket, Key=keys[1])
 
             # Structure and upload curations
+            logger.info('Uploading %s to S3' % keys[2])
             s3.put_object(
                 Body=json.dumps(self.curations),
-                Bucket=bucket, Key=key_base + 'curations.json')
-            keys = tuple(key_base + s + '.json' for s in ['raw_statements',
-                                                          'statements',
-                                                          'curations'])
-            logger.info('Corpus uploaded as %s, %s and %s at %s.' %
-                        (*keys, key_base))
+                Bucket=bucket, Key=keys[2])
             return keys
-
         except Exception as e:
             logger.exception('Failed to put on s3: %s' % e)
             return None

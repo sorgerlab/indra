@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 class Delta(object):
     """The parent class of all delta types."""
-    def from_json(json_dict):
+    @classmethod
+    def from_json(cls, json_dict):
         delta_type = json_dict.get('type')
         if delta_type == 'qualitative':
             return QualitativeDelta.from_json(json_dict)

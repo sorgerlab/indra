@@ -51,7 +51,7 @@ class BioContext(Context):
              'species']
 
     def __eq__(self, other):
-        return all([getattr(self, attr, None) == getattr(self, attr, None)
+        return all([getattr(self, attr, None) == getattr(other, attr, None)
                     for attr in self.attrs])
 
     def __ne__(self, other):
@@ -282,7 +282,7 @@ class TimeContext(object):
         if self.end:
             pieces.append('end=%s' % self.end)
         if self.duration:
-            pieces.append('end=%s' % self.duration)
+            pieces.append('duration=%s' % self.duration)
         args = ', '.join(pieces)
         return 'TimeContext(%s)' % args
 

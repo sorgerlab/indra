@@ -1,8 +1,13 @@
+import logging
 from collections import defaultdict
 from itertools import permutations
+from numpy import array, concatenate, zeros
 
 from indra.assemblers.english import EnglishAssembler
 from indra.statements import Agent, get_statement_by_name
+
+
+logger = logging.getLogger(__name__)
 
 
 def _get_keyed_stmts(stmt_list):
@@ -37,7 +42,7 @@ def _get_keyed_stmts(stmt_list):
         yield key, s
 
 
-def group_and_sort_statements(stmt_list, ev_totals=None):
+def group_and_sort_statements(stmt_list, ev_totals=None, source_counts=None):
     """Group statements by type and arguments, and sort by prevalence.
 
     Parameters
@@ -58,23 +63,39 @@ def group_and_sort_statements(stmt_list, ev_totals=None):
         arguments (normalized strings), the count of statements with those
         arguements and type, and then the statement type.
     """
-    def _count(stmt):
+    if source_counts:
+        src_arrays = {}
+        for h, counts in source_counts.items():
+            src_arrays[h] = array(list(counts.values()))
+        n_counts = len(counts) + 1
+        cols = list(counts.keys())
+    else:
+        src_arrays = {}
+        n_counts = 1
+        cols = None
+
+    def _counts(stmt):
         sh = stmt.get_hash()
         if ev_totals is None or sh not in ev_totals:
-            return len(stmt.evidence)
+            tot = len(stmt.evidence)
         else:
-            return ev_totals[sh]
+            tot = ev_totals[sh]
+
+        if src_arrays and sh in src_arrays.keys():
+            return concatenate([array([tot]), src_arrays[sh]])
+        else:
+            return array([tot])
 
     stmt_rows = defaultdict(list)
-    stmt_counts = defaultdict(lambda: 0)
-    arg_counts = defaultdict(lambda: 0)
+    stmt_counts = defaultdict(lambda: zeros(n_counts))
+    arg_counts = defaultdict(lambda: zeros(n_counts))
     for key, s in _get_keyed_stmts(stmt_list):
         # Update the counts, and add key if needed.
         stmt_rows[key].append(s)
 
         # Keep track of the total evidence counts for this statement and the
         # arguments.
-        stmt_counts[key] += _count(s)
+        stmt_counts[key] += _counts(s)
 
         # Add up the counts for the arguments, pairwise for Complexes and
         # Conversions. This allows, for example, a complex between MEK, ERK,
@@ -83,28 +104,33 @@ def group_and_sort_statements(stmt_list, ev_totals=None):
         if key[0] == 'Conversion':
             subj = key[1]
             for obj in key[2] + key[3]:
-                arg_counts[(subj, obj)] += _count(s)
+                arg_counts[(subj, obj)] += _counts(s)
         else:
-            arg_counts[key[1:]] += _count(s)
+            arg_counts[key[1:]] += _counts(s)
 
     # Sort the rows by count and agent names.
-    def process_rows(stmt_rows):
+    def processed_rows(stmt_rows):
         for key, stmts in stmt_rows.items():
             verb = key[0]
             inps = key[1:]
-            sub_count = stmt_counts[key]
-            arg_count = arg_counts[inps]
+            sub_count = stmt_counts[key][0]
+            arg_count = arg_counts[inps][0]
             if verb == 'Complex' and sub_count == arg_count and len(inps) <= 2:
                 if all([len(set(ag.name for ag in s.agent_list())) > 2
                         for s in stmts]):
                     continue
             new_key = (arg_count, inps, sub_count, verb)
             stmts = sorted(stmts,
-                           key=lambda s: _count(s) + 1/(1+len(s.agent_list())),
+                           key=lambda s: _counts(s)[0] + 1/(1+len(s.agent_list())),
                            reverse=True)
-            yield new_key, verb, stmts
+            if source_counts:
+                yield new_key, verb, stmts,\
+                      dict(zip(cols, arg_counts[inps][1:].astype(int))),\
+                      dict(zip(cols, stmt_counts[key][1:].astype(int)))
+            else:
+                yield new_key, verb, stmts
 
-    sorted_groups = sorted(process_rows(stmt_rows),
+    sorted_groups = sorted(processed_rows(stmt_rows),
                            key=lambda tpl: tpl[0], reverse=True)
 
     return sorted_groups
@@ -155,3 +181,38 @@ def get_simplified_stmts(stmts):
     for key, s in _get_keyed_stmts(stmts):
         simple_stmts.append(make_stmt_from_sort_key(key, s.__class__.__name__))
     return simple_stmts
+
+
+def _str_conversion_bits(tpl):
+    bolds = ['<b>%s</b>' % el for el in tpl]
+    return ', '.join(bolds[:-1]) + ', and ' + bolds[-1]
+
+
+def make_top_level_label_from_names_key(names):
+    try:
+        if len(names) == 3 and isinstance(names[1], tuple):  # Conversions
+            el_from = _str_conversion_bits(names[1])
+            el_to = _str_conversion_bits(names[2])
+            tl_label = ("<b>%s</b> converts %s to %s"
+                        % (names[0], el_from, el_to))
+        else:
+            b_names = ['<b>%s</b>' % name for name in names]
+            if len(names) == 1:
+                tl_label = b_names[0]
+            elif len(names) == 2:  # Singleton Modifications
+                if names[0] is None or names[0] == 'None':
+                    tl_label = b_names[1] + " is modified"
+                else:
+                    tl_label = b_names[0] + " affects " + b_names[1]
+            elif names[1] == "activity":  # ActiveForms
+                if names[2] or names[2] == "True":
+                    tl_label = b_names[0] + " is active"
+                else:
+                    tl_label = b_names[0] + " is not active"
+            else:  # Large Complexes
+                tl_label = b_names[0] + " affects "
+                tl_label += ", ".join(b_names[1:-1]) + ', and ' + b_names[-1]
+        return tl_label
+    except Exception as e:
+        logger.error("Could not handle: %s" % names)
+        raise e

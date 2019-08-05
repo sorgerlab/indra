@@ -318,6 +318,7 @@ def update_cellular_component_hierarchy():
 def update_go_id_mappings():
     g = load_latest_go()
     go_client.update_id_mappings(g)
+    go_client.update_secondary_mappings(g)
 
 
 def update_bel_chebi_map():
@@ -669,6 +670,27 @@ def _process_mirbase_file(lines):
             yield mirbase_id, mirbase_name, db, identifier, name.rstrip('.')
 
 
+def update_doid():
+    """Update disease ontology."""
+    from indra.databases.obo_client import OboClient
+    url = 'http://purl.obolibrary.org/obo/doid.obo'
+    OboClient.update_resource(path, url, 'doid', remove_prefix=False)
+
+
+def update_efo():
+    """Update experimental factor ontology."""
+    from indra.databases.obo_client import OboClient
+    url = 'https://www.ebi.ac.uk/efo/efo.obo'
+    OboClient.update_resource(path, url, 'efo', remove_prefix=True)
+
+
+def update_hpo():
+    """Update human phenotype ontology."""
+    from indra.databases.obo_client import OboClient
+    url = 'http://purl.obolibrary.org/obo/hp.obo'
+    OboClient.update_resource(path, url, 'hp', remove_prefix=False)
+
+
 if __name__ == '__main__':
     update_go_id_mappings()
     update_cellular_component_hierarchy()
@@ -689,5 +711,8 @@ if __name__ == '__main__':
     update_ncit_map()
     update_lincs_small_molecules()
     update_lincs_proteins()
-    update_mesh_names()a
+    update_mesh_names()
     update_mirbase()
+    update_doid()
+    update_efo()
+    update_hpo()

@@ -1,28 +1,17 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-from indra.preassembler.grounding_mapper import *
+from indra.preassembler.grounding_mapper import default_mapper as gm
+from indra.preassembler.grounding_mapper import GroundingMapper
+from indra.preassembler.grounding_mapper.analysis import *
 from indra.statements import Agent, Phosphorylation, Complex, Inhibition, \
     Evidence, BoundCondition
 from indra.util import unicode_strs
 from nose.tools import raises
 from nose.plugins.attrib import attr
 
-# The grounding map
-# Format:
-#   - text string
-#   - ID
-#   - species (optional)
-#   - namespace: uniprot, mesh, go, pfam, etc. (MIRIAM namespace names)
-#   - type: BioProcess, Gene_or_gene_product, Family, Simple_chemical
-
-gm = [['Akt1', 'P31749', None, 'uniprot', 'Gene_or_gene_product']]
-
 
 def test_simple_mapping():
     akt = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP': 'XXXXXX'})
     stmt = Phosphorylation(None, akt)
-    gm = GroundingMapper(default_grounding_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     mapped_akt = mapped_stmts[0].sub
     assert mapped_akt.db_refs['TEXT'] == 'Akt'
@@ -33,9 +22,8 @@ def test_simple_mapping():
 def test_map_standardize_up_hgnc():
     a1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
     a2 = Agent('MAPK1', db_refs={'UP': 'P28482'})
-    gm = GroundingMapper(default_grounding_map)
     stmt = Phosphorylation(a1, a2)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     st = mapped_stmts[0]
     assert st.enz.db_refs['HGNC'] == st.sub.db_refs['HGNC']
@@ -58,9 +46,8 @@ def test_map_standardize_mirbase_hgnc():
 def test_map_standardize_chebi_pc():
     a1 = Agent('X', db_refs={'PUBCHEM': '42611257'})
     a2 = Agent('Y', db_refs={'CHEBI': 'CHEBI:63637'})
-    gm = GroundingMapper(default_grounding_map)
     stmt = Phosphorylation(a1, a2)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     st = mapped_stmts[0]
     assert st.enz.db_refs['PUBCHEM'] == st.sub.db_refs['PUBCHEM'], \
@@ -74,9 +61,8 @@ def test_map_standardize_chebi_pc():
 def test_map_standardize_chebi_hmdb():
     a1 = Agent('X', db_refs={'HMDB': 'HMDB0000122'})
     a2 = Agent('Y', db_refs={'CHEBI': 'CHEBI:4167'})
-    gm = GroundingMapper(default_grounding_map)
     stmt = Phosphorylation(a1, a2)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     st = mapped_stmts[0]
     assert st.enz.db_refs['CHEBI'] == st.sub.db_refs['CHEBI'], \
@@ -94,8 +80,7 @@ def test_bound_condition_mapping():
 
     stmt = Phosphorylation(None, akt)
 
-    gm = GroundingMapper(default_grounding_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
 
     s = mapped_stmts[0]
     mapped_akt = mapped_stmts[0].sub
@@ -115,8 +100,7 @@ def test_bound_condition_mapping_multi():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     akt.bound_conditions = [BoundCondition(erk)]
     stmt = Phosphorylation(akt, erk)
-    gm = GroundingMapper(default_grounding_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     s = mapped_stmts[0]
     mapped_akt = mapped_stmts[0].enz
     mapped_erk1 = mapped_akt.bound_conditions[0].agent
@@ -138,8 +122,7 @@ def test_bound_condition_mapping_agent_json():
     akt.bound_conditions = [BoundCondition(erk)]
     stmt = Phosphorylation(None, akt)
 
-    gm = GroundingMapper(default_grounding_map, default_agent_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
 
     s = mapped_stmts[0]
     mapped_akt = mapped_stmts[0].sub
@@ -156,8 +139,7 @@ def test_bound_condition_mapping_agent_json():
 def test_ignore():
     agent = Agent('FA', db_refs={'TEXT': 'FA'})
     stmt = Phosphorylation(None, agent)
-    gm = GroundingMapper(default_grounding_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 0
 
 
@@ -171,7 +153,6 @@ def test_renaming():
              Phosphorylation(None, akt_hgnc_from_up),
              Phosphorylation(None, akt_other),
              Phosphorylation(None, tat_up_no_hgnc), ]
-    gm = GroundingMapper(default_grounding_map)
     renamed_stmts = gm.rename_agents(stmts)
     assert len(renamed_stmts) == 4
     # Should draw on BE first
@@ -201,7 +182,7 @@ def test_hgnc_sym_but_not_up():
     stmt = Phosphorylation(None, erk)
     g_map = {'ERK1': {'TEXT': 'ERK1', 'HGNC': '6871'}}
     gm = GroundingMapper(g_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     mapped_erk = mapped_stmts[0].sub
     assert mapped_erk.name == 'MAPK1'
@@ -216,7 +197,7 @@ def test_up_but_not_hgnc():
     stmt = Phosphorylation(None, erk)
     g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482'}}
     gm = GroundingMapper(g_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     mapped_erk = mapped_stmts[0].sub
     assert mapped_erk.name == 'MAPK1'
@@ -231,7 +212,7 @@ def test_hgnc_but_not_up():
     stmt = Phosphorylation(None, erk)
     g_map = {'ERK1': {'TEXT': 'ERK1', 'HGNC': '6871'}}
     gm = GroundingMapper(g_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     mapped_erk = mapped_stmts[0].sub
     assert mapped_erk.name == 'MAPK1'
@@ -247,7 +228,7 @@ def test_hgnc_sym_with_no_id():
     stmt = Phosphorylation(None, erk)
     g_map = {'ERK1': {'TEXT': 'ERK1', 'HGNC': 'foobar'}}
     gm = GroundingMapper(g_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
 
 
 @raises(ValueError)
@@ -263,7 +244,7 @@ def test_up_with_no_gene_name_with_hgnc_sym():
     stmt = Phosphorylation(None, erk)
     g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'A0K5Q6', 'HGNC': '6871'}}
     gm = GroundingMapper(g_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     assert mapped_stmts[0].sub.db_refs['HGNC'] == '6871', \
         mapped_stmts[0].sub.db_refs
     assert mapped_stmts[0].sub.db_refs['UP'] == 'P28482', \
@@ -272,7 +253,6 @@ def test_up_with_no_gene_name_with_hgnc_sym():
 
 def test_multiple_mapped_up():
     ag = Agent('xx', db_refs={'HGNC': '377', 'UP': 'O43687'})
-    gm = GroundingMapper(default_grounding_map)
     gm.standardize_agent_name(ag, True)
     assert ag.db_refs['HGNC'] == '377'
     assert ag.db_refs['UP'] == 'O43687'
@@ -284,7 +264,7 @@ def test_up_and_mismatched_hgnc():
     stmt = Phosphorylation(None, erk)
     g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482', 'HGNC': '6877'}}
     gm = GroundingMapper(g_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     assert mapped_stmts[0].sub.db_refs['HGNC'] == '6877', \
         mapped_stmts[0].sub.db_refs
     assert mapped_stmts[0].sub.db_refs['UP'] == 'P27361', \
@@ -297,7 +277,7 @@ def test_up_id_with_no_hgnc_id():
     stmt = Phosphorylation(None, gag)
     g_map = {'Gag': {'TEXT': 'Gag', 'UP': 'P04585'}}
     gm = GroundingMapper(g_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     mapped_gag = mapped_stmts[0].sub
     assert mapped_gag.name == 'gag-pol'
@@ -313,7 +293,7 @@ def test_up_id_with_no_gene_name():
     stmt = Phosphorylation(None, no_gn)
     g_map = {'NoGN': {'TEXT': 'NoGN', 'UP': 'A0K5Q6'}}
     gm = GroundingMapper(g_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     mapped_ag = mapped_stmts[0].sub
     assert mapped_ag.name == 'NoGNname'
@@ -330,8 +310,8 @@ def test_in_place_overwrite_of_gm():
     stmt = Phosphorylation(None, erk)
     g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482'}}
     gm = GroundingMapper(g_map)
-    mapped_stmts = gm.map_agents([stmt])
-    gmap_after_mapping = gm.gm
+    mapped_stmts = gm.map_stmts([stmt])
+    gmap_after_mapping = gm.grounding_map
     assert set(gmap_after_mapping['ERK1'].keys()) == set(['TEXT', 'UP'])
 
 
@@ -344,7 +324,7 @@ def test_map_entry_hgnc_and_up():
     g_map = {'NF-kappaB p65': {'TEXT': 'NF-kappaB p65', 'UP': 'Q04206',
                                'HGNC': '9955'}}
     gm = GroundingMapper(g_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     ms = mapped_stmts[0]
     assert ms.sub.db_refs == {'TEXT': 'NF-kappaB p65', 'UP': 'Q04206',
@@ -355,8 +335,7 @@ def test_map_agent():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     p_erk = Agent('P-ERK', db_refs={'TEXT': 'p-ERK'})
     stmt = Complex([erk, p_erk])
-    gm = GroundingMapper(default_grounding_map, default_agent_map)
-    mapped_stmts = gm.map_agents([stmt])
+    mapped_stmts = gm.map_stmts([stmt])
     mapped_ag = mapped_stmts[0].members[1]
     assert mapped_ag.name == 'ERK'
     assert mapped_ag.db_refs.get('FPLX') == 'ERK'
@@ -406,13 +385,12 @@ def test_adeft_mapping():
                                                      text_refs={'PMID':
                                                                 pmid2})])
 
-    gm = GroundingMapper(default_grounding_map, default_agent_map)
-    mapped_stmts1 = gm.map_agents([stmt1])
+    mapped_stmts1 = gm.map_stmts([stmt1])
     assert mapped_stmts1[0].sub.name == 'ESR1'
     assert mapped_stmts1[0].sub.db_refs['HGNC'] == '3467'
     assert mapped_stmts1[0].sub.db_refs['UP'] == 'P03372'
 
-    mapped_stmts2 = gm.map_agents([stmt2])
+    mapped_stmts2 = gm.map_stmts([stmt2])
     assert mapped_stmts2[0].obj.name == 'endoplasmic reticulum', \
         mapped_stmts2[0].obj.name
     assert mapped_stmts2[0].obj.db_refs['GO'] == 'GO:0005783', \
@@ -420,3 +398,13 @@ def test_adeft_mapping():
 
     annotations = mapped_stmts2[0].evidence[0].annotations
     assert 'GO:GO:0005783' in annotations['agents']['adeft'][1]
+
+
+def test_misgrounding():
+    baz1 = Agent('ZNF214', db_refs={'TEXT': 'baz1', 'HGNC': '13006'})
+    stmt = Phosphorylation(None, baz1)
+    stmts = gm.map_stmts([stmt])
+    stmt = stmts[0]
+    assert len(stmt.sub.db_refs) == 1, stmt.sub.db_refs
+    assert stmt.sub.db_refs['TEXT'] == 'baz1'
+    assert stmt.sub.name == 'baz1'

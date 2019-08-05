@@ -83,3 +83,18 @@ miRBase client (:py:mod:`indra.databases.mirbase_client`)
 ---------------------------------------------------------
 .. automodule:: indra.databases.mirbase_client
     :members:
+
+Experimental Factor Ontology (EFO) client (:py:mod:`indra.databases.efo_client`)
+--------------------------------------------------------------------------------
+.. automodule:: indra.databases.efo_client
+    :members:
+
+Human Phenotype Ontology (HP) client (:py:mod:`indra.databases.hpo_client`)
+---------------------------------------------------------------------------
+.. automodule:: indra.databases.hpo_client
+    :members:
+
+Disease Ontology (DOID) client (:py:mod:`indra.databases.doid_client`)
+----------------------------------------------------------------------
+.. automodule:: indra.databases.doid_client
+    :members:

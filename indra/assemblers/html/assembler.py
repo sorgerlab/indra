@@ -7,25 +7,95 @@ from builtins import dict, str
 
 import re
 import uuid
-import itertools
-from os.path import abspath, dirname, join
-from jinja2 import Template
 import logging
+import itertools
+from collections import OrderedDict
+from os.path import abspath, dirname, join, exists, getmtime, sep
 
-logger = logging.getLogger(__name__)
+from jinja2 import Environment, BaseLoader, TemplateNotFound
 
 from indra.statements import *
 from indra.assemblers.english import EnglishAssembler
 from indra.databases import get_identifiers_url
-from indra.util.statement_presentation import group_and_sort_statements,\
-    make_string_from_sort_key
+from indra.util.statement_presentation import group_and_sort_statements, \
+    make_string_from_sort_key, make_top_level_label_from_names_key
+
+logger = logging.getLogger(__name__)
+HERE = dirname(abspath(__file__))
 
 
-# Create a template object from the template file, load once
-template_path = join(dirname(abspath(__file__)), 'template.html')
-with open(template_path, 'rt') as f:
-    template_str = f.read()
-    template = Template(template_str)
+class IndraHTMLLoader(BaseLoader):
+    """A home-grown template loader to load the INDRA templates.
+
+    Based on the example found here:
+    http://jinja.pocoo.org/docs/2.10/api/#loaders
+
+    Parameters
+    ----------
+    root_paths : dict
+        A dict of strings indicating possible roots for template directories,
+        keyed by basename. To be more specific, an entry
+        {'indra': '/path/to/module'} would mean that you expect to have
+        'indra/template.html' mapped to '/path/to/module/templates/template.html'.
+        The default is {'indra': HERE}.
+    """
+    native_path = HERE
+
+    def __init__(self, root_paths=None):
+        self.root_paths = root_paths
+        if root_paths is None:
+            self.root_paths = {'indra': HERE}
+
+    def get_source(self, environment, template):
+        path_parts = template.split(sep)
+        if len(path_parts) == 1 or not path_parts[0]:
+            root = self.root_paths[None]
+        else:
+            root = self.root_paths[path_parts[0]]
+            path_parts = path_parts[1:]
+
+        path = join(root, 'templates', *path_parts)
+        if not exists(path):
+            raise TemplateNotFound(template)
+        mtime = getmtime(path)
+        with open(path, 'r') as f:
+            source = f.read()
+        return source, path, lambda: mtime == getmtime(path)
+
+
+env = Environment(loader=IndraHTMLLoader())
+
+default_template = env.get_template('indra/statements_view.html')
+
+color_schemes = {
+    'dark': ['#b2df8a', '#000099', '#6a3d9a', '#1f78b4', '#fdbf6f', '#ff7f00',
+             '#cab2d6', '#fb9a99', '#a6cee3', '#33a02c', '#b15928', '#e31a1c'],
+    'light': ['#8dd3c7', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69',
+              '#fccde5', '#bc80bd', '#ccebc5', '#ffffb3', '#d9d9d9', '#ffed6f']
+}
+
+
+def color_gen(scheme):
+    while True:
+        for color in color_schemes[scheme]:
+            yield color
+
+
+SOURCE_COLORS = [
+    ('databases', {'color': 'black',
+                   'sources': dict(zip(['phosphosite', 'cbn', 'pc11',
+                                        'biopax', 'bel_lc',
+                                        'signor', 'biogrid', 'tas',
+                                        'lincs_drug', 'hprd', 'trrust'],
+                                       color_gen('light')))}),
+    ('reading', {'color': 'white',
+                 'sources': dict(zip(['reach', 'medscan', 'rlimsp', 'trips',
+                                      'sparser', 'isi', 'tees', 'geneways'],
+                                     color_gen('light')))}),
+]
+
+SRC_KEY_DICT = {src: src for _, d in SOURCE_COLORS
+                for src in d['sources'].keys()}
 
 
 class HtmlAssembler(object):
@@ -53,6 +123,11 @@ class HtmlAssembler(object):
     ev_totals : Optional[dict]
         A dictionary of the total evidence available for each
         statement indexed by hash. Default: None
+    source_counts : Optional[dict]
+        A dictionary of the itemized evidence counts, by source, available for
+        each statement, indexed by hash. Default: None.
+    title : str
+        The title to be printed at the top of the page.
     db_rest_url : Optional[str]
         The URL to a DB REST API to use for links out to further evidence.
         If given, this URL will be prepended to links that load additional
@@ -60,12 +135,6 @@ class HtmlAssembler(object):
         the configuration entry indra.config.get_config('INDRA_DB_REST_URL').
         If None, the URLs are constructed as relative links.
         Default: None
-    other_scripts : Optional[list]
-        A list of links to other scripts to be added to the html document. Used
-        in advanced configurations.
-    ev_element : Optional[str]
-        A extra element that may be placed at the beginning ahead of each line
-        of evidence.
 
     Attributes
     ----------
@@ -82,17 +151,16 @@ class HtmlAssembler(object):
     db_rest_url : str
         The URL to a DB REST API.
     """
+
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
-                 title='INDRA Results', db_rest_url=None, other_scripts=None,
-                 ev_element=None):
+                 source_counts=None, title='INDRA Results', db_rest_url=None):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
             else summary_metadata
         self.ev_totals = {} if ev_totals is None else ev_totals
+        self.source_counts = {} if source_counts is None else source_counts
         self.db_rest_url = db_rest_url
-        self.other_scripts = [] if other_scripts is None else other_scripts
-        self.ev_element = ev_element
         self.model = None
 
     def add_statements(self, statements):
@@ -105,7 +173,7 @@ class HtmlAssembler(object):
         """
         self.statements += statements
 
-    def make_model(self):
+    def make_model(self, template=None):
         """Return the assembled HTML content as a string.
 
         Returns
@@ -113,10 +181,33 @@ class HtmlAssembler(object):
         str
             The assembled HTML as a string.
         """
-        stmts_formatted = []
-        stmt_rows = group_and_sort_statements(self.statements,
-                                              self.ev_totals if self.ev_totals else None)
-        for key, verb, stmts in stmt_rows:
+        # Get an iterator over the statements, carefully grouped.
+        stmt_rows = group_and_sort_statements(
+            self.statements,
+            self.ev_totals if self.ev_totals else None,
+            self.source_counts if self.source_counts else None)
+
+        # Do some extra formatting.
+        tl_stmts = OrderedDict()
+        for row in stmt_rows:
+            # Distinguish between the cases with
+            if self.source_counts:
+                key, verb, stmts, tl_counts, src_counts = row
+            else:
+                key, verb, stmts = row
+                src_counts = None
+                tl_counts = None
+
+            names = key[1]
+            tl_key = '-'.join([str(name) for name in names])
+            tl_label = make_top_level_label_from_names_key(names)
+
+            if tl_key not in tl_stmts.keys():
+                tl_stmts[tl_key] = {'html_key': str(uuid.uuid4()),
+                                    'label': tl_label,
+                                    'source_counts': tl_counts,
+                                    'stmts_formatted': []}
+
             # This will now be ordered by prevalence and entity pairs.
             stmt_info_list = []
             for stmt in stmts:
@@ -124,32 +215,43 @@ class HtmlAssembler(object):
                 ev_list = self._format_evidence_text(stmt)
                 english = self._format_stmt_text(stmt)
                 if self.ev_totals:
-                    total_evidence = self.ev_totals.get(int(stmt_hash), '?')
-                    if total_evidence == '?':
+                    tot_ev = self.ev_totals.get(int(stmt_hash), '?')
+                    if tot_ev == '?':
                         logger.warning('The hash %s was not found in the '
                                        'evidence totals dict.' % stmt_hash)
-                    evidence_count_str = '%s / %s' % (len(ev_list), total_evidence)
+                    evidence_count_str = '%s / %s' % (len(ev_list), tot_ev)
                 else:
                     evidence_count_str = str(len(ev_list))
                 stmt_info_list.append({
                     'hash': stmt_hash,
                     'english': english,
                     'evidence': ev_list,
-                    'evidence_count': evidence_count_str})
+                    'evidence_count': evidence_count_str,
+                    'source_count': self.source_counts.get(stmt_hash)})
+
+            # Generate the short name for the statement and a unique key.
             short_name = make_string_from_sort_key(key, verb)
             short_name_key = str(uuid.uuid4())
-            stmts_formatted.append((short_name, short_name_key, stmt_info_list))
+
+            new_tpl = (short_name, short_name_key, stmt_info_list, src_counts)
+            tl_stmts[tl_key]['stmts_formatted'].append(new_tpl)
+
         metadata = {k.replace('_', ' ').title(): v
-                    for k, v in self.metadata.items()}
+                    for k, v in self.metadata.items()
+                    if not isinstance(v, list) and not isinstance(v, dict)}
         if self.db_rest_url and not self.db_rest_url.endswith('statements'):
             db_rest_url = self.db_rest_url + '/statements'
         else:
             db_rest_url = '.'
-        self.model = template.render(stmt_data=stmts_formatted,
+
+        # Fill the template.
+        if template is None:
+            template = default_template
+        self.model = template.render(stmt_data=tl_stmts,
                                      metadata=metadata, title=self.title,
                                      db_rest_url=db_rest_url,
-                                     other_scripts=self.other_scripts,
-                                     ev_element=self.ev_element)
+                                     source_colors=SOURCE_COLORS,
+                                     source_key_dict=SRC_KEY_DICT)
         return self.model
 
     def append_warning(self, msg):
@@ -192,6 +294,7 @@ class HtmlAssembler(object):
             Evidence objects. The text entry of the dict includes
             `<span>` tags identifying the agents referenced by the Statement.
         """
+
         def get_role(ag_ix):
             if isinstance(stmt, Complex) or \
                isinstance(stmt, SelfModification) or \
@@ -319,6 +422,7 @@ def tag_text(text, tag_info_list):
         String where the specified substrings have been surrounded by the
         given start and close tags.
     """
+
     # Check to tags for overlap and if there is any, return the subsumed
     # range. Return None if no overlap.
     def overlap(t1, t2):
@@ -329,6 +433,7 @@ def tag_text(text, tag_info_list):
                 return t1
         else:
             return None
+
     # Remove subsumed tags
     for t1, t2 in list(itertools.combinations(tag_info_list, 2)):
         subsumed_tag = overlap(t1, t2)

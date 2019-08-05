@@ -40,9 +40,12 @@ def test_pybel_neighborhood_query():
     unicode_strs(bp.statements)
     assert all([s.evidence[0].context.cell_line.name == 'MCF 10A'
                 for s in bp.statements])
-    assert bp.statements[0].evidence[0].context.__repr__() == \
-        bp.statements[0].evidence[0].context.__str__()
-    assert bp.statements[0].evidence[0].context == \
+    # Locate statement about epidermis development
+    stmt = [st for st in bp.statements if st.agent_list()[1].name ==
+            'epidermis development'][0]
+    assert stmt.evidence[0].context.__repr__() == \
+        stmt.evidence[0].context.__str__()
+    assert stmt.evidence[0].context == \
         BioContext(location=RefContext(name="Cytoplasm",
                                        db_refs={'MESH': 'D003593'}),
                    cell_line=RefContext(name="MCF 10A",
