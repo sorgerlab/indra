@@ -38,6 +38,10 @@ class NiceCxAssembler(object):
         else:
             node_id = self.network.create_node(agent.name, str(agent.db_refs))
             self.node_keys[agent_key] = node_id
+            self.network.add_node_attribute(property_of=node_id,
+                                            name='db_refs',
+                                            values=json.dumps(agent.db_refs),
+                                            type='string')
         return node_id
 
     def add_edge(self, a1_id, a2_id, stmt):
