@@ -7,8 +7,8 @@ from indra.assemblers.html.assembler import HtmlAssembler, tag_text, \
 
 
 def make_stmt():
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    ras = Agent('RAS', db_refs = {'FPLX': 'RAS'})
+    src = Agent('SRC', db_refs={'HGNC': '11283'})
+    ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
     ev = Evidence(text="We noticed that the Src kinase was able to "
                        "phosphorylate Ras proteins.",
                   source_api='test', pmid='1234567',

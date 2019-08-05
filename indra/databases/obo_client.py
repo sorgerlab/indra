@@ -51,7 +51,8 @@ class OboClient:
                 try:
                     xref_db, xref_db_id = xref.split(':', 1)
                 except ValueError:
-                    logger.debug('Could not parse xref %s for %s:%s', xref, db_id, db_name)
+                    logger.debug('Could not parse xref %s for %s:%s', xref,
+                                 db_id, db_name)
                 else:
                     self.id_to_xrefs[db_id][xref_db].append(xref_db_id)
 

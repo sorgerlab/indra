@@ -19,8 +19,8 @@ logger = logging.getLogger('indra.benchmarks.phosphorylations')
 
 def phosphosite_to_indra():
     df = pandas.DataFrame.from_csv(psite_fname, index_col=None)
-    df = df[df['KIN_ORGANISM']=='human']
-    dt = df[df['SUB_ORGANISM']=='human']
+    df = df[df['KIN_ORGANISM'] == 'human']
+    df = df[df['SUB_ORGANISM'] == 'human']
     stmts = []
     for _, row in df.iterrows():
         enz_name = row['GENE']
@@ -235,14 +235,17 @@ if __name__ == '__main__':
 
     not_found_stmts, found_stmts = compare_overlap(indra_stmts, ps_stmts)
     logger.info('%d phosphorylations found in Phosphosite' % len(found_stmts))
-    logger.info('%d phosphorylations not found in Phosphosite' % len(not_found_stmts))
+    logger.info('%d phosphorylations not found in Phosphosite' %
+                len(not_found_stmts))
 
     indra_stmts = filter_belief(indra_stmts)
-    logger.info('%d > 1 evidence phosphorylations in statements' % len(indra_stmts))
+    logger.info('%d > 1 evidence phosphorylations in statements' %
+                len(indra_stmts))
 
     not_found_stmts, found_stmts = compare_overlap(indra_stmts, ps_stmts)
     logger.info('%d phosphorylations found in Phosphosite' % len(found_stmts))
-    logger.info('%d phosphorylations not found in Phosphosite' % len(not_found_stmts))
+    logger.info('%d phosphorylations not found in Phosphosite' %
+                len(not_found_stmts))
 
     with open('not_found.tsv', 'wt') as fh:
         for i, st in enumerate(not_found_stmts):

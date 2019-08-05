@@ -9,8 +9,10 @@ def test_doid_client_loaded():
 
 
 def test_doid_id_to_name():
-    assert 'angiosarcoma' == doid_client.get_doid_name_from_doid_id('DOID:0001816')
+    assert 'angiosarcoma' == \
+        doid_client.get_doid_name_from_doid_id('DOID:0001816')
 
 
 def test_doid_name_to_id():
-    assert 'DOID:0001816' == doid_client.get_doid_id_from_doid_name('angiosarcoma')
+    assert 'DOID:0001816' == \
+        doid_client.get_doid_id_from_doid_name('angiosarcoma')
