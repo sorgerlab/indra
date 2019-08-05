@@ -1,7 +1,9 @@
 """A client for OBO-sourced identifier mappings."""
 
+import json
 import os
 import pickle
+import re
 
 import obonet
 
@@ -15,7 +17,10 @@ RESOURCES = os.path.join(HERE, os.pardir, 'resources')
 
 
 def _make_resource_path(directory, prefix):
-    return os.path.join(directory, '{prefix}.tsv'.format(prefix=prefix))
+    return os.path.join(directory, '{prefix}.json'.format(prefix=prefix))
+
+
+OBO_SYNONYM = re.compile('EXACT|RELATED')
 
 
 class OboClient:
@@ -29,11 +34,12 @@ class OboClient:
         self.id_to_name = {}
         self.name_to_id = {}
         with open(self.mapping_path) as file:
-            next(file)  # throw away the header
-            for line in file:
-                db_id, db_name = line.strip().split('\t')
-                self.id_to_name[db_id] = db_name
-                self.name_to_id[db_name] = db_id
+            entries = json.load(file)
+
+        for entry in entries:
+            db_id, db_name = entry['id'], entry['name']
+            self.id_to_name[db_id] = db_name
+            self.name_to_id[db_name] = db_id
 
     @staticmethod
     def update_resource(
@@ -46,7 +52,7 @@ class OboClient:
         """Write the OBO information to files in the given directory."""
         prefix_upper = prefix.upper()
 
-        tsv_path = _make_resource_path(directory, prefix)
+        resource_path = _make_resource_path(directory, prefix)
         obo_path = os.path.join(
             directory,
             '{prefix}.obo.pickle'.format(prefix=prefix),
@@ -59,18 +65,25 @@ class OboClient:
             with open(obo_path, 'wb') as file:
                 pickle.dump(g, file)
 
-        with open(tsv_path, 'w') as file:
-            print(
-                '{prefix}_id'.format(prefix=prefix),
-                'name',
-                sep='\t',
-                file=file,
-            )
-            for node, data in g.nodes(data=True):
-                if node.startswith(prefix_upper):
-                    if remove_prefix:
-                        node = node[len(prefix) + 1:]
-                    print(node, data['name'], sep='\t', file=file)
+        entries = []
+        for node, data in g.nodes(data=True):
+            if not node.startswith(prefix_upper):
+                continue
+            if remove_prefix:
+                node = node[len(prefix) + 1:]
+            entries.append({
+                'namespace': prefix,
+                'id': node,
+                'name': data['name'],
+                'synonyms': [
+                    OBO_SYNONYM.split(synonym)[0].strip('" ')
+                    for synonym in data.get('synonym', [])
+                ],
+                'xrefs': data.get('xref', []),
+            })
+
+        with open(resource_path, 'w') as file:
+            json.dump(entries, file, indent=2, sort_keys=True)
 
     def get_name_from_id(self, db_id):
         """Return the database name corresponding to the given database ID.
