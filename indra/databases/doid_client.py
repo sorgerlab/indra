@@ -36,3 +36,7 @@ def get_doid_id_from_doid_name(doid_name):
         The Disease Ontology identifier corresponding to the given name.
     """
     return _client.get_id_from_name(doid_name)
+
+
+if __name__ == '__main__':
+    print(*_client.count_xrefs().most_common(), sep='\n')

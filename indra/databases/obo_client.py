@@ -1,9 +1,11 @@
 """A client for OBO-sourced identifier mappings."""
 
 import json
+import logging
 import os
 import pickle
 import re
+from collections import Counter, defaultdict
 
 import obonet
 
@@ -14,6 +16,8 @@ __all__ = [
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RESOURCES = os.path.join(HERE, os.pardir, 'resources')
+
+logger = logging.getLogger(__name__)
 
 
 def _make_resource_path(directory, prefix):
@@ -31,8 +35,11 @@ class OboClient:
         self.prefix = prefix
         self.directory = directory
         self.mapping_path = _make_resource_path(self.directory, self.prefix)
+
         self.id_to_name = {}
         self.name_to_id = {}
+        self.id_to_xrefs = defaultdict(lambda: defaultdict(list))
+
         with open(self.mapping_path) as file:
             entries = json.load(file)
 
@@ -40,6 +47,13 @@ class OboClient:
             db_id, db_name = entry['id'], entry['name']
             self.id_to_name[db_id] = db_name
             self.name_to_id[db_name] = db_id
+            for xref in entry['xrefs']:
+                try:
+                    xref_db, xref_db_id = xref.split(':', 1)
+                except ValueError:
+                    logger.debug('Could not parse xref %s for %s:%s', xref, db_id, db_name)
+                else:
+                    self.id_to_xrefs[db_id][xref_db].append(xref_db_id)
 
     @staticmethod
     def update_resource(directory, url, prefix, *args, remove_prefix=False):
@@ -78,6 +92,15 @@ class OboClient:
 
         with open(resource_path, 'w') as file:
             json.dump(entries, file, indent=2, sort_keys=True)
+
+    def count_xrefs(self):
+        """Count how many xrefs there are to each database."""
+        return Counter(
+            xref_db
+            for db_id, xref_map in self.id_to_xrefs.items()
+            for xref_db, xref_db_ids in xref_map.items()
+            for _ in xref_db_ids
+        )
 
     def get_name_from_id(self, db_id):
         """Return the database name corresponding to the given database ID.
