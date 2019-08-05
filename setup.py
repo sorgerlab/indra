@@ -17,6 +17,7 @@ def main():
                       'sofia': ['openpyxl'],
                       'bel': ['pybel'],
                       'sbml': ['python-libsbml'],
+                      'obo': ['obonet'],
                       # Tools and analysis
                       'machine': ['pytz', 'tzlocal', 'tweepy', 'pyyaml',
                                   'click'],
