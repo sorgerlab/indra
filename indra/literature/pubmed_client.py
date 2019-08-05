@@ -136,7 +136,7 @@ def get_ids_for_gene(hgnc_name, **kwargs):
 
     Parameters
     ----------
-    hgnc_name : string
+    hgnc_name : str
         The HGNC name of the gene. This is used to obtain the HGNC ID
         (using the hgnc_client module) and in turn used to obtain the Entrez
         ID associated with the gene. Entrez is then queried for that ID.
@@ -368,13 +368,13 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     ----------
     tree : xml.etree.ElementTree
         ElementTree containing one or more PubmedArticle elements.
-    get_issns_from_nlm : boolean
+    get_issns_from_nlm : bool
         Look up the full list of ISSN number for the journal associated with
         the article, which helps to match articles to CrossRef search results.
         Defaults to False, since it slows down performance.
-    get_abstracts : boolean
+    get_abstracts : bool
         Indicates whether to include the Pubmed abstract in the results.
-    prepend_title : boolean
+    prepend_title : bool
         If get_abstracts is True, specifies whether the article title should
         be prepended to the abstract text.
     mesh_annotations : bool
@@ -451,15 +451,15 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
 
     Parameters
     ----------
-    pmid_list : list of PMIDs as strings
+    pmid_list : list of str
         Can contain 1-200 PMIDs.
-    get_issns_from_nlm : boolean
+    get_issns_from_nlm : bool
         Look up the full list of ISSN number for the journal associated with
         the article, which helps to match articles to CrossRef search results.
         Defaults to False, since it slows down performance.
-    get_abstracts : boolean
+    get_abstracts : bool
         Indicates whether to include the Pubmed abstract in the results.
-    prepend_title : boolean
+    prepend_title : bool
         If get_abstracts is True, specifies whether the article title should
         be prepended to the abstract text.
 
