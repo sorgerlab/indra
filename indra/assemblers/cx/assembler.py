@@ -13,10 +13,13 @@ logger = logging.getLogger(__name__)
 
 
 class NiceCxAssembler(object):
-    def __init__(self, statements=None):
+    def __init__(self, statements=None, name=None):
         self.statements = statements if statements else []
         self.network = NiceCXNetwork()
+        self.network.set_network_attribute('name', (name if name else
+                                                    'indra_assembled'))
         self.node_keys = {}
+        self.citation_keys = {}
 
     def make_model(self):
         for stmt in self.statements:
@@ -30,8 +33,6 @@ class NiceCxAssembler(object):
                 edge_id = self.add_edge(a1_id, a2_id, stmt)
 
     def add_node(self, agent):
-        # TODO: figure out how to represent db_refs
-        # TODO: add any other node metadata if needed
         agent_key = self.get_agent_key(agent)
         if agent_key in self.node_keys:
             node_id = self.node_keys[agent_key]
@@ -47,6 +48,13 @@ class NiceCxAssembler(object):
     def add_edge(self, a1_id, a2_id, stmt):
         stmt_type = stmt.__class__.__name__
         edge_id = self.network.create_edge(a1_id, a2_id, stmt_type)
+        for ev in stmt.evidence:
+            cit = self.get_citation_key(ev)
+            if cit:
+                if cit in self.citation_keys:
+                    cit_key = self.citation_keys[cit]
+                else:
+                    cit_key = self.network.add_citation()
         return edge_id
 
     def print_model(self):
@@ -54,6 +62,9 @@ class NiceCxAssembler(object):
 
     def get_agent_key(self, agent):
         return agent.name
+
+    def get_citation_key(self, evidence):
+        return evidence.pmid
 
 
 class CxAssembler(object):
