@@ -35,6 +35,15 @@ def test_get_id_count():
 
 
 @attr('webservice')
+def test_get_id_mesh():
+    time.sleep(0.5)
+    ids = pubmed_client.get_ids_for_mesh('D009101')
+    assert len(ids) > 35000
+    ids_maj = pubmed_client.get_ids_for_mesh('D009101', major_topic=True)
+    assert len(ids_maj) < len(ids)
+
+
+@attr('webservice')
 def test_get_pmc_ids():
     time.sleep(0.5)
     ids = pubmed_client.get_ids('braf', retmax=10, db='pmc')
