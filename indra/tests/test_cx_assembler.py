@@ -32,6 +32,15 @@ def test_phos_nice():
     cxa.make_model()
     assert len(cxa.network.nodes) == 2
     assert len(cxa.network.edges) == 1
+    print(cxa.print_model())
+
+
+def test_gapgef_nice():
+    cxa = NiceCxAssembler([st_gef, st_gap])
+    cxa.make_model()
+    assert len(cxa.network.nodes) == 3, cxa.network.nodes
+    assert len(cxa.network.edges) == 2
+    print(cxa.print_model())
 
 
 def test_dephos():

@@ -16,6 +16,7 @@ class NiceCxAssembler(object):
     def __init__(self, statements=None):
         self.statements = statements if statements else []
         self.network = NiceCXNetwork()
+        self.node_keys = {}
 
     def make_model(self):
         for stmt in self.statements:
@@ -31,13 +32,24 @@ class NiceCxAssembler(object):
     def add_node(self, agent):
         # TODO: figure out how to represent db_refs
         # TODO: add any other node metadata if needed
-        node_id = self.network.create_node(agent.name, str(agent.db_refs))
+        agent_key = self.get_agent_key(agent)
+        if agent_key in self.node_keys:
+            node_id = self.node_keys[agent_key]
+        else:
+            node_id = self.network.create_node(agent.name, str(agent.db_refs))
+            self.node_keys[agent_key] = node_id
         return node_id
 
     def add_edge(self, a1_id, a2_id, stmt):
         stmt_type = stmt.__class__.__name__
         edge_id = self.network.create_edge(a1_id, a2_id, stmt_type)
         return edge_id
+
+    def print_model(self):
+        return self.network.to_cx()
+
+    def get_agent_key(self, agent):
+        return agent.name
 
 
 class CxAssembler(object):
