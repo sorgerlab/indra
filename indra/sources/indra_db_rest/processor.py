@@ -155,8 +155,16 @@ class IndraDBRestProcessor(object):
         return self.__evidence_counts.get(str(stmt_hash))
 
     def get_source_counts(self):
-        """Get the total evidence count for a statement hash."""
+        """Get the source counts as a dict per statement hash."""
         return deepcopy(self.__source_counts)
+
+    def get_source_count(self, stmt):
+        """Get the source counts for a given statement."""
+        return self.get_source_count_by_hash(stmt.get_hash(shallow=True))
+
+    def get_source_count_by_hash(self, stmt_hash):
+        """Get the source counts for a given statement."""
+        return self.__source_counts.get(stmt_hash)
 
     def get_ev_counts(self):
         """Get a dictionary of evidence counts."""

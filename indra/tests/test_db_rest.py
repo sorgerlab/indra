@@ -156,12 +156,15 @@ def test_paper_query():
 
 @attr('nonpublic')
 def test_regulate_amount():
-    stmts = dbr.get_statements('FOS', stmt_type='RegulateAmount',
-                               simple_response=True)
-    print(len(stmts))
+    idbp = dbr.get_statements('FOS', stmt_type='RegulateAmount',
+                              simple_response=False)
+    stmts = idbp.statements
     stmt_types = {type(s).__name__ for s in stmts}
-    print(stmt_types)
-    assert {'IncreaseAmount', 'DecreaseAmount'}.issubset(stmt_types), stmt_types
+    counts = idbp.get_source_counts()
+    one_key = list(counts.keys())[0]
+    assert counts[one_key] == idbp.get_source_count_by_hash(one_key)
+    assert {'IncreaseAmount', 'DecreaseAmount'}.issubset(stmt_types), \
+        stmt_types
 
 
 @attr('nonpublic')
