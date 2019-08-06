@@ -501,40 +501,6 @@ class ModelChecker(object):
                               if in_deg == 0 and node[1] == 1]
         return graph
 
-    def _get_signed_predecessors(self, graph, node, polarity):
-        """Get upstream nodes in the graph.
-
-        Return the upstream nodes along with the overall polarity of the path
-        to that node by account for the polarity of the path to the given node
-        and the polarity of the edge between the given node and its immediate
-        predecessors.
-
-        Parameters
-        ----------
-        graph : one of the networkx graph types
-            Graph representing the model.
-        node : str
-            The node (agent or rule name) in the graph to get predecessors
-            (upstream nodes) for.
-        polarity : int
-            Polarity of the overall path to the given node.
-
-
-        Returns
-        -------
-        generator of tuples, (node, polarity)
-            Each tuple returned contains two elements, a node (string) and the
-            polarity of the overall path (int) to that node.
-        """
-        signed_pred_list = []
-        for pred in graph.predecessors(node):
-            pred_edge = (pred, node)
-            yield (pred, self._get_edge_sign(graph, pred_edge) * polarity)
-
-    def _get_edge_sign(self, graph, edge):
-        """Get the polarity of the influence by examining the edge sign."""
-        raise NotImplementedError("Method must be implemented in child class.")
-
     def make_false_result(self, result_code, max_paths, max_path_length):
         return PathResult(False, result_code, max_paths, max_path_length)
 
@@ -590,28 +556,28 @@ class ModelChecker(object):
         # return self._path_with_polarities(graph, rev)
         return rev
 
-    def _path_with_polarities(self, graph, path):
-        # This doesn't address the effect of the rules themselves on the
-        # observables of interest--just the effects of the rules on each other
-        edge_polarities = []
-        path_list = list(path)
-        edges = zip(path_list[0:-1], path_list[1:])
-        for from_tup, to_tup in edges:
-            from_rule = from_tup[0]
-            to_rule = to_tup[0]
-            edge = (from_rule, to_rule)
-            edge_polarities.append(self._get_edge_sign(graph, edge))
-        # Compute and return the overall path polarity
-        # path_polarity = np.prod(edge_polarities)
-        # Calculate left product of edge polarities return
-        polarities_lprod = [1]
-        for ep_ix, ep in enumerate(edge_polarities):
-            polarities_lprod.append(polarities_lprod[-1] * ep)
-        assert len(path) == len(polarities_lprod)
-        return tuple(zip([node for node, sign in path], polarities_lprod))
-        # assert path_polarity == 1 or path_polarity == -1
-        # return True if path_polarity == 1 else False
-        # return path_polarity
+    # def _path_with_polarities(self, graph, path):
+    #     # This doesn't address the effect of the rules themselves on the
+    #     # observables of interest--just the effects of the rules on each other
+    #     edge_polarities = []
+    #     path_list = list(path)
+    #     edges = zip(path_list[0:-1], path_list[1:])
+    #     for from_tup, to_tup in edges:
+    #         from_rule = from_tup[0]
+    #         to_rule = to_tup[0]
+    #         edge = (from_rule, to_rule)
+    #         edge_polarities.append(_get_edge_sign(graph, edge))
+    #     # Compute and return the overall path polarity
+    #     # path_polarity = np.prod(edge_polarities)
+    #     # Calculate left product of edge polarities return
+    #     polarities_lprod = [1]
+    #     for ep_ix, ep in enumerate(edge_polarities):
+    #         polarities_lprod.append(polarities_lprod[-1] * ep)
+    #     assert len(path) == len(polarities_lprod)
+    #     return tuple(zip([node for node, sign in path], polarities_lprod))
+    #     # assert path_polarity == 1 or path_polarity == -1
+    #     # return True if path_polarity == 1 else False
+    #     # return path_polarity
 
 
 class PysbModelChecker(ModelChecker):
@@ -777,7 +743,7 @@ class PysbModelChecker(ModelChecker):
                 if node_attributes[neighb] != 'variable':
                     continue
                 # Get the edge and check the polarity
-                edge_sign = self._get_edge_sign(self._im, (rule.name, neighb))
+                edge_sign = _get_edge_sign(self._im, (rule.name, neighb))
                 obs_list.append((neighb, edge_sign))
             self.rule_obs_dict[rule.name] = obs_list
         return self._im
@@ -869,25 +835,6 @@ class PysbModelChecker(ModelChecker):
         logger.debug('Final input rule set contains %d rules' %
                      len(input_rule_set))
         return input_rule_set
-
-    def _get_edge_sign(self, im, edge):
-        """Get the polarity of the influence by examining the edge sign."""
-        edge_data = im[edge[0]][edge[1]]
-        # Handle possible multiple edges between nodes
-        signs = list(set([v['sign'] for v in edge_data.values()
-                          if v.get('sign')]))
-        if len(signs) > 1:
-            logger.warning("Edge %s has conflicting polarities; choosing "
-                           "positive polarity by default" % str(edge))
-            sign = 1
-        else:
-            sign = signs[0]
-        if sign is None:
-            raise Exception('No sign attribute for edge.')
-        elif abs(sign) == 1:
-            return sign
-        else:
-            raise Exception('Unexpected edge sign: %s' % edge.attr['sign'])
 
     def _sample_paths(self, input_rule_set, obs_name, target_polarity,
                       max_paths=1, max_path_length=5):
@@ -1194,7 +1141,7 @@ class PysbModelChecker(ModelChecker):
     def _im_to_signed_digraph(self, im):
         edges = []
         for e in im.edges():
-            edge_sign = self._get_edge_sign(im, e)
+            edge_sign = _get_edge_sign(im, e)
             polarity = 0 if edge_sign > 0 else 1
             edges.append((e[0], e[1], {'sign': polarity}))
         dg = nx.DiGraph()
@@ -1225,9 +1172,6 @@ class UnsignedModelChecker(ModelChecker):
         for (u, v) in self.model.edges:
             new_graph.add_edge((u, 0), (v, 0))
         return new_graph
-
-    def _get_edge_sign(self, graph, edge):
-        return 1
 
     def process_statement(self, stmt):
         subj, obj = stmt.agent_list()
@@ -1262,25 +1206,6 @@ class SignedGraphModelChecker(ModelChecker):
 
     def get_graph(self):
         return self.signed_edges_to_signed_nodes(self.model)
-
-    def _get_edge_sign(self, graph, edge):
-        """Get the sign of the edge."""
-        edge_data = graph[edge[0]][edge[1]]
-        # Handle possible multiple edges between nodes
-        signs = list(set([v['sign'] for v in edge_data.values()
-                          if v.get('sign')]))
-        if len(signs) > 1:
-            logger.warning("Edge %s has conflicting polarities; choosing "
-                           "positive polarity by default" % str(edge))
-            sign = 1
-        else:
-            sign = signs[0]
-        if sign is None:
-            raise Exception('No sign attribute for edge.')
-        elif abs(sign) == 1:
-            return sign
-        else:
-            raise Exception('Unexpected edge sign: %s' % edge.attr['sign'])
 
     def process_statement(self, stmt):
         # Get the polarity for the statement
@@ -1392,6 +1317,53 @@ def remove_im_params(model, im):
             im.remove_node(param.name)
         except:
             pass
+
+
+def _get_signed_predecessors(im, node, polarity):
+    """Get upstream nodes in the influence map.
+    Return the upstream nodes along with the overall polarity of the path
+    to that node by account for the polarity of the path to the given node
+    and the polarity of the edge between the given node and its immediate
+    predecessors.
+    Parameters
+    ----------
+    im : networkx.MultiDiGraph
+        Graph containing the influence map.
+    node : str
+        The node (rule name) in the influence map to get predecessors (upstream
+        nodes) for.
+    polarity : int
+        Polarity of the overall path to the given node.
+    Returns
+    -------
+    generator of tuples, (node, polarity)
+        Each tuple returned contains two elements, a node (string) and the
+        polarity of the overall path (int) to that node.
+    """
+    signed_pred_list = []
+    for pred in im.predecessors(node):
+        pred_edge = (pred, node)
+        yield (pred, _get_edge_sign(im, pred_edge) * polarity)
+
+
+def _get_edge_sign(im, edge):
+    """Get the polarity of the influence by examining the edge sign."""
+    edge_data = im[edge[0]][edge[1]]
+    # Handle possible multiple edges between nodes
+    signs = list(set([v['sign'] for v in edge_data.values()
+                                  if v.get('sign')]))
+    if len(signs) > 1:
+        logger.warning("Edge %s has conflicting polarities; choosing "
+                       "positive polarity by default" % str(edge))
+        sign = 1
+    else:
+        sign = signs[0]
+    if sign is None:
+        raise Exception('No sign attribute for edge.')
+    elif abs(sign) == 1:
+        return sign
+    else:
+        raise Exception('Unexpected edge sign: %s' % edge.attr['sign'])
 
 
 def _add_modification_to_agent(agent, mod_type, residue, position):
