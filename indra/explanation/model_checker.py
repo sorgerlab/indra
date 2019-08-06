@@ -1284,13 +1284,13 @@ class PybelModelChecker(ModelChecker):
         if subj is None or subj_node not in self.graph.nodes:
             return (None, None, 'SUBJECT_NOT_FOUND')
         if obj is not None:
-            obj_node = (_get_agent_node(obj), target_polarity)
-        if obj is None or obj_node is not in self.graph.nodes:
+            obj_node = (_get_agent_node(obj)[0], target_polarity)
+        if obj is None or obj_node not in self.graph.nodes:
             return (None, None, 'OBJECT_NOT_FOUND')
         return ([subj_node], [obj_node], None)
 
     def process_subject(self, subj):
-        return [subj]
+        return [subj], None
 
 
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
