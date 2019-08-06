@@ -6,7 +6,6 @@ import pandas
 import rdflib
 import logging
 import requests
-from tqdm import tqdm
 import itertools as itt
 from zipfile import ZipFile
 from collections import defaultdict
@@ -615,7 +614,7 @@ def update_mesh_names():
         logging.info('Parsing MeSH descriptors')
         et = ET.parse(desc_file)
     rows = []
-    for record in tqdm(et.iterfind('DescriptorRecord')):
+    for record in et.iterfind('DescriptorRecord'):
         # We first get the ID and the name
         uid = record.find('DescriptorUI').text
         name = record.find('DescriptorName/String').text
@@ -632,7 +631,7 @@ def update_mesh_names():
         logging.info('Parsing MeSH supplement')
         supp_et = ET.parse(supp_file)
     supp_rows = []
-    for record in tqdm(supp_et.iterfind('SupplementalRecord')):
+    for record in supp_et.iterfind('SupplementalRecord'):
         uid = record.find('SupplementalRecordUI').text
         name = record.find('SupplementalRecordName/String').text
         term_name_str = _get_term_name_str(record, name)
