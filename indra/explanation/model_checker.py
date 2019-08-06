@@ -18,7 +18,8 @@ from indra.statements import *
 from indra.assemblers.pysb import assembler as pa
 from collections import Counter
 from indra.assemblers.pysb.kappa_util import im_json_to_graph
-from indra.assemblers.pybel.assembler import belgraph_to_signed_graph
+from indra.assemblers.pybel.assembler import belgraph_to_signed_graph, \
+    _get_agent_node
 
 try:
     import paths_graph as pg
@@ -1258,10 +1259,31 @@ class PybelModelChecker(ModelChecker):
         return graph
 
     def process_statement(self, stmt):
-        pass
+        # Get the polarity for the statement
+        if isinstance(stmt, Modification):
+            target_polarity = 1 if isinstance(stmt, RemoveModification) else 0
+        elif isinstance(stmt, RegulateActivity):
+            target_polarity = 0 if stmt.is_activation else 1
+        elif isinstance(stmt, RegulateAmount):
+            target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
+        elif isinstance(stmt, Influence):
+            target_polarity = 1 if stmt.overall_polarity() == -1 else 0
+        # If it is a different type of statement, use positive polarity
+        else:
+            target_polarity = 0
+        subj, obj = stmt.agent_list()
+        if subj is not None:
+            subj_node = (_get_agent_node(subj)[0], 0)
+        if subj is None or subj_node not in self.graph.nodes:
+            return (None, None, 'SUBJECT_NOT_FOUND')
+        if obj is not None:
+            obj_node = (_get_agent_node(obj), target_polarity)
+        if obj is None or obj_node is not in self.graph.nodes:
+            return (None, None, 'OBJECT_NOT_FOUND')
+        return ([subj_node], [obj_node], None)
 
     def process_subject(self, subj):
-        pass
+        return [subj]
 
 
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
