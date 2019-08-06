@@ -208,7 +208,7 @@ class IndraDBRestProcessor(object):
         """Merge these statement jsons with new jsons."""
         # Where there is overlap, there _should_ be agreement.
         self.__evidence_counts.update(ev_counts)
-        # We turn source counts into a simple dict and update it that way
+        # We turn source counts into an int-keyed dict and update it that way
         self.__source_counts.update({int(k): v for k,
                                      v in source_counts.items()})
 
