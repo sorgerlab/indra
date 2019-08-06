@@ -30,10 +30,12 @@ def submit_statement_request(meth, end_point, query_str='', data=None,
                              tries=2, **params):
     """Even lower level function to make the request."""
     full_end_point = 'statements/' + end_point.lstrip('/')
-    return make_db_rest_request(meth, full_end_point, query_str, data, params, tries)
+    return make_db_rest_request(meth, full_end_point, query_str, data,
+                                params, tries)
 
 
-def make_db_rest_request(meth, end_point, query_str, data=None, params=None, tries=2):
+def make_db_rest_request(meth, end_point, query_str, data=None, params=None,
+                         tries=2):
     if params is None:
         params = {}
 
@@ -53,11 +55,11 @@ def make_db_rest_request(meth, end_point, query_str, data=None, params=None, tri
     else:
         json_data = None
     params['api_key'] = api_key
-    logger.info('url and query string: %s',
-                url_path.replace(str(api_key), '[api-key]'))
-    logger.info('headers: %s', str(headers).replace(str(api_key), '[api-key]'))
-    logger.info('data: %s', str(data).replace(str(api_key), '[api-key]'))
+    logger.info('query: %s', url_path.replace(str(api_key), '[api-key]'))
     logger.info('params: %s', str(params).replace(str(api_key), '[api-key]'))
+    logger.debug('headers: %s', str(headers).replace(str(api_key),
+                                                     '[api-key]'))
+    logger.debug('data: %s', str(data).replace(str(api_key), '[api-key]'))
     method_func = getattr(requests, meth.lower())
     while tries > 0:
         tries -= 1

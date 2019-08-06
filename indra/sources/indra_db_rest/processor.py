@@ -4,6 +4,7 @@ from builtins import dict, str
 __all__ = ['IndraDBRestProcessor']
 
 import logging
+from copy import deepcopy
 from threading import Thread
 from datetime import datetime
 from collections import OrderedDict, defaultdict
@@ -94,6 +95,7 @@ class IndraDBRestProcessor(object):
         self.__statement_jsons = {}
         self.__done_dict = defaultdict(lambda: False)
         self.__evidence_counts = {}
+        self.__source_counts = {}
         self.__started = False
         self.__page_dict = defaultdict(lambda: 0)
         self.__th = None
@@ -124,17 +126,17 @@ class IndraDBRestProcessor(object):
 
         # Handle the content if we were limited.
         args = [agent_strs, stmt_types, params, persist]
-        logger.info("The remainder of the query will be performed in a "
-                    "thread...")
+        logger.debug("The remainder of the query will be performed in a "
+                     "thread...")
         self.__th = Thread(target=self._run_queries, args=args)
         self.__th.start()
 
         if timeout is None:
-            logger.info("Waiting for thread to complete...")
+            logger.debug("Waiting for thread to complete...")
             self.__th.join()
         elif timeout:  # is not 0
-            logger.info("Waiting at most %d seconds for thread to complete..."
-                        % timeout)
+            logger.debug("Waiting at most %d seconds for thread to complete..."
+                         % timeout)
             self.__th.join(timeout)
         return
 
@@ -151,6 +153,10 @@ class IndraDBRestProcessor(object):
     def get_ev_count_by_hash(self, stmt_hash):
         """Get the total evidence count for a statement hash."""
         return self.__evidence_counts.get(str(stmt_hash))
+
+    def get_source_counts(self):
+        """Get the total evidence count for a statement hash."""
+        return deepcopy(self.__source_counts)
 
     def get_ev_counts(self):
         """Get a dictionary of evidence counts."""
@@ -175,7 +181,8 @@ class IndraDBRestProcessor(object):
                 self.statements_sample.extend(other_processor.statements_sample)
 
         self._merge_json(other_processor.__statement_jsons,
-                         other_processor.__evidence_counts)
+                         other_processor.__evidence_counts,
+                         other_processor.__source_counts)
         return
 
     def wait_until_done(self, timeout=None):
@@ -192,15 +199,18 @@ class IndraDBRestProcessor(object):
                            "statement load to complete." % dt.total_seconds())
             ret = False
         else:
-            logger.info("Waited %0.3f seconds for statements to finish loading."
-                        % dt.total_seconds())
+            logger.info("Waited %0.3f seconds for statements to finish"
+                        "loading." % dt.total_seconds())
             ret = True
         return ret
 
-    def _merge_json(self, stmt_json, ev_counts):
+    def _merge_json(self, stmt_json, ev_counts, source_counts):
         """Merge these statement jsons with new jsons."""
         # Where there is overlap, there _should_ be agreement.
         self.__evidence_counts.update(ev_counts)
+        # We turn source counts into an int-keyed dict and update it that way
+        self.__source_counts.update({int(k): v for k,
+                                     v in source_counts.items()})
 
         for k, sj in stmt_json.items():
             if k not in self.__statement_jsons:
@@ -236,11 +246,12 @@ class IndraDBRestProcessor(object):
         resp_dict = resp.json(object_pairs_hook=OrderedDict)
         stmts_json = resp_dict['statements']
         ev_totals = resp_dict['evidence_totals']
+        source_counts = resp_dict['source_counts']
         page_step = resp_dict['statement_limit']
         num_returned = len(stmts_json)
 
         # Update the result
-        self._merge_json(stmts_json, ev_totals)
+        self._merge_json(stmts_json, ev_totals, source_counts)
 
         # NOTE: this is technically not a direct conclusion, and could be
         # wrong, resulting in a single unnecessary extra query, but that
