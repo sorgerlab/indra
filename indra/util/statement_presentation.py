@@ -53,6 +53,9 @@ def group_and_sort_statements(stmt_list, ev_totals=None, source_counts=None):
         A dictionary, keyed by statement hash (shallow) with counts of total
         evidence as the values. Including this will allow statements to be
         better sorted.
+    source_counts : dict{int: OrderedDict}
+        A dictionary, keyed by statement hash, with an OrderedDict of
+        counts per source (ordered).
 
     Returns
     -------
@@ -81,7 +84,7 @@ def group_and_sort_statements(stmt_list, ev_totals=None, source_counts=None):
         else:
             tot = ev_totals[sh]
 
-        if src_arrays and sh in src_arrays.keys():
+        if src_arrays and sh in src_arrays:
             return concatenate([array([tot]), src_arrays[sh]])
         else:
             return array([tot])
@@ -121,7 +124,8 @@ def group_and_sort_statements(stmt_list, ev_totals=None, source_counts=None):
                     continue
             new_key = (arg_count, inps, sub_count, verb)
             stmts = sorted(stmts,
-                           key=lambda s: _counts(s)[0] + 1/(1+len(s.agent_list())),
+                           key=(lambda s:
+                                _counts(s)[0] + 1 / (1+len(s.agent_list()))),
                            reverse=True)
             if source_counts:
                 yield new_key, verb, stmts,\
