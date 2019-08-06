@@ -530,8 +530,6 @@ class ModelChecker(object):
             Data about statement subject to be used as source nodes.
         obj_data : list or None
             Data about statement object to be used as target nodes.
-        target_polarity : int or None
-            Target polarity of the statement.
         result_code : str or None
             Result code to construct PathResult.
         """
@@ -1175,7 +1173,11 @@ class UnsignedModelChecker(ModelChecker):
 
     def process_statement(self, stmt):
         subj, obj = stmt.agent_list()
-        return ([subj.name], [obj.name], 1, None)
+        if subj is None or (subj.name, 0) not in self.graph.nodes:
+            return (None, None, 'SUBJECT_NOT_FOUND')
+        if obj is None or (obj.name, 0) not in self.graph.nodes:
+            return (None, None, 'OBJECT_NOT_FOUND')
+        return ([(subj.name, 0)], [(obj.name, 0)], None)
 
     def process_subject(self, subj):
         return [subj], None
@@ -1221,7 +1223,14 @@ class SignedGraphModelChecker(ModelChecker):
         else:
             target_polarity = 0
         subj, obj = stmt.agent_list()
-        return ([subj.name], [obj.name], target_polarity, None)
+        if subj is None or (subj.name, 0) not in self.graph.nodes:
+            return (None, None, 'SUBJECT_NOT_FOUND')
+        if obj is None or (obj.name, target_polarity) not in self.graph.nodes:
+            return (None, None, 'OBJECT_NOT_FOUND')
+        return ([(subj.name, 0)], [(obj.name, target_polarity)], None)
+
+    def process_subject(self, subj):
+        return [subj], None
 
 
 class PybelModelChecker(ModelChecker):
@@ -1247,6 +1256,12 @@ class PybelModelChecker(ModelChecker):
         signed_edges = belgraph_to_signed_graph(self.model)
         graph = self.signed_edges_to_signed_nodes(signed_edges)
         return graph
+
+    def process_statement(self, stmt):
+        pass
+
+    def process_subject(self, subj):
+        pass
 
 
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
