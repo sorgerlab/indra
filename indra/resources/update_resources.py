@@ -720,7 +720,7 @@ def update_hpo():
     OboClient.update_resource(path, url, 'hp', remove_prefix=False)
 
 
-if __name__ == '__main__':
+def main():
     update_go_id_mappings()
     update_cellular_component_hierarchy()
     update_famplex()
@@ -745,3 +745,7 @@ if __name__ == '__main__':
     update_doid()
     update_efo()
     update_hpo()
+
+
+if __name__ == '__main__':
+    main()
