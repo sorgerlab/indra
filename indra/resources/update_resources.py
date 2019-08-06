@@ -6,6 +6,8 @@ import pandas
 import rdflib
 import logging
 import requests
+from tqdm import tqdm
+import itertools as itt
 from zipfile import ZipFile
 from collections import defaultdict
 from urllib.request import urlretrieve
@@ -602,33 +604,60 @@ def update_lincs_proteins():
 
 
 def update_mesh_names():
-    url = 'ftp://nlmpubs.nlm.nih.gov/online/mesh/2018/xmlmesh/desc2018.xml'
-    urlretrieve(url, 'desc2018.xml')
+    url = 'ftp://nlmpubs.nlm.nih.gov/online/mesh/2018/xmlmesh/desc2018.gz'
+    desc_path = os.path.join(path, 'mesh_desc2018.gz')
+    if not os.path.exists(desc_path):
+        logging.info('Download MeSH descriptors from %s', url)
+        urlretrieve(url, desc_path)
+        logging.info('Done downloading MeSH descriptors')
     # Process the XML and find descriptor records
-    et = ET.parse('desc2018.xml')
-    records = et.findall('DescriptorRecord')
+    with gzip.open(desc_path) as desc_file:
+        logging.info('Parsing MeSH descriptors')
+        et = ET.parse(desc_file)
     rows = []
-    for record in records:
+    for record in tqdm(et.iterfind('DescriptorRecord')):
         # We first get the ID and the name
         uid = record.find('DescriptorUI').text
         name = record.find('DescriptorName/String').text
-        # We then need to look for additional terms related to the
-        # preferred concept to get additional names
-        concepts = record.findall('ConceptList/Concept')
-        all_term_names = []
-        for concept in concepts:
-            # We only look at the preferred concept here
-            if concept.attrib['PreferredConceptYN'] == 'Y':
-                terms = concept.findall('TermList/Term')
-                for term in terms:
-                    term_name = term.find('String').text
-                    if term_name != name:
-                        all_term_names.append(term_name)
-        # Append a list of term names separated by pipes to the table
-        term_name_str = '|'.join(all_term_names)
+        term_name_str = _get_term_name_str(record, name)
         rows.append((uid, name, term_name_str))
+
+    supp_url = 'ftp://nlmpubs.nlm.nih.gov/online/mesh/2018/xmlmesh/supp2018.gz'
+    supp_path = os.path.join(path, 'mesh_supp2018.gz')
+    if not os.path.exists(supp_path):
+        logging.info('Download MeSH supplement from %s', supp_url)
+        urlretrieve(supp_url, supp_path)
+        logging.info('Done downloading MeSH supplement')
+    with gzip.open(supp_path) as supp_file:
+        logging.info('Parsing MeSH supplement')
+        supp_et = ET.parse(supp_file)
+    supp_rows = []
+    for record in tqdm(supp_et.iterfind('SupplementalRecord')):
+        uid = record.find('SupplementalRecordUI').text
+        name = record.find('SupplementalRecordName/String').text
+        term_name_str = _get_term_name_str(record, name)
+        supp_rows.append((uid, name, term_name_str))
+
     fname = os.path.join(path, 'mesh_id_label_mappings.tsv')
-    write_unicode_csv(fname, rows, delimiter='\t')
+    write_unicode_csv(fname, itt.chain(rows, sorted(supp_rows)), delimiter='\t')
+
+
+def _get_term_name_str(record, name):
+    # We then need to look for additional terms related to the
+    # preferred concept to get additional names
+    concepts = record.findall('ConceptList/Concept')
+    all_term_names = []
+    for concept in concepts:
+        # We only look at the preferred concept here
+        if concept.attrib['PreferredConceptYN'] == 'Y':
+            terms = concept.findall('TermList/Term')
+            for term in terms:
+                term_name = term.find('String').text
+                if term_name != name:
+                    all_term_names.append(term_name)
+    # Append a list of term names separated by pipes to the table
+    term_name_str = '|'.join(sorted(all_term_names))
+    return term_name_str
 
 
 def update_mirbase():
