@@ -16,3 +16,8 @@ def test_doid_id_to_name():
 def test_doid_name_to_id():
     assert 'DOID:0001816' == \
         doid_client.get_doid_id_from_doid_name('angiosarcoma')
+
+
+def test_doid_alt_id_to_doid_id():
+    assert 'DOID:0001816' == \
+        doid_client.get_doid_id_from_doid_alt_id('DOID:267')

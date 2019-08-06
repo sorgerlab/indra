@@ -38,5 +38,21 @@ def get_doid_id_from_doid_name(doid_name):
     return _client.get_id_from_name(doid_name)
 
 
+def get_doid_id_from_doid_alt_id(doid_alt_id):
+    """Return the identifier corresponding to the given Disease Ontology alt id.
+
+    Parameters
+    ----------
+    doid_alt_id : str
+        The Disease Ontology alt id to be converted. Example: "DOID:267"
+
+    Returns
+    -------
+    doid_id : str
+        The Disease Ontology identifier corresponding to the given alt id.
+    """
+    return _client.get_id_from_alt_id(doid_alt_id)
+
+
 if __name__ == '__main__':
     print(*_client.count_xrefs().most_common(), sep='\n')

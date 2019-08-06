@@ -37,6 +37,7 @@ class OboClient:
         self.mapping_path = _make_resource_path(self.directory, self.prefix)
 
         self.id_to_name = {}
+        self.alt_to_id = {}
         self.name_to_id = {}
         self.id_to_xrefs = defaultdict(lambda: defaultdict(list))
 
@@ -50,6 +51,15 @@ class OboClient:
             for xref in entry['xrefs']:
                 xref_db, xref_db_id = xref['namespace'], xref['id']
                 self.id_to_xrefs[db_id][xref_db].append(xref_db_id)
+
+            for db_alt_id in entry['alt_ids']:
+                if db_alt_id in self.id_to_name:
+                    raise ValueError(
+                        'Problem with integrity of {}:{}'.format(
+                            self.prefix, db_alt_id
+                        )
+                    )
+                self.alt_to_id[db_alt_id] = db_id
 
     @staticmethod
     def update_resource(directory, url, prefix, *args, remove_prefix=False):
@@ -146,3 +156,18 @@ class OboClient:
             The ID corresponding to the given name.
         """
         return self.name_to_id.get(db_name)
+
+    def get_id_from_alt_id(self, db_alt_id):
+        """Return the canonical database id corresponding to the alt id.
+
+        Parameters
+        ----------
+        db_alt_id : str
+            The alt id to be converted.
+
+        Returns
+        -------
+        db_id : str
+            The ID corresponding to the given alt id.
+        """
+        return self.alt_to_id.get(db_alt_id)
