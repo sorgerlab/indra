@@ -1167,10 +1167,12 @@ class UnsignedModelChecker(ModelChecker):
         super().__init__(model, statements, do_sampling, seed)
 
     def get_graph(self):
-        new_graph = nx.DiGraph()
+        if self.graph:
+            return self.graph
+        self.graph = nx.DiGraph()
         for (u, v) in self.model.edges:
-            new_graph.add_edge((u, 0), (v, 0))
-        return new_graph
+            self.graph.add_edge((u, 0), (v, 0))
+        return self.graph
 
     def process_statement(self, stmt):
         subj, obj = stmt.agent_list()
@@ -1208,7 +1210,10 @@ class SignedGraphModelChecker(ModelChecker):
         super().__init__(model, statements, do_sampling, seed)
 
     def get_graph(self):
-        return self.signed_edges_to_signed_nodes(self.model)
+        if self.graph:
+            return self.graph
+        self.graph = self.signed_edges_to_signed_nodes(self.model)
+        return self.graph
 
     def process_statement(self, stmt):
         # Get the polarity for the statement
@@ -1254,9 +1259,11 @@ class PybelModelChecker(ModelChecker):
 
     def get_graph(self):
         """Convert a PyBELGraph to a graph with signed nodes."""
+        if self.graph:
+            return self.graph
         signed_edges = belgraph_to_signed_graph(self.model)
-        graph = self.signed_edges_to_signed_nodes(signed_edges)
-        return graph
+        self.graph = self.signed_edges_to_signed_nodes(signed_edges)
+        return self.graph
 
     def process_statement(self, stmt):
         # Get the polarity for the statement
