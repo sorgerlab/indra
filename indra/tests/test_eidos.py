@@ -138,15 +138,16 @@ def test_process_geoids():
     ep = eidos.process_json_file(geo_jsonld)
     # Make sure we collect all geoids up front
     ss_loc = {'name': 'South Sudan', 'db_refs': {'GEOID': '7909807'}}
-    assert len(ep.doc.geolocs) == 5, len(ep.geoids)
+    assert len(ep.doc.geolocs) == 1, len(ep.doc.geolocs)
     assert ep.doc.geolocs['_:GeoLocation_1'].to_json() == ss_loc
     # Make sure this event has the right geoid
     assert isinstance(ep.statements[0], Influence)
-    ev = ep.statements[1].evidence[0]
-    assert ev.context.geo_location.to_json() == ss_loc
+    ev = ep.statements[0].evidence[0]
+    assert not ev.context
+    assert ep.statements[0].obj.context.geo_location.to_json() == ss_loc
     # And that the subject context is captured in annotations
-    assert 'subj_context' in ev.annotations, ev.annotations
-    assert ev.annotations['subj_context']['geo_location'] == ss_loc
+    assert 'obj_context' in ev.annotations, ev.annotations
+    assert ev.annotations['obj_context']['geo_location'] == ss_loc
 
 
 def test_eidos_to_cag():
