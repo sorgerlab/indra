@@ -70,8 +70,8 @@ default_template = env.get_template('indra/statements_view.html')
 color_schemes = {
     'dark': ['#b2df8a', '#000099', '#6a3d9a', '#1f78b4', '#fdbf6f', '#ff7f00',
              '#cab2d6', '#fb9a99', '#a6cee3', '#33a02c', '#b15928', '#e31a1c'],
-    'light': ['#8dd3c7', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69',
-              '#fccde5', '#bc80bd', '#ccebc5', '#ffffb3', '#d9d9d9', '#ffed6f']
+    'light': ['#bc80bd', '#fccde5', '#b3de69', '#80b1d3', '#fb8072', '#bebada',
+              '#fdb462', '#8dd3c7', '#ffffb3', '#d9d9d9', '#ccebc5', '#ffed6f']
 }
 
 
