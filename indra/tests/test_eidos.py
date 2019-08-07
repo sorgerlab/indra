@@ -76,8 +76,13 @@ def test_sanitize():
 def test_process_json_ld_file():
     ep = eidos.process_json_file(test_jsonld)
     assert len(ep.statements) == 1
-    assert 'UN' in ep.statements[0].subj.concept.db_refs
-    assert 'UN' in ep.statements[0].obj.concept.db_refs
+    st = ep.statements[0]
+    assert 'UN' in st.subj.concept.db_refs
+    assert 'UN' in st.obj.concept.db_refs
+
+    ep = eidos.process_json_file(test_jsonld, grounding_ns=['UN'])
+    st = ep.statements[0]
+    assert set(st.subj.concept.db_refs.keys()) == {'TEXT', 'UN'}
 
 
 def test_process_corefs():
@@ -98,15 +103,16 @@ def test_process_timex():
     ep = eidos.process_json_file(timex_jsonld)
     assert len(ep.statements) == 1
     ev = ep.statements[0].evidence[0]
-    assert ev.context is not None
-    assert ev.context.__repr__() == ev.context.__str__()
-    assert ev.context.time.duration == 365 * 86400, ev.context.time.duration
-    assert ev.context.time.start == \
+    assert ev.context is None
+    subjc = ep.statements[0].subj.context
+    assert subjc.__repr__() == subjc.__str__()
+    assert subjc.time.duration == 365 * 86400, subjc.time.duration
+    assert subjc.time.start == \
         datetime.datetime(year=2018, month=1, day=1, hour=0, minute=0), \
-        ev.context.time.start
-    assert ev.context.time.end == \
+        subjc.time.start
+    assert subjc.time.end == \
         datetime.datetime(year=2019, month=1, day=1, hour=0, minute=0), \
-        ev.context.time.end
+        subjc.time.end
 
 
 def test_process_correlations():
@@ -137,15 +143,16 @@ def test_process_geoids():
     ep = eidos.process_json_file(geo_jsonld)
     # Make sure we collect all geoids up front
     ss_loc = {'name': 'South Sudan', 'db_refs': {'GEOID': '7909807'}}
-    assert len(ep.doc.geolocs) == 5, len(ep.geoids)
+    assert len(ep.doc.geolocs) == 1, len(ep.doc.geolocs)
     assert ep.doc.geolocs['_:GeoLocation_1'].to_json() == ss_loc
     # Make sure this event has the right geoid
     assert isinstance(ep.statements[0], Influence)
-    ev = ep.statements[1].evidence[0]
-    assert ev.context.geo_location.to_json() == ss_loc
+    ev = ep.statements[0].evidence[0]
+    assert not ev.context
+    assert ep.statements[0].obj.context.geo_location.to_json() == ss_loc
     # And that the subject context is captured in annotations
-    assert 'subj_context' in ev.annotations, ev.annotations
-    assert ev.annotations['subj_context']['geo_location'] == ss_loc
+    assert 'obj_context' in ev.annotations, ev.annotations
+    assert ev.annotations['obj_context']['geo_location'] == ss_loc
 
 
 def test_eidos_to_cag():
@@ -213,3 +220,12 @@ def test_standalone_event():
     from indra.statements import stmts_to_json
     js2 = stmts_to_json([st])[0]
     assert 'evidence' in js2
+
+
+def test_geoloc_obj():
+    se_jsonld = os.path.join(path_this, 'eidos_geoloc_obj.json')
+    ep = eidos.process_json_file(se_jsonld)
+    st = ep.statements[1]
+    ev = st.evidence[0]
+    assert not ev.context, ev.context
+    assert st.obj.context

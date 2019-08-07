@@ -22,8 +22,9 @@ class EidosProcessor(object):
     statements : list[indra.statements.Statement]
         A list of INDRA Statements that were extracted by the processor.
     """
-    def __init__(self, json_dict):
+    def __init__(self, json_dict, grounding_ns=None):
         self.doc = EidosDocument(json_dict)
+        self.grounding_ns = grounding_ns
         self.statements = []
 
     def extract_causal_relations(self):
@@ -138,22 +139,6 @@ class EidosProcessor(object):
                 sentence = self.doc.sentences.get(sentence_id)
                 if sentence is not None:
                     text = _sanitize(sentence['text'])
-                # Get temporal constraints if available
-                timexes = sentence.get('timexes', [])
-                if timexes:
-                    # We currently handle just one timex per statement
-                    timex = timexes[0]
-                    tc = time_context_from_timex(timex)
-                    context = WorldContext(time=tc)
-                # Get geolocation if available
-                geolocs = sentence.get('geolocs', [])
-                if geolocs:
-                    geoloc = geolocs[0]
-                    rc = ref_context_from_geoloc(geoloc)
-                    if context:
-                        context.geo_location = rc
-                    else:
-                        context = WorldContext(geo_location=rc)
 
             # Here we try to get the title of the document and set it
             # in the provenance
@@ -243,12 +228,16 @@ class EidosProcessor(object):
             if state['type'] == 'TIMEX':
                 time_context = self.time_context_from_ref(state)
             elif state['type'] == 'LocationExp':
-                geo_context = self.geo_context_from_ref(state)
+                # TODO: here we take only the first geo_context occurrence.
+                # Eidos sometimes provides a list of locations, it may
+                # make sense to break those up into multiple statements
+                # each with one location
+                if not geo_context:
+                    geo_context = self.geo_context_from_ref(state)
         return {'polarity': polarity, 'adjectives': adjectives,
                 'time_context': time_context, 'geo_context': geo_context}
 
-    @staticmethod
-    def get_groundings(entity):
+    def get_groundings(self, entity):
         """Return groundings as db_refs for an entity."""
         def get_grounding_entries(grounding):
             if not grounding:
@@ -276,6 +265,9 @@ class EidosProcessor(object):
             # Only add these groundings if there are actual values listed
             if entries:
                 key = g['name'].upper()
+                if self.grounding_ns is not None and \
+                        key not in self.grounding_ns:
+                    continue
                 if key == 'UN':
                     db_refs[key] = [(s[0].replace(' ', '_'), s[1])
                                     for s in entries]
@@ -283,12 +275,11 @@ class EidosProcessor(object):
                     db_refs[key] = entries
         return db_refs
 
-    @staticmethod
-    def get_concept(entity):
+    def get_concept(self, entity):
         """Return Concept from an Eidos entity."""
         # Use the canonical name as the name of the Concept
         name = entity['canonicalName']
-        db_refs = EidosProcessor.get_groundings(entity)
+        db_refs = self.get_groundings(entity)
         concept = Concept(name, db_refs=db_refs)
         return concept
 
@@ -379,7 +370,7 @@ class EidosDocument(object):
         time_text = dct.get('text')
         start = _get_time_stamp(dct.get('start'))
         end = _get_time_stamp(dct.get('end'))
-        duration = dct.get('duration')
+        duration = _get_duration(start, end)
         tc = TimeContext(text=time_text, start=start, end=end,
                          duration=duration)
         return tc
@@ -406,6 +397,18 @@ def _get_time_stamp(entry):
     return dt
 
 
+def _get_duration(start, end):
+    if not start or not end:
+        return None
+    try:
+        duration = int((end - start).total_seconds())
+    except Exception as e:
+        logger.debug('Failed to get duration from %s and %s' %
+                     (str(start), str(end)))
+        duration = None
+    return duration
+
+
 def ref_context_from_geoloc(geoloc):
     """Return a RefContext object given a geoloc entry."""
     text = geoloc.get('text')
@@ -417,10 +420,14 @@ def ref_context_from_geoloc(geoloc):
 def time_context_from_timex(timex):
     """Return a TimeContext object given a timex entry."""
     time_text = timex.get('text')
-    constraint = timex['intervals'][0]
-    start = _get_time_stamp(constraint.get('start'))
-    end = _get_time_stamp(constraint.get('end'))
-    duration = constraint['duration']
+    intervals = timex.get('intervals')
+    if not intervals:
+        start = end = duration = None
+    else:
+        constraint = intervals[0]
+        start = _get_time_stamp(constraint.get('start'))
+        end = _get_time_stamp(constraint.get('end'))
+        duration = _get_duration(start, end)
     tc = TimeContext(text=time_text, start=start, end=end,
                      duration=duration)
     return tc
