@@ -536,6 +536,16 @@ class HierarchyManager(object):
 
 
 class YamlHierarchyManager(HierarchyManager):
+    """Class to manage YAML-based hierarchies.
+
+    Parameters
+    ----------
+    root : dict
+        A YAML data structure loaded with the yaml package.
+    yaml_to_rdf : function
+        A function that takes the root object as an argument and returns
+        an RDF graph.
+    """
     def __init__(self, root, yaml_to_rdf):
         self.yaml_root = root
         self.yaml_to_rdf = yaml_to_rdf
@@ -544,6 +554,16 @@ class YamlHierarchyManager(HierarchyManager):
         self.load_from_rdf_graph(G)
 
     def add_entry(self, entry, examples=None):
+        """Add a given entry to the ontology.
+
+        Parameters
+        ----------
+        entry : str
+            An entry in the ontology, with parts separated by /, e.g.,
+            animals/mammals/dog.
+        examples : Optional[list[str]]
+            A list of strings that serve as examples for the given entry.
+        """
         # TODO: Add the entry by finding the right place in the YAML object
         examples = examples if examples else []
         parts = entry.split('/')
@@ -577,6 +597,20 @@ class YamlHierarchyManager(HierarchyManager):
 
 
 def get_bio_hierarchies(from_pickle=True):
+    """Return default hierarchies for the Bio context.
+
+    Parameters
+    ----------
+    from_pickle : Optional[bool[
+        If True, hierarchies are loded from a pre-generated pickle file.
+        Otherwise, they are regenerated from RDF files (slower).
+        Default: True
+
+    Returns
+    -------
+    dict[str, HierarchyManager]
+        A dict of hierarchy managers for each type of hierarchy.
+    """
     if from_pickle:
         import pickle
         hierarchy_file = os.path.dirname(os.path.abspath(__file__)) + \
@@ -625,6 +659,14 @@ hierarchies = get_bio_hierarchies()
 
 
 def get_wm_hierarchies():
+    """Return default hierarchy managers for the World Modeling context.
+
+    Returns
+    -------
+    dict[str, HierarchyManager]
+        A dict of hierarchy managers for each type of hierarchy, in this context
+        only an `entity` hierarchy is provided in the dict.
+    """
     eidos_ont = os.path.join(os.path.dirname(__file__),
                              '../sources/eidos/eidos_ontology.rdf')
     hume_ont = os.path.join(os.path.dirname(__file__),
