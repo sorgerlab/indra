@@ -242,7 +242,7 @@ class HtmlAssembler(object):
         if self.db_rest_url and not self.db_rest_url.endswith('statements'):
             db_rest_url = self.db_rest_url + '/statements'
         else:
-            db_rest_url = '.'
+            db_rest_url = None
 
         # Fill the template.
         if template is None:

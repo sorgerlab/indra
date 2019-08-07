@@ -313,8 +313,8 @@
                   <div class="col text-left nvp">
                     <h5 class="align-middle">
                       {{ stmt_info['english'] }}
-                      <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html"
-                         target="_blank">
+                      <a href="{% if db_rest_url %}{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html{% else %}#{% endif %}"
+                         {% if db_rest_url %}target="_blank"{% endif %}>
                         <small class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</small>
                       </a>
                     </h5>
@@ -336,8 +336,8 @@
                                 <div class="col-3 nvp curation_toggle"
                                      id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}-click"
                                      data-parent_id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}">
-                                    <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html"
-                                       target="_blank">
+                                    <a href="{% if db_rest_url %}{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html{% else %}#{% endif %}"
+                                       {% if db_rest_url %}target="_blank"{% endif %}>
                                         &#10166;
                                     </a>
                                 </div>
