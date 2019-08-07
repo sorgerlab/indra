@@ -379,9 +379,10 @@ class EidosDocument(object):
         time_text = dct.get('text')
         start = _get_time_stamp(dct.get('start'))
         end = _get_time_stamp(dct.get('end'))
-        duration = dct.get('duration')
+        duration = _get_duration(start, end)
         tc = TimeContext(text=time_text, start=start, end=end,
                          duration=duration)
+        logger.info(tc)
         return tc
 
 
@@ -406,6 +407,18 @@ def _get_time_stamp(entry):
     return dt
 
 
+def _get_duration(start, end):
+    if not start or not end:
+        return None
+    try:
+        duration = int((end - start).total_seconds())
+    except Exception as e:
+        logger.debug('Failed to get duration from %s and %s' %
+                     (str(start), str(end)))
+        duration = None
+    return duration
+
+
 def ref_context_from_geoloc(geoloc):
     """Return a RefContext object given a geoloc entry."""
     text = geoloc.get('text')
@@ -420,9 +433,10 @@ def time_context_from_timex(timex):
     constraint = timex['intervals'][0]
     start = _get_time_stamp(constraint.get('start'))
     end = _get_time_stamp(constraint.get('end'))
-    duration = constraint['duration']
+    duration = _get_duration(start, end)
     tc = TimeContext(text=time_text, start=start, end=end,
                      duration=duration)
+    logger.info(tc)
     return tc
 
 
