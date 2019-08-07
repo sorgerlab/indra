@@ -6,7 +6,6 @@ import pandas
 import rdflib
 import logging
 import requests
-import itertools as itt
 from zipfile import ZipFile
 from collections import defaultdict
 from urllib.request import urlretrieve
@@ -621,6 +620,11 @@ def update_mesh_names():
         term_name_str = _get_term_name_str(record, name)
         rows.append((uid, name, term_name_str))
 
+    fname = os.path.join(path, 'mesh_id_label_mappings.tsv')
+    write_unicode_csv(fname, rows, delimiter='\t')
+
+
+def update_mesh_supplementary_names():
     supp_url = 'ftp://nlmpubs.nlm.nih.gov/online/mesh/2018/xmlmesh/supp2018.gz'
     supp_path = os.path.join(path, 'mesh_supp2018.gz')
     if not os.path.exists(supp_path):
@@ -637,8 +641,8 @@ def update_mesh_names():
         term_name_str = _get_term_name_str(record, name)
         supp_rows.append((uid, name, term_name_str))
 
-    fname = os.path.join(path, 'mesh_id_label_mappings.tsv')
-    write_unicode_csv(fname, itt.chain(rows, sorted(supp_rows)), delimiter='\t')
+    fname = os.path.join(path, 'mesh_supp_id_label_mappings.tsv')
+    write_unicode_csv(fname, supp_rows, delimiter='\t')
 
 
 def _get_term_name_str(record, name):
@@ -655,7 +659,7 @@ def _get_term_name_str(record, name):
                 if term_name != name:
                     all_term_names.append(term_name)
     # Append a list of term names separated by pipes to the table
-    term_name_str = '|'.join(sorted(all_term_names))
+    term_name_str = '|'.join(all_term_names)
     return term_name_str
 
 
@@ -740,6 +744,7 @@ def main():
     update_lincs_small_molecules()
     update_lincs_proteins()
     update_mesh_names()
+    update_mesh_supplementary_names()
     update_mirbase()
     update_doid()
     update_efo()
