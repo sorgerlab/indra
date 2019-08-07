@@ -138,22 +138,6 @@ class EidosProcessor(object):
                 sentence = self.doc.sentences.get(sentence_id)
                 if sentence is not None:
                     text = _sanitize(sentence['text'])
-                # Get temporal constraints if available
-                timexes = sentence.get('timexes', [])
-                if timexes:
-                    # We currently handle just one timex per statement
-                    timex = timexes[0]
-                    tc = time_context_from_timex(timex)
-                    context = WorldContext(time=tc)
-                # Get geolocation if available
-                geolocs = sentence.get('geolocs', [])
-                if geolocs:
-                    geoloc = geolocs[0]
-                    rc = ref_context_from_geoloc(geoloc)
-                    if context:
-                        context.geo_location = rc
-                    else:
-                        context = WorldContext(geo_location=rc)
 
             # Here we try to get the title of the document and set it
             # in the provenance
@@ -243,7 +227,12 @@ class EidosProcessor(object):
             if state['type'] == 'TIMEX':
                 time_context = self.time_context_from_ref(state)
             elif state['type'] == 'LocationExp':
-                geo_context = self.geo_context_from_ref(state)
+                # TODO: here we take only the first geo_context occurrence.
+                # Eidos sometimes provides a list of locations, it may
+                # make sense to break those up into multiple statements
+                # each with one location
+                if not geo_context:
+                    geo_context = self.geo_context_from_ref(state)
         return {'polarity': polarity, 'adjectives': adjectives,
                 'time_context': time_context, 'geo_context': geo_context}
 
