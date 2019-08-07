@@ -98,15 +98,16 @@ def test_process_timex():
     ep = eidos.process_json_file(timex_jsonld)
     assert len(ep.statements) == 1
     ev = ep.statements[0].evidence[0]
-    assert ev.context is not None
-    assert ev.context.__repr__() == ev.context.__str__()
-    assert ev.context.time.duration == 365 * 86400, ev.context.time.duration
-    assert ev.context.time.start == \
+    assert ev.context is None
+    subjc = ep.statements[0].subj.context
+    assert subjc.__repr__() == subjc.__str__()
+    assert subjc.time.duration == 365 * 86400, subjc.time.duration
+    assert subjc.time.start == \
         datetime.datetime(year=2018, month=1, day=1, hour=0, minute=0), \
-        ev.context.time.start
-    assert ev.context.time.end == \
+        subjc.time.start
+    assert subjc.time.end == \
         datetime.datetime(year=2019, month=1, day=1, hour=0, minute=0), \
-        ev.context.time.end
+        subjc.time.end
 
 
 def test_process_correlations():
@@ -213,3 +214,12 @@ def test_standalone_event():
     from indra.statements import stmts_to_json
     js2 = stmts_to_json([st])[0]
     assert 'evidence' in js2
+
+
+def test_geoloc_obj():
+    se_jsonld = os.path.join(path_this, 'eidos_geoloc_obj.json')
+    ep = eidos.process_json_file(se_jsonld)
+    st = ep.statements[1]
+    ev = st.evidence[0]
+    assert not ev.context, ev.context
+    assert st.obj.context
