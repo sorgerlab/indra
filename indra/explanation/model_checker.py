@@ -1175,6 +1175,12 @@ class UnsignedModelChecker(ModelChecker):
         return self.graph
 
     def process_statement(self, stmt):
+        # Check if this is one of the statement types that we can check
+        if not isinstance(stmt, (Modification, RegulateAmount,
+                                 RegulateActivity, Influence)):
+            logger.info('Statement type %s not handled' %
+                        stmt.__class__.__name__)
+            return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
         subj, obj = stmt.agent_list()
         if subj is None or (subj.name, 0) not in self.graph.nodes:
             return (None, None, 'SUBJECT_NOT_FOUND')
@@ -1216,18 +1222,17 @@ class SignedGraphModelChecker(ModelChecker):
         return self.graph
 
     def process_statement(self, stmt):
+        # Check if this is one of the statement types that we can check
+        if not isinstance(stmt, (Activation, Inhibition,
+                                 IncreaseAmount, DecreaseAmount)):
+            logger.info('Statement type %s not handled' %
+                        stmt.__class__.__name__)
+            return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
         # Get the polarity for the statement
-        if isinstance(stmt, Modification):
-            target_polarity = 1 if isinstance(stmt, RemoveModification) else 0
-        elif isinstance(stmt, RegulateActivity):
+        if isinstance(stmt, RegulateActivity):
             target_polarity = 0 if stmt.is_activation else 1
         elif isinstance(stmt, RegulateAmount):
             target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
-        elif isinstance(stmt, Influence):
-            target_polarity = 1 if stmt.overall_polarity() == -1 else 0
-        # If it is a different type of statement, use positive polarity
-        else:
-            target_polarity = 0
         subj, obj = stmt.agent_list()
         if subj is None or (subj.name, 0) not in self.graph.nodes:
             return (None, None, 'SUBJECT_NOT_FOUND')
@@ -1266,6 +1271,12 @@ class PybelModelChecker(ModelChecker):
         return self.graph
 
     def process_statement(self, stmt):
+        # Check if this is one of the statement types that we can check
+        if not isinstance(stmt, (Modification, RegulateAmount,
+                                 RegulateActivity, Influence)):
+            logger.info('Statement type %s not handled' %
+                        stmt.__class__.__name__)
+            return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
         # Get the polarity for the statement
         if isinstance(stmt, Modification):
             target_polarity = 1 if isinstance(stmt, RemoveModification) else 0
@@ -1275,9 +1286,6 @@ class PybelModelChecker(ModelChecker):
             target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
         elif isinstance(stmt, Influence):
             target_polarity = 1 if stmt.overall_polarity() == -1 else 0
-        # If it is a different type of statement, use positive polarity
-        else:
-            target_polarity = 0
         subj, obj = stmt.agent_list()
         if subj is not None:
             subj_node = (_get_agent_node(subj)[0], 0)
