@@ -335,9 +335,11 @@
                             <div class="row">
                                 <div class="col-3 nvp curation_toggle"
                                      id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}-click"
-                                     data-parent_id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}"
-                                     style="display: none">
-                                    &#9998;
+                                     data-parent_id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}">
+                                    <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html"
+                                       target="_blank">
+                                        &#10166;
+                                    </a>
                                 </div>
                                 <div class="col-9 nvp src-api"
                                      title="{{ ev['source_api'] }}">
