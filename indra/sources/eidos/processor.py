@@ -430,10 +430,14 @@ def ref_context_from_geoloc(geoloc):
 def time_context_from_timex(timex):
     """Return a TimeContext object given a timex entry."""
     time_text = timex.get('text')
-    constraint = timex['intervals'][0]
-    start = _get_time_stamp(constraint.get('start'))
-    end = _get_time_stamp(constraint.get('end'))
-    duration = _get_duration(start, end)
+    intervals = timex.get('intervals')
+    if not intervals:
+        start = end = duration = None
+    else:
+        constraint = intervals[0]
+        start = _get_time_stamp(constraint.get('start'))
+        end = _get_time_stamp(constraint.get('end'))
+        duration = _get_duration(start, end)
     tc = TimeContext(text=time_text, start=start, end=end,
                      duration=duration)
     logger.info(tc)
