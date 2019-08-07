@@ -37,6 +37,7 @@ class OboClient:
         self.mapping_path = _make_resource_path(self.directory, self.prefix)
 
         self.id_to_name = {}
+        self.alt_to_id = {}
         self.name_to_id = {}
         self.id_to_xrefs = defaultdict(lambda: defaultdict(list))
 
@@ -48,13 +49,17 @@ class OboClient:
             self.id_to_name[db_id] = db_name
             self.name_to_id[db_name] = db_id
             for xref in entry['xrefs']:
-                try:
-                    xref_db, xref_db_id = xref.split(':', 1)
-                except ValueError:
-                    logger.debug('Could not parse xref %s for %s:%s', xref,
-                                 db_id, db_name)
-                else:
-                    self.id_to_xrefs[db_id][xref_db].append(xref_db_id)
+                xref_db, xref_db_id = xref['namespace'], xref['id']
+                self.id_to_xrefs[db_id][xref_db].append(xref_db_id)
+
+            for db_alt_id in entry['alt_ids']:
+                if db_alt_id in self.id_to_name:
+                    raise ValueError(
+                        'Problem with integrity of {}:{}'.format(
+                            self.prefix, db_alt_id
+                        )
+                    )
+                self.alt_to_id[db_alt_id] = db_id
 
     @staticmethod
     def update_resource(directory, url, prefix, *args, remove_prefix=False):
@@ -80,6 +85,24 @@ class OboClient:
                 continue
             if remove_prefix:
                 node = node[len(prefix) + 1:]
+
+            xrefs = []
+            for xref in data.get('xref', []):
+                try:
+                    db, db_id = xref.split(':', 1)
+                except ValueError:
+                    continue
+                else:
+                    db_id = db_id.lstrip()
+                    if ' ' in db_id:
+                        db_id = db_id.split()[0]
+                        logging.debug(
+                            'Likely labeled %s:%s xref: %s. Recovered %s:%s',
+                            prefix, node, xref, db, db_id,
+                        )
+
+                    xrefs.append(dict(namespace=db, id=db_id))
+
             entries.append({
                 'namespace': prefix,
                 'id': node,
@@ -88,7 +111,8 @@ class OboClient:
                     OBO_SYNONYM.split(synonym)[0].strip('" ')
                     for synonym in data.get('synonym', [])
                 ],
-                'xrefs': data.get('xref', []),
+                'xrefs': xrefs,
+                'alt_ids': data.get('alt_id', []),
             })
 
         with open(resource_path, 'w') as file:
@@ -132,3 +156,18 @@ class OboClient:
             The ID corresponding to the given name.
         """
         return self.name_to_id.get(db_name)
+
+    def get_id_from_alt_id(self, db_alt_id):
+        """Return the canonical database id corresponding to the alt id.
+
+        Parameters
+        ----------
+        db_alt_id : str
+            The alt id to be converted.
+
+        Returns
+        -------
+        db_id : str
+            The ID corresponding to the given alt id.
+        """
+        return self.alt_to_id.get(db_alt_id)
