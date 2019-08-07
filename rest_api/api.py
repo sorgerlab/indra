@@ -220,11 +220,13 @@ def eidos_process_text():
     body = json.loads(req)
     text = body.get('text')
     webservice = body.get('webservice')
+    grounding_ns = body.get('grounding_ns')
     if not webservice:
         response.status = 400
         response.content_type = 'application/json'
         return json.dumps({'error': 'No web service address provided.'})
-    ep = eidos.process_text(text, webservice=webservice)
+    ep = eidos.process_text(text, webservice=webservice,
+                            grounding_ns=grounding_ns)
     return _stmts_from_proc(ep)
 
 
@@ -237,7 +239,8 @@ def eidos_process_jsonld():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     eidos_json = body.get('jsonld')
-    ep = eidos.process_json_str(eidos_json)
+    grounding_ns = body.get('grounding_ns')
+    ep = eidos.process_json_str(eidos_json, grounding_ns=grounding_ns)
     return _stmts_from_proc(ep)
 
 
