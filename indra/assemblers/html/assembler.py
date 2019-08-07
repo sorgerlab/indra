@@ -89,8 +89,8 @@ SOURCE_COLORS = [
                                         'lincs_drug', 'hprd', 'trrust'],
                                        color_gen('light')))}),
     ('reading', {'color': 'white',
-                 'sources': dict(zip(['reach', 'medscan', 'rlimsp', 'trips',
-                                      'sparser', 'isi', 'tees', 'geneways'],
+                 'sources': dict(zip(['geneways', 'tees', 'isi', 'trips',
+                                      'rlmisp', 'medscan', 'sparser', 'reach'],
                                      color_gen('light')))}),
 ]
 
