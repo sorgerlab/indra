@@ -22,8 +22,9 @@ class EidosProcessor(object):
     statements : list[indra.statements.Statement]
         A list of INDRA Statements that were extracted by the processor.
     """
-    def __init__(self, json_dict):
+    def __init__(self, json_dict, grounding_ns=None):
         self.doc = EidosDocument(json_dict)
+        self.grounding_ns = grounding_ns
         self.statements = []
 
     def extract_causal_relations(self):
@@ -236,8 +237,7 @@ class EidosProcessor(object):
         return {'polarity': polarity, 'adjectives': adjectives,
                 'time_context': time_context, 'geo_context': geo_context}
 
-    @staticmethod
-    def get_groundings(entity):
+    def get_groundings(self, entity):
         """Return groundings as db_refs for an entity."""
         def get_grounding_entries(grounding):
             if not grounding:
@@ -265,6 +265,9 @@ class EidosProcessor(object):
             # Only add these groundings if there are actual values listed
             if entries:
                 key = g['name'].upper()
+                if self.grounding_ns is not None and \
+                        key not in self.grounding_ns:
+                    continue
                 if key == 'UN':
                     db_refs[key] = [(s[0].replace(' ', '_'), s[1])
                                     for s in entries]
@@ -272,12 +275,11 @@ class EidosProcessor(object):
                     db_refs[key] = entries
         return db_refs
 
-    @staticmethod
-    def get_concept(entity):
+    def get_concept(self, entity):
         """Return Concept from an Eidos entity."""
         # Use the canonical name as the name of the Concept
         name = entity['canonicalName']
-        db_refs = EidosProcessor.get_groundings(entity)
+        db_refs = self.get_groundings(entity)
         concept = Concept(name, db_refs=db_refs)
         return concept
 
@@ -371,7 +373,6 @@ class EidosDocument(object):
         duration = _get_duration(start, end)
         tc = TimeContext(text=time_text, start=start, end=end,
                          duration=duration)
-        logger.info(tc)
         return tc
 
 
@@ -429,7 +430,6 @@ def time_context_from_timex(timex):
         duration = _get_duration(start, end)
     tc = TimeContext(text=time_text, start=start, end=end,
                      duration=duration)
-    logger.info(tc)
     return tc
 
 

@@ -76,8 +76,13 @@ def test_sanitize():
 def test_process_json_ld_file():
     ep = eidos.process_json_file(test_jsonld)
     assert len(ep.statements) == 1
-    assert 'UN' in ep.statements[0].subj.concept.db_refs
-    assert 'UN' in ep.statements[0].obj.concept.db_refs
+    st = ep.statements[0]
+    assert 'UN' in st.subj.concept.db_refs
+    assert 'UN' in st.obj.concept.db_refs
+
+    ep = eidos.process_json_file(test_jsonld, grounding_ns=['UN'])
+    st = ep.statements[0]
+    assert set(st.subj.concept.db_refs.keys()) == {'TEXT', 'UN'}
 
 
 def test_process_corefs():

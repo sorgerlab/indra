@@ -20,7 +20,7 @@ except Exception as e:
 
 
 def process_text(text, out_format='json_ld', save_json='eidos_output.json',
-                 webservice=None):
+                 webservice=None, grounding_ns=None):
     """Return an EidosProcessor by processing the given text.
 
     This constructs a reader object via Java and extracts mentions
@@ -40,6 +40,11 @@ def process_text(text, out_format='json_ld', save_json='eidos_output.json',
         An Eidos reader web service URL to send the request to.
         If None, the reading is assumed to be done with the Eidos JAR rather
         than via a web service. Default: None
+    grounding_ns : Optional[list]
+        A list of name spaces for which INDRA should represent groundings, when
+        given. If not specified or None, all grounding name spaces are
+        propagated. If an empty list, no groundings are propagated.
+        Example: ['UN', 'WM'], Default: None
 
     Returns
     -------
@@ -61,10 +66,10 @@ def process_text(text, out_format='json_ld', save_json='eidos_output.json',
     if save_json:
         with open(save_json, 'wt') as fh:
             json.dump(json_dict, fh, indent=2)
-    return process_json(json_dict)
+    return process_json(json_dict, grounding_ns=grounding_ns)
 
 
-def process_json_file(file_name):
+def process_json_file(file_name, grounding_ns=None):
     """Return an EidosProcessor by processing the given Eidos JSON-LD file.
 
     This function is useful if the output from Eidos is saved as a file and
@@ -74,6 +79,11 @@ def process_json_file(file_name):
     ----------
     file_name : str
         The name of the JSON-LD file to be processed.
+    grounding_ns : Optional[list]
+        A list of name spaces for which INDRA should represent groundings, when
+        given. If not specified or None, all grounding name spaces are
+        propagated. If an empty list, no groundings are propagated.
+        Example: ['UN', 'WM'], Default: None
 
     Returns
     -------
@@ -84,18 +94,23 @@ def process_json_file(file_name):
     try:
         with open(file_name, 'rb') as fh:
             json_str = fh.read().decode('utf-8')
-            return process_json_str(json_str)
+            return process_json_str(json_str, grounding_ns=grounding_ns)
     except IOError:
         logger.exception('Could not read file %s.' % file_name)
 
 
-def process_json_str(json_str):
+def process_json_str(json_str, grounding_ns=None):
     """Return an EidosProcessor by processing the Eidos JSON-LD string.
 
     Parameters
     ----------
     json_str : str
         The JSON-LD string to be processed.
+    grounding_ns : Optional[list]
+        A list of name spaces for which INDRA should represent groundings, when
+        given. If not specified or None, all grounding name spaces are
+        propagated. If an empty list, no groundings are propagated.
+        Example: ['UN', 'WM'], Default: None
 
     Returns
     -------
@@ -104,16 +119,21 @@ def process_json_str(json_str):
         in its statements attribute.
     """
     json_dict = json.loads(json_str)
-    return process_json(json_dict)
+    return process_json(json_dict, grounding_ns=grounding_ns)
 
 
-def process_json(json_dict):
+def process_json(json_dict, grounding_ns=None):
     """Return an EidosProcessor by processing a Eidos JSON-LD dict.
 
     Parameters
     ----------
     json_dict : dict
         The JSON-LD dict to be processed.
+    grounding_ns : Optional[list]
+        A list of name spaces for which INDRA should represent groundings, when
+        given. If not specified or None, all grounding name spaces are
+        propagated. If an empty list, no groundings are propagated.
+        Example: ['UN', 'WM'], Default: None
 
     Returns
     -------
@@ -121,7 +141,7 @@ def process_json(json_dict):
         A EidosProcessor containing the extracted INDRA Statements
         in its statements attribute.
     """
-    ep = EidosProcessor(json_dict)
+    ep = EidosProcessor(json_dict, grounding_ns=grounding_ns)
     ep.extract_causal_relations()
     ep.extract_correlations()
     ep.extract_events()
