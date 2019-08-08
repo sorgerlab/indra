@@ -506,7 +506,7 @@ class ModelChecker(object):
     def make_false_result(self, result_code, max_paths, max_path_length):
         return PathResult(False, result_code, max_paths, max_path_length)
 
-    def get_graph(self):
+    def get_graph(self, **kwargs):
         """Return a graph  with signed nodes to find the path."""
         raise NotImplementedError("Method must be implemented in child class.")
 
@@ -748,13 +748,18 @@ class PysbModelChecker(ModelChecker):
             self.rule_obs_dict[rule.name] = obs_list
         return self._im
 
-    def get_graph(self):
+    def get_graph(self, prune_im=True, prune_im_degrade=True,
+                  prune_im_subj_obj=False):
         """Get influence map and convert it to a graph with signed nodes."""
         if self.graph:
             return self.graph
         im = self.get_im(force_update=True)
-        self.prune_influence_map()
-        self.prune_influence_map_degrade_bind_positive(self.model_stmts)
+        if prune_im:
+            self.prune_influence_map()
+        if prune_im_degrade:
+            self.prune_influence_map_degrade_bind_positive(self.model_stmts)
+        if prune_im_subj_obj:
+            self.prune_influence_map_subj_obj()
         self.graph = self.signed_edges_to_signed_nodes(
             im, prune_nodes=False, edge_signs={'pos': 1, 'neg': -1})
         return self.graph
