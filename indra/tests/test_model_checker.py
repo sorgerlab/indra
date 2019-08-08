@@ -1120,57 +1120,57 @@ def test_check_transphosphorylation():
     assert results[1][1] == True
 """
 
+# NOTE: skip path score tests for now
+# def test_model_check_data():
+#     # Create a set of statements
+#     a = Agent('A', db_refs={'HGNC': '1'})
+#     b = Agent('B', db_refs={'HGNC': '2'})
+#     b_phos = Agent('B', mods=[ModCondition('phosphorylation')],
+#                    db_refs={'HGNC': '2'})
+#     c = Agent('C', db_refs={'HGNC': '3'})
+#     c_phos = Agent('C', mods=[ModCondition('phosphorylation')],
+#                    db_refs={'HGNC': '3'})
+#     d = Agent('D', db_refs={'HGNC': '4'})
+#     d_phos = Agent('D', mods=[ModCondition('phosphorylation')],
+#                    db_refs={'HGNC': '4'})
 
-def test_model_check_data():
-    # Create a set of statements
-    a = Agent('A', db_refs={'HGNC': '1'})
-    b = Agent('B', db_refs={'HGNC': '2'})
-    b_phos = Agent('B', mods=[ModCondition('phosphorylation')],
-                   db_refs={'HGNC': '2'})
-    c = Agent('C', db_refs={'HGNC': '3'})
-    c_phos = Agent('C', mods=[ModCondition('phosphorylation')],
-                   db_refs={'HGNC': '3'})
-    d = Agent('D', db_refs={'HGNC': '4'})
-    d_phos = Agent('D', mods=[ModCondition('phosphorylation')],
-                   db_refs={'HGNC': '4'})
-
-    # Two paths from A to D: One going through B and another through C
-    st1 = Phosphorylation(a, b)
-    st2 = Phosphorylation(b_phos, d)
-    st3 = Phosphorylation(a, c)
-    st4 = Phosphorylation(c_phos, d)
-    # Statements/Data agents for checking
-    stmt_to_check = Phosphorylation(a, d)
-    agent_obs = [b_phos, c_phos, d_phos]
-    # Make model
-    pa = PysbAssembler()
-    pa.add_statements([st1, st2, st3, st4])
-    pa.make_model(policies='one_step')
-    mc = PysbModelChecker(pa.model, [stmt_to_check], agent_obs)
-    results = mc.check_model(max_paths=5)
-    # Create observable
-    assert len(results) == 1
-    pr = results[0][1]
-    res = pr.paths[0:2]
-    assert len(res) == 2
-    p1 = (('A_phosphorylation_B_phospho', 0),
-          ('B_phospho_phosphorylation_D_phospho', 0),
-          ('D_phospho_p_obs', 0))
-    assert p1 in res
-    p2 = (('A_phosphorylation_C_phospho', 0),
-          ('C_phospho_phosphorylation_D_phospho', 0),
-          ('D_phospho_p_obs', 0))
-    assert p2 in res
-    # Now, a vector linking agents with values, expressed at first as
-    # +/- 1
-    # This data should ensure that the path through B should be more highly
-    # ranked than the path through C
-    data = {b_phos: 1, c_phos: -1, d_phos: 1}
-    paths = results[0][1].paths
-    scored_paths = mc.score_paths(paths, data)
-    assert scored_paths[0][0] == p1
-    assert scored_paths[1][0] == p2
-    assert scored_paths[0][1] > scored_paths[1][1]
+#     # Two paths from A to D: One going through B and another through C
+#     st1 = Phosphorylation(a, b)
+#     st2 = Phosphorylation(b_phos, d)
+#     st3 = Phosphorylation(a, c)
+#     st4 = Phosphorylation(c_phos, d)
+#     # Statements/Data agents for checking
+#     stmt_to_check = Phosphorylation(a, d)
+#     agent_obs = [b_phos, c_phos, d_phos]
+#     # Make model
+#     pa = PysbAssembler()
+#     pa.add_statements([st1, st2, st3, st4])
+#     pa.make_model(policies='one_step')
+#     mc = PysbModelChecker(pa.model, [stmt_to_check], agent_obs)
+#     results = mc.check_model(max_paths=5)
+#     # Create observable
+#     assert len(results) == 1
+#     pr = results[0][1]
+#     res = pr.paths[0:2]
+#     assert len(res) == 2
+#     p1 = (('A_phosphorylation_B_phospho', 0),
+#           ('B_phospho_phosphorylation_D_phospho', 0),
+#           ('D_phospho_p_obs', 0))
+#     assert p1 in res
+#     p2 = (('A_phosphorylation_C_phospho', 0),
+#           ('C_phospho_phosphorylation_D_phospho', 0),
+#           ('D_phospho_p_obs', 0))
+#     assert p2 in res
+#     # Now, a vector linking agents with values, expressed at first as
+#     # +/- 1
+#     # This data should ensure that the path through B should be more highly
+#     # ranked than the path through C
+#     data = {b_phos: 1, c_phos: -1, d_phos: 1}
+#     paths = results[0][1].paths
+#     scored_paths = mc.score_paths(paths, data)
+#     assert scored_paths[0][0] == p1
+#     assert scored_paths[1][0] == p2
+#     assert scored_paths[0][1] > scored_paths[1][1]
 
 
 def test_prune_influence_map():
@@ -1239,7 +1239,7 @@ def test_prune_influence_map_degrade_bind():
     im = mc.get_im()
     assert len(im.edges()) == 2, im.edges()
 
-
+# NOTE: skip sampling tests for now
 # def test_weighted_sampling1():
 #     """Test sampling with different path lengths but no data."""
 #     os.environ['TEST_FLAG'] = 'TRUE'
