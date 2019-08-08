@@ -67,8 +67,10 @@ class PathResult(object):
     result_code : string
         - *STATEMENT_TYPE_NOT_HANDLED* - The provided statement type is not
           handled
-        - *SUBJECT_MONOMERS_NOT_FOUND* - Statement subject not found in model
-        - *OBSERVABLES_NOT_FOUND* - Statement has no associated observable
+        - *SUBJECT_MONOMERS_NOT_FOUND* or *SUBJECT_NOT_FOUND* - 
+          Statement subject not found in model
+        - *OBSERVABLES_NOT_FOUND* or *OBJECT_NOT_FOUND* - 
+          Statement has no associated observable
         - *NO_PATHS_FOUND* - Statement has no path for any observable
         - *MAX_PATH_LENGTH_EXCEEDED* - Statement has no path len <=
           MAX_PATH_LENGTH
@@ -147,7 +149,7 @@ class ModelChecker(object):
 
     Parameters
     ----------
-    model : pysb.Model or networkx.DiGraph or PyBEL.Model
+    model : pysb.Model or indra.assemblers.indranet.IndraNet or PyBEL.Model
         Depending on the ModelChecker class, can be different type.
     statements : Optional[list[indra.statements.Statement]]
         A list of INDRA Statements to check the model against.
@@ -156,6 +158,11 @@ class ModelChecker(object):
         generate paths. Default is False (breadth-first search).
     seed : int
         Random seed for sampling (optional, default is None).
+
+    Attributes
+    ----------
+    graph : nx.Digraph
+        A DiGraph with signed nodes to find paths in.
     """
     def __init__(self, model, statements=None, do_sampling=False, seed=None):
         self.model = model
@@ -167,7 +174,6 @@ class ModelChecker(object):
             np.random.seed(seed)
         # Whether to do sampling
         self.do_sampling = do_sampling
-        # do we need other parameters here?
         self.graph = None
 
     def add_statements(self, stmts):
@@ -224,8 +230,9 @@ class ModelChecker(object):
         result : indra.explanation.modelchecker.PathResult
             A PathResult object containing the result of a test.
         """
-        # rewrite generic check statement
+        # Make sure graph is created
         self.get_graph()
+        # Extract subject and object onfo from test statement
         subj_list, obj_list, result_code = self.process_statement(stmt)
         if result_code:
             return self.make_false_result(result_code, max_paths,
@@ -233,7 +240,7 @@ class ModelChecker(object):
         for subj, obj in itertools.product(subj_list, obj_list):
             result = self.find_paths(subj, obj, max_paths, max_path_length)
             # If a path was found, then we return it; otherwise, that means
-            # there was no path for this observable, so we have to try the next
+            # there was no path for this object, so we have to try the next
             # one
             if result.path_found:
                 logger.info('Found paths for %s' % stmt)
@@ -248,15 +255,17 @@ class ModelChecker(object):
 
         Parameters
         ----------
-        subj : str or pysb.MonomerPattern
+        subj : pysb.MonomerPattern or tuple
             Relevant to the model information about the subject of the
-            Statement being checked.
-        obj : str
-            Name of the object or PySB model Observable corresponding to the
-            object/target of the Statement being checked.
-        target_polarity : int
-            Whether the influence in the Statement is positive (1) or negative
-            (-1).
+            Statement being checked (monomer pattern in PySB, source node for
+            other models).
+        obj : tuple
+            Tuple representing the target node (created from PySB model
+            Observable, PyBEL node, or Agent.name with a target sign).
+        max_paths : int
+            The maximum number of specific paths to return.
+        max_path_length : int
+            The maximum length of specific paths to return.
 
         Returns
         -------
@@ -264,7 +273,7 @@ class ModelChecker(object):
             PathResult object indicating the results of the attempt to find
             a path.
         """
-        # rewrite find_im_paths
+        # Get the input set (signed rules or names for source nodes)
         input_set, result_code = self.process_subject(subj)
         if result_code:
             return self.make_false_result(result_code,
@@ -334,19 +343,17 @@ class ModelChecker(object):
         ----------
         graph : nx.DiGraph
             Graph representing the model.
-        target : str
-            The node (object or rule name) in the graph to start looking
-            upstream for marching sources.
-        sources : list of str
-            The nodes corresponding to the subject or upstream influence being
-            checked.
-        polarity : int
-            Required polarity of the path between source and target.
+        target : tuple
+            The node (object or rule name with a sign) in the graph to start
+            looking upstream for matching sources.
+        sources : list[tuple]
+            Signed nodes corresponding to the subject or upstream influence
+            being checked.
 
         Returns
         -------
-        generator of (source, polarity, path_length)
-            Yields tuples of source node (string), polarity (int) and path
+        generator of (source, path_length)
+            Yields tuples of source node (tuple of string and sign) and path
             length (int). If there are no paths to any of the given source
             nodes, the generator is empty.
         """
@@ -367,6 +374,7 @@ class ModelChecker(object):
                 child = next(children)
                 # Is this child one of the source nodes we're looking for? If
                 # so, yield it along with path length.
+                # Also make sure that found source is positive
                 if (sources is None or child in sources) and child[1] == 0:
                     logger.debug("Found path to %s from %s with length %d"
                                  % (target, child, path_length+1))
@@ -388,35 +396,31 @@ class ModelChecker(object):
     def _find_sources_with_paths(self, graph, target, sources):
         """Get the subset of source nodes with paths to the target.
 
-        Given a target, a list of sources, and a path polarity, perform a
-        breadth-first search upstream from the target to find paths to any of
-        the upstream sources.
+        Given a target and a list of sources perform a breadth-first search
+        upstream from the target to find paths to any of the upstream sources.
 
         Parameters
         ----------
         graph : nx.DiGraph
             Graph representing the model.
-        target : str
-            The node (object or rule name) in the graph to start looking
-            upstream for marching sources.
-        sources : list of str
-            The nodes corresponding to the subject or upstream influence being
-            checked.
-        polarity : int
-            Required polarity of the path between source and target.
+        target : tuple
+            The node (object or rule name with a sign) in the graph to start
+            looking upstream for matching sources.
+        sources : list[tuple]
+            Signed nodes corresponding to the subject or upstream influence
+            being checked.
 
         Returns
         -------
         generator of path
-            Yields paths as lists of nodes (agent or rule names).  If there are
-            no paths to any of the given source nodes, the generator is empty.
+            Yields paths as lists of nodes (agent or rule names with signs).
+            If there are no paths to any of the given source nodes, the
+            generator is empty.
         """
         # First, create a list of visited nodes
         # Adapted from
         # http://stackoverflow.com/questions/8922060/
         #                       how-to-trace-the-path-in-a-breadth-first-search
-        # FIXME: the sign information for the target should be associated with
-        # the observable itself
         queue = deque([[target]])
         while queue:
             # Get the first path in the queue
@@ -512,14 +516,12 @@ class ModelChecker(object):
 
     def process_statement(self, stmt):
         """
-        This method processes the test statement to get the data about subject,
-        object, and statement target polarity, according to the specific
-        model requirements for model checking, e.g. PysbModelChecker gets
-        subject monomer patterns and observables, while graph based
-        ModelCheckers will just get subject and object. Target polarity is
-        either determined by statement type or defaults to 1 (depending on the
-        model). If any of the requirements are not satisfied, result code is
-        also returned to construct PathResult object.
+        This method processes the test statement to get the data about subject
+        and object, according to the specific model requirements for model
+        checking, e.g. PysbModelChecker gets subject monomer patterns and
+        observables, while graph based ModelCheckers will return signed nodes
+        corresponding to subject and object. If any of the requirements are not
+        satisfied, result code is also returned to construct PathResult object.
 
         Parameters
         ----------
@@ -551,8 +553,9 @@ class ModelChecker(object):
         raise NotImplementedError("Method must be implemented in child class.")
 
     def _flip(self, graph, path):
-        # Reverse the path and the polarities associated with each node
+        # Reverse the path
         rev = tuple(reversed(path))
+        # Nodes already have signs in them
         # return self._path_with_polarities(graph, rev)
         return rev
 
@@ -596,6 +599,8 @@ class PysbModelChecker(ModelChecker):
         generate paths. Default is False (breadth-first search).
     seed : int
         Random seed for sampling (optional, default is None).
+    model_stmts : list[indra.statements.Statement]
+        A list of INDRA statements used to assemble PySB model.
     """
 
     def __init__(self, model, statements=None, agent_obs=None,
@@ -606,7 +611,6 @@ class PysbModelChecker(ModelChecker):
         else:
             self.agent_obs = []
         self.model_stmts = model_stmts if model_stmts else []
-        self.graph = None
         # Influence map
         self._im = None
         # Map from statements to associated observables
