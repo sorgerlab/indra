@@ -7,7 +7,7 @@
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="icon" href="https://db.indra.bio/favicon.ico">
+    <link rel="icon" href="https://bigmech.s3.amazonaws.com/indra-db/favicon.ico">
 
     <title>{{ title }}</title>
 
@@ -20,10 +20,6 @@
           href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
           integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
           crossorigin="anonymous">
-    <!-- TOC plugin: https://afeld.github.io/bootstrap-toc/ -->
-    <link rel="stylesheet"
-          href="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.0/dist/bootstrap-toc.min.css"
-          crossorigin="anonymous">
 
     <!-- Optional theme -->
     <link rel="stylesheet"
@@ -35,80 +31,19 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
             integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
             crossorigin="anonymous"></script>
-    <!-- TOC plugin JS: https://afeld.github.io/bootstrap-toc/ -->
-    <script src="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.0/dist/bootstrap-toc.min.js"
-            crossorigin="anonymous"></script>
 
     <style>
         a {
             color: #256DC5;
             target-new: tab;
         }
-
-        nav[data-toggle=toc] .nav > li > a {
-            font-size: 0.72em;
-            padding-right: 10px;
+        h1 {
+            margin-bottom: 0;
+        }
+        .page-header {
+            padding: 1em;
         }
 
-        nav[data-toggle=toc] .nav .nav > li > a {
-            font-size: 0.68em;
-        }
-
-        p {
-            margin-bottom: 0px;
-        }
-
-        nav {
-            overflow-y: auto;
-            height: 100vh;
-            display: block;
-        }
-
-        .group, .group-shown {
-            padding: 5px;
-            margin: 5px;
-            border-left: #0d5aa7 solid 1px;
-            border-right: #0d5aa7 solid 1px;
-        }
-
-        .group {
-            display: none;
-        }
-
-        .super_group_heading, .group_heading, .statement {
-            padding: 2px;
-            padding-left: 5px;
-            margin: 2px;
-            position: sticky;
-            border-radius: 2px;
-        }
-
-        .super_group_heading, .group_heading {
-            cursor: pointer;
-        }
-
-        .super_group_heading:hover, .group_heading:hover {
-            background-color: #f2f2f2;
-        }
-
-        .badge-subject {
-            background-color: #4a36aa;
-            color: #FFFFFF;
-        }
-
-        .badge-object {
-            background-color: #2d8e4c;
-            color: #FFFFFF;
-        }
-
-        .badge-other {
-            background-color: #606060;
-            color: #FFFFFF;
-        }
-
-        .curation_toggle {
-            cursor: pointer;
-        }
     </style>
 
     {% block scripts %}
@@ -117,36 +52,29 @@
 </head>
 
 <body>
-<!-- Needed for sidebar -->
 <div class="container">
-    <div class="row">
-        <div class="col" style="padding-left: 0px;"> <!-- main content -->
-            <!-- Page Header -->
-            <div class="page-header">
-                <h1>{{ title }}</h1>
-            </div>
-            {%  block header_desc %}
-            {% endblock %}
-            <hr>
+    <!-- Page Header -->
+    <div class="page-header">
+        {% block header %}
+            <h1>{{ title }}</h1>
+        {% endblock %}
+    </div>
+    {% block header_desc %}
+    {% endblock %}
+    <hr>
+    {% block body %}
+    {% endblock %}
+    <hr>
+    <!-- Footer -->
+    <footer class="footer text-muted" id="about">
+        <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
 
-            {% block body %}
-            {% endblock %}
+        INDRA is developed by <a href="https://indralab.github.io/">indralabs</a>,
+        a part of the Harvard Medical School Laboratory of Systems Pharmacology.
 
-            <hr>
-
-            <!-- Footer -->
-            <footer class="footer text-muted" id="about">
-                <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
-
-                INDRA is developed by <a href="https://indralab.github.io/">indralabs</a>,
-                a part of the Harvard Medical School Laboratory of Systems Pharmacology.
-
-                {% block additional_footer %}
-                {% endblock %}
-            </footer>
-        </div> <!-- /main content -->
-    </div> <!-- /row for sidebar -->
-</div> <!-- /container for sidebar -->
+        {% block additional_footer %}
+        {% endblock %}
+    </footer>
+</div>
 </body>
-
 </html>

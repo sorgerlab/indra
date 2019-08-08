@@ -3,6 +3,7 @@
 {% block scripts %}
   <!-- Toggle a hidden element -->
   <script>
+    const pubmed_fetch = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
 
     function toggler(short_name_key) {
       $("#" + short_name_key + "_group").toggle();
@@ -74,7 +75,7 @@
         const nAuthors = pmd.AuthorList.length;
         let authorsStr;
         if (nAuthors > 3)
-          authorsStr = `${pmd.AuthorList[0]}, ... ${pmc.AuthorList[nAuthors - 1]}`;
+          authorsStr = `${pmd.AuthorList[0]}, ... ${pmd.AuthorList[nAuthors - 1]}`;
         else
           authorsStr = pmd.AuthorList.join(", ");
 
@@ -138,6 +139,74 @@
       z-index: 10;
       padding-top: 5px;
     }
+
+    .nvp {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .src-api {
+        overflow-x: hidden;
+    }
+
+    .group, .group-shown {
+        padding: 5px;
+        margin: 5px;
+    }
+
+    .group {
+        display: none;
+        border-left: #0d5aa7 solid 1px;
+        border-right: #0d5aa7 solid 1px;
+    }
+
+    .super_group_heading, .group_heading, .statement, .evidence {
+        padding: 2px;
+        padding-left: 5px;
+        margin: 2px;
+        position: sticky;
+        border-radius: 2px;
+    }
+
+    .evidence, .evidence-text {
+        margin-bottom: 10px;
+    }
+
+    .evidence-text {
+        border-top: #cfcfcf solid 1px;
+        padding-top: 0.5em;
+    }
+
+    .super_group_heading, .group_heading {
+        cursor: pointer;
+    }
+
+    .super_group_heading:hover, .group_heading:hover {
+        background-color: #f2f2f2;
+    }
+
+    .badge-subject {
+        background-color: #4a36aa;
+        color: #FFFFFF;
+    }
+
+    .badge-object {
+        background-color: #2d8e4c;
+        color: #FFFFFF;
+    }
+
+    .badge-other {
+        background-color: #606060;
+        color: #FFFFFF;
+    }
+
+    .curation-row {
+        overflow-y: hidden;
+    }
+
+    .curation_toggle {
+        cursor: pointer;
+    }
   </style>
 {% endblock %}
 
@@ -152,8 +221,8 @@
         {% if src_counts.get(src) %}
           <span class="badge badge-source source-{{ src }}"
               title="{{ src }}">
-            {{ src_counts.get(src) }}
-          </span>
+      {{ src_counts.get(src) }}
+      </span>
         {% endif %}
       {% endfor %}
     {% endfor %}
@@ -172,8 +241,9 @@
     <div class="row">
       <div class="col">
         <h3 {% if metadata %}
-          title="{% for n, v in metadata.items() %}{{ n }}: {{ v }}\n{% endfor %}"
-          {% endif %}>
+          title="{% for n, v in metadata.items() %}{{ n }}: {{ v }}
+{% endfor %}"
+        {% endif %}>
           Statements
         </h3>
       </div>
@@ -199,16 +269,17 @@
     <hr>
   </div>
   {% for results in stmt_data.values() %}
+    {% set i_pair = loop.index0 %}
     {% if stmt_data.values()|length > 1 %}
       <div class="row super_group_heading"
          id="tl-{{ results['html_key'] }}"
          onclick="toggler('tl-{{ results['html_key'] }}')">
-        <div class="col">
+        <div class="col nvp">
           <h5 class="align-middle">
             {{ results['label'] }}
           </h5>
         </div>
-        <div class="col text-right">
+        <div class="col text-right nvp">
           {{ badges(results['source_counts']) }}
         </div>
       </div>
@@ -216,98 +287,112 @@
     {% else %}
       <div class="group-shown" id="tl-{{ results['html_key'] }}_group">
     {% endif %}
-    {% for short_name, short_name_key, stmt_info_list, src_counts in results['stmts_formatted'] %}
-      {% if results['stmts_formatted']|length > 1 %}
-        <div class="row group_heading"
-           onclick="toggler('{{ short_name_key }}');"
-           id="{{ short_name_key }}_heading">
-          <div class="col">
-            <h5 class="align-middle">{{ short_name }}</h5>
-          </div>
-          <div class="col text-right">
-            {{ badges(src_counts) }}
-          </div>
-        </div>
-        <div class="row group" id="{{ short_name_key }}_group">
-      {% else %}
-        <div class="row group-shown" id="{{ short_name_key }}_group">
-      {% endif %}
-    {% for stmt_info in stmt_info_list %}
-      <a name="{{ stmt_info['hash'] }}"></a>
-      <div class="row statement">
-        <div class="col text-left">
-          <h5 class="align-middle">
-            {{ stmt_info['english'] }}
-            <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html"
-               target="_blank">
-              <small class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</small>
-            </a>
-          </h5>
-        </div>
-        <div class="col text-right">
-          {{ badges(stmt_info['source_count']) }}
-        </div>
-      </div>
-      <div class="evidence">
-        <table class="table"
-             id="{{ stmt_info['hash'] }}"
-             style="border-collapse: collapse;">
-          <tbody id="table_{{ loop.index0 }}">
-          {% for ev in stmt_info['evidence'] %}
-            <tr id="{{ ev['source_hash'] }}"
-              style="border-bottom: 1px solid #FFFFFF;">
+        <div class="container nvp">
+        {% for short_name, short_name_key, stmt_info_list, src_counts in results['stmts_formatted'] %}
+          {% set i_type = loop.index0 %}
+          {% if results['stmts_formatted']|length > 1 %}
+            <div class="row group_heading"
+               onclick="toggler('{{ short_name_key }}');"
+               id="{{ short_name_key }}_heading">
+              <div class="col nvp">
+                <h5 class="align-middle">{{ short_name }}</h5>
+              </div>
+              <div class="col text-right nvp">
+                {{ badges(src_counts) }}
+              </div>
+            </div>
+            <div class="row group" id="{{ short_name_key }}_group">
+          {% else %}
+            <div class="row group-shown" id="{{ short_name_key }}_group">
+          {% endif %}
+              <div class="container nvp">
+              {% for stmt_info in stmt_info_list %}
+                {% set i_stmt = loop.index0 %}
+                <a name="{{ stmt_info['hash'] }}"></a>
+                <div class="row statement">
+                  <div class="col text-left nvp">
+                    <h5 class="align-middle">
+                      {{ stmt_info['english'] }}
+                      <a href="{% if db_rest_url %}{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html{% else %}#{% endif %}"
+                         {% if db_rest_url %}target="_blank"{% endif %}>
+                        <small class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</small>
+                      </a>
+                    </h5>
+                  </div>
+                  <div class="col text-right nvp">
+                    {{ badges(stmt_info['source_count']) }}
+                  </div>
+                </div>
+                <div class="row evidence">
+                  <div class="container" id="stmt-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}"
+                       data-stmt_hash="{{ stmt_info['hash'] }}">
+                    {% for ev in stmt_info['evidence'] %}
+                      <div class="row evidence-text" data-source_hash="{{ ev['source_hash'] }}"
+                           style="border-bottom: 1px solid #FFFFFF;"
+                           id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}">
 
-              <td width="6em" id="row{{ loop.index0 }}_click"
-                data-clicked="false" class="curation_toggle"
-                style="display: none">
-                &#9998;
-              </td>
+                        <div class="col-1">
+                            <div class="row">
+                                <div class="col-3 nvp curation_toggle"
+                                     id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}-click"
+                                     data-parent_id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}">
+                                    <a href="{% if db_rest_url %}{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html{% else %}#{% endif %}"
+                                       {% if db_rest_url %}target="_blank"{% endif %}>
+                                        &#10166;
+                                    </a>
+                                </div>
+                                <div class="col-9 nvp src-api"
+                                     title="{{ ev['source_api'] }}">
+                                    {{ ev['source_api'] }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-10">
+                          {% if ev['text'] %}
+                            "{{ ev['text'] }}"
+                          {% else %}
+                            <i>No evidence text available</i>
+                          {% endif %}
+                        </div>
+                        <div class="col-1 text-right">
+                          {% if ev['pmid'] %}
+                            <a class="pmid_link"
+                               title="Hover again to see info"
+                               onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                               href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}'
+                               target="_blank">
+                              {{ ev['pmid'] }}</a>
+                          {% elif 'pmid' in ev['text_refs'] and ev['text_refs']['pmid'] %}
+                            <a class="pmid_link"
+                               title="Hover again to see info"
+                               onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                               href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}'
+                               target="_blank">
+                              {{ ev['text_refs']['pmid'] }}</a>
+                          {% endif %}
 
-              <td width="25em">{{ ev['source_api'] }}</td>
-              {% if ev['text'] %}
-                <td width="100%">"{{ ev['text'] }}"</td>
-              {% else %}
-                <td width="100%"><i>No evidence text
-                  available</i></td>
-              {% endif %}
-              <td width="25em" align="left"
-                style="white-space: nowrap">
-                {% if ev['pmid'] %}
-                  <a class="pmid_link"
-                     title="Hover again to see info"
-                     onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
-                     href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}'
-                     target="_blank">
-                    {{ ev['pmid'] }}</a>
-                {% elif 'pmid' in ev['text_refs'] and ev['text_refs']['pmid'] %}
-                  <a class="pmid_link"
-                     title="Hover again to see info"
-                     onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
-                     href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}'
-                     target="_blank">
-                    {{ ev['text_refs']['pmid'] }}</a>
-                {% endif %}
-                {% if 'pmcid' in ev['text_refs'] and ev['text_refs']['pmcid'] %}
-                  | <a class="pmcid_link"
-                     href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'
-                     target="_blank">PMC</a>
-                {% endif %}
-                {% if 'doi' in ev['text_refs'] and ev['text_refs']['doi'] %}
-                  | <a class="doi_link"
-                     href='https://dx.doi.org/{{ ev["text_refs"]["doi"] }}'
-                     target="_blank">DOI</a>
-                {% endif %}
-              </td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </div> <!-- evidence -->
-    {% endfor %}
-    </div> <!-- statement group presentation -->
-    {% endfor %}
-  </div>
+                          {% if 'pmcid' in ev['text_refs'] and ev['text_refs']['pmcid'] %}
+                            | <a class="pmcid_link"
+                               href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'
+                               target="_blank">PMC</a>
+                          {% endif %}
+
+                          {% if 'doi' in ev['text_refs'] and ev['text_refs']['doi'] %}
+                            | <a class="doi_link"
+                               href='https://dx.doi.org/{{ ev["text_refs"]["doi"] }}'
+                               target="_blank">DOI</a>
+                          {% endif %}
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div> <!-- container -->
+                </div> <!-- row evidence -->
+              {% endfor %}
+             </div> <!-- PA Statement container -->
+           </div> <!-- PA Statement group -->
+         {% endfor %}
+       </div> <!-- container -->
+     </div> <!-- type groups -->
   {% endfor %}
-
 {% endblock %}
 
