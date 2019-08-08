@@ -1219,8 +1219,8 @@ def test_prune_influence_map_subj_obj():
     pr_before = mc.check_statement(s4)
     assert pr_before.result_code == 'PATHS_FOUND', pr_before
     # Now prune the influence map
-    mc.prune_influence_map()
-    mc.prune_influence_map_subj_obj()
+    mc.graph = None
+    mc.get_graph(prune_im=True, prune_im_degrade=True, prune_im_subj_obj=True)
     pr_after = mc.check_statement(s4)
     assert pr_after.result_code == 'NO_PATHS_FOUND', pr_after
 
