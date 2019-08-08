@@ -24,10 +24,10 @@ Curating a Statement
 --------------------
 Let's assume you want to check any statements were ROS1 is an agent for
 errors. Let's also limit the number of statements to 100 and the number of
-evidences per statements to 10. This will speed up the query and page loading.
+evidences per statements to 5. This will speed up the query and page loading.
 The appropriate address to enter in your browser would then be::
 
-    http://api.host/statements/from_agents?agent=ROS1&format=html&ev_limit=10&max_stmts=100
+    http://api.host/statements/from_agents?agent=ROS1&format=html&ev_limit=5&max_stmts=100
 
 To start curating a statement, **click the pen icon (circled)** on the far left
 side of the statement. This will produce a row below the statement with a
@@ -58,27 +58,17 @@ done, you are ready to submit your curation.
 
 Submitting a Curation
 ---------------------
-To **submit a curation**, there are three minimum requirements:
-
-1) A valid **API key** (at the top of the page, see image below)
-2) A **curator ID**, such as name or email (at the top of the page, see image
-   below)
-3) A **selection in the dropdown menu** (by the curated statement)
+To **submit a curation**, you will need to at least make a **selection in the
+dropdown menu** (by the curated statement). You will also need to be logged in
+before the curation is submitted. If you do not already have an account, all
+we ask for is your email.
 
 If you selected *other...* in the dropdown menu, you must *also* describe the
 error in the textbox.
 
-+------------------------------------------+
-| .. figure:: images/apikey_curatorID.png  |
-|   :align: center                         |
-|   :figwidth: 75 %                        |
-|                                          |
-|   *Provide a valid API key and a user ID |
-|   in order to submit a curation*         |
-+------------------------------------------+
-
 When you have entered the necessary information, click the **Submit button** by
-the statement that you curated:
+the statement that you curated (if you aren't logged in, you will be prompted
+to do so at this point):
 
 +------------------------------------------------+
 | .. figure:: images/curation_submit_circled.png |
