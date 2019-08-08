@@ -1,5 +1,5 @@
 import json
-
+import os
 import re
 from functools import lru_cache
 from urllib.parse import urlencode
@@ -11,18 +11,27 @@ MESH_URL = 'https://id.nlm.nih.gov/mesh/'
 HERE = dirname(abspath(__file__))
 RESOURCES = join(HERE, pardir, 'resources')
 MESH_FILE = join(RESOURCES, 'mesh_id_label_mappings.tsv')
+MESH_SUPP_FILE = join(RESOURCES, 'mesh_supp_id_label_mappings.tsv')
 
 
 mesh_id_to_name = {}
 mesh_name_to_id = {}
 mesh_name_to_id_name = {}
-for mesh_id, mesh_label, mesh_terms_str in read_unicode_csv(MESH_FILE,
-                                                            delimiter='\t'):
-    mesh_id_to_name[mesh_id] = mesh_label
-    mesh_name_to_id[mesh_label] = mesh_id
-    mesh_terms = mesh_terms_str.split('|')
-    for term in mesh_terms:
-        mesh_name_to_id_name[term] = [mesh_id, mesh_label]
+
+
+def _load_mesh_file(path):
+    it = read_unicode_csv(path, delimiter='\t')
+    for mesh_id, mesh_label, mesh_terms_str in it:
+        mesh_id_to_name[mesh_id] = mesh_label
+        mesh_name_to_id[mesh_label] = mesh_id
+        mesh_terms = mesh_terms_str.split('|')
+        for term in mesh_terms:
+            mesh_name_to_id_name[term] = [mesh_id, mesh_label]
+
+
+_load_mesh_file(MESH_FILE)
+if os.path.exists(MESH_SUPP_FILE):
+    _load_mesh_file(MESH_SUPP_FILE)
 
 
 @lru_cache(maxsize=1000)

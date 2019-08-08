@@ -18,6 +18,12 @@ def test_mesh_id_lookup_local():
     assert mesh_name == 'Glucosylceramides'
 
 
+def test_mesh_supplementary_id_lookup_local():
+    mesh_id = 'C056331'
+    mesh_name = mesh_client.get_mesh_name(mesh_id, offline=True)
+    assert mesh_name == 'carbazomycin G'
+
+
 def test_mesh_id_local_missing():
     mesh_id = 'XXXX'  # dummy name to make sure we don't have it offline
     mesh_name = mesh_client.get_mesh_name(mesh_id, offline=True)
