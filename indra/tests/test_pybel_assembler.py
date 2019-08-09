@@ -131,14 +131,18 @@ def test_activation():
     mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
     stmt1 = Activation(braf_no_act, mek)
     stmt2 = Activation(braf_kin, mek, 'kinase')
+    hash1 = stmt1.get_hash(refresh=True)
+    hash2 = stmt2.get_hash(refresh=True)
     edge1 = {
         pc.RELATION: pc.INCREASES,
-        pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY}
+        pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY},
+        'stmt_hash': hash1
     }
     edge2 = {
         pc.RELATION: pc.INCREASES,
         pc.SUBJECT: activity('kin'),
-        pc.OBJECT: activity('kin')
+        pc.OBJECT: activity('kin'),
+        'stmt_hash': hash2
     }
     for stmt, edge in ((stmt1, edge1), (stmt2, edge2)):
         pba = pa.PybelAssembler([stmt])
@@ -162,6 +166,8 @@ def test_direct_activation():
     )
     stmt1 = Activation(braf_no_act, mek, evidence=stmt1_ev)
     stmt2 = Activation(braf_kin, mek, 'kinase', evidence=stmt1_ev)
+    hash1 = stmt1.get_hash(refresh=True)
+    hash2 = stmt2.get_hash(refresh=True)
     edge1 = {
         pc.RELATION: pc.DIRECTLY_INCREASES,
         pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY},
@@ -170,6 +176,7 @@ def test_direct_activation():
             pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
             pc.CITATION_REFERENCE: '1234',
         },
+        'stmt_hash': hash1
     }
     edge2 = {
         pc.RELATION: pc.DIRECTLY_INCREASES,
@@ -180,6 +187,7 @@ def test_direct_activation():
             pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
             pc.CITATION_REFERENCE: '1234',
         },
+        'stmt_hash': hash2
     }
     for stmt, expected_edge in ((stmt1, edge1), (stmt2, edge2)):
         pba = pa.PybelAssembler([stmt])
@@ -197,10 +205,12 @@ def test_inhibition():
                      db_refs={'HGNC': '1097', 'UP': 'P15056'})
     mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
     stmt = Inhibition(braf_kin, mek, 'kinase')
+    stmt_hash = stmt.get_hash(refresh=True)
     edge = {
         pc.RELATION: pc.DECREASES,
         pc.SUBJECT: activity('kin'),
-        pc.OBJECT: activity('kin')
+        pc.OBJECT: activity('kin'),
+        'stmt_hash': stmt_hash
     }
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
@@ -249,6 +259,7 @@ def test_gef():
                 db_refs={'HGNC': '11187'})
     ras = Agent('KRAS', db_refs={'HGNC': '6407'})
     stmt = Gef(gef, ras)
+    stmt_hash = stmt.get_hash(refresh=True)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph) == 3
@@ -264,7 +275,8 @@ def test_gef():
     edge = {
         pc.RELATION: pc.DIRECTLY_INCREASES,
         pc.SUBJECT: activity('gef'),
-        pc.OBJECT: activity('gtp')
+        pc.OBJECT: activity('gtp'),
+        'stmt_hash': stmt_hash
     }
     assert edge_data == edge
 
@@ -274,6 +286,7 @@ def test_gap():
                 db_refs={'HGNC': '9871'})
     ras = Agent('KRAS', db_refs={'HGNC': '6407'})
     stmt = Gap(gap, ras)
+    stmt_hash = stmt.get_hash(refresh=True)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph) == 3
@@ -290,7 +303,8 @@ def test_gap():
     edge = {
         pc.RELATION: pc.DIRECTLY_DECREASES,
         pc.SUBJECT: activity('gap'),
-        pc.OBJECT: activity('gtp')
+        pc.OBJECT: activity('gtp'),
+        'stmt_hash': stmt_hash
     }
     assert edge_data == edge
 
@@ -373,6 +387,7 @@ def test_rxn_with_controller():
 def test_autophosphorylation():
     egfr = Agent('EGFR', db_refs={'HGNC': id('EGFR')})
     stmt = Autophosphorylation(egfr, 'Y', '1173')
+    stmt_hash = stmt.get_hash(refresh=True)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph) == 2
@@ -385,7 +400,8 @@ def test_autophosphorylation():
     # There will be two edges between these nodes
     edge_dicts = list(belgraph.get_edge_data(egfr_dsl,
                                              egfr_phos_node).values())
-    assert {pc.RELATION: pc.DIRECTLY_INCREASES} in edge_dicts
+    assert {pc.RELATION: pc.DIRECTLY_INCREASES, 'stmt_hash': stmt_hash} \
+        in edge_dicts
 
     # Test an autophosphorylation with a bound condition
     tab1 = Agent('TAB1', db_refs={'HGNC': id('TAB1')})
@@ -406,6 +422,7 @@ def test_bound_condition():
                        bound_conditions=[BoundCondition(egfr), BoundCondition(grb2)],
                        db_refs={'HGNC': id('SOS1')})
     stmt = Gef(sos1_bound, ras)
+    stmt_hash = stmt.get_hash(refresh=True)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph) == 6
@@ -420,7 +437,8 @@ def test_bound_condition():
     edge_data = (egfr_grb2_sos1_phos_complex_dsl, kras_node,
                  {
                      pc.RELATION: pc.DIRECTLY_INCREASES,
-                     pc.OBJECT: activity('gtp')
+                     pc.OBJECT: activity('gtp'),
+                     'stmt_hash': stmt_hash
                  })
     assert edge_data in belgraph.edges(data=True)
 
@@ -430,6 +448,7 @@ def test_transphosphorylation():
     egfr_dimer = Agent('EGFR', bound_conditions=[BoundCondition(egfr)],
                        db_refs={'HGNC': id('EGFR')})
     stmt = Transphosphorylation(egfr_dimer, 'Y', '1173')
+    stmt_hash = stmt.get_hash(refresh=True)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert belgraph.number_of_nodes() == 3
@@ -438,7 +457,8 @@ def test_transphosphorylation():
     egfr_dimer_node = complex_abundance([egfr_dsl, egfr_dsl])
     egfr_phos_node = egfr_dsl.with_variants(pmod('Ph', 'Tyr', 1173))
     edge_data = get_edge_data(belgraph, egfr_dimer_node, egfr_phos_node)
-    assert edge_data == {pc.RELATION: pc.DIRECTLY_INCREASES}
+    assert edge_data == {
+        pc.RELATION: pc.DIRECTLY_INCREASES, 'stmt_hash': stmt_hash}
 
 
 """
