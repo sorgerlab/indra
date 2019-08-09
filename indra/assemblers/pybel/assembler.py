@@ -363,9 +363,9 @@ class PybelAssembler(object):
         pass
 
 
-def belgraph_to_signed_graph(belgrpah, symmetric_variant_links=False):
+def belgraph_to_signed_graph(belgraph, symmetric_variant_links=False):
         edge_set = set()
-        for u, v, edge_data in belgrpah.edges(data=True):
+        for u, v, edge_data in belgraph.edges(data=True):
             rel = edge_data.get('relation')
             if rel in pc.CAUSAL_INCREASE_RELATIONS:
                 edge_set.add((u, v, 0))
