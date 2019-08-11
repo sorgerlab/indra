@@ -130,6 +130,22 @@ def get_mesh_id_name(mesh_term, offline=False):
 
 
 @lru_cache(maxsize=1000)
+def submt_sparql_query(query_body):
+    url = MESH_URL + 'sparql'
+    query = '%s\n%s' % (mesh_rdf_prefixes, query_body)
+    args = {'query': query, 'format': 'JSON', 'inference': 'true'}
+    resp = requests.get(url, params=args)
+    # Check status
+    if resp.status_code != 200:
+        return None
+    try:
+        # Try to parse the json response (this can raise exceptions if we
+        # got no response).
+        return resp.json()
+    except Exception:
+        return None
+
+
 def get_mesh_id_name_from_web(mesh_term):
     """Get the MESH ID and name for the given MESH term using the NLM REST API.
 
@@ -147,9 +163,7 @@ def get_mesh_id_name_from_web(mesh_term):
         a Concept name). If the query failed, or no descriptor corresponding to
         the name was found, returns a tuple of (None, None).
     """
-    url = MESH_URL + 'sparql'
-    query = """
-        %s
+    query_body = """
         SELECT ?d ?dName ?c ?cName 
         FROM <http://id.nlm.nih.gov/mesh>
         WHERE {
@@ -160,23 +174,11 @@ def get_mesh_id_name_from_web(mesh_term):
           FILTER (REGEX(?dName,'^%s$','i') || REGEX(?cName,'^%s$','i'))
         }
         ORDER BY ?d
-    """ % (mesh_rdf_prefixes, mesh_term, mesh_term)
-    args = {'query': query, 'format': 'JSON', 'inference': 'true'}
-    # Interestingly, the following call using requests.get to package the
-    # query does not work:
-    # resp = requests.get(url, data=args)
-    # But if the query string is explicitly urlencoded using urllib, it works:
-    query_string = '%s?%s' % (url, urlencode(args))
-    resp = requests.get(query_string)
-    # Check status
-    if resp.status_code != 200:
+    """ % (mesh_term, mesh_term)
+    mesh_json = submt_sparql_query(query_body)
+    if mesh_json is None:
         return None, None
-
     try:
-        # Try to parse the json response (this can raise exceptions if we
-        # got no response).
-        mesh_json = resp.json()
-
         # Choose the first entry (should usually be only one)
         id_uri = mesh_json['results']['bindings'][0]['d']['value']
         name = mesh_json['results']['bindings'][0]['dName']['value']
@@ -191,26 +193,17 @@ def get_mesh_id_name_from_web(mesh_term):
 
 
 def mesh_isa(mesh_id1, mesh_id2):
-    url = MESH_URL + 'sparql'
-    query = """
-        %s
+    query_body = """
         SELECT DISTINCT ?o
         FROM <http://id.nlm.nih.gov/mesh>
         WHERE {
           mesh:%s meshv:broaderDescriptor+ ?o .
         } 
-        """ % (mesh_rdf_prefixes, mesh_id1)
-    args = {'query': query, 'format': 'JSON', 'inference': 'true'}
-    query_string = '%s?%s' % (url, urlencode(args))
-    resp = requests.get(query_string)
-    import ipdb; ipdb.set_trace()
-    # Check status
-    if resp.status_code != 200:
+        """ % mesh_id1
+    mesh_json = submt_sparql_query(query_body)
+    if mesh_json is None:
         return False
     try:
-        # Try to parse the json response (this can raise exceptions if we
-        # got no response).
-        mesh_json = resp.json()
         results = mesh_json['results']['bindings']
         for result in results:
             id_uri = result['o']['value']
