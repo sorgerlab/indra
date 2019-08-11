@@ -81,3 +81,8 @@ def test_mesh_term_lookups():
         mesh_id, mesh_name = mesh_client.get_mesh_id_name(query_term)
         assert mesh_id == correct_id
         assert mesh_name == correct_name
+
+
+def test_mesh_isa():
+    assert mesh_client.mesh_isa('D011506', 'D000602')
+    assert not mesh_client.mesh_isa('D000602', 'D011506')
