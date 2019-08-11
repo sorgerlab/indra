@@ -149,16 +149,7 @@ def get_mesh_id_name_from_web(mesh_term):
     """
     url = MESH_URL + 'sparql'
     query = """
-        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-        PREFIX owl: <http://www.w3.org/2002/07/owl#>
-        PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
-        PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
-        PREFIX mesh2019: <http://id.nlm.nih.gov/mesh/2019/>
-        PREFIX mesh2018: <http://id.nlm.nih.gov/mesh/2018/>
-        PREFIX mesh2017: <http://id.nlm.nih.gov/mesh/2017/>
-
+        %s
         SELECT ?d ?dName ?c ?cName 
         FROM <http://id.nlm.nih.gov/mesh>
         WHERE {
@@ -169,7 +160,7 @@ def get_mesh_id_name_from_web(mesh_term):
           FILTER (REGEX(?dName,'^%s$','i') || REGEX(?cName,'^%s$','i'))
         }
         ORDER BY ?d
-    """ % (mesh_term, mesh_term)
+    """ % (mesh_rdf_prefixes, mesh_term, mesh_term)
     args = {'query': query, 'format': 'JSON', 'inference': 'true'}
     # Interestingly, the following call using requests.get to package the
     # query does not work:
@@ -199,3 +190,48 @@ def get_mesh_id_name_from_web(mesh_term):
     return id, name
 
 
+def mesh_isa(mesh_id1, mesh_id2):
+    url = MESH_URL + 'sparql'
+    query = """
+        %s
+        SELECT DISTINCT ?o
+        FROM <http://id.nlm.nih.gov/mesh>
+        WHERE {
+          mesh:%s meshv:broaderDescriptor+ ?o .
+        } 
+        """ % (mesh_rdf_prefixes, mesh_id1)
+    args = {'query': query, 'format': 'JSON', 'inference': 'true'}
+    query_string = '%s?%s' % (url, urlencode(args))
+    resp = requests.get(query_string)
+    import ipdb; ipdb.set_trace()
+    # Check status
+    if resp.status_code != 200:
+        return False
+    try:
+        # Try to parse the json response (this can raise exceptions if we
+        # got no response).
+        mesh_json = resp.json()
+        results = mesh_json['results']['bindings']
+        for result in results:
+            id_uri = result['o']['value']
+            # Strip the MESH prefix off the ID URI
+            m = re.match('http://id.nlm.nih.gov/mesh/([A-Za-z0-9]*)', id_uri)
+            id = m.groups()[0]
+            if mesh_id2 == id:
+                return True
+        return False
+    except Exception:
+        return False
+
+
+mesh_rdf_prefixes = """
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        PREFIX owl: <http://www.w3.org/2002/07/owl#>
+        PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+        PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+        PREFIX mesh2019: <http://id.nlm.nih.gov/mesh/2019/>
+        PREFIX mesh2018: <http://id.nlm.nih.gov/mesh/2018/>
+        PREFIX mesh2017: <http://id.nlm.nih.gov/mesh/2017/> 
+    """
