@@ -1,12 +1,18 @@
-import networkx as nx
-import pandas as pd
 import logging
+
+import pandas as pd
+import networkx as nx
+
+from indra.belief import SimpleScorer
+from indra.statements import Evidence
+from indra.statements import Statement
 
 logger = logging.getLogger(__name__)
 default_sign_dict = {'Activation': 0,
                      'Inhibition': 1,
                      'IncreaseAmount': 0,
                      'DecreaseAmount': 1}
+scorer = SimpleScorer()
 
 
 class IndraNet(nx.MultiDiGraph):
@@ -142,3 +148,19 @@ class IndraNet(nx.MultiDiGraph):
         """Create a signed graph from a pandas DataFrame."""
         net = cls.from_df(df)
         return net.to_signed_graph(sign_dict=sign_dict)
+
+    @staticmethod
+    def _update_edge_belief(G):
+        """G must be or be a child of an nx.Graph object"""
+
+        # Aggregate belief using fake statements, one statement per edge
+        for e in G.edges:
+            # Aggregate source counts
+            evidence_list = []
+            for stmt_data in G.edges[e]['statements']:
+                for k, v in stmt_data['source_counts'].items():
+                    for _ in range(v):
+                        evidence_list.append(Evidence(source_api=k))
+            G.edges[e]['belief'] = scorer.score_statement(
+                st=Statement(evidence=evidence_list))
+        return G
