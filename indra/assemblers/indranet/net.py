@@ -16,7 +16,8 @@ class IndraNet(nx.MultiDiGraph):
         self._is_multi = True
         self.mandatory_columns = ['agA_name', 'agB_name', 'agA_ns', 'agA_id',
                                   'agB_ns', 'agB_id', 'stmt_type',
-                                  'evidence_count', 'stmt_hash', 'belief']
+                                  'evidence_count', 'stmt_hash', 'belief',
+                                  'source_counts']
 
     @classmethod
     def from_df(cls, df):
@@ -91,6 +92,7 @@ class IndraNet(nx.MultiDiGraph):
                   'stmt_type': row['stmt_type'],
                   'evidence_count': row['evidence_count'],
                   'belief': row['belief'],
+                  'source_counts': row['source_counts'],
                   **edge_attr}
             graph.add_edge(**ed)
         if skipped:
