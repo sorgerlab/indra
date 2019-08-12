@@ -9,6 +9,7 @@ import networkx as nx
 from indra.statements import *
 from collections import Counter
 from pysb import *
+from pybel.dsl import *
 from pysb.core import SelfExporter
 from pysb.tools import render_reactions
 from indra.databases import hgnc_client
@@ -1435,19 +1436,19 @@ def test_amount_vs_activation():
     assert results[0][1].result_code == 'NO_PATHS_FOUND', results
 
 
-# Test signed and unsigned model checkers
-st1 = Activation(Agent('A'), Agent('B'))
-st2 = Inhibition(Agent('B'), Agent('D'))
-st3 = IncreaseAmount(Agent('C'), Agent('B'))
-st4 = DecreaseAmount(Agent('C'), Agent('D'))
-st5 = IncreaseAmount(Agent('D'), Agent('E'))
+# Test other ModelChecker types
+st1 = Activation(Agent('A', db_refs={'HGNC': 1}), Agent('B', db_refs={'HGNC': 2}))
+st2 = Inhibition(Agent('B', db_refs={'HGNC': 2}), Agent('D', db_refs={'HGNC': 4}))
+st3 = IncreaseAmount(Agent('C', db_refs={'HGNC': 3}), Agent('B', db_refs={'HGNC': 2}))
+st4 = DecreaseAmount(Agent('C', db_refs={'HGNC': 3}), Agent('D', db_refs={'HGNC': 4}))
+st5 = IncreaseAmount(Agent('D', db_refs={'HGNC': 4}), Agent('E', db_refs={'HGNC': 5}))
 
-test_st1 = Activation(Agent('A'), Agent('E'))
-test_st2 = Inhibition(Agent('A'), Agent('E'))
-test_st3 = Activation(Agent('A'), Agent('C'))
-test_st4 = Activation(Agent('F'), Agent('B'))
-test_st5 = DecreaseAmount(Agent('B'), Agent('F'))
-test_st6 = ActiveForm(Agent('A'), None, True)
+test_st1 = Activation(Agent('A', db_refs={'HGNC': 1}), Agent('E', db_refs={'HGNC': 5}))
+test_st2 = Inhibition(Agent('A', db_refs={'HGNC': 1}), Agent('E', db_refs={'HGNC': 5}))
+test_st3 = Activation(Agent('A', db_refs={'HGNC': 1}), Agent('C', db_refs={'HGNC': 3}))
+test_st4 = Activation(Agent('F', db_refs={'HGNC': 6}), Agent('B', db_refs={'HGNC': 2}))
+test_st5 = DecreaseAmount(Agent('B', db_refs={'HGNC': 2}), Agent('F', db_refs={'HGNC': 6}))
+test_st6 = ActiveForm(Agent('A', db_refs={'HGNC': 1}), None, True)
 
 
 def test_unsigned_path():
@@ -1479,6 +1480,26 @@ def test_signed_path():
     assert results[0][1].result_code == 'NO_PATHS_FOUND'
     assert results[1][1].result_code == 'PATHS_FOUND'
     assert results[1][1].paths[0] == (('A', 0), ('B', 0), ('D', 1), ('E', 1))
+    assert results[2][1].result_code == 'NO_PATHS_FOUND'
+    assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
+    assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
+    assert results[5][1].result_code == 'STATEMENT_TYPE_NOT_HANDLED'
+
+
+def test_pybel_path():
+    pba = PybelAssembler([st1, st2, st3, st4, st5])
+    pybel_model = pba.make_model()
+    pbmc = PybelModelChecker(pybel_model)
+    pbmc.add_statements(
+        [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6])
+    results = pbmc.check_model()
+    assert results[0][1].result_code == 'NO_PATHS_FOUND'
+    assert results[1][1].result_code == 'PATHS_FOUND'
+    a = protein('HGNC', hgnc_client.get_hgnc_name(1))
+    b = protein('HGNC', hgnc_client.get_hgnc_name(2))
+    d = protein('HGNC', hgnc_client.get_hgnc_name(4))
+    e = protein('HGNC', hgnc_client.get_hgnc_name(5))
+    assert results[1][1].paths[0] == ((a, 0), (b, 0), (d, 1), (e, 1))
     assert results[2][1].result_code == 'NO_PATHS_FOUND'
     assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
     assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
