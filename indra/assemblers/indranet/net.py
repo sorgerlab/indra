@@ -106,7 +106,13 @@ class IndraNet(nx.MultiDiGraph):
         return graph
 
     def to_digraph(self):
-        """Flatten the IndraNet to a DiGraph."""
+        """Flatten the IndraNet to a DiGraph
+
+        Returns
+        -------
+        G : IndraNet(nx.DiGraph)
+            An IndraNet graph flattened to a DiGraph
+        """
         G = nx.DiGraph()
         for u, v, data in self.edges(data=True):
             if G.has_edge(u, v):
@@ -125,7 +131,13 @@ class IndraNet(nx.MultiDiGraph):
             the edge. By default only Activation and IncreaseAmount are added
             as positive edges and Inhibition and DecreaseAmount are added as
             negative edges, but a user can pass any other Statement types in
-            a dictionary."""
+            a dictionary.
+
+        Returns
+        -------
+        SG : IndraNet(nx.MultiDiGraph)
+            An IndraNet graph flattened to a signed graph
+        """
         SG = nx.MultiDiGraph()
         for u, v, data in self.edges(data=True):
             if data['stmt_type'] not in sign_dict:
