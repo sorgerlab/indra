@@ -13,16 +13,20 @@ from pysb.core import SelfExporter
 from pysb.tools import render_reactions
 from indra.databases import hgnc_client
 from indra.explanation.model_checker import ModelChecker, PysbModelChecker, \
+    UnsignedModelChecker, SignedGraphModelChecker, PybelModelChecker, \
     _mp_embeds_into, _cp_embeds_into, _match_lhs, stmt_from_rule, PathResult, \
     remove_im_params
 from indra.assemblers.pysb.assembler import PysbAssembler, \
                                             set_base_initial_condition
+from indra.assemblers.indranet import IndraNetAssembler
+from indra.assemblers.pybel import PybelAssembler
 from pysb.tools import species_graph
 from pysb.bng import generate_equations
 from pysb import kappa
 from pysb.testing import with_model
 
 
+# Test PysbModelChecker
 @with_model
 def test_mp_embedding():
     # Create a PySB model
@@ -1431,6 +1435,57 @@ def test_amount_vs_activation():
     assert results[0][1].result_code == 'NO_PATHS_FOUND', results
 
 
+# Test signed and unsigned model checkers
+st1 = Activation(Agent('A'), Agent('B'))
+st2 = Inhibition(Agent('B'), Agent('D'))
+st3 = IncreaseAmount(Agent('C'), Agent('B'))
+st4 = DecreaseAmount(Agent('C'), Agent('D'))
+st5 = IncreaseAmount(Agent('D'), Agent('E'))
+
+test_st1 = Activation(Agent('A'), Agent('E'))
+test_st2 = Inhibition(Agent('A'), Agent('E'))
+test_st3 = Activation(Agent('A'), Agent('C'))
+test_st4 = Activation(Agent('F'), Agent('B'))
+test_st5 = DecreaseAmount(Agent('B'), Agent('F'))
+test_st6 = ActiveForm(Agent('A'), None, True)
+
+
+def test_unsigned_path():
+    ia = IndraNetAssembler([st1, st2, st3, st4, st5])
+    net = ia.make_model()
+    unsigned_model = net.to_digraph()
+    umc = UnsignedModelChecker(unsigned_model)
+    umc.add_statements(
+        [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6])
+    results = umc.check_model()
+    assert results[0][1].result_code == 'PATHS_FOUND'
+    assert results[0][1].paths[0] == (('A', 0), ('B', 0), ('D', 0), ('E', 0))
+    assert results[1][1].result_code == 'PATHS_FOUND'
+    assert results[1][1].paths[0] == (('A', 0), ('B', 0), ('D', 0), ('E', 0))
+    assert results[2][1].result_code == 'NO_PATHS_FOUND'
+    assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
+    assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
+    assert results[5][1].result_code == 'STATEMENT_TYPE_NOT_HANDLED'
+
+
+def test_signed_path():
+    ia = IndraNetAssembler([st1, st2, st3, st4, st5])
+    net = ia.make_model()
+    signed_model = net.to_signed_graph()
+    smc = SignedGraphModelChecker(signed_model)
+    smc.add_statements(
+        [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6])
+    results = smc.check_model()
+    assert results[0][1].result_code == 'NO_PATHS_FOUND'
+    assert results[1][1].result_code == 'PATHS_FOUND'
+    assert results[1][1].paths[0] == (('A', 0), ('B', 0), ('D', 1), ('E', 1))
+    assert results[2][1].result_code == 'NO_PATHS_FOUND'
+    assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
+    assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
+    assert results[5][1].result_code == 'STATEMENT_TYPE_NOT_HANDLED'
+
+
+# Test graph conversion
 def test_signed_edges_to_nodes():
     g = nx.MultiDiGraph()
     g.add_edge('A', 'B', sign=0)
@@ -1445,9 +1500,8 @@ def test_signed_edges_to_nodes():
     sng = mc.signed_edges_to_signed_nodes(g, prune_nodes=False)
     assert len(sng.nodes) == 10
     assert len(sng.edges) == 10
-    assert set(sng.nodes) == set(
-        [('A', 0), ('A', 1), ('B', 0), ('B', 1), ('C', 0), ('C', 1), ('D', 0),
-         ('D', 1), ('E', 0), ('E', 1)])
+    assert set(sng.nodes) == {('A', 0), ('A', 1), ('B', 0), ('B', 1), ('C', 0),
+                              ('C', 1), ('D', 0), ('D', 1), ('E', 0), ('E', 1)}
     assert (('A', 0), ('B', 0)) in sng.edges
     assert (('A', 1), ('B', 1)) in sng.edges
     assert (('B', 0), ('D', 1)) in sng.edges
