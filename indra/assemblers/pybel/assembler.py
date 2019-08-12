@@ -223,30 +223,8 @@ class PybelAssembler(object):
                 else: # output_format == 'bel':
                     pybel.to_bel(self.model, fh)
 
-
-    def to_signed_graph(self, symmetric_variant_links=False):
-        edge_set = set()
-        for u, v, edge_data in self.model.edges(data=True):
-            rel = edge_data.get('relation')
-            if rel in pc.CAUSAL_INCREASE_RELATIONS:
-                edge_set.add((u, v, 0))
-            elif rel in (pc.HAS_VARIANT, pc.HAS_COMPONENT):
-                edge_set.add((u, v, 0))
-                if symmetric_variant_links:
-                    edge_set.add((v, u, 0))
-            elif rel in pc.CAUSAL_DECREASE_RELATIONS:
-                edge_set.add((u, v, 1))
-            else:
-                continue
-        # Turn the tuples into dicts
-        graph = nx.MultiDiGraph()
-        graph.add_edges_from(
-            (u, v, dict(sign=sign))
-            for u, v, sign in edge_set
-        )
-        return graph
-
-    def _add_nodes_edges(self, subj_agent, obj_agent, relation, evidences):
+    def _add_nodes_edges(self, subj_agent, obj_agent, relation, stmt_hash,
+                         evidences):
         """Given subj/obj agents, relation, and evidence, add nodes/edges."""
         subj_data, subj_edge = _get_agent_node(subj_agent)
         obj_data, obj_edge = _get_agent_node(obj_agent)
@@ -255,8 +233,8 @@ class PybelAssembler(object):
             return
         subj_node = self.model.add_node_from_data(subj_data)
         obj_node = self.model.add_node_from_data(obj_data)
-        edge_data_list = \
-            _combine_edge_data(relation, subj_edge, obj_edge, evidences)
+        edge_data_list = _combine_edge_data(
+            relation, subj_edge, obj_edge, stmt_hash, evidences)
         for edge_data in edge_data_list:
             self.model.add_edge(subj_node, obj_node, **edge_data)
 
@@ -269,7 +247,8 @@ class PybelAssembler(object):
         act_obj.activity.is_active = True
         activates = isinstance(stmt, Activation)
         relation = get_causal_edge(stmt, activates)
-        self._add_nodes_edges(stmt.subj, act_obj, relation, stmt.evidence)
+        self._add_nodes_edges(stmt.subj, act_obj, relation,
+                              stmt.get_hash(refresh=True), stmt.evidence)
 
     def _assemble_modification(self, stmt):
         """Example: p(HGNC:MAP2K1) => p(HGNC:MAPK1, pmod(Ph, Thr, 185))"""
@@ -277,13 +256,15 @@ class PybelAssembler(object):
         sub_agent.mods.append(stmt._get_mod_condition())
         activates = isinstance(stmt, AddModification)
         relation = get_causal_edge(stmt, activates)
-        self._add_nodes_edges(stmt.enz, sub_agent, relation, stmt.evidence)
+        self._add_nodes_edges(stmt.enz, sub_agent, relation,
+                              stmt.get_hash(refresh=True), stmt.evidence)
 
     def _assemble_regulate_amount(self, stmt):
         """Example: p(HGNC:ELK1) => p(HGNC:FOS)"""
         activates = isinstance(stmt, IncreaseAmount)
         relation = get_causal_edge(stmt, activates)
-        self._add_nodes_edges(stmt.subj, stmt.obj, relation, stmt.evidence)
+        self._add_nodes_edges(stmt.subj, stmt.obj, relation,
+                              stmt.get_hash(refresh=True), stmt.evidence)
 
     def _assemble_gef(self, stmt):
         """Example: act(p(HGNC:SOS1), ma(gef)) => act(p(HGNC:KRAS), ma(gtp))"""
@@ -291,7 +272,8 @@ class PybelAssembler(object):
         gef.activity = ActivityCondition('gef', True)
         ras = deepcopy(stmt.ras)
         ras.activity = ActivityCondition('gtpbound', True)
-        self._add_nodes_edges(gef, ras, pc.DIRECTLY_INCREASES, stmt.evidence)
+        self._add_nodes_edges(gef, ras, pc.DIRECTLY_INCREASES,
+                              stmt.get_hash(refresh=True), stmt.evidence)
 
     def _assemble_gap(self, stmt):
         """Example: act(p(HGNC:RASA1), ma(gap)) =| act(p(HGNC:KRAS), ma(gtp))"""
@@ -299,7 +281,8 @@ class PybelAssembler(object):
         gap.activity = ActivityCondition('gap', True)
         ras = deepcopy(stmt.ras)
         ras.activity = ActivityCondition('gtpbound', True)
-        self._add_nodes_edges(gap, ras, pc.DIRECTLY_DECREASES, stmt.evidence)
+        self._add_nodes_edges(gap, ras, pc.DIRECTLY_DECREASES,
+                              stmt.get_hash(refresh=True), stmt.evidence)
 
     def _assemble_active_form(self, stmt):
         """Example: p(HGNC:ELK1, pmod(Ph)) => act(p(HGNC:ELK1), ma(tscript))"""
@@ -307,7 +290,8 @@ class PybelAssembler(object):
         act_agent.activity = ActivityCondition(stmt.activity, True)
         activates = stmt.is_active
         relation = get_causal_edge(stmt, activates)
-        self._add_nodes_edges(stmt.agent, act_agent, relation, stmt.evidence)
+        self._add_nodes_edges(stmt.agent, act_agent, relation,
+                              stmt.get_hash(refresh=True), stmt.evidence)
 
     def _assemble_complex(self, stmt):
         """Example: complex(p(HGNC:MAPK14), p(HGNC:TAB1))"""
@@ -338,8 +322,9 @@ class PybelAssembler(object):
         if stmt.subj is not None:
             subj_attr, subj_edge = _get_agent_node(stmt.subj)
             subj_node = self.model.add_node_from_data(subj_attr)
-            edge_data_list = _combine_edge_data(pc.DIRECTLY_INCREASES,
-                                           subj_edge, obj_edge, stmt.evidence)
+            edge_data_list = _combine_edge_data(
+                pc.DIRECTLY_INCREASES, subj_edge, obj_edge,
+                stmt.get_hash(refresh=True), stmt.evidence)
             for edge_data in edge_data_list:
                 self.model.add_edge(subj_node, obj_node, **edge_data)
 
@@ -356,7 +341,7 @@ class PybelAssembler(object):
         sub_agent.bound_conditions = []
         # FIXME
         self._add_nodes_edges(stmt.enz, sub_agent, pc.DIRECTLY_INCREASES,
-                              stmt.evidence)
+                              stmt.get_hash(refresh=True), stmt.evidence)
 
     def _assemble_transphosphorylation(self, stmt):
         """Example: complex(p(HGNC:EGFR)) =>
@@ -368,7 +353,7 @@ class PybelAssembler(object):
         sub_agent = deepcopy(stmt.enz.bound_conditions[0].agent)
         sub_agent.mods.append(stmt._get_mod_condition())
         self._add_nodes_edges(stmt.enz, sub_agent, pc.DIRECTLY_INCREASES,
-                              stmt.evidence)
+                              stmt.get_hash(refresh=True), stmt.evidence)
 
     def _assemble_translocation(self, stmt):
         #cc = hierarchies['cellular_component']
@@ -378,12 +363,36 @@ class PybelAssembler(object):
         pass
 
 
-def _combine_edge_data(relation, subj_edge, obj_edge, evidences):
+def belgraph_to_signed_graph(belgraph, symmetric_variant_links=False):
+        edge_set = set()
+        for u, v, edge_data in belgraph.edges(data=True):
+            rel = edge_data.get('relation')
+            if rel in pc.CAUSAL_INCREASE_RELATIONS:
+                edge_set.add((u, v, 0))
+            elif rel in (pc.HAS_VARIANT, pc.HAS_COMPONENT):
+                edge_set.add((u, v, 0))
+                if symmetric_variant_links:
+                    edge_set.add((v, u, 0))
+            elif rel in pc.CAUSAL_DECREASE_RELATIONS:
+                edge_set.add((u, v, 1))
+            else:
+                continue
+        # Turn the tuples into dicts
+        graph = nx.MultiDiGraph()
+        graph.add_edges_from(
+            (u, v, dict(sign=sign))
+            for u, v, sign in edge_set
+        )
+        return graph
+
+def _combine_edge_data(relation, subj_edge, obj_edge, stmt_hash, evidences):
     edge_data = {pc.RELATION: relation}
     if subj_edge:
         edge_data[pc.SUBJECT] = subj_edge
     if obj_edge:
         edge_data[pc.OBJECT] = obj_edge
+    if stmt_hash:
+        edge_data['stmt_hash'] = stmt_hash
     if not evidences:
         return [edge_data]
     edge_data_list = []
