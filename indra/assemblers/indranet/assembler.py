@@ -3,7 +3,7 @@ import pandas as pd
 from .net import IndraNet
 from indra.statements import *
 from itertools import permutations
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 
 logger = logging.getLogger(__name__)
@@ -132,7 +132,15 @@ class IndraNetAssembler():
                     ('stmt_type', stmt_type),
                     ('evidence_count', len(stmt.evidence)),
                     ('stmt_hash', stmt.get_hash(refresh=True)),
-                    ('belief', stmt.belief)])
+                    ('belief', stmt.belief),
+                    ('source_counts', _get_source_counts(stmt))])
                 rows.append(row)
         df = pd.DataFrame.from_dict(rows)
         return df
+
+
+def _get_source_counts(stmt):
+    source_counts = defaultdict
+    for ev in stmt.evidence:
+        source_counts[ev.source_api] += 1
+    return source_counts
