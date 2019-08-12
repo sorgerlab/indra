@@ -113,7 +113,7 @@ class IndraNet(nx.MultiDiGraph):
                 G[u][v]['statements'].append(data)
             else:
                 G.add_edge(u, v, statements=[data])
-        return G
+        return self._update_edge_belief(G)
 
     def to_signed_graph(self, sign_dict=default_sign_dict):
         """Flatten the IndraNet to a signed graph.
@@ -135,7 +135,7 @@ class IndraNet(nx.MultiDiGraph):
                 SG[u][v][sign]['statements'].append(data)
             else:
                 SG.add_edge(u, v, sign, statements=[data], sign=sign)
-        return SG
+        return self._update_edge_belief(SG)
 
     @classmethod
     def digraph_from_df(cls, df):
