@@ -292,8 +292,7 @@ class ModelChecker(object):
         # Generate the predecessors to our observable and count the paths
         path_lengths = []
         path_metrics = []
-        for source, path_length in self._find_sources(
-                self.graph, obj, input_set):
+        for source, path_length in self._find_sources(obj, input_set):
             pm = PathMetric(source, obj, path_length)
             path_metrics.append(pm)
             path_lengths.append(path_length)
@@ -312,7 +311,7 @@ class ModelChecker(object):
                 pr.path_metrics = path_metrics
                 # Get the first path
                 path_iter = enumerate(self._find_sources_with_paths(
-                                           self.graph, obj, input_set))
+                                           obj, input_set))
                 for path_ix, path in path_iter:
                     flipped = self._flip(self.graph, path)
                     pr.add_path(flipped)
@@ -330,7 +329,7 @@ class ModelChecker(object):
             return PathResult(False, 'NO_PATHS_FOUND',
                               max_paths, max_path_length)
 
-    def _find_sources(self, graph, target, sources):
+    def _find_sources(self, target, sources):
         """Get the subset of source nodes with paths to the target.
 
         Given a target, a list of sources, and a path polarity, perform a
@@ -341,8 +340,6 @@ class ModelChecker(object):
 
         Parameters
         ----------
-        graph : nx.DiGraph
-            Graph representing the model.
         target : tuple
             The node (object or rule name with a sign) in the graph to start
             looking upstream for matching sources.
@@ -366,7 +363,7 @@ class ModelChecker(object):
 
         # The queue holds tuples of "parents" (in this case downstream nodes)
         # and their "children" (in this case their upstream influencers)
-        queue = deque([(target, graph.predecessors(target), 0)])
+        queue = deque([(target, self.graph.predecessors(target), 0)])
         while queue:
             parent, children, path_length = queue[0]
             try:
@@ -385,7 +382,7 @@ class ModelChecker(object):
                 if child not in visited:
                     visited.add(child)
                     queue.append(
-                        (child, graph.predecessors(child), path_length + 1))
+                        (child, self.graph.predecessors(child), path_length + 1))
             # Once we've finished iterating over the children of the current
             # node, pop the node off and go to the next one in the queue
             except StopIteration:
@@ -393,7 +390,7 @@ class ModelChecker(object):
         # There was no path; this will produce an empty generator
         return
 
-    def _find_sources_with_paths(self, graph, target, sources):
+    def _find_sources_with_paths(self, target, sources):
         """Get the subset of source nodes with paths to the target.
 
         Given a target and a list of sources perform a breadth-first search
@@ -401,8 +398,6 @@ class ModelChecker(object):
 
         Parameters
         ----------
-        graph : nx.DiGraph
-            Graph representing the model.
         target : tuple
             The node (object or rule name with a sign) in the graph to start
             looking upstream for matching sources.
@@ -437,9 +432,10 @@ class ModelChecker(object):
             # Don't allow trivial paths consisting only of the target node
             if (sources is None or node in sources) and node[1] == 0 \
                     and len(path) > 1:
-                logger.debug('Found path: %s' % str(self._flip(graph, path)))
+                logger.debug('Found path: %s' % str(
+                    self._flip(self.graph, path)))
                 yield tuple(path)
-            for predecessor in graph.predecessors(node):
+            for predecessor in self.graph.predecessors(node):
                 # Only add predecessors to the path if it's not already in the
                 # path--prevents loops
                 if predecessor in path:
