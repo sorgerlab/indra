@@ -8,10 +8,6 @@ from indra.statements import Evidence
 from indra.statements import Statement
 
 logger = logging.getLogger(__name__)
-default_sign_dict = {'Activation': 0,
-                     'Inhibition': 1,
-                     'IncreaseAmount': 0,
-                     'DecreaseAmount': 1}
 scorer = SimpleScorer()
 
 
@@ -121,7 +117,7 @@ class IndraNet(nx.MultiDiGraph):
                 G.add_edge(u, v, statements=[data])
         return self._update_edge_belief(G)
 
-    def to_signed_graph(self, sign_dict=default_sign_dict):
+    def to_signed_graph(self, sign_dict):
         """Flatten the IndraNet to a signed graph.
         
         Parameters
@@ -156,7 +152,7 @@ class IndraNet(nx.MultiDiGraph):
         return net.to_digraph()
 
     @classmethod
-    def signed_from_df(cls, df, sign_dict=default_sign_dict):
+    def signed_from_df(cls, df, sign_dict):
         """Create a signed graph from a pandas DataFrame."""
         net = cls.from_df(df)
         return net.to_signed_graph(sign_dict=sign_dict)

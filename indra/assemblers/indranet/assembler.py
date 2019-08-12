@@ -32,6 +32,11 @@ class IndraNetAssembler():
     model : IndraNet
         An IndraNet graph object assembled by this class.
     """
+    default_sign_dict = {'Activation': 0,
+                         'Inhibition': 1,
+                         'IncreaseAmount': 0,
+                         'DecreaseAmount': 1}
+
     def __init__(self, statements=None):
         self.statements = statements if statements else []
         self.model = None
@@ -79,10 +84,8 @@ class IndraNetAssembler():
         elif graph_type == 'digraph':
             model = IndraNet.digraph_from_df(df)
         elif graph_type == 'signed':
-            if not sign_dict:
-                model = IndraNet.signed_from_df(df)
-            else:
-                model = IndraNet.signed_from_df(df, sign_dict=sign_dict)
+            sign_dict = self.default_sign_dict if not sign_dict else sign_dict
+            model = IndraNet.signed_from_df(df, sign_dict=sign_dict)
         else:
             raise TypeError('Have to specify one of \'multi_graph\', '
                             '\'digraph\' or \'signed\' when providing graph '
