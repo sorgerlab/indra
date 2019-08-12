@@ -298,7 +298,6 @@ class ModelChecker(object):
             path_lengths.append(path_length)
         logger.info('Finding paths between %s and %s' % (subj, obj))
         # Now, look for paths
-        paths = []
         if path_metrics and max_paths == 0:
             pr = PathResult(True, 'MAX_PATHS_ZERO',
                             max_paths, max_path_length)
@@ -463,7 +462,7 @@ class ModelChecker(object):
         graph : networkx.MultiDiGraph
             Graph with signed edges to convert. Can have multiple edges between
             a pair of nodes.
-        prune_negative_sources : Optional(boolean)
+        prune_nodes : Optional[bool]
             If True, iteratively prunes negative (with sign 1) nodes without
             predecessors.
         Returns
