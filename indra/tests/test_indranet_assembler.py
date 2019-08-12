@@ -65,7 +65,7 @@ def test_make_df():
     assert len(df) == 9
     assert set(df.columns) == {
         'agA_name', 'agB_name', 'agA_ns', 'agA_id', 'agB_ns', 'agB_id',
-        'stmt_type', 'evidence_count', 'stmt_hash', 'belief'}
+        'stmt_type', 'evidence_count', 'stmt_hash', 'belief', 'source_counts'}
 
 
 # Test assembly from IndraNet directly
