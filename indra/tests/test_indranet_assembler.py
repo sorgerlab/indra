@@ -113,6 +113,7 @@ def test_to_digraph():
     assert set([
         stmt['stmt_type'] for stmt in digraph['a']['b']['statements']]) == {
             'Activation', 'Phosphorylation', 'Inhibition', 'IncreaseAmount'}
+    assert all(digraph.edges[e].get('belief', False) for e in digraph.edges)
     digraph_from_df = IndraNet.digraph_from_df(df)
     assert nx.is_isomorphic(digraph, digraph_from_df)
 
@@ -136,3 +137,5 @@ def test_to_signed_graph():
     assert set([stmt['stmt_type'] for stmt in
                 signed_graph['b']['c'][1]['statements']]) == {
                     'Inhibition', 'DecreaseAmount'}
+    assert all(signed_graph.edges[e].get('belief', False) for e in
+               signed_graph.edges)
