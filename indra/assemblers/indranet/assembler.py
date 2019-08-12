@@ -47,7 +47,8 @@ class IndraNetAssembler():
         """
         self.statements += stmts
 
-    def make_model(self, exclude_stmts=None, complex_members=3):
+    def make_model(self, exclude_stmts=None, complex_members=3,
+                   graph_type='multi_graph', sign_dict=None):
         """Assemble an IndraNet graph object.
 
         Parameters
@@ -59,6 +60,13 @@ class IndraNetAssembler():
             All complexes larger than complex_members will be rejected. For
             accepted complexes, all permutations of their members will be added
             as edges.
+        graph_type : str
+            Specify the type of graph to assemble. Chose from 'multi_graph'
+            (default), 'digraph', 'signed'.
+        sign_dict : dict
+            A dictionary mapping a Statement type to a sign to be used for
+            the edge. This parameter is only used with the 'signed' option.
+            See IndraNet.to_signed_graph for more info.
 
         Returns
         -------
@@ -66,7 +74,19 @@ class IndraNetAssembler():
             IndraNet graph object.
         """
         df = self.make_df(exclude_stmts, complex_members)
-        model = IndraNet.from_df(df)
+        if graph_type == 'multi_graph':
+            model = IndraNet.from_df(df)
+        elif graph_type == 'digraph':
+            model = IndraNet.digraph_from_df(df)
+        elif graph_type == 'signed':
+            if not sign_dict:
+                model = IndraNet.signed_from_df(df)
+            else:
+                model = IndraNet.signed_from_df(df, sign_dict=sign_dict)
+        else:
+            raise TypeError('Have to specify one of \'multi_graph\', '
+                            '\'digraph\' or \'signed\' when providing graph '
+                            'type.')
         return model
 
     def make_df(self, exclude_stmts=None, complex_members=3):
