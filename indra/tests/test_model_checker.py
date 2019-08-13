@@ -1453,8 +1453,7 @@ test_st6 = ActiveForm(Agent('A', db_refs={'HGNC': 1}), None, True)
 
 def test_unsigned_path():
     ia = IndraNetAssembler([st1, st2, st3, st4, st5])
-    net = ia.make_model()
-    unsigned_model = net.to_digraph()
+    unsigned_model = ia.make_model(graph_type='digraph')
     umc = UnsignedModelChecker(unsigned_model)
     umc.add_statements(
         [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6])
@@ -1471,8 +1470,7 @@ def test_unsigned_path():
 
 def test_signed_path():
     ia = IndraNetAssembler([st1, st2, st3, st4, st5])
-    net = ia.make_model()
-    signed_model = net.to_signed_graph()
+    signed_model = ia.make_model(graph_type='signed')
     smc = SignedGraphModelChecker(signed_model)
     smc.add_statements(
         [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6])
