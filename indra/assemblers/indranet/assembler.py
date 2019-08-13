@@ -3,7 +3,7 @@ import pandas as pd
 from .net import IndraNet
 from indra.statements import *
 from itertools import permutations
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 
 logger = logging.getLogger(__name__)
@@ -32,6 +32,11 @@ class IndraNetAssembler():
     model : IndraNet
         An IndraNet graph object assembled by this class.
     """
+    default_sign_dict = {'Activation': 0,
+                         'Inhibition': 1,
+                         'IncreaseAmount': 0,
+                         'DecreaseAmount': 1}
+
     def __init__(self, statements=None):
         self.statements = statements if statements else []
         self.model = None
@@ -47,7 +52,8 @@ class IndraNetAssembler():
         """
         self.statements += stmts
 
-    def make_model(self, exclude_stmts=None, complex_members=3):
+    def make_model(self, exclude_stmts=None, complex_members=3,
+                   graph_type='multi_graph', sign_dict=None):
         """Assemble an IndraNet graph object.
 
         Parameters
@@ -59,6 +65,13 @@ class IndraNetAssembler():
             All complexes larger than complex_members will be rejected. For
             accepted complexes, all permutations of their members will be added
             as edges.
+        graph_type : str
+            Specify the type of graph to assemble. Chose from 'multi_graph'
+            (default), 'digraph', 'signed'.
+        sign_dict : dict
+            A dictionary mapping a Statement type to a sign to be used for
+            the edge. This parameter is only used with the 'signed' option.
+            See IndraNet.to_signed_graph for more info.
 
         Returns
         -------
@@ -66,7 +79,17 @@ class IndraNetAssembler():
             IndraNet graph object.
         """
         df = self.make_df(exclude_stmts, complex_members)
-        model = IndraNet.from_df(df)
+        if graph_type == 'multi_graph':
+            model = IndraNet.from_df(df)
+        elif graph_type == 'digraph':
+            model = IndraNet.digraph_from_df(df)
+        elif graph_type == 'signed':
+            sign_dict = self.default_sign_dict if not sign_dict else sign_dict
+            model = IndraNet.signed_from_df(df, sign_dict=sign_dict)
+        else:
+            raise TypeError('Have to specify one of \'multi_graph\', '
+                            '\'digraph\' or \'signed\' when providing graph '
+                            'type.')
         return model
 
     def make_df(self, exclude_stmts=None, complex_members=3):
@@ -132,7 +155,15 @@ class IndraNetAssembler():
                     ('stmt_type', stmt_type),
                     ('evidence_count', len(stmt.evidence)),
                     ('stmt_hash', stmt.get_hash(refresh=True)),
-                    ('belief', stmt.belief)])
+                    ('belief', stmt.belief),
+                    ('source_counts', _get_source_counts(stmt))])
                 rows.append(row)
         df = pd.DataFrame.from_dict(rows)
         return df
+
+
+def _get_source_counts(stmt):
+    source_counts = defaultdict(int)
+    for ev in stmt.evidence:
+        source_counts[ev.source_api] += 1
+    return source_counts

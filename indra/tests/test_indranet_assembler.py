@@ -1,5 +1,6 @@
 import pandas as pd
-from indra.assemblers.indranet import IndraNetAssembler
+import networkx as nx
+from indra.assemblers.indranet import IndraNetAssembler, IndraNet
 from indra.statements import *
 
 
@@ -17,12 +18,12 @@ st6 = Complex([Agent('h'), Agent('i'), Agent('j'), Agent('b')])
 st7 = Phosphorylation(None, Agent('x'))
 
 
+# Test assembly from assembler side
 def test_simple_assembly():
     ia = IndraNetAssembler([st1, st2, st3, st4, st5, st6, st7])
     g = ia.make_model()
     assert len(g.nodes) == 6
     assert len(g.edges) == 9
-    print(g.edges)
     # Stmt with 1 agent should not be added
     assert 'e' not in g.nodes
     # Complex with more than 3 agents should not be added
@@ -64,4 +65,85 @@ def test_make_df():
     assert len(df) == 9
     assert set(df.columns) == {
         'agA_name', 'agB_name', 'agA_ns', 'agA_id', 'agB_ns', 'agB_id',
-        'stmt_type', 'evidence_count', 'stmt_hash', 'belief'}
+        'stmt_type', 'evidence_count', 'stmt_hash', 'belief', 'source_counts'}
+
+
+# Test assembly from IndraNet directly
+def test_from_df():
+    ia = IndraNetAssembler([st1, st2, st3, st4, st5, st6, st7])
+    df = ia.make_df()
+    net = IndraNet.from_df(df)
+    assert len(net.nodes) == 6
+    assert len(net.edges) == 9
+    # Stmt with 1 agent should not be added
+    assert 'e' not in net.nodes
+    # Complex with more than 3 agents should not be added
+    assert ('f', 'g', 0) in net.edges
+    assert ('h', 'i', 0) not in net.edges
+    # Test node attributes
+    assert net.nodes['a']['ns'] == 'HGNC', net.nodes['a']['ns']
+    assert net.nodes['a']['id'] == '1'
+    # Test edge attributes
+    e = net['a']['c'][0]
+    assert e['stmt_type'] == 'Inhibition'
+    assert e['belief'] == 0.76
+    assert e['evidence_count'] == 3
+    assert net['b']['d'][0]['evidence_count'] == 0
+
+
+ab1 = Activation(Agent('a'), Agent('b'), evidence=[
+    Evidence(source_api='sparser')])
+ab2 = Phosphorylation(Agent('a'), Agent('b'),evidence=[
+    Evidence(source_api='sparser'), Evidence(source_api='reach')])
+ab3 = Inhibition(Agent('a'), Agent('b'), evidence=[
+    Evidence(source_api='sparser'), Evidence(source_api='reach')])
+ab4 = IncreaseAmount(Agent('a'), Agent('b'), evidence=[
+    Evidence(source_api='trips')])
+bc1 = Activation(Agent('b'), Agent('c'), evidence=[
+    Evidence(source_api='trips')])
+bc2 = Inhibition(Agent('b'), Agent('c'), evidence=[
+    Evidence(source_api='trips'), Evidence(source_api='reach')])
+bc3 = IncreaseAmount(Agent('b'), Agent('c'), evidence=[
+    Evidence(source_api='sparser'), Evidence(source_api='reach')])
+bc4 = DecreaseAmount(Agent('b'), Agent('c'), evidence=[
+    Evidence(source_api='reach'), Evidence(source_api='trips')])
+
+
+def test_to_digraph():
+    ia = IndraNetAssembler([ab1, ab2, ab3, ab4, bc1, bc2, bc3, bc4])
+    df = ia.make_df()
+    net = IndraNet.from_df(df)
+    assert len(net.nodes) == 3
+    assert len(net.edges) == 8
+    digraph = net.to_digraph()
+    assert len(digraph.nodes) == 3
+    assert len(digraph.edges) == 2
+    assert set([
+        stmt['stmt_type'] for stmt in digraph['a']['b']['statements']]) == {
+            'Activation', 'Phosphorylation', 'Inhibition', 'IncreaseAmount'}
+    assert all(digraph.edges[e].get('belief', False) for e in digraph.edges)
+    digraph_from_df = IndraNet.digraph_from_df(df)
+    assert nx.is_isomorphic(digraph, digraph_from_df)
+
+
+def test_to_signed_graph():
+    ia = IndraNetAssembler([ab1, ab2, ab3, ab4, bc1, bc2, bc3, bc4])
+    df = ia.make_df()
+    net = IndraNet.from_df(df)
+    signed_graph = net.to_signed_graph(
+        sign_dict=IndraNetAssembler.default_sign_dict)
+    assert len(signed_graph.nodes) == 3
+    assert len(signed_graph.edges) == 4
+    assert set([stmt['stmt_type'] for stmt in
+                signed_graph['a']['b'][0]['statements']]) == {
+                    'Activation', 'IncreaseAmount'}
+    assert set([stmt['stmt_type'] for stmt in
+                signed_graph['a']['b'][1]['statements']]) == {'Inhibition'}
+    assert set([stmt['stmt_type'] for stmt in
+                signed_graph['b']['c'][0]['statements']]) == {
+                    'Activation', 'IncreaseAmount'}
+    assert set([stmt['stmt_type'] for stmt in
+                signed_graph['b']['c'][1]['statements']]) == {
+                    'Inhibition', 'DecreaseAmount'}
+    assert all(signed_graph.edges[e].get('belief', False) for e in
+               signed_graph.edges)
