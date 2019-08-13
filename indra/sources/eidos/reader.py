@@ -54,7 +54,7 @@ class EidosReader(object):
     def initialize_reader(self):
         """Instantiate the Eidos reader attribute of this reader."""
         eidos = autoclass(eidos_package + '.EidosSystem')
-        self.eidos_reader = eidos(autoclass('java.lang.Object')())
+        self.eidos_reader = eidos()
 
     def reground_texts(self, texts, yaml_str=None):
         if self.eidos_reader is None:
