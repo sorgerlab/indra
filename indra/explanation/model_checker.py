@@ -315,7 +315,7 @@ class ModelChecker(object):
                         path_iter = nx.shortest_simple_paths(
                             self.graph, source, obj)
                         for path in path_iter:
-                            pr.add_path(path)
+                            pr.add_path(tuple(path))
                             # Do not get next path if reached max_paths
                             if len(pr.paths) >= max_paths:
                                 break
