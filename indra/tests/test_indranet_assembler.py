@@ -91,14 +91,22 @@ def test_from_df():
     assert net['b']['d'][0]['evidence_count'] == 0
 
 
-ab1 = Activation(Agent('a'), Agent('b'))
-ab2 = Phosphorylation(Agent('a'), Agent('b'))
-ab3 = Inhibition(Agent('a'), Agent('b'))
-ab4 = IncreaseAmount(Agent('a'), Agent('b'))
-bc1 = Activation(Agent('b'), Agent('c'))
-bc2 = Inhibition(Agent('b'), Agent('c'))
-bc3 = IncreaseAmount(Agent('b'), Agent('c'))
-bc4 = DecreaseAmount(Agent('b'), Agent('c'))
+ab1 = Activation(Agent('a'), Agent('b'), evidence=[
+    Evidence(source_api='sparser')])
+ab2 = Phosphorylation(Agent('a'), Agent('b'),evidence=[
+    Evidence(source_api='sparser'), Evidence(source_api='reach')])
+ab3 = Inhibition(Agent('a'), Agent('b'), evidence=[
+    Evidence(source_api='sparser'), Evidence(source_api='reach')])
+ab4 = IncreaseAmount(Agent('a'), Agent('b'), evidence=[
+    Evidence(source_api='trips')])
+bc1 = Activation(Agent('b'), Agent('c'), evidence=[
+    Evidence(source_api='trips')])
+bc2 = Inhibition(Agent('b'), Agent('c'), evidence=[
+    Evidence(source_api='trips'), Evidence(source_api='reach')])
+bc3 = IncreaseAmount(Agent('b'), Agent('c'), evidence=[
+    Evidence(source_api='sparser'), Evidence(source_api='reach')])
+bc4 = DecreaseAmount(Agent('b'), Agent('c'), evidence=[
+    Evidence(source_api='reach'), Evidence(source_api='trips')])
 
 
 def test_to_digraph():
