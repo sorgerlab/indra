@@ -309,11 +309,20 @@ class ModelChecker(object):
                                 max_paths, max_path_length)
                 pr.path_metrics = path_metrics
                 # Get the first path
-                path_iter = enumerate(self._find_sources_with_paths(
-                                           obj, input_set))
-                for path_ix, path in path_iter:
-                    flipped = self._flip(self.graph, path)
-                    pr.add_path(flipped)
+                # Try to find paths using sources from input set
+                for source in input_set:
+                    try:
+                        path_iter = nx.shortest_simple_paths(
+                            self.graph, source, obj)
+                        for path in path_iter:
+                            pr.add_path(path)
+                            # Do not get next path if reached max_paths
+                            if len(pr.paths) >= max_paths:
+                                break
+                    # No path from this source, try other
+                    except nx.NetworkXNoPath:
+                        continue
+                    # Do not check next source if reached max_paths
                     if len(pr.paths) >= max_paths:
                         break
                 return pr
