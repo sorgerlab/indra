@@ -398,63 +398,6 @@ class ModelChecker(object):
         # There was no path; this will produce an empty generator
         return
 
-    def _find_sources_with_paths(self, target, sources):
-        """Get the subset of source nodes with paths to the target.
-
-        Given a target and a list of sources perform a breadth-first search
-        upstream from the target to find paths to any of the upstream sources.
-
-        Parameters
-        ----------
-        target : tuple
-            The node (object or rule name with a sign) in the graph to start
-            looking upstream for matching sources.
-        sources : list[tuple]
-            Signed nodes corresponding to the subject or upstream influence
-            being checked.
-
-        Returns
-        -------
-        generator of path
-            Yields paths as lists of nodes (agent or rule names with signs).
-            If there are no paths to any of the given source nodes, the
-            generator is empty.
-        """
-        # First, create a list of visited nodes
-        # Adapted from
-        # http://stackoverflow.com/questions/8922060/
-        #                       how-to-trace-the-path-in-a-breadth-first-search
-        queue = deque([[target]])
-        while queue:
-            # Get the first path in the queue
-            path = queue.popleft()
-            node = path[-1]
-            # If there's only one node in the path, it's the observable we're
-            # starting from, so the path is positive
-            # if len(path) == 1:
-            #    sign = 1
-            # Because the path runs from target back to source, we have to
-            # reverse the path to calculate the overall polarity
-            # else:
-            #    sign = _path_polarity(graph, reversed(path))
-            # Don't allow trivial paths consisting only of the target node
-            if (sources is None or node in sources) and node[1] == 0 \
-                    and len(path) > 1:
-                logger.debug('Found path: %s' % str(
-                    self._flip(self.graph, path)))
-                yield tuple(path)
-            for predecessor in self.graph.predecessors(node):
-                # Only add predecessors to the path if it's not already in the
-                # path--prevents loops
-                if predecessor in path:
-                    continue
-                # Otherwise, the new path is a copy of the old one plus the new
-                # predecessor
-                new_path = list(path)
-                new_path.append(predecessor)
-                queue.append(new_path)
-        return
-
     def signed_edges_to_signed_nodes(self, graph, prune_nodes=True,
                                      edge_signs={'pos': 0, 'neg': 1}):
         """Convert a graph with signed edges to a graph with signed nodes. The
@@ -555,36 +498,6 @@ class ModelChecker(object):
     def _sample_paths(self, input_set, obj_name, target_polarity,
                       max_paths=1, max_path_length=5):
         raise NotImplementedError("Method must be implemented in child class.")
-
-    def _flip(self, graph, path):
-        # Reverse the path
-        rev = tuple(reversed(path))
-        # Nodes already have signs in them
-        # return self._path_with_polarities(graph, rev)
-        return rev
-
-    # def _path_with_polarities(self, graph, path):
-    #     # This doesn't address the effect of the rules themselves on the
-    #     # observables of interest--just the effects of the rules on each other
-    #     edge_polarities = []
-    #     path_list = list(path)
-    #     edges = zip(path_list[0:-1], path_list[1:])
-    #     for from_tup, to_tup in edges:
-    #         from_rule = from_tup[0]
-    #         to_rule = to_tup[0]
-    #         edge = (from_rule, to_rule)
-    #         edge_polarities.append(_get_edge_sign(graph, edge))
-    #     # Compute and return the overall path polarity
-    #     # path_polarity = np.prod(edge_polarities)
-    #     # Calculate left product of edge polarities return
-    #     polarities_lprod = [1]
-    #     for ep_ix, ep in enumerate(edge_polarities):
-    #         polarities_lprod.append(polarities_lprod[-1] * ep)
-    #     assert len(path) == len(polarities_lprod)
-    #     return tuple(zip([node for node, sign in path], polarities_lprod))
-    #     # assert path_polarity == 1 or path_polarity == -1
-    #     # return True if path_polarity == 1 else False
-    #     # return path_polarity
 
 
 class PysbModelChecker(ModelChecker):
