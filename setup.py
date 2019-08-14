@@ -55,7 +55,7 @@ def main():
                     'indra.assemblers.sif', 'indra.assemblers.tsv',
                     'indra.belief',
                     'indra.benchmarks', 'indra.databases',
-                    'indra.explanation',
+                    'indra.explanation', 'indra.explanation.model_checker',
                     'indra.literature', 'indra.mechlinker',
                     'indra.preassembler',
                     'indra.preassembler.grounding_mapper', 'indra.sources',
