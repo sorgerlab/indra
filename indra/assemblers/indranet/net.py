@@ -1,15 +1,18 @@
 import logging
 
+import numpy as np
 import pandas as pd
 import networkx as nx
+from decimal import Decimal
 
 from indra.belief import SimpleScorer
 from indra.statements import Evidence
 from indra.statements import Statement
 
 logger = logging.getLogger(__name__)
-scorer = SimpleScorer()
-
+simple_scorer = SimpleScorer()
+np.seterr(all='raise')
+NP_PRECISION = 10 ** -np.finfo(np.longfloat).precision  # Numpy precision
 
 class IndraNet(nx.MultiDiGraph):
     """A Networkx representation of INDRA Statements."""
@@ -172,3 +175,26 @@ class IndraNet(nx.MultiDiGraph):
             G.edges[e]['belief'] = scorer.score_statement(
                 st=Statement(evidence=evidence_list))
         return G
+
+
+def _simple_scorer_update(G, edge):
+    evidence_list = []
+    for stmt_data in G.edges[edge]['statements']:
+        for k, v in stmt_data['source_counts'].items():
+            for _ in range(v):
+                evidence_list.append(Evidence(source_api=k))
+    return simple_scorer.score_statement(st=Statement(evidence=evidence_list))
+
+
+def _complementary_belief(G, edge):
+    # Aggregate belief score: 1-prod(1-belief_i)
+    belief_list = [s['belief'] for s in G.edges[edge]['statements']]
+    try:
+        ag_belief = np.longfloat(1.0) - np.prod(np.fromiter(
+            map(lambda belief: np.longfloat(1.0) - belief, belief_list),
+            dtype=np.longfloat))
+    except FloatingPointError as err:
+        logger.warning('%s: Resetting ag_belief to 10*np.longfloat precision '
+                       '(%.0e)' % (err, Decimal(NP_PRECISION * 10)))
+        ag_belief = NP_PRECISION * 10
+    return ag_belief
