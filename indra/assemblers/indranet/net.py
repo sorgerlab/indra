@@ -104,7 +104,7 @@ class IndraNet(nx.MultiDiGraph):
             logger.warning('Skipped %d edges with None as node' % skipped)
         return graph
 
-    def to_digraph(self):
+    def to_digraph(self, flattening_method=None):
         """Flatten the IndraNet to a DiGraph
 
         Returns
@@ -118,9 +118,9 @@ class IndraNet(nx.MultiDiGraph):
                 G[u][v]['statements'].append(data)
             else:
                 G.add_edge(u, v, statements=[data])
-        return self._update_edge_belief(G)
+        return self._update_edge_belief(G, flattening_method)
 
-    def to_signed_graph(self, sign_dict):
+    def to_signed_graph(self, sign_dict, flattening_method=None):
         """Flatten the IndraNet to a signed graph.
         
         Parameters
@@ -146,22 +146,23 @@ class IndraNet(nx.MultiDiGraph):
                 SG[u][v][sign]['statements'].append(data)
             else:
                 SG.add_edge(u, v, sign, statements=[data], sign=sign)
-        return self._update_edge_belief(SG)
+        return self._update_edge_belief(SG, flattening_method)
 
     @classmethod
-    def digraph_from_df(cls, df):
+    def digraph_from_df(cls, df, flattening_method=None):
         """Create a digraph from a pandas DataFrame."""
         net = cls.from_df(df)
-        return net.to_digraph()
+        return net.to_digraph(flattening_method=flattening_method)
 
     @classmethod
-    def signed_from_df(cls, df, sign_dict):
+    def signed_from_df(cls, df, sign_dict, flattening_method=None):
         """Create a signed graph from a pandas DataFrame."""
         net = cls.from_df(df)
-        return net.to_signed_graph(sign_dict=sign_dict)
+        return net.to_signed_graph(sign_dict=sign_dict,
+                                   flattening_method=flattening_method)
 
     @staticmethod
-    def _update_edge_belief(G, flattening_method=None):
+    def _update_edge_belief(G, flattening_method):
         """G must be or be a child of an nx.Graph object. If provided,
         flattening_method must be a function taking at least a graph G and
         return a number (the new belief for the flattened edge).
