@@ -107,6 +107,11 @@ class IndraNet(nx.MultiDiGraph):
     def to_digraph(self, flattening_method=None):
         """Flatten the IndraNet to a DiGraph
 
+        Parameters
+        ----------
+        flattening_method : str
+            The method to use when updating the belief for the flattened edge
+
         Returns
         -------
         G : IndraNet(nx.DiGraph)
@@ -131,6 +136,8 @@ class IndraNet(nx.MultiDiGraph):
             as positive edges and Inhibition and DecreaseAmount are added as
             negative edges, but a user can pass any other Statement types in
             a dictionary.
+        flattening_method : str
+            The method to use when updating the belief for the flattened edge
 
         Returns
         -------
