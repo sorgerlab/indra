@@ -14,6 +14,7 @@ simple_scorer = SimpleScorer()
 np.seterr(all='raise')
 NP_PRECISION = 10 ** -np.finfo(np.longfloat).precision  # Numpy precision
 
+
 class IndraNet(nx.MultiDiGraph):
     """A Networkx representation of INDRA Statements."""
     def __init__(self, incoming_graph_data=None, **attr):
@@ -189,7 +190,7 @@ class IndraNet(nx.MultiDiGraph):
         contaning the edge data from the edges included on the flattened edge.
         """
 
-        if not flattening_method:
+        if not flattening_method or flattening_method == 'simple_scorer':
             for e in G.edges:
                 G.edges[e]['belief'] = _simple_scorer_update(G, edge=e)
         elif flattening_method == 'complementary_belief':
