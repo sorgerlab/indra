@@ -1,8 +1,8 @@
-from .model_checker import stmt_from_rule
+from .model_checker.pysb import stmt_from_rule
 from indra.sources.indra_db_rest.api import get_statements_by_hash
 
 
-def stmts_from_path(path, model, stmts):
+def stmts_from_pysb_path(path, model, stmts):
     """Return source Statements corresponding to a path in a model.
 
     Parameters
