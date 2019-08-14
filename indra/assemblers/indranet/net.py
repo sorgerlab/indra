@@ -190,12 +190,14 @@ class IndraNet(nx.MultiDiGraph):
     @staticmethod
     def _update_edge_belief(G, flattening_method):
         """G must be or be a child of an nx.Graph object. If
-        'flattening_method' is a function, it must take at least a graph G
-        and return a number (the new belief for the flattened edge).
+        'flattening_method' is a function, it must take at least the graph G
+        and an edge and return a number (the new belief for the flattened
+        edge).
 
-        We assume that G is the flattened graph, and that there is an edge
-        attribute called 'statements' containing a list of dictionaries, each
-        contaning the edge data from the edges included on the flattened edge.
+        We assume that G is the flattened graph and that all its edges have an
+        edge attribute called 'statements' containing a list of dictionaries
+        representing the edge data of all the edges in the un-flattened graph
+        that were mapped to the corresponding flattened edge in G.
         """
 
         if not flattening_method or flattening_method == 'simple_scorer':
