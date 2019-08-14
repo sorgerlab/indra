@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
+import unittest
 import pickle
 import random
 import numpy as np
@@ -1125,57 +1126,57 @@ def test_check_transphosphorylation():
     assert results[1][1] == True
 """
 
-# NOTE: skip path score tests for now
-# def test_model_check_data():
-#     # Create a set of statements
-#     a = Agent('A', db_refs={'HGNC': '1'})
-#     b = Agent('B', db_refs={'HGNC': '2'})
-#     b_phos = Agent('B', mods=[ModCondition('phosphorylation')],
-#                    db_refs={'HGNC': '2'})
-#     c = Agent('C', db_refs={'HGNC': '3'})
-#     c_phos = Agent('C', mods=[ModCondition('phosphorylation')],
-#                    db_refs={'HGNC': '3'})
-#     d = Agent('D', db_refs={'HGNC': '4'})
-#     d_phos = Agent('D', mods=[ModCondition('phosphorylation')],
-#                    db_refs={'HGNC': '4'})
+@unittest.skip('Skip path score tests for now')
+def test_model_check_data():
+    # Create a set of statements
+    a = Agent('A', db_refs={'HGNC': '1'})
+    b = Agent('B', db_refs={'HGNC': '2'})
+    b_phos = Agent('B', mods=[ModCondition('phosphorylation')],
+                   db_refs={'HGNC': '2'})
+    c = Agent('C', db_refs={'HGNC': '3'})
+    c_phos = Agent('C', mods=[ModCondition('phosphorylation')],
+                   db_refs={'HGNC': '3'})
+    d = Agent('D', db_refs={'HGNC': '4'})
+    d_phos = Agent('D', mods=[ModCondition('phosphorylation')],
+                   db_refs={'HGNC': '4'})
 
-#     # Two paths from A to D: One going through B and another through C
-#     st1 = Phosphorylation(a, b)
-#     st2 = Phosphorylation(b_phos, d)
-#     st3 = Phosphorylation(a, c)
-#     st4 = Phosphorylation(c_phos, d)
-#     # Statements/Data agents for checking
-#     stmt_to_check = Phosphorylation(a, d)
-#     agent_obs = [b_phos, c_phos, d_phos]
-#     # Make model
-#     pa = PysbAssembler()
-#     pa.add_statements([st1, st2, st3, st4])
-#     pa.make_model(policies='one_step')
-#     mc = PysbModelChecker(pa.model, [stmt_to_check], agent_obs)
-#     results = mc.check_model(max_paths=5)
-#     # Create observable
-#     assert len(results) == 1
-#     pr = results[0][1]
-#     res = pr.paths[0:2]
-#     assert len(res) == 2
-#     p1 = (('A_phosphorylation_B_phospho', 0),
-#           ('B_phospho_phosphorylation_D_phospho', 0),
-#           ('D_phospho_p_obs', 0))
-#     assert p1 in res
-#     p2 = (('A_phosphorylation_C_phospho', 0),
-#           ('C_phospho_phosphorylation_D_phospho', 0),
-#           ('D_phospho_p_obs', 0))
-#     assert p2 in res
-#     # Now, a vector linking agents with values, expressed at first as
-#     # +/- 1
-#     # This data should ensure that the path through B should be more highly
-#     # ranked than the path through C
-#     data = {b_phos: 1, c_phos: -1, d_phos: 1}
-#     paths = results[0][1].paths
-#     scored_paths = mc.score_paths(paths, data)
-#     assert scored_paths[0][0] == p1
-#     assert scored_paths[1][0] == p2
-#     assert scored_paths[0][1] > scored_paths[1][1]
+    # Two paths from A to D: One going through B and another through C
+    st1 = Phosphorylation(a, b)
+    st2 = Phosphorylation(b_phos, d)
+    st3 = Phosphorylation(a, c)
+    st4 = Phosphorylation(c_phos, d)
+    # Statements/Data agents for checking
+    stmt_to_check = Phosphorylation(a, d)
+    agent_obs = [b_phos, c_phos, d_phos]
+    # Make model
+    pa = PysbAssembler()
+    pa.add_statements([st1, st2, st3, st4])
+    pa.make_model(policies='one_step')
+    mc = PysbModelChecker(pa.model, [stmt_to_check], agent_obs)
+    results = mc.check_model(max_paths=5)
+    # Create observable
+    assert len(results) == 1
+    pr = results[0][1]
+    res = pr.paths[0:2]
+    assert len(res) == 2
+    p1 = (('A_phosphorylation_B_phospho', 0),
+          ('B_phospho_phosphorylation_D_phospho', 0),
+          ('D_phospho_p_obs', 0))
+    assert p1 in res
+    p2 = (('A_phosphorylation_C_phospho', 0),
+          ('C_phospho_phosphorylation_D_phospho', 0),
+          ('D_phospho_p_obs', 0))
+    assert p2 in res
+    # Now, a vector linking agents with values, expressed at first as
+    # +/- 1
+    # This data should ensure that the path through B should be more highly
+    # ranked than the path through C
+    data = {b_phos: 1, c_phos: -1, d_phos: 1}
+    paths = results[0][1].paths
+    scored_paths = mc.score_paths(paths, data)
+    assert scored_paths[0][0] == p1
+    assert scored_paths[1][0] == p2
+    assert scored_paths[0][1] > scored_paths[1][1]
 
 
 def test_prune_influence_map():
@@ -1244,174 +1245,176 @@ def test_prune_influence_map_degrade_bind():
     im = mc.get_im()
     assert len(im.edges()) == 2, im.edges()
 
-# NOTE: skip sampling tests for now
-# def test_weighted_sampling1():
-#     """Test sampling with different path lengths but no data."""
-#     os.environ['TEST_FLAG'] = 'TRUE'
-#     mc = ModCondition('phosphorylation')
-#     braf = Agent('BRAF', db_refs={'HGNC': '1097'})
-#     map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
-#     map2k1_phos = Agent('MAP2K1', mods=[mc], db_refs={'HGNC': '6840'})
-#     mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
-#     mapk1_phos = Agent('MAPK1', mods=[mc], db_refs={'HGNC': '6871'})
-#     jun = Agent('JUN', db_refs={'HGNC': '6204'})
-#     stmt_to_check = Phosphorylation(braf, jun)
-#     stmts = [stmt_to_check,
-#              Phosphorylation(braf, map2k1),
-#              Phosphorylation(map2k1_phos, jun),
-#              Phosphorylation(map2k1_phos, mapk1),
-#              Phosphorylation(mapk1_phos, jun)]
-#     # Make model
-#     pa = PysbAssembler()
-#     pa.add_statements(stmts)
-#     pa.make_model(policies='one_step')
-#     # Make the model checker and prune the influence map
-#     mc = PysbModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
-#     mc.prune_influence_map()
-#     # Seed the random number generator
-#     np.random.seed(1)
-#     results = mc.check_model(max_path_length=5, max_paths=100)
-#     assert type(results) == list
-#     assert len(results) == 1
-#     stmt_tuple = results[0]
-#     assert len(stmt_tuple) == 2
-#     assert stmt_tuple[0] == stmt_to_check
-#     path_result = stmt_tuple[1]
-#     assert type(path_result) == PathResult
-#     path_lengths = [len(p) for p in path_result.paths]
-#     assert max(path_lengths) <= 5
-#     # There are two distinct paths
-#     assert len(set(path_result.paths)) == 3
-#     path_ctr = Counter(path_result.paths)
-#     assert path_ctr[(('BRAF_phosphorylation_JUN_phospho', 1),
-#                      ('JUN_phospho_p_obs', 1))] == 46, path_ctr[(('BRAF_phosphorylation_JUN_phospho', 1),
-#                      ('JUN_phospho_p_obs', 1))]
-#     assert path_ctr[(('BRAF_phosphorylation_MAP2K1_phospho', 1),
-#                      ('MAP2K1_phospho_phosphorylation_JUN_phospho', 1),
-#                      ('JUN_phospho_p_obs', 1))] == 22, path_ctr
-#     assert path_ctr[(('BRAF_phosphorylation_MAP2K1_phospho', 1),
-#                      ('MAP2K1_phospho_phosphorylation_MAPK1_phospho', 1),
-#                      ('MAPK1_phospho_phosphorylation_JUN_phospho', 1),
-#                      ('JUN_phospho_p_obs', 1))] == 32, path_ctr
+@unittest.skip('Skip sampling tests for now')
+def test_weighted_sampling1():
+    """Test sampling with different path lengths but no data."""
+    os.environ['TEST_FLAG'] = 'TRUE'
+    mc = ModCondition('phosphorylation')
+    braf = Agent('BRAF', db_refs={'HGNC': '1097'})
+    map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
+    map2k1_phos = Agent('MAP2K1', mods=[mc], db_refs={'HGNC': '6840'})
+    mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
+    mapk1_phos = Agent('MAPK1', mods=[mc], db_refs={'HGNC': '6871'})
+    jun = Agent('JUN', db_refs={'HGNC': '6204'})
+    stmt_to_check = Phosphorylation(braf, jun)
+    stmts = [stmt_to_check,
+             Phosphorylation(braf, map2k1),
+             Phosphorylation(map2k1_phos, jun),
+             Phosphorylation(map2k1_phos, mapk1),
+             Phosphorylation(mapk1_phos, jun)]
+    # Make model
+    pa = PysbAssembler()
+    pa.add_statements(stmts)
+    pa.make_model(policies='one_step')
+    # Make the model checker and prune the influence map
+    mc = PysbModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
+    mc.prune_influence_map()
+    # Seed the random number generator
+    np.random.seed(1)
+    results = mc.check_model(max_path_length=5, max_paths=100)
+    assert type(results) == list
+    assert len(results) == 1
+    stmt_tuple = results[0]
+    assert len(stmt_tuple) == 2
+    assert stmt_tuple[0] == stmt_to_check
+    path_result = stmt_tuple[1]
+    assert type(path_result) == PathResult
+    path_lengths = [len(p) for p in path_result.paths]
+    assert max(path_lengths) <= 5
+    # There are two distinct paths
+    assert len(set(path_result.paths)) == 3
+    path_ctr = Counter(path_result.paths)
+    assert path_ctr[(('BRAF_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))] == 46, path_ctr[(('BRAF_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))]
+    assert path_ctr[(('BRAF_phosphorylation_MAP2K1_phospho', 1),
+                     ('MAP2K1_phospho_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))] == 22, path_ctr
+    assert path_ctr[(('BRAF_phosphorylation_MAP2K1_phospho', 1),
+                     ('MAP2K1_phospho_phosphorylation_MAPK1_phospho', 1),
+                     ('MAPK1_phospho_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))] == 32, path_ctr
 
 
-# def test_weighted_sampling2():
-#     """Test sampling with abundances but no tail probabilities from data."""
-#     os.environ['TEST_FLAG'] = 'TRUE'
-#     map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
-#     mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
-#     mapk3 = Agent('MAPK3', db_refs={'HGNC': '6877'})
-#     mc = ModCondition('phosphorylation')
-#     mapk1_phos = Agent('MAPK1', mods=[mc], db_refs={'HGNC': '6871'})
-#     mapk3_phos = Agent('MAPK3', mods=[mc], db_refs={'HGNC': '6877'})
-#     jun = Agent('JUN', db_refs={'HGNC': '6204'})
-#     st1 = Phosphorylation(map2k1, mapk1)
-#     st2 = Phosphorylation(map2k1, mapk3)
-#     st3 = Phosphorylation(mapk1_phos, jun)
-#     st4 = Phosphorylation(mapk3_phos, jun)
-#     stmt_to_check = Phosphorylation(map2k1, jun)
-#     # Make model
-#     pa = PysbAssembler()
-#     pa.add_statements([st1, st2, st3, st4])
-#     pa.make_model(policies='one_step')
-#     # Set the initial conditions
-#     mapk1_monomer = pa.model.all_components()['MAPK1']
-#     mapk3_monomer = pa.model.all_components()['MAPK3']
-#     set_base_initial_condition(pa.model, mapk1_monomer, 75)
-#     set_base_initial_condition(pa.model, mapk3_monomer, 25)
-#     # Make the model checker and prune the influence map
-#     # Setting do_sampling to False should yield the default enumeration
-#     # behavior
-#     mc = PysbModelChecker(pa.model, [stmt_to_check], do_sampling=False)
-#     mc.prune_influence_map()
-#     results = mc.check_model(max_paths=5)
-#     path_result = results[0][1]
-#     assert len(path_result.paths) == 2
-#     enum_paths = path_result.paths
-#     # Now, try sampling
-#     mc = PysbModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
-#     mc.prune_influence_map()
-#     results = mc.check_model(max_path_length=5, max_paths=1000)
-#     assert type(results) == list
-#     assert len(results) == 1
-#     stmt_tuple = results[0]
-#     assert len(stmt_tuple) == 2
-#     assert stmt_tuple[0] == stmt_to_check
-#     path_result = stmt_tuple[1]
-#     assert type(path_result) == PathResult
-#     path_lengths = [len(p) for p in path_result.paths]
-#     assert max(path_lengths) <= 5
-#     # There are two distinct paths
-#     assert set(enum_paths) == set(path_result.paths)
-#     path_ctr = Counter(path_result.paths)
-#     mapk1_count = path_ctr[(('MAP2K1_phosphorylation_MAPK1_phospho', 1),
-#                             ('MAPK1_phospho_phosphorylation_JUN_phospho', 1),
-#                             ('JUN_phospho_p_obs', 1))]
-#     mapk3_count = path_ctr[(('MAP2K1_phosphorylation_MAPK3_phospho', 1),
-#                             ('MAPK3_phospho_phosphorylation_JUN_phospho', 1),
-#                             ('JUN_phospho_p_obs', 1))]
-#     assert mapk1_count == 750, mapk1_count
-#     assert mapk3_count == 250, mapk3_count
+@unittest.skip('Skip sampling tests for now')
+def test_weighted_sampling2():
+    """Test sampling with abundances but no tail probabilities from data."""
+    os.environ['TEST_FLAG'] = 'TRUE'
+    map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
+    mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
+    mapk3 = Agent('MAPK3', db_refs={'HGNC': '6877'})
+    mc = ModCondition('phosphorylation')
+    mapk1_phos = Agent('MAPK1', mods=[mc], db_refs={'HGNC': '6871'})
+    mapk3_phos = Agent('MAPK3', mods=[mc], db_refs={'HGNC': '6877'})
+    jun = Agent('JUN', db_refs={'HGNC': '6204'})
+    st1 = Phosphorylation(map2k1, mapk1)
+    st2 = Phosphorylation(map2k1, mapk3)
+    st3 = Phosphorylation(mapk1_phos, jun)
+    st4 = Phosphorylation(mapk3_phos, jun)
+    stmt_to_check = Phosphorylation(map2k1, jun)
+    # Make model
+    pa = PysbAssembler()
+    pa.add_statements([st1, st2, st3, st4])
+    pa.make_model(policies='one_step')
+    # Set the initial conditions
+    mapk1_monomer = pa.model.all_components()['MAPK1']
+    mapk3_monomer = pa.model.all_components()['MAPK3']
+    set_base_initial_condition(pa.model, mapk1_monomer, 75)
+    set_base_initial_condition(pa.model, mapk3_monomer, 25)
+    # Make the model checker and prune the influence map
+    # Setting do_sampling to False should yield the default enumeration
+    # behavior
+    mc = PysbModelChecker(pa.model, [stmt_to_check], do_sampling=False)
+    mc.prune_influence_map()
+    results = mc.check_model(max_paths=5)
+    path_result = results[0][1]
+    assert len(path_result.paths) == 2
+    enum_paths = path_result.paths
+    # Now, try sampling
+    mc = PysbModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
+    mc.prune_influence_map()
+    results = mc.check_model(max_path_length=5, max_paths=1000)
+    assert type(results) == list
+    assert len(results) == 1
+    stmt_tuple = results[0]
+    assert len(stmt_tuple) == 2
+    assert stmt_tuple[0] == stmt_to_check
+    path_result = stmt_tuple[1]
+    assert type(path_result) == PathResult
+    path_lengths = [len(p) for p in path_result.paths]
+    assert max(path_lengths) <= 5
+    # There are two distinct paths
+    assert set(enum_paths) == set(path_result.paths)
+    path_ctr = Counter(path_result.paths)
+    mapk1_count = path_ctr[(('MAP2K1_phosphorylation_MAPK1_phospho', 1),
+                            ('MAPK1_phospho_phosphorylation_JUN_phospho', 1),
+                            ('JUN_phospho_p_obs', 1))]
+    mapk3_count = path_ctr[(('MAP2K1_phosphorylation_MAPK3_phospho', 1),
+                            ('MAPK3_phospho_phosphorylation_JUN_phospho', 1),
+                            ('JUN_phospho_p_obs', 1))]
+    assert mapk1_count == 750, mapk1_count
+    assert mapk3_count == 250, mapk3_count
 
 
-# def test_weighted_sampling3():
-#     "Test sampling with normed abundances but no tail probabilities from data."
-#     # Abundances are normalized across rule instances involving the same gene.
-#     os.environ['TEST_FLAG'] = 'TRUE'
-#     map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
-#     mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
-#     mapk3 = Agent('MAPK3', db_refs={'HGNC': '6877'})
-#     jun = Agent('JUN', db_refs={'HGNC': '6204'})
-#     mapk1_p218 = Agent('MAPK1',
-#                        mods=[ModCondition('phosphorylation', 'S', '218')],
-#                        db_refs={'HGNC': '6871'})
-#     mapk1_p222 = Agent('MAPK1',
-#                        mods=[ModCondition('phosphorylation', 'S', '222')],
-#                        db_refs={'HGNC': '6871'})
-#     mapk3_phos = Agent('MAPK3',
-#                        mods=[ModCondition('phosphorylation')],
-#                        db_refs={'HGNC': '6877'})
-#     st1 = Phosphorylation(map2k1, mapk3)
-#     st2 = Phosphorylation(map2k1, mapk1, 'S', '218')
-#     st3 = Phosphorylation(map2k1, mapk1, 'S', '222')
-#     st4 = Phosphorylation(mapk3_phos, jun)
-#     st5 = Phosphorylation(mapk1_p218, jun)
-#     st6 = Phosphorylation(mapk1_p222, jun)
-#     stmt_to_check = Phosphorylation(map2k1, jun)
-#     # Make model
-#     pa = PysbAssembler()
-#     pa.add_statements([st1, st2, st3, st4, st5, st6])
-#     pa.make_model(policies='one_step')
-#     # Set the initial conditions
-#     mapk1_monomer = pa.model.all_components()['MAPK1']
-#     mapk3_monomer = pa.model.all_components()['MAPK3']
-#     set_base_initial_condition(pa.model, mapk1_monomer, 50)
-#     set_base_initial_condition(pa.model, mapk3_monomer, 50)
-#     # Do sampling
-#     mc = PysbModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
-#     mc.prune_influence_map()
-#     results = mc.check_model(max_path_length=5, max_paths=100)
-#     assert type(results) == list
-#     assert len(results) == 1
-#     stmt_tuple = results[0]
-#     assert len(stmt_tuple) == 2
-#     assert stmt_tuple[0] == stmt_to_check
-#     path_result = stmt_tuple[1]
-#     assert type(path_result) == PathResult
-#     path_lengths = [len(p) for p in path_result.paths]
-#     assert max(path_lengths) <= 5
-#     # There are two distinct paths
-#     path_ctr = Counter(path_result.paths)
-#     assert len(path_ctr) == 3
-#     assert path_ctr[(('MAP2K1_phosphorylation_MAPK3_phospho', 1),
-#                      ('MAPK3_phospho_phosphorylation_JUN_phospho', 1),
-#                      ('JUN_phospho_p_obs', 1))] == 49, path_ctr
-#     assert path_ctr[(('MAP2K1_phosphorylation_MAPK1_S218', 1),
-#                      ('MAPK1_phosphoS218_phosphorylation_JUN_phospho', 1),
-#                      ('JUN_phospho_p_obs', 1))] == 31, path_ctr
-#     assert path_ctr[(('MAP2K1_phosphorylation_MAPK1_S222', 1),
-#                      ('MAPK1_phosphoS222_phosphorylation_JUN_phospho', 1),
-#                      ('JUN_phospho_p_obs', 1))] == 20, path_ctr
+@unittest.skip('Skip sampling tests for now')
+def test_weighted_sampling3():
+    "Test sampling with normed abundances but no tail probabilities from data."
+    # Abundances are normalized across rule instances involving the same gene.
+    os.environ['TEST_FLAG'] = 'TRUE'
+    map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
+    mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
+    mapk3 = Agent('MAPK3', db_refs={'HGNC': '6877'})
+    jun = Agent('JUN', db_refs={'HGNC': '6204'})
+    mapk1_p218 = Agent('MAPK1',
+                       mods=[ModCondition('phosphorylation', 'S', '218')],
+                       db_refs={'HGNC': '6871'})
+    mapk1_p222 = Agent('MAPK1',
+                       mods=[ModCondition('phosphorylation', 'S', '222')],
+                       db_refs={'HGNC': '6871'})
+    mapk3_phos = Agent('MAPK3',
+                       mods=[ModCondition('phosphorylation')],
+                       db_refs={'HGNC': '6877'})
+    st1 = Phosphorylation(map2k1, mapk3)
+    st2 = Phosphorylation(map2k1, mapk1, 'S', '218')
+    st3 = Phosphorylation(map2k1, mapk1, 'S', '222')
+    st4 = Phosphorylation(mapk3_phos, jun)
+    st5 = Phosphorylation(mapk1_p218, jun)
+    st6 = Phosphorylation(mapk1_p222, jun)
+    stmt_to_check = Phosphorylation(map2k1, jun)
+    # Make model
+    pa = PysbAssembler()
+    pa.add_statements([st1, st2, st3, st4, st5, st6])
+    pa.make_model(policies='one_step')
+    # Set the initial conditions
+    mapk1_monomer = pa.model.all_components()['MAPK1']
+    mapk3_monomer = pa.model.all_components()['MAPK3']
+    set_base_initial_condition(pa.model, mapk1_monomer, 50)
+    set_base_initial_condition(pa.model, mapk3_monomer, 50)
+    # Do sampling
+    mc = PysbModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
+    mc.prune_influence_map()
+    results = mc.check_model(max_path_length=5, max_paths=100)
+    assert type(results) == list
+    assert len(results) == 1
+    stmt_tuple = results[0]
+    assert len(stmt_tuple) == 2
+    assert stmt_tuple[0] == stmt_to_check
+    path_result = stmt_tuple[1]
+    assert type(path_result) == PathResult
+    path_lengths = [len(p) for p in path_result.paths]
+    assert max(path_lengths) <= 5
+    # There are two distinct paths
+    path_ctr = Counter(path_result.paths)
+    assert len(path_ctr) == 3
+    assert path_ctr[(('MAP2K1_phosphorylation_MAPK3_phospho', 1),
+                     ('MAPK3_phospho_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))] == 49, path_ctr
+    assert path_ctr[(('MAP2K1_phosphorylation_MAPK1_S218', 1),
+                     ('MAPK1_phosphoS218_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))] == 31, path_ctr
+    assert path_ctr[(('MAP2K1_phosphorylation_MAPK1_S222', 1),
+                     ('MAPK1_phosphoS222_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))] == 20, path_ctr
 
 
 def test_amount_vs_activation():
