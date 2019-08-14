@@ -16,8 +16,9 @@ from pysb.tools import render_reactions
 from indra.databases import hgnc_client
 from indra.explanation.model_checker import ModelChecker, PysbModelChecker, \
     UnsignedModelChecker, SignedGraphModelChecker, PybelModelChecker, \
-    _mp_embeds_into, _cp_embeds_into, _match_lhs, stmt_from_rule, PathResult, \
-    remove_im_params
+    PathResult
+from indra.explanation.model_checker.pysb import _mp_embeds_into, \
+    _cp_embeds_into, _match_lhs, stmt_from_rule, remove_im_params
 from indra.assemblers.pysb.assembler import PysbAssembler, \
                                             set_base_initial_condition
 from indra.assemblers.indranet import IndraNetAssembler
