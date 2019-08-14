@@ -161,19 +161,22 @@ class IndraNet(nx.MultiDiGraph):
         return net.to_signed_graph(sign_dict=sign_dict)
 
     @staticmethod
-    def _update_edge_belief(G):
-        """G must be or be a child of an nx.Graph object"""
+    def _update_edge_belief(G, flattening_method=None):
+        """G must be or be a child of an nx.Graph object. If provided,
+        flattening_method must be a function taking at least a graph G and
+        return a number (the new belief for the flattened edge).
 
-        # Aggregate belief using fake statements, one statement per edge
-        for e in G.edges:
-            # Aggregate source counts
-            evidence_list = []
-            for stmt_data in G.edges[e]['statements']:
-                for k, v in stmt_data['source_counts'].items():
-                    for _ in range(v):
-                        evidence_list.append(Evidence(source_api=k))
-            G.edges[e]['belief'] = scorer.score_statement(
-                st=Statement(evidence=evidence_list))
+        We assume that G is the flattened graph, and that there is an edge
+        attribute called 'statements' containing a list of dictionaries, each
+        contaning the edge data from the edges included on the flattened edge.
+        """
+
+        if not flattening_method:
+            for e in G.edges:
+                G.edges[e]['belief'] = _simple_scorer_update(G, edge=e)
+        elif flattening_method == 'complementary_belief':
+            for e in G.edges:
+                G.edges[e]['belief'] = _complementary_belief(G, edge=e)
         return G
 
 
