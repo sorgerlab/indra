@@ -110,8 +110,12 @@ class IndraNet(nx.MultiDiGraph):
 
         Parameters
         ----------
-        flattening_method : str
+        flattening_method : str|function
             The method to use when updating the belief for the flattened edge
+        weight_mapping : function
+            A function taking at least the graph G as an argument and
+            returning G after adding edge weights as an edge attribute to the
+            flattened edges using the reserved keyword 'weight'.
 
         Returns
         -------
@@ -141,8 +145,12 @@ class IndraNet(nx.MultiDiGraph):
             as positive edges and Inhibition and DecreaseAmount are added as
             negative edges, but a user can pass any other Statement types in
             a dictionary.
-        flattening_method : str
+        flattening_method : str|function
             The method to use when updating the belief for the flattened edge
+        weight_mapping : function
+            A function taking at least the graph G as an argument and
+            returning G after adding edge weights as an edge attribute to the
+            flattened edges using the reserved keyword 'weight'.
 
         Returns
         -------
