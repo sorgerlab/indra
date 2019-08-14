@@ -292,10 +292,12 @@ class ModelChecker(object):
         # Generate the predecessors to our observable and count the paths
         path_lengths = []
         path_metrics = []
+        sources = []
         for source, path_length in self._find_sources(obj, input_set):
             pm = PathMetric(source, obj, path_length)
             path_metrics.append(pm)
             path_lengths.append(path_length)
+            sources.append(source)
         logger.info('Finding paths between %s and %s' % (subj, obj))
         # Now, look for paths
         if path_metrics and max_paths == 0:
@@ -309,19 +311,15 @@ class ModelChecker(object):
                                 max_paths, max_path_length)
                 pr.path_metrics = path_metrics
                 # Get the first path
-                # Try to find paths using sources from input set
-                for source in input_set:
-                    try:
-                        path_iter = nx.shortest_simple_paths(
-                            self.graph, source, obj)
-                        for path in path_iter:
-                            pr.add_path(tuple(path))
-                            # Do not get next path if reached max_paths
-                            if len(pr.paths) >= max_paths:
-                                break
-                    # No path from this source, try other
-                    except nx.NetworkXNoPath:
-                        continue
+                # Try to find paths using sources found above
+                for source in sources:
+                    path_iter = nx.shortest_simple_paths(
+                        self.graph, source, obj)
+                    for path in path_iter:
+                        pr.add_path(tuple(path))
+                        # Do not get next path if reached max_paths
+                        if len(pr.paths) >= max_paths:
+                            break
                     # Do not check next source if reached max_paths
                     if len(pr.paths) >= max_paths:
                         break
