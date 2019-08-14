@@ -104,7 +104,7 @@ class IndraNet(nx.MultiDiGraph):
             logger.warning('Skipped %d edges with None as node' % skipped)
         return graph
 
-    def to_digraph(self, flattening_method=None):
+    def to_digraph(self, flattening_method=None, weight_mapping=None):
         """Flatten the IndraNet to a DiGraph
 
         Parameters
@@ -123,9 +123,13 @@ class IndraNet(nx.MultiDiGraph):
                 G[u][v]['statements'].append(data)
             else:
                 G.add_edge(u, v, statements=[data])
-        return self._update_edge_belief(G, flattening_method)
+        G = self._update_edge_belief(G, flattening_method)
+        if weight_mapping:
+            G = weight_mapping(G)
+        return G
 
-    def to_signed_graph(self, sign_dict, flattening_method=None):
+    def to_signed_graph(self, sign_dict, flattening_method=None,
+                        weight_mapping=None):
         """Flatten the IndraNet to a signed graph.
         
         Parameters
@@ -153,20 +157,26 @@ class IndraNet(nx.MultiDiGraph):
                 SG[u][v][sign]['statements'].append(data)
             else:
                 SG.add_edge(u, v, sign, statements=[data], sign=sign)
-        return self._update_edge_belief(SG, flattening_method)
+        SG = self._update_edge_belief(SG, flattening_method)
+        if weight_mapping:
+            SG = weight_mapping(SG)
+        return SG
 
     @classmethod
-    def digraph_from_df(cls, df, flattening_method=None):
+    def digraph_from_df(cls, df, flattening_method=None, weight_mapping=None):
         """Create a digraph from a pandas DataFrame."""
         net = cls.from_df(df)
-        return net.to_digraph(flattening_method=flattening_method)
+        return net.to_digraph(flattening_method=flattening_method,
+                              weight_mapping=weight_mapping)
 
     @classmethod
-    def signed_from_df(cls, df, sign_dict, flattening_method=None):
+    def signed_from_df(cls, df, sign_dict, flattening_method=None,
+                       weight_mapping=None):
         """Create a signed graph from a pandas DataFrame."""
         net = cls.from_df(df)
         return net.to_signed_graph(sign_dict=sign_dict,
-                                   flattening_method=flattening_method)
+                                   flattening_method=flattening_method,
+                                   weight_mapping=weight_mapping)
 
     @staticmethod
     def _update_edge_belief(G, flattening_method):
