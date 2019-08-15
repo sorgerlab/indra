@@ -1,4 +1,3 @@
-from .model_checker.pysb import stmt_from_rule
 from indra.sources.indra_db_rest.api import get_statements_by_hash
 
 
@@ -103,3 +102,32 @@ def stmts_from_pybel_path(path, model):
         stmts = get_statements_by_hash(list(hashes))
         steps.append(stmts)
     return steps
+
+
+def stmt_from_rule(rule_name, model, stmts):
+    """Return the source INDRA Statement corresponding to a rule in a model.
+
+    Parameters
+    ----------
+    rule_name : str
+        The name of a rule in the given PySB model.
+    model : pysb.core.Model
+        A PySB model which contains the given rule.
+    stmts : list[indra.statements.Statement]
+        A list of INDRA Statements from which the model was assembled.
+
+    Returns
+    -------
+    stmt : indra.statements.Statement
+        The Statement from which the given rule in the model was obtained.
+    """
+    stmt_uuid = None
+    for ann in model.annotations:
+        if ann.subject == rule_name:
+            if ann.predicate == 'from_indra_statement':
+                stmt_uuid = ann.object
+                break
+    if stmt_uuid:
+        for stmt in stmts:
+            if stmt.uuid == stmt_uuid:
+                return stmt

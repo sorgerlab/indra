@@ -795,34 +795,3 @@ def _monomer_pattern_label(mp):
             site_str = '%s_%s' % (site, cond)
         site_strs.append(site_str)
     return '%s_%s' % (mp.monomer.name, '_'.join(site_strs))
-
-
-def stmt_from_rule(rule_name, model, stmts):
-    """Return the source INDRA Statement corresponding to a rule in a model.
-
-    Parameters
-    ----------
-    rule_name : str
-        The name of a rule in the given PySB model.
-    model : pysb.core.Model
-        A PySB model which contains the given rule.
-    stmts : list[indra.statements.Statement]
-        A list of INDRA Statements from which the model was assembled.
-
-    Returns
-    -------
-    stmt : indra.statements.Statement
-        The Statement from which the given rule in the model was obtained.
-    """
-    stmt_uuid = None
-    for ann in model.annotations:
-        if ann.subject == rule_name:
-            if ann.predicate == 'from_indra_statement':
-                stmt_uuid = ann.object
-                break
-    if stmt_uuid:
-        for stmt in stmts:
-            if stmt.uuid == stmt_uuid:
-                return stmt
-
-
