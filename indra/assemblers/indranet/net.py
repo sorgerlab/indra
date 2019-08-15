@@ -132,6 +132,12 @@ class IndraNet(nx.MultiDiGraph):
         """
         G = nx.DiGraph()
         for u, v, data in self.edges(data=True):
+            # Add nodes and their attributes
+            if u not in G.nodes:
+                G.add_node(u, **self.nodes[u])
+            if v not in G.nodes:
+                G.add_node(v, **self.nodes[v])
+            # Add edges and their attributes
             if G.has_edge(u, v):
                 G[u][v]['statements'].append(data)
             else:
