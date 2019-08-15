@@ -90,7 +90,7 @@ SOURCE_COLORS = [
                                        color_gen('light')))}),
     ('reading', {'color': 'white',
                  'sources': dict(zip(['geneways', 'tees', 'isi', 'trips',
-                                      'rlmisp', 'medscan', 'sparser', 'reach'],
+                                      'rlimsp', 'medscan', 'sparser', 'reach'],
                                      color_gen('light')))}),
 ]
 
