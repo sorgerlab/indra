@@ -53,7 +53,8 @@ class IndraNetAssembler():
         self.statements += stmts
 
     def make_model(self, exclude_stmts=None, complex_members=3,
-                   graph_type='multi_graph', sign_dict=None):
+                   graph_type='multi_graph', sign_dict=None,
+                   belief_flattening=None, weight_flattening=None):
         """Assemble an IndraNet graph object.
 
         Parameters
@@ -82,10 +83,16 @@ class IndraNetAssembler():
         if graph_type == 'multi_graph':
             model = IndraNet.from_df(df)
         elif graph_type == 'digraph':
-            model = IndraNet.digraph_from_df(df)
+            model = IndraNet.digraph_from_df(
+                df=df,
+                flattening_method=belief_flattening,
+                weight_mapping=weight_flattening
+            )
         elif graph_type == 'signed':
             sign_dict = self.default_sign_dict if not sign_dict else sign_dict
-            model = IndraNet.signed_from_df(df, sign_dict=sign_dict)
+            model = IndraNet.signed_from_df(df, sign_dict=sign_dict,
+                                            flattening_method=belief_flattening,
+                                            weight_mapping=weight_flattening)
         else:
             raise TypeError('Have to specify one of \'multi_graph\', '
                             '\'digraph\' or \'signed\' when providing graph '
