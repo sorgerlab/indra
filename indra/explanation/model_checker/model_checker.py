@@ -1,6 +1,3 @@
-from __future__ import print_function, unicode_literals, absolute_import
-from builtins import dict, str
-from future.utils import python_2_unicode_compatible
 import logging
 import textwrap
 import itertools
@@ -38,7 +35,6 @@ class PathMetric(object):
     def __repr__(self):
         return str(self)
 
-    @python_2_unicode_compatible
     def __str__(self):
         return ('source_node: %s, target_node: %s, length: %d' %
                 (self.source_node, self.target_node, self.length))
@@ -92,7 +88,6 @@ class PathResult(object):
     def add_metric(self, path_metric):
         self.path_metrics.append(path_metric)
 
-    @python_2_unicode_compatible
     def __str__(self):
         summary = textwrap.dedent("""
             PathResult:
@@ -219,7 +214,7 @@ class ModelChecker(object):
         """
         # Make sure graph is created
         self.get_graph()
-        # Extract subject and object onfo from test statement
+        # Extract subject and object info from test statement
         subj_list, obj_list, result_code = self.process_statement(stmt)
         if result_code:
             return self.make_false_result(result_code, max_paths,
@@ -385,14 +380,15 @@ class ModelChecker(object):
 
     def signed_edges_to_signed_nodes(self, graph, prune_nodes=True,
                                      edge_signs={'pos': 0, 'neg': 1}):
-        """Convert a graph with signed edges to a graph with signed nodes. The
-        Each pair of nodes and edge in an input graph are represented as four
-        nodes and two edges in the new graph. For example, an edge (a, b, 0),
-        where a and b are nodes and 0 is a sign of an edge (positive),
+        """Convert a graph with signed edges to a graph with signed nodes.
+
+        Each pair of nodes linked by an edge in an input graph are represented
+        as four nodes and two edges in the new graph. For example, an edge (a,
+        b, 0), where a and b are nodes and 0 is a sign of an edge (positive),
         will be represented as edges ((a, 0), (b, 0)) and ((a, 1), (b, 1)),
-        where (a, 0), (a, 1), (b, 0), (b, 1) are signed nodes. An edge
-        (a, b, 1) with a sign 1 (negative) will be represented as edges
-        ((a, 0), (b, 1)) and ((a, 1), (b, 0)).
+        where (a, 0), (a, 1), (b, 0), (b, 1) are signed nodes. An edge (a, b,
+        1) with sign 1 (negative) will be represented as edges ((a, 0), (b,
+        1)) and ((a, 1), (b, 0)).
 
         Parameters
         ----------
@@ -406,6 +402,7 @@ class ModelChecker(object):
             A dictionary representing the signing policy of incoming graph. The
             dictionary should have strings 'pos' and 'neg' as keys and integers
             as values.
+
         Returns
         -------
         signed_nodes_graph : networkx.DiGraph
@@ -476,8 +473,8 @@ class ModelChecker(object):
         raise NotImplementedError("Method must be implemented in child class.")
 
     def process_subject(self, subj_data):
-        """This method processes the subject of the test statement and returns
-        the neccessary information to run the tests. In case of
+        """Processes the subject of the test statement and returns
+        the necessary information to check the statement. In case of
         PysbModelChecker, method returns input_rule_set. If any of the
         requirements are not satisfied, result code is also returned to
         construct PathResult object.
