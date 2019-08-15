@@ -145,12 +145,38 @@ class IndraNet(nx.MultiDiGraph):
             as positive edges and Inhibition and DecreaseAmount are added as
             negative edges, but a user can pass any other Statement types in
             a dictionary.
-        flattening_method : str|function
-            The method to use when updating the belief for the flattened edge
-        weight_mapping : function
+        flattening_method : str|function(G, edge)
+            The method to use when updating the belief for the flattened edge.
+
+            If a string is provided, it must be one of the predefined options
+            'simple_scorer' or 'complementary_belief'.
+
+            If a function is provided, it must take the flattened graph 'G'
+            and an edge 'edge' to perform the belief flattening on and return
+            a number:
+
+            >>> def flattening_function(G, edge):
+            ...     # Return the average belief score of the constituent edges
+            ...     l = len(G.edges[edge]['statements'])
+            ...     all_beliefs = [s['belief']/l
+            ...         for s in G.edges[edge]['statements']]
+            ...     return sum(all_beliefs)
+
+        weight_mapping : function(G)
             A function taking at least the graph G as an argument and
             returning G after adding edge weights as an edge attribute to the
             flattened edges using the reserved keyword 'weight'.
+
+            Example:
+
+            >>> def weight_mapping(G):
+            ...     # Sets the flattened weight to the inverse of the average
+            ...     # source count
+            ...     for edge in G.edges:
+            ...         w = [s['evidence_count']
+            ...             for s in G.edges[edge]['statements']]
+            ...         G.edges[edge]['weight'] = w
+            ...     return G
 
         Returns
         -------
