@@ -11,6 +11,7 @@ import indra_db.resources as res
 from indra.belief import SimpleScorer
 from indra.statements import Evidence
 from indra.statements import Statement
+from indra.assemblers.indranet.assembler import default_sign_dict
 
 logger = logging.getLogger(__name__)
 simple_scorer = SimpleScorer()
@@ -147,8 +148,8 @@ class IndraNet(nx.MultiDiGraph):
             G = weight_mapping(G)
         return G
 
-    def to_signed_graph(self, sign_dict, flattening_method=None,
-                        weight_mapping=None):
+    def to_signed_graph(self, sign_dict=default_sign_dict,
+                        flattening_method=None, weight_mapping=None):
         """Flatten the IndraNet to a signed graph.
         
         Parameters
