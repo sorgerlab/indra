@@ -11,12 +11,16 @@ import indra_db.resources as res
 from indra.belief import SimpleScorer
 from indra.statements import Evidence
 from indra.statements import Statement
-from indra.assemblers.indranet.assembler import default_sign_dict
 
 logger = logging.getLogger(__name__)
 simple_scorer = SimpleScorer()
 np.seterr(all='raise')
 NP_PRECISION = 10 ** -np.finfo(np.longfloat).precision  # Numpy precision
+
+default_sign_dict = {'Activation': 0,
+                     'Inhibition': 1,
+                     'IncreaseAmount': 0,
+                     'DecreaseAmount': 1}
 
 
 with open(path.join(path.dirname(res.__file__),
@@ -148,7 +152,7 @@ class IndraNet(nx.MultiDiGraph):
             G = weight_mapping(G)
         return G
 
-    def to_signed_graph(self, sign_dict=default_sign_dict,
+    def to_signed_graph(self, sign_dict=None,
                         flattening_method=None, weight_mapping=None):
         """Flatten the IndraNet to a signed graph.
         
@@ -197,6 +201,8 @@ class IndraNet(nx.MultiDiGraph):
         SG : IndraNet(nx.MultiDiGraph)
             An IndraNet graph flattened to a signed graph
         """
+        sign_dict = default_sign_dict if not sign_dict else sign_dict
+
         SG = nx.MultiDiGraph()
         for u, v, data in self.edges(data=True):
             if data['stmt_type'] not in sign_dict:
@@ -219,7 +225,7 @@ class IndraNet(nx.MultiDiGraph):
                               weight_mapping=weight_mapping)
 
     @classmethod
-    def signed_from_df(cls, df, sign_dict, flattening_method=None,
+    def signed_from_df(cls, df, sign_dict=None, flattening_method=None,
                        weight_mapping=None):
         """Create a signed graph from a pandas DataFrame."""
         net = cls.from_df(df)

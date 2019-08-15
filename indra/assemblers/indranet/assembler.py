@@ -10,11 +10,6 @@ logger = logging.getLogger(__name__)
 NS_PRIORITY_LIST = (
     'FPLX', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH', 'HMDB', 'PUBCHEM')
 
-default_sign_dict = {'Activation': 0,
-                     'Inhibition': 1,
-                     'IncreaseAmount': 0,
-                     'DecreaseAmount': 1}
-
 
 def get_ag_ns_id(ag):
     """Return a tuple of name space, id from an Agent's db_refs."""
@@ -122,7 +117,6 @@ class IndraNetAssembler():
                 weight_mapping=weight_flattening
             )
         elif graph_type == 'signed':
-            sign_dict = default_sign_dict if not sign_dict else sign_dict
             model = IndraNet.signed_from_df(df, sign_dict=sign_dict,
                                             flattening_method=belief_flattening,
                                             weight_mapping=weight_flattening)
