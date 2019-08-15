@@ -18,7 +18,8 @@ from indra.explanation.model_checker import ModelChecker, PysbModelChecker, \
     UnsignedModelChecker, SignedGraphModelChecker, PybelModelChecker, \
     PathResult
 from indra.explanation.model_checker.pysb import _mp_embeds_into, \
-    _cp_embeds_into, _match_lhs, stmt_from_rule, remove_im_params
+    _cp_embeds_into, _match_lhs, remove_im_params
+from indra.explanation.reporting import stmt_from_rule
 from indra.assemblers.pysb.assembler import PysbAssembler, \
                                             set_base_initial_condition
 from indra.assemblers.indranet import IndraNetAssembler

@@ -9,6 +9,7 @@ from collections import Counter
 from pysb import WILD, export, Observable, ComponentSet
 from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from . import ModelChecker, PathResult
+from indra.explanation.reporting import stmt_from_rule
 from indra.statements import *
 from indra.assemblers.pysb import assembler as pa
 from indra.assemblers.pysb.kappa_util import im_json_to_graph
