@@ -73,6 +73,38 @@ class IndraNetAssembler():
             A dictionary mapping a Statement type to a sign to be used for
             the edge. This parameter is only used with the 'signed' option.
             See IndraNet.to_signed_graph for more info.
+        belief_flattening : str|function(G, edge)
+            The method to use when updating the belief for the flattened edge.
+
+            If a string is provided, it must be one of the predefined options
+            'simple_scorer' or 'complementary_belief'.
+
+            If a function is provided, it must take the flattened graph 'G'
+            and an edge 'edge' to perform the belief flattening on and return
+            a number:
+
+            >>> def belief_flattening(G, edge):
+            ...     # Return the average belief score of the constituent edges
+            ...     all_beliefs = [s['belief']
+            ...         for s in G.edges[edge]['statements']]
+            ...     return sum(all_beliefs)/len(all_beliefs)
+
+        weight_flattening : function(G)
+            A function taking at least the graph G as an argument and
+            returning G after adding edge weights as an edge attribute to the
+            flattened edges using the reserved keyword 'weight'.
+
+            Example:
+
+            >>> def weight_flattening(G):
+            ...     # Sets the flattened weight to the average of the
+            ...     # inverse source count
+            ...     for edge in G.edges:
+            ...         w = [1/s['evidence_count']
+            ...             for s in G.edges[edge]['statements']]
+            ...         G.edges[edge]['weight'] = sum(w)/len(w)
+            ...     return G
+
 
         Returns
         -------

@@ -171,10 +171,9 @@ class IndraNet(nx.MultiDiGraph):
 
             >>> def flattening_function(G, edge):
             ...     # Return the average belief score of the constituent edges
-            ...     l = len(G.edges[edge]['statements'])
-            ...     all_beliefs = [s['belief']/l
+            ...     all_beliefs = [s['belief']
             ...         for s in G.edges[edge]['statements']]
-            ...     return sum(all_beliefs)
+            ...     return sum(all_beliefs)/len(all_beliefs)
 
         weight_mapping : function(G)
             A function taking at least the graph G as an argument and
@@ -184,12 +183,12 @@ class IndraNet(nx.MultiDiGraph):
             Example:
 
             >>> def weight_mapping(G):
-            ...     # Sets the flattened weight to the inverse of the average
-            ...     # source count
+            ...     # Sets the flattened weight to the average of the
+            ...     # inverse source count
             ...     for edge in G.edges:
-            ...         w = [s['evidence_count']
+            ...         w = [1/s['evidence_count']
             ...             for s in G.edges[edge]['statements']]
-            ...         G.edges[edge]['weight'] = w
+            ...         G.edges[edge]['weight'] = sum(w)/len(w)
             ...     return G
 
         Returns
