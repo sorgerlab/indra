@@ -22,8 +22,8 @@
     "hprd": 0.01,
     "trrust": 0.01,
     "medscan": 0.05,
-    "geneways": 0.3,
-    "tees": 0.3
+    "geneways": 0.05,
+    "tees": 0.05
   },
   "rand": {
     "eidos": 0.3,
@@ -48,7 +48,7 @@
     "hprd": 0.1,
     "trrust": 0.1,
     "medscan": 0.3,
-    "geneways": 0.05,
-    "tees": 0.05
+    "geneways": 0.3,
+    "tees": 0.3
   }
 }
