@@ -1,10 +1,13 @@
+import json
 import logging
+from os import path
 
 import numpy as np
 import pandas as pd
 import networkx as nx
 from decimal import Decimal
 
+import indra_db.resources as res
 from indra.belief import SimpleScorer
 from indra.statements import Evidence
 from indra.statements import Statement
@@ -13,6 +16,11 @@ logger = logging.getLogger(__name__)
 simple_scorer = SimpleScorer()
 np.seterr(all='raise')
 NP_PRECISION = 10 ** -np.finfo(np.longfloat).precision  # Numpy precision
+
+
+with open(path.join(path.dirname(res.__file__),
+                    'source_mapping.json'), 'r') as f:
+    db_source_mapping = json.load(f)
 
 
 class IndraNet(nx.MultiDiGraph):
@@ -242,8 +250,12 @@ def _simple_scorer_update(G, edge):
     evidence_list = []
     for stmt_data in G.edges[edge]['statements']:
         for k, v in stmt_data['source_counts'].items():
+            if k in db_source_mapping:
+                s = db_source_mapping[k]
+            else:
+                s = k
             for _ in range(v):
-                evidence_list.append(Evidence(source_api=k))
+                evidence_list.append(Evidence(source_api=s))
     return simple_scorer.score_statement(st=Statement(evidence=evidence_list))
 
 
