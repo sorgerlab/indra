@@ -54,7 +54,7 @@ class EidosReader(object):
     def initialize_reader(self):
         """Instantiate the Eidos reader attribute of this reader."""
         eidos = autoclass(eidos_package + '.EidosSystem')
-        self.eidos_reader = eidos(autoclass('java.lang.Object')())
+        self.eidos_reader = eidos()
 
     def reground_texts(self, texts, yaml_str=None):
         if self.eidos_reader is None:
@@ -101,10 +101,9 @@ class EidosReader(object):
 
         annot_doc = self.eidos_reader.extractFromText(
             text,
-            True, # keep text
-            False, # CAG-relevant only
-            default_arg(today), # doc creation time
-            default_arg(fname) # file name
+            False,  # CAG-relevant only
+            default_arg(today),  # doc creation time
+            default_arg(fname)  # file name
             )
         if format == 'json':
             mentions = annot_doc.odinMentions()
