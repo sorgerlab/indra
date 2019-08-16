@@ -1459,7 +1459,7 @@ test_st6 = ActiveForm(Agent('A', db_refs={'HGNC': 1}), None, True)
 def test_unsigned_path():
     ia = IndraNetAssembler([st1, st2, st3, st4, st5])
     unsigned_model = ia.make_model(graph_type='digraph')
-    umc = UnsignedModelChecker(unsigned_model)
+    umc = UnsignedGraphModelChecker(unsigned_model)
     umc.add_statements(
         [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6])
     results = umc.check_model()
