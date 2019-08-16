@@ -1,9 +1,6 @@
 Explanation (:py:mod:`indra.explanation`)
 =========================================
+.. toctree::
+   :maxdepth: 3
 
-Check whether a rule-based model satisfies a property (:py:mod:`indra.explanation.model_checker`)
--------------------------------------------------------------------------------------------------
-
-.. automodule:: indra.explanation.model_checker
-    :members:
-
+   model_checker
