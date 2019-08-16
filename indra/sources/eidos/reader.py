@@ -101,10 +101,9 @@ class EidosReader(object):
 
         annot_doc = self.eidos_reader.extractFromText(
             text,
-            True, # keep text
-            False, # CAG-relevant only
-            default_arg(today), # doc creation time
-            default_arg(fname) # file name
+            False,  # CAG-relevant only
+            default_arg(today),  # doc creation time
+            default_arg(fname)  # file name
             )
         if format == 'json':
             mentions = annot_doc.odinMentions()
