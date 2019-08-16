@@ -7,7 +7,7 @@ from indra.statements import *
 logger = logging.getLogger(__name__)
 
 
-class UnsignedModelChecker(ModelChecker):
+class UnsignedGraphModelChecker(ModelChecker):
     """Check an unsigned DiGraph against a set of INDRA statements.
 
     Parameters

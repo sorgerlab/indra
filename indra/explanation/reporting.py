@@ -32,7 +32,7 @@ def stmts_from_pysb_path(path, model, stmts):
 
 def stmts_from_indranet_path(path, model, signed):
     """Return source Statements corresponding to a path in an IndraNet model
-    (found by SignedGraphModelChecker or UnsignedModelChecker).
+    (found by SignedGraphModelChecker or UnsignedGraphModelChecker).
 
     Parameters
     ----------

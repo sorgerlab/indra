@@ -15,7 +15,7 @@ from pysb.core import SelfExporter
 from pysb.tools import render_reactions
 from indra.databases import hgnc_client
 from indra.explanation.model_checker import ModelChecker, PysbModelChecker, \
-    UnsignedModelChecker, SignedGraphModelChecker, PybelModelChecker, \
+    UnsignedGraphModelChecker, SignedGraphModelChecker, PybelModelChecker, \
     PathResult
 from indra.explanation.model_checker.pysb import _mp_embeds_into, \
     _cp_embeds_into, _match_lhs, remove_im_params
