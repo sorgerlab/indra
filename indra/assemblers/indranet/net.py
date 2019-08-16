@@ -7,7 +7,7 @@ import pandas as pd
 import networkx as nx
 from decimal import Decimal
 
-import indra_db.resources as res
+import indra
 from indra.belief import SimpleScorer
 from indra.statements import Evidence
 from indra.statements import Statement
@@ -22,9 +22,9 @@ default_sign_dict = {'Activation': 0,
                      'IncreaseAmount': 0,
                      'DecreaseAmount': 1}
 
-
-with open(path.join(path.dirname(res.__file__),
-                    'source_mapping.json'), 'r') as f:
+INDRA_ROOT = path.abspath(path.dirname(path.abspath(indra.__file__)))
+INDRA_RESOURCES = path.join(INDRA_ROOT, 'resources')
+with open(path.join(INDRA_RESOURCES, 'source_mapping.json'), 'r') as f:
     db_source_mapping = json.load(f)
 
 
