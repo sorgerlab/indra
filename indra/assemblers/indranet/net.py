@@ -1,14 +1,31 @@
+import json
 import logging
+from os import path
 
+import numpy as np
 import pandas as pd
 import networkx as nx
+from decimal import Decimal
 
+import indra
 from indra.belief import SimpleScorer
 from indra.statements import Evidence
 from indra.statements import Statement
 
 logger = logging.getLogger(__name__)
-scorer = SimpleScorer()
+simple_scorer = SimpleScorer()
+np.seterr(all='raise')
+NP_PRECISION = 10 ** -np.finfo(np.longfloat).precision  # Numpy precision
+
+default_sign_dict = {'Activation': 0,
+                     'Inhibition': 1,
+                     'IncreaseAmount': 0,
+                     'DecreaseAmount': 1}
+
+INDRA_ROOT = path.abspath(path.dirname(path.abspath(indra.__file__)))
+INDRA_RESOURCES = path.join(INDRA_ROOT, 'resources')
+with open(path.join(INDRA_RESOURCES, 'source_mapping.json'), 'r') as f:
+    db_source_mapping = json.load(f)
 
 
 class IndraNet(nx.MultiDiGraph):
@@ -101,8 +118,17 @@ class IndraNet(nx.MultiDiGraph):
             logger.warning('Skipped %d edges with None as node' % skipped)
         return graph
 
-    def to_digraph(self):
+    def to_digraph(self, flattening_method=None, weight_mapping=None):
         """Flatten the IndraNet to a DiGraph
+
+        Parameters
+        ----------
+        flattening_method : str|function
+            The method to use when updating the belief for the flattened edge
+        weight_mapping : function
+            A function taking at least the graph G as an argument and
+            returning G after adding edge weights as an edge attribute to the
+            flattened edges using the reserved keyword 'weight'.
 
         Returns
         -------
@@ -111,13 +137,23 @@ class IndraNet(nx.MultiDiGraph):
         """
         G = nx.DiGraph()
         for u, v, data in self.edges(data=True):
+            # Add nodes and their attributes
+            if u not in G.nodes:
+                G.add_node(u, **self.nodes[u])
+            if v not in G.nodes:
+                G.add_node(v, **self.nodes[v])
+            # Add edges and their attributes
             if G.has_edge(u, v):
                 G[u][v]['statements'].append(data)
             else:
                 G.add_edge(u, v, statements=[data])
-        return self._update_edge_belief(G)
+        G = self._update_edge_belief(G, flattening_method)
+        if weight_mapping:
+            G = weight_mapping(G)
+        return G
 
-    def to_signed_graph(self, sign_dict):
+    def to_signed_graph(self, sign_dict=None,
+                        flattening_method=None, weight_mapping=None):
         """Flatten the IndraNet to a signed graph.
         
         Parameters
@@ -128,12 +164,45 @@ class IndraNet(nx.MultiDiGraph):
             as positive edges and Inhibition and DecreaseAmount are added as
             negative edges, but a user can pass any other Statement types in
             a dictionary.
+        flattening_method : str|function(G, edge)
+            The method to use when updating the belief for the flattened edge.
+
+            If a string is provided, it must be one of the predefined options
+            'simple_scorer' or 'complementary_belief'.
+
+            If a function is provided, it must take the flattened graph 'G'
+            and an edge 'edge' to perform the belief flattening on and return
+            a number:
+
+            >>> def flattening_function(G, edge):
+            ...     # Return the average belief score of the constituent edges
+            ...     all_beliefs = [s['belief']
+            ...         for s in G.edges[edge]['statements']]
+            ...     return sum(all_beliefs)/len(all_beliefs)
+
+        weight_mapping : function(G)
+            A function taking at least the graph G as an argument and
+            returning G after adding edge weights as an edge attribute to the
+            flattened edges using the reserved keyword 'weight'.
+
+            Example:
+
+            >>> def weight_mapping(G):
+            ...     # Sets the flattened weight to the average of the
+            ...     # inverse source count
+            ...     for edge in G.edges:
+            ...         w = [1/s['evidence_count']
+            ...             for s in G.edges[edge]['statements']]
+            ...         G.edges[edge]['weight'] = sum(w)/len(w)
+            ...     return G
 
         Returns
         -------
         SG : IndraNet(nx.MultiDiGraph)
             An IndraNet graph flattened to a signed graph
         """
+        sign_dict = default_sign_dict if not sign_dict else sign_dict
+
         SG = nx.MultiDiGraph()
         for u, v, data in self.edges(data=True):
             if data['stmt_type'] not in sign_dict:
@@ -143,32 +212,74 @@ class IndraNet(nx.MultiDiGraph):
                 SG[u][v][sign]['statements'].append(data)
             else:
                 SG.add_edge(u, v, sign, statements=[data], sign=sign)
-        return self._update_edge_belief(SG)
+        SG = self._update_edge_belief(SG, flattening_method)
+        if weight_mapping:
+            SG = weight_mapping(SG)
+        return SG
 
     @classmethod
-    def digraph_from_df(cls, df):
+    def digraph_from_df(cls, df, flattening_method=None, weight_mapping=None):
         """Create a digraph from a pandas DataFrame."""
         net = cls.from_df(df)
-        return net.to_digraph()
+        return net.to_digraph(flattening_method=flattening_method,
+                              weight_mapping=weight_mapping)
 
     @classmethod
-    def signed_from_df(cls, df, sign_dict):
+    def signed_from_df(cls, df, sign_dict=None, flattening_method=None,
+                       weight_mapping=None):
         """Create a signed graph from a pandas DataFrame."""
         net = cls.from_df(df)
-        return net.to_signed_graph(sign_dict=sign_dict)
+        return net.to_signed_graph(sign_dict=sign_dict,
+                                   flattening_method=flattening_method,
+                                   weight_mapping=weight_mapping)
 
     @staticmethod
-    def _update_edge_belief(G):
-        """G must be or be a child of an nx.Graph object"""
+    def _update_edge_belief(G, flattening_method):
+        """G must be or be a child of an nx.Graph object. If
+        'flattening_method' is a function, it must take at least the graph G
+        and an edge and return a number (the new belief for the flattened
+        edge).
 
-        # Aggregate belief using fake statements, one statement per edge
-        for e in G.edges:
-            # Aggregate source counts
-            evidence_list = []
-            for stmt_data in G.edges[e]['statements']:
-                for k, v in stmt_data['source_counts'].items():
-                    for _ in range(v):
-                        evidence_list.append(Evidence(source_api=k))
-            G.edges[e]['belief'] = scorer.score_statement(
-                st=Statement(evidence=evidence_list))
+        We assume that G is the flattened graph and that all its edges have an
+        edge attribute called 'statements' containing a list of dictionaries
+        representing the edge data of all the edges in the un-flattened graph
+        that were mapped to the corresponding flattened edge in G.
+        """
+
+        if not flattening_method or flattening_method == 'simple_scorer':
+            for e in G.edges:
+                G.edges[e]['belief'] = _simple_scorer_update(G, edge=e)
+        elif flattening_method == 'complementary_belief':
+            for e in G.edges:
+                G.edges[e]['belief'] = _complementary_belief(G, edge=e)
+        else:
+            for e in G.edges:
+                G.edges[e]['belief'] = flattening_method(G, edge=e)
         return G
+
+
+def _simple_scorer_update(G, edge):
+    evidence_list = []
+    for stmt_data in G.edges[edge]['statements']:
+        for k, v in stmt_data['source_counts'].items():
+            if k in db_source_mapping:
+                s = db_source_mapping[k]
+            else:
+                s = k
+            for _ in range(v):
+                evidence_list.append(Evidence(source_api=s))
+    return simple_scorer.score_statement(st=Statement(evidence=evidence_list))
+
+
+def _complementary_belief(G, edge):
+    # Aggregate belief score: 1-prod(1-belief_i)
+    belief_list = [s['belief'] for s in G.edges[edge]['statements']]
+    try:
+        ag_belief = np.longfloat(1.0) - np.prod(np.fromiter(
+            map(lambda belief: np.longfloat(1.0) - belief, belief_list),
+            dtype=np.longfloat))
+    except FloatingPointError as err:
+        logger.warning('%s: Resetting ag_belief to 10*np.longfloat precision '
+                       '(%.0e)' % (err, Decimal(NP_PRECISION * 10)))
+        ag_belief = NP_PRECISION * 10
+    return ag_belief

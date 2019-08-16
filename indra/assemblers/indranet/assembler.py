@@ -32,10 +32,6 @@ class IndraNetAssembler():
     model : IndraNet
         An IndraNet graph object assembled by this class.
     """
-    default_sign_dict = {'Activation': 0,
-                         'Inhibition': 1,
-                         'IncreaseAmount': 0,
-                         'DecreaseAmount': 1}
 
     def __init__(self, statements=None):
         self.statements = statements if statements else []
@@ -53,7 +49,8 @@ class IndraNetAssembler():
         self.statements += stmts
 
     def make_model(self, exclude_stmts=None, complex_members=3,
-                   graph_type='multi_graph', sign_dict=None):
+                   graph_type='multi_graph', sign_dict=None,
+                   belief_flattening=None, weight_flattening=None):
         """Assemble an IndraNet graph object.
 
         Parameters
@@ -72,6 +69,38 @@ class IndraNetAssembler():
             A dictionary mapping a Statement type to a sign to be used for
             the edge. This parameter is only used with the 'signed' option.
             See IndraNet.to_signed_graph for more info.
+        belief_flattening : str|function(G, edge)
+            The method to use when updating the belief for the flattened edge.
+
+            If a string is provided, it must be one of the predefined options
+            'simple_scorer' or 'complementary_belief'.
+
+            If a function is provided, it must take the flattened graph 'G'
+            and an edge 'edge' to perform the belief flattening on and return
+            a number:
+
+            >>> def belief_flattening(G, edge):
+            ...     # Return the average belief score of the constituent edges
+            ...     all_beliefs = [s['belief']
+            ...         for s in G.edges[edge]['statements']]
+            ...     return sum(all_beliefs)/len(all_beliefs)
+
+        weight_flattening : function(G)
+            A function taking at least the graph G as an argument and
+            returning G after adding edge weights as an edge attribute to the
+            flattened edges using the reserved keyword 'weight'.
+
+            Example:
+
+            >>> def weight_flattening(G):
+            ...     # Sets the flattened weight to the average of the
+            ...     # inverse source count
+            ...     for edge in G.edges:
+            ...         w = [1/s['evidence_count']
+            ...             for s in G.edges[edge]['statements']]
+            ...         G.edges[edge]['weight'] = sum(w)/len(w)
+            ...     return G
+
 
         Returns
         -------
@@ -82,10 +111,15 @@ class IndraNetAssembler():
         if graph_type == 'multi_graph':
             model = IndraNet.from_df(df)
         elif graph_type == 'digraph':
-            model = IndraNet.digraph_from_df(df)
+            model = IndraNet.digraph_from_df(
+                df=df,
+                flattening_method=belief_flattening,
+                weight_mapping=weight_flattening
+            )
         elif graph_type == 'signed':
-            sign_dict = self.default_sign_dict if not sign_dict else sign_dict
-            model = IndraNet.signed_from_df(df, sign_dict=sign_dict)
+            model = IndraNet.signed_from_df(df, sign_dict=sign_dict,
+                                            flattening_method=belief_flattening,
+                                            weight_mapping=weight_flattening)
         else:
             raise TypeError('Have to specify one of \'multi_graph\', '
                             '\'digraph\' or \'signed\' when providing graph '
