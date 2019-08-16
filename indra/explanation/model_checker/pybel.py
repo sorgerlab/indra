@@ -1,8 +1,6 @@
 import logging
 from . import ModelChecker
 from indra.statements import *
-from indra.assemblers.pybel.assembler import belgraph_to_signed_graph, \
-    _get_agent_node
 
 
 logger = logging.getLogger(__name__)
@@ -28,6 +26,9 @@ class PybelModelChecker(ModelChecker):
 
     def get_graph(self):
         """Convert a PyBELGraph to a graph with signed nodes."""
+        # This import is done here rather than at the top level to avoid
+        # making pybel an implicit dependency of the model checker
+        from indra.assemblers.pybel.assembler import belgraph_to_signed_graph
         if self.graph:
             return self.graph
         signed_edges = belgraph_to_signed_graph(self.model)
@@ -35,6 +36,9 @@ class PybelModelChecker(ModelChecker):
         return self.graph
 
     def process_statement(self, stmt):
+        # This import is done here rather than at the top level to avoid
+        # making pybel an implicit dependency of the model checker
+        from indra.assemblers.pybel.assembler import _get_agent_node
         # Check if this is one of the statement types that we can check
         if not isinstance(stmt, (Modification, RegulateAmount,
                                  RegulateActivity, Influence)):
