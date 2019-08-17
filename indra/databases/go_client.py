@@ -111,7 +111,7 @@ def get_primary_id(go_id):
 
 
 def update_id_mappings(g):
-    """Compile all ID->label0007067 mappings and save to a TSV file.
+    """Compile all ID->label mappings and save to a TSV file.
 
     Parameters
     ----------
