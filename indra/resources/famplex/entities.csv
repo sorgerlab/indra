@@ -1,4 +1,5 @@
 9_1_1
+A4GALT_family
 ABL_family
 ACAD
 ACC
@@ -22,6 +23,11 @@ ADRBK
 AKT
 ALDH
 ALDO
+ALG10
+ALG1_family
+ALG3_family
+ALG6_family
+ALG13_family
 AMPK
 AMPK_A1B1G1
 AMPK_A1B1G2
@@ -44,6 +50,7 @@ AP2A
 APC_C
 APOA
 Apolipoprotein
+ARF_GTPase_family
 Arp2_3_protein
 ARRB
 ATG4
@@ -51,8 +58,11 @@ ATP1A
 ATP1B
 ATP5G
 ATP_synthase
+Augmin
 AXIN
+B3GAT
 BCKDC
+Beta_3_4_GTF
 BIRC
 BMP
 BMP_receptor
@@ -80,6 +90,7 @@ CD64
 CD8
 CDC25
 CDK
+CDK1_2
 CDKN
 CDKN1
 CDKN2
@@ -98,6 +109,7 @@ Cohesin
 COL1
 COL4
 COL5
+COLGALT
 COX
 COX4
 COX6A
@@ -108,6 +120,8 @@ COX8
 CREB
 CRISP
 CRSP
+CRTC
+CSNK
 CSNK1
 CSNK2
 CTNNA
@@ -130,6 +144,7 @@ DNM
 DRD
 DUSP
 DVL
+DYRK
 E2F
 E3_Ub_ligase
 EDN
@@ -139,8 +154,11 @@ EIF2B
 EIF4A
 EIF4EBP
 EIF4G
+EIF4E
+EIF4
 ELA
 ENO
+Eotaxin
 Ephrin_receptor
 EPN
 ERBB
@@ -148,6 +166,7 @@ ERK
 ESR
 ETS
 EXOC
+EXT
 FANC
 FGF
 FGFR
@@ -158,13 +177,16 @@ FNT
 FOS_family
 FOXO
 FSH
+FUT
 FZD
 F_actin
 GABR
+GALNT
 Gamma_secretase
 GAP
 GAS6_receptor
 GATA
+GCNT
 GEF
 GPCR
 GPIb_IX_V
@@ -177,6 +199,12 @@ GSK3
 GST
 GTF2E
 GTF2F
+Glycosyltransferase
+GTF_family_2
+GTF_family_6
+GTF_family_8
+GTF_family_29
+GTF_family_90
 GTPase
 GUCY
 GYS
@@ -260,10 +288,12 @@ MAPK
 MCM
 MEF2
 MEK
+MGAT
 Mitochondrial_Ribosome
 MRPS
 MRPL
 MMP
+Metallothionein
 mTORC1
 mTORC2
 MYH
@@ -293,6 +323,7 @@ NRG
 NRG_1_2
 NRG_3_4
 NTRK
+OGT_family
 p14_3_3
 P2RX
 P2RY
@@ -366,6 +397,7 @@ Propionyl_CoA_carboxylase
 Protease
 Proteasome
 PTGER
+PYG
 RAB
 RAC
 RAF
@@ -385,6 +417,7 @@ RFX
 RGL
 RHO
 RhoGDI
+RLR
 RNApo_I
 RNApo_II
 ROBO
@@ -402,6 +435,7 @@ SCD
 SERCA
 SERPINB
 SHC
+SIK
 SLC2A
 SLRP
 SLRP_1
@@ -423,6 +457,7 @@ SRC
 SREBF
 STAT
 STAT5
+STT3
 Sulfonylurea_receptor
 SWI_SNF
 TAOK
@@ -458,6 +493,9 @@ TXN
 TXNRD
 UBE2
 Ubiquitin
+UGCG
+UGT
+UGGT
 VAV
 VEGF
 VEGFR
@@ -470,3 +508,5 @@ ETC_complex_II
 ETC_complex_III
 ETC_complex_IV
 ETC_complex_V
+LXR
+MKNK
