@@ -24,46 +24,7 @@ logger = logging.getLogger(__name__)
 HERE = dirname(abspath(__file__))
 
 
-class IndraHTMLLoader(BaseLoader):
-    """A home-grown template loader to load the INDRA templates.
-
-    Based on the example found here:
-    http://jinja.pocoo.org/docs/2.10/api/#loaders
-
-    Parameters
-    ----------
-    root_paths : dict
-        A dict of strings indicating possible roots for template directories,
-        keyed by basename. To be more specific, an entry
-        {'indra': '/path/to/module'} would mean that you expect to have
-        'indra/template.html' mapped to '/path/to/module/templates/template.html'.
-        The default is {'indra': HERE}.
-    """
-    native_path = HERE
-
-    def __init__(self, root_paths=None):
-        self.root_paths = root_paths
-        if root_paths is None:
-            self.root_paths = {'indra': HERE}
-
-    def get_source(self, environment, template):
-        path_parts = template.split(sep)
-        if len(path_parts) == 1 or not path_parts[0]:
-            root = self.root_paths[None]
-        else:
-            root = self.root_paths[path_parts[0]]
-            path_parts = path_parts[1:]
-
-        path = join(root, 'templates', *path_parts)
-        if not exists(path):
-            raise TemplateNotFound(template)
-        mtime = getmtime(path)
-        with open(path, 'r') as f:
-            source = f.read()
-        return source, path, lambda: mtime == getmtime(path)
-
-
-env = Environment(loader=IndraHTMLLoader())
+env = Environment()
 
 default_template = env.get_template('indra/statements_view.html')
 
