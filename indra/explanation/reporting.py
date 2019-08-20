@@ -30,7 +30,7 @@ def stmts_from_pysb_path(path, model, stmts):
     return path_stmts
 
 
-def stmts_from_indranet_path(path, model, signed):
+def stmts_from_indranet_path(path, model, signed, from_db=True, stmts=None):
     """Return source Statements corresponding to a path in an IndraNet model
     (found by SignedGraphModelChecker or UnsignedGraphModelChecker).
 
@@ -45,6 +45,12 @@ def stmts_from_indranet_path(path, model, signed):
         MultiDiGraph.
     signed : bool
         Whether the model and path are signed.
+    from_db : bool
+        If True, uses statement hashes to query the database. Otherwise, looks
+        for path statements in provided stmts.
+    stmts : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements from which the model was assembled. Required
+        if from_db is set to False.
 
     Returns
     -------
@@ -66,12 +72,16 @@ def stmts_from_indranet_path(path, model, signed):
         else:
             stmt_data = model[source[0]][target[0]]['statements']
         hashes = [stmt['stmt_hash'] for stmt in stmt_data]
-        stmts = get_statements_by_hash(hashes)
-        steps.append(stmts)
+        if from_db:
+            statements = get_statements_by_hash(hashes)
+        else:
+            statements = [
+                stmt for stmt in stmts if stmt.get_hash() in hashes]
+        steps.append(statements)
     return steps
 
 
-def stmts_from_pybel_path(path, model):
+def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
     """Return source Statements corresponding to a path in a PyBEL model.
 
     Parameters
@@ -82,6 +92,12 @@ def stmts_from_pybel_path(path, model):
         a path.
     model : pybel.BELGraph
         A PyBEL BELGraph model.
+    from_db : bool
+        If True, uses statement hashes to query the database. Otherwise, looks
+        for path statements in provided stmts.
+    stmts : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements from which the model was assembled. Required
+        if from_db is set to False.
 
     Returns
     -------
@@ -93,14 +109,18 @@ def stmts_from_pybel_path(path, model):
     """
     steps = []
     for i in range(len(path[:-1])):
-        hashes = set()
         source = path[i]
         target = path[i+1]
         edges = model[source[0]][target[0]]
-        for i in range(len(edges)):
-            hashes.add(edges[i]['stmt_hash'])
-        stmts = get_statements_by_hash(list(hashes))
-        steps.append(stmts)
+        hashes = set()
+        for j in range(len(edges)):
+            hashes.add(edges[j]['stmt_hash'])
+            if from_db:
+                statements = get_statements_by_hash(list(hashes))
+            else:
+                statements = [
+                    stmt for stmt in stmts if stmt.get_hash() in hashes]
+        steps.append(statements)
     return steps
 
 
