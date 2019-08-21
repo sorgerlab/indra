@@ -1,12 +1,13 @@
-import os
-import rdflib
 import logging
-import objectpath
-import collections
+import os
 from datetime import datetime
-from indra.statements import Concept, Event, Influence, TimeContext, \
-    RefContext, WorldContext, Evidence, QualitativeDelta
 
+import objectpath
+import rdflib
+
+from indra.statements import Concept, Event, Influence, TimeContext, \
+    RefContext, WorldContext, Evidence, QualitativeDelta, MovementContext, Migration
+from indra.statements.delta import QuantitativeState
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +142,7 @@ class HumeJsonLdProcessor(object):
             self.document_dict[doc['@id']] = {'sentences': sentences,
                                               'location': doc['location']}
 
-    def _make_context(self, entity):
+    def _make_world_context(self, entity):
         """Get place and time info from the json for this entity."""
         loc_context = None
         time_context = None
@@ -151,24 +152,11 @@ class HumeJsonLdProcessor(object):
             if argument["type"] == "place":
                 entity_id = argument["value"]["@id"]
                 loc_entity = self.concept_dict[entity_id]
-                place = loc_entity.get("canonicalName")
-                if not place:
-                    place = loc_entity['text']
-                geo_id = loc_entity.get('geoname_id')
-                loc_context = RefContext(name=place, db_refs={"GEOID": geo_id})
+                loc_context = _resolve_geo(loc_entity)
             if argument["type"] == "time":
                 entity_id = argument["value"]["@id"]
                 temporal_entity = self.concept_dict[entity_id]
-                text = temporal_entity['mentions'][0]['text']
-                if len(temporal_entity.get("timeInterval", [])) < 1:
-                    time_context = TimeContext(text=text)
-                    continue
-                time = temporal_entity["timeInterval"][0]
-                start = datetime.strptime(time['start'], '%Y-%m-%dT%H:%M')
-                end = datetime.strptime(time['end'], '%Y-%m-%dT%H:%M')
-                duration = int(time['duration'])
-                time_context = TimeContext(text=text, start=start, end=end,
-                                           duration=duration)
+                time_context = _resolve_time(temporal_entity)
 
         # Put context together
         context = None
@@ -176,6 +164,27 @@ class HumeJsonLdProcessor(object):
             context = WorldContext(time=time_context, geo_location=loc_context)
 
         return context
+
+    def _make_movement_context(self, entity):
+        movement_locations = list()
+        time_context = None
+        quantitative_state = QuantitativeState(entity="person", value=1, unit='Absolute', modifier="NoModifier")
+        for argument in entity['arguments']:
+            entity_id = argument["value"]["@id"]
+            hume_entity = self.concept_dict[entity_id]
+            if argument['type'] in {"actor", "affected_actor", "active_actor"}:
+                for count in hume_entity.get('counts', list()):
+                    quantitative_state = QuantitativeState(entity="person", value=count['value'],
+                                                           unit=count['unit'], modifier=count['modifier'])
+            if argument['type'] == "origin":
+                movement_locations.append({'location': _resolve_geo(hume_entity), 'role': 'origin'})
+            if argument['type'] == 'destination':
+                movement_locations.append({'location': _resolve_geo(hume_entity), 'role': 'destination'})
+            if argument['type'] == "time":
+                time_context = _resolve_time(hume_entity)
+        return MovementContext(locations=movement_locations,
+                               time=time_context), quantitative_state
+
 
     def _make_concept(self, entity):
         """Return Concept from a Hume entity."""
@@ -208,10 +217,20 @@ class HumeJsonLdProcessor(object):
             eid = _choose_id(event, arg_type)
         ev = self.concept_dict[eid]
         concept, metadata = self._make_concept(ev)
-        ev_delta = QualitativeDelta(polarity=get_polarity(ev), adjectives=None)
-        context = self._make_context(ev)
-        event_obj = Event(concept, delta=ev_delta, context=context,
-                          evidence=evidence)
+
+        is_migration_event = False
+        hume_grounding = {x[0] for x in concept.db_refs['HUME']}
+        for grounding_en in hume_grounding:
+            if "wm/concept/causal_factor/social_and_political/migration" in grounding_en:
+                is_migration_event = True
+        if is_migration_event:
+            movement_context, quantitative_state = self._make_movement_context(ev)
+            event_obj = Migration(concept, delta=quantitative_state, context=movement_context, evidence=evidence)
+        else:
+            ev_delta = QualitativeDelta(polarity=get_polarity(ev), adjectives=None)
+            context = self._make_world_context(ev)
+            event_obj = Event(concept, delta=ev_delta, context=context,
+                              evidence=evidence)
         return event_obj
 
     def _get_evidence(self, event, adjectives):
@@ -273,41 +292,9 @@ def _get_grounding(entity):
     groundings = entity.get('grounding')
     if not groundings:
         return db_refs
-
-    def get_ont_concept(concept):
-        """Strip slash, replace spaces and remove example leafs."""
-        # In the WM context, groundings have no URL prefix and start with /
-        # The following block does some special handling of these groundings.
-        if concept.startswith('/'):
-            concept = concept[1:]
-            concept = concept.replace(' ', '_')
-            # We eliminate any entries that aren't ontology categories
-            # these are typically "examples" corresponding to the category
-            while concept not in hume_onto_entries:
-                parts = concept.split('/')
-                if len(parts) == 1:
-                    break
-                concept = '/'.join(parts[:-1])
-        # Otherwise we just return the concept as is
-        return concept
-
-    # Basic collection of grounding entries
-    raw_grounding_entries = [(get_ont_concept(g['ontologyConcept']),
-                              g['value']) for g in groundings]
-
-    # Occasionally we get duplicate grounding entries, we want to
-    # eliminate those here
-    grounding_dict = {}
-    for cat, score in raw_grounding_entries:
-        if (cat not in grounding_dict) or (score > grounding_dict[cat]):
-            grounding_dict[cat] = score
-    # Then we sort the list in reverse order according to score
-    # Sometimes the exact same score appears multiple times, in this
-    # case we prioritize by the "depth" of the grounding which is
-    # obtained by looking at the number of /-s in the entry.
-    # However, there are still cases where the grounding depth and the score
-    # are the same. In these cases we just sort alphabetically.
-    grounding_entries = sorted(list(set(grounding_dict.items())),
+    # Get rid of leading slash
+    groundings = [(x['ontologyConcept'][1:], x['value']) for x in groundings]
+    grounding_entries = sorted(list(set(groundings)),
                                key=lambda x: (x[1], x[0].count('/'), x[0]),
                                reverse=True)
     # We could get an empty list here in which case we don't add the
@@ -335,4 +322,22 @@ def _get_ontology_entries():
     return entries
 
 
-hume_onto_entries = _get_ontology_entries()
+def _resolve_geo(hume_loc_entity):
+    place = hume_loc_entity.get('canonicalName', hume_loc_entity.get('text'))
+    geo_id = hume_loc_entity.get('geoname_id', None)
+    if geo_id is not None:
+        return RefContext(name=place, db_refs={"GEOID": geo_id})
+    else:
+        return RefContext(place)
+
+
+def _resolve_time(hume_temporal_entity):
+    text = hume_temporal_entity['mentions'][0]['text']
+    if len(hume_temporal_entity.get("timeInterval", [])) < 1:
+        return TimeContext(text=text)
+    time = hume_temporal_entity["timeInterval"][0]
+    start = datetime.strptime(time['start'], '%Y-%m-%dT%H:%M')
+    end = datetime.strptime(time['end'], '%Y-%m-%dT%H:%M')
+    duration = int(time['duration'])
+    return TimeContext(text=text, start=start, end=end,
+                       duration=duration)
