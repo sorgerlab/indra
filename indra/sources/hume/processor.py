@@ -1,13 +1,14 @@
-import logging
 import os
+import rdflib
+import logging
+import objectpath
 from datetime import datetime
 
-import objectpath
-import rdflib
 
 from indra.statements import Concept, Event, Influence, TimeContext, \
-    RefContext, WorldContext, Evidence, QualitativeDelta, MovementContext, Migration
-from indra.statements.delta import QuantitativeState
+    RefContext, WorldContext, Evidence, QualitativeDelta, MovementContext, \
+    Migration, QuantitativeState
+
 
 logger = logging.getLogger(__name__)
 
@@ -80,8 +81,8 @@ class HumeJsonLdProcessor(object):
         """Find standalone events and return them in a list."""
         # First populate self.concept_dict and self.relations_subj_obj_ids
         if not self.relation_dict or not self.concept_dict or \
-           not self.relation_subj_obj_ids:
-                self._find_relations()
+                not self.relation_subj_obj_ids:
+            self._find_relations()
 
         # Check if events are part of relations
         events = []
@@ -118,9 +119,9 @@ class HumeJsonLdProcessor(object):
                     if e['arguments']:
                         for a in e['arguments']:
                             if a['type'] == 'source' or \
-                               a['type'] == 'destination':
-                                    self.relation_subj_obj_ids.append(
-                                        a['value']['@id'])
+                                    a['type'] == 'destination':
+                                self.relation_subj_obj_ids.append(
+                                    a['value']['@id'])
             # If this is an Event or an Entity
             if {'Event', 'Entity'} & label_set:
                 self.concept_dict[e['@id']] = e
@@ -176,17 +177,20 @@ class HumeJsonLdProcessor(object):
             hume_entity = self.concept_dict[entity_id]
             if argument['type'] in {"actor", "affected_actor", "active_actor"}:
                 for count in hume_entity.get('counts', list()):
-                    quantitative_state = QuantitativeState(entity="person", value=count['value'],
-                                                           unit=count['unit'], modifier=count['modifier'])
+                    quantitative_state = QuantitativeState(
+                        entity="person", value=count['value'],
+                        unit=count['unit'], modifier=count['modifier'])
             if argument['type'] == "origin":
-                movement_locations.append({'location': _resolve_geo(hume_entity), 'role': 'origin'})
+                movement_locations.append(
+                    {'location': _resolve_geo(hume_entity), 'role': 'origin'})
             if argument['type'] == 'destination':
-                movement_locations.append({'location': _resolve_geo(hume_entity), 'role': 'destination'})
+                movement_locations.append(
+                    {'location': _resolve_geo(hume_entity),
+                     'role': 'destination'})
             if argument['type'] == "time":
                 time_context = _resolve_time(hume_entity)
         return MovementContext(locations=movement_locations,
                                time=time_context), quantitative_state
-
 
     def _make_concept(self, entity):
         """Return Concept from a Hume entity."""
@@ -223,13 +227,17 @@ class HumeJsonLdProcessor(object):
         is_migration_event = False
         hume_grounding = {x[0] for x in concept.db_refs['HUME']}
         for grounding_en in hume_grounding:
-            if "wm/concept/causal_factor/social_and_political/migration" in grounding_en:
+            if "wm/concept/causal_factor/social_and_political/migration" in \
+                    grounding_en:
                 is_migration_event = True
         if is_migration_event:
-            movement_context, quantitative_state = self._make_movement_context(ev)
-            event_obj = Migration(concept, delta=quantitative_state, context=movement_context, evidence=evidence)
+            movement_context, quantitative_state = (
+                self._make_movement_context(ev))
+            event_obj = Migration(concept, delta=quantitative_state,
+                                  context=movement_context, evidence=evidence)
         else:
-            ev_delta = QualitativeDelta(polarity=get_polarity(ev), adjectives=None)
+            ev_delta = QualitativeDelta(
+                polarity=get_polarity(ev), adjectives=None)
             context = self._make_world_context(ev)
             event_obj = Event(concept, delta=ev_delta, context=context,
                               evidence=evidence)
