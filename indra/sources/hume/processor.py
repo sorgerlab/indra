@@ -168,7 +168,9 @@ class HumeJsonLdProcessor(object):
     def _make_movement_context(self, entity):
         movement_locations = list()
         time_context = None
-        quantitative_state = QuantitativeState(entity="person", value=1, unit='Absolute', modifier="NoModifier")
+        # Use None for quantitative_state if no information found, default
+        # value will be assigned when creating a Statement
+        quantitative_state = None
         for argument in entity['arguments']:
             entity_id = argument["value"]["@id"]
             hume_entity = self.concept_dict[entity_id]
