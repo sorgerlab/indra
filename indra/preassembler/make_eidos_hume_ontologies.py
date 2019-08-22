@@ -52,7 +52,7 @@ def build_relations(G, node, tree, prefix):
     this_prefix = prefix + '/' + node if prefix else node
     for entry in tree:
         if isinstance(entry, str):
-            continue
+            child = entry
         elif isinstance(entry, dict):
             if 'OntologyNode' not in entry.keys():
                 for child in entry.keys():
