@@ -1,4 +1,5 @@
 import openpyxl
+import pickle
 from indra.statements import *
 
 
@@ -92,6 +93,11 @@ if __name__ == '__main__':
     sheets = wb.sheetnames
     cag_sheets = [s for s in sheets if 'CAG' in s]
 
+    statements = []
     for sheet_name in cag_sheets:
         sheet = wb[sheet_name]
-        process_sheet(sheet)
+        new_stmts = process_sheet(sheet)
+        statements += new_stmts
+
+    with open('stmts_from_migration_table.pkl', 'wb') as f:
+        pickle.dump(statements, f)
