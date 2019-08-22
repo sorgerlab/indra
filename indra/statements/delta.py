@@ -65,8 +65,8 @@ class QualitativeDelta(Delta):
         return delta
 
     def __str__(self):
-        return "%s(polarity=%d, adjectives=%s)" % (type(self).__name__,
-                                                   self.polarity,
+        return "%s(polarity=%s, adjectives=%s)" % (type(self).__name__,
+                                                   str(self.polarity),
                                                    self.adjectives)
 
     def __repr__(self):
