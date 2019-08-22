@@ -283,7 +283,7 @@ class GroundingMapper(object):
         hgnc_id = db_refs.get('HGNC')
         # If we have a UP ID and no HGNC ID, we try to get a gene name,
         # and if possible, a HGNC ID from that
-        if up_id and not hgnc_id:
+        if up_id and not hgnc_id and uniprot_client.is_human(up_id):
             gene_name = uniprot_client.get_gene_name(up_id, False)
             if gene_name:
                 hgnc_id = hgnc_client.get_hgnc_id(gene_name)
