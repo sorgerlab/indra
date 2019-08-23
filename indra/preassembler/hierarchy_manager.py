@@ -546,11 +546,12 @@ class YamlHierarchyManager(HierarchyManager):
         A function that takes the root object as an argument and returns
         an RDF graph.
     """
-    def __init__(self, root, yaml_to_rdf):
+    def __init__(self, root, yaml_to_rdf, add_leaves):
         self.yaml_root = root
         self.yaml_to_rdf = yaml_to_rdf
+        self.add_leaves = add_leaves
         super(YamlHierarchyManager, self).__init__(None, True, True)
-        G = self.yaml_to_rdf(self.yaml_root)
+        G = self.yaml_to_rdf(self.yaml_root, self.add_leaves)
         self.load_from_rdf_graph(G)
 
     def add_entry(self, entry, examples=None):
@@ -592,7 +593,7 @@ class YamlHierarchyManager(HierarchyManager):
                     new_root = root[-1][part]
             root = new_root
 
-        G = self.yaml_to_rdf(self.yaml_root)
+        G = self.yaml_to_rdf(self.yaml_root, self.add_leaves)
         self.load_from_rdf_graph(G)
 
 

@@ -192,7 +192,7 @@ def default_assembly(stmts):
 
 def _make_un_ontology():
     return YamlHierarchyManager(load_yaml_from_url(eidos_ont_url),
-                                rdf_graph_from_yaml)
+                                rdf_graph_from_yaml, True)
 
 
 def _stmts_dict_to_json_str(stmt_dict):
