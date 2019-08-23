@@ -27,7 +27,8 @@ def make_stmt(row_dict):
             subj_pol = -1
     else:
         subj_pol = None
-    subj_time = TimeContext(text=row_dict['Original temporal text for cause'])
+    subj_time = TimeContext(
+        text=str(row_dict['Original temporal text for cause']))
     subj_context = WorldContext(time=subj_time, geo_location=RefContext(
         name=row_dict['CauseLocation']))
     subj = Event(subj_concept, delta=QualitativeDelta(polarity=subj_pol),
@@ -37,7 +38,8 @@ def make_stmt(row_dict):
     obj_concept = Concept(
         row_dict['Target/Effect (Factor B)'],
         db_refs={'WM': row_dict['Target/Effect (WM ontology node)']})
-    obj_time = TimeContext(text=row_dict['Original temporal text for effect'])
+    obj_time = TimeContext(
+        text=str(row_dict['Original temporal text for effect']))
     if row_dict['Target/Effect polarity']:
         if row_dict['Target/Effect polarity'].lower() == 'increase':
             obj_pol = 1
