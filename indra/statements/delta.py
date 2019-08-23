@@ -88,19 +88,22 @@ class QuantitativeState(Delta):
         Modifier to value (e.g. more than, at least, approximately, etc.)
     text : str
         Natural language text describing quantitative state.
+    polarity : 1, -1 or None
+        Polarity of an Event.
     """
     def __init__(self, entity=None, value=None, unit=None, modifier=None,
-                 text=None):
+                 text=None, polarity=None):
         self.entity = entity
         self.value = value if value else None
         self.unit = unit
         self.modifier = modifier
         self.text = text
+        self.polarity = polarity
 
     def equals(self, other):
         return (self.entity == other.entity and self.value == other.value and
                 self.unit == other.unit and self.modifier == other.modifier and
-                self.text == other.text)
+                self.text == other.text and self.polarity == other.polarity)
 
     def to_json(self):
         json_dict = {'type': 'quantitative',
@@ -108,7 +111,8 @@ class QuantitativeState(Delta):
                      'value': self.value if self.value else None,
                      'unit': self.unit if self.unit else None,
                      'modifier': self.modifier if self.modifier else None,
-                     'text': self.text if self.text else None}
+                     'text': self.text if self.text else None,
+                     'polarity': self.polarity if self.polarity else None}
         return json_dict
 
     @classmethod
@@ -118,13 +122,15 @@ class QuantitativeState(Delta):
         unit = json_dict.get('unit')
         modifier = json_dict.get('modifier')
         text = json_dict.get('text')
+        polarity = json_dict.get('polarity')
         return cls(entity=entity, value=value, unit=unit, modifier=modifier,
-                   text=text)
+                   text=text, polarity=polarity)
 
     def __str__(self):
         return ("QuantitativeState(entity=%s, value=%s, unit=%s, modifier=%s,"
-                " text=%s)" % (self.entity, str(self.value), self.unit,
-                               self.modifier, self.text))
+                " text=%s, polarity=%s)" % (
+                    self.entity, str(self.value), self.unit,
+                    self.modifier, self.text, str(self.polarity)))
 
     def __repr__(self):
         return self.__str__()
