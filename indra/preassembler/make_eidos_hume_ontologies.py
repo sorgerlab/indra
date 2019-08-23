@@ -23,7 +23,7 @@ eidos_ont_url = ('https://raw.githubusercontent.com/clulab/eidos/master/'
                  'src/main/resources/org/clulab/wm/eidos/english/'
                  'ontologies/un_ontology.yml')
 hume_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
-                'resource/ontologies/hume_ontology.yaml')
+                'resource/ontologies/open/hume_ontology.yaml')
 
 
 def save_hierarchy(g, path):
