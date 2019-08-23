@@ -42,6 +42,13 @@ def make_stmt(row_dict):
     obj_time = TimeContext(text=row_dict['Original temporal text for effect'],
                            start=row_dict['Effect startTime'],
                            end=row_dict['Effect endTime'])
+    if row_dict['Target/Effect polarity']:
+        if row_dict['Target/Effect polarity'].lower() == 'increase':
+            obj_pol = 1
+        elif row_dict['Target/Effect polarity'].lower() == 'decrease':
+            obj_pol = -1
+    else:
+        obj_pol = None
     # If both source and destination locations are present, make Migration obj
     if row_dict['Effect SourceLocation'] and \
             row_dict['Effect DestinationLocation']:
@@ -53,16 +60,10 @@ def make_stmt(row_dict):
         obj = Migration(
             obj_concept, delta=QuantitativeState(
                 entity='person', value=row_dict['Relation strength estimate'],
-                unit=row_dict['Relation strength unit']), context=obj_context)
+                unit=row_dict['Relation strength unit'], polarity=obj_pol),
+            context=obj_context)
     # If only one or no location is present, make Event object
     else:
-        if row_dict['Target/Effect polarity']:
-            if row_dict['Target/Effect polarity'].lower() == 'increase':
-                obj_pol = 1
-            elif row_dict['Target/Effect polarity'].lower() == 'decrease':
-                obj_pol = -1
-        else:
-            obj_pol = None
         if row_dict['Effect SourceLocation']:
             obj_loc = RefContext(name=row_dict['Effect SourceLocation'])
         elif row_dict['Effect DestinationLocation']:
