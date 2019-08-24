@@ -85,9 +85,7 @@ def make_stmt(row_dict):
     return stmt
 
 
-if __name__ == '__main__':
-    fname = 'Initial annotation exercise for migration use case.xlsx'
-
+def process_workbook(fname):
     wb = openpyxl.load_workbook(fname, read_only=True)
     sheets = wb.sheetnames
     cag_sheets = [s for s in sheets if 'CAG' in s]
@@ -97,6 +95,4 @@ if __name__ == '__main__':
         sheet = wb[sheet_name]
         new_stmts = process_sheet(sheet)
         statements += new_stmts
-
-    with open('stmts_from_migration_table.pkl', 'wb') as f:
-        pickle.dump(statements, f)
+    return statements
