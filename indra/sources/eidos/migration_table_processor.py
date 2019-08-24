@@ -80,7 +80,7 @@ def make_stmt(row_dict):
     else:
         anns['table_figure_name'] = row_dict['Sentence(s)/Figure/Table']
         text = None
-    ev = Evidence(text=text, annotations=anns)
+    ev = Evidence(text=text, annotations=anns, source_api='assertion')
     stmt = Influence(subj, obj, [ev])
     return stmt
 
