@@ -72,8 +72,8 @@ def get_mesh_name(mesh_id, offline=False):
     mesh_id : str
         MESH Identifier, e.g. 'D003094'.
     offline : bool
-        Whether to allow queries to the NLM REST API if the given MESH ID is not
-        contained in INDRA's internal MESH mappings file. Default is False
+        Whether to allow queries to the NLM REST API if the given MESH ID is
+        not contained in INDRA's internal MESH mappings file. Default is False
         (allows REST API queries).
 
     Returns
@@ -164,7 +164,7 @@ def get_mesh_id_name_from_web(mesh_term):
         the name was found, returns a tuple of (None, None).
     """
     query_body = """
-        SELECT ?d ?dName ?c ?cName 
+        SELECT ?d ?dName ?c ?cName
         FROM <http://id.nlm.nih.gov/mesh>
         WHERE {
           ?d a meshv:Descriptor .
@@ -198,7 +198,7 @@ def mesh_isa(mesh_id1, mesh_id2):
         FROM <http://id.nlm.nih.gov/mesh>
         WHERE {
           mesh:%s meshv:broaderDescriptor+ ?o .
-        } 
+        }
         """ % mesh_id1
     mesh_json = submt_sparql_query(query_body)
     if mesh_json is None:
@@ -226,5 +226,5 @@ mesh_rdf_prefixes = """
         PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
         PREFIX mesh2019: <http://id.nlm.nih.gov/mesh/2019/>
         PREFIX mesh2018: <http://id.nlm.nih.gov/mesh/2018/>
-        PREFIX mesh2017: <http://id.nlm.nih.gov/mesh/2017/> 
+        PREFIX mesh2017: <http://id.nlm.nih.gov/mesh/2017/>
     """

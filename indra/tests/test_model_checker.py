@@ -1126,7 +1126,9 @@ def test_check_transphosphorylation():
     assert isinstance(results[0], tuple)
     assert results[0][1] == True
     assert results[1][1] == True
+
 """
+
 
 @unittest.skip('Skip path score tests for now')
 def test_model_check_data():
@@ -1247,6 +1249,7 @@ def test_prune_influence_map_degrade_bind():
     im = mc.get_im()
     assert len(im.edges()) == 2, im.edges()
 
+
 @unittest.skip('Skip sampling tests for now')
 def test_weighted_sampling1():
     """Test sampling with different path lengths but no data."""
@@ -1287,8 +1290,9 @@ def test_weighted_sampling1():
     assert len(set(path_result.paths)) == 3
     path_ctr = Counter(path_result.paths)
     assert path_ctr[(('BRAF_phosphorylation_JUN_phospho', 1),
-                     ('JUN_phospho_p_obs', 1))] == 46, path_ctr[(('BRAF_phosphorylation_JUN_phospho', 1),
-                     ('JUN_phospho_p_obs', 1))]
+                     ('JUN_phospho_p_obs', 1))] == 46, \
+        path_ctr[(('BRAF_phosphorylation_JUN_phospho', 1),
+                  ('JUN_phospho_p_obs', 1))]
     assert path_ctr[(('BRAF_phosphorylation_MAP2K1_phospho', 1),
                      ('MAP2K1_phospho_phosphorylation_JUN_phospho', 1),
                      ('JUN_phospho_p_obs', 1))] == 22, path_ctr
@@ -1360,7 +1364,8 @@ def test_weighted_sampling2():
 
 @unittest.skip('Skip sampling tests for now')
 def test_weighted_sampling3():
-    "Test sampling with normed abundances but no tail probabilities from data."
+    """Test sampling with normed abundances but no tail probabilities
+    from data."""
     # Abundances are normalized across rule instances involving the same gene.
     os.environ['TEST_FLAG'] = 'TRUE'
     map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
@@ -1442,17 +1447,27 @@ def test_amount_vs_activation():
 
 
 # Test other ModelChecker types
-st1 = Activation(Agent('A', db_refs={'HGNC': 1}), Agent('B', db_refs={'HGNC': 2}))
-st2 = Inhibition(Agent('B', db_refs={'HGNC': 2}), Agent('D', db_refs={'HGNC': 4}))
-st3 = IncreaseAmount(Agent('C', db_refs={'HGNC': 3}), Agent('B', db_refs={'HGNC': 2}))
-st4 = DecreaseAmount(Agent('C', db_refs={'HGNC': 3}), Agent('D', db_refs={'HGNC': 4}))
-st5 = IncreaseAmount(Agent('D', db_refs={'HGNC': 4}), Agent('E', db_refs={'HGNC': 5}))
+st1 = Activation(Agent('A', db_refs={'HGNC': 1}),
+                 Agent('B', db_refs={'HGNC': 2}))
+st2 = Inhibition(Agent('B', db_refs={'HGNC': 2}),
+                 Agent('D', db_refs={'HGNC': 4}))
+st3 = IncreaseAmount(Agent('C', db_refs={'HGNC': 3}),
+                     Agent('B', db_refs={'HGNC': 2}))
+st4 = DecreaseAmount(Agent('C', db_refs={'HGNC': 3}),
+                     Agent('D', db_refs={'HGNC': 4}))
+st5 = IncreaseAmount(Agent('D', db_refs={'HGNC': 4}),
+                     Agent('E', db_refs={'HGNC': 5}))
 
-test_st1 = Activation(Agent('A', db_refs={'HGNC': 1}), Agent('E', db_refs={'HGNC': 5}))
-test_st2 = Inhibition(Agent('A', db_refs={'HGNC': 1}), Agent('E', db_refs={'HGNC': 5}))
-test_st3 = Activation(Agent('A', db_refs={'HGNC': 1}), Agent('C', db_refs={'HGNC': 3}))
-test_st4 = Activation(Agent('F', db_refs={'HGNC': 6}), Agent('B', db_refs={'HGNC': 2}))
-test_st5 = DecreaseAmount(Agent('B', db_refs={'HGNC': 2}), Agent('F', db_refs={'HGNC': 6}))
+test_st1 = Activation(Agent('A', db_refs={'HGNC': 1}),
+                      Agent('E', db_refs={'HGNC': 5}))
+test_st2 = Inhibition(Agent('A', db_refs={'HGNC': 1}),
+                      Agent('E', db_refs={'HGNC': 5}))
+test_st3 = Activation(Agent('A', db_refs={'HGNC': 1}),
+                      Agent('C', db_refs={'HGNC': 3}))
+test_st4 = Activation(Agent('F', db_refs={'HGNC': 6}),
+                      Agent('B', db_refs={'HGNC': 2}))
+test_st5 = DecreaseAmount(Agent('B', db_refs={'HGNC': 2}),
+                          Agent('F', db_refs={'HGNC': 6}))
 test_st6 = ActiveForm(Agent('A', db_refs={'HGNC': 1}), None, True)
 
 
