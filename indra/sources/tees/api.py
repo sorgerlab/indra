@@ -69,7 +69,6 @@ def process_text(text, pmid=None, python2_path=None):
         A TEESProcessor object which contains a list of INDRA statements
         extracted from TEES extractions
     """
- 
     # Try to locate python2 in one of the directories of the PATH environment
     # variable if it is not provided
     if python2_path is None:
@@ -95,7 +94,7 @@ def process_text(text, pmid=None, python2_path=None):
 def run_on_text(text, python2_path):
     """Runs TEES on the given text in a temporary directory and returns a
     temporary directory with TEES output.
-    
+
     The caller should delete this directory when done with it. This function
     runs TEES and produces TEES output files but does not process TEES output
     into INDRA statements.

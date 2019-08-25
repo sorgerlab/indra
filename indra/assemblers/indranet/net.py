@@ -155,7 +155,7 @@ class IndraNet(nx.MultiDiGraph):
     def to_signed_graph(self, sign_dict=None,
                         flattening_method=None, weight_mapping=None):
         """Flatten the IndraNet to a signed graph.
-        
+
         Parameters
         ----------
         sign_dict : dict
