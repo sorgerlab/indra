@@ -1,5 +1,4 @@
 import openpyxl
-import pickle
 from indra.statements import *
 
 
@@ -11,7 +10,9 @@ def process_sheet(sheet):
         if not any(row_values):
             break
         row_dict = {h: v for h, v in zip(header, row_values)}
-        stmts.append(make_stmt(row_dict))
+        stmt = make_stmt(row_dict)
+        if stmt:
+            stmts.append(stmt)
     return stmts
 
 
@@ -20,6 +21,9 @@ def make_stmt(row_dict):
     subj_concept = Concept(
         name=row_dict['Source/Cause (Factor A)'],
         db_refs={'WM': row_dict['Source/Cause node (WM ontology node)']})
+    # Handle case where cause is missing
+    if subj_concept.name is None:
+        return None
     if row_dict['Source/Cause polarity']:
         if row_dict['Source/Cause polarity'].lower() == 'increase':
             subj_pol = 1
@@ -38,6 +42,9 @@ def make_stmt(row_dict):
     obj_concept = Concept(
         row_dict['Target/Effect (Factor B)'],
         db_refs={'WM': row_dict['Target/Effect (WM ontology node)']})
+    # Handle case where effect is missing
+    if subj_concept.name is None:
+        return None
     obj_time = TimeContext(
         text=str(row_dict['Original temporal text for effect']))
     if row_dict['Target/Effect polarity']:
