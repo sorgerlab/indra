@@ -12,7 +12,7 @@ import itertools
 from collections import OrderedDict
 from os.path import abspath, dirname, join, exists, getmtime, sep
 
-from jinja2 import Environment, BaseLoader, TemplateNotFound
+from jinja2 import Environment, BaseLoader, TemplateNotFound, FileSystemLoader
 
 from indra.statements import *
 from indra.assemblers.english import EnglishAssembler
@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 HERE = dirname(abspath(__file__))
 
 
-env = Environment()
+loader = FileSystemLoader(HERE)
+env = Environment(loader=loader)
 
 default_template = env.get_template('indra/statements_view.html')
 
