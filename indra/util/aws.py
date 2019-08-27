@@ -249,6 +249,23 @@ def dump_logs(job_queue='run_reach_queue', job_status='RUNNING'):
         get_job_log(job, write_file=True)
 
 
+def iter_s3_keys(s3, bucket, prefix):
+    """Iterate over the keys in an s3 bucket given a prefix."""
+    is_truncated = True
+    marker = None
+    while is_truncated:
+        if marker:
+            resp = s3.list_objects(Bucket=bucket, Prefix=prefix, Marker=marker)
+        else:
+            resp = s3.list_objects(Bucket=bucket, Prefix=prefix)
+        for entry in resp['Contents']:
+            if entry['Key'] != marker:
+                yield entry['Key']
+
+        is_truncated = resp['IsTruncated']
+        marker = entry['Key']
+
+
 def get_s3_file_tree(s3, bucket, prefix):
     """Overcome s3 response limit and return NestedDict tree of paths.
 
@@ -267,24 +284,9 @@ def get_s3_file_tree(s3, bucket, prefix):
 
     For more details, see the NestedDict docs.
     """
-    def get_some_keys(keys, marker=None):
-        if marker:
-            relevant_files = s3.list_objects(Bucket=bucket, Prefix=prefix,
-                                             Marker=marker)
-        else:
-            relevant_files = s3.list_objects(Bucket=bucket, Prefix=prefix)
-        keys.extend([entry['Key'] for entry in relevant_files['Contents']
-                     if entry['Key'] != marker])
-        return relevant_files['IsTruncated']
-
-    file_keys = []
-    marker = None
-    while get_some_keys(file_keys, marker):
-        marker = file_keys[-1]
-
     file_tree = NestedDict()
     pref_path = prefix.split('/')[:-1]   # avoid the trailing empty str.
-    for key in file_keys:
+    for key in iter_s3_keys(s3, bucket, prefix):
         full_path = key.split('/')
         relevant_path = full_path[len(pref_path):]
         curr = file_tree
