@@ -17,8 +17,8 @@ include indra/tools/machine/default-config.yaml
 include indra/tools/reading/util/reach_conf_fmt.txt
 include indra/assemblers/cag/cag_style.json
 include indra/assemblers/cag/cag_template.js
-include indra/assemblers/html/templates/indra_template.html
-include indra/assemblers/html/templates/statements_view.html
+include indra/assemblers/html/templates/indra/template.html
+include indra/assemblers/html/templates/indra/statements_view.html
 include indra/literature/pmids_auth_xml.txt
 include indra/literature/pmids_fulltext.txt
 include indra/literature/pmids_oa_txt.txt
