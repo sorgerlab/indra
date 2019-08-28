@@ -179,6 +179,16 @@ class IndraNetAssembler():
                 agA_ns, agA_id = get_ag_ns_id(agA)
                 agB_ns, agB_id = get_ag_ns_id(agB)
                 stmt_type = type(stmt).__name__
+                if stmt_type == 'Influence' or stmt_type == 'Association':
+                    stmt_pol = stmt.overall_polarity()
+                    if stmt_pol == 1:
+                        sign = 0
+                    elif stmt_pol == -1:
+                        sign = 1
+                    else:
+                        sign = None
+                else:
+                    sign = None
                 row = OrderedDict([
                     ('agA_name', agA.name),
                     ('agB_name', agB.name),
@@ -190,9 +200,11 @@ class IndraNetAssembler():
                     ('evidence_count', len(stmt.evidence)),
                     ('stmt_hash', stmt.get_hash(refresh=True)),
                     ('belief', stmt.belief),
-                    ('source_counts', _get_source_counts(stmt))])
+                    ('source_counts', _get_source_counts(stmt)),
+                    ('initial_sign', sign)])
                 rows.append(row)
         df = pd.DataFrame.from_dict(rows)
+        df = df.where((pd.notnull(df)), None)
         return df
 
 
