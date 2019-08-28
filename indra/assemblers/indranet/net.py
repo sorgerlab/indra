@@ -14,8 +14,7 @@ from indra.statements import Statement
 
 logger = logging.getLogger(__name__)
 simple_scorer = SimpleScorer()
-np.seterr(all='raise')
-NP_PRECISION = 10 ** -np.finfo(np.longfloat).precision  # Numpy precision
+
 
 default_sign_dict = {'Activation': 0,
                      'Inhibition': 1,
@@ -276,6 +275,8 @@ def _simple_scorer_update(G, edge):
 
 def _complementary_belief(G, edge):
     # Aggregate belief score: 1-prod(1-belief_i)
+    np.seterr(all='raise')
+    NP_PRECISION = 10 ** -np.finfo(np.longfloat).precision  # Numpy precision
     belief_list = [s['belief'] for s in G.edges[edge]['statements']]
     try:
         ag_belief = np.longfloat(1.0) - np.prod(np.fromiter(
