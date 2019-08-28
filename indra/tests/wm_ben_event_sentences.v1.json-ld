@@ -136,21 +136,21 @@
             "arguments": [
                 {
                     "@type": "Argument", 
-                    "type": "actor", 
+                    "type": "has_actor",
                     "value": {
                         "@id": "Entity-ENG_NW_20180102-2-1"
                     }
                 }, 
                 {
                     "@type": "Argument", 
-                    "type": "place", 
+                    "type": "has_location",
                     "value": {
                         "@id": "Entity-ENG_NW_20180102-2-1"
                     }
                 }, 
                 {
                     "@type": "Argument", 
-                    "type": "time", 
+                    "type": "has_time",
                     "value": {
                         "@id": "Time-1"
                     }
@@ -270,14 +270,14 @@
             "arguments": [
                 {
                     "@type": "Argument", 
-                    "type": "actor", 
+                    "type": "has_actor",
                     "value": {
                         "@id": "Entity-ENG_NW_20180102-2-1"
                     }
                 }, 
                 {
                     "@type": "Argument", 
-                    "type": "time", 
+                    "type": "has_time",
                     "value": {
                         "@id": "Time-2"
                     }
@@ -402,21 +402,21 @@
             "arguments": [
                 {
                     "@type": "Argument", 
-                    "type": "actor", 
+                    "type": "has_actor",
                     "value": {
                         "@id": "Entity-ENG_NW_20180102-1-1"
                     }
                 }, 
                 {
                     "@type": "Argument", 
-                    "type": "place", 
+                    "type": "has_location",
                     "value": {
                         "@id": "Entity-ENG_NW_20180102-1-1"
                     }
                 }, 
                 {
                     "@type": "Argument", 
-                    "type": "time", 
+                    "type": "has_time",
                     "value": {
                         "@id": "Time-3"
                     }

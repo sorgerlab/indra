@@ -144,28 +144,28 @@
             "arguments": [
                 {
                     "@type": "Argument", 
-                    "type": "destination", 
+                    "type": "has_destination_location",
                     "value": {
                         "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-2-1"
                     }
                 }, 
                 {
                     "@type": "Argument", 
-                    "type": "actor",
+                    "type": "has_actor",
                     "value": {
                         "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-0-1"
                     }
                 }, 
                 {
                     "@type": "Argument", 
-                    "type": "origin", 
+                    "type": "has_origin_location",
                     "value": {
                         "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-1-1"
                     }
                 }, 
                 {
                     "@type": "Argument", 
-                    "type": "time", 
+                    "type": "has_time",
                     "value": {
                         "@id": "Time-1"
                     }
