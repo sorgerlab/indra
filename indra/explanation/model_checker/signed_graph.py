@@ -33,7 +33,7 @@ class SignedGraphModelChecker(ModelChecker):
     def process_statement(self, stmt):
         # Check if this is one of the statement types that we can check
         if not isinstance(stmt, (Activation, Inhibition,
-                                 IncreaseAmount, DecreaseAmount)):
+                                 IncreaseAmount, DecreaseAmount, Influence)):
             logger.info('Statement type %s not handled' %
                         stmt.__class__.__name__)
             return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
@@ -42,6 +42,8 @@ class SignedGraphModelChecker(ModelChecker):
             target_polarity = 0 if stmt.is_activation else 1
         elif isinstance(stmt, RegulateAmount):
             target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
+        elif isinstance(stmt, Influence):
+            target_polarity = 1 if stmt.overall_polarity() == -1 else 0
         subj, obj = stmt.agent_list()
         if subj is None or (subj.name, 0) not in self.graph.nodes:
             return (None, None, 'SUBJECT_NOT_FOUND')
