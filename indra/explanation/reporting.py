@@ -125,7 +125,7 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
             else:
                 statements = [
                     stmt for stmt in stmts if stmt.get_hash() in hashes]
-        steps.append(statements)
+            steps.append(statements)
     return steps
 
 
