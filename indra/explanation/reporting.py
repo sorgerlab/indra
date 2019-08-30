@@ -114,7 +114,12 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
         edges = model[source[0]][target[0]]
         hashes = set()
         for j in range(len(edges)):
-            hashes.add(edges[j]['stmt_hash'])
+            try:
+                hashes.add(edges[j]['stmt_hash'])
+            # If a statement subject or object is a Complex, model would have
+            # edges with non-regular indices
+            except KeyError:
+                continue
             if from_db:
                 statements = get_statements_by_hash(list(hashes))
             else:
