@@ -2,8 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
 from indra.statements import *
-from indra.assemblers.html.assembler import HtmlAssembler, tag_text, \
-    IndraHTMLLoader
+from indra.assemblers.html.assembler import HtmlAssembler, tag_text, loader
 
 
 def make_stmt():
@@ -42,8 +41,7 @@ def test_assembler():
     assert isinstance(result, str)
     # Read from the template file and make sure the beginning and end of the
     # content matches
-    loader = IndraHTMLLoader()
-    template, _, _ = loader.get_source(None, 'indra/indra_template.html')
+    template, _, _ = loader.get_source(None, 'indra/template.html')
     assert result.startswith(template[0:100])
 
 
