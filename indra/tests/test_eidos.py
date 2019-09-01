@@ -3,6 +3,7 @@ import json
 import requests
 import datetime
 import unittest
+from nose.plugins.attrib import attr
 from indra.sources import eidos
 from indra.statements import Influence, Association, Event
 from indra.assemblers.cag import CAGAssembler
@@ -183,6 +184,8 @@ def test_eidos_to_cx():
     return
 
 
+# LibSBML used during model assembly causes out of memory error
+@attr('notravis')
 def test_eidos_to_pysb():
     stmts = __get_stmts_from_remote_jsonld()
     pa = PysbAssembler()
