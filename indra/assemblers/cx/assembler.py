@@ -31,6 +31,8 @@ class NiceCxAssembler(object):
                 a1_id = self.add_node(a1)
                 a2_id = self.add_node(a2)
                 edge_id = self.add_edge(a1_id, a2_id, stmt)
+        prefixes = {'pubmed': 'http://identifiers.org/pubmed/'}
+        self.network.set_network_attribute('@context', json.dumps(prefixes))
 
     def add_node(self, agent):
         agent_key = self.get_agent_key(agent)
@@ -48,13 +50,10 @@ class NiceCxAssembler(object):
     def add_edge(self, a1_id, a2_id, stmt):
         stmt_type = stmt.__class__.__name__
         edge_id = self.network.create_edge(a1_id, a2_id, stmt_type)
-        for ev in stmt.evidence:
-            cit = self.get_citation_key(ev)
-            if cit:
-                if cit in self.citation_keys:
-                    cit_key = self.citation_keys[cit]
-                else:
-                    cit_key = self.network.add_citation()
+        pmids = [ev.pmid for ev in stmt.evidence if ev.pmid is not None]
+        self.network.set_edge_attribute(edge_id, 'citation',
+                                        ['pubmed:%s' % p for p in pmids],
+                                        type='list_of_string')
         return edge_id
 
     def print_model(self):
