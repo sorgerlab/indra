@@ -1,453 +1,366 @@
 {
     "@context": {
-        "Argument": "https://w3id.org/wm/cag/Argument", 
-        "Corpus": "https://w3id.org/wm/cag/Corpus", 
-        "Dependency": "https://w3id.org/wm/cag/Dependency", 
-        "Document": "https://w3id.org/wm/cag/Document", 
-        "Entity": "https://w3id.org/wm/cag/Entity", 
-        "Event": "https://w3id.org/wm/cag/Event", 
-        "Interval": "https://w3id.org/wm/cag/Interval", 
-        "Modifier": "https://w3id.org/wm/cag/Modifier", 
-        "Provenance": "https://w3id.org/wm/cag/Provenance", 
-        "Sentence": "https://w3id.org/wm/cag/Sentence", 
-        "State": "https://w3id.org/wm/cag/State", 
-        "Trigger": "https://w3id.org/wm/cag/Trigger", 
-        "Word": "https://w3id.org/wm/cag/Word"
-    }, 
-    "@type": "Corpus", 
+        "Argument": "https://github.com/BBN-E/Hume/wiki#Argument",
+        "Corpus": "https://github.com/BBN-E/Hume/wiki#Corpus",
+        "Count": "https://github.com/BBN-E/Hume/wiki#Count",
+        "Document": "https://github.com/BBN-E/Hume/wiki#Document",
+        "Extraction": "https://github.com/BBN-E/Hume/wiki#Extraction",
+        "Grounding": "https://github.com/BBN-E/Hume/wiki#Grounding",
+        "Interval": "https://github.com/BBN-E/Hume/wiki#Interval",
+        "Provenance": "https://github.com/BBN-E/Hume/wiki#Provenance",
+        "Sentence": "https://github.com/BBN-E/Hume/wiki#Sentence",
+        "State": "https://github.com/BBN-E/Hume/wiki#State",
+        "TimeInterval": "https://github.com/BBN-E/Hume/wiki#TimeInterval",
+        "TimeValueMention": "https://github.com/BBN-E/Hume/wiki#TimeValueMention",
+        "Trigger": "https://github.com/BBN-E/Hume/wiki#Trigger"
+    },
+    "@type": "Corpus",
     "documents": [
         {
-            "@id": "ENG_NW_20180101", 
-            "@type": "Document", 
-            "location": "dummy.pdf", 
+            "@id": "HUME_MIGRATION_ARG_UNITTEST_082019",
+            "@type": "Document",
+            "location": "NON_EXISTED",
             "sentences": [
                 {
-                    "@id": "Sentence-ENG_NW_20180101-0", 
-                    "@type": "Sentence", 
-                    "text": "Hunger causes displacement in 2018 in South Sudan."
+                    "@id": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0",
+                    "@type": "Sentence",
+                    "text": "Hunger caused displacement in South Sudan in 2018."
                 }
             ]
         }
-    ], 
+    ],
     "extractions": [
         {
-            "@id": "Entity-ENG_NW_20180101-0-1", 
-            "@type": "Extraction", 
-            "canonicalName": "South Sudan", 
-            "geoname_id": "7909807", 
+            "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-0-1",
+            "@type": "Extraction",
+            "canonicalName": "South Sudan",
             "grounding": [
                 {
-                    "@type": "Grounding", 
-                    "name": "bbn", 
-                    "ontologyConcept": "/entity/location/geopolitical entities/nation", 
+                    "@type": "Grounding",
+                    "name": "bbn",
+                    "ontologyConcept": "/wm/concept/entity/geo-location",
                     "value": 0.8
                 }
-            ], 
+            ],
             "labels": [
                 "Entity"
-            ], 
-            "provenance": {
-                "@type": "Provenance", 
-                "document": {
-                    "@id": "ENG_NW_20180101"
-                }, 
-                "documentCharPositions": {
-                    "@type": "Interval", 
-                    "end": 112, 
-                    "start": 102
-                }, 
-                "sentence": "Sentence-ENG_NW_20180101-0"
-            }, 
-            "subtype": "entity", 
-            "text": "South Sudan", 
-            "type": "concept"
-        }, 
-        {
-            "@id": "EventGroup-0", 
-            "@type": "Extraction", 
-            "canonicalName": "hunger", 
-            "grounding": [
-                {
-                    "@type": "Grounding", 
-                    "name": "bbn", 
-                    "ontologyConcept": "/event/event group", 
-                    "value": 0.75
-                }
-            ], 
-            "subtype": "event", 
-            "text": "hunger", 
-            "type": "concept"
-        }, 
-        {
-            "@id": "unification-1", 
-            "@type": "Extraction", 
-            "arguments": [
-                {
-                    "@type": "Argument", 
-                    "type": "group", 
-                    "value": {
-                        "@id": "EventGroup-0"
-                    }
-                }, 
-                {
-                    "@type": "Argument", 
-                    "type": "member", 
-                    "value": {
-                        "@id": "Event-ENG_NW_20180101-0"
-                    }
-                }
-            ], 
-            "labels": [
-                "DirectedRelation"
-            ], 
-            "subtype": "unification", 
-            "type": "relation"
-        }, 
-        {
-            "@id": "EventGroup-1", 
-            "@type": "Extraction", 
-            "canonicalName": "displacement", 
-            "grounding": [
-                {
-                    "@type": "Grounding", 
-                    "name": "bbn", 
-                    "ontologyConcept": "/event/event group", 
-                    "value": 0.75
-                }
-            ], 
-            "subtype": "event", 
-            "text": "displacement", 
-            "type": "concept"
-        }, 
-        {
-            "@id": "unification-2", 
-            "@type": "Extraction", 
-            "arguments": [
-                {
-                    "@type": "Argument", 
-                    "type": "group", 
-                    "value": {
-                        "@id": "EventGroup-1"
-                    }
-                }, 
-                {
-                    "@type": "Argument", 
-                    "type": "member", 
-                    "value": {
-                        "@id": "Event-ENG_NW_20180101-1"
-                    }
-                }
-            ], 
-            "labels": [
-                "DirectedRelation"
-            ], 
-            "subtype": "unification", 
-            "type": "relation"
-        }, 
-        {
-            "@id": "Event-ENG_NW_20180101-1", 
-            "@type": "Extraction", 
-            "arguments": [
-                {
-                    "@type": "Argument", 
-                    "type": "actor", 
-                    "value": {
-                        "@id": "Entity-ENG_NW_20180101-0-1"
-                    }
-                }, 
-                {
-                    "@type": "Argument", 
-                    "type": "time", 
-                    "value": {
-                        "@id": "Time-3"
-                    }
-                }, 
-                {
-                    "@type": "Argument", 
-                    "type": "place", 
-                    "value": {
-                        "@id": "Entity-ENG_NW_20180101-0-1"
-                    }
-                }, 
-                {
-                    "@type": "Argument", 
-                    "type": "place", 
-                    "value": {
-                        "@id": "Entity-ENG_NW_20180101-0-1"
-                    }
-                }
-            ], 
-            "canonicalName": "displacement", 
-            "grounding": [
-                {
-                    "@type": "Grounding", 
-                    "name": "bbn", 
-                    "ontologyConcept": "/event/movement", 
-                    "value": 0.7941962239067668
-                }
-            ], 
-            "labels": [
-                "Event"
-            ], 
+            ],
             "provenance": [
                 {
-                    "@type": "Provenance", 
+                    "@type": "Provenance",
                     "document": {
-                        "@id": "ENG_NW_20180101"
-                    }, 
+                        "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
+                    },
                     "documentCharPositions": {
-                        "@type": "Interval", 
-                        "end": 89, 
-                        "start": 78
-                    }, 
-                    "sentence": "Sentence-ENG_NW_20180101-0"
+                        "@type": "Interval",
+                        "end": 41,
+                        "start": 31
+                    },
+                    "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
                 }
-            ], 
-            "states": [
-                {
-                    "@type": "State", 
-                    "text": "Asserted", 
-                    "type": "modality"
-                }, 
-                {
-                    "@type": "State", 
-                    "text": "Specific", 
-                    "type": "genericity"
-                }, 
-                {
-                    "@type": "State", 
-                    "text": "Positive", 
-                    "type": "polarity"
-                }
-            ], 
-            "subtype": "event", 
-            "text": "displacement", 
-            "trigger": {
-                "@type": "Trigger", 
-                "head text": "displacement", 
-                "provenance": [
-                    {
-                        "@type": "Provenance", 
-                        "document": {
-                            "@id": "ENG_NW_20180101"
-                        }, 
-                        "documentCharPositions": {
-                            "@type": "Interval", 
-                            "end": 89, 
-                            "start": 78
-                        }, 
-                        "sentence": "Sentence-ENG_NW_20180101-0"
-                    }
-                ], 
-                "text": "displacement"
-            }, 
+            ],
+            "subtype": "entity",
+            "text": "South Sudan",
             "type": "concept"
-        }, 
+        },
         {
-            "@id": "Time-3", 
-            "@type": "Extraction", 
-            "canonicalName": "2018", 
+            "@id": "Event-ENG_NW_20190520_WMMIGRE_TEST-0",
+            "@type": "Extraction",
+            "arguments": [
+                {
+                    "@type": "Argument",
+                    "type": "has_location",
+                    "value": {
+                        "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-0-1"
+                    }
+                },
+                {
+                    "@type": "Argument",
+                    "type": "has_time",
+                    "value": {
+                        "@id": "Time-1"
+                    }
+                }
+            ],
+            "canonicalName": "displacement in South Sudan",
             "grounding": [
                 {
-                    "@type": "Grounding", 
-                    "name": "bbn", 
-                    "ontologyConcept": "/entity/temporal", 
+                    "@type": "Grounding",
+                    "name": "bbn",
+                    "ontologyConcept": "/wm/concept/causal_factor/movement/movement/human displacement",
+                    "value": 0.17
+                },
+                {
+                    "@type": "Grounding",
+                    "name": "bbn",
+                    "ontologyConcept": "/wm/concept/indicator_and_reported_property/conflict/population displacement",
+                    "value": 0.17
+                }
+            ],
+            "labels": [
+                "Event"
+            ],
+            "provenance": [
+                {
+                    "@type": "Provenance",
+                    "document": {
+                        "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
+                    },
+                    "documentCharPositions": {
+                        "@type": "Interval",
+                        "end": 26,
+                        "start": 15
+                    },
+                    "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
+                }
+            ],
+            "states": [
+                {
+                    "@type": "State",
+                    "text": "Asserted",
+                    "type": "modality"
+                },
+                {
+                    "@type": "State",
+                    "text": "Specific",
+                    "type": "genericity"
+                },
+                {
+                    "@type": "State",
+                    "text": "Positive",
+                    "type": "polarity"
+                }
+            ],
+            "subtype": "event",
+            "text": "displacement in South Sudan",
+            "trigger": {
+                "@type": "Trigger",
+                "head text": "displacement",
+                "provenance": [
+                    {
+                        "@type": "Provenance",
+                        "document": {
+                            "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
+                        },
+                        "documentCharPositions": {
+                            "@type": "Interval",
+                            "end": 26,
+                            "start": 15
+                        },
+                        "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
+                    }
+                ],
+                "text": "displacement in South Sudan"
+            },
+            "type": "concept"
+        },
+        {
+            "@id": "Time-1",
+            "@type": "Extraction",
+            "canonicalName": "2018",
+            "grounding": [
+                {
+                    "@type": "Grounding",
+                    "name": "bbn",
+                    "ontologyConcept": "/wm/concept/time",
                     "value": 0.75
                 }
-            ], 
+            ],
             "labels": [
                 "Entity"
-            ], 
+            ],
             "mentions": [
                 {
-                    "provenance": {
-                        "@type": "Provenance", 
-                        "document": {
-                            "@id": "ENG_NW_20180101"
-                        }, 
-                        "documentCharPositions": {
-                            "@type": "Interval", 
-                            "end": 97, 
-                            "start": 94
-                        }, 
-                        "sentence": "Sentence-ENG_NW_20180101-0"
-                    }, 
+                    "@type": "TimeValueMention",
+                    "provenance": [
+                        {
+                            "@type": "Provenance",
+                            "document": {
+                                "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
+                            },
+                            "documentCharPositions": {
+                                "@type": "Interval",
+                                "end": 49,
+                                "start": 46
+                            },
+                            "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
+                        }
+                    ],
                     "text": "2018"
                 }
-            ], 
-            "subtype": "entity", 
+            ],
+            "subtype": "entity",
             "timeInterval": [
                 {
-                    "duration": 31535999, 
-                    "end": "2018-12-31T23:59", 
+                    "@type": "TimeInterval",
+                    "duration": 31535999,
+                    "end": "2018-12-31T23:59",
                     "start": "2018-01-01T00:00"
                 }
-            ], 
+            ],
             "type": "concept"
-        }, 
+        },
         {
-            "@id": "Event-ENG_NW_20180101-0", 
-            "@type": "Extraction", 
+            "@id": "Event-ENG_NW_20190520_WMMIGRE_TEST-1",
+            "@type": "Extraction",
             "arguments": [
                 {
-                    "@type": "Argument", 
-                    "type": "time", 
+                    "@type": "Argument",
+                    "type": "has_time",
                     "value": {
-                        "@id": "Time-4"
+                        "@id": "Time-2"
                     }
                 }
-            ], 
-            "canonicalName": "Hunger", 
+            ],
+            "canonicalName": "Hunger",
             "grounding": [
                 {
-                    "@type": "Grounding", 
-                    "name": "bbn", 
-                    "ontologyConcept": "/event/healthcare/famine", 
-                    "value": 1.0
-                }, 
-                {
-                    "@type": "Grounding", 
-                    "name": "bbn", 
-                    "ontologyConcept": "/indicator/Health/Global Acute Malnutrition (GAM) rate", 
+                    "@type": "Grounding",
+                    "name": "bbn",
+                    "ontologyConcept": "/wm/concept/causal_factor/condition/famine",
                     "value": 0.75
                 }
-            ], 
+            ],
             "labels": [
                 "Event"
-            ], 
+            ],
             "provenance": [
                 {
-                    "@type": "Provenance", 
+                    "@type": "Provenance",
                     "document": {
-                        "@id": "ENG_NW_20180101"
-                    }, 
+                        "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
+                    },
                     "documentCharPositions": {
-                        "@type": "Interval", 
-                        "end": 69, 
-                        "start": 64
-                    }, 
-                    "sentence": "Sentence-ENG_NW_20180101-0"
+                        "@type": "Interval",
+                        "end": 6,
+                        "start": 1
+                    },
+                    "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
                 }
-            ], 
+            ],
             "states": [
                 {
-                    "@type": "State", 
-                    "text": "Asserted", 
+                    "@type": "State",
+                    "text": "Asserted",
                     "type": "modality"
-                }, 
+                },
                 {
-                    "@type": "State", 
-                    "text": "Specific", 
+                    "@type": "State",
+                    "text": "Specific",
                     "type": "genericity"
-                }, 
+                },
                 {
-                    "@type": "State", 
-                    "text": "Positive", 
+                    "@type": "State",
+                    "text": "Positive",
                     "type": "polarity"
                 }
-            ], 
-            "subtype": "event", 
-            "text": "Hunger", 
+            ],
+            "subtype": "event",
+            "text": "Hunger",
             "trigger": {
-                "@type": "Trigger", 
-                "head text": "Hunger", 
+                "@type": "Trigger",
+                "head text": "Hunger",
                 "provenance": [
                     {
-                        "@type": "Provenance", 
+                        "@type": "Provenance",
                         "document": {
-                            "@id": "ENG_NW_20180101"
-                        }, 
+                            "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
+                        },
                         "documentCharPositions": {
-                            "@type": "Interval", 
-                            "end": 69, 
-                            "start": 64
-                        }, 
-                        "sentence": "Sentence-ENG_NW_20180101-0"
+                            "@type": "Interval",
+                            "end": 6,
+                            "start": 1
+                        },
+                        "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
                     }
-                ], 
+                ],
                 "text": "Hunger"
-            }, 
+            },
             "type": "concept"
-        }, 
+        },
         {
-            "@id": "Time-4", 
-            "@type": "Extraction", 
-            "canonicalName": "2018", 
+            "@id": "Time-2",
+            "@type": "Extraction",
+            "canonicalName": "2018",
             "grounding": [
                 {
-                    "@type": "Grounding", 
-                    "name": "bbn", 
-                    "ontologyConcept": "/entity/temporal", 
+                    "@type": "Grounding",
+                    "name": "bbn",
+                    "ontologyConcept": "/wm/concept/time",
                     "value": 0.75
                 }
-            ], 
+            ],
             "labels": [
                 "Entity"
-            ], 
+            ],
             "mentions": [
                 {
-                    "provenance": {
-                        "@type": "Provenance", 
-                        "document": {
-                            "@id": "ENG_NW_20180101"
-                        }, 
-                        "documentCharPositions": {
-                            "@type": "Interval", 
-                            "end": 97, 
-                            "start": 94
-                        }, 
-                        "sentence": "Sentence-ENG_NW_20180101-0"
-                    }, 
+                    "@type": "TimeValueMention",
+                    "provenance": [
+                        {
+                            "@type": "Provenance",
+                            "document": {
+                                "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
+                            },
+                            "documentCharPositions": {
+                                "@type": "Interval",
+                                "end": 49,
+                                "start": 46
+                            },
+                            "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
+                        }
+                    ],
                     "text": "2018"
                 }
-            ], 
-            "subtype": "entity", 
+            ],
+            "subtype": "entity",
             "timeInterval": [
                 {
-                    "duration": 31535999, 
-                    "end": "2018-12-31T23:59", 
+                    "@type": "TimeInterval",
+                    "duration": 31535999,
+                    "end": "2018-12-31T23:59",
                     "start": "2018-01-01T00:00"
                 }
-            ], 
+            ],
             "type": "concept"
-        }, 
+        },
         {
-            "@id": "Relation-ENG_NW_20180101-0", 
-            "@type": "Extraction", 
+            "@id": "Relation-ENG_NW_20190520_WMMIGRE_TEST-0",
+            "@type": "Extraction",
             "arguments": [
                 {
-                    "@type": "Argument", 
-                    "type": "source", 
+                    "@type": "Argument",
+                    "type": "source",
                     "value": {
-                        "@id": "Event-ENG_NW_20180101-0"
+                        "@id": "Event-ENG_NW_20190520_WMMIGRE_TEST-1"
                     }
-                }, 
+                },
                 {
-                    "@type": "Argument", 
-                    "type": "destination", 
+                    "@type": "Argument",
+                    "type": "destination",
                     "value": {
-                        "@id": "Event-ENG_NW_20180101-1"
+                        "@id": "Event-ENG_NW_20190520_WMMIGRE_TEST-0"
                     }
                 }
-            ], 
+            ],
             "labels": [
                 "DirectedRelation"
-            ], 
+            ],
             "provenance": [
                 {
-                    "@type": "Provenance", 
+                    "@type": "Provenance",
                     "document": {
-                        "@id": "ENG_NW_20180101"
-                    }, 
+                        "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
+                    },
                     "documentCharPositions": {
-                        "@type": "Interval", 
-                        "end": 89, 
-                        "start": 64
-                    }, 
-                    "sentence": "Sentence-ENG_NW_20180101-0"
+                        "@type": "Interval",
+                        "end": 26,
+                        "start": 1
+                    },
+                    "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
                 }
-            ], 
-            "subtype": "causation", 
+            ],
+            "subtype": "causation",
             "type": "relation"
         }
     ]

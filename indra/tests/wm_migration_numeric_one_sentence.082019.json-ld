@@ -1,284 +1,284 @@
 {
     "@context": {
-        "Argument": "https://w3id.org/wm/cag/Argument", 
-        "Corpus": "https://w3id.org/wm/cag/Corpus", 
-        "Dependency": "https://w3id.org/wm/cag/Dependency", 
-        "Document": "https://w3id.org/wm/cag/Document", 
-        "Entity": "https://w3id.org/wm/cag/Entity", 
-        "Event": "https://w3id.org/wm/cag/Event", 
-        "Interval": "https://w3id.org/wm/cag/Interval", 
-        "Modifier": "https://w3id.org/wm/cag/Modifier", 
-        "Provenance": "https://w3id.org/wm/cag/Provenance", 
-        "Sentence": "https://w3id.org/wm/cag/Sentence", 
-        "State": "https://w3id.org/wm/cag/State", 
-        "Trigger": "https://w3id.org/wm/cag/Trigger", 
+        "Argument": "https://w3id.org/wm/cag/Argument",
+        "Corpus": "https://w3id.org/wm/cag/Corpus",
+        "Dependency": "https://w3id.org/wm/cag/Dependency",
+        "Document": "https://w3id.org/wm/cag/Document",
+        "Entity": "https://w3id.org/wm/cag/Entity",
+        "Event": "https://w3id.org/wm/cag/Event",
+        "Interval": "https://w3id.org/wm/cag/Interval",
+        "Modifier": "https://w3id.org/wm/cag/Modifier",
+        "Provenance": "https://w3id.org/wm/cag/Provenance",
+        "Sentence": "https://w3id.org/wm/cag/Sentence",
+        "State": "https://w3id.org/wm/cag/State",
+        "Trigger": "https://w3id.org/wm/cag/Trigger",
         "Word": "https://w3id.org/wm/cag/Word"
-    }, 
-    "@type": "Corpus", 
+    },
+    "@type": "Corpus",
     "documents": [
         {
-            "@id": "HUME_MIGRATION_ARG_UNITTEST_082019", 
-            "@type": "Document", 
-            "location": "NON_EXISTED", 
+            "@id": "HUME_MIGRATION_ARG_UNITTEST_082019",
+            "@type": "Document",
+            "location": "NON_EXISTED",
             "sentences": [
                 {
-                    "@id": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0", 
-                    "@type": "Sentence", 
-                    "text": "30000 people fled from South Sudan to Ethiopia on May 20."
+                    "@id": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0",
+                    "@type": "Sentence",
+                    "text": "At least 10,000 people fled from South Sudan to Ethiopia per month in 2018."
                 }
             ]
         }
-    ], 
+    ],
     "extractions": [
         {
-            "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-0-1", 
-            "@type": "Extraction", 
-            "canonicalName": "30000 people", 
+            "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-0-1",
+            "@type": "Extraction",
+            "canonicalName": "10000 people",
             "counts": [
                 {
-                    "@id": "Mention-ENG_NW_20190520_WMMIGRE_TEST-0-CNT", 
-                    "@type": "Count", 
-                    "modifier": "NoModifier", 
-                    "unit": "Absolute", 
-                    "value": 30000
+                    "@id": "Mention-ENG_NW_20190520_WMMIGRE_TEST-0-CNT",
+                    "@type": "Count",
+                    "modifier": "Min",
+                    "unit": "Monthly",
+                    "value": 10000
                 }
-            ], 
+            ],
             "grounding": [
                 {
-                    "@type": "Grounding", 
-                    "name": "bbn", 
-                    "ontologyConcept": "/wm/concept/entity/person_and_group/population", 
+                    "@type": "Grounding",
+                    "name": "bbn",
+                    "ontologyConcept": "/wm/concept/entity/person_and_group/population",
                     "value": 0.8
                 }
-            ], 
+            ],
             "labels": [
                 "Entity"
-            ], 
+            ],
             "provenance": [
                 {
-                    "@type": "Provenance", 
+                    "@type": "Provenance",
                     "document": {
                         "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
-                    }, 
+                    },
                     "documentCharPositions": {
-                        "@type": "Interval", 
-                        "end": 12, 
+                        "@type": "Interval",
+                        "end": 12,
                         "start": 1
-                    }, 
+                    },
                     "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
                 }
-            ], 
-            "subtype": "entity", 
-            "text": "30000 people", 
+            ],
+            "subtype": "entity",
+            "text": "30000 people",
             "type": "concept"
-        }, 
+        },
         {
-            "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-1-1", 
-            "@type": "Extraction", 
-            "canonicalName": "South Sudan", 
+            "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-1-1",
+            "@type": "Extraction",
+            "canonicalName": "South Sudan",
             "grounding": [
                 {
-                    "@type": "Grounding", 
-                    "name": "bbn", 
-                    "ontologyConcept": "/wm/concept/entity/geo-location", 
+                    "@type": "Grounding",
+                    "name": "bbn",
+                    "ontologyConcept": "/wm/concept/entity/geo-location",
                     "value": 0.8
                 }
-            ], 
+            ],
             "labels": [
                 "Entity"
-            ], 
+            ],
             "provenance": [
                 {
-                    "@type": "Provenance", 
+                    "@type": "Provenance",
                     "document": {
                         "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
-                    }, 
+                    },
                     "documentCharPositions": {
-                        "@type": "Interval", 
-                        "end": 34, 
+                        "@type": "Interval",
+                        "end": 34,
                         "start": 24
-                    }, 
+                    },
                     "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
                 }
-            ], 
-            "subtype": "entity", 
-            "text": "South Sudan", 
+            ],
+            "subtype": "entity",
+            "text": "South Sudan",
             "type": "concept"
-        }, 
+        },
         {
-            "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-2-1", 
-            "@type": "Extraction", 
-            "canonicalName": "Federal Democratic Republic of Ethiopia", 
+            "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-2-1",
+            "@type": "Extraction",
+            "canonicalName": "Federal Democratic Republic of Ethiopia",
             "grounding": [
                 {
-                    "@type": "Grounding", 
-                    "name": "bbn", 
-                    "ontologyConcept": "/wm/concept/entity/geo-location", 
+                    "@type": "Grounding",
+                    "name": "bbn",
+                    "ontologyConcept": "/wm/concept/entity/geo-location",
                     "value": 0.8
                 }
-            ], 
+            ],
             "labels": [
                 "Entity"
-            ], 
+            ],
             "provenance": [
                 {
-                    "@type": "Provenance", 
+                    "@type": "Provenance",
                     "document": {
                         "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
-                    }, 
+                    },
                     "documentCharPositions": {
-                        "@type": "Interval", 
-                        "end": 46, 
+                        "@type": "Interval",
+                        "end": 46,
                         "start": 39
-                    }, 
+                    },
                     "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
                 }
-            ], 
-            "subtype": "entity", 
-            "text": "Ethiopia", 
+            ],
+            "subtype": "entity",
+            "text": "Ethiopia",
             "type": "concept"
-        }, 
+        },
         {
-            "@id": "Event-ENG_NW_20190520_WMMIGRE_TEST-0", 
-            "@type": "Extraction", 
+            "@id": "Event-ENG_NW_20190520_WMMIGRE_TEST-0",
+            "@type": "Extraction",
             "arguments": [
                 {
-                    "@type": "Argument", 
-                    "type": "destination", 
+                    "@type": "Argument",
+                    "type": "has_destination_location",
                     "value": {
                         "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-2-1"
                     }
-                }, 
+                },
                 {
-                    "@type": "Argument", 
-                    "type": "actor",
+                    "@type": "Argument",
+                    "type": "has_actor",
                     "value": {
                         "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-0-1"
                     }
-                }, 
+                },
                 {
-                    "@type": "Argument", 
-                    "type": "origin", 
+                    "@type": "Argument",
+                    "type": "has_origin_location",
                     "value": {
                         "@id": "Entity-ENG_NW_20190520_WMMIGRE_TEST-1-1"
                     }
-                }, 
+                },
                 {
-                    "@type": "Argument", 
-                    "type": "time", 
+                    "@type": "Argument",
+                    "type": "has_time",
                     "value": {
                         "@id": "Time-1"
                     }
                 }
-            ], 
-            "canonicalName": "fled", 
+            ],
+            "canonicalName": "fled",
             "grounding": [
                 {
-                    "@type": "Grounding", 
-                    "name": "bbn", 
-                    "ontologyConcept": "/wm/concept/causal_factor/social_and_political/migration", 
+                    "@type": "Grounding",
+                    "name": "bbn",
+                    "ontologyConcept": "/wm/concept/causal_factor/social_and_political/migration",
                     "value": 0.800000011920929
                 }
-            ], 
+            ],
             "labels": [
                 "Event"
-            ], 
+            ],
             "provenance": [
                 {
-                    "@type": "Provenance", 
+                    "@type": "Provenance",
                     "document": {
                         "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
-                    }, 
+                    },
                     "documentCharPositions": {
-                        "@type": "Interval", 
-                        "end": 17, 
+                        "@type": "Interval",
+                        "end": 17,
                         "start": 14
-                    }, 
+                    },
                     "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
                 }
-            ], 
+            ],
             "states": [
                 {
-                    "@type": "State", 
-                    "text": "Asserted", 
+                    "@type": "State",
+                    "text": "Asserted",
                     "type": "modality"
-                }, 
+                },
                 {
-                    "@type": "State", 
-                    "text": "Specific", 
+                    "@type": "State",
+                    "text": "Specific",
                     "type": "genericity"
-                }, 
+                },
                 {
-                    "@type": "State", 
-                    "text": "Positive", 
+                    "@type": "State",
+                    "text": "Positive",
                     "type": "polarity"
                 }
-            ], 
-            "subtype": "event", 
-            "text": "fled", 
+            ],
+            "subtype": "event",
+            "text": "fled",
             "trigger": {
-                "@type": "Trigger", 
-                "head text": "fled", 
+                "@type": "Trigger",
+                "head text": "fled",
                 "provenance": [
                     {
-                        "@type": "Provenance", 
+                        "@type": "Provenance",
                         "document": {
                             "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
-                        }, 
+                        },
                         "documentCharPositions": {
-                            "@type": "Interval", 
-                            "end": 17, 
+                            "@type": "Interval",
+                            "end": 17,
                             "start": 14
-                        }, 
+                        },
                         "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
                     }
-                ], 
+                ],
                 "text": "fled"
-            }, 
+            },
             "type": "concept"
-        }, 
+        },
         {
-            "@id": "Time-1", 
-            "@type": "Extraction", 
-            "canonicalName": "2019-05-20", 
+            "@id": "Time-1",
+            "@type": "Extraction",
+            "canonicalName": "2018",
             "grounding": [
                 {
-                    "@type": "Grounding", 
-                    "name": "bbn", 
-                    "ontologyConcept": "/wm/concept/time", 
+                    "@type": "Grounding",
+                    "name": "bbn",
+                    "ontologyConcept": "/wm/concept/time",
                     "value": 0.75
                 }
-            ], 
+            ],
             "labels": [
                 "Entity"
-            ], 
+            ],
             "mentions": [
                 {
                     "provenance": [
                         {
-                            "@type": "Provenance", 
+                            "@type": "Provenance",
                             "document": {
                                 "@id": "HUME_MIGRATION_ARG_UNITTEST_082019"
-                            }, 
+                            },
                             "documentCharPositions": {
-                                "@type": "Interval", 
-                                "end": 56, 
+                                "@type": "Interval",
+                                "end": 56,
                                 "start": 51
-                            }, 
+                            },
                             "sentence": "Sentence-ENG_NW_20190520_WMMIGRE_TEST-0"
                         }
-                    ], 
-                    "text": "May 20"
+                    ],
+                    "text": "2018"
                 }
-            ], 
-            "subtype": "entity", 
+            ],
+            "subtype": "entity",
             "timeInterval": [
                 {
-                    "duration": 86399, 
-                    "end": "2019-05-20T23:59", 
-                    "start": "2019-05-20T00:00"
+                    "duration": 31535999,
+                    "end": "2018-12-31T23:59",
+                    "start": "2018-01-01T00:00"
                 }
-            ], 
+            ],
             "type": "concept"
         }
     ]

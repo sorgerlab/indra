@@ -95,8 +95,8 @@ def test_migration_events():
     assert location_dict['destination'] == (
         "Federal Democratic Republic of Ethiopia")
     assert isinstance(stmt.context.time, TimeContext)
-    assert "May 20" in stmt.context.time.text
+    assert "2018" in stmt.context.time.text
     assert isinstance(stmt.delta, QuantitativeState)
-    assert stmt.delta.value == 30000
-    assert stmt.delta.unit == "Absolute"
-    assert stmt.delta.modifier == "NoModifier"
+    assert stmt.delta.value == 10000
+    assert stmt.delta.unit == "Monthly"
+    assert stmt.delta.modifier == "Min"
