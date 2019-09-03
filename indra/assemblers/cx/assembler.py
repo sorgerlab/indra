@@ -6,7 +6,8 @@ import itertools
 from ndex2.nice_cx_network import NiceCXNetwork
 from collections import OrderedDict
 from indra.statements import *
-from indra.databases import context_client, ndex_client, get_identifiers_url
+from indra.databases import context_client, ndex_client, get_identifiers_url, \
+    url_prefixes
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,9 @@ class NiceCxAssembler(object):
                 a1_id = self.add_node(a1)
                 a2_id = self.add_node(a2)
                 edge_id = self.add_edge(a1_id, a2_id, stmt)
-        prefixes = {'pubmed': 'http://identifiers.org/pubmed/'}
+
+        prefixes = {k: v for k, v in url_prefixes.items()}
+        prefixes['pubmed'] = 'https://identifiers.org/pubmed'
         self.network.set_network_attribute('@context', json.dumps(prefixes))
 
     def add_node(self, agent):
@@ -41,10 +44,13 @@ class NiceCxAssembler(object):
         else:
             node_id = self.network.create_node(agent.name, str(agent.db_refs))
             self.node_keys[agent_key] = node_id
-            self.network.add_node_attribute(property_of=node_id,
-                                            name='db_refs',
-                                            values=json.dumps(agent.db_refs),
-                                            type='string')
+            for db_name, db_id in agent.db_refs.items():
+                if db_name in url_prefixes:
+                    self.network.add_node_attribute(property_of=node_id,
+                                                    name=db_name,
+                                                    values='%s:%s' % (db_name,
+                                                                      db_id),
+                                                    type='string')
         return node_id
 
     def add_edge(self, a1_id, a2_id, stmt):
