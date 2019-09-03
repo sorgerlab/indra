@@ -150,11 +150,14 @@ class HumeJsonLdProcessor(object):
 
         # Look for time and place contexts.
         for argument in entity["arguments"]:
-            if argument["type"] in {"has_location","has_origin_location","has_destination_location","has_intermediate_location"}:
+            if argument["type"] in {"has_location", "has_origin_location",
+                                    "has_destination_location",
+                                    "has_intermediate_location"}:
                 entity_id = argument["value"]["@id"]
                 loc_entity = self.concept_dict[entity_id]
                 loc_context = _resolve_geo(loc_entity)
-            if argument["type"] in {"has_time","has_start_time","has_end_time"}:
+            if argument["type"] in {"has_time", "has_start_time",
+                                    "has_end_time"}:
                 entity_id = argument["value"]["@id"]
                 temporal_entity = self.concept_dict[entity_id]
                 time_context = _resolve_time(temporal_entity)
@@ -175,7 +178,8 @@ class HumeJsonLdProcessor(object):
         for argument in entity['arguments']:
             entity_id = argument["value"]["@id"]
             hume_entity = self.concept_dict[entity_id]
-            if argument['type'] in {"has_actor", "has_affected_actor", "has_active_actor"}:
+            if argument['type'] in {"has_actor", "has_affected_actor",
+                                    "has_active_actor"}:
                 for count in hume_entity.get('counts', list()):
                     quantitative_state = QuantitativeState(
                         entity="person", value=count['value'],
@@ -187,7 +191,8 @@ class HumeJsonLdProcessor(object):
                 movement_locations.append(
                     {'location': _resolve_geo(hume_entity),
                      'role': 'destination'})
-            if argument['type'] in {"has_time","has_start_time","has_end_time"}:
+            if argument['type'] in {"has_time", "has_start_time",
+                                    "has_end_time"}:
                 time_context = _resolve_time(hume_entity)
         return MovementContext(locations=movement_locations,
                                time=time_context), quantitative_state
