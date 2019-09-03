@@ -19,11 +19,12 @@ from indra.explanation.model_checker import ModelChecker, PysbModelChecker, \
     PathResult
 from indra.explanation.model_checker.pysb import _mp_embeds_into, \
     _cp_embeds_into, _match_lhs, remove_im_params
-from indra.explanation.reporting import stmt_from_rule
+from indra.explanation.reporting import stmt_from_rule, stmts_from_pysb_path, \
+    stmts_from_pybel_path, stmts_from_indranet_path
 from indra.assemblers.pysb.assembler import PysbAssembler, \
                                             set_base_initial_condition
 from indra.assemblers.indranet import IndraNetAssembler
-from indra.assemblers.pybel import PybelAssembler
+from indra.assemblers.pybel.assembler import PybelAssembler, _get_agent_node
 from pysb.tools import species_graph
 from pysb.bng import generate_equations
 from pysb import kappa
@@ -1457,6 +1458,11 @@ st4 = DecreaseAmount(Agent('C', db_refs={'HGNC': 3}),
                      Agent('D', db_refs={'HGNC': 4}))
 st5 = IncreaseAmount(Agent('D', db_refs={'HGNC': 4}),
                      Agent('E', db_refs={'HGNC': 5}))
+st6 = Inhibition(Agent('A', db_refs={'HGNC': 1}),
+                 Agent('B', db_refs={'HGNC': 2}))
+st7 = DecreaseAmount(Agent('B', db_refs={'HGNC': 2}),
+                     Agent('D', db_refs={'HGNC': 4}))
+statements = [st1, st2, st3, st4, st5, st6, st7]
 
 test_st1 = Activation(Agent('A', db_refs={'HGNC': 1}),
                       Agent('E', db_refs={'HGNC': 5}))
@@ -1469,14 +1475,14 @@ test_st4 = Activation(Agent('F', db_refs={'HGNC': 6}),
 test_st5 = DecreaseAmount(Agent('B', db_refs={'HGNC': 2}),
                           Agent('F', db_refs={'HGNC': 6}))
 test_st6 = ActiveForm(Agent('A', db_refs={'HGNC': 1}), None, True)
+test_statements = [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6]
 
 
 def test_unsigned_path():
-    ia = IndraNetAssembler([st1, st2, st3, st4, st5])
+    ia = IndraNetAssembler(statements)
     unsigned_model = ia.make_model(graph_type='digraph')
     umc = UnsignedGraphModelChecker(unsigned_model)
-    umc.add_statements(
-        [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6])
+    umc.add_statements(test_statements)
     results = umc.check_model()
     assert results[0][1].result_code == 'PATHS_FOUND'
     assert results[0][1].paths[0] == (('A', 0), ('B', 0), ('D', 0), ('E', 0))
@@ -1486,42 +1492,66 @@ def test_unsigned_path():
     assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
     assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
     assert results[5][1].result_code == 'STATEMENT_TYPE_NOT_HANDLED'
+    # Test reporting
+    path0 = results[0][1].paths[0]
+    path1 = results[1][1].paths[0]
+    stmts0 = stmts_from_indranet_path(
+        path0, unsigned_model, False, False, statements)
+    stmts1 = stmts_from_indranet_path(
+        path0, unsigned_model, False, False, statements)
+    assert stmts0 == stmts1 == [[st1, st6], [st2, st7], [st5]]
 
 
 def test_signed_path():
-    ia = IndraNetAssembler([st1, st2, st3, st4, st5])
+    ia = IndraNetAssembler(statements)
     signed_model = ia.make_model(graph_type='signed')
     smc = SignedGraphModelChecker(signed_model)
-    smc.add_statements(
-        [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6])
+    smc.add_statements(test_statements)
     results = smc.check_model()
-    assert results[0][1].result_code == 'NO_PATHS_FOUND'
+    assert results[0][1].result_code == 'PATHS_FOUND'
+    assert results[0][1].paths[0] == (('A', 0), ('B', 1), ('D', 0), ('E', 0))
     assert results[1][1].result_code == 'PATHS_FOUND'
     assert results[1][1].paths[0] == (('A', 0), ('B', 0), ('D', 1), ('E', 1))
     assert results[2][1].result_code == 'NO_PATHS_FOUND'
     assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
     assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
     assert results[5][1].result_code == 'STATEMENT_TYPE_NOT_HANDLED'
+    # Test reporting
+    path0 = results[0][1].paths[0]
+    path1 = results[1][1].paths[0]
+    stmts0 = stmts_from_indranet_path(
+        path0, signed_model, True, False, statements)
+    assert stmts0 == [[st6], [st2, st7], [st5]]
+    stmts1 = stmts_from_indranet_path(
+        path1, signed_model, True, False, statements)
+    assert stmts1 == [[st1], [st2, st7], [st5]]
 
 
 def test_pybel_path():
-    pba = PybelAssembler([st1, st2, st3, st4, st5])
+    pba = PybelAssembler(statements)
     pybel_model = pba.make_model()
     pbmc = PybelModelChecker(pybel_model)
-    pbmc.add_statements(
-        [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6])
+    pbmc.add_statements(test_statements)
     results = pbmc.check_model()
-    assert results[0][1].result_code == 'NO_PATHS_FOUND'
+    a = _get_agent_node(Agent('A', db_refs={'HGNC': 1}))[0]
+    b = _get_agent_node(Agent('B', db_refs={'HGNC': 2}))[0]
+    d = _get_agent_node(Agent('D', db_refs={'HGNC': 4}))[0]
+    e = _get_agent_node(Agent('E', db_refs={'HGNC': 5}))[0]
+    assert results[0][1].result_code == 'PATHS_FOUND'
+    assert results[0][1].paths[0] == ((a, 0), (b, 1), (d, 0), (e, 0)), results[0][1].paths[0]
     assert results[1][1].result_code == 'PATHS_FOUND'
-    a = protein('HGNC', hgnc_client.get_hgnc_name(1))
-    b = protein('HGNC', hgnc_client.get_hgnc_name(2))
-    d = protein('HGNC', hgnc_client.get_hgnc_name(4))
-    e = protein('HGNC', hgnc_client.get_hgnc_name(5))
-    assert results[1][1].paths[0] == ((a, 0), (b, 0), (d, 1), (e, 1))
+    assert results[1][1].paths[0] == ((a, 0), (b, 0), (d, 1), (e, 1)), results[1][1].paths[0]
     assert results[2][1].result_code == 'NO_PATHS_FOUND'
     assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
     assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
     assert results[5][1].result_code == 'STATEMENT_TYPE_NOT_HANDLED'
+    # Test reporting
+    path0 = results[0][1].paths[0]
+    path1 = results[1][1].paths[0]
+    stmts0 = stmts_from_pybel_path(path0, pybel_model, False, statements)
+    assert stmts0 == [[st1, st6], [st2, st7], [st5]], stmts0
+    stmts1 = stmts_from_pybel_path(path1, pybel_model, False, statements)
+    assert stmts1 == [[st1, st6], [st2, st7], [st5]], stmts1
 
 
 # Test graph conversion
