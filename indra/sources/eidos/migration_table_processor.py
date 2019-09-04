@@ -20,9 +20,9 @@ def make_stmt(row_dict):
     # Make subject
     subj_concept = Concept(
         name=row_dict['Source/Cause (Factor A)'],
-        db_refs={'TEXT': row_dict['Source/Cause (Factor A)'],
-                 'WM': _make_wm_grounding(
-                     row_dict['Source/Cause node (WM ontology node)'])})
+        db_refs=_make_grounding(
+            row_dict['Source/Cause (Factor A)'],
+            row_dict['Source/Cause node (WM ontology node)']))
     # Handle case where cause is missing
     if subj_concept.name is None:
         return None
@@ -43,9 +43,8 @@ def make_stmt(row_dict):
     # Make object
     obj_concept = Concept(
         row_dict['Target/Effect (Factor B)'],
-        db_refs={'TEXT': row_dict['Target/Effect (Factor B)'],
-                 'WM': _make_wm_grounding(
-                     row_dict['Target/Effect (WM ontology node)'])})
+        db_refs=_make_grounding(row_dict['Target/Effect (Factor B)'],
+                                row_dict['Target/Effect (WM ontology node)']))
     # Handle case where effect is missing
     if subj_concept.name is None:
         return None
@@ -96,13 +95,16 @@ def make_stmt(row_dict):
     return stmt
 
 
-def _make_wm_grounding(ont_str):
+def _make_grounding(text, ont_str):
     # Make a list of tuples of scored ontology concepts from a single string
-    grounding = []
-    ont_list = ont_str[1:-1].split(') (')
-    for entry in ont_list:
-        ont_concept, score = entry.split(',')
-        grounding.append((ont_concept, float(score)))
+    grounding = {'TEXT': text}
+    if ont_str:
+        wm_grounding = []
+        ont_list = ont_str[1:-1].split(') (')
+        for entry in ont_list:
+            ont_concept, score = entry.split(',')
+            wm_grounding.append((ont_concept, float(score)))
+        grounding['WM'] = wm_grounding
     return grounding
 
 
