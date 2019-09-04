@@ -108,6 +108,17 @@ def _make_grounding(text, ont_str):
     return grounding
 
 
+def _make_event_migration(concept):
+    grounding = concept.get_grounding()
+    if grounding:
+        if grounding[1].startswith(
+                'wm/concept/causal_factor/social_and_political/migration'):
+            return Migration(concept)
+        else:
+            return Event(concept)
+    return Event(concept)
+
+
 def process_workbook(fname):
     wb = openpyxl.load_workbook(fname, read_only=True)
     sheets = wb.sheetnames
