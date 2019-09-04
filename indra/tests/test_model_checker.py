@@ -19,11 +19,12 @@ from indra.explanation.model_checker import ModelChecker, PysbModelChecker, \
     PathResult
 from indra.explanation.model_checker.pysb import _mp_embeds_into, \
     _cp_embeds_into, _match_lhs, remove_im_params
-from indra.explanation.reporting import stmt_from_rule
+from indra.explanation.reporting import stmt_from_rule, stmts_from_pysb_path, \
+    stmts_from_pybel_path, stmts_from_indranet_path
 from indra.assemblers.pysb.assembler import PysbAssembler, \
                                             set_base_initial_condition
 from indra.assemblers.indranet import IndraNetAssembler
-from indra.assemblers.pybel import PybelAssembler
+from indra.assemblers.pybel.assembler import PybelAssembler, _get_agent_node
 from pysb.tools import species_graph
 from pysb.bng import generate_equations
 from pysb import kappa
@@ -202,6 +203,7 @@ def test_pysb_assembler_phospho_policies():
     assert results[0][0] == st
     pr = results[0][1]
     assert pr.paths == [(('A_phosphorylation_B_T185', 0), ('B_T185_p_obs', 0))]
+    assert stmts_from_pysb_path(pr.paths[0], pa.model, [st]) == [st]
     # Try one step
     pa.make_model(policies='one_step')
     mc = PysbModelChecker(pa.model, [st])
@@ -212,6 +214,7 @@ def test_pysb_assembler_phospho_policies():
     pr = results[0][1]
     assert pr.path_found
     assert pr.paths == [(('A_phosphorylation_B_T185', 0), ('B_T185_p_obs', 0))]
+    assert stmts_from_pysb_path(pr.paths[0], pa.model, [st]) == [st]
     # Try interactions_only
     pa.make_model(policies='interactions_only')
     mc = PysbModelChecker(pa.model, [st])
@@ -547,6 +550,8 @@ def test_check_increase_grounded_with_state():
     assert len(results) == 1
     path_result = results[0][1]
     assert path_result.path_found is True
+    assert stmts_from_pysb_path(
+        path_result.paths[0], pa.model, [stmt2]) == [stmt2]
 
 
 def test_check_activation_grounded():
@@ -776,6 +781,8 @@ def test_grounded_modified_enzyme():
     assert results[0][1].paths == \
         [(('MEK1_phosphoS202_phosphorylation_ERK2_phospho', 0),
           ('ERK2_phospho_p_obs', 0))]
+    assert stmts_from_pysb_path(
+        results[0][1].paths[0], pa.model, [stmt_to_model]) == [stmt_to_model]
 
 
 def test_check_ubiquitination():
@@ -792,6 +799,8 @@ def test_check_ubiquitination():
     assert checks[0][0] == stmt
     assert checks[0][1].paths == [(('XIAP_ubiquitination_CASP3_ub', 0),
                                    ('CASP3_ub_y_obs', 0))]
+    assert stmts_from_pysb_path(
+        checks[0][1].paths[0], pysba.model, [stmt]) == [stmt]
 
 
 def test_check_rule_subject1():
@@ -825,6 +834,8 @@ def test_gef_activation():
     assert checks[0][0] == act_stmt
     assert checks[0][1].paths == [(('SOS1_activates_KRAS', 0),
                                    ('KRAS_gtpbound_active_obs', 0))]
+    assert stmts_from_pysb_path(
+        checks[0][1].paths[0], pysba.model, [gef_stmt]) == [gef_stmt]
     # TODO TODO TODO
     """
     # Check that the Gef is satisfied by the Activation
@@ -861,7 +872,8 @@ def test_gef_rasgtp():
                                    ('KRAS_gtp_activates_BRAF_kinase', 0),
                                    ('BRAF_kinase_active_obs', 0))], \
         checks[0][1].paths
-
+    assert stmts_from_pysb_path(checks[0][1].paths[0], pysba.model, [
+        gef_stmt, rasgtp_stmt]) == [gef_stmt, rasgtp_stmt]
 
 
 def test_gef_rasgtp_phos():
@@ -890,6 +902,8 @@ def test_gef_rasgtp_phos():
                                    ('BRAF_kin_phosphorylation_MEK_phospho', 0),
                                    ('MEK_phospho_p_obs', 0))], \
         checks[0][1].paths
+    assert stmts_from_pysb_path(checks[0][1].paths[0], pysba.model, [
+        gef_stmt, rasgtp_stmt, phos]) == [gef_stmt, rasgtp_stmt, phos]
 
 
 def test_gap_activation():
@@ -907,6 +921,8 @@ def test_gap_activation():
     assert checks[0][0] == act_stmt
     assert checks[0][1].paths == [(('NF1_deactivates_KRAS', 0),
                                    ('KRAS_gtpbound_active_obs', 1))]
+    assert stmts_from_pysb_path(
+        checks[0][1].paths[0], pysba.model, [gap_stmt]) == [gap_stmt]
     # TODO TODO TODO
     """
     # Check that the Gap is satisfied by the Activation
@@ -944,6 +960,8 @@ def test_gap_rasgtp():
                                    ('KRAS_gtp_activates_BRAF_kinase', 1),
                                    ('BRAF_kinase_active_obs', 1))], \
         checks[0][1].paths
+    assert stmts_from_pysb_path(checks[0][1].paths[0], pysba.model, [
+        gap_stmt, rasgtp_stmt]) == [gap_stmt, rasgtp_stmt]
 
 
 def test_gap_rasgtp_phos():
@@ -972,6 +990,8 @@ def test_gap_rasgtp_phos():
           ('KRAS_gtp_activates_BRAF_kinase', 1),
           ('BRAF_kin_phosphorylation_MEK_phospho', 1),
           ('MEK_phospho_p_obs', 1))], checks[0][1].paths
+    assert stmts_from_pysb_path(checks[0][1].paths[0], pysba.model, [
+        gap_stmt, rasgtp_stmt, phos]) == [gap_stmt, rasgtp_stmt, phos]
 
 
 def test_increase_amount():
@@ -990,6 +1010,8 @@ def test_increase_amount():
     assert checks[0][1].paths == [(('TP53_produces_X', 0),
                                    ('X_produces_MDM2', 0),
                                    ('MDM2__obs', 0))]
+    assert stmts_from_pysb_path(
+        checks[0][1].paths[0], pysba.model, stmts) == stmts
 
 
 def test_decrease_amount():
@@ -1011,6 +1033,8 @@ def test_decrease_amount():
                                    ('MDM2_ubiquitination_TP53_ub', 0),
                                    ('TP53_ub_degraded', 0),
                                    ('TP53__obs', 1))]
+    assert stmts_from_pysb_path(
+        checks[0][1].paths[0], pysba.model, stmts) == stmts
 
 
 def test_stmt_from_rule():
@@ -1457,6 +1481,11 @@ st4 = DecreaseAmount(Agent('C', db_refs={'HGNC': 3}),
                      Agent('D', db_refs={'HGNC': 4}))
 st5 = IncreaseAmount(Agent('D', db_refs={'HGNC': 4}),
                      Agent('E', db_refs={'HGNC': 5}))
+st6 = Inhibition(Agent('A', db_refs={'HGNC': 1}),
+                 Agent('B', db_refs={'HGNC': 2}))
+st7 = DecreaseAmount(Agent('B', db_refs={'HGNC': 2}),
+                     Agent('D', db_refs={'HGNC': 4}))
+statements = [st1, st2, st3, st4, st5, st6, st7]
 
 test_st1 = Activation(Agent('A', db_refs={'HGNC': 1}),
                       Agent('E', db_refs={'HGNC': 5}))
@@ -1469,14 +1498,14 @@ test_st4 = Activation(Agent('F', db_refs={'HGNC': 6}),
 test_st5 = DecreaseAmount(Agent('B', db_refs={'HGNC': 2}),
                           Agent('F', db_refs={'HGNC': 6}))
 test_st6 = ActiveForm(Agent('A', db_refs={'HGNC': 1}), None, True)
+test_statements = [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6]
 
 
 def test_unsigned_path():
-    ia = IndraNetAssembler([st1, st2, st3, st4, st5])
+    ia = IndraNetAssembler(statements)
     unsigned_model = ia.make_model(graph_type='digraph')
     umc = UnsignedGraphModelChecker(unsigned_model)
-    umc.add_statements(
-        [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6])
+    umc.add_statements(test_statements)
     results = umc.check_model()
     assert results[0][1].result_code == 'PATHS_FOUND'
     assert results[0][1].paths[0] == (('A', 0), ('B', 0), ('D', 0), ('E', 0))
@@ -1486,42 +1515,66 @@ def test_unsigned_path():
     assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
     assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
     assert results[5][1].result_code == 'STATEMENT_TYPE_NOT_HANDLED'
+    # Test reporting
+    path0 = results[0][1].paths[0]
+    path1 = results[1][1].paths[0]
+    stmts0 = stmts_from_indranet_path(
+        path0, unsigned_model, False, False, statements)
+    stmts1 = stmts_from_indranet_path(
+        path0, unsigned_model, False, False, statements)
+    assert stmts0 == stmts1 == [[st1, st6], [st2, st7], [st5]]
 
 
 def test_signed_path():
-    ia = IndraNetAssembler([st1, st2, st3, st4, st5])
+    ia = IndraNetAssembler(statements)
     signed_model = ia.make_model(graph_type='signed')
     smc = SignedGraphModelChecker(signed_model)
-    smc.add_statements(
-        [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6])
+    smc.add_statements(test_statements)
     results = smc.check_model()
-    assert results[0][1].result_code == 'NO_PATHS_FOUND'
+    assert results[0][1].result_code == 'PATHS_FOUND'
+    assert results[0][1].paths[0] == (('A', 0), ('B', 1), ('D', 0), ('E', 0))
     assert results[1][1].result_code == 'PATHS_FOUND'
     assert results[1][1].paths[0] == (('A', 0), ('B', 0), ('D', 1), ('E', 1))
     assert results[2][1].result_code == 'NO_PATHS_FOUND'
     assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
     assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
     assert results[5][1].result_code == 'STATEMENT_TYPE_NOT_HANDLED'
+    # Test reporting
+    path0 = results[0][1].paths[0]
+    path1 = results[1][1].paths[0]
+    stmts0 = stmts_from_indranet_path(
+        path0, signed_model, True, False, statements)
+    assert stmts0 == [[st6], [st2, st7], [st5]]
+    stmts1 = stmts_from_indranet_path(
+        path1, signed_model, True, False, statements)
+    assert stmts1 == [[st1], [st2, st7], [st5]]
 
 
 def test_pybel_path():
-    pba = PybelAssembler([st1, st2, st3, st4, st5])
+    pba = PybelAssembler(statements)
     pybel_model = pba.make_model()
     pbmc = PybelModelChecker(pybel_model)
-    pbmc.add_statements(
-        [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6])
+    pbmc.add_statements(test_statements)
     results = pbmc.check_model()
-    assert results[0][1].result_code == 'NO_PATHS_FOUND'
+    a = _get_agent_node(Agent('A', db_refs={'HGNC': 1}))[0]
+    b = _get_agent_node(Agent('B', db_refs={'HGNC': 2}))[0]
+    d = _get_agent_node(Agent('D', db_refs={'HGNC': 4}))[0]
+    e = _get_agent_node(Agent('E', db_refs={'HGNC': 5}))[0]
+    assert results[0][1].result_code == 'PATHS_FOUND'
+    assert results[0][1].paths[0] == ((a, 0), (b, 1), (d, 0), (e, 0))
     assert results[1][1].result_code == 'PATHS_FOUND'
-    a = protein('HGNC', hgnc_client.get_hgnc_name(1))
-    b = protein('HGNC', hgnc_client.get_hgnc_name(2))
-    d = protein('HGNC', hgnc_client.get_hgnc_name(4))
-    e = protein('HGNC', hgnc_client.get_hgnc_name(5))
     assert results[1][1].paths[0] == ((a, 0), (b, 0), (d, 1), (e, 1))
     assert results[2][1].result_code == 'NO_PATHS_FOUND'
     assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
     assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
     assert results[5][1].result_code == 'STATEMENT_TYPE_NOT_HANDLED'
+    # Test reporting
+    path0 = results[0][1].paths[0]
+    path1 = results[1][1].paths[0]
+    stmts0 = stmts_from_pybel_path(path0, pybel_model, False, statements)
+    assert stmts0 == [[st1, st6], [st2, st7], [st5]], stmts0
+    stmts1 = stmts_from_pybel_path(path1, pybel_model, False, statements)
+    assert stmts1 == [[st1, st6], [st2, st7], [st5]], stmts1
 
 
 # Test graph conversion
