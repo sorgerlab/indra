@@ -789,6 +789,7 @@ def test_parse_identifiers_url():
     url5 = 'http://identifiers.org/chebi/12345'
     url6 = 'http://identifiers.org/interpro/12345'
     url7 = 'http://identifiers.org/pfam/12345'
+    url8 = 'https://identifiers.org/hgnc/HGNC:12345'
     (ns, id) = pa.parse_identifiers_url(url1)
     assert ns is None and id is None
     (ns, id) = pa.parse_identifiers_url(url2)
@@ -803,6 +804,8 @@ def test_parse_identifiers_url():
     assert ns == 'IP' and id == '12345'
     (ns, id) = pa.parse_identifiers_url(url7)
     assert ns == 'XFAM' and id == '12345'
+    (ns, id) = pa.parse_identifiers_url(url8)
+    assert ns == 'HGNC' and id == '12345', (ns, id)
 
 
 @with_model
