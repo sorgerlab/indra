@@ -23,6 +23,7 @@ st_cited2 = Phosphorylation(mek, erk, evidence=Evidence(pmid='api35',
                                               text='MEK phosphorylates ERK'))
 st_selfmod = Autophosphorylation(Agent('AKT1'), 'S', '473')
 
+
 def test_act():
     cja = CyJSAssembler()
     cja.add_statements([st_act, st_act2])
@@ -37,12 +38,13 @@ def test_act():
     for node, refs in zip(cja._nodes, db_refs):
         if node['data']['name'] == 'MAP2K1':
             assert refs.get('HGNC') == \
-                'http://identifiers.org/hgnc/HGNC:6840', refs
+                'https://identifiers.org/hgnc/HGNC:6840', refs
             assert refs.get('TEXT') == 'mek1', refs
         if node['data']['name'] == 'MAPK1':
             assert refs.get('UniProt')
         if node['data']['name'] == 'DUSP4':
             assert not refs
+
 
 def test_regamount():
     cja = CyJSAssembler()
@@ -55,6 +57,7 @@ def test_regamount():
     assert 'positive' in polarities
     assert 'negative' in polarities
 
+
 def test_ras():
     cja = CyJSAssembler()
     cja.add_statements([st_gef, st_gap])
@@ -66,6 +69,7 @@ def test_ras():
     assert 'positive' in polarities
     assert 'negative' in polarities
 
+
 def test_selfmod():
     cja = CyJSAssembler()
     cja.add_statements([st_selfmod])
@@ -75,6 +79,7 @@ def test_selfmod():
     polarities = [edge['data']['polarity'] for edge in cja._edges]
     assert len(polarities) == 1
     assert polarities[0] == 'positive'
+
 
 def test_complex():
     cja = CyJSAssembler()
@@ -86,6 +91,7 @@ def test_complex():
     assert len(set(polarities))==1
     assert 'none' in polarities
 
+
 def test_print_cyjs_graph():
     cja = CyJSAssembler()
     cja.add_statements([st_act, st_act2])
@@ -93,6 +99,7 @@ def test_print_cyjs_graph():
     cyjs_str = cja.print_cyjs_graph()
     # assert output is not empty
     assert len(cyjs_str) > len('{\n "edges": [],\n "nodes": []\n}')
+
 
 def test_no_grouping():
     st1 = Phosphorylation(Agent('A'), Agent('B'))
@@ -104,6 +111,7 @@ def test_no_grouping():
     parents = [node['data']['parent'] for node in cja._nodes]
     for parent in parents:
         assert parent == ''
+
 
 def test_grouping_block_targeting_node():
     st1 = Phosphorylation(Agent('A'), Agent('B'))
@@ -132,6 +140,7 @@ def test_grouping_block_targeting_node():
                   x['data']['i'] != 'Virtual']
     assert len(real_edges) == 1
 
+
 def test_grouping_node_targeting_block():
     st1 = Phosphorylation(Agent('A'), Agent('B'))
     st2 = Phosphorylation(Agent('A'), Agent('C'))
@@ -158,6 +167,7 @@ def test_grouping_node_targeting_block():
     real_edges = [x for x in cja._edges if
                   x['data']['i'] != 'Virtual']
     assert len(real_edges) == 1
+
 
 def test_grouping_node_targeting_block_targeting_node():
     st1 = Phosphorylation(Agent('A'), Agent('B'))
@@ -190,6 +200,7 @@ def test_grouping_node_targeting_block_targeting_node():
     real_edges = [x for x in cja._edges if
                   x['data']['i'] != 'Virtual']
     assert len(real_edges) == 2
+
 
 def test_grouping_block_targeting_block():
     st1 = Phosphorylation(Agent('A'), Agent('B'))
@@ -225,6 +236,7 @@ def test_grouping_block_targeting_block():
                   x['data']['i'] != 'Virtual']
     assert len(real_edges) == 1
 
+
 def test_edge_aggregation_between_nongroup_nodes():
     cja = CyJSAssembler()
     cja.add_statements([st_phos_Y, st_phos_T])
@@ -244,6 +256,7 @@ def test_edge_aggregation_between_nongroup_nodes():
         assert len(edge['data']['uuid_list']) == 2
     for node in cja._nodes:
         assert len(node['data']['uuid_list']) == 2
+
 
 def assert_element_properties(cja):
     # each element needs an id

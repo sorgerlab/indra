@@ -6,9 +6,9 @@ from indra.databases import get_identifiers_url
 def test_chembl():
     cid = '1229517'
     assert get_identifiers_url('CHEMBL', cid) == \
-        'http://identifiers.org/chembl.compound/CHEMBL%s' % cid
+        'https://identifiers.org/chembl.compound/CHEMBL%s' % cid
     assert get_identifiers_url('CHEMBL', 'CHEMBL%s' % cid) == \
-        'http://identifiers.org/chembl.compound/CHEMBL%s' % cid
+        'https://identifiers.org/chembl.compound/CHEMBL%s' % cid
 
 
 def test_signor():
