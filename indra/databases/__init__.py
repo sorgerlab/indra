@@ -36,7 +36,7 @@ url_prefixes = {
     'HUME': ('https://github.com/BBN-E/Hume/blob/master/resource/ontologies'
              '/hume_ontology/'),
     'CWMS': 'http://trips.ihmc.us/',
-    'SOFIA': 'http://cs.cmu.edu/sofia/%s',
+    'SOFIA': 'http://cs.cmu.edu/sofia/',
 }
 
 
