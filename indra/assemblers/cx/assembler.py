@@ -39,24 +39,27 @@ class NiceCxAssembler(object):
 
     def add_node(self, agent):
         agent_key = self.get_agent_key(agent)
+        # If the node already exists
         if agent_key in self.node_keys:
-            node_id = self.node_keys[agent_key]
-        else:
-            node_id = self.network.create_node(agent.name, str(agent.db_refs))
-            self.node_keys[agent_key] = node_id
-            for db_name, db_id in agent.db_refs.items():
-                if db_name in url_prefixes:
-                    self.network.add_node_attribute(property_of=node_id,
-                                                    name=db_name,
-                                                    values='%s:%s' % (db_name,
-                                                                      db_id),
-                                                    type='string')
+            return self.node_keys[agent_key]
+
+        # If the node doesn't exist yet
+        node_id = self.network.create_node(agent.name, str(agent.db_refs))
+        self.node_keys[agent_key] = node_id
+        db_refs_list = ['%s:%s' % (db_name, db_id)
+                        for db_name, db_id in agent.db_refs.items()
+                        if db_name in url_prefixes]
+        if db_refs_list:
+            self.network.add_node_attribute(property_of=node_id,
+                                            name='db_refs',
+                                            values=db_refs_list,
+                                            type='list_of_string')
         return node_id
 
     def add_edge(self, a1_id, a2_id, stmt):
         stmt_type = stmt.__class__.__name__
         edge_id = self.network.create_edge(a1_id, a2_id, stmt_type)
-        pmids = [ev.pmid for ev in stmt.evidence if ev.pmid is not None]
+        pmids = {ev.pmid for ev in stmt.evidence if ev.pmid is not None}
         self.network.set_edge_attribute(edge_id, 'citation',
                                         ['pubmed:%s' % p for p in pmids],
                                         type='list_of_string')
