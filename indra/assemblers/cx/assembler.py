@@ -22,7 +22,7 @@ class NiceCxAssembler(object):
         self.node_keys = {}
         self.citation_keys = {}
 
-    def make_model(self):
+    def make_model(self, self_loops=False):
         for stmt in self.statements:
             agents = stmt.agent_list()
             not_none_agents = [a for a in agents if a is not None]
@@ -31,11 +31,14 @@ class NiceCxAssembler(object):
             for a1, a2 in itertools.combinations(not_none_agents, 2):
                 a1_id = self.add_node(a1)
                 a2_id = self.add_node(a2)
+                if not self_loops and a1_id == a2_id:
+                    continue
                 edge_id = self.add_edge(a1_id, a2_id, stmt)
 
         prefixes = {k: v for k, v in url_prefixes.items()}
         prefixes['pubmed'] = 'https://identifiers.org/pubmed'
         self.network.set_network_attribute('@context', json.dumps(prefixes))
+        return self.network
 
     def add_node(self, agent):
         agent_key = self.get_agent_key(agent)
