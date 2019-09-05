@@ -20,7 +20,7 @@ def has_time(stmt):
 
 def get_location_from_object(loc_obj):
     """Return geo-location from a RefContext location object."""
-    if loc_obj.db_refs['GEOID']:
+    if loc_obj.db_refs.get('GEOID'):
         return loc_obj.db_refs['GEOID']
     elif loc_obj.name:
         return loc_obj.name
@@ -76,8 +76,14 @@ def event_location_refinement(st1, st2, hierarchies):
     elif not has_location(st1):
         return False
     else:
-        return st1.context.geo_location.db_refs['GEOID'] == \
-               st2.context.geo_location.db_refs['GEOID']
+        loc1 = get_location(st1)
+        loc2 = get_location(st2)
+        if loc1 == loc2:
+            return True
+        elif isinstance(loc1, list):
+            if set(loc2).issubset(set(loc1)):
+                return True
+    return False
 
 
 def location_refinement(st1, st2, hierarchies):
@@ -181,7 +187,7 @@ def event_location_time_delta_matches(event):
     mk = event_location_time_matches(event)
     if not has_delta:
         return mk
-    delta = get_delta(stmt)
+    delta = get_delta(event)
     matches_key = str((mk, delta))
     return matches_key
 
