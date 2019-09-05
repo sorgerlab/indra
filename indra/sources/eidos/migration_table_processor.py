@@ -58,13 +58,20 @@ def make_stmt(row_dict):
     else:
         obj_pol = None
     # If both source and destination locations are present, make Migration obj
-    if row_dict['Effect SourceLocation'] and \
-            row_dict['Effect DestinationLocation']:
-        obj_context = MovementContext(locations=[
-            {'location': RefContext(name=row_dict['Effect SourceLocation']),
-             'role': 'origin'},
-            {'location': RefContext(name=row_dict['Effect DestinationLocation']),
-             'role': 'destination'}], time=obj_time)
+    source_loc = row_dict['Effect SourceLocation']
+    dest_loc = row_dict['Effect DestinationLocation']
+
+    if is_migration(obj_concept):
+        locations = []
+        if source_loc:
+            locations.append(
+                {'location': RefContext(name=source_loc),
+                 'role': 'origin'})
+        if dest_loc:
+            locations.append(
+                {'location': RefContext(name=dest_loc),
+                 'role': 'destination'})
+        obj_context = MovementContext(locations=locations, time=obj_time)
         obj = Migration(
             obj_concept, delta=QuantitativeState(
                 entity='person', value=row_dict['Relation strength estimate'],
@@ -72,10 +79,10 @@ def make_stmt(row_dict):
             context=obj_context)
     # If only one or no location is present, make Event object
     else:
-        if row_dict['Effect SourceLocation']:
-            obj_loc = RefContext(name=row_dict['Effect SourceLocation'])
-        elif row_dict['Effect DestinationLocation']:
-            obj_loc = RefContext(name=row_dict['Effect DestinationLocation'])
+        if source_loc:
+            obj_loc = RefContext(name=source_loc)
+        elif dest_loc:
+            obj_loc = RefContext(name=dest_loc)
         else:
             obj_loc = None
         obj_context = WorldContext(time=obj_time, geo_location=obj_loc)
@@ -108,15 +115,13 @@ def _make_grounding(text, ont_str):
     return grounding
 
 
-def _make_event_migration(concept):
+def is_migration(concept):
     grounding = concept.get_grounding()
     if grounding:
         if grounding[1].startswith(
                 'wm/concept/causal_factor/social_and_political/migration'):
-            return Migration(concept)
-        else:
-            return Event(concept)
-    return Event(concept)
+            return True
+    return False
 
 
 def process_workbook(fname):
