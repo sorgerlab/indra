@@ -35,10 +35,19 @@ def make_stmt(row_dict):
         subj_pol = None
     subj_time = TimeContext(
         text=str(row_dict['Original temporal text for cause']))
-    subj_context = WorldContext(time=subj_time, geo_location=RefContext(
-        name=row_dict['CauseLocation']))
-    subj = Event(subj_concept, delta=QualitativeDelta(polarity=subj_pol),
-                 context=subj_context)
+    subj_loc = RefContext(name=row_dict['CauseLocation'])
+    # If it's grounded to migration concept, make Migration
+    if is_migration(subj_concept):
+        locations = [{'location': subj_loc, 'role': 'unknown'}]
+        subj_context = MovementContext(locations=locations, time=subj_time)
+        subj = Migration(
+            subj_concept, delta=QuantitativeState(polarity=subj_pol),
+            context=subj_context)
+    # Otherwise, make Event
+    else:
+        subj_context = WorldContext(time=subj_time, geo_location=subj_loc)
+        subj = Event(subj_concept, delta=QualitativeDelta(polarity=subj_pol),
+                     context=subj_context)
 
     # Make object
     obj_concept = Concept(
@@ -57,10 +66,11 @@ def make_stmt(row_dict):
             obj_pol = -1
     else:
         obj_pol = None
-    # If both source and destination locations are present, make Migration obj
+
     source_loc = row_dict['Effect SourceLocation']
     dest_loc = row_dict['Effect DestinationLocation']
 
+    # If it's grounded to migration concept, make Migration
     if is_migration(obj_concept):
         locations = []
         if source_loc:
@@ -77,7 +87,7 @@ def make_stmt(row_dict):
                 entity='person', value=row_dict['Relation strength estimate'],
                 unit=row_dict['Relation strength unit'], polarity=obj_pol),
             context=obj_context)
-    # If only one or no location is present, make Event object
+    # Otherwise, make Event
     else:
         if source_loc:
             obj_loc = RefContext(name=source_loc)
@@ -116,9 +126,9 @@ def _make_grounding(text, ont_str):
 
 
 def is_migration(concept):
-    grounding = concept.get_grounding()
+    grounding = concept.get_grounding()[1]
     if grounding:
-        if grounding[1].startswith(
+        if grounding.startswith(
                 'wm/concept/causal_factor/social_and_political/migration'):
             return True
     return False
