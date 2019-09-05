@@ -201,4 +201,31 @@ def location_time_delta_matches(stmt):
         return str((stmt.matches_key(), subj_mk, obj_mk))
     else:
         return stmt.matches_key()
->>>>>>> Define custom matches key function with delta
+
+
+def event_location_time_delta_refinement(st1, st2, hierarchies):
+    loc_time_ref = event_location_time_refinement(st1, st2, hierarchies)
+    if not loc_time_ref:
+        return False
+    if not st2.delta:
+        return True
+    elif not st1.delta:
+        return False
+    else:
+        return st1.delta.refinement_of(st2.delta)
+
+
+def location_time_delta_refinement(st1, st2, hierarchies):
+    if isinstance(st1, Event):
+        return event_location_time_delta_refinement(st1, st2, hierarchies)
+    elif isinstance(st1, Influence):
+        ref = st1.refinement_of(st2, hierarchies)
+        if not ref:
+            return False
+        subj_ref = event_location_time_delta_refinement(st1.subj, st2.subj,
+                                                        hierarchies)
+        obj_ref = event_location_time_delta_refinement(st1.obj, st2.obj,
+                                                       hierarchies)
+        return subj_ref and obj_ref
+    else:
+        return st1.refinement_of(st2, hierarchies)
