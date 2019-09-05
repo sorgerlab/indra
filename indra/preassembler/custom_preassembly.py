@@ -6,14 +6,17 @@ def has_location(stmt):
     if isinstance(stmt, Migration):
         if not stmt.context or not stmt.context.locations:
             return False
-    elif not stmt.context or not stmt.context.geo_location:
+    elif not stmt.context or not stmt.context.geo_location or \
+        not (stmt.context.geo_location.db_refs.get('GEOID') or
+             stmt.context.geo_location.name):
         return False
     return True
 
 
 def has_time(stmt):
     """Return True if a Statement has time context."""
-    if not stmt.context or not stmt.context.time:
+    if not stmt.context or not stmt.context.time or \
+            stmt.context.time.text == "None":
         return False
     return True
 

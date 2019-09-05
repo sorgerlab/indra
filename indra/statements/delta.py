@@ -114,7 +114,7 @@ class QuantitativeState(Delta):
                 self.text == other.text and self.polarity == other.polarity)
 
     def refinement_of(self, other):
-        ref = super().refinement_of(self, other)
+        ref = super().refinement_of(other)
         if not ref:
             return False
         if self.entity != other.entity:
