@@ -21,6 +21,14 @@ class Delta(object):
         else:
             raise ValueError('Unknown delta type %s' % delta_type)
 
+    def refinement_of(self, other):
+        if type(self) != type(other):
+            return False
+        if self.polarity and not other.polarity:
+            return True
+        if self.polarity == other.polarity:
+            return True
+
 
 class QualitativeDelta(Delta):
     """Qualitative delta defining an Event.
@@ -104,6 +112,21 @@ class QuantitativeState(Delta):
         return (self.entity == other.entity and self.value == other.value and
                 self.unit == other.unit and self.modifier == other.modifier and
                 self.text == other.text and self.polarity == other.polarity)
+
+    def refinement_of(self, other):
+        ref = super().refinement_of(self, other)
+        if not ref:
+            return False
+        if self.entity != other.entity:
+            return False
+        if not other.value:
+            return True
+        elif not self.value:
+            return False
+        if self.value == other.value and self.unit == other.unit:
+            return True
+        else:
+            return False
 
     def to_json(self):
         json_dict = {'type': 'quantitative',
