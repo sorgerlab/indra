@@ -33,8 +33,11 @@ def make_stmt(row_dict):
             subj_pol = -1
     else:
         subj_pol = None
-    subj_time = TimeContext(
-        text=str(row_dict['Original temporal text for cause']))
+    subj_time_text = row_dict['Original temporal text for cause']
+    if subj_time_text:
+        subj_time = TimeContext(text=str(subj_time_text))
+    else:
+        subj_time = None
     subj_loc = RefContext(name=row_dict['CauseLocation'])
     # If it's grounded to migration concept, make Migration
     if is_migration(subj_concept):
@@ -57,8 +60,11 @@ def make_stmt(row_dict):
     # Handle case where effect is missing
     if subj_concept.name is None:
         return None
-    obj_time = TimeContext(
-        text=str(row_dict['Original temporal text for effect']))
+    obj_time_text = row_dict['Original temporal text for effect']
+    if obj_time_text:
+        obj_time = TimeContext(text=str(obj_time_text))
+    else:
+        obj_time = None
     if row_dict['Target/Effect polarity']:
         if row_dict['Target/Effect polarity'].lower() == 'increase':
             obj_pol = 1

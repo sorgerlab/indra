@@ -15,8 +15,7 @@ def has_location(stmt):
 
 def has_time(stmt):
     """Return True if a Statement has time context."""
-    if not stmt.context or not stmt.context.time or \
-            stmt.context.time.text == "None":
+    if not stmt.context or not stmt.context.time:
         return False
     return True
 
