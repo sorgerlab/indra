@@ -2,7 +2,7 @@ import os
 import rdflib
 import logging
 import objectpath
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 from indra.statements import Concept, Event, Influence, TimeContext, \
@@ -353,6 +353,7 @@ def _resolve_time(hume_temporal_entity):
     time = hume_temporal_entity["timeInterval"][0]
     start = datetime.strptime(time['start'], '%Y-%m-%dT%H:%M')
     end = datetime.strptime(time['end'], '%Y-%m-%dT%H:%M')
+    end = end + timedelta(minutes=1)
     duration = int(time['duration'])
     return TimeContext(text=text, start=start, end=end,
                        duration=duration)
