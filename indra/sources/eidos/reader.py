@@ -65,12 +65,13 @@ class EidosReader(object):
                 eidos_ont_url, load_yaml_from_url
             yaml_str = yaml.dump(load_yaml_from_url(eidos_ont_url))
         text_seq = _list_to_seq(texts)
-        raw_groundings = self.eidos_reader.ontologyHandler().reground(
-            'Custom',  # name
-            yaml_str,  # ontologyYaml
-            text_seq,  # texts
-            True,  # filter
-            10  # topk
+        raw_groundings = \
+            self.eidos_reader.components().ontologyHandler().reground(
+                'Custom',  # name
+                yaml_str,  # ontologyYaml
+                text_seq,  # texts
+                True,  # filter
+                10  # topk
             )
         # Process the return values into a proper Python representation
         groundings = [[_get_scored_grounding(entry) for entry in text_grounding]
