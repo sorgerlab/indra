@@ -354,6 +354,6 @@ def _resolve_time(hume_temporal_entity):
     start = datetime.strptime(time['start'], '%Y-%m-%dT%H:%M')
     end = datetime.strptime(time['end'], '%Y-%m-%dT%H:%M')
     end = end + timedelta(minutes=1)
-    duration = int(time['duration'])
+    duration = int((end - start).total_seconds())
     return TimeContext(text=text, start=start, end=end,
                        duration=duration)
