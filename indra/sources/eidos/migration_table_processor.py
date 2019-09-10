@@ -105,7 +105,12 @@ def make_stmt(row_dict):
         obj = Event(obj_concept, delta=QualitativeDelta(polarity=obj_pol),
                     context=obj_context)
     # Make evidence
-    anns = {'provenance': row_dict['Provenance (file id)'],
+    provenance = [{
+        "@type": "Provenance",
+        "document": {
+          "@id": row_dict['Provenance (file id)'],
+        }}]
+    anns = {'provenance': provenance,
             'data_format': row_dict['Data format'],
             'group_id': row_dict['Group ID']}
     if anns['data_format'] == 'text':
