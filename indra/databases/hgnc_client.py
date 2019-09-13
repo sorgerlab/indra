@@ -388,7 +388,7 @@ def _read_hgnc_maps():
                 # Otherwise we just make a string entry here
                 else:
                     prev_sym_map[prev_sym] = hgnc_id
-        ensembl_id = row[9]
+        ensembl_id = row[10]
         # Ensembl IDs
         if ensembl_id:
             ensembl_ids[hgnc_id] = ensembl_id

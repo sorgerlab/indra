@@ -46,6 +46,13 @@ def test_entrez_hgnc_none():
     assert hgnc_id is None
 
 
+def test_ensembl_hgnc():
+    ensembl_id = 'ENSG00000006071'
+    hgnc_id = hgnc_client.get_hgnc_from_ensembl(ensembl_id)
+    assert hgnc_id == '59', hgnc_id
+    assert hgnc_client.get_ensembl_id(hgnc_id) == ensembl_id
+
+
 def test_mouse_map():
     hgnc_id1 = hgnc_client.get_hgnc_from_mouse('109599')
     hgnc_id2 = hgnc_client.get_hgnc_from_mouse('MGI:109599')
