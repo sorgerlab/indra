@@ -61,7 +61,7 @@ def get_hgnc_from_entrez(entrez_id):
     Parameters
     ----------
     entrez_id : str
-        The EntrezC ID to be converted, a number passed as a strig.
+        The EntrezC ID to be converted, a number passed as a string.
 
     Returns
     -------
@@ -70,6 +70,39 @@ def get_hgnc_from_entrez(entrez_id):
     """
     hgnc_id = entrez_ids_reverse.get(entrez_id)
     return hgnc_id
+
+
+def get_ensembl_id(hgnc_id):
+    """Return the Ensembl ID corresponding to the given HGNC ID.
+
+    Parameters
+    ----------
+    hgnc_id : str
+        The HGNC ID to be converted. Note that the HGNC ID is a number that is
+        passed as a string. It is not the same as the HGNC gene symbol.
+
+    Returns
+    -------
+    entrez_id : str
+        The Ensembl ID corresponding to the given HGNC ID.
+    """
+    return ensembl_ids.get(hgnc_id)
+
+
+def get_hgnc_from_ensembl(hgnc_id):
+    """Return the HGNC ID corresponding to the given Ensembl ID.
+
+    Parameters
+    ----------
+    entrez_id : str
+        The Ensembl ID to be converted, a number passed as a string.
+
+    Returns
+    -------
+    hgnc_id : str
+        The HGNC ID corresponding to the given Ensembl ID.
+    """
+    return ensembl_ids_reverse.get(hgnc_id)
 
 
 def get_hgnc_name(hgnc_id):
@@ -298,8 +331,8 @@ def _read_hgnc_maps():
     mouse_map = {}
     rat_map = {}
     prev_sym_map = {}
-    ensemble_ids = {}
-    ensemble_ids_reverse = {}
+    ensembl_ids = {}
+    ensembl_ids_reverse = {}
     for row in csv_rows:
         hgnc_id = row[0][5:]
         hgnc_status = row[3]
@@ -355,19 +388,20 @@ def _read_hgnc_maps():
                 # Otherwise we just make a string entry here
                 else:
                     prev_sym_map[prev_sym] = hgnc_id
-        ensemble_id = row[9]
-        if ensemble_id:
-            ensemble_ids[hgnc_id] = ensemble_id
-            ensemble_ids_reverse[ensemble_id] = hgnc_id
+        ensembl_id = row[9]
+        # Ensembl IDs
+        if ensembl_id:
+            ensembl_ids[hgnc_id] = ensembl_id
+            ensembl_ids_reverse[ensembl_id] = hgnc_id
 
     return (hgnc_names, hgnc_ids, hgnc_withdrawn,
             uniprot_ids, entrez_ids, entrez_ids_reverse, mouse_map, rat_map,
-            prev_sym_map, ensemble_ids, ensemble_ids_reverse)
+            prev_sym_map, ensembl_ids, ensembl_ids_reverse)
 
 
 (hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids,
- entrez_ids_reverse, mouse_map, rat_map, prev_sym_map, ensemble_ids,
- ensemble_ids_reverse) = _read_hgnc_maps()
+ entrez_ids_reverse, mouse_map, rat_map, prev_sym_map, ensembl_ids,
+ ensembl_ids_reverse) = _read_hgnc_maps()
 
 
 def _read_kinases():
