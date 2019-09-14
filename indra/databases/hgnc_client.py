@@ -61,7 +61,7 @@ def get_hgnc_from_entrez(entrez_id):
     Parameters
     ----------
     entrez_id : str
-        The EntrezC ID to be converted, a number passed as a string.
+        The Entrez ID to be converted, a number passed as a string.
 
     Returns
     -------
