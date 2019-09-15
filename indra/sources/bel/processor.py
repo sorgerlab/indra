@@ -457,25 +457,22 @@ def get_db_refs_by_name(ns, name, node_data):
 
     elif ns in ('UNIPROT', 'UP'):
         up_id = None
-        gene_name = uniprot_client.get_gene_name(name)
-        if gene_name:
+        # This is a simple test to see if name is a valid UniProt ID,
+        # if we can't get a mnemonic, we assume it's not a UP ID
+        if uniprot_client.get_mnemonic(name, web_fallback=False):
             up_id = name
+        # We next check if it's a mnemonic
         else:
             up_id_from_mnem = uniprot_client.get_id_from_mnemonic(name)
             if up_id_from_mnem:
                 up_id = up_id_from_mnem
-                gene_name = uniprot_client.get_gene_name(up_id)
         if not up_id:
             logger.info('Couldn\'t get UP ID from %s' % name)
             return name, None
         db_refs = {'UP': up_id}
-        if uniprot_client.is_human(up_id):
-            hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-            if not hgnc_id:
-                logger.info('Uniprot ID linked to invalid human gene '
-                            'name %s' % name)
-            else:
-                db_refs['HGNC'] = hgnc_id
+        hgnc_id = uniprot_client.get_hgnc_id(up_id)
+        if hgnc_id:
+            db_refs['HGNC'] = hgnc_id
     elif ns == 'FPLX':
         db_refs = {'FPLX': name}
     elif ns in ('GO', 'GOBP', 'GOCC'):
@@ -587,16 +584,14 @@ def get_db_refs_by_ident(ns, ident, node_data):
             db_refs['MIRBASE'] = mirbase_id
     elif ns == 'UP':
         db_refs = {'UP': ident}
-        name = uniprot_client.get_gene_name(ident)
-        if not name:
-            return None, None
-        if uniprot_client.is_human(ident):
-            hgnc_id = hgnc_client.get_hgnc_id(name)
-            if not hgnc_id:
-                logger.info('Uniprot ID linked to invalid human gene '
-                            'name %s' % name)
-            else:
-                db_refs['HGNC'] = hgnc_id
+        hgnc_id = uniprot_client.get_hgnc_id(ident)
+        if hgnc_id:
+            db_refs['HGNC'] = hgnc_id
+            name = hgnc_client.get_hgnc_name(hgnc_id)
+        else:
+            name = uniprot_client.get_gene_name(ident)
+            if not name:
+                return None, None
     elif ns == 'MIRBASE':
         db_refs = {'MIRBASE': ident}
     elif ns in ('MGI', 'RGD', 'CHEBI', 'HMDB', 'MESH'):

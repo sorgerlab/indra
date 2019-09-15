@@ -186,10 +186,12 @@ class SignorProcessor(object):
             if gnd_type == 'UP':
                 up_id = id
                 db_refs = {'UP': up_id}
-                name = uniprot_client.get_gene_name(up_id)
-                hgnc_id = hgnc_client.get_hgnc_id(name)
+                hgnc_id = uniprot_client.get_hgnc_id(up_id)
                 if hgnc_id:
                     db_refs['HGNC'] = hgnc_id
+                    name = hgnc_client.get_hgnc_name(hgnc_id)
+                else:
+                    name = uniprot_client.get_gene_name(up_id)
             # Map SIGNOR protein families to FamPlex families
             elif ent_type == 'proteinfamily':
                 db_refs = {database: id} # Keep the SIGNOR family ID in db_refs
@@ -256,8 +258,9 @@ class SignorProcessor(object):
                 db_refs['SIGNOR'] = c
             else:
                 db_refs['UP'] = c
-                hgnc_id = hgnc_client.get_hgnc_id(name)
+                hgnc_id = uniprot_client.get_hgnc_id(c)
                 if hgnc_id:
+                    name = hgnc_client.get_hgnc_name(hgnc_id)
                     db_refs['HGNC'] = hgnc_id
 
             famplex_key = ('SIGNOR', c)
