@@ -83,8 +83,10 @@ class NdexCxProcessor(object):
             id = node['@id']
             cx_db_refs = self.get_aliases(node)
             up_id = cx_db_refs.get('UP')
+            up_id = uniprot_client.get_primary_id(up_id)
+            node_name = node['n']
             if up_id:
-                db_refs = {'UP': up_id, 'TEXT': gene_name}
+                db_refs = {'UP': up_id, 'TEXT': node_name}
                 hgnc_id = uniprot_client.get_hgnc_id(up_id)
                 if hgnc_id:
                     db_refs['HGNC'] = hgnc_id
@@ -96,7 +98,6 @@ class NdexCxProcessor(object):
                 self._node_agents[id] = agent
                 continue
             else:
-                node_name = node['n']
                 self._node_names[id] = node_name
                 hgnc_id = hgnc_client.get_hgnc_id(node_name)
                 db_refs = {'TEXT': node_name}
