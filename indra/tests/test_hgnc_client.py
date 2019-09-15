@@ -14,9 +14,9 @@ def test_get_uniprot_id():
 
 def test_get_uniprot_id_none():
     # This HGNC entry doesn't have a UniProt ID
-    hgnc_id = '12027'
+    hgnc_id = '37187'
     uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
-    assert uniprot_id is None
+    assert uniprot_id is None, uniprot_id
 
 
 def test_get_hgnc_name():
@@ -44,6 +44,13 @@ def test_entrez_hgnc_none():
     entrez_id = 'xxx'
     hgnc_id = hgnc_client.get_hgnc_from_entrez(entrez_id)
     assert hgnc_id is None
+
+
+def test_ensembl_hgnc():
+    ensembl_id = 'ENSG00000006071'
+    hgnc_id = hgnc_client.get_hgnc_from_ensembl(ensembl_id)
+    assert hgnc_id == '59', hgnc_id
+    assert hgnc_client.get_ensembl_id(hgnc_id) == ensembl_id
 
 
 def test_mouse_map():

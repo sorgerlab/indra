@@ -71,7 +71,7 @@ def update_hgnc_entries():
     # Select relevant columns and parameters
     cols = ['gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_status',
             'gd_aliases', 'md_eg_id', 'md_prot_id',
-            'md_mgd_id', 'md_rgd_id', 'gd_prev_sym']
+            'md_mgd_id', 'md_rgd_id', 'gd_prev_sym', 'gd_pub_ensembl_id']
     statuses = ['Approved', 'Entry%20Withdrawn']
     params = {
             'hgnc_dbtag': 'on',
@@ -430,6 +430,7 @@ def update_chebi_entries():
     fname = os.path.join(path, 'chebi_entries.tsv')
     rows = [['CHEBI_ID', 'NAME', 'SECONDARIES']]
     for term_id, name, secondaries, parents in term_entries:
+        term_id = term_id.replace('CHEBI:', '')
         rows.append([term_id, name, ','.join(secondaries)])
     with open(fname, 'wb') as fh:
         write_unicode_csv(fname, rows, '\t')
