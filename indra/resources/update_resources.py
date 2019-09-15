@@ -430,6 +430,7 @@ def update_chebi_entries():
     fname = os.path.join(path, 'chebi_entries.tsv')
     rows = [['CHEBI_ID', 'NAME', 'SECONDARIES']]
     for term_id, name, secondaries, parents in term_entries:
+        term_id = term_id.replace('CHEBI:', '')
         rows.append([term_id, name, ','.join(secondaries)])
     with open(fname, 'wb') as fh:
         write_unicode_csv(fname, rows, '\t')
