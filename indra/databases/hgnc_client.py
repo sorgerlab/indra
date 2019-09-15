@@ -149,7 +149,7 @@ def get_hgnc_id(hgnc_name):
 
 
 def get_current_hgnc_id(hgnc_name):
-    """Return the HGNC ID(s) corresponding to a current or outdate HGNC symbol.
+    """Return HGNC ID(s) corresponding to a current or outdated HGNC symbol.
 
     Parameters
     ----------

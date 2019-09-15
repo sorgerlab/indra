@@ -14,9 +14,9 @@ def test_get_uniprot_id():
 
 def test_get_uniprot_id_none():
     # This HGNC entry doesn't have a UniProt ID
-    hgnc_id = '12027'
+    hgnc_id = '37187'
     uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
-    assert uniprot_id is None
+    assert uniprot_id is None, uniprot_id
 
 
 def test_get_hgnc_name():
