@@ -84,9 +84,13 @@ class NdexCxProcessor(object):
             cx_db_refs = self.get_aliases(node)
             up_id = cx_db_refs.get('UP')
             if up_id:
-                gene_name = uniprot_client.get_gene_name(up_id)
-                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                db_refs = {'UP': up_id, 'HGNC': hgnc_id, 'TEXT': gene_name}
+                db_refs = {'UP': up_id, 'TEXT': gene_name}
+                hgnc_id = uniprot_client.get_hgnc_id(up_id)
+                if hgnc_id:
+                    db_refs['HGNC'] = hgnc_id
+                    gene_name = hgnc_client.get_hgnc_name(hgnc_id)
+                else:
+                    gene_name = uniprot_client.get_gene_name(up_id)
                 agent = Agent(gene_name, db_refs=db_refs)
                 self._node_names[id] = gene_name
                 self._node_agents[id] = agent

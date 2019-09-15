@@ -217,21 +217,23 @@ def get_agent_from_entity_info(entity_info):
                     refs['HGNC'] = hgnc_id
         elif id_dict['source'] == 'UniProt':
             refs['UP'] = id_dict['idString']
-            gene_name = uniprot_client.get_gene_name(id_dict['idString'])
-            if gene_name is not None:
-                name = gene_name
-                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                if hgnc_id is not None:
-                    # Check to see if we have a conflict with an HGNC id
-                    # found from the Entrez id. If so, overwrite with this
-                    # one, in which we have greater faith.
-                    if 'HGNC' in refs.keys() and refs['HGNC'] != hgnc_id:
-                        msg = ('Inferred HGNC:%s from UP:%s does not'
-                               ' match HGNC:%s from EGID:%s') % \
-                               (refs['HGNC'], refs['UP'], hgnc_id,
-                                refs['EGID'])
-                        logger.info(msg)
-                    refs['HGNC'] = hgnc_id
+            hgnc_id = uniprot_client.get_hgnc_id(id_dict['idString'])
+            if hgnc_id:
+                # Check to see if we have a conflict with an HGNC id
+                # found from the Entrez id. If so, overwrite with this
+                # one, in which we have greater faith.
+                if 'HGNC' in refs.keys() and refs['HGNC'] != hgnc_id:
+                    msg = ('Inferred HGNC:%s from UP:%s does not'
+                           ' match HGNC:%s from EGID:%s') % \
+                          (refs['HGNC'], refs['UP'], hgnc_id,
+                           refs['EGID'])
+                    logger.info(msg)
+                refs['HGNC'] = hgnc_id
+                name = hgnc_client.get_hgnc_name(hgnc_id)
+            else:
+                gene_name = uniprot_client.get_gene_name(id_dict['idString'])
+                if gene_name is not None:
+                    name = gene_name
         elif id_dict['source'] in ('Tax', 'NCBI'):
             refs['TAX'] = id_dict['idString']
         elif id_dict['source'] == 'CHEBI':

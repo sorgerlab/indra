@@ -2065,11 +2065,9 @@ def _get_db_mappings(dbname, dbid):
         if target is not None:
             db_mappings.append((target[0], target[1]))
             if target[0] == 'UP':
-                gene_name = up_client.get_gene_name(target[1])
-                if gene_name:
-                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                    if hgnc_id:
-                        db_mappings.append(('HGNC', hgnc_id))
+                hgnc_id = up_client.get_hgnc_id(target[1])
+                if hgnc_id:
+                    db_mappings.append(('HGNC', hgnc_id))
             elif target[0] == 'HGNC':
                 standard_up_id = hgnc_client.get_uniprot_id(target[1])
                 if standard_up_id:
@@ -2087,12 +2085,9 @@ def _get_db_mappings(dbname, dbid):
                 goid = up_client.uniprot_subcell_loc.get(dbid)
                 if goid:
                     db_mappings.append(('GO', goid))
-            elif up_client.is_human(dbid):
-                gene_name = up_client.get_gene_name(dbid)
-                if gene_name:
-                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                    if hgnc_id:
-                        db_mappings.append(('HGNC', hgnc_id))
+            hgnc_id = up_client.get_hgnc_id(dbid)
+            if hgnc_id:
+                db_mappings.append(('HGNC', hgnc_id))
 
     # TODO: we could do some chemical mappings here i.e. CHEBI/PUBCHEM/CHEMBL
     return db_mappings

@@ -66,12 +66,14 @@ class LincsProcessor(object):
             # try to get that and standardize the name to the gene name
             up_id = db_refs.get('UP')
             if up_id:
-                gene_name = uniprot_client.get_gene_name(up_id)
-                if gene_name:
-                    prot_name = gene_name
-                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                    if hgnc_id:
-                        db_refs['HGNC'] = hgnc_id
+                hgnc_id = uniprot_client.get_hgnc_id(up_id)
+                if hgnc_id:
+                    db_refs['HGNC'] = hgnc_id
+                    prot_name = hgnc_client.get_hgnc_name(hgnc_id)
+                else:
+                    gene_name = uniprot_client.get_gene_name(up_id)
+                    if gene_name:
+                        prot_name = gene_name
         # In some cases lines are missing protein information in which
         # case we return None
         else:
