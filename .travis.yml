@@ -14,7 +14,7 @@ before_install:
   - sudo apt-get install libstdc++6 graphviz
 install:
   # Install test/Travis-specific dependencies not covered elsewhere
-  - pip install pydot jsonschema coverage python-coveralls
+  - pip install pydot jsonschema coverage
         nose-timer doctest-ignore-unicode awscli pycodestyle
   - mkdir -p $HOME/.pybel/data
   - aws s3 cp s3://bigmech/travis/pybel_cache.db $HOME/.pybel/data/ --no-sign-request  --source-region us-east-1
@@ -125,5 +125,3 @@ script:
   - git remote set-branches --add origin master
   - git fetch
   - git diff origin/master | pycodestyle --diff > pep8.txt; cat pep8.txt;
-after_success:
-  - coveralls

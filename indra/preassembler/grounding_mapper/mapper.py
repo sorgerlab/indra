@@ -283,12 +283,10 @@ class GroundingMapper(object):
         hgnc_id = db_refs.get('HGNC')
         # If we have a UP ID and no HGNC ID, we try to get a gene name,
         # and if possible, a HGNC ID from that
-        if up_id and not hgnc_id and uniprot_client.is_human(up_id):
-            gene_name = uniprot_client.get_gene_name(up_id, False)
-            if gene_name:
-                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                if hgnc_id:
-                    db_refs['HGNC'] = hgnc_id
+        if up_id and not hgnc_id:
+            hgnc_id = uniprot_client.get_hgnc_id(up_id)
+            if hgnc_id:
+                db_refs['HGNC'] = hgnc_id
         # Otherwise, if we don't have a UP ID but have an HGNC ID, we try to
         # get the UP ID
         elif hgnc_id:
@@ -400,28 +398,27 @@ class GroundingMapper(object):
 
         # If there's a FamPlex ID, prefer that for the name
         if db_ns == 'FPLX':
-            agent.name = agent.db_refs['FPLX']
+            agent.name = db_id
         # Importantly, HGNC here will be a symbol because that is what
         # get_grounding returns
         elif db_ns == 'HGNC':
             agent.name = hgnc_client.get_hgnc_name(db_id)
         elif db_ns == 'UP':
             # Try for the gene name
-            gene_name = uniprot_client.get_gene_name(agent.db_refs['UP'],
-                                                     web_fallback=False)
+            gene_name = uniprot_client.get_gene_name(db_id, web_fallback=False)
             if gene_name:
                 agent.name = gene_name
         elif db_ns == 'CHEBI':
             chebi_name = \
-                chebi_client.get_chebi_name_from_id(agent.db_refs['CHEBI'])
+                chebi_client.get_chebi_name_from_id(db_id)
             if chebi_name:
                 agent.name = chebi_name
         elif db_ns == 'MESH':
-            mesh_name = mesh_client.get_mesh_name(agent.db_refs['MESH'], False)
+            mesh_name = mesh_client.get_mesh_name(db_id, False)
             if mesh_name:
                 agent.name = mesh_name
         elif db_ns == 'GO':
-            go_name = go_client.get_go_label(agent.db_refs['GO'])
+            go_name = go_client.get_go_label(db_id)
             if go_name:
                 agent.name = go_name
         return
