@@ -5,7 +5,7 @@ def main():
     install_list = ['pysb>=1.3.0', 'objectpath', 'rdflib==4.2.1',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2', 'pandas', 'ndex2==2.0.1', 'jinja2',
-                    'protmapper>=0.0.12']
+                    'protmapper>=0.0.13']
 
     extras_require = {
                       # Inputs and outputs
