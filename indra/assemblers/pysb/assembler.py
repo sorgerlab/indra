@@ -400,6 +400,7 @@ def set_base_initial_condition(model, monomer, value):
         model.add_component(p)
         model.initial(mp, p)
 
+
 def set_extended_initial_condition(model, monomer=None, value=0):
     """Set an initial condition for monomers in "modified" state.
 
@@ -432,6 +433,7 @@ def set_extended_initial_condition(model, monomer=None, value=0):
             except InvalidInitialConditionError:
                 pass
 
+
 def get_annotation(component, db_name, db_ref):
     """Construct model Annotations for each component.
 
@@ -444,9 +446,10 @@ def get_annotation(component, db_name, db_ref):
     ann = Annotation(subj, url, 'is')
     return ann
 
+
 def parse_identifiers_url(url):
     """Parse an identifiers.org URL into (namespace, ID) tuple."""
-    url_pattern = 'http://identifiers.org/([A-Za-z]+)/([A-Za-z0-9:]+)'
+    url_pattern = r'(?:https?)://identifiers.org/([A-Za-z]+)/([A-Za-z0-9:]+)'
     match = re.match(url_pattern, url)
     if match is not None:
         g = match.groups()

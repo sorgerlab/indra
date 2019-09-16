@@ -1,21 +1,141 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import re
 import json
+import time
 import logging
 import itertools
+from ndex2.nice_cx_network import NiceCXNetwork
 from collections import OrderedDict
 from indra.statements import *
-from indra.databases import context_client, ndex_client, get_identifiers_url
+from indra.databases import context_client, ndex_client, get_identifiers_url, \
+    url_prefixes
 
-# Python 2
-try:
-    basestring
-# Python 3
-except:
-    basestring = str
 
 logger = logging.getLogger(__name__)
+
+
+class NiceCxAssembler(object):
+    """Assembles a Nice CX network from a set of INDRA Statements.
+
+    Parameters
+    ----------
+    stmts : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements to be assembled.
+    network_name : Optional[str]
+        The name of the network to be assembled. Default: indra_assembled
+
+    Attributes
+    ----------
+    network : ndex2.nice_cx_network.NiceCXNetwork
+        A Nice CX network object that is assembled from Statements.
+    """
+    def __init__(self, stmts=None, network_name=None):
+        self.statements = stmts if stmts else []
+        self.network = NiceCXNetwork()
+        self.network.set_network_attribute('name',
+                                           (network_name if network_name
+                                            else 'indra_assembled'))
+        self.node_keys = {}
+
+    def make_model(self, self_loops=False, network_attributes=None):
+        """Return a Nice CX network object after running assembly.
+
+        Parameters
+        ----------
+        self_loops : Optional[bool]
+            If False, self-loops are excluded from the network. Default: False
+        network_attributes : Optional[dict]
+            A dictionary containing attributes to be added to the
+            assembled network.
+
+        Returns
+        -------
+        ndex2.nice_cx_network.NiceCXNetwork
+            The assembled Nice CX network.
+        """
+        for stmt in self.statements:
+            agents = stmt.agent_list()
+            not_none_agents = [a for a in agents if a is not None]
+            if len(not_none_agents) < 2:
+                continue
+            for a1, a2 in itertools.combinations(not_none_agents, 2):
+                if not self_loops and \
+                        self.get_agent_key(a1) == self.get_agent_key(a2):
+                    continue
+                a1_id = self.add_node(a1)
+                a2_id = self.add_node(a2)
+                edge_id = self.add_edge(a1_id, a2_id, stmt)
+
+        prefixes = {k: v for k, v in url_prefixes.items()}
+        prefixes['pubmed'] = 'https://identifiers.org/pubmed/'
+        self.network.set_network_attribute('@context', json.dumps(prefixes))
+        if network_attributes:
+            for k, v in network_attributes.items():
+                self.network.set_network_attribute(k, v, 'string')
+        return self.network
+
+    def add_node(self, agent):
+        """Add an Agent to the network as a node."""
+        agent_key = self.get_agent_key(agent)
+        # If the node already exists
+        if agent_key in self.node_keys:
+            return self.node_keys[agent_key]
+
+        # If the node doesn't exist yet
+        db_ns, db_id = agent.get_grounding()
+        # TODO: handle more represents name spaces
+        if db_ns == 'HGNC':
+            represents = 'hgnc.symbol:%s' % agent.name
+        else:
+            represents = None
+        node_id = self.network.create_node(agent.name,
+                                           node_represents=represents)
+        self.node_keys[agent_key] = node_id
+
+        # Add db_refs as aliases
+        db_refs_list = ['%s:%s' % (db_name, db_id)
+                        for db_name, db_id in agent.db_refs.items()
+                        if db_name in url_prefixes]
+        if db_refs_list:
+            self.network.add_node_attribute(property_of=node_id,
+                                            name='aliases',
+                                            values=db_refs_list,
+                                            type='list_of_string')
+
+        # Add the type of the node, inferred from grounding
+        if db_ns:
+            mapped_type = db_ns_type_mappings.get(db_ns)
+            if mapped_type:
+                self.network.add_node_attribute(property_of=node_id,
+                                                name='type',
+                                                values=mapped_type,
+                                                type='string')
+
+        return node_id
+
+    def add_edge(self, a1_id, a2_id, stmt):
+        """Add a Statement to the network as an edge."""
+        stmt_type = stmt.__class__.__name__
+        edge_id = self.network.create_edge(a1_id, a2_id, stmt_type)
+        pmids = {ev.pmid for ev in stmt.evidence if ev.pmid is not None}
+        self.network.set_edge_attribute(edge_id, 'citation',
+                                        ['pubmed:%s' % p for p in pmids],
+                                        type='list_of_string')
+        return edge_id
+
+    def print_model(self):
+        """Return the CX string of the assembled model."""
+        return self.network.to_cx()
+
+    @staticmethod
+    def get_agent_key(agent):
+        return agent.name
+
+
+db_ns_type_mappings = {'HGNC': 'gene',
+                       'UP': 'protein',
+                       'FPLX': 'proteinfamily',
+                       'CHEBI': 'chemical',
+                       'GO': 'biological_process'}
 
 
 class CxAssembler(object):
@@ -206,6 +326,7 @@ class CxAssembler(object):
         network_id = ndex_client.create_network(cx_str, ndex_cred, private)
         if network_id and style:
             template_id = None if style == 'default' else style
+            time.sleep(0.5)
             ndex_client.set_style(network_id, ndex_cred, template_id)
         return network_id
 

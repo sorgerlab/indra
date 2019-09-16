@@ -130,3 +130,17 @@ def location_time_refinement(st1, st2, hierarchies):
         obj_ref = event_location_time_refinement(st1.obj, st2.obj,
                                                  hierarchies)
         return subj_ref and obj_ref
+
+
+def agent_grounding_matches(agent):
+    """Return an Agent matches key just based on grounding, not state."""
+    if agent is None:
+        return None
+    return str(agent.entity_matches_key())
+
+
+def agents_stmt_type_matches(stmt):
+    """Return a matches key just based on Agent grounding and Stmt type."""
+    agents = [agent_grounding_matches(a) for a in stmt.agent_list()]
+    key = str((stmt.__class__.__name__, agents))
+    return key

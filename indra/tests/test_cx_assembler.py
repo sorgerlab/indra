@@ -1,7 +1,5 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 from indra.statements import *
-from indra.assemblers.cx import CxAssembler
+from indra.assemblers.cx import CxAssembler, NiceCxAssembler
 
 mek = Agent('MAP2K1', db_refs={'HGNC': '6840'})
 erk = Agent('MAPK1', db_refs={'UP': 'P28482'})
@@ -27,6 +25,22 @@ def test_phos():
     cxa.make_model()
     assert len(cxa.cx['nodes']) == 2
     assert len(cxa.cx['edges']) == 1
+
+
+def test_phos_nice():
+    cxa = NiceCxAssembler([st_phos])
+    cxa.make_model()
+    assert len(cxa.network.nodes) == 2
+    assert len(cxa.network.edges) == 1
+    print(cxa.print_model())
+
+
+def test_gapgef_nice():
+    cxa = NiceCxAssembler([st_gef, st_gap])
+    cxa.make_model()
+    assert len(cxa.network.nodes) == 3, cxa.network.nodes
+    assert len(cxa.network.edges) == 2
+    print(cxa.print_model())
 
 
 def test_dephos():
