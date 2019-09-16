@@ -36,7 +36,7 @@ class NiceCxAssembler(object):
                                             else 'indra_assembled'))
         self.node_keys = {}
 
-    def make_model(self, self_loops=False):
+    def make_model(self, self_loops=False, network_attributes=None):
         """Return a Nice CX network object after running assembly.
 
         Parameters
@@ -81,9 +81,18 @@ class NiceCxAssembler(object):
                         if db_name in url_prefixes]
         if db_refs_list:
             self.network.add_node_attribute(property_of=node_id,
-                                            name='db_refs',
+                                            name='aliases',
                                             values=db_refs_list,
                                             type='list_of_string')
+        db_ns, db_id = agent.get_grounding()
+        if db_ns:
+            mapped_type = db_ns_type_mappings.get(db_ns)
+            if mapped_type:
+                self.network.add_node_attribute(property_of=node_id,
+                                                name='type',
+                                                values=mapped_type,
+                                                type='string')
+
         return node_id
 
     def add_edge(self, a1_id, a2_id, stmt):
@@ -103,6 +112,13 @@ class NiceCxAssembler(object):
     @staticmethod
     def get_agent_key(agent):
         return agent.name
+
+
+db_ns_type_mappings = {'HGNC': 'gene',
+                       'UP': 'protein',
+                       'FPLX': 'proteinfamily',
+                       'CHEBI': 'chemical',
+                       'GO': 'biological_process'}
 
 
 class CxAssembler(object):
