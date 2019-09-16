@@ -121,8 +121,10 @@ class SofiaProcessor(object):
         # events showing change
         processed_event_dict = {}
         for event_index, event_info in raw_event_dict.items():
-            agent_index = event_info['Agent_index'].split(', ')
-            patient_index = event_info['Patient_index'].split(', ')
+            ai = event_info['Agent_index']
+            agent_index = [] if not ai else ai.split(', ')
+            pi = event_info['Patient_index']
+            patient_index = [] if not pi else pi.split(', ')
 
             if _in_rels(event_info['Relation'], pos_rels):
                 pol = 1
@@ -131,10 +133,10 @@ class SofiaProcessor(object):
             else:
                 pol = None
 
-            agent_embedded_events = all(a in raw_event_dict for a in
-                                        agent_index)
-            patient_embedded_events = all(a in raw_event_dict for a in
-                                          patient_index)
+            agent_embedded_events = agent_index and \
+                all(a in raw_event_dict for a in agent_index)
+            patient_embedded_events = patient_index and \
+                all(a in raw_event_dict for a in patient_index)
             # If the agent is itself an event, we use that as the reference
             if agent_embedded_events:
                 for event_ix in agent_index:
