@@ -24,6 +24,7 @@ class SofiaProcessor(object):
             ('Patient_index', 'Patient Index'),
             ('Agent', 'Agent'),
             ('Patient', 'Patient'),
+            ('Event Index', 'Event Index')
         ]
         return {k: event_dict.get(v) for k, v in mappings}
 
@@ -92,7 +93,8 @@ class SofiaProcessor(object):
         ref = event_entry.get('Source')
         agent = event_entry.get('Agent')
         patient = event_entry.get('Patient')
-        anns = {'agent': agent, 'patient': patient}
+        anns = {'agent': agent, 'patient': patient,
+                'sofia_id': event_entry['Event Index']}
         ev = Evidence(source_api='sofia', pmid=ref, text=text,
                       annotations=anns)
         pol = event_entry.get('Polarity')
@@ -119,23 +121,30 @@ class SofiaProcessor(object):
         # events showing change
         processed_event_dict = {}
         for event_index, event_info in raw_event_dict.items():
-            agent_index = event_info['Agent_index']
-            patient_index = event_info['Patient_index']
+            agent_index = event_info['Agent_index'].split(', ')
+            patient_index = event_info['Patient_index'].split(', ')
+
             if _in_rels(event_info['Relation'], pos_rels):
                 pol = 1
             elif _in_rels(event_info['Relation'], neg_rels):
                 pol = -1
             else:
                 pol = None
+
+            agent_embedded_events = all(a in raw_event_dict for a in
+                                        agent_index)
+            patient_embedded_events = all(a in raw_event_dict for a in
+                                          patient_index)
             # If the agent is itself an event, we use that as the reference
-            if agent_index in raw_event_dict.keys():
-                processed_event_dict[agent_index] = raw_event_dict[agent_index]
-                processed_event_dict[agent_index]['Polarity'] = pol
+            if agent_embedded_events:
+                for event_ix in agent_index:
+                    processed_event_dict[event_ix] = raw_event_dict[event_ix]
+                    processed_event_dict[event_ix]['Polarity'] = pol
             # If the patient is itself an event, we use that as the reference
-            elif patient_index in raw_event_dict.keys():
-                processed_event_dict[patient_index] = (
-                    raw_event_dict[patient_index])
-                processed_event_dict[patient_index]['Polarity'] = pol
+            elif patient_embedded_events:
+                for event_ix in patient_index:
+                    processed_event_dict[event_ix] = raw_event_dict[event_ix]
+                    processed_event_dict[event_ix]['Polarity'] = pol
             # Otherwise we take the event itself
             else:
                 processed_event_dict[event_index] = raw_event_dict[event_index]
