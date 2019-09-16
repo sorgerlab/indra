@@ -432,6 +432,9 @@ class SparserXMLProcessor(object):
                 db_refs['FPLX'] = be_id
                 agent_name = be_id
             elif db_ns in ['UP', 'Uniprot']:
+                id_from_mnemonic = uniprot_client.get_id_from_mnemonic(db_id)
+                if id_from_mnemonic:
+                    db_id = id_from_mnemonic
                 db_refs['UP'] = db_id
                 hgnc_id = uniprot_client.get_hgnc_id(db_id)
                 if hgnc_id:
