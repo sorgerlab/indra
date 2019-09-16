@@ -26,7 +26,6 @@ url_prefixes = {
     'HMDB': '%s/hmdb/' % identifiers_url,
     'FPLX': '%s/fplx/' % identifiers_url,
     'REFSEQ_PROT': '%s/refseq:' % identifiers_url,
-    'CHEMBL': '%s/chembl.compound/' % identifiers_url,
     'NXPFA': 'https://www.nextprot.org/term/FA-',
     'SIGNOR': 'https://signor.uniroma2.it/relation_result.php?id=',
     'NONCODE': 'http://www.noncode.org/show_gene.php?id=NONHSAG',
@@ -65,11 +64,15 @@ def get_identifiers_url(db_name, db_id):
     bel_scai_url = 'https://arty.scai.fraunhofer.de/artifactory/bel/namespace/'
     if db_name == 'LINCS':
         if db_id.startswith('LSM-'):  # Lincs Small Molecule ID
-            url = identifiers_url + 'lincs.smallmolecule/%s' % db_id
+            url = identifiers_url + '/lincs.smallmolecule/%s' % db_id
         elif db_id.startswith('LCL-'):  # Lincs Cell Line ID
-            url = identifiers_url + 'lincs.cell/%s' % db_id
+            url = identifiers_url + '/lincs.cell/%s' % db_id
         else:  # Assume LINCS Protein
-            url = identifiers_url + 'lincs.protein/%s' % db_id
+            url = identifiers_url + '/lincs.protein/%s' % db_id
+    elif db_name == 'CHEMBL':
+        if not db_id.startswith('CHEMBL'):
+            db_id = 'CHEMBL%s' % db_id
+        url = identifiers_url + '/chembl.compound/%s' % db_id
     elif db_name == 'HMS-LINCS':
         url = 'http://lincs.hms.harvard.edu/db/sm/%s-101' % db_id
     # Special cases with no identifiers entry
@@ -92,4 +95,5 @@ def get_identifiers_url(db_name, db_id):
     else:
         logger.warning('Unhandled name space %s' % db_name)
         url = None
+    print(url)
     return url
