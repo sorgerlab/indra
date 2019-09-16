@@ -238,18 +238,20 @@ def _fix_agent(agent):
             if up_id:
                 agent.db_refs['UP'] = up_id
     elif up_id:
-        gene_name = uniprot_client.get_gene_name(up_id)
-        if gene_name:
-            agent.name = gene_name
-            hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-            if hgnc_id:
-                agent.db_refs['HGNC'] = hgnc_id
-        # If it doesn't have a gene name, it's better to just
-        # use the raw string name otherwise Sparser sets
-        # has Uniprot IDs or mnemonics as the name
+        hgnc_id = uniprot_client.get_hgnc_id(up_id)
+        if hgnc_id:
+            agent.db_refs['HGNC'] = hgnc_id
+            agent.name = hgnc_client.get_hgnc_name(hgnc_id)
         else:
-            name = agent.db_refs.get('TEXT', agent.name)
-            agent.name = name
+            gene_name = uniprot_client.get_gene_name(up_id)
+            if gene_name:
+                agent.name = gene_name
+            # If it doesn't have a gene name, it's better to just
+            # use the raw string name otherwise Sparser sets
+            # has Uniprot IDs or mnemonics as the name
+            else:
+                name = agent.db_refs.get('TEXT', agent.name)
+                agent.name = name
 
 
 class SparserXMLProcessor(object):
@@ -430,13 +432,18 @@ class SparserXMLProcessor(object):
                 db_refs['FPLX'] = be_id
                 agent_name = be_id
             elif db_ns in ['UP', 'Uniprot']:
+                id_from_mnemonic = uniprot_client.get_id_from_mnemonic(db_id)
+                if id_from_mnemonic:
+                    db_id = id_from_mnemonic
                 db_refs['UP'] = db_id
-                gene_name = uniprot_client.get_gene_name(db_id)
-                if gene_name:
-                    agent_name = gene_name
-                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                    if hgnc_id:
-                        db_refs['HGNC'] = hgnc_id
+                hgnc_id = uniprot_client.get_hgnc_id(db_id)
+                if hgnc_id:
+                    db_refs['HGNC'] = hgnc_id
+                    agent_name = hgnc_client.get_hgnc_name(hgnc_id)
+                else:
+                    gene_name = uniprot_client.get_gene_name(db_id)
+                    if gene_name:
+                        agent_name = gene_name
             elif db_ns == 'NCIT':
                 db_refs['NCIT'] = db_id
                 target = ncit_map.get(db_id)

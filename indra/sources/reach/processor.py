@@ -387,16 +387,17 @@ class ReachProcessor(object):
             if ns == 'uniprot':
                 up_id = xr['id']
                 db_refs['UP'] = up_id
-                # Look up official names in UniProt
-                gene_name = up_client.get_gene_name(up_id)
-                if gene_name is not None:
-                    agent_name = gene_name
-                    # If the gene name corresponds to an HGNC ID, add it to the
-                    # db_refs
-                    if up_client.is_human(up_id):
-                        hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                        if hgnc_id:
-                            db_refs['HGNC'] = hgnc_id
+                hgnc_id = up_client.get_hgnc_id(up_id)
+                if hgnc_id:
+                    db_refs['HGNC'] = hgnc_id
+                    gene_name = hgnc_client.get_hgnc_name(hgnc_id)
+                    if gene_name:
+                        agent_name = gene_name
+                else:
+                    # Look up official names in UniProt
+                    gene_name = up_client.get_gene_name(up_id)
+                    if gene_name is not None:
+                        agent_name = gene_name
             elif ns == 'hgnc':
                 hgnc_id = xr['id']
                 db_refs['HGNC'] = hgnc_id
