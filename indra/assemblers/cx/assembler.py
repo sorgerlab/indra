@@ -58,10 +58,11 @@ class NiceCxAssembler(object):
             if len(not_none_agents) < 2:
                 continue
             for a1, a2 in itertools.combinations(not_none_agents, 2):
+                if not self_loops and \
+                        self.get_agent_key(a1) == self.get_agent_key(a2):
+                    continue
                 a1_id = self.add_node(a1)
                 a2_id = self.add_node(a2)
-                if not self_loops and a1_id == a2_id:
-                    continue
                 edge_id = self.add_edge(a1_id, a2_id, stmt)
 
         prefixes = {k: v for k, v in url_prefixes.items()}
