@@ -95,5 +95,4 @@ def get_identifiers_url(db_name, db_id):
     else:
         logger.warning('Unhandled name space %s' % db_name)
         url = None
-    print(url)
     return url
