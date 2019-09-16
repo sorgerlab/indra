@@ -42,7 +42,10 @@ class NiceCxAssembler(object):
         Parameters
         ----------
         self_loops : Optional[bool]
-            if False, self-loops are excluded from the network. Default: False
+            If False, self-loops are excluded from the network. Default: False
+        network_attributes : Optional[dict]
+            A dictionary containing attributes to be added to the
+            assembled network.
 
         Returns
         -------
@@ -64,6 +67,9 @@ class NiceCxAssembler(object):
         prefixes = {k: v for k, v in url_prefixes.items()}
         prefixes['pubmed'] = 'https://identifiers.org/pubmed/'
         self.network.set_network_attribute('@context', json.dumps(prefixes))
+        if network_attributes:
+            for k, v in network_attributes.items():
+                self.network.set_network_attribute(k, v, 'string')
         return self.network
 
     def add_node(self, agent):
@@ -74,8 +80,17 @@ class NiceCxAssembler(object):
             return self.node_keys[agent_key]
 
         # If the node doesn't exist yet
-        node_id = self.network.create_node(agent.name)
+        db_ns, db_id = agent.get_grounding()
+        # TODO: handle more represents name spaces
+        if db_ns == 'HGNC':
+            represents = 'hgnc.symbol:%s' % agent.name
+        else:
+            represents = None
+        node_id = self.network.create_node(agent.name,
+                                           node_represents=represents)
         self.node_keys[agent_key] = node_id
+
+        # Add db_refs as aliases
         db_refs_list = ['%s:%s' % (db_name, db_id)
                         for db_name, db_id in agent.db_refs.items()
                         if db_name in url_prefixes]
@@ -84,7 +99,8 @@ class NiceCxAssembler(object):
                                             name='aliases',
                                             values=db_refs_list,
                                             type='list_of_string')
-        db_ns, db_id = agent.get_grounding()
+
+        # Add the type of the node, inferred from grounding
         if db_ns:
             mapped_type = db_ns_type_mappings.get(db_ns)
             if mapped_type:
