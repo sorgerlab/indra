@@ -36,8 +36,8 @@ class SofiaProcessor(object):
         # FIXME: Handle cases in which there is a missing cause/effect
         if not cause_entries or not effect_entries:
             return []
-        causes = [c.strip() for c in cause_entries.split(',')]
-        effects = [e.strip() for e in effect_entries.split(',')]
+        causes = [c.strip() for c in cause_entries.split(', ')]
+        effects = [e.strip() for e in effect_entries.split(', ')]
         rel = rel_dict.get('Relation')
         if _in_rels(rel, pos_rels):
             pol = 1
@@ -93,10 +93,13 @@ class SofiaProcessor(object):
         ref = event_entry.get('Source')
         agent = event_entry.get('Agent')
         patient = event_entry.get('Patient')
-        anns = {'agent': agent, 'patient': patient,
-                'sofia_id': event_entry['Event Index']}
+        anns = {}
+        if agent:
+            anns['agent'] = agent
+        if patient:
+            anns['patient'] = patient
         ev = Evidence(source_api='sofia', pmid=ref, text=text,
-                      annotations=anns)
+                      annotations=anns, source_id=event_entry['Event Index'])
         pol = event_entry.get('Polarity')
         event = Event(concept, context=context, evidence=[ev],
                       delta=QualitativeDelta(polarity=pol, adjectives=None))
