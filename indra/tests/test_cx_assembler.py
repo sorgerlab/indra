@@ -28,7 +28,7 @@ def test_phos():
 
 
 def test_phos_nice():
-    cxa = NiceCxAssembler([st_phos])
+    cxa = NiceCxAssembler([st_cited])
     cxa.make_model()
     assert len(cxa.network.nodes) == 2
     assert len(cxa.network.edges) == 1
