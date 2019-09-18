@@ -1,4 +1,11 @@
+import os
 from setuptools import setup
+
+
+readme_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                           'README.md')
+with open(readme_path, 'r', encoding='utf-8') as fh:
+    long_description = fh.read()
 
 
 def main():
@@ -37,10 +44,8 @@ def main():
     setup(name='indra',
           version='1.13.0',
           description='Integrated Network and Dynamical Reasoning Assembler',
-          long_description='INDRA is a framework '
-              'for assembling rule-based mathematical models and '
-              'mechanistic networks of biochemical systems from natural '
-              'language and pathway databases.',
+          long_description=long_description,
+          long_description_content_type='text/markdown',
           author='Benjamin Gyori',
           author_email='benjamin_gyori@hms.harvard.edu',
           url='http://github.com/sorgerlab/indra',

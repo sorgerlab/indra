@@ -294,5 +294,6 @@ The development of INDRA has been funded from the following sources:
 | DARPA Big Mechanism                              | W911NF-14-1-0397     |
 | DARPA World Modelers                             | W911NF-18-1-0014     |
 | DARPA Communicating with Computers               | W911NF-15-1-0544     |
-| DARPA Automated Scientific Discovery Fraemwork   | W911NF018-1-0124     |
+| DARPA Automated Scientific Discovery Framework   | W911NF018-1-0124     |
 | DARPA Automating Scientific Knowledge Extraction | HR00111990009        |
+| DARPA Panacea                                    | HR00111920022        |
