@@ -13,14 +13,20 @@ neu_rels = ['affect', 'impact', 'due', 'caus', 'because']
 class SofiaProcessor(object):
     @staticmethod
     def process_event(event_dict):
-        return {'Event_Type': event_dict.get('Event_Type'),
-                'Relation': event_dict.get('Relation'),
-                'Location': event_dict.get('Location'),
-                'Time': event_dict.get('Time'),
-                'Source': event_dict.get('Source_File'),
-                'Text': event_dict.get('Sentence'),
-                'Agent_index': event_dict.get('Agent Index'),
-                'Patient_index': event_dict.get('Patient Index')}
+        mappings = [
+            ('Event_Type', 'Event_Type'),
+            ('Relation', 'Relation'),
+            ('Location', 'Location'),
+            ('Time', 'Time'),
+            ('Source', 'Source_File'),
+            ('Text', 'Sentence'),
+            ('Agent_index', 'Agent Index'),
+            ('Patient_index', 'Patient Index'),
+            ('Agent', 'Agent'),
+            ('Patient', 'Patient'),
+            ('Event Index', 'Event Index')
+        ]
+        return {k: event_dict.get(v) for k, v in mappings}
 
     def _build_influences(self, rel_dict):
         stmt_list = []
@@ -30,8 +36,8 @@ class SofiaProcessor(object):
         # FIXME: Handle cases in which there is a missing cause/effect
         if not cause_entries or not effect_entries:
             return []
-        causes = [c.strip() for c in cause_entries.split(',')]
-        effects = [e.strip() for e in effect_entries.split(',')]
+        causes = [c.strip() for c in cause_entries.split(', ')]
+        effects = [e.strip() for e in effect_entries.split(', ')]
         rel = rel_dict.get('Relation')
         if _in_rels(rel, pos_rels):
             pol = 1
@@ -50,8 +56,12 @@ class SofiaProcessor(object):
         ref = rel_dict.get('Source_File')
 
         for cause_idx, effect_idx in itertools.product(causes, effects):
-            subj = self.get_event(self._events[cause_idx])
-            obj = self.get_event(self._events[effect_idx])
+            cause = self._events.get(cause_idx)
+            effect = self._events.get(effect_idx)
+            if not cause or not effect:
+                continue
+            subj = self.get_event(cause)
+            obj = self.get_event(effect)
 
             ev = Evidence(source_api='sofia', pmid=ref,
                           annotations=annots, text=text)
@@ -81,7 +91,15 @@ class SofiaProcessor(object):
 
         text = event_entry.get('Text')
         ref = event_entry.get('Source')
-        ev = Evidence(source_api='sofia', pmid=ref, text=text)
+        agent = event_entry.get('Agent')
+        patient = event_entry.get('Patient')
+        anns = {}
+        if agent:
+            anns['agent'] = agent
+        if patient:
+            anns['patient'] = patient
+        ev = Evidence(source_api='sofia', pmid=ref, text=text,
+                      annotations=anns, source_id=event_entry['Event Index'])
         pol = event_entry.get('Polarity')
         event = Event(concept, context=context, evidence=[ev],
                       delta=QualitativeDelta(polarity=pol, adjectives=None))
@@ -106,21 +124,33 @@ class SofiaProcessor(object):
         # events showing change
         processed_event_dict = {}
         for event_index, event_info in raw_event_dict.items():
-            agent_index = event_info['Agent_index']
-            patient_index = event_info['Patient_index']
+            ai = event_info['Agent_index']
+            agent_index = [] if not ai else ai.split(', ')
+            pi = event_info['Patient_index']
+            patient_index = [] if not pi else pi.split(', ')
+
             if _in_rels(event_info['Relation'], pos_rels):
                 pol = 1
             elif _in_rels(event_info['Relation'], neg_rels):
                 pol = -1
             else:
                 pol = None
-            if agent_index in raw_event_dict.keys():
-                processed_event_dict[agent_index] = raw_event_dict[agent_index]
-                processed_event_dict[agent_index]['Polarity'] = pol
-            elif patient_index in raw_event_dict.keys():
-                processed_event_dict[patient_index] = (
-                    raw_event_dict[patient_index])
-                processed_event_dict[patient_index]['Polarity'] = pol
+
+            agent_embedded_events = agent_index and \
+                all(a in raw_event_dict for a in agent_index)
+            patient_embedded_events = patient_index and \
+                all(a in raw_event_dict for a in patient_index)
+            # If the agent is itself an event, we use that as the reference
+            if agent_embedded_events:
+                for event_ix in agent_index:
+                    processed_event_dict[event_ix] = raw_event_dict[event_ix]
+                    processed_event_dict[event_ix]['Polarity'] = pol
+            # If the patient is itself an event, we use that as the reference
+            elif patient_embedded_events:
+                for event_ix in patient_index:
+                    processed_event_dict[event_ix] = raw_event_dict[event_ix]
+                    processed_event_dict[event_ix]['Polarity'] = pol
+            # Otherwise we take the event itself
             else:
                 processed_event_dict[event_index] = raw_event_dict[event_index]
         return processed_event_dict
