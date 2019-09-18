@@ -58,11 +58,10 @@ class NiceCxAssembler(object):
             if len(not_none_agents) < 2:
                 continue
             for a1, a2 in itertools.combinations(not_none_agents, 2):
-                if not self_loops and \
-                        self.get_agent_key(a1) == self.get_agent_key(a2):
-                    continue
                 a1_id = self.add_node(a1)
                 a2_id = self.add_node(a2)
+                if not self_loops and a1_id == a2_id:
+                    continue
                 edge_id = self.add_edge(a1_id, a2_id, stmt)
 
         prefixes = {k: v for k, v in url_prefixes.items()}
@@ -116,9 +115,28 @@ class NiceCxAssembler(object):
         """Add a Statement to the network as an edge."""
         stmt_type = stmt.__class__.__name__
         edge_id = self.network.create_edge(a1_id, a2_id, stmt_type)
-        pmids = {ev.pmid for ev in stmt.evidence if ev.pmid is not None}
-        self.network.set_edge_attribute(edge_id, 'citation',
-                                        ['pubmed:%s' % p for p in pmids],
+        evs = []
+        for ev in stmt.evidence:
+            # We skip evidences with no PMID
+            if not ev.pmid:
+                continue
+            # We take a maximum 200 character snippet of the evidence text
+            if not ev.text:
+                ev_txt = 'Evidence text not available.'
+            elif len(ev.text) > 200:
+                ev_txt = ev.text[:200] + '...'
+            else:
+                ev_txt = ev.text
+            # Construct a clickable PMID link with the source and evidence text
+            ev_str = (f'<a target="_blank" '
+                      f'href="http://identifiers.org/pubmed/{ev.pmid}">'
+                      f'pubmed:{ev.pmid}</a> ({ev.source_api}) {ev_txt}')
+            evs.append((ev_str, 0 if ev.text is None else 1))
+        # Reorder to have ones with text first
+        evs = sorted(evs, key=lambda x: x[1], reverse=True)
+        # Cap at 10 pieces of evidence
+        evs = [e[0] for e in evs[:10]]
+        self.network.set_edge_attribute(edge_id, 'citation', evs,
                                         type='list_of_string')
         return edge_id
 
