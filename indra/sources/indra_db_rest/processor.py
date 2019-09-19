@@ -120,11 +120,6 @@ class IndraDBRestProcessor(object):
             raise ValueError("Can only extend with another %s instance."
                              % self.__class__.__name__)
         self.statements.extend(other_processor.statements)
-        if other_processor.statements_sample is not None:
-            if self.statements_sample is None:
-                self.statements_sample = other_processor.statements_sample
-            else:
-                self.statements_sample.extend(other_processor.statements_sample)
 
         self._merge_json(other_processor.__statement_jsons,
                          other_processor.__evidence_counts,
@@ -135,6 +130,7 @@ class IndraDBRestProcessor(object):
         """Merge these statement jsons with new jsons."""
         # Where there is overlap, there _should_ be agreement.
         self.__evidence_counts.update(ev_counts)
+
         # We turn source counts into an int-keyed dict and update it that way
         self.__source_counts.update({int(k): v
                                      for k, v in source_counts.items()})
@@ -147,10 +143,6 @@ class IndraDBRestProcessor(object):
                 for evj in sj['evidence']:
                     self.__statement_jsons[k]['evidence'].append(evj)
 
-        if not self.__started:
-            self.statements_sample = stmts_from_json(
-                self.__statement_jsons.values())
-            self.__started = True
         return
 
     def _compile_statements(self):
@@ -362,6 +354,11 @@ class IndraDBRestSearchProcessor(IndraDBRestProcessor):
         general these will be the "best" (currently this means they have the
         most evidence) Statements available.
     """
+    def __init__(self, *args, **kwargs):
+        self.statements_sample = None
+        super(self.__class__, self).__init__(*args, **kwargs)
+        return
+
     def is_working(self):
         """Check if the thread is running."""
         if not self.__th:
@@ -452,9 +449,26 @@ class IndraDBRestSearchProcessor(IndraDBRestProcessor):
         self._compile_statements()
         return
 
+    def merge_results(self, other_processor):
+        super(self.__class__, self).merge_results(other_processor)
+
+        if other_processor.statements_sample is not None:
+            if self.statements_sample is None:
+                self.statements_sample = other_processor.statements_sample
+            else:
+                self.statements_sample.extend(other_processor.statements_sample)
+
+    def _merge_json(self, stmt_json, ev_counts, source_counts):
+        super(self.__class__, self)._merge_json(stmt_json, ev_counts,
+                                                source_counts)
+
+        if not self.__started:
+            self.statements_sample = stmts_from_json(stmt_json)
+            self.__started = True
+        return
+
     def _run(self, subject=None, object=None, agents=None, stmt_type=None,
              use_exact_type=False, persist=True, **api_params):
-        self.statements_sample = None
         self.__started = False
         self.__done_dict = defaultdict(lambda: False)
         self.__page_dict = defaultdict(lambda: 0)
