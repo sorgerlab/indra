@@ -482,7 +482,10 @@ class IndraDBRestSearchProcessor(IndraDBRestProcessor):
                              "the scope will be too large.")
 
         # Make timeouts apply differently in this case
-        timeout = api_params.pop('timeout', None)
+        if not persist:
+            timeout = api_params.pop('timeout', None)
+        else:
+            timeout = api_params.get('timeout', None)
 
         # Formulate inputs for the agents..
         key_val_list = [('subject', subject), ('object', object)]
