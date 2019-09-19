@@ -117,8 +117,10 @@ def test_too_big_request_persist_no_block():
         ("Counts dict was improperly handled before completing: %d counts "
          "for %d statements." % (num_counts, num_stmts))
     assert resp_all2.is_working(), "Background complete resolved too fast."
-    assert len(resp_all2.statements_sample) == len(resp_some.statements)
-    resp_all2.wait_until_done(120)
+    assert len(resp_all2.statements_sample) == len(resp_some.statements), \
+        "Sample size: %s, Small resp size: %s" \
+        % (len(resp_all2.statements_sample), len(resp_some.statements))
+    resp_all2.wait_until_done(500)
     assert not resp_all2.is_working(), \
         "Response is still working. Took too long."
     assert resp_all2.statements

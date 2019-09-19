@@ -463,7 +463,7 @@ class IndraDBRestSearchProcessor(IndraDBRestProcessor):
                                                 source_counts)
 
         if not self.__started:
-            self.statements_sample = stmts_from_json(stmt_json)
+            self.statements_sample = stmts_from_json(stmt_json.values())
             self.__started = True
         return
 
