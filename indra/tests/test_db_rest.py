@@ -1,7 +1,4 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 import random
-from builtins import dict, str
 
 from datetime import datetime
 from unittest import SkipTest
