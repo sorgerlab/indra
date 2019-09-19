@@ -153,6 +153,12 @@ def test_paper_query():
                                            simple_response=True)
     assert len(stmts_1)
 
+    p = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
+                                      ('pmid', '27014235')])
+    assert len(p.statements)
+    assert len(p.get_source_counts())
+    assert len(p.get_ev_counts())
+
 
 @attr('nonpublic')
 def test_regulate_amount():
@@ -174,6 +180,11 @@ def test_get_statements_by_hash():
     print({s.get_hash(shallow=True): s for s in stmts})
     assert len(stmts) >= 2, \
         "Wrong number of statements: %s vs. %s" % (len(stmts), len(hash_list))
+
+    p = dbr.get_statements_by_hash(hash_list)
+    assert len(p.statements)
+    assert len(p.get_source_counts())
+    assert len(p.get_ev_counts())
     return
 
 
