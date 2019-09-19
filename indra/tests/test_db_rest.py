@@ -170,7 +170,7 @@ def test_regulate_amount():
 @attr('nonpublic')
 def test_get_statements_by_hash():
     hash_list = [30674674032092136, -22289282229858243, -25056605420392180]
-    stmts = dbr.get_statements_by_hash(hash_list)
+    stmts = dbr.get_statements_by_hash(hash_list, simple_response=True)
     print({s.get_hash(shallow=True): s for s in stmts})
     assert len(stmts) >= 2, \
         "Wrong number of statements: %s vs. %s" % (len(stmts), len(hash_list))
@@ -179,7 +179,7 @@ def test_get_statements_by_hash():
 
 @attr('nonpublic')
 def test_get_statements_by_hash_no_hash():
-    stmts = dbr.get_statements_by_hash([])
+    stmts = dbr.get_statements_by_hash([], simple_response=True)
     assert not stmts, "Got statements without giving a hash."
 
 

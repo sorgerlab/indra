@@ -1,7 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 from builtins import dict, str
 
-__all__ = ['IndraDBRestPagingProcessor']
+__all__ = ['IndraDBRestSearchProcessor']
 
 import logging
 from copy import deepcopy
@@ -12,10 +12,15 @@ from collections import OrderedDict, defaultdict
 from indra.statements import stmts_from_json, get_statement_by_name, \
     get_all_descendants
 
-from indra.sources.indra_db_rest.util import submit_query_request
+from indra.sources.indra_db_rest.util import submit_query_request, \
+    submit_statement_request
 from indra.sources.indra_db_rest.exceptions import IndraDBRestResponseError
 
 logger = logging.getLogger(__name__)
+
+
+class RemoveParam(object):
+    pass
 
 
 class IndraDBRestProcessor(object):
@@ -53,22 +58,31 @@ class IndraDBRestProcessor(object):
     statements : list[:py:class:`indra.statements.Statement`]
         A list of INDRA Statements that will be filled once all queries have
         been completed.
-    statements_sample : list[:py:class:`indra.statements.Statement`]
-        A list of the INDRA Statements received from the first query. In
-        general these will be the "best" (currently this means they have the
-        most evidence) Statements available.
     """
+    _override_default_api_params = {}
+
     def __init__(self, *args, **kwargs):
         self.statements = []
-        self.statements_sample = None
         self.__statement_jsons = {}
         self.__evidence_counts = {}
         self.__source_counts = {}
 
-        defaults_api_params = dict(timeout=None, ev_limit=10, best_first=True,
+        # Define the basic generic defaults.
+        default_api_params = dict(timeout=None, ev_limit=10, best_first=True,
                                    tries=2, max_stmts=None)
-        kwargs.update((k, kwargs.get(k, defaults_api_params[k]))
-                      for k in defaults_api_params.keys())
+
+        # Update with any overrides.
+        default_api_params.update(self._override_default_api_params)
+
+        # Some overrides may be RemoveParam objects, indicating the key should
+        # be removed. Filter those out.
+        default_api_params = {k: v for k, v in default_api_params.items()
+                              if not isinstance(v, RemoveParam)}
+
+        # Update the kwargs to include these default values, if not already
+        # specified by the user.
+        kwargs.update((k, kwargs.get(k, default_api_params[k]))
+                      for k in default_api_params.keys())
 
         self._run(*args, **kwargs)
         return
@@ -163,8 +177,73 @@ class IndraDBRestProcessor(object):
         raise NotImplementedError("_run must be defined in subclass.")
 
 
-class IndraDBRestPagingProcessor(IndraDBRestProcessor):
-    """The packaging for query responses.
+class IndraDBRestHashProcessor(IndraDBRestProcessor):
+    """The packaging and processor for hash lookup of statements.
+
+    Parameters
+    ----------
+    hash_list : list[int or str]
+        A list of the matches-key hashes for the statements you want to get.
+
+    Keyword Parameters
+    ------------------
+    timeout : positive int or None
+        If an int, block until the work is done and statements are retrieved, or
+        until the timeout has expired, in which case the results so far will be
+        returned in the response object, and further results will be added in
+        a separate thread as they become available. If simple_response is True,
+        all statements available will be returned. Otherwise (if None), block
+        indefinitely until all statements are retrieved. Default is None.
+    ev_limit : int or None
+        Limit the amount of evidence returned per Statement. Default is 100.
+    best_first : bool
+        If True, the preassembled statements will be sorted by the amount of
+        evidence they have, and those with the most evidence will be
+        prioritized. When using `max_stmts`, this means you will get the "best"
+        statements. If False, statements will be queried in arbitrary order.
+    tries : int > 0
+        Set the number of times to try the query. The database often caches
+        results, so if a query times out the first time, trying again after a
+        timeout will often succeed fast enough to avoid a timeout. This can also
+        help gracefully handle an unreliable connection, if you're willing to
+        wait. Default is 2.
+
+    Attributes
+    ----------
+    statements : list[:py:class:`indra.statements.Statement`]
+        A list of INDRA Statements that will be filled once all queries have
+        been completed.
+    """
+    _default_api_params = {'ev_limit': 100, 'max_stmts': RemoveParam()}
+
+    def _run(self, hash_list, **api_params):
+        # Make sure the input is a list (not just a single hash).
+        if not isinstance(hash_list, list):
+            raise ValueError("The `hash_list` input is a list, not %s."
+                             % type(hash_list))
+
+        # If there is nothing in the list, don't waste time with a query.
+        if not hash_list:
+            return
+
+        # Regularize and check the types of elements in the hash list.
+        if isinstance(hash_list[0], str):
+            hash_list = [int(h) for h in hash_list]
+        if not all([isinstance(h, int) for h in hash_list]):
+            raise ValueError("Hashes must be ints or strings that can be "
+                             "converted into ints.")
+
+        # Execute the query and load the results.
+        resp = submit_statement_request('post', 'from_hashes',
+                                        data={'hashes': hash_list},
+                                        **api_params)
+        self._unload_and_merge_resp(resp)
+        self._compile_statements()
+        return
+
+
+class IndraDBRestSearchProcessor(IndraDBRestProcessor):
+    """The packaging for agent and statement type search query responses.
 
     Parameters
     ----------
@@ -327,6 +406,7 @@ class IndraDBRestPagingProcessor(IndraDBRestProcessor):
 
     def _run(self, subject=None, object=None, agents=None, stmt_type=None,
              use_exact_type=False, persist=True, **api_params):
+        self.statements_sample = None
         self.__started = False
         self.__done_dict = defaultdict(lambda: False)
         self.__page_dict = defaultdict(lambda: 0)

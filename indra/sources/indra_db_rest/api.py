@@ -2,7 +2,8 @@ from indra.util import clockit
 from indra.statements import stmts_from_json, Complex, SelfModification, \
     ActiveForm, Translocation, Conversion
 
-from indra.sources.indra_db_rest.processor import IndraDBRestPagingProcessor
+from indra.sources.indra_db_rest.processor import IndraDBRestSearchProcessor, \
+    IndraDBRestHashProcessor
 from indra.sources.indra_db_rest.util import submit_statement_request, \
     make_db_rest_request, get_url_base
 from indra.util.statement_presentation import get_simplified_stmts
@@ -97,14 +98,14 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
 
     Returns
     -------
-    processor : :py:class:`IndraDBRestPagingProcessor`
+    processor : :py:class:`IndraDBRestSearchProcessor`
         An instance of the IndraDBRestProcessor, which has an attribute
         `statements` which will be populated when the query/queries are done.
         This is the default behavior, and is encouraged in all future cases,
         however a simple list of statements may be returned using the
         `simple_response` option described above.
     """
-    processor = IndraDBRestPagingProcessor(subject, object, agents, stmt_type,
+    processor = IndraDBRestSearchProcessor(subject, object, agents, stmt_type,
                                            use_exact_type, persist, timeout,
                                            ev_limit, best_first, tries, max_stmts)
 
@@ -117,7 +118,8 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
 
 
 @clockit
-def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
+def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2,
+                           simple_response=False):
     """Get fully formed statements from a list of hashes.
 
     Parameters
@@ -137,21 +139,24 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
         timeout will often succeed fast enough to avoid a timeout. This can
         also help gracefully handle an unreliable connection, if you're
         willing to wait. Default is 2.
+    simple_response : bool
+        If True, a simple list of statements is returned (thus block should also
+        be True). If block is False, only the original sample will be returned
+        (as though persist was False), until the statements are done loading, in
+        which case the rest should appear in the list. This behavior is not
+        encouraged. Default is False (which breaks backwards compatibility with
+        usage of INDRA versions from before 9/19/2019). WE ENCOURAGE ALL NEW
+        USE-CASES TO USE THE PROCESSOR, AS THIS FEATURE MAY BE REMOVED AT A
+        LATER DATE.
     """
-    if not isinstance(hash_list, list):
-        raise ValueError("The `hash_list` input is a list, not %s."
-                         % type(hash_list))
-    if not hash_list:
-        return []
-    if isinstance(hash_list[0], str):
-        hash_list = [int(h) for h in hash_list]
-    if not all([isinstance(h, int) for h in hash_list]):
-        raise ValueError("Hashes must be ints or strings that can be "
-                         "converted into ints.")
-    resp = submit_statement_request('post', 'from_hashes', ev_limit=ev_limit,
-                                    data={'hashes': hash_list},
-                                    best_first=best_first, tries=tries)
-    return stmts_from_json(resp.json()['statements'].values())
+    processor = IndraDBRestHashProcessor(hash_list, ev_limit=ev_limit,
+                                         best_first=best_first, tries=tries)
+
+    if simple_response:
+        ret = processor.statements
+    else:
+        ret = processor
+    return ret
 
 
 @clockit
