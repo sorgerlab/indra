@@ -481,6 +481,9 @@ class IndraDBRestSearchProcessor(IndraDBRestProcessor):
             raise ValueError("At least one agent must be specified, or else "
                              "the scope will be too large.")
 
+        # Make timeouts apply differently in this case
+        timeout = api_params.pop('timeout', None)
+
         # Formulate inputs for the agents..
         key_val_list = [('subject', subject), ('object', object)]
         params = {param_key: param_val for param_key, param_val in key_val_list
@@ -504,11 +507,11 @@ class IndraDBRestSearchProcessor(IndraDBRestProcessor):
         self.__th = Thread(target=self._run_queries, args=args)
         self.__th.start()
 
-        if api_params['timeout'] is None:
+        if timeout is None:
             logger.debug("Waiting for thread to complete...")
             self.__th.join()
-        elif api_params['timeout']:  # is not 0
+        elif timeout:  # is not 0
             logger.debug("Waiting at most %d seconds for thread to complete..."
-                         % api_params['timeout'])
-            self.__th.join(api_params['timeout'])
+                         % timeout)
+            self.__th.join(timeout)
         return

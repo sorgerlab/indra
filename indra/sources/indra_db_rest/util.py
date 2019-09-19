@@ -64,7 +64,6 @@ def make_db_rest_request(meth, end_point, query_str, data=None, params=None,
     method_func = getattr(requests, meth.lower())
     while tries > 0:
         tries -= 1
-        timeout = timeout if timeout else None
         resp = method_func(url_path, headers=headers, data=json_data,
                            params=params, timeout=timeout)
         if resp.status_code == 200:
