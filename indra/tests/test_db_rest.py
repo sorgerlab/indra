@@ -150,7 +150,8 @@ def test_famplex_namespace():
 def test_paper_query():
     raise SkipTest("Paper query currently not supported.")
     stmts_1 = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
-                                            ('pmid', '27014235')])
+                                            ('pmid', '27014235')],
+                                           simple_response=True)
     assert len(stmts_1)
 
 

@@ -6,16 +6,14 @@ from indra.statements import stmts_from_json, Complex, SelfModification, \
     ActiveForm, Translocation, Conversion
 
 from indra.sources.indra_db_rest.processor import IndraDBRestSearchProcessor, \
-    IndraDBRestHashProcessor
-from indra.sources.indra_db_rest.util import submit_statement_request, \
-    make_db_rest_request, get_url_base
+    IndraDBRestHashProcessor, IndraDBRestPaperProcessor
+from indra.sources.indra_db_rest.util import make_db_rest_request, get_url_base
 
 
 @clockit
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
-                   use_exact_type=False, persist=True, timeout=None,
-                   simple_response=False, ev_limit=10, best_first=True, tries=2,
-                   max_stmts=None):
+                   use_exact_type=False, persist=True, simple_response=False,
+                   *api_args, **api_kwargs):
     """Get a processor for the INDRA DB web API matching given agents and type.
 
     There are two types of responses available. You can just get a list of
@@ -61,13 +59,6 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         results returned), just give up and pass along what was returned.
         Otherwise, make further queries to get the rest of the data (which may
         take some time).
-    timeout : positive int or None
-        If an int, block until the work is done and statements are retrieved, or
-        until the timeout has expired, in which case the results so far will be
-        returned in the response object, and further results will be added in
-        a separate thread as they become available. If simple_response is True,
-        all statements available will be returned. Otherwise (if None), block
-        indefinitely until all statements are retrieved. Default is None.
     simple_response : bool
         If True, a simple list of statements is returned (thus block should also
         be True). If block is False, only the original sample will be returned
@@ -77,6 +68,13 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         usage of INDRA versions from before 1/22/2019). WE ENCOURAGE ALL NEW
         USE-CASES TO USE THE PROCESSOR, AS THIS FEATURE MAY BE REMOVED AT A
         LATER DATE.
+    timeout : positive int or None
+        If an int, block until the work is done and statements are retrieved, or
+        until the timeout has expired, in which case the results so far will be
+        returned in the response object, and further results will be added in
+        a separate thread as they become available. If simple_response is True,
+        all statements available will be returned. Otherwise (if None), block
+        indefinitely until all statements are retrieved. Default is None.
     ev_limit : int or None
         Limit the amount of evidence returned per Statement. Default is 10.
     best_first : bool
@@ -97,34 +95,42 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
 
     Returns
     -------
-    processor : :py:class:`IndraDBRestSearchProcessor`
+    processor/stmt_list : :py:class:`IndraDBRestSearchProcessor` or list
+        See `simple_response` for details regarding the choice. If a processor:
         An instance of the IndraDBRestProcessor, which has an attribute
         `statements` which will be populated when the query/queries are done.
         This is the default behavior, and is encouraged in all future cases,
         however a simple list of statements may be returned using the
         `simple_response` option described above.
     """
-    processor = IndraDBRestSearchProcessor(subject, object, agents, stmt_type,
-                                           use_exact_type, persist, timeout,
-                                           ev_limit, best_first, tries, max_stmts)
-
-    # Format the result appropriately.
-    if simple_response:
-        ret = processor.statements
-    else:
-        ret = processor
-    return ret
+    return _wrap_processor(
+        IndraDBRestSearchProcessor(subject, object, agents, stmt_type,
+                                   use_exact_type, persist, *api_args,
+                                   **api_kwargs),
+        simple_response
+    )
 
 
 @clockit
-def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2,
-                           simple_response=False):
+def get_statements_by_hash(hash_list, simple_response=False, *args, **kwargs):
     """Get fully formed statements from a list of hashes.
 
     Parameters
     ----------
     hash_list : list[int or str]
         A list of statement hashes.
+    simple_response : bool
+        If True, a simple list of statements is returned (thus block should also
+        be True). If block is False, only the original sample will be returned
+        (as though persist was False), until the statements are done loading, in
+        which case the rest should appear in the list. This behavior is not
+        encouraged. Default is False (which breaks backwards compatibility with
+        usage of INDRA versions from before 9/19/2019). WE ENCOURAGE ALL NEW
+        USE-CASES TO USE THE PROCESSOR, AS THIS FEATURE MAY BE REMOVED AT A
+        LATER DATE.
+    timeout : positive int or None
+        If an int, return after `timeout` seconds, even if query is not done.
+        Default is None.
     ev_limit : int or None
         Limit the amount of evidence returned per Statement. Default is 100.
     best_first : bool
@@ -138,6 +144,33 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2,
         timeout will often succeed fast enough to avoid a timeout. This can
         also help gracefully handle an unreliable connection, if you're
         willing to wait. Default is 2.
+
+    Returns
+    -------
+    processor/stmt_list : :py:class:`IndraDBRestSearchProcessor` or list
+        See `simple_response` for details regarding the choice. If a processor:
+        An instance of the IndraDBRestProcessor, which has an attribute
+        `statements` which will be populated when the query/queries are done.
+        This is the default behavior, and is encouraged in all future cases,
+        however a simple list of statements may be returned using the
+        `simple_response` option described above.
+    """
+    return _wrap_processor(
+        IndraDBRestHashProcessor(hash_list, *args, **kwargs),
+        simple_response
+    )
+
+
+@clockit
+def get_statements_for_paper(ids, simple_response=False, *args, **kwargs):
+    """Get the set of raw Statements extracted from a paper given by the id.
+
+    Parameters
+    ----------
+    ids : list[(<id type>, <id value>)]
+        A list of tuples with ids and their type. The type can be any one of
+        'pmid', 'pmcid', 'doi', 'pii', 'manuscript id', or 'trid', which is the
+        primary key id of the text references in the database.
     simple_response : bool
         If True, a simple list of statements is returned (thus block should also
         be True). If block is False, only the original sample will be returned
@@ -147,28 +180,9 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2,
         usage of INDRA versions from before 9/19/2019). WE ENCOURAGE ALL NEW
         USE-CASES TO USE THE PROCESSOR, AS THIS FEATURE MAY BE REMOVED AT A
         LATER DATE.
-    """
-    processor = IndraDBRestHashProcessor(hash_list, ev_limit=ev_limit,
-                                         best_first=best_first, tries=tries)
-
-    if simple_response:
-        ret = processor.statements
-    else:
-        ret = processor
-    return ret
-
-
-@clockit
-def get_statements_for_paper(ids, ev_limit=10, best_first=True, tries=2,
-                             max_stmts=None):
-    """Get the set of raw Statements extracted from a paper given by the id.
-
-    Parameters
-    ----------
-    ids : list[(<id type>, <id value>)]
-        A list of tuples with ids and their type. The type can be any one of
-        'pmid', 'pmcid', 'doi', 'pii', 'manuscript id', or 'trid', which is the
-        primary key id of the text references in the database.
+    timeout : positive int or None
+        If an int, return after `timeout` seconds, even if query is not done.
+        Default is None.
     ev_limit : int or None
         Limit the amount of evidence returned per Statement. Default is 10.
     best_first : bool
@@ -187,15 +201,24 @@ def get_statements_for_paper(ids, ev_limit=10, best_first=True, tries=2,
 
     Returns
     -------
-    stmts : list[:py:class:`indra.statements.Statement`]
-        A list of INDRA Statement instances.
+    processor/stmt_list : :py:class:`IndraDBRestSearchProcessor` or list
+        See `simple_response` for details regarding the choice. If a processor:
+        An instance of the IndraDBRestProcessor, which has an attribute
+        `statements` which will be populated when the query/queries are done.
+        This is the default behavior, and is encouraged in all future cases,
+        however a simple list of statements may be returned using the
+        `simple_response` option described above.
     """
-    id_l = [{'id': id_val, 'type': id_type} for id_type, id_val in ids]
-    resp = submit_statement_request('post', 'from_papers', data={'ids': id_l},
-                                    ev_limit=ev_limit, best_first=best_first,
-                                    tries=tries, max_stmts=max_stmts)
-    stmts_json = resp.json()['statements']
-    return stmts_from_json(stmts_json.values())
+    return _wrap_processor(IndraDBRestPaperProcessor(ids, *args, **kwargs),
+                           simple_response)
+
+
+def _wrap_processor(processor, simple_response):
+    if simple_response:
+        ret = processor.statements
+    else:
+        ret = processor
+    return ret
 
 
 def submit_curation(hash_val, tag, curator, text=None,

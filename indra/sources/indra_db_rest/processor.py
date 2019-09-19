@@ -66,7 +66,7 @@ class IndraDBRestProcessor(object):
 
         # Define the basic generic defaults.
         default_api_params = dict(timeout=None, ev_limit=10, best_first=True,
-                                   tries=2, max_stmts=None)
+                                  tries=2, max_stmts=None)
 
         # Update with any overrides.
         default_api_params.update(self._override_default_api_params)
@@ -233,6 +233,57 @@ class IndraDBRestHashProcessor(IndraDBRestProcessor):
         # Execute the query and load the results.
         resp = submit_statement_request('post', 'from_hashes',
                                         data={'hashes': hash_list},
+                                        **api_params)
+        self._unload_and_merge_resp(resp)
+        self._compile_statements()
+        return
+
+
+class IndraDBRestPaperProcessor(IndraDBRestProcessor):
+    """The packaging and processor for hash lookup of statements.
+
+    Parameters
+    ----------
+    hash_list : list[int or str]
+        A list of the matches-key hashes for the statements you want to get.
+
+    Keyword Parameters
+    ------------------
+    timeout : positive int or None
+        If an int, block until the work is done and statements are retrieved, or
+        until the timeout has expired, in which case the results so far will be
+        returned in the response object, and further results will be added in
+        a separate thread as they become available. If simple_response is True,
+        all statements available will be returned. Otherwise (if None), block
+        indefinitely until all statements are retrieved. Default is None.
+    ev_limit : int or None
+        Limit the amount of evidence returned per Statement. Default is 100.
+    best_first : bool
+        If True, the preassembled statements will be sorted by the amount of
+        evidence they have, and those with the most evidence will be
+        prioritized. When using `max_stmts`, this means you will get the "best"
+        statements. If False, statements will be queried in arbitrary order.
+    tries : int > 0
+        Set the number of times to try the query. The database often caches
+        results, so if a query times out the first time, trying again after a
+        timeout will often succeed fast enough to avoid a timeout. This can also
+        help gracefully handle an unreliable connection, if you're willing to
+        wait. Default is 2.
+    max_stmts : int or None
+        Select the maximum number of statements to return. When set less than
+        1000 the effect is much the same as setting persist to false, and will
+        guarantee a faster response. Default is None.
+
+    Attributes
+    ----------
+    statements : list[:py:class:`indra.statements.Statement`]
+        A list of INDRA Statements that will be filled once all queries have
+        been completed.
+    """
+    def _run(self, ids, **api_params):
+        id_l = [{'id': id_val, 'type': id_type} for id_type, id_val in ids]
+        resp = submit_statement_request('post', 'from_papers',
+                                        data={'ids': id_l},
                                         **api_params)
         self._unload_and_merge_resp(resp)
         self._compile_statements()
