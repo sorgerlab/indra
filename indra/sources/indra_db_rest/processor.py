@@ -1,7 +1,4 @@
-from __future__ import absolute_import, unicode_literals
-from builtins import dict, str
-
-__all__ = ['IndraDBRestSearchProcessor']
+__all__ = ['IndraDBRestSearchProcessor', 'IndraDBRestHashProcessor']
 
 import logging
 from copy import deepcopy

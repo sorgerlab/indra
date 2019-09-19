@@ -1,3 +1,6 @@
+__all__ = ['get_statements', 'get_statements_for_paper',
+           'get_statements_by_hash', 'submit_curation']
+
 from indra.util import clockit
 from indra.statements import stmts_from_json, Complex, SelfModification, \
     ActiveForm, Translocation, Conversion
@@ -6,10 +9,6 @@ from indra.sources.indra_db_rest.processor import IndraDBRestSearchProcessor, \
     IndraDBRestHashProcessor
 from indra.sources.indra_db_rest.util import submit_statement_request, \
     make_db_rest_request, get_url_base
-from indra.util.statement_presentation import get_simplified_stmts
-
-__all__ = ['get_statements', 'get_statements_for_paper',
-           'get_statements_by_hash', 'submit_curation']
 
 
 @clockit
