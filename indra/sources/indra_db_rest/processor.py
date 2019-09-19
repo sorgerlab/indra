@@ -236,8 +236,10 @@ class IndraDBRestPaperProcessor(IndraDBRestProcessor):
 
     Parameters
     ----------
-    hash_list : list[int or str]
-        A list of the matches-key hashes for the statements you want to get.
+    ids : list[(<id type>, <id value>)]
+        A list of tuples with ids and their type. The type can be any one of
+        'pmid', 'pmcid', 'doi', 'pii', 'manuscript id', or 'trid', which is the
+        primary key id of the text references in the database.
 
     Keyword Parameters
     ------------------
