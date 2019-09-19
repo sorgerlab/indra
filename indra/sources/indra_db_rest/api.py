@@ -2,7 +2,7 @@ from indra.util import clockit
 from indra.statements import stmts_from_json, Complex, SelfModification, \
     ActiveForm, Translocation, Conversion
 
-from indra.sources.indra_db_rest.processor import IndraDBRestProcessor
+from indra.sources.indra_db_rest.processor import IndraDBRestPagingProcessor
 from indra.sources.indra_db_rest.util import submit_statement_request, \
     make_db_rest_request, get_url_base
 from indra.util.statement_presentation import get_simplified_stmts
@@ -97,16 +97,16 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
 
     Returns
     -------
-    processor : :py:class:`IndraDBRestProcessor`
+    processor : :py:class:`IndraDBRestPagingProcessor`
         An instance of the IndraDBRestProcessor, which has an attribute
         `statements` which will be populated when the query/queries are done.
         This is the default behavior, and is encouraged in all future cases,
         however a simple list of statements may be returned using the
         `simple_response` option described above.
     """
-    processor = IndraDBRestProcessor(subject, object, agents, stmt_type,
-                                     use_exact_type, persist, timeout,
-                                     ev_limit, best_first, tries, max_stmts)
+    processor = IndraDBRestPagingProcessor(subject, object, agents, stmt_type,
+                                           use_exact_type, persist, timeout,
+                                           ev_limit, best_first, tries, max_stmts)
 
     # Format the result appropriately.
     if simple_response:
