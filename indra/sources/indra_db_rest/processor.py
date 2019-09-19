@@ -125,8 +125,8 @@ class IndraDBRestProcessor(object):
         # Where there is overlap, there _should_ be agreement.
         self.__evidence_counts.update(ev_counts)
         # We turn source counts into an int-keyed dict and update it that way
-        self.__source_counts.update({int(k): v for k,
-                                                   v in source_counts.items()})
+        self.__source_counts.update({int(k): v
+                                     for k, v in source_counts.items()})
 
         for k, sj in stmt_json.items():
             if k not in self.__statement_jsons:
