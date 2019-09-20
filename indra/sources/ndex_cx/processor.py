@@ -82,9 +82,8 @@ class NdexCxProcessor(object):
         for node in nodes:
             id = node['@id']
             cx_db_refs = self.get_aliases(node)
-            up_id = cx_db_refs.get('UP')
-            up_id = uniprot_client.get_primary_id(up_id)
             node_name = node['n']
+            up_id = cx_db_refs.get('UP')
             if up_id:
                 db_refs = {'UP': up_id, 'TEXT': node_name}
                 hgnc_id = uniprot_client.get_hgnc_id(up_id)
