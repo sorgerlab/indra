@@ -333,19 +333,23 @@ def _read_hgnc_maps():
     prev_sym_map = {}
     ensembl_ids = {}
     ensembl_ids_reverse = {}
+    hgnc_withdrawn_new_ids = {}
     for row in csv_rows:
         hgnc_id = row[0][5:]
         hgnc_status = row[3]
-        if hgnc_status == 'Approved':
+        if hgnc_status in {'Approved', 'Entry Withdrawn'}:
             hgnc_name = row[1]
             hgnc_names[hgnc_id] = hgnc_name
+            # Note that withdrawn entries don't overlap with approved
+            # entries at this point so it's safe to add mappings for
+            # withdrawn names
             hgnc_ids[hgnc_name] = hgnc_id
         elif hgnc_status == 'Symbol Withdrawn':
             descr = row[2]
-            m = re.match(r'symbol withdrawn, see ([^ ]*)', descr)
-            new_name = m.groups()[0]
+            m = re.match(r'symbol withdrawn, see \[HGNC:(?: ?)(\d+)\]', descr)
+            new_id = m.groups()[0]
             hgnc_withdrawn.append(hgnc_id)
-            hgnc_names[hgnc_id] = new_name
+            hgnc_withdrawn_new_ids[hgnc_id] = new_id
         # Uniprot
         uniprot_id = row[6]
         if uniprot_id:
@@ -393,6 +397,8 @@ def _read_hgnc_maps():
         if ensembl_id:
             ensembl_ids[hgnc_id] = ensembl_id
             ensembl_ids_reverse[ensembl_id] = hgnc_id
+    for old_id, new_id in hgnc_withdrawn_new_ids.items():
+        hgnc_names[old_id] = hgnc_names[new_id]
 
     return (hgnc_names, hgnc_ids, hgnc_withdrawn,
             uniprot_ids, entrez_ids, entrez_ids_reverse, mouse_map, rat_map,
