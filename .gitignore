@@ -119,3 +119,4 @@ models/fallahi_eval/output
 
 .pytest_cache
 .DS_Store
+.noseids

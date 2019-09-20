@@ -236,6 +236,19 @@ def test_run_preassembly_all_stmts():
     assert len(st_out) == 4
 
 
+def test_run_preassembly_concepts():
+    rainfall = Event(Concept('rain', db_refs={
+        'WM': 'wm/concept/indicator_and_reported_property/weather/rainfall'}))
+    flooding_1 = Event(Concept('flood', db_refs={
+        'WM': 'wm/concept/causal_factor/crisis_and_disaster/crisis/'
+              'natural_disaster/flooding'}))
+    flooding_2 = Event(Concept('flooding', db_refs={
+        'WM': 'wm/concept/causal_factor/weather/precipitation/flooding'}))
+    st_out = ac.run_preassembly([
+        Influence(rainfall, flooding_1), Influence(rainfall, flooding_2)])
+    assert len(st_out) == 1
+
+
 def test_expand_families():
     st_out = ac.expand_families([st10])
     assert len(st_out) == 2

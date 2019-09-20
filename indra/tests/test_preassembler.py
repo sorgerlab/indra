@@ -687,9 +687,9 @@ def test_influence_duplicate():
     pa = Preassembler(hierarchies, [stmt1, stmt2, stmt3])
     unique_stmts = pa.combine_duplicates()
     assert len(unique_stmts) == 2
-    assert len(unique_stmts[0].evidence) == 2
-    assert len(unique_stmts[1].evidence) == 1
-    sources = [e.source_api for e in unique_stmts[0].evidence]
+    assert len(unique_stmts[1].evidence) == 2
+    assert len(unique_stmts[0].evidence) == 1
+    sources = [e.source_api for e in unique_stmts[1].evidence]
     assert set(sources) == set(['eidos1', 'eidos3'])
 
 
