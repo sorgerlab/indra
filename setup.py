@@ -12,7 +12,7 @@ def main():
     install_list = ['pysb>=1.3.0', 'objectpath', 'rdflib==4.2.1',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2', 'pandas', 'ndex2==2.0.1', 'jinja2',
-                    'protmapper>=0.0.13']
+                    'protmapper>=0.0.14']
 
     extras_require = {
                       # Inputs and outputs
@@ -42,7 +42,7 @@ def main():
                                   for dep in deps})
 
     setup(name='indra',
-          version='1.13.0',
+          version='1.14.1',
           description='Integrated Network and Dynamical Reasoning Assembler',
           long_description=long_description,
           long_description_content_type='text/markdown',
@@ -93,7 +93,6 @@ def main():
             'Environment :: Console',
             'Intended Audience :: Science/Research',
             'License :: OSI Approved :: BSD License',
-            'Programming Language :: Python :: 2',
             'Programming Language :: Python :: 3',
             'Topic :: Scientific/Engineering :: Bio-Informatics',
             'Topic :: Scientific/Engineering :: Chemistry',

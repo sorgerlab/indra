@@ -2,7 +2,7 @@
 
 # INDRA
 
-<img align="left" src="/doc/indra_logo.png?raw=True" width="300" height="224" />
+<img align="left" src="https://raw.githubusercontent.com/sorgerlab/indra/master/doc/indra_logo.png" width="300" height="224" />
 
 INDRA (Integrated Network and Dynamical Reasoning Assembler) is an automated
 model assembly system, originally developed for molecular systems biology and
