@@ -326,6 +326,8 @@ def _read_chebi_names():
         chebi_id_to_name[chebi_id] = name
         chebi_name_to_id[name] = chebi_id
         for secondary_id in secondaries.split(','):
+            if secondary_id.startswith('CHEBI:'):
+                secondary_id = secondary_id[6:]
             chebi_to_primary[secondary_id] = chebi_id
     return chebi_id_to_name, chebi_name_to_id, chebi_to_primary
 
