@@ -150,7 +150,6 @@ class CWMSProcessor(object):
         for event_term in events:
             event = self.migration_from_event(event_term)
             if event is not None:
-                print(event)
                 self.statements.append(event)
 
     def extract_correlations(self):
@@ -239,27 +238,24 @@ class CWMSProcessor(object):
 
     def migration_from_event(self, event_term):
         """Return a Migration event from an EVENT element in the EKB."""
-        arg_id, arg_term = self._get_term_by_role(event_term, 'AGENT',
-                                                  False)
-        affected_arg_id, affected_arg_term = self._get_term_by_role(event_term,
-                                                                    'AFFECTED',
-                                                                    False)
-        if arg_term is None:
+        # Arguments can be under AGENT or AFFECTED
+        agent_arg_id, agent_arg_term = self._get_term_by_role(
+            event_term, 'AGENT', False)
+        affected_arg_id, affected_arg_term = self._get_term_by_role(
+            event_term, 'AFFECTED', False)
+        if agent_arg_term is None and affected_arg_term is None:
             return None
 
         # Try to get the quantitative state associated with the event
-        size_arg = arg_term.find('size')
-        if affected_arg_term is not None:
-            other_size_arg = affected_arg_term.find('size')
-        else:
-            other_size_arg = None
+        for arg_term in [agent_arg_term, affected_arg_term]:
+            if arg_term is not None:
+                size_arg = arg_term.find('size')
+                if size_arg:
+                    break
         if size_arg is not None:
             size = self._get_size(size_arg.attrib['id'])
-        elif other_size_arg is not None:
-            size = self._get_size(other_size_arg.attrib['id'])
         else:
             size = None
-
         # Try to get the locations associated with the event
         neutral_id, neutral_term = self._get_term_by_role(event_term,
                                                           'NEUTRAL',
@@ -281,11 +277,18 @@ class CWMSProcessor(object):
                          'role': 'origin'})
 
         # There are some locations at arg level, often duplicate
-        loc = self._extract_geoloc(arg_term)
-        if loc is not None:
-            if loc not in [location['location'] for location in locs]:
-                locs.append({'location': loc,
-                            'role': 'destination'})
+        if agent_arg_term:
+            loc = self._extract_geoloc(agent_arg_term)
+            if loc is not None:
+                if loc not in [location['location'] for location in locs]:
+                    locs.append({'location': loc,
+                                'role': 'destination'})
+        if affected_arg_term:
+            loc = self._extract_geoloc(affected_arg_term)
+            if loc is not None:
+                if loc not in [location['location'] for location in locs]:
+                    locs.append({'location': loc,
+                                'role': 'destination'})
 
         time = self._extract_time(event_term)
 
@@ -302,6 +305,8 @@ class CWMSProcessor(object):
     def _get_size(self, size_term_id):
         size_term = self.tree.find("*[@id='%s']" % size_term_id)
         value = size_term.find('value')
+        if not value:
+            value = size_term.find('amount')
         if value is not None:
             mod = value.attrib.get('mod')
             if mod and mod.lower() == 'almost':
@@ -311,9 +316,12 @@ class CWMSProcessor(object):
                 value = int(value_str)
             else:
                 value = None
-            size = QuantitativeState(value=value, unit='absolute',
+            unit = size_term.find('unit').text.strip()
+            size = QuantitativeState(value=value, unit=unit,
                                      modifier=mod)
-            return size
+        else:
+            size = None
+        return size
 
     def _get_term_by_role(self, term, role, is_arg):
         """Return the ID and the element corresponding to a role in a term."""
