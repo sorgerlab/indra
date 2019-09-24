@@ -201,8 +201,8 @@ class CWMSProcessor(object):
         if member1_term is None or member2_term is None:
             return None
 
-        member1 = self._get_event(member1_term)
-        member2 = self._get_event(member2_term)
+        member1 = self.get_event_or_migration(member1_term)
+        member2 = self.get_event_or_migration(member2_term)
         if member1 is None or member2 is None:
             return None
 
@@ -367,6 +367,13 @@ class CWMSProcessor(object):
         event_obj = Event(concept, delta=delta, context=context,
                           evidence=evidence)
         return event_obj
+
+    def get_event_or_migration(self, event_term):
+        if event_term.find('type').text in [
+           'ONT::MOVE', 'ONT::DEPART', 'ONT::ARRIVE']:
+                return self.migration_from_event(event_term)
+        else:
+            return self._get_event(event_term)
 
     def get_context(self, element):
         time = self._extract_time(element)
