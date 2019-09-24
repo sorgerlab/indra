@@ -148,6 +148,10 @@ class CWMSProcessor(object):
             events += evs
 
         for event_term in events:
+            event_id = event_term.attrib.get('id')
+            if event_id in self.subsumed_events or \
+                    event_id in self.relation_events:
+                continue
             event = self.migration_from_event(event_term)
             if event is not None:
                 self.statements.append(event)
