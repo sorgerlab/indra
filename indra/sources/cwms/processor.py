@@ -243,24 +243,13 @@ class CWMSProcessor(object):
 
     def migration_from_event(self, event_term):
         """Return a Migration event from an EVENT element in the EKB."""
-        # Arguments can be under AGENT or AFFECTED
-        agent_arg_id, agent_arg_term = self._get_term_by_role(
-            event_term, 'AGENT', False)
-        affected_arg_id, affected_arg_term = self._get_term_by_role(
-            event_term, 'AFFECTED', False)
-        if agent_arg_term is None and affected_arg_term is None:
-            return None
-
-        # Try to get the quantitative state associated with the event
-        for arg_term in [agent_arg_term, affected_arg_term]:
-            if arg_term is not None:
-                size_arg = arg_term.find('size')
-                if size_arg:
-                    break
-        if size_arg is not None:
-            size = self._get_size(size_arg.attrib['id'])
-        else:
-            size = None
+        # First process at event level
+        migration_grounding = 'WM/causal_factor/social_and_political/migration'
+        concept = Concept('Migration',
+                          db_refs={'UN': migration_grounding})
+        evidence = self._get_evidence(event_term)
+        event = Migration(concept, evidence=[evidence])
+        time = self._extract_time(event_term)
         # Try to get the locations associated with the event
         neutral_id, neutral_term = self._get_term_by_role(event_term,
                                                           'NEUTRAL',
@@ -270,6 +259,10 @@ class CWMSProcessor(object):
             text = neutral_term.find('text').text
             locs.append({'location': RefContext(name=text),
                          'role': 'origin'})
+        loc = self._extract_geoloc(event_term, arg_link='location')
+        if loc is not None:
+            locs.append({'location': loc,
+                         'role': 'unknown'})
 
         loc = self._extract_geoloc(event_term, arg_link='to-location')
         if loc is not None:
@@ -281,6 +274,27 @@ class CWMSProcessor(object):
             locs.append({'location': loc,
                          'role': 'origin'})
 
+        # Arguments can be under AGENT or AFFECTED
+        agent_arg_id, agent_arg_term = self._get_term_by_role(
+            event_term, 'AGENT', False)
+        affected_arg_id, affected_arg_term = self._get_term_by_role(
+            event_term, 'AFFECTED', False)
+        if agent_arg_term is None and affected_arg_term is None:
+            context = MovementContext(locations=locs, time=time)
+            event.context = context
+            return event
+
+        # If there are argument terms, extract more data from them
+        # Try to get the quantitative state associated with the event
+        for arg_term in [agent_arg_term, affected_arg_term]:
+            if arg_term is not None:
+                size_arg = arg_term.find('size')
+                if size_arg:
+                    break
+        if size_arg is not None:
+            size = self._get_size(size_arg.attrib['id'])
+        else:
+            size = None
         # There are some locations at arg level, often duplicate
         if agent_arg_term:
             loc = self._extract_geoloc(agent_arg_term)
@@ -293,18 +307,10 @@ class CWMSProcessor(object):
             if loc is not None:
                 if loc not in [location['location'] for location in locs]:
                     locs.append({'location': loc,
-                                'role': 'destination'})
-
-        time = self._extract_time(event_term)
-
+                                'role': 'destination'})    
         context = MovementContext(locations=locs, time=time)
-
-        migration_grounding = 'WM/causal_factor/social_and_political/migration'
-        concept = Concept('Migration',
-                          db_refs={'UN': migration_grounding})
-        evidence = self._get_evidence(event_term)
-        event = Migration(
-            concept, delta=size, context=context, evidence=[evidence])
+        event.delta = size
+        event.context = context
         return event
 
     def _get_size(self, size_term_id):
