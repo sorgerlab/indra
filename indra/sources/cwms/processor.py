@@ -155,6 +155,7 @@ class CWMSProcessor(object):
             event = self.migration_from_event(event_term)
             if event is not None:
                 self.statements.append(event)
+        self._remove_multi_extraction_artifacts()
 
     def extract_correlations(self):
         correlations = self.tree.findall("EPI/[type='ONT::ASSOCIATE']")
@@ -309,7 +310,7 @@ class CWMSProcessor(object):
     def _get_size(self, size_term_id):
         size_term = self.tree.find("*[@id='%s']" % size_term_id)
         value = size_term.find('value')
-        if not value:
+        if value is None:
             value = size_term.find('amount')
         if value is not None:
             mod = value.attrib.get('mod')
@@ -320,7 +321,11 @@ class CWMSProcessor(object):
                 value = int(value_str)
             else:
                 value = None
-            unit = size_term.find('unit').text.strip()
+            unit = size_term.find('unit')
+            if unit is not None:
+                unit = unit.text.strip().lower()
+            else:
+                unit = 'absolute'
             size = QuantitativeState(value=value, unit=unit,
                                      modifier=mod)
         else:
