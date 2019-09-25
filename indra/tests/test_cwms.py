@@ -207,7 +207,7 @@ def test_context_influence_subj():
     stmt = cp.statements[0]
     cont = stmt.subj.context
     assert cont is not None
-    assert cont.time and cont.locations, cont
+    assert cont.time and cont.geo_location, cont
 
 
 @attr('slow', 'webservice')
