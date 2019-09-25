@@ -252,30 +252,8 @@ class CWMSProcessor(object):
         evidence = self._get_evidence(event_term)
         event = Migration(concept, evidence=[evidence])
         time = self._extract_time(event_term)
-        # Try to get the locations associated with the event
-        neutral_id, neutral_term = self._get_term_by_role(event_term,
-                                                          'NEUTRAL',
-                                                          is_arg=False)
-        locs = []
-        if neutral_term is not None:
-            text = neutral_term.find('text').text
-            locs.append({'location': RefContext(name=text),
-                         'role': 'origin'})
-        loc = self._extract_geoloc(event_term, arg_link='location')
-        if loc is not None:
-            locs.append({'location': loc,
-                         'role': 'unknown'})
-
-        loc = self._extract_geoloc(event_term, arg_link='to-location')
-        if loc is not None:
-            locs.append({'location': loc,
-                         'role': 'destination'})
-
-        loc = self._extract_geoloc(event_term, arg_link='from-location')
-        if loc is not None:
-            locs.append({'location': loc,
-                         'role': 'origin'})
-
+        # Locations can be at different levels, keep expanding the list
+        locs = self._get_migration_locations(event_term)
         # Arguments can be under AGENT or AFFECTED
         agent_arg_id, agent_arg_term = self._get_term_by_role(
             event_term, 'AGENT', False)
@@ -297,19 +275,16 @@ class CWMSProcessor(object):
             size = self._get_size(size_arg.attrib['id'])
         else:
             size = None
-        # There are some locations at arg level, often duplicate
+        # Get more locations from arguments and inevents
         if agent_arg_term:
-            loc = self._extract_geoloc(agent_arg_term)
-            if loc is not None:
-                if loc not in [location['location'] for location in locs]:
-                    locs.append({'location': loc,
-                                'role': 'destination'})
+            locs = self._get_migration_locations(
+                agent_arg_term, locs, 'destination')
+            inevent_term = self._get_inevent_term(agent_arg_term)
+            if inevent_term is not None:
+                locs = self._get_migration_locations(inevent_term, locs)
         if affected_arg_term:
-            loc = self._extract_geoloc(affected_arg_term)
-            if loc is not None:
-                if loc not in [location['location'] for location in locs]:
-                    locs.append({'location': loc,
-                                'role': 'destination'})    
+            locs = self._get_migration_locations(
+                affected_arg_term, locs, 'destination')
         context = MovementContext(locations=locs, time=time)
         event.delta = size
         event.context = context
@@ -333,6 +308,38 @@ class CWMSProcessor(object):
         self.subsumed_events.append(inevent_id)
         inevent_term = self.tree.find("*[@id='%s']" % inevent_id)
         return inevent_term
+
+    def _get_migration_locations(self, event_term, existing_locs=None,
+                                 default_role='unknown'):
+        if existing_locs is None:
+            existing_locs = []
+        new_locs = []
+        neutral_id, neutral_term = self._get_term_by_role(event_term,
+                                                          'NEUTRAL',
+                                                          is_arg=False)
+        if neutral_term is not None:
+            text = neutral_term.find('text').text
+            new_locs.append({'location': RefContext(name=text),
+                             'role': 'origin'})
+
+        loc = self._extract_geoloc(event_term, arg_link='location')
+        if loc is not None:
+            new_locs.append({'location': loc,
+                             'role': default_role})
+
+        loc = self._extract_geoloc(event_term, arg_link='to-location')
+        if loc is not None:
+            new_locs.append({'location': loc,
+                             'role': 'destination'})
+
+        loc = self._extract_geoloc(event_term, arg_link='from-location')
+        if loc is not None:
+            new_locs.append({'location': loc,
+                             'role': 'origin'})
+        for loc in new_locs:
+            if loc not in existing_locs:
+                existing_locs.append(loc)
+        return existing_locs
 
     def _get_size(self, size_term_id):
         size_term = self.tree.find("*[@id='%s']" % size_term_id)
