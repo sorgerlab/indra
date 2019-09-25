@@ -315,6 +315,25 @@ class CWMSProcessor(object):
         event.context = context
         return event
 
+    def _get_inevent_term(self, arg_term):
+        refset_arg = arg_term.find('refset')
+        if refset_arg is None:
+            return None
+        refset_id = refset_arg.attrib['id']
+        refset_term = self.tree.find("*[@id='%s']" % refset_id)
+        if refset_term is None:
+            return None
+        features = refset_term.find('features')
+        if features is None:
+            return None
+        inevent = features.find('inevent')
+        if inevent is None:
+            return None
+        inevent_id = inevent.attrib['id']
+        self.subsumed_events.append(inevent_id)
+        inevent_term = self.tree.find("*[@id='%s']" % inevent_id)
+        return inevent_term
+
     def _get_size(self, size_term_id):
         size_term = self.tree.find("*[@id='%s']" % size_term_id)
         value = size_term.find('value')
