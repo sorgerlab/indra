@@ -26,7 +26,9 @@ POLARITY_DICT = {'CC': {'ONT::CAUSE': 1,
                            'ONT::TRANSFORM': None,
                            'ONT::STIMULATE': 1,
                            'ONT::ARRIVE': None,
-                           'ONT::DEPART': None},
+                           'ONT::DEPART': None,
+                           'ONT::MOVE': None,
+                           'ONT::BE': None},
                  'EPI': {'ONT::ASSOCIATE': None}}
 
 
