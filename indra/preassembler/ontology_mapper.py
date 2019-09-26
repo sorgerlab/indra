@@ -1,12 +1,6 @@
 import os
-import rdflib
 import logging
-# Python 3
-try:
-    from functools import lru_cache
-# Python 2
-except ImportError:
-    from functools32 import lru_cache
+from functools import lru_cache
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +28,7 @@ class OntologyMapper(object):
                  scored=False):
         self.statements = statements
         if mappings is None:
-            self.mappings = _load_default_mappings()
+            self.mappings = []
         else:
             self.mappings = mappings
         self.symmetric = symmetric
@@ -68,7 +62,7 @@ class OntologyMapper(object):
                         agent.db_refs[map_db_name] = \
                             [(map_db_id, score * orig_score)]
                     else:
-                        if map_db_name in ('UN', 'HUME'):
+                        if map_db_name == 'WM':
                             agent.db_refs[map_db_name] = [(map_db_id, 1.0)]
                         else:
                             agent.db_refs[map_db_name] = map_db_id
@@ -93,10 +87,6 @@ class OntologyMapper(object):
                  (m1 == (db_name, db_id.lower()))):
                 mappings.append((m2[0], m2[1], score, db_name))
         return mappings
-
-
-def _load_default_mappings():
-    return [(('UN', 'entities/x'), ('HUME', 'entities/y'))]
 
 
 def _load_wm_map(exclude_auto=None):
