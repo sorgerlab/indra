@@ -323,28 +323,27 @@ class CWMSProcessor(object):
         for ev in potential_events:
             arg1 = ev.find('arg1')
             arg2 = ev.find('arg2')
-            if arg1 is not None:
-                if refset_arg is not None:
-                    if arg1.attrib['id'] == refset_arg.attrib['id']:
-                        event_id = ev.attrib['id']
-                        self.subsumed_events.append(event_id)
-                        event_term = self.tree.find("*[@id='%s']" % event_id)
-                        return event_term
-                # Refset might be on a different level
-                term = self.tree.find("*[@id='%s']" % arg1.attrib['id'])
-                refset_arg1 = term.find('refset')
-                if refset_arg1 is not None:
-                    if refset_arg1.attrib['id'] == arg_term.attrib['id']:
-                        event_id = ev.attrib['id']
-                        self.subsumed_events.append(event_id)
-                        event_term = self.tree.find("*[@id='%s']" % event_id)
-                        return event_term
-            elif arg2 is not None and refset_arg is not None:
-                if arg2.attrib['id'] == refset_arg.attrib['id']:
-                    event_id = ev.attrib['id']
-                    self.subsumed_events.append(event_id)
-                    event_term = self.tree.find("*[@id='%s']" % event_id)
-                    return event_term
+            for arg in [arg1, arg2]:
+                if arg is not None:
+                    if refset_arg is not None:
+                        if arg.attrib.get('id') == refset_arg.attrib.get('id'):
+                            event_id = ev.attrib['id']
+                            self.subsumed_events.append(event_id)
+                            event_term = self.tree.find("*[@id='%s']"
+                                                        % event_id)
+                            return event_term
+                    else:
+                        # Refset might be on a different level
+                        term = self.tree.find("*[@id='%s']" % arg.attrib['id'])
+                        arg_refset_arg = term.find('refset')
+                        if arg_refset_arg is not None:
+                            if arg_refset_arg.attrib.get('id') == \
+                                    arg_term.attrib.get('id'):
+                                event_id = ev.attrib['id']
+                                self.subsumed_events.append(event_id)
+                                event_term = self.tree.find("*[@id='%s']"
+                                                            % event_id)
+                                return event_term
         return None
 
     def _get_migration_locations(self, event_term, existing_locs=None,
