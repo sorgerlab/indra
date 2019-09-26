@@ -112,39 +112,11 @@ def _load_wm_map(exclude_auto=None):
     ontomap_file = os.path.join(path_here, '../resources/wm_ontomap.tsv')
     mappings = {}
 
-    def make_hume_prefix_map():
-        hume_ont = os.path.join(path_here, '../sources/hume/hume_ontology.rdf')
-        graph = rdflib.Graph()
-        graph.parse(os.path.abspath(hume_ont), format='nt')
-        entry_map = {}
-        for node in graph.all_nodes():
-            entry = node.split('#')[1]
-            # Handle "event" and other top-level entries
-            if '/' not in entry:
-                entry_map[entry] = None
-                continue
-            parts = entry.split('/')
-            prefix, real_entry = parts[0], '/'.join(parts[1:])
-            entry_map[real_entry] = prefix
-        return entry_map
-
-    hume_prefix_map = make_hume_prefix_map()
-
-    def add_hume_prefix(hume_entry):
-        """We need to do this because the HUME prefixes are missing"""
-        prefix = hume_prefix_map[hume_entry]
-        return '%s/%s' % (prefix, hume_entry)
-
     def map_entry(reader, entry):
         """Remap the readers and entries to match our internal standards."""
-        if reader == 'eidos':
-            namespace = 'UN'
-            entry = entry.replace(' ', '_')
+        if reader == 'WM':
+            namespace = 'WM'
             entry_id = entry
-        elif reader == 'BBN':
-            namespace = 'HUME'
-            entry = entry.replace(' ', '_')
-            entry_id = add_hume_prefix(entry)
         elif reader == 'sofia':
             namespace = 'SOFIA'
             # First chop off the Event/Entity prefix
@@ -186,32 +158,6 @@ def _load_wm_map(exclude_auto=None):
     for s, ts in mappings.items():
         ontomap.append(((s[0], s[1]), ts[0], ts[1]))
 
-    # Now apply the Hume -> Eidos override
-    override_file = os.path.join(path_here, '../resources/wm_ontomap.bbn.tsv')
-    override_mappings = []
-    with open(override_file, 'r') as fh:
-        for row in fh.readlines():
-            if 'BBN' not in row:
-                continue
-            # Order is target first, source second
-            _, te, _, se = row.strip().split('\t')
-            # Map the entries to our internal naming standards
-            s = 'HUME'
-            t = 'UN'
-            se = se.replace(' ', '_')
-            te = te.replace(' ', '_')
-            if se.startswith('/'):
-                se = se[1:]
-            override_mappings.append((s, se, t, te))
-    for s, se, t, te in override_mappings:
-        found = False
-        for idx, ((so, seo), (eo, teo), score) in enumerate(ontomap):
-            if (s, se, t) == (so, seo, eo):
-                # Override when a match is found
-                ontomap[idx] = ((s, se), (t, te), 1.0)
-                found = True
-        if not found:
-            ontomap.append(((s, se), (t, te), 1.0))
     return ontomap
 
 
