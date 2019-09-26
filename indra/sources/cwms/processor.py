@@ -250,10 +250,14 @@ class CWMSProcessor(object):
         concept = Concept('Migration',
                           db_refs={'UN': migration_grounding})
         evidence = self._get_evidence(event_term)
-        event = Migration(concept, evidence=[evidence])
         time = self._extract_time(event_term)
         # Locations can be at different levels, keep expanding the list
         locs = self._get_migration_locations(event_term)
+        neutral_id, neutral_term = self._get_term_by_role(event_term,
+                                                          'NEUTRAL',
+                                                          is_arg=False)
+        if neutral_term is not None:
+            locs = self._get_migration_locations(neutral_term, locs, 'origin')
         # Arguments can be under AGENT or AFFECTED
         agent_arg_id, agent_arg_term = self._get_term_by_role(
             event_term, 'AGENT', False)
@@ -261,20 +265,18 @@ class CWMSProcessor(object):
             event_term, 'AFFECTED', False)
         if agent_arg_term is None and affected_arg_term is None:
             context = MovementContext(locations=locs, time=time)
-            event.context = context
+            event = Migration(concept, context=context, evidence=[evidence])
             return event
 
         # If there are argument terms, extract more data from them
         # Try to get the quantitative state associated with the event
+        size = None
         for arg_term in [agent_arg_term, affected_arg_term]:
             if arg_term is not None:
                 size_arg = arg_term.find('size')
                 if size_arg is not None:
+                    size = self._get_size(size_arg.attrib['id'])
                     break
-        if size_arg is not None:
-            size = self._get_size(size_arg.attrib['id'])
-        else:
-            size = None
         # Get more locations from arguments and inevents
         if agent_arg_term:
             locs = self._get_migration_locations(
@@ -286,15 +288,13 @@ class CWMSProcessor(object):
             if other_event_term is not None:
                 locs = self._get_migration_locations(other_event_term, locs)
                 if size is None:
-                    size_arg = other_event_term.find('size')
-                    if size_arg is not None:
-                        size = self._get_size(size_arg.attrib['id'])
+                    size = self._get_size_and_entity(other_event_term)
         if affected_arg_term:
             locs = self._get_migration_locations(
                 affected_arg_term, locs, 'destination')
         context = MovementContext(locations=locs, time=time)
-        event.delta = size
-        event.context = context
+        event = Migration(
+            concept, delta=size, context=context, evidence=[evidence])
         return event
 
     def _get_inevent_term(self, arg_term):
@@ -318,24 +318,26 @@ class CWMSProcessor(object):
 
     def _get_other_event_term(self, arg_term):
         refset_arg = arg_term.find('refset')
-        if refset_arg is not None:
-            refset_id = refset_arg.attrib['id']
-            potential_events = self.tree.findall("EVENT/[type].//arg2/..")
-            for ev in potential_events:
-                arg2 = ev.find('arg2')
-                if arg2 is not None:
-                    if arg2.attrib['id'] == refset_id:
+        potential_events = self.tree.findall("EVENT/[type].//arg1/..") + \
+            self.tree.findall("EVENT/[type].//arg2/..")
+        for ev in potential_events:
+            arg1 = ev.find('arg1')
+            arg2 = ev.find('arg2')
+            if arg1 is not None:
+                term = self.tree.find("*[@id='%s']" % arg1.attrib['id'])
+                refset_arg1 = term.find('refset')
+                if refset_arg1 is not None:
+                    if refset_arg1.attrib['id'] == arg_term.attrib['id']:
                         event_id = ev.attrib['id']
                         self.subsumed_events.append(event_id)
                         event_term = self.tree.find("*[@id='%s']" % event_id)
                         return event_term
-        else:
-            potential_terms = self.tree.findall("TERM/[type].//refset/..")
-            for term in potential_terms:
-                refset = term.find('refset')
-                if term is not None:
-                    if refset.attrib['id'] == arg_term.attrib['id']:
-                        return term
+            elif arg2 is not None and refset_arg is not None:
+                if arg2.attrib['id'] == refset_arg.attrib['id']:
+                    event_id = ev.attrib['id']
+                    self.subsumed_events.append(event_id)
+                    event_term = self.tree.find("*[@id='%s']" % event_id)
+                    return event_term
         return None
 
     def _get_migration_locations(self, event_term, existing_locs=None,
@@ -343,13 +345,6 @@ class CWMSProcessor(object):
         if existing_locs is None:
             existing_locs = []
         new_locs = []
-        neutral_id, neutral_term = self._get_term_by_role(event_term,
-                                                          'NEUTRAL',
-                                                          is_arg=False)
-        if neutral_term is not None:
-            text = neutral_term.find('text').text
-            new_locs.append({'location': RefContext(name=text),
-                             'role': 'origin'})
 
         loc = self._extract_geoloc(event_term, arg_link='location')
         if loc is not None:
@@ -389,10 +384,25 @@ class CWMSProcessor(object):
                 unit = unit.text.strip().lower()
             else:
                 unit = 'absolute'
-            size = QuantitativeState(value=value, unit=unit,
-                                     modifier=mod)
+            text = size_term.find('text').text
+            size = QuantitativeState(entity='person', value=value, unit=unit,
+                                     modifier=mod, text=text)
         else:
             size = None
+        return size
+
+    def _get_size_and_entity(self, event_term):
+        # For cases when entity (group) information and quantity are stored in
+        # different arguments and we can overwrite default 'person' entity
+        _, term1 = self._get_term_by_role(event_term, 'NEUTRAL', False)
+        _, term2 = self._get_term_by_role(event_term, 'NEUTRAL1', False)
+        size = None
+        if term1 is not None:
+            size_arg = term1.find('size')
+            if size_arg is not None:
+                size = self._get_size(size_arg.attrib['id'])
+        if size is not None and term2 is not None:
+            size.entity = term2.find('text').text
         return size
 
     def _get_term_by_role(self, term, role, is_arg):
@@ -618,6 +628,12 @@ def sanitize_name(txt):
 
 
 def event_delta_score(stmt):
+    if stmt.delta is None:
+        return 0
     pol_score = 1 if stmt.delta.polarity is not None else 0
-    adj_score = len(stmt.delta.adjectives)
-    return (pol_score + adj_score)
+    if isinstance(stmt.delta, QualitativeDelta):
+        adj_score = len(stmt.delta.adjectives)
+        return (pol_score + adj_score)
+    if isinstance(stmt.delta, QuantitativeState):
+        value_score = 1 if stmt.delta.value is not None else 0
+        return (pol_score + value_score)
