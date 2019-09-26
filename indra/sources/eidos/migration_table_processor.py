@@ -20,7 +20,9 @@ def make_stmt(row_dict):
     # Make subject
     subj_concept = Concept(
         name=row_dict['Source/Cause (Factor A)'],
-        db_refs={'WM': row_dict['Source/Cause node (WM ontology node)']})
+        db_refs=_make_grounding(
+            row_dict['Source/Cause (Factor A)'],
+            row_dict['Source/Cause node (WM ontology node)']))
     # Handle case where cause is missing
     if subj_concept.name is None:
         return None
@@ -31,22 +33,38 @@ def make_stmt(row_dict):
             subj_pol = -1
     else:
         subj_pol = None
-    subj_time = TimeContext(
-        text=str(row_dict['Original temporal text for cause']))
-    subj_context = WorldContext(time=subj_time, geo_location=RefContext(
-        name=row_dict['CauseLocation']))
-    subj = Event(subj_concept, delta=QualitativeDelta(polarity=subj_pol),
-                 context=subj_context)
+    subj_time_text = row_dict['Original temporal text for cause']
+    if subj_time_text:
+        subj_time = TimeContext(text=str(subj_time_text))
+    else:
+        subj_time = None
+    subj_loc = RefContext(name=row_dict['CauseLocation'])
+    # If it's grounded to migration concept, make Migration
+    if is_migration(subj_concept):
+        locations = [{'location': subj_loc, 'role': 'unknown'}]
+        subj_context = MovementContext(locations=locations, time=subj_time)
+        subj = Migration(
+            subj_concept, delta=QuantitativeState(polarity=subj_pol),
+            context=subj_context)
+    # Otherwise, make Event
+    else:
+        subj_context = WorldContext(time=subj_time, geo_location=subj_loc)
+        subj = Event(subj_concept, delta=QualitativeDelta(polarity=subj_pol),
+                     context=subj_context)
 
     # Make object
     obj_concept = Concept(
         row_dict['Target/Effect (Factor B)'],
-        db_refs={'WM': row_dict['Target/Effect (WM ontology node)']})
+        db_refs=_make_grounding(row_dict['Target/Effect (Factor B)'],
+                                row_dict['Target/Effect (WM ontology node)']))
     # Handle case where effect is missing
     if subj_concept.name is None:
         return None
-    obj_time = TimeContext(
-        text=str(row_dict['Original temporal text for effect']))
+    obj_time_text = row_dict['Original temporal text for effect']
+    if obj_time_text:
+        obj_time = TimeContext(text=str(obj_time_text))
+    else:
+        obj_time = None
     if row_dict['Target/Effect polarity']:
         if row_dict['Target/Effect polarity'].lower() == 'increase':
             obj_pol = 1
@@ -54,32 +72,45 @@ def make_stmt(row_dict):
             obj_pol = -1
     else:
         obj_pol = None
-    # If both source and destination locations are present, make Migration obj
-    if row_dict['Effect SourceLocation'] and \
-            row_dict['Effect DestinationLocation']:
-        obj_context = MovementContext(locations=[
-            {'location': RefContext(name=row_dict['Effect SourceLocation']),
-             'role': 'origin'},
-            {'location': RefContext(name=row_dict['Effect DestinationLocation']),
-             'role': 'destination'}], time=obj_time)
+
+    source_loc = row_dict['Effect SourceLocation']
+    dest_loc = row_dict['Effect DestinationLocation']
+
+    # If it's grounded to migration concept, make Migration
+    if is_migration(obj_concept):
+        locations = []
+        if source_loc:
+            locations.append(
+                {'location': RefContext(name=source_loc),
+                 'role': 'origin'})
+        if dest_loc:
+            locations.append(
+                {'location': RefContext(name=dest_loc),
+                 'role': 'destination'})
+        obj_context = MovementContext(locations=locations, time=obj_time)
         obj = Migration(
             obj_concept, delta=QuantitativeState(
                 entity='person', value=row_dict['Relation strength estimate'],
                 unit=row_dict['Relation strength unit'], polarity=obj_pol),
             context=obj_context)
-    # If only one or no location is present, make Event object
+    # Otherwise, make Event
     else:
-        if row_dict['Effect SourceLocation']:
-            obj_loc = RefContext(name=row_dict['Effect SourceLocation'])
-        elif row_dict['Effect DestinationLocation']:
-            obj_loc = RefContext(name=row_dict['Effect DestinationLocation'])
+        if source_loc:
+            obj_loc = RefContext(name=source_loc)
+        elif dest_loc:
+            obj_loc = RefContext(name=dest_loc)
         else:
             obj_loc = None
         obj_context = WorldContext(time=obj_time, geo_location=obj_loc)
         obj = Event(obj_concept, delta=QualitativeDelta(polarity=obj_pol),
                     context=obj_context)
     # Make evidence
-    anns = {'provenance': row_dict['Provenance (file id)'],
+    provenance = [{
+        "@type": "Provenance",
+        "document": {
+          "@id": row_dict['Provenance (file id)'],
+        }}]
+    anns = {'provenance': provenance,
             'data_format': row_dict['Data format'],
             'group_id': row_dict['Group ID']}
     if anns['data_format'] == 'text':
@@ -90,6 +121,28 @@ def make_stmt(row_dict):
     ev = Evidence(text=text, annotations=anns, source_api='assertion')
     stmt = Influence(subj, obj, [ev])
     return stmt
+
+
+def _make_grounding(text, ont_str):
+    # Make a list of tuples of scored ontology concepts from a single string
+    grounding = {'TEXT': text}
+    if ont_str:
+        wm_grounding = []
+        ont_list = ont_str[1:-1].split(') (')
+        for entry in ont_list:
+            ont_concept, score = entry.split(',')
+            wm_grounding.append((ont_concept, float(score)))
+        grounding['WM'] = wm_grounding
+    return grounding
+
+
+def is_migration(concept):
+    grounding = concept.get_grounding()[1]
+    if grounding:
+        if grounding.startswith(
+                'wm/concept/causal_factor/social_and_political/migration'):
+            return True
+    return False
 
 
 def process_workbook(fname):

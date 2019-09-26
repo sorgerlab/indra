@@ -52,8 +52,10 @@ class Concept(object):
         # Prioritize anything that is other than TEXT
         db_names = sorted(list(set(self.db_refs.keys()) - set(['TEXT'])))
         db_ns = db_names[0] if db_names else None
-        # Prefer UN if it's there
-        if 'UN' in db_names:
+        # Prefer WM/UN if it's there
+        if 'WM' in db_names:
+            db_ns = 'WM'
+        elif 'UN' in db_names:
             db_ns = 'UN'
         db_id = self.db_refs[db_ns] if db_ns else None
         # If the db_id is actually a list of scored groundings, we take the
@@ -67,7 +69,7 @@ class Concept(object):
         # to make sure we don't consider this a potential isa
         if db_id is None:
             db_ns = None
-        return (db_ns, db_id)
+        return db_ns, db_id
 
     def isa(self, other, hierarchies):
         # Get the namespaces for the comparison

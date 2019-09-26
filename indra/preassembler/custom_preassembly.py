@@ -3,8 +3,12 @@ from indra.statements import *
 
 def has_location(stmt):
     """Return True if a Statement has grounded geo-location context."""
-    if not stmt.context or not stmt.context.geo_location or \
-            not stmt.context.geo_location.db_refs.get('GEOID'):
+    if isinstance(stmt, Migration):
+        if not stmt.context or not stmt.context.locations:
+            return False
+    elif not stmt.context or not stmt.context.geo_location or \
+        not (stmt.context.geo_location.db_refs.get('GEOID') or
+             stmt.context.geo_location.name):
         return False
     return True
 
@@ -16,13 +20,28 @@ def has_time(stmt):
     return True
 
 
+def get_location_from_object(loc_obj):
+    """Return geo-location from a RefContext location object."""
+    if loc_obj.db_refs.get('GEOID'):
+        return loc_obj.db_refs['GEOID']
+    elif loc_obj.name:
+        return loc_obj.name
+    else:
+        return None
+
+
 def get_location(stmt):
     """Return the grounded geo-location context associated with a Statement."""
     if not has_location(stmt):
-        loc = None
+        location = None
+    elif isinstance(stmt, Migration):
+        location = []
+        for loc in stmt.context.locations:
+            loc_obj = loc['location']
+            location.append((get_location_from_object(loc_obj), loc['role']))
     else:
-        loc = stmt.context.geo_location.db_refs['GEOID']
-    return loc
+        location = get_location_from_object(stmt.context.geo_location)
+    return location
 
 
 def get_time(stmt):
@@ -59,8 +78,14 @@ def event_location_refinement(st1, st2, hierarchies):
     elif not has_location(st1):
         return False
     else:
-        return st1.context.geo_location.db_refs['GEOID'] == \
-               st2.context.geo_location.db_refs['GEOID']
+        loc1 = get_location(st1)
+        loc2 = get_location(st2)
+        if loc1 == loc2:
+            return True
+        elif isinstance(loc1, list):
+            if set(loc2).issubset(set(loc1)):
+                return True
+    return False
 
 
 def location_refinement(st1, st2, hierarchies):
@@ -144,3 +169,65 @@ def agents_stmt_type_matches(stmt):
     agents = [agent_grounding_matches(a) for a in stmt.agent_list()]
     key = str((stmt.__class__.__name__, agents))
     return key
+
+
+def has_delta(stmt):
+    if not stmt.delta:
+        return False
+    return True
+
+
+def get_delta(stmt):
+    delta = stmt.delta
+    if isinstance(delta, QualitativeDelta):
+        return delta.polarity
+    elif isinstance(delta, QuantitativeState):
+        return (delta.entity, delta.value, delta.unit, delta.polarity)
+
+
+def event_location_time_delta_matches(event):
+    mk = event_location_time_matches(event)
+    if not has_delta:
+        return mk
+    delta = get_delta(event)
+    matches_key = str((mk, delta))
+    return matches_key
+
+
+def location_time_delta_matches(stmt):
+    if isinstance(stmt, Event):
+        return event_location_time_delta_matches(stmt)
+    elif isinstance(stmt, Influence):
+        subj_mk = event_location_time_delta_matches(stmt.subj)
+        obj_mk = event_location_time_delta_matches(stmt.obj)
+        return str((stmt.matches_key(), subj_mk, obj_mk))
+    else:
+        return stmt.matches_key()
+
+
+def event_location_time_delta_refinement(st1, st2, hierarchies):
+    loc_time_ref = event_location_time_refinement(st1, st2, hierarchies)
+    if not loc_time_ref:
+        return False
+    if not st2.delta:
+        return True
+    elif not st1.delta:
+        return False
+    else:
+        return st1.delta.refinement_of(st2.delta)
+
+
+def location_time_delta_refinement(st1, st2, hierarchies):
+    if isinstance(st1, Event):
+        return event_location_time_delta_refinement(st1, st2, hierarchies)
+    elif isinstance(st1, Influence):
+        ref = st1.refinement_of(st2, hierarchies)
+        if not ref:
+            return False
+        subj_ref = event_location_time_delta_refinement(st1.subj, st2.subj,
+                                                        hierarchies)
+        obj_ref = event_location_time_delta_refinement(st1.obj, st2.obj,
+                                                       hierarchies)
+        return subj_ref and obj_ref
+    else:
+        return st1.refinement_of(st2, hierarchies)

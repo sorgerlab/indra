@@ -18,7 +18,7 @@ indra_rel_ns = Namespace(indra_ns + 'relations/')
 isa = indra_rel_ns.term('isa')
 
 wm_ont_url = ('https://raw.githubusercontent.com/WorldModelers/'
-              'Ontologies/master/wm.yml')
+              'Ontologies/master/wm_metadata.yml')
 eidos_ont_url = ('https://raw.githubusercontent.com/clulab/eidos/master/'
                  'src/main/resources/org/clulab/wm/eidos/english/'
                  'ontologies/un_ontology.yml')

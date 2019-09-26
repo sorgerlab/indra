@@ -2,7 +2,7 @@ import os
 import rdflib
 import logging
 import objectpath
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 from indra.statements import Concept, Event, Influence, TimeContext, \
@@ -230,7 +230,7 @@ class HumeJsonLdProcessor(object):
         concept, metadata = self._make_concept(ev)
 
         is_migration_event = False
-        hume_grounding = {x[0] for x in concept.db_refs['HUME']}
+        hume_grounding = {x[0] for x in concept.db_refs['WM']}
         for grounding_en in hume_grounding:
             if "wm/concept/causal_factor/social_and_political/migration" in \
                     grounding_en:
@@ -315,7 +315,7 @@ def _get_grounding(entity):
     # We could get an empty list here in which case we don't add the
     # grounding
     if grounding_entries:
-        db_refs['HUME'] = grounding_entries
+        db_refs['WM'] = grounding_entries
     return db_refs
 
 
@@ -353,6 +353,7 @@ def _resolve_time(hume_temporal_entity):
     time = hume_temporal_entity["timeInterval"][0]
     start = datetime.strptime(time['start'], '%Y-%m-%dT%H:%M')
     end = datetime.strptime(time['end'], '%Y-%m-%dT%H:%M')
-    duration = int(time['duration'])
+    end = end + timedelta(minutes=1)
+    duration = int((end - start).total_seconds())
     return TimeContext(text=text, start=start, end=end,
                        duration=duration)
