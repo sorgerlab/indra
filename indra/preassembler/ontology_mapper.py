@@ -62,7 +62,7 @@ class OntologyMapper(object):
                         agent.db_refs[map_db_name] = \
                             [(map_db_id, score * orig_score)]
                     else:
-                        if map_db_name == 'WM':
+                        if map_db_name in {'WM', 'UN'}:
                             agent.db_refs[map_db_name] = [(map_db_id, 1.0)]
                         else:
                             agent.db_refs[map_db_name] = map_db_id

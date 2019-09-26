@@ -5,15 +5,15 @@ from indra.preassembler.ontology_mapper import OntologyMapper, wm_ontomap
 
 def test_map():
     c1 = Concept('x', db_refs={'UN': [('entities/x', 1.0)]})
-    c2 = Concept('y', db_refs={'HUME': [('entities/y', 1.0)]})
+    c2 = Concept('y', db_refs={'WM': [('entities/y', 1.0)]})
     c3 = Concept('z')
     stmts = [Influence(Event(c1), Event(c3)),
              Influence(Event(c2), Event(c3))]
-    mappings = [(('UN', 'entities/x'), ('HUME', 'entities/y'))]
+    mappings = [(('UN', 'entities/x'), ('WM', 'entities/y'))]
     om = OntologyMapper(stmts, mappings=mappings)
     om.map_statements()
     assert len(om.statements) == 2
-    assert om.statements[0].subj.concept.db_refs['HUME'] == \
+    assert om.statements[0].subj.concept.db_refs['WM'] == \
         [('entities/y', 1.0)], om.statements[0].subj.concept.db_refs
     assert om.statements[1].subj.concept.db_refs['UN'] == \
         [('entities/x', 1.0)], om.statements[1].subj.concept.db_refs
