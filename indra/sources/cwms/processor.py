@@ -282,6 +282,9 @@ class CWMSProcessor(object):
             inevent_term = self._get_inevent_term(agent_arg_term)
             if inevent_term is not None:
                 locs = self._get_migration_locations(inevent_term, locs)
+            other_event_term = self._get_other_event_term(agent_arg_term)
+            if other_event_term is not None:
+                locs = self._get_migration_locations(other_event_term, locs)
         if affected_arg_term:
             locs = self._get_migration_locations(
                 affected_arg_term, locs, 'destination')
@@ -308,6 +311,22 @@ class CWMSProcessor(object):
         self.subsumed_events.append(inevent_id)
         inevent_term = self.tree.find("*[@id='%s']" % inevent_id)
         return inevent_term
+
+    def _get_other_event_term(self, arg_term):
+        refset_arg = arg_term.find('refset')
+        if refset_arg is None:
+            return None
+        refset_id = refset_arg.attrib['id']
+        potential_events = self.tree.findall("EVENT/[type].//arg2/..")
+        for ev in potential_events:
+            arg2 = ev.find('arg2')
+            if arg2 is not None:
+                if arg2.attrib['id'] == refset_id:
+                    event_id = ev.attrib['id']
+                    self.subsumed_events.append(event_id)
+                    event_term = self.tree.find("*[@id='%s']" % event_id)
+                    return event_term
+        return None
 
     def _get_migration_locations(self, event_term, existing_locs=None,
                                  default_role='unknown'):
