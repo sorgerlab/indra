@@ -187,6 +187,7 @@ def test_three_sentences():
     assert cp is not None
     print(cp.statements)
     assert len(cp.statements) == 3, len(cp.statements)
+    assert all(isinstance(st, Influence) for st in cp.statements), cp.statements
 
 
 @attr('slow', 'webservice')
