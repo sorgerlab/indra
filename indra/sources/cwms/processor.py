@@ -324,6 +324,13 @@ class CWMSProcessor(object):
             arg1 = ev.find('arg1')
             arg2 = ev.find('arg2')
             if arg1 is not None:
+                if refset_arg is not None:
+                    if arg1.attrib['id'] == refset_arg.attrib['id']:
+                        event_id = ev.attrib['id']
+                        self.subsumed_events.append(event_id)
+                        event_term = self.tree.find("*[@id='%s']" % event_id)
+                        return event_term
+                # Refset might be on a different level
                 term = self.tree.find("*[@id='%s']" % arg1.attrib['id'])
                 refset_arg1 = term.find('refset')
                 if refset_arg1 is not None:
