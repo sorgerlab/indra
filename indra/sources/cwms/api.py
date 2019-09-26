@@ -73,8 +73,8 @@ def process_ekb(ekb_str):
     cp = CWMSProcessor(ekb_str)
     cp.extract_causal_relations()
     cp.extract_correlations()
-    cp.extract_events()
     cp.extract_migrations()
+    cp.extract_events()
     return cp
 
 
