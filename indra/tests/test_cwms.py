@@ -187,6 +187,7 @@ def test_three_sentences():
     assert cp is not None
     print(cp.statements)
     assert len(cp.statements) == 3, len(cp.statements)
+    assert all(isinstance(st, Influence) for st in cp.statements), cp.statements
 
 
 @attr('slow', 'webservice')
@@ -194,9 +195,10 @@ def test_context_influence_obj():
     text = 'Hunger causes displacement in 2018 in South Sudan.'
     cp = process_text(text)
     stmt = cp.statements[0]
+    assert isinstance(stmt.obj, Migration)
     cont = stmt.obj.context
     assert cont is not None
-    assert cont.time and cont.geo_location
+    assert cont.time and cont.locations
 
 
 @attr('slow', 'webservice')
@@ -214,7 +216,7 @@ def test_context_influence_subj_obj():
     text = 'Hunger in 2018 causes displacement in South Sudan.'
     cp = process_text(text)
     stmt = cp.statements[0]
-    assert stmt.subj.context.time and stmt.obj.context.geo_location
+    assert stmt.subj.context.time and stmt.obj.context.locations
 
 
 def test_ekb_process():

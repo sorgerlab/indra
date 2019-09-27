@@ -26,7 +26,9 @@ POLARITY_DICT = {'CC': {'ONT::CAUSE': 1,
                            'ONT::TRANSFORM': None,
                            'ONT::STIMULATE': 1,
                            'ONT::ARRIVE': None,
-                           'ONT::DEPART': None},
+                           'ONT::DEPART': None,
+                           'ONT::MOVE': None,
+                           'ONT::BE': None},
                  'EPI': {'ONT::ASSOCIATE': None}}
 
 
@@ -148,10 +150,14 @@ class CWMSProcessor(object):
             events += evs
 
         for event_term in events:
+            event_id = event_term.attrib.get('id')
+            if event_id in self.subsumed_events or \
+                    event_id in self.relation_events:
+                continue
             event = self.migration_from_event(event_term)
             if event is not None:
-                print(event)
                 self.statements.append(event)
+        self._remove_multi_extraction_artifacts()
 
     def extract_correlations(self):
         correlations = self.tree.findall("EPI/[type='ONT::ASSOCIATE']")
@@ -202,8 +208,8 @@ class CWMSProcessor(object):
         if member1_term is None or member2_term is None:
             return None
 
-        member1 = self._get_event(member1_term)
-        member2 = self._get_event(member2_term)
+        member1 = self.get_event_or_migration(member1_term)
+        member2 = self.get_event_or_migration(member2_term)
         if member1 is None or member2 is None:
             return None
 
@@ -239,69 +245,137 @@ class CWMSProcessor(object):
 
     def migration_from_event(self, event_term):
         """Return a Migration event from an EVENT element in the EKB."""
-        arg_id, arg_term = self._get_term_by_role(event_term, 'AGENT',
-                                                  False)
-        affected_arg_id, affected_arg_term = self._get_term_by_role(event_term,
-                                                                    'AFFECTED',
-                                                                    False)
-        if arg_term is None:
-            return None
-
-        # Try to get the quantitative state associated with the event
-        size_arg = arg_term.find('size')
-        if affected_arg_term is not None:
-            other_size_arg = affected_arg_term.find('size')
-        else:
-            other_size_arg = None
-        if size_arg is not None:
-            size = self._get_size(size_arg.attrib['id'])
-        elif other_size_arg is not None:
-            size = self._get_size(other_size_arg.attrib['id'])
-        else:
-            size = None
-
-        # Try to get the locations associated with the event
-        neutral_id, neutral_term = self._get_term_by_role(event_term,
-                                                          'NEUTRAL',
-                                                          is_arg=False)
-        locs = []
-        if neutral_term is not None:
-            text = neutral_term.find('text').text
-            locs.append({'location': RefContext(name=text),
-                         'role': 'origin'})
-
-        loc = self._extract_geoloc(event_term, arg_link='to-location')
-        if loc is not None:
-            locs.append({'location': loc,
-                         'role': 'destination'})
-
-        loc = self._extract_geoloc(event_term, arg_link='from-location')
-        if loc is not None:
-            locs.append({'location': loc,
-                         'role': 'origin'})
-
-        # There are some locations at arg level, often duplicate
-        loc = self._extract_geoloc(arg_term)
-        if loc is not None:
-            if loc not in [location['location'] for location in locs]:
-                locs.append({'location': loc,
-                            'role': 'destination'})
-
-        time = self._extract_time(event_term)
-
-        context = MovementContext(locations=locs, time=time)
-
+        # First process at event level
         migration_grounding = 'WM/causal_factor/social_and_political/migration'
         concept = Concept('Migration',
                           db_refs={'UN': migration_grounding})
         evidence = self._get_evidence(event_term)
+        time = self._extract_time(event_term)
+        # Locations can be at different levels, keep expanding the list
+        locs = self._get_migration_locations(event_term)
+        neutral_id, neutral_term = self._get_term_by_role(event_term,
+                                                          'NEUTRAL',
+                                                          is_arg=False)
+        if neutral_term is not None:
+            locs = self._get_migration_locations(neutral_term, locs, 'origin')
+        # Arguments can be under AGENT or AFFECTED
+        agent_arg_id, agent_arg_term = self._get_term_by_role(
+            event_term, 'AGENT', False)
+        affected_arg_id, affected_arg_term = self._get_term_by_role(
+            event_term, 'AFFECTED', False)
+        if agent_arg_term is None and affected_arg_term is None:
+            context = MovementContext(locations=locs, time=time)
+            event = Migration(concept, context=context, evidence=[evidence])
+            return event
+
+        # If there are argument terms, extract more data from them
+        # Try to get the quantitative state associated with the event
+        size = None
+        for arg_term in [agent_arg_term, affected_arg_term]:
+            if arg_term is not None:
+                size_arg = arg_term.find('size')
+                if size_arg is not None:
+                    size = self._get_size(size_arg.attrib['id'])
+                    break
+        # Get more locations from arguments and inevents
+        if agent_arg_term:
+            locs = self._get_migration_locations(
+                agent_arg_term, locs, 'destination')
+            inevent_term = self._get_inevent_term(agent_arg_term)
+            if inevent_term is not None:
+                locs = self._get_migration_locations(inevent_term, locs)
+            other_event_term = self._get_other_event_term(agent_arg_term)
+            if other_event_term is not None:
+                locs = self._get_migration_locations(other_event_term, locs)
+                if size is None:
+                    size = self._get_size_and_entity(other_event_term)
+        if affected_arg_term:
+            locs = self._get_migration_locations(
+                affected_arg_term, locs, 'destination')
+        context = MovementContext(locations=locs, time=time)
         event = Migration(
             concept, delta=size, context=context, evidence=[evidence])
         return event
 
+    def _get_inevent_term(self, arg_term):
+        refset_arg = arg_term.find('refset')
+        if refset_arg is None:
+            return None
+        refset_id = refset_arg.attrib['id']
+        refset_term = self.tree.find("*[@id='%s']" % refset_id)
+        if refset_term is None:
+            return None
+        features = refset_term.find('features')
+        if features is None:
+            return None
+        inevent = features.find('inevent')
+        if inevent is None:
+            return None
+        inevent_id = inevent.attrib['id']
+        self.subsumed_events.append(inevent_id)
+        inevent_term = self.tree.find("*[@id='%s']" % inevent_id)
+        return inevent_term
+
+    def _get_other_event_term(self, arg_term):
+        refset_arg = arg_term.find('refset')
+        potential_events = self.tree.findall("EVENT/[type].//arg1/..") + \
+            self.tree.findall("EVENT/[type].//arg2/..")
+        for ev in potential_events:
+            arg1 = ev.find('arg1')
+            arg2 = ev.find('arg2')
+            for arg in [arg1, arg2]:
+                if arg is not None:
+                    if refset_arg is not None:
+                        if arg.attrib.get('id') == refset_arg.attrib.get('id'):
+                            event_id = ev.attrib['id']
+                            self.subsumed_events.append(event_id)
+                            event_term = self.tree.find("*[@id='%s']"
+                                                        % event_id)
+                            return event_term
+                    else:
+                        # Refset might be on a different level
+                        term = self.tree.find("*[@id='%s']" % arg.attrib['id'])
+                        arg_refset_arg = term.find('refset')
+                        if arg_refset_arg is not None:
+                            if arg_refset_arg.attrib.get('id') == \
+                                    arg_term.attrib.get('id'):
+                                event_id = ev.attrib['id']
+                                self.subsumed_events.append(event_id)
+                                event_term = self.tree.find("*[@id='%s']"
+                                                            % event_id)
+                                return event_term
+        return None
+
+    def _get_migration_locations(self, event_term, existing_locs=None,
+                                 default_role='unknown'):
+        if existing_locs is None:
+            existing_locs = []
+        new_locs = []
+
+        loc = self._extract_geoloc(event_term, arg_link='location')
+        if loc is not None:
+            new_locs.append({'location': loc,
+                             'role': default_role})
+
+        loc = self._extract_geoloc(event_term, arg_link='to-location')
+        if loc is not None:
+            new_locs.append({'location': loc,
+                             'role': 'destination'})
+
+        loc = self._extract_geoloc(event_term, arg_link='from-location')
+        if loc is not None:
+            new_locs.append({'location': loc,
+                             'role': 'origin'})
+        for loc in new_locs:
+            if loc not in existing_locs:
+                existing_locs.append(loc)
+        return existing_locs
+
     def _get_size(self, size_term_id):
         size_term = self.tree.find("*[@id='%s']" % size_term_id)
         value = size_term.find('value')
+        if value is None:
+            value = size_term.find('amount')
         if value is not None:
             mod = value.attrib.get('mod')
             if mod and mod.lower() == 'almost':
@@ -311,9 +385,31 @@ class CWMSProcessor(object):
                 value = int(value_str)
             else:
                 value = None
-            size = QuantitativeState(value=value, unit='absolute',
-                                     modifier=mod)
-            return size
+            unit = size_term.find('unit')
+            if unit is not None:
+                unit = unit.text.strip().lower()
+            else:
+                unit = 'absolute'
+            text = size_term.find('text').text
+            size = QuantitativeState(entity='person', value=value, unit=unit,
+                                     modifier=mod, text=text)
+        else:
+            size = None
+        return size
+
+    def _get_size_and_entity(self, event_term):
+        # For cases when entity (group) information and quantity are stored in
+        # different arguments and we can overwrite default 'person' entity
+        _, term1 = self._get_term_by_role(event_term, 'NEUTRAL', False)
+        _, term2 = self._get_term_by_role(event_term, 'NEUTRAL1', False)
+        size = None
+        if term1 is not None:
+            size_arg = term1.find('size')
+            if size_arg is not None:
+                size = self._get_size(size_arg.attrib['id'])
+        if size is not None and term2 is not None:
+            size.entity = term2.find('text').text
+        return size
 
     def _get_term_by_role(self, term, role, is_arg):
         """Return the ID and the element corresponding to a role in a term."""
@@ -359,6 +455,13 @@ class CWMSProcessor(object):
         event_obj = Event(concept, delta=delta, context=context,
                           evidence=evidence)
         return event_obj
+
+    def get_event_or_migration(self, event_term):
+        if event_term.find('type').text in [
+           'ONT::MOVE', 'ONT::DEPART', 'ONT::ARRIVE']:
+                return self.migration_from_event(event_term)
+        else:
+            return self._get_event(event_term)
 
     def get_context(self, element):
         time = self._extract_time(element)
@@ -531,6 +634,12 @@ def sanitize_name(txt):
 
 
 def event_delta_score(stmt):
+    if stmt.delta is None:
+        return 0
     pol_score = 1 if stmt.delta.polarity is not None else 0
-    adj_score = len(stmt.delta.adjectives)
-    return (pol_score + adj_score)
+    if isinstance(stmt.delta, QualitativeDelta):
+        adj_score = len(stmt.delta.adjectives)
+        return (pol_score + adj_score)
+    if isinstance(stmt.delta, QuantitativeState):
+        value_score = 1 if stmt.delta.value is not None else 0
+        return (pol_score + value_score)

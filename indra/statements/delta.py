@@ -29,6 +29,9 @@ class Delta(object):
         if self.polarity == other.polarity:
             return True
 
+    def set_polarity(self, pol):
+        self.polarity = pol
+
 
 class QualitativeDelta(Delta):
     """Qualitative delta defining an Event.
@@ -43,9 +46,6 @@ class QualitativeDelta(Delta):
     def __init__(self, polarity=None, adjectives=None):
         self.polarity = polarity
         self.adjectives = adjectives if adjectives else []
-
-    def set_polarity(self, pol):
-        self.polarity = pol
 
     def add_adjectives(self, adjectives):
         for adj in adjectives:
