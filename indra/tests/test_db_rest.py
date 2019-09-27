@@ -1,7 +1,4 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 import random
-from builtins import dict, str
 
 from datetime import datetime
 from unittest import SkipTest
@@ -117,8 +114,10 @@ def test_too_big_request_persist_no_block():
         ("Counts dict was improperly handled before completing: %d counts "
          "for %d statements." % (num_counts, num_stmts))
     assert resp_all2.is_working(), "Background complete resolved too fast."
-    assert len(resp_all2.statements_sample) == len(resp_some.statements)
-    resp_all2.wait_until_done(120)
+    assert len(resp_all2.statements_sample) == len(resp_some.statements), \
+        "Sample size: %s, Small resp size: %s" \
+        % (len(resp_all2.statements_sample), len(resp_some.statements))
+    resp_all2.wait_until_done(500)
     assert not resp_all2.is_working(), \
         "Response is still working. Took too long."
     assert resp_all2.statements
@@ -150,8 +149,15 @@ def test_famplex_namespace():
 def test_paper_query():
     raise SkipTest("Paper query currently not supported.")
     stmts_1 = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
-                                            ('pmid', '27014235')])
+                                            ('pmid', '27014235')],
+                                           simple_response=True)
     assert len(stmts_1)
+
+    p = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
+                                      ('pmid', '27014235')])
+    assert len(p.statements)
+    assert len(p.get_source_counts())
+    assert len(p.get_ev_counts())
 
 
 @attr('nonpublic')
@@ -170,16 +176,21 @@ def test_regulate_amount():
 @attr('nonpublic')
 def test_get_statements_by_hash():
     hash_list = [30674674032092136, -22289282229858243, -25056605420392180]
-    stmts = dbr.get_statements_by_hash(hash_list)
+    stmts = dbr.get_statements_by_hash(hash_list, simple_response=True)
     print({s.get_hash(shallow=True): s for s in stmts})
     assert len(stmts) >= 2, \
         "Wrong number of statements: %s vs. %s" % (len(stmts), len(hash_list))
+
+    p = dbr.get_statements_by_hash(hash_list)
+    assert len(p.statements)
+    assert len(p.get_source_counts())
+    assert len(p.get_ev_counts())
     return
 
 
 @attr('nonpublic')
 def test_get_statements_by_hash_no_hash():
-    stmts = dbr.get_statements_by_hash([])
+    stmts = dbr.get_statements_by_hash([], simple_response=True)
     assert not stmts, "Got statements without giving a hash."
 
 

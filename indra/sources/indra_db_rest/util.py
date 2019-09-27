@@ -13,6 +13,7 @@ def submit_query_request(end_point, *args, **kwargs):
     ev_limit = kwargs.pop('ev_limit', 10)
     best_first = kwargs.pop('best_first', True)
     tries = kwargs.pop('tries', 2)
+    timeout = kwargs.pop('timeout', None)
     # This isn't handled by requests because of the multiple identical agent
     # keys, e.g. {'agent': 'MEK', 'agent': 'ERK'} which is not supported in
     # python, but is allowed and necessary in these query strings.
@@ -23,19 +24,19 @@ def submit_query_request(end_point, *args, **kwargs):
                                + list(args))
     return submit_statement_request('get', end_point, query_str,
                                     ev_limit=ev_limit, best_first=best_first,
-                                    tries=tries)
+                                    tries=tries, timeout=timeout)
 
 
 def submit_statement_request(meth, end_point, query_str='', data=None,
-                             tries=2, **params):
+                             tries=2, timeout=None, **params):
     """Even lower level function to make the request."""
     full_end_point = 'statements/' + end_point.lstrip('/')
     return make_db_rest_request(meth, full_end_point, query_str, data,
-                                params, tries)
+                                params, tries, timeout)
 
 
 def make_db_rest_request(meth, end_point, query_str, data=None, params=None,
-                         tries=2):
+                         tries=2, timeout=None):
     if params is None:
         params = {}
 
@@ -64,7 +65,7 @@ def make_db_rest_request(meth, end_point, query_str, data=None, params=None,
     while tries > 0:
         tries -= 1
         resp = method_func(url_path, headers=headers, data=json_data,
-                           params=params)
+                           params=params, timeout=timeout)
         if resp.status_code == 200:
             return resp
         elif resp.status_code == 504 and tries > 0:
