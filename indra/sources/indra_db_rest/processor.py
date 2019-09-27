@@ -470,7 +470,8 @@ class IndraDBRestSearchProcessor(IndraDBRestProcessor):
         return
 
     def _run(self, subject=None, object=None, agents=None, stmt_type=None,
-             use_exact_type=False, persist=True, **api_params):
+             use_exact_type=False, persist=True, strict_stop=False,
+             **api_params):
         self.__started = False
         self.__done_dict = defaultdict(lambda: False)
         self.__page_dict = defaultdict(lambda: 0)
@@ -484,7 +485,7 @@ class IndraDBRestSearchProcessor(IndraDBRestProcessor):
                              "the scope will be too large.")
 
         # Make timeouts apply differently in this case
-        if not persist:
+        if not strict_stop:
             timeout = api_params.pop('timeout', None)
         else:
             timeout = api_params.get('timeout', None)
