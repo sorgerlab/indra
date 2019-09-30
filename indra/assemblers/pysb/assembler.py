@@ -2084,7 +2084,7 @@ def conversion_assemble_one_step(stmt, model, agent_set, parameters):
     # Create pieces needed for from object
     obj_from = stmt.obj_from[0]
     obj_from_pattern = get_monomer_pattern(model, obj_from)
-    obj_from_monomer = obj_from_pattern.monomer
+    obj_from_pattern = ComplexPattern([obj_from_pattern], None)
     rule_obj_from_str = get_agent_rule_str(obj_from)
 
     obj_to_monomers = [get_monomer_pattern(model, o).monomer for
