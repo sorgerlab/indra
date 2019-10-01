@@ -271,14 +271,17 @@ def get_statement_queries(stmts, **params):
     """
 
     def pick_ns(ag):
+        # If the Agent has grounding, in order of preference, in any of these
+        # name spaces then we look it up based on grounding.
         for ns in ['HGNC', 'FPLX', 'CHEMBL', 'CHEBI', 'GO', 'MESH']:
             if ns in ag.db_refs.keys():
                 dbid = ag.db_refs[ns]
-                break
-        else:
-            ns = 'TEXT'
-            dbid = ag.name
-        return '%s@%s' % (dbid, ns)
+                return '%s@%s' % (dbid, ns)
+        # Otherwise, we search by Agent name - if the name is standardized,
+        # this will still yield good results. If it isn't standardized, then
+        # the name will match the raw entity text so again this lookup will
+        # work.
+        return ag.name
 
     queries = []
     url_base = get_url_base('statements/from_agents')
