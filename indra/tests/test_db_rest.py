@@ -7,7 +7,7 @@ from nose.plugins.attrib import attr
 from indra.sources import indra_db_rest as dbr
 
 
-EXPECTED_BATCH_SIZE = 1000
+EXPECTED_BATCH_SIZE = 500
 
 
 def __check_request(seconds, *args, **kwargs):
