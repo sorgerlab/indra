@@ -1,7 +1,7 @@
 import logging
 from . import ModelChecker
 from indra.statements import *
-
+from copy import deepcopy
 
 logger = logging.getLogger(__name__)
 
@@ -45,16 +45,23 @@ class PybelModelChecker(ModelChecker):
             logger.info('Statement type %s not handled' %
                         stmt.__class__.__name__)
             return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
+        subj, obj = stmt.agent_list()
         # Get the polarity for the statement
         if isinstance(stmt, Modification):
             target_polarity = 1 if isinstance(stmt, RemoveModification) else 0
+            obj_agent = deepcopy(obj)
+            obj_agent.mods.append(stmt._get_mod_condition())
+            obj = obj_agent
         elif isinstance(stmt, RegulateActivity):
             target_polarity = 0 if stmt.is_activation else 1
+            obj_agent = deepcopy(obj)
+            obj_agent.activity = stmt._get_activity_condition()
+            obj_agent.activity.is_active = True
+            obj = obj_agent
         elif isinstance(stmt, RegulateAmount):
             target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
         elif isinstance(stmt, Influence):
             target_polarity = 1 if stmt.overall_polarity() == -1 else 0
-        subj, obj = stmt.agent_list()
         if subj is not None:
             subj_node = (_get_agent_node(subj)[0], 0)
         if subj is None or subj_node not in self.graph.nodes:
