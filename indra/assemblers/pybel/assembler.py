@@ -290,8 +290,16 @@ class PybelAssembler(object):
         act_agent.activity = ActivityCondition(stmt.activity, True)
         activates = stmt.is_active
         relation = get_causal_edge(stmt, activates)
-        self._add_nodes_edges(stmt.agent, act_agent, relation,
-                              stmt.get_hash(refresh=True), stmt.evidence)
+        stmt_hash = stmt.get_hash(refresh=True)
+        if not stmt.agent.mods:
+            self._add_nodes_edges(stmt.agent, act_agent, relation,
+                                  stmt_hash, stmt.evidence)
+        else:
+            for mod in stmt.agent.mods:
+                mod_agent = Agent(
+                    stmt.agent.name, db_refs=stmt.agent.db_refs, mods=[mod])
+                self._add_nodes_edges(mod_agent, act_agent, relation,
+                                      stmt_hash, stmt.evidence)
 
     def _assemble_complex(self, stmt):
         """Example: complex(p(HGNC:MAPK14), p(HGNC:TAB1))"""
