@@ -486,30 +486,20 @@ class ModelChecker(object):
 
 
 def get_path_iter(graph, source, target):
-    """Return a generator of simple paths or cycles from source to target
-    depending on whether source and target are the same node.
-    """
+    """Return a generator of paths from source to target."""
+    # If source and target are the same node we need to find paths from source
+    # to its predecessors
     if source == target:
-        # NOTE # TODO This method only returns one cycle. It's currently only
-        # possible to get either one cycle with a specified source or
-        # a generator of all cycles in a graph (not specifying the source).
-        # There's no functionality in networkx to return a generator of
-        # cycles from a given source. Looping through all returned cycles to
-        # get ones from a desired source is very inefficient. This needs to be
-        # implemented if we want to find multiple paths (cycles) from a given
-        # source.
-        cycle_edges = nx.find_cycle(graph, source=source)
-        # reformat list of edges to a list of nodes (a path) for consistency
-        path = [source]
-        for i, edge in enumerate(cycle_edges):
-            if i == 0:
-                path.append(edge[0])
-                path.append(edge[1])
-            else:
-                path.append(edge[1])
-        path.append(source)
-        yield path
+        new_targets = graph.predecessors(source)
+        for nt in new_targets:
+            path_iter = nx.shortest_simple_paths(graph, source, nt)
+            for p in path_iter:
+                path = deepcopy(p)
+                # Append source to close the loop
+                path.append(source)
+                yield path
     else:
+        # Regular path search
         path_iter = nx.shortest_simple_paths(graph, source, target)
         for path in path_iter:
             yield path
