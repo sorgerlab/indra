@@ -100,7 +100,7 @@ def load_yaml_from_url(ont_url):
     res = requests.get(ont_url)
     if res.status_code != 200:
         raise Exception('Could not load ontology from %s' % ont_url)
-    root = yaml.load(res.content)
+    root = yaml.load(res.content, Loader=yaml.FullLoader)
     return root
 
 
