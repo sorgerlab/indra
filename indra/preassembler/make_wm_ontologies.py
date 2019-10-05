@@ -30,71 +30,69 @@ hume_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
                 'resource/ontologies/open/hume_ontology.yaml')
 
 
-def save_hierarchy(g, path):
-    with open(path, 'wb') as out_file:
-        g_bytes = g.serialize(format='nt')
-        # Replace extra new lines in string and get rid of empty line at end
+class HierarchyConverter(object):
+    def __init__(self, url, path, add_leaves=True):
+        self.yml = load_yaml_from_url(url)
+        self.path = path
+        self.add_leaves = add_leaves
+        self.G = None
+
+    def convert_ontology(self):
+        self.G = Graph()
+        for top_entry in self.yml:
+            node = list(top_entry.keys())[0]
+            self.build_relations(node, top_entry[node], None)
+
+    def build_relations(self, node, tree, prefix):
+        this_term = get_term(node, prefix)
+        node = node.replace(' ', '_')
+        if prefix is not None:
+            prefix = prefix.replace(' ', '_')
+        this_prefix = prefix + '/' + node if prefix else node
+        for entry in tree:
+            if isinstance(entry, str):
+                if self.add_leaves:
+                    child = entry
+                else:
+                    continue
+            elif isinstance(entry, dict):
+                if 'OntologyNode' not in entry.keys():
+                    for child in entry.keys():
+                        if child[0] != '_' and child != 'examples' \
+                                and isinstance(entry[child], (list, dict)):
+                            self.build_relations(child, entry[child],
+                                                 this_prefix)
+                else:
+                    opp = entry.get('opposite')
+                    if opp:
+                        parts = opp.split('/')
+                        opp_term = get_term(parts[-1], '/'.join(parts[:-1]))
+                        rel = (opp_term, isopp, this_term)
+                        self.G.add(rel)
+                    child = entry['name']
+
+            if child[0] != '_' and child != 'examples':
+                child_term = get_term(child, this_prefix)
+                rel = (child_term, isa, this_term)
+                self.G.add(rel)
+
+    def save_hierarchy(self):
+        g_bytes = self.G.serialize(format='nt')
+        # Replace extra new lines in string and get rid of empty
+        # line at end
         g_bytes = g_bytes.replace(b'\n\n', b'\n').strip()
         # Split into rows and sort
         rows = g_bytes.split(b'\n')
         rows.sort()
         g_bytes = b'\n'.join(rows)
-        out_file.write(g_bytes)
+        with open(self.path, 'wb') as out_file:
+            out_file.write(g_bytes)
 
 
 def get_term(node, prefix):
     node = node.replace(' ', '_')
     path = prefix + '/' + node if prefix else node
     return eidos_ns.term(path)
-
-
-def build_relations(G, node, tree, prefix, add_leaves=True):
-    this_term = get_term(node, prefix)
-    node = node.replace(' ', '_')
-    if prefix is not None:
-        prefix = prefix.replace(' ', '_')
-    this_prefix = prefix + '/' + node if prefix else node
-    for entry in tree:
-        if isinstance(entry, str):
-            if add_leaves:
-                child = entry
-            else:
-                continue
-        elif isinstance(entry, dict):
-            if 'OntologyNode' not in entry.keys():
-                for child in entry.keys():
-                    if child[0] != '_' and child != 'examples' \
-                       and isinstance(entry[child], (list, dict)):
-                        build_relations(
-                            G, child, entry[child], this_prefix, add_leaves)
-            else:
-                child = entry['name']
-
-        if child[0] != '_' and child != 'examples':
-            child_term = get_term(child, this_prefix)
-            rel = (child_term, isa, this_term)
-            G.add(rel)
-
-
-def update_ontology(ont_url, rdf_path):
-    """Load an ontology formatted like Eidos' from github."""
-    logger.info('Processing %s into %s' % (ont_url, rdf_path))
-    yaml_root = load_yaml_from_url(ont_url)
-    if ont_url == hume_ont_url:
-        G = rdf_graph_from_yaml(yaml_root, add_leaves=False)
-    else:
-        G = rdf_graph_from_yaml(yaml_root, add_leaves=True)
-    save_hierarchy(G, rdf_path)
-
-
-def rdf_graph_from_yaml(yaml_root, add_leaves):
-    """Convert the YAML object into an RDF Graph object."""
-    G = Graph()
-    for top_entry in yaml_root:
-        assert len(top_entry) == 1
-        node = list(top_entry.keys())[0]
-        build_relations(G, node, top_entry[node], None, add_leaves)
-    return G
 
 
 def load_yaml_from_url(ont_url):
@@ -120,4 +118,6 @@ if __name__ == '__main__':
                         default=wm_rdf_path)
     args = parser.parse_args()
 
-    update_ontology(args.url, args.fname)
+    hc = HierarchyConverter(args.url, args.fname, args.url == hume_ont_url)
+    hc.convert_ontology()
+    hc.save_hierarchy()
