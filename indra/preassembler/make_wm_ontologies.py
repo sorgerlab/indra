@@ -63,18 +63,18 @@ class HierarchyConverter(object):
                             self.build_relations(child, entry[child],
                                                  this_prefix)
                 else:
-                    opp = entry.get('opposite')
-                    if opp:
-                        parts = opp.split('/')
-                        opp_term = get_term(parts[-1], '/'.join(parts[:-1]))
-                        rel = (opp_term, isopp, this_term)
-                        self.G.add(rel)
                     child = entry['name']
 
             if child[0] != '_' and child != 'examples':
                 child_term = get_term(child, this_prefix)
                 rel = (child_term, isa, this_term)
                 self.G.add(rel)
+                opp = entry.get('opposite')
+                if opp:
+                    parts = opp.split('/')
+                    opp_term = get_term(parts[-1], '/'.join(parts[:-1]))
+                    rel = (opp_term, isopp, child_term)
+                    self.G.add(rel)
 
     def save_hierarchy(self):
         g_bytes = self.G.serialize(format='nt')
