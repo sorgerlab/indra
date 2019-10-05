@@ -154,13 +154,14 @@ class IndraDBRestProcessor(object):
         stmts_json = resp_dict['statements']
         ev_totals = resp_dict['evidence_totals']
         source_counts = resp_dict['source_counts']
+        eos = resp_dict['end_of_statements']
         limit = resp_dict['statement_limit']
-        num_returned = len(stmts_json)
+        num_returned = resp_dict['statements_returned']
 
         # Update the result
         self._merge_json(stmts_json, ev_totals, source_counts)
 
-        return limit, num_returned
+        return eos, num_returned, limit
 
     def _run(self, *args, **kwargs):
         raise NotImplementedError("_run must be defined in subclass.")
@@ -399,13 +400,13 @@ class IndraDBRestSearchProcessor(IndraDBRestProcessor):
         if stmt_type is not None:
             params['type'] = stmt_type
         resp = submit_query_request('from_agents', *agent_strs, **params)
-        page_step, num_returned = self._unload_and_merge_resp(resp)
+        eos, num_returned, page_step = self._unload_and_merge_resp(resp)
 
         # NOTE: this is technically not a direct conclusion, and could be
         # wrong, resulting in a single unnecessary extra query, but that
         # should almost never happen, and if it does, it isn't the end of
         # the world.
-        self.__done_dict[stmt_type] = num_returned < page_step
+        self.__done_dict[stmt_type] = eos
 
         # Update the quota
         if self.__quota is not None:
