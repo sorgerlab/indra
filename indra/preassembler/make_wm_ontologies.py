@@ -3,19 +3,23 @@
 The script can handle any ontology which uses the same format (yaml ontology
 following the namespace defined at `eidos_ns`).
 """
+import os
 import yaml
+import logging
 import argparse
 import requests
-from os.path import join, dirname, abspath
 from rdflib import Graph, Namespace, Literal
 
-from indra.sources import eidos, hume
+
+logger = logging.getLogger('indra.preassembler.make_wm_ontologies')
 
 
 eidos_ns = Namespace('https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#')
 indra_ns = 'http://sorger.med.harvard.edu/indra/'
 indra_rel_ns = Namespace(indra_ns + 'relations/')
 isa = indra_rel_ns.term('isa')
+isequal = indra_rel_ns.term('is_equal')
+isopp = indra_rel_ns.term('is_opposite')
 
 wm_ont_url = ('https://raw.githubusercontent.com/WorldModelers/'
               'Ontologies/master/wm_metadata.yml')
@@ -74,6 +78,7 @@ def build_relations(G, node, tree, prefix, add_leaves=True):
 
 def update_ontology(ont_url, rdf_path):
     """Load an ontology formatted like Eidos' from github."""
+    logger.info('Processing %s into %s' % (ont_url, rdf_path))
     yaml_root = load_yaml_from_url(ont_url)
     if ont_url == hume_ont_url:
         G = rdf_graph_from_yaml(yaml_root, add_leaves=False)
@@ -102,32 +107,17 @@ def load_yaml_from_url(ont_url):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Process hume or eidos '
-        'ontologies. With arguments, only the ontology at <url> is processed '
-        'and saved to <fname>. Otherwise the script will process the default '
-        'eidos and hume ontologies.')
-    parser.add_argument('--url', help='Specify a url to download an ontology '
-                                      'from.')
-    parser.add_argument('--fname', help='Filename to save new ontology '
-                                        'mapping from <url>')
+    wm_rdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               os.pardir, 'resources', 'wm_ontology.rdf')
+    parser = argparse.ArgumentParser(
+        description='Process YAML ontology files to create INDRA-compatible '
+                    'RDF files as input to the Preassembler.')
+    parser.add_argument('--url', help='Specify the url to download an '
+                                      'ontology from.',
+                        default=wm_ont_url)
+    parser.add_argument('--fname', help='Name of the file to save new RDF '
+                                        'ontology into.',
+                        default=wm_rdf_path)
     args = parser.parse_args()
 
-    # Update with from given url to given fname
-    if args.fname and args.url:
-        update_ontology(args.url, args.fname)
-
-    # Specifying only a URL or only a filename is ambiguous, don't execute
-    elif bool(args.fname) ^ bool(args.url):
-        print('Must specify both --fname and --url or run without arguments.')
-
-    # Default script execution, backwards compatible
-    else:
-        # Eidos
-        eidos_rdf_path = join(dirname(abspath(eidos.__file__)),
-                              'eidos_ontology.rdf')
-        update_ontology(eidos_ont_url, eidos_rdf_path)
-
-        # Hume
-        hume_rdf_path = join(dirname(abspath(hume.__file__)),
-                             'hume_ontology.rdf')
-        update_ontology(hume_ont_url, hume_rdf_path)
+    update_ontology(args.url, args.fname)
