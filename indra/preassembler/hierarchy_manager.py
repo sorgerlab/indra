@@ -403,13 +403,19 @@ class HierarchyManager(object):
                                                    self.isa_or_partof_closure,
                                                    rel_fun)
 
+    def get_equals(self, ns1, id1):
+        u1 = self.get_uri(ns1, id1)
+        t1 = rdflib.term.URIRef(u1)
+        rel = rdflib.term.URIRef(self.relations_prefix + 'is_equal')
+        to = [t.toPython() for t in list(self.graph.objects(t1, rel))]
+        return to
+
     def get_opposites(self, ns1, id1):
         u1 = self.get_uri(ns1, id1)
         t1 = rdflib.term.URIRef(u1)
         rel = rdflib.term.URIRef(self.relations_prefix + 'is_opposite')
-        to = list(self.graph.objects(t1, rel))
+        to = [t.toPython() for t in list(self.graph.objects(t1, rel))]
         return to
-
 
     def is_opposite(self, ns1, id1, ns2, id2):
         """Return True if two entities are in an "is_opposite" relationship
@@ -431,9 +437,8 @@ class HierarchyManager(object):
             True if t1 has an "is_opposite" relationship with t2.
         """
         u2 = self.get_uri(ns2, id2)
-        t2 = rdflib.term.URIRef(u2)
 
-        if t2 in self.get_opposites(ns1, id1):
+        if u2 in self.get_opposites(ns1, id1):
             return True
         return False
 
