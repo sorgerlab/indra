@@ -1,12 +1,8 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 import rdflib
 import logging
-try:
-    from functools import lru_cache
-except ImportError:
-    from functools32 import lru_cache
+from functools import lru_cache
+
 
 from indra.preassembler.make_entity_hierarchy import ns_map
 
@@ -677,16 +673,13 @@ def get_wm_hierarchies():
         A dict of hierarchy managers for each type of hierarchy, in this context
         only an `entity` hierarchy is provided in the dict.
     """
-    eidos_ont = os.path.join(os.path.dirname(__file__),
-                             '../sources/eidos/eidos_ontology.rdf')
-    hume_ont = os.path.join(os.path.dirname(__file__),
-                            '../sources/hume/hume_ontology.rdf')
-    trips_ont = os.path.join(os.path.dirname(__file__),
-                             '../sources/cwms/trips_ontology.rdf')
-    sofia_ont = os.path.join(os.path.dirname(__file__),
-                             '../sources/sofia/sofia_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, build_closure=False, uri_as_name=True)
-    hm.extend_with(hume_ont)
+    this_dir = os.path.dirname(__file__)
+    wm_ont = os.path.join(this_dir, os.pardir, 'resources', 'wm_ontology.rdf')
+    trips_ont = os.path.join(this_dir, os.pardir, 'sources', 'cwms',
+                             'trips_ontology.rdf')
+    sofia_ont = os.path.join(this_dir, os.pardir, 'sources', 'sofia',
+                             'sofia_ontology.rdf')
+    hm = HierarchyManager(wm_ont, build_closure=False, uri_as_name=True)
     hm.extend_with(trips_ont)
     hm.extend_with(sofia_ont)
     wm_hierarchies = {'entity': hm}
