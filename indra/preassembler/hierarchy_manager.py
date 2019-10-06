@@ -406,6 +406,31 @@ class HierarchyManager(object):
         to = [t.toPython() for t in list(self.graph.objects(t1, rel))]
         return to
 
+    def is_equal(self, ns1, id1, ns2, id2):
+        """Return True if two entities are in an "is_equal" relationship
+
+        Parameters
+        ----------
+        ns1 : str
+            Namespace code for an entity.
+        id1 : str
+            URI for an entity.
+        ns2 : str
+            Namespace code for an entity.
+        id2 : str
+            URI for an entity.
+
+        Returns
+        -------
+        bool
+            True if t1 has an "is_equal" relationship with t2.
+        """
+        u2 = self.get_uri(ns2, id2)
+
+        if u2 in self.get_equals(ns1, id1):
+            return True
+        return False
+
     def get_opposites(self, ns1, id1):
         u1 = self.get_uri(ns1, id1)
         t1 = rdflib.term.URIRef(u1)

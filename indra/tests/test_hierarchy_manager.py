@@ -285,10 +285,27 @@ def test_yaml_hm():
     assert hm.isa('UN', entry, 'UN', '/'.join(entry.split('/')[:-2]))
 
 
-def test_hm_equals():
+def test_hm_opposite():
     hierarchies = get_wm_hierarchies()
     concept1 = 'wm/concept/causal_factor/access/food_shortage'
     concept2 = ('wm/concept/causal_factor/economic_and_commerce/'
                 'economic_activity/market/supply/food_supply')
+    concept3 = ('wm/concept/causal_factor/environmental/meteorologic/'
+                'precipitation/flooding')
     assert hierarchies['entity'].is_opposite('WM', concept1, 'WM', concept2)
     assert hierarchies['entity'].is_opposite('WM', concept2, 'WM', concept1)
+    assert not hierarchies['entity'].is_opposite('WM', concept1, 'WM',
+                                                 concept3)
+
+
+def test_hm_equal():
+    hierarchies = get_wm_hierarchies()
+    concept1 = ('wm/concept/causal_factor/crisis_and_disaster/environmental/'
+                'natural_disaster/flooding')
+    concept2 = ('wm/concept/causal_factor/environmental/meteorologic/'
+                'precipitation/flooding')
+    concept3 = 'wm/concept/causal_factor/access/food_shortage'
+
+    assert hierarchies['entity'].is_equal('WM', concept1, 'WM', concept2)
+    assert hierarchies['entity'].is_equal('WM', concept2, 'WM', concept1)
+    assert not hierarchies['entity'].is_equal('WM', concept1, 'WM', concept3)

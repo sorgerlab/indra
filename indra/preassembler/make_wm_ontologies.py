@@ -89,6 +89,7 @@ class HierarchyConverter(object):
         for equiv_terms in term_equivs.values():
             for t1, t2 in itertools.combinations(equiv_terms, 2):
                 self.G.add((t1, isequal, t2))
+                self.G.add((t2, isequal, t1))
 
     def save_hierarchy(self, fname):
         g_bytes = self.G.serialize(format='nt')
