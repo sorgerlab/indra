@@ -8,6 +8,8 @@ import yaml
 import logging
 import argparse
 import requests
+import itertools
+from collections import defaultdict
 from rdflib import Graph, Namespace, Literal
 
 
@@ -42,6 +44,7 @@ class HierarchyConverter(object):
         for top_entry in self.yml:
             node = list(top_entry.keys())[0]
             self.build_relations(node, top_entry[node], None)
+        self.add_equals()
 
     def build_relations(self, node, tree, prefix):
         this_term = get_term(node, prefix)
@@ -75,6 +78,15 @@ class HierarchyConverter(object):
                     opp_term = get_term(parts[-1], '/'.join(parts[:-1]))
                     rel = (opp_term, isopp, child_term)
                     self.G.add(rel)
+
+    def add_equals(self):
+        term_equivs = defaultdict(list)
+        for t in self.G.all_nodes():
+            entry = t.rpartition('/')[-1]
+            term_equivs[entry].append(t)
+        for equiv_terms in term_equivs.values():
+            for t1, t2 in itertools.combinations(equiv_terms, 2):
+                self.G.add((t1, isequal, t2))
 
     def save_hierarchy(self):
         g_bytes = self.G.serialize(format='nt')
