@@ -579,7 +579,7 @@ class Statement(object):
         new_instance._shallow_hash = my_shallow_hash
         return new_instance
 
-    def flip_polarity(self):
+    def flip_polarity(self, agent_idx=None):
         """If applicable, flip the polarity of the statement"""
         pass
 
@@ -2019,6 +2019,12 @@ class Influence(Statement):
             pol = p1 * p2
         return pol
 
+    def flip_polarity(self, agent_idx):
+        if agent_idx == 0:
+            self.subj.flip_polarity()
+        elif agent_idx == 1:
+            self.obj.flip_polarity()
+
     def polarity_count(self):
         return ((1 if self.subj.delta.polarity is not None else 0) +
                 (1 if self.obj.delta.polarity is not None else 0))
@@ -2378,7 +2384,7 @@ class Event(Statement):
                    context=context)
         return stmt
 
-    def flip_polarity(self):
+    def flip_polarity(self, agent_idx=None):
         # If we have an explicit polarity, flip it, otherwise do nothing
         if self.delta.polarity == 1:
             self.delta.polarity = -1

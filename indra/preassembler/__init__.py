@@ -641,7 +641,7 @@ class Preassembler(object):
         if rank_key is None:
             rank_key = lambda x: x
         for stmt in self.stmts:
-            for agent in stmt.agent_list():
+            for agent_idx, agent in enumerate(stmt.agent_list()):
                 if agent is not None and ns in agent.db_refs:
                     grounding = agent.db_refs[ns]
                     if isinstance(grounding, list):
@@ -652,14 +652,14 @@ class Preassembler(object):
                                                                  rel_fun)
                             new_grounding.append((chosen, score))
                             if idx == 0 and changed and flip_polarity:
-                                stmt.flip_polarity()
+                                stmt.flip_polarity(agent_idx=agent_idx)
                         agent.db_refs[ns] = new_grounding
                     else:
                         chosen, changed = _replace_grounding(ns, grounding,
                                                              rank_key, rel_fun)
                         agent.db_refs[ns] = chosen
                         if changed and flip_polarity:
-                            stmt.flip_polarity()
+                            stmt.flip_polarity(agent_idx=agent_idx)
 
     def normalize_equivalences(self, ns, rank_key=None):
         self._normalize_relations(ns, rank_key,

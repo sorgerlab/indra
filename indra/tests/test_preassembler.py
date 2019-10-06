@@ -799,6 +799,23 @@ def test_normalize_opposites():
     assert pa.stmts[0].delta.polarity == -1
 
 
+def test_normalize_opposites_influence():
+    concept1 = ('wm/concept/causal_factor/economic_and_commerce/'
+                'economic_activity/market/supply/food_supply')
+    concept2 = 'wm/concept/causal_factor/access/food_shortage'
+    dbr1 = {'WM': [(concept1, 1.0), (concept2, 0.5)]}
+    dbr2 = {'WM': [(concept2, 1.0), (concept1, 0.5)]}
+    stmt = Influence(Event(Concept('x', db_refs=dbr1),
+                           delta=QualitativeDelta(polarity=1)),
+                     Event(Concept('y', db_refs=dbr2),
+                           delta=QualitativeDelta(polarity=-1)))
+    pa = Preassembler(hierarchies=get_wm_hierarchies(),
+                      stmts=[stmt])
+    pa.normalize_opposites(ns='WM')
+    assert pa.stmts[0].subj.delta.polarity == -1
+    assert pa.stmts[0].obj.delta.polarity == -1
+
+
 def test_agent_text_storage():
     A1 = Agent('A', db_refs={'TEXT': 'A'})
     A2 = Agent('A', db_refs={'TEXT': 'alpha'})
