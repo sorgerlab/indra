@@ -1,8 +1,8 @@
 import os
-import re
 import json
 import datetime
 from indra import get_config
+
 
 # Before the import, we have to deal with the CLASSPATH to avoid clashes
 # with REACH.
@@ -28,7 +28,7 @@ def _set_classpath():
     os.environ['CLASSPATH'] = new_clp
 _set_classpath()
 
-from indra.java_vm import autoclass, JavaException
+from indra.java_vm import autoclass
 
 
 eidos_package = 'org.clulab.wm.eidos'
@@ -61,9 +61,9 @@ class EidosReader(object):
             self.initialize_reader()
         if yaml_str is None:
             import yaml
-            from indra.preassembler.make_eidos_hume_ontologies import \
-                eidos_ont_url, load_yaml_from_url
-            yaml_str = yaml.dump(load_yaml_from_url(eidos_ont_url))
+            from indra.preassembler.make_wm_ontologies import \
+                wm_ont_url, load_yaml_from_url
+            yaml_str = yaml.dump(load_yaml_from_url(wm_ont_url))
         text_seq = _list_to_seq(texts)
         raw_groundings = \
             self.eidos_reader.components().ontologyHandler().reground(
