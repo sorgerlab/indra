@@ -287,7 +287,8 @@ def test_yaml_hm():
 
 def test_hm_equals():
     hierarchies = get_wm_hierarchies()
-    assert hierarchies['entity'].is_opposite(
-        'WM', 'wm/concept/access/food_shortage',
-        'WM', 'wm/concept/causal_factor/economic_and_commerce/'
-              'economic_activity/market/supply/food_supply')
+    concept1 = 'wm/concept/causal_factor/access/food_shortage'
+    concept2 = ('wm/concept/causal_factor/economic_and_commerce/'
+                'economic_activity/market/supply/food_supply')
+    assert hierarchies['entity'].is_opposite('WM', concept1, 'WM', concept2)
+    assert hierarchies['entity'].is_opposite('WM', concept2, 'WM', concept1)

@@ -510,7 +510,7 @@ class HierarchyManager(object):
             return 'http://identifiers.org/fplx/' + id
         elif ns == 'CHEBI':
             return 'http://identifiers.org/chebi/' + id
-        elif ns in ['UN', 'WDI', 'FAO', 'HUME']:
+        elif ns in ['WM', 'UN', 'WDI', 'FAO', 'HUME']:
             return \
                 'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#' + id
         elif ns == 'SOFIA':
