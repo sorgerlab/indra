@@ -403,6 +403,14 @@ class HierarchyManager(object):
                                                    self.isa_or_partof_closure,
                                                    rel_fun)
 
+    def get_opposites(self, ns1, id1):
+        u1 = self.get_uri(ns1, id1)
+        t1 = rdflib.term.URIRef(u1)
+        rel = rdflib.term.URIRef(self.relations_prefix + 'is_opposite')
+        to = list(self.graph.objects(t1, rel))
+        return to
+
+
     def is_opposite(self, ns1, id1, ns2, id2):
         """Return True if two entities are in an "is_opposite" relationship
 
@@ -422,14 +430,10 @@ class HierarchyManager(object):
         bool
             True if t1 has an "is_opposite" relationship with t2.
         """
-        u1 = self.get_uri(ns1, id1)
         u2 = self.get_uri(ns2, id2)
-        t1 = rdflib.term.URIRef(u1)
         t2 = rdflib.term.URIRef(u2)
 
-        rel = rdflib.term.URIRef(self.relations_prefix + 'is_opposite')
-        to = self.graph.objects(t1, rel)
-        if t2 in to:
+        if t2 in self.get_opposites(ns1, id1):
             return True
         return False
 
@@ -532,7 +536,7 @@ class HierarchyManager(object):
         ag_ns_name = ns_map.get(ag_ns)
         if ag_ns_name is None:
             raise UnknownNamespaceException('Unknown namespace %s' % ag_ns)
-        return (ag_ns_name, ag_id)
+        return ag_ns_name, ag_id
 
 
 class YamlHierarchyManager(HierarchyManager):

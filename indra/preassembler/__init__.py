@@ -626,6 +626,28 @@ class Preassembler(object):
 
         return contradicts
 
+    def normalize_equivalences(self, ns):
+        pass
+
+    def normalize_opposites(self, ns, rank_key=None):
+        if rank_key is None:
+            rank_key = lambda x: x
+        eh = self.hierarchies['entity']
+        for stmt in self.stmts:
+            for agent in stmt.agent_list():
+                if agent is not None and ns in agent.db_reft:
+                    grounding = agent.db_refs[ns]
+                    if isinstance(grounding, list):
+                        new_grounding = []
+                        for entry, score in grounding:
+                            opps = eh.get_opposites(entry)
+                            if opps:
+                                chosen = sorted([entry] + opps,
+                                                key=rank_key)[0]
+                                new_grounding.append((chosen, score))
+                            else:
+                                new_grounding.append((entry, score))
+
 
 def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
                              check_entities_match=False, refinement_fun=None):
