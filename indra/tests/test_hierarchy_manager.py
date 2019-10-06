@@ -1,11 +1,10 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 from copy import deepcopy
 from indra.util import unicode_strs
 from indra.preassembler.hierarchy_manager import hierarchies, \
-    HierarchyManager, get_bio_hierarchies, YamlHierarchyManager
-from indra.preassembler.make_eidos_hume_ontologies import eidos_ont_url, \
+    HierarchyManager, get_bio_hierarchies, YamlHierarchyManager, \
+    get_wm_hierarchies
+from indra.preassembler.make_wm_ontologies import eidos_ont_url, \
     rdf_graph_from_yaml, load_yaml_from_url
 
 
@@ -284,3 +283,11 @@ def test_yaml_hm():
     hm.add_entry(entry)
     assert hm.isa('UN', entry, 'UN', '/'.join(entry.split('/')[:-1]))
     assert hm.isa('UN', entry, 'UN', '/'.join(entry.split('/')[:-2]))
+
+
+def test_hm_equals():
+    hierarchies = get_wm_hierarchies()
+    assert hierarchies['entity'].is_opposite(
+        'WM', 'wm/concept/access/food_shortage',
+        'WM', 'wm/concept/causal_factor/economic_and_commerce/'
+              'economic_activity/market/supply/food_supply')

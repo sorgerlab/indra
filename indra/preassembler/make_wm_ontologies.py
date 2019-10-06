@@ -33,9 +33,8 @@ hume_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
 
 
 class HierarchyConverter(object):
-    def __init__(self, url, path, add_leaves=True):
-        self.yml = load_yaml_from_url(url)
-        self.path = path
+    def __init__(self, yml, add_leaves=True):
+        self.yml = yml
         self.add_leaves = add_leaves
         self.G = None
 
@@ -45,6 +44,7 @@ class HierarchyConverter(object):
             node = list(top_entry.keys())[0]
             self.build_relations(node, top_entry[node], None)
         self.add_equals()
+        return self.G
 
     def build_relations(self, node, tree, prefix):
         this_term = get_term(node, prefix)
@@ -88,7 +88,7 @@ class HierarchyConverter(object):
             for t1, t2 in itertools.combinations(equiv_terms, 2):
                 self.G.add((t1, isequal, t2))
 
-    def save_hierarchy(self):
+    def save_hierarchy(self, fname):
         g_bytes = self.G.serialize(format='nt')
         # Replace extra new lines in string and get rid of empty
         # line at end
@@ -97,7 +97,7 @@ class HierarchyConverter(object):
         rows = g_bytes.split(b'\n')
         rows.sort()
         g_bytes = b'\n'.join(rows)
-        with open(self.path, 'wb') as out_file:
+        with open(fname, 'wb') as out_file:
             out_file.write(g_bytes)
 
 
@@ -116,6 +116,11 @@ def load_yaml_from_url(ont_url):
     return root
 
 
+def rdf_graph_from_yaml(yml, add_leaves=True):
+    hc = HierarchyConverter(yml, add_leaves)
+    return hc.convert_ontology()
+
+
 if __name__ == '__main__':
     wm_rdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                os.pardir, 'resources', 'wm_ontology.rdf')
@@ -130,6 +135,7 @@ if __name__ == '__main__':
                         default=wm_rdf_path)
     args = parser.parse_args()
 
-    hc = HierarchyConverter(args.url, args.fname, args.url == hume_ont_url)
+    yml = load_yaml_from_url(args.url)
+    hc = HierarchyConverter(yml, args.url == hume_ont_url)
     hc.convert_ontology()
-    hc.save_hierarchy()
+    hc.save_hierarchy(args.fname)
