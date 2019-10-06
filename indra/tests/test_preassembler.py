@@ -4,12 +4,7 @@ from indra.preassembler import Preassembler, render_stmt_graph, \
                                flatten_evidence, flatten_stmts
 from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.sources import trips, reach
-from indra.statements import Agent, Phosphorylation, BoundCondition, \
-    Dephosphorylation, Evidence, ModCondition, \
-    ActiveForm, MutCondition, Complex, \
-    Translocation, Activation, Inhibition, \
-    Deacetylation, Conversion, Concept, Influence, \
-    IncreaseAmount, DecreaseAmount, Statement, Event, Association
+from indra.statements import *
 from indra.preassembler.hierarchy_manager import hierarchies, \
     get_wm_hierarchies
 
@@ -784,22 +779,24 @@ def test_normalize_equals():
 
 
 def test_normalize_opposites():
-    concept1 = 'wm/concept/causal_factor/access/food_shortage'
-    concept2 = ('wm/concept/causal_factor/economic_and_commerce/'
+    concept1 = ('wm/concept/causal_factor/economic_and_commerce/'
                 'economic_activity/market/supply/food_supply')
+    concept2 = 'wm/concept/causal_factor/access/food_shortage'
     concept3 = ('wm/concept/causal_factor/environmental/meteorologic/'
                 'precipitation/flooding')
     dbr = {'WM': [(concept1, 1.0), (concept2, 0.5), (concept3, 0.1)]}
-    ev = Event(Concept('x', db_refs=dbr))
+    ev = Event(Concept('x', db_refs=dbr),
+               delta=QualitativeDelta(polarity=1))
     pa = Preassembler(hierarchies=get_wm_hierarchies(),
                       stmts=[ev])
-    pa.normalize_equivalences(ns='WM')
+    pa.normalize_opposites(ns='WM')
     assert pa.stmts[0].concept.db_refs['WM'][0] == \
-           (concept1, 1.0), pa.stmts[0].concept.db_refs['WM']
+        (concept2, 1.0), pa.stmts[0].concept.db_refs['WM']
     assert pa.stmts[0].concept.db_refs['WM'][1] == \
-           (concept1, 0.5), pa.stmts[0].concept.db_refs['WM']
+        (concept2, 0.5), pa.stmts[0].concept.db_refs['WM']
     assert pa.stmts[0].concept.db_refs['WM'][2] == \
-           (concept3, 0.1), pa.stmts[0].concept.db_refs['WM']
+        (concept3, 0.1), pa.stmts[0].concept.db_refs['WM']
+    assert pa.stmts[0].delta.polarity == -1
 
 
 def test_agent_text_storage():

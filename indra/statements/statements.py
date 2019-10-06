@@ -579,6 +579,10 @@ class Statement(object):
         new_instance._shallow_hash = my_shallow_hash
         return new_instance
 
+    def flip_polarity(self):
+        """If applicable, flip the polarity of the statement"""
+        pass
+
 
 @python_2_unicode_compatible
 class Modification(Statement):
@@ -2373,6 +2377,13 @@ class Event(Statement):
         stmt = cls(concept, delta=delta,
                    context=context)
         return stmt
+
+    def flip_polarity(self):
+        # If we have an explicit polarity, flip it, otherwise do nothing
+        if self.delta.polarity == 1:
+            self.delta.polarity = -1
+        elif self.delta.polarity == -1:
+            self.delta.polarity = 1
 
     def __str__(self):
         return '%s(%s)' % (type(self).__name__, self.concept.name)

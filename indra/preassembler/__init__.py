@@ -626,16 +626,17 @@ class Preassembler(object):
 
         return contradicts
 
-    def _normalize_relations(self, ns, rank_key, rel_fun):
+    def _normalize_relations(self, ns, rank_key, rel_fun, flip_polarity):
         def _replace_grounding(ns, entry, rank_key, rel_fun):
             rel_ents = rel_fun(ns, entry)
             if rel_ents:
                 rel_ents = [e.split('#')[1] if '#' in e else e
                             for e in rel_ents]
                 sorted_entries = sorted([entry] + rel_ents, key=rank_key)
-                return sorted_entries[0]
+                chosen = sorted_entries[0]
+                return chosen, chosen != entry
             else:
-                return entry
+                return entry, False
 
         if rank_key is None:
             rank_key = lambda x: x
@@ -645,24 +646,29 @@ class Preassembler(object):
                     grounding = agent.db_refs[ns]
                     if isinstance(grounding, list):
                         new_grounding = []
-                        for entry, score in grounding:
-                            new_grounding.append(
-                                (_replace_grounding(ns, entry,
-                                                    rank_key, rel_fun),
-                                 score))
+                        for idx, (entry, score) in enumerate(grounding):
+                            chosen, changed = _replace_grounding(ns, entry,
+                                                                 rank_key,
+                                                                 rel_fun)
+                            new_grounding.append((chosen, score))
+                            if idx == 0 and changed and flip_polarity:
+                                stmt.flip_polarity()
                         agent.db_refs[ns] = new_grounding
                     else:
-                        agent.db_refs[ns] = _replace_grounding(ns, entry,
-                                                               rank_key,
-                                                               rel_fun)
+                        chosen, changed = _replace_grounding(ns, grounding,
+                                                             rank_key, rel_fun)
+                        agent.db_refs[ns] = chosen
+                        if changed and flip_polarity:
+                            stmt.flip_polarity()
 
     def normalize_equivalences(self, ns, rank_key=None):
         self._normalize_relations(ns, rank_key,
-                                  self.hierarchies['entity'].get_equals)
+                                  self.hierarchies['entity'].get_equals, False)
 
     def normalize_opposites(self, ns, rank_key=None):
         self._normalize_relations(ns, rank_key,
-                                  self.hierarchies['entity'].get_opposites)
+                                  self.hierarchies['entity'].get_opposites,
+                                  True)
 
 
 def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
