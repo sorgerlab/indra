@@ -2179,6 +2179,9 @@ class Association(Complex):
 
         return False
 
+    def flip_polarity(self, agent_idx):
+        self.members[agent_idx].flip_polarity()
+
     def to_json(self, use_sbo=False, matches_fun=None):
         # Get generic from two inheritance levels above - from Statement class
         generic = super(Complex, self).to_json(use_sbo, matches_fun)
