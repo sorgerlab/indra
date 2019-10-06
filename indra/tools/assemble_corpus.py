@@ -380,6 +380,15 @@ def run_preassembly(stmts_in, **kwargs):
         `supports` attribute of each statement or the `supported_by` attribute.
         If not set, defaults to 'supported_by'.
         Only relevant when flatten_evidence is True.
+    normalize_equivalences : Optional[bool]
+        If True, equivalent groundings are rewritten to a single standard one.
+        Default: False
+    normalize_opposites : Optional[bool]
+        If True, groundings that have opposites in the hierarchy are rewritten
+        to a single standard one.
+    normalize_ns : Optional[str]
+        The name space with respect to which equivalences and opposites are
+        normalized.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
     save_unique : Optional[str]
@@ -394,11 +403,18 @@ def run_preassembly(stmts_in, **kwargs):
     belief_scorer = kwargs.get('belief_scorer')
     matches_fun = kwargs.get('matches_fun')
     refinement_fun = kwargs.get('refinement_fun')
-    use_hierarchies = kwargs['hierarchies'] if 'hierarchies' in kwargs else \
-        hierarchies
+    use_hierarchies = kwargs.get('hierarchies', hierarchies)
+
     be = BeliefEngine(scorer=belief_scorer, matches_fun=matches_fun)
-    pa = Preassembler(hierarchies, stmts_in, matches_fun=matches_fun,
+    pa = Preassembler(use_hierarchies, stmts_in, matches_fun=matches_fun,
                       refinement_fun=refinement_fun)
+    if kwargs.get('normalize_equivalences'):
+        logger.info('Normalizing equals on %d statements' % len(pa.stmts))
+        pa.normalize_equivalences(kwargs.get('normalize_ns'))
+    if kwargs.get('normalize_opposites'):
+        logger.info('Normalizing opposites on %d statements' % len(pa.stmts))
+        pa.normalize_opposites(kwargs.get('normalize_ns'))
+
     run_preassembly_duplicate(pa, be, save=dump_pkl_unique)
 
     dump_pkl = kwargs.get('save')

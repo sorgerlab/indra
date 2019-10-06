@@ -1,9 +1,8 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import pickle
-from indra.tools import assemble_corpus as ac
-from indra.statements import *
 from copy import deepcopy
+from indra.statements import *
+from indra.tools import assemble_corpus as ac
+from indra.preassembler.hierarchy_manager import get_wm_hierarchies
 
 a = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'})
 b = Agent('b', db_refs={'UP': 'P15056', 'TEXT': 'b'})
@@ -639,3 +638,34 @@ def test_preassemble_flatten():
                                 flatten_evidence_collect_from='supports')
     assert len(st_out[0].evidence) == 1
     assert len(st_out[1].evidence) == 1
+
+
+def test_normalize_equals_opposites():
+    concept1 = ('wm/concept/causal_factor/crisis_and_disaster/environmental/'
+                'natural_disaster/flooding')
+    concept2 = ('wm/concept/causal_factor/environmental/meteorologic/'
+                'precipitation/flooding')
+    concept3 = 'wm/concept/causal_factor/access/food_shortage'
+    concept4 = ('wm/concept/causal_factor/economic_and_commerce/'
+                'economic_activity/market/supply/food_supply')
+    dbr = {'WM': [(concept1, 1.0), (concept2, 0.5), (concept3, 0.1)]}
+    ev1 = Event(Concept('x', db_refs=dbr))
+
+    dbr = {'WM': [(concept4, 1.0), (concept2, 0.5)]}
+    ev2 = Event(Concept('x', db_refs=dbr),
+                delta=QualitativeDelta(polarity=1))
+    stmts = ac.run_preassembly([ev1, ev2], hierarchies=get_wm_hierarchies())
+    assert stmts[0].concept.db_refs['WM'][0][0] != \
+        stmts[0].concept.db_refs['WM'][1][0]
+    stmts = ac.run_preassembly([ev1, ev2], normalize_equivalences=True,
+                               normalize_ns='WM',
+                               hierarchies=get_wm_hierarchies())
+    assert stmts[0].concept.db_refs['WM'][0][0] == \
+        stmts[0].concept.db_refs['WM'][1][0], \
+        stmts[0].concept.db_refs['WM']
+    stmts = ac.run_preassembly([ev1, ev2], normalize_equivalences=True,
+                               normalize_opposites=True, normalize_ns='WM',
+                               hierarchies=get_wm_hierarchies())
+    assert stmts[0].concept.db_refs['WM'][2][0] == \
+           stmts[1].concept.db_refs['WM'][0][0], \
+        stmts[1].concept.db_refs['WM']
