@@ -75,8 +75,6 @@ class HierarchyConverter(object):
                 opp = entry.get('opposite')
                 if opp:
                     parts = opp.split('/')
-                    # TEMPORARY PATCH, TO BE REMOVED ONCE FIXED IN YAML
-                    parts = parts[:2] + ['causal_factor'] + parts[2:]
                     opp_term = get_term(parts[-1], '/'.join(parts[:-1]))
                     rel = (opp_term, isopp, child_term)
                     self.G.add(rel)
