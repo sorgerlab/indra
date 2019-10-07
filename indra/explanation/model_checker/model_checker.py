@@ -4,6 +4,7 @@ import itertools
 import numpy as np
 import networkx as nx
 from collections import deque
+from copy import deepcopy
 
 try:
     import paths_graph as pg
@@ -493,13 +494,19 @@ def get_path_iter(graph, source, target):
         new_targets = graph.predecessors(source)
         for nt in new_targets:
             path_iter = nx.shortest_simple_paths(graph, source, nt)
-            for p in path_iter:
-                path = deepcopy(p)
-                # Append source to close the loop
-                path.append(source)
-                yield path
+            try:
+                for p in path_iter:
+                    path = deepcopy(p)
+                    # Append source to close the loop
+                    path.append(source)
+                    yield path
+            except nx.NetworkXNoPath:
+                    continue
     else:
         # Regular path search
         path_iter = nx.shortest_simple_paths(graph, source, target)
-        for path in path_iter:
-            yield path
+        try:
+            for path in path_iter:
+                yield path
+            except nx.NetworkXNoPath:
+                continue
