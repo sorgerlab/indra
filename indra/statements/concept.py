@@ -39,8 +39,6 @@ class Concept(object):
         # If there's no grounding, just use the name as key
         if not db_ns and not db_id:
             return self.name
-        if '/' in db_id:
-            return str((db_ns, db_id.split('/')[-1]))
         return str((db_ns, db_id))
 
     def equals(self, other):
