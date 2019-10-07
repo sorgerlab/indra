@@ -325,7 +325,7 @@ def test_active_form():
     for stmt in (stmt1, stmt2, stmt3):
         pba = pa.PybelAssembler([stmt])
         belgraph = pba.make_model()
-        assert len(belgraph) == 2
+        assert len(belgraph) == 3, len(belgraph)
 
 
 def test_complex():
