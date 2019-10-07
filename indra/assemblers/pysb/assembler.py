@@ -2084,7 +2084,7 @@ def conversion_assemble_one_step(stmt, model, agent_set, parameters):
     # Create pieces needed for from object
     obj_from = stmt.obj_from[0]
     obj_from_pattern = get_monomer_pattern(model, obj_from)
-    obj_from_monomer = obj_from_pattern.monomer
+    obj_from_pattern = ComplexPattern([obj_from_pattern], None)
     rule_obj_from_str = get_agent_rule_str(obj_from)
 
     obj_to_monomers = [get_monomer_pattern(model, o).monomer for
@@ -2101,7 +2101,7 @@ def conversion_assemble_one_step(stmt, model, agent_set, parameters):
                 sites_dict[site] = obj_to_monomer.site_states[site][0]
             else:
                 sites_dict[site] = None
-        obj_to_pattern = obj_to_monomer(**sites_dict)
+        obj_to_pattern = ComplexPattern([obj_to_monomer(**sites_dict)], None)
         obj_to_patterns.append(obj_to_pattern)
 
     obj_to_pattern = ReactionPattern(obj_to_patterns)
@@ -2116,7 +2116,8 @@ def conversion_assemble_one_step(stmt, model, agent_set, parameters):
         r = Rule(rule_name, obj_from_pattern >> obj_to_pattern,
                  kf_one_step_convert)
     else:
-        subj_pattern = get_monomer_pattern(model, stmt.subj)
+        subj_pattern = ComplexPattern(
+            [get_monomer_pattern(model, stmt.subj)], None)
         result_pattern = obj_to_pattern
         result_pattern.complex_patterns.insert(0, subj_pattern)
         rule_subj_str = get_agent_rule_str(stmt.subj)
