@@ -2116,7 +2116,8 @@ def conversion_assemble_one_step(stmt, model, agent_set, parameters):
         r = Rule(rule_name, obj_from_pattern >> obj_to_pattern,
                  kf_one_step_convert)
     else:
-        subj_pattern = get_monomer_pattern(model, stmt.subj)
+        subj_pattern = ComplexPattern(
+            [get_monomer_pattern(model, stmt.subj)], None)
         result_pattern = obj_to_pattern
         result_pattern.complex_patterns.insert(0, subj_pattern)
         rule_subj_str = get_agent_rule_str(stmt.subj)
