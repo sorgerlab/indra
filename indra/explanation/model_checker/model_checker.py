@@ -501,7 +501,7 @@ def get_path_iter(graph, source, target):
                     path.append(source)
                     yield path
             except nx.NetworkXNoPath:
-                continue
+                pass
     else:
         # Regular path search
         path_iter = nx.shortest_simple_paths(graph, source, target)
@@ -509,4 +509,4 @@ def get_path_iter(graph, source, target):
             for path in path_iter:
                 yield path
         except nx.NetworkXNoPath:
-            continue
+            pass
