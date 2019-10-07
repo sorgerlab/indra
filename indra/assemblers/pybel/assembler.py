@@ -291,7 +291,8 @@ class PybelAssembler(object):
         activates = stmt.is_active
         relation = get_causal_edge(stmt, activates)
         stmt_hash = stmt.get_hash(refresh=True)
-        if not stmt.agent.mods and not stmt.agent.bound_conditions:
+        if not stmt.agent.mods and not stmt.agent.bound_conditions and \
+                not stmt.agent.mutations:
             self._add_nodes_edges(stmt.agent, act_agent, relation,
                                   stmt_hash, stmt.evidence)
         else:
@@ -305,6 +306,12 @@ class PybelAssembler(object):
                     stmt.agent.name, db_refs=stmt.agent.db_refs,
                     bound_conditions=[bc])
                 self._add_nodes_edges(bound_agent, act_agent, relation,
+                                      stmt_hash, stmt.evidence)
+            for mut in stmt.agent.mutations:
+                mut_agent = Agent(
+                    stmt.agent.name, db_refs=stmt.agent.db_refs,
+                    mutations=[mut])
+                self._add_nodes_edges(mut_agent, act_agent, relation,
                                       stmt_hash, stmt.evidence)
 
     def _assemble_complex(self, stmt):
