@@ -2101,7 +2101,7 @@ def conversion_assemble_one_step(stmt, model, agent_set, parameters):
                 sites_dict[site] = obj_to_monomer.site_states[site][0]
             else:
                 sites_dict[site] = None
-        obj_to_pattern = obj_to_monomer(**sites_dict)
+        obj_to_pattern = ComplexPattern([obj_to_monomer(**sites_dict)], None)
         obj_to_patterns.append(obj_to_pattern)
 
     obj_to_pattern = ReactionPattern(obj_to_patterns)
