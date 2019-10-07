@@ -275,12 +275,14 @@ class ModelChecker(object):
         # Generate the predecessors to our observable and count the paths
         path_lengths = []
         path_metrics = []
-        sources = set()
+        sources = []
         for source, path_length in self._find_sources(obj, input_set):
             pm = PathMetric(source, obj, path_length)
             path_metrics.append(pm)
             path_lengths.append(path_length)
-            sources.add(source)
+            # Keep unique sources but use a list (not set) to preserve order
+            if source not in sources:
+                sources.append(source)
         logger.info('Finding paths between %s and %s' % (subj, obj))
         # Now, look for paths
         if path_metrics and max_paths == 0:
