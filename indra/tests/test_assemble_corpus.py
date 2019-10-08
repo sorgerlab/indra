@@ -239,13 +239,16 @@ def test_run_preassembly_concepts():
     rainfall = Event(Concept('rain', db_refs={
         'WM': 'wm/concept/indicator_and_reported_property/weather/rainfall'}))
     flooding_1 = Event(Concept('flood', db_refs={
-        'WM': 'wm/concept/causal_factor/crisis_and_disaster/crisis/'
-              'natural_disaster/flooding'}))
+        'WM': ('wm/concept/causal_factor/crisis_and_disaster/environmental/'
+               'natural_disaster/flooding')}))
     flooding_2 = Event(Concept('flooding', db_refs={
-        'WM': 'wm/concept/causal_factor/weather/precipitation/flooding'}))
+        'WM': ('wm/concept/causal_factor/environmental/meteorologic/'
+               'precipitation/flooding')}))
     st_out = ac.run_preassembly([
-        Influence(rainfall, flooding_1), Influence(rainfall, flooding_2)])
-    assert len(st_out) == 1
+        Influence(rainfall, flooding_1), Influence(rainfall, flooding_2)],
+        normalize_ns='WM', normalize_equivalences=True,
+        hierarchies=get_wm_hierarchies())
+    assert len(st_out) == 1, st_out
 
 
 def test_expand_families():

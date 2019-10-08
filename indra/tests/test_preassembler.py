@@ -669,6 +669,7 @@ def test_influence_duplicate():
     agr = 'UN/entities/natural/crop_technology'
     cgov = Event(Concept('government', db_refs={'UN': [(gov, 1.0)]}))
     cagr = Event(Concept('agriculture', db_refs={'UN': [(agr, 1.0)]}))
+    print(cgov.matches_key())
     stmt1 = Influence(cgov, cagr, evidence=[Evidence(source_api='eidos1')])
     stmt2 = Influence(cagr, cgov, evidence=[Evidence(source_api='eidos2')])
     stmt3 = Influence(cgov, cagr, evidence=[Evidence(source_api='eidos3')])
@@ -678,9 +679,10 @@ def test_influence_duplicate():
     hierarchies = {'entity': hm}
     pa = Preassembler(hierarchies, [stmt1, stmt2, stmt3])
     unique_stmts = pa.combine_duplicates()
+    unique_stmts = sorted(unique_stmts, key=lambda x: len(x.evidence))
     assert len(unique_stmts) == 2
-    assert len(unique_stmts[1].evidence) == 2
     assert len(unique_stmts[0].evidence) == 1
+    assert len(unique_stmts[1].evidence) == 2, unique_stmts
     sources = [e.source_api for e in unique_stmts[1].evidence]
     assert set(sources) == set(['eidos1', 'eidos3'])
 
