@@ -370,9 +370,7 @@ class EidosDocument(object):
         time_text = dct.get('text')
         start = _get_time_stamp(dct.get('start'))
         end = _get_time_stamp(dct.get('end'))
-        duration = _get_duration(start, end)
-        tc = TimeContext(text=time_text, start=start, end=end,
-                         duration=duration)
+        tc = TimeContext(text=time_text, start=start, end=end)
         return tc
 
 
@@ -427,9 +425,7 @@ def time_context_from_timex(timex):
         constraint = intervals[0]
         start = _get_time_stamp(constraint.get('start'))
         end = _get_time_stamp(constraint.get('end'))
-        duration = _get_duration(start, end)
-    tc = TimeContext(text=time_text, start=start, end=end,
-                     duration=duration)
+    tc = TimeContext(text=time_text, start=start, end=end)
     return tc
 
 
