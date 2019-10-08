@@ -322,10 +322,13 @@ def test_active_form():
     stmt1 = ActiveForm(ras, 'gtpbound', True)
     stmt2 = ActiveForm(mapk1_p, 'kinase', True)
     stmt3 = ActiveForm(mapk1_pp, 'kinase', True)
-    for stmt in (stmt1, stmt2, stmt3):
+    for i, stmt in enumerate((stmt1, stmt2, stmt3)):
         pba = pa.PybelAssembler([stmt])
         belgraph = pba.make_model()
-        assert len(belgraph) == 3, len(belgraph)
+        if i == 2:
+            assert len(belgraph) == 3, len(belgraph)
+        else:
+            assert len(belgraph) == 2, len(belgraph)
 
 
 def test_complex():
