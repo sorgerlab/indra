@@ -669,6 +669,10 @@ def test_normalize_equals_opposites():
     stmts = ac.run_preassembly([ev1, ev2], normalize_equivalences=True,
                                normalize_opposites=True, normalize_ns='WM',
                                hierarchies=get_wm_hierarchies())
+    assert len(stmts) == 2
+    stmts = sorted(stmts, key=lambda x: len(x.concept.db_refs['WM']),
+                   reverse=True)
+    assert len(stmts[0].concept.db_refs['WM']) == 3, stmts[0].concept.db_refs
     assert stmts[0].concept.db_refs['WM'][2][0] == \
            stmts[1].concept.db_refs['WM'][0][0], \
         stmts[1].concept.db_refs['WM']
