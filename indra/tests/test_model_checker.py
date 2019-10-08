@@ -1608,6 +1608,38 @@ def test_pybel_path():
     assert stmts6 == [[st2, st7], [st5], [st8]]
 
 
+def test_pybel_active_form_path():
+    braf = Agent('BRAF', db_refs={'HGNC': '1097'})
+    map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
+    map2k1_phos = Agent('MAP2K1', db_refs={'HGNC': '6840'}, mods=[
+        ModCondition('phosphorylation', 'S', '218', True),
+        ModCondition('phosphorylation', 'S', '222', True)])
+    mapk1 = Agent('MAPK1', db_refs={'UP': 'P28482'})
+    mapk1_phos = Agent('MAPK1', db_refs={'UP': 'P28482'}, mods=[
+        ModCondition('phosphorylation', 'T', '185', True),
+        ModCondition('phosphorylation', 'Y', '187', True)])
+    elk1 = Agent('ELK1', db_refs={'HGNC': '3321'})
+    elk1_phos = Agent('ELK1', db_refs={'HGNC': '3321'}, mods=[
+        ModCondition('phosphorylation', 'S', '383', True),
+        ModCondition('phosphorylation', 'S', '389', True)])
+    stmts = [
+        Phosphorylation(braf, map2k1, 'S', '222'),
+        ActiveForm(map2k1_phos, 'activity', True),
+        Phosphorylation(map2k1, mapk1, 'Y', '187'),
+        ActiveForm(mapk1_phos, 'activity', True),
+        Phosphorylation(mapk1, elk1, 'S', '383'),
+        ActiveForm(elk1_phos, 'activity', True)]
+    pba = PybelAssembler(stmts)
+    pybel_model = pba.make_model()
+    pbmc = PybelModelChecker(pybel_model)
+    pbmc.add_statements([Activation(braf, elk1)])
+    results = pbmc.check_model(1, 10)
+    assert results[0][1].path_found, results
+    stmts_from_path = stmts_from_pybel_path(
+        results[0][1].paths[0], pybel_model, False, stmts)
+    assert stmts_from_path == [[stmt] for stmt in stmts]
+
+
 # Test graph conversion
 def test_signed_edges_to_nodes():
     g = nx.MultiDiGraph()
