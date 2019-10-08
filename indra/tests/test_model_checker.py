@@ -1485,7 +1485,9 @@ st6 = Inhibition(Agent('A', db_refs={'HGNC': 1}),
                  Agent('B', db_refs={'HGNC': 2}))
 st7 = DecreaseAmount(Agent('B', db_refs={'HGNC': 2}),
                      Agent('D', db_refs={'HGNC': 4}))
-statements = [st1, st2, st3, st4, st5, st6, st7]
+st8 = IncreaseAmount(Agent('E', db_refs={'HGNC': 5}),
+                     Agent('B', db_refs={'HGNC': 2}))
+statements = [st1, st2, st3, st4, st5, st6, st7, st8]
 
 test_st1 = Activation(Agent('A', db_refs={'HGNC': 1}),
                       Agent('E', db_refs={'HGNC': 5}))
@@ -1498,7 +1500,10 @@ test_st4 = Activation(Agent('F', db_refs={'HGNC': 6}),
 test_st5 = DecreaseAmount(Agent('B', db_refs={'HGNC': 2}),
                           Agent('F', db_refs={'HGNC': 6}))
 test_st6 = ActiveForm(Agent('A', db_refs={'HGNC': 1}), None, True)
-test_statements = [test_st1, test_st2, test_st3, test_st4, test_st5, test_st6]
+test_st7 = DecreaseAmount(Agent('B', db_refs={'HGNC': 2}),
+                          Agent('B', db_refs={'HGNC': 2}))
+test_statements = [
+    test_st1, test_st2, test_st3, test_st4, test_st5, test_st6, test_st7]
 
 
 def test_unsigned_path():
@@ -1507,22 +1512,31 @@ def test_unsigned_path():
     umc = UnsignedGraphModelChecker(unsigned_model)
     umc.add_statements(test_statements)
     results = umc.check_model()
+    # Paths found
     assert results[0][1].result_code == 'PATHS_FOUND'
     assert results[0][1].paths[0] == (('A', 0), ('B', 0), ('D', 0), ('E', 0))
     assert results[1][1].result_code == 'PATHS_FOUND'
     assert results[1][1].paths[0] == (('A', 0), ('B', 0), ('D', 0), ('E', 0))
+    # Fail cases
     assert results[2][1].result_code == 'NO_PATHS_FOUND'
     assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
     assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
     assert results[5][1].result_code == 'STATEMENT_TYPE_NOT_HANDLED'
+    # Loop paths
+    assert results[6][1].result_code == 'PATHS_FOUND'
+    assert results[6][1].paths[0] == (('B', 0), ('D', 0), ('E', 0), ('B', 0))
     # Test reporting
     path0 = results[0][1].paths[0]
     path1 = results[1][1].paths[0]
+    path6 = results[6][1].paths[0]
     stmts0 = stmts_from_indranet_path(
         path0, unsigned_model, False, False, statements)
     stmts1 = stmts_from_indranet_path(
         path0, unsigned_model, False, False, statements)
+    stmts6 = stmts_from_indranet_path(
+        path6, unsigned_model, False, False, statements)
     assert stmts0 == stmts1 == [[st1, st6], [st2, st7], [st5]]
+    assert stmts6 == [[st2, st7], [st5], [st8]]
 
 
 def test_signed_path():
@@ -1531,23 +1545,32 @@ def test_signed_path():
     smc = SignedGraphModelChecker(signed_model)
     smc.add_statements(test_statements)
     results = smc.check_model()
+    # Paths found
     assert results[0][1].result_code == 'PATHS_FOUND'
     assert results[0][1].paths[0] == (('A', 0), ('B', 1), ('D', 0), ('E', 0))
     assert results[1][1].result_code == 'PATHS_FOUND'
     assert results[1][1].paths[0] == (('A', 0), ('B', 0), ('D', 1), ('E', 1))
+    # Fail cases
     assert results[2][1].result_code == 'NO_PATHS_FOUND'
     assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
     assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
     assert results[5][1].result_code == 'STATEMENT_TYPE_NOT_HANDLED'
+    # Loop paths
+    assert results[6][1].result_code == 'PATHS_FOUND'
+    assert results[6][1].paths[0] == (('B', 0), ('D', 1), ('E', 1), ('B', 1))
     # Test reporting
     path0 = results[0][1].paths[0]
     path1 = results[1][1].paths[0]
+    path6 = results[6][1].paths[0]
     stmts0 = stmts_from_indranet_path(
         path0, signed_model, True, False, statements)
     assert stmts0 == [[st6], [st2, st7], [st5]]
     stmts1 = stmts_from_indranet_path(
         path1, signed_model, True, False, statements)
     assert stmts1 == [[st1], [st2, st7], [st5]]
+    stmts6 = stmts_from_indranet_path(
+        path6, signed_model, True, False, statements)
+    assert stmts6 == [[st2, st7], [st5], [st8]]
 
 
 def test_pybel_path():
@@ -1560,21 +1583,29 @@ def test_pybel_path():
     b = _get_agent_node(Agent('B', db_refs={'HGNC': 2}))[0]
     d = _get_agent_node(Agent('D', db_refs={'HGNC': 4}))[0]
     e = _get_agent_node(Agent('E', db_refs={'HGNC': 5}))[0]
+    # Paths found
     assert results[0][1].result_code == 'PATHS_FOUND'
     assert results[0][1].paths[0] == ((a, 0), (b, 1), (d, 0), (e, 0))
     assert results[1][1].result_code == 'PATHS_FOUND'
     assert results[1][1].paths[0] == ((a, 0), (b, 0), (d, 1), (e, 1))
+    # Fail cases
     assert results[2][1].result_code == 'NO_PATHS_FOUND'
     assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
     assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
     assert results[5][1].result_code == 'STATEMENT_TYPE_NOT_HANDLED'
+    # Loop paths
+    assert results[6][1].result_code == 'PATHS_FOUND'
+    assert results[6][1].paths[0] == ((b, 0), (d, 1), (e, 1), (b, 1))
     # Test reporting
     path0 = results[0][1].paths[0]
     path1 = results[1][1].paths[0]
+    path6 = results[6][1].paths[0]
     stmts0 = stmts_from_pybel_path(path0, pybel_model, False, statements)
     assert stmts0 == [[st1, st6], [st2, st7], [st5]], stmts0
     stmts1 = stmts_from_pybel_path(path1, pybel_model, False, statements)
     assert stmts1 == [[st1, st6], [st2, st7], [st5]], stmts1
+    stmts6 = stmts_from_pybel_path(path6, pybel_model, False, statements)
+    assert stmts6 == [[st2, st7], [st5], [st8]]
 
 
 # Test graph conversion
