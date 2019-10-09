@@ -351,8 +351,6 @@ class PybelProcessor(object):
 
 
 def get_agent(node_data, node_modifier_data=None):
-    # FIXME: Handle translocations on the agent for ActiveForms, turn into
-    # location conditions
     # Check the node type/function
     node_func = node_data[pc.FUNCTION]
     if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX,
@@ -786,9 +784,12 @@ def _get_translocation_target(node_modifier_data):
     to_loc_ns = to_loc_info.get(pc.NAMESPACE)
     to_loc_name = to_loc_info.get(pc.NAME)
     # Only use GO Cellular Component location names
-    if to_loc_ns != 'GOCC' or not to_loc_name:
+    if to_loc_ns not in ('GOCC', 'GOCCID') or not to_loc_name:
         return None
     try:
+        if re.match(r'\d+', to_loc_name) and \
+                not to_loc_name.startswith('GO'):
+            to_loc_name = 'GO:' + to_loc_name
         valid_loc = get_valid_location(to_loc_name)
     except InvalidLocationError:
         return None

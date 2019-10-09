@@ -69,6 +69,7 @@ def process_pybel_network(network_type, network_file, **kwargs):
     elif network_type == 'graph_pickle_url':
         if not network_file:
             network_file = large_corpus_url
+        logger.info('Loading %s' % network_file)
         res = requests.get(network_file)
         res.raise_for_status()
         graph = pickle.loads(res.content)
