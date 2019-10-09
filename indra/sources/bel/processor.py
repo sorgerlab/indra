@@ -784,7 +784,7 @@ def _get_translocation_target(node_modifier_data):
     to_loc_ns = to_loc_info.get(pc.NAMESPACE)
     to_loc_name = to_loc_info.get(pc.NAME)
     # Only use GO Cellular Component location names
-    if to_loc_ns not in ('GOCC', 'GOCCID') or not to_loc_name:
+    if to_loc_ns not in ('GO', 'GOCC', 'GOCCID') or not to_loc_name:
         return None
     try:
         if re.match(r'\d+', to_loc_name) and \
