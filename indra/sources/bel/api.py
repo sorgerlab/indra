@@ -26,11 +26,8 @@ def process_small_corpus():
         A PybelProcessor object which contains INDRA Statements in
         its statements attribute.
     """
-    logger.info('Loading Selventa Small Corpus from %s' % small_corpus_url)
-    res = requests.get(small_corpus_url)
-    res.raise_for_status()
-    graph = pickle.loads(res.content)
-    return process_pybel_graph(graph)
+    return process_pybel_network(network_type='graph_pickle_url',
+                                 network_file=small_corpus_url)
 
 
 def process_large_corpus():
@@ -42,15 +39,39 @@ def process_large_corpus():
         A PybelProcessor object which contains INDRA Statements in
         its statements attribute.
     """
-    logger.info('Loading Selventa Large Corpus from %s' % large_corpus_url)
-    res = requests.get(large_corpus_url)
-    res.raise_for_status()
-    graph = pickle.loads(res.content)
-    return process_pybel_graph(graph)
+    return process_pybel_network(network_type='graph_pickle_url',
+                                 network_file=large_corpus_url)
 
 
-def process_pybel_neighborhood(gene_names, network_file=None,
-                               network_type='belscript', **kwargs):
+def process_pybel_network(network_type='graph_pickle_url', network_file=None,
+                          **kwargs):
+    if network_type != 'graph_pickle_url' and network_file is None:
+        raise ValueError('The network_file argument needs to be given with '
+                         'network_type=%s' % network_type)
+
+    if network_type == 'belscript':
+        return process_belscript(network_file, **kwargs)
+    elif network_type == 'json':
+        return process_json_file(network_file)
+    elif network_type == 'cbn_jgif':
+        return process_cbn_jgif_file(network_file)
+    elif network_type == 'graph_pickle_url':
+        if not network_file:
+            network_file = large_corpus_url
+        res = requests.get(network_file)
+        res.raise_for_status()
+        graph = pickle.loads(res.content)
+        return process_pybel_graph(graph)
+    elif network_type == 'graph_pickle':
+        with open(network_file, 'rb') as fh:
+            graph = pickle.load(fh)
+            return process_pybel_graph(graph)
+    else:
+        raise ValueError('Unknown network type: %s' % network_type)
+
+
+def process_pybel_neighborhood(gene_names, network_type='graph_pickle_url',
+                               network_file=None, **kwargs):
     """Return PybelProcessor around neighborhood of given genes in a network.
 
     This function processes the given network file and filters the returned
@@ -58,13 +79,13 @@ def process_pybel_neighborhood(gene_names, network_file=None,
 
     Parameters
     ----------
-    network_file : Optional[str]
-        Path to the network file to process. If not given, by default, the
-        BEL Large Corpus is used.
     network_type : Optional[str]
         This function allows processing both BEL Script files and JSON files.
         This argument controls which type is assumed to be processed, and the
         value can be either 'belscript' or 'json'. Default: bel_script
+    network_file : Optional[str]
+        Path to the network file to process. If not given, by default, the
+        BEL Large Corpus is used.
 
     Returns
     -------
@@ -72,16 +93,7 @@ def process_pybel_neighborhood(gene_names, network_file=None,
         A PybelProcessor object which contains INDRA Statements in
         bp.statements.
     """
-    if network_file is None:
-        # Use large corpus as base network
-        network_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                    os.path.pardir, os.path.pardir,
-                                    os.path.pardir, 'data', 'large_corpus.bel')
-    if network_type == 'belscript':
-        bp = process_belscript(network_file, **kwargs)
-    elif network_type == 'json':
-        bp = process_json_file(network_file)
-
+    bp = process_pybel_network(network_type, network_file, **kwargs)
     filtered_stmts = []
     for stmt in bp.statements:
         found = False
