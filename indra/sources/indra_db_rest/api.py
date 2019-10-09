@@ -273,8 +273,8 @@ def get_statement_queries(stmts, **params):
     def pick_ns(ag):
         # If the Agent has grounding, in order of preference, in any of these
         # name spaces then we look it up based on grounding.
-        for ns in ['HGNC', 'FPLX', 'CHEMBL', 'CHEBI', 'GO', 'MESH']:
-            if ns in ag.db_refs.keys():
+        for ns in ['HGNC', 'UP', 'FPLX', 'CHEBI', 'GO', 'MESH']:
+            if ns in ag.db_refs:
                 dbid = ag.db_refs[ns]
                 return '%s@%s' % (dbid, ns)
         # Otherwise, we search by Agent name - if the name is standardized,
