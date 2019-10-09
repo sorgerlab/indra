@@ -5,6 +5,8 @@ from unittest import SkipTest
 
 from nose.plugins.attrib import attr
 from indra.sources import indra_db_rest as dbr
+from indra.sources.indra_db_rest.api import get_statement_queries
+from indra.statements import Agent, Phosphorylation
 
 
 EXPECTED_BATCH_SIZE = 500
@@ -198,3 +200,25 @@ def test_curation_submission():
     raise SkipTest("Curation currently not working.")
     dbr.submit_curation(32760831642168299, 'TEST', 'This is a test.',
                         'tester', is_test=True)
+
+
+def test_get_statement_queries():
+    ag = Agent('MAP2K1', db_refs={})
+    stmt = Phosphorylation(None, ag)
+    urls = get_statement_queries([stmt])
+    assert 'MAP2K1@NAME' in urls[0]
+    urls = get_statement_queries([stmt], fallback_ns='TEXT')
+    assert 'MAP2K1@TEXT' in urls[0]
+    urls = get_statement_queries([stmt],
+                                 pick_ns_fun=lambda x: '%s@%s' %
+                                                       (x.name, 'XXX'))
+    assert 'MAP2K1@XXX' in urls[0], urls[0]
+    ag = Agent('MEK', db_refs={'FPLX': 'MEK'})
+    stmt = Phosphorylation(None, ag)
+    urls = get_statement_queries([stmt])
+    assert 'MEK@FPLX' in urls[0]
+    urls = get_statement_queries([stmt], fallback_ns='TEXT')
+    assert 'MEK@FPLX' in urls[0]
+    urls = get_statement_queries([stmt],
+                                 pick_ns_fun=lambda x: '%s@%s' %
+                                                       (x.name, 'XXX'))

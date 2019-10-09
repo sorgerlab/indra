@@ -284,12 +284,14 @@ def get_statement_queries(stmts, **params):
         same TEXT that are grounded and then standardized to a different name.
         Example: Erk(db_refs={'TEXT': 'Erk'}).
         Default: 'NAME'
+    pick_ns_fun : Optional[function]
+        An optional user-supplied function which takes an Agent as input and
+        returns a string of the form value@ns where 'value' will be looked
+        up in namespace 'ns' to search for the given Agent.
     **params : kwargs
         A set of keyword arguments that are added as parameters to the
         query URLs.
     """
-    fallback_ns = params.pop('fallback_ns', 'NAME')
-
     def pick_ns(ag):
         # If the Agent has grounding, in order of preference, in any of these
         # name spaces then we look it up based on grounding.
@@ -302,6 +304,9 @@ def get_statement_queries(stmts, **params):
         # usefully looked up in that name space).
         return '%s@%s' % (ag.name, fallback_ns)
 
+    fallback_ns = params.pop('fallback_ns', 'NAME')
+    pick_ns_fun = params.pop('pick_ns_fun', pick_ns)
+
     queries = []
     url_base = get_url_base('statements/from_agents')
     non_binary_statements = (Complex, SelfModification, ActiveForm,
@@ -311,11 +316,11 @@ def get_statement_queries(stmts, **params):
         if not isinstance(stmt, non_binary_statements):
             for pos, ag in zip(['subject', 'object'], stmt.agent_list()):
                 if ag is not None:
-                    kwargs[pos] = pick_ns(ag)
+                    kwargs[pos] = pick_ns_fun(ag)
         else:
             for i, ag in enumerate(stmt.agent_list()):
                 if ag is not None:
-                    kwargs['agent%d' % i] = pick_ns(ag)
+                    kwargs['agent%d' % i] = pick_ns_fun(ag)
         kwargs['type'] = stmt.__class__.__name__
         kwargs.update(params)
         query_str = '?' + '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()
