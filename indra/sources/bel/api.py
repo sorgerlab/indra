@@ -43,12 +43,23 @@ def process_large_corpus():
                                  network_file=large_corpus_url)
 
 
-def process_pybel_network(network_type='graph_pickle_url', network_file=None,
-                          **kwargs):
-    if network_type != 'graph_pickle_url' and network_file is None:
-        raise ValueError('The network_file argument needs to be given with '
-                         'network_type=%s' % network_type)
+def process_pybel_network(network_type, network_file, **kwargs):
+    """Return PybelProcessor by processing a given network file.
 
+    Parameters
+    ----------
+    network_type : str
+        The type of network that network_file is. The options are:
+        belscript, json, cbn_jgif, graph_pickle, and graph_pickle_url.
+    network_file : str
+        Path to the network file/URL to process.
+
+    Returns
+    -------
+    bp : PybelProcessor
+        A PybelProcessor object which contains INDRA Statements in
+        bp.statements.
+    """
     if network_type == 'belscript':
         return process_belscript(network_file, **kwargs)
     elif network_type == 'json':
@@ -70,7 +81,7 @@ def process_pybel_network(network_type='graph_pickle_url', network_file=None,
         raise ValueError('Unknown network type: %s' % network_type)
 
 
-def process_pybel_neighborhood(gene_names, network_type='graph_pickle_url',
+def process_pybel_neighborhood(entity_names, network_type='graph_pickle_url',
                                network_file=None, **kwargs):
     """Return PybelProcessor around neighborhood of given genes in a network.
 
@@ -79,13 +90,19 @@ def process_pybel_neighborhood(gene_names, network_type='graph_pickle_url',
 
     Parameters
     ----------
+    entity_names : list[str]
+        A list of entity names (e.g., gene names) which will be used as the
+        basis of filtering the result. If any of the Agents of an extracted
+        INDRA Statement has a name appearing in this list, the Statement is
+        retained in the result.
     network_type : Optional[str]
-        This function allows processing both BEL Script files and JSON files.
-        This argument controls which type is assumed to be processed, and the
-        value can be either 'belscript' or 'json'. Default: bel_script
+        The type of network that network_file is. The options are:
+        belscript, json, cbn_jgif, graph_pickle, and graph_pickle_url.
+        Default: graph_pickle_url
     network_file : Optional[str]
-        Path to the network file to process. If not given, by default, the
-        BEL Large Corpus is used.
+        Path to the network file/URL to process. If not given, by default, the
+        Selventa Large Corpus is used via a URL pointing to a PyBEL Graph
+        pickle.
 
     Returns
     -------
@@ -95,11 +112,12 @@ def process_pybel_neighborhood(gene_names, network_type='graph_pickle_url',
     """
     bp = process_pybel_network(network_type, network_file, **kwargs)
     filtered_stmts = []
+    filter_names = set(entity_names)
     for stmt in bp.statements:
         found = False
         for agent in stmt.agent_list():
             if agent is not None:
-                if agent.name in gene_names:
+                if agent.name in filter_names:
                     found = True
         if found:
             filtered_stmts.append(stmt)
