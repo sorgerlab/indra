@@ -268,20 +268,39 @@ def get_statement_queries(stmts, **params):
     ----------
     stmts : list[Statement]
         A list of INDRA statements.
+    fallback_ns : Optional[str]
+        The name space to search by when an Agent in a Statement is not
+        grounded to one of the standardized name spaces. Typically,
+        searching by 'NAME' (i.e., the Agent's name) is a good option if
+        (1) An Agent's grounding is missing but the agent's name is
+        known to be standard in one of the name spaces. In this case the
+        name-based lookup will yield the same result as looking up by
+        grounding. Example: MAP2K1(db_refs={})
+        (2) Any Agent that is encountered with the same name as this Agent
+        is never standardized, so looking up by name yields the same result
+        as looking up by TEXT. Example: xyz(db_refs={'TEXT': 'xyz'})
+        Searching by TEXT is better in other cases e.g., when the given
+        specific Agent is not grounded but we have other Agent's with the
+        same TEXT that are grounded and then standardized to a different name.
+        Example: Erk(db_refs={'TEXT': 'Erk'}).
+        Default: 'NAME'
+    **params : kwargs
+        A set of keyword arguments that are added as parameters to the
+        query URLs.
     """
+    fallback_ns = params.pop('fallback_ns', 'NAME')
 
     def pick_ns(ag):
         # If the Agent has grounding, in order of preference, in any of these
         # name spaces then we look it up based on grounding.
-        for ns in ['HGNC', 'UP', 'FPLX', 'CHEBI', 'GO', 'MESH']:
+        for ns in ['FPLX', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH']:
             if ns in ag.db_refs:
                 dbid = ag.db_refs[ns]
                 return '%s@%s' % (dbid, ns)
-        # Otherwise, we search by Agent name - if the name is standardized,
-        # this will still yield good results. If it isn't standardized, then
-        # the name will match the raw entity text so again this lookup will
-        # work.
-        return ag.name
+        # Otherwise we fall back on searching by NAME or TEXT
+        # (or any other given name space as long as the Agent name can be
+        # usefully looked up in that name space).
+        return '%s@%s' % (ag.name, fallback_ns)
 
     queries = []
     url_base = get_url_base('statements/from_agents')
