@@ -272,7 +272,7 @@ def get_statement_queries(stmts, **params):
         The name space to search by when an Agent in a Statement is not
         grounded to one of the standardized name spaces. Typically,
         searching by 'NAME' (i.e., the Agent's name) is a good option if
-        (1) An Agent's grounding is missing but the agent's name is
+        (1) An Agent's grounding is missing but its name is
         known to be standard in one of the name spaces. In this case the
         name-based lookup will yield the same result as looking up by
         grounding. Example: MAP2K1(db_refs={})
@@ -280,7 +280,7 @@ def get_statement_queries(stmts, **params):
         is never standardized, so looking up by name yields the same result
         as looking up by TEXT. Example: xyz(db_refs={'TEXT': 'xyz'})
         Searching by TEXT is better in other cases e.g., when the given
-        specific Agent is not grounded but we have other Agent's with the
+        specific Agent is not grounded but we have other Agents with the
         same TEXT that are grounded and then standardized to a different name.
         Example: Erk(db_refs={'TEXT': 'Erk'}).
         Default: 'NAME'
