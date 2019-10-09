@@ -1,74 +1,13 @@
 import os
 import json
+import pybel
 import rdflib
 import logging
-from rdflib.plugins.parsers.ntriples import ParseError
-
-from indra.databases import ndex_client
-from .rdf_processor import BelRdfProcessor
-from .processor import PybelProcessor
-import pybel
-
 from functools import lru_cache
+from .processor import PybelProcessor
 
 
 logger = logging.getLogger(__name__)
-
-ndex_bel2rdf = 'http://bel2rdf.bigmech.ndexbio.org'
-
-
-def process_ndex_neighborhood(gene_names, network_id=None,
-                              rdf_out='bel_output.rdf', print_output=True):
-    """Return a BelRdfProcessor for an NDEx network neighborhood.
-
-    Parameters
-    ----------
-    gene_names : list
-        A list of HGNC gene symbols to search the neighborhood of.
-        Example: ['BRAF', 'MAP2K1']
-    network_id : Optional[str]
-        The UUID of the network in NDEx. By default, the BEL Large Corpus
-        network is used.
-    rdf_out : Optional[str]
-        Name of the output file to save the RDF returned by the web service.
-        This is useful for debugging purposes or to repeat the same query
-        on an offline RDF file later. Default: bel_output.rdf
-
-    Returns
-    -------
-    bp : BelRdfProcessor
-        A BelRdfProcessor object which contains INDRA Statements in bp.statements.
-
-    Notes
-    -----
-    This function calls process_belrdf to the returned RDF string from the
-    webservice.
-    """
-    logger.warning('This method is deprecated and the results are not '
-                   'guaranteed to be correct. Please use '
-                   'process_pybel_neighborhood instead.')
-    if network_id is None:
-        network_id = '9ea3c170-01ad-11e5-ac0f-000c29cb28fb'
-    url = ndex_bel2rdf + '/network/%s/asBELRDF/query' % network_id
-    params = {'searchString': ' '.join(gene_names)}
-    # The ndex_client returns the rdf as the content of a json dict
-    res_json = ndex_client.send_request(url, params, is_json=True)
-    if not res_json:
-        logger.error('No response for NDEx neighborhood query.')
-        return None
-    if res_json.get('error'):
-        error_msg = res_json.get('message')
-        logger.error('BEL/RDF response contains error: %s' % error_msg)
-        return None
-    rdf = res_json.get('content')
-    if not rdf:
-        logger.error('BEL/RDF response is empty.')
-        return None
-
-    with open(rdf_out, 'wb') as fh:
-        fh.write(rdf.encode('utf-8'))
-    bp = process_belrdf(rdf, print_output=print_output)
-    return bp
 
 
 def process_pybel_neighborhood(gene_names, network_file=None,
@@ -120,7 +59,7 @@ def process_pybel_neighborhood(gene_names, network_file=None,
 
 
 def process_belrdf(rdf_str, print_output=True):
-    """Return a BelRdfProcessor for a BEL/RDF string.
+    """Deprecated: Return a BelRdfProcessor for a BEL/RDF string.
 
     Parameters
     ----------
@@ -140,6 +79,12 @@ def process_belrdf(rdf_str, print_output=True):
     functions of the newly constructed BelRdfProcessor to extract
     INDRA Statements.
     """
+    from rdflib.plugins.parsers.ntriples import ParseError
+    from .rdf_processor import BelRdfProcessor
+    logger.warning('The BEL/RDF format is deprecated and the results of '
+                   'this function are not guaranteed to be correct. '
+                   'Running this function requires rdflib==4.2.1, which is '
+                   'older than the rdflib dependency installed by default.')
     g = rdflib.Graph()
     try:
         g.parse(data=rdf_str, format='nt')
