@@ -1,13 +1,52 @@
 import os
 import json
 import pybel
-import rdflib
+import pickle
 import logging
+import requests
 from functools import lru_cache
 from .processor import PybelProcessor
 
 
 logger = logging.getLogger(__name__)
+
+large_corpus_url = ('https://github.com/cthoyt/selventa-knowledge/raw/master/'
+                    'selventa_knowledge/large_corpus-20170611.bel.pickle')
+small_corpus_url = ('https://github.com/cthoyt/selventa-knowledge/raw/master/'
+                    'selventa_knowledge/'
+                    'selventa-small-corpus-20150611.bel.pickle')
+
+
+def process_small_corpus():
+    """Return PybelProcessor with statements from Selventa Small Corpus.
+
+    Returns
+    -------
+    bp : PybelProcessor
+        A PybelProcessor object which contains INDRA Statements in
+        its statements attribute.
+    """
+    logger.info('Loading Selventa Small Corpus from %s' % small_corpus_url)
+    res = requests.get(small_corpus_url)
+    res.raise_for_status()
+    graph = pickle.loads(res.content)
+    return process_pybel_graph(graph)
+
+
+def process_large_corpus():
+    """Return PybelProcessor with statements from Selventa Large Corpus.
+
+    Returns
+    -------
+    bp : PybelProcessor
+        A PybelProcessor object which contains INDRA Statements in
+        its statements attribute.
+    """
+    logger.info('Loading Selventa Large Corpus from %s' % large_corpus_url)
+    res = requests.get(large_corpus_url)
+    res.raise_for_status()
+    graph = pickle.loads(res.content)
+    return process_pybel_graph(graph)
 
 
 def process_pybel_neighborhood(gene_names, network_file=None,
@@ -55,56 +94,6 @@ def process_pybel_neighborhood(gene_names, network_file=None,
 
     bp.statements = filtered_stmts
 
-    return bp
-
-
-def process_belrdf(rdf_str, print_output=True):
-    """Deprecated: Return a BelRdfProcessor for a BEL/RDF string.
-
-    Parameters
-    ----------
-    rdf_str : str
-        A BEL/RDF string to be processed. This will usually come from reading
-        a .rdf file.
-
-    Returns
-    -------
-    bp : BelRdfProcessor
-        A BelRdfProcessor object which contains INDRA Statements in
-        bp.statements.
-
-    Notes
-    -----
-    This function calls all the specific get_type_of_mechanism()
-    functions of the newly constructed BelRdfProcessor to extract
-    INDRA Statements.
-    """
-    from rdflib.plugins.parsers.ntriples import ParseError
-    from .rdf_processor import BelRdfProcessor
-    logger.warning('The BEL/RDF format is deprecated and the results of '
-                   'this function are not guaranteed to be correct. '
-                   'Running this function requires rdflib==4.2.1, which is '
-                   'older than the rdflib dependency installed by default.')
-    g = rdflib.Graph()
-    try:
-        g.parse(data=rdf_str, format='nt')
-    except ParseError as e:
-        logger.error('Could not parse rdf: %s' % e)
-        return None
-    # Build INDRA statements from RDF
-    bp = BelRdfProcessor(g)
-    bp.get_complexes()
-    bp.get_activating_subs()
-    bp.get_modifications()
-    bp.get_activating_mods()
-    bp.get_transcription()
-    bp.get_activation()
-    bp.get_conversions()
-
-    # Print some output about the process
-    if print_output:
-        bp.print_statement_coverage()
-        bp.print_statements()
     return bp
 
 
@@ -199,3 +188,59 @@ def process_cbn_jgif_file(file_name):
     """
     with open(file_name, 'r') as jgf:
         return process_pybel_graph(pybel.from_cbn_jgif(json.load(jgf)))
+
+
+def process_belrdf(rdf_str, print_output=True):
+    """Deprecated: Return a BelRdfProcessor for a BEL/RDF string.
+
+    Parameters
+    ----------
+    rdf_str : str
+        A BEL/RDF string to be processed. This will usually come from reading
+        a .rdf file.
+    print_output : Optional[bool]
+        If True, print statistics of what has been extracted from the given
+        BEL/RDF network. Default: True
+
+    Returns
+    -------
+    bp : BelRdfProcessor
+        A BelRdfProcessor object which contains INDRA Statements in
+        its statements attribute.
+
+    Notes
+    -----
+    This function calls all the specific get_type_of_mechanism()
+    functions of the newly constructed BelRdfProcessor to extract
+    INDRA Statements.
+    """
+    import rdflib
+    from rdflib.plugins.parsers.ntriples import ParseError
+    from .rdf_processor import BelRdfProcessor
+    logger.warning('The BEL/RDF format is deprecated and the results of '
+                   'this function are not guaranteed to be correct. '
+                   'Running this function requires rdflib==4.2.1, which is '
+                   'older than the rdflib dependency installed by default.')
+    g = rdflib.Graph()
+    try:
+        g.parse(data=rdf_str, format='nt')
+    except ParseError as e:
+        logger.error('Could not parse rdf: %s' % e)
+        return None
+    # Build INDRA statements from RDF
+    bp = BelRdfProcessor(g)
+    bp.get_complexes()
+    bp.get_activating_subs()
+    bp.get_modifications()
+    bp.get_activating_mods()
+    bp.get_transcription()
+    bp.get_activation()
+    bp.get_conversions()
+
+    # Print some output about the process
+    if print_output:
+        bp.print_statement_coverage()
+        bp.print_statements()
+    return bp
+
+
