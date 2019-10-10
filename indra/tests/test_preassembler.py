@@ -761,15 +761,26 @@ def test_preassemble_related_complex():
     assert len(top) == 1
 
 
+def _get_extended_wm_hierarchy():
+    from indra.preassembler.make_wm_ontologies import isequal, get_term
+    hierarchies = get_wm_hierarchies()
+    test_rel = (get_term('flooding', 'wm/x/y/z'), isequal,
+                get_term('flooding', 'wm/a/b/c'))
+    hierarchies['entity'].graph.add(test_rel)
+    test_rel = (get_term('flooding', 'wm/a/b/c'), isequal,
+                get_term('flooding', 'wm/x/y/z'))
+    hierarchies['entity'].graph.add(test_rel)
+    return hierarchies
+
+
 def test_normalize_equals():
-    concept1 = ('wm/concept/causal_factor/crisis_and_disaster/environmental/'
-                'natural_disaster/flooding')
-    concept2 = ('wm/concept/causal_factor/environmental/meteorologic/'
-                'precipitation/flooding')
+    hierarchies = _get_extended_wm_hierarchy()
+    concept1 = 'wm/a/b/c/flooding'
+    concept2 = 'wm/x/y/z/flooding'
     concept3 = 'wm/concept/causal_factor/access/food_shortage'
     dbr = {'WM': [(concept1, 1.0), (concept2, 0.5), (concept3, 0.1)]}
     ev = Event(Concept('x', db_refs=dbr))
-    pa = Preassembler(hierarchies=get_wm_hierarchies(),
+    pa = Preassembler(hierarchies=hierarchies,
                       stmts=[ev])
     pa.normalize_equivalences(ns='WM')
     assert pa.stmts[0].concept.db_refs['WM'][0] == \
