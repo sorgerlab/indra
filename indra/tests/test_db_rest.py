@@ -202,6 +202,7 @@ def test_curation_submission():
                         'tester', is_test=True)
 
 
+@attr('nonpublic')
 def test_get_statement_queries():
     ag = Agent('MAP2K1', db_refs={})
     stmt = Phosphorylation(None, ag)

@@ -258,7 +258,8 @@ def submit_curation(hash_val, tag, curator, text=None,
     return make_db_rest_request('post', url, qstr, data=data)
 
 
-def get_statement_queries(stmts, **params):
+def get_statement_queries(stmts, fallback_ns='NAME', pick_ns_fun=None,
+                          **params):
     """Get queries used to search based on a statement.
 
     In addition to the stmts, you can enter any parameters standard to the
@@ -304,8 +305,7 @@ def get_statement_queries(stmts, **params):
         # usefully looked up in that name space).
         return '%s@%s' % (ag.name, fallback_ns)
 
-    fallback_ns = params.pop('fallback_ns', 'NAME')
-    pick_ns_fun = params.pop('pick_ns_fun', pick_ns)
+    pick_ns_fun = pick_ns if not pick_ns_fun else pick_ns_fun
 
     queries = []
     url_base = get_url_base('statements/from_agents')
