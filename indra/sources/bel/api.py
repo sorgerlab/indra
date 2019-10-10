@@ -1,4 +1,4 @@
-import os
+import zlib
 import json
 import pybel
 import pickle
@@ -11,10 +11,10 @@ from .processor import PybelProcessor
 logger = logging.getLogger(__name__)
 
 large_corpus_url = ('https://github.com/cthoyt/selventa-knowledge/raw/master/'
-                    'selventa_knowledge/large_corpus-20170611.bel.pickle')
+                    'selventa_knowledge/large_corpus-20170611.bel.json.gz')
 small_corpus_url = ('https://github.com/cthoyt/selventa-knowledge/raw/master/'
                     'selventa_knowledge/'
-                    'selventa-small-corpus-20150611.bel.pickle')
+                    'selventa-small-corpus-20150611.bel.json.gz')
 
 
 def process_small_corpus():
@@ -26,7 +26,7 @@ def process_small_corpus():
         A PybelProcessor object which contains INDRA Statements in
         its statements attribute.
     """
-    return process_pybel_network(network_type='graph_pickle_url',
+    return process_pybel_network(network_type='graph_jsongz_url',
                                  network_file=small_corpus_url)
 
 
@@ -39,7 +39,7 @@ def process_large_corpus():
         A PybelProcessor object which contains INDRA Statements in
         its statements attribute.
     """
-    return process_pybel_network(network_type='graph_pickle_url',
+    return process_pybel_network(network_type='graph_jsongz_url',
                                  network_file=large_corpus_url)
 
 
@@ -50,7 +50,8 @@ def process_pybel_network(network_type, network_file, **kwargs):
     ----------
     network_type : str
         The type of network that network_file is. The options are:
-        belscript, json, cbn_jgif, graph_pickle, and graph_pickle_url.
+        belscript, json, cbn_jgif, graph_pickle, and graph_jsongz_url.
+        Default: graph_jsongz_url
     network_file : str
         Path to the network file/URL to process.
 
@@ -66,13 +67,14 @@ def process_pybel_network(network_type, network_file, **kwargs):
         return process_json_file(network_file)
     elif network_type == 'cbn_jgif':
         return process_cbn_jgif_file(network_file)
-    elif network_type == 'graph_pickle_url':
+    elif network_type == 'graph_jsongz_url':
         if not network_file:
             network_file = large_corpus_url
         logger.info('Loading %s' % network_file)
         res = requests.get(network_file)
         res.raise_for_status()
-        graph = pickle.loads(res.content)
+        content = zlib.decompress(res.content, zlib.MAX_WBITS | 32)
+        graph = pybel.from_jsons(content)
         return process_pybel_graph(graph)
     elif network_type == 'graph_pickle':
         with open(network_file, 'rb') as fh:
@@ -82,7 +84,7 @@ def process_pybel_network(network_type, network_file, **kwargs):
         raise ValueError('Unknown network type: %s' % network_type)
 
 
-def process_pybel_neighborhood(entity_names, network_type='graph_pickle_url',
+def process_pybel_neighborhood(entity_names, network_type='graph_jsongz_url',
                                network_file=None, **kwargs):
     """Return PybelProcessor around neighborhood of given genes in a network.
 
@@ -98,12 +100,12 @@ def process_pybel_neighborhood(entity_names, network_type='graph_pickle_url',
         retained in the result.
     network_type : Optional[str]
         The type of network that network_file is. The options are:
-        belscript, json, cbn_jgif, graph_pickle, and graph_pickle_url.
-        Default: graph_pickle_url
+        belscript, json, cbn_jgif, graph_pickle, and graph_jsongz_url.
+        Default: graph_jsongz_url
     network_file : Optional[str]
         Path to the network file/URL to process. If not given, by default, the
-        Selventa Large Corpus is used via a URL pointing to a PyBEL Graph
-        pickle.
+        Selventa Large Corpus is used via a URL pointing to a gzipped PyBEL
+        Graph JSON file.
 
     Returns
     -------
