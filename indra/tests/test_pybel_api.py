@@ -1,5 +1,6 @@
 import os
 from urllib import request
+from nose.plugins.attrib import attr
 from pybel import BELGraph
 from pybel.dsl import *
 from pybel.language import Entity
@@ -8,11 +9,43 @@ from pybel.examples import egf_graph
 from indra.statements import *
 from indra.sources import bel
 from indra.sources.bel import processor as pb
-from indra.sources.bel.api import process_cbn_jgif_file, process_pybel_graph
+from indra.sources.bel.api import process_cbn_jgif_file, process_pybel_graph, \
+    small_corpus_url
 from indra.databases import hgnc_client
 
 mek_hgnc_id = hgnc_client.get_hgnc_id('MAP2K1')
 mek_up_id = hgnc_client.get_uniprot_id(mek_hgnc_id)
+
+
+@attr('slow')
+def test_pybel_neighborhood_query():
+    bp = bel.process_pybel_neighborhood(['TP63'],
+                                        network_type='graph_pickle_url',
+                                        network_file=small_corpus_url)
+    assert bp.statements
+    assert all([s.evidence[0].context.cell_line.name == 'MCF 10A'
+                for s in bp.statements])
+    # Locate statement about epidermis development
+    stmt = [st for st in bp.statements if st.agent_list()[1].name ==
+            'epidermis development'][0]
+    assert stmt.evidence[0].context.__repr__() == \
+           stmt.evidence[0].context.__str__()
+    assert stmt.evidence[0].context == \
+           BioContext(location=RefContext(name="Cytoplasm",
+                                          db_refs={'MESH': 'D003593'}),
+                      cell_line=RefContext(name="MCF 10A",
+                                           db_refs={'EFO': '0001200'}),
+                      cell_type=RefContext(name="keratinocyte",
+                                           db_refs={'CL': '0000312'}),
+                      organ=RefContext(name="colon",
+                                       db_refs={'UBERON': '0001155'}),
+                      disease=RefContext(name="cancer",
+                                         db_refs={'DOID': '162'}),
+                      species=RefContext(name="Rattus norvegicus",
+                                         db_refs={'TAXONOMY': '10116'}))
+    # Test annotation manager
+    assert bp.annot_manager.get_mapping('Species', '9606') == \
+           'Homo sapiens'
 
 
 def test_process_pybel():
