@@ -579,6 +579,10 @@ class Statement(object):
         new_instance._shallow_hash = my_shallow_hash
         return new_instance
 
+    def flip_polarity(self, agent_idx=None):
+        """If applicable, flip the polarity of the statement"""
+        pass
+
 
 @python_2_unicode_compatible
 class Modification(Statement):
@@ -2015,6 +2019,12 @@ class Influence(Statement):
             pol = p1 * p2
         return pol
 
+    def flip_polarity(self, agent_idx):
+        if agent_idx == 0:
+            self.subj.flip_polarity()
+        elif agent_idx == 1:
+            self.obj.flip_polarity()
+
     def polarity_count(self):
         return ((1 if self.subj.delta.polarity is not None else 0) +
                 (1 if self.obj.delta.polarity is not None else 0))
@@ -2168,6 +2178,9 @@ class Association(Complex):
                 return True
 
         return False
+
+    def flip_polarity(self, agent_idx):
+        self.members[agent_idx].flip_polarity()
 
     def to_json(self, use_sbo=False, matches_fun=None):
         # Get generic from two inheritance levels above - from Statement class
@@ -2373,6 +2386,13 @@ class Event(Statement):
         stmt = cls(concept, delta=delta,
                    context=context)
         return stmt
+
+    def flip_polarity(self, agent_idx=None):
+        # If we have an explicit polarity, flip it, otherwise do nothing
+        if self.delta.polarity == 1:
+            self.delta.polarity = -1
+        elif self.delta.polarity == -1:
+            self.delta.polarity = 1
 
     def __str__(self):
         return '%s(%s)' % (type(self).__name__, self.concept.name)

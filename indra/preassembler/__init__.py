@@ -626,6 +626,50 @@ class Preassembler(object):
 
         return contradicts
 
+    def _normalize_relations(self, ns, rank_key, rel_fun, flip_polarity):
+        def _replace_grounding(ns, entry, rank_key, rel_fun):
+            rel_ents = rel_fun(ns, entry)
+            if rel_ents:
+                rel_ents = [e.split('#')[1] if '#' in e else e
+                            for e in rel_ents]
+                sorted_entries = sorted([entry] + rel_ents, key=rank_key)
+                chosen = sorted_entries[0]
+                return chosen, chosen != entry
+            else:
+                return entry, False
+
+        if rank_key is None:
+            rank_key = lambda x: x
+        for stmt in self.stmts:
+            for agent_idx, agent in enumerate(stmt.agent_list()):
+                if agent is not None and ns in agent.db_refs:
+                    grounding = agent.db_refs[ns]
+                    if isinstance(grounding, list):
+                        new_grounding = []
+                        for idx, (entry, score) in enumerate(grounding):
+                            chosen, changed = _replace_grounding(ns, entry,
+                                                                 rank_key,
+                                                                 rel_fun)
+                            new_grounding.append((chosen, score))
+                            if idx == 0 and changed and flip_polarity:
+                                stmt.flip_polarity(agent_idx=agent_idx)
+                        agent.db_refs[ns] = new_grounding
+                    else:
+                        chosen, changed = _replace_grounding(ns, grounding,
+                                                             rank_key, rel_fun)
+                        agent.db_refs[ns] = chosen
+                        if changed and flip_polarity:
+                            stmt.flip_polarity(agent_idx=agent_idx)
+
+    def normalize_equivalences(self, ns, rank_key=None):
+        self._normalize_relations(ns, rank_key,
+                                  self.hierarchies['entity'].get_equals, False)
+
+    def normalize_opposites(self, ns, rank_key=None):
+        self._normalize_relations(ns, rank_key,
+                                  self.hierarchies['entity'].get_opposites,
+                                  True)
+
 
 def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
                              check_entities_match=False, refinement_fun=None):

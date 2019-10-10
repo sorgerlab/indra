@@ -481,20 +481,6 @@ def test_agent_entity_match_ungrounded():
     assert not ag3.entity_matches(ag4)
 
 
-def test_concept_entity_match_wm():
-    flooding_1 = Concept('flood', db_refs={
-        'WM': 'wm/concept/causal_factor/crisis_and_disaster/crisis/'
-              'natural_disaster/flooding'})
-    flooding_2 = Concept('flooding', db_refs={
-        'WM': 'wm/concept/causal_factor/weather/precipitation/flooding'})
-    storm = Concept('flood', db_refs={
-        'WM': 'wm/concept/causal_factor/weather/precipitation/storm'})
-    # If the last node in ontology is the same, they should match
-    assert flooding_1.entity_matches(flooding_2)
-    assert not flooding_1.entity_matches(storm)
-    assert not flooding_2.entity_matches(storm)
-
-
 def test_entities_match_mod():
     """Test matching of entities only, entities match on name and grounding."""
     src = Agent('SRC', db_refs={'HGNC': '11283'})

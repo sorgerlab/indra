@@ -1,12 +1,8 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 import rdflib
 import logging
-try:
-    from functools import lru_cache
-except ImportError:
-    from functools32 import lru_cache
+from functools import lru_cache
+
 
 from indra.preassembler.make_entity_hierarchy import ns_map
 
@@ -403,6 +399,45 @@ class HierarchyManager(object):
                                                    self.isa_or_partof_closure,
                                                    rel_fun)
 
+    def get_equals(self, ns1, id1):
+        u1 = self.get_uri(ns1, id1)
+        t1 = rdflib.term.URIRef(u1)
+        rel = rdflib.term.URIRef(self.relations_prefix + 'is_equal')
+        to = [t.toPython() for t in list(self.graph.objects(t1, rel))]
+        return to
+
+    def is_equal(self, ns1, id1, ns2, id2):
+        """Return True if two entities are in an "is_equal" relationship
+
+        Parameters
+        ----------
+        ns1 : str
+            Namespace code for an entity.
+        id1 : str
+            URI for an entity.
+        ns2 : str
+            Namespace code for an entity.
+        id2 : str
+            URI for an entity.
+
+        Returns
+        -------
+        bool
+            True if t1 has an "is_equal" relationship with t2.
+        """
+        u2 = self.get_uri(ns2, id2)
+
+        if u2 in self.get_equals(ns1, id1):
+            return True
+        return False
+
+    def get_opposites(self, ns1, id1):
+        u1 = self.get_uri(ns1, id1)
+        t1 = rdflib.term.URIRef(u1)
+        rel = rdflib.term.URIRef(self.relations_prefix + 'is_opposite')
+        to = [t.toPython() for t in list(self.graph.objects(t1, rel))]
+        return to
+
     def is_opposite(self, ns1, id1, ns2, id2):
         """Return True if two entities are in an "is_opposite" relationship
 
@@ -422,14 +457,9 @@ class HierarchyManager(object):
         bool
             True if t1 has an "is_opposite" relationship with t2.
         """
-        u1 = self.get_uri(ns1, id1)
         u2 = self.get_uri(ns2, id2)
-        t1 = rdflib.term.URIRef(u1)
-        t2 = rdflib.term.URIRef(u2)
 
-        rel = rdflib.term.URIRef(self.relations_prefix + 'is_opposite')
-        to = self.graph.objects(t1, rel)
-        if t2 in to:
+        if u2 in self.get_opposites(ns1, id1):
             return True
         return False
 
@@ -505,7 +535,7 @@ class HierarchyManager(object):
             return 'http://identifiers.org/fplx/' + id
         elif ns == 'CHEBI':
             return 'http://identifiers.org/chebi/' + id
-        elif ns in ['UN', 'WDI', 'FAO', 'HUME']:
+        elif ns in ['WM', 'UN', 'WDI', 'FAO', 'HUME']:
             return \
                 'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#' + id
         elif ns == 'SOFIA':
@@ -532,7 +562,7 @@ class HierarchyManager(object):
         ag_ns_name = ns_map.get(ag_ns)
         if ag_ns_name is None:
             raise UnknownNamespaceException('Unknown namespace %s' % ag_ns)
-        return (ag_ns_name, ag_id)
+        return ag_ns_name, ag_id
 
 
 class YamlHierarchyManager(HierarchyManager):
@@ -668,16 +698,13 @@ def get_wm_hierarchies():
         A dict of hierarchy managers for each type of hierarchy, in this context
         only an `entity` hierarchy is provided in the dict.
     """
-    eidos_ont = os.path.join(os.path.dirname(__file__),
-                             '../sources/eidos/eidos_ontology.rdf')
-    hume_ont = os.path.join(os.path.dirname(__file__),
-                            '../sources/hume/hume_ontology.rdf')
-    trips_ont = os.path.join(os.path.dirname(__file__),
-                             '../sources/cwms/trips_ontology.rdf')
-    sofia_ont = os.path.join(os.path.dirname(__file__),
-                             '../sources/sofia/sofia_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, build_closure=False, uri_as_name=True)
-    hm.extend_with(hume_ont)
+    this_dir = os.path.dirname(__file__)
+    wm_ont = os.path.join(this_dir, os.pardir, 'resources', 'wm_ontology.rdf')
+    trips_ont = os.path.join(this_dir, os.pardir, 'sources', 'cwms',
+                             'trips_ontology.rdf')
+    sofia_ont = os.path.join(this_dir, os.pardir, 'sources', 'sofia',
+                             'sofia_ontology.rdf')
+    hm = HierarchyManager(wm_ont, build_closure=False, uri_as_name=True)
     hm.extend_with(trips_ont)
     hm.extend_with(sofia_ont)
     wm_hierarchies = {'entity': hm}

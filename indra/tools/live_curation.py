@@ -6,9 +6,8 @@ import boto3
 import pickle
 import logging
 import argparse
-from botocore.exceptions import ClientError
 from flask import Flask, request, jsonify, abort, Response
-# Note: preserve EidosReader install as first one from indra
+# Note: preserve EidosReader import as first one from indra
 from indra.sources.eidos.reader import EidosReader
 from indra.belief import BeliefEngine
 from indra.tools import assemble_corpus as ac
@@ -16,7 +15,7 @@ from indra.belief.wm_scorer import get_eidos_bayesian_scorer
 from indra.statements import stmts_from_json_file, stmts_to_json, \
     stmts_from_json, Statement
 from indra.preassembler.hierarchy_manager import YamlHierarchyManager
-from indra.preassembler.make_eidos_hume_ontologies import eidos_ont_url, \
+from indra.preassembler.make_wm_ontologies import wm_ont_url, \
     load_yaml_from_url, rdf_graph_from_yaml
 
 
@@ -182,16 +181,20 @@ def default_assembly(stmts):
     stmts = ac.run_preassembly(stmts, belief_scorer=scorer,
                                return_toplevel=True,
                                flatten_evidence=True,
+                               normalize_equivalences=True,
+                               normalize_opposites=True,
+                               normalize_ns='WM',
                                flatten_evidence_collect_from='supported_by',
-                               poolsize=4)
+                               poolsize=4,
+                               hierarchies=hm)
     stmts = ac.merge_groundings(stmts)
     stmts = ac.merge_deltas(stmts)
     stmts = ac.standardize_names_groundings(stmts)
     return stmts
 
 
-def _make_un_ontology():
-    return YamlHierarchyManager(load_yaml_from_url(eidos_ont_url),
+def _make_wm_ontology():
+    return YamlHierarchyManager(load_yaml_from_url(wm_ont_url),
                                 rdf_graph_from_yaml, True)
 
 
@@ -247,7 +250,7 @@ class LiveCurator(object):
     def __init__(self, scorer=None, corpora=None):
         self.corpora = corpora if corpora else {}
         self.scorer = scorer if scorer else get_eidos_bayesian_scorer()
-        self.ont_manager = _make_un_ontology()
+        self.ont_manager = _make_wm_ontology()
         self.eidos_reader = EidosReader()
 
     # TODO: generalize this to other kinds of scorers
@@ -459,7 +462,7 @@ def reset_ontology():
         abort(Response('Missing application/json header.', 415))
 
     # Reload the original ontology
-    curator.ont_manager = _make_un_ontology()
+    curator.ont_manager = _make_wm_ontology()
 
     return jsonify({})
 

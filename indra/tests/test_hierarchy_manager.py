@@ -1,11 +1,10 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 from copy import deepcopy
 from indra.util import unicode_strs
 from indra.preassembler.hierarchy_manager import hierarchies, \
-    HierarchyManager, get_bio_hierarchies, YamlHierarchyManager
-from indra.preassembler.make_eidos_hume_ontologies import eidos_ont_url, \
+    HierarchyManager, get_bio_hierarchies, YamlHierarchyManager, \
+    get_wm_hierarchies
+from indra.preassembler.make_wm_ontologies import eidos_ont_url, \
     rdf_graph_from_yaml, load_yaml_from_url
 
 
@@ -284,3 +283,34 @@ def test_yaml_hm():
     hm.add_entry(entry)
     assert hm.isa('UN', entry, 'UN', '/'.join(entry.split('/')[:-1]))
     assert hm.isa('UN', entry, 'UN', '/'.join(entry.split('/')[:-2]))
+
+
+def test_hm_opposite():
+    hierarchies = get_wm_hierarchies()
+    concept1 = 'wm/concept/causal_factor/access/food_shortage'
+    concept2 = ('wm/concept/causal_factor/economic_and_commerce/'
+                'economic_activity/market/supply/food_supply')
+    concept3 = ('wm/concept/causal_factor/environmental/meteorologic/'
+                'precipitation/flooding')
+    assert hierarchies['entity'].is_opposite('WM', concept1, 'WM', concept2)
+    assert hierarchies['entity'].is_opposite('WM', concept2, 'WM', concept1)
+    assert not hierarchies['entity'].is_opposite('WM', concept1, 'WM',
+                                                 concept3)
+
+
+def test_hm_equal():
+    from indra.preassembler.make_wm_ontologies import isequal, get_term
+    hierarchies = get_wm_hierarchies()
+    test_rel = (get_term('flooding', 'wm/x/y/z'), isequal,
+                get_term('flooding', 'wm/a/b/c'))
+    hierarchies['entity'].graph.add(test_rel)
+    test_rel = (get_term('flooding', 'wm/a/b/c'), isequal,
+                get_term('flooding', 'wm/x/y/z'))
+    hierarchies['entity'].graph.add(test_rel)
+    concept1 = 'wm/x/y/z/flooding'
+    concept2 = 'wm/a/b/c/flooding'
+    concept3 = 'wm/concept/causal_factor/access/food_shortage'
+
+    assert hierarchies['entity'].is_equal('WM', concept1, 'WM', concept2)
+    assert hierarchies['entity'].is_equal('WM', concept2, 'WM', concept1)
+    assert not hierarchies['entity'].is_equal('WM', concept1, 'WM', concept3)

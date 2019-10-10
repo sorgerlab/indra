@@ -1,20 +1,12 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
-from builtins import dict, str
 import os
-from collections import OrderedDict
 
 from indra.preassembler import Preassembler, render_stmt_graph, \
                                flatten_evidence, flatten_stmts
 from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.sources import trips, reach
-from indra.statements import Agent, Phosphorylation, BoundCondition, \
-    Dephosphorylation, Evidence, ModCondition, \
-    ActiveForm, MutCondition, Complex, \
-    Translocation, Activation, Inhibition, \
-    Deacetylation, Conversion, Concept, Influence, \
-    IncreaseAmount, DecreaseAmount, Statement, Event, Association
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.statements import *
+from indra.preassembler.hierarchy_manager import hierarchies, \
+    get_wm_hierarchies
 
 
 def test_duplicates():
@@ -677,6 +669,7 @@ def test_influence_duplicate():
     agr = 'UN/entities/natural/crop_technology'
     cgov = Event(Concept('government', db_refs={'UN': [(gov, 1.0)]}))
     cagr = Event(Concept('agriculture', db_refs={'UN': [(agr, 1.0)]}))
+    print(cgov.matches_key())
     stmt1 = Influence(cgov, cagr, evidence=[Evidence(source_api='eidos1')])
     stmt2 = Influence(cagr, cgov, evidence=[Evidence(source_api='eidos2')])
     stmt3 = Influence(cgov, cagr, evidence=[Evidence(source_api='eidos3')])
@@ -686,9 +679,10 @@ def test_influence_duplicate():
     hierarchies = {'entity': hm}
     pa = Preassembler(hierarchies, [stmt1, stmt2, stmt3])
     unique_stmts = pa.combine_duplicates()
+    unique_stmts = sorted(unique_stmts, key=lambda x: len(x.evidence))
     assert len(unique_stmts) == 2
-    assert len(unique_stmts[1].evidence) == 2
     assert len(unique_stmts[0].evidence) == 1
+    assert len(unique_stmts[1].evidence) == 2, unique_stmts
     sources = [e.source_api for e in unique_stmts[1].evidence]
     assert set(sources) == set(['eidos1', 'eidos3'])
 
@@ -765,6 +759,91 @@ def test_preassemble_related_complex():
     assert len(uniq) == 2
     top = pa.combine_related()
     assert len(top) == 1
+
+
+def _get_extended_wm_hierarchy():
+    from indra.preassembler.make_wm_ontologies import isequal, get_term
+    hierarchies = get_wm_hierarchies()
+    test_rel = (get_term('flooding', 'wm/x/y/z'), isequal,
+                get_term('flooding', 'wm/a/b/c'))
+    hierarchies['entity'].graph.add(test_rel)
+    test_rel = (get_term('flooding', 'wm/a/b/c'), isequal,
+                get_term('flooding', 'wm/x/y/z'))
+    hierarchies['entity'].graph.add(test_rel)
+    return hierarchies
+
+
+def test_normalize_equals():
+    hierarchies = _get_extended_wm_hierarchy()
+    concept1 = 'wm/a/b/c/flooding'
+    concept2 = 'wm/x/y/z/flooding'
+    concept3 = 'wm/concept/causal_factor/access/food_shortage'
+    dbr = {'WM': [(concept1, 1.0), (concept2, 0.5), (concept3, 0.1)]}
+    ev = Event(Concept('x', db_refs=dbr))
+    pa = Preassembler(hierarchies=hierarchies,
+                      stmts=[ev])
+    pa.normalize_equivalences(ns='WM')
+    assert pa.stmts[0].concept.db_refs['WM'][0] == \
+        (concept1, 1.0), pa.stmts[0].concept.db_refs['WM']
+    assert pa.stmts[0].concept.db_refs['WM'][1] == \
+        (concept1, 0.5), pa.stmts[0].concept.db_refs['WM']
+    assert pa.stmts[0].concept.db_refs['WM'][2] == \
+        (concept3, 0.1), pa.stmts[0].concept.db_refs['WM']
+
+
+def test_normalize_opposites():
+    concept1 = ('wm/concept/causal_factor/economic_and_commerce/'
+                'economic_activity/market/supply/food_supply')
+    concept2 = 'wm/concept/causal_factor/access/food_shortage'
+    concept3 = ('wm/concept/causal_factor/environmental/meteorologic/'
+                'precipitation/flooding')
+    dbr = {'WM': [(concept1, 1.0), (concept2, 0.5), (concept3, 0.1)]}
+    ev = Event(Concept('x', db_refs=dbr),
+               delta=QualitativeDelta(polarity=1))
+    pa = Preassembler(hierarchies=get_wm_hierarchies(),
+                      stmts=[ev])
+    pa.normalize_opposites(ns='WM')
+    assert pa.stmts[0].concept.db_refs['WM'][0] == \
+        (concept2, 1.0), pa.stmts[0].concept.db_refs['WM']
+    assert pa.stmts[0].concept.db_refs['WM'][1] == \
+        (concept2, 0.5), pa.stmts[0].concept.db_refs['WM']
+    assert pa.stmts[0].concept.db_refs['WM'][2] == \
+        (concept3, 0.1), pa.stmts[0].concept.db_refs['WM']
+    assert pa.stmts[0].delta.polarity == -1
+
+
+def test_normalize_opposites_influence():
+    concept1 = ('wm/concept/causal_factor/economic_and_commerce/'
+                'economic_activity/market/supply/food_supply')
+    concept2 = 'wm/concept/causal_factor/access/food_shortage'
+    dbr1 = {'WM': [(concept1, 1.0), (concept2, 0.5)]}
+    dbr2 = {'WM': [(concept2, 1.0), (concept1, 0.5)]}
+    stmt = Influence(Event(Concept('x', db_refs=dbr1),
+                           delta=QualitativeDelta(polarity=1)),
+                     Event(Concept('y', db_refs=dbr2),
+                           delta=QualitativeDelta(polarity=-1)))
+    pa = Preassembler(hierarchies=get_wm_hierarchies(),
+                      stmts=[stmt])
+    pa.normalize_opposites(ns='WM')
+    assert pa.stmts[0].subj.delta.polarity == -1
+    assert pa.stmts[0].obj.delta.polarity == -1
+
+
+def test_normalize_opposites_association():
+    concept1 = ('wm/concept/causal_factor/economic_and_commerce/'
+                'economic_activity/market/supply/food_supply')
+    concept2 = 'wm/concept/causal_factor/access/food_shortage'
+    dbr1 = {'WM': [(concept1, 1.0), (concept2, 0.5)]}
+    dbr2 = {'WM': [(concept2, 1.0), (concept1, 0.5)]}
+    stmt = Association([Event(Concept('x', db_refs=dbr1),
+                              delta=QualitativeDelta(polarity=1)),
+                        Event(Concept('y', db_refs=dbr2),
+                              delta=QualitativeDelta(polarity=-1))])
+    pa = Preassembler(hierarchies=get_wm_hierarchies(),
+                      stmts=[stmt])
+    pa.normalize_opposites(ns='WM')
+    assert pa.stmts[0].members[0].delta.polarity == -1
+    assert pa.stmts[0].members[1].delta.polarity == -1
 
 
 def test_agent_text_storage():
