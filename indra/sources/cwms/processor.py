@@ -382,7 +382,7 @@ class CWMSProcessor(object):
                 mod = 'less_than'
             value_str = value.text.strip()
             if value_str:
-                value = int(value_str)
+                value = int(float(value_str))
             else:
                 value = None
             unit = size_term.find('unit')
