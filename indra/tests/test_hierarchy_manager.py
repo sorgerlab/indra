@@ -299,11 +299,16 @@ def test_hm_opposite():
 
 
 def test_hm_equal():
+    from indra.preassembler.make_wm_ontologies import isequal, get_term
     hierarchies = get_wm_hierarchies()
-    concept1 = ('wm/concept/causal_factor/crisis_and_disaster/environmental/'
-                'natural_disaster/flooding')
-    concept2 = ('wm/concept/causal_factor/environmental/meteorologic/'
-                'precipitation/flooding')
+    test_rel = (get_term('flooding', 'wm/x/y/z'), isequal,
+                get_term('flooding', 'wm/a/b/c'))
+    hierarchies['entity'].graph.add(test_rel)
+    test_rel = (get_term('flooding', 'wm/a/b/c'), isequal,
+                get_term('flooding', 'wm/x/y/z'))
+    hierarchies['entity'].graph.add(test_rel)
+    concept1 = 'wm/x/y/z/flooding'
+    concept2 = 'wm/a/b/c/flooding'
     concept3 = 'wm/concept/causal_factor/access/food_shortage'
 
     assert hierarchies['entity'].is_equal('WM', concept1, 'WM', concept2)
