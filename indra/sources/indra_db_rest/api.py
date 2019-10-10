@@ -258,7 +258,8 @@ def submit_curation(hash_val, tag, curator, text=None,
     return make_db_rest_request('post', url, qstr, data=data)
 
 
-def get_statement_queries(stmts, **params):
+def get_statement_queries(stmts, fallback_ns='NAME', pick_ns_fun=None,
+                          **params):
     """Get queries used to search based on a statement.
 
     In addition to the stmts, you can enter any parameters standard to the
@@ -268,17 +269,43 @@ def get_statement_queries(stmts, **params):
     ----------
     stmts : list[Statement]
         A list of INDRA statements.
+    fallback_ns : Optional[str]
+        The name space to search by when an Agent in a Statement is not
+        grounded to one of the standardized name spaces. Typically,
+        searching by 'NAME' (i.e., the Agent's name) is a good option if
+        (1) An Agent's grounding is missing but its name is
+        known to be standard in one of the name spaces. In this case the
+        name-based lookup will yield the same result as looking up by
+        grounding. Example: MAP2K1(db_refs={})
+        (2) Any Agent that is encountered with the same name as this Agent
+        is never standardized, so looking up by name yields the same result
+        as looking up by TEXT. Example: xyz(db_refs={'TEXT': 'xyz'})
+        Searching by TEXT is better in other cases e.g., when the given
+        specific Agent is not grounded but we have other Agents with the
+        same TEXT that are grounded and then standardized to a different name.
+        Example: Erk(db_refs={'TEXT': 'Erk'}).
+        Default: 'NAME'
+    pick_ns_fun : Optional[function]
+        An optional user-supplied function which takes an Agent as input and
+        returns a string of the form value@ns where 'value' will be looked
+        up in namespace 'ns' to search for the given Agent.
+    **params : kwargs
+        A set of keyword arguments that are added as parameters to the
+        query URLs.
     """
-
     def pick_ns(ag):
-        for ns in ['HGNC', 'FPLX', 'CHEMBL', 'CHEBI', 'GO', 'MESH']:
-            if ns in ag.db_refs.keys():
+        # If the Agent has grounding, in order of preference, in any of these
+        # name spaces then we look it up based on grounding.
+        for ns in ['FPLX', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH']:
+            if ns in ag.db_refs:
                 dbid = ag.db_refs[ns]
-                break
-        else:
-            ns = 'TEXT'
-            dbid = ag.name
-        return '%s@%s' % (dbid, ns)
+                return '%s@%s' % (dbid, ns)
+        # Otherwise we fall back on searching by NAME or TEXT
+        # (or any other given name space as long as the Agent name can be
+        # usefully looked up in that name space).
+        return '%s@%s' % (ag.name, fallback_ns)
+
+    pick_ns_fun = pick_ns if not pick_ns_fun else pick_ns_fun
 
     queries = []
     url_base = get_url_base('statements/from_agents')
@@ -289,11 +316,11 @@ def get_statement_queries(stmts, **params):
         if not isinstance(stmt, non_binary_statements):
             for pos, ag in zip(['subject', 'object'], stmt.agent_list()):
                 if ag is not None:
-                    kwargs[pos] = pick_ns(ag)
+                    kwargs[pos] = pick_ns_fun(ag)
         else:
             for i, ag in enumerate(stmt.agent_list()):
                 if ag is not None:
-                    kwargs['agent%d' % i] = pick_ns(ag)
+                    kwargs['agent%d' % i] = pick_ns_fun(ag)
         kwargs['type'] = stmt.__class__.__name__
         kwargs.update(params)
         query_str = '?' + '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()
