@@ -284,9 +284,15 @@ class CWMSProcessor(object):
             inevent_term = self._get_inevent_term(agent_arg_term)
             if inevent_term is not None:
                 locs = self._get_migration_locations(inevent_term, locs)
+                if time is None:
+                    time = self._extract_time(inevent_term)
+                if size is None:
+                    size = self._get_size_and_entity(inevent_term)
             other_event_term = self._get_other_event_term(agent_arg_term)
             if other_event_term is not None:
                 locs = self._get_migration_locations(other_event_term, locs)
+                if time is None:
+                    time = self._extract_time(other_event_term)
                 if size is None:
                     size = self._get_size_and_entity(other_event_term)
         if affected_arg_term:
