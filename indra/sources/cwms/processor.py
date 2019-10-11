@@ -492,29 +492,30 @@ class CWMSProcessor(object):
         text = sanitize_name(time_term.findtext('text'))
         timex = time_term.find('timex')
         if timex is not None:
+    def _process_timex(self, timex):
             year = timex.findtext('year')
+        month = timex.findtext('month')
+        day = timex.findtext('day')
+        if year or month or day:
             try:
                 year = int(year)
             except Exception:
-                year = None
-            month = timex.findtext('month')
-            day = timex.findtext('day')
-            if year and (month or day):
+                year = datetime.today().year
                 try:
+                # Month can be represented either by name or number (May or 5)
                     month = int(month)
+                except Exception:
+                try:
+                    month = datetime.strptime(month, '%B').month
                 except Exception:
                     month = 1
                 try:
                     day = int(day)
                 except Exception:
                     day = 1
-                start = datetime(year, month, day)
-                time_context = TimeContext(text=text, start=start)
-            else:
-                time_context = TimeContext(text=text)
-        else:
-            time_context = TimeContext(text=text)
-        return time_context
+            time = datetime(year, month, day)
+            return time
+        return None
 
     def _extract_geoloc(self, term, arg_link='location'):
         """Get the location from a term (CC or TERM)"""
