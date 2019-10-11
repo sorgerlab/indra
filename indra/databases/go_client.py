@@ -8,7 +8,7 @@ from indra.util import read_unicode_csv, write_unicode_csv
 logger = logging.getLogger(__name__)
 
 # This file can be downloaded from: http://geneontology.org/ontology/go.owl
-go_owl_path = join(dirname(abspath(__file__)), '..', '..', 'data', 'go.owl')
+go_owl_path = join(os.getenv('HOME', '.'), 'go.owl')
 go_mappings_file = join(dirname(abspath(__file__)), '..', 'resources',
                         'go_id_label_mappings.tsv')
 secondary_mappings_file = join(dirname(abspath(__file__)), '..', 'resources',

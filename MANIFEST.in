@@ -2,7 +2,6 @@ include LICENSE
 include README.md
 graft indra/resources
 graft indra/benchmarks
-graft data
 graft doc
 graft models
 graft rest_api
