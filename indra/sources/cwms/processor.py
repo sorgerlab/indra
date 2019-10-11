@@ -492,8 +492,40 @@ class CWMSProcessor(object):
         text = sanitize_name(time_term.findtext('text'))
         timex = time_term.find('timex')
         if timex is not None:
+            start = self._process_timex(timex)
+            if start is not None:
+                time_context = TimeContext(text=text, start=start)
+            else:
+                time_context = TimeContext(text=text)
+        else:
+            start = None
+            end = None
+            from_time_el = time_term.find('from-time')
+            to_time_el = time_term.find('to-time')
+            if from_time_el is not None:
+                from_time_id = from_time_el.attrib.get('id')
+                from_time_term = self.tree.find("*[@id='%s']" % from_time_id)
+                if time_term is not None:
+                    timex = from_time_term.find('timex')
+                    if timex is not None:
+                        start = self._process_timex(timex)
+            if to_time_el is not None:
+                to_time_id = to_time_el.attrib.get('id')
+                to_time_term = self.tree.find("*[@id='%s']" % to_time_id)
+                if to_time_term is not None:
+                    timex = to_time_term.find('timex')
+                    if timex is not None:
+                        end = self._process_timex(timex)
+            if start and end:
+                duration = int((end - start).total_seconds())
+            else:
+                duration = None
+            time_context = TimeContext(
+                text=text, start=start, end=end, duration=duration)
+        return time_context
+
     def _process_timex(self, timex):
-            year = timex.findtext('year')
+        year = timex.findtext('year')
         month = timex.findtext('month')
         day = timex.findtext('day')
         if year or month or day:
@@ -501,18 +533,18 @@ class CWMSProcessor(object):
                 year = int(year)
             except Exception:
                 year = datetime.today().year
-                try:
+            try:
                 # Month can be represented either by name or number (May or 5)
-                    month = int(month)
-                except Exception:
+                month = int(month)
+            except Exception:
                 try:
                     month = datetime.strptime(month, '%B').month
                 except Exception:
                     month = 1
-                try:
-                    day = int(day)
-                except Exception:
-                    day = 1
+            try:
+                day = int(day)
+            except Exception:
+                day = 1
             time = datetime(year, month, day)
             return time
         return None
