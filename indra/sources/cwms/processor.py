@@ -380,9 +380,14 @@ class CWMSProcessor(object):
             mod = value.attrib.get('mod')
             if mod and mod.lower() == 'almost':
                 mod = 'less_than'
+            value_txt = value.text
+            if value_txt is not None:
             value_str = value.text.strip()
-            if value_str:
+                if value_str and not value_str.startswith('ONT') and \
+                        not value_str.startswith('W'):
                 value = int(float(value_str))
+            else:
+                value = None
             else:
                 value = None
             unit = size_term.find('unit')
