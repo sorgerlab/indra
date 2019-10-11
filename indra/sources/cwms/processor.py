@@ -534,13 +534,17 @@ class CWMSProcessor(object):
             except Exception:
                 year = datetime.today().year
             try:
-                # Month can be represented either by name or number (May or 5)
+                # Month can be represented either by name, short name or
+                # number (October, Oct or 10)
                 month = int(month)
             except Exception:
                 try:
                     month = datetime.strptime(month, '%B').month
                 except Exception:
-                    month = 1
+                    try:
+                        month = datetime.strptime(month, '%b').month
+                    except Exception:
+                        month = 1
             try:
                 day = int(day)
             except Exception:
