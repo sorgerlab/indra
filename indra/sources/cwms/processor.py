@@ -274,7 +274,7 @@ class CWMSProcessor(object):
         for arg_term in [agent_arg_term, affected_arg_term]:
             if arg_term is not None:
                 size_arg = arg_term.find('size')
-                if size_arg is not None:
+                if size_arg is not None and size_arg.attrib.get('id'):
                     size = self._get_size(size_arg.attrib['id'])
                     break
         # Get more locations from arguments and inevents
@@ -334,16 +334,17 @@ class CWMSProcessor(object):
                             return event_term
                     else:
                         # Refset might be on a different level
-                        term = self.tree.find("*[@id='%s']" % arg.attrib['id'])
-                        arg_refset_arg = term.find('refset')
-                        if arg_refset_arg is not None:
-                            if arg_refset_arg.attrib.get('id') == \
-                                    arg_term.attrib.get('id'):
-                                event_id = ev.attrib['id']
-                                self.subsumed_events.append(event_id)
-                                event_term = self.tree.find("*[@id='%s']"
-                                                            % event_id)
-                                return event_term
+                        if arg.attrib.get('id'):
+                            term = self.tree.find("*[@id='%s']" % arg.attrib['id'])
+                            arg_refset_arg = term.find('refset')
+                            if arg_refset_arg is not None:
+                                if arg_refset_arg.attrib.get('id') == \
+                                        arg_term.attrib.get('id'):
+                                    event_id = ev.attrib['id']
+                                    self.subsumed_events.append(event_id)
+                                    event_term = self.tree.find("*[@id='%s']"
+                                                                % event_id)
+                                    return event_term
         return None
 
     def _get_migration_locations(self, event_term, existing_locs=None,
@@ -382,12 +383,12 @@ class CWMSProcessor(object):
                 mod = 'less_than'
             value_txt = value.text
             if value_txt is not None:
-            value_str = value.text.strip()
+                value_str = value.text.strip()
                 if value_str and not value_str.startswith('ONT') and \
                         not value_str.startswith('W'):
-                value = int(float(value_str))
-            else:
-                value = None
+                    value = int(float(value_str))
+                else:
+                    value = None
             else:
                 value = None
             unit = size_term.find('unit')
@@ -410,7 +411,7 @@ class CWMSProcessor(object):
         size = None
         if term1 is not None:
             size_arg = term1.find('size')
-            if size_arg is not None:
+            if size_arg is not None and size_arg.attrib.get('id'):
                 size = self._get_size(size_arg.attrib['id'])
         if size is not None and term2 is not None:
             size.entity = term2.find('text').text
