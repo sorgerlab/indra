@@ -20,7 +20,7 @@ mek_up_id = hgnc_client.get_uniprot_id(mek_hgnc_id)
 @attr('slow')
 def test_pybel_neighborhood_query():
     bp = bel.process_pybel_neighborhood(['TP63'],
-                                        network_type='graph_pickle_url',
+                                        network_type='graph_jsongz_url',
                                         network_file=small_corpus_url)
     assert bp.statements
     assert all([s.evidence[0].context.cell_line.name == 'MCF 10A'
