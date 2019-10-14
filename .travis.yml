@@ -39,7 +39,7 @@ install:
     fi
   # Install TEES only if slow tests are being run
   - |
-    if [[ $RUN_SLOW == "true" ]]; then
+    if [[ $RUN_SLOW != "true" ]]; then
         sudo pip2 install numpy
         sudo apt-get --yes install ruby;
         aws s3 cp s3://bigmech/travis/TEES.tar.bz2 . --no-sign-request --no-sign-request;
@@ -77,11 +77,11 @@ script:
   - echo $NOSEATTR
   # Now run all INDRA tests
   - cd $TRAVIS_BUILD_DIR
-  - python -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"
-    indra -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
-        --ignore-files='.*test_reach.py' --ignore-files='.*test_live_curation.py'
-        --with-coverage --cover-inclusive --cover-package=indra
-        --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10
+  #- python -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"
+  #  indra -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
+  #      --ignore-files='.*test_reach.py' --ignore-files='.*test_live_curation.py'
+  #      --with-coverage --cover-inclusive --cover-package=indra
+  #      --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10
   # First run TEES and Eidos tests separately for technical reasons
   - python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
     --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
