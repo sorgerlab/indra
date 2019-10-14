@@ -14,6 +14,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 
+import requests
 from indra.statements import Phosphorylation, Dephosphorylation, Complex, \
         IncreaseAmount, DecreaseAmount, Agent, Evidence
 from indra.sources.tees.parse_tees import parse_output
@@ -56,17 +57,6 @@ class TEESProcessor(object):
         # Store pmid
         self.pmid = pmid
 
-        # Load grounding information
-        path_this = os.path.dirname(os.path.abspath(__file__))
-        gm_fname = os.path.join(path_this, '../../resources/',
-                                'extracted_reach_grounding_map.csv')
-        try:
-            gm = load_grounding_map(gm_fname)
-        except BaseException:
-            raise Exception('Could not load the grounding map from ' +
-                            gm_fname)
-        mapper = GroundingMapper(gm)
-
         # Run TEES and parse into networkx graph
         self.G = parse_output(a1_text, a2_text, sentence_segmentations)
 
@@ -78,7 +68,26 @@ class TEESProcessor(object):
         self.statements.extend(self.process_decrease_expression_amount())
 
         # Ground statements
-        self.statements = mapper.map_stmts(self.statements)
+        self.ground_statements(self.statements)
+
+    @staticmethod
+    def ground_statements(stmts):
+        gm = GroundingMapper()
+        grounding_url = 'http://grounding.indra.bio/ground'
+        for stmt in stmts:
+            context = stmt.evidence[0].text
+            for agent in stmt.agent_list():
+                if agent is not None and 'TEXT' in agent.db_refs:
+                    txt = agent.db_refs['TEXT']
+                    resp = requests.post(grounding_url,
+                                         json={'text': txt,
+                                               'context': context})
+                    results = resp.json()
+                    if results:
+                        db_refs = {'TEXT': txt,
+                                   results[0]['db']: results[0]['id']}
+                        agent.db_Refs = db_refs
+                        gm.standardize_agent_name(agent, standardize_refs=True)
 
     def node_has_edge_with_label(self, node_name, edge_label):
         """Looks for an edge from node_name to some other node with the specified
