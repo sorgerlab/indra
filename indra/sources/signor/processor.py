@@ -53,6 +53,7 @@ _type_db_map = {
     ('chemical', 'ChEBI'): 'CHEBI',
     ('smallmolecule', 'ChEBI'): 'CHEBI',
     ('mirna', 'miRBase'): 'MIRBASE',
+    ('antibody', 'DRUGBANK'): 'DRUGBANK'
 }
 
 
@@ -207,7 +208,8 @@ class SignorProcessor(object):
                     name = famplex_id
             # Other possible groundings are PUBCHEM, SIGNOR, etc.
             elif gnd_type is not None:
-                if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI', 'miRBase'):
+                if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI', 'miRBase',
+                                    'DRUGBANK'):
                     raise ValueError('Unexpected database %s' % database)
                 if database == 'PUBCHEM' and id.startswith('CID:'):
                     # We take off the CID: prefix plus fix an issue with
