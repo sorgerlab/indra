@@ -148,7 +148,7 @@ def test_process_row_chem_inh():
         SEQUENCE='', TAX_ID='9606', CELL_DATA='', TISSUE_DATA='',
         MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
         MODIFICATIONB='', MODBSEQ='', PMID='Other', DIRECT='YES',
-        NOTES='Selleck', ANNOTATOR='gcesareni', SENTENCE='',
+        NOTES='Selleck', ANNOTATOR='gcesareni', SENTENCE='', SCORE='0.5',
         SIGNOR_ID='SIGNOR-190245')
     # Create an empty Signor processor
     sp = SignorProcessor([])
@@ -167,7 +167,8 @@ def test_process_row_chem_act():
         SEQUENCE='', TAX_ID='9606', CELL_DATA='', TISSUE_DATA='',
         MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
         MODIFICATIONB='', MODBSEQ='', PMID='16293724', DIRECT='YES', NOTES='',
-        ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-141820')
+        ANNOTATOR='gcesareni', SENTENCE='', SCORE='0.5',
+        SIGNOR_ID='SIGNOR-141820')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row_chem_act)
@@ -185,7 +186,8 @@ def test_process_row_stab():
             CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='',
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='17052192', DIRECT='YES', NOTES='',
-            ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-150135')
+            ANNOTATOR='gcesareni', SENTENCE='', SCORE='0.5',
+            SIGNOR_ID='SIGNOR-150135')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row_stab)
@@ -205,7 +207,7 @@ def test_process_row_destab():
             MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='',
             MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='23721961',
             DIRECT='NO', NOTES='', ANNOTATOR='miannu',
-            SENTENCE='', SIGNOR_ID='SIGNOR-252114')
+            SENTENCE='', SCORE='0.5', SIGNOR_ID='SIGNOR-252114')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row_destab)
@@ -223,7 +225,8 @@ def test_process_row_binding_complex():
             CELL_DATA='', TISSUE_DATA='BTO:0000007', MODULATOR_COMPLEX='',
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='18321988', DIRECT='YES', NOTES='',
-            ANNOTATOR='lperfetto', SENTENCE='', SIGNOR_ID='SIGNOR-226693')
+            ANNOTATOR='lperfetto', SENTENCE='', SCORE='0.5',
+            SIGNOR_ID='SIGNOR-226693')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row)
@@ -243,7 +246,7 @@ def test_process_row_phos_up():
             TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='11901158', DIRECT='YES', NOTES='', ANNOTATOR='gcesareni',
-            SENTENCE='', SIGNOR_ID='SIGNOR-116131')
+            SENTENCE='', SCORE='0.5', SIGNOR_ID='SIGNOR-116131')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row)
@@ -273,7 +276,7 @@ def test_process_row_phos_down():
             TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='18056643', DIRECT='YES', NOTES='', ANNOTATOR='llicata',
-            SENTENCE='', SIGNOR_ID='SIGNOR-159591')
+            SENTENCE='', SCORE='0.5', SIGNOR_ID='SIGNOR-159591')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row)
@@ -303,7 +306,7 @@ def test_process_row_phos_nores_up():
             MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='',
             MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='14976552',
             DIRECT='YES', NOTES='', ANNOTATOR='lperfetto',
-            SENTENCE='', SIGNOR_ID='SIGNOR-242602')
+            SENTENCE='', SCORE='0.5', SIGNOR_ID='SIGNOR-242602')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row)
@@ -332,7 +335,8 @@ def test_process_row_phos_nores_down():
             TAX_ID='9606', CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='',
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='15747065', DIRECT='YES', NOTES='',
-            ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-134494')
+            ANNOTATOR='gcesareni', SENTENCE='', SCORE='0.5',
+            SIGNOR_ID='SIGNOR-134494')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row)
@@ -362,7 +366,7 @@ def test_process_row_dephos_up():
             TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='11901158', DIRECT='YES', NOTES='', ANNOTATOR='gcesareni',
-            SENTENCE='', SIGNOR_ID='SIGNOR-116131')
+            SENTENCE='', SCORE='0.5', SIGNOR_ID='SIGNOR-116131')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row)
@@ -392,7 +396,7 @@ def test_process_row_dephos_down():
             TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='18056643', DIRECT='YES', NOTES='', ANNOTATOR='llicata',
-            SENTENCE='', SIGNOR_ID='SIGNOR-159591')
+            SENTENCE='', SCORE='0.5', SIGNOR_ID='SIGNOR-159591')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row)
@@ -421,7 +425,7 @@ def test_mod_unknown_effect():
             CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='',
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='9111318', DIRECT='YES', NOTES='', ANNOTATOR='',
-            SENTENCE='', SIGNOR_ID='SIGNOR-251358')
+            SENTENCE='', SCORE='0.5', SIGNOR_ID='SIGNOR-251358')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row)
@@ -442,7 +446,7 @@ def test_process_row_dephos_nores_up():
             MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='',
             MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='14976552',
             DIRECT='YES', NOTES='', ANNOTATOR='lperfetto',
-            SENTENCE='', SIGNOR_ID='SIGNOR-242602')
+            SENTENCE='', SCORE='0.5', SIGNOR_ID='SIGNOR-242602')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row)
@@ -471,7 +475,8 @@ def test_process_row_dephos_nores_down():
             TAX_ID='9606', CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='',
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='15747065', DIRECT='YES', NOTES='',
-            ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-134494')
+            ANNOTATOR='gcesareni', SENTENCE='', SCORE='0.5',
+            SIGNOR_ID='SIGNOR-134494')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row)
@@ -501,7 +506,7 @@ def test_process_row_phos_multi_res():
             CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='',
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='8157000', DIRECT='YES',
-            NOTES='', ANNOTATOR='gcesareni', SENTENCE='',
+            NOTES='', ANNOTATOR='gcesareni', SENTENCE='', SCORE='0.5',
             SIGNOR_ID='SIGNOR-36553')
     # Create an empty Signor processor
     sp = SignorProcessor([])
@@ -536,7 +541,7 @@ def test_process_row_complex_up():
             TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='9756848', DIRECT='YES', NOTES='', ANNOTATOR='miannu',
-            SENTENCE='', SIGNOR_ID='SIGNOR-60557')
+            SENTENCE='', SCORE='0.5', SIGNOR_ID='SIGNOR-60557')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row)
@@ -567,7 +572,8 @@ def test_process_row_complex_down():
             CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='',
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='10548111', DIRECT='YES', NOTES='',
-            ANNOTATOR='amattioni', SENTENCE='', SIGNOR_ID='SIGNOR-71954')
+            ANNOTATOR='amattioni', SENTENCE='', SCORE='0.5',
+            SIGNOR_ID='SIGNOR-71954')
     # Create an empty Signor processor
     sp = SignorProcessor([])
     stmts, no_mech = sp._process_row(test_row)
@@ -631,7 +637,7 @@ def test_signor_family_famplex_mapping():
             TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='20404851', DIRECT='NO', NOTES='', ANNOTATOR='lperfetto',
-            SENTENCE='', SIGNOR_ID='SIGNOR-216310')
+            SENTENCE='', SCORE='0.5', SIGNOR_ID='SIGNOR-216310')
     complex_map = {}
     sp = SignorProcessor([test_row], complex_map)
     statements = sp.statements
@@ -651,7 +657,7 @@ def test_signor_complexes():
         TAX_ID='9606', CELL_DATA='BTO:0000972', TISSUE_DATA='',
         MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
         MODIFICATIONB='', MODBSEQ='', PMID='18025157', DIRECT='NO', NOTES='',
-        ANNOTATOR='', SENTENCE='', SIGNOR_ID='SIGNOR-255746')
+        ANNOTATOR='', SENTENCE='', SCORE='0.5', SIGNOR_ID='SIGNOR-255746')
     complex_map = {'SIGNOR-C1': ['P23511', 'P25208', 'Q13952']}
     sp = SignorProcessor([test_row], complex_map)
     assert isinstance(sp.statements, list)
@@ -696,7 +702,8 @@ def test_recursive_complexes():
             TISSUE_DATA='BTO:0000887;BTO:0001103', MODULATOR_COMPLEX='',
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='22863532', DIRECT='NO', NOTES='',
-            ANNOTATOR='miannu', SENTENCE='', SIGNOR_ID='SIGNOR-198641')
+            ANNOTATOR='miannu', SENTENCE='', SCORE='0.5',
+            SIGNOR_ID='SIGNOR-198641')
     complex_map = {
             'SIGNOR-C87': ['P61964', 'Q9UBL3', 'Q9C005', 'Q15291'],
             'SIGNOR-C88': ['SIGNOR-C87', 'O14686'],
@@ -741,7 +748,8 @@ def test_complexes_with_families():
             TISSUE_DATA='BTO:0000887;BTO:0001103', MODULATOR_COMPLEX='',
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='22863532', DIRECT='NO', NOTES='',
-            ANNOTATOR='miannu', SENTENCE='', SIGNOR_ID='SIGNOR-198641')
+            ANNOTATOR='miannu', SENTENCE='', SCORE='0.5',
+            SIGNOR_ID='SIGNOR-198641')
     complex_map = {'SIGNOR-C22' : ['O60271', 'Q4KMG0', 'SIGNOR-PF14']}
     sp = SignorProcessor([test_row], complex_map)
     assert isinstance(sp.statements, list)
