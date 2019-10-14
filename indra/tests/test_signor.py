@@ -23,6 +23,7 @@ test_row = _SignorRow_(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
         SENTENCE="Together, these results indicate that the Met gene is a "\
                  "direct target of NFkappaB and that Met participates "\
                  "in NFkappaB-mediated cell survival.",
+        SCORE='0.5',
         SIGNOR_ID='SIGNOR-241929')
 
 
