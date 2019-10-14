@@ -1,11 +1,6 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-from os.path import join, dirname
-from nose.tools import raises
 from nose.plugins.attrib import attr
 
 from indra.sources.tees import api
-from indra.sources.tees.parse_tees import tees_parse_networkx_to_dot
 from indra.statements import Phosphorylation, Dephosphorylation, \
         IncreaseAmount, DecreaseAmount, Complex
 
@@ -119,7 +114,7 @@ def test_process_decrease_amount():
     tp = api.process_text(s)
     statements = tp.statements
 
-    # Exactly one statement should have been etracted from the provided text
+    # Exactly one statement should have been extracted from the provided text
     assert len(statements) == 1
     statement0 = statements[0]
 
@@ -196,7 +191,7 @@ def test_evidence_text():
     assert text == 'Ras leads to the phosphorylation of Raf.'
 
 
-@attr('slow')
+#@attr('slow')
 def test_evidence_pmid():
     # Test whether the pmid provided to the TEES processor is put into the
     # statement's evidence
