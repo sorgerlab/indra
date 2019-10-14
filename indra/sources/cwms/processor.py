@@ -246,9 +246,17 @@ class CWMSProcessor(object):
     def migration_from_event(self, event_term):
         """Return a Migration event from an EVENT element in the EKB."""
         # First process at event level
-        migration_grounding = 'WM/causal_factor/social_and_political/migration'
-        concept = Concept('Migration',
-                          db_refs={'UN': migration_grounding})
+        migration_grounding = ('wm/concept/causal_factor/'
+                               'social_and_political/migration')
+        concept_name = 'migration'
+        concept_db_refs = {'WM': migration_grounding}
+        # Get the element's text and use it to construct a Concept
+        element_text_element = event_term.find('text')
+        if element_text_element is not None:
+            element_text = element_text_element.text
+            concept_db_refs['TEXT'] = element_text
+            concept_name = sanitize_name(element_text)
+        concept = Concept(concept_name, db_refs=concept_db_refs)
         evidence = self._get_evidence(event_term)
         time = self._extract_time(event_term)
         # Locations can be at different levels, keep expanding the list
@@ -580,6 +588,8 @@ class CWMSProcessor(object):
                 db_ns, db_id = nsid.split(':')
                 if db_ns == 'GNO':
                     db_ns = 'GEOID'
+                # TODO: name spaces are sometimes repeated in the EKB, here we
+                #  silently overwrite a key if it already exists
                 db_refs[db_ns] = db_id
         # name = loc_term.findtext('name')
         geoloc_context = RefContext(name=text, db_refs=db_refs)
