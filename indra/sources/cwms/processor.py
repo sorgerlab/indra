@@ -530,7 +530,8 @@ class CWMSProcessor(object):
                 text=text, start=start, end=end, duration=duration)
         return time_context
 
-    def _process_timex(self, timex):
+    @staticmethod
+    def _process_timex(timex):
         year = timex.findtext('year')
         month = timex.findtext('month')
         day = timex.findtext('day')
@@ -538,7 +539,7 @@ class CWMSProcessor(object):
             try:
                 year = int(year)
             except Exception:
-                year = datetime.today().year
+                year = None
             try:
                 # Month can be represented either by name, short name or
                 # number (October, Oct or 10)
@@ -555,8 +556,9 @@ class CWMSProcessor(object):
                 day = int(day)
             except Exception:
                 day = 1
-            time = datetime(year, month, day)
-            return time
+            if year and month and day:
+                time = datetime(year, month, day)
+                return time
         return None
 
     def _extract_geoloc(self, term, arg_link='location'):
