@@ -571,8 +571,18 @@ class CWMSProcessor(object):
         if loc_term is None:
             return None
         text = loc_term.findtext('text')
+        grounding = loc_term.find('grounding')
+        db_refs = {}
+        if grounding is not None:
+            places = grounding.findall('place')
+            for place in places:
+                nsid = place.attrib.get('id')
+                db_ns, db_id = nsid.split(':')
+                if db_ns == 'GNO':
+                    db_ns = 'GEOID'
+                db_refs[db_ns] = db_id
         # name = loc_term.findtext('name')
-        geoloc_context = RefContext(name=text)
+        geoloc_context = RefContext(name=text, db_refs=db_refs)
         return geoloc_context
 
     def _get_assoc_with(self, element_term):
