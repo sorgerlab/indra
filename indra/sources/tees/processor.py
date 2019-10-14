@@ -78,7 +78,7 @@ class TEESProcessor(object):
         self.statements.extend(self.process_decrease_expression_amount())
 
         # Ground statements
-        self.statements = mapper.map_agents(self.statements)
+        self.statements = mapper.map_stmts(self.statements)
 
     def node_has_edge_with_label(self, node_name, edge_label):
         """Looks for an edge from node_name to some other node with the specified
