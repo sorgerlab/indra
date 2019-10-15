@@ -204,6 +204,7 @@ def run_on_text(text, python2_path):
     shutil.rmtree(tmp_dir)
     return output_tuple
 
+
 def extract_output(output_dir):
     """Extract the text of the a1, a2, and sentence segmentation files from the
     TEES output directory. These files are located within a compressed archive.
@@ -225,7 +226,7 @@ def extract_output(output_dir):
 
     # Locate the file of sentences segmented by the TEES system, described
     # in a compressed xml document
-    sentences_glob = os.path.join(output_dir, '*-preprocessed.xml.gz')
+    sentences_glob = os.path.join(output_dir, '*-preprocessed*.xml.gz')
     sentences_filename_candidates = glob.glob(sentences_glob)
 
     # Make sure there is exactly one such file

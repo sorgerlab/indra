@@ -37,6 +37,7 @@ _signor_fields = [
     'NOTES',
     'ANNOTATOR',
     'SENTENCE',
+    'SCORE',
     'SIGNOR_ID',
 ]
 

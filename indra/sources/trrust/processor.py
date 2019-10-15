@@ -47,6 +47,8 @@ def get_grounded_agent(gene_name):
     if gene_name in hgnc_map:
         gene_name = hgnc_map[gene_name]
     hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+    if not hgnc_id:
+        hgnc_id = hgnc_client.get_current_hgnc_id(gene_name)
     if hgnc_id:
         db_refs['HGNC'] = hgnc_id
         up_id = hgnc_client.get_uniprot_id(hgnc_id)
