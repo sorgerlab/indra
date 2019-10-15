@@ -72,10 +72,12 @@ class TEESProcessor(object):
 
     @staticmethod
     def ground_statements(stmts):
-        gm = GroundingMapper()
         grounding_url = 'http://grounding.indra.bio/ground'
         for stmt in stmts:
-            context = stmt.evidence[0].text
+            if stmt.evidence and stmt.evidence[0].text:
+                context = stmt.evidence[0].text
+            else:
+                context = None
             for agent in stmt.agent_list():
                 if agent is not None and 'TEXT' in agent.db_refs:
                     txt = agent.db_refs['TEXT']
@@ -85,9 +87,11 @@ class TEESProcessor(object):
                     results = resp.json()
                     if results:
                         db_refs = {'TEXT': txt,
-                                   results[0]['db']: results[0]['id']}
-                        agent.db_Refs = db_refs
-                        gm.standardize_agent_name(agent, standardize_refs=True)
+                                   results[0]['term']['db']:
+                                       results[0]['term']['id']}
+                        agent.db_refs = db_refs
+                        GroundingMapper.standardize_agent_name(agent,
+                                                        standardize_refs=True)
 
     def node_has_edge_with_label(self, node_name, edge_label):
         """Looks for an edge from node_name to some other node with the specified
