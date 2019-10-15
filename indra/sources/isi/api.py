@@ -42,9 +42,7 @@ def process_text(text, pmid=None, cleanup=True, add_grounding=True):
     pp.preprocess_plain_text_string(text, pmid, extra_annotations)
 
     # Run the ISI reader and extract statements
-    ip = process_preprocessed(pp)
-    if add_grounding:
-        ip.add_grounding()
+    ip = process_preprocessed(pp, add_grounding=add_grounding)
 
     if cleanup:
         # Remove temporary directory with processed input
@@ -96,9 +94,7 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None,
     pp.preprocess_nxml_file(nxml_filename, pmid, extra_annotations)
 
     # Run the ISI reader and extract statements
-    ip = process_preprocessed(pp)
-    if add_grounding:
-        ip.add_grounding()
+    ip = process_preprocessed(pp, add_grounding=add_grounding)
 
     if cleanup:
         # Remove temporary directory with processed input
@@ -167,7 +163,7 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
         fname = os.path.join(output_dir, '%s.json' % basename)
         ip = process_json_file(fname, pmid=pmid,
             extra_annotations=isi_preprocessor.extra_annotations.get(fname, {}),
-            add_grounding=False)
+            add_grounding=add_grounding)
         ips.append(ip)
 
     # Remove the temporary output directory
@@ -186,8 +182,6 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
             ips[0].statements += ip.statements
 
     if ips:
-        if add_grounding:
-            ips[0].add_grounding()
         return ips[0]
     else:
         return None
@@ -222,7 +216,8 @@ def process_output_folder(folder_path, pmids=None, extra_annotations=None,
         # Extract the corresponding file id
         pmid = pmids.get(entry_key)
         extra_annotation = extra_annotations.get(entry_key)
-        ip = process_json_file(entry, pmid, extra_annotation, False)
+        ip = process_json_file(entry, pmid, extra_annotation,
+                               add_grounding=add_grounding)
         ips.append(ip)
 
     if len(ips) > 1:
@@ -230,8 +225,6 @@ def process_output_folder(folder_path, pmids=None, extra_annotations=None,
             ips[0].statements += ip.statements
 
     if ips:
-        if add_grounding:
-            ips[0].add_grounding()
         return ips[0]
     else:
         return None
@@ -257,8 +250,7 @@ def process_json_file(file_path, pmid=None, extra_annotations=None,
     logger.info('Extracting from %s' % file_path)
     with open(file_path, 'rb') as fh:
         jd = json.load(fh)
-        ip = IsiProcessor(jd, pmid, extra_annotations)
+        ip = IsiProcessor(jd, pmid, extra_annotations,
+                          add_grounding=add_grounding)
         ip.get_statements()
-        if add_grounding:
-            ip.add_grounding()
         return ip
