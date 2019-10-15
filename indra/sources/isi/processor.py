@@ -3,8 +3,7 @@ import json
 import logging
 from copy import deepcopy
 import indra.statements as ist
-from indra.preassembler.grounding_mapper import load_grounding_map, \
-        GroundingMapper
+from indra.preassembler.grounding_mapper.gilda import ground_statements
 
 logger = logging.getLogger(__name__)
 
@@ -12,21 +11,27 @@ logger = logging.getLogger(__name__)
 class IsiProcessor(object):
     """Processes the output of the ISI reader.
 
-    Attributes
+    Parameters
     ----------
     reader_output : json
         The output JSON of the ISI reader as a json object.
+    pmid : Optional[str]
+        The PMID to assign to the extracted Statements
+    extra_annotations : Optional[dict]
+        Annotations to be included with each extracted Statement
+    add_grounding : Optional[bool]
+        If True, Gilda is used as a service to ground the Agents in
+        the extracted Statements.
+
+    Attributes
+    ----------
     verbs : set[str]
         A list of verbs that have appeared in the processed ISI output
-    pmid : str
-        The PMID to assign to the extracted Statements
-    extra_annotations : dict
-        Annotations to be included with each extracted Statement
     statements : list[indra.statements.Statement]
         Extracted statements
     """
     def __init__(self, reader_output, pmid=None, extra_annotations=None,
-                 add_grounding=True):
+                 add_grounding=False):
         self.reader_output = reader_output
         self.pmid = pmid
         self.extra_annotations = extra_annotations if \
@@ -34,6 +39,7 @@ class IsiProcessor(object):
         self.verbs = set()
 
         self.statements = []
+        self.add_grounding = add_grounding
 
     def get_statements(self):
         """Process reader output to produce INDRA Statements."""
@@ -41,20 +47,8 @@ class IsiProcessor(object):
             for interaction in v['interactions']:
                 self._process_interaction(k, interaction, v['text'], self.pmid,
                                           self.extra_annotations)
-
-    def add_grounding(self):
-        # Load grounding information
-        path_this = os.path.dirname(os.path.abspath(__file__))
-        gm_fname = os.path.join(path_this, '../../resources/',
-                                'extracted_reach_grounding_map.csv')
-        try:
-            gm = load_grounding_map(gm_fname)
-        except BaseException:
-            raise Exception('Could not load the grounding map from ' +
-                            gm_fname)
-        mapper = GroundingMapper(gm)
-        self.statements = mapper.map_agents(self.statements)
-
+        if self.add_grounding:
+            ground_statements(self.statements)
 
     def _process_interaction(self, source_id, interaction, text, pmid,
                              extra_annotations):
