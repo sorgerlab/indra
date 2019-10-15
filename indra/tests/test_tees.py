@@ -207,13 +207,3 @@ def test_evidence_pmid():
     assert statements[0].evidence[0].pmid == pmid
 
 
-def test_ground():
-    mek = Agent('Mek', db_refs={'TEXT': 'MEK'})
-    erk = Agent('Erk1', db_refs={'TEXT': 'Erk1'})
-    stmt = Phosphorylation(mek, erk)
-    TEESProcessor.ground_statements([stmt])
-    assert stmt.enz.name == 'MEK', stmt.enz
-    assert stmt.enz.db_refs['FPLX'] == 'MEK'
-    assert stmt.sub.name == 'MAPK3'
-    assert stmt.sub.db_refs['HGNC'] == '6877'
-    assert stmt.sub.db_refs['UP'] == 'P27361'

@@ -18,8 +18,7 @@ import requests
 from indra.statements import Phosphorylation, Dephosphorylation, Complex, \
         IncreaseAmount, DecreaseAmount, Agent, Evidence
 from indra.sources.tees.parse_tees import parse_output
-from indra.preassembler.grounding_mapper import load_grounding_map,\
-        GroundingMapper
+from indra.preassembler.grounding_mapper.gilda import ground_statements
 from networkx.algorithms import dag
 import os.path
 
@@ -68,30 +67,7 @@ class TEESProcessor(object):
         self.statements.extend(self.process_decrease_expression_amount())
 
         # Ground statements
-        self.ground_statements(self.statements)
-
-    @staticmethod
-    def ground_statements(stmts):
-        grounding_url = 'http://grounding.indra.bio/ground'
-        for stmt in stmts:
-            if stmt.evidence and stmt.evidence[0].text:
-                context = stmt.evidence[0].text
-            else:
-                context = None
-            for agent in stmt.agent_list():
-                if agent is not None and 'TEXT' in agent.db_refs:
-                    txt = agent.db_refs['TEXT']
-                    resp = requests.post(grounding_url,
-                                         json={'text': txt,
-                                               'context': context})
-                    results = resp.json()
-                    if results:
-                        db_refs = {'TEXT': txt,
-                                   results[0]['term']['db']:
-                                       results[0]['term']['id']}
-                        agent.db_refs = db_refs
-                        GroundingMapper.standardize_agent_name(agent,
-                                                        standardize_refs=True)
+        ground_statements(self.statements)
 
     def node_has_edge_with_label(self, node_name, edge_label):
         """Looks for an edge from node_name to some other node with the specified
