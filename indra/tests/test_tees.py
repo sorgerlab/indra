@@ -190,7 +190,7 @@ def test_evidence_text():
     assert text == 'Ras leads to the phosphorylation of Raf.'
 
 
-#@attr('slow')
+@attr('slow')
 def test_evidence_pmid():
     # Test whether the pmid provided to the TEES processor is put into the
     # statement's evidence
