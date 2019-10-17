@@ -350,6 +350,7 @@ class BeliefEngine(object):
         """
         def build_hierarchy_graph(stmts):
             """Return a DiGraph based on matches keys and Statement supports"""
+            logger.debug('Building hierarchy graph')
             g = networkx.DiGraph()
             for st1 in stmts:
                 g.add_node(self.matches_fun(st1), stmt=st1)
@@ -357,11 +358,13 @@ class BeliefEngine(object):
                     g.add_node(self.matches_fun(st2), stmt=st2)
                     g.add_edge(self.matches_fun(st2),
                                self.matches_fun(st1))
+            logger.debug('Finished building hierarchy graph')
             return g
 
         def get_ranked_stmts(g):
             """Return a topological sort of statement matches keys from a graph.
             """
+            logger.debug('Getting ranked statements')
             node_ranks = networkx.algorithms.dag.topological_sort(g)
             node_ranks = reversed(list(node_ranks))
             stmts = [g.node[n]['stmt'] for n in node_ranks]
@@ -369,6 +372,7 @@ class BeliefEngine(object):
 
         def assert_no_cycle(g):
             """If the graph has cycles, throws AssertionError."""
+            logger.debug('Looking for cycles in belief graph')
             try:
                 cyc = networkx.algorithms.cycles.find_cycle(g)
             except networkx.exception.NetworkXNoCycle:
@@ -379,6 +383,7 @@ class BeliefEngine(object):
         g = build_hierarchy_graph(statements)
         assert_no_cycle(g)
         ranked_stmts = get_ranked_stmts(g)
+        logger.debug('Start belief propagation over ranked statements')
         for st in ranked_stmts:
             bps = _get_belief_package(st, self.matches_fun)
             supporting_evidences = []
@@ -393,6 +398,7 @@ class BeliefEngine(object):
             # Now score all the evidences
             belief = self.scorer.score_statement(st, supporting_evidences)
             st.belief = belief
+        logger.debug('Finished belief propagation over ranked statements')
 
     def set_linked_probs(self, linked_statements):
         """Sets the belief probabilities for a list of linked INDRA Statements.
