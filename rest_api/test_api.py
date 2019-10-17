@@ -2,7 +2,7 @@ import json
 import requests
 from indra.statements import *
 
-base_url = 'http://localhost:8080'
+base_url = 'http://api.indra.bio:8000'
 
 
 def test_filter_by_type():
