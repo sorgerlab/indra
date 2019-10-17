@@ -42,7 +42,7 @@ def main():
                                   for dep in deps})
 
     setup(name='indra',
-          version='1.15.0',
+          version='1.15.1',
           description='Integrated Network and Dynamical Reasoning Assembler',
           long_description=long_description,
           long_description_content_type='text/markdown',
