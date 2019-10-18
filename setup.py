@@ -9,7 +9,7 @@ with open(readme_path, 'r', encoding='utf-8') as fh:
 
 
 def main():
-    install_list = ['pysb>=1.3.0', 'objectpath', 'rdflib',
+    install_list = ['pysb>=1.3.0,<=1.9.1', 'objectpath', 'rdflib',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2,<=2.3', 'pandas', 'ndex2==2.0.1', 'jinja2',
                     'protmapper>=0.0.14']
