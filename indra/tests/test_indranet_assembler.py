@@ -18,6 +18,7 @@ st4 = ActiveForm(Agent('e'), None, True)  # 1 agent
 st5 = Complex([Agent('c'), Agent('f'), Agent('g')])
 st6 = Complex([Agent('h'), Agent('i'), Agent('j'), Agent('b')])
 st7 = Phosphorylation(None, Agent('x'))
+st8 = Conversion(Agent('PI3K'), [Agent('PIP2')], [Agent('PIP3')])
 
 
 # Test assembly from assembler side
@@ -190,3 +191,15 @@ def test_initial_signs():
     assert ('c', 'd', 1) not in sg.edges
     assert ('b', 'd', 0) not in sg.edges
     assert ('b', 'd', 1) in sg.edges
+
+
+def test_conversion():
+    ia = IndraNetAssembler([st8])
+    ug = ia.make_model(graph_type='multi_graph')
+    assert len(ug.nodes) == 3
+    assert len(ug.edges) == 2, ug.edges
+    sg = ia.make_model(graph_type='signed')
+    assert len(sg.nodes) == 3
+    assert len(sg.edges) == 2, sg.edges
+    assert ('PI3K', 'PIP3', 0) in sg.edges, sg.edges
+    assert ('PI3K', 'PIP2', 1) in sg.edges, sg.edges
