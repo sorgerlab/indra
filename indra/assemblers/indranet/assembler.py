@@ -135,10 +135,10 @@ class IndraNetAssembler():
         exclude_stmts : list[str]
             A list of statement type names to not include into a dataframe.
         complex_members : int
-            Maximum allowed size of a complex to be included in the data
-            frame. All complexes larger than complex_members will be rejected.
-            For accepted complexes, all permutations of their members will be
-            added as dataframe records.
+            Maximum allowed size of a complex to be included in the
+            data frame. All complexes larger than complex_members will be
+            rejected. For accepted complexes, all permutations of their
+            members will be added as dataframe records.
 
         Returns
         -------
@@ -160,35 +160,54 @@ class IndraNetAssembler():
                 continue
             agents = stmt.agent_list()
             not_none_agents = [a for a in agents if a is not None]
+
             # Exclude statements with less than 2 agents
             if len(not_none_agents) < 2:
                 continue
-            # Handle complexes
-            if isinstance(stmt, Complex):
+            # Special handling for Influences and Associations
+            if isinstance(stmt, (Influence, Association)):
+                stmt_pol = stmt.overall_polarity()
+                if stmt_pol == 1:
+                    sign = 0
+                elif stmt_pol == -1:
+                    sign = 1
+                else:
+                    sign = None
+                if isinstance(stmt, Influence):
+                    edges = [(stmt.subj.concept, stmt.obj.concept, sign)]
+                else:
+                    edges = [(a, b, sign) for a, b in
+                             permutations(not_none_agents, 2)]
+            # Handle complexes by creating pairs of their
+            # not-none-agents.
+            elif isinstance(stmt, Complex):
                 # Do not add complexes with more members than complex_members
                 if len(not_none_agents) > complex_members:
                     logger.debug('Skipping a complex with %d members.'
                                  % len(not_none_agents))
                     continue
                 else:
-                    # add every permutation
-                    pairs = permutations(not_none_agents, 2)
+                    # add every permutation with a neutral polarity
+                    edges = [(a, b, None) for a, b in
+                             permutations(not_none_agents, 2)]
+            elif isinstance(stmt, Conversion):
+                edges = []
+                if stmt.subj:
+                    for obj in stmt.obj_from:
+                        edges.append((stmt.subj, obj, 1))
+                    for obj in stmt.obj_to:
+                        edges.append((stmt.subj, obj, 0))
+            # This is for any remaining statement type that may not be
+            # handled above explicitly but somehow has more than two
+            # not-none-agents at this point
+            elif len(not_none_agents) > 2:
+                continue
             else:
-                pairs = [not_none_agents]
-            for (agA, agB) in pairs:
+                edges = [(not_none_agents[0], not_none_agents[1], None)]
+            for (agA, agB, sign) in edges:
                 agA_ns, agA_id = get_ag_ns_id(agA)
                 agB_ns, agB_id = get_ag_ns_id(agB)
                 stmt_type = type(stmt).__name__
-                if stmt_type == 'Influence' or stmt_type == 'Association':
-                    stmt_pol = stmt.overall_polarity()
-                    if stmt_pol == 1:
-                        sign = 0
-                    elif stmt_pol == -1:
-                        sign = 1
-                    else:
-                        sign = None
-                else:
-                    sign = None
                 row = OrderedDict([
                     ('agA_name', agA.name),
                     ('agB_name', agB.name),
