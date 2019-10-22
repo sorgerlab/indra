@@ -198,16 +198,16 @@ class SifAssembler(object):
         """
         init_str = ''
         for node_key in self.graph.nodes():
-            node_name = self.graph.node[node_key]['name']
+            node_name = self.graph.nodes[node_key]['name']
             init_str += '%s = False\n' % node_name
         rule_str = ''
         for node_key in self.graph.nodes():
-            node_name = self.graph.node[node_key]['name']
+            node_name = self.graph.nodes[node_key]['name']
             in_edges = self.graph.in_edges(node_key)
             if not in_edges:
                 continue
             parents = [e[0] for e in in_edges]
-            polarities = [self.graph.edge[e[0]][node_key]['polarity']
+            polarities = [self.graph.edges[e[0]][node_key]['polarity']
                           for e in in_edges]
             pos_parents = [par for par, pol in zip(parents, polarities) if
                            pol == 'positive']
@@ -216,12 +216,12 @@ class SifAssembler(object):
 
             rhs_pos_parts = []
             for par in pos_parents:
-                rhs_pos_parts.append(self.graph.node[par]['name'])
+                rhs_pos_parts.append(self.graph.nodes[par]['name'])
             rhs_pos_str = ' or '.join(rhs_pos_parts)
 
             rhs_neg_parts = []
             for par in neg_parents:
-                rhs_neg_parts.append(self.graph.node[par]['name'])
+                rhs_neg_parts.append(self.graph.nodes[par]['name'])
             rhs_neg_str = ' or '.join(rhs_neg_parts)
 
             if rhs_pos_str:

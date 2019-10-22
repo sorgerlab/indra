@@ -367,7 +367,7 @@ class BeliefEngine(object):
             logger.debug('Getting ranked statements')
             node_ranks = networkx.algorithms.dag.topological_sort(g)
             node_ranks = reversed(list(node_ranks))
-            stmts = [g.node[n]['stmt'] for n in node_ranks]
+            stmts = [g.nodes[n]['stmt'] for n in node_ranks]
             return stmts
 
         def assert_no_cycle(g):

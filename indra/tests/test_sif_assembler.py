@@ -11,6 +11,7 @@ def test_simple_assembly():
     sa.make_model()
     assert len(sa.graph.nodes()) == 3
     assert len(sa.graph.edges()) == 2
+    bn = sa.print_boolean_net()
 
 
 def test_evidence_assembly():
