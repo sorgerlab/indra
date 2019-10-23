@@ -1,21 +1,18 @@
 """Objects for interacting with bulk nlp reading tools."""
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
-import sys
-import shutil
 import re
-import tempfile
+import zlib
 import glob
 import json
+import shutil
 import logging
+import tempfile
 import subprocess
-import zlib
-from os import path, mkdir, environ, listdir, remove
+
 from io import BytesIO
+from platform import system
 from datetime import datetime
 from multiprocessing import Pool
-from platform import system
+from os import path, mkdir, environ, listdir, remove
 
 from indra import get_config
 from indra.sources import sparser, reach, trips
