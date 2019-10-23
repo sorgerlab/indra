@@ -97,7 +97,6 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None, **kwargs):
     pp_dir = tempfile.mkdtemp('indra_isi_pp_output')
 
     pp = IsiPreprocessor(pp_dir)
-    extra_annotations = {}
     pp.preprocess_nxml_file(nxml_filename, pmid, extra_annotations)
 
     # Run the ISI reader and extract statements
