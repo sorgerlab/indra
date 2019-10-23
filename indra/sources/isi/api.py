@@ -111,6 +111,27 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None, **kwargs):
     return ip
 
 
+def run_isi(input_dir, output_dir, tmp_dir, num_processes=1):
+    # We call realpath on all these paths so that any symbolic links
+    # are generated out - this is needed on Mac
+    input_binding = os.path.realpath(input_dir) + ':/input:ro'
+    output_binding = os.path.realpath(output_dir) + ':/output:rw'
+    tmp_binding = os.path.realpath(tmp_dir) + ':/temp:rw'
+    command = ['docker', 'run', '-it', '--rm',
+               '-v', input_binding, '-v', output_binding, '-v', tmp_binding,
+               'sahilgar/bigmechisi', './myprocesspapers.sh',
+               '-c', str(num_processes)]
+
+    # Invoke the ISI reader
+    logger.info('Running command:')
+    logger.info(' '.join(command))
+    ret = subprocess.call(command)
+    if ret != 0:
+        logger.error('Docker returned non-zero status code')
+
+    return
+
+
 def process_preprocessed(isi_preprocessor, num_processes=1,
                          output_dir=None, cleanup=True, add_grounding=True):
     """Process a directory of abstracts and/or papers preprocessed using the
@@ -147,22 +168,9 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
 
     # Form the command to invoke the ISI reader via Docker
     dir_name = isi_preprocessor.preprocessed_dir
-    # We call realpath on all these paths so that any symbolic links
-    # are generated out - this is needed on Mac
-    input_binding = os.path.realpath(dir_name) + ':/input:ro'
-    output_binding = os.path.realpath(output_dir) + ':/output:rw'
-    tmp_binding = os.path.realpath(tmp_dir) + ':/temp:rw'
-    command = ['docker', 'run', '-it', '--rm',
-               '-v', input_binding, '-v', output_binding, '-v', tmp_binding,
-               'sahilgar/bigmechisi', './myprocesspapers.sh',
-               '-c', str(num_processes)]
 
-    # Invoke the ISI reader
-    logger.info('Running command:')
-    logger.info(' '.join(command))
-    ret = subprocess.call(command)
-    if ret != 0:
-        logger.error('Docker returned non-zero status code')
+    # Run the ISI reader
+    run_isi(dir_name, output_dir, tmp_dir, num_processes)
 
     ips = []
     for fname, pmid, extra_annots in isi_preprocessor.iter_outputs(output_dir):
