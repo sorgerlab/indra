@@ -165,11 +165,10 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
         logger.error('Docker returned non-zero status code')
 
     ips = []
-    for basename, pmid in isi_preprocessor.pmids.items():
-        fname = os.path.join(output_dir, '%s.json' % basename)
+    for fname, pmid, extra_annots in isi_preprocessor.iter_outputs(output_dir):
         ip = process_json_file(fname, pmid=pmid,
-            extra_annotations=isi_preprocessor.extra_annotations.get(fname, {}),
-            add_grounding=add_grounding)
+                               extra_annotations=extra_annots,
+                               add_grounding=add_grounding)
         ips.append(ip)
 
     # Remove the temporary output directory
