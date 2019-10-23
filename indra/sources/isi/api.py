@@ -14,7 +14,7 @@ from indra.sources.isi.preprocessor import IsiPreprocessor
 logger = logging.getLogger(__name__)
 
 
-def process_text(text, pmid=None, cleanup=True, add_grounding=True):
+def process_text(text, pmid=None, **kwargs):
     """Process a string using the ISI reader and extract INDRA statements.
 
     Parameters
@@ -23,6 +23,8 @@ def process_text(text, pmid=None, cleanup=True, add_grounding=True):
         A text string to process
     pmid : Optional[str]
         The PMID associated with this text (or None if not specified)
+    num_processes : Optional[int]
+        Number of processes to parallelize over
     cleanup : Optional[bool]
         If True, the temporary folders created for preprocessed reading input
         and output are removed. Default: True
@@ -34,6 +36,8 @@ def process_text(text, pmid=None, cleanup=True, add_grounding=True):
     ip : indra.sources.isi.processor.IsiProcessor
         A processor containing statements
     """
+    cleanup = kwargs.get('cleanup', True)
+
     # Create a temporary directory to store the proprocessed input
     pp_dir = tempfile.mkdtemp('indra_isi_pp_output')
 
@@ -42,7 +46,7 @@ def process_text(text, pmid=None, cleanup=True, add_grounding=True):
     pp.preprocess_plain_text_string(text, pmid, extra_annotations)
 
     # Run the ISI reader and extract statements
-    ip = process_preprocessed(pp, add_grounding=add_grounding)
+    ip = process_preprocessed(pp, **kwargs)
 
     if cleanup:
         # Remove temporary directory with processed input
@@ -53,8 +57,7 @@ def process_text(text, pmid=None, cleanup=True, add_grounding=True):
     return ip
 
 
-def process_nxml(nxml_filename, pmid=None, extra_annotations=None,
-                 cleanup=True, add_grounding=True):
+def process_nxml(nxml_filename, pmid=None, extra_annotations=None, **kwargs):
     """Process an NXML file using the ISI reader
 
     First converts NXML to plain text and preprocesses it, then runs the ISI
@@ -72,6 +75,8 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None,
         INDRA statements. Extra annotations called 'interaction' are ignored
         since this is used by the processor to store the corresponding
         raw ISI output.
+    num_processes : Optional[int]
+        Number of processes to parallelize over
     cleanup : Optional[bool]
         If True, the temporary folders created for preprocessed reading input
         and output are removed. Default: True
@@ -86,6 +91,8 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None,
     if extra_annotations is None:
         extra_annotations = {}
 
+    cleanup = kwargs.get('cleanup', True)
+
     # Create a temporary directory to store the proprocessed input
     pp_dir = tempfile.mkdtemp('indra_isi_pp_output')
 
@@ -94,7 +101,7 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None,
     pp.preprocess_nxml_file(nxml_filename, pmid, extra_annotations)
 
     # Run the ISI reader and extract statements
-    ip = process_preprocessed(pp, add_grounding=add_grounding)
+    ip = process_preprocessed(pp, **kwargs)
 
     if cleanup:
         # Remove temporary directory with processed input
