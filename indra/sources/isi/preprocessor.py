@@ -232,3 +232,19 @@ class IsiPreprocessor(object):
                                       zlib.MAX_WBITS+16).decode('utf-8')
 
             self.preprocess_plain_text_string(content, pmid, extra_annotations)
+
+    def iter_outputs(self, output_dir):
+        """Iterate over the outputs in a given directory using stored metadata.
+
+        For each of the output JSONs, retrieve the extra annotations for that
+        file, and link the file with its corresponding PMID.
+
+        Parameters
+        ----------
+        output_dir : str
+            The path to the directory where the JSON outputs were dumped.
+        """
+        for basename, pmid in self.pmids.items():
+            fname = os.path.join(output_dir, '%s.json' % basename)
+            extra_annotations = self.extra_annotations.get(fname, {})
+            yield fname, pmid, extra_annotations
