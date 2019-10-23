@@ -16,6 +16,9 @@ from os import path, mkdir, environ, listdir, remove
 
 from indra import get_config
 from indra.sources import sparser, reach, trips
+from indra.sources.isi.api import run_isi
+from indra.sources.isi.preprocessor import IsiPreprocessor
+from indra.sources.isi.processor import IsiProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -253,6 +256,9 @@ class ReadingData(object):
                     processor.set_statements_pmid(None)
             elif self.reader == TripsReader.name:
                 processor = trips.process_xml(self.content)
+            elif self.reader == IsiReader.name:
+                processor = IsiProcessor(self.content)
+                processor.get_statements()
             else:
                 raise ReadingError("Unknown reader: %s." % self.reader)
 
@@ -718,6 +724,45 @@ class SparserReader(Reader):
                                 log_name)
         ret = self.get_output(output_file_list)
         return ret
+
+
+class IsiReader(Reader):
+
+    name = 'ISI'
+
+    def read(self, read_list, verbose=False, log=False, n_per_proc=None):
+        # Define some temp directories
+        nxml_tmp = tempfile.mkdtemp('isi_nxml')
+        inp_tmp = tempfile.mkdtemp('isi_input')
+        out_tmp = tempfile.mkdtemp('isi_output')
+        tmp_tmp = tempfile.mkdtemp('isi_temp')
+
+        # Create a preprocessor
+        pp = IsiPreprocessor(inp_tmp)
+
+        # Preprocess all the content.
+        for content in read_list:
+            if content.is_format('nxml'):
+                content.copy_to(nxml_tmp)
+                pp.preprocess_nxml_file(content.get_filepath(renew=True),
+                                        content.get_id(), {})
+            elif content.is_format('txt', 'text'):
+                pp.preprocess_plain_text_string(content.get_text(),
+                                                content.get_id(), {})
+            else:
+                raise ValueError("Invalid/unrecognized format: %s"
+                                 % content.get_format())
+
+        # Run ISI
+        run_isi(inp_tmp, out_tmp, tmp_tmp, self.n_proc)
+
+        # Process the outputs
+        for fname, content_id, extra_annots in pp.iter_outputs(out_tmp):
+            with open(fname, 'rb') as f:
+                content = json.load(f)
+            self.add_result(content_id, content)
+
+        return self.results
 
 
 class EmptyReader(Reader):
