@@ -71,6 +71,8 @@ class IsiProcessor(object):
             with the key "interaction" will be overridden by the JSON
             interaction tuple from the ISI output
         """
+        # Note: interaction[1] is a catalyst, but unused due to a lack of ways
+        # to represent it with Statements.
         verb = interaction[0].lower()
         subj = interaction[-2]
         obj = interaction[-1]
@@ -93,14 +95,7 @@ class IsiProcessor(object):
                           text=text.rstrip(),
                           annotations=annotations)
 
-        # For binding time interactions, it is said that a catayst might be
-        # specified. We don't use this for now, but extract in case we want
-        # to in the future
-        cataylst_specified = False
-        if len(interaction) == 4:
-            catalyst = interaction[1]
-            if catalyst is not None:
-                cataylst_specified = True
+        # Add the verb to the set of verbs.
         self.verbs.add(verb)
 
         statement = None
