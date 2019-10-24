@@ -14,6 +14,9 @@ from indra.sources.isi.preprocessor import IsiPreprocessor
 logger = logging.getLogger(__name__)
 
 
+DOCKER_IMAGE_NAME = 'sahilgar/bigmechisi'
+
+
 def process_text(text, pmid=None, **kwargs):
     """Process a string using the ISI reader and extract INDRA statements.
 
@@ -119,7 +122,7 @@ def run_isi(input_dir, output_dir, tmp_dir, num_processes=1):
     tmp_binding = os.path.realpath(tmp_dir) + ':/temp:rw'
     command = ['docker', 'run', '-it', '--rm',
                '-v', input_binding, '-v', output_binding, '-v', tmp_binding,
-               'sahilgar/bigmechisi', './myprocesspapers.sh',
+               DOCKER_IMAGE_NAME, './myprocesspapers.sh',
                '-c', str(num_processes)]
 
     # Invoke the ISI reader
@@ -130,6 +133,14 @@ def run_isi(input_dir, output_dir, tmp_dir, num_processes=1):
         logger.error('Docker returned non-zero status code')
 
     return
+
+
+def get_isi_image_data():
+    """Get the json data for the ISI docker image."""
+    ret = subprocess.run(['docker', 'image', 'inspect', DOCKER_IMAGE_NAME],
+                         stdout=subprocess.PIPE)
+    image_data = json.loads(ret.stdout)[0]
+    return image_data
 
 
 def process_preprocessed(isi_preprocessor, num_processes=1,
