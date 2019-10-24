@@ -96,6 +96,10 @@ class Content(object):
         self._raw_content = None
         return
 
+    def __repr__(self):
+        return ('Content(id=\'%s\', path=\'%s\')'
+                % (self.get_id(), self.get_filepath()))
+
     @classmethod
     def from_file(cls, file_path, compressed=False, encoded=False):
         """Create a content object from a file path."""
@@ -300,6 +304,9 @@ class Reader(object):
         self.results = []
         self.ResultClass = ResultClass
         return
+
+    def __repr__(self):
+        return 'Reader(\'%s\', n_proc=%d)' % (self.name, self.n_proc)
 
     def reset(self):
         self.results = []
