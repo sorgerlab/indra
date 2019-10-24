@@ -150,7 +150,8 @@ class IsiPreprocessor(object):
         Parameters
         ----------
         filename : str
-            Filename of an nxml file to process
+            Filename (more specifically the file path) of an nxml file to
+            process
         pmid : str
             The PMID from which it comes, or None if not specified
         extra_annotations : dict
@@ -170,20 +171,17 @@ class IsiPreprocessor(object):
             logger.error('PYTHON2_PATH not specified in config file or ' + 
                          'environment variable')
             return
-        else:
-            txt_out = os.path.join(tmp_dir, 'out.txt')
-            so_out = os.path.join(tmp_dir, 'out.so')
-            command = [python2_path,
-                       os.path.join(nxml2txt_path, 'nxml2txt'),
-                       filename,
-                       txt_out,
-                       so_out]
-            ret = subprocess.call(command)
-            if ret != 0:
-                logger.warning('nxml2txt returned non-zero error code')
 
-            with open(txt_out, 'r') as f:
-                txt_content = f.read()
+        txt_out = os.path.join(tmp_dir, 'out.txt')
+        so_out = os.path.join(tmp_dir, 'out.so')
+        command = [python2_path, os.path.join(nxml2txt_path, 'nxml2txt'),
+                   filename, txt_out, so_out]
+        ret = subprocess.call(command)
+        if ret != 0:
+            logger.warning('nxml2txt returned non-zero error code')
+
+        with open(txt_out, 'r') as f:
+            txt_content = f.read()
 
         # Remote temporary directory
         shutil.rmtree(tmp_dir)
