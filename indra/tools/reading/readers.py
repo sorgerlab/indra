@@ -315,8 +315,9 @@ class Reader(object):
 
     def add_result(self, content_id, content, **kwargs):
         """"Add a result to the list of results."""
-        result_object = self.ResultClass(content_id, self.name, self.version,
-                                         formats.JSON, content, **kwargs)
+        result_object = self.ResultClass(content_id, self.name,
+                                         self.get_version(), formats.JSON,
+                                         content, **kwargs)
         self.results.append(result_object)
         return
 
@@ -755,7 +756,7 @@ class IsiReader(Reader):
         for content in read_list:
             if content.is_format('nxml'):
                 content.copy_to(self.nxml_dir)
-                pp.preprocess_nxml_file(content.get_filepath(renew=True),
+                pp.preprocess_nxml_file(content.get_filepath(),
                                         content.get_id(), {})
             elif content.is_format('txt', 'text'):
                 pp.preprocess_plain_text_string(content.get_text(),
