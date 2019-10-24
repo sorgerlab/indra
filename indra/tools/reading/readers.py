@@ -16,7 +16,7 @@ from os import path, mkdir, environ, listdir, remove
 
 from indra import get_config
 from indra.sources import sparser, reach, trips
-from indra.sources.isi.api import run_isi
+from indra.sources.isi.api import run_isi, get_isi_image_data
 from indra.sources.isi.preprocessor import IsiPreprocessor
 from indra.sources.isi.processor import IsiProcessor
 
@@ -768,6 +768,11 @@ class IsiReader(Reader):
             self.add_result(cid, content)
 
         return self.results
+
+    @classmethod
+    def get_version(cls):
+        image_data = get_isi_image_data()
+        return image_data['Id'].split(':')[1][:12]
 
 
 class EmptyReader(Reader):
