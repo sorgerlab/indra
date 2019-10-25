@@ -275,7 +275,7 @@ def test_process_migration1():
     assert len(cp.statements) == 1
     stmt = cp.statements[0]
     assert isinstance(stmt, Migration)
-    assert stmt.concept.name == 'Migration'
+    assert stmt.concept.name.startswith('In Sudan'), stmt.concept.name
     assert len(stmt.context.locations) == 1
     assert isinstance(stmt.context.locations[0]['location'], RefContext)
     assert stmt.context.locations[0]['location'].name == "Sudan"
@@ -294,7 +294,7 @@ def test_process_migration2():
     assert len(cp.statements) == 1
     stmt = cp.statements[0]
     assert isinstance(stmt, Migration)
-    assert stmt.concept.name == 'Migration'
+    assert stmt.concept.name.startswith('Since the'), stmt.concept.name
     assert len(stmt.context.locations) == 2
     assert isinstance(stmt.context.locations[0]['location'], RefContext)
     assert stmt.context.locations[0]['location'].name == "Ethiopia"

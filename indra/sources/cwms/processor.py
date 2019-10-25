@@ -246,9 +246,17 @@ class CWMSProcessor(object):
     def migration_from_event(self, event_term):
         """Return a Migration event from an EVENT element in the EKB."""
         # First process at event level
-        migration_grounding = 'WM/causal_factor/social_and_political/migration'
-        concept = Concept('Migration',
-                          db_refs={'UN': migration_grounding})
+        migration_grounding = ('wm/concept/causal_factor/'
+                               'social_and_political/migration')
+        concept_name = 'migration'
+        concept_db_refs = {'WM': migration_grounding}
+        # Get the element's text and use it to construct a Concept
+        element_text_element = event_term.find('text')
+        if element_text_element is not None:
+            element_text = element_text_element.text
+            concept_db_refs['TEXT'] = element_text
+            concept_name = sanitize_name(element_text)
+        concept = Concept(concept_name, db_refs=concept_db_refs)
         evidence = self._get_evidence(event_term)
         time = self._extract_time(event_term)
         # Locations can be at different levels, keep expanding the list
@@ -274,7 +282,7 @@ class CWMSProcessor(object):
         for arg_term in [agent_arg_term, affected_arg_term]:
             if arg_term is not None:
                 size_arg = arg_term.find('size')
-                if size_arg is not None:
+                if size_arg is not None and size_arg.attrib.get('id'):
                     size = self._get_size(size_arg.attrib['id'])
                     break
         # Get more locations from arguments and inevents
@@ -284,9 +292,15 @@ class CWMSProcessor(object):
             inevent_term = self._get_inevent_term(agent_arg_term)
             if inevent_term is not None:
                 locs = self._get_migration_locations(inevent_term, locs)
+                if time is None:
+                    time = self._extract_time(inevent_term)
+                if size is None:
+                    size = self._get_size_and_entity(inevent_term)
             other_event_term = self._get_other_event_term(agent_arg_term)
             if other_event_term is not None:
                 locs = self._get_migration_locations(other_event_term, locs)
+                if time is None:
+                    time = self._extract_time(other_event_term)
                 if size is None:
                     size = self._get_size_and_entity(other_event_term)
         if affected_arg_term:
@@ -334,16 +348,17 @@ class CWMSProcessor(object):
                             return event_term
                     else:
                         # Refset might be on a different level
-                        term = self.tree.find("*[@id='%s']" % arg.attrib['id'])
-                        arg_refset_arg = term.find('refset')
-                        if arg_refset_arg is not None:
-                            if arg_refset_arg.attrib.get('id') == \
-                                    arg_term.attrib.get('id'):
-                                event_id = ev.attrib['id']
-                                self.subsumed_events.append(event_id)
-                                event_term = self.tree.find("*[@id='%s']"
-                                                            % event_id)
-                                return event_term
+                        if arg.attrib.get('id'):
+                            term = self.tree.find("*[@id='%s']" % arg.attrib['id'])
+                            arg_refset_arg = term.find('refset')
+                            if arg_refset_arg is not None:
+                                if arg_refset_arg.attrib.get('id') == \
+                                        arg_term.attrib.get('id'):
+                                    event_id = ev.attrib['id']
+                                    self.subsumed_events.append(event_id)
+                                    event_term = self.tree.find("*[@id='%s']"
+                                                                % event_id)
+                                    return event_term
         return None
 
     def _get_migration_locations(self, event_term, existing_locs=None,
@@ -380,9 +395,14 @@ class CWMSProcessor(object):
             mod = value.attrib.get('mod')
             if mod and mod.lower() == 'almost':
                 mod = 'less_than'
-            value_str = value.text.strip()
-            if value_str:
-                value = int(value_str)
+            value_txt = value.text
+            if value_txt is not None:
+                value_str = value.text.strip()
+                if value_str and not value_str.startswith('ONT') and \
+                        not value_str.startswith('W'):
+                    value = int(float(value_str))
+                else:
+                    value = None
             else:
                 value = None
             unit = size_term.find('unit')
@@ -405,7 +425,7 @@ class CWMSProcessor(object):
         size = None
         if term1 is not None:
             size_arg = term1.find('size')
-            if size_arg is not None:
+            if size_arg is not None and size_arg.attrib.get('id'):
                 size = self._get_size(size_arg.attrib['id'])
         if size is not None and term2 is not None:
             size.entity = term2.find('text').text
@@ -486,29 +506,68 @@ class CWMSProcessor(object):
         text = sanitize_name(time_term.findtext('text'))
         timex = time_term.find('timex')
         if timex is not None:
-            year = timex.findtext('year')
-            try:
-                year = int(year)
-            except Exception:
-                year = None
-            month = timex.findtext('month')
-            day = timex.findtext('day')
-            if year and (month or day):
-                try:
-                    month = int(month)
-                except Exception:
-                    month = 1
-                try:
-                    day = int(day)
-                except Exception:
-                    day = 1
-                start = datetime(year, month, day)
+            start = self._process_timex(timex)
+            if start is not None:
                 time_context = TimeContext(text=text, start=start)
             else:
                 time_context = TimeContext(text=text)
         else:
-            time_context = TimeContext(text=text)
+            start = None
+            end = None
+            from_time_el = time_term.find('from-time')
+            to_time_el = time_term.find('to-time')
+            if from_time_el is not None:
+                from_time_id = from_time_el.attrib.get('id')
+                from_time_term = self.tree.find("*[@id='%s']" % from_time_id)
+                if time_term is not None:
+                    timex = from_time_term.find('timex')
+                    if timex is not None:
+                        start = self._process_timex(timex)
+            if to_time_el is not None:
+                to_time_id = to_time_el.attrib.get('id')
+                to_time_term = self.tree.find("*[@id='%s']" % to_time_id)
+                if to_time_term is not None:
+                    timex = to_time_term.find('timex')
+                    if timex is not None:
+                        end = self._process_timex(timex)
+            if start and end:
+                duration = int((end - start).total_seconds())
+            else:
+                duration = None
+            time_context = TimeContext(
+                text=text, start=start, end=end, duration=duration)
         return time_context
+
+    @staticmethod
+    def _process_timex(timex):
+        year = timex.findtext('year')
+        month = timex.findtext('month')
+        day = timex.findtext('day')
+        if year or month or day:
+            try:
+                year = int(year)
+            except Exception:
+                year = None
+            try:
+                # Month can be represented either by name, short name or
+                # number (October, Oct or 10)
+                month = int(month)
+            except Exception:
+                try:
+                    month = datetime.strptime(month, '%B').month
+                except Exception:
+                    try:
+                        month = datetime.strptime(month, '%b').month
+                    except Exception:
+                        month = 1
+            try:
+                day = int(day)
+            except Exception:
+                day = 1
+            if year and month and day:
+                time = datetime(year, month, day)
+                return time
+        return None
 
     def _extract_geoloc(self, term, arg_link='location'):
         """Get the location from a term (CC or TERM)"""
@@ -520,8 +579,20 @@ class CWMSProcessor(object):
         if loc_term is None:
             return None
         text = loc_term.findtext('text')
+        grounding = loc_term.find('grounding')
+        db_refs = {}
+        if grounding is not None:
+            places = grounding.findall('place')
+            for place in places:
+                nsid = place.attrib.get('id')
+                db_ns, db_id = nsid.split(':')
+                if db_ns == 'GNO':
+                    db_ns = 'GEOID'
+                # TODO: name spaces are sometimes repeated in the EKB, here we
+                #  silently overwrite a key if it already exists
+                db_refs[db_ns] = db_id
         # name = loc_term.findtext('name')
-        geoloc_context = RefContext(name=text)
+        geoloc_context = RefContext(name=text, db_refs=db_refs)
         return geoloc_context
 
     def _get_assoc_with(self, element_term):
