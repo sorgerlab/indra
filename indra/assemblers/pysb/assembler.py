@@ -2107,14 +2107,19 @@ def conversion_assemble_one_step(stmt, model, agent_set, parameters):
     obj_to_pattern = ReactionPattern(obj_to_patterns)
     rule_obj_to_str = '_'.join([get_agent_rule_str(o) for o in stmt.obj_to])
 
+    # We now need to take care of padding both sides of the rule for
+    # compatibility with Kappa
+    lhs_pattern = ReactionPattern([obj_from_pattern] +
+                                  [None] * len(obj_to_patterns))
+    rhs_pattern = ReactionPattern([None] + obj_to_patterns)
+
     if stmt.subj is None:
         rule_name = '%s_converted_to_%s' % (rule_obj_from_str, rule_obj_to_str)
         param_name = 'kf_%s%s_convert' % (obj_from.name[0].lower(),
                                           obj_to_monomers[0].name[0].lower())
         kfp = parameters.get('kf', Param(param_name, 2, True))
         kf_one_step_convert = get_create_parameter(model, kfp)
-        r = Rule(rule_name, obj_from_pattern >> obj_to_pattern,
-                 kf_one_step_convert)
+        r = Rule(rule_name, lhs_pattern >> rhs_pattern, kf_one_step_convert)
     else:
         subj_pattern = ComplexPattern(
             [get_monomer_pattern(model, stmt.subj)], None)

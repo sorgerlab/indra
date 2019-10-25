@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import xml.etree.ElementTree as ET
 from indra.assemblers.pysb import PysbAssembler
 import indra.assemblers.pysb.assembler as pa
@@ -9,6 +7,7 @@ from indra.statements import *
 from pysb import bng, WILD, Monomer, Annotation
 from pysb.testing import with_model
 from nose.tools import raises
+
 
 def test_pysb_assembler_complex1():
     member1 = Agent('BRAF')
@@ -1154,6 +1153,12 @@ def test_convert_nosubj():
     assert len(pa.model.parameters) == 3
     assert len(pa.model.rules) == 1
     assert len(pa.model.monomers) == 2
+    # We need to make sure that these are Kappa-compatible, and the easiest
+    # way to do that is by making a ModelChecker and getting the IM without
+    # error
+    from indra.explanation.model_checker import PysbModelChecker
+    pmc = PysbModelChecker(pa.model)
+    pmc.get_im()
 
 
 def test_convert_subj():
@@ -1163,6 +1168,12 @@ def test_convert_subj():
     assert len(pa.model.parameters) == 4
     assert len(pa.model.rules) == 1
     assert len(pa.model.monomers) == 3
+    # We need to make sure that these are Kappa-compatible, and the easiest
+    # way to do that is by making a ModelChecker and getting the IM without
+    # error
+    from indra.explanation.model_checker import PysbModelChecker
+    pmc = PysbModelChecker(pa.model)
+    pmc.get_im()
 
 
 def test_activity_agent_rule_name():
