@@ -207,7 +207,7 @@ class SifAssembler(object):
             if not in_edges:
                 continue
             parents = [e[0] for e in in_edges]
-            polarities = [self.graph.edges[e[0]][node_key]['polarity']
+            polarities = [self.graph.edges[(e[0], node_key)]['polarity']
                           for e in in_edges]
             pos_parents = [par for par, pol in zip(parents, polarities) if
                            pol == 'positive']
