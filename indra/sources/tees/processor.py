@@ -96,10 +96,10 @@ class TEESProcessor(object):
         """Used for debugging - gives a short text description of a
         graph node."""
         G = self.G
-        if G.node[node]['is_event']:
-            return 'event type=' + G.node[node]['type']
+        if G.nodes[node]['is_event']:
+            return 'event type=' + G.nodes[node]['type']
         else:
-            return 'entity text=' + G.node[node]['text']
+            return 'entity text=' + G.nodes[node]['text']
 
     def print_parent_and_children_info(self, node):
         """Used for debugging - prints a short description of a a node, its
@@ -130,12 +130,12 @@ class TEESProcessor(object):
         child_name."""
         G = self.G
         matches = []
-        for n in G.node.keys():
-            if G.node[n]['is_event'] and G.node[n]['type'] == parent_name:
+        for n in G.nodes.keys():
+            if G.nodes[n]['is_event'] and G.nodes[n]['type'] == parent_name:
                 children = G.successors(n)
                 for child in children:
-                    if G.node[child]['is_event'] and \
-                            G.node[child]['type'] == child_name:
+                    if G.nodes[child]['is_event'] and \
+                            G.nodes[child]['type'] == child_name:
                         matches.append((n, child))
                         break
         return list(set(matches))
@@ -163,8 +163,8 @@ class TEESProcessor(object):
 
         desired_event_nodes = []
 
-        for node in G.node.keys():
-            if G.node[node]['is_event'] and G.node[node]['type'] == event_name:
+        for node in G.nodes.keys():
+            if G.nodes[node]['is_event'] and G.nodes[node]['type'] == event_name:
                 has_relations = [G.edges[node, edge[1]]['relation'] for
                                  edge in G.edges(node)]
                 has_relations = set(has_relations)
@@ -196,8 +196,8 @@ class TEESProcessor(object):
         G = self.G
         related_node = self.get_related_node(node, relation)
         if related_node is not None:
-            if not G.node[related_node]['is_event']:
-                return G.node[related_node]['text']
+            if not G.nodes[related_node]['is_event']:
+                return G.nodes[related_node]['text']
             else:
                 return None
         else:
@@ -342,7 +342,7 @@ class TEESProcessor(object):
         # We assume that the entire event is within a single sentence, and
         # get this sentence by getting the sentence containing one of the
         # entities
-        sentence_text = self.G.node[entity_node]['sentence_text']
+        sentence_text = self.G.nodes[entity_node]['sentence_text']
 
         # Make annotations object containing the fully connected subgraph
         # containing these nodes

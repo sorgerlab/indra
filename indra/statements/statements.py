@@ -529,10 +529,10 @@ class Statement(object):
                     if k == 'id':
                         continue
                     elif k == 'name':
-                        graph.node[node_id]['label'] = v
+                        graph.nodes[node_id]['label'] = v
                         continue
                     elif k == 'type':
-                        graph.node[node_id]['label'] = v
+                        graph.nodes[node_id]['label'] = v
                         continue
 
                     sub_id = json_node(graph, v, prefix + ['%s' % k])

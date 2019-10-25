@@ -151,10 +151,10 @@ def parse_a2(a2_text, entities, tees_sentences):
             identifier = tokens[0]
             text = tokens[2]
 
-            if identifier not in G.node:
+            if identifier not in G.nodes:
                 G.add_node(identifier)
-            G.node[identifier]['text'] = text
-            G.node[identifier]['is_event'] = False
+            G.nodes[identifier]['text'] = text
+            G.nodes[identifier]['is_event'] = False
 
         elif line[0] == 'E':  # New event
             tokens = line.rstrip().split('\t')
@@ -178,7 +178,7 @@ def parse_a2(a2_text, entities, tees_sentences):
                 properties[key_and_value[0]] = key_and_value[1]
 
             # Add event to the graph if we haven't added it yet
-            if event_identifier not in G.node:
+            if event_identifier not in G.nodes:
                 G.add_node(event_identifier)
 
             # Add edges
@@ -188,10 +188,10 @@ def parse_a2(a2_text, entities, tees_sentences):
 
             # We assume that node is not negated unless a event modifier
             # later says otherwise
-            G.node[event_identifier]['negated'] = False
-            G.node[event_identifier]['speculation'] = False
-            G.node[event_identifier]['type'] = event_name
-            G.node[event_identifier]['is_event'] = True
+            G.nodes[event_identifier]['negated'] = False
+            G.nodes[event_identifier]['speculation'] = False
+            G.nodes[event_identifier]['type'] = event_name
+            G.nodes[event_identifier]['is_event'] = True
 
             event_names.add(event_name)
 
@@ -211,9 +211,9 @@ def parse_a2(a2_text, entities, tees_sentences):
             # But assuming this is a negation modifier, we'll need to
             # handle it
             if modification_type == 'Negation':
-                G.node[modified]['negated'] = True
+                G.nodes[modified]['negated'] = True
             elif modification_type == 'Speculation':
-                G.node[modified]['speculation'] = True
+                G.nodes[modified]['speculation'] = True
             else:
                 # I've only seen negation event modifiers in these outputs
                 # If there are other types of modifications,
@@ -330,11 +330,11 @@ def tees_parse_networkx_to_dot(G, output_file, subgraph_nodes):
                         relation))
 
         for node in mentioned_nodes:
-            is_event = G.node[node]['is_event']
+            is_event = G.nodes[node]['is_event']
             if is_event:
-                node_type = G.node[node]['type']
-                negated = G.node[node]['negated']
-                speculation = G.node[node]['speculation']
+                node_type = G.nodes[node]['type']
+                negated = G.nodes[node]['negated']
+                speculation = G.nodes[node]['speculation']
 
                 # Add a tag to the label if the event is negated or speculation
                 if negated and speculation:
@@ -348,7 +348,7 @@ def tees_parse_networkx_to_dot(G, output_file, subgraph_nodes):
 
                 node_label = node_type + tag
             else:
-                node_label = G.node[node]['text']
+                node_label = G.nodes[node]['text']
             f.write('%s [label="%s"];\n' % (node, node_label))
 
         f.write('}\n')
