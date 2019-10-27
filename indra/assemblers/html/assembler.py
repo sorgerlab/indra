@@ -345,10 +345,11 @@ class HtmlAssembler(object):
 
 def id_url(ag):
     # Return identifier URLs in a prioritized order
-    for db_name in ('HGNC', 'FPLX', 'UP', 'IP', 'PF', 'NXPFA',
+    for db_name in ('FPLX', 'HGNC', 'UP',
+                    'GO', 'MESH',
+                    'CHEBI', 'PUBCHEM', 'HMDB',
+                    'IP', 'PF', 'NXPFA',
                     'MIRBASEM', 'MIRBASE',
-                    'MESH', 'GO',
-                    'HMDB', 'PUBCHEM', 'CHEBI',
                     'NCIT',
                     'UN', 'HUME', 'CWMS', 'SOFIA'):
         if db_name in ag.db_refs:
