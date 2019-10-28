@@ -6,20 +6,18 @@ import os
 from urllib import request
 
 from nose.plugins.attrib import attr
-
-from indra.databases import hgnc_client
+from pybel import BELGraph, constants as pc
+from pybel.dsl import *
+from pybel.language import Entity
+from pybel.io import from_nodelink_file
+from pybel.examples import egf_graph
+from indra.statements import *
 from indra.sources import bel
 from indra.sources.bel import processor as pb
-from indra.sources.bel.api import (
-    process_cbn_jgif_file, process_pybel_graph, small_corpus_url,
-)
-from indra.statements import *
-from pybel import BELGraph
-from pybel.dsl import *
-import pybel.constants as pc
-from pybel.examples import egf_graph
-from pybel.io import from_nodelink_file
-from pybel.language import Entity
+from indra.sources.bel.api import process_cbn_jgif_file, process_pybel_graph, \
+    small_corpus_url
+from indra.databases import hgnc_client
+
 
 mek_hgnc_id = hgnc_client.get_hgnc_id('MAP2K1')
 mek_up_id = hgnc_client.get_uniprot_id(mek_hgnc_id)
@@ -33,10 +31,8 @@ def test_pybel_neighborhood_query():
         network_file=small_corpus_url,
     )
     assert bp.statements
-    assert all(
-        s.evidence[0].context.cell_line.name == 'MCF 10A'
-        for s in bp.statements
-    )
+    assert all(s.evidence[0].context.cell_line.name == 'MCF 10A'
+                for s in bp.statements)
     # Locate statement about epidermis development
     stmt = [st for st in bp.statements if st.agent_list()[1].name ==
             'epidermis development'][0]
@@ -663,8 +659,7 @@ def test_gtpactivation():
 
 def test_conversion():
     enz = Protein(name='PLCG1', namespace='HGNC')
-    react_1 = abundance('SCHEM',
-                        '1-Phosphatidyl-D-myo-inositol 4,5-bisphosphate')
+    react_1 = abundance('SCHEM', '1-Phosphatidyl-D-myo-inositol 4,5-bisphosphate')
     p1 = abundance('SCHEM', 'Diacylglycerol')
     p2 = abundance('SCHEM', 'Inositol 1,4,5-trisphosphate')
 
@@ -702,10 +697,8 @@ def test_controlled_transloc_loc_cond():
     subj = Protein(name='MAP2K1', namespace='HGNC')
     obj = Protein(name='MAPK1', namespace='HGNC')
     g = BELGraph()
-    transloc = translocation(
-        from_loc=Entity(namespace='GOCC', name='intracellular'),
-        to_loc=Entity(namespace='GOCC', name='extracellular space'),
-    )
+    transloc = translocation(from_loc=Entity(namespace='GOCC', name='intracellular'),
+                             to_loc=Entity(namespace='GOCC', name='extracellular space'))
     g.add_increases(subj, obj, object_modifier=transloc,
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
@@ -763,7 +756,7 @@ def test_complex_stmt_with_activation():
     raf = Protein(name='BRAF', namespace='HGNC')
     mek = Protein(name='MAP2K1', namespace='HGNC')
     erk = Protein(name='MAPK1', namespace='HGNC')
-    cplx = ComplexAbundance([raf, mek])
+    cplx = complex_abundance([raf, mek])
     g = BELGraph()
     g.add_directly_increases(cplx, erk,
                              object_modifier=activity(name='kin'),

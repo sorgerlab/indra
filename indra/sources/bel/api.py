@@ -1,14 +1,11 @@
-# -*- coding: utf-8 -*-
-
-import json
-import logging
 import zlib
-from functools import lru_cache
-
+import json
 import pybel
+import logging
 import requests
-
+from functools import lru_cache
 from .processor import PybelProcessor
+
 
 logger = logging.getLogger(__name__)
 

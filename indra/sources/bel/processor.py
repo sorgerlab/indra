@@ -3,11 +3,14 @@
 import logging
 import re
 from collections import defaultdict
-
-from bel_resources import get_bel_resource
-
-import pybel.constants as pc
+from pybel.struct import has_protein_modification
+from pybel.canonicalize import edge_to_bel
 import pybel.dsl as dsl
+from bel_resources import get_bel_resource
+from indra.statements import *
+from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
+from indra.databases import hgnc_client, uniprot_client, chebi_client, \
+    go_client, mesh_client, mirbase_client
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 from indra.databases import (
     chebi_client, go_client, hgnc_client, mesh_client,
@@ -106,7 +109,7 @@ class PybelProcessor(object):
             #   x(Foo) -> p(Bar, pmod(Ph))
             #   act(x(Foo)) -> p(Bar, pmod(Ph))
             if isinstance(v_data, dsl.Protein) and \
-                has_protein_modification(v_data):
+                    has_protein_modification(v_data):
                 if obj_activity:
                     logger.info("Ignoring object activity modifier in "
                                 "modification statement: %s, %s, %s, %s",
@@ -835,8 +838,8 @@ def _get_translocation_target(node_modifier_data):
     to_loc_info = transloc_data.get(pc.TO_LOC)
     if not to_loc_info:
         return None
-    to_loc_ns = to_loc_info.get(pc.NAMESPACE)
-    to_loc_name = to_loc_info.get(pc.NAME)
+    to_loc_ns = to_loc_info.namespace
+    to_loc_name = to_loc_info.name
     # Only use GO Cellular Component location names
     if to_loc_ns not in ('GO', 'GOCC', 'GOCCID') or not to_loc_name:
         return None
