@@ -334,12 +334,16 @@ class HtmlAssembler(object):
             # Build up a set of indices
             tag_start = "<a href='%s'>" % url
             tag_close = "</a>"
-            # FIXME: the EnglishAssembler capitalizes the first letter of
-            # each sentence. In some cases this causes no match here
-            # and not produce agent links.
-            indices += [(m.start(), m.start() + len(ag.name), ag.name,
+            found = False
+            for m in re.finditer(re.escape(ag.name), english):
+                index = (m.start(), m.start() + len(ag.name), ag.name,
                          tag_start, tag_close)
-                         for m in re.finditer(re.escape(ag.name), english)]
+                indices.append(index)
+                found = True
+            if not found and \
+                    english.startswith(re.escape(ag.name).capitalize()):
+                index = (0, len(ag.name), ag.name, tag_start, tag_close)
+                indices.append(index)
         return tag_text(english, indices)
 
 
