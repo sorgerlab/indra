@@ -6,7 +6,6 @@ import requests
 from functools import lru_cache
 from .processor import PybelProcessor
 
-
 logger = logging.getLogger(__name__)
 
 version = 'v1.0.0'

@@ -31,37 +31,27 @@ def test_pybel_neighborhood_query():
         network_file=small_corpus_url,
     )
     assert bp.statements
-    assert all(s.evidence[0].context.cell_line.name == 'MCF 10A'
-                for s in bp.statements)
+    assert all(
+        s.evidence[0].context.cell_line.name == 'MCF 10A'
+        for s in bp.statements
+    )
     # Locate statement about epidermis development
     stmt = [st for st in bp.statements if st.agent_list()[1].name ==
             'epidermis development'][0]
     assert repr(stmt.evidence[0].context) == str(stmt.evidence[0].context)
     assert stmt.evidence[0].context == BioContext(
-        location=RefContext(
-            name="Cytoplasm",
-            db_refs={'MESH': 'D003593'},
-        ),
-        cell_line=RefContext(
-            name="MCF 10A",
-            db_refs={'EFO': '0001200'},
-        ),
-        cell_type=RefContext(
-            name="keratinocyte",
-            db_refs={'CL': '0000312'},
-        ),
-        organ=RefContext(
-            name="colon",
-            db_refs={'UBERON': '0001155'},
-        ),
-        disease=RefContext(
-            name="cancer",
-            db_refs={'DOID': '162'},
-        ),
-        species=RefContext(
-            name="Rattus norvegicus",
-            db_refs={'TAXONOMY': '10116'},
-        ))
+        location=RefContext(name="Cytoplasm",
+                            db_refs={'MESH': 'D003593'}),
+        cell_line=RefContext(name="MCF 10A",
+                             db_refs={'EFO': '0001200'}),
+        cell_type=RefContext(name="keratinocyte",
+                             db_refs={'CL': '0000312'}),
+        organ=RefContext(name="colon",
+                         db_refs={'UBERON': '0001155'}),
+        disease=RefContext(name="cancer",
+                           db_refs={'DOID': '162'}),
+        species=RefContext(name="Rattus norvegicus",
+                           db_refs={'TAXONOMY': '10116'}))
     # Test annotation manager
     assert bp.annot_manager.get_mapping('Species', '9606') == 'Homo sapiens'
 
@@ -659,7 +649,8 @@ def test_gtpactivation():
 
 def test_conversion():
     enz = Protein(name='PLCG1', namespace='HGNC')
-    react_1 = abundance('SCHEM', '1-Phosphatidyl-D-myo-inositol 4,5-bisphosphate')
+    react_1 = abundance('SCHEM',
+                        '1-Phosphatidyl-D-myo-inositol 4,5-bisphosphate')
     p1 = abundance('SCHEM', 'Diacylglycerol')
     p2 = abundance('SCHEM', 'Inositol 1,4,5-trisphosphate')
 
@@ -697,8 +688,10 @@ def test_controlled_transloc_loc_cond():
     subj = Protein(name='MAP2K1', namespace='HGNC')
     obj = Protein(name='MAPK1', namespace='HGNC')
     g = BELGraph()
-    transloc = translocation(from_loc=Entity(namespace='GOCC', name='intracellular'),
-                             to_loc=Entity(namespace='GOCC', name='extracellular space'))
+    transloc = translocation(
+        from_loc=Entity(namespace='GOCC', name='intracellular'),
+        to_loc=Entity(namespace='GOCC', name='extracellular space'),
+    )
     g.add_increases(subj, obj, object_modifier=transloc,
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)

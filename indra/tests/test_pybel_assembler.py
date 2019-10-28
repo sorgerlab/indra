@@ -8,10 +8,8 @@ import pybel.constants as pc
 from indra.assemblers.pybel import assembler as pa
 from indra.databases import hgnc_client
 from indra.statements import *
-from pybel.dsl import (
-    abundance, activity, bioprocess, complex_abundance,
-    hgvs, pmod, protein, reaction,
-)
+from pybel.dsl import abundance, activity, bioprocess, \
+    complex_abundance, hgvs, pmod, protein, reaction
 
 
 def id(gene_name):
