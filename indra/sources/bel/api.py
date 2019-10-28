@@ -6,7 +6,6 @@ import requests
 from functools import lru_cache
 from .processor import PybelProcessor
 
-
 logger = logging.getLogger(__name__)
 
 branch = (
@@ -274,5 +273,3 @@ def process_belrdf(rdf_str, print_output=True):
         bp.print_statement_coverage()
         bp.print_statements()
     return bp
-
-

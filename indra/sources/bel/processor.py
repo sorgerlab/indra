@@ -37,7 +37,8 @@ _pybel_indra_pmod_map = {
 
 #: A mapping from the BEL text location annotation to the INDRA ones at
 # :py:data:`indra.reach.processor._section_list`
-#: see https://arty.scai.fraunhofer.de/artifactory/bel/annotation/text-location/text-location-1.0.0.belanno
+#: see https://arty.scai.fraunhofer.de/artifactory/bel/annotation/
+#       text-location/text-location-1.0.0.belanno
 _pybel_text_location_map = {
     "Abstract": 'abstract',
     "Results": 'results',
@@ -46,7 +47,7 @@ _pybel_text_location_map = {
     'Introduction': 'introduction',
     'Methods': 'methods',
     'Discussion': 'discussion',
-    'Conclusion': 'conclusion'
+    'Conclusion': 'conclusion',
 }
 
 
@@ -167,7 +168,7 @@ class PybelProcessor(object):
             # rxn(reactants(r1,...,rn), products(p1,...pn))
             # Complex(a,b)
             # p(A, pmod('ph')) -> Complex(A, B)
-            # Complex(A-Ph, B) 
+            # Complex(A-Ph, B)
             # Complexes
             #   complex(x(Foo), x(Bar), ...)
             else:
@@ -379,7 +380,7 @@ def get_agent(node_data, node_modifier_data=None):
 
     # Skip gene/protein fusions
     if isinstance(node_data, dsl.FusionBase):
-        logger.info("Gene and protein fusions not handled: %s" % str(node_data))
+        logger.info("Gene and protein fusions not handled: %s", node_data)
         return None
     # COMPLEXES ------------
     # First, handle complexes, which will consist recursively of other agents

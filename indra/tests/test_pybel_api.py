@@ -24,29 +24,29 @@ def test_pybel_neighborhood_query():
                                         network_type='graph_jsongz_url',
                                         network_file=small_corpus_url)
     assert bp.statements
-    assert all(s.evidence[0].context.cell_line.name == 'MCF 10A'
-                for s in bp.statements)
+    assert all(
+        s.evidence[0].context.cell_line.name == 'MCF 10A'
+        for s in bp.statements
+    )
     # Locate statement about epidermis development
     stmt = [st for st in bp.statements if st.agent_list()[1].name ==
             'epidermis development'][0]
-    assert stmt.evidence[0].context.__repr__() == \
-           stmt.evidence[0].context.__str__()
-    assert stmt.evidence[0].context == \
-           BioContext(location=RefContext(name="Cytoplasm",
-                                          db_refs={'MESH': 'D003593'}),
-                      cell_line=RefContext(name="MCF 10A",
-                                           db_refs={'EFO': '0001200'}),
-                      cell_type=RefContext(name="keratinocyte",
-                                           db_refs={'CL': '0000312'}),
-                      organ=RefContext(name="colon",
-                                       db_refs={'UBERON': '0001155'}),
-                      disease=RefContext(name="cancer",
-                                         db_refs={'DOID': '162'}),
-                      species=RefContext(name="Rattus norvegicus",
-                                         db_refs={'TAXONOMY': '10116'}))
+    assert repr(stmt.evidence[0].context) == str(stmt.evidence[0].context)
+    assert stmt.evidence[0].context == BioContext(
+        location=RefContext(name="Cytoplasm",
+                            db_refs={'MESH': 'D003593'}),
+        cell_line=RefContext(name="MCF 10A",
+                             db_refs={'EFO': '0001200'}),
+        cell_type=RefContext(name="keratinocyte",
+                             db_refs={'CL': '0000312'}),
+        organ=RefContext(name="colon",
+                         db_refs={'UBERON': '0001155'}),
+        disease=RefContext(name="cancer",
+                           db_refs={'DOID': '162'}),
+        species=RefContext(name="Rattus norvegicus",
+                           db_refs={'TAXONOMY': '10116'}))
     # Test annotation manager
-    assert bp.annot_manager.get_mapping('Species', '9606') == \
-           'Homo sapiens'
+    assert bp.annot_manager.get_mapping('Species', '9606') == 'Homo sapiens'
 
 
 def test_process_pybel():
@@ -199,6 +199,7 @@ def test_get_agent_mirna():
     assert agent.name == 'MIRLET7A1'
     assert agent.db_refs.get('MIRBASE') == 'MI0000060'
     assert agent.db_refs.get('HGNC') == '31476'
+
 
 def test_get_agent_fusion():
     node_data = ProteinFusion(
@@ -361,8 +362,11 @@ def test_phosphorylation_one_site_with_evidence():
     g = BELGraph()
     ev_text = 'Some evidence.'
     ev_pmid = '123456'
-    edge_hash = g.add_directly_increases(mek, erk, evidence=ev_text, citation=ev_pmid,
-                                         annotations={"TextLocation": 'Abstract'})
+    edge_hash = g.add_directly_increases(
+        mek, erk, evidence=ev_text,
+        citation=ev_pmid,
+        annotations={"TextLocation": 'Abstract'},
+    )
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -508,7 +512,8 @@ def test_active_form():
                        variants=[pmod('Ph', position=33, code='Ser')])
     p53_obj = Protein(name='TP53', namespace='HGNC')
     g = BELGraph()
-    g.add_increases(p53_pmod, p53_obj, object_modifier=activity(name='tscript'),
+    g.add_increases(p53_pmod, p53_obj,
+                    object_modifier=activity(name='tscript'),
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -631,7 +636,8 @@ def test_gtpactivation():
 
 def test_conversion():
     enz = Protein(name='PLCG1', namespace='HGNC')
-    react_1 = abundance('SCHEM', '1-Phosphatidyl-D-myo-inositol 4,5-bisphosphate')
+    react_1 = abundance('SCHEM',
+                        '1-Phosphatidyl-D-myo-inositol 4,5-bisphosphate')
     p1 = abundance('SCHEM', 'Diacylglycerol')
     p2 = abundance('SCHEM', 'Inositol 1,4,5-trisphosphate')
 
@@ -669,8 +675,10 @@ def test_controlled_transloc_loc_cond():
     subj = Protein(name='MAP2K1', namespace='HGNC')
     obj = Protein(name='MAPK1', namespace='HGNC')
     g = BELGraph()
-    transloc = translocation(from_loc=Entity(namespace='GOCC', name='intracellular'),
-                             to_loc=Entity(namespace='GOCC', name='extracellular space'))
+    transloc = translocation(
+        from_loc=Entity(namespace='GOCC', name='intracellular'),
+        to_loc=Entity(namespace='GOCC', name='extracellular space'),
+    )
     g.add_increases(subj, obj, object_modifier=transloc,
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)

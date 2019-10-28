@@ -4,7 +4,8 @@ import pybel.constants as pc
 from indra.assemblers.pybel import assembler as pa
 from indra.databases import hgnc_client
 from indra.statements import *
-from pybel.dsl import abundance, activity, bioprocess, complex_abundance, hgvs, pmod, protein, reaction
+from pybel.dsl import abundance, activity, bioprocess, \
+    complex_abundance, hgvs, pmod, protein, reaction
 
 
 def id(gene_name):
@@ -423,9 +424,11 @@ def test_bound_condition():
     egfr = Agent('EGFR', db_refs={'HGNC': id('EGFR')})
     grb2 = Agent('GRB2', db_refs={'HGNC': id('GRB2')})
     ras = Agent('KRAS', db_refs={'HGNC': '6407'})
-    sos1_bound = Agent('SOS1', mods=[ModCondition('phosphorylation')],
-                       bound_conditions=[BoundCondition(egfr), BoundCondition(grb2)],
-                       db_refs={'HGNC': id('SOS1')})
+    sos1_bound = Agent(
+        'SOS1', mods=[ModCondition('phosphorylation')],
+        bound_conditions=[BoundCondition(egfr), BoundCondition(grb2)],
+        db_refs={'HGNC': id('SOS1')}
+    )
     stmt = Gef(sos1_bound, ras)
     stmt_hash = stmt.get_hash(refresh=True)
     pba = pa.PybelAssembler([stmt])
