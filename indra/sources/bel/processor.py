@@ -213,7 +213,7 @@ class PybelProcessor(object):
 
     def _get_modification(self, u_data, v_data, k, edge_data):
         subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
-        mods, muts = _get_all_pmods(v_data)
+        mods, muts = _get_mods_and_muts(v_data)
         v_data_no_mods = v_data.get_parent()
         obj_agent = get_agent(v_data_no_mods, edge_data.get(pc.OBJECT))
         if subj_agent is None or obj_agent is None:
@@ -230,12 +230,10 @@ class PybelProcessor(object):
         # Subject info
         subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
         subj_activity = _get_activity_condition(edge_data.get(pc.SUBJECT))
-        subj_function = u_data.function
         # Object info
         # Note: Don't pass the object modifier data because we don't want to
         # put an activity on the agent
         obj_agent = get_agent(v_data, None)
-        obj_function = v_data.function
         # If it's a bioprocess object, we won't have an activity in the edge
         if isinstance(v_data, (dsl.BiologicalProcess, dsl.Pathology)):
             activity_type = 'activity'
@@ -425,7 +423,7 @@ def get_agent(node_data, node_modifier_data=None):
         return None
 
     # Get modification conditions
-    mods, muts = _get_all_pmods(node_data)
+    mods, muts = _get_mods_and_muts(node_data)
     # Get activity condition
     ac = _get_activity_condition(node_modifier_data)
     to_loc = _get_translocation_target(node_modifier_data)
@@ -733,7 +731,21 @@ class AnnotationManager(object):
         self.failures[key].add(value)
 
 
-def _get_all_pmods(node_data):
+def _get_mods_and_muts(node_data):
+    """Get all modifications and mutations on the PyBEL node.
+
+    Parameters
+    ----------
+    node_data : pybel.dsl.CentralDogma
+        A PyBEL node
+
+    Returns
+    -------
+    mods : List[ModCondition]
+        A list of modifications to the given abundance
+    muts : List[MutCondition]
+        A list of mutations to the given abundance
+    """
     mods = []
     muts = []
     variants = node_data.get(pc.VARIANTS)
@@ -792,7 +804,7 @@ def _get_activity_condition(node_modifier_data):
     if activity_ns == pc.BEL_DEFAULT_NAMESPACE:
         activity_name = effect[pc.NAME]
         activity_type = _pybel_indra_act_map.get(activity_name)
-        # If an activity type in Bel/PyBel that is not implemented in INDRA,
+        # If an activity type in Bel/PyBEL that is not implemented in INDRA,
         # return generic activity
         if activity_type is None:
             return ActivityCondition('activity', True)
