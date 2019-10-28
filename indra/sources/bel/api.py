@@ -1,7 +1,6 @@
 import zlib
 import json
 import pybel
-import pickle
 import logging
 import requests
 from functools import lru_cache
@@ -74,12 +73,11 @@ def process_pybel_network(network_type, network_file, **kwargs):
         res = requests.get(network_file)
         res.raise_for_status()
         content = zlib.decompress(res.content, zlib.MAX_WBITS | 32)
-        graph = pybel.from_jsons(content)
+        graph = pybel.from_nodelink(json.loads(content))
         return process_pybel_graph(graph)
     elif network_type == 'graph_pickle':
-        with open(network_file, 'rb') as fh:
-            graph = pickle.load(fh)
-            return process_pybel_graph(graph)
+        graph = pybel.from_pickle(network_file)
+        return process_pybel_graph(graph)
     else:
         raise ValueError('Unknown network type: %s' % network_type)
 
@@ -179,7 +177,7 @@ def process_belscript(file_name, **kwargs):
         kwargs['citation_clearing'] = False
     if 'no_identifier_validation' not in kwargs:
         kwargs['no_identifier_validation'] = True
-    pybel_graph = pybel.from_path(file_name, **kwargs)
+    pybel_graph = pybel.from_bel_script(file_name, **kwargs)
     return process_pybel_graph(pybel_graph)
 
 
@@ -201,7 +199,7 @@ def process_json_file(file_name):
         bp.statements.
     """
     with open(file_name, 'rt') as fh:
-        pybel_graph = pybel.from_json_file(fh, False)
+        pybel_graph = pybel.from_nodelink_file(fh, check_version=False)
     return process_pybel_graph(pybel_graph)
 
 
