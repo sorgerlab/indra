@@ -8,6 +8,7 @@ from threading import Thread
 from datetime import datetime
 from indra.literature import elsevier_client as ec
 from indra.literature.elsevier_client import _ensure_api_keys
+from indra.tools.reading.readers import get_reader_classes
 from indra.util.aws import get_job_log, tag_instance, get_batch_command, \
     kill_all, get_ids
 
@@ -383,7 +384,7 @@ class Submitter(object):
     def __init__(self, basename, readers, project_name=None, **options):
         self.basename = basename
         if 'all' in readers:
-            self.readers = ['reach', 'sparser']
+            self.readers = [rc.name.lower() for rc in get_reader_classes()]
         else:
             self.readers = readers
         self.project_name = project_name
