@@ -8,6 +8,7 @@ import shutil
 import logging
 import tempfile
 import subprocess
+
 from indra.sources.isi.processor import IsiProcessor
 from indra.sources.isi.preprocessor import IsiPreprocessor
 
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 DOCKER_IMAGE_NAME = 'sahilgar/bigmechisi'
+IN_ISI_DOCKER = os.environ.get('IN_ISI_DOCKER', 'false').lower() == 'true'
 
 
 def process_text(text, pmid=None, **kwargs):
@@ -114,33 +116,80 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None, **kwargs):
     return ip
 
 
+def _make_links(dirname, link_dir):
+    """Make links to files in a directory.
+
+    This is used when running from within the modified ISI docker.
+    """
+    # Create a directory in the root dir with the appropriate name.
+    if not os.path.exists(link_dir):
+        os.mkdir(link_dir)
+
+    # Link each of the files in the directory to this new link_dir.
+    for fname in os.listdir(dirname):
+        if fname.startswith('.'):
+            continue
+        link = os.path.join(link_dir, fname)
+        true = os.path.join(dirname, fname)
+        os.symlink(true, link)
+
+    return
+
+
 def run_isi(input_dir, output_dir, tmp_dir, num_processes=1):
-    # We call realpath on all these paths so that any symbolic links
-    # are generated out - this is needed on Mac
-    input_binding = os.path.realpath(input_dir) + ':/input:ro'
-    output_binding = os.path.realpath(output_dir) + ':/output:rw'
-    tmp_binding = os.path.realpath(tmp_dir) + ':/temp:rw'
-    command = ['docker', 'run', '-it', '--rm',
-               '-v', input_binding, '-v', output_binding, '-v', tmp_binding,
-               DOCKER_IMAGE_NAME, './myprocesspapers.sh',
-               '-c', str(num_processes)]
+    base_command = ['~/myprocesspapers.sh', '-c', str(num_processes)]
+
+    if IN_ISI_DOCKER:
+        _make_links(input_dir, '/input')
+        os.mkdir('/output')
+        os.mkdir('/temp')
+        command = base_command
+    else:
+        # We call realpath on all these paths so that any symbolic links
+        # are generated out - this is needed on Mac
+        input_binding = os.path.realpath(input_dir) + ':/input:ro'
+        output_binding = os.path.realpath(output_dir) + ':/output:rw'
+        tmp_binding = os.path.realpath(tmp_dir) + ':/temp:rw'
+        command = ['docker', 'run', '-it', '--rm',
+                   '-v', input_binding, '-v', output_binding, '-v', tmp_binding,
+                   DOCKER_IMAGE_NAME] + base_command
 
     # Invoke the ISI reader
-    logger.info('Running command:')
+    logger.info('Running command',
+                'from within the docker:' if IN_ISI_DOCKER
+                else 'using the docker:')
     logger.info(' '.join(command))
     ret = subprocess.call(command)
     if ret != 0:
         logger.error('Docker returned non-zero status code')
+
+    if IN_ISI_DOCKER:
+        _make_links('/output', output_dir)
+        _make_links('/temp', tmp_dir)
 
     return
 
 
 def get_isi_image_data():
     """Get the json data for the ISI docker image."""
+    if IN_ISI_DOCKER:
+        logger.error("Cannot read docker info from within the docker.")
+        return {}
+
     ret = subprocess.run(['docker', 'image', 'inspect', DOCKER_IMAGE_NAME],
                          stdout=subprocess.PIPE)
     image_data = json.loads(ret.stdout)[0]
     return image_data
+
+
+def get_isi_version():
+    if IN_ISI_DOCKER:
+        ret = subprocess.run('echo HOSTNAME', shell=True,
+                             stdout=subprocess.PIPE)
+        return ret.stdout.decode('utf-8').strip()
+    else:
+        data = get_isi_image_data()
+        return data['Id'].split(':')[1][:12]
 
 
 def process_preprocessed(isi_preprocessor, num_processes=1,

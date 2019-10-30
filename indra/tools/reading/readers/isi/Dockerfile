@@ -72,3 +72,6 @@ RUN echo "Cloning" https://github.com/$INDRA_DB_USER/indra_db.git && \
 
 # Check the installation (and make sure any files are downloaded)
 RUN python3 -m indra_db.reading.read_db_aws --help
+
+# Set the in-isi environment variable
+ENV IN_ISI_DOCKER=true
