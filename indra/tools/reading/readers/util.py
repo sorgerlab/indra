@@ -9,7 +9,7 @@ class formats:
     XML = 'xml'
 
 
-def _get_dir(*args):
+def get_dir(*args):
     dirname = path.join(*args)
     if path.isabs(dirname):
         dirpath = dirname
@@ -22,11 +22,11 @@ def _get_dir(*args):
     return dirpath
 
 
-def _time_stamp():
+def get_time_stamp():
     return datetime.now().strftime("%Y%m%d%H%M%S")
 
 
-def _get_mem_total():
+def get_mem_total():
     if system() == 'Linux':
         with open('/proc/meminfo', 'r') as f:
             lines = f.readlines()

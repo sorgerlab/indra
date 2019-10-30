@@ -8,7 +8,7 @@ from multiprocessing import Pool
 
 from indra.tools.reading.readers.core import Reader, ReadingError
 from indra.tools.reading.readers.content import Content
-from indra.tools.reading.readers.util import _time_stamp
+from indra.tools.reading.readers.util import get_time_stamp
 
 from indra.sources import sparser
 
@@ -149,7 +149,7 @@ class SparserReader(Reader):
         logger.info("Beginning to run sparser.")
         output_file_list = []
         if log:
-            log_name = 'sparser_run_%s.log' % _time_stamp()
+            log_name = 'sparser_run_%s.log' % get_time_stamp()
             outbuf = open(log_name, 'wb')
         else:
             outbuf = None

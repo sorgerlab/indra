@@ -1,7 +1,7 @@
 import json
 
 from indra.tools.reading.readers.core import Reader
-from indra.tools.reading.readers.util import _get_dir
+from indra.tools.reading.readers.util import get_dir
 
 from indra.sources.isi.api import run_isi, get_isi_image_data
 from indra.sources.isi.processor import IsiProcessor
@@ -16,9 +16,9 @@ class IsiReader(Reader):
         super(IsiReader, self).__init__(*args, **kwargs)
 
         # Define some extra directories
-        self.nxml_dir = _get_dir(self.tmp_dir, 'nxmls')
-        self.isi_temp_dir = _get_dir(self.tmp_dir, 'temp')
-        self.output_dir = _get_dir(self.tmp_dir, 'output')
+        self.nxml_dir = get_dir(self.tmp_dir, 'nxmls')
+        self.isi_temp_dir = get_dir(self.tmp_dir, 'temp')
+        self.output_dir = get_dir(self.tmp_dir, 'output')
 
         return
 

@@ -1,7 +1,7 @@
 import logging
 import tempfile
 
-from .util import _get_dir, _time_stamp, formats
+from .util import get_dir, get_time_stamp, formats
 
 logger = logging.getLogger(__name__)
 
@@ -81,13 +81,13 @@ class Reader(object):
         if base_dir is None:
             base_dir = 'run_' + self.name.lower()
         self.n_proc = n_proc
-        self.base_dir = _get_dir(base_dir)
+        self.base_dir = get_dir(base_dir)
         tmp_dir = tempfile.mkdtemp(
-            prefix='%s_job_%s' % (self.name.lower(), _time_stamp()),
+            prefix='%s_job_%s' % (self.name.lower(), get_time_stamp()),
             dir=self.base_dir
         )
         self.tmp_dir = tmp_dir
-        self.input_dir = _get_dir(tmp_dir, 'input')
+        self.input_dir = get_dir(tmp_dir, 'input')
         self.id_maps = {}
         self.do_content_check = check_content
         self.input_character_limit = input_character_limit

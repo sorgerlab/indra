@@ -9,7 +9,7 @@ import random
 logger = logging.getLogger('indra.tools.reading.read_files')
 
 from indra.tools.reading.util.script_tools import get_parser
-from indra.tools.reading.readers import _get_dir, get_reader_classes, Content
+from indra.tools.reading.readers import get_dir, get_reader_classes, Content
 
 
 def make_parser():
@@ -85,7 +85,7 @@ def main():
         input_lines = input_lines[start_idx:end_idx]
 
     # Create a single base directory
-    base_dir = _get_dir('run_%s' % ('_and_'.join(args.readers)))
+    base_dir = get_dir('run_%s' % ('_and_'.join(args.readers)))
 
     # Set the verbosity. The quiet argument overrides the verbose argument.
     verbose = args.verbose and not args.quiet

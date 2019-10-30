@@ -7,7 +7,7 @@ import subprocess
 from os import path, remove, environ, listdir
 
 from indra.config import get_config
-from indra.tools.reading.readers.util import _get_dir, _get_mem_total
+from indra.tools.reading.readers.util import get_dir, get_mem_total
 from indra.tools.reading.readers.core import Reader, ReadingError
 
 from indra.sources import reach
@@ -40,7 +40,7 @@ class ReachReader(Reader):
                     fmt.format(tmp_dir=self.tmp_dir, num_cores=self.n_proc,
                                loglevel=log_level)
                 )
-        self.output_dir = _get_dir(self.tmp_dir, 'output')
+        self.output_dir = get_dir(self.tmp_dir, 'output')
         self.num_input = 0
         return
 
@@ -183,7 +183,7 @@ class ReachReader(Reader):
     def read(self, read_list, verbose=False, log=False):
         """Read the content, returning a list of ReadingData objects."""
         ret = []
-        mem_tot = _get_mem_total()
+        mem_tot = get_mem_total()
         if mem_tot is not None and mem_tot <= self.REACH_MEM + self.MEM_BUFFER:
             logger.error(
                 "Too little memory to run reach. At least %s required." %
