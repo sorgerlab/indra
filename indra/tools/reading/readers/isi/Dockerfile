@@ -2,9 +2,11 @@ FROM sahilgar/bigmechisi
 
 ARG INDRA_USER
 ARG INDRA_BRANCH
+RUN echo $INDRA_USER $INDRA_BRANCH
 
 ARG INDRA_DB_USER
 ARG INDRA_DB_BRANCH
+RUN echo $INDRA_DB_USER $INDRA_DB_BRANCH
 
 ENV DIRPATH /root
 ENV PYTHONPATH "${DIRPATH}/indra_db:${PYTHONPATH}"
@@ -21,9 +23,17 @@ RUN apt-get update && \
 RUN pip3 install -U pip
 
 # Install indra
-RUN git clone https://github.com/$INDRA_USER/indra.git && \
+RUN echo "Cloning" https://github.com/$INDRA_USER/indra.git && \
+    git clone https://github.com/$INDRA_USER/indra.git && \
     cd indra && \
-    git checkout $INDRA_BRACH && \
+    echo "================================================" && \
+    git fetch --all && \
+    git branch --list --all && \
+    echo "Changing to branch" $INDRA_BRANCH &&\
+    git checkout $INDRA_BRANCH && \
+    git status && \
+    git show && \
+    echo "================================================" && \
     pip3 install . && \
     cd ..
 
@@ -46,9 +56,17 @@ RUN pip3 install adeft
 RUN python3 -m adeft.download
 
 # Install indra_db
-RUN git clone https://github.com/$INDRA_DB_USER/indra_db.git && \
+RUN echo "Cloning" https://github.com/$INDRA_DB_USER/indra_db.git && \
+    git clone https://github.com/$INDRA_DB_USER/indra_db.git && \
     cd indra_db && \
+    echo "================================================" && \
+    git fetch --all && \
+    git branch --list --all && \
+    echo "Changing to branch" $INDRA_DB_BRANCH &&\
     git checkout $INDRA_DB_BRANCH && \
+    git status && \
+    git show && \
+    echo "================================================" && \
     pip3 install . && \
     cd ..
 
