@@ -3,7 +3,7 @@ import json
 from indra.tools.reading.readers.core import Reader
 from indra.tools.reading.readers.util import get_dir
 
-from indra.sources.isi.api import run_isi, get_isi_image_data
+from indra.sources.isi.api import run_isi, get_isi_version
 from indra.sources.isi.processor import IsiProcessor
 from indra.sources.isi.preprocessor import IsiPreprocessor
 
@@ -53,8 +53,7 @@ class IsiReader(Reader):
 
     @classmethod
     def get_version(cls):
-        image_data = get_isi_image_data()
-        return image_data['Id'].split(':')[1][:12]
+        return get_isi_version()
 
     @staticmethod
     def get_processor(content):
