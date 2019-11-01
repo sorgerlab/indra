@@ -75,3 +75,8 @@ RUN python3 -m indra_db.reading.read_db_aws --help
 
 # Set the in-isi environment variable
 ENV IN_ISI_DOCKER=true
+
+# Install NXML2TEXT
+RUN git clone https://github.com/spyysalo/nxml2txt.git
+ENV NXML2TXT_PATH = /root/nxml2txt
+ENV PYTHON2_PATH = python2
