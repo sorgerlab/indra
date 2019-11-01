@@ -41,7 +41,7 @@ class ReadingData(object):
         return
 
     def __repr__(self):
-        return "ReadingData(content_id=%s, reader=%s)" \
+        return self.__class__.__name__ + "(content_id=%s, reader=%s)" \
                % (self.content_id, self.reader)
 
     def get_statements(self, reprocess=False):
