@@ -4,7 +4,7 @@
   <!-- Toggle a hidden element -->
   <script>
     const pubmed_fetch = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
-    const ALL_COLLAPSED = true;
+    let ALL_COLLAPSED = true;
 
     function toggler(short_name_key) {
       $("#" + short_name_key + "_group").toggle();
