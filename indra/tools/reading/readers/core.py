@@ -40,6 +40,10 @@ class ReadingData(object):
         self._statements = None
         return
 
+    def __repr__(self):
+        return "ReadingData(content_id=%s, reader=%s)" \
+               % (self.content_id, self.reader)
+
     def get_statements(self, reprocess=False):
         """General method to create statements."""
         if self._statements is None or reprocess:
