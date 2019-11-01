@@ -1,3 +1,5 @@
+from datetime import datetime
+
 __all__ = ['process_text', 'process_nxml', 'process_preprocessed',
            'process_json_file', 'process_output_folder']
 
@@ -184,12 +186,13 @@ def get_isi_image_data():
 
 def get_isi_version():
     if IN_ISI_DOCKER:
-        ret = subprocess.run('echo HOSTNAME', shell=True,
-                             stdout=subprocess.PIPE)
-        return ret.stdout.decode('utf-8').strip()
+        timestamp = os.path.getmtime('~/myprocesspapers.sh')
+        dt = datetime.fromtimestamp(timestamp)
     else:
         data = get_isi_image_data()
-        return data['Id'].split(':')[1][:12]
+        dt = datetime.strptime(data['Created'].split('.')[0],
+                               '%Y-%m-%dT%H:%M:%S')
+    return dt.strftime('%Y%m%d')
 
 
 def process_preprocessed(isi_preprocessor, num_processes=1,
