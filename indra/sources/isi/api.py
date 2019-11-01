@@ -139,7 +139,7 @@ def _make_links(dirname, link_dir):
 
 
 def run_isi(input_dir, output_dir, tmp_dir, num_processes=1):
-    base_command = ['~/myprocesspapers.sh', '-c', str(num_processes)]
+    base_command = ['/root/myprocesspapers.sh', '-c', str(num_processes)]
 
     if IN_ISI_DOCKER:
         _make_links(input_dir, '/input')
@@ -186,7 +186,7 @@ def get_isi_image_data():
 
 def get_isi_version():
     if IN_ISI_DOCKER:
-        timestamp = os.path.getmtime('~/myprocesspapers.sh')
+        timestamp = os.path.getmtime('/root/myprocesspapers.sh')
         dt = datetime.fromtimestamp(timestamp)
     else:
         data = get_isi_image_data()
