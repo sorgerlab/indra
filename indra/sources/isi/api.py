@@ -157,9 +157,8 @@ def run_isi(input_dir, output_dir, tmp_dir, num_processes=1):
                    DOCKER_IMAGE_NAME] + base_command
 
     # Invoke the ISI reader
-    logger.info('Running command',
-                'from within the docker:' if IN_ISI_DOCKER
-                else 'using the docker:')
+    logger.info('Running command from within the docker:' if IN_ISI_DOCKER
+                else 'Running command using the docker:')
     logger.info(' '.join(command))
     ret = subprocess.call(command)
     if ret != 0:
