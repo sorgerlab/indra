@@ -83,7 +83,7 @@ class Reader(object):
                  max_space_ratio=CONTENT_MAX_SPACE_RATIO,
                  ResultClass=ReadingData):
         if base_dir is None:
-            base_dir = 'run_' + self.name.lower()
+            base_dir = self.name.lower() + '_run'
         self.n_proc = n_proc
         self.base_dir = get_dir(base_dir)
         tmp_dir = tempfile.mkdtemp(
@@ -101,7 +101,8 @@ class Reader(object):
         return
 
     def __repr__(self):
-        return 'Reader(\'%s\', n_proc=%d)' % (self.name, self.n_proc)
+        return self.__class__.__name__ + '(\'%s\', n_proc=%d)' \
+               % (self.name, self.n_proc)
 
     def reset(self):
         self.results = []
