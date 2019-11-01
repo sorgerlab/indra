@@ -45,7 +45,7 @@ class IsiReader(Reader):
 
         # Process the outputs
         for fname, cid, extra_annots in pp.iter_outputs(self.output_dir):
-            with open(fname, 'rb') as f:
+            with open(fname, 'r') as f:
                 content = json.load(f)
             self.add_result(cid, content)
 
