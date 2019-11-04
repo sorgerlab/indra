@@ -54,6 +54,7 @@ def stmts_from_json(json_in, on_missing_support='handle'):
         try:
             st = Statement._from_json(json_stmt)
         except Exception as e:
+            logger.exception(e)
             logger.warning("Error creating statement: %s" % e)
             continue
         stmts.append(st)
