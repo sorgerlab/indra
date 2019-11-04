@@ -213,6 +213,8 @@ __all__ = [
 import abc
 import sys
 import uuid
+import json
+import gzip
 import logging
 import networkx
 import itertools
@@ -253,7 +255,7 @@ class Statement(object):
     _agent_order = NotImplemented
 
     def __init__(self, evidence=None, supports=None, supported_by=None):
-        self._evidence = evidence
+        self.evidence = evidence
         # Initialize supports/supported_by fields, which should be lists
         self.supports = supports if supports else []
         self.supported_by = supported_by if supported_by else []
@@ -265,19 +267,25 @@ class Statement(object):
 
     @property
     def evidence(self):
-        return self._evidence
+        evjsgz = gzip.decompress(self._evidence)
+        evjs = json.loads(evjsgz.decode('utf-8'))
+        evs = [Evidence._from_json(e) for e in evjs]
+        return evs
 
     @evidence.setter
     def evidence(self, evidence):
         if evidence is None:
-            self._evidence = []
+            evs = []
         elif isinstance(evidence, Evidence):
-            self._evidence = [evidence]
+            evs = [evidence]
         elif isinstance(evidence, list):
-            self._evidence = evidence
+            evs = evidence
         else:
             raise ValueError('evidence must be an Evidence object, a list '
                              '(of Evidence objects), or None.')
+        evjs = json.dumps([e.to_json() for e in evs])
+        evjsgz = gzip.compress(evjs.encode('utf-8'))
+        self._evidence = evjsgz
 
     def matches_key(self):
         raise NotImplementedError("Method must be implemented in child class.")
