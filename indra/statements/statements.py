@@ -253,16 +253,7 @@ class Statement(object):
     _agent_order = NotImplemented
 
     def __init__(self, evidence=None, supports=None, supported_by=None):
-        if evidence is None:
-            self.evidence = []
-        elif isinstance(evidence, Evidence):
-            self.evidence = [evidence]
-        elif isinstance(evidence, list):
-            self.evidence = evidence
-        else:
-            raise ValueError('evidence must be an Evidence object, a list '
-                             '(of Evidence objects), or None.')
-
+        self._evidence = evidence
         # Initialize supports/supported_by fields, which should be lists
         self.supports = supports if supports else []
         self.supported_by = supported_by if supported_by else []
@@ -271,6 +262,22 @@ class Statement(object):
         self._full_hash = None
         self._shallow_hash = None
         return
+
+    @property
+    def evidence(self):
+        return self._evidence
+
+    @evidence.setter
+    def evidence(self, evidence):
+        if evidence is None:
+            self._evidence = []
+        elif isinstance(evidence, Evidence):
+            self._evidence = [evidence]
+        elif isinstance(evidence, list):
+            self._evidence = evidence
+        else:
+            raise ValueError('evidence must be an Evidence object, a list '
+                             '(of Evidence objects), or None.')
 
     def matches_key(self):
         raise NotImplementedError("Method must be implemented in child class.")
