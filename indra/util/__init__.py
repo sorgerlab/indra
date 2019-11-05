@@ -64,12 +64,15 @@ def unicode_strs(obj, attr_filter=None):
 
 
 def decode_obj(obj, encoding='utf-8'):
+    from indra.statements import Statement
     if isinstance(obj, non_unicode):
         return obj.decode(encoding)
     elif isinstance(obj, list) or isinstance(obj, tuple):
         return [decode_obj(item) for item in obj]
     elif hasattr(obj, '__dict__'):
         for k, v in obj.__dict__.items():
+            if isinstance(obj, Statement) and k == '_evidence':
+                continue
             obj.__dict__[k] = decode_obj(v)
         return obj
     elif isinstance(obj, dict):
