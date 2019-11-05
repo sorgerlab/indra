@@ -186,7 +186,7 @@ class Preassembler(object):
                         if 'prior_uuids' not in ev.annotations:
                             ev.annotations['prior_uuids'] = []
                         ev.annotations['prior_uuids'].append(stmt.uuid)
-                        new_stmt.evidence.append(ev)
+                        new_stmt.add_evidence(ev)
                         ev_keys.add(ev_key)
             end_ev_keys = _ev_keys([new_stmt])
             if len(end_ev_keys) != len(start_ev_keys):

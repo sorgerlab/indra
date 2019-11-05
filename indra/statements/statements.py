@@ -272,6 +272,11 @@ class Statement(object):
         evs = [Evidence._from_json(e) for e in evjs]
         return evs
 
+    def add_evidence(self, ev):
+        evs = self.evidence
+        evs.append(ev)
+        self.evidence = evs
+
     @evidence.setter
     def evidence(self, evidence):
         if evidence is None:

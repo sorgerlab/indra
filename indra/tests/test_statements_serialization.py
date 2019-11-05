@@ -348,6 +348,7 @@ def test_evidence_context():
     assert evj['pmid'] == '1'
     assert evj['annotations'] == {'a': '2'}
     assert ev.to_json() == Evidence._from_json(ev.to_json()).to_json()
+    assert ev.matches_key() == Evidence._from_json(ev.to_json()).matches_key()
 
 
 def test_file_serialization():
