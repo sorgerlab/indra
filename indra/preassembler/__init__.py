@@ -990,10 +990,14 @@ def flatten_evidence(stmts, collect_from=None):
 def _flatten_evidence_for_stmt(stmt, collect_from):
     supp_stmts = (stmt.supports if collect_from == 'supports'
                                 else stmt.supported_by)
-    total_evidence = set(stmt.evidence)
+    evs = {ev.matches_key(): ev for ev in stmt.evidence}
+    total_evidence = set(evs.values())
     for supp_stmt in supp_stmts:
         child_evidence = _flatten_evidence_for_stmt(supp_stmt, collect_from)
-        total_evidence = total_evidence.union(child_evidence)
+        chevs = {ev.matches_key(): ev for ev in child_evidence}
+        for k, v in chevs.items():
+            evs[k] = v
+        total_evidence = list(evs.values())
     return list(total_evidence)
 
 
