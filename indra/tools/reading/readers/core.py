@@ -44,7 +44,7 @@ class ReadingData(object):
         return self.__class__.__name__ + "(content_id=%s, reader=%s)" \
                % (self.content_id, self.reader)
 
-    def get_statements(self, reprocess=False):
+    def get_statements(self, reprocess=False, add_metadata=False):
         """General method to create statements."""
         if self._statements is None or reprocess:
             # Handle the case that there is no content.
@@ -68,10 +68,17 @@ class ReadingData(object):
                 stmts = []
             else:
                 stmts = processor.statements
-            self._statements = stmts[:]
-        else:
-            stmts = self._statements[:]
-        return stmts
+
+            # Add some metadata to the annotations
+            if add_metadata:
+                meta_info = {'READER': self.reader.upper(),
+                             'CONTENT_ID': self.content_id}
+                self._statements = []
+                for stmt in stmts:
+                    stmt.evidence.text_refs.update(meta_info)
+                    self._statements.append(stmt)
+
+        return self._statements[:]
 
 
 class Reader(object):

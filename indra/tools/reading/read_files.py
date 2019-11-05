@@ -1,15 +1,12 @@
 """Read a list of files located in your local directory."""
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
-import logging
 import pickle
 import random
-
-logger = logging.getLogger('indra.tools.reading.read_files')
+import logging
 
 from indra.tools.reading.util.script_tools import get_parser
 from indra.tools.reading.readers import get_dir, get_reader_classes, Content
+
+logger = logging.getLogger(__name__)
 
 
 def make_parser():
@@ -23,6 +20,12 @@ def make_parser():
         dest='output_name',
         help=('Results will be pickled in files '
               '<output_name>_stmts.pkl and <output_name>_readings.pkl.')
+    )
+    parser.add_argument(
+        '-M', '--add-stmt-metadata',
+        dest='add_stmt_metadata',
+        help=('Optionally add special metadata to the evidence of all '
+              'Statements that are produced.')
     )
     return parser
 

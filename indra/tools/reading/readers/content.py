@@ -34,8 +34,13 @@ class Content(object):
     @classmethod
     def from_file(cls, file_path, compressed=False, encoded=False):
         """Create a content object from a file path."""
+        # Create an ID which is the filename without the suffix.
         file_id = '.'.join(path.basename(file_path).split('.')[:-1])
+
+        # Extract the filetype
         file_format = file_path.split('.')[-1]
+
+        # Initialize a content object.
         content = cls(file_id, file_format, compressed, encoded)
         content.file_exists = True
         content._location = path.dirname(file_path)
