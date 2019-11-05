@@ -23,20 +23,20 @@ class ReadingData(object):
         example: 'REACH'
     reader_version : str
         A string identifying the version of the underlying nlp reader.
-    content_format : str
-        The format of the content. Options are in indra.db.formats.
-    content : str or dict
+    reading_format : str
+        The format of the reading result. Options are in indra.db.formats.
+    reading : str or dict
         The content of the reading result. A string in the format given by
-        `content_format`.
+        `reading_format`.
     """
 
-    def __init__(self, content_id, reader, reader_version, content_format,
-                 content):
+    def __init__(self, content_id, reader, reader_version, reading_format,
+                 reading):
         self.content_id = content_id
         self.reader = reader
         self.reader_version = reader_version
-        self.format = content_format
-        self.content = content
+        self.format = reading_format
+        self.reading = reading
         self._statements = None
         return
 
@@ -47,8 +47,9 @@ class ReadingData(object):
     def get_statements(self, reprocess=False, add_metadata=False):
         """General method to create statements."""
         if self._statements is None or reprocess:
+
             # Handle the case that there is no content.
-            if self.content is None:
+            if self.reading is None:
                 self._statements = []
                 return []
 
@@ -56,7 +57,7 @@ class ReadingData(object):
             reader_classes = get_reader_classes()
             for reader_class in reader_classes:
                 if reader_class.name == self.reader:
-                    processor = reader_class.get_processor(self.content)
+                    processor = reader_class.get_processor(self.reading)
                     break
             else:
                 raise ReadingError("Unknown reader: %s." % self.reader)
