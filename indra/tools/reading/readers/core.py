@@ -18,9 +18,9 @@ class ReadingData(object):
     content_id : int or str
         A unique identifier of the text content that produced the reading,
         which can be mapped back to that content.
-    reader : str
-        The name of the reader, consistent with it's `name` attribute, for
-        example: 'REACH'
+    reader_class : type
+        The class of the reader, a child of
+        `indra.tools.reading.readers.core.Reader`.
     reader_version : str
         A string identifying the version of the underlying nlp reader.
     reading_format : str
@@ -30,10 +30,10 @@ class ReadingData(object):
         `reading_format`.
     """
 
-    def __init__(self, content_id, reader, reader_version, reading_format,
-                 reading):
+    def __init__(self, content_id, reader_class, reader_version,
+                 reading_format, reading):
         self.content_id = content_id
-        self.reader = reader
+        self.reader_class = reader_class
         self.reader_version = reader_version
         self.format = reading_format
         self.reading = reading
@@ -41,8 +41,8 @@ class ReadingData(object):
         return
 
     def __repr__(self):
-        return self.__class__.__name__ + "(content_id=%s, reader=%s)" \
-               % (self.content_id, self.reader)
+        return self.__class__.__name__ + "(content_id=%s, reader_class=%s)" \
+               % (self.content_id, self.reader_class.__name__)
 
     def get_statements(self, reprocess=False, add_metadata=False):
         """General method to create statements."""
@@ -54,25 +54,19 @@ class ReadingData(object):
                 return []
 
             # Map to the different processors.
-            reader_classes = get_reader_classes()
-            for reader_class in reader_classes:
-                if reader_class.name == self.reader:
-                    processor = reader_class.get_processor(self.reading)
-                    break
-            else:
-                raise ReadingError("Unknown reader: %s." % self.reader)
+            processor = self.reader_class.get_processor(self.reading)
 
             # Get the statements from the processor, if it was resolved.
             if processor is None:
                 logger.error("Production of statements from %s failed for %s."
-                             % (self.reader, self.content_id))
+                             % (self.reader_class.name, self.content_id))
                 stmts = []
             else:
                 stmts = processor.statements
 
             # Add some metadata to the annotations
             if add_metadata:
-                meta_info = {'READER': self.reader.upper(),
+                meta_info = {'READER': self.reader_class.name.upper(),
                              'CONTENT_ID': self.content_id}
                 self._statements = []
                 for stmt in stmts:
@@ -119,7 +113,7 @@ class Reader(object):
 
     def add_result(self, content_id, content, **kwargs):
         """"Add a result to the list of results."""
-        result_object = self.ResultClass(content_id, self.name,
+        result_object = self.ResultClass(content_id, self.__class__,
                                          self.get_version(), formats.JSON,
                                          content, **kwargs)
         self.results.append(result_object)
