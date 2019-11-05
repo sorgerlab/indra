@@ -1,9 +1,9 @@
-version: 0.1
+version: 0.2
 
 phases:
   install:
     runtime-versions:
-      python: 3.6
+      python: 3.7
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
