@@ -41,7 +41,7 @@ def _get_keyed_stmts(stmt_list):
             ons, oid = s.obj.concept.get_grounding()
             skey = s.subj.concept.name if not sid \
                 else sid.split('/')[-1].replace('_', ' ')
-            okey = s.oubj.concept.name if not oid \
+            okey = s.obj.concept.name if not oid \
                 else oid.split('/')[-1].replace('_', ' ')
             key += (skey, okey)
         else:
