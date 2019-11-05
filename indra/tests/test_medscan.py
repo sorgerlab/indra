@@ -157,8 +157,8 @@ def test_evidence():
     coords = s0.evidence[0].annotations['agents']['coords']
     assert isinstance(coords, list), type(coords)
     assert len(coords) == 2, len(coords)
-    assert coords[0] == (90, 97), coords[0]
-    assert coords[1] == (106, 120), coords[1]
+    assert tuple(coords[0]) == (90, 97), tuple(coords[0])
+    assert tuple(coords[1]) == (106, 120), tuple(coords[1])
 
 
 def test_molsynthesis_positive():

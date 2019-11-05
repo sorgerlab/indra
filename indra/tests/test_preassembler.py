@@ -510,7 +510,9 @@ def test_flatten_evidence_hierarchy():
     supporting_stmt = top_stmt.supported_by[0]
     assert len(supporting_stmt.evidence) == 1
     assert supporting_stmt.evidence[0].text == 'foo'
-    supporting_stmt.evidence[0].text = 'changed_foo'
+    evs = supporting_stmt.evidence
+    evs[0].text = 'changed_foo'
+    supporting_stmt.evidence = evs
     assert supporting_stmt.evidence[0].text == 'changed_foo'
     assert 'changed_foo' not in [e.text for e in top_stmt.evidence]
     assert 'foo' in [e.text for e in top_stmt.evidence]
@@ -930,8 +932,10 @@ def test_agent_coordinates():
     evidence_list = unique_stmt.evidence
     agent_annots = [ev.annotations['agents'] for ev in unique_stmt.evidence]
     assert all(a['raw_text'] == ['MEK1', 'ERK2'] for a in agent_annots)
-    assert {tuple(a['coords']) for a in agent_annots} == {((21, 25), (0, 4)),
-                                                          ((0, 4), (15, 19))}
+    expected_coords = {((21, 25), (0, 4)), ((0, 4), (15, 19))}
+    for annot in agent_annots:
+        coords = tuple(tuple(a) for a in annot['coords'])
+        assert coords in expected_coords
 
 
 def test_association_duplicate():
