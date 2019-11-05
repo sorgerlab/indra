@@ -579,7 +579,7 @@ class Statement(object):
             kwargs = deepcopy(self.__dict__)
         else:
             kwargs = self.__dict__.copy()
-        for attr in ['evidence', 'belief', 'uuid', 'supports', 'supported_by',
+        for attr in ['_evidence', 'belief', 'uuid', 'supports', 'supported_by',
                      'is_activation']:
             kwargs.pop(attr, None)
         for attr in ['_full_hash', '_shallow_hash']:
