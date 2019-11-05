@@ -813,8 +813,10 @@ class TripsProcessor(object):
 
                 for stmt in stmts_to_make:
                     stmt.enz = enz
-                    for ev in stmt.evidence:
+                    evs = stmt.evidence
+                    for ev in evs:
                         ev.epistemics['direct'] = False
+                    stmt.evidence = evs
                     self.statements.append(stmt)
 
             self._add_extracted(event_type, event.attrib['id'])
