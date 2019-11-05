@@ -369,7 +369,7 @@ def test_get_agent_coordinates_phosphorylation():
         stmt = rp.statements[0]
         annotations = stmt.evidence[0].annotations
 
-        coords = [(0, 3), (42, 45)]
+        coords = [[0, 3], [42, 45]]
         assert annotations['agents']['coords'] == coords
 
 
@@ -379,7 +379,7 @@ def test_get_agent_coordinates_activation():
         rp = reach.process_text(test_case, offline=offline)
         stmt = rp.statements[0]
         annotations = stmt.evidence[0].annotations
-        coords = [(0, 4), (15, 19)]
+        coords = [[0, 4], [15, 19]]
         assert annotations['agents']['coords'] == coords
 
 
@@ -389,7 +389,7 @@ def test_get_agent_coordinates_regulate_amount():
         rp = reach.process_text(test_case, offline=offline)
         stmt = rp.statements[0]
         annotations = stmt.evidence[0].annotations
-        coords = [(0, 3), (35, 39)]
+        coords = [[0, 3], [35, 39]]
         assert annotations['agents']['coords'] == coords
 
 
@@ -399,7 +399,7 @@ def test_get_agent_coordinates_binding():
         rp = reach.process_text(test_case, offline=offline)
         stmt = rp.statements[0]
         annotations = stmt.evidence[0].annotations
-        coords = [(27, 31), (38, 42)]
+        coords = [[27, 31], [38, 42]]
         assert annotations['agents']['coords'] == coords
 
 
@@ -412,7 +412,7 @@ def test_get_agent_coordinates_translocation():
         stmt = [stmt for stmt in rp.statements if
                 isinstance(stmt, Translocation)][0]
         annotations = stmt.evidence[0].annotations
-        coords = [(86, 89)]
+        coords = [[86, 89]]
         assert annotations['agents']['coords'] == coords
 
 
@@ -426,5 +426,5 @@ def test_get_agent_coordinates_phosphorylation_missing_controller():
         stmt = [stmt for stmt in rp.statements if
                 isinstance(stmt, Phosphorylation)][0]
         annotations = stmt.evidence[0].annotations
-        coords = [None, (57, 60)]
+        coords = [None, [57, 60]]
         assert annotations['agents']['coords'] == coords
