@@ -1,3 +1,4 @@
+import json
 import logging
 import tempfile
 
@@ -197,3 +198,20 @@ def get_reader(reader_name, *args, **kwargs):
     return get_reader_class(reader_name)(*args, **kwargs)
 
 
+def dump_readings(readings, filepath):
+    """Dump a list of ReadingData objects to a file as JSON."""
+    json_list = []
+    for rd in readings:
+        json_list.append(rd.to_json())
+
+    with open(filepath, 'w') as f:
+        json.dump(json_list, f)
+
+    return
+
+
+def load_readings(filepath):
+    """Load readings from the given filepath."""
+    with open(filepath, 'r') as f:
+        json_list = json.load(f)
+    return [ReadingData.from_json(jd) for jd in json_list]
