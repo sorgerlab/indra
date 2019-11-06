@@ -1,8 +1,11 @@
 """Read a list of files located in your local directory."""
+import json
 import pickle
 import random
 import logging
+from os import path
 
+from indra.tools.reading.readers.core import dump_readings
 from indra.tools.reading.util.script_tools import get_parser
 from indra.tools.reading.readers import get_dir, get_reader_classes, Content
 
@@ -14,18 +17,29 @@ def make_parser():
     parser = get_parser(
         __doc__,
         ('A file containing a list of files/file paths to be read. These '
-         'should be nxml or txt files.')
+         'should be nxml or txt files. The basenames of the files will be '
+         'used as the IDs for the content.')
     )
     parser.add_argument(
-        dest='output_name',
-        help=('Results will be pickled in files '
-              '<output_name>_stmts.pkl and <output_name>_readings.pkl.')
+        dest='output_path',
+        help=('The location of the results. Results will be stored in files '
+              '<output_path>/stmts.json and <output_path>/readings.json, '
+              'or likewise with .pkl if --pickle option is used. All '
+              'directories must exists along the path.')
     )
     parser.add_argument(
-        '-M', '--add-stmt-metadata',
+        '-m', '--add-stmt-metadata',
+        action='store_true',
         dest='add_stmt_metadata',
         help=('Optionally add special metadata to the evidence of all '
-              'Statements that are produced.')
+              'Statements that are produced, including the content IDs (the '
+              'basenames of the files) and the readers used.')
+    )
+    parser.add_argument(
+        '-p', '--pickle',
+        action='store_true',
+        dest='pickle',
+        help='Select to use pickles instead of JSON for the dumps.'
     )
     return parser
 
@@ -100,16 +114,31 @@ def main():
 
     # Read the files.
     outputs = read_files(input_lines, readers, verboes=verbose)
-    reading_out_path = args.name + '_readings.pkl'
-    with open(reading_out_path, 'wb') as f:
-        pickle.dump([output.make_tuple(None) for output in outputs], f)
+
+    # Dump the outputs
+    reading_out_path = path.join(args.output_path, 'readings')
+    if args.pickle:
+        reading_out_path += '.pkl'
+        with open(reading_out_path, 'wb') as f:
+            pickle.dump(outputs, f)
+    else:
+        reading_out_path += '.json'
+        dump_readings(outputs, reading_out_path)
     print("Reading outputs stored in %s." % reading_out_path)
 
-    stmts = [s for rd in outputs for s in rd.get_statements()]
-    stmts_pkl_path = args.name + '_stmts.pkl'
-    with open(stmts_pkl_path, 'wb') as f:
-        pickle.dump(stmts, f)
-        print("Statements pickled in %s." % stmts_pkl_path)
+    # Generate and dump the statements.
+    stmts_dump_path = path.join(args.out_path, 'stmts')
+    stmt_gen = (s for rd in outputs for s in rd.get_statements())
+    if args.pickle:
+        stmts_dump_path += ".pkl"
+        with open(stmts_dump_path, 'wb') as f:
+            pickle.dump(list(stmt_gen), f)
+    else:
+        stmt_jsons = [s.to_json() for s in stmt_gen]
+        stmts_dump_path += '.json'
+        with open(stmts_dump_path, 'w') as f:
+            json.dump(stmt_jsons, f)
+    print("Statements stored in %s." % stmts_dump_path)
 
 
 if __name__ == '__main__':
