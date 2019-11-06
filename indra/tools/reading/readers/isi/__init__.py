@@ -32,6 +32,15 @@ class IsiReader(Reader):
         # Preprocess all the content.
         num_content = 0
         for content in read_list:
+
+            # Check the quality of the text, and skip if there are any issues.
+            quality_issue = self._check_content(content.get_text())
+            if quality_issue is not None:
+                logger.warning("Skipping %s due to: %s"
+                               % (content.get_id(), quality_issue))
+                continue
+
+            # Preprocess the content
             if content.is_format('nxml'):
                 content.copy_to(self.nxml_dir)
                 pp.preprocess_nxml_file(content.get_filepath(),

@@ -123,7 +123,7 @@ class ReachReader(Reader):
             # Check the quality of the text, and skip if there are any issues.
             quality_issue = self._check_content(content.get_text())
             if quality_issue is not None:
-                logger.warning("Skipping %d due to: %s"
+                logger.warning("Skipping %s due to: %s"
                                % (content.get_id(), quality_issue))
                 continue
 
