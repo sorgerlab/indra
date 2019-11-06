@@ -1,6 +1,7 @@
 import logging
 from . import ModelChecker
 from indra.statements import *
+from indra.preassembler.hierarchy_manager import hierarchies
 from copy import deepcopy
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ class PybelModelChecker(ModelChecker):
     """
     def __init__(self, model, statements=None, do_sampling=False, seed=None):
         super().__init__(model, statements, do_sampling, seed)
+        self.model_agents = self._get_model_agents()
 
     def get_graph(self):
         """Convert a PyBELGraph to a graph with signed nodes."""
@@ -36,9 +38,6 @@ class PybelModelChecker(ModelChecker):
         return self.graph
 
     def process_statement(self, stmt):
-        # This import is done here rather than at the top level to avoid
-        # making pybel an implicit dependency of the model checker
-        from indra.assemblers.pybel.assembler import _get_agent_node
         # Check if this is one of the statement types that we can check
         if not isinstance(stmt, (Modification, RegulateAmount,
                                  RegulateActivity, Influence)):
@@ -62,13 +61,11 @@ class PybelModelChecker(ModelChecker):
             target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
         elif isinstance(stmt, Influence):
             target_polarity = 1 if stmt.overall_polarity() == -1 else 0
-        if subj is not None:
-            subj_node = (_get_agent_node(subj)[0], 0)
-        if subj is None or subj_node not in self.graph.nodes:
+        subj_node = self.get_node(subj, self.graph, 0)
+        if subj_node is None:
             return (None, None, 'SUBJECT_NOT_FOUND')
-        if obj is not None:
-            obj_node = (_get_agent_node(obj)[0], target_polarity)
-        if obj is None or obj_node not in self.graph.nodes:
+        obj_node = self.get_node(obj, self.graph, target_polarity)
+        if obj_node is None:
             return (None, None, 'OBJECT_NOT_FOUND')
         return ([subj_node], [obj_node], None)
 
