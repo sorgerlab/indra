@@ -87,8 +87,8 @@ class PybelModelChecker(ModelChecker):
                     specific_agent = ag
             if specific_agent:
                 node = (_get_agent_node(specific_agent)[0], target_polarity)
-                if node not in graph.nodes:
-                    return None
+            if node not in graph.nodes:
+                return None
         return node
 
     def _get_model_agents(self):
