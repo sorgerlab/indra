@@ -158,12 +158,12 @@ class Reader(object):
     def read(self, read_list, verbose=False, log=False):
         "Read a list of items and return a dict of output files."
         start = datetime.now()
-        self._read(read_list, verbose, log)
+        ret = self._read(read_list, verbose, log)
         end = datetime.now()
         logger.info("%s took %s to read %s content and %s results."
                     % (self.name, end - start, len(read_list),
                        len(self.results)))
-        return
+        return ret
 
     def _read(self, read_list, verbose=False, log=False):
         raise NotImplementedError()
