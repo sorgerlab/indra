@@ -74,3 +74,9 @@ class PybelModelChecker(ModelChecker):
 
     def process_subject(self, subj):
         return [subj], None
+
+    def _get_model_agents(self):
+        # This import is done here rather than at the top level to avoid
+        # making pybel an implicit dependency of the model checker
+        from indra.sources.bel.processor import get_agent
+        return [get_agent(node) for node in self.model.nodes]
