@@ -72,8 +72,10 @@ class ReadingData(object):
                              'CONTENT_ID': self.content_id}
                 self._statements = []
                 for stmt in stmts:
-                    stmt.evidence.text_refs.update(meta_info)
+                    stmt.evidence[0].text_refs.update(meta_info)
                     self._statements.append(stmt)
+            else:
+                self._statements = stmts[:]
 
         return self._statements[:]
 
