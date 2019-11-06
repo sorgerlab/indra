@@ -160,7 +160,9 @@ class Reader(object):
         start = datetime.now()
         self._read(read_list, verbose, log)
         end = datetime.now()
-        logger.info("%s took %s to run." % (self.name, end - start))
+        logger.info("%s took %s to read %s content and %s results."
+                    % (self.name, end - start, len(read_list),
+                       len(self.results)))
         return
 
     def _read(self, read_list, verbose=False, log=False):
