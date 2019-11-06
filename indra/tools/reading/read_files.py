@@ -3,7 +3,7 @@ import json
 import pickle
 import random
 import logging
-from os import path
+from os import path, listdir
 
 from indra.tools.reading.readers.core import dump_readings
 from indra.tools.reading.util.script_tools import get_parser
@@ -16,7 +16,8 @@ def make_parser():
     """Create the argument parser, derived from the general scripts parser."""
     parser = get_parser(
         __doc__,
-        ('A file containing a list of files/file paths to be read. These '
+        ('Either a file containing a list of files/file paths to be read or '
+         'else a directory containing the files to be read. These '
          'should be nxml or txt files. The basenames of the files will be '
          'used as the IDs for the content.')
     )
@@ -84,22 +85,30 @@ def main():
         logger.setLevel(logging.DEBUG)
 
     # Load the input file.
-    with open(args.input_file, 'r') as f:
-        input_lines = f.readlines()
-    logger.info("Found %d files." % len(input_lines))
+    if path.isdir(args.input_file):
+        file_list = [path.join(args.input_file, fname)
+                     for fname in listdir(args.input_file)]
+    elif path.isfile(args.input_file):
+        with open(args.input_file, 'r') as f:
+            file_list = [line.strip() for line in f.readlines()]
+    else:
+        raise ValueError("File or directory %s does not exist."
+                         % args.input_file)
+
+    logger.info("Found %d files." % len(file_list))
     for ftype in ['nxml', 'txt']:
         logger.debug('%d are %s' % (
-            len([f for f in input_lines if f.endswith(ftype)]), ftype
+            len([f for f in file_list if f.endswith(ftype)]), ftype
         ))
 
     # Select only a sample of the lines, if sample is chosen.
     if args.n_samp is not None:
-        input_lines = random.sample(input_lines, args.n_samp)
+        file_list = random.sample(file_list, args.n_samp)
 
     # If a range is specified, only use that range.
     if args.range_str is not None:
         start_idx, end_idx = [int(n) for n in args.range_str.split(':')]
-        input_lines = input_lines[start_idx:end_idx]
+        file_list = file_list[start_idx:end_idx]
 
     # Create a single base directory
     base_dir = get_dir('run_%s' % ('_and_'.join(args.readers)))
@@ -113,7 +122,7 @@ def main():
                if reader_class.name.lower() in args.readers]
 
     # Read the files.
-    outputs = read_files(input_lines, readers, verboes=verbose)
+    outputs = read_files(file_list, readers, verboes=verbose)
 
     # Dump the outputs
     reading_out_path = path.join(args.output_path, 'readings')
