@@ -68,12 +68,13 @@ def read_files(files, readers, **kwargs):
     for reader in readers:
         res_list = reader.read(reading_content, **kwargs)
         if res_list is None:
-            logger.info("Nothing read by %s." % reader.name)
+            logger.warning("No readings produced by %s." % reader.name)
         else:
-            logger.info("Successfully read %d content entries with %s."
+            logger.info("Produced %d readings with %s."
                         % (len(res_list), reader.name))
             output_list += res_list
-    logger.info("Read %s text content entries in all." % len(output_list))
+    logger.info("Produced %d readings across %d readers."
+                % (len(output_list), len(readers)))
     return output_list
 
 
@@ -141,14 +142,17 @@ def main():
                 for s in rd.get_statements(add_metadata=args.add_metadata))
     if args.pickle:
         stmts_dump_path += ".pkl"
+        stmts_json = list(stmt_gen)
+        num_stmts = len(stmts_json)
         with open(stmts_dump_path, 'wb') as f:
-            pickle.dump(list(stmt_gen), f)
+            pickle.dump(stmts_json, f)
     else:
         stmt_jsons = [s.to_json() for s in stmt_gen]
+        num_stmts = len(stmt_jsons)
         stmts_dump_path += '.json'
         with open(stmts_dump_path, 'w') as f:
             json.dump(stmt_jsons, f)
-    print("Statements stored in %s." % stmts_dump_path)
+    print("Stored %d statements in %s." % (num_stmts, stmts_dump_path))
 
 
 if __name__ == '__main__':
