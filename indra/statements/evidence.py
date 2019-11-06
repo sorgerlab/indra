@@ -84,7 +84,8 @@ class Evidence(object):
         self.stmt_tag = None
 
     def __setstate__(self, state):
-        state = state[1]
+        # With a slots-based object, state is a tuple, otherwise it's a dict
+        state = state[1] if isinstance(state, tuple) else state
         for slot in self.__slots__:
             setattr(self, slot, state.get(slot, None))
 

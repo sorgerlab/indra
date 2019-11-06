@@ -267,15 +267,10 @@ class Statement(object):
 
     @property
     def evidence(self):
-        evjsgz = gzip.decompress(self._evidence)
-        evjs = json.loads(evjsgz.decode('utf-8'))
-        evs = [Evidence._from_json(e) for e in evjs]
+        # Decompress, decode, and then deserialize each Evidence from JSON
+        evs = [Evidence._from_json(e) for e in
+               json.loads(gzip.decompress(self._evidence).decode('utf-8'))]
         return evs
-
-    def add_evidence(self, ev):
-        evs = self.evidence
-        evs.append(ev)
-        self.evidence = evs
 
     @evidence.setter
     def evidence(self, evidence):
@@ -288,9 +283,22 @@ class Statement(object):
         else:
             raise ValueError('evidence must be an Evidence object, a list '
                              '(of Evidence objects), or None.')
-        evjs = json.dumps([e.to_json() for e in evs])
-        evjsgz = gzip.compress(evjs.encode('utf-8'))
-        self._evidence = evjsgz
+        self._evidence = \
+            gzip.compress(json.dumps([e.to_json()
+                                      for e in evs]).encode('utf-8'))
+
+    def add_evidence(self, ev):
+        """Extend the Statement's evidence list with a new Evidence.
+
+        Parameters
+        ----------
+        ev : indra.statements.Evidence
+            An Evidence object to be added to the Statement's list of
+            evidences.
+        """
+        evs = self.evidence
+        evs.append(ev)
+        self.evidence = evs
 
     def matches_key(self):
         raise NotImplementedError("Method must be implemented in child class.")
