@@ -31,7 +31,7 @@ def make_parser():
     parser.add_argument(
         '-m', '--add-stmt-metadata',
         action='store_true',
-        dest='add_stmt_metadata',
+        dest='add_metadata',
         help=('Optionally add special metadata to the evidence of all '
               'Statements that are produced, including the content IDs (the '
               'basenames of the files) and the readers used.')
@@ -137,7 +137,8 @@ def main():
 
     # Generate and dump the statements.
     stmts_dump_path = path.join(args.output_path, 'stmts')
-    stmt_gen = (s for rd in outputs for s in rd.get_statements())
+    stmt_gen = (s for rd in outputs
+                for s in rd.get_statements(add_metadata=args.add_metadata))
     if args.pickle:
         stmts_dump_path += ".pkl"
         with open(stmts_dump_path, 'wb') as f:
