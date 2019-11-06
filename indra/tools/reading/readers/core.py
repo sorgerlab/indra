@@ -75,6 +75,24 @@ class ReadingData(object):
 
         return self._statements[:]
 
+    def to_json(self):
+        return {'content_id': self.content_id,
+                'reader_name': self.reader_class.name,
+                'reader_version': self.reader_version,
+                'reading_format': self.format,
+                'reading': self.reading}
+
+    @classmethod
+    def from_json(cls, jd):
+        jd['reader_class'] = get_reader_class(jd.pop('reader_name'))
+        stored_version = jd['reader_version']
+        current_version = jd['reader_class'].get_version()
+        if stored_version != current_version:
+            logger.debug("Current reader version does not match stored "
+                         "version: %s (current) vs %s (stored)"
+                         % (current_version, stored_version))
+        return cls(**jd)
+
 
 class Reader(object):
     """This abstract object defines and some general methods for readers."""
