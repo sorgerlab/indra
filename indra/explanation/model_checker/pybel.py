@@ -75,6 +75,25 @@ class PybelModelChecker(ModelChecker):
     def process_subject(self, subj):
         return [subj], None
 
+    def get_node(self, agent, graph, target_polarity):
+        # This import is done here rather than at the top level to avoid
+        # making pybel an implicit dependency of the model checker
+        from indra.assemblers.pybel.assembler import _get_agent_node
+        if agent is None:
+            return None
+        node = (_get_agent_node(agent)[0], target_polarity)
+        if node not in graph.nodes:
+            # Try find more refined agents in the graph
+            specific_agent = None
+            for ag in self.model_agents:
+                if ag.refinement_of(agent, hierarchies):
+                    specific_agent = ag
+            if specific_agent:
+                node = (_get_agent_node(specific_agent)[0], target_polarity)
+                if node not in graph.nodes:
+                    return None
+        return node
+
     def _get_model_agents(self):
         # This import is done here rather than at the top level to avoid
         # making pybel an implicit dependency of the model checker
