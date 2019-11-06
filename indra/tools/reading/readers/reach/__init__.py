@@ -180,7 +180,7 @@ class ReachReader(Reader):
                 logger.debug('Removed input %s.' % item_path)
         return
 
-    def read(self, read_list, verbose=False, log=False):
+    def _read(self, read_list, verbose=False, log=False):
         """Read the content, returning a list of ReadingData objects."""
         ret = []
         mem_tot = get_mem_total()

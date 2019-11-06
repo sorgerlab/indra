@@ -136,7 +136,7 @@ def main():
     print("Reading outputs stored in %s." % reading_out_path)
 
     # Generate and dump the statements.
-    stmts_dump_path = path.join(args.out_path, 'stmts')
+    stmts_dump_path = path.join(args.output_path, 'stmts')
     stmt_gen = (s for rd in outputs for s in rd.get_statements())
     if args.pickle:
         stmts_dump_path += ".pkl"

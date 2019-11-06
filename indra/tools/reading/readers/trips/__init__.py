@@ -16,7 +16,7 @@ class TripsReader(EmptyReader):
         self.version = self.get_version()
         return
 
-    def read(self, *args, **kwargs):
+    def _read(self, *args, **kwargs):
         return []
 
     @classmethod

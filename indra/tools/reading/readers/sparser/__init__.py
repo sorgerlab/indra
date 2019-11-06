@@ -138,7 +138,7 @@ class SparserReader(Reader):
                 outpath_list.append(output)
         return outpath_list, outbuf
 
-    def read(self, read_list, verbose=False, log=False, n_per_proc=None):
+    def _read(self, read_list, verbose=False, log=False, n_per_proc=None):
         "Perform the actual reading."
         ret = []
         self.prep_input(read_list)

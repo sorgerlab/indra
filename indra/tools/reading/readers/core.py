@@ -1,6 +1,7 @@
 import json
 import logging
 import tempfile
+from datetime import datetime
 
 from .util import get_dir, get_time_stamp, formats
 
@@ -156,6 +157,13 @@ class Reader(object):
 
     def read(self, read_list, verbose=False, log=False):
         "Read a list of items and return a dict of output files."
+        start = datetime.now()
+        self._read(read_list, verbose, log)
+        end = datetime.now()
+        logger.info("%s took %s to run." % (self.name, end - start))
+        return
+
+    def _read(self, read_list, verbose=False, log=False):
         raise NotImplementedError()
 
     @staticmethod

@@ -25,7 +25,7 @@ class IsiReader(Reader):
 
         return
 
-    def read(self, read_list, verbose=False, log=False, n_per_proc=None):
+    def _read(self, read_list, verbose=False, log=False, n_per_proc=None):
         # Create a preprocessor
         pp = IsiPreprocessor(self.input_dir)
 
