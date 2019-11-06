@@ -122,7 +122,7 @@ def main():
                if reader_class.name.lower() in args.readers]
 
     # Read the files.
-    outputs = read_files(file_list, readers, verboes=verbose)
+    outputs = read_files(file_list, readers, verbose=verbose)
 
     # Dump the outputs
     reading_out_path = path.join(args.output_path, 'readings')
