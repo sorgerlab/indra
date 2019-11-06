@@ -1,4 +1,5 @@
 import json
+import logging
 
 from indra.tools.reading.readers.core import Reader
 from indra.tools.reading.readers.util import get_dir
@@ -6,6 +7,8 @@ from indra.tools.reading.readers.util import get_dir
 from indra.sources.isi.api import run_isi, get_isi_version
 from indra.sources.isi.processor import IsiProcessor
 from indra.sources.isi.preprocessor import IsiPreprocessor
+
+logger = logging.getLogger(__name__)
 
 
 class IsiReader(Reader):
@@ -27,6 +30,7 @@ class IsiReader(Reader):
         pp = IsiPreprocessor(self.input_dir)
 
         # Preprocess all the content.
+        num_content = 0
         for content in read_list:
             if content.is_format('nxml'):
                 content.copy_to(self.nxml_dir)
@@ -36,8 +40,14 @@ class IsiReader(Reader):
                 pp.preprocess_plain_text_string(content.get_text(),
                                                 content.get_id(), {})
             else:
-                raise ValueError("Invalid/unrecognized format: %s"
-                                 % content.get_format())
+                logger.error("Invalid/unrecognized format: %s"
+                             % content.get_format())
+                continue
+            num_content += 1
+
+        # Make sure we actually have something to read before running.
+        if not num_content:
+            return self.results
 
         # Run ISI
         run_isi(self.input_dir, self.output_dir, self.isi_temp_dir,

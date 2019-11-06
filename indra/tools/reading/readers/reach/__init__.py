@@ -195,35 +195,43 @@ class ReachReader(Reader):
         # Prep the content
         self.prep_input(read_list)
 
-        if self.num_input > 0:
-            # Run REACH!
-            logger.info("Beginning reach.")
-            args = [
-                'java',
-                '-Dconfig.file=%s' % self.conf_file_path,
-                '-jar', self.exec_path
-            ]
-            p = subprocess.Popen(args, stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-            log_file_str = ''
-            for line in iter(p.stdout.readline, b''):
-                log_line = 'REACH: ' + line.strip().decode('utf8')
-                if verbose:
-                    logger.info(log_line)
-                if log:
-                    log_file_str += log_line + '\n'
+        # Make sure there is something to read before we start up Reach.
+        if not self.num_input:
+            return ret
+
+        # Run REACH!
+        logger.info("Beginning reach.")
+        args = [
+            'java',
+            '-Dconfig.file=%s' % self.conf_file_path,
+            '-jar', self.exec_path
+        ]
+        p = subprocess.Popen(args, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+
+        # Monitor the logs and wait for Reach to finish.
+        log_file_str = ''
+        for line in iter(p.stdout.readline, b''):
+            log_line = 'REACH: ' + line.strip().decode('utf8')
+            if verbose:
+                logger.info(log_line)
             if log:
-                with open('reach_run.log', 'ab') as f:
-                    f.write(log_file_str.encode('utf8'))
-            p_out, p_err = p.communicate()
-            if p.returncode:
-                logger.error('Problem running REACH:')
-                logger.error('Stdout: %s' % p_out.decode('utf-8'))
-                logger.error('Stderr: %s' % p_err.decode('utf-8'))
-                raise ReachError("Problem running REACH")
-            logger.info("Reach finished.")
-            ret = self.get_output()
-            self.clear_input()
+                log_file_str += log_line + '\n'
+        if log:
+            with open('reach_run.log', 'ab') as f:
+                f.write(log_file_str.encode('utf8'))
+        p_out, p_err = p.communicate()
+        if p.returncode:
+            logger.error('Problem running REACH:')
+            logger.error('Stdout: %s' % p_out.decode('utf-8'))
+            logger.error('Stderr: %s' % p_err.decode('utf-8'))
+            raise ReachError("Problem running REACH")
+        logger.info("Reach finished.")
+
+        # Get the output
+        ret = self.get_output()
+        self.clear_input()
+
         return ret
 
     @staticmethod
