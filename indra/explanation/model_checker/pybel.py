@@ -61,35 +61,39 @@ class PybelModelChecker(ModelChecker):
             target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
         elif isinstance(stmt, Influence):
             target_polarity = 1 if stmt.overall_polarity() == -1 else 0
-        subj_node = self.get_node(subj, self.graph, 0)
-        if subj_node is None:
+        subj_nodes = self.get_nodes(subj, self.graph, 0)
+        if not subj_nodes:
             return (None, None, 'SUBJECT_NOT_FOUND')
-        obj_node = self.get_node(obj, self.graph, target_polarity)
-        if obj_node is None:
+        obj_nodes = self.get_nodes(obj, self.graph, target_polarity)
+        if not obj_nodes:
             return (None, None, 'OBJECT_NOT_FOUND')
-        return ([subj_node], [obj_node], None)
+        return (subj_nodes, obj_nodes, None)
 
     def process_subject(self, subj):
         return [subj], None
 
-    def get_node(self, agent, graph, target_polarity):
+    def get_nodes(self, agent, graph, target_polarity):
         # This import is done here rather than at the top level to avoid
         # making pybel an implicit dependency of the model checker
         from indra.assemblers.pybel.assembler import _get_agent_node
+        nodes = set()
         if agent is None:
-            return None
-        node = (_get_agent_node(agent)[0], target_polarity)
-        if node not in graph.nodes:
-            # Try find more refined agents in the graph
-            specific_agent = None
-            for ag in self.model_agents:
-                if ag.refinement_of(agent, hierarchies):
-                    specific_agent = ag
-            if specific_agent:
-                node = (_get_agent_node(specific_agent)[0], target_polarity)
-            if node not in graph.nodes:
-                return None
-        return node
+            return nodes
+        # First get exact match
+        agent_node = _get_agent_node(agent)[0]
+        if agent_node:
+            node = (agent_node, target_polarity)
+            if node in graph.nodes:
+                nodes.add(node)
+        # Try get refined versions
+        for ag in self.model_agents:
+            if ag.refinement_of(agent, hierarchies):
+                agent_node = _get_agent_node(ag)[0]
+                if agent_node:
+                    node = (agent_node, target_polarity)
+                    if node in graph.nodes:
+                        nodes.add(node)
+        return nodes
 
     def _get_model_agents(self):
         # This import is done here rather than at the top level to avoid
