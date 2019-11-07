@@ -508,7 +508,7 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
 
 
 REACH_CONF_FMT_FNAME = os.path.join(os.path.dirname(__file__),
-                                    '../util/reach_conf_fmt.txt')
+                                    '../readers/reach/reach_conf_fmt.txt')
 
 REACH_MEM = 5  # GB
 MEM_BUFFER = 2  # GB
