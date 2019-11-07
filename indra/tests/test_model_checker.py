@@ -16,7 +16,7 @@ from pysb.tools import render_reactions
 from indra.databases import hgnc_client
 from indra.explanation.model_checker import ModelChecker, PysbModelChecker, \
     UnsignedGraphModelChecker, SignedGraphModelChecker, PybelModelChecker, \
-    PathResult
+    PathResult, signed_edges_to_signed_nodes
 from indra.explanation.model_checker.pysb import _mp_embeds_into, \
     _cp_embeds_into, _match_lhs, remove_im_params
 from indra.explanation.reporting import stmt_from_rule, stmts_from_pysb_path, \
@@ -1676,9 +1676,8 @@ def test_signed_edges_to_nodes():
     g.add_edge('E', 'B', sign=1)
     assert len(g.edges) == 5
     assert len(g.nodes) == 5
-    mc = ModelChecker(g)
     # Create a signed nodes graph without pruning
-    sng = mc.signed_edges_to_signed_nodes(g, prune_nodes=False)
+    sng = signed_edges_to_signed_nodes(g, prune_nodes=False)
     assert len(sng.nodes) == 10
     assert len(sng.edges) == 10
     assert set(sng.nodes) == {('A', 0), ('A', 1), ('B', 0), ('B', 1), ('C', 0),
@@ -1688,7 +1687,7 @@ def test_signed_edges_to_nodes():
     assert (('B', 0), ('D', 1)) in sng.edges
     assert (('B', 1), ('D', 0)) in sng.edges
     # Create a signed nodes graph with pruning
-    psng = mc.signed_edges_to_signed_nodes(g, prune_nodes=True)
+    psng = signed_edges_to_signed_nodes(g, prune_nodes=True)
     assert len(psng.nodes) == 7
     assert ('A', 1) not in psng.nodes
     assert ('C', 1) not in psng.nodes
