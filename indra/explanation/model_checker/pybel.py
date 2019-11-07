@@ -88,7 +88,7 @@ class PybelModelChecker(ModelChecker):
                 nodes.add(node)
         # Try get refined versions
         for ag in self.model_agents:
-            if ag.refinement_of(agent, hierarchies):
+            if ag is not None and ag.refinement_of(agent, hierarchies):
                 agent_node = _get_agent_node(ag)[0]
                 if agent_node:
                     node = (agent_node, target_polarity)
