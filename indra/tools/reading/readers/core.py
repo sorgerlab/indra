@@ -167,12 +167,32 @@ class Reader(object):
 
     def read(self, read_list, verbose=False, log=False):
         "Read a list of items and return a dict of output files."
+        # Place a timer on the whole reading process.
         start = datetime.now()
         ret = self._read(read_list, verbose, log)
         end = datetime.now()
-        logger.info("%s took %s to read %s content and %s results."
+
+        # Count the number of not-null readings, and fill in any missing.
+        # NOTE: result_dict should be empty after this operation.
+        result_dict = {rd.content_id: rd for rd in self.results}
+        null_results = 0
+        for content in read_list:
+            content_id = content.get_id()
+            if content_id not in result_dict.keys():
+                self.results.append(self.ResultClass(content_id, None))
+                null_results += 1
+            elif result_dict.pop(content_id).reading is None:
+                null_results += 1
+
+        if result_dict:
+            logger.warning("The following IDs are in results but not in the "
+                           "input: %s" % result_dict.keys())
+
+        # Make a report of the results.
+        logger.info("%s took %s to read %s content and produce %s results, "
+                    "with %d of those being null."
                     % (self.name, end - start, len(read_list),
-                       len(self.results)))
+                       len(self.results), null_results))
         return ret
 
     def _read(self, read_list, verbose=False, log=False):
