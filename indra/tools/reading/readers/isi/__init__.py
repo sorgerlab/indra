@@ -60,7 +60,7 @@ class IsiReader(Reader):
 
         # Run ISI
         run_isi(self.input_dir, self.output_dir, self.isi_temp_dir,
-                self.n_proc)
+                self.n_proc, verbose=verbose, log=log)
 
         # Process the outputs
         for fname, cid, extra_annots in pp.iter_outputs(self.output_dir):

@@ -21,6 +21,10 @@ DOCKER_IMAGE_NAME = 'sahilgar/bigmechisi'
 IN_ISI_DOCKER = os.environ.get('IN_ISI_DOCKER', 'false').lower() == 'true'
 
 
+class IsiRuntimeError(Exception):
+    pass
+
+
 def process_text(text, pmid=None, **kwargs):
     """Process a string using the ISI reader and extract INDRA statements.
 
@@ -138,7 +142,8 @@ def _make_links(dirname, link_dir):
     return
 
 
-def run_isi(input_dir, output_dir, tmp_dir, num_processes=1):
+def run_isi(input_dir, output_dir, tmp_dir, num_processes=1,
+            verbose=True, log=False):
     base_command = ['/root/myprocesspapers.sh', '-c', str(num_processes)]
 
     if IN_ISI_DOCKER:
@@ -160,9 +165,31 @@ def run_isi(input_dir, output_dir, tmp_dir, num_processes=1):
     logger.info('Running command from within the docker:' if IN_ISI_DOCKER
                 else 'Running command using the docker:')
     logger.info(' '.join(command))
-    ret = subprocess.call(command)
-    if ret != 0:
-        logger.error('Docker returned non-zero status code')
+
+    p = subprocess.Popen(command, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+
+    # Monitor the logs and wait for reading to end.
+    log_file_str = ''
+    for line in iter(p.stdout.readline, b''):
+        log_line = 'ISI: ' + line.strip().decode('utf8')
+        if verbose:
+            logger.info(log_line)
+        if log:
+            log_file_str += log_line + '\n'
+
+    if log:
+        with open('isi_run.log', 'ab') as f:
+            f.write(log_file_str.encode('utf8'))
+
+    p_out, p_err = p.communicate()
+    if p.returncode:
+        logger.error('Problem running ISI:')
+        logger.error('Stdout: %s' % p_out.decode('utf-8'))
+        logger.error('Stderr: %s' % p_err.decode('utf-8'))
+        raise IsiRuntimeError("Problem encountered running ISI.")
+
+    logger.info("ISI finished.")
 
     if IN_ISI_DOCKER:
         _make_links('/output', output_dir)
