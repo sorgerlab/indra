@@ -233,10 +233,6 @@ class ModelChecker(object):
         return self.make_false_result('NO_PATHS_FOUND',
                                       max_paths, max_path_length)
 
-    def path_iter(self, subj, obj):
-        """Returns a path generator of the graph from subject to obejct"""
-        return get_path_iter(self.graph, subj, obj)
-
     def find_paths(self, subj, obj, max_paths=1, max_path_length=5):
         """Check for a source/target path in the model.
 
@@ -302,7 +298,7 @@ class ModelChecker(object):
                 # Get the first path
                 # Try to find paths using sources found above
                 for source in sources:
-                    path_iter = self.path_iter(source, obj)
+                    path_iter = get_path_iter(source, obj)
                     for path in path_iter:
                         pr.add_path(tuple(path))
                         # Do not get next path if reached max_paths
