@@ -17,6 +17,14 @@ nxml2txt_path = get_config('NXML2TXT_PATH')
 python2_path = get_config('PYTHON2_PATH')
 
 
+GREEKS = {'α': 'alpha', 'β': 'beta', 'γ': 'gamma', 'δ': 'delta',
+          'ε': 'epsilon', 'ζ': 'zeta', 'η': 'eta', 'θ': 'theta',
+          'ι': 'iota', 'κ': 'kappa', 'λ': 'lambda', 'μ': 'mu',
+          'ν': 'nu', 'ξ': 'xi', 'ο': 'omicron', 'π': 'pi', 'ρ': 'rho',
+          'ς': 'sigma', 'σ': 'sigma', 'τ': 'tau', 'υ': 'upsilon', 'φ': 'phi',
+          'χ': 'chi', 'ψ': 'psi', 'ω': 'omega'}
+
+
 class IsiPreprocessor(object):
     """Preprocess a set of documents, one by one, and add the preprocessed
     text to a temporary directory in a format suitable for the ISI reader.
@@ -99,6 +107,10 @@ class IsiPreprocessor(object):
         """
         output_file = '%s.txt' % self.next_file_id
         output_file = os.path.join(self.preprocessed_dir, output_file)
+
+        # Replace greek characters with corresponding strings
+        for greek_letter, spelled_letter in GREEKS.items():
+            text = text.replace(greek_letter, spelled_letter)
 
         # Tokenize sentence
         sentences = nltk.sent_tokenize(text)
