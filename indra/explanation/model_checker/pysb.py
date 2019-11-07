@@ -1,22 +1,32 @@
 import numbers
-import scipy.stats
-import kappy
 import logging
-import itertools
-import networkx as nx
 from copy import deepcopy
 from collections import Counter
+
+import scipy.stats
+import kappy
+import itertools
+import numpy as np
+import networkx as nx
 from pysb import WILD, export, Observable, ComponentSet
 from pysb.core import as_complex_pattern, ComponentDuplicateNameError
-from . import ModelChecker, PathResult
 from indra.explanation.reporting import stmt_from_rule
 from indra.statements import *
 from indra.assemblers.pysb import assembler as pa
 from indra.assemblers.pysb.kappa_util import im_json_to_graph
+
+from . import ModelChecker, PathResult
 from .model_checker import signed_edges_to_signed_nodes
 
-
 logger = logging.getLogger(__name__)
+
+try:
+    import paths_graph as pg
+    has_pg = True
+except ImportError:
+    pg = None
+    has_pg = False
+    logger.warning('PathsGraph is not available')
 
 
 class PysbModelChecker(ModelChecker):
@@ -285,6 +295,8 @@ class PysbModelChecker(ModelChecker):
                       max_paths=1, max_path_length=5):
         if max_paths == 0:
             raise ValueError("max_paths cannot be 0 for path sampling.")
+        if not has_pg:
+            raise ImportError("Paths Graph is not imported")
         # Convert path polarity representation from 0/1 to 1/-1
 
         def convert_polarities(path_list):
