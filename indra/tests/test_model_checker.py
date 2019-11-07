@@ -1640,6 +1640,32 @@ def test_pybel_active_form_path():
     assert stmts_from_path == [[stmt] for stmt in stmts]
 
 
+def test_pybel_refinements():
+    prkcb = Agent('PRKCB', db_refs={'TEXT': 'PRKCB', 'HGNC': '9395'})
+    gsk3b = Agent('GSK3B', db_refs={'TEXT': 'GSK3B', 'HGNC': '4617'})
+    map2k1 = Agent('MAP2K1', db_refs={'TEXT': 'MAP2K1', 'HGNC': '6840'})
+    mapk1 = Agent('MAPK1', db_refs={'TEXT': 'MAPK1', 'HGNC': '6871'})
+    mek = Agent('MEK', db_refs={'TEXT': 'MEK', 'FPLX': 'MEK'})
+    erk = Agent('ERK', db_refs={'TEXT': 'ERK', 'FPLX': 'ERK'})
+    # Model statements are refined versions of test statements
+    model_stmts = [Phosphorylation(prkcb, gsk3b, 'S', '9'),
+                   Phosphorylation(map2k1, mapk1)]
+    test_stmts = [Phosphorylation(prkcb, gsk3b, 'S'),
+                  Phosphorylation(mek, erk)]
+    pba = PybelAssembler(model_stmts)
+    pybel_model = pba.make_model()
+    pbmc = PybelModelChecker(pybel_model, test_stmts)
+    results = pbmc.check_model()
+    assert results[0][1].path_found
+    assert results[1][1].path_found
+    path0 = results[0][1].paths[0]
+    path1 = results[1][1].paths[0]
+    assert stmts_from_pybel_path(
+        path0, pybel_model, False, model_stmts) == [[model_stmts[0]]]
+    assert stmts_from_pybel_path(
+        path1, pybel_model, False, model_stmts) == [[model_stmts[1]]]
+
+
 # Test graph conversion
 def test_signed_edges_to_nodes():
     g = nx.MultiDiGraph()
