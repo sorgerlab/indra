@@ -121,7 +121,11 @@ class Content(object):
         If the file name doesn't already exist, we created it as {id}.{format}.
         """
         if self._fname is None or renew:
-            self._fname = '%s.%s' % (self._id, self._format)
+            if self._format == 'text':
+                fmt = 'txt'
+            else:
+                fmt = self._format
+            self._fname = '%s.%s' % (self._id, fmt)
         return self._fname
 
     def get_filepath(self, renew=False):
