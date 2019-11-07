@@ -133,14 +133,18 @@ class Reader(object):
         self.id_maps = {}
         return
 
+    def _map_id(self, content_id):
+        if not isinstance(content_id, int) and content_id.isdecimal():
+            content_id = int(content_id)
+        elif content_id in self.id_maps.keys():
+            content_id = self.id_maps[content_id]
+        return content_id
+
     def add_result(self, content_id, content, **kwargs):
         """"Add a result to the list of results."""
         # Regularize the content ID a bit, and apply any id_maps that were
         # generated.
-        if content_id.isdecimal():
-            content_id = int(content_id)
-        elif content_id in self.id_maps.keys():
-            content_id = self.id_maps[content_id]
+        content_id = self._map_id(content_id)
 
         # Create a new result object and add it to the results.
         result_object = self.ResultClass(content_id, self.__class__,
@@ -177,9 +181,9 @@ class Reader(object):
         result_dict = {rd.content_id: rd for rd in self.results}
         null_results = 0
         for content in read_list:
-            content_id = content.get_id()
+            content_id = self._map_id(content.get_id())
             if content_id not in result_dict.keys():
-                self.results.append(self.ResultClass(content_id, None))
+                self.add_result(content_id, None)
                 null_results += 1
             elif result_dict.pop(content_id).reading is None:
                 null_results += 1

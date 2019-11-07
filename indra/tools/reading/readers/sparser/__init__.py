@@ -67,6 +67,12 @@ class SparserReader(Reader):
                                    % content.format)
         return
 
+    def _map_id(self, content_id):
+        if content_id.startswith('PMC'):
+            content_id = content_id[3:]
+        content_id = super(SparserReader, self)._map_id(content_id)
+        return content_id
+
     def get_output(self, output_files, clear=True):
         "Get the output files as an id indexed dict."
         patt = re.compile(r'(.*?)-semantics.*?')
@@ -92,8 +98,6 @@ class SparserReader(Reader):
                                    % outpath)
 
             content_id = re_out.groups()[0]
-            if content_id.startswith('PMC'):
-                content_id = content_id[3:]
             self.add_result(content_id, reading)
 
             # Clean up the input and output files.
