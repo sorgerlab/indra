@@ -298,7 +298,7 @@ class ModelChecker(object):
                 # Get the first path
                 # Try to find paths using sources found above
                 for source in sources:
-                    path_iter = get_path_iter(source, obj)
+                    path_iter = get_path_iter(self.graph, source, obj)
                     for path in path_iter:
                         pr.add_path(tuple(path))
                         # Do not get next path if reached max_paths
