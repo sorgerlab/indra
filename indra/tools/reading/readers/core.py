@@ -135,6 +135,14 @@ class Reader(object):
 
     def add_result(self, content_id, content, **kwargs):
         """"Add a result to the list of results."""
+        # Regularize the content ID a bit, and apply any id_maps that were
+        # generated.
+        if content_id.isdecimal():
+            content_id = int(content_id)
+        elif content_id in self.id_maps.keys():
+            content_id = self.id_maps[content_id]
+
+        # Create a new result object and add it to the results.
         result_object = self.ResultClass(content_id, self.__class__,
                                          self.get_version(), formats.JSON,
                                          content, **kwargs)

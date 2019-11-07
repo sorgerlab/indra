@@ -156,19 +156,15 @@ class ReachReader(Reader):
 
         # Join each set of json files and store the json dict.
         for prefix in json_prefixes:
-            base_prefix = path.basename(prefix)
-            if base_prefix.isdecimal():
-                base_prefix = int(base_prefix)
-            elif base_prefix in self.id_maps.keys():
-                base_prefix = self.id_maps[base_prefix]
+            content_id = path.basename(prefix)
             try:
                 content = self._join_json_files(prefix, clear=True)
             except Exception as e:
                 logger.exception(e)
                 logger.error("Could not load result for prefix %s." % prefix)
                 content = None
-            self.add_result(base_prefix, content)
-            logger.debug('Joined files for prefix %s.' % base_prefix)
+            self.add_result(content_id, content)
+            logger.debug('Joined files for prefix %s.' % content_id)
         return self.results
 
     def clear_input(self):

@@ -71,32 +71,32 @@ class SparserReader(Reader):
         "Get the output files as an id indexed dict."
         patt = re.compile(r'(.*?)-semantics.*?')
         for outpath in output_files:
+            # Get the reading results if possible.
             if outpath is None:
                 logger.warning("Found outpath with value None. Skipping.")
                 continue
 
-            re_out = patt.match(path.basename(outpath))
-            if re_out is None:
-                raise SparserError("Could not get prefix from output path %s."
-                                   % outpath)
-            prefix = re_out.groups()[0]
-            if prefix.startswith('PMC'):
-                prefix = prefix[3:]
-            if prefix.isdecimal():
-                # In this case we assume the prefix is a tcid.
-                prefix = int(prefix)
-
             try:
                 with open(outpath, 'rt') as f:
-                    content = json.load(f)
+                    reading = json.load(f)
             except Exception as e:
                 logger.exception(e)
                 logger.error("Could not load reading content from %s."
                              % outpath)
-                content = None
+                reading = None
 
-            self.add_result(prefix, content)
+            # Get the content ID
+            re_out = patt.match(path.basename(outpath))
+            if re_out is None:
+                raise SparserError("Could not get prefix from output path %s."
+                                   % outpath)
 
+            content_id = re_out.groups()[0]
+            if content_id.startswith('PMC'):
+                content_id = content_id[3:]
+            self.add_result(content_id, reading)
+
+            # Clean up the input and output files.
             if clear:
                 input_path = outpath.replace('-semantics.json', '.nxml')
                 try:
