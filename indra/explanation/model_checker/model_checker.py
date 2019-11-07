@@ -1,10 +1,11 @@
 import logging
 import textwrap
 import itertools
-import numpy as np
-import networkx as nx
 from collections import deque
 from copy import deepcopy
+
+import numpy as np
+import networkx as nx
 
 try:
     import paths_graph as pg
@@ -453,7 +454,8 @@ def get_path_iter(graph, source, target):
 
 
 def signed_edges_to_signed_nodes(graph, prune_nodes=True,
-                                 edge_signs={'pos': 0, 'neg': 1}):
+                                 edge_signs={'pos': 0, 'neg': 1},
+                                 copy_edge_data=False):
     """Convert a graph with signed edges to a graph with signed nodes.
 
     Each pair of nodes linked by an edge in an input graph are represented
@@ -476,6 +478,11 @@ def signed_edges_to_signed_nodes(graph, prune_nodes=True,
         A dictionary representing the signing policy of incoming graph. The
         dictionary should have strings 'pos' and 'neg' as keys and integers
         as values.
+    copy_edge_data : bool|set(keys)
+        Option for copying edge data as well from graph. If False (default),
+        no edge data is copied (except sign). If True, all edge data is
+        copied. If a set of keys is provided, only the keys appearing in the
+        set will be copied, assuming the key is part of a nested dictionary.
 
     Returns
     -------
@@ -487,15 +494,21 @@ def signed_edges_to_signed_nodes(graph, prune_nodes=True,
         nodes.append(((node, 0), node_data))
         nodes.append(((node, 1), node_data))
     signed_nodes_graph.add_nodes_from(nodes)
-    edges = set()
+    edges = []
     for u, v, edge_data in graph.edges(data=True):
-        edge_sign = edge_data.get('sign')
+        copy_dict = deepcopy(edge_data)
+        edge_sign = copy_dict.pop('sign', None)
+        if edge_sign is None:
+            continue
+        edge_dict = copy_dict if copy_edge_data == True else \
+            ({k: v for k, v in copy_dict.items() if k in copy_edge_data} if
+             isinstance(copy_edge_data, set) else {})
         if edge_sign == edge_signs['pos']:
-            edges.add(((u, 0), (v, 0)))
-            edges.add(((u, 1), (v, 1)))
+            edges.append(((u, 0), (v, 0), edge_dict))
+            edges.append(((u, 1), (v, 1), edge_dict))
         elif edge_sign == edge_signs['neg']:
-            edges.add(((u, 0), (v, 1)))
-            edges.add(((u, 1), (v, 0)))
+            edges.append(((u, 0), (v, 1), edge_dict))
+            edges.append(((u, 1), (v, 0), edge_dict))
     signed_nodes_graph.add_edges_from(edges)
     if prune_nodes:
         signed_nodes_graph = prune_signed_nodes(signed_nodes_graph)
