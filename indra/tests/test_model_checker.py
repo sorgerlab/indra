@@ -1,20 +1,15 @@
 from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
+
 import os
 import unittest
-import pickle
-import random
+from collections import Counter
+
 import numpy as np
-import pygraphviz as pgv
 import networkx as nx
 from indra.statements import *
-from collections import Counter
 from pysb import *
-from pybel.dsl import *
-from pysb.core import SelfExporter
-from pysb.tools import render_reactions
 from indra.databases import hgnc_client
-from indra.explanation.model_checker import ModelChecker, PysbModelChecker, \
+from indra.explanation.model_checker import PysbModelChecker, \
     UnsignedGraphModelChecker, SignedGraphModelChecker, PybelModelChecker, \
     PathResult, signed_edges_to_signed_nodes
 from indra.explanation.model_checker.pysb import _mp_embeds_into, \
@@ -22,12 +17,9 @@ from indra.explanation.model_checker.pysb import _mp_embeds_into, \
 from indra.explanation.reporting import stmt_from_rule, stmts_from_pysb_path, \
     stmts_from_pybel_path, stmts_from_indranet_path
 from indra.assemblers.pysb.assembler import PysbAssembler, \
-                                            set_base_initial_condition
+    set_base_initial_condition
 from indra.assemblers.indranet import IndraNetAssembler
 from indra.assemblers.pybel.assembler import PybelAssembler, _get_agent_node
-from pysb.tools import species_graph
-from pysb.bng import generate_equations
-from pysb import kappa
 from pysb.testing import with_model
 
 
@@ -1668,12 +1660,14 @@ def test_pybel_refinements():
 
 # Test graph conversion
 def test_signed_edges_to_nodes():
+    edge_dict = {'extra_data': {'list': ['value'], 'float': 0.123456},
+                 'weight': 0.987654}
     g = nx.MultiDiGraph()
-    g.add_edge('A', 'B', sign=0)
-    g.add_edge('A', 'C', sign=0)
-    g.add_edge('B', 'D', sign=1)
-    g.add_edge('C', 'D', sign=0)
-    g.add_edge('E', 'B', sign=1)
+    g.add_edge('A', 'B', sign=0, **edge_dict)
+    g.add_edge('A', 'C', sign=0, **edge_dict)
+    g.add_edge('B', 'D', sign=1, **edge_dict)
+    g.add_edge('C', 'D', sign=0, **edge_dict)
+    g.add_edge('E', 'B', sign=1, **edge_dict)
     assert len(g.edges) == 5
     assert len(g.nodes) == 5
     # Create a signed nodes graph without pruning
@@ -1693,6 +1687,24 @@ def test_signed_edges_to_nodes():
     assert ('C', 1) not in psng.nodes
     assert ('E', 1) not in psng.nodes
     assert len(psng.edges) == 6
+    # Create a signed nodes graph with weight data with pruning
+    psng_wed = signed_edges_to_signed_nodes(g, prune_nodes=True,
+                                            copy_edge_data={'weight'})
+    for edge in psng_wed.edges:
+        assert psng_wed.edges[edge]['weight'] == 0.987654
+        assert 'sign' not in psng_wed.edges[edge]
+        assert 'extra_data' not in psng_wed.edges[edge]
+
+    # Create a signed nodes graph with all edge data with pruning
+    psng_ed = signed_edges_to_signed_nodes(g, prune_nodes=True,
+                                            copy_edge_data=True)
+    for edge in psng_ed.edges:
+        assert psng_ed.edges[edge]['weight'] == 0.987654
+        assert 'sign' not in psng_ed.edges[edge]
+        assert 'extra_data' in psng_ed.edges[edge],\
+            psng_ed.edges[edge].items()
+        assert psng_ed.edges[edge]['extra_data']['list'] == ['value']
+        assert psng_ed.edges[edge]['extra_data']['float'] == 0.123456
 
 
 if __name__ == '__main__':
