@@ -34,13 +34,13 @@ class SparserReader(Reader):
     def get_version(cls):
         return sparser.get_version()
 
-    def prep_input(self, read_list):
+    def prep_input(self, content_iter):
         "Prepare the list of files or text content objects to be read."
         logger.info('Prepping input for sparser.')
 
         self.file_list = []
 
-        for content in read_list:
+        for content in content_iter:
             quality_issue = self._check_content(content.get_text())
             if quality_issue is not None:
                 logger.warning("Skipping %d due to: %s"
@@ -142,10 +142,10 @@ class SparserReader(Reader):
                 outpath_list.append(output)
         return outpath_list, outbuf
 
-    def _read(self, read_list, verbose=False, log=False, n_per_proc=None):
+    def _read(self, content_iter, verbose=False, log=False, n_per_proc=None):
         "Perform the actual reading."
         ret = []
-        self.prep_input(read_list)
+        self.prep_input(content_iter)
         L = len(self.file_list)
         if L == 0:
             return ret

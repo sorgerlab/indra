@@ -25,13 +25,13 @@ class IsiReader(Reader):
 
         return
 
-    def _read(self, read_list, verbose=False, log=False, n_per_proc=None):
+    def _read(self, content_iter, verbose=False, log=False, n_per_proc=None):
         # Create a preprocessor
         pp = IsiPreprocessor(self.input_dir)
 
         # Preprocess all the content.
         num_content = 0
-        for content in read_list:
+        for content in content_iter:
 
             # Check the quality of the text, and skip if there are any issues.
             quality_issue = self._check_content(content.get_text())

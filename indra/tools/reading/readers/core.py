@@ -122,6 +122,7 @@ class Reader(object):
         self.max_space_ratio = max_space_ratio
         self.results = []
         self.ResultClass = ResultClass
+        self.content_ids_read = []
         return
 
     def __repr__(self):
@@ -131,6 +132,7 @@ class Reader(object):
     def reset(self):
         self.results = []
         self.id_maps = {}
+        self.content_ids_read = []
         return
 
     def _map_id(self, content_id):
@@ -169,19 +171,24 @@ class Reader(object):
     def get_version(cls):
         raise NotImplementedError()
 
+    def _iter_content(self, read_list):
+        for content in read_list:
+            self.content_ids_read.append(content.get_id())
+            yield content
+
     def read(self, read_list, verbose=False, log=False):
         "Read a list of items and return a dict of output files."
         # Place a timer on the whole reading process.
         start = datetime.now()
-        ret = self._read(read_list, verbose, log)
+        ret = self._read(self._iter_content(read_list), verbose, log)
         end = datetime.now()
 
         # Count the number of not-null readings, and fill in any missing.
         # NOTE: result_dict should be empty after this operation.
         result_dict = {rd.content_id: rd for rd in self.results}
         null_results = 0
-        for content in read_list:
-            content_id = self._map_id(content.get_id())
+        for content_id in self.content_ids_read:
+            content_id = self._map_id(content_id)
             if content_id not in result_dict.keys():
                 self.add_result(content_id, None)
                 null_results += 1
@@ -199,7 +206,7 @@ class Reader(object):
                        len(self.results), null_results))
         return ret
 
-    def _read(self, read_list, verbose=False, log=False):
+    def _read(self, content_iter, verbose=False, log=False):
         raise NotImplementedError()
 
     @staticmethod

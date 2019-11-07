@@ -115,11 +115,11 @@ class ReachReader(Reader):
         _, version = cls._check_reach_env()
         return version
 
-    def prep_input(self, read_list):
+    def prep_input(self, content_iter):
         """Apply the readers to the content."""
         logger.info("Prepping input.")
         i = 0
-        for content in read_list:
+        for content in content_iter:
             # Check the quality of the text, and skip if there are any issues.
             quality_issue = self._check_content(content.get_text())
             if quality_issue is not None:
@@ -176,7 +176,7 @@ class ReachReader(Reader):
                 logger.debug('Removed input %s.' % item_path)
         return
 
-    def _read(self, read_list, verbose=False, log=False):
+    def _read(self, content_iter, verbose=False, log=False):
         """Read the content, returning a list of ReadingData objects."""
         ret = []
         mem_tot = get_mem_total()
@@ -189,7 +189,7 @@ class ReachReader(Reader):
             return ret
 
         # Prep the content
-        self.prep_input(read_list)
+        self.prep_input(content_iter)
 
         # Make sure there is something to read before we start up Reach.
         if not self.num_input:
