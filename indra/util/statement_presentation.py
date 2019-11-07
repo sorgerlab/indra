@@ -4,7 +4,7 @@ from itertools import permutations
 from numpy import array, concatenate, zeros
 
 from indra.assemblers.english import EnglishAssembler
-from indra.statements import Agent, get_statement_by_name
+from indra.statements import Agent, Influence, Event, get_statement_by_name
 
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,14 @@ def _get_keyed_stmts(stmt_list):
             key += (name(ags[0]), s.activity, s.is_active)
         elif verb == 'HasActivity':
             key += (name(ags[0]), s.activity, s.has_activity)
+        elif verb == 'Influence':
+            sns, sid = s.subj.concept.get_grounding()
+            ons, oid = s.obj.concept.get_grounding()
+            skey = s.subj.concept.name if not sid \
+                else sid.split('/')[-1].replace('_', ' ')
+            okey = s.obj.concept.name if not oid \
+                else oid.split('/')[-1].replace('_', ' ')
+            key += (skey, okey)
         else:
             key += tuple([name(ag) for ag in ags])
 
@@ -160,6 +168,9 @@ def make_stmt_from_sort_key(key, verb):
                          [make_agent(name) for name in inps[2]])
     elif verb == 'ActiveForm' or verb == 'HasActivity':
         stmt = StmtClass(make_agent(inps[0]), inps[1], inps[2])
+    elif verb == 'Influence':
+        stmt = Influence(Event(make_agent(inps[0])),
+                         Event(make_agent(inps[1])))
     else:
         stmt = StmtClass(*[make_agent(name) for name in inps])
     return stmt
@@ -218,5 +229,5 @@ def make_top_level_label_from_names_key(names):
                 tl_label += ", ".join(b_names[1:-1]) + ', and ' + b_names[-1]
         return tl_label
     except Exception as e:
-        logger.error("Could not handle: %s" % names)
+        logger.error("Could not handle: %s" % str(names))
         raise e

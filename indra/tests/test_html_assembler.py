@@ -59,3 +59,15 @@ def test_tag_text():
     print(tagged_text)
     assert tagged_text == '<FooBarBaz>FooBarBaz</FooBarBaz> binds ' \
                           '<Foo>Foo</Foo>.'
+
+
+def test_influence():
+    c2 = Concept('food insecurity',
+                 db_refs={'WM': [('wm/food_insecurity', 1.0)]})
+    c1 = Concept('floods',
+                 db_refs={'WM': [('wm/floods', 1.0)]})
+    c3 = Concept('x', db_refs={})
+    stmt = Influence(Event(c1), Event(c2))
+    stmt2 = Influence(Event(c1), Event(c3))
+    ha = HtmlAssembler([stmt, stmt2])
+    ha.make_model()

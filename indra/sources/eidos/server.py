@@ -9,8 +9,12 @@ Eidos JSON-LD output.
 """
 
 import json
+import requests
 from flask import Flask, request
 from indra.sources.eidos.reader import EidosReader
+from indra.preassembler.make_wm_ontologies import wm_ont_url
+
+wm_yml = requests.get(wm_ont_url).text
 
 
 app = Flask(__name__)
@@ -25,7 +29,16 @@ def process_text():
     return json.dumps(res)
 
 
+@app.route('/reground_text', methods=['POST'])
+def reground_text():
+    text = request.json.get('text')
+    if not text:
+        return []
+    res = er.reground_texts([text], wm_yml)
+    return json.dumps(res)
+
+
 if __name__ == '__main__':
     er = EidosReader()
     er.process_text('hello', 'json_ld')
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=6666)
