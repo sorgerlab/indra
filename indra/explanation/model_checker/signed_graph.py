@@ -1,6 +1,7 @@
 import logging
 from . import ModelChecker
 from indra.statements import *
+from .model_checker import signed_edges_to_signed_nodes
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ class SignedGraphModelChecker(ModelChecker):
     def get_graph(self):
         if self.graph:
             return self.graph
-        self.graph = self.signed_edges_to_signed_nodes(self.model)
+        self.graph = signed_edges_to_signed_nodes(self.model)
         return self.graph
 
     def process_statement(self, stmt):

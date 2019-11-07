@@ -1,8 +1,9 @@
 import logging
+from copy import deepcopy
 from . import ModelChecker
 from indra.statements import *
 from indra.preassembler.hierarchy_manager import hierarchies
-from copy import deepcopy
+from .model_checker import signed_edges_to_signed_nodes
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class PybelModelChecker(ModelChecker):
         if self.graph:
             return self.graph
         signed_edges = belgraph_to_signed_graph(self.model)
-        self.graph = self.signed_edges_to_signed_nodes(signed_edges)
+        self.graph = signed_edges_to_signed_nodes(signed_edges)
         return self.graph
 
     def process_statement(self, stmt):

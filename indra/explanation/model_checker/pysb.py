@@ -13,6 +13,7 @@ from indra.explanation.reporting import stmt_from_rule
 from indra.statements import *
 from indra.assemblers.pysb import assembler as pa
 from indra.assemblers.pysb.kappa_util import im_json_to_graph
+from .model_checker import signed_edges_to_signed_nodes
 
 
 logger = logging.getLogger(__name__)
@@ -199,7 +200,7 @@ class PysbModelChecker(ModelChecker):
             self.prune_influence_map_degrade_bind_positive(self.model_stmts)
         if prune_im_subj_obj:
             self.prune_influence_map_subj_obj()
-        self.graph = self.signed_edges_to_signed_nodes(
+        self.graph = signed_edges_to_signed_nodes(
             im, prune_nodes=False, edge_signs={'pos': 1, 'neg': -1})
         return self.graph
 
