@@ -358,6 +358,18 @@ class GroundingMapper(object):
         # If we have CHEBI and not PC but can map to PC, we do that
         elif chebi_id and not pc_id and mapped_pc_id:
             db_refs['PUBCHEM'] = mapped_pc_id
+
+        # Try to apply MeSH/GO mappings
+        mesh_id = db_refs.get('MESH')
+        go_id = db_refs.get('GO')
+        if mesh_id and not go_id:
+            mapped_go_id = mesh_client.get_go_id(mesh_id)
+            if mapped_go_id:
+                db_refs['GO'] = mapped_go_id
+        elif go_id and not mesh_id:
+            mapped_mesh_id = mesh_client.get_mesh_id_from_go_id(go_id)
+            if mapped_mesh_id:
+                db_refs['MESH'] = mapped_mesh_id
         # Otherwise there is no useful mapping that we can add and no
         # further conflict to resolve.
         return db_refs

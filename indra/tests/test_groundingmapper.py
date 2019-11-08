@@ -359,6 +359,18 @@ def test_name_standardize_mesh():
     assert a1.name == 'Melanoma', a1.name
 
 
+def test_name_standardize_mesh_go():
+    a1 = Agent('x', db_refs={'MESH': 'D058750'})
+    GroundingMapper.standardize_agent_name(a1, True)
+    assert a1.db_refs['GO'] == 'GO:0001837'
+    assert a1.name == 'epithelial to mesenchymal transition', a1.name
+    a1 = Agent('x', db_refs={'GO': 'GO:0001837'})
+    GroundingMapper.standardize_agent_name(a1, True)
+    assert a1.db_refs['MESH'] == 'D058750'
+    assert a1.name == 'epithelial to mesenchymal transition', a1.name
+
+
+
 @attr('nonpublic')
 def test_adeft_mapping():
     er1 = Agent('ER', db_refs={'TEXT': 'ER'})
