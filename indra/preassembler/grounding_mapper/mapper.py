@@ -41,9 +41,9 @@ class GroundingMapper(object):
     """
     def __init__(self, grounding_map=None, agent_map=None, ignores=None,
                  misgrounding_map=None, use_adeft=True):
-        self.check_grounding_map(grounding_map)
         self.grounding_map = grounding_map if grounding_map is not None \
             else default_grounding_map
+        self.check_grounding_map(self.grounding_map)
         self.agent_map = agent_map if agent_map is not None \
             else default_agent_map
         self.ignores = set(ignores) if ignores else default_ignores
