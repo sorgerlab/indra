@@ -480,10 +480,11 @@ def get_db_refs_by_name(ns, name, node_data):
             return name, None
         db_refs = {'GO': go_id}
     elif ns in ('MESHPP', 'MESHD', 'MESH'):
-        mesh_id = mesh_client.get_mesh_id_name(name)[0]
+        mesh_id, mesh_name = mesh_client.get_mesh_id_name(name)
         if not mesh_id:
-            logger.info('Could not find MESH ID fro %s' % name)
+            logger.info('Could not find MESH ID from %s' % name)
             return name, None
+        name = mesh_name
         db_refs = {'MESH': mesh_id}
     # For now, handle MGI/RGD but putting the name into the db_refs so
     # it's clear what namespace the name belongs to
