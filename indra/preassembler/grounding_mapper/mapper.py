@@ -129,19 +129,19 @@ class GroundingMapper(object):
                 return None
 
             # Check if an adeft model exists for agent text
-            adeft_used = False
+            adeft_success = False
             if self.use_adeft and agent_txt and agent_txt in \
                     adeft_disambiguators:
                 try:
-                    run_adeft_disambiguation(mapped_stmt, agent, idx)
-                    adeft_used = True
+                    adeft_success = run_adeft_disambiguation(mapped_stmt,
+                                                             agent, idx)
                 except Exception as e:
                     logger.error('There was an error during Adeft'
                                  ' disambiguation of %s.' % agent_txt)
                     logger.error(e)
 
             # If adeft was not used, we do grounding mapping
-            new_agent = self.map_agent(agent, do_rename) if not adeft_used \
+            new_agent = self.map_agent(agent, do_rename) if not adeft_success \
                 else agent
 
             # If the old agent had bound conditions, but the new agent does

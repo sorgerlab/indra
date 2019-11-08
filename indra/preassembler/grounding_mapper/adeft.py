@@ -39,13 +39,21 @@ def run_adeft_disambiguation(stmt, agent, idx):
     idx : int
         The index of the new Agent's position in the Statement's agent list
         (needed to set annotations correctly).
+
+    Returns
+    -------
+    bool
+        True if disambiguation was successfully applied, and False otherwise.
+        Reasons for a False response can be the lack of evidence as well as
+        failure to obtain text for grounding disambiguation.
     """
+    success = False
     # If the Statement doesn't have evidence for some reason, then there is
     # no text to disambiguate by
     # NOTE: we might want to try disambiguating by other agents in the
     # Statement
     if not stmt.evidence:
-        return
+        return False
     # Initialize annotations if needed so Adeft predicted
     # probabilities can be added to Agent annotations
     annots = stmt.evidence[0].annotations
@@ -78,6 +86,8 @@ def run_adeft_disambiguation(stmt, agent, idx):
             GroundingMapper.standardize_agent_name(agent,
                                                    standardize_refs=True)
             annots['agents']['adeft'][idx] = disamb_scores
+        success = True
+    return success
 
 
 def _get_text_for_grounding(stmt, agent_text):
