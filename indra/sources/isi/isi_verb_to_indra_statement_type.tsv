@@ -39,12 +39,12 @@ estimated
 estimation	
 ethyl	
 ethylene	
-expressed	
-expressing	
-expression	
-form	
-formally	
-formation	
+expressed	IncreaseAmount
+expressing	IncreaseAmount
+expression	IncreaseAmount
+form
+formally
+formation
 formations	
 formerly	
 forms	
@@ -87,7 +87,7 @@ phosphorylation	Phosphorylation
 preserves	
 pressure	
 produce	IncreaseAmount
-produced	
+produced	IncreaseAmount
 producing	
 production	
 productivity	
@@ -113,7 +113,7 @@ singly
 times	
 topical	
 topically	
-transcription	
+transcription	IncreaseAmount
 translating	
 transplants	
 triclosan	
