@@ -79,6 +79,8 @@ def run_adeft_disambiguation(stmt, agent, idx):
         # and set the standard name
         else:
             db_ns, db_id = ns_and_id.split(':', maxsplit=1)
+            if db_ns == 'CHEBI' and not db_id.startswith('CHEBI:'):
+                db_id = 'CHEBI:%s' % db_id
             agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
             agent.name = standard_name
             logger.info('Disambiguated %s to: %s, %s:%s' %
