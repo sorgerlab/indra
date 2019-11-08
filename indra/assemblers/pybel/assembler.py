@@ -507,15 +507,15 @@ def _get_agent_grounding(agent):
             logger.warning('Agent %s with HGNC ID %s has no HGNC name.',
                            agent, hgnc_id)
             return
-        return protein('HGNC', hgnc_name)
+        return protein('HGNC', name=hgnc_name, identifier=hgnc_id)
 
     uniprot_id = _get_id(agent, 'UP')
     if uniprot_id:
-        return protein('UP', uniprot_id)
+        return protein('UP', name=uniprot_id, identifier=uniprot_id)
 
     fplx_id = _get_id(agent, 'FPLX')
     if fplx_id:
-        return protein('FPLX', fplx_id)
+        return protein('FPLX', name=fplx_id, identifier=fplx_id)
 
     pfam_id = _get_id(agent, 'PF')
     if pfam_id:
@@ -533,19 +533,19 @@ def _get_agent_grounding(agent):
     if chebi_id:
         if chebi_id.startswith('CHEBI:'):
             chebi_id = chebi_id[len('CHEBI:'):]
-        return abundance('CHEBI', chebi_id)
+        return abundance('CHEBI', name=agent.name, identifier=chebi_id)
 
     pubchem_id = _get_id(agent, 'PUBCHEM')
     if pubchem_id:
-        return abundance('PUBCHEM', pubchem_id)
+        return abundance('PUBCHEM', name=pubchem_id, identifier=pubchem_id)
 
     go_id = _get_id(agent, 'GO')
     if go_id:
-        return bioprocess('GO', go_id)
+        return bioprocess('GO', name=agent.name, identifier=go_id)
 
     mesh_id = _get_id(agent, 'MESH')
     if mesh_id:
-        return bioprocess('MESH', mesh_id)
+        return bioprocess('MESH', name=agent.name, identifier=mesh_id)
 
     return
 

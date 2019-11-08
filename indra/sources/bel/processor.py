@@ -441,10 +441,12 @@ def get_db_refs_by_name(ns, name, node_data):
     """
     db_refs = None
     if ns == 'HGNC':
-        hgnc_id = hgnc_client.get_hgnc_id(name)
+        # Assumption: name is an HGNC symbol
+        hgnc_id = hgnc_client.get_current_hgnc_id(name)
         if not hgnc_id:
             logger.info("Invalid HGNC name: %s (%s)" % (name, node_data))
             return name, None
+        name = hgnc_client.get_hgnc_name(hgnc_id)
         db_refs = {'HGNC': hgnc_id}
         up_id = _get_up_id(hgnc_id)
         if up_id:
@@ -471,6 +473,9 @@ def get_db_refs_by_name(ns, name, node_data):
         hgnc_id = uniprot_client.get_hgnc_id(up_id)
         if hgnc_id:
             db_refs['HGNC'] = hgnc_id
+            name = hgnc_client.get_hgnc_name(hgnc_id)
+        else:
+            name = uniprot_client.get_gene_name(up_id)
     elif ns == 'FPLX':
         db_refs = {'FPLX': name}
     elif ns in ('GO', 'GOBP', 'GOCC'):
@@ -479,6 +484,7 @@ def get_db_refs_by_name(ns, name, node_data):
             logger.info('Could not find GO ID for %s' % name)
             return name, None
         db_refs = {'GO': go_id}
+        name = go_client.get_go_label(go_id)
     elif ns in ('MESHPP', 'MESHD', 'MESH'):
         mesh_id, mesh_name = mesh_client.get_mesh_id_name(name)
         if not mesh_id:
@@ -526,14 +532,17 @@ def get_db_refs_by_name(ns, name, node_data):
         mirbase_id = mirbase_client.get_mirbase_id_from_mirbase_name(name)
         if not mirbase_id:
             logger.info('Could not map miRBase name %s to ID', name)
-            return
+            return name, None
         db_refs = {'MIRBASE': mirbase_id}
         hgnc_id = mirbase_client.get_hgnc_id_from_mirbase_id(mirbase_id)
         if hgnc_id:
             db_refs['HGNC'] = hgnc_id
+            name = hgnc_client.get_hgnc_name(hgnc_id)
     # CHEBI
     elif ns == 'CHEBI':
+        # We first look up BEL's own namespace map for ChEBI names to IDs
         chebi_id = chebi_name_id.get(name)
+        # If that fails, we look up INDRA's ChEBI name to ID mapping
         if not chebi_id:
             chebi_id = chebi_client.get_chebi_id_from_name(name)
         if chebi_id:
