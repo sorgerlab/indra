@@ -1,5 +1,6 @@
 import os
 from urllib import request
+
 from nose.plugins.attrib import attr
 from pybel import BELGraph
 from pybel.dsl import *
@@ -209,7 +210,7 @@ def test_get_agent_mirna():
     m = MicroRna(namespace='MIRBASE', name='hsa-let-7a-1')
     agent = pb.get_agent(m, {})
     assert isinstance(agent, Agent)
-    assert agent.name == 'hsa-let-7a-1'
+    assert agent.name == 'MIRLET7A1'
     assert agent.db_refs.get('MIRBASE') == 'MI0000060'
     assert agent.db_refs.get('HGNC') == '31476'
 
