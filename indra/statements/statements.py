@@ -1024,49 +1024,61 @@ class Carboxylation(AddModification):
     """Carboxylation modification."""
     pass
 
+
 class Decarboxylation(RemoveModification):
     """Decarboxylation modification."""
     pass
+
 
 class Amidation(AddModification):
     """Amidation modification."""
     pass
 
+
 class Deamidation(RemoveModification):
     """Deamidation modification."""
     pass
+
 
 class Sulfation(AddModification):
     """Sulfation modification."""
     pass
 
+
 class Desulfation(RemoveModification):
     """Desulfation modification."""
     pass
+
 
 class Neddylation(AddModification):
     """Neddylation modification."""
     pass
 
+
 class Deneddylation(RemoveModification):
     """Deneddylation modification."""
     pass
+
 
 class Alkylation(AddModification):
     """Alkylation modification."""
     pass
 
+
 class Dealkylation(RemoveModification):
     """Dealkylation modification."""
     pass
+
 
 class Prenylation(AddModification):
     """Prenylation modification."""
     pass
 
+
 class Deprenylation(RemoveModification):
     """Deprenylation modification."""
     pass
+
 
 @python_2_unicode_compatible
 class RegulateActivity(Statement):
