@@ -480,7 +480,7 @@ def get_db_refs_by_name(ns, name, node_data):
             return name, None
         db_refs = {'GO': go_id}
     elif ns in ('MESHPP', 'MESHD', 'MESH'):
-        mesh_id = mesh_client.get_mesh_id_name(name)
+        mesh_id = mesh_client.get_mesh_id_name(name)[0]
         if not mesh_id:
             logger.info('Could not find MESH ID fro %s' % name)
             return name, None
