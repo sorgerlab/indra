@@ -41,9 +41,9 @@ class GroundingMapper(object):
     """
     def __init__(self, grounding_map=None, agent_map=None, ignores=None,
                  misgrounding_map=None, use_adeft=True):
-        self.check_grounding_map(grounding_map)
         self.grounding_map = grounding_map if grounding_map is not None \
             else default_grounding_map
+        self.check_grounding_map(self.grounding_map)
         self.agent_map = agent_map if agent_map is not None \
             else default_agent_map
         self.ignores = set(ignores) if ignores else default_ignores
@@ -129,19 +129,19 @@ class GroundingMapper(object):
                 return None
 
             # Check if an adeft model exists for agent text
-            adeft_used = False
+            adeft_success = False
             if self.use_adeft and agent_txt and agent_txt in \
                     adeft_disambiguators:
                 try:
-                    run_adeft_disambiguation(mapped_stmt, agent, idx)
-                    adeft_used = True
+                    adeft_success = run_adeft_disambiguation(mapped_stmt,
+                                                             agent, idx)
                 except Exception as e:
                     logger.error('There was an error during Adeft'
                                  ' disambiguation of %s.' % agent_txt)
                     logger.error(e)
 
             # If adeft was not used, we do grounding mapping
-            new_agent = self.map_agent(agent, do_rename) if not adeft_used \
+            new_agent = self.map_agent(agent, do_rename) if not adeft_success \
                 else agent
 
             # If the old agent had bound conditions, but the new agent does
@@ -358,6 +358,18 @@ class GroundingMapper(object):
         # If we have CHEBI and not PC but can map to PC, we do that
         elif chebi_id and not pc_id and mapped_pc_id:
             db_refs['PUBCHEM'] = mapped_pc_id
+
+        # Try to apply MeSH/GO mappings
+        mesh_id = db_refs.get('MESH')
+        go_id = db_refs.get('GO')
+        if mesh_id and not go_id:
+            mapped_go_id = mesh_client.get_go_id(mesh_id)
+            if mapped_go_id:
+                db_refs['GO'] = mapped_go_id
+        elif go_id and not mesh_id:
+            mapped_mesh_id = mesh_client.get_mesh_id_from_go_id(go_id)
+            if mapped_mesh_id:
+                db_refs['MESH'] = mapped_mesh_id
         # Otherwise there is no useful mapping that we can add and no
         # further conflict to resolve.
         return db_refs

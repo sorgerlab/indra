@@ -12,6 +12,7 @@ HERE = dirname(abspath(__file__))
 RESOURCES = join(HERE, pardir, 'resources')
 MESH_FILE = join(RESOURCES, 'mesh_id_label_mappings.tsv')
 MESH_SUPP_FILE = join(RESOURCES, 'mesh_supp_id_label_mappings.tsv')
+GO_MAPPINGS = join(RESOURCES, 'mesh_go_mappings.tsv')
 
 
 mesh_id_to_name = {}
@@ -32,6 +33,18 @@ def _load_mesh_file(path):
 _load_mesh_file(MESH_FILE)
 if os.path.exists(MESH_SUPP_FILE):
     _load_mesh_file(MESH_SUPP_FILE)
+
+
+def _load_go_mappings(path):
+    mesh_to_go = {}
+    go_to_mesh = {}
+    for mesh_id, go_id in read_unicode_csv(path, delimiter='\t'):
+        mesh_to_go[mesh_id] = go_id
+        go_to_mesh[go_id] = mesh_id
+    return mesh_to_go, go_to_mesh
+
+
+mesh_to_go, go_to_mesh = _load_go_mappings(GO_MAPPINGS)
 
 
 @lru_cache(maxsize=1000)
@@ -215,6 +228,39 @@ def mesh_isa(mesh_id1, mesh_id2):
         return False
     except Exception:
         return False
+
+
+def get_go_id(mesh_id):
+    """Return a GO ID corresponding to the given MeSH ID.
+
+    Parameters
+    ----------
+    mesh_id : str
+        MeSH ID to map to GO
+
+    Returns
+    -------
+    str
+        The GO ID corresponding to the given MeSH ID, or None if not available.
+    """
+    return mesh_to_go.get(mesh_id)
+
+
+def get_mesh_id_from_go_id(go_id):
+    """Return a MeSH ID corresponding to the given GO ID.
+
+    Parameters
+    ----------
+    go_id : str
+        GO ID to map to MeSH
+
+    Returns
+    -------
+    str
+        The MeSH ID corresponding to the given GO ID, or None if not
+        available.
+    """
+    return go_to_mesh.get(go_id)
 
 
 mesh_rdf_prefixes = """
