@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-from builtins import dict, str
 import logging
 import requests
 from json import JSONDecodeError
@@ -7,7 +6,7 @@ from collections import Counter
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import modtype_to_modclass, Agent, Evidence, Complex
 
-logger = logging.getLogger("omnipath")
+logger = logging.getLogger(__file__)
 
 op_url = 'http://omnipathdb.org'
 urls = {'interactions': op_url + '/interactions',
@@ -51,6 +50,7 @@ def _stmts_from_op_mods(mod_list):
         stmt_list.append(stmt)
     print(Counter(unhandled_mod_types))
     return stmt_list
+
 
 #'cleavage',
 #'proteolytic cleavage',
