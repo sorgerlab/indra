@@ -412,7 +412,7 @@ class Submitter(object):
                 continue
 
             job_name = '%s_%d_%d' % (self.basename, start_ix, end_ix)
-            job_name += '_'.join(reader_list)
+            job_name += '_' + '_'.join(reader_list)
             cmd = self._get_base(job_name, start_ix, end_ix)
             cmd += ['-r'] + reader_list
             cmd += self._get_extensions()
