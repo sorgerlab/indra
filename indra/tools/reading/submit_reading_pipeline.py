@@ -675,7 +675,7 @@ def create_submit_parser():
     parent_submit_parser.add_argument(
         '-r', '--readers',
         dest='readers',
-        choices=['sparser', 'reach', 'all'],
+        choices=[rc.name.lower() for rc in get_reader_classes()] + ['all'],
         default=['all'],
         nargs='+',
         help='Choose which reader(s) to use.'
