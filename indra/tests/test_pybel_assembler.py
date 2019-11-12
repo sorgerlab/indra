@@ -21,8 +21,10 @@ tp53_dsl = protein(namespace='HGNC', name='TP53')
 mdm2_dsl = protein(namespace='HGNC', name='MDM2')
 egfr_dsl = protein(namespace='HGNC', name='EGFR')
 
-chebi_17534 = abundance(namespace='CHEBI', name='17634')
-chebi_4170 = abundance(namespace='CHEBI', name='4170')
+chebi_17534 = abundance(namespace='CHEBI', name='D-glucose',
+                        identifier='17634')
+chebi_4170 = abundance(namespace='CHEBI', name='D-glucopyranose 6-phosphate',
+                       identifier='4170')
 chebi_17534_to_4170 = reaction(chebi_17534, chebi_4170)
 
 grb2_dsl = protein(namespace='HGNC', name='GRB2')
@@ -322,10 +324,13 @@ def test_active_form():
     stmt1 = ActiveForm(ras, 'gtpbound', True)
     stmt2 = ActiveForm(mapk1_p, 'kinase', True)
     stmt3 = ActiveForm(mapk1_pp, 'kinase', True)
-    for stmt in (stmt1, stmt2, stmt3):
+    for i, stmt in enumerate((stmt1, stmt2, stmt3)):
         pba = pa.PybelAssembler([stmt])
         belgraph = pba.make_model()
-        assert len(belgraph) == 2
+        if i == 2:
+            assert len(belgraph) == 3, len(belgraph)
+        else:
+            assert len(belgraph) == 2, len(belgraph)
 
 
 def test_complex():
@@ -344,8 +349,8 @@ def test_complex():
 
 
 def test_rxn_no_controller():
-    glu = Agent('D-GLUCOSE', db_refs={'CHEBI': 'CHEBI:17634'})
-    g6p = Agent('GLUCOSE-6-PHOSPHATE', db_refs={'CHEBI': 'CHEBI:4170'})
+    glu = Agent('D-glucose', db_refs={'CHEBI': 'CHEBI:17634'})
+    g6p = Agent('D-glucopyranose 6-phosphate', db_refs={'CHEBI': 'CHEBI:4170'})
     stmt = Conversion(None, [glu], [g6p])
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
@@ -366,8 +371,8 @@ def test_rxn_no_controller():
 
 def test_rxn_with_controller():
     hk1 = Agent('HK1', db_refs={'HGNC': id('HK1')})
-    glu = Agent('D-GLUCOSE', db_refs={'CHEBI': 'CHEBI:17634'})
-    g6p = Agent('GLUCOSE-6-PHOSPHATE', db_refs={'CHEBI': 'CHEBI:4170'})
+    glu = Agent('D-glucose', db_refs={'CHEBI': 'CHEBI:17634'})
+    g6p = Agent('D-glucopyranose 6-phosphate', db_refs={'CHEBI': 'CHEBI:4170'})
     stmt = Conversion(hk1, [glu], [g6p])
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
@@ -537,7 +542,8 @@ def test_no_activity_on_bioprocess():
     assert belgraph.number_of_edges() == 1
 
     yfg_pybel = protein('HGNC', 'PPP1R13L')
-    apoptosis_pybel = bioprocess('GO', 'GO:0006915')
+    apoptosis_pybel = bioprocess('GO', name='apoptotic process',
+                                 identifier='GO:0006915')
     assert yfg_pybel in belgraph
     assert apoptosis_pybel in belgraph
 

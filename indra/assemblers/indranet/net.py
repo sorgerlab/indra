@@ -204,7 +204,8 @@ class IndraNet(nx.MultiDiGraph):
 
         SG = nx.MultiDiGraph()
         for u, v, data in self.edges(data=True):
-            if data['initial_sign'] is not None:
+            # Explicit 'is not None' needed to accept 0
+            if data.get('initial_sign') is not None:
                 sign = data['initial_sign']
             elif data['stmt_type'] not in sign_dict:
                 continue

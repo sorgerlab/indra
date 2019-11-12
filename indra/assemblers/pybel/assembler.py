@@ -290,8 +290,29 @@ class PybelAssembler(object):
         act_agent.activity = ActivityCondition(stmt.activity, True)
         activates = stmt.is_active
         relation = get_causal_edge(stmt, activates)
-        self._add_nodes_edges(stmt.agent, act_agent, relation,
-                              stmt.get_hash(refresh=True), stmt.evidence)
+        stmt_hash = stmt.get_hash(refresh=True)
+        if not stmt.agent.mods and not stmt.agent.bound_conditions and \
+                not stmt.agent.mutations:
+            self._add_nodes_edges(stmt.agent, act_agent, relation,
+                                  stmt_hash, stmt.evidence)
+        else:
+            for mod in stmt.agent.mods:
+                mod_agent = Agent(
+                    stmt.agent.name, db_refs=stmt.agent.db_refs, mods=[mod])
+                self._add_nodes_edges(mod_agent, act_agent, relation,
+                                      stmt_hash, stmt.evidence)
+            for bc in stmt.agent.bound_conditions:
+                bound_agent = Agent(
+                    stmt.agent.name, db_refs=stmt.agent.db_refs,
+                    bound_conditions=[bc])
+                self._add_nodes_edges(bound_agent, act_agent, relation,
+                                      stmt_hash, stmt.evidence)
+            for mut in stmt.agent.mutations:
+                mut_agent = Agent(
+                    stmt.agent.name, db_refs=stmt.agent.db_refs,
+                    mutations=[mut])
+                self._add_nodes_edges(mut_agent, act_agent, relation,
+                                      stmt_hash, stmt.evidence)
 
     def _assemble_complex(self, stmt):
         """Example: complex(p(HGNC:MAPK14), p(HGNC:TAB1))"""
@@ -486,15 +507,15 @@ def _get_agent_grounding(agent):
             logger.warning('Agent %s with HGNC ID %s has no HGNC name.',
                            agent, hgnc_id)
             return
-        return protein('HGNC', hgnc_name)
+        return protein('HGNC', name=hgnc_name, identifier=hgnc_id)
 
     uniprot_id = _get_id(agent, 'UP')
     if uniprot_id:
-        return protein('UP', uniprot_id)
+        return protein('UP', name=uniprot_id, identifier=uniprot_id)
 
     fplx_id = _get_id(agent, 'FPLX')
     if fplx_id:
-        return protein('FPLX', fplx_id)
+        return protein('FPLX', name=fplx_id, identifier=fplx_id)
 
     pfam_id = _get_id(agent, 'PF')
     if pfam_id:
@@ -512,19 +533,19 @@ def _get_agent_grounding(agent):
     if chebi_id:
         if chebi_id.startswith('CHEBI:'):
             chebi_id = chebi_id[len('CHEBI:'):]
-        return abundance('CHEBI', chebi_id)
+        return abundance('CHEBI', name=agent.name, identifier=chebi_id)
 
     pubchem_id = _get_id(agent, 'PUBCHEM')
     if pubchem_id:
-        return abundance('PUBCHEM', pubchem_id)
+        return abundance('PUBCHEM', name=pubchem_id, identifier=pubchem_id)
 
     go_id = _get_id(agent, 'GO')
     if go_id:
-        return bioprocess('GO', go_id)
+        return bioprocess('GO', name=agent.name, identifier=go_id)
 
     mesh_id = _get_id(agent, 'MESH')
     if mesh_id:
-        return bioprocess('MESH', mesh_id)
+        return bioprocess('MESH', name=agent.name, identifier=mesh_id)
 
     return
 
