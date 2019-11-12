@@ -5,7 +5,7 @@ import requests
 from json import JSONDecodeError
 from collections import Counter
 from indra.databases import hgnc_client, uniprot_client
-from indra.statements import modtype_to_modclass, Agent, Evidence
+from indra.statements import modtype_to_modclass, Agent, Evidence, Complex
 
 logger = logging.getLogger("omnipath")
 
@@ -54,6 +54,29 @@ def _stmts_from_op_mods(mod_list):
 
 #'cleavage',
 #'proteolytic cleavage',
+
+
+def _stmts_from_op_rlint(rlint_list):
+    """rlint_list is a list of receptor-ligand interactions"""
+    stmt_list = []
+    for entry in rlint_list:
+        # ToDo handle when source and/or target is COMPLEX:ID1_ID2_...
+        source = _agent_from_up_id(entry['source'])
+        target = _agent_from_up_id(entry['target'])
+
+        # Todo add to annotations if interesting
+        is_directed = entry['is_directed']
+        is_stimulation = entry['is_stimulation']
+        is_inhibition = entry['is_inhibition']
+
+        # We don't know the pairing of source db with PMID, so add sources
+        # to all of them
+        for pmid in entry['references']:
+            evidence = Evidence('omnipath', None, pmid,
+                                annotations={'source_db': entry['sources']})
+            stmt_list.append(Complex([source, target], evidence))
+    return stmt_list
+
 
 def get_all_modifications():
     """Get all PTMs from Omnipath as INDRA Statements.
