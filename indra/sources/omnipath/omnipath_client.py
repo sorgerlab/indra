@@ -57,7 +57,7 @@ def _stmts_from_op_mods(mod_list):
 
 
 def _stmts_from_op_rlint(rlint_list):
-    """rlint_list is a list of receptor-ligand interactions"""
+    """Build Complex statements from a list of receptor-ligand interactions"""
     stmt_list = []
     for entry in rlint_list:
         # ToDo handle when source and/or target is COMPLEX:ID1_ID2_...
