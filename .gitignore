@@ -99,6 +99,7 @@ indra/literature/cr_clickthrough_key
 indra/benchmarks/assembly_eval/batch4/trips
 indra/benchmarks/assembly_eval/batch4/reach
 models/fallahi_eval/output
+indra/sources/eidos/cache/geonames/index/
 
 # Other
 *.txt
