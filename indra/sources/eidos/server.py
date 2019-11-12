@@ -34,7 +34,10 @@ def reground_text():
     text = request.json.get('text')
     if not text:
         return []
-    res = er.reground_texts([text], wm_yml)
+    if isinstance(text, str):
+        res = er.reground_texts([text], wm_yml)
+    elif isinstance(text, list):
+        res = er.reground_texts(text, wm_yml)
     return json.dumps(res)
 
 
