@@ -1,14 +1,16 @@
 from __future__ import unicode_literals
 import logging
 import requests
-from json import JSONDecodeError
 from collections import Counter
+import pypath.intera as pp_intera
+from pypath import main as pypath_main, data_formats
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import modtype_to_modclass, Agent, Evidence, Complex
 
 logger = logging.getLogger(__file__)
 
 op_url = 'http://omnipathdb.org'
+pa = pypath_main.PyPath()
 urls = {'interactions': op_url + '/interactions',
         'ptms': op_url + '/ptms'}
 
@@ -80,25 +82,82 @@ def _stmts_from_op_mods(mod_list):
 #'proteolytic cleavage',
 
 
-def _stmts_from_op_rlint(rlint_list):
-    """Build Complex statements from a list of receptor-ligand interactions"""
+def _stmts_from_op_pypath_graph(pp):
+    """Build Complex statements from an igraph of ligand-receptor interactions
+
+    Parameters
+    ----------
+    pp : pypath.main.PyPath
+        An instance of a PyPath object containing the network
+        representing ligand-receptor interactions
+    """
     stmt_list = []
-    for entry in rlint_list:
-        # ToDo handle when source and/or target is COMPLEX:ID1_ID2_...
-        source = _agent_from_up_id(entry['source'])
-        target = _agent_from_up_id(entry['target'])
+    for s, t in pp.graph.get_edgelist():
+        edge_obj = pp.get_edge(s, t)
 
-        # Todo add to annotations if interesting
-        is_directed = entry['is_directed']
-        is_stimulation = entry['is_stimulation']
-        is_inhibition = entry['is_inhibition']
+        # Get participating agents
+        if isinstance(pp.vs[s]['name'], pp_intera.Complex):
+            # Catch the odd pypath.intera.Complex objects
+            src_string = str(pp.vs[s]['name'])
+        else:
+            src_string = pp.vs[s]['name']
+        source_agents = _complex_agents_from_op_complex(src_string)
 
-        # We don't know the pairing of source db with PMID, so add sources
-        # to all of them
-        for pmid in entry['references']:
-            evidence = Evidence('omnipath', None, pmid,
-                                annotations={'source_db': entry['sources']})
-            stmt_list.append(Complex([source, target], evidence))
+        if isinstance(pp.vs[t]['name'], pp_intera.Complex):
+            # Catch the odd pypath.intera.Complex objects
+            trg_string = str(pp.vs[t]['name'])
+        else:
+            trg_string = pp.vs[t]['name']
+        target_agents = _complex_agents_from_op_complex(trg_string)
+
+        # Assemble agent list
+        agent_list = []
+        for agent in [*source_agents, *target_agents]:
+            if agent not in agent_list:
+                agent_list.append(agent)
+
+        # Get article IDs by support
+        for ref_name, ref_set in edge_obj['refs_by_source'].items():
+            for ref_obj in ref_set:
+                # Check for PMID
+                if ref_obj.pmid:
+                    pmid = ref_obj.pmid
+                else:
+                    pmid = None
+                try:
+                    ref_info = ref_obj.info()
+                    if ref_info.get('uids'):
+                        uid = ref_info['uids'][0]
+                        # Text refs
+                        text_refs = _get_text_refs(ref_info[uid]['articleids'])
+                        text_refs['nlmuniqueid'] = ref_info[uid]['nlmuniqueid']
+                        text_refs['ISSN'] = ref_info[uid]['issn']
+                        text_refs['ESSN'] = ref_info[uid]['essn']
+                    else:
+                        text_refs = None
+                except TypeError as e:
+                    logger.warning('Failed to load info')
+                    logger.exception(e)
+                    text_refs = None
+
+                # If both pmid and text_refs is None, skip this Complex
+                if pmid is None and text_refs is None:
+                    continue
+
+                # Get annotations
+                annotations = {'omnipath_source': ref_name}
+                if ref_name == 'Ramilowski2015' and\
+                        edge_obj['ramilowski_sources']:
+                    annotations['ramilowski_sources'] =\
+                        edge_obj['ramilowski_sources']
+                if edge_obj['cellphonedb_type']:
+                    annotations['cellphonedb_type'] =\
+                        edge_obj['cellphonedb_type']
+                evidence = Evidence('omnipath', None, pmid,
+                                    annotations=annotations,
+                                    text_refs=text_refs)
+                stmt_list.append(Complex(agent_list, evidence))
+
     return stmt_list
 
 
@@ -138,25 +197,17 @@ def get_modifications(up_list):
     return _stmts_from_op_mods(res.json())
 
 
-def get_all_rlint():
-    """Get all receptor ligand interactions from the omnipath
+def get_all_rlint_pypath(reload_resources=False, force=False):
+    """Get all receptor ligand interactions from the omnipath pypath module
 
     Returns
     -------
     stmts : list[indra.statements.Statement]
         A list of indra statements"""
-
-    parameters = {
-        'format': 'json',
-        'fields': ['sources', 'references'],
-        'datasets': 'ligrecextra'
-    }
-    res = requests.get(url=urls['interactions'], params=parameters)
-    try:
-        if not res.status_code == 200:
-            logger.info('Service responded with status %d' % res.status_code)
-            return None
-        return _stmts_from_op_rlint(res.json())
-    except JSONDecodeError:
-        logger.warning('Could not json decode the response')
-        return None
+    if reload_resources:
+        # Todo wipe the cache (stored in ~/.pypath/cache) clean and
+        #  re-download the resources. Warn the user that it takes a lot of
+        #  time to download it
+        pass
+    pa.init_network(data_formats.ligand_receptor)
+    return _stmts_from_op_pypath_graph(pa)
