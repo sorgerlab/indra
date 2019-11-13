@@ -15,12 +15,15 @@ class RlimspProcessor(object):
         self._json = rlimsp_json
         self.statements = []
         self.doc_id_type = doc_id_type
+        self.processed_texts = []
         return
 
     def extract_statements(self):
         """Extract the statements from the json."""
         for p_info in self._json:
             para = RlimspParagraph(p_info, self.doc_id_type)
+            if para._text not in self.processed_texts:
+                self.processed_texts.append(para._text)
             self.statements.extend(para.get_statements())
         return
 
