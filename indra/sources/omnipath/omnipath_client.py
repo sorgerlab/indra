@@ -13,6 +13,18 @@ urls = {'interactions': op_url + '/interactions',
         'ptms': op_url + '/ptms'}
 
 
+def _get_text_refs(article_id_list):
+    text_refs = {}
+    for ref in article_id_list:
+        name = ref['idtype'].upper()
+        try:
+            id = int(ref['value'])
+        except ValueError:
+            id = ref['value']
+        text_refs[name] = id
+    return text_refs
+
+
 def _agent_from_up_id(up_id):
     """Build an Agent object from a Uniprot ID. Adds db_refs for both Uniprot
     and HGNC where available."""
