@@ -151,6 +151,7 @@ class HtmlAssembler(object):
 
         # Do some extra formatting.
         tl_stmts = OrderedDict()
+        previous_stmt_set = set()
         for row in stmt_rows:
             # Distinguish between the cases with
             if self.source_counts:
@@ -159,6 +160,11 @@ class HtmlAssembler(object):
                 key, verb, stmts = row
                 src_counts = None
                 tl_counts = None
+            curr_stmt_set = {s.get_hash() for s in stmts}
+            if curr_stmt_set == previous_stmt_set:
+                continue
+            else:
+                previous_stmt_set = curr_stmt_set
 
             names = key[1]
             tl_key = '-'.join([str(name) for name in names])
