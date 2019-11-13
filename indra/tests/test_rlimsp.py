@@ -26,7 +26,7 @@ def test_ungrounded_endpoint_with_pmids():
                                             with_grounding=False)
         assert len(rp.statements) > 10, len(rp.statements)
         stmts.extend(rp.statements)
-    assert len(stmts) == 395, len(stmts)
+    assert len(stmts) == 394, len(stmts)
     return
 
 
