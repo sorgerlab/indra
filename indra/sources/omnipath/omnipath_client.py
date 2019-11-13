@@ -25,6 +25,13 @@ def _agent_from_up_id(up_id):
     return ag
 
 
+def _complex_agents_from_op_complex(up_id_string):
+    """up_ids is a string of the format COMPLEX:UP1_UP2_..."""
+    # Return list of contained agents
+    return [_agent_from_up_id(up_id) for up_id in
+            up_id_string.split('COMPLEX:')[1].split('_')]
+
+
 def _stmts_from_op_mods(mod_list):
     """Build Modification Statements from a list of Omnipath PTM entries."""
     stmt_list = []
