@@ -195,7 +195,7 @@ def update_network(cx_str, network_id, ndex_cred=None):
                }
     logger.info('Updating NDEx network (%s) profile to %s',
                 network_id, profile)
-    profile_retries = 5
+    profile_retries = 3
     for _ in range(profile_retries):
         try:
             time.sleep(5)
@@ -223,7 +223,8 @@ def set_style(network_id, ndex_cred=None, template_id=None):
     """
     if not template_id:
         template_id = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
-
+    logger.info('Setting network style based on template: %s' %
+                template_id)
     server = 'http://public.ndexbio.org'
     username, password = get_default_ndex_cred(ndex_cred)
 
