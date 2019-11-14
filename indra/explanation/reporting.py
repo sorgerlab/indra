@@ -1,4 +1,5 @@
 from indra.sources.indra_db_rest.api import get_statements_by_hash
+from indra.statements import *
 
 
 def stmts_from_pysb_path(path, model, stmts):
@@ -116,18 +117,46 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
         for j in range(len(edges)):
             try:
                 hashes.add(edges[j]['stmt_hash'])
-            # If a statement subject or object is a Complex, model would have
-            # edges with non-regular indices
+            # hasComponent and hasVariant edges don't have hashes
             except KeyError:
                 continue
-        if from_db:
-            statements = get_statements_by_hash(list(hashes),
-                                                simple_response=True)
+        # If we didn't get any hashes, we can get statements from hasComponent
+        # and hasVariant edges
+        if not hashes:
+            statements = []
+            for edge_v in edges.values():
+                stmt = _stmt_from_other_relation(
+                    source, target, stmts, edge_v['relation'])
+                if stmt:
+                    statements.append(stmt)
+                    # Stop if we have a statement to avoid duplicates
+                    break
+        # If we have hashes, retrieve statements from them
         else:
-            statements = [
-                stmt for stmt in stmts if stmt.get_hash() in hashes]
+            if from_db:
+                statements = get_statements_by_hash(list(hashes),
+                                                    simple_response=True)
+            else:
+                statements = [
+                    stmt for stmt in stmts if stmt.get_hash() in hashes]
         steps.append(statements)
     return steps
+
+
+def _stmt_from_other_relation(source, target, model_stmts, relation_type):
+    from indra.sources.bel.processor import get_agent
+    agents = [get_agent(source[0]), get_agent(target[0])]
+    for stmt in model_stmts:
+        if relation_type == 'hasComponent' and isinstance(stmt, Complex):
+            agents.extend([bc.agent for bc in agents[0].bound_conditions])
+            if set([ag.name for ag in agents]) == set(
+                    [ag.name for ag in stmt.agent_list() if ag is not None]):
+                return stmt
+        if relation_type == 'hasVariant':
+            obj = stmt.agent_list()[-1]
+            if obj is not None and obj.name in set([ag.name for ag in agents]):
+                return stmt
+    return None
 
 
 def stmt_from_rule(rule_name, model, stmts):
