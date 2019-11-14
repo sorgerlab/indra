@@ -1,15 +1,11 @@
 from __future__ import unicode_literals
 import logging
 from collections import Counter
-import pypath.intera as pp_intera
+from pypath.intera import Complex as pp_Complex
 from indra.preassembler.grounding_mapper import GroundingMapper
 from indra.statements import modtype_to_modclass, Agent, Evidence, Complex
 
 logger = logging.getLogger(__file__)
-
-op_url = 'http://omnipathdb.org'
-urls = {'interactions': op_url + '/interactions',
-        'ptms': op_url + '/ptms'}
 
 
 class OmniPathBaseProcessor(object):
@@ -109,14 +105,14 @@ class OmniPathLiganReceptorProcessor(OmniPathBaseProcessor):
             edge_obj = pa.get_edge(s, t)
 
             # Get participating agents
-            if isinstance(pa.vs[s]['name'], pp_intera.Complex):
+            if isinstance(pa.vs[s]['name'], pp_Complex):
                 # Catch the odd pypath.intera.Complex objects
                 src_string = str(pa.vs[s]['name'])
             else:
                 src_string = pa.vs[s]['name']
             source_agents = self._complex_agents_from_op_complex(src_string)
 
-            if isinstance(pa.vs[t]['name'], pp_intera.Complex):
+            if isinstance(pa.vs[t]['name'], pp_Complex):
                 # Catch the odd pypath.intera.Complex objects
                 trg_string = str(pa.vs[t]['name'])
             else:
