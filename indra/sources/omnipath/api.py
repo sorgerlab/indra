@@ -3,6 +3,11 @@ import logging
 import requests
 from .processor import OmniPathLiganReceptorProcessor, \
     OmniPathModificationProcessor
+try:
+    from pypath import main as pypath_main, data_formats
+    has_pypath = True
+except ImportError:
+    has_pypath = False
 
 logger = logging.getLogger("omnipath")
 
@@ -30,8 +35,10 @@ def process_from_pypath(reload_resources=False, force=False):
     -------
     stmts : list[indra.statements.Statement]
         A list of indra statements"""
-    # Import here rather than globally to remove overhead
-    from pypath import main as pypath_main, data_formats
+    if not has_pypath:
+        logger.warning('Unable to run OmniPathLiganReceptorProcessor when '
+                       'PyPath is not available')
+        return None
     pa = pypath_main.PyPath()
     pa.init_network(data_formats.ligand_receptor)
 
@@ -62,6 +69,9 @@ def _get_modifications():
 
 
 def _delete_omnipath_cache(force=False):
+    if not has_pypath:
+        logger.warning('PyPath could not be imported')
+        return False
     from pypath.cache import get_cachedir
     cache_path = get_cachedir()
     if os.path.isdir(cache_path) and \
