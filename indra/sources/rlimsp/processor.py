@@ -15,13 +15,16 @@ class RlimspProcessor(object):
         self._json = rlimsp_json
         self.statements = []
         self.doc_id_type = doc_id_type
+        self.processed_texts = []
         return
 
     def extract_statements(self):
         """Extract the statements from the json."""
         for p_info in self._json:
             para = RlimspParagraph(p_info, self.doc_id_type)
-            self.statements.extend(para.get_statements())
+            if para._text not in self.processed_texts:
+                self.processed_texts.append(para._text)
+                self.statements.extend(para.get_statements())
         return
 
 
@@ -190,16 +193,17 @@ def get_agent_from_entity_info(entity_info):
 
     # Get the db refs.
     refs = {'TEXT': raw_text}
-
-    ref_counts = Counter([entry['source'] for entry in
-                          entity_info['entityId']])
+    entries = entity_info['entityId']
+    if entries is None:
+        entries = []
+    ref_counts = Counter([entry['source'] for entry in entries])
     for source, count in ref_counts.items():
         if source in ('Entrez', 'UniProt') and count > 1:
             logger.info('%s has %d entries for %s, skipping'
                         % (raw_text, count, source))
             return None, None
     muts = []
-    for id_dict in entity_info['entityId']:
+    for id_dict in entries:
         if id_dict['source'] == 'Entrez':
             refs['EGID'] = id_dict['idString']
             hgnc_id = hgnc_client.get_hgnc_from_entrez(id_dict['idString'])
