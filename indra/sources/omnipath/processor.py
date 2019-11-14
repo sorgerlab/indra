@@ -21,7 +21,7 @@ class OmniPathBaseProcessor(object):
         return ag
 
     def _complex_agents_from_op_complex(self, up_id_string):
-        """up_ids is a string of the format COMPLEX:UP1_UP2_..."""
+        """Return a list of agents from a string containing multiple UP ids"""
         # Return list of contained agents
         if 'COMPLEX' in up_id_string:
             if ' ' in up_id_string:
