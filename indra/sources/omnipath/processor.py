@@ -69,9 +69,17 @@ class OmniPathModificationProcessor(OmniPathBaseProcessor):
 
 
 class OmniPathLiganReceptorProcessor(OmniPathBaseProcessor):
-    def __init__(self, pa_lr_obj):
+    def __init__(self, pa):
+        """Process ligand-receptor interactions from PyPath
+
+        Parameters
+        ----------
+        pa : pypath.main.PyPath
+            An instance of a PyPath object containing the network
+            representing ligand-receptor interactions
+        """
         super().__init__()
-        self.pa = pa_lr_obj
+        self.pa = pa
         self.statements.extend(self._stmts_from_op_pypath_graph(self.pa))
 
     @staticmethod
