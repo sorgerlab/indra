@@ -187,7 +187,8 @@ class OmniPathLiganReceptorProcessor(OmniPathBaseProcessor):
                             edge_obj['ramilowski_sources']:
                         annotations['ramilowski_sources'] =\
                             edge_obj['ramilowski_sources']
-                    if edge_obj['cellphonedb_type']:
+                    if ref_name.lower() == 'cellphonedb' and\
+                            edge_obj['cellphonedb_type']:
                         annotations['cellphonedb_type'] =\
                             edge_obj['cellphonedb_type']
                     evidence = Evidence('omnipath', None, pmid,
