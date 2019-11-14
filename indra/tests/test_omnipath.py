@@ -33,3 +33,11 @@ def test_mods_from_web():
         stmts[0].agent_list()
     assert 'omnipath' == stmts[0].evidence[0].source_api,\
         stmts[0].evidence[0].source_api
+
+
+def test_pypath_import():
+    try:
+        import pypath
+    except ImportError:
+        pypath = None
+    assert pypath, 'PyPath is not avaialble'
