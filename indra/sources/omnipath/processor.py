@@ -21,7 +21,8 @@ class OmniPathBaseProcessor(object):
         return ag
 
     def _complex_agents_from_op_complex(self, up_id_string):
-        """Return a list of agents from a string containing multiple UP ids"""
+        """Return a list of agents from a string containing multiple UP ids
+        """
         # Return list of contained agents
         if 'COMPLEX' in up_id_string:
             if ' ' in up_id_string:
@@ -149,12 +150,16 @@ class OmniPathLiganReceptorProcessor(OmniPathBaseProcessor):
             # Get article IDs by support
             for ref_name, ref_set in edge_obj['refs_by_source'].items():
                 for ref_obj in ref_set:
+                    # Ref obj is a pypath.refs.Reference object
                     # Check for PMID
                     if ref_obj.pmid:
                         pmid = ref_obj.pmid
                     else:
                         pmid = None
                     try:
+                        # pypath.refs.Reference.info() returns a dictionary
+                        # of reference info. If load fails silently, an
+                        # empty dict is returned.
                         ref_info = ref_obj.info()
                         if ref_info.get('uids'):
                             uid = ref_info['uids'][0]
@@ -175,6 +180,7 @@ class OmniPathLiganReceptorProcessor(OmniPathBaseProcessor):
 
                     # If both pmid and text_refs is None, skip this Complex
                     if pmid is None and text_refs is None:
+                        logger.info('Skipping statement for %s' % ref_name)
                         continue
 
                     # Get annotations
