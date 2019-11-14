@@ -1,3 +1,4 @@
+import os
 import logging
 import requests
 from .processor import OmniPathLiganReceptorProcessor, \
@@ -19,9 +20,11 @@ def process_from_pypath(reload_resources=False, force=False):
 
     Parameters
     ----------
-    pa : pypath.main.PyPath
-        An instance of a PyPath object containing the network
-        representing ligand-receptor interactions
+    reload_resources : bool
+        If True, wipe the local cache (typically in ~/.pypath/cache) and
+        re-download the resources.
+    force : bool
+        If True, don't ask user for permission to wipe the cache.
 
     Returns
     -------
@@ -33,11 +36,11 @@ def process_from_pypath(reload_resources=False, force=False):
     pa.init_network(data_formats.ligand_receptor)
 
     if reload_resources:
-        # Todo wipe the cache (stored in ~/.pypath/cache) clean and
-        #  re-download the resources. Warn the user that it takes a lot of
-        #  time to download it
-        pass
-
+        success = _delete_omnipath_cache(force=False)
+        if success:
+            logger.info('Successfully emptied omnipath cache')
+        else:
+            logger.warning('Failed to empty cache')
     return OmniPathLiganReceptorProcessor(pa)
 
 
@@ -57,3 +60,30 @@ def _get_modifications():
     else:
         return res.json()
 
+
+def _delete_omnipath_cache(force=False):
+    from pypath.cache import get_cachedir
+    cache_path = get_cachedir()
+    if os.path.isdir(cache_path) and \
+            len(os.walk(cache_path).__next__()[2]) > 0:
+        logger.warning('Deleting the omnipath cache')
+        if not force:
+            print('Re-loading the omnipath resources can take up to an hour '
+                  'for some of its resources.')
+        ok = input('This action will remove all files in the omnipath '
+                   'cahce. Proceed? [Y/n] ') if not force else 'n'
+        try:
+            if force or ok.lower() == 'y':
+                for file in os.walk(cache_path).__next__()[2]:
+                    file_path = os.path.join(cache_path, file)
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+        except Exception as e:
+            logger.exception('Failed to delete file(s)')
+            # Should raise the exception here, because if we partially
+            # emptied the cache, we don't know if the needed resources are
+            # there or not
+            raise e
+    else:
+        logger.info('No files detected in %s' % cache_path)
+        return False
