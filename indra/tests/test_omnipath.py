@@ -2,7 +2,7 @@ import requests
 from indra.sources.omnipath import OmniPathModificationProcessor,\
     OmniPathLiganReceptorProcessor
 from indra.sources.omnipath.api import op_url
-from indra.statements import Agent, Phosphorylation
+from indra.statements import Agent, Phosphorylation, Complex
 from indra.preassembler.grounding_mapper import GroundingMapper
 
 BRAF_UPID = 'P15056'
@@ -41,3 +41,15 @@ def test_pypath_import():
     except ImportError:
         pypath = None
     assert pypath, 'PyPath is not avaialble'
+
+
+def test_lr_pypath_network():
+    from pypath import main as pypath_main, data_formats
+    pa = pypath_main.PyPath()
+    pa.init_network({
+        'cellphonedb': data_formats.ligand_receptor['cellphonedb']
+    })
+    stmts = OmniPathLiganReceptorProcessor(pa).statements
+    assert isinstance(stmts[0], Complex)
+    assert 'omnipath' == stmts[0].evidence[0].source_api, \
+        stmts[0].evidence[0].source_api
