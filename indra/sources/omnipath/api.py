@@ -3,13 +3,16 @@ import logging
 import requests
 from .processor import OmniPathLiganReceptorProcessor, \
     OmniPathModificationProcessor
+
+logger = logging.getLogger("omnipath")
+
 try:
     from pypath import main as pypath_main, data_formats
     has_pypath = True
 except ImportError:
+    logger.info('PyPath is not available')
+    pypath_main, data_formats = None, None
     has_pypath = False
-
-logger = logging.getLogger("omnipath")
 
 
 op_url = 'http://omnipathdb.org'
