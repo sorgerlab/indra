@@ -73,7 +73,8 @@ def _get_modifications():
 
 def _delete_omnipath_cache(force=False):
     if not has_pypath:
-        logger.warning('PyPath could not be imported')
+        logger.warning('PyPath cache is not available: PyPath could not be '
+                       'imported')
         return False
     from pypath.cache import get_cachedir
     cache_path = get_cachedir()
