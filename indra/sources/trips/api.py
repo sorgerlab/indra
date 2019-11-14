@@ -16,7 +16,7 @@ except Exception as e:
 
 
 def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
-                 offline=False, service_endpoint='drum'):
+                 offline=False, service_endpoint='drum', service_host=None):
     """Return a TripsProcessor by processing text.
 
     Parameters
@@ -36,6 +36,9 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
     service_endpoint : Optional[str]
         Selects the TRIPS/DRUM web service endpoint to use. Is a choice between
         "drum" (default) and "drum-dev", a nightly build.
+    service_host : Optional[str]
+        Address of a service host different from the public IHMC server (e.g., a
+        locally running service).
 
     Returns
     -------
@@ -44,7 +47,8 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
         in tp.statements.
     """
     if not offline:
-        html = client.send_query(text, service_endpoint)
+        html = client.send_query(text, service_endpoint=service_endpoint,
+                                 service_host=service_host)
         xml = client.get_xml(html)
     else:
         if offline_reading:
@@ -55,7 +59,7 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
             except BaseException as e:
                 logger.error(e)
                 logger.error('Make sure drum/bin/trips-drum is running in'
-                              ' a separate process')
+                             ' a separate process')
                 return None
             try:
                 dr.read_text(text)

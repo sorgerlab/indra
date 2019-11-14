@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 base_url = 'http://trips.ihmc.us/parser/cgi/'
 
 
-def send_query(text, service_endpoint='drum', query_args=None):
+def send_query(text, service_endpoint='drum', query_args=None,
+               service_host=None):
     """Send a query to the TRIPS web service.
 
     Parameters
@@ -25,14 +26,18 @@ def send_query(text, service_endpoint='drum', query_args=None):
         more general knowledge extraction.
     query_args : Optional[dict]
         A dictionary of arguments to be passed with the query.
+    service_host : Optional[str]
+        The server's base URL under which service_endpoint is an endpoint.
+        By default, IHMC's public server is used.
 
     Returns
     -------
     html : str
         The HTML result returned by the web service.
     """
+    use_base_url = service_host if service_host else base_url
     if service_endpoint in ['drum', 'drum-dev', 'cwms', 'cwmsreader']:
-        url = base_url + service_endpoint
+        url = use_base_url + service_endpoint
     else:
         logger.error('Invalid service endpoint: %s' % service_endpoint)
         return ''
