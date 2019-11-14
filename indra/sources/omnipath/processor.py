@@ -90,6 +90,27 @@ class OmniPathLiganReceptorProcessor(OmniPathBaseProcessor):
             text_refs[name] = id
         return text_refs
 
+    @staticmethod
+    def _get_annotations(ref_info):
+        """ref_info is a dict returned by the method 'info' of a
+        pypath.refs.Reference object"""
+        annotations = {}
+        uid = ref_info['uids'][0]
+        ref_dict = ref_info[uid]
+        if ref_dict.get('recordstatus'):
+            annotations['recordstatus'] = ref_dict['recordstatus']
+        if ref_dict.get('pubstatus'):
+            annotations['pubstatus'] = ref_dict['pubstatus']
+        if ref_dict.get('pmcrefcount'):
+            annotations['pmcrefcount'] = ref_dict['pmcrefcount']
+        if ref_dict.get('reportnumber'):
+            annotations['reportnumber'] = ref_dict['reportnumber']
+        if ref_dict.get('availablefromurl'):
+            annotations['availablefromurl'] = ref_dict['availablefromurl']
+        if ref_dict.get('locationlabel'):
+            annotations['locationlabel'] = ref_dict['locationlabel']
+        return annotations
+
     def _stmts_from_op_pypath_graph(self, pa):
         """Build Complex statements from an igraph of ligand-receptor
         interactions
@@ -149,6 +170,7 @@ class OmniPathLiganReceptorProcessor(OmniPathBaseProcessor):
                     except TypeError as e:
                         logger.warning('Failed to load info')
                         logger.exception(e)
+                        ref_info = None
                         text_refs = None
 
                     # If both pmid and text_refs is None, skip this Complex
@@ -156,7 +178,11 @@ class OmniPathLiganReceptorProcessor(OmniPathBaseProcessor):
                         continue
 
                     # Get annotations
-                    annotations = {'omnipath_source': ref_name}
+                    if ref_info:
+                        annotations = self._get_annotations(ref_info)
+                        annotations['source_sub_id'] = ref_name
+                    else:
+                        annotations = {'source_sub_id': ref_name}
                     if ref_name == 'Ramilowski2015' and\
                             edge_obj['ramilowski_sources']:
                         annotations['ramilowski_sources'] =\
