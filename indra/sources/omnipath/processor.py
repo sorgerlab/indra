@@ -1,11 +1,17 @@
 from __future__ import unicode_literals
 import logging
 from collections import Counter
-from pypath.intera import Complex as pp_Complex
 from indra.preassembler.grounding_mapper import GroundingMapper
 from indra.statements import modtype_to_modclass, Agent, Evidence, Complex
 
 logger = logging.getLogger(__file__)
+
+try:
+    from pypath.intera import Complex as pp_Complex
+    has_pypath = True
+except ImportError:
+    has_pypath = False
+    pp_Complex = None
 
 
 class OmniPathBaseProcessor(object):
