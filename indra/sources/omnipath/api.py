@@ -29,8 +29,8 @@ def process_from_pypath(reload_resources=False, force=False):
     Parameters
     ----------
     reload_resources : bool
-        If True, wipe the local cache (typically in ~/.pypath/cache) and
-        re-download the resources.
+        If True, wipe the local cache (typically in ~/.pypath/cache),
+        triggering a re-download of the resources.
     force : bool
         If True, don't ask user for permission to wipe the cache.
 
@@ -46,7 +46,7 @@ def process_from_pypath(reload_resources=False, force=False):
     pa.init_network(data_formats.ligand_receptor)
 
     if reload_resources:
-        success = _delete_omnipath_cache(force=False)
+        success = _delete_omnipath_cache(force)
         if success:
             logger.info('Successfully emptied omnipath cache')
         else:
