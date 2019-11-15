@@ -44,6 +44,10 @@ install:
   - aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
   - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos.jar
   - aws s3 cp s3://bigmech/travis/Phosphorylation_site_dataset.tsv indra/resources/ --no-sign-request  --source-region us-east-1
+  # PyPath and its dependencies; Placed here because pygraphviz is dependency
+  - pip install python-igraph
+  - pip install pycairo
+  - pip install git+git://github.com/saezlab/pypath.git
   # Run slow tests only if we're in the cron setting
   - |
     if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then

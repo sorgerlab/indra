@@ -26,8 +26,7 @@ def main():
                       'sofia': ['openpyxl'],
                       'bel': ['pybel>=0.14.2,<0.15.0'],
                       'sbml': ['python-libsbml'],
-                      'pypath @ git+https://github.com/saezlab/pypath.git':\
-                          ['python-igraph', 'pycairo', 'pygraphviz'],
+                      'pypath': ['python-igraph', 'pycairo', 'pygraphviz'],
                       # Tools and analysis
                       'machine': ['pytz', 'tzlocal', 'tweepy', 'pyyaml>=5.1.0',
                                   'click'],
