@@ -5,6 +5,7 @@
 import os
 from urllib import request
 
+import pybel.constants as pc
 from nose.plugins.attrib import attr
 from pybel import BELGraph, constants as pc
 from pybel.dsl import *
@@ -370,12 +371,9 @@ def test_phosphorylation_one_site_with_evidence():
     ev_text = 'Some evidence.'
     ev_pmid = '123456'
     edge_hash = g.add_directly_increases(
-        mek, erk,
-        evidence=ev_text,
-        citation={
-            pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
-            pc.CITATION_IDENTIFIER: ev_pmid,
-        },
+        mek, erk, evidence=ev_text,
+        citation={pc.CITATION_DB: pc.CITATION_TYPES[pc.CITATION_TYPE_PUBMED],
+                  pc.CITATION_IDENTIFIER: ev_pmid},
         annotations={"TextLocation": 'Abstract'},
     )
     pbp = bel.process_pybel_graph(g)
