@@ -14,6 +14,7 @@ before_install:
   - sudo apt-get install openjdk-8-jdk
   - sudo apt-get install libstdc++6 graphviz
   - sudo apt-get install libcairo2-dev # Depdency for PyPath
+  - sudo apt-get install libgnutls-dev
   - wget https://igraph.org/nightly/get/c/igraph-0.7.1.tar.gz # Dependency for PyPath
   - tar -xz -f igraph-0.7.1.tar.gz
   - cd igraph-0.7.1
