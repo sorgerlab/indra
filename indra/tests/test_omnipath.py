@@ -63,7 +63,7 @@ def test_lr_pypath_network():
     from pypath import main as pypath_main, data_formats
     pa = pypath_main.PyPath()
     pa.init_network({
-        'cellphonedb': data_formats.ligand_receptor['cellphonedb']
+        'hpmr': data_formats.ligand_receptor['hpmr']
     })
     stmts = OmniPathLiganReceptorProcessor(pa).statements
     stmt = stmts[0]
@@ -73,5 +73,5 @@ def test_lr_pypath_network():
     assert ev.pmid or ev.text_refs, 'pmid=%s, ev.text_refs=%s' % \
                                     (ev.pmid, ev.text_refs)
     assert 'source_sub_id' in ev.annotations, print(ev.annotations.keys())
-    assert 'cellphonedb' == ev.annotations['source_sub_id'].lower(), \
+    assert 'hpmr' == ev.annotations['source_sub_id'].lower(), \
         ev.annotations['source_sub_id']
