@@ -106,8 +106,8 @@ def test_modification_with_evidences():
     assert edge_data[pc.RELATION] == pc.INCREASES
     assert edge_data[pc.EVIDENCE] == 'evidence text'
     assert edge_data[pc.CITATION] == {
-        pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
-        pc.CITATION_REFERENCE: '1234',
+        pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
+        pc.CITATION_IDENTIFIER: '1234',
     }
     assert 'source_api' in edge_data[pc.ANNOTATIONS]
     assert edge_data[pc.ANNOTATIONS]['source_api'] == 'test'
@@ -176,8 +176,8 @@ def test_direct_activation():
         pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY},
         pc.EVIDENCE: 'No evidence text.',
         pc.CITATION: {
-            pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
-            pc.CITATION_REFERENCE: '1234',
+            pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
+            pc.CITATION_IDENTIFIER: '1234',
         },
         'stmt_hash': hash1
     }
@@ -187,8 +187,8 @@ def test_direct_activation():
         pc.OBJECT: activity('kin'),
         pc.EVIDENCE: 'No evidence text.',
         pc.CITATION: {
-            pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
-            pc.CITATION_REFERENCE: '1234',
+            pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
+            pc.CITATION_IDENTIFIER: '1234',
         },
         'stmt_hash': hash2
     }
