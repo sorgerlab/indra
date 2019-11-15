@@ -10,6 +10,7 @@ import logging
 import tempfile
 import subprocess
 from indra import get_config
+from indra.resources.greek_alphabet import greek_alphabet
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +101,10 @@ class IsiPreprocessor(object):
         output_file = '%s.txt' % self.next_file_id
         output_file = os.path.join(self.preprocessed_dir, output_file)
 
+        # Replace greek characters with corresponding strings
+        for greek_letter, spelled_letter in greek_alphabet.items():
+            text = text.replace(greek_letter, spelled_letter)
+
         # Tokenize sentence
         sentences = nltk.sent_tokenize(text)
 
@@ -150,7 +155,8 @@ class IsiPreprocessor(object):
         Parameters
         ----------
         filename : str
-            Filename of an nxml file to process
+            Filename (more specifically the file path) of an nxml file to
+            process
         pmid : str
             The PMID from which it comes, or None if not specified
         extra_annotations : dict
@@ -170,20 +176,17 @@ class IsiPreprocessor(object):
             logger.error('PYTHON2_PATH not specified in config file or ' + 
                          'environment variable')
             return
-        else:
-            txt_out = os.path.join(tmp_dir, 'out.txt')
-            so_out = os.path.join(tmp_dir, 'out.so')
-            command = [python2_path,
-                       os.path.join(nxml2txt_path, 'nxml2txt'),
-                       filename,
-                       txt_out,
-                       so_out]
-            ret = subprocess.call(command)
-            if ret != 0:
-                logger.warning('nxml2txt returned non-zero error code')
 
-            with open(txt_out, 'r') as f:
-                txt_content = f.read()
+        txt_out = os.path.join(tmp_dir, 'out.txt')
+        so_out = os.path.join(tmp_dir, 'out.so')
+        command = [python2_path, os.path.join(nxml2txt_path, 'nxml2txt'),
+                   filename, txt_out, so_out]
+        ret = subprocess.call(command)
+        if ret != 0:
+            logger.warning('nxml2txt returned non-zero error code')
+
+        with open(txt_out, 'r') as f:
+            txt_content = f.read()
 
         # Remote temporary directory
         shutil.rmtree(tmp_dir)
@@ -232,3 +235,19 @@ class IsiPreprocessor(object):
                                       zlib.MAX_WBITS+16).decode('utf-8')
 
             self.preprocess_plain_text_string(content, pmid, extra_annotations)
+
+    def iter_outputs(self, output_dir):
+        """Iterate over the outputs in a given directory using stored metadata.
+
+        For each of the output JSONs, retrieve the extra annotations for that
+        file, and link the file with its corresponding PMID.
+
+        Parameters
+        ----------
+        output_dir : str
+            The path to the directory where the JSON outputs were dumped.
+        """
+        for basename, pmid in self.pmids.items():
+            fname = os.path.join(output_dir, '%s.json' % basename)
+            extra_annotations = self.extra_annotations.get(fname, {})
+            yield fname, pmid, extra_annotations

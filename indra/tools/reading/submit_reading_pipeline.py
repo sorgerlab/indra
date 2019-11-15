@@ -8,6 +8,7 @@ from threading import Thread
 from datetime import datetime
 from indra.literature import elsevier_client as ec
 from indra.literature.elsevier_client import _ensure_api_keys
+from indra.tools.reading.readers import get_reader_classes
 from indra.util.aws import get_job_log, tag_instance, get_batch_command, \
     kill_all, get_ids
 
@@ -377,13 +378,18 @@ def get_environment():
 class Submitter(object):
     _s3_input_name = NotImplemented
     _purpose = NotImplemented
+
+    # The job queue on which these jobs will be submitted.
     _job_queue = NotImplemented
-    _job_def = NotImplemented
+
+    # A dictionary of job_def names as keys, with a list of applicable readers
+    # as the values.
+    _job_def_dict = NotImplemented
 
     def __init__(self, basename, readers, project_name=None, **options):
         self.basename = basename
         if 'all' in readers:
-            self.readers = ['reach', 'sparser']
+            self.readers = [rc.name.lower() for rc in get_reader_classes()]
         else:
             self.readers = readers
         self.project_name = project_name
@@ -399,15 +405,22 @@ class Submitter(object):
         self.options = kwargs
         return
 
-    def _make_command(self, start_ix, end_ix):
-        job_name = '%s_%d_%d' % (self.basename, start_ix, end_ix)
-        cmd = self._get_base(job_name, start_ix, end_ix) + ['-r'] + self.readers
-        cmd += self._get_extensions()
-        for arg in cmd:
-            if not isinstance(arg, str):
-                logger.warning("Argument of command is not a string: %s"
+    def _iter_commands(self, start_ix, end_ix):
+        for job_def, reader_list in self._job_def_dict.items():
+            reader_list = [r for r in reader_list if r in self.readers]
+            if not reader_list:
+                continue
+
+            job_name = '%s_%d_%d' % (self.basename, start_ix, end_ix)
+            job_name += '_' + '_'.join(reader_list)
+            cmd = self._get_base(job_name, start_ix, end_ix)
+            cmd += ['-r'] + reader_list
+            cmd += self._get_extensions()
+            for arg in cmd:
+                if not isinstance(arg, str):
+                    logger.warning("Argument of command is not a string: %s"
                                % repr(arg))
-        return job_name, cmd
+            yield job_name, cmd, job_def
 
     def _get_base(self, job_name, start_ix, end_ix):
         raise NotImplementedError
@@ -482,27 +495,30 @@ class Submitter(object):
             job_end_ix = job_start_ix + ids_per_job
             if job_end_ix > end_ix:
                 job_end_ix = end_ix
-            job_name, cmd = self._make_command(job_start_ix, job_end_ix)
-            command_list = get_batch_command(cmd, purpose=self._purpose,
-                                             project=self.project_name)
-            logger.info('Command list: %s' % str(command_list))
 
-            # Submit the job.
-            job_info = batch_client.submit_job(
-                jobName=job_name,
-                jobQueue=self._job_queue,
-                jobDefinition=self._job_def,
-                containerOverrides={
-                    'environment': environment_vars,
-                    'command': command_list},
-                retryStrategy={'attempts': num_tries}
-            )
+            # Enter a command for reach job
+            command_iter = self._iter_commands(job_start_ix, job_end_ix)
+            for job_name, cmd, job_def in command_iter:
+                command_list = get_batch_command(cmd, purpose=self._purpose,
+                                                 project=self.project_name)
+                logger.info('Command list: %s' % str(command_list))
 
-            # Record the job id.
-            logger.info("submitted...")
-            self.job_list.append({'jobId': job_info['jobId']})
-            logger.info("Sleeping for %d seconds..." % stagger)
-            sleep(stagger)
+                # Submit the job.
+                job_info = batch_client.submit_job(
+                    jobName=job_name,
+                    jobQueue=self._job_queue,
+                    jobDefinition=job_def,
+                    containerOverrides={
+                        'environment': environment_vars,
+                        'command': command_list},
+                    retryStrategy={'attempts': num_tries}
+                )
+
+                # Record the job id.
+                logger.info("submitted...")
+                self.job_list.append({'jobId': job_info['jobId']})
+                logger.info("Sleeping for %d seconds..." % stagger)
+                sleep(stagger)
 
         return self.job_list
 
@@ -568,7 +584,8 @@ class PmidSubmitter(Submitter):
     _s3_input_name = 'pmids'
     _purpose = 'pmid_reading'
     _job_queue = 'run_reach_queue'
-    _job_def = 'run_reach_jobdef'
+    _job_def_dict = {'run_reach_jobdef': ['reach', 'sparser'],
+                     'run_db_reading_isi_jobdef': ['isi']}
 
     def _get_base(self, job_name, start_ix, end_ix):
         base = ['python', '-m', 'indra.tools.reading.pmid_reading.read_pmids_aws',
@@ -608,7 +625,7 @@ class PmidSubmitter(Submitter):
             )
         logger.info('Command list: %s' % str(command_list))
         kwargs = {'jobName': job_name, 'jobQueue': self._job_queue,
-                  'jobDefinition': self._job_def,
+                  'jobDefinition': 'run_reach_jobdef',
                   'containerOverrides': {'environment': environment_vars,
                                          'command': command_list,
                                          'memory': 60000, 'vcpus': 1}}
@@ -658,7 +675,7 @@ def create_submit_parser():
     parent_submit_parser.add_argument(
         '-r', '--readers',
         dest='readers',
-        choices=['sparser', 'reach', 'all'],
+        choices=[rc.name.lower() for rc in get_reader_classes()] + ['all'],
         default=['all'],
         nargs='+',
         help='Choose which reader(s) to use.'

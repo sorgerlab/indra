@@ -1,9 +1,8 @@
 """Useful tools for reading scripts."""
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
 import logging
 from argparse import ArgumentParser
+
+from indra.tools.reading.readers import get_reader_classes
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ def get_parser(description, input_desc):
         )
     parser.add_argument(
         '-r', '--readers',
-        choices=['reach', 'sparser', 'trips'],
+        choices=[rc.name.lower() for rc in get_reader_classes()],
         help='List of readers to be used.',
         nargs='+'
         )
