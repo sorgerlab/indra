@@ -328,9 +328,9 @@ class PybelProcessor(object):
         ev_citation = edge_data.get(pc.CITATION)
         ev_pmid = None
         if ev_citation:
-            cit_type = ev_citation[pc.CITATION_TYPE]
-            cit_ref = ev_citation[pc.CITATION_REFERENCE]
-            if cit_type == pc.CITATION_TYPE_PUBMED:
+            cit_type = ev_citation[pc.CITATION_DB]
+            cit_ref = ev_citation[pc.CITATION_IDENTIFIER]
+            if cit_type == pc.CITATION_TYPES[pc.CITATION_TYPE_PUBMED]:
                 ev_pmid = cit_ref
                 ev_ref = None
             else:
