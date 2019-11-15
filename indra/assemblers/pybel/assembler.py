@@ -231,12 +231,12 @@ class PybelAssembler(object):
         # If we failed to create nodes for subject or object, skip it
         if subj_data is None or obj_data is None:
             return
-        subj_node = self.model.add_node_from_data(subj_data)
-        obj_node = self.model.add_node_from_data(obj_data)
+        self.model.add_node_from_data(subj_data)
+        self.model.add_node_from_data(obj_data)
         edge_data_list = _combine_edge_data(
             relation, subj_edge, obj_edge, stmt_hash, evidences)
         for edge_data in edge_data_list:
-            self.model.add_edge(subj_node, obj_node, **edge_data)
+            self.model.add_edge(subj_data, obj_data, **edge_data)
 
     def _assemble_regulate_activity(self, stmt):
         """Example: p(HGNC:MAP2K1) => act(p(HGNC:MAPK1))"""
@@ -337,17 +337,17 @@ class PybelAssembler(object):
             reactants=pybel_lists[0],
             products=pybel_lists[1],
         )
-        obj_node = self.model.add_node_from_data(rxn_node_data)
+        self.model.add_node_from_data(rxn_node_data)
         obj_edge = None  # TODO: Any edge information possible here?
         # Add node for controller, if there is one
         if stmt.subj is not None:
             subj_attr, subj_edge = _get_agent_node(stmt.subj)
-            subj_node = self.model.add_node_from_data(subj_attr)
+            self.model.add_node_from_data(subj_attr)
             edge_data_list = _combine_edge_data(
                 pc.DIRECTLY_INCREASES, subj_edge, obj_edge,
                 stmt.get_hash(refresh=True), stmt.evidence)
             for edge_data in edge_data_list:
-                self.model.add_edge(subj_node, obj_node, **edge_data)
+                self.model.add_edge(subj_attr, rxn_node_data, **edge_data)
 
     def _assemble_autophosphorylation(self, stmt):
         """Example: complex(p(HGNC:MAPK14), p(HGNC:TAB1)) =>
