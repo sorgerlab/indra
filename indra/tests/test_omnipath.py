@@ -50,6 +50,12 @@ def test_lr_pypath_network():
         'cellphonedb': data_formats.ligand_receptor['cellphonedb']
     })
     stmts = OmniPathLiganReceptorProcessor(pa).statements
-    assert isinstance(stmts[0], Complex)
-    assert 'omnipath' == stmts[0].evidence[0].source_api, \
-        stmts[0].evidence[0].source_api
+    stmt = stmts[0]
+    assert isinstance(stmt, Complex)
+    ev = stmt.evidence[0]
+    assert 'omnipath' == ev.source_api, ev.source_api
+    assert ev.pmid or ev.text_refs, 'pmid=%s, ev.text_refs=%s' % \
+                                    (ev.pmid, ev.text_refs)
+    assert 'source_sub_id' in ev.annotations, print(ev.annotations.keys())
+    assert 'cellphonedb' == ev.annotations['source_sub_id'].lower(), \
+        ev.annotations['source_sub_id']
