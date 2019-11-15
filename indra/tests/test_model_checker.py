@@ -1464,37 +1464,37 @@ def test_amount_vs_activation():
 
 
 # Test other ModelChecker types
-st1 = Activation(Agent('A', db_refs={'HGNC': 1}),
-                 Agent('B', db_refs={'HGNC': 2}))
-st2 = Inhibition(Agent('B', db_refs={'HGNC': 2}),
-                 Agent('D', db_refs={'HGNC': 4}))
-st3 = IncreaseAmount(Agent('C', db_refs={'HGNC': 3}),
-                     Agent('B', db_refs={'HGNC': 2}))
-st4 = DecreaseAmount(Agent('C', db_refs={'HGNC': 3}),
-                     Agent('D', db_refs={'HGNC': 4}))
-st5 = IncreaseAmount(Agent('D', db_refs={'HGNC': 4}),
-                     Agent('E', db_refs={'HGNC': 5}))
-st6 = Inhibition(Agent('A', db_refs={'HGNC': 1}),
-                 Agent('B', db_refs={'HGNC': 2}))
-st7 = DecreaseAmount(Agent('B', db_refs={'HGNC': 2}),
-                     Agent('D', db_refs={'HGNC': 4}))
-st8 = IncreaseAmount(Agent('E', db_refs={'HGNC': 5}),
-                     Agent('B', db_refs={'HGNC': 2}))
+st1 = Activation(Agent('A', db_refs={'HGNC': '1'}),
+                 Agent('B', db_refs={'HGNC': '2'}))
+st2 = Inhibition(Agent('B', db_refs={'HGNC': '2'}),
+                 Agent('D', db_refs={'HGNC': '4'}))
+st3 = IncreaseAmount(Agent('C', db_refs={'HGNC': '3'}),
+                     Agent('B', db_refs={'HGNC': '2'}))
+st4 = DecreaseAmount(Agent('C', db_refs={'HGNC': '3'}),
+                     Agent('D', db_refs={'HGNC': '4'}))
+st5 = IncreaseAmount(Agent('D', db_refs={'HGNC': '4'}),
+                     Agent('E', db_refs={'HGNC': '5'}))
+st6 = Inhibition(Agent('A', db_refs={'HGNC': '1'}),
+                 Agent('B', db_refs={'HGNC': '2'}))
+st7 = DecreaseAmount(Agent('B', db_refs={'HGNC': '2'}),
+                     Agent('D', db_refs={'HGNC': '4'}))
+st8 = IncreaseAmount(Agent('E', db_refs={'HGNC': '5'}),
+                     Agent('B', db_refs={'HGNC': '2'}))
 statements = [st1, st2, st3, st4, st5, st6, st7, st8]
 
-test_st1 = Activation(Agent('A', db_refs={'HGNC': 1}),
-                      Agent('E', db_refs={'HGNC': 5}))
-test_st2 = Inhibition(Agent('A', db_refs={'HGNC': 1}),
-                      Agent('E', db_refs={'HGNC': 5}))
-test_st3 = Activation(Agent('A', db_refs={'HGNC': 1}),
-                      Agent('C', db_refs={'HGNC': 3}))
-test_st4 = Activation(Agent('F', db_refs={'HGNC': 6}),
-                      Agent('B', db_refs={'HGNC': 2}))
-test_st5 = DecreaseAmount(Agent('B', db_refs={'HGNC': 2}),
-                          Agent('F', db_refs={'HGNC': 6}))
-test_st6 = ActiveForm(Agent('A', db_refs={'HGNC': 1}), None, True)
-test_st7 = DecreaseAmount(Agent('B', db_refs={'HGNC': 2}),
-                          Agent('B', db_refs={'HGNC': 2}))
+test_st1 = Activation(Agent('A', db_refs={'HGNC': '1'}),
+                      Agent('E', db_refs={'HGNC': '5'}))
+test_st2 = Inhibition(Agent('A', db_refs={'HGNC': '1'}),
+                      Agent('E', db_refs={'HGNC': '5'}))
+test_st3 = Activation(Agent('A', db_refs={'HGNC': '1'}),
+                      Agent('C', db_refs={'HGNC': '3'}))
+test_st4 = Activation(Agent('F', db_refs={'HGNC': '6'}),
+                      Agent('B', db_refs={'HGNC': '2'}))
+test_st5 = DecreaseAmount(Agent('B', db_refs={'HGNC': '2'}),
+                          Agent('F', db_refs={'HGNC': '6'}))
+test_st6 = ActiveForm(Agent('A', db_refs={'HGNC': '1'}), None, True)
+test_st7 = DecreaseAmount(Agent('B', db_refs={'HGNC': '2'}),
+                          Agent('B', db_refs={'HGNC': '2'}))
 test_statements = [
     test_st1, test_st2, test_st3, test_st4, test_st5, test_st6, test_st7]
 
@@ -1572,10 +1572,10 @@ def test_pybel_path():
     pbmc = PybelModelChecker(pybel_model)
     pbmc.add_statements(test_statements)
     results = pbmc.check_model()
-    a = _get_agent_node(Agent('A', db_refs={'HGNC': 1}))[0]
-    b = _get_agent_node(Agent('B', db_refs={'HGNC': 2}))[0]
-    d = _get_agent_node(Agent('D', db_refs={'HGNC': 4}))[0]
-    e = _get_agent_node(Agent('E', db_refs={'HGNC': 5}))[0]
+    a = _get_agent_node(Agent('A', db_refs={'HGNC': '1'}))[0]
+    b = _get_agent_node(Agent('B', db_refs={'HGNC': '2'}))[0]
+    d = _get_agent_node(Agent('D', db_refs={'HGNC': '4'}))[0]
+    e = _get_agent_node(Agent('E', db_refs={'HGNC': '5'}))[0]
     # Paths found
     assert results[0][1].result_code == 'PATHS_FOUND'
     assert results[0][1].paths[0] == ((a, 0), (b, 1), (d, 0), (e, 0))
