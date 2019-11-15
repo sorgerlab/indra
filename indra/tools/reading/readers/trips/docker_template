@@ -1,0 +1,9 @@
+FROM 292075781285.dkr.ecr.us-east-1.amazonaws.com/drum:latest
+
+ENV DIRPATH /root
+ENV PYTHONPATH "${DIRPATH}/indra_db:${DIRPATH}/indra:${PYTHONPATH}"
+WORKDIR $DIRPATH
+
+{% indra_install %}
+
+{% indra_db_install %}

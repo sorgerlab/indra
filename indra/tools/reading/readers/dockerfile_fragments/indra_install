@@ -1,0 +1,31 @@
+ARG INDRA_USER
+ARG INDRA_BRANCH
+RUN echo $INDRA_USER $INDRA_BRANCH
+
+RUN apt-get update && \
+    apt-get install -y git wget python3 python3-pip
+
+# Install libpq5
+RUN apt-get update && \
+    apt-get install -y libpq5 libpq-dev
+
+# Make sure pip is up-to-date
+RUN pip3 install -U pip
+
+# Install indra
+RUN echo "Cloning" https://github.com/$INDRA_USER/indra.git && \
+    git clone https://github.com/$INDRA_USER/indra.git && \
+    cd indra && \
+    echo "================================================" && \
+    git fetch --all && \
+    git branch --list --all && \
+    echo "Changing to branch" $INDRA_BRANCH &&\
+    git checkout $INDRA_BRANCH && \
+    git status && \
+    git show && \
+    echo "================================================" && \
+    pip3 install -e . && \
+    cd ..
+
+# Update the protmapper
+RUN pip3 install -U git+https://github.com/indralab/protmapper.git
