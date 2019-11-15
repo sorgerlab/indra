@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 branch = (
     'https://github.com/cthoyt/selventa-knowledge/raw/'
-    'prepare-pybel-14/selventa_knowledge'
+    'prepare-pybel-14/selventa_knowledge/'
 )
 large_corpus_url = branch + 'large_corpus.bel.nodelink.json.gz'
 small_corpus_url = branch + 'small_corpus.bel.nodelink.json.gz'
