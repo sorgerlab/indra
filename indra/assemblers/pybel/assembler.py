@@ -396,7 +396,7 @@ def belgraph_to_signed_graph(
             edge_set.add((u, v, 0))
             if symmetric_variant_links:
                 edge_set.add((v, u, 0))
-        elif rel in pc.HAS_COMPONENT and include_components:
+        elif rel in pc.PART_OF and include_components:
             edge_set.add((u, v, 0))
             if symmetric_component_links:
                 edge_set.add((v, u, 0))
