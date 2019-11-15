@@ -14,7 +14,7 @@ GroundingMapper.standardize_agent_name(JAK2_AG)
 
 
 def test_omnipath_web_api():
-    query_url = '%s/queries'
+    query_url = '%s/queries' % op_url
     res = requests.get(query_url)
     assert res.status_code == 200
 
