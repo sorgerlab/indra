@@ -453,7 +453,14 @@ class HierarchyManager(object):
         return self.get_rel_objects(ns, id, 'is_opposite')
 
     def get_polarity(self, ns, id):
-        return self.get_rel_objects(ns, id, 'has_polarity')
+        pols = self.get_rel_objects(ns, id, 'has_polarity')
+        # If it's an empty list then there are no polarity relations
+        if not pols:
+            return None
+        # Otherwise the first entry is the polarity and we turn it into an
+        # integer
+        else:
+            return int(pols[0])
 
     def get_equals(self, ns, id):
         return self.get_rel_objects(ns, id, 'is_equal')
