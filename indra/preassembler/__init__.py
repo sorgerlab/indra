@@ -627,6 +627,9 @@ class Preassembler(object):
         return contradicts
 
     def _normalize_relations(self, ns, rank_key, rel_fun, flip_polarity):
+
+        # Find related entries, sort them, and return the first one which is
+        # the one that will be normalized to
         def _replace_grounding(ns, entry, rank_key, rel_fun):
             rel_ents = rel_fun(ns, entry)
             if rel_ents:
@@ -638,12 +641,18 @@ class Preassembler(object):
             else:
                 return entry, False
 
+        # If no custom rank_key was provided we use the original value to
+        # sort by
         if rank_key is None:
             rank_key = lambda x: x
+        # We now go agent by agent to normalize grounding
         for stmt in self.stmts:
             for agent_idx, agent in enumerate(stmt.agent_list()):
+                # If the relevant namespace is an entry
                 if agent is not None and ns in agent.db_refs:
                     grounding = agent.db_refs[ns]
+                    # If we have a list, we iterate over it and normalize
+                    # each entry separately
                     if isinstance(grounding, list):
                         new_grounding = []
                         for idx, (entry, score) in enumerate(grounding):
@@ -651,9 +660,14 @@ class Preassembler(object):
                                                                  rank_key,
                                                                  rel_fun)
                             new_grounding.append((chosen, score))
+                            # If the top grounding was changed and we need
+                            # to flip polarity then the Statement's polarity
+                            # is flipped
                             if idx == 0 and changed and flip_polarity:
                                 stmt.flip_polarity(agent_idx=agent_idx)
                         agent.db_refs[ns] = new_grounding
+                    # If there's only one grounding then we just normalize
+                    # that one
                     else:
                         chosen, changed = _replace_grounding(ns, grounding,
                                                              rank_key, rel_fun)
@@ -662,10 +676,38 @@ class Preassembler(object):
                             stmt.flip_polarity(agent_idx=agent_idx)
 
     def normalize_equivalences(self, ns, rank_key=None):
+        """Normalize to one of a set of equivalent concepts across statements.
+
+        This function changes Statements in place without returning a value.
+
+        Parameters
+        ----------
+        ns : str
+            The db_refs namespace for which the equivalence relation should
+            be applied.
+        rank_key : Optional[function]
+            A function handle which assigns a sort key to each entry in the
+            given namespace to allow prioritizing in a controlled way which
+            concept is normalized to.
+        """
         self._normalize_relations(ns, rank_key,
                                   self.hierarchies['entity'].get_equals, False)
 
     def normalize_opposites(self, ns, rank_key=None):
+        """Normalize to one of a pair of opposite concepts across statements.
+
+        This function changes Statements in place without returning a value.
+
+        Parameters
+        ----------
+        ns : str
+            The db_refs namespace for which the opposite relation should
+            be applied.
+        rank_key : Optional[function]
+            A function handle which assigns a sort key to each entry in the
+            given namespace to allow prioritizing in a controlled way which
+            concept is normalized to.
+        """
         self._normalize_relations(ns, rank_key,
                                   self.hierarchies['entity'].get_opposites,
                                   True)
