@@ -399,13 +399,6 @@ class HierarchyManager(object):
                                                    self.isa_or_partof_closure,
                                                    rel_fun)
 
-    def get_equals(self, ns1, id1):
-        u1 = self.get_uri(ns1, id1)
-        t1 = rdflib.term.URIRef(u1)
-        rel = rdflib.term.URIRef(self.relations_prefix + 'is_equal')
-        to = [t.toPython() for t in list(self.graph.objects(t1, rel))]
-        return to
-
     def is_equal(self, ns1, id1, ns2, id2):
         """Return True if two entities are in an "is_equal" relationship
 
@@ -431,13 +424,6 @@ class HierarchyManager(object):
             return True
         return False
 
-    def get_opposites(self, ns1, id1):
-        u1 = self.get_uri(ns1, id1)
-        t1 = rdflib.term.URIRef(u1)
-        rel = rdflib.term.URIRef(self.relations_prefix + 'is_opposite')
-        to = [t.toPython() for t in list(self.graph.objects(t1, rel))]
-        return to
-
     def is_opposite(self, ns1, id1, ns2, id2):
         """Return True if two entities are in an "is_opposite" relationship
 
@@ -462,6 +448,22 @@ class HierarchyManager(object):
         if u2 in self.get_opposites(ns1, id1):
             return True
         return False
+
+    def get_opposites(self, ns, id):
+        return self.get_rel_objects(ns, id, 'is_opposite')
+
+    def get_polarity(self, ns, id):
+        return self.get_rel_objects(ns, id, 'has_polarity')
+
+    def get_equals(self, ns, id):
+        return self.get_rel_objects(ns, id, 'is_equal')
+
+    def get_rel_objects(self, ns, id, rel_suffix):
+        uri = self.get_uri(ns, id)
+        term = rdflib.term.URIRef(uri)
+        rel = rdflib.term.URIRef(self.relations_prefix + rel_suffix)
+        objs = [t.toPython() for t in list(self.graph.objects(term, rel))]
+        return objs
 
     def get_parents(self, uri, type='all'):
         """Return parents of a given entry.
