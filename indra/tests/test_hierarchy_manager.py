@@ -285,17 +285,20 @@ def test_yaml_hm():
     assert hm.isa('UN', entry, 'UN', '/'.join(entry.split('/')[:-2]))
 
 
-def test_hm_opposite():
+def test_hm_opposite_polarity():
     hierarchies = get_wm_hierarchies()
     concept1 = 'wm/concept/causal_factor/access/food_shortage'
     concept2 = ('wm/concept/causal_factor/economic_and_commerce/'
                 'economic_activity/market/supply/food_supply')
     concept3 = ('wm/concept/causal_factor/environmental/meteorologic/'
                 'precipitation/flooding')
-    assert hierarchies['entity'].is_opposite('WM', concept1, 'WM', concept2)
-    assert hierarchies['entity'].is_opposite('WM', concept2, 'WM', concept1)
-    assert not hierarchies['entity'].is_opposite('WM', concept1, 'WM',
-                                                 concept3)
+    eh = hierarchies['entity']
+    assert eh.is_opposite('WM', concept1, 'WM', concept2)
+    assert eh.is_opposite('WM', concept2, 'WM', concept1)
+    assert not eh.is_opposite('WM', concept1, 'WM', concept3)
+    assert eh.get_polarity('WM', concept1) == -1
+    assert eh.get_polarity('WM', concept2) == 1
+    assert eh.get_polarity('UN', 'something') is None
 
 
 def test_hm_equal():

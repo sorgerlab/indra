@@ -797,18 +797,39 @@ def test_normalize_opposites():
     concept2 = 'wm/concept/causal_factor/access/food_shortage'
     concept3 = ('wm/concept/causal_factor/environmental/meteorologic/'
                 'precipitation/flooding')
+
+    # First test the inherently positive being the main grounding
     dbr = {'WM': [(concept1, 1.0), (concept2, 0.5), (concept3, 0.1)]}
     ev = Event(Concept('x', db_refs=dbr),
                delta=QualitativeDelta(polarity=1))
     pa = Preassembler(hierarchies=get_wm_hierarchies(),
                       stmts=[ev])
     pa.normalize_opposites(ns='WM')
+    # We are normalizing to food supply since that is the inherently
+    # positive concept
     assert pa.stmts[0].concept.db_refs['WM'][0] == \
-        (concept2, 1.0), pa.stmts[0].concept.db_refs['WM']
+        (concept1, 1.0), pa.stmts[0].concept.db_refs['WM']
     assert pa.stmts[0].concept.db_refs['WM'][1] == \
-        (concept2, 0.5), pa.stmts[0].concept.db_refs['WM']
+        (concept1, 0.5), pa.stmts[0].concept.db_refs['WM']
     assert pa.stmts[0].concept.db_refs['WM'][2] == \
         (concept3, 0.1), pa.stmts[0].concept.db_refs['WM']
+    assert pa.stmts[0].delta.polarity == 1
+
+    # Next test the inherently negative being the main grounding
+    dbr = {'WM': [(concept2, 1.0), (concept1, 0.5), (concept3, 0.1)]}
+    ev = Event(Concept('x', db_refs=dbr),
+               delta=QualitativeDelta(polarity=1))
+    pa = Preassembler(hierarchies=get_wm_hierarchies(),
+                      stmts=[ev])
+    pa.normalize_opposites(ns='WM')
+    # We are normalizing to food supply since that is the inherently
+    # positive concept
+    assert pa.stmts[0].concept.db_refs['WM'][0] == \
+           (concept1, 1.0), pa.stmts[0].concept.db_refs['WM']
+    assert pa.stmts[0].concept.db_refs['WM'][1] == \
+           (concept1, 0.5), pa.stmts[0].concept.db_refs['WM']
+    assert pa.stmts[0].concept.db_refs['WM'][2] == \
+           (concept3, 0.1), pa.stmts[0].concept.db_refs['WM']
     assert pa.stmts[0].delta.polarity == -1
 
 
@@ -825,8 +846,8 @@ def test_normalize_opposites_influence():
     pa = Preassembler(hierarchies=get_wm_hierarchies(),
                       stmts=[stmt])
     pa.normalize_opposites(ns='WM')
-    assert pa.stmts[0].subj.delta.polarity == -1
-    assert pa.stmts[0].obj.delta.polarity == -1
+    assert pa.stmts[0].subj.delta.polarity == 1
+    assert pa.stmts[0].obj.delta.polarity == 1
 
 
 def test_normalize_opposites_association():
@@ -842,8 +863,8 @@ def test_normalize_opposites_association():
     pa = Preassembler(hierarchies=get_wm_hierarchies(),
                       stmts=[stmt])
     pa.normalize_opposites(ns='WM')
-    assert pa.stmts[0].members[0].delta.polarity == -1
-    assert pa.stmts[0].members[1].delta.polarity == -1
+    assert pa.stmts[0].members[0].delta.polarity == 1
+    assert pa.stmts[0].members[1].delta.polarity == 1
 
 
 def test_agent_text_storage():

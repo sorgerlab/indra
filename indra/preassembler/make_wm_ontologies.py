@@ -22,6 +22,7 @@ indra_rel_ns = Namespace(indra_ns + 'relations/')
 isa = indra_rel_ns.term('isa')
 isequal = indra_rel_ns.term('is_equal')
 isopp = indra_rel_ns.term('is_opposite')
+has_polarity = indra_rel_ns.term('has_polarity')
 
 wm_ont_url = ('https://raw.githubusercontent.com/WorldModelers/'
               'Ontologies/master/wm_metadata.yml')
@@ -77,6 +78,10 @@ class HierarchyConverter(object):
                     parts = opp.split('/')
                     opp_term = get_term(parts[-1], '/'.join(parts[:-1]))
                     rel = (opp_term, isopp, child_term)
+                    self.G.add(rel)
+                pol = entry.get('polarity')
+                if pol is not None:
+                    rel = (child_term, has_polarity, Literal(str(pol)))
                     self.G.add(rel)
 
     def add_equals(self):
