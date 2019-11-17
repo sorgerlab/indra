@@ -214,16 +214,20 @@ class HierarchyManager(object):
                         if v == remove_component:
                             self.components[k] = joint_component
 
-
     @lru_cache(maxsize=100000)
     def find_entity(self, x):
-        """
-        Get the entity that has the specified name (or synonym).
+        """Return the entity that has the specified name (or synonym).
 
         Parameters
         ----------
-        x : string
+        x : str
             Name or synonym for the target entity.
+
+        Returns
+        -------
+        str
+            The URI or value corresponding to the entry, represented as a
+            string.
         """
 
         qstr = self.prefixes + """
