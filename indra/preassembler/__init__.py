@@ -637,7 +637,7 @@ class Preassembler(object):
                             for e in rel_ents]
                 sorted_entries = sorted([(ns, entry)] + rel_ents,
                                         key=rank_key)
-                _, chisen = sorted_entries[0]
+                _, chosen = sorted_entries[0]
                 return chosen, chosen != entry
             else:
                 return entry, False
@@ -645,7 +645,8 @@ class Preassembler(object):
         # If no custom rank_key was provided we use the original value to
         # sort by
         if rank_key is None:
-            def polarity_rank_key(ns, entry):
+            def polarity_rank_key(args):
+                ns, entry = args
                 pol = self.hierarchies['entity'].get_polarity(ns, entry)
                 # Here we flip polarities to rank positive polarity before
                 # negative
