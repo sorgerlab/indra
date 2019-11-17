@@ -846,8 +846,8 @@ def test_normalize_opposites_influence():
     pa = Preassembler(hierarchies=get_wm_hierarchies(),
                       stmts=[stmt])
     pa.normalize_opposites(ns='WM')
-    assert pa.stmts[0].subj.delta.polarity == -1
-    assert pa.stmts[0].obj.delta.polarity == -1
+    assert pa.stmts[0].subj.delta.polarity == 1
+    assert pa.stmts[0].obj.delta.polarity == 1
 
 
 def test_normalize_opposites_association():
@@ -863,8 +863,8 @@ def test_normalize_opposites_association():
     pa = Preassembler(hierarchies=get_wm_hierarchies(),
                       stmts=[stmt])
     pa.normalize_opposites(ns='WM')
-    assert pa.stmts[0].members[0].delta.polarity == -1
-    assert pa.stmts[0].members[1].delta.polarity == -1
+    assert pa.stmts[0].members[0].delta.polarity == 1
+    assert pa.stmts[0].members[1].delta.polarity == 1
 
 
 def test_agent_text_storage():
