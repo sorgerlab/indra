@@ -384,27 +384,34 @@ class PybelAssembler(object):
         pass
 
 
-def belgraph_to_signed_graph(belgraph, symmetric_variant_links=False):
-        edge_set = set()
-        for u, v, edge_data in belgraph.edges(data=True):
-            rel = edge_data.get('relation')
-            if rel in pc.CAUSAL_INCREASE_RELATIONS:
-                edge_set.add((u, v, 0))
-            elif rel in (pc.HAS_VARIANT, pc.HAS_COMPONENT):
-                edge_set.add((u, v, 0))
-                if symmetric_variant_links:
-                    edge_set.add((v, u, 0))
-            elif rel in pc.CAUSAL_DECREASE_RELATIONS:
-                edge_set.add((u, v, 1))
-            else:
-                continue
-        # Turn the tuples into dicts
-        graph = nx.MultiDiGraph()
-        graph.add_edges_from(
-            (u, v, dict(sign=sign))
-            for u, v, sign in edge_set
-        )
-        return graph
+def belgraph_to_signed_graph(
+        belgraph, symmetric_variant_links=False,
+        symmetric_part_of_links=False):
+    edge_set = set()
+    for u, v, edge_data in belgraph.edges(data=True):
+        rel = edge_data.get('relation')
+        if rel in pc.CAUSAL_INCREASE_RELATIONS:
+            edge_set.add((u, v, 0))
+        elif rel in pc.HAS_VARIANT:
+            edge_set.add((u, v, 0))
+            if symmetric_variant_links:
+                edge_set.add((v, u, 0))
+        elif rel in pc.HAS_COMPONENT:
+            edge_set.add((u, v, 0))
+            if symmetric_part_of_links:
+                edge_set.add((v, u, 0))
+        elif rel in pc.CAUSAL_DECREASE_RELATIONS:
+            edge_set.add((u, v, 1))
+        else:
+            continue
+    # Turn the tuples into dicts
+    graph = nx.MultiDiGraph()
+    graph.add_edges_from(
+        (u, v, dict(sign=sign))
+        for u, v, sign in edge_set
+    )
+    return graph
+
 
 def _combine_edge_data(relation, subj_edge, obj_edge, stmt_hash, evidences):
     edge_data = {pc.RELATION: relation}
