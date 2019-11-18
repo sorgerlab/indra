@@ -202,7 +202,7 @@ class Reader(object):
         # Make a report of the results.
         logger.info("%s took %s to read %s content and produce %s results, "
                     "with %d of those being null."
-                    % (self.name, end - start, len(read_list),
+                    % (self.name, end - start, len(self.content_ids_read),
                        len(self.results), null_results))
         return ret
 

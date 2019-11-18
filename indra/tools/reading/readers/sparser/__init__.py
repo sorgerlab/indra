@@ -68,7 +68,7 @@ class SparserReader(Reader):
         return
 
     def _map_id(self, content_id):
-        if content_id.startswith('PMC'):
+        if isinstance(content_id, str) and content_id.startswith('PMC'):
             content_id = content_id[3:]
         content_id = super(SparserReader, self)._map_id(content_id)
         return content_id
