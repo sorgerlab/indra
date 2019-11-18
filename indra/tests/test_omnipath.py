@@ -36,11 +36,27 @@ def test_mods_from_web():
 
 
 def test_pypath_import():
+    # Import package
     try:
         import pypath
     except ImportError:
         pypath = None
+
     assert pypath, 'PyPath is not avaialble'
+
+    # Import of main
+    try:
+        from pypath import main as pypath_main
+    except ImportError:
+        pypath_main = None
+    assert pypath_main, 'Could not import pypath.main'
+
+    # Data formats
+    try:
+        from pypath import data_formats
+    except ImportError:
+        data_formats = None
+    assert data_formats, 'Could not import pypath.data_formats'
 
 
 def test_lr_pypath_network():
