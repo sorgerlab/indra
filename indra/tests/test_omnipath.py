@@ -62,7 +62,12 @@ def test_pypath_import():
 
 @attr('no-travis')
 def test_lr_pypath_network():
-    from pypath import main as pypath_main, data_formats
+    try:
+        from pypath import main as pypath_main, data_formats
+    except ImportError:
+        pypath_main = None
+        data_formats = None
+    assert pypath_main and data_formats, 'Failed to import pypath'
     pa = pypath_main.PyPath()
     pa.init_network({
         'hpmr': data_formats.ligand_receptor['hpmr']
