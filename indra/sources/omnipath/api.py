@@ -5,6 +5,7 @@ from .processor import OmniPathProcessor
 
 logger = logging.getLogger("omnipath")
 
+
 try:
     from pypath import main as pypath_main, data_formats
     from pypath.intera import Complex as pp_Complex
@@ -33,7 +34,7 @@ def process_from_pypath(resources='all', reload_resources=False,
     ----------
     reload_resources : bool
         If True, wipe the local cache (typically in ~/.pypath/cache),
-        triggering a re-download of the resources.
+        triggering a re-download of the required resources.
     force : bool
         If True, don't ask user for permission to wipe the cache.
 
@@ -241,8 +242,8 @@ def _get_modifications():
 
 def _delete_omnipath_cache(force=False):
     if not has_pypath:
-        logger.warning('PyPath cache is not available: PyPath could not be '
-                       'imported')
+        logger.warning('PyPath cache is not available: PyPath could not'
+                       ' be imported')
         return False
     from pypath.cache import get_cachedir
     cache_path = get_cachedir()
@@ -250,10 +251,10 @@ def _delete_omnipath_cache(force=False):
             len(os.walk(cache_path).__next__()[2]) > 0:
         logger.warning('Deleting the omnipath cache')
         if not force:
-            print('Re-loading the omnipath resources can take up to an hour '
-                  'for some of its resources.')
+            print('Re-loading the omnipath resources can take up to an'
+                  ' hour for some of its resources.')
         ok = input('This action will remove all files in the omnipath '
-                   'cahce. Proceed? [Y/n] ') if not force else 'n'
+                   'cache. Proceed? [Y/n] ') if not force else 'n'
         try:
             if force or ok.lower() == 'y':
                 for file in os.walk(cache_path).__next__()[2]:
