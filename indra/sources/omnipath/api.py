@@ -261,6 +261,7 @@ def _delete_omnipath_cache(force=False):
                     file_path = os.path.join(cache_path, file)
                     if os.path.isfile(file_path):
                         os.unlink(file_path)
+                return True
         except Exception as e:
             logger.exception('Failed to delete file(s)')
             # Should raise the exception here, because if we partially
