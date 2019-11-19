@@ -1,7 +1,7 @@
 import requests
-from indra.sources.omnipath import OmniPathModificationProcessor,\
-    OmniPathLiganReceptorProcessor
-from indra.sources.omnipath.api import op_url
+from indra.sources.omnipath import OmniPathProcessor
+from indra.sources.omnipath.api import op_url,\
+    _get_ligand_receptor_interactions
 from indra.statements import Agent, Phosphorylation, Complex
 from indra.preassembler.grounding_mapper import GroundingMapper
 from nose.plugins.attrib import attr
@@ -29,7 +29,7 @@ def test_mods_from_web():
     assert res.text
     ptm_json = res.json()
     assert ptm_json[0]['substrate'] == JAK2_UPID, ptm_json[0]['substrate']
-    stmts = OmniPathModificationProcessor(ptm_json).statements
+    stmts = OmniPathProcessor(ptm_json=ptm_json).statements
     assert JAK2_AG.name in [a.name for a in stmts[0].agent_list()],\
         stmts[0].agent_list()
     assert 'omnipath' == stmts[0].evidence[0].source_api,\
@@ -68,11 +68,9 @@ def test_lr_pypath_network():
         pypath_main = None
         data_formats = None
     assert pypath_main and data_formats, 'Failed to import pypath'
-    pa = pypath_main.PyPath()
-    pa.init_network({
-        'hpmr': data_formats.ligand_receptor['hpmr']
-    })
-    stmts = OmniPathLiganReceptorProcessor(pa).statements
+    lr_json = _get_ligand_receptor_interactions('hpmr')
+    assert lr_json
+    stmts = OmniPathProcessor(ligrec_json=lr_json).statements
     assert len(stmts) > 0, 'len(stmts) = %d' % len(stmts)
     stmt = stmts[0]
     assert isinstance(stmt, Complex)
