@@ -4,6 +4,7 @@ from indra.sources.omnipath import OmniPathModificationProcessor,\
 from indra.sources.omnipath.api import op_url
 from indra.statements import Agent, Phosphorylation, Complex
 from indra.preassembler.grounding_mapper import GroundingMapper
+from nose.plugins.attrib import attr
 
 BRAF_UPID = 'P15056'
 JAK2_UPID = 'O60674'
@@ -59,6 +60,7 @@ def test_pypath_import():
     assert data_formats, 'Could not import pypath.data_formats'
 
 
+@attr('no-travis')
 def test_lr_pypath_network():
     from pypath import main as pypath_main, data_formats
     pa = pypath_main.PyPath()
