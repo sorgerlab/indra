@@ -73,6 +73,7 @@ def test_lr_pypath_network():
         'hpmr': data_formats.ligand_receptor['hpmr']
     })
     stmts = OmniPathLiganReceptorProcessor(pa).statements
+    assert len(stmts) > 0, 'len(stmts) = %d' % len(stmts)
     stmt = stmts[0]
     assert isinstance(stmt, Complex)
     ev = stmt.evidence[0]
