@@ -112,7 +112,13 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
     for i in range(len(path[:-1])):
         source = path[i]
         target = path[i+1]
-        edges = model[source[0]][target[0]]
+        reverse = False
+        try:
+            edges = model[source[0]][target[0]]
+        except KeyError:
+            # May be a symmetric edge
+            edges = model[target[0]][source[0]]
+            reverse = True
         hashes = set()
         for j in range(len(edges)):
             try:
@@ -125,6 +131,8 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
         if not hashes:
             statements = []
             for edge_v in edges.values():
+                if reverse:
+                    source, target = target, source
                 stmt = _stmt_from_other_relation(
                     source, target, stmts, edge_v['relation'])
                 if stmt:
