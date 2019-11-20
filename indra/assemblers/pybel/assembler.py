@@ -436,14 +436,15 @@ def _get_agent_node(agent):
     if not agent.bound_conditions:
         return _get_agent_node_no_bcs(agent)
 
+    # Check if bound conditions are bound to agent
+    bound_conditions = [
+        bc.agent for bc in agent.bound_conditions if bc.is_bound]
+    if not bound_conditions:
+        return _get_agent_node_no_bcs(agent)
     # "Flatten" the bound conditions for the agent at this level
     agent_no_bc = deepcopy(agent)
     agent_no_bc.bound_conditions = []
-    members = [agent_no_bc] + [
-        bc.agent
-        for bc in agent.bound_conditions
-        if bc.is_bound
-    ]
+    members = [agent_no_bc] + bound_conditions
     return _get_complex_node(members)
 
 
