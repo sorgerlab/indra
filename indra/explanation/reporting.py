@@ -159,18 +159,17 @@ PybelEdge = namedtuple(
 
 def get_agent_or_complex(node, model_stmts):
     from indra.sources.bel.processor import get_agent
-    agents = [get_agent(source[0]), get_agent(target[0])]
+    from pybel.dsl import complex_abundance
+    agent = get_agent(node)
+    if isinstance(node, complex_abundance):
+        components = [agent, *[bc.agent for bc in agent.bound_conditions]]
     for stmt in model_stmts:
-        if relation_type == 'hasComponent' and isinstance(stmt, Complex):
-            agents.extend([bc.agent for bc in agents[0].bound_conditions])
-            if set([ag.name for ag in agents]) == set(
-                    [ag.name for ag in stmt.agent_list() if ag is not None]):
+            if isinstance(stmt, Complex):
+                if set([ag.name for ag in components]) == set(
+                    [ag.name for ag in stmt.agent_list()
+                        if ag is not None]):
                 return stmt
-        if relation_type == 'hasVariant':
-            obj = stmt.agent_list()[-1]
-            if obj is not None and obj.name in set([ag.name for ag in agents]):
-                return stmt
-    return None
+    return agent
 
 
 def stmt_from_rule(rule_name, model, stmts):
