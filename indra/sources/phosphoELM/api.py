@@ -3,14 +3,14 @@ import csv
 ppelm_s3_key = ''
 
 
-def process_from_dump(fname=None):
+def process_from_dump(fname=None, delimiter='\t'):
     ppelm_json = []
     if fname is None:
         # ToDo Get from S3
         pass
     else:
         with open(fname, 'r') as f:
-            csv_reader = csv.reader(f.readlines(), dialect='csv')
+            csv_reader = csv.reader(f.readlines(), delimiter=delimiter)
             columns = next(csv_reader)
             for entry in csv_reader:
                 row_dict = {columns[n]: entry[n]
