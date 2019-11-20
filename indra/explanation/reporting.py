@@ -128,19 +128,23 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
             # hasComponent and hasVariant edges don't have hashes
             except KeyError:
                 continue
-        # If we didn't get any hashes, we can get statements from hasComponent
-        # and hasVariant edges
+        # If we didn't get any hashes, we can get PybelEdge object from
+        # hasComponent and hasVariant edges
         if not hashes:
             statements = []
-            for edge_v in edges.values():
-                if reverse:
-                    source, target = target, source
-                stmt = _stmt_from_other_relation(
-                    source, target, stmts, edge_v['relation'])
-                if stmt:
-                    statements.append(stmt)
-                    # Stop if we have a statement to avoid duplicates
-                    break
+            # Can't get statements without hash from db
+            if from_db:
+                continue
+            else:
+                for edge_v in edges.values():
+                    rel = edge_v['relation']
+                    source_ag = get_agent_or_complex(source[0], stmts)
+                    target_ag = get_agent_or_complex(target[0], stmts)
+                    edge = PybelEdge(source_ag, target_ag, rel, reverse)
+                    statements.append(edge)
+                    # Stop if we have an edge to avoid duplicates
+                    if len(statements) > 0:
+                        break
         # If we have hashes, retrieve statements from them
         else:
             if from_db:
@@ -163,12 +167,12 @@ def get_agent_or_complex(node, model_stmts):
     agent = get_agent(node)
     if isinstance(node, complex_abundance):
         components = [agent, *[bc.agent for bc in agent.bound_conditions]]
-    for stmt in model_stmts:
+        for stmt in model_stmts:
             if isinstance(stmt, Complex):
                 if set([ag.name for ag in components]) == set(
                     [ag.name for ag in stmt.agent_list()
                         if ag is not None]):
-                return stmt
+                    return stmt
     return agent
 
 
