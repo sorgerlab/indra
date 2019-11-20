@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 from indra.sources.indra_db_rest.api import get_statements_by_hash
 from indra.statements import *
 
@@ -151,7 +153,11 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
     return steps
 
 
-def _stmt_from_other_relation(source, target, model_stmts, relation_type):
+PybelEdge = namedtuple(
+    'PybelEdge', ['source', 'target', 'relation', 'reverse'])
+
+
+def get_agent_or_complex(node, model_stmts):
     from indra.sources.bel.processor import get_agent
     agents = [get_agent(source[0]), get_agent(target[0])]
     for stmt in model_stmts:
