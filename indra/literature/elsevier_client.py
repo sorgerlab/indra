@@ -376,7 +376,10 @@ def search_science_direct(query_str, field_name, year=None, loaded_after=None):
         if total_results == 0:
             logger.info('Search result was empty')
             return []
-        entries = res_json['results']
+        try:
+            entries = res_json['results']
+        except KeyError:
+            entries = []
         parts = [entry[field_name] for entry in entries]
         all_parts += parts
         # Get next batch
