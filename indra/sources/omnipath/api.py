@@ -109,7 +109,9 @@ def _get_ligand_receptor_interactions(resources='all'):
         return annotations
 
     def _get_complex_agents(up_id_string):
+        # Cut out COMPLEX from COMPLEX:<up id>_<up id>
         if 'COMPLEX' in up_id_string:
+            # Cut out other text pre-pending COMPLEX separated by space
             if ' ' in up_id_string:
                 up_id_string = up_id_string.split()[-1]
             return [up_id for up_id in
