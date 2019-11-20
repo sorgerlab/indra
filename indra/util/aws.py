@@ -130,7 +130,7 @@ def tag_myself(project='cwc', **other_tags):
 def get_batch_command(command_list, project=None, purpose=None):
     """Get the command appropriate for running something on batch."""
     command_str = ' '.join(command_list)
-    ret = ['python', '-m', 'indra.util.aws', 'run_in_batch', command_str]
+    ret = ['python3', '-m', 'indra.util.aws', 'run_in_batch', command_str]
     if not project and has_config('DEFAULT_AWS_PROJECT'):
         project = get_config('DEFAULT_AWS_PROJECT')
     if project:
