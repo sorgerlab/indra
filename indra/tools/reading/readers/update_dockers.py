@@ -76,11 +76,29 @@ def make_zip_package(rc):
 def main():
     from sys import argv
 
+    # Allow the user to limit the readers used.
+    only_include_readers = []
+    if '--readers' in argv:
+        next_idx = argv.index('--readers') + 1
+        while not argv[next_idx].startswith('--'):
+            only_include_readers.append(argv[next_idx].upper())
+            next_idx += 1
+        if not only_include_readers:
+            raise ValueError("At least one reader must be specified with "
+                             "--readers.")
+        logger.info("Updating: ", only_include_readers)
+    else:
+        logger.info("Updating all readers.")
+
     # Get the AWS clients.
     s3 = boto3.client('s3')
     cb = boto3.client('codebuild')
 
     for rc in get_reader_classes():
+        if only_include_readers and rc.name not in only_include_readers:
+            logger.info("%s not included. Skipping." % rc.name)
+            continue
+
         # Put the latest dockerfile etc on s3
         zip_output, arg_list = make_zip_package(rc)
         if zip_output is None:
