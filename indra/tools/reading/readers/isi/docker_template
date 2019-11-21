@@ -13,5 +13,5 @@ RUN apt-get update && \
 
 # Install NXML2TEXT
 RUN git clone https://github.com/spyysalo/nxml2txt.git
-ENV NXML2TXT_PATH = /root/nxml2txt
-ENV PYTHON2_PATH = python2
+ENV NXML2TXT_PATH /root/nxml2txt
+ENV PYTHON2_PATH python2
