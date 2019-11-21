@@ -167,7 +167,7 @@ def run_isi(input_dir, output_dir, tmp_dir, num_processes=1,
     logger.info(' '.join(command))
 
     p = subprocess.Popen(command, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
+                         stderr=subprocess.STDOUT)
 
     # Monitor the logs and wait for reading to end.
     log_file_str = ''
