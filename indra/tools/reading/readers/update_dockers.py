@@ -52,7 +52,7 @@ def make_zip_package(rc):
     logger.info("Forming dockerfile for %s." % rc.name)
     dockerfile = _make_dockerfile_rec(template_path)
     dockerfile += "\n# Set in-{reader} environment variable\n" \
-                  "ENV IN_{reader}_DOCKER=true\n".format(reader=rc.name)
+                  "ENV IN_{reader}_DOCKER true\n".format(reader=rc.name)
 
     # Create the buildspec
     build_spec_path = path.join(DOCKER_TEMPLATE_DIR, 'buildspec_fmt.yml')
