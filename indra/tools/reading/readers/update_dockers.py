@@ -80,13 +80,13 @@ def main():
     only_include_readers = []
     if '--readers' in argv:
         next_idx = argv.index('--readers') + 1
-        while not argv[next_idx].startswith('--'):
+        while next_idx < len(argv) and not argv[next_idx].startswith('--'):
             only_include_readers.append(argv[next_idx].upper())
             next_idx += 1
         if not only_include_readers:
             raise ValueError("At least one reader must be specified with "
                              "--readers.")
-        logger.info("Updating: ", only_include_readers)
+        logger.info("Updating: %s" % str(only_include_readers))
     else:
         logger.info("Updating all readers.")
 
