@@ -389,7 +389,7 @@ def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
             resp = s3.list_objects(Bucket=bucket, Prefix=prefix)
 
         if not resp.get('Contents'):
-            logger.error("Got response without contents: %s" % str(resp))
+            logger.info("Got response without contents: %s" % str(resp))
             if not on_retry:
                 logger.info("Retrying once.")
                 on_retry = True
