@@ -4,9 +4,13 @@ import boto3
 import logging
 import requests
 from datetime import datetime, timezone, timedelta
+
 from botocore import UNSIGNED
 from botocore.client import Config
+
+from time import sleep
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+
 from indra import get_config, has_config
 from indra.util.nested_dict import NestedDict
 
@@ -376,12 +380,25 @@ def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
         if date_cutoff.utcoffset() != timedelta():
             date_cutoff = date_cutoff.astimezone(timezone.utc)
     is_truncated = True
+    on_retry = False
     marker = None
     while is_truncated:
         if marker:
             resp = s3.list_objects(Bucket=bucket, Prefix=prefix, Marker=marker)
         else:
             resp = s3.list_objects(Bucket=bucket, Prefix=prefix)
+
+        if not resp.get('Contents'):
+            logger.error("Got response without contents: %s" % str(resp))
+            if not on_retry:
+                logger.info("Retrying once.")
+                on_retry = True
+                sleep(0.1)
+                continue
+            else:
+                logger.info("Could no contents found.")
+                break
+
         for entry in resp['Contents']:
             if entry['Key'] != marker:
                 if date_cutoff and after and\
