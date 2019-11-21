@@ -48,7 +48,7 @@ def make_zip_package(rc):
                               'docker_template')
     if not path.exists(template_path):
         logger.info("%s does not have a dockerfile. Continuing." % rc.name)
-        return
+        return None, None
     logger.info("Forming dockerfile for %s." % rc.name)
     dockerfile = _make_dockerfile_rec(template_path)
     dockerfile += "\n# Set in-{reader} environment variable\n" \
@@ -83,6 +83,8 @@ def main():
     for rc in get_reader_classes():
         # Put the latest dockerfile etc on s3
         zip_output, arg_list = make_zip_package(rc)
+        if zip_output is None:
+            continue
         s3_key = 'indra-db/{rdr}-dockerfile/{rdr}-autogen.zip'.format(rdr=rc.name.lower())
         logger.info("Writing %s to s3." % s3_key)
         s3.put_object(Bucket='bigmech', Key=s3_key, Body=zip_output)
