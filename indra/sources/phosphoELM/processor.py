@@ -59,7 +59,8 @@ class PhosphoELMPRocessor(object):
             # 'species': '<species name in latin>',
             # 'entry_date': 'yyyy-mm-dd HH:MM:SS.mmmmmm'
             substrate = Agent(None, db_refs={'UP': entry['acc']})
-            used_name, enz = self._get_enzyme(entry['kinases'])
+            used_name, enz = self._get_enzyme(entry['kinases']) if\
+                entry.get('kinases') else '', None
 
             evidence = Evidence(
                 source_api='phosphoELM',
@@ -68,8 +69,7 @@ class PhosphoELMPRocessor(object):
                     'data_source': 'High-ThroughPut' if
                     entry['source'].lower == 'htp' else 'Low-ThroughPut',
                     'phosphoelm_substrate_name': entry['acc'],
-                    'phosphoelm_kinase_name': entry.get('kinases',
-                                                        'unknown'),
+                    'phosphoelm_kinase_name': entry.get('kinases', ''),
                     'used_kinse_name': used_name,
                     'entry_date': entry['entry_date']
                 }
