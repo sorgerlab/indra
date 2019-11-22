@@ -71,7 +71,8 @@ class PhosphoELMPRocessor(object):
                     'phosphoelm_substrate_name': entry['acc'],
                     'phosphoelm_kinase_name': entry.get('kinases', ''),
                     'used_kinse_name': used_name,
-                    'entry_date': entry['entry_date']
+                    'entry_date': entry['entry_date'],
+                    'sequence': entry['sequence']
                 }
             )
             statements.append(Phosphorylation(
