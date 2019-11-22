@@ -63,7 +63,7 @@ class PhosphoELMPRocessor(object):
                 entry.get('kinases') else '', None
 
             evidence = Evidence(
-                source_api='phosphoELM',
+                source_api='phospho.ELM',
                 pmid=entry['pmids'],
                 annotations={
                     'data_source': 'High-ThroughPut' if
