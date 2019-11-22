@@ -388,19 +388,13 @@ def _assemble_influence(stmt):
 
 
 def _assemble_pybel_edge(pybel_edge):
-    if isinstance(pybel_edge.source, ist.Agent):
-        source_str = _assemble_agent_str(pybel_edge.source)
-    else:
-        source_str = _assemble_complex(pybel_edge.source).rstrip('.')
-    if isinstance(pybel_edge.target, ist.Agent):
-        target_str = _assemble_agent_str(pybel_edge.target)
-    else:
-        target_str = _assemble_complex(pybel_edge.target).rstrip('.')
+    source_str = _assemble_agent_str(pybel_edge.source)
+    target_str = _assemble_agent_str(pybel_edge.target)
     if pybel_edge.relation == 'hasComponent':
         if pybel_edge.reverse:
-            rel_str = ' is a part of complex '
+            rel_str = ' is a part of '
         else:
-            rel_str = ' complex has a component '
+            rel_str = ' has a component '
     elif pybel_edge.relation == 'hasVariant':
         if pybel_edge.reverse:
             rel_str = ' is a variant of '
