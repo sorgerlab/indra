@@ -2,7 +2,6 @@ import requests
 import logging
 
 from indra.statements import Phosphorylation, Evidence, Agent
-from indra.preassembler.grounding_mapper import GroundingMapper
 
 gilda_url = 'http://grounding.indra.bio/ground'
 logger = logging.getLogger(__file__)
@@ -127,6 +126,3 @@ class PhosphoELMPRocessor(object):
 
         ag = Agent(None, db_refs={ns: id})
         return used_str, ag
-
-    # def _seq_mapping(self, sequence, position, residue, species):
-    #     pass
