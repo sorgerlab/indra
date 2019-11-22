@@ -4,7 +4,6 @@ import subprocess as sp
 from indra.tools.reading.readers.core import Reader
 
 from indra.sources.trips import client, process_xml
-from indra_db import formats
 
 startup_path = '/sw/drum/bin/startup.sh'
 service_host = 'drum'
@@ -18,7 +17,7 @@ class TripsReader(Reader):
     a while ago.
     """
     name = 'TRIPS'
-    result_format = formats.XML
+    result_format = 'xml'
 
     def __init__(self, *args, **kwargs):
         self.version = self.get_version()
