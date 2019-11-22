@@ -6,6 +6,9 @@ from indra.tools.reading.readers.core import Reader
 from indra.sources.trips import client, process_xml
 from indra_db import formats
 
+startup_path = '/sw/drum/bin/startup.sh'
+service_host = 'drum'
+
 
 class TripsReader(Reader):
     """A stand-in for TRIPS reading.
@@ -24,13 +27,14 @@ class TripsReader(Reader):
 
     def _read(self, content_iter, verbose=False, log=False, n_per_proc=None):
         # Start trips running
-        if os.environ.get("IN_TRIPS_DOCKER", 'false') != 'true':
-            return []
-
-        p = sp.Popen('/sw/drum/bin/startup.sh', stdout=sp.PIPE,
-                     stderr=sp.STDOUT)
-        service_endpoint = 'http://localhost:80/cgi/'
-        service_host = 'drum'
+        if os.environ.get("IN_TRIPS_DOCKER", 'false') == 'true':
+            p = sp.Popen([startup_path], stdout=sp.PIPE,
+                         stderr=sp.STDOUT)
+            service_endpoint = 'http://localhost:80/cgi/'
+        else:
+            p = sp.Popen(['docker', 'run', '-id', '-p', '8080:80',
+                          '--entrypoint', startup_path, 'drum:latest'])
+            service_endpoint = 'http://localhost:8080/cgi/'
 
         # Process all the content.
         for content in content_iter:
@@ -39,6 +43,9 @@ class TripsReader(Reader):
                                      service_host=service_host)
             xml = client.get_xml(html)
             self.add_result(content.get_id(), xml)
+
+        # Stop TRIPS
+        p.kill()
 
         return self.results
 
