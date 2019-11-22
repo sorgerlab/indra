@@ -68,11 +68,13 @@ class PhosphoELMPRocessor(object):
             GroundingMapper.standardize_agent_name(substrate)
             GroundingMapper.standardize_agent_name(enz)
 
-            evidence = Evidence(annotations={
-                'data_source': 'High-ThroughPut' if
-                entry['source'].lower == 'htp' else 'Low-ThroughPut',
-                'phosphoelm_substrate': entry['acc'],
-                'phosphoelm_kinase': entry.get('kinases', 'unknown')
+            evidence = Evidence(
+                pmid=entry['pmids'],
+                annotations={
+                    'data_source': 'High-ThroughPut' if
+                    entry['source'].lower == 'htp' else 'Low-ThroughPut',
+                    'phosphoelm_substrate': entry['acc'],
+                    'phosphoelm_kinase': entry.get('kinases', 'unknown')
             })
             statements.append(Phosphorylation(
                 enz=enz,
