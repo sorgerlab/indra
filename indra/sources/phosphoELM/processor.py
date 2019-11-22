@@ -1,5 +1,5 @@
-import requests
 import logging
+import requests
 
 from indra.statements import Phosphorylation, Evidence, Agent
 
@@ -51,7 +51,7 @@ class PhosphoELMPRocessor(object):
             # Entries:
             # 'acc': '<UP ID>', <-- substrate
             # 'sequence': '<protein sequence>',
-            # 'position': '<position>',
+            # 'position': '<sequence position>',
             # 'code': '<phosphorylated residue>',
             # 'pmids': '<pmid>',
             # 'kinases': '<responsible kinase>', <-- enzyme
