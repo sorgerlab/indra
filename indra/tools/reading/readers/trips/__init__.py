@@ -19,6 +19,7 @@ class TripsReader(Reader):
 
     def __init__(self, *args, **kwargs):
         self.version = self.get_version()
+        super(TripsReader, self).__init__(*args, **kwargs)
         return
 
     def _read(self, content_iter, verbose=False, log=False, n_per_proc=None):
