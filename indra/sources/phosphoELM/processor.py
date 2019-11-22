@@ -67,9 +67,11 @@ class PhosphoELMPRocessor(object):
                 pmid=entry['pmids'],
                 annotations={
                     'data_source': 'High-ThroughPut' if
-                    entry['source'].lower == 'htp' else 'Low-ThroughPut',
+                    entry['source'].lower == 'htp' else (
+                        'Low-ThroughPut' if entry['source'].lower() == 'ltp'
+                        else None),
                     'phosphoelm_substrate_name': entry['acc'],
-                    'phosphoelm_kinase_name': entry.get('kinases', ''),
+                    'phosphoelm_kinase_name': entry.get('kinases', None),
                     'used_kinse_name': used_name,
                     'entry_date': entry['entry_date'],
                     'sequence': entry['sequence']
