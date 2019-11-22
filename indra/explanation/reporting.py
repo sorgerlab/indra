@@ -84,6 +84,10 @@ def stmts_from_indranet_path(path, model, signed, from_db=True, stmts=None):
     return steps
 
 
+PybelEdge = namedtuple(
+    'PybelEdge', ['source', 'target', 'relation', 'reverse'])
+
+
 def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
     """Return source Statements corresponding to a path in a PyBEL model.
 
@@ -110,6 +114,7 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
         multiple edges representing multiple statements and evidences between
         two nodes).
     """
+    from indra.sources.bel.processor import get_agent
     steps = []
     for i in range(len(path[:-1])):
         source = path[i]
@@ -138,9 +143,8 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
             else:
                 for edge_v in edges.values():
                     rel = edge_v['relation']
-                    source_ag = get_agent_or_complex(source[0], stmts)
-                    target_ag = get_agent_or_complex(target[0], stmts)
-                    edge = PybelEdge(source_ag, target_ag, rel, reverse)
+                    edge = PybelEdge(get_agent(source[0]),
+                                     get_agent(target[0]), rel, reverse)
                     statements.append(edge)
                     # Stop if we have an edge to avoid duplicates
                     if len(statements) > 0:
@@ -155,25 +159,6 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
                     stmt for stmt in stmts if stmt.get_hash() in hashes]
         steps.append(statements)
     return steps
-
-
-PybelEdge = namedtuple(
-    'PybelEdge', ['source', 'target', 'relation', 'reverse'])
-
-
-def get_agent_or_complex(node, model_stmts):
-    from indra.sources.bel.processor import get_agent
-    from pybel.dsl import complex_abundance
-    agent = get_agent(node)
-    if isinstance(node, complex_abundance):
-        components = [agent, *[bc.agent for bc in agent.bound_conditions]]
-        for stmt in model_stmts:
-            if isinstance(stmt, Complex):
-                if set([ag.name for ag in components]) == set(
-                    [ag.name for ag in stmt.agent_list()
-                        if ag is not None]):
-                    return stmt
-    return agent
 
 
 def stmt_from_rule(rule_name, model, stmts):
