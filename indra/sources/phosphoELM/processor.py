@@ -22,15 +22,12 @@ def _gilda_grounder(entity_str):
 
 
 class PhosphoELMPRocessor(object):
-    def __init__(self, file_dump_json=None, keep_empty=False,
-                 non_human=False):
+    def __init__(self, file_dump_json=None, keep_empty=False):
         self.statements = []
         self.statements.extend(self._from_file_dump_json(file_dump_json,
-                                                         keep_empty,
-                                                         non_human))
+                                                         keep_empty))
 
-    def _from_file_dump_json(self, fd_json, keep_empty=False,
-                             non_human=False):
+    def _from_file_dump_json(self, fd_json, keep_empty=False):
         """Structuring the json entry to Phosphorylation statements
 
         fd_json : list(json)
@@ -38,10 +35,6 @@ class PhosphoELMPRocessor(object):
         keep_empty : bool
             If true, also create statements when upstream kinases
             (in entry['kinases']) are not known.
-        non_human : bool|str|list(str)
-            If true, use all entries regardless of species. If a string or
-            list of strings, also use the species provided in the list.
-            Homo sapiens is always used.
 
         Returns
         -------
@@ -50,10 +43,10 @@ class PhosphoELMPRocessor(object):
             return []
         statements = []
         for entry in fd_json:
-            if not keep_empty and not entry['kinases'] or not non_human \
-                    and not entry['species'].lower() == 'homo sapiens':
+            if not keep_empty and not entry['kinases'] or\
+                    not entry['species'].lower() == 'homo sapiens':
                 # Skip entries without any kinases or if species is other
-                # than human when 'use_non_human' is False.
+                # than human.
                 continue
             # Entries:
             # 'acc': '<UP ID>', <-- substrate
