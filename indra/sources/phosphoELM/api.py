@@ -1,5 +1,8 @@
 import csv
 
+from .processor import PhosphoELMPRocessor
+
+s3_bucket = 'bigmech'
 ppelm_s3_key = ''
 
 
@@ -11,7 +14,7 @@ def process_from_dump(fname=None, delimiter='\t'):
         with open(fname, 'r') as f:
             csv_reader = csv.reader(f.readlines(), delimiter=delimiter)
             ppelm_json = _get_json_from_entry_rows(csv_reader)
-    return ppelm_json
+    return PhosphoELMPRocessor(file_dump_json=ppelm_json)
 
 
 def _get_json_from_entry_rows(row_iter):
