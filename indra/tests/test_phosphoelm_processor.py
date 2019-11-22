@@ -2,8 +2,8 @@ from indra.statements import Phosphorylation
 from indra.sources.phosphoELM.api import PhosphoELMPRocessor, \
     _get_json_from_entry_rows
 
-columns = ['acc', 'sequence', 'position', 'code', 'pmids', 'kinases', 'source',
-           'species', 'entry_date']
+columns = ['acc', 'sequence', 'position', 'code', 'pmids', 'kinases',
+           'source', 'species', 'entry_date']
 non_human_no_kinase = ['O08539',
                        'MAEMGSKG', '6', 'S', '17114649', '', 'HTP',
                        'Mus musculus', '2005-03-14 12:16:11.108314+01']
