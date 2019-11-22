@@ -23,9 +23,12 @@ def _gilda_grounder(entity_str):
 
 
 class PhosphoELMPRocessor(object):
-    def __init__(self, file_dump_json=None):
+    def __init__(self, file_dump_json=None, keep_empty=False,
+                 non_human=False):
         self.statements = []
-        self.statements.extend(self._from_file_dump_json(file_dump_json))
+        self.statements.extend(self._from_file_dump_json(file_dump_json,
+                                                         keep_empty,
+                                                         non_human))
 
     def _from_file_dump_json(self, fd_json, keep_empty=False,
                              non_human=False):
