@@ -385,21 +385,23 @@ class PybelAssembler(object):
 
 
 def belgraph_to_signed_graph(
-        belgraph, symmetric_variant_links=False,
-        symmetric_component_links=False):
+        belgraph, include_variants=True, symmetric_variant_links=False,
+        include_components=True, symmetric_component_links=False):
     edge_set = set()
     for u, v, edge_data in belgraph.edges(data=True):
         rel = edge_data.get('relation')
         if rel in pc.CAUSAL_INCREASE_RELATIONS:
             edge_set.add((u, v, 0))
         elif rel in pc.HAS_VARIANT:
-            edge_set.add((u, v, 0))
-            if symmetric_variant_links:
-                edge_set.add((v, u, 0))
+            if include_variants:
+                edge_set.add((u, v, 0))
+                if symmetric_variant_links:
+                    edge_set.add((v, u, 0))
         elif rel in pc.HAS_COMPONENT:
-            edge_set.add((u, v, 0))
-            if symmetric_component_links:
-                edge_set.add((v, u, 0))
+            if include_components:
+                edge_set.add((u, v, 0))
+                if symmetric_component_links:
+                    edge_set.add((v, u, 0))
         elif rel in pc.CAUSAL_DECREASE_RELATIONS:
             edge_set.add((u, v, 1))
         else:
