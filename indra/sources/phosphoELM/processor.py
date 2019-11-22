@@ -8,7 +8,8 @@ logger = logging.getLogger(__file__)
 
 
 def _gilda_grounder(entity_str):
-    # If match found, return the string that provided the match
+    # Try to find a namespace for the enzyme entity string, return the string
+    # that provided the match
     res = requests.post(gilda_url, json={'text': entity_str})
     if res.status_code == 200 and res.json():
         db_ns = res.json()[0]['term']['db']
@@ -23,21 +24,33 @@ def _gilda_grounder(entity_str):
 
 class PhosphoELMPRocessor(object):
     def __init__(self, file_dump_json=None, keep_empty=False):
+        """The PhosphoELMPRocessor processes data dumps from the phospho.ELM
+        database. See http://phospho.elm.eu.org/dataset.html
+
+        file_dump_json : list(dict)
+            JSON compatible list of entries from a phospho.ELM data dump
+        keep_empty : bool
+            If true, also create statements when upstream kinases in
+            entry['kinases'] are not known.
+        """
         self.statements = []
         self.statements.extend(self._from_file_dump_json(file_dump_json,
                                                          keep_empty))
 
     def _from_file_dump_json(self, fd_json, keep_empty=False):
-        """Structuring the json entry to Phosphorylation statements
+        """Create Phosphorylation statements from the json entries
 
-        fd_json : list(json)
-            JSON comatible list of entries
+        fd_json : list(dict)
+            JSON compatible list of entries
         keep_empty : bool
-            If true, also create statements when upstream kinases
-            (in entry['kinases']) are not known.
+            If true, also create statements when upstream kinases in
+            entry['kinases'] are not known.
 
         Returns
         -------
+        statements : list[indra.statement.Phosphorylation]
+            A list of the phosphorylation statements produced by the entries
+            in the json
         """
         if fd_json is None:
             return []
@@ -97,8 +110,10 @@ class PhosphoELMPRocessor(object):
 
         Returns
         -------
-        kinases : indra.statements.Agent
-            The agents contained in 'upstream_kinases'
+        used_str, ag : tuple(str, indra.statements.Agent)
+            A tuple containing a string and an agent. The string is the
+            string from within 'upstream_kinases' that was used to create
+            the agent.
         """
         strip_words = ['_group', 'kinase', '_drome', '_Caeel']
         # Pre process: strip 'strip words' and any trailing space
