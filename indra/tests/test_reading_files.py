@@ -3,8 +3,6 @@ from indra.tools.reading.read_files import read_files, get_reader_classes
 
 from nose.plugins.attrib import attr
 
-from indra.tools.reading.readers import EmptyReader
-
 
 @attr('slow', 'nonpublic', 'notravis')
 def test_read_files():
@@ -34,6 +32,5 @@ def test_read_files():
         readers.append(rc())
     outputs = read_files(example_files, readers)
     N_out = len(outputs)
-    proper_readers = [r for r in readers if not isinstance(r, EmptyReader)]
-    N_exp = len(proper_readers)*len(example_files)
+    N_exp = len(readers)*len(example_files)
     assert N_out == N_exp, "Expected %d outputs, got %d." % (N_exp, N_out)

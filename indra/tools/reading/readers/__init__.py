@@ -1,7 +1,7 @@
 import logging
 
 from .core import Reader, ReadingError, ReadingData, get_reader, \
-    get_reader_classes, get_reader_class, EmptyReader
+    get_reader_classes, get_reader_class
 
 from .util import get_dir
 

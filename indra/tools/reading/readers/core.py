@@ -215,10 +215,6 @@ class Reader(object):
         raise NotImplementedError()
 
 
-class EmptyReader(Reader):
-    """A class name to use for Readers that are not implemented yet."""
-
-
 class ReadingError(Exception):
     pass
 
