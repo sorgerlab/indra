@@ -39,7 +39,7 @@ class PybelModelChecker(ModelChecker):
             self.model,
             include_variants=include_variants,
             symmetric_variant_links=symmetric_variant_links,
-            include_components=True,
+            include_components=include_components,
             symmetric_component_links=symmetric_component_links)
         self.graph = signed_edges_to_signed_nodes(signed_edges)
         return self.graph
