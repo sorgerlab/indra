@@ -22,9 +22,9 @@ def _gilda_grounder(entity_str):
         return entity_str, None, None
 
 
-class PhosphoELMPRocessor(object):
+class PhosphoElmProcessor(object):
     def __init__(self, file_dump_json=None, keep_empty=False):
-        """The PhosphoELMPRocessor processes data dumps from the phospho.ELM
+        """The PhosphoElmProcessor processes data dumps from the phospho.ELM
         database. See http://phospho.elm.eu.org/dataset.html
 
         file_dump_json : list(dict)

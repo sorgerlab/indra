@@ -1,2 +1,2 @@
 from .api import process_from_dump
-from .processor import PhosphoELMPRocessor
+from .processor import PhosphoElmProcessor
