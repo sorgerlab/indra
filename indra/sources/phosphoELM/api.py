@@ -1,16 +1,24 @@
 import csv
+import logging
+import requests
+from bs4 import BeautifulSoup
+from unidecode import unidecode
 
 from .processor import PhosphoELMPRocessor
 
+logger = logging.getLogger(__file__)
+
 s3_bucket = 'bigmech'
-ppelm_s3_key = ''
+ppelm_s3_key = 'phosphoELM_data/phosphoELM_all_2015-04.dump'
+kinases_list_web = 'http://phospho.elm.eu.org/kinases.html'
 
 
 def process_from_dump(fname=None, delimiter='\t'):
     """Process a phospho.ELM file dump
 
     fname : str
-        File path to the phospho.ELM file dump
+        File path to the phospho.ELM file dump. If none is provided,
+        the file will be downloaded from S3.
     delimiter : str
         The delimiter to use for csv.reader
 
@@ -21,12 +29,16 @@ def process_from_dump(fname=None, delimiter='\t'):
         generated from the file dump
     """
     if fname is None:
-        # ToDo Get from S3
-        return []
+        s3 = _get_s3_client()
+        s3_obj = s3.get_object(
+            Bucket=s3_bucket,
+            Key=ppelm_s3_key)
+        csv_reader = csv.reader(s3_obj['Body'].read().decode('utf8'),
+                                delimiter='\t')
     else:
         with open(fname, 'r') as f:
             csv_reader = csv.reader(f.readlines(), delimiter=delimiter)
-            ppelm_json = _get_json_from_entry_rows(csv_reader)
+    ppelm_json = _get_json_from_entry_rows(csv_reader)
     return PhosphoELMPRocessor(file_dump_json=ppelm_json)
 
 
@@ -39,3 +51,47 @@ def _get_json_from_entry_rows(row_iter):
                     for n in range(len(columns))}
         ppelm_json.append(row_dict)
     return ppelm_json
+
+
+def _get_kinase_list_from_web():
+    res = requests.get(kinases_list_web)
+    if res.status_code != 200:
+        logger.warning('Could not parse kinase list: resource %s responsed '
+                       'with status %d' %
+                       (kinases_list_web, res.status_code))
+        return {}
+
+    soup = BeautifulSoup(markup=res.text, features='html.parser')
+    kinase_table = soup.find('table', {'id': 'kinaselist'})
+    headers = tuple(unidecode(th.get_text()).strip() for th in
+                    kinase_table.find_all('th'))
+    kinase_entries = {}
+    for tr in kinase_table.find('tbody').find_all('tr'):
+        entry = dict(zip(headers, (unidecode(td.get_text()).strip() for td
+                                   in tr.find_all('td'))))
+        kinase_entries[entry['Name']] = entry
+    return kinase_entries
+
+
+def _get_s3_client(unsigned=True):
+    import boto3
+    from botocore import UNSIGNED
+    from botocore.client import Config
+
+    """Return a boto3 S3 client with optional unsigned config.
+
+    Parameters
+    ----------
+    unsigned : Optional[bool]
+        If True, the client will be using unsigned mode in which public
+        resources can be accessed without credentials. Default: True
+
+    Returns
+    -------
+    botocore.client.S3
+        A client object to AWS S3.
+    """
+    if unsigned:
+        return boto3.client('s3', config=Config(signature_version=UNSIGNED))
+    else:
+        return boto3.client('s3')
