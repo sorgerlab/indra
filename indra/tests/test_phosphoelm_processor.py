@@ -1,5 +1,5 @@
 from indra.statements import Phosphorylation
-from indra.sources.phosphoELM.api import PhosphoELMPRocessor, \
+from indra.sources.phosphoelm.api import PhosphoElmProcessor, \
     _get_json_from_entry_rows
 
 columns = ['acc', 'sequence', 'position', 'code', 'pmids', 'kinases',
@@ -30,7 +30,7 @@ def test_json_processing():
 
 
 def test_keep_empty():
-    stmts = PhosphoELMPRocessor(
+    stmts = PhosphoElmProcessor(
         file_dump_json=_get_json_from_entry_rows(iter(raw_data)),
         keep_empty=True
     ).statements
@@ -42,7 +42,7 @@ def test_keep_empty():
 
 
 def test_not_empty():
-    stmts = PhosphoELMPRocessor(
+    stmts = PhosphoElmProcessor(
         file_dump_json=_get_json_from_entry_rows(iter(raw_data))
     ).statements
     assert len(stmts) == 2
