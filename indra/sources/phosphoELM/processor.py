@@ -115,7 +115,7 @@ class PhosphoELMPRocessor(object):
             string from within 'upstream_kinases' that was used to create
             the agent.
         """
-        strip_words = ['_group', 'kinase', '_drome', '_Caeel']
+        strip_words = ['_group', '_drome', '_Caeel']
         # Pre process: strip 'strip words' and any trailing space
         for word in strip_words:
             upstream_kinase = upstream_kinase.replace(word, '').rstrip()
