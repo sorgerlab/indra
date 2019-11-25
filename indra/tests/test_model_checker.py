@@ -15,7 +15,7 @@ from indra.explanation.model_checker import PysbModelChecker, \
 from indra.explanation.model_checker.pysb import _mp_embeds_into, \
     _cp_embeds_into, _match_lhs, remove_im_params
 from indra.explanation.reporting import stmt_from_rule, stmts_from_pysb_path, \
-    stmts_from_pybel_path, stmts_from_indranet_path
+    stmts_from_pybel_path, stmts_from_indranet_path, PybelEdge
 from indra.assemblers.pysb.assembler import PysbAssembler, \
     set_base_initial_condition
 from indra.assemblers.indranet import IndraNetAssembler
@@ -1656,6 +1656,65 @@ def test_pybel_refinements():
         path0, pybel_model, False, model_stmts) == [[model_stmts[0]]]
     assert stmts_from_pybel_path(
         path1, pybel_model, False, model_stmts) == [[model_stmts[1]]]
+
+
+def test_pybel_edge_types():
+    a = Agent('A', db_refs={'HGNC': 1})
+    b = Agent('B', db_refs={'HGNC': 2})
+    c = Agent('C', db_refs={'HGNC': 3})
+    a_b = Agent('A', db_refs={'HGNC': 1}, bound_conditions=[BoundCondition(b)])
+    c_phos = Agent('C', db_refs={'HGNC': 3},
+                   mods=[ModCondition('phosphorylation', 'S', '218')])
+    model_stmts = [Complex([a, b]),
+                   Phosphorylation(b, c, 'S', '218')]
+    test_stmts = [Activation(a, c),
+                  Activation(b, c),
+                  Activation(b, a),
+                  Activation(a_b, b),
+                  Activation(c, c_phos)]
+    pba = PybelAssembler(model_stmts)
+    pybel_model = pba.make_model()
+    pbmc = PybelModelChecker(pybel_model, test_stmts)
+    # Do not include hasVariant and hasComponent edges at all
+    pbmc.graph = None
+    pbmc.get_graph(include_variants=False, symmetric_variant_links=False,
+                   include_components=False, symmetric_component_links=False)
+    results = pbmc.check_model()
+    assert not results[0][1].path_found
+    assert not results[1][1].path_found
+    assert not results[2][1].path_found
+    assert not results[3][1].path_found, results[3][1]
+    assert not results[4][1].path_found
+    # Include hasVariant and hasComponent edges without symmetric links
+    pbmc.graph = None
+    pbmc.get_graph(include_variants=True, symmetric_variant_links=False,
+                   include_components=True, symmetric_component_links=False)
+    results = pbmc.check_model()
+    assert not results[0][1].path_found
+    assert not results[1][1].path_found
+    assert not results[2][1].path_found
+    assert results[3][1].path_found
+    assert results[4][1].path_found
+    path3 = results[3][1].paths[0]
+    path4 = results[4][1].paths[0]
+    path_stmt_3 = stmts_from_pybel_path(
+        path3, pybel_model, False, model_stmts)[0][0]
+    path_stmt_4 = stmts_from_pybel_path(
+        path4, pybel_model, False, model_stmts)[0][0]
+    assert isinstance(path_stmt_3, PybelEdge)
+    assert path_stmt_3.relation == 'hasComponent'
+    assert isinstance(path_stmt_4, PybelEdge)
+    assert path_stmt_4.relation == 'hasVariant'
+    # Include symmetric links
+    pbmc.graph = None
+    pbmc.get_graph(include_variants=True, symmetric_variant_links=True,
+                   include_components=True, symmetric_component_links=True)
+    results = pbmc.check_model()
+    assert results[0][1].path_found
+    assert results[1][1].path_found
+    assert results[2][1].path_found
+    assert results[3][1].path_found
+    assert results[4][1].path_found
 
 
 # Test graph conversion
