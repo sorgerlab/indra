@@ -1,10 +1,16 @@
 import csv
 import logging
 import requests
-from bs4 import BeautifulSoup
 from unidecode import unidecode
 
 from .processor import PhosphoElmProcessor
+
+try:
+    from bs4 import BeautifulSoup
+    has_soup = False
+except ImportError:
+    BeautifulSoup = None
+    has_soup = False
 
 logger = logging.getLogger(__file__)
 
@@ -53,7 +59,11 @@ def _get_json_from_entry_rows(row_iter):
     return ppelm_json
 
 
-def _get_kinase_list_from_web():
+def _get_kinase_names_from_web():
+    if not has_soup:
+        logger.warning('BeautifulSoup is not available. Will not get kinase '
+                       'name list from phosphoELM')
+        return {}
     res = requests.get(kinases_list_web)
     if res.status_code != 200:
         logger.warning('Could not parse kinase list: resource %s responsed '
