@@ -1,5 +1,6 @@
 import indra.assemblers.english.assembler as ea
 from indra.statements import *
+from indra.explanation.reporting import PybelEdge
 
 
 def test_agent_basic():
@@ -432,6 +433,32 @@ def test_active_form():
                     'kinase', True)
     s = _stmt_to_text(st)
     assert s == 'BRAF phosphorylated on T396 is kinase-active.'
+
+
+def test_pybel_edge():
+    pe = PybelEdge(
+        Agent('EGF', bound_conditions=[BoundCondition(Agent('EGFR'))]),
+        Agent('EGF'), 'hasComponent', False)
+    s = _stmt_to_text(pe)
+    assert s == 'EGF bound to EGFR has a component EGF.'
+    pe = PybelEdge(
+        Agent('EGF'),
+        Agent('EGF', bound_conditions=[BoundCondition(Agent('EGFR'))]),
+        'hasComponent', True)
+    s = _stmt_to_text(pe)
+    assert s == 'EGF is a part of EGF bound to EGFR.'
+    pe = PybelEdge(
+        Agent('BRAF'),
+        Agent('BRAF', mods=[ModCondition('phosphorylation', 'T', '396')]),
+        'hasVariant', False)
+    s = _stmt_to_text(pe)
+    assert s == 'BRAF has a variant BRAF phosphorylated on T396.'
+    pe = PybelEdge(
+        Agent('BRAF', mods=[ModCondition('phosphorylation', 'T', '396')]),
+        Agent('BRAF'),
+        'hasVariant', True)
+    s = _stmt_to_text(pe)
+    assert s == 'BRAF phosphorylated on T396 is a variant of BRAF.'
 
 
 def test_get_base_verb():
