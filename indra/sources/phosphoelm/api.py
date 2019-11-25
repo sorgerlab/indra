@@ -36,11 +36,11 @@ def process_from_dump(fname=None, delimiter='\t'):
     """
     if fname is None:
         s3 = _get_s3_client()
-        s3_obj = s3.get_object(
-            Bucket=s3_bucket,
-            Key=ppelm_s3_key)
-        csv_reader = csv.reader(s3_obj['Body'].read().decode('utf8'),
-                                delimiter='\t')
+        s3_obj = s3.get_object(Bucket=s3_bucket, Key=ppelm_s3_key)
+        csv_reader = csv.reader(
+            s3_obj['Body'].read().decode('utf8').splitlines(True),
+            delimiter='\t'
+        )
     else:
         with open(fname, 'r') as f:
             csv_reader = csv.reader(f.readlines(), delimiter=delimiter)
