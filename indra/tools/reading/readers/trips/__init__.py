@@ -33,19 +33,23 @@ class TripsReader(Reader):
     def _read(self, content_iter, verbose=False, log=False, n_per_proc=None):
         # Start trips running
         if os.environ.get("IN_TRIPS_DOCKER", 'false') == 'true':
-            logger.info("Starting up a TRIPS service.")
+            logger.info("Starting up a TRIPS service from within the docker.")
             p = sp.Popen([startup_path], stdout=sp.PIPE,
                          stderr=sp.STDOUT)
-            for line in iter(p.stdout.readline, b''):
-                log_line = line.strip().decode('utf8')
-                logger.info('TRIPS: ' + log_line)
-                if log_line == 'ready.':
-                    break
             service_endpoint = 'http://localhost:80/cgi/'
         else:
-            p = sp.Popen(['docker', 'run', '-id', '-p', '8080:80',
-                          '--entrypoint', startup_path, DRUM_DOCKER])
+            logger.info("Starting up a TRIPS service using drum docker.")
+            p = sp.Popen(['docker', 'run', '-it', '-p', '8080:80',
+                          '--entrypoint', startup_path, DRUM_DOCKER],
+                         stdout=sp.PIPE, stderr=sp.STDOUT)
             service_endpoint = 'http://localhost:8080/cgi/'
+
+        # Wait for the service to be ready
+        for line in iter(p.stdout.readline, b''):
+            log_line = line.strip().decode('utf8')
+            logger.info('TRIPS: ' + log_line)
+            if log_line == 'ready.':
+                break
 
         # Process all the content.
         for content in content_iter:
