@@ -54,6 +54,8 @@ class PhosphoElmProcessor(object):
             kinases in entry['kinases'] are not known.
         """
         if self._phosphoelm_data is None:
+            logger.warning('No phosphoelm data to process. No statements '
+                           'are produced')
             return
         for entry in self._phosphoelm_data:
             if not keep_empty and not entry['kinases'] or\
