@@ -48,8 +48,7 @@ def _get_json_from_entry_rows(row_iter):
     ppelm_json = []
     columns = next(row_iter)
     for entry in row_iter:
-        row_dict = {columns[n]: entry[n]
-                    for n in range(len(columns))}
+        row_dict = {c: e for c, e in zip(columns, entry)}
         ppelm_json.append(row_dict)
     return ppelm_json
 
