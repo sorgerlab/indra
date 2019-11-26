@@ -44,10 +44,11 @@ def test_json_processing():
 
 
 def test_keep_empty():
-    stmts = PhosphoElmProcessor(
-        file_dump_json=_get_json_from_entry_rows(iter(raw_data)),
-        keep_empty=True
-    ).statements
+    pep = PhosphoElmProcessor(
+        phosphoelm_data=_get_json_from_entry_rows(iter(raw_data))
+    )
+    pep.process_phosphorylations(True)
+    stmts = pep.statements
     assert len(stmts) == 3
     assert all(isinstance(st, Phosphorylation) for st in stmts)
     assert all(st.evidence[0].source_api == 'phospho.ELM' for st in stmts)
@@ -56,9 +57,11 @@ def test_keep_empty():
 
 
 def test_not_empty():
-    stmts = PhosphoElmProcessor(
-        file_dump_json=_get_json_from_entry_rows(iter(raw_data))
-    ).statements
+    pep = PhosphoElmProcessor(
+        phosphoelm_data=_get_json_from_entry_rows(iter(raw_data))
+    )
+    pep.process_phosphorylations()
+    stmts = pep.statements
     assert len(stmts) == 2
 
 
