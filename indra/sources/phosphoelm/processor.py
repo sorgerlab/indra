@@ -23,25 +23,30 @@ def _gilda_grounder(entity_str):
 
 
 class PhosphoElmProcessor(object):
-    def __init__(self, file_dump_json=None, keep_empty=False):
-        """The PhosphoElmProcessor processes data dumps from the phospho.ELM
-        database. See http://phospho.elm.eu.org/dataset.html
+    """Processes data dumps from the phospho.ELM database.
 
-        file_dump_json : list(dict)
-            JSON compatible list of entries from a phospho.ELM data dump
-        keep_empty : bool
-            If true, also create statements when upstream kinases in
-            entry['kinases'] are not known.
-        """
+    See http://phospho.elm.eu.org/dataset.html
+
+    Parameters
+    ----------
+    phosphoelm_data : list(dict)
+        JSON compatible list of entries from a phospho.ELM data dump
+
+    Attributes
+    ----------
+    statements : list(indra.statement.Phosphorylation)
+        A list of the phosphorylation statements produced by the entries
+        in phosphoelm_data
+    """
+    def __init__(self, phosphoelm_data=None):
         self.statements = []
-        self.statements.extend(self._from_file_dump_json(file_dump_json,
-                                                         keep_empty))
+        self._phosphoelm_data = phosphoelm_data
 
-    def _from_file_dump_json(self, fd_json, keep_empty=False):
+    def process_phosphorylations(self, keep_empty=False):
         """Create Phosphorylation statements from the json entries
 
-        fd_json : list(dict)
-            JSON compatible list of entries
+        Parameters
+        ----------
         keep_empty : bool
             If true, also create statements when upstream kinases in
             entry['kinases'] are not known.
@@ -52,10 +57,9 @@ class PhosphoElmProcessor(object):
             A list of the phosphorylation statements produced by the entries
             in the json
         """
-        if fd_json is None:
-            return []
-        statements = []
-        for entry in fd_json:
+        if self._phosphoelm_data is None:
+            return
+        for entry in self._phosphoelm_data:
             if not keep_empty and not entry['kinases'] or\
                     not entry['species'].lower() == 'homo sapiens':
                 # Skip entries without any kinases or if species is other
@@ -90,14 +94,13 @@ class PhosphoElmProcessor(object):
                     'sequence': entry['sequence']
                 }
             )
-            statements.append(Phosphorylation(
+            self.statements.append(Phosphorylation(
                 enz=enz,
                 sub=substrate,
                 residue=entry['code'],
                 position=entry['position'],
                 evidence=evidence)
             )
-        return statements
 
     @staticmethod
     def _get_enzyme(upstream_kinase):

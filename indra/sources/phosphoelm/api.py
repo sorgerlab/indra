@@ -30,7 +30,7 @@ def process_from_dump(fname=None, delimiter='\t'):
 
     Returns
     -------
-    ppp : indra.sources.phosphoELM.PhosphoElmProcessor
+    pep : indra.sources.phosphoelm.PhosphoElmProcessor
         An instance of a PhosphoElmProcessor containing the statements
         generated from the file dump
     """
@@ -45,7 +45,9 @@ def process_from_dump(fname=None, delimiter='\t'):
         with open(fname, 'r') as f:
             csv_reader = csv.reader(f.readlines(), delimiter=delimiter)
     ppelm_json = _get_json_from_entry_rows(csv_reader)
-    return PhosphoElmProcessor(file_dump_json=ppelm_json)
+    pep = PhosphoElmProcessor(ppelm_json)
+    pep.process_phosphorylations()
+    return pep
 
 
 def _get_json_from_entry_rows(row_iter):
