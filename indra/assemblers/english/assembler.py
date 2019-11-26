@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import logging
 import indra.statements as ist
-from indra.explanation.reporting import PybelEdge
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +75,6 @@ class EnglishAssembler(object):
                 stmt_strs.append(_assemble_gap(stmt))
             elif isinstance(stmt, ist.Conversion):
                 stmt_strs.append(_assemble_conversion(stmt))
-            elif isinstance(stmt, PybelEdge):
-                stmt_strs.append(_assemble_pybel_edge(stmt))
             else:
                 logger.warning('Unhandled statement type: %s.' % type(stmt))
         if stmt_strs:
@@ -385,23 +382,6 @@ def _assemble_influence(stmt):
 
     stmt_str = '%s causes %s' % (subj_str, obj_str)
     return _make_sentence(stmt_str)
-
-
-def _assemble_pybel_edge(pybel_edge):
-    source_str = _assemble_agent_str(pybel_edge.source)
-    target_str = _assemble_agent_str(pybel_edge.target)
-    if pybel_edge.relation == 'hasComponent':
-        if pybel_edge.reverse:
-            rel_str = ' is a part of '
-        else:
-            rel_str = ' has a component '
-    elif pybel_edge.relation == 'hasVariant':
-        if pybel_edge.reverse:
-            rel_str = ' is a variant of '
-        else:
-            rel_str = ' has a variant '
-    edge_str = source_str + rel_str + target_str
-    return _make_sentence(edge_str)
 
 
 def _make_sentence(txt):

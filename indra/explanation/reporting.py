@@ -2,6 +2,8 @@ from collections import namedtuple
 
 from indra.sources.indra_db_rest.api import get_statements_by_hash
 from indra.statements import *
+from indra.assemblers.english.assembler import _assemble_agent_str, \
+    _make_sentence
 
 
 def stmts_from_pysb_path(path, model, stmts):
@@ -86,6 +88,23 @@ def stmts_from_indranet_path(path, model, signed, from_db=True, stmts=None):
 
 PybelEdge = namedtuple(
     'PybelEdge', ['source', 'target', 'relation', 'reverse'])
+
+
+def pybel_edge_to_english(pybel_edge):
+    source_str = _assemble_agent_str(pybel_edge.source)
+    target_str = _assemble_agent_str(pybel_edge.target)
+    if pybel_edge.relation == 'hasComponent':
+        if pybel_edge.reverse:
+            rel_str = ' is a part of '
+        else:
+            rel_str = ' has a component '
+    elif pybel_edge.relation == 'hasVariant':
+        if pybel_edge.reverse:
+            rel_str = ' is a variant of '
+        else:
+            rel_str = ' has a variant '
+    edge_str = source_str + rel_str + target_str
+    return _make_sentence(edge_str)
 
 
 def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
