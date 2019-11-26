@@ -22,7 +22,7 @@ def main():
                       'eidos_offline': ['pyyaml>=5.1.0', 'cython', 'pyjnius==1.1.4'],
                       'geneways': ['stemming', 'nltk'],
                       'sofia': ['openpyxl'],
-                      'bel': ['pybel>=0.14.2'],
+                      'bel': ['pybel>=0.14.2,<0.15.0'],
                       'sbml': ['python-libsbml'],
                       'obo': ['obonet'],
                       # Tools and analysis
