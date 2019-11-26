@@ -4,7 +4,7 @@ import requests
 from indra.statements import Phosphorylation, Evidence, Agent
 
 gilda_url = 'http://grounding.indra.bio/ground'
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def _gilda_grounder(entity_str):

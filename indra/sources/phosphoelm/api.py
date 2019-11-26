@@ -12,7 +12,7 @@ except ImportError:
     BeautifulSoup = None
     has_soup = False
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 s3_bucket = 'bigmech'
 ppelm_s3_key = 'phosphoELM_data/phosphoELM_all_2015-04.dump'
