@@ -1,10 +1,14 @@
 import os
+import logging
 import subprocess as sp
 from datetime import datetime, timedelta, timezone
 
 from indra.tools.reading.readers.core import Reader
 
 from indra.sources.trips import client, process_xml
+
+
+logger = logging.getLogger(__name__)
 
 startup_path = '/sw/drum/bin/startup.sh'
 service_host = 'drum'
@@ -29,8 +33,14 @@ class TripsReader(Reader):
     def _read(self, content_iter, verbose=False, log=False, n_per_proc=None):
         # Start trips running
         if os.environ.get("IN_TRIPS_DOCKER", 'false') == 'true':
+            logger.info("Starting up a TRIPS service.")
             p = sp.Popen([startup_path], stdout=sp.PIPE,
                          stderr=sp.STDOUT)
+            for line in iter(p.stdout.readline, b''):
+                log_line = line.strip().decode('utf8')
+                logger.info('TRIPS: ' + log_line)
+                if log_line == 'ready.':
+                    break
             service_endpoint = 'http://localhost:80/cgi/'
         else:
             p = sp.Popen(['docker', 'run', '-id', '-p', '8080:80',
