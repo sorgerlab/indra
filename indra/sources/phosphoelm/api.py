@@ -24,7 +24,7 @@ def process_from_dump(fname=None, delimiter='\t'):
 
     Returns
     -------
-    pep : indra.sources.phosphoelm.PhosphoElmProcessor
+    indra.sources.phosphoelm.PhosphoElmProcessor
         An instance of a PhosphoElmProcessor containing the statements
         generated from the file dump
     """
@@ -35,10 +35,13 @@ def process_from_dump(fname=None, delimiter='\t'):
             s3_obj['Body'].read().decode('utf8').splitlines(True),
             delimiter='\t'
         )
+        ppelm_json = _get_json_from_entry_rows(csv_reader)
     else:
         with open(fname, 'r') as f:
-            csv_reader = csv.reader(f.readlines(), delimiter=delimiter)
-    ppelm_json = _get_json_from_entry_rows(csv_reader)
+            # f.readlines is needed so that the file content is consumed
+            # before exiting the with-open clause
+            csv_reader = csv.reader(f, delimiter=delimiter)
+            ppelm_json = _get_json_from_entry_rows(csv_reader)
     pep = PhosphoElmProcessor(ppelm_json)
     pep.process_phosphorylations()
     return pep
