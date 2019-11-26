@@ -1,5 +1,6 @@
 import os
 import subprocess as sp
+from datetime import datetime, timedelta, timezone
 
 from indra.tools.reading.readers.core import Reader
 
@@ -7,6 +8,7 @@ from indra.sources.trips import client, process_xml
 
 startup_path = '/sw/drum/bin/startup.sh'
 service_host = 'drum'
+DRUM_DOCKER = '292075781285.dkr.ecr.us-east-1.amazonaws.com/drum'
 
 
 class TripsReader(Reader):
@@ -32,7 +34,7 @@ class TripsReader(Reader):
             service_endpoint = 'http://localhost:80/cgi/'
         else:
             p = sp.Popen(['docker', 'run', '-id', '-p', '8080:80',
-                          '--entrypoint', startup_path, 'drum:latest'])
+                          '--entrypoint', startup_path, DRUM_DOCKER])
             service_endpoint = 'http://localhost:8080/cgi/'
 
         # Process all the content.
@@ -50,11 +52,28 @@ class TripsReader(Reader):
 
     @classmethod
     def get_version(cls):
-        return 'STATIC'
+        git_date_cmd = ['git', 'log', '-1', '--format=%cd']
+        if os.environ.get("IN_TRIPS_DOCKER", "false") == "true":
+            curdir = os.getcwd()
+            try:
+                # Get the date of the last commit from git in drum.
+                os.chdir('/sw/drum')
+                res = sp.run(git_date_cmd, stdout=sp.PIPE)
+            finally:
+                os.chdir(curdir)
+        else:
+            # We need to add a function within the docker to
+            assert False, "This is currently not available."
+
+        # Format that string into a datetime and standardize to utc.
+        d = datetime.strptime(res.stdout, '%a %b %d %H:%M:%S %Y %z')
+        d.astimezone(tz=timezone(timedelta(0)))
+
+        # Create a formatted string as the version.
+        version = d.strftime('%Y%b%d')
+
+        return version
 
     @staticmethod
     def get_processor(reading_content):
         return process_xml(reading_content)
-
-
-
