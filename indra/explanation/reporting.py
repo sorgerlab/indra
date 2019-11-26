@@ -149,7 +149,7 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
         for j in range(len(edges)):
             try:
                 hashes.add(edges[j]['stmt_hash'])
-            #  and hasVariant edges don't have hashes
+            # partOf and hasVariant edges don't have hashes
             except KeyError:
                 continue
         # If we didn't get any hashes, we can get PybelEdge object from
