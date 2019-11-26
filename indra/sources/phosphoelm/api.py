@@ -1,5 +1,6 @@
 import csv
 import logging
+from indra.util.aws import get_s3_client
 
 from .processor import PhosphoElmProcessor
 
@@ -28,7 +29,7 @@ def process_from_dump(fname=None, delimiter='\t'):
         generated from the file dump
     """
     if fname is None:
-        s3 = _get_s3_client()
+        s3 = get_s3_client(False)
         s3_obj = s3.get_object(Bucket=s3_bucket, Key=ppelm_s3_key)
         csv_reader = csv.reader(
             s3_obj['Body'].read().decode('utf8').splitlines(True),
@@ -51,27 +52,3 @@ def _get_json_from_entry_rows(row_iter):
         row_dict = {c: e for c, e in zip(columns, entry)}
         ppelm_json.append(row_dict)
     return ppelm_json
-
-
-def _get_s3_client(unsigned=True):
-    import boto3
-    from botocore import UNSIGNED
-    from botocore.client import Config
-
-    """Return a boto3 S3 client with optional unsigned config.
-
-    Parameters
-    ----------
-    unsigned : Optional[bool]
-        If True, the client will be using unsigned mode in which public
-        resources can be accessed without credentials. Default: True
-
-    Returns
-    -------
-    botocore.client.S3
-        A client object to AWS S3.
-    """
-    if unsigned:
-        return boto3.client('s3', config=Config(signature_version=UNSIGNED))
-    else:
-        return boto3.client('s3')
