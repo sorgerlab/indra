@@ -1,4 +1,9 @@
+from collections import namedtuple
+
 from indra.sources.indra_db_rest.api import get_statements_by_hash
+from indra.statements import *
+from indra.assemblers.english.assembler import _assemble_agent_str, \
+    _make_sentence
 
 
 def stmts_from_pysb_path(path, model, stmts):
@@ -81,6 +86,27 @@ def stmts_from_indranet_path(path, model, signed, from_db=True, stmts=None):
     return steps
 
 
+PybelEdge = namedtuple(
+    'PybelEdge', ['source', 'target', 'relation', 'reverse'])
+
+
+def pybel_edge_to_english(pybel_edge):
+    source_str = _assemble_agent_str(pybel_edge.source)
+    target_str = _assemble_agent_str(pybel_edge.target)
+    if pybel_edge.relation == 'hasComponent':
+        if pybel_edge.reverse:
+            rel_str = ' is a part of '
+        else:
+            rel_str = ' has a component '
+    elif pybel_edge.relation == 'hasVariant':
+        if pybel_edge.reverse:
+            rel_str = ' is a variant of '
+        else:
+            rel_str = ' has a variant '
+    edge_str = source_str + rel_str + target_str
+    return _make_sentence(edge_str)
+
+
 def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
     """Return source Statements corresponding to a path in a PyBEL model.
 
@@ -107,25 +133,46 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
         multiple edges representing multiple statements and evidences between
         two nodes).
     """
+    from indra.sources.bel.processor import get_agent
     steps = []
     for i in range(len(path[:-1])):
         source = path[i]
         target = path[i+1]
-        edges = model[source[0]][target[0]]
+        reverse = False
+        try:
+            edges = model[source[0]][target[0]]
+        except KeyError:
+            # May be a symmetric edge
+            edges = model[target[0]][source[0]]
+            reverse = True
         hashes = set()
         for j in range(len(edges)):
             try:
                 hashes.add(edges[j]['stmt_hash'])
-            # If a statement subject or object is a Complex, model would have
-            # edges with non-regular indices
+            # hasComponent and hasVariant edges don't have hashes
             except KeyError:
                 continue
-        if from_db:
-            statements = get_statements_by_hash(list(hashes),
-                                                simple_response=True)
+        # If we didn't get any hashes, we can get PybelEdge object from
+        # hasComponent and hasVariant edges
+        if not hashes:
+            statements = []
+            # Can't get statements without hash from db
+            for edge_v in edges.values():
+                rel = edge_v['relation']
+                edge = PybelEdge(get_agent(source[0]),
+                                 get_agent(target[0]), rel, reverse)
+                statements.append(edge)
+                # Stop if we have an edge to avoid duplicates
+                if len(statements) > 0:
+                    break
+        # If we have hashes, retrieve statements from them
         else:
-            statements = [
-                stmt for stmt in stmts if stmt.get_hash() in hashes]
+            if from_db:
+                statements = get_statements_by_hash(list(hashes),
+                                                    simple_response=True)
+            else:
+                statements = [
+                    stmt for stmt in stmts if stmt.get_hash() in hashes]
         steps.append(statements)
     return steps
 

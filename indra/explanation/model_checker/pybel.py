@@ -27,14 +27,20 @@ class PybelModelChecker(ModelChecker):
         super().__init__(model, statements, do_sampling, seed)
         self.model_agents = self._get_model_agents()
 
-    def get_graph(self):
+    def get_graph(self, include_variants=False, symmetric_variant_links=False,
+                  include_components=True, symmetric_component_links=True):
         """Convert a PyBELGraph to a graph with signed nodes."""
         # This import is done here rather than at the top level to avoid
         # making pybel an implicit dependency of the model checker
         from indra.assemblers.pybel.assembler import belgraph_to_signed_graph
         if self.graph:
             return self.graph
-        signed_edges = belgraph_to_signed_graph(self.model)
+        signed_edges = belgraph_to_signed_graph(
+            self.model,
+            include_variants=include_variants,
+            symmetric_variant_links=symmetric_variant_links,
+            include_components=include_components,
+            symmetric_component_links=symmetric_component_links)
         self.graph = signed_edges_to_signed_nodes(signed_edges)
         return self.graph
 

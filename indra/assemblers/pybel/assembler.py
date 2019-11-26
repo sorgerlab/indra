@@ -384,27 +384,34 @@ class PybelAssembler(object):
         pass
 
 
-def belgraph_to_signed_graph(belgraph, symmetric_variant_links=False):
-        edge_set = set()
-        for u, v, edge_data in belgraph.edges(data=True):
-            rel = edge_data.get('relation')
-            if rel in pc.CAUSAL_INCREASE_RELATIONS:
-                edge_set.add((u, v, 0))
-            elif rel in (pc.HAS_VARIANT, pc.HAS_COMPONENT):
-                edge_set.add((u, v, 0))
-                if symmetric_variant_links:
-                    edge_set.add((v, u, 0))
-            elif rel in pc.CAUSAL_DECREASE_RELATIONS:
-                edge_set.add((u, v, 1))
-            else:
-                continue
-        # Turn the tuples into dicts
-        graph = nx.MultiDiGraph()
-        graph.add_edges_from(
-            (u, v, dict(sign=sign))
-            for u, v, sign in edge_set
-        )
-        return graph
+def belgraph_to_signed_graph(
+        belgraph, include_variants=True, symmetric_variant_links=False,
+        include_components=True, symmetric_component_links=False):
+    edge_set = set()
+    for u, v, edge_data in belgraph.edges(data=True):
+        rel = edge_data.get('relation')
+        if rel in pc.CAUSAL_INCREASE_RELATIONS:
+            edge_set.add((u, v, 0))
+        elif rel in pc.HAS_VARIANT and include_variants:
+            edge_set.add((u, v, 0))
+            if symmetric_variant_links:
+                edge_set.add((v, u, 0))
+        elif rel in pc.HAS_COMPONENT and include_components:
+            edge_set.add((u, v, 0))
+            if symmetric_component_links:
+                edge_set.add((v, u, 0))
+        elif rel in pc.CAUSAL_DECREASE_RELATIONS:
+            edge_set.add((u, v, 1))
+        else:
+            continue
+    # Turn the tuples into dicts
+    graph = nx.MultiDiGraph()
+    graph.add_edges_from(
+        (u, v, dict(sign=sign))
+        for u, v, sign in edge_set
+    )
+    return graph
+
 
 def _combine_edge_data(relation, subj_edge, obj_edge, stmt_hash, evidences):
     edge_data = {pc.RELATION: relation}
@@ -429,14 +436,15 @@ def _get_agent_node(agent):
     if not agent.bound_conditions:
         return _get_agent_node_no_bcs(agent)
 
+    # Check if bound conditions are bound to agent
+    bound_conditions = [
+        bc.agent for bc in agent.bound_conditions if bc.is_bound]
+    if not bound_conditions:
+        return _get_agent_node_no_bcs(agent)
     # "Flatten" the bound conditions for the agent at this level
     agent_no_bc = deepcopy(agent)
     agent_no_bc.bound_conditions = []
-    members = [agent_no_bc] + [
-        bc.agent
-        for bc in agent.bound_conditions
-        if bc.is_bound
-    ]
+    members = [agent_no_bc] + bound_conditions
     return _get_complex_node(members)
 
 

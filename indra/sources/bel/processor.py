@@ -602,7 +602,7 @@ def get_db_refs_by_ident(ns, ident, node_data):
                 return None, None
     elif ns == 'MIRBASE':
         db_refs = {'MIRBASE': ident}
-    elif ns in ('MGI', 'RGD', 'CHEBI', 'HMDB', 'MESH'):
+    elif ns in ('MGI', 'RGD', 'CHEBI', 'HMDB', 'MESH', 'FPLX'):
         db_refs = {ns: ident}
         # raise ValueError('Identifiers for MGI and RGD databases are not '
         #                 'currently handled: %s' % node_data)

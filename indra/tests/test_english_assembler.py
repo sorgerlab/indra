@@ -1,5 +1,6 @@
 import indra.assemblers.english.assembler as ea
 from indra.statements import *
+from indra.explanation.reporting import PybelEdge
 
 
 def test_agent_basic():
