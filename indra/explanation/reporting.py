@@ -93,11 +93,11 @@ PybelEdge = namedtuple(
 def pybel_edge_to_english(pybel_edge):
     source_str = _assemble_agent_str(pybel_edge.source)
     target_str = _assemble_agent_str(pybel_edge.target)
-    if pybel_edge.relation == 'hasComponent':
+    if pybel_edge.relation == 'partOf':
         if pybel_edge.reverse:
-            rel_str = ' is a part of '
-        else:
             rel_str = ' has a component '
+        else:
+            rel_str = ' is a part of '
     elif pybel_edge.relation == 'hasVariant':
         if pybel_edge.reverse:
             rel_str = ' is a variant of '
@@ -149,11 +149,11 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
         for j in range(len(edges)):
             try:
                 hashes.add(edges[j]['stmt_hash'])
-            # hasComponent and hasVariant edges don't have hashes
+            #  and hasVariant edges don't have hashes
             except KeyError:
                 continue
         # If we didn't get any hashes, we can get PybelEdge object from
-        # hasComponent and hasVariant edges
+        # partOf and hasVariant edges
         if not hashes:
             statements = []
             # Can't get statements without hash from db
