@@ -7,7 +7,7 @@ from .processor import PhosphoElmProcessor
 
 try:
     from bs4 import BeautifulSoup
-    has_soup = False
+    has_soup = True
 except ImportError:
     BeautifulSoup = None
     has_soup = False
