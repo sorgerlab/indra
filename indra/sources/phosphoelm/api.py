@@ -15,7 +15,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 s3_bucket = 'bigmech'
-ppelm_s3_key = 'phosphoELM_data/phosphoELM_all_2015-04.dump'
+ppelm_s3_key = 'indra-db/external_databases/phosphoELM_all_2015-04.dump'
 kinases_list_web = 'http://phospho.elm.eu.org/kinases.html'
 
 
