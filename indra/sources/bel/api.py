@@ -8,12 +8,10 @@ from .processor import PybelProcessor
 
 logger = logging.getLogger(__name__)
 
-branch = (
-    'https://github.com/cthoyt/selventa-knowledge/raw/'
-    'prepare-pybel-14/selventa_knowledge/'
-)
-large_corpus_url = branch + 'large_corpus.bel.nodelink.json.gz'
-small_corpus_url = branch + 'small_corpus.bel.nodelink.json.gz'
+version = 'v1.0.0'
+branch = 'https://github.com/cthoyt/selventa-knowledge/raw/{}/selventa_knowledge/{}'
+large_corpus_url = branch.format(version, 'large_corpus.bel.nodelink.json.gz')
+small_corpus_url = branch.format(version, 'small_corpus.bel.nodelink.json.gz')
 
 
 def process_small_corpus():
