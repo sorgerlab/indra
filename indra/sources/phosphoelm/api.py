@@ -22,6 +22,8 @@ kinases_list_web = 'http://phospho.elm.eu.org/kinases.html'
 def process_from_dump(fname=None, delimiter='\t'):
     """Process a phospho.ELM file dump
 
+    Parameters
+    ----------
     fname : str
         File path to the phospho.ELM file dump. If none is provided,
         the file will be downloaded from S3.
@@ -64,7 +66,7 @@ def _get_json_from_entry_rows(row_iter):
 def _get_kinase_names_from_web():
     if not has_soup:
         logger.warning('BeautifulSoup is not available. Will not get kinase '
-                       'name list from phosphoELM')
+                       'name list from phospho.ELM')
         return {}
     res = requests.get(kinases_list_web)
     if res.status_code != 200:

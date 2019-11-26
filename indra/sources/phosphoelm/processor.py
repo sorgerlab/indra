@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 
 
 def _gilda_grounder(entity_str):
-    # Try to find a namespace for the enzyme entity string, return the string
-    # that provided the match
+    # Try to find a namespace for the enzyme entity string, return the
+    # string that provided the match
     res = requests.post(gilda_url, json={'text': entity_str})
     if res.status_code == 200 and res.json():
         db_ns = res.json()[0]['term']['db']
@@ -43,19 +43,13 @@ class PhosphoElmProcessor(object):
         self._phosphoelm_data = phosphoelm_data
 
     def process_phosphorylations(self, keep_empty=False):
-        """Create Phosphorylation statements from the json entries
+        """Create Phosphorylation statements from phosphoelm_data
 
         Parameters
         ----------
         keep_empty : bool
             If true, also create statements when upstream kinases in
             entry['kinases'] are not known.
-
-        Returns
-        -------
-        statements : list[indra.statement.Phosphorylation]
-            A list of the phosphorylation statements produced by the entries
-            in the json
         """
         if self._phosphoelm_data is None:
             return
