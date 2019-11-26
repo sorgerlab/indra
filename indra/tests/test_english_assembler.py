@@ -435,32 +435,6 @@ def test_active_form():
     assert s == 'BRAF phosphorylated on T396 is kinase-active.'
 
 
-def test_pybel_edge():
-    pe = PybelEdge(
-        Agent('EGF', bound_conditions=[BoundCondition(Agent('EGFR'))]),
-        Agent('EGF'), 'hasComponent', False)
-    s = _stmt_to_text(pe)
-    assert s == 'EGF bound to EGFR has a component EGF.'
-    pe = PybelEdge(
-        Agent('EGF'),
-        Agent('EGF', bound_conditions=[BoundCondition(Agent('EGFR'))]),
-        'hasComponent', True)
-    s = _stmt_to_text(pe)
-    assert s == 'EGF is a part of EGF bound to EGFR.'
-    pe = PybelEdge(
-        Agent('BRAF'),
-        Agent('BRAF', mods=[ModCondition('phosphorylation', 'T', '396')]),
-        'hasVariant', False)
-    s = _stmt_to_text(pe)
-    assert s == 'BRAF has a variant BRAF phosphorylated on T396.'
-    pe = PybelEdge(
-        Agent('BRAF', mods=[ModCondition('phosphorylation', 'T', '396')]),
-        Agent('BRAF'),
-        'hasVariant', True)
-    s = _stmt_to_text(pe)
-    assert s == 'BRAF phosphorylated on T396 is a variant of BRAF.'
-
-
 def test_get_base_verb():
     assert ea.statement_base_verb('inhibition') == 'inhibit'
     assert ea.statement_base_verb('dephosphorylation') == 'dephosphorylate'

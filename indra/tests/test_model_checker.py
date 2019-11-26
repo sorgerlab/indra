@@ -15,7 +15,8 @@ from indra.explanation.model_checker import PysbModelChecker, \
 from indra.explanation.model_checker.pysb import _mp_embeds_into, \
     _cp_embeds_into, _match_lhs, remove_im_params
 from indra.explanation.reporting import stmt_from_rule, stmts_from_pysb_path, \
-    stmts_from_pybel_path, stmts_from_indranet_path, PybelEdge
+    stmts_from_pybel_path, stmts_from_indranet_path, PybelEdge, \
+    pybel_edge_to_english
 from indra.assemblers.pysb.assembler import PysbAssembler, \
     set_base_initial_condition
 from indra.assemblers.indranet import IndraNetAssembler
@@ -1715,6 +1716,32 @@ def test_pybel_edge_types():
     assert results[2][1].path_found
     assert results[3][1].path_found
     assert results[4][1].path_found
+
+
+def test_pybel_edge_to_english():
+    pe = PybelEdge(
+        Agent('EGF', bound_conditions=[BoundCondition(Agent('EGFR'))]),
+        Agent('EGF'), 'hasComponent', False)
+    s = pybel_edge_to_english(pe)
+    assert s == 'EGF bound to EGFR has a component EGF.'
+    pe = PybelEdge(
+        Agent('EGF'),
+        Agent('EGF', bound_conditions=[BoundCondition(Agent('EGFR'))]),
+        'hasComponent', True)
+    s = pybel_edge_to_english(pe)
+    assert s == 'EGF is a part of EGF bound to EGFR.'
+    pe = PybelEdge(
+        Agent('BRAF'),
+        Agent('BRAF', mods=[ModCondition('phosphorylation', 'T', '396')]),
+        'hasVariant', False)
+    s = pybel_edge_to_english(pe)
+    assert s == 'BRAF has a variant BRAF phosphorylated on T396.'
+    pe = PybelEdge(
+        Agent('BRAF', mods=[ModCondition('phosphorylation', 'T', '396')]),
+        Agent('BRAF'),
+        'hasVariant', True)
+    s = pybel_edge_to_english(pe)
+    assert s == 'BRAF phosphorylated on T396 is a variant of BRAF.'
 
 
 # Test graph conversion
