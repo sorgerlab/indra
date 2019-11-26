@@ -76,7 +76,8 @@ class TripsReader(Reader):
             assert False, "This is currently not available."
 
         # Format that string into a datetime and standardize to utc.
-        d = datetime.strptime(res.stdout, '%a %b %d %H:%M:%S %Y %z')
+        d = datetime.strptime(res.stdout.decode('utf-8').stirp(),
+                              '%a %b %d %H:%M:%S %Y %z')
         d.astimezone(tz=timezone(timedelta(0)))
 
         # Create a formatted string as the version.
