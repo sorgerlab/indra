@@ -1,16 +1,7 @@
 import csv
 import logging
-import requests
-from unidecode import unidecode
 
 from .processor import PhosphoElmProcessor
-
-try:
-    from bs4 import BeautifulSoup
-    has_soup = True
-except ImportError:
-    BeautifulSoup = None
-    has_soup = False
 
 logger = logging.getLogger(__name__)
 
@@ -61,30 +52,6 @@ def _get_json_from_entry_rows(row_iter):
                     for n in range(len(columns))}
         ppelm_json.append(row_dict)
     return ppelm_json
-
-
-def _get_kinase_names_from_web():
-    if not has_soup:
-        logger.warning('BeautifulSoup is not available. Will not get kinase '
-                       'name list from phospho.ELM')
-        return {}
-    res = requests.get(kinases_list_web)
-    if res.status_code != 200:
-        logger.warning('Could not parse kinase list: resource %s responsed '
-                       'with status %d' %
-                       (kinases_list_web, res.status_code))
-        return {}
-
-    soup = BeautifulSoup(markup=res.text, features='html.parser')
-    kinase_table = soup.find('table', {'id': 'kinaselist'})
-    headers = tuple(unidecode(th.get_text()).strip() for th in
-                    kinase_table.find_all('th'))
-    kinase_entries = {}
-    for tr in kinase_table.find('tbody').find_all('tr'):
-        entry = dict(zip(headers, (unidecode(td.get_text()).strip() for td
-                                   in tr.find_all('td'))))
-        kinase_entries[entry['Name']] = entry
-    return kinase_entries
 
 
 def _get_s3_client(unsigned=True):
