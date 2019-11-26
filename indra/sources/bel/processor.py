@@ -1,16 +1,22 @@
-import re
+# -*- coding: utf-8 -*-
+
 import logging
-import pybel.constants as pc
+import re
 from collections import defaultdict
-from pybel.struct import has_protein_modification
-from pybel.canonicalize import edge_to_bel
-import pybel.dsl as dsl
+
 from bel_resources import get_bel_resource
-from indra.statements import *
-from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
-from indra.databases import hgnc_client, uniprot_client, chebi_client, \
-    go_client, mesh_client, mirbase_client
+
+import pybel.constants as pc
+import pybel.dsl as dsl
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
+from indra.databases import (
+    chebi_client, go_client, hgnc_client, mesh_client,
+    mirbase_client, uniprot_client,
+)
+from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
+from indra.statements import *
+from pybel.canonicalize import edge_to_bel
+from pybel.struct import has_protein_modification
 
 __all__ = [
     'PybelProcessor',
@@ -18,7 +24,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-
 
 _pybel_indra_pmod_map = {
     'Ph': 'phosphorylation',
@@ -67,6 +72,7 @@ class PybelProcessor(object):
     statements : list[indra.statements.Statement]
         A list of extracted INDRA Statements representing BEL Statements.
     """
+
     def __init__(self, graph):
         self.graph = graph
         self.statements = []
@@ -100,7 +106,7 @@ class PybelProcessor(object):
             #   x(Foo) -> p(Bar, pmod(Ph))
             #   act(x(Foo)) -> p(Bar, pmod(Ph))
             if isinstance(v_data, dsl.Protein) and \
-               has_protein_modification(v_data):
+                has_protein_modification(v_data):
                 if obj_activity:
                     logger.info("Ignoring object activity modifier in "
                                 "modification statement: %s, %s, %s, %s",
@@ -204,10 +210,10 @@ class PybelProcessor(object):
             return
         elif has_deg:
             stmt_class = (DecreaseAmount if rel in
-                          pc.CAUSAL_INCREASE_RELATIONS else IncreaseAmount)
+                                            pc.CAUSAL_INCREASE_RELATIONS else IncreaseAmount)
         else:
             stmt_class = (IncreaseAmount if rel in
-                          pc.CAUSAL_INCREASE_RELATIONS else DecreaseAmount)
+                                            pc.CAUSAL_INCREASE_RELATIONS else DecreaseAmount)
         ev = self._get_evidence(u_data, v_data, k, edge_data)
         stmt = stmt_class(subj_agent, obj_agent, evidence=[ev])
         self.statements.append(stmt)
@@ -240,7 +246,7 @@ class PybelProcessor(object):
             activity_type = 'activity'
         else:
             obj_activity_condition = \
-                            _get_activity_condition(edge_data.get(pc.OBJECT))
+                _get_activity_condition(edge_data.get(pc.OBJECT))
             activity_type = obj_activity_condition.activity_type
             assert obj_activity_condition.is_active is True
         # Check for valid subject/object
@@ -310,12 +316,12 @@ class PybelProcessor(object):
         # We are not handling the following degenerate cases:
         # If there is no subject agent
         if (subj_agent is None or
-                # If get_agent returned None for any of the reactants or
-                # products
-                any(r is None for r in reactant_agents) or
-                any(p is None for p in product_agents) or
-                # If there are no reactants and or no products
-                (not reactant_agents and not product_agents)):
+            # If get_agent returned None for any of the reactants or
+            # products
+            any(r is None for r in reactant_agents) or
+            any(p is None for p in product_agents) or
+            # If there are no reactants and or no products
+            (not reactant_agents and not product_agents)):
             self.unhandled.append((u_data, v_data, k, edge_data))
             return
         ev = self._get_evidence(u_data, v_data, k, edge_data)
@@ -656,6 +662,7 @@ def extract_context(annotations, annot_manager):
     bc : BioContext
         An INDRA BioContext object
     """
+
     def get_annot(annotations, key):
         """Return a specific annotation given a key."""
         val = annotations.pop(key, None)
@@ -835,7 +842,7 @@ def _get_translocation_target(node_modifier_data):
         return None
     try:
         if re.match(r'\d+', to_loc_name) and \
-                not to_loc_name.startswith('GO'):
+            not to_loc_name.startswith('GO'):
             to_loc_name = 'GO:' + to_loc_name
         valid_loc = get_valid_location(to_loc_name)
     except InvalidLocationError:

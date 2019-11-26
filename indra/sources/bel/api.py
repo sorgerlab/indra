@@ -1,9 +1,13 @@
-import zlib
+# -*- coding: utf-8 -*-
+
 import json
-import pybel
 import logging
-import requests
+import zlib
 from functools import lru_cache
+
+import pybel
+import requests
+
 from .processor import PybelProcessor
 
 logger = logging.getLogger(__name__)
@@ -23,8 +27,10 @@ def process_small_corpus():
         A PybelProcessor object which contains INDRA Statements in
         its statements attribute.
     """
-    return process_pybel_network(network_type='graph_jsongz_url',
-                                 network_file=small_corpus_url)
+    return process_pybel_network(
+        network_type='graph_jsongz_url',
+        network_file=small_corpus_url,
+    )
 
 
 def process_large_corpus():
@@ -36,8 +42,10 @@ def process_large_corpus():
         A PybelProcessor object which contains INDRA Statements in
         its statements attribute.
     """
-    return process_pybel_network(network_type='graph_jsongz_url',
-                                 network_file=large_corpus_url)
+    return process_pybel_network(
+        network_type='graph_jsongz_url',
+        network_file=large_corpus_url,
+    )
 
 
 def process_pybel_network(network_type, network_file, **kwargs):
@@ -60,8 +68,8 @@ def process_pybel_network(network_type, network_file, **kwargs):
     """
     if network_type == 'belscript':
         return process_belscript(network_file, **kwargs)
-    elif network_type == 'json':
-        return process_json_file(network_file)
+    elif network_type == 'nodelink':
+        return process_nodelink_json_file(network_file)
     elif network_type == 'cbn_jgif':
         return process_cbn_jgif_file(network_file)
     elif network_type == 'graph_jsongz_url':
@@ -71,7 +79,7 @@ def process_pybel_network(network_type, network_file, **kwargs):
         res = requests.get(network_file)
         res.raise_for_status()
         content = zlib.decompress(res.content, zlib.MAX_WBITS | 32)
-        graph = pybel.from_nodelink(json.loads(content))
+        graph = pybel.from_nodelink_jsons(content)
         return process_pybel_graph(graph)
     elif network_type == 'graph_pickle':
         graph = pybel.from_pickle(network_file)
@@ -171,15 +179,13 @@ def process_belscript(file_name, **kwargs):
         A PybelProcessor object which contains INDRA Statements in
         bp.statements.
     """
-    if 'citation_clearing' not in kwargs:
-        kwargs['citation_clearing'] = False
-    if 'no_identifier_validation' not in kwargs:
-        kwargs['no_identifier_validation'] = True
+    kwargs.setdefault('citation_clearing', False)
+    kwargs.setdefault('no_identifier_validation', True)
     pybel_graph = pybel.from_bel_script(file_name, **kwargs)
     return process_pybel_graph(pybel_graph)
 
 
-def process_json_file(file_name):
+def process_nodelink_json_file(file_name):
     """Return a PybelProcessor by processing a Node-Link JSON file.
 
     For more information on this format, see:
@@ -196,8 +202,7 @@ def process_json_file(file_name):
         A PybelProcessor object which contains INDRA Statements in
         bp.statements.
     """
-    with open(file_name, 'rt') as fh:
-        pybel_graph = pybel.from_nodelink_file(fh, check_version=False)
+    pybel_graph = pybel.from_nodelink_file(file_name, check_version=False)
     return process_pybel_graph(pybel_graph)
 
 
