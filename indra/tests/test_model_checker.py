@@ -1660,23 +1660,23 @@ def test_pybel_refinements():
 
 
 def test_pybel_edge_types():
-    a = Agent('A', db_refs={'HGNC': 1})
-    b = Agent('B', db_refs={'HGNC': 2})
-    c = Agent('C', db_refs={'HGNC': 3})
-    a_b = Agent('A', db_refs={'HGNC': 1}, bound_conditions=[BoundCondition(b)])
-    c_phos = Agent('C', db_refs={'HGNC': 3},
+    a = Agent('A', db_refs={'HGNC': '1'})
+    b = Agent('B', db_refs={'HGNC': '2'})
+    c = Agent('C', db_refs={'HGNC': '3'})
+    a_b = Agent('A', db_refs={'HGNC': '1'}, bound_conditions=[BoundCondition(b)])
+    c_phos = Agent('C', db_refs={'HGNC': '3'},
                    mods=[ModCondition('phosphorylation', 'S', '218')])
     model_stmts = [Complex([a, b]),
                    Phosphorylation(b, c, 'S', '218')]
     test_stmts = [Activation(a, c),
                   Activation(b, c),
                   Activation(b, a),
-                  Activation(a_b, b),
+                  Activation(b, a_b),
                   Activation(c, c_phos)]
     pba = PybelAssembler(model_stmts)
     pybel_model = pba.make_model()
     pbmc = PybelModelChecker(pybel_model, test_stmts)
-    # Do not include hasVariant and hasComponent edges at all
+    # Do not include hasVariant and partOf edges at all
     pbmc.graph = None
     pbmc.get_graph(include_variants=False, symmetric_variant_links=False,
                    include_components=False, symmetric_component_links=False)
@@ -1686,7 +1686,7 @@ def test_pybel_edge_types():
     assert not results[2][1].path_found
     assert not results[3][1].path_found, results[3][1]
     assert not results[4][1].path_found
-    # Include hasVariant and hasComponent edges without symmetric links
+    # Include hasVariant and partOf edges without symmetric links
     pbmc.graph = None
     pbmc.get_graph(include_variants=True, symmetric_variant_links=False,
                    include_components=True, symmetric_component_links=False)
@@ -1703,7 +1703,7 @@ def test_pybel_edge_types():
     path_stmt_4 = stmts_from_pybel_path(
         path4, pybel_model, False, model_stmts)[0][0]
     assert isinstance(path_stmt_3, PybelEdge)
-    assert path_stmt_3.relation == 'hasComponent'
+    assert path_stmt_3.relation == 'partOf'
     assert isinstance(path_stmt_4, PybelEdge)
     assert path_stmt_4.relation == 'hasVariant'
     # Include symmetric links
@@ -1721,13 +1721,13 @@ def test_pybel_edge_types():
 def test_pybel_edge_to_english():
     pe = PybelEdge(
         Agent('EGF', bound_conditions=[BoundCondition(Agent('EGFR'))]),
-        Agent('EGF'), 'hasComponent', False)
+        Agent('EGF'), 'partOf', True)
     s = pybel_edge_to_english(pe)
     assert s == 'EGF bound to EGFR has a component EGF.'
     pe = PybelEdge(
         Agent('EGF'),
         Agent('EGF', bound_conditions=[BoundCondition(Agent('EGFR'))]),
-        'hasComponent', True)
+        'partOf', False)
     s = pybel_edge_to_english(pe)
     assert s == 'EGF is a part of EGF bound to EGFR.'
     pe = PybelEdge(
