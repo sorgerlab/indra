@@ -3,6 +3,8 @@ import requests
 
 from indra.statements import Phosphorylation, Evidence, Agent
 
+from .phosphoelm_mapping import phosphoelm_mapping
+
 gilda_url = 'http://grounding.indra.bio/ground'
 logger = logging.getLogger(__name__)
 
@@ -48,8 +50,8 @@ class PhosphoElmProcessor(object):
         Parameters
         ----------
         keep_empty : bool
-            If true, also create statements when upstream kinases in
-            entry['kinases'] are not known.
+            Default: False. If true, also create statements when upstream
+            kinases in entry['kinases'] are not known.
         """
         if self._phosphoelm_data is None:
             return
@@ -112,25 +114,30 @@ class PhosphoElmProcessor(object):
             string from within 'upstream_kinases' that was used to create
             the agent.
         """
+        # Check if kinase is in the hard coded mapping
+        if upstream_kinase in phosphoelm_mapping:
+            ns, _id = phosphoelm_mapping[upstream_kinase]
+            return upstream_kinase, Agent(None, db_refs={ns: _id})
+
         strip_words = ['_group', '_drome', '_Caeel']
         # Pre process: strip 'strip words' and any trailing space
         for word in strip_words:
             upstream_kinase = upstream_kinase.replace(word, '').rstrip()
-        used_str, ns, id = _gilda_grounder(upstream_kinase)
-
-        # Split on '_'
-        if ns is None and id is None and '_' in used_str:
-            used_str, suffix = used_str.split('_')
-            used_str, ns, id = _gilda_grounder(used_str)
+        used_str, ns, _id = _gilda_grounder(upstream_kinase)
 
         # Split on '/'
-        if ns is None and id is None and '/' in used_str:
+        if ns is None and _id is None and '/' in used_str:
             used_str = used_str.split('/')[0]
-            used_str, ns, id = _gilda_grounder(used_str)
+            used_str, ns, _id = _gilda_grounder(used_str)
 
-        if ns is None and id is None:
+        # Replace '_' with '-'
+        if ns is None and _id is None and '_' in used_str:
+            used_str = used_str.replace('_', '-')
+            used_str, ns, _id = _gilda_grounder(used_str)
+
+        if ns is None and _id is None:
             ns = 'TEXT'
-            id = used_str
+            _id = used_str
 
-        ag = Agent(None, db_refs={ns: id})
+        ag = Agent(None, db_refs={ns: _id})
         return used_str, ag
