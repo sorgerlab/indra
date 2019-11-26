@@ -157,17 +157,14 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
         if not hashes:
             statements = []
             # Can't get statements without hash from db
-            if from_db:
-                continue
-            else:
-                for edge_v in edges.values():
-                    rel = edge_v['relation']
-                    edge = PybelEdge(get_agent(source[0]),
-                                     get_agent(target[0]), rel, reverse)
-                    statements.append(edge)
-                    # Stop if we have an edge to avoid duplicates
-                    if len(statements) > 0:
-                        break
+            for edge_v in edges.values():
+                rel = edge_v['relation']
+                edge = PybelEdge(get_agent(source[0]),
+                                 get_agent(target[0]), rel, reverse)
+                statements.append(edge)
+                # Stop if we have an edge to avoid duplicates
+                if len(statements) > 0:
+                    break
         # If we have hashes, retrieve statements from them
         else:
             if from_db:
