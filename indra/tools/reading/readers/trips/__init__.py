@@ -11,7 +11,7 @@ from indra.sources.trips import client, process_xml
 logger = logging.getLogger(__name__)
 
 startup_path = '/sw/drum/bin/startup.sh'
-service_host = 'drum'
+service_endpoint = 'drum'
 DRUM_DOCKER = '292075781285.dkr.ecr.us-east-1.amazonaws.com/drum'
 
 
@@ -36,26 +36,27 @@ class TripsReader(Reader):
             logger.info("Starting up a TRIPS service from within the docker.")
             p = sp.Popen([startup_path], stdout=sp.PIPE,
                          stderr=sp.STDOUT)
-            service_endpoint = 'http://localhost:80/cgi/'
+            service_host = 'http://localhost:80/cgi/'
         else:
             logger.info("Starting up a TRIPS service using drum docker.")
             p = sp.Popen(['docker', 'run', '-it', '-p', '8080:80',
                           '--entrypoint', startup_path, DRUM_DOCKER],
                          stdout=sp.PIPE, stderr=sp.STDOUT)
-            service_endpoint = 'http://localhost:8080/cgi/'
+            service_host = 'http://localhost:8080/cgi/'
 
         # Wait for the service to be ready
         for line in iter(p.stdout.readline, b''):
-            log_line = line.strip().decode('utf8')
+            log_line = line.strip().decode('utf-8')
             logger.info('TRIPS: ' + log_line)
-            if log_line == 'ready.':
+            if log_line == 'Ready':
                 break
+        logger.info("Service has started up.")
 
         # Process all the content.
         for content in content_iter:
             html = client.send_query(content.get_text(),
-                                     service_endpoint=service_endpoint,
-                                     service_host=service_host)
+                                     service_host=service_host,
+                                     service_endpoint=service_endpoint)
             xml = client.get_xml(html)
             self.add_result(content.get_id(), xml)
 
@@ -80,7 +81,7 @@ class TripsReader(Reader):
             assert False, "This is currently not available."
 
         # Format that string into a datetime and standardize to utc.
-        d = datetime.strptime(res.stdout.decode('utf-8').stirp(),
+        d = datetime.strptime(res.stdout.decode('utf-8').strip(),
                               '%a %b %d %H:%M:%S %Y %z')
         d.astimezone(tz=timezone(timedelta(0)))
 
