@@ -392,16 +392,14 @@ def belgraph_to_signed_graph(
         rel = edge_data.get('relation')
         if rel in pc.CAUSAL_INCREASE_RELATIONS:
             edge_set.add((u, v, 0))
-        elif rel in pc.HAS_VARIANT:
-            if include_variants:
-                edge_set.add((u, v, 0))
-                if symmetric_variant_links:
-                    edge_set.add((v, u, 0))
-        elif rel in pc.HAS_COMPONENT:
-            if include_components:
-                edge_set.add((u, v, 0))
-                if symmetric_component_links:
-                    edge_set.add((v, u, 0))
+        elif rel in pc.HAS_VARIANT and include_variants:
+            edge_set.add((u, v, 0))
+            if symmetric_variant_links:
+                edge_set.add((v, u, 0))
+        elif rel in pc.HAS_COMPONENT and include_components:
+            edge_set.add((u, v, 0))
+            if symmetric_component_links:
+                edge_set.add((v, u, 0))
         elif rel in pc.CAUSAL_DECREASE_RELATIONS:
             edge_set.add((u, v, 1))
         else:
