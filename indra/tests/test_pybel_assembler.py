@@ -1,11 +1,17 @@
+# -*- coding: utf-8 -*-
+
+"""Tests for the PyBEL assembler."""
+
 import networkx as nx
 
 import pybel.constants as pc
 from indra.assemblers.pybel import assembler as pa
 from indra.databases import hgnc_client
 from indra.statements import *
-from pybel.dsl import abundance, activity, bioprocess, \
-    complex_abundance, hgvs, pmod, protein, reaction
+from pybel.dsl import (
+    abundance, activity, bioprocess, complex_abundance,
+    hgvs, pmod, protein, reaction,
+)
 
 
 def id(gene_name):
@@ -52,7 +58,9 @@ def draw(g, filename):
 
 
 def get_edge_data(g, u, v):
-    return list(g.get_edge_data(u, v).values())[0]
+    assert g.has_edge(u, v)
+    data = g.get_edge_data(u, v)
+    return list(data.values())[0]
 
 
 def get_first_edge_data(g):
@@ -65,10 +73,10 @@ def test_simple_modification_no_evidence():
                      db_refs={'HGNC': '1097', 'UP': 'P15056'})
     braf_cat = Agent('BRAF', activity=ActivityCondition('catalytic', True),
                      db_refs={'HGNC': '1097', 'UP': 'P15056'})
-    mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
-    stmt1 = Phosphorylation(braf, mek, 'S', '218')
-    stmt2 = Phosphorylation(braf_kin, mek, 'S', '218')
-    stmt3 = Ubiquitination(braf_cat, mek, 'S', '218')
+    map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})  # MEK
+    stmt1 = Phosphorylation(braf, map2k1, 'S', '218')
+    stmt2 = Phosphorylation(braf_kin, map2k1, 'S', '218')
+    stmt3 = Ubiquitination(braf_cat, map2k1, 'S', '218')
     # Edge info for subject
     edge1 = None
     edge2 = activity('kin')
@@ -78,14 +86,16 @@ def test_simple_modification_no_evidence():
                                       (stmt3, ub_dsl, edge3)):
         pba = pa.PybelAssembler([stmt])
         belgraph = pba.make_model()
-        assert len(belgraph.nodes()) == 3
-        assert braf_dsl in belgraph
+        assert belgraph.number_of_nodes() == 3, belgraph.number_of_nodes()
         map2k1_mod_dsl = map2k1_dsl.with_variants(modtuple)
-        assert map2k1_mod_dsl in belgraph
-        assert belgraph.number_of_edges() == 2
+        assert set(belgraph) == {braf_dsl, map2k1_dsl, map2k1_mod_dsl}, \
+            set(belgraph)
+        assert belgraph.number_of_edges() == 2, belgraph.number_of_edges()
+        assert belgraph.has_edge(map2k1_dsl, map2k1_mod_dsl)
+        assert belgraph.has_edge(braf_dsl, map2k1_mod_dsl)
         edge_data = get_edge_data(belgraph, braf_dsl, map2k1_mod_dsl)
-        assert edge_data.get(pc.SUBJECT) == subj_edge
         assert edge_data[pc.RELATION] == pc.INCREASES
+        assert edge_data.get(pc.SUBJECT) == subj_edge
 
 
 def test_modification_with_evidences():
@@ -96,7 +106,7 @@ def test_modification_with_evidences():
     stmt = Phosphorylation(braf_kin, mek, 'S', '218', evidence=evidence)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
-    assert len(belgraph.nodes()) == 3
+    assert belgraph.number_of_nodes() == 3, belgraph.number_of_nodes()
     assert braf_dsl in belgraph
     map2k1_mod_dsl = map2k1_dsl.with_variants(phos_dsl)
     assert map2k1_mod_dsl in belgraph
@@ -122,7 +132,7 @@ def test_modification_with_mutation():
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     # Adds in the base protein nodes as well as the variants (so 4 nodes)
-    assert len(belgraph.nodes()) == 4
+    assert belgraph.number_of_nodes() == 4, belgraph.number_of_nodes()
     braf_mut_dsl = braf_dsl.with_variants(hgvs('p.Val600Glu'))
     assert braf_mut_dsl in belgraph
 
@@ -150,7 +160,7 @@ def test_activation():
     for stmt, edge in ((stmt1, edge1), (stmt2, edge2)):
         pba = pa.PybelAssembler([stmt])
         belgraph = pba.make_model()
-        assert len(belgraph.nodes()) == 2
+        assert belgraph.number_of_nodes() == 2, belgraph.number_of_nodes()
         assert braf_dsl in belgraph
         assert map2k1_dsl in belgraph
         assert belgraph.number_of_edges() == 1
@@ -195,7 +205,7 @@ def test_direct_activation():
     for stmt, expected_edge in ((stmt1, edge1), (stmt2, edge2)):
         pba = pa.PybelAssembler([stmt])
         belgraph = pba.make_model()
-        assert len(belgraph.nodes()) == 2
+        assert belgraph.number_of_nodes() == 2, belgraph.number_of_nodes()
         assert braf_dsl in belgraph
         assert map2k1_dsl in belgraph
         assert belgraph.number_of_edges() == 1
@@ -217,7 +227,7 @@ def test_inhibition():
     }
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
-    assert len(belgraph.nodes()) == 2
+    assert belgraph.number_of_nodes() == 2, belgraph.number_of_nodes()
     assert braf_dsl in belgraph
     assert map2k1_dsl in belgraph
     assert belgraph.number_of_edges() == 1
@@ -232,7 +242,7 @@ def test_increase_amount():
     stmt = IncreaseAmount(tp53, mdm2)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
-    assert len(belgraph.nodes()) == 2
+    assert belgraph.number_of_nodes() == 2, belgraph.number_of_nodes()
     assert mdm2_dsl in belgraph
     assert tp53_dsl in belgraph
     assert belgraph.number_of_edges() == 1
@@ -248,7 +258,7 @@ def test_increase_amount_tscript():
     stmt = IncreaseAmount(tp53, mdm2)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
-    assert len(belgraph.nodes()) == 2
+    assert belgraph.number_of_nodes() == 2, belgraph.number_of_nodes()
     assert mdm2_dsl in belgraph
     assert tp53_dsl in belgraph
     assert belgraph.number_of_edges() == 1
@@ -357,12 +367,11 @@ def test_rxn_no_controller():
     belgraph = pba.make_model()
     # The graph should contain the node for the reaction as well as nodes
     # for all of the members
-    assert len(belgraph) == 3
-
     assert chebi_17534_to_4170 in belgraph
-
     for reactant in chebi_17534_to_4170.reactants:
         assert reactant in belgraph
+
+    assert belgraph.number_of_nodes() == 3, belgraph.number_of_nodes()
     # TODO check edge chebi_17534_to_4170 hasReactant chebi_17534
 
     for product in chebi_17534_to_4170.products:
@@ -377,9 +386,6 @@ def test_rxn_with_controller():
     stmt = Conversion(hk1, [glu], [g6p])
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
-    # The graph should contain the node for the reaction as well as nodes
-    # for all of the members
-    assert len(belgraph) == 4
 
     # check the catalyst makes it
     assert protein(namespace='HGNC', name='HK1') in belgraph
@@ -388,6 +394,10 @@ def test_rxn_with_controller():
     assert chebi_17534 in belgraph
     assert chebi_4170 in belgraph
     assert chebi_17534_to_4170 in belgraph
+
+    # The graph should contain the node for the reaction as well as nodes
+    # for all of the members
+    assert belgraph.number_of_nodes() == 4, belgraph.number_of_nodes()
 
 
 def test_autophosphorylation():
@@ -406,8 +416,10 @@ def test_autophosphorylation():
     # There will be two edges between these nodes
     edge_dicts = list(belgraph.get_edge_data(egfr_dsl,
                                              egfr_phos_node).values())
-    assert {pc.RELATION: pc.DIRECTLY_INCREASES, 'stmt_hash': stmt_hash} \
-        in edge_dicts
+    assert {
+               pc.RELATION: pc.DIRECTLY_INCREASES,
+               'stmt_hash': stmt_hash
+           } in edge_dicts
 
     # Test an autophosphorylation with a bound condition
     tab1 = Agent('TAB1', db_refs={'HGNC': id('TAB1')})
@@ -466,7 +478,8 @@ def test_transphosphorylation():
     egfr_phos_node = egfr_dsl.with_variants(pmod('Ph', 'Tyr', 1173))
     edge_data = get_edge_data(belgraph, egfr_dimer_node, egfr_phos_node)
     assert edge_data == {
-        pc.RELATION: pc.DIRECTLY_INCREASES, 'stmt_hash': stmt_hash}
+        pc.RELATION: pc.DIRECTLY_INCREASES, 'stmt_hash': stmt_hash
+    }
 
 
 """

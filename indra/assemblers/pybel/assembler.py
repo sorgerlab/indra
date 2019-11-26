@@ -1,18 +1,20 @@
 from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-import uuid
+
 import logging
+import uuid
+from copy import copy, deepcopy
+
 import networkx as nx
-from copy import deepcopy, copy
+from builtins import dict, str
+
 import pybel
 import pybel.constants as pc
+from indra.databases import hgnc_client
+from indra.statements import *
 from pybel.dsl import *
 from pybel.language import pmod_namespace
-from indra.statements import *
-from indra.databases import hgnc_client
 
 logger = logging.getLogger(__name__)
-
 
 _indra_pybel_act_map = {
     'kinase': 'kin',
@@ -69,6 +71,7 @@ class PybelAssembler(object):
     >>> belgraph.number_of_edges()
     2
     """
+
     def __init__(self, stmts=None, name=None, description=None, version=None,
                  authors=None, contact=None, license=None, copyright=None,
                  disclaimer=None):
@@ -93,15 +96,17 @@ class PybelAssembler(object):
         )
         ns_dict = {
             'HGNC': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
-                    'namespace/hgnc-human-genes/hgnc-human-genes-20170725.belns',
+                    'namespace/hgnc-human-genes/'
+                    'hgnc-human-genes-20170725.belns',
             'UP': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
                   'namespace/swissprot/swissprot-20170725.belns',
             'IP': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
                   'namespace/interpro/interpro-20170731.belns',
             'FPLX': 'https://raw.githubusercontent.com/sorgerlab/famplex/'
-                    '5f5b573fe26d7405dbccb711ae8e5697b6a3ec7e/export/famplex.belns',
-            #'PFAM':
-            #'NXPFA':
+                    '5f5b573fe26d7405dbccb711ae8e5697b6a3ec7e/export/'
+                    'famplex.belns',
+            # 'PFAM':
+            # 'NXPFA':
             'CHEBI': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
                      'namespace/chebi-ids/chebi-ids-20170725.belns',
             'GO': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
@@ -110,7 +115,7 @@ class PybelAssembler(object):
                     'namespace/mesh-processes/mesh-processes-20170725.belns'
         }
         self.model.namespace_url.update(ns_dict)
-        self.model.namespace_pattern['PUBCHEM'] = '\d+'
+        self.model.namespace_pattern['PUBCHEM'] = r'\d+'
 
     def add_statements(self, stmts_to_add):
         self.statements += stmts_to_add
@@ -118,8 +123,10 @@ class PybelAssembler(object):
     def make_model(self):
         for stmt in self.statements:
             # Skip statements with no subject
-            if stmt.agent_list()[0] is None and \
-                    not isinstance(stmt, Conversion):
+            if (
+                stmt.agent_list()[0] is None
+                and not isinstance(stmt, Conversion)
+            ):
                 continue
             # Assemble statements
             if isinstance(stmt, Modification):
@@ -210,7 +217,8 @@ class PybelAssembler(object):
         path : str
             The path to output to
         output_format : Optional[str]
-            Output format as ``cx``, ``pickle``, ``json`` or defaults to ``bel``
+            Output format as ``cx``, ``pickle``, ``json`` or defaults to
+            ``bel``
         """
         if output_format == 'pickle':
             pybel.to_pickle(self.model, path)
@@ -220,7 +228,7 @@ class PybelAssembler(object):
                     pybel.to_json_file(self.model, fh)
                 elif output_format == 'cx':
                     pybel.to_cx_file(self.model, fh)
-                else: # output_format == 'bel':
+                else:  # output_format == 'bel':
                     pybel.to_bel(self.model, fh)
 
     def _add_nodes_edges(self, subj_agent, obj_agent, relation, stmt_hash,
@@ -292,7 +300,7 @@ class PybelAssembler(object):
         relation = get_causal_edge(stmt, activates)
         stmt_hash = stmt.get_hash(refresh=True)
         if not stmt.agent.mods and not stmt.agent.bound_conditions and \
-                not stmt.agent.mutations:
+            not stmt.agent.mutations:
             self._add_nodes_edges(stmt.agent, act_agent, relation,
                                   stmt_hash, stmt.evidence)
         else:
@@ -327,7 +335,7 @@ class PybelAssembler(object):
                                        products(a(CHEBI:"CHEBI:4170")))"""
         pybel_lists = ([], [])
         for pybel_list, agent_list in \
-                            zip(pybel_lists, (stmt.obj_from, stmt.obj_to)):
+            zip(pybel_lists, (stmt.obj_from, stmt.obj_to)):
             for agent in agent_list:
                 node = _get_agent_grounding(agent)
                 # TODO check for missing grounding?
@@ -377,10 +385,10 @@ class PybelAssembler(object):
                               stmt.get_hash(refresh=True), stmt.evidence)
 
     def _assemble_translocation(self, stmt):
-        #cc = hierarchies['cellular_component']
-        #nuc_uri = cc.find_entity('nucleus')
-        #cyto_uri = cc.find_entity('cytoplasm')
-        #cyto_go = cyto_uri.rsplit('/')[-1]
+        # cc = hierarchies['cellular_component']
+        # nuc_uri = cc.find_entity('nucleus')
+        # cyto_uri = cc.find_entity('cytoplasm')
+        # cyto_go = cyto_uri.rsplit('/')[-1]
         pass
 
 
@@ -502,6 +510,7 @@ def _get_agent_node_no_bcs(agent):
 
 def _get_agent_grounding(agent):
     """Convert an agent to the corresponding PyBEL DSL object (to be filled with variants later)."""
+
     def _get_id(_agent, key):
         _id = _agent.db_refs.get(key)
         if isinstance(_id, list):
@@ -577,16 +586,20 @@ def _get_evidence(evidence):
     pybel_ev = {pc.EVIDENCE: text}
     # If there is a PMID, use it as the citation
     if evidence.pmid:
-        citation = {pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
-                    pc.CITATION_IDENTIFIER: evidence.pmid}
+        citation = {
+            pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
+            pc.CITATION_IDENTIFIER: evidence.pmid,
+        }
     # If no PMID, include the interface and source_api for now--
     # in general this should probably be in the annotations for all evidence
     else:
         cit_source = evidence.source_api if evidence.source_api else 'Unknown'
         cit_id = evidence.source_id if evidence.source_id else 'Unknown'
         cit_ref_str = '%s:%s' % (cit_source, cit_id)
-        citation = {pc.CITATION_DB: pc.CITATION_TYPE_OTHER,
-                    pc.CITATION_IDENTIFIER: cit_ref_str}
+        citation = {
+            pc.CITATION_DB: pc.CITATION_TYPE_OTHER,
+            pc.CITATION_IDENTIFIER: cit_ref_str,
+        }
     pybel_ev[pc.CITATION] = citation
 
     annotations = {}

@@ -828,8 +828,8 @@ def _get_translocation_target(node_modifier_data):
     to_loc_info = transloc_data.get(pc.TO_LOC)
     if not to_loc_info:
         return None
-    to_loc_ns = to_loc_info.namespace
-    to_loc_name = to_loc_info.name
+    to_loc_ns = to_loc_info.get(pc.NAMESPACE)
+    to_loc_name = to_loc_info.get(pc.NAME)
     # Only use GO Cellular Component location names
     if to_loc_ns not in ('GO', 'GOCC', 'GOCCID') or not to_loc_name:
         return None
@@ -851,7 +851,7 @@ def _has_unhandled_modifiers(node_modifier_data):
     if mod is None:
         return False
     if mod in (pc.CELL_SECRETION, pc.CELL_SURFACE_EXPRESSION):
-        logger.info("Unhandled node modifier data: %s" % node_modifier_data)
+        logger.info("Unhandled node modifier data: %s", node_modifier_data)
         return True
 
 

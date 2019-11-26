@@ -1,19 +1,25 @@
+# -*- coding: utf-8 -*-
+
+"""Tests for the PyBEL processor."""
+
 import os
 from urllib import request
 
-import pybel.constants as pc
 from nose.plugins.attrib import attr
-from pybel import BELGraph
-from pybel.dsl import *
-from pybel.language import Entity
-from pybel.io import from_nodelink_file
-from pybel.examples import egf_graph
-from indra.statements import *
+
+from indra.databases import hgnc_client
 from indra.sources import bel
 from indra.sources.bel import processor as pb
-from indra.sources.bel.api import process_cbn_jgif_file, process_pybel_graph, \
-    small_corpus_url
-from indra.databases import hgnc_client
+from indra.sources.bel.api import (
+    process_cbn_jgif_file, process_pybel_graph, small_corpus_url,
+)
+from indra.statements import *
+from pybel import BELGraph
+from pybel.dsl import *
+import pybel.constants as pc
+from pybel.examples import egf_graph
+from pybel.io import from_nodelink_file
+from pybel.language import Entity
 
 mek_hgnc_id = hgnc_client.get_hgnc_id('MAP2K1')
 mek_up_id = hgnc_client.get_uniprot_id(mek_hgnc_id)
@@ -21,9 +27,11 @@ mek_up_id = hgnc_client.get_uniprot_id(mek_hgnc_id)
 
 @attr('slow')
 def test_pybel_neighborhood_query():
-    bp = bel.process_pybel_neighborhood(['TP63'],
-                                        network_type='graph_jsongz_url',
-                                        network_file=small_corpus_url)
+    bp = bel.process_pybel_neighborhood(
+        ['TP63'],
+        network_type='graph_jsongz_url',
+        network_file=small_corpus_url,
+    )
     assert bp.statements
     assert all(
         s.evidence[0].context.cell_line.name == 'MCF 10A'
@@ -34,18 +42,30 @@ def test_pybel_neighborhood_query():
             'epidermis development'][0]
     assert repr(stmt.evidence[0].context) == str(stmt.evidence[0].context)
     assert stmt.evidence[0].context == BioContext(
-        location=RefContext(name="Cytoplasm",
-                            db_refs={'MESH': 'D003593'}),
-        cell_line=RefContext(name="MCF 10A",
-                             db_refs={'EFO': '0001200'}),
-        cell_type=RefContext(name="keratinocyte",
-                             db_refs={'CL': '0000312'}),
-        organ=RefContext(name="colon",
-                         db_refs={'UBERON': '0001155'}),
-        disease=RefContext(name="cancer",
-                           db_refs={'DOID': '162'}),
-        species=RefContext(name="Rattus norvegicus",
-                           db_refs={'TAXONOMY': '10116'}))
+        location=RefContext(
+            name="Cytoplasm",
+            db_refs={'MESH': 'D003593'},
+        ),
+        cell_line=RefContext(
+            name="MCF 10A",
+            db_refs={'EFO': '0001200'},
+        ),
+        cell_type=RefContext(
+            name="keratinocyte",
+            db_refs={'CL': '0000312'},
+        ),
+        organ=RefContext(
+            name="colon",
+            db_refs={'UBERON': '0001155'},
+        ),
+        disease=RefContext(
+            name="cancer",
+            db_refs={'DOID': '162'},
+        ),
+        species=RefContext(
+            name="Rattus norvegicus",
+            db_refs={'TAXONOMY': '10116'},
+        ))
     # Test annotation manager
     assert bp.annot_manager.get_mapping('Species', '9606') == 'Homo sapiens'
 
@@ -364,9 +384,12 @@ def test_phosphorylation_one_site_with_evidence():
     ev_text = 'Some evidence.'
     ev_pmid = '123456'
     edge_hash = g.add_directly_increases(
-        mek, erk, evidence=ev_text,
-        citation={pc.CITATION_DB: pc.CITATION_TYPES[pc.CITATION_TYPE_PUBMED],
-                  pc.CITATION_IDENTIFIER: ev_pmid},
+        mek, erk,
+        evidence=ev_text,
+        citation={
+            pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
+            pc.CITATION_IDENTIFIER: ev_pmid,
+        },
         annotations={"TextLocation": 'Abstract'},
     )
     pbp = bel.process_pybel_graph(g)
@@ -388,8 +411,10 @@ def test_phosphorylation_one_site_with_evidence():
     assert ev.source_id == edge_hash
     assert ev.pmid == ev_pmid, (ev.pmid, ev_pmid)
     assert ev.text == ev_text
-    assert ev.annotations == {'bel': 'p(HGNC:MAP2K1) directlyIncreases '
-                                     'p(HGNC:MAPK1, pmod(Ph, Thr, 185))'}
+    assert ev.annotations == {
+        'bel': 'p(HGNC:MAP2K1) directlyIncreases '
+               'p(HGNC:MAPK1, pmod(Ph, Thr, 185))'
+    }
     assert ev.epistemics == {'direct': True, 'section_type': 'abstract'}
 
 
@@ -738,7 +763,7 @@ def test_complex_stmt_with_activation():
     raf = Protein(name='BRAF', namespace='HGNC')
     mek = Protein(name='MAP2K1', namespace='HGNC')
     erk = Protein(name='MAPK1', namespace='HGNC')
-    cplx = complex_abundance([raf, mek])
+    cplx = ComplexAbundance([raf, mek])
     g = BELGraph()
     g.add_directly_increases(cplx, erk,
                              object_modifier=activity(name='kin'),
