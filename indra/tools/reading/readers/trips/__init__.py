@@ -77,8 +77,9 @@ class TripsReader(Reader):
             finally:
                 os.chdir(curdir)
         else:
-            # We need to add a function within the docker to
-            assert False, "This is currently not available."
+            res = sp.run(['docker', 'run', DRUM_DOCKER, '-c',
+                          ' '.join(['cd', '/sw/drum;'] + git_date_cmd)],
+                         stdout=sp.PIPE)
 
         # Format that string into a datetime and standardize to utc.
         d = datetime.strptime(res.stdout.decode('utf-8').strip(),
