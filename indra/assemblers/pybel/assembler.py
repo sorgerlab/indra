@@ -3,7 +3,7 @@ from builtins import dict, str
 import uuid
 import logging
 import networkx as nx
-from copy import copy, deepcopy
+from copy import deepcopy, copy
 import pybel
 import pybel.constants as pc
 from pybel.dsl import *
@@ -110,7 +110,7 @@ class PybelAssembler(object):
                     'namespace/mesh-processes/mesh-processes-20170725.belns'
         }
         self.model.namespace_url.update(ns_dict)
-        self.model.namespace_pattern['PUBCHEM'] = r'\d+'
+        self.model.namespace_pattern['PUBCHEM'] = '\d+'
 
     def add_statements(self, stmts_to_add):
         self.statements += stmts_to_add
@@ -119,7 +119,7 @@ class PybelAssembler(object):
         for stmt in self.statements:
             # Skip statements with no subject
             if stmt.agent_list()[0] is None and \
-                not isinstance(stmt, Conversion):
+                    not isinstance(stmt, Conversion):
                 continue
             # Assemble statements
             if isinstance(stmt, Modification):

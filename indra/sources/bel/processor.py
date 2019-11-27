@@ -7,16 +7,16 @@ import logging
 import pybel.dsl as dsl
 import pybel.constants as pc
 from collections import defaultdict
+from pybel.struct import has_protein_modification
 from pybel.canonicalize import edge_to_bel
 from bel_resources import get_bel_resource
-from pybel.struct import has_protein_modification
-from indra.assemblers.pybel.assembler import _pybel_indra_act_map
+from indra.statements import *
+from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
 from indra.databases import (
     chebi_client, go_client, hgnc_client, mesh_client,
     mirbase_client, uniprot_client,
 )
-from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
-from indra.statements import *
+from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 
 __all__ = [
     'PybelProcessor',
@@ -71,7 +71,6 @@ class PybelProcessor(object):
     ----------
     statements : list[indra.statements.Statement]
         A list of extracted INDRA Statements representing BEL Statements.
-
     """
     def __init__(self, graph):
         self.graph = graph
@@ -128,11 +127,8 @@ class PybelProcessor(object):
                 #   act(p(Foo)) => gtp(p(Foo))
                 # Gap
                 #   act(p(Foo)) =| gtp(p(Foo))
-                elif (
-                    subj_activity
-                    and _rel_is_direct(d)
-                    and obj_activity.activity_type == 'gtpbound'
-                ):
+                elif subj_activity and _rel_is_direct(d) and \
+                    obj_activity.activity_type == 'gtpbound':
                     self._get_gef_gap(u_data, v_data, k, d)
                 # Activation/Inhibition
                 #   x(Foo) -> act(x(Foo))
@@ -209,11 +205,11 @@ class PybelProcessor(object):
             # stmt_class = RegulateAmount
             return
         elif has_deg:
-            stmt_class = (DecreaseAmount
-                          if rel in pc.CAUSAL_INCREASE_RELATIONS else IncreaseAmount)
+            stmt_class = (DecreaseAmount if rel in
+                          pc.CAUSAL_INCREASE_RELATIONS else IncreaseAmount)
         else:
-            stmt_class = (IncreaseAmount
-                          if rel in pc.CAUSAL_INCREASE_RELATIONS else DecreaseAmount)
+            stmt_class = (IncreaseAmount if rel in
+                          pc.CAUSAL_INCREASE_RELATIONS else DecreaseAmount)
         ev = self._get_evidence(u_data, v_data, k, edge_data)
         stmt = stmt_class(subj_agent, obj_agent, evidence=[ev])
         self.statements.append(stmt)
@@ -246,7 +242,7 @@ class PybelProcessor(object):
             activity_type = 'activity'
         else:
             obj_activity_condition = \
-                _get_activity_condition(edge_data.get(pc.OBJECT))
+                            _get_activity_condition(edge_data.get(pc.OBJECT))
             activity_type = obj_activity_condition.activity_type
             assert obj_activity_condition.is_active is True
         # Check for valid subject/object
@@ -660,9 +656,7 @@ def extract_context(annotations, annot_manager):
     -------
     bc : BioContext
         An INDRA BioContext object
-
     """
-
     def get_annot(annotations, key):
         """Return a specific annotation given a key."""
         val = annotations.pop(key, None)
@@ -753,7 +747,6 @@ def _get_mods_and_muts(node_data):
         A list of modifications to the given abundance
     muts : List[MutCondition]
         A list of mutations to the given abundance
-
     """
     mods = []
     muts = []
