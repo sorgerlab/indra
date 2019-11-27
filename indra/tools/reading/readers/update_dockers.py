@@ -45,6 +45,8 @@ def _make_dockerfile_rec(template_path):
 def make_zip_package(rc):
     # Make the dockerfile from the template
     dockerfile, arg_list = get_docker_file(rc)
+    if dockerfile is None:
+        return None, None
 
     # Create the buildspec
     build_spec_path = path.join(DOCKER_TEMPLATE_DIR, 'buildspec_fmt.yml')
