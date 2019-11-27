@@ -4,10 +4,12 @@ import logging
 import re
 from collections import defaultdict
 
-from bel_resources import get_bel_resource
-
 import pybel.constants as pc
 import pybel.dsl as dsl
+from bel_resources import get_bel_resource
+from pybel.canonicalize import edge_to_bel
+from pybel.struct import has_protein_modification
+
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 from indra.databases import (
     chebi_client, go_client, hgnc_client, mesh_client,
@@ -15,8 +17,6 @@ from indra.databases import (
 )
 from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
 from indra.statements import *
-from pybel.canonicalize import edge_to_bel
-from pybel.struct import has_protein_modification
 
 __all__ = [
     'PybelProcessor',

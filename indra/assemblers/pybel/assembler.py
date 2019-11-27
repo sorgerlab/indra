@@ -2,17 +2,17 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import uuid
+from builtins import dict, str
 from copy import copy, deepcopy
 
 import networkx as nx
-from builtins import dict, str
-
 import pybel
 import pybel.constants as pc
-from indra.databases import hgnc_client
-from indra.statements import *
 from pybel.dsl import *
 from pybel.language import pmod_namespace
+
+from indra.databases import hgnc_client
+from indra.statements import *
 
 logger = logging.getLogger(__name__)
 
