@@ -11,7 +11,7 @@ phosphoelm_mapping = {
     'PDHK1': ('HGNC', '8809'),  # PDK1: https://www.phosphosite.org/proteinAction.action?id=2352
     'PDHK3': ('HGNC', '8811'),  # PDK3: https://www.uniprot.org/uniprot/Q15120
     'PDHK4': ('HGNC', '8812'),  # PDK4: https://www.uniprot.org/uniprot/Q16654
-    # 'PDKC': ('', ''),
+    'PDKC': (None, None),  # Unknown alias, could be PKC or SDK1 from source: http://www.jbc.org/content/273/34/21834.long
     'PKA_alpha': ('HGNC', '9380'),  # PRKACA?? https://en.wikipedia.org/wiki/PRKACA
     'PKC_eta': ('HGNC', '9403'),  # PRKCH?? https://www.ncbi.nlm.nih.gov/gene/5583
     'PKC_iota': ('HGNC', '9404'),  # PRKCI?? https://www.uniprot.org/uniprot/P41743

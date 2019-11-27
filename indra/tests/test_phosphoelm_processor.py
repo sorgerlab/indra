@@ -84,7 +84,7 @@ def test_special_cases():
     # http://phospho.elm.eu.org/kinases.html but it is unclear what was
     # meant by the name from the source material
     _, ag = PhosphoElmProcessor._get_enzyme('PDKC')
-    assert list(ag.db_refs.items())[0] == ('TEXT', 'PDKC')
+    assert ag is None
 
     _, ag = PhosphoElmProcessor._get_enzyme('PKA_alpha')
     assert list(ag.db_refs.items())[0] == ('HGNC', '9380')
