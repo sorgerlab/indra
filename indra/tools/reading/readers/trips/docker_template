@@ -8,4 +8,4 @@ WORKDIR $DIRPATH
 
 {% indra_db_install %}
 
-ENTRYPOINT ""
+ENTRYPOINT []
