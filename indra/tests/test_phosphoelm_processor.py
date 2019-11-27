@@ -64,3 +64,37 @@ def test_not_empty():
     pep.process_phosphorylations()
     stmts = pep.statements
     assert len(stmts) == 2
+
+
+def test_special_cases():
+    # See http://phospho.elm.eu.org/kinases.html for list of kinases
+    _, ag = PhosphoElmProcessor._get_enzyme('Aurora A')
+    assert list(ag.db_refs.items())[0] == ('HGNC', '11393')
+
+    _, ag = PhosphoElmProcessor._get_enzyme('CCDPK')  # is non-human
+    assert ag is None
+
+    _, ag = PhosphoElmProcessor._get_enzyme('MAP2K_group')
+    assert list(ag.db_refs.items())[0] == ('FPLX', 'MAP2K')
+
+    _, ag = PhosphoElmProcessor._get_enzyme('PDHK4')
+    assert list(ag.db_refs.items())[0] == ('HGNC', '8812')
+
+    # PDKC is probably a typo in the kinase table at
+    # http://phospho.elm.eu.org/kinases.html but it is unclear what was
+    # meant by the name from the source material
+    _, ag = PhosphoElmProcessor._get_enzyme('PDKC')
+    assert list(ag.db_refs.items())[0] == ('TEXT', 'PDKC')
+
+    _, ag = PhosphoElmProcessor._get_enzyme('PKA_alpha')
+    assert list(ag.db_refs.items())[0] == ('HGNC', '9380')
+
+    _, ag = PhosphoElmProcessor._get_enzyme('PKC_zeta')
+    assert list(ag.db_refs.items())[0] == ('HGNC', '9412')
+
+    _, ag = PhosphoElmProcessor._get_enzyme('RSK-5')
+    assert list(ag.db_refs.items())[0] == ('HGNC', '10434')
+
+    _, ag = PhosphoElmProcessor._get_enzyme('Titin kinase')
+    assert list(ag.db_refs.items())[0] == ('HGNC', '12403')
+
