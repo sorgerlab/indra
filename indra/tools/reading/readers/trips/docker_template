@@ -7,3 +7,5 @@ WORKDIR $DIRPATH
 {% indra_install %}
 
 {% indra_db_install %}
+
+ENTRYPOINT ""
