@@ -40,7 +40,7 @@ class PhosphoElmProcessor(object):
         A list of the phosphorylation statements produced by the entries
         in phosphoelm_data
     """
-    def __init__(self, phosphoelm_data=None):
+    def __init__(self, phosphoelm_data):
         self.statements = []
         self._phosphoelm_data = phosphoelm_data
 
@@ -53,10 +53,6 @@ class PhosphoElmProcessor(object):
             Default: False. If true, also create statements when upstream
             kinases in entry['kinases'] are not known.
         """
-        if self._phosphoelm_data is None:
-            logger.warning('No phosphoelm data to process. No statements '
-                           'are produced')
-            return
         for entry in self._phosphoelm_data:
             if not keep_empty and not entry['kinases'] or\
                     not entry['species'].lower() == 'homo sapiens':
