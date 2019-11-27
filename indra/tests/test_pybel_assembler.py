@@ -417,10 +417,8 @@ def test_autophosphorylation():
     # There will be two edges between these nodes
     edge_dicts = list(belgraph.get_edge_data(egfr_dsl,
                                              egfr_phos_node).values())
-    assert {
-               pc.RELATION: pc.DIRECTLY_INCREASES,
-               'stmt_hash': stmt_hash
-           } in edge_dicts
+    assert {pc.RELATION: pc.DIRECTLY_INCREASES, 'stmt_hash': stmt_hash} \
+        in edge_dicts
 
     # Test an autophosphorylation with a bound condition
     tab1 = Agent('TAB1', db_refs={'HGNC': id('TAB1')})
@@ -479,8 +477,7 @@ def test_transphosphorylation():
     egfr_phos_node = egfr_dsl.with_variants(pmod('Ph', 'Tyr', 1173))
     edge_data = get_edge_data(belgraph, egfr_dimer_node, egfr_phos_node)
     assert edge_data == {
-        pc.RELATION: pc.DIRECTLY_INCREASES, 'stmt_hash': stmt_hash
-    }
+        pc.RELATION: pc.DIRECTLY_INCREASES, 'stmt_hash': stmt_hash}
 
 
 """

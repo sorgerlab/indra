@@ -19,23 +19,18 @@ from indra.sources.bel.api import process_cbn_jgif_file, process_pybel_graph, \
     small_corpus_url
 from indra.databases import hgnc_client
 
-
 mek_hgnc_id = hgnc_client.get_hgnc_id('MAP2K1')
 mek_up_id = hgnc_client.get_uniprot_id(mek_hgnc_id)
 
 
 @attr('slow')
 def test_pybel_neighborhood_query():
-    bp = bel.process_pybel_neighborhood(
-        ['TP63'],
-        network_type='graph_jsongz_url',
-        network_file=small_corpus_url,
-    )
+    bp = bel.process_pybel_neighborhood(['TP63'],
+                                        network_type='graph_jsongz_url',
+                                        network_file=small_corpus_url)
     assert bp.statements
-    assert all(
-        s.evidence[0].context.cell_line.name == 'MCF 10A'
-        for s in bp.statements
-    )
+    assert all([s.evidence[0].context.cell_line.name == 'MCF 10A'
+               for s in bp.statements])
     # Locate statement about epidermis development
     stmt = [st for st in bp.statements if st.agent_list()[1].name ==
             'epidermis development'][0]
@@ -54,7 +49,8 @@ def test_pybel_neighborhood_query():
         species=RefContext(name="Rattus norvegicus",
                            db_refs={'TAXONOMY': '10116'}))
     # Test annotation manager
-    assert bp.annot_manager.get_mapping('Species', '9606') == 'Homo sapiens'
+    assert bp.annot_manager.get_mapping('Species', '9606') == \
+           'Homo sapiens'
 
 
 def test_process_pybel():
