@@ -73,6 +73,11 @@ class PhosphoElmProcessor(object):
             used_name, enz = self._get_enzyme(entry['kinases']) if\
                 entry.get('kinases') else '', None
 
+            # Skip if we hit one of the special cases
+            if enz is None:
+                continue
+
+            # Build evidence, add statement
             evidence = Evidence(
                 source_api='phospho.ELM',
                 pmid=entry['pmids'],
@@ -115,6 +120,8 @@ class PhosphoElmProcessor(object):
         # Check if kinase is in the hard coded mapping
         if upstream_kinase in phosphoelm_mapping:
             ns, _id = phosphoelm_mapping[upstream_kinase]
+            if ns is None and _id is None:
+                return upstream_kinase, None
             return upstream_kinase, Agent(None, db_refs={ns: _id})
 
         strip_words = ['_group', '_drome', '_Caeel']
