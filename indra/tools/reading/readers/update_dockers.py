@@ -90,29 +90,34 @@ def get_available_readers():
     return reader_spec
 
 
+def print_help():
+    reader_spec = get_available_readers()
+    msg = ("usage: update_dockers.py [docker build options]\n"
+           "                         [--readers {%s}]"
+           % (', '.join(reader_spec.keys())))
+    msg += ("\n\nUpdate the specialized docker images on ECR via "
+            "CodeBuild.\n\n")
+    msg += "optional arguments:\n\n"
+    msg += "  -h, --help\t\tShow this message and exit.\n"
+    msg += ("  --readers\t\tSpecify which readers' images should be "
+            "updated.\n"
+            "           \t\tIf not entered, all readers will be "
+            "updated.\n")
+
+    msg += "\n\navailable reader dockers:"
+    for reader_name, arg_list in reader_spec.items():
+        msg += '\n\n  ' + reader_name.lower() + '\t\t'
+        msg += '\n\t\t'.join(['--%s' % arg.lower() for arg in arg_list])
+    print(msg)
+    return
+
+
 def main():
     from sys import argv
 
     # Provide some help
     if '--help' in argv or '-h' in argv:
-        reader_spec = get_available_readers()
-        msg = ("usage: update_dockers.py [docker build options]\n"
-               "                         [--readers {%s}]"
-               % (', '.join(reader_spec.keys())))
-        msg += ("\n\nUpdate the specialized docker images on ECR via "
-                "CodeBuild.\n\n")
-        msg += "optional arguments:\n\n"
-        msg += "  -h, --help\t\tShow this message and exit.\n"
-        msg += ("  --readers\t\tSpecify which readers' images should be "
-                "updated.\n"
-                "           \t\tIf not entered, all readers will be "
-                "updated.\n")
-
-        msg += "\n\navailable reader dockers:"
-        for reader_name, arg_list in reader_spec.items():
-            msg += '\n\n  ' + reader_name.lower() + '\t\t'
-            msg += '\n\t\t'.join(['--%s' % arg.lower() for arg in arg_list])
-        print(msg)
+        print_help()
         return
 
     # Allow the user to limit the readers used.
