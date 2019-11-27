@@ -3,11 +3,12 @@ from indra.util.aws import get_s3_client
 from indra.statements import Phosphorylation
 from indra.sources.phosphoelm.api import PhosphoElmProcessor, \
     _get_json_from_entry_rows, s3_bucket, ppelm_s3_key
+from nose.plugins.attrib import attr
 
 columns = ['acc', 'sequence', 'position', 'code', 'pmids', 'kinases',
            'source', 'species', 'entry_date']
 non_human_no_kinase = ['O08539',
-                       'MAEMGSKG', '6', 'S', '17114649', '', 'HTP',
+                       'FAKEGSKG', '6', 'S', '17114649', '', 'HTP',
                        'Mus musculus', '2005-03-14 12:16:11.108314+01']
 human_no_kinase = ['O14543',
                    'MVTHSKFPAAGMSRPLDTSLRLKTFSSKSEYQL', '31', 'Y',
@@ -25,6 +26,7 @@ raw_data = [columns, non_human_no_kinase, human_no_kinase, human_kinase1,
             human_kinase2]
 
 
+@attr('nonpublic')
 def test_download_from_s3():
     s3 = get_s3_client(False)
     s3_obj = s3.get_object(Bucket=s3_bucket, Key=ppelm_s3_key)
@@ -62,5 +64,3 @@ def test_not_empty():
     pep.process_phosphorylations()
     stmts = pep.statements
     assert len(stmts) == 2
-
-
