@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Processor for PyBEL."""
+
 import logging
 import re
 from collections import defaultdict
@@ -71,6 +73,7 @@ class PybelProcessor(object):
     ----------
     statements : list[indra.statements.Statement]
         A list of extracted INDRA Statements representing BEL Statements.
+
     """
 
     def __init__(self, graph):
@@ -209,11 +212,17 @@ class PybelProcessor(object):
             # stmt_class = RegulateAmount
             return
         elif has_deg:
-            stmt_class = (DecreaseAmount if rel in
-                                            pc.CAUSAL_INCREASE_RELATIONS else IncreaseAmount)
+            stmt_class = (
+                DecreaseAmount
+                if rel in pc.CAUSAL_INCREASE_RELATIONS else
+                IncreaseAmount
+            )
         else:
-            stmt_class = (IncreaseAmount if rel in
-                                            pc.CAUSAL_INCREASE_RELATIONS else DecreaseAmount)
+            stmt_class = (
+                IncreaseAmount
+                if rel in pc.CAUSAL_INCREASE_RELATIONS else
+                DecreaseAmount
+            )
         ev = self._get_evidence(u_data, v_data, k, edge_data)
         stmt = stmt_class(subj_agent, obj_agent, evidence=[ev])
         self.statements.append(stmt)
@@ -315,13 +324,15 @@ class PybelProcessor(object):
         product_agents = [get_agent(p) for p in v_data[pc.PRODUCTS]]
         # We are not handling the following degenerate cases:
         # If there is no subject agent
-        if (subj_agent is None or
+        if (
+            subj_agent is None or
             # If get_agent returned None for any of the reactants or
             # products
             any(r is None for r in reactant_agents) or
             any(p is None for p in product_agents) or
             # If there are no reactants and or no products
-            (not reactant_agents and not product_agents)):
+            (not reactant_agents and not product_agents)
+        ):
             self.unhandled.append((u_data, v_data, k, edge_data))
             return
         ev = self._get_evidence(u_data, v_data, k, edge_data)
@@ -369,6 +380,7 @@ class PybelProcessor(object):
 
 
 def get_agent(node_data, node_modifier_data=None):
+    """Get an INDRA agent from a PyBEL node."""
     # Check the node type/function
     if not isinstance(node_data, dsl.BaseEntity):
         raise TypeError('Non-pybel dict given: ({}) {}'.format(
@@ -463,6 +475,7 @@ def get_db_refs_by_name(ns, name, node_data):
         The standardized name for the given entity.
     db_refs : dict
         The grounding for the given entity.
+
     """
     db_refs = None
     if ns == 'HGNC':
@@ -601,6 +614,7 @@ def get_db_refs_by_ident(ns, ident, node_data):
         The standardized name for the given entity.
     db_refs : dict
         The grounding for the given entity.
+
     """
     name = node_data.name
     db_refs = None
@@ -661,6 +675,7 @@ def extract_context(annotations, annot_manager):
     -------
     bc : BioContext
         An INDRA BioContext object
+
     """
 
     def get_annot(annotations, key):
@@ -753,6 +768,7 @@ def _get_mods_and_muts(node_data):
         A list of modifications to the given abundance
     muts : List[MutCondition]
         A list of mutations to the given abundance
+
     """
     mods = []
     muts = []

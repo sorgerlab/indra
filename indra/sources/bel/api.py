@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""High level API functions for the PyBEL processor."""
+
 import json
 import logging
 import zlib
@@ -13,7 +15,8 @@ from .processor import PybelProcessor
 logger = logging.getLogger(__name__)
 
 version = 'v1.0.0'
-branch = 'https://github.com/cthoyt/selventa-knowledge/raw/{}/selventa_knowledge/{}'
+branch = 'https://github.com/cthoyt/selventa-knowledge/raw/' \
+         '{}/selventa_knowledge/{}'
 large_corpus_url = branch.format(version, 'large_corpus.bel.nodelink.json.gz')
 small_corpus_url = branch.format(version, 'small_corpus.bel.nodelink.json.gz')
 
@@ -26,6 +29,7 @@ def process_small_corpus():
     bp : PybelProcessor
         A PybelProcessor object which contains INDRA Statements in
         its statements attribute.
+
     """
     return process_pybel_network(
         network_type='graph_jsongz_url',
@@ -41,6 +45,7 @@ def process_large_corpus():
     bp : PybelProcessor
         A PybelProcessor object which contains INDRA Statements in
         its statements attribute.
+
     """
     return process_pybel_network(
         network_type='graph_jsongz_url',
@@ -65,6 +70,7 @@ def process_pybel_network(network_type, network_file, **kwargs):
     bp : PybelProcessor
         A PybelProcessor object which contains INDRA Statements in
         bp.statements.
+
     """
     if network_type == 'belscript':
         return process_belscript(network_file, **kwargs)
@@ -116,6 +122,7 @@ def process_pybel_neighborhood(entity_names, network_type='graph_jsongz_url',
     bp : PybelProcessor
         A PybelProcessor object which contains INDRA Statements in
         bp.statements.
+
     """
     bp = process_pybel_network(network_type, network_file, **kwargs)
     filtered_stmts = []
@@ -148,6 +155,7 @@ def process_pybel_graph(graph):
     bp : PybelProcessor
         A PybelProcessor object which contains INDRA Statements in
         bp.statements.
+
     """
     bp = PybelProcessor(graph)
     bp.get_statements()
@@ -178,6 +186,7 @@ def process_belscript(file_name, **kwargs):
     bp : PybelProcessor
         A PybelProcessor object which contains INDRA Statements in
         bp.statements.
+
     """
     kwargs.setdefault('citation_clearing', False)
     kwargs.setdefault('no_identifier_validation', True)
@@ -201,6 +210,7 @@ def process_nodelink_json_file(file_name):
     bp : PybelProcessor
         A PybelProcessor object which contains INDRA Statements in
         bp.statements.
+
     """
     pybel_graph = pybel.from_nodelink_file(file_name, check_version=False)
     return process_pybel_graph(pybel_graph)
@@ -219,6 +229,7 @@ def process_cbn_jgif_file(file_name):
     bp : PybelProcessor
         A PybelProcessor object which contains INDRA Statements in
         bp.statements.
+
     """
     with open(file_name, 'r') as jgf:
         return process_pybel_graph(pybel.from_cbn_jgif(json.load(jgf)))
@@ -247,6 +258,7 @@ def process_belrdf(rdf_str, print_output=True):
     This function calls all the specific get_type_of_mechanism()
     functions of the newly constructed BelRdfProcessor to extract
     INDRA Statements.
+
     """
     import rdflib
     from rdflib.plugins.parsers.ntriples import ParseError
