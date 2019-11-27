@@ -2,16 +2,14 @@
 
 """Processor for PyBEL."""
 
-import logging
 import re
-from collections import defaultdict
-
-import pybel.constants as pc
+import logging
 import pybel.dsl as dsl
-from bel_resources import get_bel_resource
+import pybel.constants as pc
+from collections import defaultdict
 from pybel.canonicalize import edge_to_bel
+from bel_resources import get_bel_resource
 from pybel.struct import has_protein_modification
-
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 from indra.databases import (
     chebi_client, go_client, hgnc_client, mesh_client,
@@ -26,6 +24,7 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
+
 
 _pybel_indra_pmod_map = {
     'Ph': 'phosphorylation',
@@ -43,9 +42,8 @@ _pybel_indra_pmod_map = {
 }
 
 #: A mapping from the BEL text location annotation to the INDRA ones at
-# :py:data:`indra.reach.processor._section_list`
-#: see https://arty.scai.fraunhofer.de/artifactory/bel/annotation/
-#       text-location/text-location-1.0.0.belanno
+#: :py:data:`indra.reach.processor._section_list`
+#: see https://arty.scai.fraunhofer.de/artifactory/bel/annotation/text-location/text-location-1.0.0.belanno
 _pybel_text_location_map = {
     "Abstract": 'abstract',
     "Results": 'results',
@@ -54,7 +52,7 @@ _pybel_text_location_map = {
     'Introduction': 'introduction',
     'Methods': 'methods',
     'Discussion': 'discussion',
-    'Conclusion': 'conclusion',
+    'Conclusion': 'conclusion'
 }
 
 
@@ -75,7 +73,6 @@ class PybelProcessor(object):
         A list of extracted INDRA Statements representing BEL Statements.
 
     """
-
     def __init__(self, graph):
         self.graph = graph
         self.statements = []
@@ -212,17 +209,11 @@ class PybelProcessor(object):
             # stmt_class = RegulateAmount
             return
         elif has_deg:
-            stmt_class = (
-                DecreaseAmount
-                if rel in pc.CAUSAL_INCREASE_RELATIONS else
-                IncreaseAmount
-            )
+            stmt_class = (DecreaseAmount
+                          if rel in pc.CAUSAL_INCREASE_RELATIONS else IncreaseAmount)
         else:
-            stmt_class = (
-                IncreaseAmount
-                if rel in pc.CAUSAL_INCREASE_RELATIONS else
-                DecreaseAmount
-            )
+            stmt_class = (IncreaseAmount
+                          if rel in pc.CAUSAL_INCREASE_RELATIONS else DecreaseAmount)
         ev = self._get_evidence(u_data, v_data, k, edge_data)
         stmt = stmt_class(subj_agent, obj_agent, evidence=[ev])
         self.statements.append(stmt)
@@ -264,13 +255,9 @@ class PybelProcessor(object):
             return
         # Check which kind of statement we need to make
         # GtpActivation
-        if (
-            subj_activity
-            and subj_activity.activity_type == 'gtpbound'
-            and isinstance(u_data, dsl.Protein)
-            and isinstance(v_data, dsl.Protein)
-            and edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
-        ):
+        if subj_activity and subj_activity.activity_type == 'gtpbound' and \
+            isinstance(u_data, dsl.Protein) and isinstance(v_data, dsl.Protein) and \
+            edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES:
             stmt_class = GtpActivation
         elif edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
             stmt_class = Activation
@@ -294,7 +281,7 @@ class PybelProcessor(object):
             self.unhandled.append((u_data, v_data, edge_data))
             return
         obj_activity_condition = \
-            _get_activity_condition(edge_data.get(pc.OBJECT))
+                        _get_activity_condition(edge_data.get(pc.OBJECT))
         activity_type = obj_activity_condition.activity_type
         # If the relation is DECREASES, this means that this agent state
         # is inactivating
@@ -324,15 +311,13 @@ class PybelProcessor(object):
         product_agents = [get_agent(p) for p in v_data[pc.PRODUCTS]]
         # We are not handling the following degenerate cases:
         # If there is no subject agent
-        if (
-            subj_agent is None or
-            # If get_agent returned None for any of the reactants or
-            # products
-            any(r is None for r in reactant_agents) or
-            any(p is None for p in product_agents) or
-            # If there are no reactants and or no products
-            (not reactant_agents and not product_agents)
-        ):
+        if (subj_agent is None or
+                # If get_agent returned None for any of the reactants or
+                # products
+                any(r is None for r in reactant_agents) or
+                any(p is None for p in product_agents) or
+                # If there are no reactants and or no products
+                (not reactant_agents and not product_agents)):
             self.unhandled.append((u_data, v_data, k, edge_data))
             return
         ev = self._get_evidence(u_data, v_data, k, edge_data)
@@ -417,7 +402,7 @@ def get_agent(node_data, node_modifier_data=None):
         bound_conditions = [BoundCondition(get_agent(m), True)
                             for m in members[1:]]
         # Check the bound_conditions for any None agents
-        if any(bc.agent is None for bc in bound_conditions):
+        if any([bc.agent is None for bc in bound_conditions]):
             return None
         main_agent.bound_conditions = bound_conditions
         # Get activity of main agent
@@ -858,7 +843,7 @@ def _get_translocation_target(node_modifier_data):
         return None
     try:
         if re.match(r'\d+', to_loc_name) and \
-            not to_loc_name.startswith('GO'):
+                not to_loc_name.startswith('GO'):
             to_loc_name = 'GO:' + to_loc_name
         valid_loc = get_valid_location(to_loc_name)
     except InvalidLocationError:

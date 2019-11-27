@@ -2,14 +2,12 @@
 
 """High level API functions for the PyBEL processor."""
 
-import json
-import logging
 import zlib
-from functools import lru_cache
-
+import json
 import pybel
+import logging
 import requests
-
+from functools import lru_cache
 from .processor import PybelProcessor
 
 logger = logging.getLogger(__name__)
@@ -31,10 +29,8 @@ def process_small_corpus():
         its statements attribute.
 
     """
-    return process_pybel_network(
-        network_type='graph_jsongz_url',
-        network_file=small_corpus_url,
-    )
+    return process_pybel_network(network_type='graph_jsongz_url',
+                                 network_file=small_corpus_url)
 
 
 def process_large_corpus():
@@ -47,10 +43,8 @@ def process_large_corpus():
         its statements attribute.
 
     """
-    return process_pybel_network(
-        network_type='graph_jsongz_url',
-        network_file=large_corpus_url,
-    )
+    return process_pybel_network(network_type='graph_jsongz_url',
+                                 network_file=large_corpus_url)
 
 
 def process_pybel_network(network_type, network_file, **kwargs):
@@ -74,8 +68,8 @@ def process_pybel_network(network_type, network_file, **kwargs):
     """
     if network_type == 'belscript':
         return process_belscript(network_file, **kwargs)
-    elif network_type == 'nodelink':
-        return process_nodelink_json_file(network_file)
+    elif network_type == 'json':
+        return process_json_file(network_file)
     elif network_type == 'cbn_jgif':
         return process_cbn_jgif_file(network_file)
     elif network_type == 'graph_jsongz_url':
@@ -188,13 +182,15 @@ def process_belscript(file_name, **kwargs):
         bp.statements.
 
     """
-    kwargs.setdefault('citation_clearing', False)
-    kwargs.setdefault('no_identifier_validation', True)
+    if 'citation_clearing' not in kwargs:
+        kwargs['citation_clearing'] = False
+    if 'no_identifier_validation' not in kwargs:
+        kwargs['no_identifier_validation'] = True
     pybel_graph = pybel.from_bel_script(file_name, **kwargs)
     return process_pybel_graph(pybel_graph)
 
 
-def process_nodelink_json_file(file_name):
+def process_json_file(file_name):
     """Return a PybelProcessor by processing a Node-Link JSON file.
 
     For more information on this format, see:
