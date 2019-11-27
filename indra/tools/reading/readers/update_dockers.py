@@ -3,7 +3,7 @@ import boto3
 import logging
 import inspect
 
-from os import path
+from os import path, listdir
 from io import BytesIO
 from zipfile import ZipFile
 
@@ -44,21 +44,12 @@ def _make_dockerfile_rec(template_path):
 
 def make_zip_package(rc):
     # Make the dockerfile from the template
-    template_path = path.join(path.dirname(inspect.getfile(rc)),
-                              'docker_template')
-    if not path.exists(template_path):
-        logger.info("%s does not have a dockerfile. Continuing." % rc.name)
-        return None, None
-    logger.info("Forming dockerfile for %s." % rc.name)
-    dockerfile = _make_dockerfile_rec(template_path)
-    dockerfile += "\n# Set in-{reader} environment variable\n" \
-                  "ENV IN_{reader}_DOCKER true\n".format(reader=rc.name)
+    dockerfile, arg_list = get_docker_file(rc)
 
     # Create the buildspec
     build_spec_path = path.join(DOCKER_TEMPLATE_DIR, 'buildspec_fmt.yml')
     with open(build_spec_path, 'r') as f:
         build_spec_fmt = f.read()
-    arg_list = re.findall('^ARG[ \t]+(.*?)$', dockerfile, re.MULTILINE)
     args = ' '.join('--build-arg {arg}=${arg}'.format(arg=arg)
                     for arg in arg_list)
     build_spec = build_spec_fmt.format(args=args)
@@ -73,14 +64,62 @@ def make_zip_package(rc):
     return zip_output, arg_list
 
 
+def get_docker_file(rc, logging=True):
+    template_path = path.join(path.dirname(inspect.getfile(rc)),
+                              'docker_template')
+    if not path.exists(template_path):
+        if logging:
+            logger.info("%s does not have a dockerfile. Continuing." % rc.name)
+        return None, None
+    if logging:
+        logger.info("Forming dockerfile for %s." % rc.name)
+    dockerfile = _make_dockerfile_rec(template_path)
+    dockerfile += "\n# Set in-{reader} environment variable\n" \
+                  "ENV IN_{reader}_DOCKER true\n".format(reader=rc.name)
+    arg_list = re.findall('^ARG[ \t]+(.*?)$', dockerfile, re.MULTILINE)
+    return dockerfile, arg_list
+
+
+def get_available_readers():
+    reader_spec = {}
+    for rc in get_reader_classes():
+        _, arg_list = get_docker_file(rc, logging=False)
+        if arg_list is None:
+            continue
+        reader_spec[rc.name] = arg_list
+    return reader_spec
+
+
 def main():
     from sys import argv
+
+    # Provide some help
+    if '--help' in argv or '-h' in argv:
+        reader_spec = get_available_readers()
+        msg = ("usage: update_dockers.py [docker build options]\n"
+               "                         [--readers {%s}]"
+               % (', '.join(reader_spec.keys())))
+        msg += ("\n\nUpdate the specialized docker images on ECR via "
+                "CodeBuild.\n\n")
+        msg += "optional arguments:\n\n"
+        msg += "  -h, --help\t\tShow this message and exit.\n"
+        msg += ("  --readers\t\tSpecify which readers' images should be "
+                "updated.\n"
+                "           \t\tIf not entered, all readers will be "
+                "updated.\n")
+
+        msg += "\n\navailable reader dockers:"
+        for reader_name, arg_list in reader_spec.items():
+            msg += '\n\n  ' + reader_name.lower() + '\t\t'
+            msg += '\n\t\t'.join(['--%s' % arg.lower() for arg in arg_list])
+        print(msg)
+        return
 
     # Allow the user to limit the readers used.
     only_include_readers = []
     if '--readers' in argv:
         next_idx = argv.index('--readers') + 1
-        while next_idx < len(argv) and not argv[next_idx].startswith('--'):
+        while next_idx < len(argv) and not argv[next_idx].startswith('-'):
             only_include_readers.append(argv[next_idx].upper())
             next_idx += 1
         if not only_include_readers:
@@ -103,7 +142,8 @@ def main():
         zip_output, arg_list = make_zip_package(rc)
         if zip_output is None:
             continue
-        s3_key = 'indra-db/{rdr}-dockerfile/{rdr}-autogen.zip'.format(rdr=rc.name.lower())
+        s3_key = ('indra-db/{rdr}-dockerfile/{rdr}-autogen.zip'
+                  .format(rdr=rc.name.lower()))
         logger.info("Writing %s to s3." % s3_key)
         s3.put_object(Bucket='bigmech', Key=s3_key, Body=zip_output)
 
