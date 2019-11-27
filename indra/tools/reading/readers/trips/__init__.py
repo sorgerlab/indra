@@ -1,5 +1,6 @@
 import os
 import logging
+import threading
 import subprocess as sp
 from datetime import datetime, timedelta, timezone
 
@@ -28,7 +29,19 @@ class TripsReader(Reader):
     def __init__(self, *args, **kwargs):
         self.version = self.get_version()
         super(TripsReader, self).__init__(*args, **kwargs)
+        self.running = False
+        self.stopping = False
         return
+
+    def _monitor_trips_service(self, proc):
+        self.running = True
+        for _ in _tail_trips(proc):
+            if self.stopping:
+                break
+        proc.communicate()
+        if proc.returncode:
+            logger.error("TRIPS ended badly.")
+        self.running = False
 
     def _read(self, content_iter, verbose=False, log=False, n_per_proc=None):
         # Start trips running
@@ -45,23 +58,30 @@ class TripsReader(Reader):
             service_host = 'http://localhost:8080/cgi/'
 
         # Wait for the service to be ready
-        for line in iter(p.stdout.readline, b''):
-            log_line = line.strip().decode('utf-8')
-            logger.info('TRIPS: ' + log_line)
+        for log_line in _tail_trips(p):
             if log_line == 'Ready':
                 break
         logger.info("Service has started up.")
 
+        # Set up the trips monitor
+        th = threading.Thread(target=self._monitor_trips_service, args=[p])
+        th.start()
+
         # Process all the content.
         for content in content_iter:
+            if not self.running:
+                logger.error("Breaking loop: trips is down.")
+                break
             html = client.send_query(content.get_text(),
                                      service_host=service_host,
                                      service_endpoint=service_endpoint)
             xml = client.get_xml(html)
             self.add_result(content.get_id(), xml)
 
-        # Stop TRIPS
-        p.kill()
+        # Stop TRIPS if it hasn't stopped already.
+        p.kill()  # Send signal to the process to stop
+        self.stopping = True  # Sends signal to the loop to stop
+        th.join()
 
         return self.results
 
@@ -94,3 +114,10 @@ class TripsReader(Reader):
     @staticmethod
     def get_processor(reading_content):
         return process_xml(reading_content)
+
+
+def _tail_trips(proc):
+    for line in iter(proc.stdout.readline, b''):
+        log_line = line.strip().decode('utf-8')
+        logger.info('TRIPS: ' + log_line)
+        yield log_line
