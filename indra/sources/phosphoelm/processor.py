@@ -44,18 +44,18 @@ class PhosphoElmProcessor(object):
         self.statements = []
         self._phosphoelm_data = phosphoelm_data
 
-    def process_phosphorylations(self, keep_empty=False):
+    def process_phosphorylations(self, skip_empty=True):
         """Create Phosphorylation statements from phosphoelm_data
 
         Parameters
         ----------
-        keep_empty : bool
-            Default: False. If true, also create statements when upstream
+        skip_empty : bool
+            Default: True. If False, also create statements when upstream
             kinases in entry['kinases'] are not known.
         """
         for entry in self._phosphoelm_data:
-            if not keep_empty and not entry['kinases'] or\
-                    not entry['species'].lower() == 'homo sapiens':
+            if entry['species'].lower() != 'homo sapiens' or\
+                    skip_empty and not entry['kinases']:
                 # Skip entries without any kinases or if species is other
                 # than human.
                 continue
@@ -71,10 +71,11 @@ class PhosphoElmProcessor(object):
             # 'entry_date': 'yyyy-mm-dd HH:MM:SS.mmmmmm'
             substrate = Agent(None, db_refs={'UP': entry['acc']})
             used_name, enz = self._get_enzyme(entry['kinases']) if\
-                entry.get('kinases') else '', None
+                len(entry['kinases']) > 0 else ('', None)
 
-            # Skip if we hit one of the special cases
-            if enz is None:
+            # Skip if enz is None instead of an Agent (only when we skip
+            # empty kinase entries)
+            if skip_empty and not isinstance(enz, Agent):
                 continue
 
             # Build evidence, add statement
@@ -121,7 +122,9 @@ class PhosphoElmProcessor(object):
         if upstream_kinase in phosphoelm_mapping:
             ns, _id = phosphoelm_mapping[upstream_kinase]
             if ns is None and _id is None:
+                # Can't define an Agent
                 return upstream_kinase, None
+            # Agent can be defined from mapping
             return upstream_kinase, Agent(None, db_refs={ns: _id})
 
         strip_words = ['_group', '_drome', '_Caeel']
