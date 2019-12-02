@@ -608,6 +608,8 @@ def get_db_refs_by_ident(ns, ident, node_data):
         #                 'currently handled: %s' % node_data)
     elif ns == 'PUBCHEM.COMPOUND':
         db_refs = {'PUBCHEM': ident}
+    elif ns == 'PFAM':
+        db_refs = {'PF': ident}
     else:
         logger.info("Unhandled namespace %s with name %s and "
                     "identifier %s (%s)." % (ns, name,
