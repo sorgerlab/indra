@@ -48,22 +48,22 @@ def test_keep_empty():
     pep = PhosphoElmProcessor(
         phosphoelm_data=_get_json_from_entry_rows(iter(raw_data))
     )
-    pep.process_phosphorylations(True)
+    pep.process_phosphorylations(skip_empty=False)
     stmts = pep.statements
-    assert len(stmts) == 3
+    assert len(stmts) == 3, len(stmts)
     assert all(isinstance(st, Phosphorylation) for st in stmts)
     assert all(st.evidence[0].source_api == 'phospho.ELM' for st in stmts)
     assert all(len(st.evidence[0].annotations['sequence']) > 0
                for st in stmts)
 
 
-def test_not_empty():
+def test_skip_empty():
     pep = PhosphoElmProcessor(
         phosphoelm_data=_get_json_from_entry_rows(iter(raw_data))
     )
-    pep.process_phosphorylations()
+    pep.process_phosphorylations(skip_empty=True)
     stmts = pep.statements
-    assert len(stmts) == 2
+    assert len(stmts) == 2, len(stmts)
 
 
 def test_special_cases():
