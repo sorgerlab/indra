@@ -10,17 +10,17 @@ columns = ['acc', 'sequence', 'position', 'code', 'pmids', 'kinases',
 non_human_no_kinase = ['O08539',
                        'FAKEGSKG', '6', 'S', '17114649', '', 'HTP',
                        'Mus musculus', '2005-03-14 12:16:11.108314+01']
-human_no_kinase = ['O14543',
-                   'MVTHSKFPAAGMSRPLDTSLRLKTFSSKSEYQL', '31', 'Y',
+human_no_kinase = ['O14543',  # SOCS3
+                   'FAKESEQUENCESRPLDTSLRLKTFSSKSEYQL', '31', 'Y',
                    '12783885', '', 'LTP', 'Homo sapiens',
                    '2006-10-17 12:06:48.271076+02']
-human_kinase1 = ['O14543',
+human_kinase1 = ['O14543',  # SOCS3
                  'FAKESEQUENCESRPLDTSLRLKTFSSKSEYQL',
                  '31', 'Y', '12783885', 'Lck', 'LTP', 'Homo sapiens',
                  '2006-10-17 12:06:48.16767+02']
-human_kinase2 = ['O14746', 'FAKEPRCRAVRSLL', '12', 'S', '10224060',
-                 'PKB_group', 'LTP', 'Homo sapiens',
-                 '2004-12-31 00:00:00+01']
+human_kinase2 = ['O14746',  # TERT
+                 'FAKEPRCRAVRSLL', '12', 'S', '10224060', 'PKB_group',
+                 'LTP', 'Homo sapiens', '2004-12-31 00:00:00+01']
 
 raw_data = [columns, non_human_no_kinase, human_no_kinase, human_kinase1,
             human_kinase2]
@@ -82,7 +82,7 @@ def test_special_cases():
 
     # PDKC is probably a typo in the kinase table at
     # http://phospho.elm.eu.org/kinases.html but it is unclear what was
-    # meant by the name from the source material
+    # meant by the name from the source material: possibly PKC or SDK1.
     _, ag = PhosphoElmProcessor._get_enzyme('PDKC')
     assert ag is None
 
