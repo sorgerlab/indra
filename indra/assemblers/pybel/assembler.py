@@ -527,7 +527,7 @@ def _get_agent_grounding(agent):
 
     pfam_id = _get_id(agent, 'PF')
     if pfam_id:
-        return protein('PFAM', pfam_id)
+        return protein('PFAM', name=agent.name, identifier=pfam_id)
 
     ip_id = _get_id(agent, 'IP')
     if ip_id:
