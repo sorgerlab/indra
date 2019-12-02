@@ -61,6 +61,9 @@ class TripsReader(Reader):
         for log_line in _tail_trips(p):
             if log_line == 'Ready':
                 break
+        else:
+            logger.error("TRIPS failed to start.")
+            return []
         logger.info("Service has started up.")
 
         # Set up the trips monitor
