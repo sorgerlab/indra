@@ -256,17 +256,19 @@
         </button>
       </div>
     </div>
-    <div class="row justify-content-md-center">
-      <div class="col-1 text-right">
-        {{ source_colors[0][0] }}
+    {% if source_key_dict %}
+      <div class="row justify-content-md-center">
+        <div class="col-1 text-right">
+          {{ source_colors[0][0] }}
+        </div>
+        <div class="col col-auto text-center">
+          {{ badges(source_key_dict) }}
+        </div>
+        <div class="col-1 text-left">
+          {{ source_colors[1][0] }}
+        </div>
       </div>
-      <div class="col col-auto text-center">
-        {{ badges(source_key_dict) }}
-      </div>
-      <div class="col-1 text-left">
-        {{ source_colors[1][0] }}
-      </div>
-    </div>
+    {% endif %}
     <hr>
   </div>
   {% for results in stmt_data.values() %}
