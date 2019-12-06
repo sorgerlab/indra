@@ -284,6 +284,7 @@ class ModelChecker(object):
             # Keep unique sources but use a list (not set) to preserve order
             if source not in sources:
                 sources.append(source)
+        min_length = min(path_lengths)
         logger.info('Finding paths between %s and %s' % (subj, obj))
         # Now, look for paths
         if path_metrics and max_paths == 0:
@@ -427,14 +428,14 @@ class ModelChecker(object):
         raise NotImplementedError("Method must be implemented in child class.")
 
 
-def get_path_iter(graph, source, target):
+def get_path_iter(graph, source, target, path_length):
     """Return a generator of paths from source to target."""
     # If source and target are the same node we need to find paths from source
     # to its predecessors
     if source == target:
         new_targets = graph.predecessors(source)
         for nt in new_targets:
-            path_iter = nx.shortest_simple_paths(graph, source, nt)
+            path_iter = nx.all_simple_paths(graph, source, nt, path_length - 1)
             try:
                 for p in path_iter:
                     path = deepcopy(p)
@@ -445,7 +446,7 @@ def get_path_iter(graph, source, target):
                 pass
     else:
         # Regular path search
-        path_iter = nx.shortest_simple_paths(graph, source, target)
+        path_iter = nx.all_simple_paths(graph, source, target, path_length)
         try:
             for path in path_iter:
                 yield path
