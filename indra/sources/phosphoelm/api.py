@@ -1,18 +1,15 @@
 import csv
 import logging
-from indra.util.aws import get_s3_client
 
 from .processor import PhosphoElmProcessor
 
 logger = logging.getLogger(__name__)
 
-s3_bucket = 'bigmech'
-ppelm_s3_key = 'indra-db/external_databases/phosphoELM_all_2015-04.dump'
-kinases_list_web = 'http://phospho.elm.eu.org/kinases.html'
-
 
 def process_from_dump(fname, delimiter='\t'):
-    """Process a phospho.ELM file dump
+    """Process a Phospho.ELM file dump
+
+    The dump can be obtained at http://phospho.elm.eu.org/dataset.html.
 
     Parameters
     ----------
@@ -28,8 +25,6 @@ def process_from_dump(fname, delimiter='\t'):
         generated from the file dump
     """
     with open(fname, 'r') as f:
-        # f.readlines is needed so that the file content is consumed
-        # before exiting the with-open clause
         csv_reader = csv.reader(f, delimiter=delimiter)
         ppelm_json = _get_json_from_entry_rows(csv_reader)
     pep = PhosphoElmProcessor(ppelm_json)
