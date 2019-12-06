@@ -41,6 +41,7 @@ Standard Molecular Pathway Databases
    biogrid/index
    hprd/index
    trrust
+   phosphoelm/index
 
 Custom Knowledge Bases
 ----------------------

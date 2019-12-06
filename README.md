@@ -61,6 +61,7 @@ Biological pathway databases:
 | LINCS small molecules      | [`indra.sources.lincs_drug`](https://indra.readthedocs.io/en/latest/modules/sources/lincs_drug/index.html) | http://lincs.hms.harvard.edu/db/sm/                             |
 | HPRD                       | [`indra.sources.hprd`](https://indra.readthedocs.io/en/latest/modules/sources/hprd/index.html) | http://www.hprd.org          |                   |
 | TRRUST                     | [`indra.sources.trrust`](https://indra.readthedocs.io/en/latest/modules/sources/trrust.html) | https://www.grnpedia.org/trrust/          |                   |
+| Phospho.ELM                | [`indra.sources.phosphoelm`](https://indra.readthedocs.io/en/latest/modules/sources/phosphoelm/index.html) | http://phospho.elm.eu.org/ |
 
 Custom knowledge bases:
 

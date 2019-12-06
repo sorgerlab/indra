@@ -1,6 +1,8 @@
 import boto3
 import logging
 import requests
+from botocore import UNSIGNED
+from botocore.client import Config
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from indra import get_config, has_config
 from indra.util.nested_dict import NestedDict
@@ -294,6 +296,26 @@ def get_s3_file_tree(s3, bucket, prefix):
             curr = curr[step]
         curr['key'] = key
     return file_tree
+
+
+def get_s3_client(unsigned=True):
+    """Return a boto3 S3 client with optional unsigned config.
+
+    Parameters
+    ----------
+    unsigned : Optional[bool]
+        If True, the client will be using unsigned mode in which public
+        resources can be accessed without credentials. Default: True
+
+    Returns
+    -------
+    botocore.client.S3
+        A client object to AWS S3.
+    """
+    if unsigned:
+        return boto3.client('s3', config=Config(signature_version=UNSIGNED))
+    else:
+        return boto3.client('s3')
 
 
 if __name__ == '__main__':
