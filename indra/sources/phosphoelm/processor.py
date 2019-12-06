@@ -55,7 +55,7 @@ class PhosphoElmProcessor(object):
             # 'source': 'HTP|LTP',
             # 'species': '<species name in latin>',
             # 'entry_date': 'yyyy-mm-dd HH:MM:SS.mmmmmm'
-            substrate = _agent_from_up(entry['acc'])
+            substrate = _agent_from_id(entry['acc'])
             enzyme = _agent_from_str(entry['kinases'])
 
             # Skip if enz is None instead of an Agent (only when we skip
@@ -84,16 +84,22 @@ class PhosphoElmProcessor(object):
             )
 
 
-def _agent_from_up(up_id):
-    name = uniprot_client.get_gene_name(up_id)
-    if not name:
-        return None
-    db_refs = {'UP': up_id}
-    hgnc_id = uniprot_client.get_hgnc_id(up_id)
-    if hgnc_id:
-        db_refs['HGNC'] = hgnc_id
-    ag = Agent(name, db_refs=db_refs)
-    return ag
+def _agent_from_id(db_id):
+    # There are some Ensembl protein IDs which we currently can't normalize
+    # to anything else (unlike ENSG).
+    if db_id.startswith('ENSP'):
+        db_refs = {'ENSEMBL': db_id}
+        name = db_id
+    # All other entries are UniProt IDs
+    else:
+        name = uniprot_client.get_gene_name(db_id)
+        if not name:
+            return None
+        db_refs = {'UP': db_id}
+        hgnc_id = uniprot_client.get_hgnc_id(db_id)
+        if hgnc_id:
+            db_refs['HGNC'] = hgnc_id
+    return Agent(name, db_refs=db_refs)
 
 
 def _agent_from_str(txt):
@@ -113,6 +119,9 @@ def _agent_from_str(txt):
     if txt in phosphoelm_mapping:
         name = txt
         ns, _id = phosphoelm_mapping[txt]
+        # If None is hard coded in the map it means we should skip this
+        if ns is None:
+            return None
     else:
         term = _gilda_grounder(txt)
 
