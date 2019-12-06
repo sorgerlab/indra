@@ -11,14 +11,13 @@ ppelm_s3_key = 'indra-db/external_databases/phosphoELM_all_2015-04.dump'
 kinases_list_web = 'http://phospho.elm.eu.org/kinases.html'
 
 
-def process_from_dump(fname=None, delimiter='\t'):
+def process_from_dump(fname, delimiter='\t'):
     """Process a phospho.ELM file dump
 
     Parameters
     ----------
     fname : str
-        File path to the phospho.ELM file dump. If none is provided,
-        the file will be downloaded from S3.
+        File path to the phospho.ELM file dump.
     delimiter : str
         The delimiter to use for csv.reader
 
@@ -28,20 +27,11 @@ def process_from_dump(fname=None, delimiter='\t'):
         An instance of a PhosphoElmProcessor containing the statements
         generated from the file dump
     """
-    if fname is None:
-        s3 = get_s3_client(False)
-        s3_obj = s3.get_object(Bucket=s3_bucket, Key=ppelm_s3_key)
-        csv_reader = csv.reader(
-            s3_obj['Body'].read().decode('utf8').splitlines(True),
-            delimiter='\t'
-        )
+    with open(fname, 'r') as f:
+        # f.readlines is needed so that the file content is consumed
+        # before exiting the with-open clause
+        csv_reader = csv.reader(f, delimiter=delimiter)
         ppelm_json = _get_json_from_entry_rows(csv_reader)
-    else:
-        with open(fname, 'r') as f:
-            # f.readlines is needed so that the file content is consumed
-            # before exiting the with-open clause
-            csv_reader = csv.reader(f, delimiter=delimiter)
-            ppelm_json = _get_json_from_entry_rows(csv_reader)
     pep = PhosphoElmProcessor(ppelm_json)
     pep.process_phosphorylations()
     return pep
