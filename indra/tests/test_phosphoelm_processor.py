@@ -1,9 +1,7 @@
-import csv
-from indra.util.aws import get_s3_client
 from indra.statements import Phosphorylation
-from indra.sources.phosphoelm.api import PhosphoElmProcessor, \
-    _get_json_from_entry_rows, s3_bucket, ppelm_s3_key
-from nose.plugins.attrib import attr
+from indra.sources.phosphoelm.processor import PhosphoElmProcessor, \
+    _agent_from_str
+from indra.sources.phosphoelm.api import _get_json_from_entry_rows
 
 columns = ['acc', 'sequence', 'position', 'code', 'pmids', 'kinases',
            'source', 'species', 'entry_date']
@@ -40,7 +38,7 @@ def test_keep_empty():
     stmts = pep.statements
     assert len(stmts) == 3, len(stmts)
     assert all(isinstance(st, Phosphorylation) for st in stmts)
-    assert all(st.evidence[0].source_api == 'phospho.ELM' for st in stmts)
+    assert all(st.evidence[0].source_api == 'phosphoelm' for st in stmts)
     assert all(len(st.evidence[0].annotations['sequence']) > 0
                for st in stmts)
 
@@ -56,33 +54,33 @@ def test_skip_empty():
 
 def test_special_cases():
     # See http://phospho.elm.eu.org/kinases.html for list of kinases
-    _, ag = PhosphoElmProcessor._get_enzyme('Aurora A')
-    assert list(ag.db_refs.items())[0] == ('HGNC', '11393')
+    ag = _agent_from_str('Aurora A')
+    assert ag.db_refs.get('HGNC') == '11393'
 
-    _, ag = PhosphoElmProcessor._get_enzyme('CCDPK')  # is non-human
-    assert ag is None
+    ag = _agent_from_str('CCDPK')  # is non-human
+    assert ag is None, ag
 
-    _, ag = PhosphoElmProcessor._get_enzyme('MAP2K_group')
-    assert list(ag.db_refs.items())[0] == ('FPLX', 'MAP2K')
+    ag = _agent_from_str('MAP2K_group')
+    assert ag.db_refs.get('FPLX') == 'MAP2K'
 
-    _, ag = PhosphoElmProcessor._get_enzyme('PDHK4')
-    assert list(ag.db_refs.items())[0] == ('HGNC', '8812')
+    ag = _agent_from_str('PDHK4')
+    assert ag.db_refs.get('HGNC') == '8812'
 
     # PDKC is probably a typo in the kinase table at
     # http://phospho.elm.eu.org/kinases.html but it is unclear what was
     # meant by the name from the source material: possibly PKC or SDK1.
-    _, ag = PhosphoElmProcessor._get_enzyme('PDKC')
+    ag = _agent_from_str('PDKC')
     assert ag is None
 
-    _, ag = PhosphoElmProcessor._get_enzyme('PKA_alpha')
-    assert list(ag.db_refs.items())[0] == ('HGNC', '9380')
+    ag = _agent_from_str('PKA_alpha')
+    assert ag.db_refs.get('HGNC') == '9380'
 
-    _, ag = PhosphoElmProcessor._get_enzyme('PKC_zeta')
-    assert list(ag.db_refs.items())[0] == ('HGNC', '9412')
+    ag = _agent_from_str('PKC_zeta')
+    assert ag.db_refs.get('HGNC') == '9412'
 
-    _, ag = PhosphoElmProcessor._get_enzyme('RSK-5')
-    assert list(ag.db_refs.items())[0] == ('HGNC', '10434')
+    ag = _agent_from_str('RSK-5')
+    assert ag.db_refs.get('HGNC') == '10434'
 
-    _, ag = PhosphoElmProcessor._get_enzyme('Titin kinase')
-    assert list(ag.db_refs.items())[0] == ('HGNC', '12403')
+    ag = _agent_from_str('Titin kinase')
+    assert ag.db_refs.get('HGNC') == '12403'
 
