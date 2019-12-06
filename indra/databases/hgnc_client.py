@@ -83,18 +83,18 @@ def get_ensembl_id(hgnc_id):
 
     Returns
     -------
-    entrez_id : str
+    ensembl_id : str
         The Ensembl ID corresponding to the given HGNC ID.
     """
     return ensembl_ids.get(hgnc_id)
 
 
-def get_hgnc_from_ensembl(hgnc_id):
+def get_hgnc_from_ensembl(ensembl_id):
     """Return the HGNC ID corresponding to the given Ensembl ID.
 
     Parameters
     ----------
-    entrez_id : str
+    ensembl_id : str
         The Ensembl ID to be converted, a number passed as a string.
 
     Returns
@@ -102,7 +102,7 @@ def get_hgnc_from_ensembl(hgnc_id):
     hgnc_id : str
         The HGNC ID corresponding to the given Ensembl ID.
     """
-    return ensembl_ids_reverse.get(hgnc_id)
+    return ensembl_ids_reverse.get(ensembl_id)
 
 
 def get_hgnc_name(hgnc_id):
