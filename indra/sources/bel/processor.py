@@ -1,14 +1,21 @@
+# -*- coding: utf-8 -*-
+
+"""Processor for PyBEL."""
+
 import re
 import logging
+import pybel.dsl as dsl
 import pybel.constants as pc
 from collections import defaultdict
 from pybel.struct import has_protein_modification
 from pybel.canonicalize import edge_to_bel
-from pybel.resources import get_bel_resource
+from bel_resources import get_bel_resource
 from indra.statements import *
 from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
-from indra.databases import hgnc_client, uniprot_client, chebi_client, \
-    go_client, mesh_client, mirbase_client
+from indra.databases import (
+    chebi_client, go_client, hgnc_client, mesh_client,
+    mirbase_client, uniprot_client,
+)
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 
 __all__ = [
@@ -35,7 +42,7 @@ _pybel_indra_pmod_map = {
 }
 
 #: A mapping from the BEL text location annotation to the INDRA ones at
-# :py:data:`indra.reach.processor._section_list`
+#: :py:data:`indra.reach.processor._section_list`
 #: see https://arty.scai.fraunhofer.de/artifactory/bel/annotation/text-location/text-location-1.0.0.belanno
 _pybel_text_location_map = {
     "Abstract": 'abstract',
@@ -80,9 +87,9 @@ class PybelProcessor(object):
                 continue
             # If the left or right-hand sides involve complex abundances,
             # add them as statements
-            for node_ix, node_data in enumerate((u_data, v_data)):
-                if node_data[pc.FUNCTION] == pc.COMPLEX:
-                    self._get_complex(u_data, v_data, k, d, node_ix)
+            for node_ix, node in enumerate((u_data, v_data)):
+                if isinstance(node, dsl.ComplexAbundance):
+                    self._get_enum_complex(u_data, v_data, k, d, node_ix)
             subj_activity = _get_activity_condition(d.get(pc.SUBJECT))
             obj_activity = _get_activity_condition(d.get(pc.OBJECT))
             obj_to_loc = _get_translocation_target(d.get(pc.OBJECT))
@@ -94,13 +101,11 @@ class PybelProcessor(object):
                             "handled: %s)", edge_to_bel(u_data, v_data, d))
                 continue
 
-            v_func = v_data[pc.FUNCTION]
-
             # Modification, e.g.
             #   x(Foo) -> p(Bar, pmod(Ph))
             #   act(x(Foo)) -> p(Bar, pmod(Ph))
-            if v_func == pc.PROTEIN and \
-               has_protein_modification(v_data):
+            if isinstance(v_data, dsl.Protein) and \
+                    has_protein_modification(v_data):
                 if obj_activity:
                     logger.info("Ignoring object activity modifier in "
                                 "modification statement: %s, %s, %s, %s",
@@ -134,7 +139,7 @@ class PybelProcessor(object):
                     self._get_regulate_activity(u_data, v_data, k, d)
             # Activations involving biological processes or pathologies
             #   x(Foo) -> bp(Bar)
-            elif v_func in (pc.BIOPROCESS, pc.PATHOLOGY):
+            elif isinstance(v_data, (dsl.BiologicalProcess, dsl.Pathology)):
                 self._get_regulate_activity(u_data, v_data, k, d)
             # Regulate amount
             #   x(Foo) -> p(Bar)
@@ -142,8 +147,13 @@ class PybelProcessor(object):
             #   act(x(Foo)) -> p(Bar):
             #   x(Foo) -> deg(p(Bar))
             #   act(x(Foo)) ->/-| deg(p(Bar))
-            elif v_data.function in (pc.PROTEIN, pc.RNA, pc.ABUNDANCE,
-                 pc.COMPLEX, pc.MIRNA) and not obj_activity:
+            elif (
+                isinstance(v_data, (
+                    dsl.Protein, dsl.Rna, dsl.Abundance, dsl.MicroRna,
+                    dsl.NamedComplexAbundance,
+                ))
+                and not obj_activity
+            ):
                 self._get_regulate_amount(u_data, v_data, k, d)
             # Controlled conversions
             #   x(Foo) -> rxn(reactants(r1,...,rn), products(p1,...pn))
@@ -151,24 +161,26 @@ class PybelProcessor(object):
             # Note that we can't really handle statements where the relation
             # is decreases, as inhibition of a reaction match the semantics
             # of a controlled conversion
-            elif v_data.function == pc.REACTION and \
-                 d[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
+            elif (
+                isinstance(v_data, dsl.Reaction)
+                and d[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS
+            ):
                 self._get_conversion(u_data, v_data, k, d)
             # UNHANDLED
             # rxn(reactants(r1,...,rn), products(p1,...pn))
             # Complex(a,b)
             # p(A, pmod('ph')) -> Complex(A, B)
-            # Complex(A-Ph, B) 
+            # Complex(A-Ph, B)
             # Complexes
             #   complex(x(Foo), x(Bar), ...)
             else:
                 self.unhandled.append((u_data, v_data, k, d))
 
-    def _get_complex(self, u_data, v_data, k, edge_data, node_ix):
+    def _get_enum_complex(self, u_data, v_data, k, edge_data, node_ix):
         # Get an agent with bound conditions from the Complex
         assert node_ix in (0, 1)
-        node_data = [u_data, v_data][node_ix]
-        cplx_agent = get_agent(node_data, None)
+        node = [u_data, v_data][node_ix]
+        cplx_agent = get_agent(node, None)
         if cplx_agent is None:
             return
         agents = [bc.agent for bc in cplx_agent.bound_conditions]
@@ -204,7 +216,7 @@ class PybelProcessor(object):
 
     def _get_modification(self, u_data, v_data, k, edge_data):
         subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
-        mods, muts = _get_all_pmods(v_data)
+        mods, muts = _get_mods_and_muts(v_data)
         v_data_no_mods = v_data.get_parent()
         obj_agent = get_agent(v_data_no_mods, edge_data.get(pc.OBJECT))
         if subj_agent is None or obj_agent is None:
@@ -221,14 +233,12 @@ class PybelProcessor(object):
         # Subject info
         subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
         subj_activity = _get_activity_condition(edge_data.get(pc.SUBJECT))
-        subj_function = u_data.function
         # Object info
         # Note: Don't pass the object modifier data because we don't want to
         # put an activity on the agent
         obj_agent = get_agent(v_data, None)
-        obj_function = v_data.function
         # If it's a bioprocess object, we won't have an activity in the edge
-        if obj_function in (pc.BIOPROCESS, pc.PATHOLOGY):
+        if isinstance(v_data, (dsl.BiologicalProcess, dsl.Pathology)):
             activity_type = 'activity'
         else:
             obj_activity_condition = \
@@ -242,8 +252,8 @@ class PybelProcessor(object):
         # Check which kind of statement we need to make
         # GtpActivation
         if subj_activity and subj_activity.activity_type == 'gtpbound' and \
-           subj_function == pc.PROTEIN and obj_function == pc.PROTEIN and \
-           edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES:
+            isinstance(u_data, dsl.Protein) and isinstance(v_data, dsl.Protein) and \
+            edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES:
             stmt_class = GtpActivation
         elif edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
             stmt_class = Activation
@@ -267,7 +277,7 @@ class PybelProcessor(object):
             self.unhandled.append((u_data, v_data, edge_data))
             return
         obj_activity_condition = \
-            _get_activity_condition(edge_data.get(pc.OBJECT))
+                        _get_activity_condition(edge_data.get(pc.OBJECT))
         activity_type = obj_activity_condition.activity_type
         # If the relation is DECREASES, this means that this agent state
         # is inactivating
@@ -316,9 +326,9 @@ class PybelProcessor(object):
         ev_citation = edge_data.get(pc.CITATION)
         ev_pmid = None
         if ev_citation:
-            cit_type = ev_citation[pc.CITATION_TYPE]
-            cit_ref = ev_citation[pc.CITATION_REFERENCE]
-            if cit_type == pc.CITATION_TYPE_PUBMED:
+            cit_type = ev_citation[pc.CITATION_DB]
+            cit_ref = ev_citation[pc.CITATION_IDENTIFIER]
+            if cit_type == pc.CITATION_TYPES[pc.CITATION_TYPE_PUBMED]:
                 ev_pmid = cit_ref
                 ev_ref = None
             else:
@@ -351,24 +361,32 @@ class PybelProcessor(object):
 
 
 def get_agent(node_data, node_modifier_data=None):
+    """Get an INDRA agent from a PyBEL node."""
     # Check the node type/function
-    node_func = node_data[pc.FUNCTION]
-    if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX,
-                         pc.PATHOLOGY, pc.ABUNDANCE, pc.MIRNA, pc.GENE):
+    if not isinstance(node_data, dsl.BaseEntity):
+        raise TypeError('Non-pybel dict given: ({}) {}'.format(
+            type(node_data), node_data))
+
+    if not isinstance(node_data, (
+        dsl.Protein, dsl.Rna, dsl.BiologicalProcess, dsl.ComplexAbundance,
+        dsl.NamedComplexAbundance, dsl.Pathology, dsl.Abundance,
+        dsl.MicroRna, dsl.Gene,
+    )):
         mod_data = node_modifier_data or 'No node data'
         logger.info("Nodes of type %s not handled: %s",
-                    node_func, mod_data)
+                    node_data.function, mod_data)
         return None
+
     # Skip gene/protein fusions
-    if pc.FUSION in node_data:
-        logger.info("Gene and protein fusions not handled: %s" % str(node_data))
+    if isinstance(node_data, dsl.FusionBase):
+        logger.info("Gene and protein fusions not handled: %s", node_data)
         return None
     # COMPLEXES ------------
     # First, handle complexes, which will consist recursively of other agents
-    if node_func == pc.COMPLEX:
+    if isinstance(node_data, dsl.ComplexAbundance):
         # First, check for members: if there are no members, we assume this
         # is a named complex
-        members = node_data.get(pc.MEMBERS)
+        members = node_data.members
         if members is None:
             return None
         # Otherwise, get the "main" agent, to which the other members will be
@@ -389,9 +407,9 @@ def get_agent(node_data, node_modifier_data=None):
         return main_agent
     # OTHER NODE TYPES -----
     # Get node identifier information
-    name = node_data.get(pc.NAME)
-    ns = node_data[pc.NAMESPACE].upper()
-    ident = node_data.get(pc.IDENTIFIER)
+    name = node_data.name
+    ns = node_data.namespace.upper()
+    ident = node_data.identifier
     # No ID present, get identifier using the name, namespace
     if not ident:
         assert name, "Node must have a name if lacking an identifier."
@@ -405,7 +423,7 @@ def get_agent(node_data, node_modifier_data=None):
         return None
 
     # Get modification conditions
-    mods, muts = _get_all_pmods(node_data)
+    mods, muts = _get_mods_and_muts(node_data)
     # Get activity condition
     ac = _get_activity_condition(node_modifier_data)
     to_loc = _get_translocation_target(node_modifier_data)
@@ -438,6 +456,7 @@ def get_db_refs_by_name(ns, name, node_data):
         The standardized name for the given entity.
     db_refs : dict
         The grounding for the given entity.
+
     """
     db_refs = None
     if ns == 'HGNC':
@@ -567,7 +586,7 @@ def get_db_refs_by_ident(ns, ident, node_data):
         A name space in which the given identifier is interpreted.
     ident : str
         The identifier in the given name space to get grounding for.
-    node_data : dict
+    node_data : pybel.dsl.BaseAbundance
         Node data for logging purposes.
 
     Returns
@@ -576,8 +595,9 @@ def get_db_refs_by_ident(ns, ident, node_data):
         The standardized name for the given entity.
     db_refs : dict
         The grounding for the given entity.
+
     """
-    name = node_data.get(pc.NAME)
+    name = node_data.name
     db_refs = None
     if ns == 'HGNC':
         name = hgnc_client.get_hgnc_name(ident)
@@ -713,7 +733,21 @@ class AnnotationManager(object):
         self.failures[key].add(value)
 
 
-def _get_all_pmods(node_data):
+def _get_mods_and_muts(node_data):
+    """Get all modifications and mutations on the PyBEL node.
+
+    Parameters
+    ----------
+    node_data : pybel.dsl.CentralDogma
+        A PyBEL node
+
+    Returns
+    -------
+    mods : List[ModCondition]
+        A list of modifications to the given abundance
+    muts : List[MutCondition]
+        A list of mutations to the given abundance
+    """
     mods = []
     muts = []
     variants = node_data.get(pc.VARIANTS)
@@ -721,37 +755,39 @@ def _get_all_pmods(node_data):
         return mods, muts
 
     for var in variants:
-        if var[pc.KIND] == pc.HGVS and node_data[pc.FUNCTION] == pc.GENE:
-            logger.debug('Unhandled genetic variant: %s' % node_data)
-        elif var[pc.KIND] == pc.HGVS:
-            hgvs_str = var[pc.IDENTIFIER]
+        if isinstance(var, dsl.Hgvs):
+            if isinstance(node_data, dsl.Gene):
+                logger.debug('Unhandled genetic variant: %s', node_data)
+                continue
+
+            hgvs_str = var.variant
             position, res_from, res_to = _parse_mutation(hgvs_str)
             if position is None and res_from is None and res_to is None:
-                logger.info("Could not parse HGVS string %s" % hgvs_str)
+                logger.info("Could not parse HGVS string %s", hgvs_str)
             else:
                 mut_cond = MutCondition(position, res_from, res_to)
                 muts.append(mut_cond)
-        elif var[pc.KIND] == pc.PMOD:
-            var_id_dict = var[pc.IDENTIFIER]
-            var_ns = var_id_dict[pc.NAMESPACE]
+
+        elif isinstance(var, dsl.ProteinModification):
+            var_ns = var.entity.namespace
             if var_ns == pc.BEL_DEFAULT_NAMESPACE:
-                var_id = var_id_dict[pc.NAME]
+                var_id = var.entity.name
                 mod_type = _pybel_indra_pmod_map.get(var_id)
                 if mod_type is None:
-                    logger.info("Unhandled modification type %s (%s)" %
-                                (var_id, node_data))
+                    logger.info("Unhandled modification type %s (%s)",
+                                var_id, node_data)
                     continue
                 mc = ModCondition(mod_type, var.get(pc.PMOD_CODE),
                                   var.get(pc.PMOD_POSITION))
                 mods.append(mc)
         # FIXME These unhandled mod types should result in throwing out
         # the node (raise, or return None)
-        elif var[pc.KIND] == pc.GMOD:
-            logger.debug('Unhandled node variant GMOD: %s' % node_data)
-        elif var[pc.KIND] == pc.FRAGMENT:
-            logger.debug('Unhandled node variant FRAG: %s' % node_data)
+        elif isinstance(var, dsl.GeneModification):
+            logger.debug('Unhandled node variant GMOD: %s', node_data)
+        elif isinstance(var, dsl.Fragment):
+            logger.debug('Unhandled node variant FRAG: %s', node_data)
         else:
-            logger.debug('Unknown node variant type: %s' % node_data)
+            logger.debug('Unknown node variant type: %s', node_data)
     return mods, muts
 
 
@@ -770,7 +806,7 @@ def _get_activity_condition(node_modifier_data):
     if activity_ns == pc.BEL_DEFAULT_NAMESPACE:
         activity_name = effect[pc.NAME]
         activity_type = _pybel_indra_act_map.get(activity_name)
-        # If an activity type in Bel/PyBel that is not implemented in INDRA,
+        # If an activity type in Bel/PyBEL that is not implemented in INDRA,
         # return generic activity
         if activity_type is None:
             return ActivityCondition('activity', True)
@@ -793,8 +829,8 @@ def _get_translocation_target(node_modifier_data):
     to_loc_info = transloc_data.get(pc.TO_LOC)
     if not to_loc_info:
         return None
-    to_loc_ns = to_loc_info.get(pc.NAMESPACE)
-    to_loc_name = to_loc_info.get(pc.NAME)
+    to_loc_ns = to_loc_info.get('namespace')
+    to_loc_name = to_loc_info.get('name')
     # Only use GO Cellular Component location names
     if to_loc_ns not in ('GO', 'GOCC', 'GOCCID') or not to_loc_name:
         return None
@@ -816,22 +852,24 @@ def _has_unhandled_modifiers(node_modifier_data):
     if mod is None:
         return False
     if mod in (pc.CELL_SECRETION, pc.CELL_SURFACE_EXPRESSION):
-        logger.info("Unhandled node modifier data: %s" % node_modifier_data)
+        logger.info("Unhandled node modifier data: %s", node_modifier_data)
         return True
 
 
 def _proteins_match(u_data, v_data):
     return (
-        u_data[pc.FUNCTION] == pc.PROTEIN and
-        v_data[pc.FUNCTION] == pc.PROTEIN and
-        pc.NAMESPACE in u_data and pc.NAMESPACE in v_data and
-        pc.NAME in u_data and pc.NAME in v_data and
-        u_data[pc.NAMESPACE] == v_data[pc.NAMESPACE] and
-        u_data[pc.NAME] == v_data[pc.NAME]
+        isinstance(u_data, dsl.Protein) and
+        isinstance(v_data, dsl.Protein) and
+        u_data.namespace and
+        v_data.namespace and
+        u_data.name and
+        v_data.name and
+        u_data.namespace == v_data.namespace and
+        u_data.name == v_data.name
     )
 
 
-_hgvs_protein_mutation = re.compile('^p.([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2})')
+_hgvs_protein_mutation = re.compile(r'^p.([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2})')
 
 
 def _parse_mutation(s):
@@ -840,5 +878,3 @@ def _parse_mutation(s):
         return None, None, None
     from_aa, position, to_aa = m.groups()
     return position, from_aa, to_aa
-
-

@@ -1,11 +1,16 @@
+# -*- coding: utf-8 -*-
+
+"""Tests for the PyBEL processor."""
+
 import os
 from urllib import request
 
+import pybel.constants as pc
 from nose.plugins.attrib import attr
-from pybel import BELGraph
+from pybel import BELGraph, constants as pc
 from pybel.dsl import *
 from pybel.language import Entity
-from pybel.io import from_json_file
+from pybel.io import from_nodelink_file
 from pybel.examples import egf_graph
 from indra.statements import *
 from indra.sources import bel
@@ -25,25 +30,24 @@ def test_pybel_neighborhood_query():
                                         network_file=small_corpus_url)
     assert bp.statements
     assert all([s.evidence[0].context.cell_line.name == 'MCF 10A'
-                for s in bp.statements])
+               for s in bp.statements])
     # Locate statement about epidermis development
     stmt = [st for st in bp.statements if st.agent_list()[1].name ==
             'epidermis development'][0]
-    assert stmt.evidence[0].context.__repr__() == \
-           stmt.evidence[0].context.__str__()
-    assert stmt.evidence[0].context == \
-           BioContext(location=RefContext(name="Cytoplasm",
-                                          db_refs={'MESH': 'D003593'}),
-                      cell_line=RefContext(name="MCF 10A",
-                                           db_refs={'EFO': '0001200'}),
-                      cell_type=RefContext(name="keratinocyte",
-                                           db_refs={'CL': '0000312'}),
-                      organ=RefContext(name="colon",
-                                       db_refs={'UBERON': '0001155'}),
-                      disease=RefContext(name="cancer",
-                                         db_refs={'DOID': '162'}),
-                      species=RefContext(name="Rattus norvegicus",
-                                         db_refs={'TAXONOMY': '10116'}))
+    assert repr(stmt.evidence[0].context) == str(stmt.evidence[0].context)
+    assert stmt.evidence[0].context == BioContext(
+        location=RefContext(name="Cytoplasm",
+                            db_refs={'MESH': 'D003593'}),
+        cell_line=RefContext(name="MCF 10A",
+                             db_refs={'EFO': '0001200'}),
+        cell_type=RefContext(name="keratinocyte",
+                             db_refs={'CL': '0000312'}),
+        organ=RefContext(name="colon",
+                         db_refs={'UBERON': '0001155'}),
+        disease=RefContext(name="cancer",
+                           db_refs={'DOID': '162'}),
+        species=RefContext(name="Rattus norvegicus",
+                           db_refs={'TAXONOMY': '10116'}))
     # Test annotation manager
     assert bp.annot_manager.get_mapping('Species', '9606') == \
            'Homo sapiens'
@@ -73,8 +77,7 @@ def test_nodelink_json():
         'https://s3.amazonaws.com/bigmech/travis/Hox-2.0-Hs_nljson.json'
     test_file = 'Hox-2.0-Hs_nljson.json'
     request.urlretrieve(url=test_file_url, filename=test_file)
-    with open(test_file) as jr:
-        pbp = process_pybel_graph(from_json_file(file=jr))
+    pbp = process_pybel_graph(from_nodelink_file(test_file))
 
     # Clean up
     os.remove(test_file)
@@ -85,7 +88,7 @@ def test_nodelink_json():
 
 
 def test_get_agent_hgnc():
-    mek = protein(name='MAP2K1', namespace='HGNC')
+    mek = Protein(name='MAP2K1', namespace='HGNC')
     agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert agent.name == 'MAP2K1', agent
@@ -93,7 +96,7 @@ def test_get_agent_hgnc():
     assert agent.db_refs.get('UP') == mek_up_id
 
     # Now create an agent with an identifier
-    mek = protein(name='Foo', namespace='HGNC', identifier='6840')
+    mek = Protein(name='Foo', namespace='HGNC', identifier='6840')
     agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert agent.name == 'MAP2K1', agent
@@ -102,7 +105,7 @@ def test_get_agent_hgnc():
 
 
 def test_get_agent_up():
-    mek = protein(namespace='UP', identifier='Q02750')
+    mek = Protein(namespace='UP', identifier='Q02750')
     agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert agent.name == 'MAP2K1'
@@ -111,7 +114,7 @@ def test_get_agent_up():
 
 
 def test_get_agent_egid():
-    node_data = {'function': 'Protein', 'name': '5008', 'namespace': 'EGID'}
+    node_data = Protein(name='5008', namespace='EGID')
     agent = pb.get_agent(node_data)
     assert isinstance(agent, Agent)
     assert agent.name == 'OSM'
@@ -122,7 +125,7 @@ def test_get_agent_egid():
 
 
 def test_get_agent_mgi():
-    node = protein(namespace='MGI', name='Nr1h3')
+    node = Protein(namespace='MGI', name='Nr1h3')
     agent = pb.get_agent(node, {})
     assert isinstance(agent, Agent)
     assert agent.name == 'Nr1h3'
@@ -131,7 +134,7 @@ def test_get_agent_mgi():
 
 
 def test_get_agent_rgd():
-    node = protein(namespace='RGD', name='Tp53')
+    node = Protein(namespace='RGD', name='Tp53')
     agent = pb.get_agent(node, {})
     assert isinstance(agent, Agent)
     assert agent.name == 'Tp53'
@@ -140,11 +143,10 @@ def test_get_agent_rgd():
 
 
 def test_get_agent_sfam():
-    node_data = {
-            'cname': 'PRKC Family',
-            'function': 'Protein',
-            'name': 'PRKC Family',
-            'namespace': 'SFAM'}
+    node_data = Protein(
+        namespace='SFAM',
+        name='PRKC Family',
+    )
     agent = pb.get_agent(node_data)
     assert isinstance(agent, Agent)
     assert len(agent.db_refs) == 2
@@ -154,11 +156,7 @@ def test_get_agent_sfam():
 
 
 def test_get_agent_sdis():
-    node_data = {
-            'cname': 'metastasis',
-            'function': 'Pathology',
-            'name': 'metastasis',
-            'namespace': 'SDIS'}
+    node_data = Pathology(namespace='SDIS', name='metastasis')
     agent = pb.get_agent(node_data)
     assert isinstance(agent, Agent)
     assert agent.name == 'metastasis'
@@ -167,11 +165,7 @@ def test_get_agent_sdis():
 
 
 def test_get_agent_chebi():
-    node_data = {
-            'cname': 'nitric oxide',
-            'function': 'Abundance',
-            'name': 'nitric oxide',
-            'namespace': 'CHEBI'}
+    node_data = Abundance(namespace='CHEBI', name='nitric oxide')
     agent = pb.get_agent(node_data)
     assert isinstance(agent, Agent)
     assert agent.name == 'nitric oxide'
@@ -180,11 +174,7 @@ def test_get_agent_chebi():
 
 
 def test_get_agent_schem():
-    node_data = {
-            'cname': 'Promegestone',
-            'function': 'Abundance',
-            'name': 'Promegestone',
-            'namespace': 'SCHEM'}
+    node_data = Abundance(namespace='SCHEM', name='Promegestone')
     agent = pb.get_agent(node_data)
     assert isinstance(agent, Agent)
     assert agent.name == 'Promegestone'
@@ -214,19 +204,18 @@ def test_get_agent_mirna():
     assert agent.db_refs.get('MIRBASE') == 'MI0000060'
     assert agent.db_refs.get('HGNC') == '31476'
 
+
 def test_get_agent_fusion():
-    node_data = {'function': 'Protein',
-                 'fusion': {
-                     'partner_5p': {'namespace': 'HGNC', 'name': 'BCR'},
-                     'range_5p': {'missing': '?'},
-                     'range_3p': {'missing': '?'},
-                     'partner_3p': {'namespace': 'HGNC', 'name': 'ABL1'}}}
+    node_data = ProteinFusion(
+        partner_5p=Protein(namespace='HGNC', name='BCR'),
+        partner_3p=Protein(namespace='HGNC', name='ABL1'),
+    )
     agent = pb.get_agent(node_data)
     assert agent is None
 
 
 def test_get_agent_up_no_id():
-    mek = protein(name='MAP2K1', namespace='UP')
+    mek = Protein(name='MAP2K1', namespace='UP')
     agent = pb.get_agent(mek, {})
     assert agent is None
 
@@ -248,7 +237,7 @@ def test_get_agent_meshd():
 
 
 def test_get_agent_with_mods():
-    mek = protein(name='MAP2K1', namespace='HGNC',
+    mek = Protein(name='MAP2K1', namespace='HGNC',
                   variants=[pmod('Ph')])
     agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
@@ -258,7 +247,7 @@ def test_get_agent_with_mods():
     assert not mod.residue
     assert not mod.position
 
-    mek = protein(name='MAP2K1', namespace='HGNC',
+    mek = Protein(name='MAP2K1', namespace='HGNC',
                   variants=[pmod('Ph', code='Ser')])
     agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
@@ -268,7 +257,7 @@ def test_get_agent_with_mods():
     assert mod.residue == 'S'
     assert not mod.position
 
-    mek = protein(name='MAP2K1', namespace='HGNC',
+    mek = Protein(name='MAP2K1', namespace='HGNC',
                   variants=[pmod('Ph', position=218)])
     agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
@@ -278,7 +267,7 @@ def test_get_agent_with_mods():
     assert not mod.residue
     assert mod.position == '218'
 
-    mek = protein(name='MAP2K1', namespace='HGNC',
+    mek = Protein(name='MAP2K1', namespace='HGNC',
                   variants=[pmod('Ph', position=218, code='Ser')])
     agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
@@ -290,7 +279,7 @@ def test_get_agent_with_mods():
 
 
 def test_get_agent_with_muts():
-    mek = protein(name='MAP2K1', namespace='HGNC',
+    mek = Protein(name='MAP2K1', namespace='HGNC',
                   variants=[hgvs('p.Val600Glu')])
     agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
@@ -302,7 +291,7 @@ def test_get_agent_with_muts():
 
 
 def test_get_agent_with_activity():
-    mek = protein(name='MAP2K1', namespace='HGNC')
+    mek = Protein(name='MAP2K1', namespace='HGNC')
     agent = pb.get_agent(mek, activity('act'))
     assert isinstance(agent, Agent)
     assert isinstance(agent.activity, ActivityCondition)
@@ -311,8 +300,8 @@ def test_get_agent_with_activity():
 
 
 def test_get_agent_complex():
-    mek = protein(name='MAP2K1', namespace='HGNC')
-    erk = protein(name='MAPK1', namespace='HGNC',
+    mek = Protein(name='MAP2K1', namespace='HGNC')
+    erk = Protein(name='MAPK1', namespace='HGNC',
                   variants=[pmod('Ph', position=185, code='Thr')])
     cplx = complex_abundance([mek, erk])
     agent = pb.get_agent(cplx)
@@ -334,16 +323,16 @@ def test_get_agent_complex_none_agent():
     """If one of the agents in the complex can't be obtained (e.g., an
     unhandled namespace), then the complex itself should be None."""
     # Prime agent is None
-    mek = protein(name='MAP2K1', namespace='FOO')
-    erk = protein(name='MAPK1', namespace='HGNC',
+    mek = Protein(name='MAP2K1', namespace='FOO')
+    erk = Protein(name='MAPK1', namespace='HGNC',
                   variants=[pmod('Ph', position=185, code='Thr')])
     cplx = complex_abundance([mek, erk])
     agent = pb.get_agent(cplx)
     assert agent is None
 
     # Bound agent is None
-    mek = protein(name='MAP2K1', namespace='HGNC')
-    erk = protein(name='MAPK1', namespace='FOO',
+    mek = Protein(name='MAP2K1', namespace='HGNC')
+    erk = Protein(name='MAPK1', namespace='FOO',
                   variants=[pmod('Ph', position=185, code='Thr')])
     cplx = complex_abundance([mek, erk])
     agent = pb.get_agent(cplx)
@@ -352,20 +341,18 @@ def test_get_agent_complex_none_agent():
 
 def test_get_agent_named_complex_go():
     # TODO: Handle named complexes and map to FamPlex where possible
-    node_data = {
-            'cname': '0043509',
-            'function': 'Complex',
-            'name': '0043509',
-            'namespace': 'GOCCID'}
+    node_data = NamedComplexAbundance(namespace='GOCCID', name='0043509')
     agent = pb.get_agent(node_data)
     assert agent is None
 
 
 def test_get_agent_with_translocation():
-    node_data = protein(name='MAPK1', namespace='HGNC')
+    node_data = Protein(name='MAPK1', namespace='HGNC')
     # Some example edge data
-    edge_data = translocation(from_loc=Entity('GOCC', 'intracellular'),
-                              to_loc=Entity('GOCC', 'extracellular space'))
+    edge_data = translocation(
+        from_loc=Entity(namespace='GOCC', name='intracellular'),
+        to_loc=Entity(namespace='GOCC', name='extracellular space'),
+    )
     agent = pb.get_agent(node_data, edge_data)
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
@@ -373,14 +360,18 @@ def test_get_agent_with_translocation():
 
 
 def test_phosphorylation_one_site_with_evidence():
-    mek = protein(name='MAP2K1', namespace='HGNC')
-    erk = protein(name='MAPK1', namespace='HGNC',
+    mek = Protein(name='MAP2K1', namespace='HGNC')
+    erk = Protein(name='MAPK1', namespace='HGNC',
                   variants=[pmod('Ph', position=185, code='Thr')])
     g = BELGraph()
     ev_text = 'Some evidence.'
     ev_pmid = '123456'
-    edge_hash = g.add_directly_increases(mek, erk, evidence=ev_text, citation=ev_pmid,
-                                         annotations={"TextLocation": 'Abstract'})
+    edge_hash = g.add_directly_increases(
+        mek, erk, evidence=ev_text,
+        citation={pc.CITATION_DB: pc.CITATION_TYPES[pc.CITATION_TYPE_PUBMED],
+                  pc.CITATION_IDENTIFIER: ev_pmid},
+        annotations={"TextLocation": 'Abstract'},
+    )
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -398,16 +389,18 @@ def test_phosphorylation_one_site_with_evidence():
     ev = pbp.statements[0].evidence[0]
     assert ev.source_api == 'bel'
     assert ev.source_id == edge_hash
-    assert ev.pmid == ev_pmid
+    assert ev.pmid == ev_pmid, (ev.pmid, ev_pmid)
     assert ev.text == ev_text
-    assert ev.annotations == {'bel': 'p(HGNC:MAP2K1) directlyIncreases '
-                                     'p(HGNC:MAPK1, pmod(Ph, Thr, 185))'}
+    assert ev.annotations == {
+        'bel': 'p(HGNC:MAP2K1) directlyIncreases '
+               'p(HGNC:MAPK1, pmod(Ph, Thr, 185))'
+    }
     assert ev.epistemics == {'direct': True, 'section_type': 'abstract'}
 
 
 def test_phosphorylation_two_sites():
-    mek = protein(name='MAP2K1', namespace='HGNC')
-    erk = protein(name='MAPK1', namespace='HGNC',
+    mek = Protein(name='MAP2K1', namespace='HGNC')
+    erk = Protein(name='MAPK1', namespace='HGNC',
                   variants=[pmod('Ph', position=185, code='Thr'),
                             pmod('Ph', position=187, code='Tyr')])
     g = BELGraph()
@@ -428,8 +421,8 @@ def test_phosphorylation_two_sites():
 
 
 def test_regulate_amount1_prot_obj():
-    mek = protein(name='MAP2K1', namespace='HGNC')
-    erk = protein(name='MAPK1', namespace='HGNC')
+    mek = Protein(name='MAP2K1', namespace='HGNC')
+    erk = Protein(name='MAPK1', namespace='HGNC')
     g = BELGraph()
     g.add_increases(mek, erk, evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
@@ -441,7 +434,7 @@ def test_regulate_amount1_prot_obj():
 
 def test_regulate_amount2_rna_obj():
     # FIXME: Create a transcription-specific statement for p->rna
-    mek = protein(name='MAP2K1', namespace='HGNC')
+    mek = Protein(name='MAP2K1', namespace='HGNC')
     erk = rna(name='MAPK1', namespace='HGNC')
     g = BELGraph()
     g.add_increases(mek, erk, evidence="Some evidence.", citation='123456')
@@ -454,8 +447,8 @@ def test_regulate_amount2_rna_obj():
 
 def test_regulate_amount3_deg():
     # FIXME: Create a stability-specific statement for p->deg(p(Foo))
-    mek = protein(name='MAP2K1', namespace='HGNC')
-    erk = protein(name='MAPK1', namespace='HGNC')
+    mek = Protein(name='MAP2K1', namespace='HGNC')
+    erk = Protein(name='MAPK1', namespace='HGNC')
     g = BELGraph()
     g.add_increases(mek, erk, object_modifier=degradation(),
                     evidence="Some evidence.", citation='123456')
@@ -467,8 +460,8 @@ def test_regulate_amount3_deg():
 
 
 def test_regulate_amount4_subj_act():
-    mek = protein(name='MAP2K1', namespace='HGNC')
-    erk = protein(name='MAPK1', namespace='HGNC')
+    mek = Protein(name='MAP2K1', namespace='HGNC')
+    erk = Protein(name='MAPK1', namespace='HGNC')
     g = BELGraph()
     g.add_increases(mek, erk, subject_modifier=activity(name='tscript'),
                     evidence="Some evidence.", citation='123456')
@@ -499,8 +492,8 @@ def test_regulate_amount4_subj_act():
 
 
 def test_regulate_activity():
-    mek = protein(name='MAP2K1', namespace='HGNC')
-    erk = protein(name='MAPK1', namespace='HGNC')
+    mek = Protein(name='MAP2K1', namespace='HGNC')
+    erk = Protein(name='MAPK1', namespace='HGNC')
     g = BELGraph()
     g.add_increases(mek, erk, subject_modifier=activity(name='kin'),
                     object_modifier=activity(name='kin'),
@@ -522,11 +515,12 @@ def test_regulate_activity():
 
 
 def test_active_form():
-    p53_pmod = protein(name='TP53', namespace='HGNC',
+    p53_pmod = Protein(name='TP53', namespace='HGNC',
                        variants=[pmod('Ph', position=33, code='Ser')])
-    p53_obj = protein(name='TP53', namespace='HGNC')
+    p53_obj = Protein(name='TP53', namespace='HGNC')
     g = BELGraph()
-    g.add_increases(p53_pmod, p53_obj, object_modifier=activity(name='tscript'),
+    g.add_increases(p53_pmod, p53_obj,
+                    object_modifier=activity(name='tscript'),
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -546,8 +540,8 @@ def test_active_form():
 
 
 def test_gef():
-    sos = protein(name='SOS1', namespace='HGNC')
-    kras = protein(name='KRAS', namespace='HGNC')
+    sos = Protein(name='SOS1', namespace='HGNC')
+    kras = Protein(name='KRAS', namespace='HGNC')
     g = BELGraph()
     g.add_directly_increases(sos, kras,
                              subject_modifier=activity(name='activity'),
@@ -567,8 +561,8 @@ def test_gef():
 
 
 def test_indirect_gef_is_activation():
-    sos = protein(name='SOS1', namespace='HGNC')
-    kras = protein(name='KRAS', namespace='HGNC')
+    sos = Protein(name='SOS1', namespace='HGNC')
+    kras = Protein(name='KRAS', namespace='HGNC')
     g = BELGraph()
     g.add_increases(sos, kras, subject_modifier=activity(name='activity'),
                     object_modifier=activity(name='gtp'),
@@ -588,8 +582,8 @@ def test_indirect_gef_is_activation():
 
 
 def test_gap():
-    sos = protein(name='RASA1', namespace='HGNC')
-    kras = protein(name='KRAS', namespace='HGNC')
+    sos = Protein(name='RASA1', namespace='HGNC')
+    kras = Protein(name='KRAS', namespace='HGNC')
     g = BELGraph()
     g.add_directly_decreases(sos, kras,
                              subject_modifier=activity(name='activity'),
@@ -609,7 +603,7 @@ def test_gap():
 
 
 def test_activation_bioprocess():
-    bax = protein(name='BAX', namespace='HGNC')
+    bax = Protein(name='BAX', namespace='HGNC')
     apoptosis = bioprocess(name='apoptotic process', namespace='GOBP')
     g = BELGraph()
     g.add_increases(bax, apoptosis, evidence="Some evidence.",
@@ -626,8 +620,8 @@ def test_activation_bioprocess():
 
 
 def test_gtpactivation():
-    kras = protein(name='KRAS', namespace='HGNC')
-    braf = protein(name='BRAF', namespace='HGNC')
+    kras = Protein(name='KRAS', namespace='HGNC')
+    braf = Protein(name='BRAF', namespace='HGNC')
     g = BELGraph()
     g.add_directly_increases(kras, braf,
                              subject_modifier=activity(name='gtp'),
@@ -648,8 +642,9 @@ def test_gtpactivation():
 
 
 def test_conversion():
-    enz = protein(name='PLCG1', namespace='HGNC')
-    react_1 = abundance('SCHEM', '1-Phosphatidyl-D-myo-inositol 4,5-bisphosphate')
+    enz = Protein(name='PLCG1', namespace='HGNC')
+    react_1 = abundance('SCHEM',
+                        '1-Phosphatidyl-D-myo-inositol 4,5-bisphosphate')
     p1 = abundance('SCHEM', 'Diacylglycerol')
     p2 = abundance('SCHEM', 'Inositol 1,4,5-trisphosphate')
 
@@ -684,11 +679,13 @@ def test_conversion():
 
 def test_controlled_transloc_loc_cond():
     """Controlled translocations are currently not handled."""
-    subj = protein(name='MAP2K1', namespace='HGNC')
-    obj = protein(name='MAPK1', namespace='HGNC')
+    subj = Protein(name='MAP2K1', namespace='HGNC')
+    obj = Protein(name='MAPK1', namespace='HGNC')
     g = BELGraph()
-    transloc = translocation(from_loc=Entity('GOCC', 'intracellular'),
-                             to_loc=Entity('GOCC', 'extracellular space'))
+    transloc = translocation(
+        from_loc=Entity(namespace='GOCC', name='intracellular'),
+        to_loc=Entity(namespace='GOCC', name='extracellular space'),
+    )
     g.add_increases(subj, obj, object_modifier=transloc,
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
@@ -698,10 +695,12 @@ def test_controlled_transloc_loc_cond():
 def test_subject_transloc_loc_cond():
     """Translocations of the subject are treated as location conditions on the
     subject (using the to_loc location as the condition)"""
-    subj = protein(name='MAP2K1', namespace='HGNC')
-    obj = protein(name='MAPK1', namespace='HGNC')
-    transloc = translocation(from_loc=Entity('GOCC', 'intracellular'),
-                             to_loc=Entity('GOCC', 'extracellular space'))
+    subj = Protein(name='MAP2K1', namespace='HGNC')
+    obj = Protein(name='MAPK1', namespace='HGNC')
+    transloc = translocation(
+        from_loc=Entity(namespace='GOCC', name='intracellular'),
+        to_loc=Entity(namespace='GOCC', name='extracellular space'),
+    )
     g = BELGraph()
     g.add_increases(subj, obj, subject_modifier=transloc,
                     evidence="Some evidence.", citation='123456')
@@ -718,10 +717,12 @@ def test_subject_transloc_loc_cond():
 def test_subject_transloc_active_form():
     """ActiveForms where the subject is a translocation--should draw on the
     to-location of the subject."""
-    subj = protein(name='MAP2K1', namespace='HGNC')
-    obj = protein(name='MAP2K1', namespace='HGNC')
-    transloc = translocation(from_loc=Entity('GOCC', 'intracellular'),
-                             to_loc=Entity('GOCC', 'extracellular space'))
+    subj = Protein(name='MAP2K1', namespace='HGNC')
+    obj = Protein(name='MAP2K1', namespace='HGNC')
+    transloc = translocation(
+        from_loc=Entity(namespace='GOCC', name='intracellular'),
+        to_loc=Entity(namespace='GOCC', name='extracellular space'),
+    )
     g = BELGraph()
     g.add_increases(subj, obj, subject_modifier=transloc,
                     object_modifier=activity(name='kin'),
@@ -739,9 +740,9 @@ def test_subject_transloc_active_form():
 
 
 def test_complex_stmt_with_activation():
-    raf = protein(name='BRAF', namespace='HGNC')
-    mek = protein(name='MAP2K1', namespace='HGNC')
-    erk = protein(name='MAPK1', namespace='HGNC')
+    raf = Protein(name='BRAF', namespace='HGNC')
+    mek = Protein(name='MAP2K1', namespace='HGNC')
+    erk = Protein(name='MAPK1', namespace='HGNC')
     cplx = complex_abundance([raf, mek])
     g = BELGraph()
     g.add_directly_increases(cplx, erk,
@@ -762,7 +763,3 @@ def test_complex_stmt_with_activation():
     assert stmt2.obj.name == 'MAPK1'
     assert stmt2.obj.activity is None
     assert stmt2.obj_activity == 'kinase'
-
-
-if __name__ == '__main__':
-    test_get_agent_fusion()

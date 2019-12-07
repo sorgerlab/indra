@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
+
+"""High level API functions for the PyBEL processor."""
+
 import zlib
 import json
 import pybel
-import pickle
 import logging
 import requests
 from functools import lru_cache
@@ -10,11 +13,11 @@ from .processor import PybelProcessor
 
 logger = logging.getLogger(__name__)
 
-large_corpus_url = ('https://github.com/cthoyt/selventa-knowledge/raw/master/'
-                    'selventa_knowledge/large_corpus-20170611.bel.json.gz')
-small_corpus_url = ('https://github.com/cthoyt/selventa-knowledge/raw/master/'
-                    'selventa_knowledge/'
-                    'selventa-small-corpus-20150611.bel.json.gz')
+version = 'v1.0.0'
+branch = 'https://github.com/cthoyt/selventa-knowledge/raw/' \
+         '{}/selventa_knowledge/{}'
+large_corpus_url = branch.format(version, 'large_corpus.bel.nodelink.json.gz')
+small_corpus_url = branch.format(version, 'small_corpus.bel.nodelink.json.gz')
 
 
 def process_small_corpus():
@@ -74,12 +77,11 @@ def process_pybel_network(network_type, network_file, **kwargs):
         res = requests.get(network_file)
         res.raise_for_status()
         content = zlib.decompress(res.content, zlib.MAX_WBITS | 32)
-        graph = pybel.from_jsons(content)
+        graph = pybel.from_nodelink_jsons(content)
         return process_pybel_graph(graph)
     elif network_type == 'graph_pickle':
-        with open(network_file, 'rb') as fh:
-            graph = pickle.load(fh)
-            return process_pybel_graph(graph)
+        graph = pybel.from_pickle(network_file)
+        return process_pybel_graph(graph)
     else:
         raise ValueError('Unknown network type: %s' % network_type)
 
@@ -179,7 +181,7 @@ def process_belscript(file_name, **kwargs):
         kwargs['citation_clearing'] = False
     if 'no_identifier_validation' not in kwargs:
         kwargs['no_identifier_validation'] = True
-    pybel_graph = pybel.from_path(file_name, **kwargs)
+    pybel_graph = pybel.from_bel_script(file_name, **kwargs)
     return process_pybel_graph(pybel_graph)
 
 
@@ -200,8 +202,7 @@ def process_json_file(file_name):
         A PybelProcessor object which contains INDRA Statements in
         bp.statements.
     """
-    with open(file_name, 'rt') as fh:
-        pybel_graph = pybel.from_json_file(fh, False)
+    pybel_graph = pybel.from_nodelink_file(file_name, check_version=False)
     return process_pybel_graph(pybel_graph)
 
 
@@ -275,5 +276,3 @@ def process_belrdf(rdf_str, print_output=True):
         bp.print_statement_coverage()
         bp.print_statements()
     return bp
-
-

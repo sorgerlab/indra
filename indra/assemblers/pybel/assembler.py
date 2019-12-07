@@ -231,12 +231,12 @@ class PybelAssembler(object):
         # If we failed to create nodes for subject or object, skip it
         if subj_data is None or obj_data is None:
             return
-        subj_node = self.model.add_node_from_data(subj_data)
-        obj_node = self.model.add_node_from_data(obj_data)
+        self.model.add_node_from_data(subj_data)
+        self.model.add_node_from_data(obj_data)
         edge_data_list = _combine_edge_data(
             relation, subj_edge, obj_edge, stmt_hash, evidences)
         for edge_data in edge_data_list:
-            self.model.add_edge(subj_node, obj_node, **edge_data)
+            self.model.add_edge(subj_data, obj_data, **edge_data)
 
     def _assemble_regulate_activity(self, stmt):
         """Example: p(HGNC:MAP2K1) => act(p(HGNC:MAPK1))"""
@@ -337,17 +337,17 @@ class PybelAssembler(object):
             reactants=pybel_lists[0],
             products=pybel_lists[1],
         )
-        obj_node = self.model.add_node_from_data(rxn_node_data)
+        self.model.add_node_from_data(rxn_node_data)
         obj_edge = None  # TODO: Any edge information possible here?
         # Add node for controller, if there is one
         if stmt.subj is not None:
             subj_attr, subj_edge = _get_agent_node(stmt.subj)
-            subj_node = self.model.add_node_from_data(subj_attr)
+            self.model.add_node_from_data(subj_attr)
             edge_data_list = _combine_edge_data(
                 pc.DIRECTLY_INCREASES, subj_edge, obj_edge,
                 stmt.get_hash(refresh=True), stmt.evidence)
             for edge_data in edge_data_list:
-                self.model.add_edge(subj_node, obj_node, **edge_data)
+                self.model.add_edge(subj_attr, rxn_node_data, **edge_data)
 
     def _assemble_autophosphorylation(self, stmt):
         """Example: complex(p(HGNC:MAPK14), p(HGNC:TAB1)) =>
@@ -396,7 +396,7 @@ def belgraph_to_signed_graph(
             edge_set.add((u, v, 0))
             if symmetric_variant_links:
                 edge_set.add((v, u, 0))
-        elif rel in pc.HAS_COMPONENT and include_components:
+        elif rel in pc.PART_OF and include_components:
             edge_set.add((u, v, 0))
             if symmetric_component_links:
                 edge_set.add((v, u, 0))
@@ -577,16 +577,16 @@ def _get_evidence(evidence):
     pybel_ev = {pc.EVIDENCE: text}
     # If there is a PMID, use it as the citation
     if evidence.pmid:
-        citation = {pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
-                    pc.CITATION_REFERENCE: evidence.pmid}
+        citation = {pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
+                    pc.CITATION_IDENTIFIER: evidence.pmid}
     # If no PMID, include the interface and source_api for now--
     # in general this should probably be in the annotations for all evidence
     else:
         cit_source = evidence.source_api if evidence.source_api else 'Unknown'
         cit_id = evidence.source_id if evidence.source_id else 'Unknown'
         cit_ref_str = '%s:%s' % (cit_source, cit_id)
-        citation = {pc.CITATION_TYPE: pc.CITATION_TYPE_OTHER,
-                    pc.CITATION_REFERENCE: cit_ref_str}
+        citation = {pc.CITATION_DB: pc.CITATION_TYPE_OTHER,
+                    pc.CITATION_IDENTIFIER: cit_ref_str}
     pybel_ev[pc.CITATION] = citation
 
     annotations = {}
