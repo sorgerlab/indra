@@ -184,6 +184,7 @@ class HtmlAssembler(object):
                     evidence_count_str = '%s / %s' % (len(ev_list), tot_ev)
                 else:
                     evidence_count_str = str(len(ev_list))
+
                 stmt_info_list.append({
                     'hash': stmt_hash,
                     'english': english,
@@ -209,11 +210,14 @@ class HtmlAssembler(object):
         # Fill the template.
         if template is None:
             template = default_template
+        if self.source_counts and 'source_key_dict' not in template_kwargs:
+            template_kwargs['source_key_dict'] = SRC_KEY_DICT
+        if 'source_colors' not in template_kwargs:
+            template_kwargs['source_colors'] = SOURCE_COLORS
+
         self.model = template.render(stmt_data=tl_stmts,
                                      metadata=metadata, title=self.title,
                                      db_rest_url=db_rest_url,
-                                     source_colors=SOURCE_COLORS,
-                                     source_key_dict=SRC_KEY_DICT,
                                      **template_kwargs)
         return self.model
 
