@@ -297,7 +297,7 @@ class ModelChecker(object):
                                 max_paths, max_path_length)
                 pr.path_metrics = path_metrics
                 # Get the first path
-                # Try to find paths using sources found above
+                # Try to find paths of fixed length using sources found above
                 for source in sources:
                     path_iter = get_path_iter(self.graph, source, obj,
                                               min(path_lengths))
@@ -429,7 +429,7 @@ class ModelChecker(object):
 
 
 def get_path_iter(graph, source, target, path_length):
-    """Return a generator of paths from source to target."""
+    """Return a generator of paths with path_length cutoff from source to target."""
     # If source and target are the same node we need to find paths from source
     # to its predecessors
     if source == target:
