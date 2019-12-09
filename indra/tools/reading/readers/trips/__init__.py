@@ -1,7 +1,10 @@
 import os
+import socket
+import random
 import logging
 import threading
 import subprocess as sp
+from contextlib import closing
 from datetime import datetime, timedelta, timezone
 
 from indra.tools.reading.readers.core import Reader
@@ -14,6 +17,24 @@ logger = logging.getLogger(__name__)
 startup_path = '/sw/drum/bin/startup.sh'
 service_endpoint = 'drum'
 DRUM_DOCKER = '292075781285.dkr.ecr.us-east-1.amazonaws.com/drum'
+
+
+def find_free_ports():
+    """Find ports that are unused.
+
+    The order is randomized to minimize the chances of race-condition overlaps.
+    """
+    ports = list(range(1, 65536))
+    random.shuffle(ports)
+    for port in ports:
+        with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sok:
+            res = sok.connect_ex(('localhost', port))
+            if res != 0:
+                yield port
+
+
+class TripsStartupError(Exception):
+    pass
 
 
 class TripsReader(Reader):
@@ -45,25 +66,44 @@ class TripsReader(Reader):
 
     def _read(self, content_iter, verbose=False, log=False, n_per_proc=None):
         # Start trips running
-        if os.environ.get("IN_TRIPS_DOCKER", 'false') == 'true':
-            logger.info("Starting up a TRIPS service from within the docker.")
-            p = sp.Popen([startup_path], stdout=sp.PIPE,
-                         stderr=sp.STDOUT)
-            service_host = 'http://localhost:80/cgi/'
-        else:
-            logger.info("Starting up a TRIPS service using drum docker.")
-            p = sp.Popen(['docker', 'run', '-it', '-p', '8080:80',
-                          '--entrypoint', startup_path, DRUM_DOCKER],
-                         stdout=sp.PIPE, stderr=sp.STDOUT)
-            service_host = 'http://localhost:8080/cgi/'
+        for port in find_free_ports():
+            port_failure = False
+            if os.environ.get("IN_TRIPS_DOCKER", 'false') == 'true':
+                logger.info("Attempting to starting up a TRIPS service from "
+                            "within the docker on port %d." % port)
+                p = sp.Popen([startup_path], stdout=sp.PIPE,
+                             stderr=sp.STDOUT)
+                service_host = 'http://localhost:%d/cgi/' % port
+            else:
+                logger.info("Starting up a TRIPS service using drum docker.")
+                p = sp.Popen(['docker', 'run', '-it', '-p', '8080:%d' % port,
+                              '--entrypoint', startup_path, DRUM_DOCKER],
+                             stdout=sp.PIPE, stderr=sp.STDOUT)
+                service_host = 'http://localhost:8080/cgi/'
 
-        # Wait for the service to be ready
-        for log_line in _tail_trips(p):
-            if log_line == 'Ready':
-                break
+            # Wait for the service to be ready
+            for log_line in _tail_trips(p):
+                if 'can\'t bind to port' in 'log_line':
+                    port_failure = True
+                if log_line == 'Ready':
+                    # TRIPS is ready to read and we can continue on.
+                    break
+            else:
+                logger.error("TRIPS failed to start on port %d." % port)
+                if port_failure:
+                    # If the failure due to wrong port, try another port.
+                    continue
+                else:
+                    # Otherwise give up.
+                    raise TripsStartupError("Trips failed to start up.")
+
+            # The above for-loop existed without going to else, indicating
+            # successful startup.
+            break
         else:
-            logger.error("TRIPS failed to start.")
-            return []
+            # We exhausted all possible ports.
+            raise TripsStartupError("Could not start TRIPS, all ports appear "
+                                    "to be busy.")
         logger.info("Service has started up.")
 
         # Set up the trips monitor
