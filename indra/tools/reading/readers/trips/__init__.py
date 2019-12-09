@@ -4,9 +4,11 @@ import random
 import logging
 import threading
 import subprocess as sp
+from unidecode import unidecode
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
 
+from indra.resources import greek_alphabet
 from indra.tools.reading.readers.core import Reader
 
 from indra.sources.trips import client, process_xml
@@ -115,8 +117,15 @@ class TripsReader(Reader):
             if not self.running:
                 logger.error("Breaking loop: trips is down.")
                 break
-            html = client.send_query(content.get_text(),
-                                     service_host=service_host,
+
+            # Clean up the text string a bit.
+            raw_text = content.get_text()
+            for greek_letter, spelled_letter in greek_alphabet.items():
+                raw_text = raw_text.replace(greek_letter, spelled_letter)
+            text = unidecode(raw_text)
+
+            # Process the text
+            html = client.send_query(text, service_host=service_host,
                                      service_endpoint=service_endpoint)
             xml = client.get_xml(html)
             self.add_result(content.get_id(), xml)
