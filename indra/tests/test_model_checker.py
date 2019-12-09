@@ -1795,16 +1795,16 @@ def test_signed_edges_to_nodes():
 
 def test_path_fixed_length():
     model_stmts = [
-        IncreaseAmount(Agent('A', db_refs={'HGNC': 1}),
-                       Agent('B', db_refs={'HGNC': 2})),
-        IncreaseAmount(Agent('B', db_refs={'HGNC': 2}),
-                       Agent('C', db_refs={'HGNC': 3})),
-        IncreaseAmount(Agent('C', db_refs={'HGNC': 3}),
-                       Agent('D', db_refs={'HGNC': 4})),
-        IncreaseAmount(Agent('A', db_refs={'HGNC': 1}),
-                       Agent('C', db_refs={'HGNC': 3})),
-        IncreaseAmount(Agent('B', db_refs={'HGNC': 2}),
-                       Agent('D', db_refs={'HGNC': 4}))
+        IncreaseAmount(Agent('A', db_refs={'HGNC': '1'}),
+                       Agent('B', db_refs={'HGNC': '2'})),
+        IncreaseAmount(Agent('B', db_refs={'HGNC': '2'}),
+                       Agent('C', db_refs={'HGNC': '3'})),
+        IncreaseAmount(Agent('C', db_refs={'HGNC': '3'}),
+                       Agent('D', db_refs={'HGNC': '4'})),
+        IncreaseAmount(Agent('A', db_refs={'HGNC': '1'}),
+                       Agent('C', db_refs={'HGNC': '3'})),
+        IncreaseAmount(Agent('B', db_refs={'HGNC': '2'}),
+                       Agent('D', db_refs={'HGNC': '4'}))
     ]
     test_stmt = IncreaseAmount(Agent('A', db_refs={'HGNC': 1}),
                                Agent('D', db_refs={'HGNC': 4}))
