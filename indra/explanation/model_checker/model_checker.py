@@ -284,7 +284,6 @@ class ModelChecker(object):
             # Keep unique sources but use a list (not set) to preserve order
             if source not in sources:
                 sources.append(source)
-        min_length = min(path_lengths)
         logger.info('Finding paths between %s and %s' % (subj, obj))
         # Now, look for paths
         if path_metrics and max_paths == 0:
@@ -300,7 +299,8 @@ class ModelChecker(object):
                 # Get the first path
                 # Try to find paths using sources found above
                 for source in sources:
-                    path_iter = get_path_iter(self.graph, source, obj)
+                    path_iter = get_path_iter(self.graph, source, obj,
+                                              min(path_lengths))
                     for path in path_iter:
                         pr.add_path(tuple(path))
                         # Do not get next path if reached max_paths
