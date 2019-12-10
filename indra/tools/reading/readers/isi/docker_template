@@ -4,12 +4,9 @@ ENV DIRPATH /root
 ENV PYTHONPATH "${DIRPATH}/indra_db:${PYTHONPATH}"
 WORKDIR $DIRPATH
 
-RUN apt-get update && \
-    apt-get install -y git wget python3 python3-pip
+{% indra_install %}
 
 RUN pip3 install unidecode
-
-{% indra_install %}
 
 {% indra_db_install %}
 

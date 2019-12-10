@@ -4,9 +4,9 @@ ENV DIRPATH /root
 ENV PYTHONPATH "${DIRPATH}/indra_db:${DIRPATH}/indra:${PYTHONPATH}"
 WORKDIR $DIRPATH
 
-RUN pip3 install unidecode
-
 {% indra_install %}
+
+RUN pip3 install unidecode
 
 {% indra_db_install %}
 
