@@ -74,7 +74,7 @@ class TripsReader(Reader):
             if os.environ.get("IN_TRIPS_DOCKER", 'false') == 'true':
                 logger.info("Attempting to starting up a TRIPS service from "
                             "within the docker on port %d." % port)
-                p = sp.Popen(['~/startup_trips.sh', port], stdout=sp.PIPE,
+                p = sp.Popen(['~/startup_trips.sh', str(port)], stdout=sp.PIPE,
                              stderr=sp.STDOUT)
             else:
                 logger.info("Starting up a TRIPS service using drum docker.")
