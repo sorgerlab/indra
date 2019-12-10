@@ -11,7 +11,7 @@ from unidecode import unidecode
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
 
-from indra.resources import greek_alphabet
+from indra.resources.greek_alphabet import greek_alphabet
 from indra.tools.reading.readers.core import Reader
 
 from indra.sources.trips import client, process_xml
