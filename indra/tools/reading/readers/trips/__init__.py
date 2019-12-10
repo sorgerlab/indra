@@ -74,15 +74,15 @@ class TripsReader(Reader):
             if os.environ.get("IN_TRIPS_DOCKER", 'false') == 'true':
                 logger.info("Attempting to starting up a TRIPS service from "
                             "within the docker on port %d." % port)
-                p = sp.Popen([startup_path], stdout=sp.PIPE,
+                p = sp.Popen(['~/startup_trips.sh', port], stdout=sp.PIPE,
                              stderr=sp.STDOUT)
-                service_host = 'http://localhost:%d/cgi/' % port
             else:
                 logger.info("Starting up a TRIPS service using drum docker.")
-                p = sp.Popen(['docker', 'run', '-it', '-p', '8080:%d' % port,
-                              '--entrypoint', startup_path, DRUM_DOCKER],
+                p = sp.Popen(['docker', 'run', '-it', '-p', '%d:80' % port,
+                              '--entrypoint', '/sw/drum/bin/startup.sh',
+                              DRUM_DOCKER],
                              stdout=sp.PIPE, stderr=sp.STDOUT)
-                service_host = 'http://localhost:8080/cgi/'
+            service_host = 'http://localhost:%d/cgi/' % port
 
             # Wait for the service to be ready
             for log_line in _tail_trips(p):
