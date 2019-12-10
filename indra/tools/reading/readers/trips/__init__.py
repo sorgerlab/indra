@@ -5,6 +5,8 @@ import random
 import logging
 import threading
 import subprocess as sp
+from os.path import expanduser
+
 from unidecode import unidecode
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
@@ -74,8 +76,8 @@ class TripsReader(Reader):
             if os.environ.get("IN_TRIPS_DOCKER", 'false') == 'true':
                 logger.info("Attempting to starting up a TRIPS service from "
                             "within the docker on port %d." % port)
-                p = sp.Popen(['~/startup_trips.sh', str(port)], stdout=sp.PIPE,
-                             stderr=sp.STDOUT)
+                p = sp.Popen([expanduser('~/startup_trips.sh'), str(port)],
+                             stdout=sp.PIPE, stderr=sp.STDOUT)
             else:
                 logger.info("Starting up a TRIPS service using drum docker.")
                 p = sp.Popen(['docker', 'run', '-it', '-p', '%d:80' % port,
