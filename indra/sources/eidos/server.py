@@ -32,12 +32,14 @@ def process_text():
 @app.route('/reground_text', methods=['POST'])
 def reground_text():
     text = request.json.get('text')
+    ont_yml = request.json.get('ont_yml', wm_yml)
+    topk = request.json.get('topk', 10)
     if not text:
         return []
     if isinstance(text, str):
-        res = er.reground_texts([text], wm_yml)
+        res = er.reground_texts([text], ont_yml, topk=topk)
     elif isinstance(text, list):
-        res = er.reground_texts(text, wm_yml)
+        res = er.reground_texts(text, ont_yml, topk=topk)
     return json.dumps(res)
 
 

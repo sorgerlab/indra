@@ -56,7 +56,7 @@ class EidosReader(object):
         eidos = autoclass(eidos_package + '.EidosSystem')
         self.eidos_reader = eidos()
 
-    def reground_texts(self, texts, yaml_str=None):
+    def reground_texts(self, texts, yaml_str=None, topk=10):
         if self.eidos_reader is None:
             self.initialize_reader()
         if yaml_str is None:
@@ -71,7 +71,7 @@ class EidosReader(object):
                 yaml_str,  # ontologyYaml
                 text_seq,  # texts
                 True,  # filter
-                10  # topk
+                topk  # topk
             )
         # Process the return values into a proper Python representation
         groundings = [[_get_scored_grounding(entry) for entry in text_grounding]
@@ -137,5 +137,5 @@ def _list_to_seq(lst):
 
 def _get_scored_grounding(tpl):
     ts = tpl.toString()
-    parts = ts[1:-1].split(',')
+    parts = ts[1:-1].rsplit(',', maxsplit=1)
     return parts[0], float(parts[1])
