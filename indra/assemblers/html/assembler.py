@@ -135,7 +135,7 @@ class HtmlAssembler(object):
         """
         self.statements += statements
 
-    def make_json_model(self):
+    def make_json_model(self, with_grouping=True):
         """Return the JSON used to create the HTML display."""
         # Get an iterator over the statements, carefully grouped.
         stmt_rows = group_and_sort_statements(
@@ -144,14 +144,14 @@ class HtmlAssembler(object):
             self.source_counts if self.source_counts else None)
 
         # Do some extra formatting.
-        tl_stmts = OrderedDict()
+        stmts = OrderedDict()
         previous_stmt_set = set()
         for row in stmt_rows:
             # Distinguish between the cases with
             if self.source_counts:
-                key, verb, stmts, tl_counts, src_counts = row
+                key, verb, stmts_group, tl_counts, src_counts = row
             else:
-                key, verb, stmts = row
+                key, verb, stmts_group = row
                 src_counts = None
                 tl_counts = None
             curr_stmt_set = {s.get_hash() for s in stmts}
@@ -161,18 +161,22 @@ class HtmlAssembler(object):
                 previous_stmt_set = curr_stmt_set
 
             names = key[1]
-            tl_key = '-'.join([str(name) for name in names])
-            tl_label = make_top_level_label_from_names_key(names)
+            if with_grouping:
+                tl_key = '-'.join([str(name) for name in names])
+                tl_label = make_top_level_label_from_names_key(names)
+            else:
+                tl_key = 'all-statements'
+                tl_label = 'All Statements'
 
-            if tl_key not in tl_stmts.keys():
-                tl_stmts[tl_key] = {'html_key': str(uuid.uuid4()),
-                                    'label': tl_label,
-                                    'source_counts': tl_counts,
-                                    'stmts_formatted': []}
+            if tl_key not in stmts.keys():
+                stmts[tl_key] = {'html_key': str(uuid.uuid4()),
+                                 'label': tl_label,
+                                 'source_counts': tl_counts,
+                                 'stmts_formatted': []}
 
             # This will now be ordered by prevalence and entity pairs.
             stmt_info_list = []
-            for stmt in stmts:
+            for stmt in stmts_group:
                 stmt_hash = stmt.get_hash(shallow=True)
                 ev_list = self._format_evidence_text(stmt)
                 english = self._format_stmt_text(stmt)
@@ -193,15 +197,23 @@ class HtmlAssembler(object):
                     'source_count': self.source_counts.get(stmt_hash)})
 
             # Generate the short name for the statement and a unique key.
-            short_name = make_string_from_sort_key(key, verb)
-            short_name_key = str(uuid.uuid4())
+            if with_grouping or not stmts[tl_key]['stmts_formatted']:
+                if with_grouping:
+                    short_name = make_string_from_sort_key(key, verb)
+                    short_name_key = str(uuid.uuid4())
+                else:
+                    short_name = "All Statements Sub Group"
+                    short_name_key = "all-statements-sub-group"
+                new_tpl = (short_name, short_name_key, stmt_info_list, src_counts)
+                stmts[tl_key]['stmts_formatted'].append(new_tpl)
+            else:
+                stmts[tl_key]['stmts_formatted'][0][2].extend(stmt_info_list)
+                if src_counts:
+                    stmts[tl_key]['stmts_formatted'][0][3].update(src_counts)
 
-            new_tpl = (short_name, short_name_key, stmt_info_list, src_counts)
-            tl_stmts[tl_key]['stmts_formatted'].append(new_tpl)
+        return stmts
 
-        return tl_stmts
-
-    def make_model(self, template=None, **template_kwargs):
+    def make_model(self, template=None, with_grouping=True, **template_kwargs):
         """Return the assembled HTML content as a string.
 
         Returns
@@ -209,7 +221,7 @@ class HtmlAssembler(object):
         str
             The assembled HTML as a string.
         """
-        tl_stmts = self.make_json_model()
+        tl_stmts = self.make_json_model(with_grouping)
 
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()
