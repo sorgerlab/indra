@@ -135,14 +135,8 @@ class HtmlAssembler(object):
         """
         self.statements += statements
 
-    def make_model(self, template=None, **template_kwargs):
-        """Return the assembled HTML content as a string.
-
-        Returns
-        -------
-        str
-            The assembled HTML as a string.
-        """
+    def make_json_model(self):
+        """Return the JSON used to create the HTML display."""
         # Get an iterator over the statements, carefully grouped.
         stmt_rows = group_and_sort_statements(
             self.statements,
@@ -204,6 +198,18 @@ class HtmlAssembler(object):
 
             new_tpl = (short_name, short_name_key, stmt_info_list, src_counts)
             tl_stmts[tl_key]['stmts_formatted'].append(new_tpl)
+
+        return tl_stmts
+
+    def make_model(self, template=None, **template_kwargs):
+        """Return the assembled HTML content as a string.
+
+        Returns
+        -------
+        str
+            The assembled HTML as a string.
+        """
+        tl_stmts = self.make_json_model()
 
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()
