@@ -144,7 +144,17 @@ class TripsReader(Reader):
                 logger.info("Got stop signal. Stopping.")
                 break
         logger.info("Waiting for TRIPS process to join.")
-        proc.communicate()
+        try:
+            proc.communicate(timeout=10)
+        except sp.TimeoutExpired:
+            logger.warning("TRIPS did not end. Trying to terminate...")
+            proc.terminate()
+            try:
+                proc.communicate(timeout=10)
+            except sp.TimeoutExpired:
+                logger.error("Giving up: TRIPS won't die.")
+                self.running = False
+                return
         if proc.returncode:
             logger.error("TRIPS ended with return code %d." % proc.returncode)
         else:
