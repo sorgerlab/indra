@@ -141,10 +141,15 @@ class TripsReader(Reader):
         self.running = True
         for _ in _tail_trips(proc):
             if self.stopping:
+                logger.info("Got stop signal. Stopping.")
                 break
+        logger.info("Waiting for TRIPS process to join.")
         proc.communicate()
         if proc.returncode:
-            logger.error("TRIPS ended badly.")
+            logger.error("TRIPS ended with return code %d." % proc.returncode)
+        else:
+            logger.info("TRIPS ended without error.")
+        logger.info("TRIPS is no longer running.")
         self.running = False
 
     def _read(self, content_iter, verbose=False, log=False, n_per_proc=None):
@@ -174,12 +179,20 @@ class TripsReader(Reader):
             # Process the text
             html = client.send_query(text, service_host=service_host,
                                      service_endpoint=service_endpoint)
-            xml = client.get_xml(html)
-            self.add_result(content.get_id(), xml)
+            if html:
+                xml = client.get_xml(html)
+                self.add_result(content.get_id(), xml)
+            else:
+                self.add_result(content.get_id(), None)
 
         # Stop TRIPS if it hasn't stopped already.
+        logger.info("Killing TRIPS")
         p.kill()  # Send signal to the process to stop
+
+        logger.info("Signalling observation loop to stop.")
         self.stopping = True  # Sends signal to the loop to stop
+
+        logger.info("Waiting for observation loop thread to join.")
         th.join()
 
         return self.results
