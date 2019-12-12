@@ -792,9 +792,8 @@ def test_normalize_equals():
 
 
 def test_normalize_opposites():
-    concept1 = ('wm/concept/causal_factor/economic_and_commerce/'
-                'economic_activity/market/supply/food_supply')
-    concept2 = 'wm/concept/causal_factor/access/food_shortage'
+    concept1 = 'wm/concept/causal_factor/food_security/food_stability'
+    concept2 = 'wm/concept/causal_factor/food_insecurity/food_instability'
     concept3 = ('wm/concept/causal_factor/environmental/meteorologic/'
                 'precipitation/flooding')
 
@@ -802,8 +801,7 @@ def test_normalize_opposites():
     dbr = {'WM': [(concept1, 1.0), (concept2, 0.5), (concept3, 0.1)]}
     ev = Event(Concept('x', db_refs=dbr),
                delta=QualitativeDelta(polarity=1))
-    pa = Preassembler(hierarchies=get_wm_hierarchies(),
-                      stmts=[ev])
+    pa = Preassembler(hierarchies=get_wm_hierarchies(), stmts=[ev])
     pa.normalize_opposites(ns='WM')
     # We are normalizing to food supply since that is the inherently
     # positive concept
@@ -819,8 +817,7 @@ def test_normalize_opposites():
     dbr = {'WM': [(concept2, 1.0), (concept1, 0.5), (concept3, 0.1)]}
     ev = Event(Concept('x', db_refs=dbr),
                delta=QualitativeDelta(polarity=1))
-    pa = Preassembler(hierarchies=get_wm_hierarchies(),
-                      stmts=[ev])
+    pa = Preassembler(hierarchies=get_wm_hierarchies(), stmts=[ev])
     pa.normalize_opposites(ns='WM')
     # We are normalizing to food supply since that is the inherently
     # positive concept
@@ -834,9 +831,8 @@ def test_normalize_opposites():
 
 
 def test_normalize_opposites_influence():
-    concept1 = ('wm/concept/causal_factor/economic_and_commerce/'
-                'economic_activity/market/supply/food_supply')
-    concept2 = 'wm/concept/causal_factor/access/food_shortage'
+    concept1 = 'wm/concept/causal_factor/food_security/food_stability'
+    concept2 = 'wm/concept/causal_factor/food_insecurity/food_instability'
     dbr1 = {'WM': [(concept1, 1.0), (concept2, 0.5)]}
     dbr2 = {'WM': [(concept2, 1.0), (concept1, 0.5)]}
     stmt = Influence(Event(Concept('x', db_refs=dbr1),
@@ -851,17 +847,15 @@ def test_normalize_opposites_influence():
 
 
 def test_normalize_opposites_association():
-    concept1 = ('wm/concept/causal_factor/economic_and_commerce/'
-                'economic_activity/market/supply/food_supply')
-    concept2 = 'wm/concept/causal_factor/access/food_shortage'
+    concept1 = 'wm/concept/causal_factor/food_security/food_stability'
+    concept2 = 'wm/concept/causal_factor/food_insecurity/food_instability'
     dbr1 = {'WM': [(concept1, 1.0), (concept2, 0.5)]}
     dbr2 = {'WM': [(concept2, 1.0), (concept1, 0.5)]}
     stmt = Association([Event(Concept('x', db_refs=dbr1),
                               delta=QualitativeDelta(polarity=1)),
                         Event(Concept('y', db_refs=dbr2),
                               delta=QualitativeDelta(polarity=-1))])
-    pa = Preassembler(hierarchies=get_wm_hierarchies(),
-                      stmts=[stmt])
+    pa = Preassembler(hierarchies=get_wm_hierarchies(), stmts=[stmt])
     pa.normalize_opposites(ns='WM')
     assert pa.stmts[0].members[0].delta.polarity == 1
     assert pa.stmts[0].members[1].delta.polarity == 1
