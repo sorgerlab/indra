@@ -344,7 +344,8 @@ def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
         marker = entry['Key']
 
 
-def get_s3_file_tree(s3, bucket, prefix):
+def get_s3_file_tree(s3, bucket, prefix, date_cutoff=None, after=True,
+                     with_dt=False):
     """Overcome s3 response limit and return NestedDict tree of paths.
 
     The NestedDict object also allows the user to search by the ends of a path.
@@ -361,16 +362,46 @@ def get_s3_file_tree(s3, bucket, prefix):
         ret.get_paths('file.txt')
 
     For more details, see the NestedDict docs.
+
+    Parameters
+    ----------
+    s3 : boto3.client.S3
+        A boto3.client.S3 instance
+    bucket : str
+        The name of the bucket to list objects in
+    prefix : str
+        The prefix filtering of the objects for list
+    date_cutoff : str|datetime.datetime
+        A datestring of format %Y(-%m-%d-%H-%M-%S) or an instance of a
+        datetime.datetime class. The date is assumed to be in UTC.
+        By default no filtering is done. Default: None.
+    after : bool
+        If True, only return objects after the given date cutoff.
+        Otherwise, return objects before. Default: True
+    with_dt : bool
+        If True, yield a tuple (key, datetime.datetime(LastModified)) of
+        the s3 Key and the object's LastModified date as a
+        datetime.datetime object, only yield s3 key otherwise.
+        Default: False.
+
+    Returns
+    -------
+    NestedDict
+        A file tree represented as an NestedDict
     """
     file_tree = NestedDict()
     pref_path = prefix.split('/')[:-1]   # avoid the trailing empty str.
-    for key in iter_s3_keys(s3, bucket, prefix):
+    for k in iter_s3_keys(s3, bucket, prefix, date_cutoff, after, with_dt):
+        if with_dt:
+            key, dt = k
+        else:
+            key, dt = k, None
         full_path = key.split('/')
         relevant_path = full_path[len(pref_path):]
         curr = file_tree
         for step in relevant_path:
             curr = curr[step]
-        curr['key'] = key
+        curr['key'] = k
     return file_tree
 
 
