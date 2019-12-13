@@ -1,6 +1,4 @@
 from __future__ import absolute_import, print_function, unicode_literals
-
-import json
 from builtins import dict, str
 import re
 import sys
@@ -50,7 +48,6 @@ def send_query(text, service_endpoint='drum', query_args=None,
     if not res.status_code == 200:
         logger.error('Problem with TRIPS query: status code %s' %
                      res.status_code)
-        logger.error(json.dumps(res.__dict__, indent=2))
         return ''
     # Gets unicode content
     return res.text
