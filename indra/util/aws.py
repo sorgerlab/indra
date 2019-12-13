@@ -1,6 +1,7 @@
 import boto3
 import logging
 import requests
+from datetime import datetime, timezone, timedelta
 from botocore import UNSIGNED
 from botocore.client import Config
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
@@ -251,8 +252,75 @@ def dump_logs(job_queue='run_reach_queue', job_status='RUNNING'):
         get_job_log(job, write_file=True)
 
 
-def iter_s3_keys(s3, bucket, prefix):
-    """Iterate over the keys in an s3 bucket given a prefix."""
+def get_date_from_str(date_str):
+    """Get a utc datetime object from a string of format %Y-%m-%d-%H-%M-%S
+
+    Parameters
+    ----------
+    date_str : str
+        A string of the format %Y(-%m-%d-%H-%M-%S). The string is assumed
+        to represent a UTC time.
+
+    Returns
+    -------
+    datetime.datetime
+    """
+    date_format = '%Y-%m-%d-%H-%M-%S'
+    # Pad date_str specifying less than full format
+    if 1 <= len(date_str.split('-')) < 6:
+        # Add Jan if not present
+        if len(date_str.split('-')) == 1:
+            date_str += '-01'
+        # Add day after month if not present
+        if len(date_str.split('-')) == 2:
+            date_str += '-01'
+        # Pad with 0 hours, 0 minutes and 0 seconds
+        while len(date_str.split('-')) < 6:
+            date_str += '-0'
+    return datetime.strptime(
+        date_str, date_format).replace(
+        tzinfo=timezone.utc)
+
+
+def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
+                 with_dt=False):
+    """Iterate over the keys in an s3 bucket given a prefix
+
+    Parameters
+    ----------
+    s3 : boto3.client.S3
+        A boto3.client.S3 instance
+    bucket : str
+        The name of the bucket to list objects in
+    prefix : str
+        The prefix filtering of the objects for list
+    date_cutoff : str|datetime.datetime
+        A datestring of format %Y(-%m-%d-%H-%M-%S) or an instance of a
+        datetime.datetime class. The date is assumed to be in UTC.
+        By default no filtering is done. Default: None.
+    after : bool
+        If True, only return objects after the given date cutoff.
+        Otherwise, return objects before. Default: True
+    with_dt : bool
+        If True, yield a tuple (key, datetime.datetime(LastModified)) of
+        the s3 Key and the object's LastModified date as a
+        datetime.datetime object, only yield s3 key otherwise.
+        Default: False.
+
+    Returns
+    -------
+    iterator[key]|iterator[(key, datetime.datetime)]
+        An iterator over s3 keys or (key, LastModified) tuples.
+    """
+    if date_cutoff:
+        date_cutoff = date_cutoff if\
+            isinstance(date_cutoff, datetime) else\
+            get_date_from_str(date_cutoff)
+        # Check timezone info
+        if date_cutoff.utcoffset() is None:
+            date_cutoff = date_cutoff.replace(tzinfo=timezone.utc)
+        if date_cutoff.utcoffset() != timedelta():
+            date_cutoff = date_cutoff.astimezone(timezone.utc)
     is_truncated = True
     marker = None
     while is_truncated:
@@ -262,7 +330,15 @@ def iter_s3_keys(s3, bucket, prefix):
             resp = s3.list_objects(Bucket=bucket, Prefix=prefix)
         for entry in resp['Contents']:
             if entry['Key'] != marker:
-                yield entry['Key']
+                if date_cutoff and after and\
+                        entry['LastModified'] > date_cutoff\
+                        or\
+                        date_cutoff and not after and\
+                        entry['LastModified'] < date_cutoff\
+                        or \
+                        date_cutoff is None:
+                    yield entry['Key'], entry['LastModified'] if with_dt \
+                        else entry['Key']
 
         is_truncated = resp['IsTruncated']
         marker = entry['Key']
