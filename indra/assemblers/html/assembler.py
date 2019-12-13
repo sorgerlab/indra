@@ -197,19 +197,23 @@ class HtmlAssembler(object):
                     'source_count': self.source_counts.get(stmt_hash)})
 
             # Generate the short name for the statement and a unique key.
-            if with_grouping or not stmts[tl_key]['stmts_formatted']:
+            existing_list = stmts[tl_key]['stmts_formatted']
+            if with_grouping or not existing_list:
                 if with_grouping:
                     short_name = make_string_from_sort_key(key, verb)
                     short_name_key = str(uuid.uuid4())
                 else:
                     short_name = "All Statements Sub Group"
                     short_name_key = "all-statements-sub-group"
-                new_tpl = (short_name, short_name_key, stmt_info_list, src_counts)
-                stmts[tl_key]['stmts_formatted'].append(new_tpl)
+                new_dict = {'short_name': short_name,
+                            'short_name_key': short_name_key,
+                            'stmt_info_list': stmt_info_list,
+                            'src_counts': src_counts}
+                existing_list.append(new_dict)
             else:
-                stmts[tl_key]['stmts_formatted'][0][2].extend(stmt_info_list)
+                existing_list[0]['stmt_info_list'].extend(stmt_info_list)
                 if src_counts:
-                    stmts[tl_key]['stmts_formatted'][0][3].update(src_counts)
+                    existing_list[0]['src_counts'].update(src_counts)
 
         return stmts
 
