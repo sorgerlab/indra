@@ -271,6 +271,9 @@ class EidosProcessor(object):
                 if key == 'UN':
                     db_refs[key] = [(s[0].replace(' ', '_'), s[1])
                                     for s in entries]
+                elif key == 'WM_FLATTENED' or key == 'WM':
+                    db_refs['WM'] = [(s[0].strip('/'), s[1])
+                                     for s in entries]
                 else:
                     db_refs[key] = entries
         return db_refs
