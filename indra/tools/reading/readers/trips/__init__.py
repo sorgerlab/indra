@@ -40,6 +40,7 @@ def find_free_ports():
 
 def _wait_for_trips_startup(p):
     # Wait for the service to be ready
+    port_failure = False
     for log_line in _tail_trips(p):
         if 'can\'t bind to port' in 'log_line':
             port_failure = True
@@ -147,14 +148,9 @@ class TripsReader(Reader):
         try:
             proc.communicate(timeout=10)
         except sp.TimeoutExpired:
-            logger.warning("TRIPS did not end. Trying to terminate...")
-            proc.terminate()
-            try:
-                proc.communicate(timeout=10)
-            except sp.TimeoutExpired:
-                logger.error("Giving up: TRIPS won't die.")
-                self.running = False
-                return
+            logger.warning("TRIPS did not end.")
+            self.running = False
+            return
         if proc.returncode:
             logger.error("TRIPS ended with return code %d." % proc.returncode)
         else:
@@ -203,7 +199,9 @@ class TripsReader(Reader):
         self.stopping = True  # Sends signal to the loop to stop
 
         logger.info("Waiting for observation loop thread to join.")
-        th.join()
+        th.join(timeout=5)
+        if th.is_alive():
+            logger.warning("Thread did not end, TRIPS is still running.")
 
         return self.results
 
