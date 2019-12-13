@@ -42,7 +42,7 @@ def _wait_for_trips_startup(p):
     # Wait for the service to be ready
     port_failure = False
     for log_line in _tail_trips(p):
-        if 'can\'t bind to port' in 'log_line':
+        if 'can\'t bind to port' in log_line:
             port_failure = True
         if log_line == 'Ready':
             # TRIPS is ready to read and we can continue on.
