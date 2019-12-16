@@ -190,7 +190,7 @@ class HtmlAssembler(object):
                     evidence_count_str = str(len(ev_list))
 
                 stmt_info_list.append({
-                    'hash': stmt_hash,
+                    'hash': str(stmt_hash),
                     'english': english,
                     'evidence': ev_list,
                     'evidence_count': evidence_count_str,
@@ -345,7 +345,7 @@ class HtmlAssembler(object):
                             'pmid': ev.pmid,
                             'text_refs': ev.text_refs,
                             'text': format_text,
-                            'source_hash': ev.source_hash })
+                            'source_hash': str(ev.source_hash) })
 
         return ev_list
 
