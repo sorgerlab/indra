@@ -115,13 +115,15 @@ class HtmlAssembler(object):
     """
 
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
-                 source_counts=None, title='INDRA Results', db_rest_url=None):
+                 source_counts=None, curation_dict=None, title='INDRA Results',
+                 db_rest_url=None):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
             else summary_metadata
         self.ev_totals = {} if ev_totals is None else ev_totals
         self.source_counts = {} if source_counts is None else source_counts
+        self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
         self.model = None
 
@@ -271,8 +273,7 @@ class HtmlAssembler(object):
         with open(fname, 'wb') as fh:
             fh.write(self.model.encode('utf-8'))
 
-    @staticmethod
-    def _format_evidence_text(stmt):
+    def _format_evidence_text(self, stmt):
         """Returns evidence metadata with highlighted evidence text.
 
         Parameters
@@ -341,11 +342,14 @@ class HtmlAssembler(object):
                                                       ev.text)]
                 format_text = tag_text(ev.text, indices)
 
+            has_curation = ((stmt.get_hash(), ev.source_hash)
+                            in self.curation_dict.keys())
             ev_list.append({'source_api': source_api,
                             'pmid': ev.pmid,
                             'text_refs': ev.text_refs,
                             'text': format_text,
-                            'source_hash': str(ev.source_hash) })
+                            'source_hash': str(ev.source_hash),
+                            'has_curation': has_curation})
 
         return ev_list
 
