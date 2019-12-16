@@ -342,14 +342,14 @@ class HtmlAssembler(object):
                                                       ev.text)]
                 format_text = tag_text(ev.text, indices)
 
-            has_curation = ((stmt.get_hash(), ev.source_hash)
-                            in self.curation_dict.keys())
+            curation_key = (stmt.get_hash(), ev.source_hash)
+            num_curations = len(self.curation_dict.get(curation_key, []))
             ev_list.append({'source_api': source_api,
                             'pmid': ev.pmid,
                             'text_refs': ev.text_refs,
                             'text': format_text,
                             'source_hash': str(ev.source_hash),
-                            'has_curation': has_curation})
+                            'num_curations': num_curations})
 
         return ev_list
 
