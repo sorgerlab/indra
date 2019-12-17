@@ -9,16 +9,17 @@ import re
 import uuid
 import logging
 import itertools
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from os.path import abspath, dirname, join, exists, getmtime, sep
 
 from jinja2 import Environment, BaseLoader, TemplateNotFound, FileSystemLoader
 
 from indra.statements import *
 from indra.assemblers.english import EnglishAssembler
-from indra.databases import get_identifiers_url
+from indra.databases import get_identifiers_url, hgnc_client, chebi_client
 from indra.util.statement_presentation import group_and_sort_statements, \
-    make_string_from_sort_key, make_top_level_label_from_names_key
+    make_string_from_sort_key, make_top_level_label_from_names_key, \
+    make_stmt_from_sort_key
 
 logger = logging.getLogger(__name__)
 HERE = dirname(abspath(__file__))
@@ -178,8 +179,11 @@ class HtmlAssembler(object):
 
             # This will now be ordered by prevalence and entity pairs.
             stmt_info_list = []
+            name_groundings = defaultdict(dict)
             for stmt in stmts_group:
                 stmt_hash = stmt.get_hash(shallow=True)
+                for ag in stmt.agent_list():
+                    name_groundings[ag.name].update(ag.db_refs)
                 ev_list = self._format_evidence_text(stmt)
                 english = self._format_stmt_text(stmt)
                 if self.ev_totals:
@@ -202,7 +206,11 @@ class HtmlAssembler(object):
             existing_list = stmts[tl_key]['stmts_formatted']
             if with_grouping or not existing_list:
                 if with_grouping:
-                    short_name = make_string_from_sort_key(key, verb)
+                    agents = []
+                    meta_stmt = make_stmt_from_sort_key(key, verb, agents)
+                    for ag in agents:
+                        ag.db_refs.update(name_groundings.get(ag.name, {}))
+                    short_name = self._format_stmt_text(meta_stmt)
                     short_name_key = str(uuid.uuid4())
                 else:
                     short_name = "All Statements Sub Group"
