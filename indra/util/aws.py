@@ -337,7 +337,7 @@ def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
                         entry['LastModified'] < date_cutoff\
                         or \
                         date_cutoff is None:
-                    yield entry['Key'], entry['LastModified'] if with_dt \
+                    yield (entry['Key'], entry['LastModified']) if with_dt \
                         else entry['Key']
 
         is_truncated = resp['IsTruncated']
