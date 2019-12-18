@@ -297,9 +297,10 @@ class ModelChecker(object):
                                 max_paths, max_path_length)
                 pr.path_metrics = path_metrics
                 # Get the first path
-                # Try to find paths using sources found above
+                # Try to find paths of fixed length using sources found above
                 for source in sources:
-                    path_iter = get_path_iter(self.graph, source, obj)
+                    path_iter = get_path_iter(self.graph, source, obj,
+                                              min(path_lengths))
                     for path in path_iter:
                         pr.add_path(tuple(path))
                         # Do not get next path if reached max_paths
@@ -427,14 +428,14 @@ class ModelChecker(object):
         raise NotImplementedError("Method must be implemented in child class.")
 
 
-def get_path_iter(graph, source, target):
-    """Return a generator of paths from source to target."""
+def get_path_iter(graph, source, target, path_length):
+    """Return a generator of paths with path_length cutoff from source to target."""
     # If source and target are the same node we need to find paths from source
     # to its predecessors
     if source == target:
         new_targets = graph.predecessors(source)
         for nt in new_targets:
-            path_iter = nx.shortest_simple_paths(graph, source, nt)
+            path_iter = nx.all_simple_paths(graph, source, nt, path_length - 1)
             try:
                 for p in path_iter:
                     path = deepcopy(p)
@@ -445,7 +446,7 @@ def get_path_iter(graph, source, target):
                 pass
     else:
         # Regular path search
-        path_iter = nx.shortest_simple_paths(graph, source, target)
+        path_iter = nx.all_simple_paths(graph, source, target, path_length)
         try:
             for path in path_iter:
                 yield path

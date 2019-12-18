@@ -1793,6 +1793,32 @@ def test_signed_edges_to_nodes():
         assert psng_ed.edges[edge]['extra_data']['float'] == 0.123456
 
 
+def test_path_fixed_length():
+    model_stmts = [
+        IncreaseAmount(Agent('A', db_refs={'HGNC': '1'}),
+                       Agent('B', db_refs={'HGNC': '2'})),
+        IncreaseAmount(Agent('B', db_refs={'HGNC': '2'}),
+                       Agent('C', db_refs={'HGNC': '3'})),
+        IncreaseAmount(Agent('C', db_refs={'HGNC': '3'}),
+                       Agent('D', db_refs={'HGNC': '4'})),
+        IncreaseAmount(Agent('A', db_refs={'HGNC': '1'}),
+                       Agent('C', db_refs={'HGNC': '3'})),
+        IncreaseAmount(Agent('B', db_refs={'HGNC': '2'}),
+                       Agent('D', db_refs={'HGNC': '4'}))
+    ]
+    test_stmt = IncreaseAmount(Agent('A', db_refs={'HGNC': 1}),
+                               Agent('D', db_refs={'HGNC': 4}))
+    # There are two two-step paths and one three-step path.
+    # ModelChecker should return all two-step paths.
+    ia = IndraNetAssembler(model_stmts)
+    unsigned_model = ia.make_model(graph_type='digraph')
+    umc = UnsignedGraphModelChecker(unsigned_model)
+    res = umc.check_statement(test_stmt, max_paths=10, max_path_length=5)
+    assert res.path_found
+    assert len(res.paths) == 2, len(res.paths)
+    assert len(res.paths[0]) == len(res.paths[1]) == 3  # 3 nodes = 2 edges/steps
+
+
 if __name__ == '__main__':
     test_prune_influence_map_subj_obj()
 
