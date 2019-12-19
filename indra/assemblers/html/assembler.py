@@ -177,19 +177,38 @@ class HtmlAssembler(object):
                                  'source_counts': tl_counts,
                                  'stmts_formatted': []}
 
+            # We will keep track of some of the meta data for this stmt group.
+            # NOTE: Much of the code relies heavily on the fact that the Agent
+            # objects in `meta_agents` are references to the Agent's in the
+            # Statement object `meta_stmts`.
+            meta_agents = []
+            meta_stmt = make_stmt_from_sort_key(key, verb, meta_agents)
+            meta_agent_dict = {ag.name: ag for ag in meta_agents}
+
             # This will now be ordered by prevalence and entity pairs.
             stmt_info_list = []
-            name_groundings = defaultdict(dict)
             for stmt in stmts_group:
                 stmt_hash = stmt.get_hash(shallow=True)
+
+                # Try to accumulate db refs in the meta agents.
                 for ag in stmt.agent_list():
+
+                    # Get the corresponding meta-agent
+                    meta_ag = meta_agent_dict.get(ag.name)
+                    if not meta_ag:
+                        continue
+
+                    # Check the db refs for this agent against the meta agent
                     for dbn, dbid in ag.db_refs.items():
-                        # If we've seen it before and don't agree, scrap it.
-                        existing_dbid = name_groundings[ag.name].get(dbn)
+                        existing_dbid = meta_ag.db_refs.get(dbn)
                         if existing_dbid is not None and existing_dbid != dbid:
-                            name_groundings[ag.name].pop(dbn)
+                            # If we've seen it before and don't agree, mark it.
+                            meta_ag.db_refs[dbn] = '~INVALID~'
                         elif existing_dbid is None:
-                            name_groundings[ag.name][dbn] = dbid
+                            # Otherwise, add it.
+                            meta_ag.db_refs[dbn] = dbid
+
+                # Format some strings nicely.
                 ev_list = self._format_evidence_text(stmt)
                 english = self._format_stmt_text(stmt)
                 if self.ev_totals:
@@ -208,14 +227,18 @@ class HtmlAssembler(object):
                     'evidence_count': evidence_count_str,
                     'source_count': self.source_counts.get(stmt_hash)})
 
+            # Clean out invalid fields from the meta agents.
+            for ag in meta_agents:
+                for dbn, dbid in list(ag.db_refs.items()):
+                    if dbid == '~INVALID~':
+                        del ag.db_refs[dbn]
+
             # Generate the short name for the statement and a unique key.
             existing_list = stmts[tl_key]['stmts_formatted']
             if with_grouping or not existing_list:
                 if with_grouping:
-                    agents = []
-                    meta_stmt = make_stmt_from_sort_key(key, verb, agents)
-                    for ag in agents:
-                        ag.db_refs.update(name_groundings.get(ag.name, {}))
+                    # See note above: this is where the work on meta_agents is
+                    # applied because the agents are references.
                     short_name = self._format_stmt_text(meta_stmt)
                     short_name_key = str(uuid.uuid4())
                 else:
