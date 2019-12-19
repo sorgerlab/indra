@@ -202,15 +202,16 @@ class HtmlAssembler(object):
                     for dbn, dbid in ag.db_refs.items():
                         if dbn == 'TEXT':
                             continue
-                        existing_dbid = meta_ag.db_refs.get(dbn)
-                        if existing_dbid is not None and existing_dbid != dbid:
+                        meta_dbid = meta_ag.db_refs.get(dbn)
+                        if isinstance(meta_dbid, set):
+                            # If we've already marked this one add to the set.
+                            meta_ag.db_refs[dbn].add(dbid)
+                        elif meta_dbid is not None and meta_dbid != dbid:
                             # If we've seen it before and don't agree, mark it.
                             meta_ag.db_refs[dbn] = {meta_ag.db_refs[dbn], dbid}
-                        elif existing_dbid is None:
+                        elif meta_dbid is None:
                             # Otherwise, add it.
                             meta_ag.db_refs[dbn] = dbid
-                        elif isinstance(existing_dbid, set):
-                            meta_ag.db_refs[dbn].add(dbid)
 
                 # Format some strings nicely.
                 ev_list = self._format_evidence_text(stmt)
