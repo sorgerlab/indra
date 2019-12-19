@@ -368,27 +368,31 @@ class HtmlAssembler(object):
         english = ea.make_model()
         if not english:
             english = str(stmt)
-        indices = []
-        for ag in stmt.agent_list():
-            if ag is None or not ag.name:
-                continue
-            url = id_url(ag)
-            if url is None:
-                continue
-            # Build up a set of indices
-            tag_start = "<a href='%s'>" % url
-            tag_close = "</a>"
-            found = False
-            for m in re.finditer(re.escape(ag.name), english):
-                index = (m.start(), m.start() + len(ag.name), ag.name,
-                         tag_start, tag_close)
-                indices.append(index)
-                found = True
-            if not found and \
-                    english.startswith(re.escape(ag.name).capitalize()):
-                index = (0, len(ag.name), ag.name, tag_start, tag_close)
-                indices.append(index)
-        return tag_text(english, indices)
+        return tag_agents(english, stmt.agent_list())
+
+
+def tag_agents(english, agents):
+    indices = []
+    for ag in agents:
+        if ag is None or not ag.name:
+            continue
+        url = id_url(ag)
+        if url is None:
+            continue
+        # Build up a set of indices
+        tag_start = "<a href='%s' target='_blank'>" % url
+        tag_close = "</a>"
+        found = False
+        for m in re.finditer(re.escape(ag.name), english):
+            index = (m.start(), m.start() + len(ag.name), ag.name,
+                     tag_start, tag_close)
+            indices.append(index)
+            found = True
+        if not found and \
+                english.startswith(re.escape(ag.name).capitalize()):
+            index = (0, len(ag.name), ag.name, tag_start, tag_close)
+            indices.append(index)
+    return tag_text(english, indices)
 
 
 def id_url(ag):
