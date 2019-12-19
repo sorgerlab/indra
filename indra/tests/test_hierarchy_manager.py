@@ -287,9 +287,8 @@ def test_yaml_hm():
 
 def test_hm_opposite_polarity():
     hierarchies = get_wm_hierarchies()
-    concept1 = 'wm/concept/causal_factor/access/food_shortage'
-    concept2 = ('wm/concept/causal_factor/economic_and_commerce/'
-                'economic_activity/market/supply/food_supply')
+    concept1 = 'wm/concept/causal_factor/food_insecurity/food_instability'
+    concept2 = 'wm/concept/causal_factor/food_security/food_stability'
     concept3 = ('wm/concept/causal_factor/environmental/meteorologic/'
                 'precipitation/flooding')
     eh = hierarchies['entity']
