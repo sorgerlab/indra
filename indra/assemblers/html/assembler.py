@@ -200,13 +200,17 @@ class HtmlAssembler(object):
 
                     # Check the db refs for this agent against the meta agent
                     for dbn, dbid in ag.db_refs.items():
+                        if dbn == 'TEXT':
+                            continue
                         existing_dbid = meta_ag.db_refs.get(dbn)
                         if existing_dbid is not None and existing_dbid != dbid:
                             # If we've seen it before and don't agree, mark it.
-                            meta_ag.db_refs[dbn] = '~INVALID~'
+                            meta_ag.db_refs[dbn] = {meta_ag.db_refs[dbn], dbid}
                         elif existing_dbid is None:
                             # Otherwise, add it.
                             meta_ag.db_refs[dbn] = dbid
+                        elif isinstance(existing_dbid, set):
+                            meta_ag.db_refs[dbn].add(dbid)
 
                 # Format some strings nicely.
                 ev_list = self._format_evidence_text(stmt)
@@ -230,7 +234,9 @@ class HtmlAssembler(object):
             # Clean out invalid fields from the meta agents.
             for ag in meta_agents:
                 for dbn, dbid in list(ag.db_refs.items()):
-                    if dbid == '~INVALID~':
+                    if isinstance(dbid, set):
+                        logger.warning("Removing %s from refs due to too many "
+                                       "matches: %s" % (dbn, dbid))
                         del ag.db_refs[dbn]
 
             # Generate the short name for the statement and a unique key.
