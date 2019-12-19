@@ -183,7 +183,13 @@ class HtmlAssembler(object):
             for stmt in stmts_group:
                 stmt_hash = stmt.get_hash(shallow=True)
                 for ag in stmt.agent_list():
-                    name_groundings[ag.name].update(ag.db_refs)
+                    for dbn, dbid in ag.db_refs.items():
+                        # If we've seen it before and don't agree, scrap it.
+                        existing_dbid = name_groundings[ag.name].get(dbn)
+                        if existing_dbid is not None and existing_dbid != dbid:
+                            name_groundings[ag.name].pop(dbn)
+                        elif existing_dbid is None:
+                            name_groundings[ag.name][dbn] = dbid
                 ev_list = self._format_evidence_text(stmt)
                 english = self._format_stmt_text(stmt)
                 if self.ev_totals:
