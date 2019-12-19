@@ -148,6 +148,7 @@ class HtmlAssembler(object):
 
         # Do some extra formatting.
         stmts = OrderedDict()
+        agents = {}
         previous_stmt_set = set()
         for row in stmt_rows:
             # Distinguish between the cases with
@@ -183,21 +184,7 @@ class HtmlAssembler(object):
                     meta_ag = meta_agent_dict.get(ag.name)
                     if not meta_ag:
                         continue
-
-                    # Check the db refs for this agent against the meta agent
-                    for dbn, dbid in ag.db_refs.items():
-                        if dbn == 'TEXT':
-                            continue
-                        meta_dbid = meta_ag.db_refs.get(dbn)
-                        if isinstance(meta_dbid, set):
-                            # If we've already marked this one add to the set.
-                            meta_ag.db_refs[dbn].add(dbid)
-                        elif meta_dbid is not None and meta_dbid != dbid:
-                            # If we've seen it before and don't agree, mark it.
-                            meta_ag.db_refs[dbn] = {meta_ag.db_refs[dbn], dbid}
-                        elif meta_dbid is None:
-                            # Otherwise, add it.
-                            meta_ag.db_refs[dbn] = dbid
+                    _cautiously_merge_refs(ag, meta_ag)
 
                 # Format some strings nicely.
                 ev_list = self._format_evidence_text(stmt)
@@ -226,21 +213,37 @@ class HtmlAssembler(object):
                                        "matches: %s" % (dbn, dbid))
                         del ag.db_refs[dbn]
 
-            names = key[1]
+            # Update the top level grouping.
+            tl_names = key[1]
             if with_grouping:
-                tl_key = '-'.join([str(name) for name in names])
-                tl_label = make_top_level_label_from_names_key(names)
-                tl_label = re.sub("<b>(.*?)</b>", r"\1", tl_label)
-                tl_label = tag_agents(tl_label, meta_agents)
+                tl_key = '-'.join([str(name) for name in tl_names])
+                tl_agents = {name: Agent(name) for name in tl_names
+                             if name is not None}
+                for ag in tl_agents.values():
+                    meta_ag = meta_agent_dict.get(ag.name)
+                    if meta_ag is None:
+                        continue
+                    ag.db_refs.update(meta_ag.db_refs)
+                tl_label = None
             else:
                 tl_key = 'all-statements'
                 tl_label = 'All Statements'
+                tl_agents = None
 
             if tl_key not in stmts.keys():
+                agents[tl_key] = tl_agents
                 stmts[tl_key] = {'html_key': str(uuid.uuid4()),
-                                 'label': tl_label,
                                  'source_counts': tl_counts,
-                                 'stmts_formatted': []}
+                                 'stmts_formatted': [],
+                                 'names': tl_names}
+                if tl_label:
+                    stmts[tl_key]['label'] = tl_label
+            else:
+                for name, existing_ag in agents[tl_key].items():
+                    new_ag = tl_agents.get(name)
+                    if new_ag is None:
+                        continue
+                    _cautiously_merge_refs(new_ag, existing_ag)
 
             # Generate the short name for the statement and a unique key.
             existing_list = stmts[tl_key]['stmts_formatted']
@@ -262,6 +265,22 @@ class HtmlAssembler(object):
                 existing_list[0]['stmt_info_list'].extend(stmt_info_list)
                 if src_counts:
                     existing_list[0]['src_counts'].update(src_counts)
+
+        # Add labels for each top level group (tlg).
+        if with_grouping:
+            for tl_key, tlg in stmts.items():
+                tl_agents = list(agents[tl_key].values())
+                for ag in tl_agents:
+                    for dbn, dbid in list(ag.db_refs.items()):
+                        if isinstance(dbid, set):
+                            logger.warning("Removing %s from top level refs "
+                                           "due to multiple matches: %s"
+                                           % (dbn, dbid))
+                            del ag.db_refs[dbn]
+                tl_label = make_top_level_label_from_names_key(tlg['names'])
+                tl_label = re.sub("<b>(.*?)</b>", r"\1", tl_label)
+                tl_label = tag_agents(tl_label, tl_agents)
+                tlg['label'] = tl_label
 
         return stmts
 
@@ -407,6 +426,23 @@ class HtmlAssembler(object):
         if not english:
             english = str(stmt)
         return tag_agents(english, stmt.agent_list())
+
+
+def _cautiously_merge_refs(from_ag, to_ag):
+    # Check the db refs for this agent against the meta agent
+    for dbn, dbid in from_ag.db_refs.items():
+        if dbn == 'TEXT':
+            continue
+        meta_dbid = to_ag.db_refs.get(dbn)
+        if isinstance(meta_dbid, set):
+            # If we've already marked this one add to the set.
+            to_ag.db_refs[dbn].add(dbid)
+        elif meta_dbid is not None and meta_dbid != dbid:
+            # If we've seen it before and don't agree, mark it.
+            to_ag.db_refs[dbn] = {to_ag.db_refs[dbn], dbid}
+        elif meta_dbid is None:
+            # Otherwise, add it.
+            to_ag.db_refs[dbn] = dbid
 
 
 def tag_agents(english, agents):
