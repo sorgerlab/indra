@@ -24,6 +24,11 @@ def test_read_chebi_to_chembl():
     assert unicode_strs(ctoc)
 
 
+def test_chebi_chembl():
+    assert chebi_client.get_chebi_id_from_chembl('CHEMBL525191') == '83405'
+    assert chebi_client.get_chembl_id('83405') == 'CHEMBL525191'
+
+
 def test_cas_to_chebi():
     assert chebi_client.get_chebi_id_from_cas('23261-20-3') == 'CHEBI:18035'
     assert chebi_client.get_chebi_id_from_cas('100-51-6') == 'CHEBI:17987'
