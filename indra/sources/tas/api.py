@@ -9,14 +9,14 @@ from indra.util import read_unicode_csv
 
 
 HERE = path.dirname(path.abspath(__file__))
-DATAFILE_NAME = 'classification_hms_cmpds_symbol.csv'
+DATAFILE_NAME = 'indra_tas.csv'
 
 
 def _load_data():
     """Load the data from the csv in data.
 
     The "gene_id" is the Entrez gene id, and the "approved_symbol" is the
-    standard gene symbol. The "hms_id" is the LINCS ID for the drug.
+    standard gene symbol.
 
     Returns
     -------
@@ -34,7 +34,6 @@ def _load_data():
 
     # For some reason this heading is oddly formatted and inconsistent with the
     # rest, or with the usual key-style for dicts.
-    headers[headers.index('Approved.Symbol')] = 'approved_symbol'
     return [{header: val for header, val in zip(headers, line)}
             for line in data_iter[1:]]
 
