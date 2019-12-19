@@ -163,20 +163,6 @@ class HtmlAssembler(object):
             else:
                 previous_stmt_set = curr_stmt_set
 
-            names = key[1]
-            if with_grouping:
-                tl_key = '-'.join([str(name) for name in names])
-                tl_label = make_top_level_label_from_names_key(names)
-            else:
-                tl_key = 'all-statements'
-                tl_label = 'All Statements'
-
-            if tl_key not in stmts.keys():
-                stmts[tl_key] = {'html_key': str(uuid.uuid4()),
-                                 'label': tl_label,
-                                 'source_counts': tl_counts,
-                                 'stmts_formatted': []}
-
             # We will keep track of some of the meta data for this stmt group.
             # NOTE: Much of the code relies heavily on the fact that the Agent
             # objects in `meta_agents` are references to the Agent's in the
@@ -239,6 +225,22 @@ class HtmlAssembler(object):
                         logger.warning("Removing %s from refs due to too many "
                                        "matches: %s" % (dbn, dbid))
                         del ag.db_refs[dbn]
+
+            names = key[1]
+            if with_grouping:
+                tl_key = '-'.join([str(name) for name in names])
+                tl_label = make_top_level_label_from_names_key(names)
+                tl_label = re.sub("<b>(.*?)</b>", r"\1", tl_label)
+                tl_label = tag_agents(tl_label, meta_agents)
+            else:
+                tl_key = 'all-statements'
+                tl_label = 'All Statements'
+
+            if tl_key not in stmts.keys():
+                stmts[tl_key] = {'html_key': str(uuid.uuid4()),
+                                 'label': tl_label,
+                                 'source_counts': tl_counts,
+                                 'stmts_formatted': []}
 
             # Generate the short name for the statement and a unique key.
             existing_list = stmts[tl_key]['stmts_formatted']
