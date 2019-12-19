@@ -21,7 +21,7 @@ def process_jsonld_file(fname):
         A HumeProcessor instance, which contains a list of INDRA Statements
         as its statements attribute.
     """
-    with open(fname, 'r') as fh:
+    with open(fname, 'r', encoding='utf-8') as fh:
         json_dict = json.load(fh)
     return process_jsonld(json_dict)
 

@@ -32,12 +32,15 @@ def process_text():
 @app.route('/reground_text', methods=['POST'])
 def reground_text():
     text = request.json.get('text')
+    ont_yml = request.json.get('ont_yml', wm_yml)
+    topk = request.json.get('topk', 10)
+    is_canonicalized = request.json.get('is_canonicalized', False)
     if not text:
         return []
     if isinstance(text, str):
-        res = er.reground_texts([text], wm_yml)
-    elif isinstance(text, list):
-        res = er.reground_texts(text, wm_yml)
+        text = [text]
+    res = er.reground_texts(text, ont_yml, topk=topk,
+                            is_canonicalized=is_canonicalized)
     return json.dumps(res)
 
 

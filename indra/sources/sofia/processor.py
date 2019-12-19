@@ -253,8 +253,9 @@ class SofiaExcelProcessor(SofiaProcessor):
 
 def _in_rels(value, rels):
     for rel in rels:
-        if value.lower().startswith(rel):
-            return True
-        if rel in value.lower():
-            return True
+        if value is not None:
+            if value.lower().startswith(rel):
+                return True
+            if rel in value.lower():
+                return True
     return False
