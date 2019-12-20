@@ -552,3 +552,7 @@
 <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#wm/concept/time/temporal> <http://sorger.med.harvard.edu/indra/relations/isa> <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#wm/concept/time> .
 <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#wm/concept/time> <http://sorger.med.harvard.edu/indra/relations/isa> <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#wm/concept> .
 <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#wm/concept> <http://sorger.med.harvard.edu/indra/relations/isa> <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#wm> .
+<https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#wm/concept/causal_factor/food_insecurity> <http://sorger.med.harvard.edu/indra/relations/has_polarity> "-1" .
+<https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#wm/concept/causal_factor/food_security> <http://sorger.med.harvard.edu/indra/relations/has_polarity> "1" .
+<https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#wm/concept/causal_factor/food_insecurity/food_unavailability> <http://sorger.med.harvard.edu/indra/relations/is_opposite> <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#wm/concept/causal_factor/food_security/food_availability> .
+<https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#wm/concept/causal_factor/food_insecurity> <http://sorger.med.harvard.edu/indra/relations/is_opposite> <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#wm/concept/causal_factor/food_security> .
