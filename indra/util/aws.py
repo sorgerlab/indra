@@ -295,9 +295,9 @@ def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
     prefix : str
         The prefix filtering of the objects for list
     date_cutoff : str|datetime.datetime
-        A datestring of format %Y(-%m-%d-%H-%M-%S) or an instance of a
-        datetime.datetime class. The date is assumed to be in UTC.
-        By default no filtering is done. Default: None.
+        A datestring of format %Y(-%m-%d-%H-%M-%S) or a datetime.datetime
+        object. The date is assumed to be in UTC. By default no filtering
+        is done. Default: None.
     after : bool
         If True, only return objects after the given date cutoff.
         Otherwise, return objects before. Default: True
@@ -372,9 +372,9 @@ def get_s3_file_tree(s3, bucket, prefix, date_cutoff=None, after=True,
     prefix : str
         The prefix filtering of the objects for list
     date_cutoff : str|datetime.datetime
-        A datestring of format %Y(-%m-%d-%H-%M-%S) or an instance of a
-        datetime.datetime class. The date is assumed to be in UTC.
-        By default no filtering is done. Default: None.
+        A datestring of format %Y(-%m-%d-%H-%M-%S) or a datetime.datetime
+        object. The date is assumed to be in UTC. By default no filtering
+        is done. Default: None.
     after : bool
         If True, only return objects after the given date cutoff.
         Otherwise, return objects before. Default: True
