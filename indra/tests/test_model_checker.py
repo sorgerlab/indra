@@ -1594,9 +1594,9 @@ def test_pybel_path():
     path1 = results[1][1].paths[0]
     path6 = results[6][1].paths[0]
     stmts0 = stmts_from_pybel_path(path0, pybel_model, False, statements)
-    assert stmts0 == [[st1, st6], [st2, st7], [st5]], stmts0
+    assert stmts0 == [[st6], [st2, st7], [st5]], stmts0
     stmts1 = stmts_from_pybel_path(path1, pybel_model, False, statements)
-    assert stmts1 == [[st1, st6], [st2, st7], [st5]], stmts1
+    assert stmts1 == [[st1], [st2, st7], [st5]], stmts1
     stmts6 = stmts_from_pybel_path(path6, pybel_model, False, statements)
     assert stmts6 == [[st2, st7], [st5], [st8]]
 
