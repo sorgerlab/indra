@@ -76,7 +76,8 @@ def process_pybel_network(network_type, network_file, **kwargs):
         logger.info('Loading %s' % network_file)
         res = requests.get(network_file)
         res.raise_for_status()
-        content = zlib.decompress(res.content, zlib.MAX_WBITS | 32)
+        contentb = zlib.decompress(res.content, zlib.MAX_WBITS | 32)
+        content = contentb.decode('utf-8')
         graph = pybel.from_nodelink_jsons(content)
         return process_pybel_graph(graph)
     elif network_type == 'graph_pickle':

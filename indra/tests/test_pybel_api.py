@@ -5,8 +5,6 @@
 import os
 from urllib import request
 
-import pybel.constants as pc
-from nose.plugins.attrib import attr
 from pybel import BELGraph, constants as pc
 from pybel.dsl import *
 from pybel.language import Entity
@@ -23,7 +21,6 @@ mek_hgnc_id = hgnc_client.get_hgnc_id('MAP2K1')
 mek_up_id = hgnc_client.get_uniprot_id(mek_hgnc_id)
 
 
-@attr('slow')
 def test_pybel_neighborhood_query():
     bp = bel.process_pybel_neighborhood(['TP63'],
                                         network_type='graph_jsongz_url',
@@ -50,7 +47,12 @@ def test_pybel_neighborhood_query():
                            db_refs={'TAXONOMY': '10116'}))
     # Test annotation manager
     assert bp.annot_manager.get_mapping('Species', '9606') == \
-           'Homo sapiens'
+        'Homo sapiens'
+
+
+def test_pybel_readme_example():
+    bel_processor = bel.process_pybel_neighborhood(['KRAS', 'BRAF'])
+    assert bel_processor.statements
 
 
 def test_process_pybel():
