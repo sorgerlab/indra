@@ -133,18 +133,38 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
         multiple edges representing multiple statements and evidences between
         two nodes).
     """
+    import pybel.constants as pc
     from indra.sources.bel.processor import get_agent
     steps = []
     for i in range(len(path[:-1])):
         source = path[i]
         target = path[i+1]
+        # Check if the signs of source and target nodes are the same
+        positive = (source[1] == target[1])
         reverse = False
         try:
-            edges = model[source[0]][target[0]]
+            all_edges = model[source[0]][target[0]]
         except KeyError:
             # May be a symmetric edge
-            edges = model[target[0]][source[0]]
+            all_edges = model[target[0]][source[0]]
             reverse = True
+        # Only keep the edges with correct sign or non-causal
+        edges = {}
+        key = 0
+        for edge_data in all_edges.values():
+            if edge_data['relation'] not in pc.CAUSAL_RELATIONS:
+                edges[key] = edge_data
+                key += 1
+            if positive and \
+                    edge_data['relation'] in pc.CAUSAL_INCREASE_RELATIONS:
+                edges[key] = edge_data
+                key += 1
+            elif not positive and \
+                    edge_data['relation'] in pc.CAUSAL_DECREASE_RELATIONS:
+                edges[key] = edge_data
+                key += 1
+            else:
+                continue
         hashes = set()
         for j in range(len(edges)):
             try:
