@@ -465,6 +465,10 @@ def get_db_refs_by_name(ns, name, node_data):
         if not hgnc_id:
             logger.info("Invalid HGNC name: %s (%s)" % (name, node_data))
             return name, None
+        elif isinstance(hgnc_id, list):
+            logger.info('More than one current HGNC ID for %s, choosing %s'
+                        % (name, hgnc_id[0]))
+            hgnc_id = hgnc_id[0]
         name = hgnc_client.get_hgnc_name(hgnc_id)
         db_refs = {'HGNC': hgnc_id}
         up_id = _get_up_id(hgnc_id)
