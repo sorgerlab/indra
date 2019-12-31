@@ -603,8 +603,8 @@ def update_lincs_proteins():
 
 
 def update_mesh_names():
-    url = 'ftp://nlmpubs.nlm.nih.gov/online/mesh/2018/xmlmesh/desc2018.gz'
-    desc_path = os.path.join(path, 'mesh_desc2018.gz')
+    url = 'ftp://nlmpubs.nlm.nih.gov/online/mesh/2019/xmlmesh/desc2019.gz'
+    desc_path = os.path.join(path, 'mesh_desc2019.gz')
     if not os.path.exists(desc_path):
         logging.info('Download MeSH descriptors from %s', url)
         urlretrieve(url, desc_path)
@@ -626,8 +626,8 @@ def update_mesh_names():
 
 
 def update_mesh_supplementary_names():
-    supp_url = 'ftp://nlmpubs.nlm.nih.gov/online/mesh/2018/xmlmesh/supp2018.gz'
-    supp_path = os.path.join(path, 'mesh_supp2018.gz')
+    supp_url = 'ftp://nlmpubs.nlm.nih.gov/online/mesh/2019/xmlmesh/supp2019.gz'
+    supp_path = os.path.join(path, 'mesh_supp2019.gz')
     if not os.path.exists(supp_path):
         logging.info('Download MeSH supplement from %s', supp_url)
         urlretrieve(supp_url, supp_path)
