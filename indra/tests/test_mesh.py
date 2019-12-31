@@ -72,7 +72,6 @@ def test_mesh_term_name_norm():
 def test_mesh_term_lookups():
     queries = {'Breast Cancer': ('D001943', 'Breast Neoplasms'),
                'Neoplasms': ('D009369', 'Neoplasms'),
-               'Colorectal Cancer': ('D015179', 'Colorectal Neoplasms'),
                'Intestinal Neoplasms': ('D007414', 'Intestinal Neoplasms'),
                'Carcinoma, Non-Small-Cell Lung':
                                 ('D002289', 'Carcinoma, Non-Small-Cell Lung'),
