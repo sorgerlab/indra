@@ -665,8 +665,8 @@ def test_normalize_equals_opposites():
     hierarchies['entity'].graph.add(test_rel)
     concept1 = 'wm/a/b/c/flooding'
     concept2 = 'wm/x/y/z/flooding'
-    concept3 = 'wm/concept/causal_factor/food_insecurity/food_instability'
-    concept4 = 'wm/concept/causal_factor/food_security/food_stability'
+    concept3 = 'wm/concept/causal_factor/food_insecurity'
+    concept4 = 'wm/concept/causal_factor/food_security'
     dbr = {'WM': [(concept1, 1.0), (concept2, 0.5), (concept3, 0.1)]}
     ev1 = Event(Concept('x', db_refs=dbr))
 
