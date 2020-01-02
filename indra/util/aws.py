@@ -141,6 +141,7 @@ def get_batch_command(command_list, project=None, purpose=None):
 def run_in_batch(command_list, project, purpose):
     from subprocess import call
     tag_myself(project, purpose=purpose)
+    logger.info("Running command list: %s" % str(command_list))
     logger.info('\n'+20*'='+' Begin Primary Command Output '+20*'='+'\n')
     ret_code = call(command_list)
     logger.info('\n'+21*'='+' End Primary Command Output '+21*'='+'\n')
