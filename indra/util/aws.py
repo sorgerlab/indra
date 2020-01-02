@@ -480,7 +480,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.task == 'run_in_batch':
-        ret_code = run_in_batch(args.command.split(' '), args.project,
+        ret_code = run_in_batch(args.command.split(), args.project,
                                 args.purpose)
         if ret_code is 0:
             logger.info('Job endend well.')
