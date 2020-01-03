@@ -156,8 +156,7 @@ def get_jobs(job_queue='run_reach_queue', job_status='RUNNING'):
     return jobs.get('jobSummaryList')
 
 
-def get_job_log(job_info, log_group_name='/aws/batch/job',
-                write_file=True, verbose=False):
+class JobLog(object):
     """Gets the Cloudwatch log associated with the given job.
 
     Parameters
@@ -167,90 +166,70 @@ def get_job_log(job_info, log_group_name='/aws/batch/job',
         by get_jobs()
     log_group_name : string
         Name of the log group; defaults to '/aws/batch/job'
-    write_file : boolean
-        If True, writes the downloaded log to a text file with the filename
-        '%s_%s.log' % (job_name, job_id)
-
 
     Returns
     -------
     list of strings
         The event messages in the log, with the earliest events listed first.
     """
-    job_name = job_info['jobName']
-    job_id = job_info['jobId']
-    logs = boto3.client('logs')
-    batch = boto3.client('batch')
-    resp = batch.describe_jobs(jobs=[job_id])
-    job_desc = resp['jobs'][0]
-    job_def_name = job_desc['jobDefinition'].split('/')[-1].split(':')[0]
-    task_arn_id = job_desc['container']['taskArn'].split('/')[-1]
-    log_stream_name = '%s/default/%s' % (job_def_name, task_arn_id)
-    stream_resp = logs.describe_log_streams(
-                            logGroupName=log_group_name,
-                            logStreamNamePrefix=log_stream_name)
-    streams = stream_resp.get('logStreams')
-    if not streams:
-        logger.warning('No streams for job')
-        return None
-    elif len(streams) > 1:
-        logger.warning('More than 1 stream for job, returning first')
-    log_stream_name = streams[0]['logStreamName']
-    if verbose:
-        logger.info("Getting log for %s/%s" % (job_name, job_id))
-    out_file = ('%s_%s.log' % (job_name, job_id)) if write_file else None
-    lines = get_log_by_name(log_group_name, log_stream_name, out_file, verbose)
-    return lines
+    def __init__(self, job_info, log_group_name='/aws/batch/job',
+                 verbose=False):
+        self.job_name = job_info['jobName']
+        self.job_id = job_info['jobId']
+        self.logs_client = boto3.client('logs')
+        self.verbose = verbose
+        self.log_group_name = log_group_name
+        batch = boto3.client('batch')
+        resp = batch.describe_jobs(jobs=[self.job_id])
+        job_desc = resp['jobs'][0]
+        job_def_name = job_desc['jobDefinition'].split('/')[-1].split(':')[0]
+        task_arn_id = job_desc['container']['taskArn'].split('/')[-1]
+        self.log_stream_name = '%s/default/%s' % (job_def_name, task_arn_id)
+        self.latest_timestamp = None
+        self.lines = []
+        self.nextToken = None
 
+    def clear_lines(self):
+        self.lines = []
 
-def get_log_by_name(log_group_name, log_stream_name, out_file=None,
-                    verbose=True):
-    """Download a log given the log's group and stream name.
-
-    Parameters
-    ----------
-    log_group_name : str
-        The name of the log group, e.g. /aws/batch/job.
-
-    log_stream_name : str
-        The name of the log stream, e.g. run_reach_jobdef/default/<UUID>
-
-    Returns
-    -------
-    lines : list[str]
-        The lines of the log as a list.
-    """
-    logs = boto3.client('logs')
-    kwargs = {'logGroupName': log_group_name,
-              'logStreamName': log_stream_name,
-              'startFromHead': True}
-    lines = []
-    while True:
-        response = logs.get_log_events(**kwargs)
-        # If we've gotten all the events already, the nextForwardToken for
-        # this call will be the same as the last one
-        if response.get('nextForwardToken') == kwargs.get('nextToken'):
-            break
-        else:
-            events = response.get('events')
-            if events:
-                lines += ['%s: %s\n' % (evt['timestamp'], evt['message'])
-                          for evt in events]
-            kwargs['nextToken'] = response.get('nextForwardToken')
-        if verbose:
-            logger.info('%d %s' % (len(lines), lines[-1]))
-    if out_file:
+    def dump(self):
+        """Dump the logs in their entirety to the specified file."""
+        self.get_lines()
+        out_file = '%s_%s.log' % (self.job_name, self.job_id)
         with open(out_file, 'wt') as f:
-            for line in lines:
+            for line in self.lines:
                 f.write(line)
-    return lines
+
+    def get_lines(self):
+        kwargs = {'logGroupName': self.log_group_name,
+                  'logStreamName': self.log_stream_name,
+                  'startFromHead': True}
+        if self.nextToken is not None:
+            kwargs['nextToken'] = self.nextToken
+        while True:
+            response = self.logs_client.get_log_events(**kwargs)
+            # If we've gotten all the events already, the nextForwardToken for
+            # this call will be the same as the last one
+            if response.get('nextForwardToken') == kwargs.get('nextToken'):
+                break
+            else:
+                events = response.get('events')
+                if events:
+                    for evt in events:
+                        line = '%s: %s\n' % (evt['timestamp'], evt['message'])
+                        self.lines.append(line)
+                        if self.verbose:
+                            logger.info('%d %s' % (len(self.lines), line))
+                self.nextToken = response.get('nextForwardToken')
+        return
 
 
 def dump_logs(job_queue='run_reach_queue', job_status='RUNNING'):
     """Write logs for all jobs with given the status to files."""
     jobs = get_jobs(job_queue, job_status)
     for job in jobs:
-        get_job_log(job, write_file=True)
+        job_log = JobLog(job)
+        job_log.dump()
 
 
 def get_date_from_str(date_str):
