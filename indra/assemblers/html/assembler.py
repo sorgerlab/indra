@@ -2,24 +2,21 @@
 Format a set of INDRA Statements into an HTML-formatted report which also
 supports curation.
 """
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 
 import re
 import uuid
 import logging
 import itertools
-from collections import OrderedDict, defaultdict
-from os.path import abspath, dirname, join, exists, getmtime, sep
+from collections import OrderedDict
+from os.path import abspath, dirname, join
 
-from jinja2 import Environment, BaseLoader, TemplateNotFound, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader
 
 from indra.statements import *
 from indra.assemblers.english import EnglishAssembler
-from indra.databases import get_identifiers_url, hgnc_client, chebi_client
+from indra.databases import get_identifiers_url
 from indra.util.statement_presentation import group_and_sort_statements, \
-    make_string_from_sort_key, make_top_level_label_from_names_key, \
-    make_stmt_from_sort_key
+    make_top_level_label_from_names_key, make_stmt_from_sort_key
 
 logger = logging.getLogger(__name__)
 HERE = dirname(abspath(__file__))
