@@ -103,7 +103,6 @@ class BatchMonitor(object):
             ecs_cluster_name = None
         terminate_msg = 'Job log has stalled for at least %f minutes.'
         terminated_jobs = set()
-        stashed_id_set = set()
         found_a_job = False
         while True:
             pre_run = []
@@ -123,9 +122,9 @@ class BatchMonitor(object):
                 self.get_dict_of_job_tuples(pre_run + running)
             )
 
-            logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
-                        ((datetime.now() - self.start_time).seconds,
-                         len(pre_run), len(running), len(failed), len(done)))
+            logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)'
+                        % ((datetime.now() - self.start_time).seconds,
+                           len(pre_run), len(running), len(failed), len(done)))
 
             # Check the logs for new output, and possibly terminate some jobs.
             stalled_jobs = self.check_logs(running)
@@ -164,26 +163,16 @@ class BatchMonitor(object):
             # Stash the logs of things that have finished so far. Note that
             # jobs terminated in this round will not be picked up until the
             # next round.
-            self.stash_logs(stash_log_method, done, failed, stashed_id_set)
+            for job_log in self.job_log_dict.values():
+                job_log.dump()
 
             sleep(poll_interval)
-
-        # Pick up any stragglers
-        self.stash_logs(stash_log_method, done, failed, stashed_id_set)
 
         self.result_record['terminated'] = terminated_jobs
         self.result_record['failed'] = failed
         self.result_record['succeeded'] = done
 
         return ret
-
-    def stash_logs(self, method, done, failed, stashed_ids):
-        if not method:
-            return
-        stash_logs(self.observed_job_def_dict, done, failed, self.queue_name,
-                   method, self.job_name_prefix,
-                   self.start_time.strftime('%Y%m%d_%H%M%S'),
-                   ids_stashed=stashed_ids)
 
     def get_jobs_by_status(self, status):
         res = self.batch_client.list_jobs(jobQueue=self.queue_name,
@@ -255,65 +244,6 @@ class BatchMonitor(object):
 def _get_job_ids_to_stash(job_def_list, stashed_id_set):
     return [job_def['jobId'] for job_def in job_def_list
             if job_def['jobId'] not in stashed_id_set]
-
-
-def stash_logs(job_defs, success_jobs, failure_jobs, queue_name, method='local',
-               job_name_prefix=None, tag='stash', ids_stashed=None):
-    if ids_stashed is None:
-        ids_stashed = set()
-
-    success_ids = _get_job_ids_to_stash(success_jobs, ids_stashed)
-    failure_ids = _get_job_ids_to_stash(failure_jobs, ids_stashed)
-    if method == 's3':
-        s3_client = boto3.client('s3')
-
-        def stash_log(log_str, name_base):
-            name = '%s_%s.log' % (name_base, tag)
-            s3_client.put_object(
-                Bucket=bucket_name,
-                Key='reading_results/%s/logs/%s/%s' % (
-                    job_name_prefix,
-                    queue_name,
-                    name),
-                Body=log_str
-                )
-    elif method == 'local':
-        if job_name_prefix is None:
-            job_name_prefix = 'batch_%s' % tag
-        dirname = '%s_job_logs' % job_name_prefix
-        os.mkdir(dirname)
-
-        def stash_log(log_str, name_base):
-            with open(os.path.join(dirname, name_base + '.log'), 'w') as f:
-                f.write(log_str)
-    else:
-        raise ValueError('Invalid method: %s' % method)
-
-    for jobId, job_def_tpl in job_defs.items():
-        if jobId not in success_ids and jobId not in failure_ids:
-            continue  # Logs aren't done and ready to be loaded.
-        try:
-            job_def = dict(job_def_tpl)
-            lines = get_job_log(job_def, write_file=False)
-            if lines is None:
-                logger.warning("No logs found for %s." % job_def['jobName'])
-                continue
-            log_str = ''.join(lines)
-            base_name = job_def['jobName']
-            if job_def['jobId'] in success_ids:
-                base_name += '/SUCCESS'
-            elif job_def['jobId'] in failure_ids:
-                base_name += '/FAILED'
-            else:
-                logger.error("Job cannot be logged unless completed.")
-                continue
-            logger.info('Stashing ' + base_name)
-            stash_log(log_str, base_name)
-        except Exception as e:
-            logger.error("Failed to save logs for: %s" % str(job_def_tpl))
-            logger.exception(e)
-    ids_stashed |= {jid for jids in [success_ids, failure_ids] for jid in jids}
-    return
 
 
 def get_ecs_cluster_for_queue(queue_name, batch_client=None):

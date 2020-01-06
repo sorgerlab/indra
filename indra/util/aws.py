@@ -197,13 +197,17 @@ class JobLog(object):
     def clear_lines(self):
         self.lines = []
 
-    def dump(self):
+    def dump(self, out_file=None):
         """Dump the logs in their entirety to the specified file."""
-        self.get_lines()
-        out_file = '%s_%s.log' % (self.job_name, self.job_id)
+        if not out_file:
+            out_file = '%s_%s.log' % (self.job_name, self.job_id)
         with open(out_file, 'wt') as f:
             for line in self.lines:
                 f.write(line)
+        return
+
+    def dumps(self):
+        return ''.join(self.lines)
 
     def get_lines(self):
         kwargs = {'logGroupName': self.log_group_name,
@@ -237,6 +241,7 @@ def dump_logs(job_queue='run_reach_queue', job_status='RUNNING'):
     jobs = get_jobs(job_queue, job_status)
     for job in jobs:
         log = JobLog(job)
+        log.get_lines()
         log.dump()
 
 
