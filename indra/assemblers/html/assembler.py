@@ -167,7 +167,8 @@ class HtmlAssembler(object):
             # Statement object `meta_stmts`.
             meta_agents = []
             meta_stmt = make_stmt_from_sort_key(key, verb, meta_agents)
-            meta_agent_dict = {ag.name: ag for ag in meta_agents}
+            meta_agent_dict = {ag.name: ag for ag in meta_agents
+                               if ag is not None}
 
             # This will now be ordered by prevalence and entity pairs.
             stmt_info_list = []
