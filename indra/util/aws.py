@@ -204,13 +204,13 @@ class JobLog(object):
         kwargs = {'logGroupName': self.log_group_name,
                   'logStreamName': self.log_stream_name,
                   'startFromHead': True}
-        if self.nextToken is not None:
-            kwargs['nextToken'] = self.nextToken
         while True:
+            if self.nextToken is not None:
+                kwargs['nextToken'] = self.nextToken
             response = self.logs_client.get_log_events(**kwargs)
             # If we've gotten all the events already, the nextForwardToken for
             # this call will be the same as the last one
-            if response.get('nextForwardToken') == kwargs.get('nextToken'):
+            if response.get('nextForwardToken') == self.nextToken:
                 break
             else:
                 events = response.get('events')
