@@ -148,14 +148,14 @@ class HtmlAssembler(object):
         agents = {}
         previous_stmt_set = set()
         for row in stmt_rows:
-            # Distinguish between the cases with
+            # Distinguish between the cases with source counts and without.
             if self.source_counts:
                 key, verb, stmts_group, tl_counts, src_counts = row
             else:
                 key, verb, stmts_group = row
                 src_counts = None
                 tl_counts = None
-            curr_stmt_set = {s.get_hash() for s in stmts}
+            curr_stmt_set = {s.get_hash() for s in stmts_group}
             if curr_stmt_set == previous_stmt_set:
                 continue
             else:
