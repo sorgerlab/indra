@@ -176,7 +176,8 @@ class HtmlAssembler(object):
 
                 # Try to accumulate db refs in the meta agents.
                 for ag in stmt.agent_list():
-
+                    if ag is None:
+                        continue
                     # Get the corresponding meta-agent
                     meta_ag = meta_agent_dict.get(ag.name)
                     if not meta_ag:
