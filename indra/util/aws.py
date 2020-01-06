@@ -188,6 +188,11 @@ class JobLog(object):
         self.latest_timestamp = None
         self.lines = []
         self.nextToken = None
+        self.__len = 0
+        return
+
+    def __len__(self):
+        return self.__len
 
     def clear_lines(self):
         self.lines = []
@@ -218,6 +223,9 @@ class JobLog(object):
                     for evt in events:
                         line = '%s: %s\n' % (evt['timestamp'], evt['message'])
                         self.lines.append(line)
+                        self.latest_timestamp = \
+                            datetime.fromtimestamp(evt['timestamp'])
+                        self.__len += 1
                         if self.verbose:
                             logger.info('%d %s' % (len(self.lines), line))
                 self.nextToken = response.get('nextForwardToken')
@@ -228,8 +236,8 @@ def dump_logs(job_queue='run_reach_queue', job_status='RUNNING'):
     """Write logs for all jobs with given the status to files."""
     jobs = get_jobs(job_queue, job_status)
     for job in jobs:
-        job_log = JobLog(job)
-        job_log.dump()
+        log = JobLog(job)
+        log.dump()
 
 
 def get_date_from_str(date_str):

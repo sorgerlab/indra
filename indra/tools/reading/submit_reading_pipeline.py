@@ -9,8 +9,8 @@ from datetime import datetime
 from indra.literature import elsevier_client as ec
 from indra.literature.elsevier_client import _ensure_api_keys
 from indra.tools.reading.readers import get_reader_classes
-from indra.util.aws import get_job_log, tag_instance, get_batch_command, \
-    kill_all, get_ids
+from indra.util.aws import tag_instance, get_batch_command, kill_all, get_ids,\
+    JobLog
 
 bucket_name = 'bigmech'
 
@@ -93,29 +93,34 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     job_log_dict = {}
 
     def check_logs(job_defs):
-        """Updates teh job_log_dict."""
+        """Updates the job_log_dict."""
         stalled_jobs = set()
 
         # Check the status of all the jobs we're tracking.
         for job_def in job_defs:
             try:
-                # Get the logs for this job.
-                log_lines = get_job_log(job_def, write_file=False)
-
                 # Get the job id.
                 jid = job_def['jobId']
-                now = datetime.now()
+                now = datetime.utcnow()
                 if jid not in job_log_dict.keys():
                     # If the job is new...
-                    logger.info("Adding job %s to the log tracker at %s."
+                    logger.info("Adding job %s to the log job_log at %s."
                                 % (jid, now))
-                    job_log_dict[jid] = {'log': log_lines,
-                                         'last change time': now}
-                elif len(job_log_dict[jid]['log']) == len(log_lines):
+                    # Instantiate a new job_log.
+                    job_log = JobLog(job_def)
+                    job_log_dict[jid] = job_log
+                else:
+                    job_log = job_log_dict[jid]
+
+                pre_len = len(job_log)
+                job_log.get_lines()
+                post_len = len(job_log)
+
+                if pre_len == post_len:
                     # If the job log hasn't changed, announce as such, and
                     # check to see if it has been the same for longer than
                     # stall time.
-                    check_dt = now - job_log_dict[jid]['last change time']
+                    check_dt = now - job_log.latest_timestamp
                     logger.warning(('Job \'%s\' has not produced output for '
                                     '%d seconds.')
                                    % (job_def['jobName'], check_dt.seconds))
@@ -123,12 +128,10 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                         logger.warning("Job \'%s\' has stalled."
                                        % job_def['jobName'])
                         stalled_jobs.add(jid)
-                else:
-                    # If the job is known, and the logs have changed, update
-                    # the "last change time".
-                    old_log = job_log_dict[jid]['log']
-                    old_log += log_lines[len(old_log):]
-                    job_log_dict[jid]['last change time'] = now
+
+                # Dump the log lines as we go, reducing RAM usage.
+                job_log.dump()
+                job_log.clear_lines()
             except Exception as e:
                 # Sometimes due to sync et al. issues, a part of this will fail
                 # Such things are usually transitory issues so we keep trying.
