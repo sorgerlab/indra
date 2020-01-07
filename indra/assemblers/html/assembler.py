@@ -210,8 +210,8 @@ class HtmlAssembler(object):
                     continue
                 for dbn, dbid in list(ag.db_refs.items()):
                     if isinstance(dbid, set):
-                        logger.warning("Removing %s from refs due to too many "
-                                       "matches: %s" % (dbn, dbid))
+                        logger.info("Removing %s from refs due to too many "
+                                    "matches: %s" % (dbn, dbid))
                         del ag.db_refs[dbn]
 
             # Update the top level grouping.
@@ -274,8 +274,8 @@ class HtmlAssembler(object):
                 for ag in tl_agents:
                     for dbn, dbid in list(ag.db_refs.items()):
                         if isinstance(dbid, set):
-                            logger.warning("Removing %s from top level refs "
-                                           "due to multiple matches: %s"
+                            logger.info("Removing %s from top level refs "
+                                        "due to multiple matches: %s"
                                            % (dbn, dbid))
                             del ag.db_refs[dbn]
                 tl_label = make_top_level_label_from_names_key(tlg['names'])
