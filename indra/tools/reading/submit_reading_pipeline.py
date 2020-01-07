@@ -59,7 +59,8 @@ class BatchMonitor(object):
 
     def watch_and_wait(self, poll_interval=10, idle_log_timeout=None,
                        kill_on_log_timeout=False, stash_log_method=None,
-                       tag_instances=False, wait_for_first_job=False):
+                       tag_instances=False, wait_for_first_job=False,
+                       dump_size=10000):
         """Return when all jobs are finished.
 
         If no job list was given, return when all jobs in queue finished.
@@ -91,6 +92,9 @@ class BatchMonitor(object):
             you are monitoring jobs that are submitted periodically, but can be
             a problem if there is a chance you might call this when no jobs
             will ever be run.
+        dump_size : int
+            Set the size of the log dumps (number of lines). The default is
+            10,000.
         """
         logger.info("Given %s jobs to track"
                     % ('no' if self.job_list is None else len(self.job_list)))
@@ -164,15 +168,43 @@ class BatchMonitor(object):
             # jobs terminated in this round will not be picked up until the
             # next round.
             for job_log in self.job_log_dict.values():
-                job_log.dump()
+                if len(job_log) >= dump_size:
+                    log_name = self._get_log_name(stash_log_method,
+                                                  job_log.job_name)
+                    job_log.dump(log_name)
 
             sleep(poll_interval)
+
+        for job_log in self.job_log_dict.values():
+            if len(job_log) > 0:
+                log_name = self._get_log_name(stash_log_method,
+                                              job_log.job_name)
+                job_log.dump(log_name)
 
         self.result_record['terminated'] = terminated_jobs
         self.result_record['failed'] = failed
         self.result_record['succeeded'] = done
 
         return ret
+
+    def _get_log_name(self, stash_log_method, job_name):
+        log_name = '%s_stash.log' % job_name
+        if stash_log_method == 's3':
+            log_name = 's3:%s/reading_results/%s/logs/%s/%s' % (
+                bucket_name, self.job_name_prefix, self.queue_name,
+                log_name)
+        elif stash_log_method == 'local':
+            prefix = self.job_name_prefix
+            if prefix is None:
+                prefix = 'batch_stash'
+            dirname = '%s_job_logs' % prefix
+            if not os.path.exists(dirname):
+                os.mkdir(dirname)
+            log_name = os.path.join(dirname, log_name)
+        else:
+            raise ValueError("Invalid log stash method: %s"
+                             % stash_log_method)
+        return log_name
 
     def get_jobs_by_status(self, status):
         res = self.batch_client.list_jobs(jobQueue=self.queue_name,
