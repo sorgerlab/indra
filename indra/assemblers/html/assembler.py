@@ -186,8 +186,8 @@ class HtmlAssembler(object):
                     _cautiously_merge_refs(ag, meta_ag)
 
                 # Format some strings nicely.
-                ev_list = self._format_evidence_text(stmt)
-                english = self._format_stmt_text(stmt)
+                ev_list = _format_evidence_text(stmt, self.curation_dict)
+                english = _format_stmt_text(stmt)
                 if self.ev_totals:
                     tot_ev = self.ev_totals.get(int(stmt_hash), '?')
                     if tot_ev == '?':
@@ -250,7 +250,7 @@ class HtmlAssembler(object):
                 if with_grouping:
                     # See note above: this is where the work on meta_agents is
                     # applied because the agents are references.
-                    short_name = self._format_stmt_text(meta_stmt)
+                    short_name = _format_stmt_text(meta_stmt)
                     short_name_key = str(uuid.uuid4())
                 else:
                     short_name = "All Statements Sub Group"
@@ -337,94 +337,95 @@ class HtmlAssembler(object):
         with open(fname, 'wb') as fh:
             fh.write(self.model.encode('utf-8'))
 
-    def _format_evidence_text(self, stmt):
-        """Returns evidence metadata with highlighted evidence text.
 
-        Parameters
-        ----------
-        stmt : indra.Statement
-            The Statement with Evidence to be formatted.
+def _format_evidence_text(stmt, curation_dict):
+    """Returns evidence metadata with highlighted evidence text.
 
-        Returns
-        -------
-        list of dicts
-            List of dictionaries corresponding to each Evidence object in the
-            Statement's evidence list. Each dictionary has keys 'source_api',
-            'pmid' and 'text', drawn from the corresponding fields in the
-            Evidence objects. The text entry of the dict includes
-            `<span>` tags identifying the agents referenced by the Statement.
-        """
+    Parameters
+    ----------
+    stmt : indra.Statement
+        The Statement with Evidence to be formatted.
 
-        def get_role(ag_ix):
-            if isinstance(stmt, Complex) or \
-               isinstance(stmt, SelfModification) or \
-               isinstance(stmt, ActiveForm) or isinstance(stmt, Conversion) or\
-               isinstance(stmt, Translocation):
-                return 'other'
-            else:
-                assert len(stmt.agent_list()) == 2, (len(stmt.agent_list()),
-                                                     type(stmt))
-                return 'subject' if ag_ix == 0 else 'object'
+    Returns
+    -------
+    list of dicts
+        List of dictionaries corresponding to each Evidence object in the
+        Statement's evidence list. Each dictionary has keys 'source_api',
+        'pmid' and 'text', drawn from the corresponding fields in the
+        Evidence objects. The text entry of the dict includes
+        `<span>` tags identifying the agents referenced by the Statement.
+    """
 
-        ev_list = []
-        for ix, ev in enumerate(stmt.evidence):
-            # Expand the source api to include the sub-database
-            if ev.source_api == 'biopax' and \
-               'source_sub_id' in ev.annotations and \
-               ev.annotations['source_sub_id']:
-               source_api = '%s:%s' % (ev.source_api,
-                                       ev.annotations['source_sub_id'])
-            else:
-                source_api = ev.source_api
-            # Prepare the evidence text
-            if ev.text is None:
-                format_text = None
-            else:
-                indices = []
-                for ix, ag in enumerate(stmt.agent_list()):
-                    if ag is None:
-                        continue
-                    # If the statement has been preassembled, it will have
-                    # this entry in annotations
-                    try:
-                        ag_text = ev.annotations['agents']['raw_text'][ix]
-                        if ag_text is None:
-                            raise KeyError
-                    # Otherwise we try to get the agent text from db_refs
-                    except KeyError:
-                        ag_text = ag.db_refs.get('TEXT')
+    def get_role(ag_ix):
+        if isinstance(stmt, Complex) or \
+           isinstance(stmt, SelfModification) or \
+           isinstance(stmt, ActiveForm) or isinstance(stmt, Conversion) or\
+           isinstance(stmt, Translocation):
+            return 'other'
+        else:
+            assert len(stmt.agent_list()) == 2, (len(stmt.agent_list()),
+                                                 type(stmt))
+            return 'subject' if ag_ix == 0 else 'object'
+
+    ev_list = []
+    for ix, ev in enumerate(stmt.evidence):
+        # Expand the source api to include the sub-database
+        if ev.source_api == 'biopax' and \
+           'source_sub_id' in ev.annotations and \
+           ev.annotations['source_sub_id']:
+           source_api = '%s:%s' % (ev.source_api,
+                                   ev.annotations['source_sub_id'])
+        else:
+            source_api = ev.source_api
+        # Prepare the evidence text
+        if ev.text is None:
+            format_text = None
+        else:
+            indices = []
+            for ix, ag in enumerate(stmt.agent_list()):
+                if ag is None:
+                    continue
+                # If the statement has been preassembled, it will have
+                # this entry in annotations
+                try:
+                    ag_text = ev.annotations['agents']['raw_text'][ix]
                     if ag_text is None:
-                        continue
-                    role = get_role(ix)
-                    # Get the tag with the correct badge
-                    tag_start = '<span class="badge badge-%s">' % role
-                    tag_close = '</span>'
-                    # Build up a set of indices
-                    indices += [(m.start(), m.start() + len(ag_text),
-                                 ag_text, tag_start, tag_close)
-                                 for m in re.finditer(re.escape(ag_text),
-                                                      ev.text)]
-                format_text = tag_text(ev.text, indices)
+                        raise KeyError
+                # Otherwise we try to get the agent text from db_refs
+                except KeyError:
+                    ag_text = ag.db_refs.get('TEXT')
+                if ag_text is None:
+                    continue
+                role = get_role(ix)
+                # Get the tag with the correct badge
+                tag_start = '<span class="badge badge-%s">' % role
+                tag_close = '</span>'
+                # Build up a set of indices
+                indices += [(m.start(), m.start() + len(ag_text),
+                             ag_text, tag_start, tag_close)
+                             for m in re.finditer(re.escape(ag_text),
+                                                  ev.text)]
+            format_text = tag_text(ev.text, indices)
 
-            curation_key = (stmt.get_hash(), ev.source_hash)
-            num_curations = len(self.curation_dict.get(curation_key, []))
-            ev_list.append({'source_api': source_api,
-                            'pmid': ev.pmid,
-                            'text_refs': ev.text_refs,
-                            'text': format_text,
-                            'source_hash': str(ev.source_hash),
-                            'num_curations': num_curations})
+        curation_key = (stmt.get_hash(), ev.source_hash)
+        num_curations = len(curation_dict.get(curation_key, []))
+        ev_list.append({'source_api': source_api,
+                        'pmid': ev.pmid,
+                        'text_refs': ev.text_refs,
+                        'text': format_text,
+                        'source_hash': str(ev.source_hash),
+                        'num_curations': num_curations})
 
-        return ev_list
+    return ev_list
 
-    @staticmethod
-    def _format_stmt_text(stmt):
-        # Get the English assembled statement
-        ea = EnglishAssembler([stmt])
-        english = ea.make_model()
-        if not english:
-            english = str(stmt)
-        return tag_agents(english, stmt.agent_list())
+
+def _format_stmt_text(stmt):
+    # Get the English assembled statement
+    ea = EnglishAssembler([stmt])
+    english = ea.make_model()
+    if not english:
+        english = str(stmt)
+    return tag_agents(english, stmt.agent_list())
 
 
 def _cautiously_merge_refs(from_ag, to_ag):
