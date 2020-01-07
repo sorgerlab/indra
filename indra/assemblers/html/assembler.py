@@ -206,6 +206,8 @@ class HtmlAssembler(object):
 
             # Clean out invalid fields from the meta agents.
             for ag in meta_agents:
+                if ag is None:
+                    continue
                 for dbn, dbid in list(ag.db_refs.items()):
                     if isinstance(dbid, set):
                         logger.warning("Removing %s from refs due to too many "
