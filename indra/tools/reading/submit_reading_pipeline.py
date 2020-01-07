@@ -170,16 +170,28 @@ class BatchMonitor(object):
             for job_log in self.job_log_dict.values():
                 if len(job_log) >= dump_size:
                     log_name = self._get_log_name(stash_log_method,
-                                                  job_log.job_name)
+                                                  job_log.job_name, 'RUNNING')
                     job_log.dump(log_name)
 
             sleep(poll_interval)
 
+        failed_jobs = {job['jobId'] for job in failed}
+        succeeded_jobs = {job['jobId'] for job in done}
         for job_log in self.job_log_dict.values():
-            if len(job_log) > 0:
-                log_name = self._get_log_name(stash_log_method,
-                                              job_log.job_name)
-                job_log.dump(log_name)
+            if job_log.job_id in terminated_jobs:
+                label = 'TERMINATED'
+            elif job_log.job_id in failed_jobs:
+                label = 'FAILURE'
+            elif job_log.job_id in succeeded_jobs:
+                label = "SUCCESS"
+            else:
+                label = 'UNKNOWN'
+                logger.warning("Job %s not among terminated, succeeded, or "
+                               "failed..." % job_log.job_id)
+
+            log_name = self._get_log_name(stash_log_method, job_log.job_name,
+                                          label)
+            job_log.dump(log_name)
 
         self.result_record['terminated'] = terminated_jobs
         self.result_record['failed'] = failed
@@ -187,12 +199,12 @@ class BatchMonitor(object):
 
         return ret
 
-    def _get_log_name(self, stash_log_method, job_name):
+    def _get_log_name(self, stash_log_method, job_name, label=''):
         log_name = '%s_stash.log' % job_name
         if stash_log_method == 's3':
-            log_name = 's3:%s/reading_results/%s/logs/%s/%s' % (
+            log_name = 's3:%s/reading_results/%s/logs/%s/%s%s' % (
                 bucket_name, self.job_name_prefix, self.queue_name,
-                log_name)
+                label + '_' if label else '', log_name)
         elif stash_log_method == 'local':
             prefix = self.job_name_prefix
             if prefix is None:
