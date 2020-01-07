@@ -237,7 +237,7 @@ class HtmlAssembler(object):
                                  'names': tl_names}
                 if tl_label:
                     stmts[tl_key]['label'] = tl_label
-            else:
+            elif with_grouping:
                 for name, existing_ag in agents[tl_key].items():
                     new_ag = tl_agents.get(name)
                     if new_ag is None:
