@@ -214,15 +214,16 @@ class JobLog(object):
             s3 = boto3.client('s3')
 
             # Find the largest part number among the current suffixes
+            suffix_base = '/part_'
             max_num = 0
             for key in iter_s3_keys(s3, bucket, prefix):
-                if key[len(prefix):].startswith('.'):
-                    num = int(key[len(prefix + '.'):])
+                if key[len(prefix):].startswith(suffix_base):
+                    num = int(key[len(prefix + suffix_base):])
                     if max_num > num:
                         max_num = num
 
             # Create the new suffix, and dump the lines to s3.
-            new_suffix = '.%d' % (max_num + 1)
+            new_suffix = suffix_base + str(max_num + 1)
             s3.put_object(Bucket=bucket, Key=prefix + new_suffix,
                           Body=''.join(self.lines))
         else:
