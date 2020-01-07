@@ -2,23 +2,21 @@
 Format a set of INDRA Statements into an HTML-formatted report which also
 supports curation.
 """
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 
 import re
 import uuid
 import logging
 import itertools
 from collections import OrderedDict
-from os.path import abspath, dirname, join, exists, getmtime, sep
+from os.path import abspath, dirname, join
 
-from jinja2 import Environment, BaseLoader, TemplateNotFound, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader
 
 from indra.statements import *
 from indra.assemblers.english import EnglishAssembler
 from indra.databases import get_identifiers_url
 from indra.util.statement_presentation import group_and_sort_statements, \
-    make_string_from_sort_key, make_top_level_label_from_names_key
+    make_top_level_label_from_names_key, make_stmt_from_sort_key
 
 logger = logging.getLogger(__name__)
 HERE = dirname(abspath(__file__))
@@ -115,13 +113,15 @@ class HtmlAssembler(object):
     """
 
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
-                 source_counts=None, title='INDRA Results', db_rest_url=None):
+                 source_counts=None, curation_dict=None, title='INDRA Results',
+                 db_rest_url=None):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
             else summary_metadata
         self.ev_totals = {} if ev_totals is None else ev_totals
         self.source_counts = {} if source_counts is None else source_counts
+        self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
         self.model = None
 
@@ -135,13 +135,21 @@ class HtmlAssembler(object):
         """
         self.statements += statements
 
-    def make_model(self, template=None, **template_kwargs):
-        """Return the assembled HTML content as a string.
+    def make_json_model(self, with_grouping=True):
+        """Return the JSON used to create the HTML display.
+
+        Parameters
+        ----------
+        with_grouping : bool
+            If True, statements will be grouped under multiple sub-headings. If
+            False, all headings will be collapsed into one on every level, with
+            all statements placed under a single heading.
 
         Returns
         -------
-        str
-            The assembled HTML as a string.
+        json : dict
+            A complexly structured JSON dict containing grouped statements and
+            various metadata.
         """
         # Get an iterator over the statements, carefully grouped.
         stmt_rows = group_and_sort_statements(
@@ -150,32 +158,50 @@ class HtmlAssembler(object):
             self.source_counts if self.source_counts else None)
 
         # Do some extra formatting.
-        tl_stmts = OrderedDict()
+        stmts = OrderedDict()
+        agents = {}
+        previous_stmt_set = set()
         for row in stmt_rows:
-            # Distinguish between the cases with
+            # Distinguish between the cases with source counts and without.
             if self.source_counts:
-                key, verb, stmts, tl_counts, src_counts = row
+                key, verb, stmts_group, tl_counts, src_counts = row
             else:
-                key, verb, stmts = row
+                key, verb, stmts_group = row
                 src_counts = None
                 tl_counts = None
+            curr_stmt_set = {s.get_hash() for s in stmts_group}
+            if curr_stmt_set == previous_stmt_set:
+                continue
+            else:
+                previous_stmt_set = curr_stmt_set
 
-            names = key[1]
-            tl_key = '-'.join([str(name) for name in names])
-            tl_label = make_top_level_label_from_names_key(names)
-
-            if tl_key not in tl_stmts.keys():
-                tl_stmts[tl_key] = {'html_key': str(uuid.uuid4()),
-                                    'label': tl_label,
-                                    'source_counts': tl_counts,
-                                    'stmts_formatted': []}
+            # We will keep track of some of the meta data for this stmt group.
+            # NOTE: Much of the code relies heavily on the fact that the Agent
+            # objects in `meta_agents` are references to the Agent's in the
+            # Statement object `meta_stmts`.
+            meta_agents = []
+            meta_stmt = make_stmt_from_sort_key(key, verb, meta_agents)
+            meta_agent_dict = {ag.name: ag for ag in meta_agents
+                               if ag is not None}
 
             # This will now be ordered by prevalence and entity pairs.
             stmt_info_list = []
-            for stmt in stmts:
+            for stmt in stmts_group:
                 stmt_hash = stmt.get_hash(shallow=True)
-                ev_list = self._format_evidence_text(stmt)
-                english = self._format_stmt_text(stmt)
+
+                # Try to accumulate db refs in the meta agents.
+                for ag in stmt.agent_list():
+                    if ag is None:
+                        continue
+                    # Get the corresponding meta-agent
+                    meta_ag = meta_agent_dict.get(ag.name)
+                    if not meta_ag:
+                        continue
+                    _cautiously_merge_refs(ag, meta_ag)
+
+                # Format some strings nicely.
+                ev_list = _format_evidence_text(stmt, self.curation_dict)
+                english = _format_stmt_text(stmt)
                 if self.ev_totals:
                     tot_ev = self.ev_totals.get(int(stmt_hash), '?')
                     if tot_ev == '?':
@@ -186,18 +212,117 @@ class HtmlAssembler(object):
                     evidence_count_str = str(len(ev_list))
 
                 stmt_info_list.append({
-                    'hash': stmt_hash,
+                    'hash': str(stmt_hash),
                     'english': english,
                     'evidence': ev_list,
                     'evidence_count': evidence_count_str,
                     'source_count': self.source_counts.get(stmt_hash)})
 
-            # Generate the short name for the statement and a unique key.
-            short_name = make_string_from_sort_key(key, verb)
-            short_name_key = str(uuid.uuid4())
+            # Clean out invalid fields from the meta agents.
+            for ag in meta_agents:
+                if ag is None:
+                    continue
+                for dbn, dbid in list(ag.db_refs.items()):
+                    if isinstance(dbid, set):
+                        logger.info("Removing %s from refs due to too many "
+                                    "matches: %s" % (dbn, dbid))
+                        del ag.db_refs[dbn]
 
-            new_tpl = (short_name, short_name_key, stmt_info_list, src_counts)
-            tl_stmts[tl_key]['stmts_formatted'].append(new_tpl)
+            # Update the top level grouping.
+            tl_names = key[1]
+            if with_grouping:
+                tl_key = '-'.join([str(name) for name in tl_names])
+                tl_agents = {name: Agent(name) for name in tl_names
+                             if name is not None}
+                for ag in tl_agents.values():
+                    meta_ag = meta_agent_dict.get(ag.name)
+                    if meta_ag is None:
+                        continue
+                    ag.db_refs.update(meta_ag.db_refs)
+                tl_label = None
+            else:
+                tl_key = 'all-statements'
+                tl_label = 'All Statements'
+                tl_agents = None
+
+            if tl_key not in stmts.keys():
+                agents[tl_key] = tl_agents
+                stmts[tl_key] = {'html_key': str(uuid.uuid4()),
+                                 'source_counts': tl_counts,
+                                 'stmts_formatted': [],
+                                 'names': tl_names}
+                if tl_label:
+                    stmts[tl_key]['label'] = tl_label
+            elif with_grouping:
+                for name, existing_ag in agents[tl_key].items():
+                    new_ag = tl_agents.get(name)
+                    if new_ag is None:
+                        continue
+                    _cautiously_merge_refs(new_ag, existing_ag)
+
+            # Generate the short name for the statement and a unique key.
+            existing_list = stmts[tl_key]['stmts_formatted']
+            if with_grouping or not existing_list:
+                if with_grouping:
+                    # See note above: this is where the work on meta_agents is
+                    # applied because the agents are references.
+                    short_name = _format_stmt_text(meta_stmt)
+                    short_name_key = str(uuid.uuid4())
+                else:
+                    short_name = "All Statements Sub Group"
+                    short_name_key = "all-statements-sub-group"
+                new_dict = {'short_name': short_name,
+                            'short_name_key': short_name_key,
+                            'stmt_info_list': stmt_info_list,
+                            'src_counts': src_counts}
+                existing_list.append(new_dict)
+            else:
+                existing_list[0]['stmt_info_list'].extend(stmt_info_list)
+                if src_counts:
+                    existing_list[0]['src_counts'].update(src_counts)
+
+        # Add labels for each top level group (tlg).
+        if with_grouping:
+            for tl_key, tlg in stmts.items():
+                tl_agents = list(agents[tl_key].values())
+                for ag in tl_agents:
+                    for dbn, dbid in list(ag.db_refs.items()):
+                        if isinstance(dbid, set):
+                            logger.info("Removing %s from top level refs "
+                                        "due to multiple matches: %s"
+                                           % (dbn, dbid))
+                            del ag.db_refs[dbn]
+                tl_label = make_top_level_label_from_names_key(tlg['names'])
+                tl_label = re.sub("<b>(.*?)</b>", r"\1", tl_label)
+                tl_label = tag_agents(tl_label, tl_agents)
+                tlg['label'] = tl_label
+
+        return stmts
+
+    def make_model(self, template=None, with_grouping=True, **template_kwargs):
+        """Return the assembled HTML content as a string.
+
+        Parameters
+        ----------
+        template : a Template object
+            Manually pass a Jinja template to be used in generating the HTML.
+            The template is responsible for rendering essentially the output of
+            `make_json_model`.
+        with_grouping : bool
+            If True, statements will be grouped under multiple sub-headings. If
+            False, all headings will be collapsed into one on every level, with
+            all statements placed under a single heading.
+
+        All other keyword arguments are passed along to the template. If you
+        are using a custom template with args that are not passed below, this
+        is how you pass them.
+
+        Returns
+        -------
+        str
+            The assembled HTML as a string.
+        """
+        tl_stmts = self.make_json_model(with_grouping)
 
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()
@@ -243,112 +368,138 @@ class HtmlAssembler(object):
         with open(fname, 'wb') as fh:
             fh.write(self.model.encode('utf-8'))
 
-    @staticmethod
-    def _format_evidence_text(stmt):
-        """Returns evidence metadata with highlighted evidence text.
 
-        Parameters
-        ----------
-        stmt : indra.Statement
-            The Statement with Evidence to be formatted.
+def _format_evidence_text(stmt, curation_dict=None):
+    """Returns evidence metadata with highlighted evidence text.
 
-        Returns
-        -------
-        list of dicts
-            List of dictionaries corresponding to each Evidence object in the
-            Statement's evidence list. Each dictionary has keys 'source_api',
-            'pmid' and 'text', drawn from the corresponding fields in the
-            Evidence objects. The text entry of the dict includes
-            `<span>` tags identifying the agents referenced by the Statement.
-        """
+    Parameters
+    ----------
+    stmt : indra.Statement
+        The Statement with Evidence to be formatted.
 
-        def get_role(ag_ix):
-            if isinstance(stmt, Complex) or \
-               isinstance(stmt, SelfModification) or \
-               isinstance(stmt, ActiveForm) or isinstance(stmt, Conversion) or\
-               isinstance(stmt, Translocation):
-                return 'other'
-            else:
-                assert len(stmt.agent_list()) == 2, (len(stmt.agent_list()),
-                                                     type(stmt))
-                return 'subject' if ag_ix == 0 else 'object'
+    Returns
+    -------
+    list of dicts
+        List of dictionaries corresponding to each Evidence object in the
+        Statement's evidence list. Each dictionary has keys 'source_api',
+        'pmid' and 'text', drawn from the corresponding fields in the
+        Evidence objects. The text entry of the dict includes
+        `<span>` tags identifying the agents referenced by the Statement.
+    """
+    if curation_dict is None:
+        curation_dict = {}
 
-        ev_list = []
-        for ix, ev in enumerate(stmt.evidence):
-            # Expand the source api to include the sub-database
-            if ev.source_api == 'biopax' and \
-               'source_sub_id' in ev.annotations and \
-               ev.annotations['source_sub_id']:
-               source_api = '%s:%s' % (ev.source_api,
-                                       ev.annotations['source_sub_id'])
-            else:
-                source_api = ev.source_api
-            # Prepare the evidence text
-            if ev.text is None:
-                format_text = None
-            else:
-                indices = []
-                for ix, ag in enumerate(stmt.agent_list()):
-                    if ag is None:
-                        continue
-                    # If the statement has been preassembled, it will have
-                    # this entry in annotations
-                    try:
-                        ag_text = ev.annotations['agents']['raw_text'][ix]
-                        if ag_text is None:
-                            raise KeyError
-                    # Otherwise we try to get the agent text from db_refs
-                    except KeyError:
-                        ag_text = ag.db_refs.get('TEXT')
+    def get_role(ag_ix):
+        if isinstance(stmt, Complex) or \
+           isinstance(stmt, SelfModification) or \
+           isinstance(stmt, ActiveForm) or isinstance(stmt, Conversion) or\
+           isinstance(stmt, Translocation):
+            return 'other'
+        else:
+            assert len(stmt.agent_list()) == 2, (len(stmt.agent_list()),
+                                                 type(stmt))
+            return 'subject' if ag_ix == 0 else 'object'
+
+    ev_list = []
+    for ix, ev in enumerate(stmt.evidence):
+        # Expand the source api to include the sub-database
+        if ev.source_api == 'biopax' and \
+           'source_sub_id' in ev.annotations and \
+           ev.annotations['source_sub_id']:
+           source_api = '%s:%s' % (ev.source_api,
+                                   ev.annotations['source_sub_id'])
+        else:
+            source_api = ev.source_api
+        # Prepare the evidence text
+        if ev.text is None:
+            format_text = None
+        else:
+            indices = []
+            for ix, ag in enumerate(stmt.agent_list()):
+                if ag is None:
+                    continue
+                # If the statement has been preassembled, it will have
+                # this entry in annotations
+                try:
+                    ag_text = ev.annotations['agents']['raw_text'][ix]
                     if ag_text is None:
-                        continue
-                    role = get_role(ix)
-                    # Get the tag with the correct badge
-                    tag_start = '<span class="badge badge-%s">' % role
-                    tag_close = '</span>'
-                    # Build up a set of indices
-                    indices += [(m.start(), m.start() + len(ag_text),
-                                 ag_text, tag_start, tag_close)
-                                 for m in re.finditer(re.escape(ag_text),
-                                                      ev.text)]
-                format_text = tag_text(ev.text, indices)
+                        raise KeyError
+                # Otherwise we try to get the agent text from db_refs
+                except KeyError:
+                    ag_text = ag.db_refs.get('TEXT')
+                if ag_text is None:
+                    continue
+                role = get_role(ix)
+                # Get the tag with the correct badge
+                tag_start = '<span class="badge badge-%s">' % role
+                tag_close = '</span>'
+                # Build up a set of indices
+                indices += [(m.start(), m.start() + len(ag_text),
+                             ag_text, tag_start, tag_close)
+                             for m in re.finditer(re.escape(ag_text),
+                                                  ev.text)]
+            format_text = tag_text(ev.text, indices)
 
-            ev_list.append({'source_api': source_api,
-                            'pmid': ev.pmid,
-                            'text_refs': ev.text_refs,
-                            'text': format_text,
-                            'source_hash': ev.source_hash })
+        curation_key = (stmt.get_hash(), ev.source_hash)
+        num_curations = len(curation_dict.get(curation_key, []))
+        ev_list.append({'source_api': source_api,
+                        'pmid': ev.pmid,
+                        'text_refs': ev.text_refs,
+                        'text': format_text,
+                        'source_hash': str(ev.source_hash),
+                        'num_curations': num_curations})
 
-        return ev_list
+    return ev_list
 
-    @staticmethod
-    def _format_stmt_text(stmt):
-        # Get the English assembled statement
-        ea = EnglishAssembler([stmt])
-        english = ea.make_model()
-        if not english:
-            english = str(stmt)
-        indices = []
-        for ag in stmt.agent_list():
-            if ag is None or not ag.name:
-                continue
-            url = id_url(ag)
-            if url is None:
-                continue
-            # Build up a set of indices
-            tag_start = "<a href='%s'>" % url
-            tag_close = "</a>"
-            found = False
-            for m in re.finditer(re.escape(ag.name), english):
-                index = (m.start(), m.start() + len(ag.name), ag.name,
-                         tag_start, tag_close)
-                indices.append(index)
-                found = True
-            if not found and \
-                    english.startswith(re.escape(ag.name).capitalize()):
-                index = (0, len(ag.name), ag.name, tag_start, tag_close)
-                indices.append(index)
-        return tag_text(english, indices)
+
+def _format_stmt_text(stmt):
+    # Get the English assembled statement
+    ea = EnglishAssembler([stmt])
+    english = ea.make_model()
+    if not english:
+        english = str(stmt)
+    return tag_agents(english, stmt.agent_list())
+
+
+def _cautiously_merge_refs(from_ag, to_ag):
+    # Check the db refs for this agent against the meta agent
+    for dbn, dbid in from_ag.db_refs.items():
+        if dbn == 'TEXT':
+            continue
+        meta_dbid = to_ag.db_refs.get(dbn)
+        if isinstance(meta_dbid, set):
+            # If we've already marked this one add to the set.
+            to_ag.db_refs[dbn].add(dbid)
+        elif meta_dbid is not None and meta_dbid != dbid:
+            # If we've seen it before and don't agree, mark it.
+            to_ag.db_refs[dbn] = {to_ag.db_refs[dbn], dbid}
+        elif meta_dbid is None:
+            # Otherwise, add it.
+            to_ag.db_refs[dbn] = dbid
+
+
+def tag_agents(english, agents):
+    indices = []
+    for ag in agents:
+        if ag is None or not ag.name:
+            continue
+        url = id_url(ag)
+        if url is None:
+            continue
+        # Build up a set of indices
+        tag_start = "<a href='%s' target='_blank'>" % url
+        tag_close = "</a>"
+        found = False
+        for m in re.finditer(re.escape(ag.name), english):
+            index = (m.start(), m.start() + len(ag.name), ag.name,
+                     tag_start, tag_close)
+            indices.append(index)
+            found = True
+        if not found and \
+                english.startswith(re.escape(ag.name).capitalize()):
+            index = (0, len(ag.name), ag.name, tag_start, tag_close)
+            indices.append(index)
+    return tag_text(english, indices)
 
 
 def id_url(ag):

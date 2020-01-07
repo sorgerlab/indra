@@ -1,8 +1,7 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import re
 from indra.statements import *
-from indra.assemblers.html.assembler import HtmlAssembler, tag_text, loader
+from indra.assemblers.html.assembler import HtmlAssembler, tag_text, loader, \
+    _format_evidence_text
 
 
 def make_stmt():
@@ -19,12 +18,12 @@ def make_stmt():
 
 def test_format_evidence_text():
     stmt = make_stmt()
-    ev_list = HtmlAssembler._format_evidence_text(stmt)
+    ev_list = _format_evidence_text(stmt)
     assert len(ev_list) == 1
     ev = ev_list[0]
     assert isinstance(ev, dict)
     assert set(ev.keys()) == {'source_api', 'text_refs', 'text', 'source_hash',
-                              'pmid'}
+                              'pmid', 'num_curations'}
     assert ev['source_api'] == 'test'
     assert ev['text_refs']['PMID'] == '1234567'
     assert ev['text'] == ('We noticed that the '

@@ -148,7 +148,7 @@ def group_and_sort_statements(stmt_list, ev_totals=None, source_counts=None):
     return sorted_groups
 
 
-def make_stmt_from_sort_key(key, verb):
+def make_stmt_from_sort_key(key, verb, agents=None):
     """Make a Statement from the sort key.
 
     Specifically, the sort key used by `group_and_sort_statements`.
@@ -160,19 +160,25 @@ def make_stmt_from_sort_key(key, verb):
 
     StmtClass = get_statement_by_name(verb)
     inps = list(key[1])
+    if agents is None:
+        agents = []
     if verb == 'Complex':
-        stmt = StmtClass([make_agent(name) for name in inps])
+        agents.extend([make_agent(name) for name in inps])
+        stmt = StmtClass(agents[:])
     elif verb == 'Conversion':
-        stmt = StmtClass(make_agent(inps[0]),
-                         [make_agent(name) for name in inps[1]],
-                         [make_agent(name) for name in inps[2]])
+        names_from = [make_agent(name) for name in inps[1]]
+        names_to = [make_agent(name) for name in inps[2]]
+        agents.extend(names_from + names_to)
+        stmt = StmtClass(make_agent(inps[0]), names_from, names_to)
     elif verb == 'ActiveForm' or verb == 'HasActivity':
-        stmt = StmtClass(make_agent(inps[0]), inps[1], inps[2])
+        agents.extend([make_agent(inps[0])])
+        stmt = StmtClass(agents[0], inps[1], inps[2])
     elif verb == 'Influence':
-        stmt = Influence(Event(make_agent(inps[0])),
-                         Event(make_agent(inps[1])))
+        agents.extend([make_agent(inp) for inp in inps[:2]])
+        stmt = Influence(*[Event(ag) for ag in agents])
     else:
-        stmt = StmtClass(*[make_agent(name) for name in inps])
+        agents.extend([make_agent(name) for name in inps])
+        stmt = StmtClass(*agents)
     return stmt
 
 

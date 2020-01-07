@@ -291,25 +291,25 @@
       <div class="group-shown" id="tl-{{ results['html_key'] }}_group">
     {% endif %}
         <div class="container nvp">
-        {% for short_name, short_name_key, stmt_info_list, src_counts in results['stmts_formatted'] %}
+        {% for group_dict in results['stmts_formatted'] %}
           {% set i_type = loop.index0 %}
           {% if results['stmts_formatted']|length > 1 %}
             <div class="row group_heading"
-               onclick="toggler('{{ short_name_key }}');"
-               id="{{ short_name_key }}_heading">
+               onclick="toggler('{{ group_dict['short_name_key'] }}');"
+               id="{{ group_dict['short_name_key'] }}_heading">
               <div class="col nvp">
-                <h5 class="align-middle">{{ short_name }}</h5>
+                <h5 class="align-middle">{{ group_dict['short_name'] }}</h5>
               </div>
               <div class="col text-right nvp">
-                {{ badges(src_counts) }}
+                {{ badges(group_dict['src_counts']) }}
               </div>
             </div>
-            <div class="row group" id="{{ short_name_key }}_group">
+            <div class="row group" id="{{ group_dict['short_name_key'] }}_group">
           {% else %}
-            <div class="row group-shown" id="{{ short_name_key }}_group">
+            <div class="row group-shown" id="{{ group_dict['short_name_key'] }}_group">
           {% endif %}
               <div class="container nvp">
-              {% for stmt_info in stmt_info_list %}
+              {% for stmt_info in group_dict['stmt_info_list'] %}
                 {% set i_stmt = loop.index0 %}
                 <a name="{{ stmt_info['hash'] }}"></a>
                 <div class="row statement">
