@@ -23,7 +23,7 @@ def test_format_evidence_text():
     ev = ev_list[0]
     assert isinstance(ev, dict)
     assert set(ev.keys()) == {'source_api', 'text_refs', 'text', 'source_hash',
-                              'pmid'}
+                              'pmid', 'num_curations'}
     assert ev['source_api'] == 'test'
     assert ev['text_refs']['PMID'] == '1234567'
     assert ev['text'] == ('We noticed that the '
