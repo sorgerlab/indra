@@ -1,3 +1,5 @@
+import re
+
 import boto3
 import logging
 import requests
@@ -156,6 +158,9 @@ def get_jobs(job_queue='run_reach_queue', job_status='RUNNING'):
     return jobs.get('jobSummaryList')
 
 
+s3_path_patt = re.compile('^s3:([-a-zA-Z0-9_]+)/(.*?)$')
+
+
 class JobLog(object):
     """Gets the Cloudwatch log associated with the given job.
 
@@ -201,9 +206,30 @@ class JobLog(object):
         """Dump the logs in their entirety to the specified file."""
         if not out_file:
             out_file = '%s_%s.log' % (self.job_name, self.job_id)
-        with open(out_file, 'wt') as f:
-            for line in self.lines:
-                f.write(line)
+
+        m = s3_path_patt.match(out_file)
+        if m is not None:
+            # If the user wants the files on s3...
+            bucket, prefix = m.groups()
+            s3 = boto3.client('s3')
+
+            # Find the largest part number among the current suffixes
+            max_num = 0
+            for key in iter_s3_keys(s3, bucket, prefix):
+                if key[len(prefix):].startswith('.'):
+                    num = int(key[len(prefix + '.'):])
+                    if max_num > num:
+                        max_num = num
+
+            # Create the new suffix, and dump the lines to s3.
+            new_suffix = '.%d' % (max_num + 1)
+            s3.put_object(Bucket=bucket, Key=prefix + new_suffix,
+                          Body=''.join(self.lines))
+        else:
+            # Otherwise, if they want them locally...
+            with open(out_file, 'wt') as f:
+                for line in self.lines:
+                    f.write(line)
         return
 
     def dumps(self):
