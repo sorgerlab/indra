@@ -136,7 +136,21 @@ class HtmlAssembler(object):
         self.statements += statements
 
     def make_json_model(self, with_grouping=True):
-        """Return the JSON used to create the HTML display."""
+        """Return the JSON used to create the HTML display.
+
+        Parameters
+        ----------
+        with_grouping : bool
+            If True, statements will be grouped under multiple sub-headings. If
+            False, all headings will be collapsed into one on every level, with
+            all statements placed under a single heading.
+
+        Returns
+        -------
+        json : dict
+            A complexly structured JSON dict containing grouped statements and
+            various metadata.
+        """
         # Get an iterator over the statements, carefully grouped.
         stmt_rows = group_and_sort_statements(
             self.statements,
@@ -287,6 +301,21 @@ class HtmlAssembler(object):
 
     def make_model(self, template=None, with_grouping=True, **template_kwargs):
         """Return the assembled HTML content as a string.
+
+        Parameters
+        ----------
+        template : a Template object
+            Manually pass a Jinja template to be used in generating the HTML.
+            The template is responsible for rendering essentially the output of
+            `make_json_model`.
+        with_grouping : bool
+            If True, statements will be grouped under multiple sub-headings. If
+            False, all headings will be collapsed into one on every level, with
+            all statements placed under a single heading.
+
+        All other keyword arguments are passed along to the template. If you
+        are using a custom template with args that are not passed below, this
+        is how you pass them.
 
         Returns
         -------
