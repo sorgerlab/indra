@@ -202,7 +202,7 @@ class JobLog(object):
     def clear_lines(self):
         self.lines = []
 
-    def dump(self, out_file=None):
+    def dump(self, out_file=None, appending=True):
         """Dump the logs in their entirety to the specified file."""
         if not out_file:
             out_file = '%s_%s.log' % (self.job_name, self.job_id)
@@ -214,21 +214,24 @@ class JobLog(object):
             s3 = boto3.client('s3')
 
             # Find the largest part number among the current suffixes
-            suffix_base = '/part_'
-            max_num = 0
-            for key in iter_s3_keys(s3, bucket, prefix):
-                if key[len(prefix):].startswith(suffix_base):
-                    num = int(key[len(prefix + suffix_base):])
-                    if max_num > num:
-                        max_num = num
+            if appending:
+                suffix_base = '/part_'
+                max_num = 0
+                for key in iter_s3_keys(s3, bucket, prefix):
+                    if key[len(prefix):].startswith(suffix_base):
+                        num = int(key[len(prefix + suffix_base):])
+                        if max_num > num:
+                            max_num = num
 
-            # Create the new suffix, and dump the lines to s3.
-            new_suffix = suffix_base + str(max_num + 1)
-            s3.put_object(Bucket=bucket, Key=prefix + new_suffix,
-                          Body=''.join(self.lines))
+                # Create the new suffix, and dump the lines to s3.
+                new_suffix = suffix_base + str(max_num + 1)
+                key = prefix + new_suffix
+            else:
+                key = prefix
+            s3.put_object(Bucket=bucket, Key=key, Body=self.dumps())
         else:
             # Otherwise, if they want them locally...
-            with open(out_file, 'wt') as f:
+            with open(out_file, 'wt' if appending else 'w') as f:
                 for line in self.lines:
                     f.write(line)
         return
