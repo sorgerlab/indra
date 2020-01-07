@@ -338,7 +338,7 @@ class HtmlAssembler(object):
             fh.write(self.model.encode('utf-8'))
 
 
-def _format_evidence_text(stmt, curation_dict):
+def _format_evidence_text(stmt, curation_dict=None):
     """Returns evidence metadata with highlighted evidence text.
 
     Parameters
@@ -355,6 +355,8 @@ def _format_evidence_text(stmt, curation_dict):
         Evidence objects. The text entry of the dict includes
         `<span>` tags identifying the agents referenced by the Statement.
     """
+    if curation_dict is None:
+        curation_dict = {}
 
     def get_role(ag_ix):
         if isinstance(stmt, Complex) or \
