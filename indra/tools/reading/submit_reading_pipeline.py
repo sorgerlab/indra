@@ -218,8 +218,8 @@ class BatchMonitor(object):
         if stash_log_method == 's3':
             s3_prefix = get_s3_job_prefix(self.log_base, job_name,
                                           job_queue=self.queue_name)
-            log_name = label + '_' if label else '' + log_name
-            log_name = 's3:%s/%s/%s' % (bucket_name, s3_prefix, log_name)
+            log_name = (label + '_' if label else '') + log_name
+            log_name = 's3:%s/%s%s' % (bucket_name, s3_prefix, log_name)
         elif stash_log_method == 'local':
             prefix = self.log_base
             if prefix is None:
