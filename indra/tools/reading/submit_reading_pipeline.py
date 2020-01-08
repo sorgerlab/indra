@@ -111,8 +111,6 @@ class BatchMonitor(object):
         while True:
             pre_run = []
             self.job_id_list = get_ids(self.job_list)
-            logger.info("Specifically tracked jobs: %s"
-                        % len(self.job_id_list))
             for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
                 pre_run += self.get_jobs_by_status(status)
             running = self.get_jobs_by_status('RUNNING')
@@ -126,9 +124,11 @@ class BatchMonitor(object):
                 self.get_dict_of_job_tuples(pre_run + running)
             )
 
-            logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)'
+            logger.info('(%d s)=(tracking: %d, pre: %d, running: %d, '
+                        'failed: %d, done: %d)'
                         % ((datetime.now() - self.start_time).seconds,
-                           len(pre_run), len(running), len(failed), len(done)))
+                           len(self.job_id_list), len(pre_run), len(running),
+                           len(failed), len(done)))
 
             # Check the logs for new output, and possibly terminate some jobs.
             stalled_jobs = self.check_logs(running, idle_log_timeout)
