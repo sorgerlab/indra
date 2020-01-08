@@ -40,7 +40,7 @@ class BatchMonitor(object):
         If you choose to dump logs on s3, this will be the s3 prefix. Note that
         a trailing '/' is NOT assumed.
     """
-    def __init__(self, queue_name, job_base=None, log_base=None, job_list=None):
+    def __init__(self, queue_name, job_list=None, job_base=None, log_base=None):
 
         self.start_time = datetime.now()
         self.queue_name = queue_name
