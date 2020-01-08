@@ -371,16 +371,23 @@ def rename_s3_prefix(s3, bucket, old_prefix, new_prefix):
     """Change an s3 prefix within the same bucket."""
     to_delete = []
     for key in iter_s3_keys(s3, bucket, old_prefix):
+        # Copy the object to the new key (with prefix replaced)
         new_key = key.replace(old_prefix, new_prefix)
         s3.copy_object(Bucket=bucket, Key=new_key,
                        CopySource={'Bucket': bucket, 'Key': key},
                        MetadataDirective='COPY',
                        TaggingDirective='COPY')
+
+        # Keep track of the objects that will need to be deleted (the old keys)
         to_delete.append({'Key': key})
+
+        # Delete objects in maximum batches of 1000.
         if len(to_delete) >= 1000:
             s3.delete_objects(Bucket=bucket,
                               Delete={'Objects': to_delete[:1000]})
             del to_delete[:1000]
+
+    # Get any stragglers.
     s3.delete_objects(Bucket=bucket,
                       Delete={'Objects': to_delete})
     return
