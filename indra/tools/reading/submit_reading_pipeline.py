@@ -35,18 +35,14 @@ class BatchMonitor(object):
     job_name_prefix : Optional[str]
         A prefix for the name of the jobs to wait for. This is useful if the
         explicit job list is not available but filtering is needed.
-    result_record : dict
-        A dict which will be modified in place to record the results of the job
     """
-    def __init__(self, queue_name, job_list=None, job_name_prefix=None,
-                 result_record=None):
+    def __init__(self, queue_name, job_list=None, job_name_prefix=None):
 
         self.start_time = datetime.now()
         self.queue_name = queue_name
         self.job_name_prefix = job_name_prefix
         self.job_list = job_list
 
-        self.result_record = {} if result_record is None else result_record
         self.job_log_dict = {}
 
         # Don't start watching jobs added after this command was initialized.
@@ -60,7 +56,7 @@ class BatchMonitor(object):
     def watch_and_wait(self, poll_interval=10, idle_log_timeout=None,
                        kill_on_log_timeout=False, stash_log_method=None,
                        tag_instances=False, wait_for_first_job=False,
-                       dump_size=10000):
+                       dump_size=10000, result_record=None):
         """Return when all jobs are finished.
 
         If no job list was given, return when all jobs in queue finished.
@@ -95,9 +91,13 @@ class BatchMonitor(object):
         dump_size : int
             Set the size of the log dumps (number of lines). The default is
             10,000.
+        result_record : dict
+            A dict which will be modified in place to record the results of the
+            job.
         """
         logger.info("Given %s jobs to track"
                     % ('no' if self.job_list is None else len(self.job_list)))
+        result_record = {} if result_record is None else result_record
         if stash_log_method == 's3' and self.job_name_prefix is None:
             raise Exception('A job_name_prefix is required to post logs on s3.')
         if tag_instances:
@@ -193,9 +193,9 @@ class BatchMonitor(object):
                                           label)
             job_log.dump(log_name)
 
-        self.result_record['terminated'] = terminated_jobs
-        self.result_record['failed'] = failed
-        self.result_record['succeeded'] = done
+        result_record['terminated'] = terminated_jobs
+        result_record['failed'] = failed
+        result_record['succeeded'] = done
 
         return ret
 
