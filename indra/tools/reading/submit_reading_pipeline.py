@@ -33,18 +33,21 @@ class BatchMonitor(object):
         A list of jobID-s in a dict, as returned by the submit function.
         Example: [{'jobId': 'e6b00f24-a466-4a72-b735-d205e29117b4'}, ...]
         If not given, this function will return if all jobs completed.
-    job_name_prefix : Optional[str]
-        A prefix for the name of the jobs to wait for. This is useful if the
-        explicit job list is not available but filtering is needed.
+    job_base : Optional[str]
+        Give the root name of the jobs you want to track.
+    log_base : Optional[str]
+        Indicate the root name of the location you wish all logs to be stored.
+        If you choose to dump logs on s3, this will be the s3 prefix. Note that
+        a trailing '/' is NOT assumed.
     """
-    def __init__(self, queue_name, job_base, log_base, job_list=None):
+    def __init__(self, queue_name, job_base=None, log_base=None, job_list=None):
 
         self.start_time = datetime.now()
         self.queue_name = queue_name
 
         # Define the various names for this bunch of jobs...
         self.job_base = job_base
-        self.log_base = log_base
+        self.log_base = log_base if log_base else '.'
 
         # Prime some recording containers.
         self.job_list = job_list
@@ -82,8 +85,8 @@ class BatchMonitor(object):
         stash_log_method : Optional[str]
             Select a method to store the job logs, either 's3' or 'local'. If
             no method is specified, the logs will not be loaded off of AWS. If
-            's3' is specified, then `job_name_prefix` must also be given, as
-            this will indicate where on s3 to store the logs.
+            's3' is specified, then `log_base` must have been given in
+            __init__, as this will indicate where to store the logs.
         tag_instances : bool
             Default is False. If True, apply tags to the instances. This is
             today typically done by each job, so in most cases this should not
@@ -170,33 +173,36 @@ class BatchMonitor(object):
             # Stash the logs of things that have finished so far. Note that
             # jobs terminated in this round will not be picked up until the
             # next round.
-            for job_log in self.job_log_dict.values():
-                if len(job_log) >= dump_size:
-                    log_name = self._get_log_name(stash_log_method,
-                                                  job_log.job_name, 'RUNNING')
-                    job_log.dump(log_name)
-                    job_log.clear_lines()
+            if stash_log_method:
+                for job_log in self.job_log_dict.values():
+                    if len(job_log) >= dump_size:
+                        log_name = self._get_log_name(stash_log_method,
+                                                      job_log.job_name,
+                                                      'RUNNING')
+                        job_log.dump(log_name)
+                        job_log.clear_lines()
 
             sleep(poll_interval)
 
-        failed_jobs = {job['jobId'] for job in failed}
-        succeeded_jobs = {job['jobId'] for job in done}
-        for job_log in self.job_log_dict.values():
-            if job_log.job_id in terminated_jobs:
-                label = 'TERMINATED'
-            elif job_log.job_id in failed_jobs:
-                label = 'FAILURE'
-            elif job_log.job_id in succeeded_jobs:
-                label = "SUCCESS"
-            else:
-                label = 'UNKNOWN'
-                logger.warning("Job %s not among terminated, succeeded, or "
-                               "failed..." % job_log.job_id)
+        if stash_log_method:
+            failed_jobs = {job['jobId'] for job in failed}
+            succeeded_jobs = {job['jobId'] for job in done}
+            for job_log in self.job_log_dict.values():
+                if job_log.job_id in terminated_jobs:
+                    label = 'TERMINATED'
+                elif job_log.job_id in failed_jobs:
+                    label = 'FAILURE'
+                elif job_log.job_id in succeeded_jobs:
+                    label = "SUCCESS"
+                else:
+                    label = 'UNKNOWN'
+                    logger.warning("Job %s not among terminated, succeeded, "
+                                   "or failed..." % job_log.job_id)
 
-            log_name = self._get_log_name(stash_log_method, job_log.job_name,
-                                          label)
-            job_log.dump(log_name)
-            job_log.clear_lines()
+                log_name = self._get_log_name(stash_log_method,
+                                              job_log.job_name, label)
+                job_log.dump(log_name)
+                job_log.clear_lines()
 
         result_record['terminated'] = terminated_jobs
         result_record['failed'] = failed
@@ -206,6 +212,9 @@ class BatchMonitor(object):
 
     def _get_log_name(self, stash_log_method, job_name, label=''):
         log_name = '%s_stash.log' % job_name
+        if not self.log_base:
+            raise ValueError("You cannot stash logs without specifying a base "
+                             "directory for the logs: log_base.")
         if stash_log_method == 's3':
             s3_prefix = get_s3_job_prefix(self.log_base, job_name,
                                           job_queue=self.queue_name)
