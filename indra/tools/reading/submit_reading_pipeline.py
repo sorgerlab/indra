@@ -37,13 +37,17 @@ class BatchMonitor(object):
         A prefix for the name of the jobs to wait for. This is useful if the
         explicit job list is not available but filtering is needed.
     """
-    def __init__(self, queue_name, job_list=None, job_name_prefix=None):
+    def __init__(self, queue_name, job_base, log_base, job_list=None):
 
         self.start_time = datetime.now()
         self.queue_name = queue_name
-        self.job_name_prefix = job_name_prefix
-        self.job_list = job_list
 
+        # Define the various names for this bunch of jobs...
+        self.job_base = job_base
+        self.log_base = log_base
+
+        # Prime some recording containers.
+        self.job_list = job_list
         self.job_log_dict = {}
 
         # Don't start watching jobs added after this command was initialized.
@@ -99,8 +103,6 @@ class BatchMonitor(object):
         logger.info("Given %s jobs to track"
                     % ('no' if self.job_list is None else len(self.job_list)))
         result_record = {} if result_record is None else result_record
-        if stash_log_method == 's3' and self.job_name_prefix is None:
-            raise Exception('A job_name_prefix is required to post logs on s3.')
         if tag_instances:
             ecs_cluster_name = \
                 get_ecs_cluster_for_queue(self.queue_name, self.batch_client)
@@ -205,16 +207,17 @@ class BatchMonitor(object):
     def _get_log_name(self, stash_log_method, job_name, label=''):
         log_name = '%s_stash.log' % job_name
         if stash_log_method == 's3':
-            log_name = 's3:%s/reading_results/%s/logs/%s/%s%s' % (
-                bucket_name, self.job_name_prefix, self.queue_name,
-                label + '_' if label else '', log_name)
+            s3_prefix = get_s3_job_prefix(self.log_base, job_name,
+                                          job_queue=self.queue_name)
+            log_name = label + '_' if label else '' + log_name
+            log_name = 's3:%s/%s/%s' % (bucket_name, s3_prefix, log_name)
         elif stash_log_method == 'local':
-            prefix = self.job_name_prefix
+            prefix = self.log_base
             if prefix is None:
                 prefix = 'batch_stash'
             dirname = '%s_job_logs' % prefix
             if not os.path.exists(dirname):
-                os.mkdir(dirname)
+                os.makedirs(dirname)
             log_name = os.path.join(dirname, log_name)
         else:
             raise ValueError("Invalid log stash method: %s"
@@ -225,9 +228,9 @@ class BatchMonitor(object):
         res = self.batch_client.list_jobs(jobQueue=self.queue_name,
                                           jobStatus=status, maxResults=10000)
         jobs = res['jobSummaryList']
-        if self.job_name_prefix:
+        if self.job_base:
             jobs = [job for job in jobs if
-                    job['jobName'].startswith(self.job_name_prefix)]
+                    job['jobName'].startswith(self.job_base)]
         if self.job_id_list is not None:
             jobs = [job_def for job_def in jobs
                     if job_def['jobId'] in self.job_id_list]
