@@ -367,6 +367,25 @@ def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
         marker = entry['Key']
 
 
+def rename_s3_prefix(s3, bucket, old_prefix, new_prefix):
+    """Change an s3 prefix within the same bucket."""
+    to_delete = []
+    for key in iter_s3_keys(s3, bucket, old_prefix):
+        new_key = key.replace(old_prefix, new_prefix)
+        s3.copy_object(Bucket=bucket, Key=new_key,
+                       CopySource={'Bucket': bucket, 'Key': key},
+                       MetadataDirective='COPY',
+                       TaggingDirective='COPY')
+        to_delete.append({'Key': key})
+        if len(to_delete) >= 1000:
+            s3.delete_objects(Bucket=bucket,
+                              Delete={'Objects': to_delete[:1000]})
+            del to_delete[:1000]
+    s3.delete_objects(Bucket=bucket,
+                      Delete={'Objects': to_delete})
+    return
+
+
 def get_s3_file_tree(s3, bucket, prefix, date_cutoff=None, after=True,
                      with_dt=False):
     """Overcome s3 response limit and return NestedDict tree of paths.
