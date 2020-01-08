@@ -131,7 +131,7 @@ class BatchMonitor(object):
                            len(pre_run), len(running), len(failed), len(done)))
 
             # Check the logs for new output, and possibly terminate some jobs.
-            stalled_jobs = self.check_logs(running)
+            stalled_jobs = self.check_logs(running, idle_log_timeout)
             if idle_log_timeout is not None:
                 if kill_on_log_timeout:
                     # Keep track of terminated jobs so we don't send a
@@ -232,7 +232,7 @@ class BatchMonitor(object):
                     if job_def['jobId'] in self.job_id_list]
         return jobs
 
-    def check_logs(self, job_defs):
+    def check_logs(self, job_defs, idle_log_timeout):
         """Updates the job_log_dict."""
         stalled_jobs = set()
 
@@ -264,7 +264,7 @@ class BatchMonitor(object):
                     logger.warning(('Job \'%s\' has not produced output for '
                                     '%d seconds.')
                                    % (job_def['jobName'], check_dt.seconds))
-                    if check_dt.seconds > self.idle_log_timeout:
+                    if check_dt.seconds > idle_log_timeout:
                         logger.warning("Job \'%s\' has stalled."
                                        % job_def['jobName'])
                         stalled_jobs.add(jid)
