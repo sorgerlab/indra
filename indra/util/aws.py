@@ -258,7 +258,7 @@ class JobLog(object):
                         line = '%s: %s\n' % (evt['timestamp'], evt['message'])
                         self.lines.append(line)
                         self.latest_timestamp = \
-                            datetime.fromtimestamp(evt['timestamp'])
+                            datetime.fromtimestamp(evt['timestamp']/1000)
                         self.__len += 1
                         if self.verbose:
                             logger.info('%d %s' % (len(self.lines), line))

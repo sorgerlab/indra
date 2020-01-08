@@ -172,6 +172,7 @@ class BatchMonitor(object):
                     log_name = self._get_log_name(stash_log_method,
                                                   job_log.job_name, 'RUNNING')
                     job_log.dump(log_name)
+                    job_log.clear_lines()
 
             sleep(poll_interval)
 
@@ -192,6 +193,7 @@ class BatchMonitor(object):
             log_name = self._get_log_name(stash_log_method, job_log.job_name,
                                           label)
             job_log.dump(log_name)
+            job_log.clear_lines()
 
         result_record['terminated'] = terminated_jobs
         result_record['failed'] = failed
@@ -254,7 +256,7 @@ class BatchMonitor(object):
                 job_log.get_lines()
                 post_len = len(job_log)
 
-                if pre_len == post_len:
+                if post_len and pre_len == post_len:
                     # If the job log hasn't changed, announce as such, and
                     # check to see if it has been the same for longer than
                     # stall time.
@@ -266,10 +268,6 @@ class BatchMonitor(object):
                         logger.warning("Job \'%s\' has stalled."
                                        % job_def['jobName'])
                         stalled_jobs.add(jid)
-
-                # Dump the log lines as we go, reducing RAM usage.
-                job_log.dump()
-                job_log.clear_lines()
             except Exception as e:
                 # Sometimes due to sync et al. issues, a part of this will fail
                 # Such things are usually transitory issues so we keep trying.
@@ -390,7 +388,7 @@ class Submitter(object):
         else:
             self.readers = readers
         self.project_name = project_name
-        self.job_list = None
+        self.job_list = []
         self.options = options
         self.ids_per_job = None
         self.running = None
@@ -451,8 +449,6 @@ class Submitter(object):
         job_list : list[str]
             A list of job id strings.
         """
-        self.job_list = []
-
         # stash this for later.
         self.ids_per_job = ids_per_job
 
