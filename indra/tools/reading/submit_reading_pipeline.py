@@ -9,6 +9,7 @@ from datetime import datetime
 from indra.literature import elsevier_client as ec
 from indra.literature.elsevier_client import _ensure_api_keys
 from indra.tools.reading.readers import get_reader_classes
+from indra.tools.reading.util import get_s3_job_prefix, get_s3_and_job_prefixes
 from indra.util.aws import tag_instance, get_batch_command, kill_all, get_ids,\
     JobLog
 
@@ -381,8 +382,12 @@ class Submitter(object):
     # as the values.
     _job_def_dict = NotImplemented
 
-    def __init__(self, basename, readers, project_name=None, **options):
+    def __init__(self, basename, readers, group_name=None, project_name=None,
+                 **options):
         self.basename = basename
+        self.group_name = group_name
+        self.s3_base, self.job_base = \
+            get_s3_and_job_prefixes(basename, group_name)
         if 'all' in readers:
             self.readers = [rc.name.lower() for rc in get_reader_classes()]
         else:
@@ -393,7 +398,7 @@ class Submitter(object):
         self.ids_per_job = None
         self.running = None
         self.monitor = BatchMonitor(self._job_queue, self.job_list,
-                                    self.basename)
+                                    self.job_base, self.s3_base)
         return
 
     def set_options(self, **kwargs):
@@ -408,7 +413,7 @@ class Submitter(object):
             if not reader_list:
                 continue
 
-            job_name = '%s_%d_%d' % (self.basename, start_ix, end_ix)
+            job_name = '%s_%d_%d' % (self.job_base, start_ix, end_ix)
             job_name += '_' + '_'.join(reader_list)
             cmd = self._get_base(job_name, start_ix, end_ix)
             cmd += ['-r'] + reader_list
@@ -453,8 +458,7 @@ class Submitter(object):
         self.ids_per_job = ids_per_job
 
         # Upload the pmid_list to Amazon S3
-        id_list_key = 'reading_results/%s/%s' % (self.basename,
-                                                 self._s3_input_name)
+        id_list_key = self.s3_base + self._s3_input_name
         s3_client = boto3.client('s3')
         s3_client.upload_file(input_fname, bucket_name, id_list_key)
 
@@ -583,7 +587,7 @@ class PmidSubmitter(Submitter):
 
     def _get_base(self, job_name, start_ix, end_ix):
         base = ['python', '-m', 'indra.tools.reading.pmid_reading.read_pmids_aws',
-                self.basename, '/tmp', '16', str(start_ix), str(end_ix)]
+                self.job_base, '/tmp', '16', str(start_ix), str(end_ix)]
         return base
 
     def _get_extensions(self):
@@ -610,10 +614,10 @@ class PmidSubmitter(Submitter):
         # Get environment variables
         environment_vars = get_environment()
 
-        job_name = '%s_combine_reading_results' % self.basename
+        job_name = '%s_combine_reading_results' % self.job_base
         command_list = get_batch_command(
             ['python', '-m', 'indra.tools.reading.assemble_reading_stmts_aws',
-             self.basename, '-r'] + self.readers,
+             self.job_base, '-r'] + self.readers,
             purpose='pmid_reading',
             project=self.project_name
             )
@@ -665,6 +669,10 @@ def create_submit_parser():
     parent_submit_parser.add_argument(
         'basename',
         help='Defines job names and S3 keys'
+    )
+    parent_submit_parser.add_argument(
+        '--group_name',
+        help="Indicate what group of jobs this batch is a part of."
     )
     parent_submit_parser.add_argument(
         '-r', '--readers',
@@ -780,7 +788,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     job_ids = None
-    sub = PmidSubmitter(args.basename, args.readers, args.project)
+    sub = PmidSubmitter(args.basename, args.readers, args.project,
+                        group_name=args.group_Name)
     sub.set_options(args.force_read, args.force_fulltext)
     if args.job_type in ['read', 'full']:
         sub.submit_reading(args.input_file, args.start_ix, args.end_ix,
