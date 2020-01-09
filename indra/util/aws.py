@@ -341,7 +341,7 @@ def get_date_from_str(date_str):
 
 
 def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
-                 with_dt=False):
+                 with_dt=False, do_retry=True):
     """Iterate over the keys in an s3 bucket given a prefix
 
     Parameters
@@ -364,6 +364,10 @@ def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
         the s3 Key and the object's LastModified date as a
         datetime.datetime object, only yield s3 key otherwise.
         Default: False.
+    do_retry : bool
+        If True, and no contents appear, try again in case there was simply a
+        brief lag. If False, do not retry, and just accept the "directory" is
+        empty.
 
     Returns
     -------
@@ -380,26 +384,27 @@ def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
         if date_cutoff.utcoffset() != timedelta():
             date_cutoff = date_cutoff.astimezone(timezone.utc)
     is_truncated = True
-    on_retry = False
     marker = None
     while is_truncated:
+        # Get the (next) batch of contents.
         if marker:
             resp = s3.list_objects(Bucket=bucket, Prefix=prefix, Marker=marker)
         else:
             resp = s3.list_objects(Bucket=bucket, Prefix=prefix)
 
+        # Handle case where no contents are found.
         if not resp.get('Contents'):
-            logger.info("Prefix \"%s\" does not appear to have any children"
-                        % prefix)
-            if not on_retry:
-                logger.info("Retrying once.")
-                on_retry = True
+            if do_retry:
+                logger.info("Prefix \"%s\" does not seem to have children. "
+                            "Retrying once." % prefix)
+                do_retry = False
                 sleep(0.1)
                 continue
             else:
                 logger.info("No contents found for \"%s\"." % prefix)
                 break
 
+        # Filter by time.
         for entry in resp['Contents']:
             if entry['Key'] != marker:
                 if date_cutoff and after and\
