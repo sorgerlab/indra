@@ -259,7 +259,8 @@ class JobLog(object):
                         self.lines.append(line)
                         self.latest_timestamp = \
                             (datetime.fromtimestamp(evt['timestamp']/1000)
-                                     .astimezone(timezone.utc))
+                                     .astimezone(timezone.utc)
+                                     .replace(tzinfo=None))
                         self.__len += 1
                         if self.verbose:
                             logger.info('%d %s' % (len(self.lines), line))
