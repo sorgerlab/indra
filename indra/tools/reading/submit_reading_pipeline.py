@@ -175,19 +175,17 @@ class BatchMonitor(object):
             # next round.
             if stash_log_method:
                 for job_log in self.job_log_dict.values():
-                    if len(job_log) >= dump_size:
-                        log_name = self._get_log_name(stash_log_method,
-                                                      job_log.job_name,
-                                                      'RUNNING')
-                        job_log.dump(log_name)
-                        job_log.clear_lines()
+                    self._stash_log(job_log, stash_log_method)
 
             sleep(poll_interval)
 
+        # Reload the stashed logs, and dump a final record log.
         if stash_log_method:
             failed_jobs = {job['jobId'] for job in failed}
             succeeded_jobs = {job['jobId'] for job in done}
             for job_log in self.job_log_dict.values():
+                job_log.load(self._get_log_name(stash_log_method,
+                                                job_log.job_name, 'RUNNING'))
                 if job_log.job_id in terminated_jobs:
                     label = 'TERMINATED'
                 elif job_log.job_id in failed_jobs:
@@ -199,9 +197,9 @@ class BatchMonitor(object):
                     logger.warning("Job %s not among terminated, succeeded, "
                                    "or failed..." % job_log.job_id)
 
-                log_name = self._get_log_name(stash_log_method,
-                                              job_log.job_name, label)
-                job_log.dump(log_name)
+                final_log_name = self._get_log_name(stash_log_method,
+                                                    job_log.job_name, label)
+                job_log.dump(final_log_name, append=False)
                 job_log.clear_lines()
 
         result_record['terminated'] = terminated_jobs
@@ -209,6 +207,13 @@ class BatchMonitor(object):
         result_record['succeeded'] = done
 
         return ret
+
+    def _stash_log(self, job_log, stash_log_method):
+        log_name = self._get_log_name(stash_log_method, job_log.job_name,
+                                      'RUNNING')
+        job_log.dump(log_name)
+        job_log.clear_lines()
+        return log_name
 
     def _get_log_name(self, stash_log_method, job_name, label=''):
         log_name = '%s_stash.log' % job_name

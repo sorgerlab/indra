@@ -205,8 +205,13 @@ class JobLog(object):
     def clear_lines(self):
         self.lines = []
 
-    def dump(self, out_file):
+    def dump(self, out_file, append=None):
         """Dump the logs in their entirety to the specified file."""
+        if append is None:
+            append = self.append
+        elif append != self.append:
+            logger.info("Overriding default append behavior. This could muddy "
+                        "future loads.")
         m = s3_path_patt.match(out_file)
         if m is not None:
             # If the user wants the files on s3...
@@ -214,7 +219,7 @@ class JobLog(object):
             s3 = boto3.client('s3')
 
             # Find the largest part number among the current suffixes
-            if self.append:
+            if append:
                 max_num = 0
                 for key in iter_s3_keys(s3, bucket, prefix):
                     if key[len(prefix):].startswith(self._suffix_base):
@@ -230,7 +235,7 @@ class JobLog(object):
             s3.put_object(Bucket=bucket, Key=key, Body=self.dumps())
         else:
             # Otherwise, if they want them locally...
-            with open(out_file, 'wt' if self.append else 'w') as f:
+            with open(out_file, 'wt' if append else 'w') as f:
                 for line in self.lines:
                     f.write(line)
         return
