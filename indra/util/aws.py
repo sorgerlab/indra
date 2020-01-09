@@ -177,8 +177,10 @@ class JobLog(object):
     list of strings
         The event messages in the log, with the earliest events listed first.
     """
+    _suffix_base = '/part_'
+
     def __init__(self, job_info, log_group_name='/aws/batch/job',
-                 verbose=False):
+                 verbose=False, append_dumps=True):
         self.job_name = job_info['jobName']
         self.job_id = job_info['jobId']
         self.logs_client = boto3.client('logs')
@@ -194,6 +196,7 @@ class JobLog(object):
         self.lines = []
         self.nextToken = None
         self.__len = 0
+        self.append = append_dumps
         return
 
     def __len__(self):
@@ -202,11 +205,8 @@ class JobLog(object):
     def clear_lines(self):
         self.lines = []
 
-    def dump(self, out_file=None, appending=True):
+    def dump(self, out_file):
         """Dump the logs in their entirety to the specified file."""
-        if not out_file:
-            out_file = '%s_%s.log' % (self.job_name, self.job_id)
-
         m = s3_path_patt.match(out_file)
         if m is not None:
             # If the user wants the files on s3...
@@ -214,26 +214,50 @@ class JobLog(object):
             s3 = boto3.client('s3')
 
             # Find the largest part number among the current suffixes
-            if appending:
-                suffix_base = '/part_'
+            if self.append:
                 max_num = 0
                 for key in iter_s3_keys(s3, bucket, prefix):
-                    if key[len(prefix):].startswith(suffix_base):
-                        num = int(key[len(prefix + suffix_base):])
+                    if key[len(prefix):].startswith(self._suffix_base):
+                        num = int(key[len(prefix + self._suffix_base):])
                         if max_num > num:
                             max_num = num
 
                 # Create the new suffix, and dump the lines to s3.
-                new_suffix = suffix_base + str(max_num + 1)
+                new_suffix = self._suffix_base + str(max_num + 1)
                 key = prefix + new_suffix
             else:
                 key = prefix
             s3.put_object(Bucket=bucket, Key=key, Body=self.dumps())
         else:
             # Otherwise, if they want them locally...
-            with open(out_file, 'wt' if appending else 'w') as f:
+            with open(out_file, 'wt' if self.append else 'w') as f:
                 for line in self.lines:
                     f.write(line)
+        return
+
+    def load(self, out_file):
+        """Load the log lines from the cached files."""
+        m = s3_path_patt.match(out_file)
+        if m is not None:
+            bucket, prefix = m.groups()
+            s3 = boto3.client('s3')
+
+            if self.append:
+                prior_line_bytes = []
+                for key in sorted(iter_s3_keys(s3, bucket, prefix)):
+                    if key[len(prefix):].startswith(self._suffix_base):
+                        res = s3.get_object(Bucket=bucket, Key=key)
+                        prior_line_bytes += res['Body'].read().splitlines()
+            else:
+                res = s3.get_object(Bucket=bucket, Key=prefix)
+                prior_line_bytes = res['Body'].read().splitlines()
+
+            prior_lines = [s.decode('utf-8') + '\n'
+                           for s in prior_line_bytes]
+        else:
+            with open(out_file, 'r') as f:
+                prior_lines = f.readlines()
+        self.lines = prior_lines + self.lines
         return
 
     def dumps(self):
@@ -274,7 +298,7 @@ def dump_logs(job_queue='run_reach_queue', job_status='RUNNING'):
     for job in jobs:
         log = JobLog(job)
         log.get_lines()
-        log.dump()
+        log.dump('{jobName}_{jobId}.log'.format(**job))
 
 
 def get_date_from_str(date_str):
