@@ -1,9 +1,9 @@
-def get_s3_root(s3_base, job_queue="run_db_reading_queue"):
+def get_s3_log_prefix(s3_base, job_queue="run_db_reading_queue"):
     return s3_base + 'logs/%s/' % job_queue
 
 
-def get_s3_job_prefix(s3_base, job_name, job_queue="run_db_reading_queue"):
-    s3_root = get_s3_root(s3_base, job_queue)
+def get_s3_job_log_prefix(s3_base, job_name, job_queue="run_db_reading_queue"):
+    s3_root = get_s3_log_prefix(s3_base, job_queue)
     return s3_root + '%s/' % job_name
 
 

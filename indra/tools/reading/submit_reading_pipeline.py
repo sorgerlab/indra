@@ -9,7 +9,7 @@ from datetime import datetime
 from indra.literature import elsevier_client as ec
 from indra.literature.elsevier_client import _ensure_api_keys
 from indra.tools.reading.readers import get_reader_classes
-from indra.tools.reading.util import get_s3_job_prefix, get_s3_and_job_prefixes
+from indra.tools.reading.util import get_s3_job_log_prefix, get_s3_and_job_prefixes
 from indra.util.aws import tag_instance, get_batch_command, kill_all, get_ids,\
     JobLog
 
@@ -221,8 +221,8 @@ class BatchMonitor(object):
             raise ValueError("You cannot stash logs without specifying a base "
                              "directory for the logs: log_base.")
         if stash_log_method == 's3':
-            s3_prefix = get_s3_job_prefix(self.log_base, job_name,
-                                          job_queue=self.queue_name)
+            s3_prefix = get_s3_job_log_prefix(self.log_base, job_name,
+                                              job_queue=self.queue_name)
             log_name = (label + '_' if label else '') + log_name
             log_name = 's3:%s/%s%s' % (bucket_name, s3_prefix, log_name)
         elif stash_log_method == 'local':
