@@ -389,14 +389,15 @@ def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
             resp = s3.list_objects(Bucket=bucket, Prefix=prefix)
 
         if not resp.get('Contents'):
-            logger.info("Got response without contents: %s" % str(resp))
+            logger.info("Prefix \"%s\" does not appear to have any children"
+                        % prefix)
             if not on_retry:
                 logger.info("Retrying once.")
                 on_retry = True
                 sleep(0.1)
                 continue
             else:
-                logger.info("Could no contents found.")
+                logger.info("No contents found for \"%s\"." % prefix)
                 break
 
         for entry in resp['Contents']:
