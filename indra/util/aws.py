@@ -221,7 +221,7 @@ class JobLog(object):
             # Find the largest part number among the current suffixes
             if append:
                 max_num = 0
-                for key in iter_s3_keys(s3, bucket, prefix):
+                for key in iter_s3_keys(s3, bucket, prefix, do_retry=False):
                     if key[len(prefix):].startswith(self._suffix_base):
                         num = int(key[len(prefix + self._suffix_base):])
                         if max_num > num:
