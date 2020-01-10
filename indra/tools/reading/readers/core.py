@@ -101,6 +101,7 @@ class ReadingData(object):
 class Reader(object):
     """This abstract object defines and some general methods for readers."""
     name = NotImplemented
+    result_format = formats.JSON
 
     def __init__(self, base_dir=None, n_proc=1, check_content=True,
                  input_character_limit=CONTENT_CHARACTER_LIMIT,
@@ -150,8 +151,8 @@ class Reader(object):
 
         # Create a new result object and add it to the results.
         result_object = self.ResultClass(content_id, self.__class__,
-                                         self.get_version(), formats.JSON,
-                                         content, **kwargs)
+                                         self.get_version(),
+                                         self.result_format, content, **kwargs)
         self.results.append(result_object)
         return
 
@@ -212,10 +213,6 @@ class Reader(object):
     @staticmethod
     def get_processor(content):
         raise NotImplementedError()
-
-
-class EmptyReader(Reader):
-    """A class name to use for Readers that are not implemented yet."""
 
 
 class ReadingError(Exception):

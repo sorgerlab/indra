@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import re
 import os
 import nltk
@@ -9,6 +7,9 @@ import shutil
 import logging
 import tempfile
 import subprocess
+
+from unidecode import unidecode
+
 from indra import get_config
 from indra.resources.greek_alphabet import greek_alphabet
 
@@ -104,6 +105,9 @@ class IsiPreprocessor(object):
         # Replace greek characters with corresponding strings
         for greek_letter, spelled_letter in greek_alphabet.items():
             text = text.replace(greek_letter, spelled_letter)
+
+        # Replace all other unicode characters with nearest ascii equivalents
+        text = unidecode(text)
 
         # Tokenize sentence
         sentences = nltk.sent_tokenize(text)

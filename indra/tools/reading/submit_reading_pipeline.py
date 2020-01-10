@@ -532,7 +532,8 @@ class Submitter(object):
 
                 # Record the job id.
                 logger.info("submitted...")
-                self.job_list.append({'jobId': job_info['jobId']})
+                self.job_list.append({k: job_info[k]
+                                      for k in ['jobId', 'jobName']})
                 logger.info("Sleeping for %d seconds..." % stagger)
                 sleep(stagger)
 

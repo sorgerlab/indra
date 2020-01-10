@@ -167,7 +167,7 @@ def run_isi(input_dir, output_dir, tmp_dir, num_processes=1,
     logger.info(' '.join(command))
 
     p = subprocess.Popen(command, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
+                         stderr=subprocess.STDOUT)
 
     # Monitor the logs and wait for reading to end.
     log_file_str = ''
@@ -185,8 +185,7 @@ def run_isi(input_dir, output_dir, tmp_dir, num_processes=1,
     p_out, p_err = p.communicate()
     if p.returncode:
         logger.error('Problem running ISI:')
-        logger.error('Stdout: %s' % p_out.decode('utf-8'))
-        logger.error('Stderr: %s' % p_err.decode('utf-8'))
+        logger.error('Stdout & Stderr: %s' % p_out.decode('utf-8'))
         raise IsiRuntimeError("Problem encountered running ISI.")
 
     logger.info("ISI finished.")

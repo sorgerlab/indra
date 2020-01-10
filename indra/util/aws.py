@@ -4,9 +4,13 @@ import boto3
 import logging
 import requests
 from datetime import datetime, timezone, timedelta
+
 from botocore import UNSIGNED
 from botocore.client import Config
+
+from time import sleep
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+
 from indra import get_config, has_config
 from indra.util.nested_dict import NestedDict
 
@@ -130,7 +134,7 @@ def tag_myself(project='cwc', **other_tags):
 def get_batch_command(command_list, project=None, purpose=None):
     """Get the command appropriate for running something on batch."""
     command_str = ' '.join(command_list)
-    ret = ['python', '-m', 'indra.util.aws', 'run_in_batch', command_str]
+    ret = ['python3', '-m', 'indra.util.aws', 'run_in_batch', command_str]
     if not project and has_config('DEFAULT_AWS_PROJECT'):
         project = get_config('DEFAULT_AWS_PROJECT')
     if project:
@@ -337,7 +341,7 @@ def get_date_from_str(date_str):
 
 
 def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
-                 with_dt=False):
+                 with_dt=False, do_retry=True):
     """Iterate over the keys in an s3 bucket given a prefix
 
     Parameters
@@ -360,6 +364,10 @@ def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
         the s3 Key and the object's LastModified date as a
         datetime.datetime object, only yield s3 key otherwise.
         Default: False.
+    do_retry : bool
+        If True, and no contents appear, try again in case there was simply a
+        brief lag. If False, do not retry, and just accept the "directory" is
+        empty.
 
     Returns
     -------
@@ -378,10 +386,25 @@ def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
     is_truncated = True
     marker = None
     while is_truncated:
+        # Get the (next) batch of contents.
         if marker:
             resp = s3.list_objects(Bucket=bucket, Prefix=prefix, Marker=marker)
         else:
             resp = s3.list_objects(Bucket=bucket, Prefix=prefix)
+
+        # Handle case where no contents are found.
+        if not resp.get('Contents'):
+            if do_retry:
+                logger.info("Prefix \"%s\" does not seem to have children. "
+                            "Retrying once." % prefix)
+                do_retry = False
+                sleep(0.1)
+                continue
+            else:
+                logger.info("No contents found for \"%s\"." % prefix)
+                break
+
+        # Filter by time.
         for entry in resp['Contents']:
             if entry['Key'] != marker:
                 if date_cutoff and after and\

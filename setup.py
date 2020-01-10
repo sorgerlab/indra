@@ -35,7 +35,7 @@ def main():
                       # Utilities
                       'graph': ['pygraphviz'],
                       'plot': ['matplotlib'],
-                      'isi': ['nltk'],
+                      'isi': ['nltk', 'unidecode'],
                       'api': ['flask']
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
