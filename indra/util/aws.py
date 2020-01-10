@@ -1,3 +1,5 @@
+import re
+
 import boto3
 import logging
 import requests
@@ -141,6 +143,7 @@ def get_batch_command(command_list, project=None, purpose=None):
 def run_in_batch(command_list, project, purpose):
     from subprocess import call
     tag_myself(project, purpose=purpose)
+    logger.info("Running command list: %s" % str(command_list))
     logger.info('\n'+20*'='+' Begin Primary Command Output '+20*'='+'\n')
     ret_code = call(command_list)
     logger.info('\n'+21*'='+' End Primary Command Output '+21*'='+'\n')
@@ -155,8 +158,10 @@ def get_jobs(job_queue='run_reach_queue', job_status='RUNNING'):
     return jobs.get('jobSummaryList')
 
 
-def get_job_log(job_info, log_group_name='/aws/batch/job',
-                write_file=True, verbose=False):
+s3_path_patt = re.compile('^s3:([-a-zA-Z0-9_]+)/(.*?)$')
+
+
+class JobLog(object):
     """Gets the Cloudwatch log associated with the given job.
 
     Parameters
@@ -166,90 +171,139 @@ def get_job_log(job_info, log_group_name='/aws/batch/job',
         by get_jobs()
     log_group_name : string
         Name of the log group; defaults to '/aws/batch/job'
-    write_file : boolean
-        If True, writes the downloaded log to a text file with the filename
-        '%s_%s.log' % (job_name, job_id)
-
 
     Returns
     -------
     list of strings
         The event messages in the log, with the earliest events listed first.
     """
-    job_name = job_info['jobName']
-    job_id = job_info['jobId']
-    logs = boto3.client('logs')
-    batch = boto3.client('batch')
-    resp = batch.describe_jobs(jobs=[job_id])
-    job_desc = resp['jobs'][0]
-    job_def_name = job_desc['jobDefinition'].split('/')[-1].split(':')[0]
-    task_arn_id = job_desc['container']['taskArn'].split('/')[-1]
-    log_stream_name = '%s/default/%s' % (job_def_name, task_arn_id)
-    stream_resp = logs.describe_log_streams(
-                            logGroupName=log_group_name,
-                            logStreamNamePrefix=log_stream_name)
-    streams = stream_resp.get('logStreams')
-    if not streams:
-        logger.warning('No streams for job')
-        return None
-    elif len(streams) > 1:
-        logger.warning('More than 1 stream for job, returning first')
-    log_stream_name = streams[0]['logStreamName']
-    if verbose:
-        logger.info("Getting log for %s/%s" % (job_name, job_id))
-    out_file = ('%s_%s.log' % (job_name, job_id)) if write_file else None
-    lines = get_log_by_name(log_group_name, log_stream_name, out_file, verbose)
-    return lines
+    _suffix_base = '/part_'
 
+    def __init__(self, job_info, log_group_name='/aws/batch/job',
+                 verbose=False, append_dumps=True):
+        self.job_name = job_info['jobName']
+        self.job_id = job_info['jobId']
+        self.logs_client = boto3.client('logs')
+        self.verbose = verbose
+        self.log_group_name = log_group_name
+        batch = boto3.client('batch')
+        resp = batch.describe_jobs(jobs=[self.job_id])
+        job_desc = resp['jobs'][0]
+        job_def_name = job_desc['jobDefinition'].split('/')[-1].split(':')[0]
+        task_arn_id = job_desc['container']['taskArn'].split('/')[-1]
+        self.log_stream_name = '%s/default/%s' % (job_def_name, task_arn_id)
+        self.latest_timestamp = None
+        self.lines = []
+        self.nextToken = None
+        self.__len = 0
+        self.append = append_dumps
+        return
 
-def get_log_by_name(log_group_name, log_stream_name, out_file=None,
-                    verbose=True):
-    """Download a log given the log's group and stream name.
+    def __len__(self):
+        return self.__len
 
-    Parameters
-    ----------
-    log_group_name : str
-        The name of the log group, e.g. /aws/batch/job.
+    def clear_lines(self):
+        self.lines = []
 
-    log_stream_name : str
-        The name of the log stream, e.g. run_reach_jobdef/default/<UUID>
+    def dump(self, out_file, append=None):
+        """Dump the logs in their entirety to the specified file."""
+        if append is None:
+            append = self.append
+        elif append != self.append:
+            logger.info("Overriding default append behavior. This could muddy "
+                        "future loads.")
+        m = s3_path_patt.match(out_file)
+        if m is not None:
+            # If the user wants the files on s3...
+            bucket, prefix = m.groups()
+            s3 = boto3.client('s3')
 
-    Returns
-    -------
-    lines : list[str]
-        The lines of the log as a list.
-    """
-    logs = boto3.client('logs')
-    kwargs = {'logGroupName': log_group_name,
-              'logStreamName': log_stream_name,
-              'startFromHead': True}
-    lines = []
-    while True:
-        response = logs.get_log_events(**kwargs)
-        # If we've gotten all the events already, the nextForwardToken for
-        # this call will be the same as the last one
-        if response.get('nextForwardToken') == kwargs.get('nextToken'):
-            break
+            # Find the largest part number among the current suffixes
+            if append:
+                max_num = 0
+                for key in iter_s3_keys(s3, bucket, prefix, do_retry=False):
+                    if key[len(prefix):].startswith(self._suffix_base):
+                        num = int(key[len(prefix + self._suffix_base):])
+                        if max_num > num:
+                            max_num = num
+
+                # Create the new suffix, and dump the lines to s3.
+                new_suffix = self._suffix_base + str(max_num + 1)
+                key = prefix + new_suffix
+            else:
+                key = prefix
+            s3.put_object(Bucket=bucket, Key=key, Body=self.dumps())
         else:
-            events = response.get('events')
-            if events:
-                lines += ['%s: %s\n' % (evt['timestamp'], evt['message'])
-                          for evt in events]
-            kwargs['nextToken'] = response.get('nextForwardToken')
-        if verbose:
-            logger.info('%d %s' % (len(lines), lines[-1]))
-    if out_file:
-        with open(out_file, 'wt') as f:
-            for line in lines:
-                f.write(line)
-    return lines
+            # Otherwise, if they want them locally...
+            with open(out_file, 'wt' if append else 'w') as f:
+                for line in self.lines:
+                    f.write(line)
+        return
+
+    def load(self, out_file):
+        """Load the log lines from the cached files."""
+        m = s3_path_patt.match(out_file)
+        if m is not None:
+            bucket, prefix = m.groups()
+            s3 = boto3.client('s3')
+
+            if self.append:
+                prior_line_bytes = []
+                for key in sorted(iter_s3_keys(s3, bucket, prefix)):
+                    if key[len(prefix):].startswith(self._suffix_base):
+                        res = s3.get_object(Bucket=bucket, Key=key)
+                        prior_line_bytes += res['Body'].read().splitlines()
+            else:
+                res = s3.get_object(Bucket=bucket, Key=prefix)
+                prior_line_bytes = res['Body'].read().splitlines()
+
+            prior_lines = [s.decode('utf-8') + '\n'
+                           for s in prior_line_bytes]
+        else:
+            with open(out_file, 'r') as f:
+                prior_lines = f.readlines()
+        self.lines = prior_lines + self.lines
+        return
+
+    def dumps(self):
+        return ''.join(self.lines)
+
+    def get_lines(self):
+        kwargs = {'logGroupName': self.log_group_name,
+                  'logStreamName': self.log_stream_name,
+                  'startFromHead': True}
+        while True:
+            if self.nextToken is not None:
+                kwargs['nextToken'] = self.nextToken
+            response = self.logs_client.get_log_events(**kwargs)
+            # If we've gotten all the events already, the nextForwardToken for
+            # this call will be the same as the last one
+            if response.get('nextForwardToken') == self.nextToken:
+                break
+            else:
+                events = response.get('events')
+                if events:
+                    for evt in events:
+                        line = '%s: %s\n' % (evt['timestamp'], evt['message'])
+                        self.lines.append(line)
+                        self.latest_timestamp = \
+                            (datetime.fromtimestamp(evt['timestamp']/1000)
+                                     .astimezone(timezone.utc)
+                                     .replace(tzinfo=None))
+                        self.__len += 1
+                        if self.verbose:
+                            logger.info('%d %s' % (len(self.lines), line))
+                self.nextToken = response.get('nextForwardToken')
+        return
 
 
 def dump_logs(job_queue='run_reach_queue', job_status='RUNNING'):
     """Write logs for all jobs with given the status to files."""
     jobs = get_jobs(job_queue, job_status)
     for job in jobs:
-        get_job_log(job, write_file=True)
+        log = JobLog(job)
+        log.get_lines()
+        log.dump('{jobName}_{jobId}.log'.format(**job))
 
 
 def get_date_from_str(date_str):
@@ -342,6 +396,32 @@ def iter_s3_keys(s3, bucket, prefix, date_cutoff=None, after=True,
 
         is_truncated = resp['IsTruncated']
         marker = entry['Key']
+
+
+def rename_s3_prefix(s3, bucket, old_prefix, new_prefix):
+    """Change an s3 prefix within the same bucket."""
+    to_delete = []
+    for key in iter_s3_keys(s3, bucket, old_prefix):
+        # Copy the object to the new key (with prefix replaced)
+        new_key = key.replace(old_prefix, new_prefix)
+        s3.copy_object(Bucket=bucket, Key=new_key,
+                       CopySource={'Bucket': bucket, 'Key': key},
+                       MetadataDirective='COPY',
+                       TaggingDirective='COPY')
+
+        # Keep track of the objects that will need to be deleted (the old keys)
+        to_delete.append({'Key': key})
+
+        # Delete objects in maximum batches of 1000.
+        if len(to_delete) >= 1000:
+            s3.delete_objects(Bucket=bucket,
+                              Delete={'Objects': to_delete[:1000]})
+            del to_delete[:1000]
+
+    # Get any stragglers.
+    s3.delete_objects(Bucket=bucket,
+                      Delete={'Objects': to_delete})
+    return
 
 
 def get_s3_file_tree(s3, bucket, prefix, date_cutoff=None, after=True,
@@ -479,7 +559,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.task == 'run_in_batch':
-        ret_code = run_in_batch(args.command.split(' '), args.project,
+        ret_code = run_in_batch(args.command.split(), args.project,
                                 args.purpose)
         if ret_code is 0:
             logger.info('Job endend well.')

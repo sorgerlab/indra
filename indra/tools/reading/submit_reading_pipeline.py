@@ -9,8 +9,9 @@ from datetime import datetime
 from indra.literature import elsevier_client as ec
 from indra.literature.elsevier_client import _ensure_api_keys
 from indra.tools.reading.readers import get_reader_classes
-from indra.util.aws import get_job_log, tag_instance, get_batch_command, \
-    kill_all, get_ids
+from indra.tools.reading.util import get_s3_job_log_prefix, get_s3_and_job_prefixes
+from indra.util.aws import tag_instance, get_batch_command, kill_all, get_ids,\
+    JobLog
 
 bucket_name = 'bigmech'
 
@@ -21,14 +22,8 @@ class BatchReadingError(Exception):
     pass
 
 
-def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
-                      poll_interval=10, idle_log_timeout=None,
-                      kill_on_log_timeout=False, stash_log_method=None,
-                      tag_instances=False, result_record=None,
-                      wait_for_first_job=False):
-    """Return when all jobs in the given list finished.
-
-    If not job list is given, return when all jobs in queue finished.
+class BatchMonitor(object):
+    """A monitor for batch jobs.
 
     Parameters
     ----------
@@ -38,84 +33,252 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         A list of jobID-s in a dict, as returned by the submit function.
         Example: [{'jobId': 'e6b00f24-a466-4a72-b735-d205e29117b4'}, ...]
         If not given, this function will return if all jobs completed.
-    job_name_prefix : Optional[str]
-        A prefix for the name of the jobs to wait for. This is useful if the
-        explicit job list is not available but filtering is needed.
-    poll_interval : Optional[int]
-        The time delay between API calls to check the job statuses.
-    idle_log_timeout : Optional[int] or None
-        If not None, then track the logs of the active jobs, and if new output
-        is not produced after `idle_log_timeout` seconds, a warning is printed.
-        If `kill_on_log_timeout` is set to True, the job will also be
-        terminated.
-    kill_on_log_timeout : Optional[bool]
-        If True, and if `idle_log_timeout` is set, jobs will be terminated
-        after timeout. This has no effect if `idle_log_timeout` is None.
-        Default is False.
-    stash_log_method : Optional[str]
-        Select a method to store the job logs, either 's3' or 'local'. If no
-        method is specified, the logs will not be loaded off of AWS. If 's3' is
-        specified, then `job_name_prefix` must also be given, as this will
-        indicate where on s3 to store the logs.
-    tag_instances : bool
-        Default is False. If True, apply tags to the instances. This is toady
-        typically done by each job, so in most cases this should not be needed.
-    result_record : dict
-        A dict which will be modified in place to record the results of the job
-    wait_for_first_job : bool
-        Don't exit until at least one job has been found. This is good if you
-        are monitoring jobs that are submitted periodically, but can be a
-        problem if there is a chance you might call this when no jobs will
-        ever be run.
+    job_base : Optional[str]
+        Give the root name of the jobs you want to track.
+    log_base : Optional[str]
+        Indicate the root name of the location you wish all logs to be stored.
+        If you choose to dump logs on s3, this will be the s3 prefix. Note that
+        a trailing '/' is NOT assumed.
     """
-    if stash_log_method == 's3' and job_name_prefix is None:
-        raise Exception('A job_name_prefix is required to post logs on s3.')
+    def __init__(self, queue_name, job_list=None, job_base=None, log_base=None):
 
-    logger.info("Given %s jobs to track"
-                % ('no' if job_list is None else len(job_list)))
-    start_time = datetime.now()
+        self.start_time = datetime.now()
+        self.queue_name = queue_name
 
-    if result_record is None:
-        result_record = {}
+        # Define the various names for this bunch of jobs...
+        self.job_base = job_base
+        self.log_base = log_base if log_base else '.'
 
-    def get_jobs_by_status(status, job_id_filter=None, job_name_prefix=None):
-        res = batch_client.list_jobs(jobQueue=queue_name,
-                                     jobStatus=status, maxResults=10000)
+        # Prime some recording containers.
+        self.job_list = job_list
+        self.job_log_dict = {}
+
+        # Don't start watching jobs added after this command was initialized.
+        self.observed_job_def_dict = {}
+
+        self.batch_client = boto3.client('batch')
+
+        self.job_id_list = None
+        return
+
+    def watch_and_wait(self, poll_interval=10, idle_log_timeout=None,
+                       kill_on_log_timeout=False, stash_log_method=None,
+                       tag_instances=False, wait_for_first_job=False,
+                       dump_size=10000, result_record=None):
+        """Return when all jobs are finished.
+
+        If no job list was given, return when all jobs in queue finished.
+
+        Parameters
+        ----------
+        poll_interval : Optional[int]
+            The time delay between API calls to check the job statuses.
+        idle_log_timeout : Optional[int] or None
+            If not None, then track the logs of the active jobs, and if new
+            output is not produced after `idle_log_timeout` seconds, a warning
+            is printed. If `kill_on_log_timeout` is set to True, the job will
+            also be terminated.
+        kill_on_log_timeout : Optional[bool]
+            If True, and if `idle_log_timeout` is set, jobs will be terminated
+            after timeout. This has no effect if `idle_log_timeout` is None.
+            Default is False.
+        stash_log_method : Optional[str]
+            Select a method to store the job logs, either 's3' or 'local'. If
+            no method is specified, the logs will not be loaded off of AWS. If
+            's3' is specified, then `log_base` must have been given in
+            __init__, as this will indicate where to store the logs.
+        tag_instances : bool
+            Default is False. If True, apply tags to the instances. This is
+            today typically done by each job, so in most cases this should not
+            be needed.
+        wait_for_first_job : bool
+            Don't exit until at least one job has been found. This is good if
+            you are monitoring jobs that are submitted periodically, but can be
+            a problem if there is a chance you might call this when no jobs
+            will ever be run.
+        dump_size : int
+            Set the size of the log dumps (number of lines). The default is
+            10,000.
+        result_record : dict
+            A dict which will be modified in place to record the results of the
+            job.
+        """
+        logger.info("Given %s jobs to track"
+                    % ('no' if self.job_list is None else len(self.job_list)))
+        result_record = {} if result_record is None else result_record
+        if tag_instances:
+            ecs_cluster_name = \
+                get_ecs_cluster_for_queue(self.queue_name, self.batch_client)
+        else:
+            ecs_cluster_name = None
+        terminate_msg = 'Job log has stalled for at least %f minutes.'
+        terminated_jobs = set()
+        found_a_job = False
+        while True:
+            pre_run = []
+            self.job_id_list = get_ids(self.job_list)
+            for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
+                pre_run += self.get_jobs_by_status(status)
+            running = self.get_jobs_by_status('RUNNING')
+            failed = self.get_jobs_by_status('FAILED')
+            done = self.get_jobs_by_status('SUCCEEDED')
+
+            if len(pre_run + running):
+                found_a_job = True
+
+            self.observed_job_def_dict.update(
+                self.get_dict_of_job_tuples(pre_run + running)
+            )
+
+            logger.info('(%d s)=(tracking: %d, pre: %d, running: %d, '
+                        'failed: %d, done: %d)'
+                        % ((datetime.now() - self.start_time).seconds,
+                           len(self.job_id_list), len(pre_run), len(running),
+                           len(failed), len(done)))
+
+            # Check the logs for new output, and possibly terminate some jobs.
+            stalled_jobs = self.check_logs(running, idle_log_timeout)
+            if idle_log_timeout is not None:
+                if kill_on_log_timeout:
+                    # Keep track of terminated jobs so we don't send a
+                    # terminate message twice.
+                    for jid in stalled_jobs - terminated_jobs:
+                        self.batch_client.terminate_job(
+                            jobId=jid,
+                            reason=terminate_msg % (idle_log_timeout/60.0)
+                        )
+                        logger.info('Terminating %s.' % jid)
+                        terminated_jobs.add(jid)
+
+            # Check for end-conditions.
+            if found_a_job or not wait_for_first_job:
+                if self.job_id_list:
+                    if (len(failed) + len(done)) == len(self.job_id_list):
+                        logger.info("Total failed and done equals number of "
+                                    "original tracked jobs. Ending.")
+                        ret = 0
+                        break
+                else:
+                    if (len(failed) + len(done) > 0) and \
+                            (len(pre_run) + len(running) == 0):
+                        logger.info("No job_id_list, but there are new "
+                                    "finished jobs and no running or pre-"
+                                    "running jobs. Ending.")
+                        ret = 0
+                        break
+
+            if tag_instances:
+                tag_instances_on_cluster(ecs_cluster_name)
+
+            # Stash the logs of things that have finished so far. Note that
+            # jobs terminated in this round will not be picked up until the
+            # next round.
+            if stash_log_method:
+                for job_log in self.job_log_dict.values():
+                    self._stash_log(job_log, stash_log_method)
+
+            sleep(poll_interval)
+
+        # Reload the stashed logs, and dump a final record log.
+        if stash_log_method:
+            failed_jobs = {job['jobId'] for job in failed}
+            succeeded_jobs = {job['jobId'] for job in done}
+            for job_log in self.job_log_dict.values():
+                job_log.load(self._get_log_name(stash_log_method,
+                                                job_log.job_name, 'RUNNING'))
+                if job_log.job_id in terminated_jobs:
+                    label = 'TERMINATED'
+                elif job_log.job_id in failed_jobs:
+                    label = 'FAILURE'
+                elif job_log.job_id in succeeded_jobs:
+                    label = "SUCCESS"
+                else:
+                    label = 'UNKNOWN'
+                    logger.warning("Job %s not among terminated, succeeded, "
+                                   "or failed..." % job_log.job_id)
+
+                final_log_name = self._get_log_name(stash_log_method,
+                                                    job_log.job_name, label)
+                job_log.dump(final_log_name, append=False)
+                job_log.clear_lines()
+
+        result_record['terminated'] = terminated_jobs
+        result_record['failed'] = failed
+        result_record['succeeded'] = done
+
+        return ret
+
+    def _stash_log(self, job_log, stash_log_method):
+        log_name = self._get_log_name(stash_log_method, job_log.job_name,
+                                      'RUNNING')
+        job_log.dump(log_name)
+        job_log.clear_lines()
+        return log_name
+
+    def _get_log_name(self, stash_log_method, job_name, label=''):
+        log_name = '%s_stash.log' % job_name
+        if not self.log_base:
+            raise ValueError("You cannot stash logs without specifying a base "
+                             "directory for the logs: log_base.")
+        if stash_log_method == 's3':
+            s3_prefix = get_s3_job_log_prefix(self.log_base, job_name,
+                                              job_queue=self.queue_name)
+            log_name = (label + '_' if label else '') + log_name
+            log_name = 's3:%s/%s%s' % (bucket_name, s3_prefix, log_name)
+        elif stash_log_method == 'local':
+            prefix = self.log_base
+            if prefix is None:
+                prefix = 'batch_stash'
+            dirname = '%s_job_logs' % prefix
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+            log_name = os.path.join(dirname, log_name)
+        else:
+            raise ValueError("Invalid log stash method: %s"
+                             % stash_log_method)
+        return log_name
+
+    def get_jobs_by_status(self, status):
+        res = self.batch_client.list_jobs(jobQueue=self.queue_name,
+                                          jobStatus=status, maxResults=10000)
         jobs = res['jobSummaryList']
-        if job_name_prefix:
+        if self.job_base:
             jobs = [job for job in jobs if
-                    job['jobName'].startswith(job_name_prefix)]
-        if job_id_filter is not None:
+                    job['jobName'].startswith(self.job_base)]
+        if self.job_id_list is not None:
             jobs = [job_def for job_def in jobs
-                    if job_def['jobId'] in job_id_filter]
+                    if job_def['jobId'] in self.job_id_list]
         return jobs
 
-    job_log_dict = {}
-
-    def check_logs(job_defs):
-        """Updates teh job_log_dict."""
+    def check_logs(self, job_defs, idle_log_timeout):
+        """Updates the job_log_dict."""
         stalled_jobs = set()
 
         # Check the status of all the jobs we're tracking.
         for job_def in job_defs:
             try:
-                # Get the logs for this job.
-                log_lines = get_job_log(job_def, write_file=False)
-
                 # Get the job id.
                 jid = job_def['jobId']
-                now = datetime.now()
-                if jid not in job_log_dict.keys():
+                now = datetime.utcnow()
+                if jid not in self.job_log_dict.keys():
                     # If the job is new...
-                    logger.info("Adding job %s to the log tracker at %s."
+                    logger.info("Adding job %s to the log job_log at %s."
                                 % (jid, now))
-                    job_log_dict[jid] = {'log': log_lines,
-                                         'last change time': now}
-                elif len(job_log_dict[jid]['log']) == len(log_lines):
+                    # Instantiate a new job_log.
+                    job_log = JobLog(job_def)
+                    self.job_log_dict[jid] = job_log
+                else:
+                    job_log = self.job_log_dict[jid]
+
+                pre_len = len(job_log)
+                job_log.get_lines()
+                post_len = len(job_log)
+
+                if post_len and pre_len == post_len:
                     # If the job log hasn't changed, announce as such, and
                     # check to see if it has been the same for longer than
                     # stall time.
-                    check_dt = now - job_log_dict[jid]['last change time']
+                    check_dt = now - job_log.latest_timestamp
                     logger.warning(('Job \'%s\' has not produced output for '
                                     '%d seconds.')
                                    % (job_def['jobName'], check_dt.seconds))
@@ -123,12 +286,6 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                         logger.warning("Job \'%s\' has stalled."
                                        % job_def['jobName'])
                         stalled_jobs.add(jid)
-                else:
-                    # If the job is known, and the logs have changed, update
-                    # the "last change time".
-                    old_log = job_log_dict[jid]['log']
-                    old_log += log_lines[len(old_log):]
-                    job_log_dict[jid]['last change time'] = now
             except Exception as e:
                 # Sometimes due to sync et al. issues, a part of this will fail
                 # Such things are usually transitory issues so we keep trying.
@@ -138,159 +295,15 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         # Pass up the set of job id's for stalled jobs.
         return stalled_jobs
 
-    # Don't start watching jobs added after this command was initialized.
-    observed_job_def_dict = {}
+    @staticmethod
     def get_dict_of_job_tuples(job_defs):
         return {jdef['jobId']: [(k, jdef[k]) for k in ['jobName', 'jobId']]
                 for jdef in job_defs}
-
-    batch_client = boto3.client('batch')
-    if tag_instances:
-        ecs_cluster_name = get_ecs_cluster_for_queue(queue_name, batch_client)
-
-    terminate_msg = 'Job log has stalled for at least %f minutes.'
-    terminated_jobs = set()
-    stashed_id_set = set()
-    found_a_job = False
-    while True:
-        pre_run = []
-        job_id_list = get_ids(job_list)
-        logger.info("Specifically tracked jobs: %s" % len(job_id_list))
-        for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
-            pre_run += get_jobs_by_status(status, job_id_list, job_name_prefix)
-        running = get_jobs_by_status('RUNNING', job_id_list, job_name_prefix)
-        failed = get_jobs_by_status('FAILED', job_id_list, job_name_prefix)
-        done = get_jobs_by_status('SUCCEEDED', job_id_list, job_name_prefix)
-
-        if len(pre_run + running):
-            found_a_job = True
-
-        observed_job_def_dict.update(get_dict_of_job_tuples(pre_run + running))
-
-        logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
-                    ((datetime.now() - start_time).seconds, len(pre_run),
-                     len(running), len(failed), len(done)))
-
-        # Check the logs for new output, and possibly terminate some jobs.
-        stalled_jobs = check_logs(running)
-        if idle_log_timeout is not None:
-            if kill_on_log_timeout:
-                # Keep track of terminated jobs so we don't send a terminate
-                # message twice.
-                for jid in stalled_jobs - terminated_jobs:
-                    batch_client.terminate_job(
-                        jobId=jid,
-                        reason=terminate_msg % (idle_log_timeout/60.0)
-                        )
-                    logger.info('Terminating %s.' % jid)
-                    terminated_jobs.add(jid)
-
-        # Check for end-conditions.
-        if found_a_job or not wait_for_first_job:
-            if job_id_list:
-                if (len(failed) + len(done)) == len(job_id_list):
-                    logger.info("Total failed and done equals number of "
-                                "original tracked jobs. Ending.")
-                    ret = 0
-                    break
-            else:
-                if (len(failed) + len(done) > 0) and \
-                   (len(pre_run) + len(running) == 0):
-                    logger.info("No job_id_list, but there are new finished "
-                                "jobs and no running or pre-running jobs. "
-                                "Ending.")
-                    ret = 0
-                    break
-
-        if tag_instances:
-            tag_instances_on_cluster(ecs_cluster_name)
-
-        # Stash the logs of things that have finished so far. Note that jobs
-        # terminated in this round will not be picked up until the next round.
-        if stash_log_method:
-            stash_logs(observed_job_def_dict, done, failed, queue_name,
-                       stash_log_method, job_name_prefix,
-                       start_time.strftime('%Y%m%d_%H%M%S'),
-                       ids_stashed=stashed_id_set)
-
-        sleep(poll_interval)
-
-    # Pick up any stragglers
-    if stash_log_method:
-        stash_logs(observed_job_def_dict, done, failed, queue_name,
-                   stash_log_method, job_name_prefix,
-                   start_time.strftime('%Y%m%d_%H%M%S'),
-                   ids_stashed=stashed_id_set)
-
-    result_record['terminated'] = terminated_jobs
-    result_record['failed'] = failed
-    result_record['succeeded'] = done
-
-    return ret
 
 
 def _get_job_ids_to_stash(job_def_list, stashed_id_set):
     return [job_def['jobId'] for job_def in job_def_list
             if job_def['jobId'] not in stashed_id_set]
-
-
-def stash_logs(job_defs, success_jobs, failure_jobs, queue_name, method='local',
-               job_name_prefix=None, tag='stash', ids_stashed=None):
-    if ids_stashed is None:
-        ids_stashed = set()
-
-    success_ids = _get_job_ids_to_stash(success_jobs, ids_stashed)
-    failure_ids = _get_job_ids_to_stash(failure_jobs, ids_stashed)
-    if method == 's3':
-        s3_client = boto3.client('s3')
-
-        def stash_log(log_str, name_base):
-            name = '%s_%s.log' % (name_base, tag)
-            s3_client.put_object(
-                Bucket=bucket_name,
-                Key='reading_results/%s/logs/%s/%s' % (
-                    job_name_prefix,
-                    queue_name,
-                    name),
-                Body=log_str
-                )
-    elif method == 'local':
-        if job_name_prefix is None:
-            job_name_prefix = 'batch_%s' % tag
-        dirname = '%s_job_logs' % job_name_prefix
-        os.mkdir(dirname)
-
-        def stash_log(log_str, name_base):
-            with open(os.path.join(dirname, name_base + '.log'), 'w') as f:
-                f.write(log_str)
-    else:
-        raise ValueError('Invalid method: %s' % method)
-
-    for jobId, job_def_tpl in job_defs.items():
-        if jobId not in success_ids and jobId not in failure_ids:
-            continue  # Logs aren't done and ready to be loaded.
-        try:
-            job_def = dict(job_def_tpl)
-            lines = get_job_log(job_def, write_file=False)
-            if lines is None:
-                logger.warning("No logs found for %s." % job_def['jobName'])
-                continue
-            log_str = ''.join(lines)
-            base_name = job_def['jobName']
-            if job_def['jobId'] in success_ids:
-                base_name += '/SUCCESS'
-            elif job_def['jobId'] in failure_ids:
-                base_name += '/FAILED'
-            else:
-                logger.error("Job cannot be logged unless completed.")
-                continue
-            logger.info('Stashing ' + base_name)
-            stash_log(log_str, base_name)
-        except Exception as e:
-            logger.error("Failed to save logs for: %s" % str(job_def_tpl))
-            logger.exception(e)
-    ids_stashed |= {jid for jids in [success_ids, failure_ids] for jid in jids}
-    return
 
 
 def get_ecs_cluster_for_queue(queue_name, batch_client=None):
@@ -386,17 +399,23 @@ class Submitter(object):
     # as the values.
     _job_def_dict = NotImplemented
 
-    def __init__(self, basename, readers, project_name=None, **options):
+    def __init__(self, basename, readers, group_name=None, project_name=None,
+                 **options):
         self.basename = basename
+        self.group_name = group_name
+        self.s3_base, self.job_base = \
+            get_s3_and_job_prefixes(basename, group_name)
         if 'all' in readers:
             self.readers = [rc.name.lower() for rc in get_reader_classes()]
         else:
             self.readers = readers
         self.project_name = project_name
-        self.job_list = None
+        self.job_list = []
         self.options = options
         self.ids_per_job = None
         self.running = None
+        self.monitor = BatchMonitor(self._job_queue, self.job_list,
+                                    self.job_base, self.s3_base)
         return
 
     def set_options(self, **kwargs):
@@ -411,7 +430,7 @@ class Submitter(object):
             if not reader_list:
                 continue
 
-            job_name = '%s_%d_%d' % (self.basename, start_ix, end_ix)
+            job_name = '%s_%d_%d' % (self.job_base, start_ix, end_ix)
             job_name += '_' + '_'.join(reader_list)
             cmd = self._get_base(job_name, start_ix, end_ix)
             cmd += ['-r'] + reader_list
@@ -452,14 +471,11 @@ class Submitter(object):
         job_list : list[str]
             A list of job id strings.
         """
-        self.job_list = []
-
         # stash this for later.
         self.ids_per_job = ids_per_job
 
         # Upload the pmid_list to Amazon S3
-        id_list_key = 'reading_results/%s/%s' % (self.basename,
-                                                 self._s3_input_name)
+        id_list_key = self.s3_base + self._s3_input_name
         s3_client = boto3.client('s3')
         s3_client.upload_file(input_fname, bucket_name, id_list_key)
 
@@ -527,13 +543,12 @@ class Submitter(object):
                        tag_instances=False, kill_on_exception=True, **kwargs):
         """This provides shortcut access to the wait_for_complete_function."""
         try:
-            res = wait_for_complete(self._job_queue, job_list=self.job_list,
-                                    job_name_prefix=self.basename,
-                                    poll_interval=poll_interval,
-                                    idle_log_timeout=idle_log_timeout,
-                                    kill_on_log_timeout=kill_on_timeout,
-                                    stash_log_method=stash_log_method,
-                                    tag_instances=tag_instances, **kwargs)
+            res = self.monitor.watch_and_wait(
+                poll_interval=poll_interval, idle_log_timeout=idle_log_timeout,
+                kill_on_log_timeout=kill_on_timeout,
+                stash_log_method=stash_log_method, tag_instances=tag_instances,
+                **kwargs
+            )
         except (BaseException, KeyboardInterrupt) as e:
             logger.error("Exception in wait_for_complete:")
             logger.exception(e)
@@ -589,7 +604,7 @@ class PmidSubmitter(Submitter):
 
     def _get_base(self, job_name, start_ix, end_ix):
         base = ['python', '-m', 'indra.tools.reading.pmid_reading.read_pmids_aws',
-                self.basename, '/tmp', '16', str(start_ix), str(end_ix)]
+                self.job_base, '/tmp', '16', str(start_ix), str(end_ix)]
         return base
 
     def _get_extensions(self):
@@ -616,10 +631,10 @@ class PmidSubmitter(Submitter):
         # Get environment variables
         environment_vars = get_environment()
 
-        job_name = '%s_combine_reading_results' % self.basename
+        job_name = '%s_combine_reading_results' % self.job_base
         command_list = get_batch_command(
             ['python', '-m', 'indra.tools.reading.assemble_reading_stmts_aws',
-             self.basename, '-r'] + self.readers,
+             self.job_base, '-r'] + self.readers,
             purpose='pmid_reading',
             project=self.project_name
             )
@@ -671,6 +686,10 @@ def create_submit_parser():
     parent_submit_parser.add_argument(
         'basename',
         help='Defines job names and S3 keys'
+    )
+    parent_submit_parser.add_argument(
+        '--group_name',
+        help="Indicate what group of jobs this batch is a part of."
     )
     parent_submit_parser.add_argument(
         '-r', '--readers',
@@ -786,7 +805,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     job_ids = None
-    sub = PmidSubmitter(args.basename, args.readers, args.project)
+    sub = PmidSubmitter(args.basename, args.readers, args.project,
+                        group_name=args.group_Name)
     sub.set_options(args.force_read, args.force_fulltext)
     if args.job_type in ['read', 'full']:
         sub.submit_reading(args.input_file, args.start_ix, args.end_ix,
