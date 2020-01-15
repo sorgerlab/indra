@@ -7,8 +7,7 @@ import json
 import logging
 from copy import deepcopy
 from indra.statements import Agent
-from indra.databases import uniprot_client, hgnc_client, chebi_client, \
-    mesh_client, go_client
+from indra.databases import hgnc_client
 from indra.util import read_unicode_csv
 from indra.preassembler.grounding_mapper.gilda import get_gilda_models, \
     run_gilda_disambiguation

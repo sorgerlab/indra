@@ -3,7 +3,9 @@ and contains functions to help apply it during the course of INDRA assembly."""
 
 import logging
 import requests
-import indra.preassembler.grounding_mapper as gm
+from indra.preassembler.grounding_mapper.standardize \
+    import standardize_agent_name
+
 from .adeft import _get_text_for_grounding
 
 logger = logging.getLogger(__name__)
@@ -32,8 +34,7 @@ def ground_agent(agent, txt, context=None):
         db_refs = {'TEXT': txt,
                    results[0]['term']['db']: results[0]['term']['id']}
         agent.db_refs = db_refs
-        gm.GroundingMapper.standardize_agent_name(agent,
-                                                  standardize_refs=True)
+        standardize_agent_name(agent, standardize_refs=True)
     return results
 
 

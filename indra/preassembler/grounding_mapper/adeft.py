@@ -1,5 +1,6 @@
 import logging
-import indra.preassembler.grounding_mapper as gm
+from indra.preassembler.grounding_mapper.standardize \
+    import standardize_agent_name
 
 logger = logging.getLogger(__name__)
 
@@ -85,8 +86,7 @@ def run_adeft_disambiguation(stmt, agent, idx):
             agent.name = standard_name
             logger.info('Disambiguated %s to: %s, %s:%s' %
                         (agent_txt, standard_name, db_ns, db_id))
-            gm.GroundingMapper.standardize_agent_name(agent,
-                                                      standardize_refs=True)
+            standardize_agent_name(agent, standardize_refs=True)
             annots['agents']['adeft'][idx] = disamb_scores
         success = True
     return success
