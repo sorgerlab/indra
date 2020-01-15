@@ -10,6 +10,8 @@ from indra.statements import Agent
 from indra.databases import uniprot_client, hgnc_client, chebi_client, \
     mesh_client, go_client
 from indra.util import read_unicode_csv
+from indra.preassembler.grounding_mapper.gilda import get_gilda_models, \
+    run_gilda_disambiguation
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +40,12 @@ class GroundingMapper(object):
     use_adeft : Optional[bool]
         If True, Adeft will be attempted to be used for disambiguation of
         acronyms. Default: True
+    use_gilda : Optional[bool]
+        If True, Gilda will be attempted to be used for disambiguation of
+        ambiguous entity texts. Default: True
     """
     def __init__(self, grounding_map=None, agent_map=None, ignores=None,
-                 misgrounding_map=None, use_adeft=True):
+                 misgrounding_map=None, use_adeft=True, use_gilda=True):
         self.grounding_map = grounding_map if grounding_map is not None \
             else default_grounding_map
         self.check_grounding_map(self.grounding_map)
@@ -50,6 +55,8 @@ class GroundingMapper(object):
         self.misgrounding_map = misgrounding_map if misgrounding_map \
             else default_misgrounding_map
         self.use_adeft = use_adeft
+        self.use_gilda = use_gilda
+        self.gilda_models = get_gilda_models() if self.use_gilda else []
 
     @staticmethod
     def check_grounding_map(gm):
@@ -140,9 +147,21 @@ class GroundingMapper(object):
                                  ' disambiguation of %s.' % agent_txt)
                     logger.error(e)
 
-            # If adeft was not used, we do grounding mapping
-            new_agent = self.map_agent(agent, do_rename) if not adeft_success \
-                else agent
+            gilda_success = False
+            if not adeft_success and self.use_gilda and \
+                    agent_txt in self.gilda_models:
+                try:
+                    gilda_success = run_gilda_disambiguation(mapped_stmt,
+                                                             agent, idx)
+                except Exception as e:
+                    logger.error('There was an error during Gilda'
+                                 ' disambiguation of %s.' % agent_txt)
+                    logger.error(e)
+
+            # If Adeft and Gilda were not used or didn't succeed, we do
+            # grounding mapping
+            new_agent = self.map_agent(agent, do_rename) \
+                if not (adeft_success or gilda_success) else agent
 
             # If the old agent had bound conditions, but the new agent does
             # not, copy the bound conditions over
