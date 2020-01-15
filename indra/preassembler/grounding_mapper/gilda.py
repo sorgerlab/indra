@@ -3,14 +3,16 @@ and contains functions to help apply it during the course of INDRA assembly."""
 
 import logging
 import requests
+from urllib.parse import urljoin
 from indra.preassembler.grounding_mapper.standardize \
     import standardize_agent_name
-
+from indra.config import get_config, has_config
 from .adeft import _get_text_for_grounding
 
 logger = logging.getLogger(__name__)
 
-grounding_service_url = 'http://grounding.indra.bio'
+grounding_service_url = get_config('GILDA_URL') if has_config('GILDA_URL') \
+    else 'http://grounding.indra.bio'
 
 
 def get_gilda_models():
@@ -21,13 +23,13 @@ def get_gilda_models():
     list[str]
         A list of entity strings.
     """
-    res = requests.post(grounding_service_url + '/models')
+    res = requests.post(urljoin(grounding_service_url, 'models'))
     models = res.json()
     return models
 
 
 def ground_agent(agent, txt, context=None):
-    resp = requests.post(grounding_service_url + '/ground',
+    resp = requests.post(urljoin(grounding_service_url, 'ground'),
                          json={'text': txt, 'context': context})
     results = resp.json()
     if results:
