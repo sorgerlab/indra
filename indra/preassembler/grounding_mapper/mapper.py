@@ -12,6 +12,7 @@ from indra.util import read_unicode_csv
 from indra.preassembler.grounding_mapper.gilda import get_gilda_models, \
     run_gilda_disambiguation
 from .standardize import standardize_db_refs, standardize_agent_name
+from .adeft import adeft_disambiguators, run_adeft_disambiguation
 
 logger = logging.getLogger(__name__)
 
@@ -474,6 +475,3 @@ default_mapper = GroundingMapper(default_grounding_map,
                                  agent_map=default_agent_map,
                                  ignores=default_ignores,
                                  misgrounding_map=default_misgrounding_map)
-
-
-from .adeft import adeft_disambiguators, run_adeft_disambiguation

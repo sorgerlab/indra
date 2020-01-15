@@ -1,13 +1,10 @@
-from __future__ import print_function, unicode_literals, absolute_import
-from builtins import dict, str
 import logging
 import itertools
 from copy import deepcopy
 from indra.preassembler.hierarchy_manager import HierarchyManager, \
     hierarchies as default_hierarchies
-from indra.databases import hgnc_client
 from indra.statements import Agent, Complex, Evidence
-from indra.preassembler.grounding_mapper import GroundingMapper
+from indra.preassembler.grounding_mapper import standardize_agent_name
 
 logger = logging.getLogger(__name__)
 
@@ -133,6 +130,6 @@ def _agent_from_ns_id(ag_ns, ag_id):
     if ag_id is not None:
         agent.db_refs[ag_ns] = ag_id
     # Now standardize db_refs and set standardized name
-    GroundingMapper.standardize_agent_name(agent, standardize_refs=True)
+    standardize_agent_name(agent, standardize_refs=True)
     agent.db_refs['TEXT'] = agent.name
     return agent
