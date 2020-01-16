@@ -101,6 +101,8 @@ def map_grounding(stmts_in, **kwargs):
     use_adeft : Optional[bool]
         If True, Adeft will be attempted to be used for acronym disambiguation.
         Default: True
+    use_gilda : Optional[bool]
+        If True, Gilda will be used for disambiguation. Default: True
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -120,7 +122,8 @@ def map_grounding(stmts_in, **kwargs):
     agent_map = kwargs.get('agent_map', default_agent_map)
     gm = GroundingMapper(gm, agent_map=agent_map,
                          misgrounding_map=misgm, ignores=ignores,
-                         use_adeft=kwargs.get('use_adeft', True))
+                         use_adeft=kwargs.get('use_adeft', True),
+                         use_gilda=kwargs.get('use_gilda', True))
     stmts_out = gm.map_stmts(stmts_in, do_rename=do_rename)
     dump_pkl = kwargs.get('save')
     if dump_pkl:

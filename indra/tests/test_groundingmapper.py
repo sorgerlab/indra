@@ -371,7 +371,6 @@ def test_name_standardize_mesh_go():
     assert a1.name == 'epithelial to mesenchymal transition', a1.name
 
 
-
 @attr('nonpublic')
 def test_adeft_mapping():
     er1 = Agent('ER', db_refs={'TEXT': 'ER'})

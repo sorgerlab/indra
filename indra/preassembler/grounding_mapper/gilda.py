@@ -1,6 +1,6 @@
 """This module implements a client to the Gilda grounding web service,
 and contains functions to help apply it during the course of INDRA assembly."""
-
+import os
 import logging
 import requests
 from urllib.parse import urljoin
@@ -15,17 +15,31 @@ grounding_service_url = get_config('GILDA_URL') if has_config('GILDA_URL') \
     else 'http://grounding.indra.bio'
 
 
-def get_gilda_models():
+def get_gilda_models(offline=True):
     """Return a list of strings for which Gilda has a disambiguation model.
+
+    Parameters
+    ----------
+    offline : Optional[bool]
+        If True, INDRA's local resource file is used to determine the set
+        of models. Otherwise, the web service is invoked to get the
+        set of models. Default: True
 
     Returns
     -------
     list[str]
         A list of entity strings.
     """
-    res = requests.post(urljoin(grounding_service_url, 'models'))
-    models = res.json()
-    return models
+    if offline:
+        fname = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                             os.pardir, os.pardir, 'resources',
+                             'gilda_models.txt')
+        with open(fname, 'r') as fh:
+            return [l.strip() for l in fh.readlines()]
+    else:
+        res = requests.post(urljoin(grounding_service_url, 'models'))
+        models = res.json()
+        return models
 
 
 def ground_agent(agent, txt, context=None):
