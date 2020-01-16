@@ -89,7 +89,7 @@ def ground_statements(stmts):
 
 
 def run_gilda_disambiguation(stmt, agent, idx):
-    """Run Adeft disambiguation on an Agent in a given Statement.
+    """Run Gilda disambiguation on an Agent in a given Statement.
 
     This function looks at the evidence of the given Statement and attempts
     to look up the full paper or the abstract for the evidence. If both of
@@ -126,7 +126,7 @@ def run_gilda_disambiguation(stmt, agent, idx):
     # Statement
     if not stmt.evidence:
         return False
-    # Initialize annotations if needed so Adeft predicted
+    # Initialize annotations if needed so predicted
     # probabilities can be added to Agent annotations
     annots = stmt.evidence[0].annotations
     agent_txt = agent.db_refs['TEXT']
