@@ -1,6 +1,4 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-import unittest
+import os
 from nose.plugins.attrib import attr
 from indra.sources import reach
 from indra.sources.reach.processor import ReachProcessor
@@ -428,3 +426,13 @@ def test_get_agent_coordinates_phosphorylation_missing_controller():
         annotations = stmt.evidence[0].annotations
         coords = [None, (57, 60)]
         assert annotations['agents']['coords'] == coords
+
+
+def test_amount_embedded_in_activation():
+    here = os.path.dirname(os.path.abspath(__file__))
+    test_file = os.path.join(here, 'reach_act_amt.json')
+    rp = reach.process_json_file(test_file)
+    assert len(rp.statements) == 1
+    assert isinstance(rp.statements[0], IncreaseAmount)
+    assert rp.statements[0].subj is not None
+    assert rp.statements[0].obj is not None
