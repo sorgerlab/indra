@@ -2,7 +2,7 @@ import json
 import requests
 from indra.statements import *
 
-base_url = 'http://localhost:8080'
+base_url = 'http://api.indra.bio:8000'
 
 
 def test_filter_by_type():
@@ -40,12 +40,12 @@ def test_filter_grounded_only():
 def test_filter_grounded_only_score():
     db_refs1 = {'UN': [('x', 0.1)]}
     db_refs2 = {'UN': [('x', 0.5)]}
-    st1 = Influence(Concept('a', db_refs=db_refs1),
-                    Concept('b', db_refs=db_refs1))
-    st2 = Influence(Concept('a', db_refs=db_refs1),
-                    Concept('b', db_refs=db_refs2))
-    st3 = Influence(Concept('a', db_refs=db_refs2),
-                    Concept('b', db_refs=db_refs2))
+    st1 = Influence(Event(Concept('a', db_refs=db_refs1)),
+                    Event(Concept('b', db_refs=db_refs1)))
+    st2 = Influence(Event(Concept('a', db_refs=db_refs1)),
+                    Event(Concept('b', db_refs=db_refs2)))
+    st3 = Influence(Event(Concept('a', db_refs=db_refs2)),
+                    Event(Concept('b', db_refs=db_refs2)))
     stmts_json = stmts_to_json([st1, st2, st3])
     url = base_url + '/preassembly/filter_grounded_only'
     res = requests.post(url, json={'statements': stmts_json,
@@ -159,11 +159,11 @@ def test_eidos_json():
 
 
 def test_belief_filter():
-    st1 = Influence(Concept('a'), Concept('b'))
+    st1 = Influence(Event(Concept('a')), Event(Concept('b')))
     st1.belief = 0.2
-    st2 = Influence(Concept('a'), Concept('b'))
+    st2 = Influence(Event(Concept('a')), Event(Concept('b')))
     st2.belief = 0.5
-    st3 = Influence(Concept('a'), Concept('b'))
+    st3 = Influence(Event(Concept('a')), Event(Concept('b')))
     st3.belief = 0.8
     stmts_json = stmts_to_json([st1, st2, st3])
     url = base_url + '/preassembly/filter_belief'
@@ -178,23 +178,23 @@ def test_ontology_mapping():
     c1 = Concept('x', db_refs={'UN': [('UN/events/human/famine', 1.0)]})
     c2 = Concept('y', db_refs={'UN': [('UN/entities/human/education', 1.0)]})
 
-    st = Influence(c1, c2)
+    st = Influence(Event(c1), Event(c2))
     stmts_json = stmts_to_json([st])
     url = base_url + '/preassembly/map_ontologies'
     res = requests.post(url, json={'statements': stmts_json})
     res_json = res.json()
     stmts_json = res_json.get('statements')
     stmt = stmts_from_json(stmts_json)[0]
-    assert 'HUME' in stmt.subj.db_refs
-    assert 'SOFIA' in stmt.subj.db_refs
-    assert 'HUME' in stmt.obj.db_refs
-    assert 'SOFIA' in stmt.obj.db_refs
+    assert 'HUME' in stmt.subj.concept.db_refs
+    assert 'SOFIA' in stmt.subj.concept.db_refs
+    assert 'HUME' in stmt.obj.concept.db_refs
+    assert 'SOFIA' in stmt.obj.concept.db_refs
 
 
 def test_preassembly_wm_scorer():
     ev = Evidence(source_api='eidos',
                   annotations={'found_by': 'dueToSyntax2-Causal'})
-    st = Influence(Concept('x'), Concept('y'), evidence=[ev])
+    st = Influence(Event(Concept('x')), Event(Concept('y')), evidence=[ev])
     stmts_json = stmts_to_json([st])
     url = base_url + '/preassembly/run_preassembly'
     res = requests.post(url, json={'statements': stmts_json,
