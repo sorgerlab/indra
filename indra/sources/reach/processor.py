@@ -200,7 +200,8 @@ class ReachProcessor(object):
             if theme is None:
                 continue
             theme_agent, theme_coords = self._get_agent_from_entity(theme)
-            qstr = "$.events.frames[(@.type is 'regulation') and " + \
+            qstr = "$.events.frames[((@.type is 'regulation') or "\
+                   "(@.type is 'activation')) and " + \
                    "(@.arguments[0].arg is '%s')]" % frame_id
             reg_res = self.tree.execute(qstr)
             for reg in reg_res:
@@ -217,7 +218,7 @@ class ReachProcessor(object):
                               context=context, epistemics=epistemics)
                 args = [controller_agent, theme_agent, ev]
                 subtype = reg.get('subtype')
-                if subtype == 'positive-regulation':
+                if subtype.startswith('positive'):
                     st = IncreaseAmount(*args)
                 else:
                     st = DecreaseAmount(*args)
@@ -273,6 +274,7 @@ class ReachProcessor(object):
                           pmid=self.citation, annotations=annotations,
                           context=context, epistemics=epistemics)
             args = r['arguments']
+            controller_agent = None
             for a in args:
                 if self._get_arg_type(a) == 'controller':
                     controller_agent, controller_coords = \
@@ -281,6 +283,8 @@ class ReachProcessor(object):
                     controlled = a['arg']
             controlled_agent, controlled_coords = \
                 self._get_agent_from_entity(controlled)
+            if controller_agent is None or controlled_agent is None:
+                continue
             annotations['agents']['coords'] = [controller_coords,
                                                controlled_coords]
             if r['subtype'] == 'positive-activation':

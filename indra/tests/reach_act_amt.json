@@ -1,0 +1,484 @@
+{
+  "events" : {
+    "frames" : [ {
+      "frame-id" : "evem-api1789-UAZ-r1-Reach-0-11103",
+      "text" : "levels of p53",
+      "arguments" : [ {
+        "text" : "p53",
+        "argument-type" : "entity",
+        "type" : "theme",
+        "object-type" : "argument",
+        "index" : 0,
+        "arg" : "ment-api1789-UAZ-r1-Reach-0-139368"
+      } ],
+      "type" : "amount",
+      "frame-type" : "event-mention",
+      "subtype" : "amount",
+      "is-direct" : false,
+      "end-pos" : {
+        "reference" : "pass-api1789-UAZ-r1-Reach",
+        "offset" : 13,
+        "object-type" : "relative-pos"
+      },
+      "trigger" : "levels",
+      "object-type" : "frame",
+      "start-pos" : {
+        "reference" : "pass-api1789-UAZ-r1-Reach",
+        "offset" : 0,
+        "object-type" : "relative-pos"
+      },
+      "sentence" : "sent-api1789-UAZ-r1-Reach-0",
+      "found-by" : "amount_1",
+      "verbose-text" : "levels of p53 mediating DNA damage genes"
+    }, {
+      "frame-id" : "evem-api1789-UAZ-r1-Reach-0-11104",
+      "text" : "levels of p53-mediating DNA damage",
+      "arguments" : [ {
+        "text" : "levels of p53",
+        "argument-type" : "event",
+        "type" : "controlled",
+        "object-type" : "argument",
+        "index" : 0,
+        "arg" : "evem-api1789-UAZ-r1-Reach-0-11103"
+      }, {
+        "text" : "DNA damage",
+        "argument-type" : "entity",
+        "type" : "controller",
+        "object-type" : "argument",
+        "index" : 0,
+        "arg" : "ment-api1789-UAZ-r1-Reach-0-139369"
+      } ],
+      "type" : "activation",
+      "frame-type" : "event-mention",
+      "subtype" : "positive-activation",
+      "is-direct" : false,
+      "end-pos" : {
+        "reference" : "pass-api1789-UAZ-r1-Reach",
+        "offset" : 34,
+        "object-type" : "relative-pos"
+      },
+      "trigger" : "mediating",
+      "object-type" : "frame",
+      "start-pos" : {
+        "reference" : "pass-api1789-UAZ-r1-Reach",
+        "offset" : 0,
+        "object-type" : "relative-pos"
+      },
+      "sentence" : "sent-api1789-UAZ-r1-Reach-0",
+      "found-by" : "Positive_activation_syntax_1_verb",
+      "verbose-text" : "levels of p53 mediating DNA damage genes"
+    } ],
+    "object-type" : "frame-collection",
+    "object-meta" : {
+      "processing-end" : "2020-01-18T22:42:19Z",
+      "doc-id" : "api1789",
+      "component-type" : "machine",
+      "component" : "Reach",
+      "processing-start" : "2020-01-18T22:42:18Z",
+      "object-type" : "meta-info",
+      "organization" : "UAZ"
+    }
+  },
+  "entities" : {
+    "frames" : [ {
+      "text" : "p53",
+      "frame-id" : "ment-api1789-UAZ-r1-Reach-0-139368",
+      "type" : "protein",
+      "frame-type" : "entity-mention",
+      "end-pos" : {
+        "reference" : "pass-api1789-UAZ-r1-Reach",
+        "offset" : 13,
+        "object-type" : "relative-pos"
+      },
+      "xrefs" : [ {
+        "namespace" : "uniprot",
+        "species" : "homo sapiens",
+        "object-type" : "db-reference",
+        "id" : "P04637"
+      } ],
+      "object-type" : "frame",
+      "start-pos" : {
+        "reference" : "pass-api1789-UAZ-r1-Reach",
+        "offset" : 10,
+        "object-type" : "relative-pos"
+      },
+      "sentence" : "sent-api1789-UAZ-r1-Reach-0",
+      "alt-xrefs" : [ {
+        "namespace" : "uniprot",
+        "species" : "homo sapiens",
+        "object-type" : "db-reference",
+        "id" : "P04637"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "human",
+        "object-type" : "db-reference",
+        "id" : "P04637"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "arabidopsis thaliana",
+        "object-type" : "db-reference",
+        "id" : "Q42578"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "barbel",
+        "object-type" : "db-reference",
+        "id" : "Q9W678"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "barbus barbus",
+        "object-type" : "db-reference",
+        "id" : "Q9W678"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bec",
+        "object-type" : "db-reference",
+        "id" : "Q288N7"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bec-nb",
+        "object-type" : "db-reference",
+        "id" : "Q8JN60"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "beluga whale",
+        "object-type" : "db-reference",
+        "id" : "Q8SPZ3"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bovine enteric calicivirus nb",
+        "object-type" : "db-reference",
+        "id" : "Q8JN60"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bovine enteric calicivirus newbury agent-1",
+        "object-type" : "db-reference",
+        "id" : "Q288N7"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "canis familiaris",
+        "object-type" : "db-reference",
+        "id" : "Q29537"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "canis lupus familiaris",
+        "object-type" : "db-reference",
+        "id" : "Q29537"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "channel catfish",
+        "object-type" : "db-reference",
+        "id" : "O93379"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "chinese hamster",
+        "object-type" : "db-reference",
+        "id" : "O09185"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "common tree shrew",
+        "object-type" : "db-reference",
+        "id" : "Q9TTA1"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "congo puffer",
+        "object-type" : "db-reference",
+        "id" : "Q9W679"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "crab-eating macaque",
+        "object-type" : "db-reference",
+        "id" : "P56423"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "cricetulus barabensis griseus",
+        "object-type" : "db-reference",
+        "id" : "O09185"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "cricetulus griseus",
+        "object-type" : "db-reference",
+        "id" : "O09185"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "cynomolgus monkey",
+        "object-type" : "db-reference",
+        "id" : "P56423"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "cyprinus barbus",
+        "object-type" : "db-reference",
+        "id" : "Q9W678"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "delphinapterus leucas",
+        "object-type" : "db-reference",
+        "id" : "Q8SPZ3"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "dog",
+        "object-type" : "db-reference",
+        "id" : "Q29537"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "equus caballus",
+        "object-type" : "db-reference",
+        "id" : "P79892"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "european flounder",
+        "object-type" : "db-reference",
+        "id" : "O12946"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "green swordtail",
+        "object-type" : "db-reference",
+        "id" : "O57538"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "horse",
+        "object-type" : "db-reference",
+        "id" : "P79892"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "ictalurus punctatus",
+        "object-type" : "db-reference",
+        "id" : "O93379"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "isolate bovine/uk/newbury1/1976",
+        "object-type" : "db-reference",
+        "id" : "Q288N7"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "isolate bovine/united states/nebraska/1980",
+        "object-type" : "db-reference",
+        "id" : "Q8JN60"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "japanese killifish",
+        "object-type" : "db-reference",
+        "id" : "P79820"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "japanese macaque",
+        "object-type" : "db-reference",
+        "id" : "P61260"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "japanese rice fish",
+        "object-type" : "db-reference",
+        "id" : "P79820"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "macaca fascicularis",
+        "object-type" : "db-reference",
+        "id" : "P56423"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "macaca fuscata fuscata",
+        "object-type" : "db-reference",
+        "id" : "P61260"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "macaca mulatta",
+        "object-type" : "db-reference",
+        "id" : "P56424"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "mouse",
+        "object-type" : "db-reference",
+        "id" : "P02340"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "mouse-ear cress",
+        "object-type" : "db-reference",
+        "id" : "Q42578"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "mus musculus",
+        "object-type" : "db-reference",
+        "id" : "P02340"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "oncorhynchus mykiss",
+        "object-type" : "db-reference",
+        "id" : "P25035"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "oryzias latipes",
+        "object-type" : "db-reference",
+        "id" : "P79820"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "pig",
+        "object-type" : "db-reference",
+        "id" : "Q9TUB2"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "platichthys flesus",
+        "object-type" : "db-reference",
+        "id" : "O12946"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "platypoecilus maculatus",
+        "object-type" : "db-reference",
+        "id" : "Q92143"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "pleuronectes flesus",
+        "object-type" : "db-reference",
+        "id" : "O12946"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "rainbow trout",
+        "object-type" : "db-reference",
+        "id" : "P25035"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "rat",
+        "object-type" : "db-reference",
+        "id" : "P10361"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "rattus norvegicus",
+        "object-type" : "db-reference",
+        "id" : "P10361"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "rhesus macaque",
+        "object-type" : "db-reference",
+        "id" : "P56424"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "salmo gairdneri",
+        "object-type" : "db-reference",
+        "id" : "P25035"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "silurus punctatus",
+        "object-type" : "db-reference",
+        "id" : "O93379"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "southern platyfish",
+        "object-type" : "db-reference",
+        "id" : "Q92143"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "sus scrofa",
+        "object-type" : "db-reference",
+        "id" : "Q9TUB2"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "tetraodon miurus",
+        "object-type" : "db-reference",
+        "id" : "Q9W679"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "tupaia belangeri",
+        "object-type" : "db-reference",
+        "id" : "Q9TTA1"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "tupaia glis belangeri",
+        "object-type" : "db-reference",
+        "id" : "Q9TTA1"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "xiphophorus helleri",
+        "object-type" : "db-reference",
+        "id" : "O57538"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "xiphophorus maculatus",
+        "object-type" : "db-reference",
+        "id" : "Q92143"
+      } ]
+    }, {
+      "text" : "DNA damage",
+      "frame-id" : "ment-api1789-UAZ-r1-Reach-0-139369",
+      "type" : "bioprocess",
+      "frame-type" : "entity-mention",
+      "end-pos" : {
+        "reference" : "pass-api1789-UAZ-r1-Reach",
+        "offset" : 34,
+        "object-type" : "relative-pos"
+      },
+      "xrefs" : [ {
+        "namespace" : "mesh",
+        "species" : "human",
+        "object-type" : "db-reference",
+        "id" : "D004249"
+      } ],
+      "object-type" : "frame",
+      "start-pos" : {
+        "reference" : "pass-api1789-UAZ-r1-Reach",
+        "offset" : 24,
+        "object-type" : "relative-pos"
+      },
+      "sentence" : "sent-api1789-UAZ-r1-Reach-0",
+      "alt-xrefs" : [ {
+        "namespace" : "mesh",
+        "species" : "human",
+        "object-type" : "db-reference",
+        "id" : "D004249"
+      } ]
+    } ],
+    "object-type" : "frame-collection",
+    "object-meta" : {
+      "processing-end" : "2020-01-18T22:42:19Z",
+      "doc-id" : "api1789",
+      "component-type" : "machine",
+      "component" : "Reach",
+      "processing-start" : "2020-01-18T22:42:18Z",
+      "object-type" : "meta-info",
+      "organization" : "UAZ"
+    }
+  },
+  "sentences" : {
+    "frames" : [ {
+      "text" : "levels of p53-mediating DNA damage genes",
+      "frame-id" : "pass-api1789-UAZ-r1-Reach",
+      "section-id" : "NoSection",
+      "frame-type" : "passage",
+      "is-title" : false,
+      "section-name" : "NoSection",
+      "object-type" : "frame",
+      "index" : "Reach",
+      "object-meta" : {
+        "component" : "nxml2fries",
+        "object-type" : "meta-info"
+      }
+    }, {
+      "text" : "levels of p53 mediating DNA damage genes",
+      "frame-id" : "sent-api1789-UAZ-r1-Reach-0",
+      "passage" : "pass-api1789-UAZ-r1-Reach",
+      "frame-type" : "sentence",
+      "end-pos" : {
+        "reference" : "pass-api1789-UAZ-r1-Reach",
+        "offset" : 40,
+        "object-type" : "relative-pos"
+      },
+      "object-type" : "frame",
+      "start-pos" : {
+        "reference" : "pass-api1789-UAZ-r1-Reach",
+        "offset" : 0,
+        "object-type" : "relative-pos"
+      },
+      "object-meta" : {
+        "component" : "BioNLPProcessor",
+        "object-type" : "meta-info"
+      }
+    } ],
+    "object-type" : "frame-collection",
+    "object-meta" : {
+      "processing-end" : "2020-01-18T22:42:19Z",
+      "doc-id" : "api1789",
+      "component-type" : "machine",
+      "component" : "Reach",
+      "processing-start" : "2020-01-18T22:42:18Z",
+      "object-type" : "meta-info",
+      "organization" : "UAZ"
+    }
+  }
+}
