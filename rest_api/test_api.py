@@ -175,8 +175,11 @@ def test_belief_filter():
 
 
 def test_ontology_mapping():
-    c1 = Concept('x', db_refs={'UN': [('UN/events/human/famine', 1.0)]})
-    c2 = Concept('y', db_refs={'UN': [('UN/entities/human/education', 1.0)]})
+    c1 = Concept('x', db_refs={'WM': [('wm/concept/causal_factor/'
+                                       'health_and_life/famine', 1.0)]})
+    c2 = Concept('y', db_refs={'WM': [('wm/concept/causal_factor/'
+                                       'social_and_political/education/'
+                                       'education', 1.0)]})
 
     st = Influence(Event(c1), Event(c2))
     stmts_json = stmts_to_json([st])
@@ -185,10 +188,8 @@ def test_ontology_mapping():
     res_json = res.json()
     stmts_json = res_json.get('statements')
     stmt = stmts_from_json(stmts_json)[0]
-    assert 'HUME' in stmt.subj.concept.db_refs
-    assert 'SOFIA' in stmt.subj.concept.db_refs
-    assert 'HUME' in stmt.obj.concept.db_refs
-    assert 'SOFIA' in stmt.obj.concept.db_refs
+    assert 'SOFIA' in stmt.subj.concept.db_refs, stmt.subj.concept.db_refs
+    assert 'SOFIA' in stmt.obj.concept.db_refs, stmt.obj.concept.db_refs
 
 
 def test_preassembly_wm_scorer():
