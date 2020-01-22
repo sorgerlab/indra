@@ -71,6 +71,7 @@ BDKR
 BEST
 Beta_3_4_GTF
 BIRC
+BLVR
 BMP
 BMP_receptor
 BMP_receptor_type_I
@@ -117,12 +118,14 @@ Chemokine_receptor
 Chloride_calcium_activated_channels
 Chloride_channels
 Cholinesterase
+CHK
 CHRM
 CHRN
 CK2
 Clathrin
 CLCN
 CLIC
+CLK
 CNG
 CNKSR
 Cofilin
@@ -149,14 +152,17 @@ CTNNA
 CUL
 CXCL_ELR_negative
 CXCL_ELR_positive
+Creatine_kinase
 Cyclin
 Cyclin_A
 Cyclin_D
 Cyclin_E
 Cyclophilin
 Cytoplasmic_dynein
+DAPK
 DDR
 Death_receptor
+Deoxyribonucleoside_kinases
 Desmoglein
 DGC
 DGK
@@ -169,6 +175,7 @@ DYRK
 E2F
 E3_Ub_ligase
 EDN
+EFN
 EGFR_ligand
 EGR
 EIF2B
@@ -180,6 +187,8 @@ EIF4G
 ELA
 ENO
 Eotaxin
+EPHA
+EPHB
 Ephrin_receptor
 EPN
 ERBB
@@ -192,6 +201,7 @@ ETC_complex_III
 ETC_complex_I_supernumerary
 ETC_complex_IV
 ETC_complex_V
+ETNK
 ETS
 EXOC
 EXT
@@ -335,6 +345,7 @@ MAP2K
 MAP3K
 MAPK
 MCM
+MED
 MEF2
 MEK
 Metallothionein
@@ -342,6 +353,7 @@ MGAT
 Mitochondrial_Ribosome
 MKNK
 MMP
+MOB
 MRPL
 MRPS
 mTORC1
@@ -369,6 +381,7 @@ NCOA
 NCOR
 NDRG
 Neurexins
+Neuropeptides
 NFAT
 NFE
 NFkappaB
@@ -444,6 +457,7 @@ Phosphatase
 PI3K
 PI3K_p110
 PI3K_p85
+PI4K
 PIK3R_I
 PIM
 PKA
@@ -503,6 +517,7 @@ RFX
 RGL
 RHO
 RhoGDI
+RIPK
 RLR
 RNApo_I
 RNApo_II
@@ -511,6 +526,9 @@ ROCK
 ROR
 RPA
 RSK
+RSTK
+RSTK1
+RSTK2
 RTK
 RXR
 RYR
@@ -544,6 +562,7 @@ Sodium_channels
 Sodium_voltage_gated_channel_alpha_subunits
 Sodium_voltage_gated_channel_beta_subunits
 SOS
+SPHK
 SPRED
 SPRY
 SRC
@@ -553,8 +572,10 @@ STAT5
 STT3
 Sulfonylurea_receptor
 SWI_SNF
+TAC
 TAOK
 TAP
+TAT_associated_kinase
 TCF_LEF
 TCR
 TEAD
@@ -567,10 +588,12 @@ THR
 Thrombin_antithrombin
 TIAM
 TIF_IB
+TK
 TLR
 TN
 TNF
 TNFRSF
+TOP
 TOP2
 TPCN
 Troponin
@@ -597,5 +620,6 @@ VEGF
 VEGFR
 Voltage_gated_ion_channels
 Wnt
+Wnt5
 YBX
 ZACN
