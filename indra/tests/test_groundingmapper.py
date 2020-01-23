@@ -478,3 +478,5 @@ def test_gilda_disambiguation():
     annotations = mapped_stmts2[0].evidence[0].annotations
     assert len(annotations['agents']['gilda'][1]) == 2, \
         annotations
+    assert annotations['agents']['gilda'][0] is None
+    assert annotations['agents']['gilda'][1] is not None

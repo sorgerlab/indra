@@ -168,13 +168,15 @@ def run_gilda_disambiguation(stmt, agent, idx, mode='web'):
     if 'agents' in annots:
         if 'gilda' not in annots['agents']:
             annots['agents']['gilda'] = \
-                {'gilda': [None for _ in stmt.agent_list()]}
+                [None for _ in stmt.agent_list()]
     else:
         annots['agents'] = {'gilda': [None for _ in stmt.agent_list()]}
     grounding_text = _get_text_for_grounding(stmt, agent_txt)
     if grounding_text:
         gilda_result = ground_agent(agent, agent_txt, grounding_text, mode)
         if gilda_result:
+            logger.info('Disambiguated %s to: %s' %
+                        (agent_txt, agent.name))
             annots['agents']['gilda'][idx] = gilda_result
             success = True
     return success
