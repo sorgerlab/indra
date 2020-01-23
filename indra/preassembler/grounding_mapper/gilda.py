@@ -5,23 +5,31 @@ import requests
 from urllib.parse import urljoin
 from indra.preassembler.grounding_mapper.standardize \
     import standardize_agent_name
-from indra.config import get_config
+from indra.config import get_config, has_config
 from .adeft import _get_text_for_grounding
 
 logger = logging.getLogger(__name__)
 
-grounding_service_url = get_config('GILDA_URL')
+grounding_service_url = get_config('GILDA_URL') if has_config('GILDA_URL') \
+    else 'http://grounding.indra.bio/'
 
 
-def get_gilda_models():
+def get_gilda_models(mode='web'):
     """Return a list of strings for which Gilda has a disambiguation model.
+
+    Parameters
+    ----------
+    mode : Optional[str]
+        If 'web', the web service given in the GILDA_URL config setting or
+        environmental variable is used. Otherwise, the gilda package is
+        attempted to be imported and used. Default: web
 
     Returns
     -------
     list[str]
         A list of entity strings.
     """
-    if grounding_service_url:
+    if mode == 'web':
         res = requests.post(urljoin(grounding_service_url, 'models'))
         models = res.json()
         return models
@@ -30,7 +38,7 @@ def get_gilda_models():
         return get_models()
 
 
-def ground_agent(agent, txt, context=None):
+def ground_agent(agent, txt, context=None, mode='web'):
     """Set the grounding of a given agent, by re-grounding with Gilda.
 
     This function changes the agent in place without returning a value.
@@ -44,8 +52,12 @@ def ground_agent(agent, txt, context=None):
     context : Optional[str]
         Any additional text context to help disambiguate the sense
         associated with txt.
+    mode : Optional[str]
+        If 'web', the web service given in the GILDA_URL config setting or
+        environmental variable is used. Otherwise, the gilda package is
+        attempted to be imported and used. Default: web
     """
-    if grounding_service_url:
+    if mode == 'web':
         resp = requests.post(urljoin(grounding_service_url, 'ground'),
                              json={'text': txt, 'context': context})
         results = resp.json()
@@ -65,7 +77,7 @@ def ground_agent(agent, txt, context=None):
             standardize_agent_name(agent, standardize_refs=True)
 
 
-def ground_statement(stmt):
+def ground_statement(stmt, mode='web'):
     """Set grounding for Agents in a given Statement using Gilda.
 
     This function modifies the original Statement/Agents in place.
@@ -74,6 +86,10 @@ def ground_statement(stmt):
     ----------
     stmt : indra.statements.Statement
         A Statement to ground
+    mode : Optional[str]
+        If 'web', the web service given in the GILDA_URL config setting or
+        environmental variable is used. Otherwise, the gilda package is
+        attempted to be imported and used. Default: web
     """
     if stmt.evidence and stmt.evidence[0].text:
         context = stmt.evidence[0].text
@@ -82,10 +98,10 @@ def ground_statement(stmt):
     for agent in stmt.agent_list():
         if agent is not None and 'TEXT' in agent.db_refs:
             txt = agent.db_refs['TEXT']
-            ground_agent(agent, txt, context)
+            ground_agent(agent, txt, context, mode=mode)
 
 
-def ground_statements(stmts):
+def ground_statements(stmts, mode='web'):
     """Set grounding for Agents in a list of Statements using Gilda.
 
     This function modifies the original Statements/Agents in place.
@@ -94,12 +110,16 @@ def ground_statements(stmts):
     ----------
     stmts : list[indra.statements.Statement]
         A list of Statements to ground
+    mode : Optional[str]
+        If 'web', the web service given in the GILDA_URL config setting or
+        environmental variable is used. Otherwise, the gilda package is
+        attempted to be imported and used. Default: web
     """
     for stmt in stmts:
-        ground_statement(stmt)
+        ground_statement(stmt, mode)
 
 
-def run_gilda_disambiguation(stmt, agent, idx):
+def run_gilda_disambiguation(stmt, agent, idx, mode='web'):
     """Run Gilda disambiguation on an Agent in a given Statement.
 
     This function looks at the evidence of the given Statement and attempts
@@ -122,6 +142,10 @@ def run_gilda_disambiguation(stmt, agent, idx):
     idx : int
         The index of the new Agent's position in the Statement's agent list
         (needed to set annotations correctly).
+    mode : Optional[str]
+        If 'web', the web service given in the GILDA_URL config setting or
+        environmental variable is used. Otherwise, the gilda package is
+        attempted to be imported and used. Default: web
 
     Returns
     -------
@@ -149,7 +173,7 @@ def run_gilda_disambiguation(stmt, agent, idx):
         annots['agents'] = {'gilda': [None for _ in stmt.agent_list()]}
     grounding_text = _get_text_for_grounding(stmt, agent_txt)
     if grounding_text:
-        gilda_result = ground_agent(agent, agent_txt, grounding_text)
+        gilda_result = ground_agent(agent, agent_txt, grounding_text, mode)
         if gilda_result:
             annots['agents']['gilda'][idx] = gilda_result
             success = True

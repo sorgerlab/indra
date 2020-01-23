@@ -429,15 +429,16 @@ def test_misgrounding():
 
 
 def test_ground_gilda():
-    mek = Agent('Mek', db_refs={'TEXT': 'MEK'})
-    erk = Agent('Erk1', db_refs={'TEXT': 'Erk1'})
-    stmt = Phosphorylation(mek, erk)
-    ground_statements([stmt])
-    assert stmt.enz.name == 'MEK', stmt.enz
-    assert stmt.enz.db_refs['FPLX'] == 'MEK'
-    assert stmt.sub.name == 'MAPK3'
-    assert stmt.sub.db_refs['HGNC'] == '6877'
-    assert stmt.sub.db_refs['UP'] == 'P27361'
+    for mode in ['web', 'local']:
+        mek = Agent('Mek', db_refs={'TEXT': 'MEK'})
+        erk = Agent('Erk1', db_refs={'TEXT': 'Erk1'})
+        stmt = Phosphorylation(mek, erk)
+        ground_statements([stmt], mode=mode)
+        assert stmt.enz.name == 'MEK', stmt.enz
+        assert stmt.enz.db_refs['FPLX'] == 'MEK'
+        assert stmt.sub.name == 'MAPK3'
+        assert stmt.sub.db_refs['HGNC'] == '6877'
+        assert stmt.sub.db_refs['UP'] == 'P27361'
 
 
 def test_get_gilda_models():

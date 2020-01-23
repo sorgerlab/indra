@@ -41,12 +41,15 @@ class GroundingMapper(object):
     use_adeft : Optional[bool]
         If True, Adeft will be attempted to be used for disambiguation of
         acronyms. Default: True
-    use_gilda : Optional[bool]
-        If True, Gilda will be attempted to be used for disambiguation of
-        ambiguous entity texts. Default: True
+    gilda_mode : Optional[str]
+        If None, Gilda will not be used at all. If 'web', the GILDA_URL
+        setting from the config file or as an environmental variable
+        is assumed to be the web service endpoint through which Gilda is used.
+        If 'local', we assume that the gilda Python package is installed
+        and will be used.
     """
     def __init__(self, grounding_map=None, agent_map=None, ignores=None,
-                 misgrounding_map=None, use_adeft=True, use_gilda=True):
+                 misgrounding_map=None, use_adeft=True, gilda_mode='web'):
         self.grounding_map = grounding_map if grounding_map is not None \
             else default_grounding_map
         self.check_grounding_map(self.grounding_map)
@@ -56,8 +59,18 @@ class GroundingMapper(object):
         self.misgrounding_map = misgrounding_map if misgrounding_map \
             else default_misgrounding_map
         self.use_adeft = use_adeft
-        self.use_gilda = use_gilda
-        self.gilda_models = get_gilda_models() if self.use_gilda else []
+        self.gilda_mode = gilda_mode
+        self._gilda_models = None
+
+    @property
+    def gilda_models(self):
+        if self._gilda_models is None:
+            self._gilda_models = get_gilda_models() if self.gilda_mode else []
+        return self._gilda_models
+
+    @gilda_models.setter
+    def gilda_models(self, models):
+        self._gilda_models = models
 
     @staticmethod
     def check_grounding_map(gm):
@@ -149,7 +162,7 @@ class GroundingMapper(object):
                     logger.error(e)
 
             gilda_success = False
-            if not adeft_success and self.use_gilda and \
+            if not adeft_success and self.gilda_mode and \
                     agent_txt in self.gilda_models:
                 try:
                     gilda_success = run_gilda_disambiguation(mapped_stmt,
