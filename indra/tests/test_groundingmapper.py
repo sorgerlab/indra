@@ -400,6 +400,24 @@ def test_adeft_mapping():
     assert 'GO:GO:0005783' in annotations['agents']['adeft'][1]
 
 
+def test_adeft_mapping_non_pos():
+    pcs = Agent('PCS', db_refs={'TEXT': 'PCS'})
+    # This is an exact definition of a non-positive label entry so we
+    # expect that it will be applied as a grounding
+    ev = Evidence(text='post concussive symptoms (PCS)')
+    stmt = Phosphorylation(None, pcs, evidence=[ev])
+    mapped_stmt = gm.map_stmts([stmt])[0]
+    assert 'MESH' in mapped_stmt.sub.db_refs, mapped_stmt.evidence
+
+    pcs = Agent('PCS', db_refs={'TEXT': 'PCS', 'MESH': 'xxx'})
+    # There a non-positive entry is implied but not exactly, so
+    # the prior grounding will be removed.
+    ev = Evidence(text='post symptoms concussive concussion')
+    stmt = Phosphorylation(None, pcs, evidence=[ev])
+    mapped_stmt = gm.map_stmts([stmt])[0]
+    assert 'MESH' not in mapped_stmt.sub.db_refs, mapped_stmt.evidence
+
+
 def test_misgrounding():
     baz1 = Agent('ZNF214', db_refs={'TEXT': 'baz1', 'HGNC': '13006'})
     stmt = Phosphorylation(None, baz1)
