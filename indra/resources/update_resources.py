@@ -724,14 +724,6 @@ def update_hpo():
     OboClient.update_resource(path, url, 'hp', remove_prefix=False)
 
 
-def update_gilda_models():
-    from indra.preassembler.grounding_mapper.gilda import get_gilda_models
-    models = get_gilda_models(offline=False)
-    fname = os.path.join(path, 'gilda_models.txt')
-    with open(fname, 'w') as fh:
-        fh.write('\n'.join(models))
-
-
 def main():
     update_go_id_mappings()
     update_cellular_component_hierarchy()
@@ -758,7 +750,6 @@ def main():
     update_doid()
     update_efo()
     update_hpo()
-    update_gilda_models()
 
 
 if __name__ == '__main__':

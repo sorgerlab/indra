@@ -30,6 +30,7 @@ def main():
                                   'click'],
                       'explanation': ['kappy==4.0.0rc1', 'paths-graph'],
                       'adeft': ['adeft'],
+                      'gilda': ['gilda'],
                       # AWS interface and database
                       'aws': ['boto3', 'reportlab'],
                       # Utilities

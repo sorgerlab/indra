@@ -11,8 +11,7 @@ from .adeft import _get_text_for_grounding
 
 logger = logging.getLogger(__name__)
 
-grounding_service_url = get_config('GILDA_URL') if has_config('GILDA_URL') \
-    else 'http://grounding.indra.bio'
+grounding_service_url = get_config('GILDA_URL')
 
 
 def get_gilda_models(offline=True):
@@ -30,28 +29,34 @@ def get_gilda_models(offline=True):
     list[str]
         A list of entity strings.
     """
-    if offline:
-        fname = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                             os.pardir, os.pardir, 'resources',
-                             'gilda_models.txt')
-        with open(fname, 'r') as fh:
-            return [l.strip() for l in fh.readlines()]
-    else:
+    if grounding_service_url:
         res = requests.post(urljoin(grounding_service_url, 'models'))
         models = res.json()
         return models
+    else:
+        from gilda import get_models
+        return get_models()
 
 
 def ground_agent(agent, txt, context=None):
-    resp = requests.post(urljoin(grounding_service_url, 'ground'),
-                         json={'text': txt, 'context': context})
-    results = resp.json()
-    if results:
-        db_refs = {'TEXT': txt,
-                   results[0]['term']['db']: results[0]['term']['id']}
-        agent.db_refs = db_refs
-        standardize_agent_name(agent, standardize_refs=True)
-    return results
+    if grounding_service_url:
+        resp = requests.post(urljoin(grounding_service_url, 'ground'),
+                             json={'text': txt, 'context': context})
+        results = resp.json()
+        if results:
+            db_refs = {'TEXT': txt,
+                       results[0]['term']['db']: results[0]['term']['id']}
+            agent.db_refs = db_refs
+            standardize_agent_name(agent, standardize_refs=True)
+        return results
+    else:
+        from gilda import ground
+        results = ground(txt, context)
+        if results:
+            db_refs = {'TEXT': txt,
+                       results[0].term.db: results[0].term.id}
+            agent.db_refs = db_refs
+            standardize_agent_name(agent, standardize_refs=True)
 
 
 def ground_statement(stmt):
