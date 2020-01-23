@@ -1,12 +1,11 @@
 """This module implements a client to the Gilda grounding web service,
 and contains functions to help apply it during the course of INDRA assembly."""
-import os
 import logging
 import requests
 from urllib.parse import urljoin
 from indra.preassembler.grounding_mapper.standardize \
     import standardize_agent_name
-from indra.config import get_config, has_config
+from indra.config import get_config
 from .adeft import _get_text_for_grounding
 
 logger = logging.getLogger(__name__)
@@ -14,15 +13,8 @@ logger = logging.getLogger(__name__)
 grounding_service_url = get_config('GILDA_URL')
 
 
-def get_gilda_models(offline=True):
+def get_gilda_models():
     """Return a list of strings for which Gilda has a disambiguation model.
-
-    Parameters
-    ----------
-    offline : Optional[bool]
-        If True, INDRA's local resource file is used to determine the set
-        of models. Otherwise, the web service is invoked to get the
-        set of models. Default: True
 
     Returns
     -------
@@ -39,6 +31,20 @@ def get_gilda_models(offline=True):
 
 
 def ground_agent(agent, txt, context=None):
+    """Set the grounding of a given agent, by re-grounding with Gilda.
+
+    This function changes the agent in place without returning a value.
+
+    Parameters
+    ----------
+    agent : indra.statements.Agent
+        The Agent whose db_refs shuld be changed.
+    txt : str
+        The text by which the Agent should be grounded.
+    context : Optional[str]
+        Any additional text context to help disambiguate the sense
+        associated with txt.
+    """
     if grounding_service_url:
         resp = requests.post(urljoin(grounding_service_url, 'ground'),
                              json={'text': txt, 'context': context})
