@@ -228,6 +228,8 @@ of dependencies.
 +-----------------+------------------------------------------------------+
 |sbml             |SBML model export through the PySB Assembler          |
 +-----------------+------------------------------------------------------+
+|grounding        |Packages for re-grounding and disambiguating entities |
++-----------------+------------------------------------------------------+
 |machine          |Running a local instance of a "RAS machine"           |
 +-----------------+------------------------------------------------------+
 |explanation      |Finding explanatory paths in rule-based models        |
