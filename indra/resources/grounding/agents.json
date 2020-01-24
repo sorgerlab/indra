@@ -31,6 +31,22 @@
   },
   "nl": "ERK that is phosphorylated"
  },
+ "phospho-ERK": {
+  "agent": {
+   "name": "ERK",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "FPLX": "ERK",
+    "NCIT": "C26360"
+   }
+  },
+  "nl": "ERK that is phosphorylated"
+ },
  "p-mTOR": {
   "agent": {
    "name": "MTOR",
