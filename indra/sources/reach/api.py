@@ -61,14 +61,17 @@ def process_pmc(pmc_id, offline=False, output_fname=default_output_fname):
         A ReachProcessor containing the extracted INDRA Statements
         in rp.statements.
     """
+    logger.info('Loading %s from PMC' % pmc_id)
     xml_str = pmc_client.get_xml(pmc_id)
     if xml_str is None:
         return None
     fname = pmc_id + '.nxml'
     with open(fname, 'wb') as fh:
         fh.write(xml_str.encode('utf-8'))
+    logger.info('Looking up PMID for %s' % pmc_id)
     ids = id_lookup(pmc_id, 'pmcid')
     pmid = ids.get('pmid')
+    logger.info('Processing %s with REACH' % pmc_id)
     rp = process_nxml_file(fname, citation=pmid, offline=offline,
                            output_fname=output_fname)
     return rp
@@ -290,7 +293,8 @@ def process_nxml_file(file_name, citation=None, offline=False,
     """
     with open(file_name, 'rb') as f:
         nxml_str = f.read().decode('utf-8')
-        return process_nxml_str(nxml_str, citation, False, output_fname)
+        return process_nxml_str(nxml_str, citation, offline=offline,
+                                output_fname=output_fname)
 
 
 def process_json_file(file_name, citation=None):
