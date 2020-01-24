@@ -49,7 +49,7 @@ class GroundingMapper(object):
         and will be used.
     """
     def __init__(self, grounding_map=None, agent_map=None, ignores=None,
-                 misgrounding_map=None, use_adeft=True, gilda_mode='web'):
+                 misgrounding_map=None, use_adeft=True, gilda_mode=None):
         self.grounding_map = grounding_map if grounding_map is not None \
             else default_grounding_map
         self.check_grounding_map(self.grounding_map)

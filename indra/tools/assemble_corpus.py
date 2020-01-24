@@ -126,7 +126,7 @@ def map_grounding(stmts_in, **kwargs):
     gm = GroundingMapper(gm, agent_map=agent_map,
                          misgrounding_map=misgm, ignores=ignores,
                          use_adeft=kwargs.get('use_adeft', True),
-                         gilda_mode=kwargs.get('gilda_mode', 'web'))
+                         gilda_mode=kwargs.get('gilda_mode', None))
     stmts_out = gm.map_stmts(stmts_in, do_rename=do_rename)
     dump_pkl = kwargs.get('save')
     if dump_pkl:
