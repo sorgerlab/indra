@@ -448,6 +448,7 @@ def test_get_gilda_models():
 
 @attr('nonpublic')
 def test_gilda_disambiguation():
+    gm.gilda_mode = 'web'
     er1 = Agent('NDR1', db_refs={'TEXT': 'NDR1'})
     pmid1 = '18362890'
     stmt1 = Phosphorylation(None, er1,
