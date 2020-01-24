@@ -1,5 +1,6 @@
 import logging
-from .mapper import GroundingMapper
+from indra.preassembler.grounding_mapper.standardize \
+    import standardize_agent_name
 
 logger = logging.getLogger(__name__)
 
@@ -65,29 +66,42 @@ def run_adeft_disambiguation(stmt, agent, idx):
     else:
         annots['agents'] = {'adeft': [None for _ in stmt.agent_list()]}
     grounding_text = _get_text_for_grounding(stmt, agent_txt)
+
+    def apply_grounding(agent, agent_txt, ns_and_id):
+        db_ns, db_id = ns_and_id.split(':', maxsplit=1)
+        if db_ns == 'CHEBI' and not db_id.startswith('CHEBI:'):
+            db_id = 'CHEBI:%s' % db_id
+        agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
+        agent.name = standard_name
+        logger.info('Disambiguated %s to: %s, %s:%s' %
+                    (agent_txt, standard_name, db_ns, db_id))
+        standardize_agent_name(agent, standardize_refs=True)
+
+    def remove_grounding(agent, agent_txt):
+        agent.name = agent_txt
+        agent.db_refs = {'TEXT': agent_txt}
+
     if grounding_text:
-        res = adeft_disambiguators[agent_txt].disambiguate(
-            [grounding_text])
+        da = adeft_disambiguators[agent_txt]
+        res = da.disambiguate([grounding_text])
         ns_and_id, standard_name, disamb_scores = res[0]
         # If the highest score is ungrounded we explicitly remove grounding
         # and reset the (potentially incorrectly standardized) name to the
         # original text value.
         if ns_and_id == 'ungrounded':
-            agent.name = agent_txt
-            agent.db_refs = {'TEXT': agent_txt}
+            remove_grounding(agent, agent_txt)
         # Otherwise we update the db_refs with what we got from DEFT
         # and set the standard name
-        else:
-            db_ns, db_id = ns_and_id.split(':', maxsplit=1)
-            if db_ns == 'CHEBI' and not db_id.startswith('CHEBI:'):
-                db_id = 'CHEBI:%s' % db_id
-            agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
-            agent.name = standard_name
-            logger.info('Disambiguated %s to: %s, %s:%s' %
-                        (agent_txt, standard_name, db_ns, db_id))
-            GroundingMapper.standardize_agent_name(agent,
-                                                   standardize_refs=True)
+        elif ns_and_id in da.pos_labels:
+            apply_grounding(agent, agent_txt, ns_and_id)
             annots['agents']['adeft'][idx] = disamb_scores
+        else:
+            if disamb_scores[ns_and_id] == 1 and ':' in ns_and_id:
+                apply_grounding(agent, agent_txt, ns_and_id)
+                annots['agents']['adeft'][idx] = disamb_scores
+            else:
+                remove_grounding(agent, agent_txt)
+
         success = True
     return success
 

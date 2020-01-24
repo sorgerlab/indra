@@ -1,7 +1,8 @@
 from indra.preassembler.grounding_mapper import default_mapper as gm
 from indra.preassembler.grounding_mapper import GroundingMapper
 from indra.preassembler.grounding_mapper.analysis import *
-from indra.preassembler.grounding_mapper.gilda import ground_statements
+from indra.preassembler.grounding_mapper.gilda import ground_statements, \
+    get_gilda_models
 from indra.statements import Agent, Phosphorylation, Complex, Inhibition, \
     Evidence, BoundCondition
 from indra.util import unicode_strs
@@ -370,7 +371,6 @@ def test_name_standardize_mesh_go():
     assert a1.name == 'epithelial to mesenchymal transition', a1.name
 
 
-
 @attr('nonpublic')
 def test_adeft_mapping():
     er1 = Agent('ER', db_refs={'TEXT': 'ER'})
@@ -400,6 +400,24 @@ def test_adeft_mapping():
     assert 'GO:GO:0005783' in annotations['agents']['adeft'][1]
 
 
+def test_adeft_mapping_non_pos():
+    pcs = Agent('PCS', db_refs={'TEXT': 'PCS'})
+    # This is an exact definition of a non-positive label entry so we
+    # expect that it will be applied as a grounding
+    ev = Evidence(text='post concussive symptoms (PCS)')
+    stmt = Phosphorylation(None, pcs, evidence=[ev])
+    mapped_stmt = gm.map_stmts([stmt])[0]
+    assert 'MESH' in mapped_stmt.sub.db_refs, mapped_stmt.evidence
+
+    pcs = Agent('PCS', db_refs={'TEXT': 'PCS', 'MESH': 'xxx'})
+    # There a non-positive entry is implied but not exactly, so
+    # the prior grounding will be removed.
+    ev = Evidence(text='post symptoms concussive concussion')
+    stmt = Phosphorylation(None, pcs, evidence=[ev])
+    mapped_stmt = gm.map_stmts([stmt])[0]
+    assert 'MESH' not in mapped_stmt.sub.db_refs, mapped_stmt.evidence
+
+
 def test_misgrounding():
     baz1 = Agent('ZNF214', db_refs={'TEXT': 'baz1', 'HGNC': '13006'})
     stmt = Phosphorylation(None, baz1)
@@ -411,12 +429,54 @@ def test_misgrounding():
 
 
 def test_ground_gilda():
-    mek = Agent('Mek', db_refs={'TEXT': 'MEK'})
-    erk = Agent('Erk1', db_refs={'TEXT': 'Erk1'})
-    stmt = Phosphorylation(mek, erk)
-    ground_statements([stmt])
-    assert stmt.enz.name == 'MEK', stmt.enz
-    assert stmt.enz.db_refs['FPLX'] == 'MEK'
-    assert stmt.sub.name == 'MAPK3'
-    assert stmt.sub.db_refs['HGNC'] == '6877'
-    assert stmt.sub.db_refs['UP'] == 'P27361'
+    for mode in ['web', 'local']:
+        mek = Agent('Mek', db_refs={'TEXT': 'MEK'})
+        erk = Agent('Erk1', db_refs={'TEXT': 'Erk1'})
+        stmt = Phosphorylation(mek, erk)
+        ground_statements([stmt], mode=mode)
+        assert stmt.enz.name == 'MEK', stmt.enz
+        assert stmt.enz.db_refs['FPLX'] == 'MEK'
+        assert stmt.sub.name == 'MAPK3'
+        assert stmt.sub.db_refs['HGNC'] == '6877'
+        assert stmt.sub.db_refs['UP'] == 'P27361'
+
+
+def test_get_gilda_models():
+    models = get_gilda_models()
+    assert 'NDR1' in models
+
+
+@attr('nonpublic')
+def test_gilda_disambiguation():
+    er1 = Agent('NDR1', db_refs={'TEXT': 'NDR1'})
+    pmid1 = '18362890'
+    stmt1 = Phosphorylation(None, er1,
+                            evidence=[Evidence(pmid=pmid1,
+                                               text_refs={'PMID': pmid1})])
+
+    er2 = Agent('NDR1', db_refs={'TEXT': 'NDR1'})
+    pmid2 = '16832411'
+    stmt2 = Inhibition(None, er2,
+                       evidence=[Evidence(pmid=pmid2,
+                                          text_refs={'PMID': pmid2})])
+
+    mapped_stmts1 = gm.map_stmts([stmt1])
+    assert mapped_stmts1[0].sub.name == 'STK38', mapped_stmts1[0].sub.name
+    assert mapped_stmts1[0].sub.db_refs['HGNC'] == '17847', \
+        mapped_stmts1[0].sub.db_refs
+    assert mapped_stmts1[0].sub.db_refs['UP'] == 'Q15208', \
+        mapped_stmts1[0].sub.db_refs
+
+    mapped_stmts2 = gm.map_stmts([stmt2])
+    assert mapped_stmts2[0].obj.name == 'NDRG1', \
+        mapped_stmts2[0].obj.name
+    assert mapped_stmts2[0].obj.db_refs['HGNC'] == '7679', \
+        mapped_stmts2[0].obj.db_refs
+    assert mapped_stmts2[0].obj.db_refs['UP'] == 'Q92597', \
+        mapped_stmts2[0].obj.db_refs
+
+    annotations = mapped_stmts2[0].evidence[0].annotations
+    assert len(annotations['agents']['gilda'][1]) == 2, \
+        annotations
+    assert annotations['agents']['gilda'][0] is None
+    assert annotations['agents']['gilda'][1] is not None

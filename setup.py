@@ -29,7 +29,7 @@ def main():
                       'machine': ['pytz', 'tzlocal', 'tweepy', 'pyyaml>=5.1.0',
                                   'click'],
                       'explanation': ['kappy==4.0.0rc1', 'paths-graph'],
-                      'adeft': ['adeft'],
+                      'grounding': ['adeft', 'gilda'],
                       # AWS interface and database
                       'aws': ['boto3', 'reportlab'],
                       # Utilities
