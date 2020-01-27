@@ -171,6 +171,17 @@ def agents_stmt_type_matches(stmt):
     return key
 
 
+def agent_name_matches(agent):
+    bw = set(agent.name.split())
+    return sorted(bw)
+
+
+def agent_name_stmt_type_matches(stmt):
+    agents = [agent_name_matches(a) for a in stmt.agent_list()]
+    key = str((stmt.__class__.__name__, agents))
+    return key
+
+
 def has_delta(stmt):
     if not stmt.delta:
         return False
