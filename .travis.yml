@@ -77,7 +77,7 @@ script:
   - echo $NOSEATTR
   # Now run all INDRA tests
   - cd $TRAVIS_BUILD_DIR
-  - python -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"
+  - python -u -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"
     indra -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
         --ignore-files='.*test_reach.py' --ignore-files='.*test_live_curation.py'
         --with-coverage --cover-inclusive --cover-package=indra
