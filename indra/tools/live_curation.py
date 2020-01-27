@@ -25,7 +25,7 @@ corpora = {}
 
 
 default_bucket = 'world-modelers'
-default_base_name = 'indra_models'
+default_key_base = 'indra_models'
 default_profile = 'wm'
 
 
@@ -196,6 +196,25 @@ def default_assembly(stmts):
 def _make_wm_ontology():
     return YamlHierarchyManager(load_yaml_from_url(wm_ont_url),
                                 rdf_graph_from_yaml, True)
+
+
+def _clean_key(s3key):
+    # Check if default_key_base ('indra_models') is present in key
+    s3key = s3key if default_key_base in s3key else \
+        default_key_base + '/' + s3key
+
+    # Replace double slashes
+    s3key = s3key.replace('//', '/')
+
+    # Ommit file part of key, assume it ends with json if it is present
+    s3key = '/'.join([s for s in s3key.split('/')[:-1]]) if \
+        s3key.endswith('.json') else s3key
+
+    # Ensure last char in string is not '/'
+    s3key = s3key[:-1] if s3key.endswith('/') else \
+        s3key
+
+    return s3key
 
 
 def _stmts_dict_to_json_str(stmt_dict):
