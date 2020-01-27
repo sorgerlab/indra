@@ -148,7 +148,7 @@ class Corpus(object):
         s3key = _clean_key(s3key)
 
         try:
-            logger.info('Getting corpus from %s' % s3key)
+            logger.info('Loading corpus from s3 at %s' % s3key)
             s3 = self._get_s3_client()
             # Get and process raw statements
             raw_stmt_jsons = s3.get_object(
