@@ -69,14 +69,13 @@ class Corpus(object):
         return str(self)
 
     @classmethod
-    def load_from_s3(cls, name, aws_name=default_profile,
-                     bucket=default_bucket, key_base_name=default_base_name):
+    def load_from_s3(cls, s3key, aws_name=default_profile,
+                     bucket=default_bucket):
         corpus = cls([], aws_name=aws_name)
-        corpus.s3_get(name, bucket, key_base_name)
+        corpus.s3_get(s3key, bucket)
         return corpus
 
-    def s3_put(self, name, bucket=default_bucket,
-               key_base_name=default_base_name):
+    def s3_put(self, s3key, bucket=default_bucket):
         """Push a corpus object to S3 in the form of three json files
 
         The json files representing the object have S3 keys of the format
@@ -88,20 +87,16 @@ class Corpus(object):
             The name of the model to upload. Is part of the S3 key.
         bucket : str
             The S3 bucket to upload the Corpus to. Default: 'world-modelers'.
-        key_base_name : str
-            The base object path to upload the json files to. Is part of the
-            S3 key. Default: 'indra_models'.
 
         Returns
         -------
         keys : tuple(str)
             A tuple of three strings giving the S3 key to the pushed objects
         """
-        key_base = key_base_name + '/' + name + '/'
-        key_base = key_base.replace('//', '/')  # # replace double slashes
-        keys = tuple(key_base + s + '.json' for s in ['raw_statements',
-                                                      'statements',
-                                                      'curations'])
+        s3key = _clean_key(s3key) + '/'
+        keys = tuple(s3key + s + '.json' for s in ['raw_statements',
+                                                   'statements',
+                                                   'curations'])
         try:
             s3 = self._get_s3_client()
             # Structure and upload raw statements
@@ -126,8 +121,7 @@ class Corpus(object):
             logger.exception('Failed to put on s3: %s' % e)
             return None
 
-    def s3_get(self, name, bucket=default_bucket,
-               key_base_name=default_profile):
+    def s3_get(self, s3key, bucket=default_bucket):
         """Fetch a corpus object from S3 in the form of three json files
 
         The json files representing the object have S3 keys of the format
@@ -139,30 +133,27 @@ class Corpus(object):
             The name of the model to fetch. Is part of the S3 key.
         bucket : str
             The S3 bucket to fetch the Corpus from. Default: 'world-modelers'.
-        key_base_name : str
-            The base object path to fetch the json files from. Is part of the
-            S3 key. Default: 'indra_models'.
 
         """
-        key_base = key_base_name + '/' + name + '/'
-        key_base = key_base.replace('//', '/')  # replace double slashes
+        s3key = _clean_key(s3key)
+
         try:
             s3 = self._get_s3_client()
             # Get and process raw statements
             raw_stmt_jsons = s3.get_object(
                 Bucket=bucket,
-                Key=key_base+'raw_statements.json')['Body'].read()
+                Key=s3key + '/raw_statements.json')['Body'].read()
             self.raw_statements = stmts_from_json(json.loads(raw_stmt_jsons))
 
             # Get and process assembled statements from list to dict
             self.statements = _json_str_to_stmts_dict(s3.get_object(
                 Bucket=bucket,
-                Key=key_base+'statements.json')['Body'].read())
+                Key=s3key + '/statements.json')['Body'].read())
 
             # Get and process curations if any
             curation_jsons = json.loads(s3.get_object(
                 Bucket=bucket,
-                Key=key_base+'curations.json')['Body'].read())
+                Key=s3key + '/curations.json')['Body'].read())
             self.curations = {uid: c for uid, c in curation_jsons.items()}
 
         except Exception as e:
