@@ -1,8 +1,5 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
 import os
-import json
+import unittest
 from nose.plugins.attrib import attr
 
 from indra.sources import sofia
@@ -20,6 +17,7 @@ path_here = os.path.abspath(os.path.dirname(__file__))
 
 
 @attr('webservice', 'nonpublic')
+@unittest.skip('webservice non-responsive')
 def test_text_process_webservice():
     txt = 'rainfall causes floods'
     sp = sofia.process_text(txt)
