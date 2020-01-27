@@ -83,8 +83,13 @@ class Corpus(object):
 
         Parameters
         ----------
-        name : str
-            The name of the model to upload. Is part of the S3 key.
+        s3key : str
+            The key to fetch the json files from. The key is assumed to be
+            of the following form: "indra_models/<dirname>/<file>.json" and
+            only <dirname> *must* be provided. Any combination of
+            including/excluding 'indra_models' and/or <file>.json is
+            accepted assuming the file ending '.json' is specified when
+            <file>.json is specified.
         bucket : str
             The S3 bucket to upload the Corpus to. Default: 'world-modelers'.
 
@@ -125,12 +130,17 @@ class Corpus(object):
         """Fetch a corpus object from S3 in the form of three json files
 
         The json files representing the object have S3 keys of the format
-        <key_base_name>/<name>/<file>.json
+        <s3key>/statements.json and <s3key>/raw_statements.json.
 
         Parameters
         ----------
-        name : str
-            The name of the model to fetch. Is part of the S3 key.
+        s3key : str
+            The key to fetch the json files from. The key is assumed to be
+            of the following form: "indra_models/<dirname>/<file>.json" and
+            only <dirname> *must* be provided. Any combination of
+            including/excluding 'indra_models' and/or <file>.json is
+            accepted assuming the file ending '.json' is specified when
+            <file>.json is specified.
         bucket : str
             The S3 bucket to fetch the Corpus from. Default: 'world-modelers'.
 
@@ -138,6 +148,7 @@ class Corpus(object):
         s3key = _clean_key(s3key)
 
         try:
+            logger.info('Getting corpus from %s' % s3key)
             s3 = self._get_s3_client()
             # Get and process raw statements
             raw_stmt_jsons = s3.get_object(
