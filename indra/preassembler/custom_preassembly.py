@@ -172,8 +172,8 @@ def agents_stmt_type_matches(stmt):
 
 
 def agent_name_matches(agent):
-    bw = set(agent.name.split())
-    return sorted(bw)
+    bw = '_'.join(sorted(list(set(agent.name.lower().split()))))
+    return bw
 
 
 def agent_name_stmt_type_matches(stmt):
