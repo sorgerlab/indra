@@ -157,9 +157,9 @@ class Corpus(object):
 
         # Remove <base_name>
         rawf, stsf, curf = \
-            CACHE.joinpath(raw.replace(default_key_base, '')),\
-            CACHE.joinpath(sts.replace(default_key_base, '')),\
-            CACHE.joinpath(cur.replace(default_key_base, ''))
+            CACHE.joinpath(raw.replace(default_key_base + '/', '')),\
+            CACHE.joinpath(sts.replace(default_key_base + '/', '')),\
+            CACHE.joinpath(cur.replace(default_key_base + '/', ''))
 
         # Raw:
         if not rawf.is_file():
