@@ -6,6 +6,8 @@ import boto3
 import pickle
 import logging
 import argparse
+from os import path
+from pathlib import Path
 from flask import Flask, request, jsonify, abort, Response
 # Note: preserve EidosReader import as first one from indra
 from indra.sources.eidos.reader import EidosReader
@@ -27,6 +29,27 @@ corpora = {}
 default_bucket = 'world-modelers'
 default_key_base = 'indra_models'
 default_profile = 'wm'
+file_defaults = ('raw_statements', 'statements', 'curations')
+
+HERE = Path(path.dirname(path.abspath(__file__)))
+CACHE = HERE.joinpath('_local_cache')
+CACHE.mkdir(exist_ok=True)
+
+
+def _json_loader(fpath):
+    with open(fpath, 'r') as f:
+        return json.load(f)
+
+
+def _json_dumper(jsonobj, fpath):
+    try:
+        with open(fpath, 'w') as f:
+            json.dump(obj=jsonobj, fp=f)
+        return True
+    except Exception as e:
+        logger.error('Could not save json')
+        logger.exception(e)
+        return False
 
 
 class Corpus(object):
@@ -126,7 +149,7 @@ class Corpus(object):
             logger.exception('Failed to put on s3: %s' % e)
             return None
 
-    def s3_get(self, s3key, bucket=default_bucket):
+    def s3_get(self, s3key, bucket=default_bucket, cache=True):
         """Fetch a corpus object from S3 in the form of three json files
 
         The json files representing the object have S3 keys of the format
@@ -143,28 +166,44 @@ class Corpus(object):
             <file>.json is specified.
         bucket : str
             The S3 bucket to fetch the Corpus from. Default: 'world-modelers'.
+        cache : bool
+            If True, look for corpus in local cache instead of loading it
+            from s3. Default: True.
 
         """
-        s3key = _clean_key(s3key)
-
+        s3key = _clean_key(s3key) + '/'
+        raw, sts, cur = tuple(s3key + s + '.json' for s in file_defaults)
         try:
-            logger.info('Loading corpus from s3 at %s' % s3key)
+            logger.info('Loading corpus: %s' % s3key)
             s3 = self._get_s3_client()
+
             # Get and process raw statements
-            raw_stmt_jsons = s3.get_object(
-                Bucket=bucket,
-                Key=s3key + '/raw_statements.json')['Body'].read()
-            self.raw_statements = stmts_from_json(json.loads(raw_stmt_jsons))
+            raw_stmt_jsons = None
+            if cache:
+                raw_stmt_jsons = self._load_from_cache(raw)
+            if raw_stmt_jsons is None:
+                raw_stmt_jsons_str = s3.get_object(
+                    Bucket=bucket, Key=raw)['Body'].read()
+                raw_stmt_jsons = json.loads(raw_stmt_jsons_str)
+            self.raw_statements = stmts_from_json(raw_stmt_jsons)
 
             # Get and process assembled statements from list to dict
-            self.statements = _json_str_to_stmts_dict(s3.get_object(
-                Bucket=bucket,
-                Key=s3key + '/statements.json')['Body'].read())
+            json_stmts = None
+            if cache:
+                json_stmts = self._load_from_cache(sts)
+            if json_stmts is None:
+                json_stmts = json.loads(s3.get_object(
+                    Bucket=bucket, Key=sts)['Body'].read())
+
+            self.statements = _json_to_stmts_dict(json_stmts)
 
             # Get and process curations if any
-            curation_jsons = json.loads(s3.get_object(
-                Bucket=bucket,
-                Key=s3key + '/curations.json')['Body'].read())
+            curation_jsons = None
+            if cache:
+                curation_jsons = self._load_from_cache(cur)
+            if curation_jsons is None:
+                curation_jsons = json.loads(s3.get_object(Bucket=bucket,
+                                                          Key=cur))
             self.curations = {uid: c for uid, c in curation_jsons.items()}
 
         except Exception as e:
