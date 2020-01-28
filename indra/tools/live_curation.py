@@ -183,7 +183,8 @@ class Corpus(object):
             curf.touch(exist_ok=True)
         _json_dumper(jsonobj=self.curations, fpath=curf.as_posix())
 
-    def s3_get(self, s3key, bucket=default_bucket, cache=True):
+    def s3_get(self, s3key, bucket=default_bucket, cache=True,
+               raise_exc=False):
         """Fetch a corpus object from S3 in the form of three json files
 
         The json files representing the object have S3 keys of the format
@@ -203,6 +204,8 @@ class Corpus(object):
         cache : bool
             If True, look for corpus in local cache instead of loading it
             from s3. Default: True.
+        raise_exc : bool
+            If True, raise InvalidCorpusError when corpus failed to load
 
         """
         s3key = _clean_key(s3key) + '/'
@@ -241,7 +244,10 @@ class Corpus(object):
             self.curations = {uid: c for uid, c in curation_jsons.items()}
 
         except Exception as e:
-            logger.exception('Failed to get from s3: %s' % e)
+            if raise_exc:
+                raise InvalidCorpusError('Failed to get from s3: %s' % e)
+            else:
+                logger.warning('Failed to get from s3: %s' % e)
 
     @staticmethod
     def _load_from_cache(file_key):
