@@ -155,6 +155,15 @@ class Corpus(object):
             logger.exception('Failed to put on s3: %s' % e)
             return None
 
+    @staticmethod
+    def _s3_put_file(s3, key, json_obj, bucket=default_bucket):
+        """Does the json.dumps operation for the the upload, i.e. json_obj
+        must be an object that can be turned into a bytestring using
+        json.dumps"""
+        logger.info('Uploading %s to S3' % key)
+        s3.put_object(Body=json.dumps(json_obj),
+                      Bucket=bucket, Key=key)
+
     def _save_to_cache(self, raw=None, sts=None, cur=None):
         # Assuming file keys are full s3 keys:
         # <base_name>/<dirname>/<file>.json
