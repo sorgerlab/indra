@@ -170,6 +170,21 @@ class Corpus(object):
         except Exception as e:
             logger.exception('Failed to get from s3: %s' % e)
 
+    @staticmethod
+    def _load_from_cache(file_key):
+        # Assuming file_key is cleaned, contains the file name and contains
+        # the initial file base name:
+        # <base_name>/<dirname>/<file>.json
+
+        # Remove <base_name> and get local path to file
+        local_file = CACHE.joinpath(
+            '/'.join([s for s in file_key.split('/')[1:]]))
+
+        # Load json object
+        if local_file.is_file():
+            return _json_loader(local_file.as_posix())
+        return None
+
 
 class InvalidCorpusError(Exception):
     pass
