@@ -155,35 +155,35 @@ class Corpus(object):
             logger.exception('Failed to put on s3: %s' % e)
             return None
 
-    def _save_to_cache(self, raw, sts, cur):
+    def _save_to_cache(self, raw=None, sts=None, cur=None):
         # Assuming file keys are full s3 keys:
         # <base_name>/<dirname>/<file>.json
 
-        # Remove <base_name>
-        rawf, stsf, curf = \
-            CACHE.joinpath(raw.replace(default_key_base + '/', '')),\
-            CACHE.joinpath(sts.replace(default_key_base + '/', '')),\
-            CACHE.joinpath(cur.replace(default_key_base + '/', ''))
-
         # Raw:
-        if not rawf.is_file():
-            rawf.parent.mkdir(exist_ok=True, parents=True)
-            rawf.touch(exist_ok=True)
-        _json_dumper(jsonobj=stmts_to_json(self.raw_statements),
-                     fpath=rawf.as_posix())
+        if raw:
+            rawf = CACHE.joinpath(raw.replace(default_key_base + '/', ''))
+            if not rawf.is_file():
+                rawf.parent.mkdir(exist_ok=True, parents=True)
+                rawf.touch(exist_ok=True)
+            _json_dumper(jsonobj=stmts_to_json(self.raw_statements),
+                         fpath=rawf.as_posix())
 
         # Assembled
-        if not stsf.is_file():
-            stsf.parent.mkdir(exist_ok=True, parents=True)
-            stsf.touch(exist_ok=True)
-        _json_dumper(jsonobj=_stmts_dict_to_json(self.statements),
-                     fpath=stsf.as_posix())
+        if sts:
+            stsf = CACHE.joinpath(sts.replace(default_key_base + '/', ''))
+            if not stsf.is_file():
+                stsf.parent.mkdir(exist_ok=True, parents=True)
+                stsf.touch(exist_ok=True)
+            _json_dumper(jsonobj=_stmts_dict_to_json(self.statements),
+                         fpath=stsf.as_posix())
 
         # Curation
-        if not curf.is_file():
-            curf.parent.mkdir(exist_ok=True, parents=True)
-            curf.touch(exist_ok=True)
-        _json_dumper(jsonobj=self.curations, fpath=curf.as_posix())
+        if cur:
+            curf = CACHE.joinpath(cur.replace(default_key_base + '/', ''))
+            if not curf.is_file():
+                curf.parent.mkdir(exist_ok=True, parents=True)
+                curf.touch(exist_ok=True)
+            _json_dumper(jsonobj=self.curations, fpath=curf.as_posix())
 
     def s3_get(self, s3key, bucket=default_bucket, cache=True,
                raise_exc=False):
