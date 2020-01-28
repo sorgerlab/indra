@@ -98,7 +98,7 @@ class Corpus(object):
         corpus.s3_get(s3key, bucket)
         return corpus
 
-    def s3_put(self, s3key, bucket=default_bucket):
+    def s3_put(self, s3key, bucket=default_bucket, cache=True):
         """Push a corpus object to S3 in the form of three json files
 
         The json files representing the object have S3 keys of the format
@@ -122,29 +122,29 @@ class Corpus(object):
             A tuple of three strings giving the S3 key to the pushed objects
         """
         s3key = _clean_key(s3key) + '/'
-        keys = tuple(s3key + s + '.json' for s in ['raw_statements',
-                                                   'statements',
-                                                   'curations'])
+        raw, sts, cur = tuple(s3key + s + '.json' for s in file_defaults)
         try:
             s3 = self._get_s3_client()
             # Structure and upload raw statements
             logger.info('Uploading %s to S3' % keys[0])
             s3.put_object(
                 Body=json.dumps(stmts_to_json(self.raw_statements)),
-                Bucket=bucket, Key=keys[0])
+                Bucket=bucket, Key=raw)
 
             # Structure and upload assembled statements
             logger.info('Uploading %s to S3' % keys[1])
             s3.put_object(
-                Body=_stmts_dict_to_json_str(self.statements),
-                Bucket=bucket, Key=keys[1])
+                Body=_stmts_dict_to_json(self.statements),
+                Bucket=bucket, Key=sts)
 
             # Structure and upload curations
             logger.info('Uploading %s to S3' % keys[2])
             s3.put_object(
                 Body=json.dumps(self.curations),
-                Bucket=bucket, Key=keys[2])
-            return keys
+                Bucket=bucket, Key=cur)
+            if cache:
+                self._save_to_cache(raw, sts, cur)
+            return list((raw, sts, cur))
         except Exception as e:
             logger.exception('Failed to put on s3: %s' % e)
             return None
