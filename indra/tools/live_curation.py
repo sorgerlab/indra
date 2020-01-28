@@ -115,6 +115,8 @@ class Corpus(object):
             <file>.json is specified.
         bucket : str
             The S3 bucket to upload the Corpus to. Default: 'world-modelers'.
+        cache : bool
+            If True, also create a local cache of the corpus. Default: True.
 
         Returns
         -------
@@ -126,19 +128,19 @@ class Corpus(object):
         try:
             s3 = self._get_s3_client()
             # Structure and upload raw statements
-            logger.info('Uploading %s to S3' % keys[0])
+            logger.info('Uploading %s to S3' % raw)
             s3.put_object(
                 Body=json.dumps(stmts_to_json(self.raw_statements)),
                 Bucket=bucket, Key=raw)
 
             # Structure and upload assembled statements
-            logger.info('Uploading %s to S3' % keys[1])
+            logger.info('Uploading %s to S3' % sts)
             s3.put_object(
                 Body=_stmts_dict_to_json(self.statements),
                 Bucket=bucket, Key=sts)
 
             # Structure and upload curations
-            logger.info('Uploading %s to S3' % keys[2])
+            logger.info('Uploading %s to S3' % cur)
             s3.put_object(
                 Body=json.dumps(self.curations),
                 Bucket=bucket, Key=cur)
