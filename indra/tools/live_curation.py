@@ -219,10 +219,10 @@ def _clean_key(s3key):
     return s3key
 
 
-def _stmts_dict_to_json_str(stmt_dict):
+def _stmts_dict_to_json(stmt_dict):
     """Make a json representation from dict of statements keyed by their uuid's
 
-    This function is the inverse of _json_str_to_stmts_dict()
+    This function is the inverse of _json_to_stmts_dict()
 
     Parameters
     ----------
@@ -231,30 +231,29 @@ def _stmts_dict_to_json_str(stmt_dict):
 
     Returns
     -------
-    json_str : str
-        A json compatible string
+    list(json)
+        A list of json statements
     """
-    return json.dumps([s.to_json() for _, s in stmt_dict.items()])
+    return [s.to_json() for _, s in stmt_dict.items()]
 
 
-def _json_str_to_stmts_dict(json_str):
+def _json_to_stmts_dict(stmt_jsons):
     """Make a dict of statements keyed by their uuid's from json representation
 
-    This function is the inverse of _stmts_dict_to_json_str()
+    This function is the inverse of _stmts_dict_to_json()
 
     Parameters
     ----------
-    json_str : str
-        A json compatible string
+    {uuid: stmt_json}
+        A dict of json statements
 
     Returns
     -------
     stmt_dict : dict
         Dict with statements keyed by their uuid's: {uuid: stmt}
     """
-    stmt_jsons = json.loads(json_str)
-    stmts = [Statement._from_json(s) for s in stmt_jsons]
-    return {s.uuid: s for s in stmts}
+    loaded_stmts = [Statement._from_json(s) for s in stmt_jsons]
+    return {s.uuid: s for s in loaded_stmts}
 
 
 class LiveCurator(object):
