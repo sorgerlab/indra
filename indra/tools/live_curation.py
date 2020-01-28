@@ -37,12 +37,14 @@ CACHE.mkdir(exist_ok=True)
 
 
 def _json_loader(fpath):
+    logger.info('Loading json file %s' % fpath)
     with open(fpath, 'r') as f:
         return json.load(f)
 
 
 def _json_dumper(jsonobj, fpath):
     try:
+        logger.info('Saving json object to file %s' % fpath)
         with open(fpath, 'w') as f:
             json.dump(obj=jsonobj, fp=f)
         return True
