@@ -604,7 +604,7 @@ if __name__ == '__main__':
                              'found in your AWS config, `[default]`  is used.')
     args = parser.parse_args()
 
-    # Load the corpus
+    # Load the corpus; If no corpus is provided, raise ValueError
     if args.corpus_id == '1' and (not args.pickle and not args.json):
         raise ValueError('Must specify --corpus_id OR (--pickle or --json)')
     if args.corpus_id:
@@ -627,8 +627,9 @@ if __name__ == '__main__':
             raw_stmts = stmts_from_json_file(args.raw_json)
         else:
             raw_stmts = None
-        logger.info('Loaded corpus %s with %d statements.' %
-                    (args.corpus_id, len(stmts)))
+        logger.info('Loaded corpus from provided file with %d statements.' %
+                    len(stmts))
+        # If loaded from file, the key will be '1'
         curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts,
                                                  args.aws_cred)
 
