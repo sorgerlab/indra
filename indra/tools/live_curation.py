@@ -376,7 +376,7 @@ class LiveCurator(object):
         for corpus_id, corpus in self.corpora.items():
             corpus.curations = {}
 
-    def get_corpus(self, corpus_id):
+    def get_corpus(self, corpus_id, check_s3=False, use_cache=True):
         """Return a corpus given an ID.
 
         If the corpus ID cannot be found, an InvalidCorpusError is raised.
@@ -385,6 +385,13 @@ class LiveCurator(object):
         ----------
         corpus_id : str
             The ID of the corpus to return.
+        check_s3 : bool
+            If True, look on S3 for the corpus if it's not currently loaded.
+            Default: False.
+        use_cache : bool
+            If True, look in local cache before trying to find corpus on s3.
+            If True while check_s3 if False, this option will be ignored.
+            Default: False.
 
         Returns
         -------
@@ -392,7 +399,16 @@ class LiveCurator(object):
             The corpus with the given ID.
         """
         try:
-            corpus = self.corpora[corpus_id]
+            corpus = self.corpora.get(corpus_id)
+            if check_s3 and corpus is None:
+                logger.info('Corpus not loaded, looking on S3')
+                corpus = Corpus.load_from_s3(s3key=corpus_id,
+                                             force_s3_reload=not use_cache,
+                                             raise_exc=True)
+                logger.info('Adding corpus to loaded corpora')
+                self.corpora[corpus_id] = corpus
+            elif corpus is None:
+                raise InvalidCorpusError
             return corpus
         except KeyError:
             raise InvalidCorpusError
@@ -408,7 +424,7 @@ class LiveCurator(object):
             A dict of curations with keys corresponding to Statement UUIDs and
             values corresponding to correct/incorrect feedback.
         """
-        corpus = self.get_corpus(corpus_id)
+        corpus = self.get_corpus(corpus_id, check_s3=True, use_cache=True)
         # Start tabulating the curation counts
         prior_counts = {}
         subtype_counts = {}
