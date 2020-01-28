@@ -605,19 +605,32 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Load the corpus
-    if args.json:
-        stmts = stmts_from_json_file(args.json)
-    elif args.pickle:
-        with open(args.pickle, 'rb') as fh:
-            stmts = pickle.load(fh)
-    if args.raw_json:
-        raw_stmts = stmts_from_json_file(args.raw_json)
+    if args.corpus_id == '1' and (not args.pickle and not args.json):
+        raise ValueError('Must specify --corpus_id OR (--pickle or --json)')
+    if args.corpus_id:
+        curator.corpora[args.corpus_id] = Corpus.load_from_s3(
+            s3key=args.corpus_id,
+            aws_name=args.aws_cred
+        )
+        logger.info('Loaded corpus %s from S3 with %d statements and %d '
+                    'curation entries' %
+                    (args.corpus_id,
+                     len(curator.corpora[args.corpus_id].statements),
+                     len(curator.corpora[args.corpus_id].curations)))
     else:
-        raw_stmts = None
-
-    logger.info('Loaded corpus %s with %d statements.' %
-                (args.corpus_id, len(stmts)))
-    curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts, args.aws_cred)
+        if args.json:
+            stmts = stmts_from_json_file(args.json)
+        elif args.pickle:
+            with open(args.pickle, 'rb') as fh:
+                stmts = pickle.load(fh)
+        if args.raw_json:
+            raw_stmts = stmts_from_json_file(args.raw_json)
+        else:
+            raw_stmts = None
+        logger.info('Loaded corpus %s with %d statements.' %
+                    (args.corpus_id, len(stmts)))
+        curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts,
+                                                 args.aws_cred)
 
     # Run the app
     app.run(host=args.host, port=args.port, threaded=False)
