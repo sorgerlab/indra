@@ -136,7 +136,7 @@ class Corpus(object):
             # Structure and upload assembled statements
             logger.info('Uploading %s to S3' % sts)
             s3.put_object(
-                Body=_stmts_dict_to_json(self.statements),
+                Body=json.dumps(_stmts_dict_to_json(self.statements)),
                 Bucket=bucket, Key=sts)
 
             # Structure and upload curations
