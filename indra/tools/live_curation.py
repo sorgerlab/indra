@@ -234,8 +234,8 @@ class Corpus(object):
             if cache:
                 curation_jsons = self._load_from_cache(cur)
             if curation_jsons is None:
-                curation_jsons = json.loads(s3.get_object(Bucket=bucket,
-                                                          Key=cur))
+                curation_jsons = json.loads(s3.get_object(
+                    Bucket=bucket, Key=cur)['Body'].read())
             self.curations = {uid: c for uid, c in curation_jsons.items()}
 
         except Exception as e:
