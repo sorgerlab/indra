@@ -306,7 +306,7 @@ def _clean_key(s3key):
 
 
 def _stmts_dict_to_json(stmt_dict):
-    """Make a json representation from dict of statements keyed by their uuid's
+    """Make a json representation from dict of statements
 
     This function is the inverse of _json_to_stmts_dict()
 
