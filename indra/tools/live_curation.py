@@ -95,9 +95,11 @@ class Corpus(object):
 
     @classmethod
     def load_from_s3(cls, s3key, aws_name=default_profile,
-                     bucket=default_bucket, force_s3_reload=False):
+                     bucket=default_bucket, force_s3_reload=False,
+                     raise_exc=False):
         corpus = cls([], aws_name=aws_name)
-        corpus.s3_get(s3key, bucket, cache=(not force_s3_reload))
+        corpus.s3_get(s3key, bucket, cache=(not force_s3_reload),
+                      raise_exc=raise_exc)
         return corpus
 
     def s3_put(self, s3key, bucket=default_bucket, cache=True):
