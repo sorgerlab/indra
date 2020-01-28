@@ -260,6 +260,38 @@ class Corpus(object):
             else:
                 logger.warning('Failed to get from s3: %s' % e)
 
+    def upload_curations(self, corpus_id, look_in_cache=False,
+                         save_to_cache=False, bucket=default_bucket):
+        """Upload the current state of curations for the corpus
+
+        Parameters
+        ----------
+        corpus_id : str
+            The corpus ID of the curations to upload
+        look_in_cache : bool
+            If True, when no curations are avaialbe check if there are
+            curations cached locally. Default: False
+        save_to_cache : bool
+            If True, also save current curation state to cache. If
+            look_in_cache is True, this option will have no effect. Default:
+            False.
+        bucket : str
+            The bucket to upload to. Default: 'world-modlers'.
+        """
+        # Get curation file key
+        file_key = _clean_key(corpus_id) + '/' + file_defaults[2]
+
+        curations = self.curations if self.curations else (
+            self._load_from_cache(file_key) if look_in_cache else None)
+
+        self._s3_put_file(s3=self._get_s3_client(),
+                          key=file_key,
+                          json_obj=curations,
+                          bucket=bucket)
+
+        if save_to_cache and not look_in_cache:
+            self._save_to_cache(cur=file_key)
+
     @staticmethod
     def _load_from_cache(file_key):
         # Assuming file_key is cleaned, contains the file name and contains
