@@ -253,18 +253,18 @@ def _stmts_dict_to_json(stmt_dict):
 
 
 def _json_to_stmts_dict(stmt_jsons):
-    """Make a dict of statements keyed by their uuid's from json representation
+    """Return dict of statements keyed by uuid's from json statements
 
     This function is the inverse of _stmts_dict_to_json()
 
     Parameters
     ----------
-    {uuid: stmt_json}
-        A dict of json statements
+    stmt_jsons : list(json)
+        A list of json statements
 
     Returns
     -------
-    stmt_dict : dict
+    dict
         Dict with statements keyed by their uuid's: {uuid: stmt}
     """
     loaded_stmts = [Statement._from_json(s) for s in stmt_jsons]
