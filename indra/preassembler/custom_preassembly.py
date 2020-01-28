@@ -172,11 +172,15 @@ def agents_stmt_type_matches(stmt):
 
 
 def agent_name_matches(agent):
+    """Return a sorted, normalized bag of words as the name."""
+    if agent is None:
+        return None
     bw = '_'.join(sorted(list(set(agent.name.lower().split()))))
     return bw
 
 
 def agent_name_stmt_type_matches(stmt):
+    """Return True if the statement type and normalized agent name matches."""
     agents = [agent_name_matches(a) for a in stmt.agent_list()]
     key = str((stmt.__class__.__name__, agents))
     return key
