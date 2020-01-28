@@ -31,7 +31,7 @@ default_key_base = 'indra_models'
 default_profile = 'wm'
 file_defaults = ('raw_statements', 'statements', 'curations')
 
-HERE = Path(path.dirname(path.abspath(__file__)))
+HERE = Path(path.abspath(__file__)).parent
 CACHE = HERE.joinpath('_local_cache')
 CACHE.mkdir(exist_ok=True)
 
