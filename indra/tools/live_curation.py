@@ -506,6 +506,31 @@ class LiveCurator(object):
         # Finally, we update the scorer with the new curation counts
         self.scorer.update_counts(prior_counts, subtype_counts)
 
+    def save_curations(self, corpus_id, use_cache=True):
+        """Save the current state of curations for a corpus given its ID
+
+        If the corpus ID cannot be found, an InvalidCorpusError is raised.
+
+        Parameters
+        ----------
+        corpus_id : str
+            the ID of the corpus to save the
+        use_cache : bool
+            If True, also save the current curation to the local cache.
+            Default: True.
+        """
+        # Do NOT use cache or S3 when getting the corpus, otherwise it will
+        # overwrite the current corpus
+        try:
+            corpus = self.get_corpus(corpus_id, check_s3=False,
+                                     use_cache=False)
+            corpus.upload_curations(s3key=corpus_id)
+        except InvalidCorpusError:
+            logger.info('No')
+            return
+
+        corpus.upload_curations(corpus_id, use_cache=use_cache)
+
     def update_beliefs(self, corpus_id):
         """Return updated belief scores for a given corpus.
 
