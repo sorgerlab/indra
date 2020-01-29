@@ -136,22 +136,16 @@ class Corpus(object):
         try:
             s3 = self._get_s3_client()
             # Structure and upload raw statements
-            logger.info('Uploading %s to S3' % raw)
-            s3.put_object(
-                Body=json.dumps(stmts_to_json(self.raw_statements)),
-                Bucket=bucket, Key=raw)
+            self._s3_put_file(s3, raw, stmts_to_json(self.raw_statements),
+                              bucket)
 
             # Structure and upload assembled statements
-            logger.info('Uploading %s to S3' % sts)
-            s3.put_object(
-                Body=json.dumps(_stmts_dict_to_json(self.statements)),
-                Bucket=bucket, Key=sts)
+            self._s3_put_file(s3, sts, _stmts_dict_to_json(self.statements),
+                              bucket)
 
             # Structure and upload curations
-            logger.info('Uploading %s to S3' % cur)
-            s3.put_object(
-                Body=json.dumps(self.curations),
-                Bucket=bucket, Key=cur)
+            self._s3_put_file(s3, cur, self.curations, bucket)
+
             if cache:
                 self._save_to_cache(raw, sts, cur)
             return list((raw, sts, cur))
