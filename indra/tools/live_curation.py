@@ -524,7 +524,7 @@ class LiveCurator(object):
         # Finally, we update the scorer with the new curation counts
         self.scorer.update_counts(prior_counts, subtype_counts)
 
-    def save_curations(self, corpus_id, save_to_cache=True):
+    def save_curation(self, corpus_id, save_to_cache=True):
         """Save the current state of curations for a corpus given its ID
 
         If the corpus ID cannot be found, an InvalidCorpusError is raised.
@@ -692,7 +692,7 @@ def update_groundings():
     return jsonify(stmts_json)
 
 
-@app.route('/save_curations', methods=['POST'])
+@app.route('/save_curation', methods=['POST'])
 def save_curations():
     if request.json is None:
         abort(Response('Missing application/json header.', 415))
@@ -700,7 +700,7 @@ def save_curations():
     try:
         # Get input parameters
         corpus_id = request.json.get('corpus_id')
-        curator.save_curations(corpus_id, save_to_cache=True)
+        curator.save_curation(corpus_id, save_to_cache=True)
     except InvalidCorpusError:
         abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
         return
