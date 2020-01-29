@@ -29,7 +29,9 @@ corpora = {}
 default_bucket = 'world-modelers'
 default_key_base = 'indra_models'
 default_profile = 'wm'
-file_defaults = ('raw_statements', 'statements', 'curations')
+file_defaults = {'raw': 'raw_statements',
+                 'sts': 'statements',
+                 'cur': 'curations'}
 
 HERE = Path(path.abspath(__file__)).parent
 CACHE = HERE.joinpath('_local_cache')
@@ -128,7 +130,9 @@ class Corpus(object):
             A tuple of three strings giving the S3 key to the pushed objects
         """
         s3key = _clean_key(s3key) + '/'
-        raw, sts, cur = tuple(s3key + s + '.json' for s in file_defaults)
+        raw = s3key + file_defaults['raw'] + '.json'
+        sts = s3key + file_defaults['sts'] + '.json'
+        cur = s3key + file_defaults['cur'] + '.json'
         try:
             s3 = self._get_s3_client()
             # Structure and upload raw statements
@@ -220,7 +224,9 @@ class Corpus(object):
 
         """
         s3key = _clean_key(s3key) + '/'
-        raw, sts, cur = tuple(s3key + s + '.json' for s in file_defaults)
+        raw = s3key + file_defaults['raw'] + '.json'
+        sts = s3key + file_defaults['sts'] + '.json'
+        cur = s3key + file_defaults['cur'] + '.json'
         try:
             logger.info('Loading corpus: %s' % s3key)
             s3 = self._get_s3_client()
@@ -276,10 +282,11 @@ class Corpus(object):
             look_in_cache is True, this option will have no effect. Default:
             False.
         bucket : str
-            The bucket to upload to. Default: 'world-modlers'.
+            The bucket to upload to. Default: 'world-modelers'.
         """
         # Get curation file key
-        file_key = _clean_key(corpus_id) + '/' + file_defaults[2]
+        file_key = _clean_key(corpus_id) + '/' + \
+                   file_defaults['cur'] + '.json'
 
         curations = self.curations if self.curations else (
             self._load_from_cache(file_key) if look_in_cache else None)
