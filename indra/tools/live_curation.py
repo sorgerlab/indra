@@ -351,8 +351,7 @@ def _clean_key(s3key):
         s3key.endswith('.json') else s3key
 
     # Ensure last char in string is not '/'
-    s3key = s3key[:-1] if s3key.endswith('/') else \
-        s3key
+    s3key = s3key[:-1] if s3key.endswith('/') else s3key
 
     return s3key
 
@@ -546,6 +545,7 @@ class LiveCurator(object):
             A dictionary of belief scores with keys corresponding to Statement
             UUIDs and values to new belief scores.
         """
+        # TODO check which options are appropriate for get_corpus
         corpus = self.get_corpus(corpus_id)
         be = BeliefEngine(self.scorer)
         stmts = list(corpus.statements.values())
@@ -561,6 +561,7 @@ class LiveCurator(object):
         return belief_dict
 
     def update_groundings(self, corpus_id):
+        # TODO check which options are appropriate for get_corpus
         corpus = self.get_corpus(corpus_id)
 
         # Send the latest ontology and list of concept texts to Eidos
