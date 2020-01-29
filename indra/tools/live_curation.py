@@ -163,6 +163,8 @@ class Corpus(object):
                       Bucket=bucket, Key=key)
 
     def _save_to_cache(self, raw=None, sts=None, cur=None):
+        """Helper method that saves the current state of the provided
+        file keys"""
         # Assuming file keys are full s3 keys:
         # <base_name>/<dirname>/<file>.json
 
@@ -282,15 +284,23 @@ class Corpus(object):
         file_key = _clean_key(corpus_id) + '/' + \
                    file_defaults['cur'] + '.json'
 
-        curations = self.curations if self.curations else (
-            self._load_from_cache(file_key) if look_in_cache else None)
+        # First see if we have any curations, then check in cache if
+        # look_in_cache == True
+        if self.curations:
+            curations = self.curations
+        elif look_in_cache:
+            curations = self._load_from_cache(file_key)
+        else:
+            curations = None
 
-        self._s3_put_file(s3=self._get_s3_client(),
-                          key=file_key,
-                          json_obj=curations,
-                          bucket=bucket)
+        # Only upload if we actually have any curations to upload
+        if curations:
+            self._s3_put_file(s3=self._get_s3_client(),
+                              key=file_key,
+                              json_obj=curations,
+                              bucket=bucket)
 
-        if save_to_cache and not look_in_cache:
+        if self.curations and save_to_cache and not look_in_cache:
             self._save_to_cache(cur=file_key)
 
     @staticmethod
@@ -707,6 +717,8 @@ if __name__ == '__main__':
     # Load the corpus; If no corpus is provided, raise ValueError
     if args.corpus_id == '1' and (not args.pickle and not args.json):
         raise ValueError('Must specify --corpus_id OR (--pickle or --json)')
+
+    # Load corpus from S3 if corpus ID is provided
     if args.corpus_id:
         curator.corpora[args.corpus_id] = Corpus.load_from_s3(
             s3key=args.corpus_id,
@@ -717,6 +729,7 @@ if __name__ == '__main__':
                     (args.corpus_id,
                      len(curator.corpora[args.corpus_id].statements),
                      len(curator.corpora[args.corpus_id].curations)))
+
     else:
         if args.json:
             stmts = stmts_from_json_file(args.json)
