@@ -673,6 +673,21 @@ def update_groundings():
     return jsonify(stmts_json)
 
 
+@app.route('/save_curations', methods=['POST'])
+def save_curations():
+    if request.json is None:
+        abort(Response('Missing application/json header.', 415))
+
+    try:
+        # Get input parameters
+        corpus_id = request.json.get('corpus_id')
+        curator.save_curations(corpus_id, save_to_cache=True)
+    except InvalidCorpusError:
+        abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
+        return
+    return jsonify({})
+
+
 if __name__ == '__main__':
     # Process arguments
     parser = argparse.ArgumentParser(
