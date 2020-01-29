@@ -163,6 +163,8 @@ class Corpus(object):
                       Bucket=bucket, Key=key)
 
     def _save_to_cache(self, raw=None, sts=None, cur=None):
+        """Helper method that saves the current state of the provided
+        file keys"""
         # Assuming file keys are full s3 keys:
         # <base_name>/<dirname>/<file>.json
 
@@ -282,15 +284,23 @@ class Corpus(object):
         file_key = _clean_key(corpus_id) + '/' + \
                    file_defaults['cur'] + '.json'
 
-        curations = self.curations if self.curations else (
-            self._load_from_cache(file_key) if look_in_cache else None)
+        # First see if we have any curations, then check in cache if
+        # look_in_cache == True
+        if self.curations:
+            curations = self.curations
+        elif look_in_cache:
+            curations = self._load_from_cache(file_key)
+        else:
+            curations = None
 
-        self._s3_put_file(s3=self._get_s3_client(),
-                          key=file_key,
-                          json_obj=curations,
-                          bucket=bucket)
+        # Only upload if we actually have any curations to upload
+        if curations:
+            self._s3_put_file(s3=self._get_s3_client(),
+                              key=file_key,
+                              json_obj=curations,
+                              bucket=bucket)
 
-        if save_to_cache and not look_in_cache:
+        if self.curations and save_to_cache and not look_in_cache:
             self._save_to_cache(cur=file_key)
 
     @staticmethod
@@ -412,12 +422,14 @@ class LiveCurator(object):
 
     # TODO: generalize this to other kinds of scorers
     def reset_scorer(self):
-        """Reset the scorer used for couration."""
+        """Reset the scorer used for curation."""
+        logger.info('Resetting the scorer')
         self.scorer = get_eidos_bayesian_scorer()
         for corpus_id, corpus in self.corpora.items():
             corpus.curations = {}
 
-    def get_corpus(self, corpus_id, check_s3=False, use_cache=True):
+    def get_corpus(self, corpus_id, check_s3=False, use_cache=True,
+                   run_update_beliefs=True):
         """Return a corpus given an ID.
 
         If the corpus ID cannot be found, an InvalidCorpusError is raised.
@@ -433,12 +445,15 @@ class LiveCurator(object):
             If True, look in local cache before trying to find corpus on s3.
             If True while check_s3 if False, this option will be ignored.
             Default: False.
+        run_update_beliefs : bool
+            If True, run update_beliefs after loading Corpus
 
         Returns
         -------
         Corpus
             The corpus with the given ID.
         """
+        logger.info('Getting corpus "%s"' % corpus_id)
         try:
             corpus = self.corpora.get(corpus_id)
             if check_s3 and corpus is None:
@@ -450,6 +465,10 @@ class LiveCurator(object):
                 self.corpora[corpus_id] = corpus
             elif corpus is None:
                 raise InvalidCorpusError
+
+            # Update beliefs
+            if run_update_beliefs:
+                beliefs = self.update_beliefs(corpus_id)
             return corpus
         except KeyError:
             raise InvalidCorpusError
@@ -465,7 +484,9 @@ class LiveCurator(object):
             A dict of curations with keys corresponding to Statement UUIDs and
             values corresponding to correct/incorrect feedback.
         """
-        corpus = self.get_corpus(corpus_id, check_s3=True, use_cache=True)
+        logger.info('Submitting curations for corpus "%s"' % corpus_id)
+        corpus = self.get_corpus(corpus_id, check_s3=True, use_cache=True,
+                                 run_update_beliefs=True)
         # Start tabulating the curation counts
         prior_counts = {}
         subtype_counts = {}
@@ -506,7 +527,7 @@ class LiveCurator(object):
         # Finally, we update the scorer with the new curation counts
         self.scorer.update_counts(prior_counts, subtype_counts)
 
-    def save_curations(self, corpus_id, save_to_cache=True):
+    def save_curation(self, corpus_id, save_to_cache=True):
         """Save the current state of curations for a corpus given its ID
 
         If the corpus ID cannot be found, an InvalidCorpusError is raised.
@@ -521,7 +542,9 @@ class LiveCurator(object):
         """
         # Do NOT use cache or S3 when getting the corpus, otherwise it will
         # overwrite the current corpus
-        corpus = self.get_corpus(corpus_id, check_s3=False, use_cache=False)
+        logger.info('Saving curations for corpus "%s"' % corpus_id)
+        corpus = self.get_corpus(corpus_id, check_s3=False, use_cache=False,
+                                 run_update_beliefs=True)
         corpus.upload_curations(corpus_id, save_to_cache=save_to_cache)
 
     def update_beliefs(self, corpus_id):
@@ -538,8 +561,9 @@ class LiveCurator(object):
             A dictionary of belief scores with keys corresponding to Statement
             UUIDs and values to new belief scores.
         """
+        logger.info('Updating beliefs for corpus "%s"' % corpus_id)
         # TODO check which options are appropriate for get_corpus
-        corpus = self.get_corpus(corpus_id)
+        corpus = self.get_corpus(corpus_id, run_update_beliefs=False)
         be = BeliefEngine(self.scorer)
         stmts = list(corpus.statements.values())
         be.set_prior_probs(stmts)
@@ -555,7 +579,8 @@ class LiveCurator(object):
 
     def update_groundings(self, corpus_id):
         # TODO check which options are appropriate for get_corpus
-        corpus = self.get_corpus(corpus_id)
+        logger.info('Updating groundings for corpus "%s"' % corpus_id)
+        corpus = self.get_corpus(corpus_id, run_update_beliefs=True)
 
         # Send the latest ontology and list of concept texts to Eidos
         yaml_str = yaml.dump(self.ont_manager.yaml_root)
@@ -673,7 +698,7 @@ def update_groundings():
     return jsonify(stmts_json)
 
 
-@app.route('/save_curations', methods=['POST'])
+@app.route('/save_curation', methods=['POST'])
 def save_curations():
     if request.json is None:
         abort(Response('Missing application/json header.', 415))
@@ -681,7 +706,7 @@ def save_curations():
     try:
         # Get input parameters
         corpus_id = request.json.get('corpus_id')
-        curator.save_curations(corpus_id, save_to_cache=True)
+        curator.save_curation(corpus_id, save_to_cache=True)
     except InvalidCorpusError:
         abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
         return
@@ -707,6 +732,8 @@ if __name__ == '__main__':
     # Load the corpus; If no corpus is provided, raise ValueError
     if args.corpus_id == '1' and (not args.pickle and not args.json):
         raise ValueError('Must specify --corpus_id OR (--pickle or --json)')
+
+    # Load corpus from S3 if corpus ID is provided
     if args.corpus_id:
         curator.corpora[args.corpus_id] = Corpus.load_from_s3(
             s3key=args.corpus_id,
@@ -717,6 +744,7 @@ if __name__ == '__main__':
                     (args.corpus_id,
                      len(curator.corpora[args.corpus_id].statements),
                      len(curator.corpora[args.corpus_id].curations)))
+
     else:
         if args.json:
             stmts = stmts_from_json_file(args.json)
