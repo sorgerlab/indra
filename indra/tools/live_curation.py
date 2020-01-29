@@ -422,7 +422,8 @@ class LiveCurator(object):
 
     # TODO: generalize this to other kinds of scorers
     def reset_scorer(self):
-        """Reset the scorer used for couration."""
+        """Reset the scorer used for curation."""
+        logger.info('Resetting the scorer')
         self.scorer = get_eidos_bayesian_scorer()
         for corpus_id, corpus in self.corpora.items():
             corpus.curations = {}
@@ -452,6 +453,7 @@ class LiveCurator(object):
         Corpus
             The corpus with the given ID.
         """
+        logger.info('Getting corpus "%s"' % corpus_id)
         try:
             corpus = self.corpora.get(corpus_id)
             if check_s3 and corpus is None:
@@ -482,6 +484,7 @@ class LiveCurator(object):
             A dict of curations with keys corresponding to Statement UUIDs and
             values corresponding to correct/incorrect feedback.
         """
+        logger.info('Submitting curations for corpus "%s"' % corpus_id)
         corpus = self.get_corpus(corpus_id, check_s3=True, use_cache=True,
                                  run_update_beliefs=True)
         # Start tabulating the curation counts
@@ -539,6 +542,7 @@ class LiveCurator(object):
         """
         # Do NOT use cache or S3 when getting the corpus, otherwise it will
         # overwrite the current corpus
+        logger.info('Saving curations for corpus "%s"' % corpus_id)
         corpus = self.get_corpus(corpus_id, check_s3=False, use_cache=False,
                                  run_update_beliefs=True)
         corpus.upload_curations(corpus_id, save_to_cache=save_to_cache)
@@ -557,6 +561,7 @@ class LiveCurator(object):
             A dictionary of belief scores with keys corresponding to Statement
             UUIDs and values to new belief scores.
         """
+        logger.info('Updating beliefs for corpus "%s"' % corpus_id)
         # TODO check which options are appropriate for get_corpus
         corpus = self.get_corpus(corpus_id, run_update_beliefs=False)
         be = BeliefEngine(self.scorer)
@@ -574,6 +579,7 @@ class LiveCurator(object):
 
     def update_groundings(self, corpus_id):
         # TODO check which options are appropriate for get_corpus
+        logger.info('Updating groundings for corpus "%s"' % corpus_id)
         corpus = self.get_corpus(corpus_id, run_update_beliefs=True)
 
         # Send the latest ontology and list of concept texts to Eidos
