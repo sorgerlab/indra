@@ -29,7 +29,9 @@ corpora = {}
 default_bucket = 'world-modelers'
 default_key_base = 'indra_models'
 default_profile = 'wm'
-file_defaults = ('raw_statements', 'statements', 'curations')
+file_defaults = {'raw': 'raw_statements',
+                 'sts': 'statements',
+                 'cur': 'curations'}
 
 HERE = Path(path.abspath(__file__)).parent
 CACHE = HERE.joinpath('_local_cache')
@@ -95,9 +97,11 @@ class Corpus(object):
 
     @classmethod
     def load_from_s3(cls, s3key, aws_name=default_profile,
-                     bucket=default_bucket, force_s3_reload=False):
+                     bucket=default_bucket, force_s3_reload=False,
+                     raise_exc=False):
         corpus = cls([], aws_name=aws_name)
-        corpus.s3_get(s3key, bucket, cache=(not force_s3_reload))
+        corpus.s3_get(s3key, bucket, cache=(not force_s3_reload),
+                      raise_exc=raise_exc)
         return corpus
 
     def s3_put(self, s3key, bucket=default_bucket, cache=True):
@@ -126,26 +130,22 @@ class Corpus(object):
             A tuple of three strings giving the S3 key to the pushed objects
         """
         s3key = _clean_key(s3key) + '/'
-        raw, sts, cur = tuple(s3key + s + '.json' for s in file_defaults)
+        raw = s3key + file_defaults['raw'] + '.json'
+        sts = s3key + file_defaults['sts'] + '.json'
+        cur = s3key + file_defaults['cur'] + '.json'
         try:
             s3 = self._get_s3_client()
             # Structure and upload raw statements
-            logger.info('Uploading %s to S3' % raw)
-            s3.put_object(
-                Body=json.dumps(stmts_to_json(self.raw_statements)),
-                Bucket=bucket, Key=raw)
+            self._s3_put_file(s3, raw, stmts_to_json(self.raw_statements),
+                              bucket)
 
             # Structure and upload assembled statements
-            logger.info('Uploading %s to S3' % sts)
-            s3.put_object(
-                Body=json.dumps(_stmts_dict_to_json(self.statements)),
-                Bucket=bucket, Key=sts)
+            self._s3_put_file(s3, sts, _stmts_dict_to_json(self.statements),
+                              bucket)
 
             # Structure and upload curations
-            logger.info('Uploading %s to S3' % cur)
-            s3.put_object(
-                Body=json.dumps(self.curations),
-                Bucket=bucket, Key=cur)
+            self._s3_put_file(s3, cur, self.curations, bucket)
+
             if cache:
                 self._save_to_cache(raw, sts, cur)
             return list((raw, sts, cur))
@@ -153,37 +153,47 @@ class Corpus(object):
             logger.exception('Failed to put on s3: %s' % e)
             return None
 
-    def _save_to_cache(self, raw, sts, cur):
+    @staticmethod
+    def _s3_put_file(s3, key, json_obj, bucket=default_bucket):
+        """Does the json.dumps operation for the the upload, i.e. json_obj
+        must be an object that can be turned into a bytestring using
+        json.dumps"""
+        logger.info('Uploading %s to S3' % key)
+        s3.put_object(Body=json.dumps(json_obj),
+                      Bucket=bucket, Key=key)
+
+    def _save_to_cache(self, raw=None, sts=None, cur=None):
         # Assuming file keys are full s3 keys:
         # <base_name>/<dirname>/<file>.json
 
-        # Remove <base_name>
-        rawf, stsf, curf = \
-            CACHE.joinpath(raw.replace(default_key_base + '/', '')),\
-            CACHE.joinpath(sts.replace(default_key_base + '/', '')),\
-            CACHE.joinpath(cur.replace(default_key_base + '/', ''))
-
         # Raw:
-        if not rawf.is_file():
-            rawf.parent.mkdir(exist_ok=True, parents=True)
-            rawf.touch(exist_ok=True)
-        _json_dumper(jsonobj=stmts_to_json(self.raw_statements),
-                     fpath=rawf.as_posix())
+        if raw:
+            rawf = CACHE.joinpath(raw.replace(default_key_base + '/', ''))
+            if not rawf.is_file():
+                rawf.parent.mkdir(exist_ok=True, parents=True)
+                rawf.touch(exist_ok=True)
+            _json_dumper(jsonobj=stmts_to_json(self.raw_statements),
+                         fpath=rawf.as_posix())
 
         # Assembled
-        if not stsf.is_file():
-            stsf.parent.mkdir(exist_ok=True, parents=True)
-            stsf.touch(exist_ok=True)
-        _json_dumper(jsonobj=_stmts_dict_to_json(self.statements),
-                     fpath=stsf.as_posix())
+        if sts:
+            stsf = CACHE.joinpath(sts.replace(default_key_base + '/', ''))
+            if not stsf.is_file():
+                stsf.parent.mkdir(exist_ok=True, parents=True)
+                stsf.touch(exist_ok=True)
+            _json_dumper(jsonobj=_stmts_dict_to_json(self.statements),
+                         fpath=stsf.as_posix())
 
         # Curation
-        if not curf.is_file():
-            curf.parent.mkdir(exist_ok=True, parents=True)
-            curf.touch(exist_ok=True)
-        _json_dumper(jsonobj=self.curations, fpath=curf.as_posix())
+        if cur:
+            curf = CACHE.joinpath(cur.replace(default_key_base + '/', ''))
+            if not curf.is_file():
+                curf.parent.mkdir(exist_ok=True, parents=True)
+                curf.touch(exist_ok=True)
+            _json_dumper(jsonobj=self.curations, fpath=curf.as_posix())
 
-    def s3_get(self, s3key, bucket=default_bucket, cache=True):
+    def s3_get(self, s3key, bucket=default_bucket, cache=True,
+               raise_exc=False):
         """Fetch a corpus object from S3 in the form of three json files
 
         The json files representing the object have S3 keys of the format
@@ -203,10 +213,14 @@ class Corpus(object):
         cache : bool
             If True, look for corpus in local cache instead of loading it
             from s3. Default: True.
+        raise_exc : bool
+            If True, raise InvalidCorpusError when corpus failed to load
 
         """
         s3key = _clean_key(s3key) + '/'
-        raw, sts, cur = tuple(s3key + s + '.json' for s in file_defaults)
+        raw = s3key + file_defaults['raw'] + '.json'
+        sts = s3key + file_defaults['sts'] + '.json'
+        cur = s3key + file_defaults['cur'] + '.json'
         try:
             logger.info('Loading corpus: %s' % s3key)
             s3 = self._get_s3_client()
@@ -241,7 +255,43 @@ class Corpus(object):
             self.curations = {uid: c for uid, c in curation_jsons.items()}
 
         except Exception as e:
-            logger.exception('Failed to get from s3: %s' % e)
+            if raise_exc:
+                raise InvalidCorpusError('Failed to get from s3: %s' % e)
+            else:
+                logger.warning('Failed to get from s3: %s' % e)
+
+    def upload_curations(self, corpus_id, look_in_cache=False,
+                         save_to_cache=False, bucket=default_bucket):
+        """Upload the current state of curations for the corpus
+
+        Parameters
+        ----------
+        corpus_id : str
+            The corpus ID of the curations to upload
+        look_in_cache : bool
+            If True, when no curations are avaialbe check if there are
+            curations cached locally. Default: False
+        save_to_cache : bool
+            If True, also save current curation state to cache. If
+            look_in_cache is True, this option will have no effect. Default:
+            False.
+        bucket : str
+            The bucket to upload to. Default: 'world-modelers'.
+        """
+        # Get curation file key
+        file_key = _clean_key(corpus_id) + '/' + \
+                   file_defaults['cur'] + '.json'
+
+        curations = self.curations if self.curations else (
+            self._load_from_cache(file_key) if look_in_cache else None)
+
+        self._s3_put_file(s3=self._get_s3_client(),
+                          key=file_key,
+                          json_obj=curations,
+                          bucket=bucket)
+
+        if save_to_cache and not look_in_cache:
+            self._save_to_cache(cur=file_key)
 
     @staticmethod
     def _load_from_cache(file_key):
@@ -301,8 +351,7 @@ def _clean_key(s3key):
         s3key.endswith('.json') else s3key
 
     # Ensure last char in string is not '/'
-    s3key = s3key[:-1] if s3key.endswith('/') else \
-        s3key
+    s3key = s3key[:-1] if s3key.endswith('/') else s3key
 
     return s3key
 
@@ -368,7 +417,7 @@ class LiveCurator(object):
         for corpus_id, corpus in self.corpora.items():
             corpus.curations = {}
 
-    def get_corpus(self, corpus_id):
+    def get_corpus(self, corpus_id, check_s3=False, use_cache=True):
         """Return a corpus given an ID.
 
         If the corpus ID cannot be found, an InvalidCorpusError is raised.
@@ -377,6 +426,13 @@ class LiveCurator(object):
         ----------
         corpus_id : str
             The ID of the corpus to return.
+        check_s3 : bool
+            If True, look on S3 for the corpus if it's not currently loaded.
+            Default: False.
+        use_cache : bool
+            If True, look in local cache before trying to find corpus on s3.
+            If True while check_s3 if False, this option will be ignored.
+            Default: False.
 
         Returns
         -------
@@ -384,7 +440,16 @@ class LiveCurator(object):
             The corpus with the given ID.
         """
         try:
-            corpus = self.corpora[corpus_id]
+            corpus = self.corpora.get(corpus_id)
+            if check_s3 and corpus is None:
+                logger.info('Corpus not loaded, looking on S3')
+                corpus = Corpus.load_from_s3(s3key=corpus_id,
+                                             force_s3_reload=not use_cache,
+                                             raise_exc=True)
+                logger.info('Adding corpus to loaded corpora')
+                self.corpora[corpus_id] = corpus
+            elif corpus is None:
+                raise InvalidCorpusError
             return corpus
         except KeyError:
             raise InvalidCorpusError
@@ -400,7 +465,7 @@ class LiveCurator(object):
             A dict of curations with keys corresponding to Statement UUIDs and
             values corresponding to correct/incorrect feedback.
         """
-        corpus = self.get_corpus(corpus_id)
+        corpus = self.get_corpus(corpus_id, check_s3=True, use_cache=True)
         # Start tabulating the curation counts
         prior_counts = {}
         subtype_counts = {}
@@ -441,6 +506,24 @@ class LiveCurator(object):
         # Finally, we update the scorer with the new curation counts
         self.scorer.update_counts(prior_counts, subtype_counts)
 
+    def save_curations(self, corpus_id, save_to_cache=True):
+        """Save the current state of curations for a corpus given its ID
+
+        If the corpus ID cannot be found, an InvalidCorpusError is raised.
+
+        Parameters
+        ----------
+        corpus_id : str
+            the ID of the corpus to save the
+        save_to_cache : bool
+            If True, also save the current curation to the local cache.
+            Default: True.
+        """
+        # Do NOT use cache or S3 when getting the corpus, otherwise it will
+        # overwrite the current corpus
+        corpus = self.get_corpus(corpus_id, check_s3=False, use_cache=False)
+        corpus.upload_curations(corpus_id, save_to_cache=save_to_cache)
+
     def update_beliefs(self, corpus_id):
         """Return updated belief scores for a given corpus.
 
@@ -455,6 +538,7 @@ class LiveCurator(object):
             A dictionary of belief scores with keys corresponding to Statement
             UUIDs and values to new belief scores.
         """
+        # TODO check which options are appropriate for get_corpus
         corpus = self.get_corpus(corpus_id)
         be = BeliefEngine(self.scorer)
         stmts = list(corpus.statements.values())
@@ -470,6 +554,7 @@ class LiveCurator(object):
         return belief_dict
 
     def update_groundings(self, corpus_id):
+        # TODO check which options are appropriate for get_corpus
         corpus = self.get_corpus(corpus_id)
 
         # Send the latest ontology and list of concept texts to Eidos
@@ -588,6 +673,21 @@ def update_groundings():
     return jsonify(stmts_json)
 
 
+@app.route('/save_curations', methods=['POST'])
+def save_curations():
+    if request.json is None:
+        abort(Response('Missing application/json header.', 415))
+
+    try:
+        # Get input parameters
+        corpus_id = request.json.get('corpus_id')
+        curator.save_curations(corpus_id, save_to_cache=True)
+    except InvalidCorpusError:
+        abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
+        return
+    return jsonify({})
+
+
 if __name__ == '__main__':
     # Process arguments
     parser = argparse.ArgumentParser(
@@ -604,20 +704,34 @@ if __name__ == '__main__':
                              'found in your AWS config, `[default]`  is used.')
     args = parser.parse_args()
 
-    # Load the corpus
-    if args.json:
-        stmts = stmts_from_json_file(args.json)
-    elif args.pickle:
-        with open(args.pickle, 'rb') as fh:
-            stmts = pickle.load(fh)
-    if args.raw_json:
-        raw_stmts = stmts_from_json_file(args.raw_json)
+    # Load the corpus; If no corpus is provided, raise ValueError
+    if args.corpus_id == '1' and (not args.pickle and not args.json):
+        raise ValueError('Must specify --corpus_id OR (--pickle or --json)')
+    if args.corpus_id:
+        curator.corpora[args.corpus_id] = Corpus.load_from_s3(
+            s3key=args.corpus_id,
+            aws_name=args.aws_cred
+        )
+        logger.info('Loaded corpus %s from S3 with %d statements and %d '
+                    'curation entries' %
+                    (args.corpus_id,
+                     len(curator.corpora[args.corpus_id].statements),
+                     len(curator.corpora[args.corpus_id].curations)))
     else:
-        raw_stmts = None
-
-    logger.info('Loaded corpus %s with %d statements.' %
-                (args.corpus_id, len(stmts)))
-    curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts, args.aws_cred)
+        if args.json:
+            stmts = stmts_from_json_file(args.json)
+        elif args.pickle:
+            with open(args.pickle, 'rb') as fh:
+                stmts = pickle.load(fh)
+        if args.raw_json:
+            raw_stmts = stmts_from_json_file(args.raw_json)
+        else:
+            raw_stmts = None
+        logger.info('Loaded corpus from provided file with %d statements.' %
+                    len(stmts))
+        # If loaded from file, the key will be '1'
+        curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts,
+                                                 args.aws_cred)
 
     # Run the app
     app.run(host=args.host, port=args.port, threaded=False)
