@@ -482,7 +482,8 @@ class LiveCurator(object):
             A dict of curations with keys corresponding to Statement UUIDs and
             values corresponding to correct/incorrect feedback.
         """
-        corpus = self.get_corpus(corpus_id, check_s3=True, use_cache=True)
+        corpus = self.get_corpus(corpus_id, check_s3=True, use_cache=True,
+                                 run_update_beliefs=True)
         # Start tabulating the curation counts
         prior_counts = {}
         subtype_counts = {}
@@ -538,7 +539,8 @@ class LiveCurator(object):
         """
         # Do NOT use cache or S3 when getting the corpus, otherwise it will
         # overwrite the current corpus
-        corpus = self.get_corpus(corpus_id, check_s3=False, use_cache=False)
+        corpus = self.get_corpus(corpus_id, check_s3=False, use_cache=False,
+                                 run_update_beliefs=True)
         corpus.upload_curations(corpus_id, save_to_cache=save_to_cache)
 
     def update_beliefs(self, corpus_id):
@@ -556,7 +558,7 @@ class LiveCurator(object):
             UUIDs and values to new belief scores.
         """
         # TODO check which options are appropriate for get_corpus
-        corpus = self.get_corpus(corpus_id)
+        corpus = self.get_corpus(corpus_id, run_update_beliefs=False)
         be = BeliefEngine(self.scorer)
         stmts = list(corpus.statements.values())
         be.set_prior_probs(stmts)
@@ -572,7 +574,7 @@ class LiveCurator(object):
 
     def update_groundings(self, corpus_id):
         # TODO check which options are appropriate for get_corpus
-        corpus = self.get_corpus(corpus_id)
+        corpus = self.get_corpus(corpus_id, run_update_beliefs=True)
 
         # Send the latest ontology and list of concept texts to Eidos
         yaml_str = yaml.dump(self.ont_manager.yaml_root)
