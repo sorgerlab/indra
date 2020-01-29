@@ -427,7 +427,8 @@ class LiveCurator(object):
         for corpus_id, corpus in self.corpora.items():
             corpus.curations = {}
 
-    def get_corpus(self, corpus_id, check_s3=False, use_cache=True):
+    def get_corpus(self, corpus_id, check_s3=False, use_cache=True,
+                   run_update_beliefs=True):
         """Return a corpus given an ID.
 
         If the corpus ID cannot be found, an InvalidCorpusError is raised.
@@ -443,6 +444,8 @@ class LiveCurator(object):
             If True, look in local cache before trying to find corpus on s3.
             If True while check_s3 if False, this option will be ignored.
             Default: False.
+        run_update_beliefs : bool
+            If True, run update_beliefs after loading Corpus
 
         Returns
         -------
@@ -460,6 +463,10 @@ class LiveCurator(object):
                 self.corpora[corpus_id] = corpus
             elif corpus is None:
                 raise InvalidCorpusError
+
+            # Update beliefs
+            if run_update_beliefs:
+                beliefs = self.update_beliefs(corpus_id)
             return corpus
         except KeyError:
             raise InvalidCorpusError
