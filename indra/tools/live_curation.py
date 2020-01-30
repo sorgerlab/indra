@@ -31,7 +31,8 @@ default_key_base = 'indra_models'
 default_profile = 'wm'
 file_defaults = {'raw': 'raw_statements',
                  'sts': 'statements',
-                 'cur': 'curations'}
+                 'cur': 'curations',
+                 'meta': 'metadata'}
 
 HERE = Path(path.abspath(__file__)).parent
 CACHE = HERE.joinpath('_local_cache')
@@ -63,6 +64,9 @@ class Corpus(object):
     ----------
     statements : list[indra.statement.Statement]
         A list of INDRA Statements to embed in the corpus.
+    raw_statements : list[indra.statement.Statement]
+        A List of raw statements forming the basis of the statements in
+        'statements'.
     aws_name : str
         The name of the profile in the AWS credential file to use. 'default' is
         used by default.
@@ -71,16 +75,21 @@ class Corpus(object):
     ----------
     statements : dict
         A dict of INDRA Statements keyed by UUID.
+    raw_statements : list
+        A list of the raw statements
     curations : dict
         A dict keeping track of the curations submitted so far for Statement
         UUIDs in the corpus.
+    meta_data : dict
+        A dict with meta data associated with the corpus
     """
     def __init__(self, statements=None, raw_statements=None, meta_data=None,
                  aws_name=default_profile):
-        self.statements = {st.uuid: st for st in statements}
-        self.raw_statements = [] if not raw_statements else raw_statements
+        self.statements = {st.uuid: st for st in statements} if statements \
+            else {}
+        self.raw_statements = raw_statements if raw_statements else []
         self.curations = {}
-        self.meta_data = meta_data
+        self.meta_data = meta_data if meta_data else {}
         self.aws_name = aws_name
         self._s3 = None
 
@@ -134,6 +143,7 @@ class Corpus(object):
         raw = s3key + file_defaults['raw'] + '.json'
         sts = s3key + file_defaults['sts'] + '.json'
         cur = s3key + file_defaults['cur'] + '.json'
+        meta = s3key + file_defaults['meta'] + '.json'
         try:
             s3 = self._get_s3_client()
             # Structure and upload raw statements
@@ -146,6 +156,9 @@ class Corpus(object):
 
             # Structure and upload curations
             self._s3_put_file(s3, cur, self.curations, bucket)
+
+            # Upload meta data
+            self._s3_put_file(s3, meta, self.meta_data, bucket)
 
             if cache:
                 self._save_to_cache(raw, sts, cur)
@@ -163,7 +176,7 @@ class Corpus(object):
         s3.put_object(Body=json.dumps(json_obj, indent=1),
                       Bucket=bucket, Key=key)
 
-    def _save_to_cache(self, raw=None, sts=None, cur=None):
+    def _save_to_cache(self, raw=None, sts=None, cur=None, meta=None):
         """Helper method that saves the current state of the provided
         file keys"""
         # Assuming file keys are full s3 keys:
@@ -195,6 +208,14 @@ class Corpus(object):
                 curf.touch(exist_ok=True)
             _json_dumper(jsonobj=self.curations, fpath=curf.as_posix())
 
+        # Meta data
+        if meta:
+            metaf = CACHE.joinpath(meta.replace(default_key_base + '/', ''))
+            if not metaf.is_file():
+                metaf.parent.mkdir(exist_ok=True, parents=True)
+                metaf.touch(exist_ok=True)
+            _json_dumper(jsonobj=self.meta_data, fpath=metaf.as_posix())
+
     def s3_get(self, s3key, bucket=default_bucket, cache=True,
                raise_exc=False):
         """Fetch a corpus object from S3 in the form of three json files
@@ -224,6 +245,7 @@ class Corpus(object):
         raw = s3key + file_defaults['raw'] + '.json'
         sts = s3key + file_defaults['sts'] + '.json'
         cur = s3key + file_defaults['cur'] + '.json'
+        meta = s3key + file_defaults['meta'] + '.json'
         try:
             logger.info('Loading corpus: %s' % s3key)
             s3 = self._get_s3_client()
@@ -256,6 +278,14 @@ class Corpus(object):
                 curation_jsons = json.loads(s3.get_object(
                     Bucket=bucket, Key=cur)['Body'].read())
             self.curations = {uid: c for uid, c in curation_jsons.items()}
+
+            meta_json = {}
+            if cache:
+                meta_json = self._load_from_cache(meta)
+            if not meta_json:
+                meta_json = json.loads(s3.get_object(
+                    Bucket=bucket, Key=meta)['Body'].read())
+            self.meta_data = meta_json
 
         except Exception as e:
             if raise_exc:
