@@ -251,30 +251,30 @@ class Corpus(object):
             s3 = self._get_s3_client()
 
             # Get and process raw statements
-            raw_stmt_jsons = None
+            raw_stmt_jsons = []
             if cache:
                 raw_stmt_jsons = self._load_from_cache(raw)
-            if raw_stmt_jsons is None:
+            if not raw_stmt_jsons:
                 raw_stmt_jsons_str = s3.get_object(
                     Bucket=bucket, Key=raw)['Body'].read()
                 raw_stmt_jsons = json.loads(raw_stmt_jsons_str)
             self.raw_statements = stmts_from_json(raw_stmt_jsons)
 
             # Get and process assembled statements from list to dict
-            json_stmts = None
+            json_stmts = []
             if cache:
                 json_stmts = self._load_from_cache(sts)
-            if json_stmts is None:
+            if not json_stmts:
                 json_stmts = json.loads(s3.get_object(
                     Bucket=bucket, Key=sts)['Body'].read())
 
             self.statements = _json_to_stmts_dict(json_stmts)
 
             # Get and process curations if any
-            curation_jsons = None
+            curation_jsons = {}
             if cache:
                 curation_jsons = self._load_from_cache(cur)
-            if curation_jsons is None:
+            if not curation_jsons:
                 curation_jsons = json.loads(s3.get_object(
                     Bucket=bucket, Key=cur)['Body'].read())
             self.curations = {uid: c for uid, c in curation_jsons.items()}
