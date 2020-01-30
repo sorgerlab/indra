@@ -271,13 +271,13 @@ class Corpus(object):
             self.statements = _json_to_stmts_dict(json_stmts)
 
             # Get and process curations if any
-            curation_jsons = {}
+            curation_json = {}
             if cache:
-                curation_jsons = self._load_from_cache(cur)
-            if not curation_jsons:
-                curation_jsons = json.loads(s3.get_object(
+                curation_json = self._load_from_cache(cur)
+            if not curation_json:
+                curation_json = json.loads(s3.get_object(
                     Bucket=bucket, Key=cur)['Body'].read())
-            self.curations = curation_jsons
+            self.curations = curation_json
 
             meta_json = {}
             if cache:
