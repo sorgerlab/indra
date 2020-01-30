@@ -48,7 +48,7 @@ def _json_dumper(jsonobj, fpath):
     try:
         logger.info('Saving json object to file %s' % fpath)
         with open(fpath, 'w') as f:
-            json.dump(obj=jsonobj, fp=f)
+            json.dump(obj=jsonobj, fp=f, indent=1)
         return True
     except Exception as e:
         logger.error('Could not save json')
@@ -159,7 +159,7 @@ class Corpus(object):
         must be an object that can be turned into a bytestring using
         json.dumps"""
         logger.info('Uploading %s to S3' % key)
-        s3.put_object(Body=json.dumps(json_obj),
+        s3.put_object(Body=json.dumps(json_obj, indent=1),
                       Bucket=bucket, Key=key)
 
     def _save_to_cache(self, raw=None, sts=None, cur=None):
