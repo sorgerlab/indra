@@ -571,6 +571,31 @@ class LiveCurator(object):
         corpus = self.get_corpus(corpus_id, check_s3=False, use_cache=False)
         corpus.upload_curations(corpus_id, save_to_cache=save_to_cache)
 
+    def update_metadata(self, corpus_id, meta_data, save_to_cache=True):
+        """Update the meta data for a given corpus
+
+        Parameters
+        ----------
+        corpus_id : str
+            The ID of the corpus to update the meta data for
+        meta_data : dict
+            A json compatible dict containing the meta data
+        save_to_cache : bool
+            If True, also update the local cache of the meta data dict.
+            Default: True.
+        """
+        logger.info('Updating meta data for corpus "%s"' % corpus_id)
+        corpus = self.get_corpus(corpus_id, check_s3=True, use_cache=True)
+
+        # Loop and add/overwrite meta data key value pairs
+        for k, v in meta_data.items():
+            corpus.meta_data[k] = v
+
+        if save_to_cache:
+            meta_file_key = _clean_key(corpus_id) + '/' + \
+                       file_defaults['meta'] + '.json'
+            corpus._save_to_cache(meta=meta_file_key)
+
     def update_beliefs(self, corpus_id):
         """Return updated belief scores for a given corpus.
 
@@ -720,6 +745,22 @@ def update_groundings():
     stmts = curator.update_groundings(corpus_id)
     stmts_json = stmts_to_json(stmts)
     return jsonify(stmts_json)
+
+
+@app.route('/update_metadata', methods=['POST'])
+def update_metadata():
+    if request.json is None:
+        abort(Response('Missing application/json header.', 415))
+
+    try:
+        # Get input parameters
+        corpus_id = request.json.get('corpus_id')
+        meta_data = request.json.get('meta_data')
+        curator.update_metadata(corpus_id, meta_data, save_to_cache=True)
+    except InvalidCorpusError:
+        abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
+        return
+    return jsonify({})
 
 
 @app.route('/save_curation', methods=['POST'])
