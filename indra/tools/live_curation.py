@@ -277,7 +277,7 @@ class Corpus(object):
             if not curation_jsons:
                 curation_jsons = json.loads(s3.get_object(
                     Bucket=bucket, Key=cur)['Body'].read())
-            self.curations = {uid: c for uid, c in curation_jsons.items()}
+            self.curations = curation_jsons
 
             meta_json = {}
             if cache:
