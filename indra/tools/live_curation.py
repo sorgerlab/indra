@@ -280,11 +280,14 @@ class Corpus(object):
             self.curations = curation_json
 
             meta_json = {}
-            if cache:
-                meta_json = self._load_from_cache(meta)
-            if not meta_json:
-                meta_json = json.loads(s3.get_object(
-                    Bucket=bucket, Key=meta)['Body'].read())
+            try:
+                if cache:
+                    meta_json = self._load_from_cache(meta)
+                if not meta_json:
+                    meta_json = json.loads(s3.get_object(
+                        Bucket=bucket, Key=meta)['Body'].read())
+            except Exception as e:
+                logger.warning('No meta data found')
             self.meta_data = meta_json
 
         except Exception as e:
