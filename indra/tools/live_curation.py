@@ -75,7 +75,7 @@ class Corpus(object):
         A dict keeping track of the curations submitted so far for Statement
         UUIDs in the corpus.
     """
-    def __init__(self, statements, raw_statements=None,
+    def __init__(self, statements=None, raw_statements=None,
                  aws_name=default_profile):
         self.statements = {st.uuid: st for st in statements}
         self.raw_statements = [] if not raw_statements else raw_statements
@@ -722,10 +722,6 @@ if __name__ == '__main__':
                              'found in your AWS config, `[default]`  is used.')
     args = parser.parse_args()
 
-    # Load the corpus; If no corpus is provided, raise ValueError
-    if args.corpus_id == '1' and (not args.pickle and not args.json):
-        raise ValueError('Must specify --corpus_id OR (--pickle or --json)')
-
     # Load corpus from S3 if corpus ID is provided
     if args.corpus_id:
         curator.corpora[args.corpus_id] = Corpus.load_from_s3(
@@ -744,15 +740,20 @@ if __name__ == '__main__':
         elif args.pickle:
             with open(args.pickle, 'rb') as fh:
                 stmts = pickle.load(fh)
+        else:
+            stmts = None
+
         if args.raw_json:
             raw_stmts = stmts_from_json_file(args.raw_json)
         else:
             raw_stmts = None
-        logger.info('Loaded corpus from provided file with %d statements.' %
-                    len(stmts))
-        # If loaded from file, the key will be '1'
-        curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts,
-                                                 args.aws_cred)
+
+        if stmts:
+            logger.info('Loaded corpus from provided file with %d '
+                        'statements.' % len(stmts))
+            # If loaded from file, the key will be '1'
+            curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts,
+                                                     args.aws_cred)
 
     # Run the app
     app.run(host=args.host, port=args.port, threaded=False)
