@@ -781,16 +781,16 @@ if __name__ == '__main__':
             raw_stmts = None
 
         if args.meta_json and path.isfile(args.meta_json):
-            meta_json = _json_loader(args.meta_json)
+            meta_json_obj = _json_loader(args.meta_json)
         else:
-            meta_json = None
+            meta_json_obj = None
 
         if stmts:
             logger.info('Loaded corpus from provided file with %d '
                         'statements.' % len(stmts))
             # If loaded from file, the key will be '1'
             curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts,
-                                                     meta_json,
+                                                     meta_json_obj,
                                                      args.aws_cred)
 
     # Run the app
