@@ -75,11 +75,12 @@ class Corpus(object):
         A dict keeping track of the curations submitted so far for Statement
         UUIDs in the corpus.
     """
-    def __init__(self, statements=None, raw_statements=None,
+    def __init__(self, statements=None, raw_statements=None, meta_data=None,
                  aws_name=default_profile):
         self.statements = {st.uuid: st for st in statements}
         self.raw_statements = [] if not raw_statements else raw_statements
         self.curations = {}
+        self.meta_data = meta_data
         self.aws_name = aws_name
         self._s3 = None
 
@@ -713,6 +714,7 @@ if __name__ == '__main__':
     parser.add_argument('--json')
     parser.add_argument('--raw_json')
     parser.add_argument('--pickle')
+    parser.add_argument('--meta-json', help='Meta data json file')
     parser.add_argument('--corpus_id', default='1')
     parser.add_argument('--host', default='0.0.0.0')
     parser.add_argument('--port', default=8001, type=int)
@@ -748,11 +750,17 @@ if __name__ == '__main__':
         else:
             raw_stmts = None
 
+        if args.meta_json and path.isfile(args.meta_json):
+            meta_json = _json_loader(args.meta_json)
+        else:
+            meta_json = None
+
         if stmts:
             logger.info('Loaded corpus from provided file with %d '
                         'statements.' % len(stmts))
             # If loaded from file, the key will be '1'
             curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts,
+                                                     meta_json,
                                                      args.aws_cred)
 
     # Run the app
