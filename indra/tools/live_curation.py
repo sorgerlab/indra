@@ -789,7 +789,7 @@ if __name__ == '__main__':
     parser.add_argument('--raw_json')
     parser.add_argument('--pickle')
     parser.add_argument('--meta-json', help='Meta data json file')
-    parser.add_argument('--corpus_id', default='1')
+    parser.add_argument('--corpus_id')
     parser.add_argument('--host', default='0.0.0.0')
     parser.add_argument('--port', default=8001, type=int)
     parser.add_argument('--aws-cred', type=str, default='default',
@@ -810,7 +810,7 @@ if __name__ == '__main__':
                      len(curator.corpora[args.corpus_id].statements),
                      len(curator.corpora[args.corpus_id].curations)))
 
-    else:
+    elif args.json or args.pickle:
         if args.json:
             stmts = stmts_from_json_file(args.json)
         elif args.pickle:
@@ -833,9 +833,9 @@ if __name__ == '__main__':
             logger.info('Loaded corpus from provided file with %d '
                         'statements.' % len(stmts))
             # If loaded from file, the key will be '1'
-            curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts,
-                                                     meta_json_obj,
-                                                     args.aws_cred)
+            curator.corpora['1'] = Corpus(stmts, raw_stmts,
+                                          meta_json_obj,
+                                          args.aws_cred)
 
     # Run the app
     app.run(host=args.host, port=args.port, threaded=False)
