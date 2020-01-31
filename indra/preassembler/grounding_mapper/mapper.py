@@ -65,7 +65,8 @@ class GroundingMapper(object):
     @property
     def gilda_models(self):
         if self._gilda_models is None:
-            self._gilda_models = get_gilda_models() if self.gilda_mode else []
+            self._gilda_models = get_gilda_models(self.gilda_mode) \
+                if self.gilda_mode else []
         return self._gilda_models
 
     @gilda_models.setter
