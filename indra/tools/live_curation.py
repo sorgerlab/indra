@@ -799,7 +799,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Load corpus from S3 if corpus ID is provided
-    if args.corpus_id:
+    if args.corpus_id and not args.json and not args.pickle:
         curator.corpora[args.corpus_id] = Corpus.load_from_s3(
             s3key=args.corpus_id,
             aws_name=args.aws_cred
@@ -811,6 +811,9 @@ if __name__ == '__main__':
                      len(curator.corpora[args.corpus_id].curations)))
 
     elif args.json or args.pickle:
+        if not args.corpus_id:
+            raise ValueError('Must provide a corpus id when loading files '
+                             'locally')
         if args.json:
             stmts = stmts_from_json_file(args.json)
         elif args.pickle:
@@ -833,9 +836,9 @@ if __name__ == '__main__':
             logger.info('Loaded corpus from provided file with %d '
                         'statements.' % len(stmts))
             # If loaded from file, the key will be '1'
-            curator.corpora['1'] = Corpus(stmts, raw_stmts,
-                                          meta_json_obj,
-                                          args.aws_cred)
+            curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts,
+                                                     meta_json_obj,
+                                                     args.aws_cred)
 
     # Run the app
     app.run(host=args.host, port=args.port, threaded=False)
