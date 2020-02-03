@@ -5,7 +5,7 @@ import unittest
 from nose.plugins.attrib import attr
 from indra.statements import *
 from indra.tools.live_curation import app, curator, Corpus, LiveCurator, \
-    _json_str_to_stmts_dict, _stmts_dict_to_json_str
+    _json_to_stmts_dict, _stmts_dict_to_json
 
 
 logger = logging.getLogger(__name__)
@@ -130,7 +130,7 @@ def test_sofia_incorrect():
 
 def test_json_formatters():
     corpus = _make_corpus()
-    jssj = _json_str_to_stmts_dict(_stmts_dict_to_json_str(corpus.statements))
+    jssj = _json_to_stmts_dict(_stmts_dict_to_json(corpus.statements))
     assert set(jssj.keys()) == set(corpus.statements.keys())
     for k, v in jssj.items():
         assert jssj[k].matches(corpus.statements[k])
