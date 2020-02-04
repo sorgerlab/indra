@@ -3,6 +3,7 @@ from indra.statements import *
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler.custom_preassembly import *
+import indra.tools.assemble_corpus as ac
 
 
 def test_event_assemble_location():
@@ -44,3 +45,12 @@ def test_influence_event_hash_reference():
     assert ev1j['matches_hash'] == ij['subj']['matches_hash'],\
         (print(json.dumps(ev1j, indent=1)),
          print(json.dumps(ij, indent=1)))
+
+
+def test_agent_name_custom_preassembly():
+    e1 = Event(Concept('price oil'))
+    e2 = Event(Concept('oil price'))
+    stmts = [e1, e2]
+    stmts_out = ac.run_preassembly(stmts,
+                                   matches_fun=agent_name_stmt_type_matches)
+    assert len(stmts_out) == 1
