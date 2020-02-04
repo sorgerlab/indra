@@ -166,8 +166,9 @@ class GroundingMapper(object):
             if not adeft_success and self.gilda_mode and \
                     agent_txt in self.gilda_models:
                 try:
-                    gilda_success = run_gilda_disambiguation(mapped_stmt,
-                                                             agent, idx)
+                    gilda_success = \
+                        run_gilda_disambiguation(mapped_stmt, agent, idx,
+                                                 mode=self.gilda_mode)
                 except Exception as e:
                     logger.error('There was an error during Gilda'
                                  ' disambiguation of %s.' % agent_txt)
