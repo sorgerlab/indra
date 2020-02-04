@@ -14,3 +14,5 @@ protmapper
 pyyaml
 networkx>=2.1
 obonet
+pybel
+unidecode
