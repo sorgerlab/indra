@@ -184,9 +184,9 @@ stmts = ac.run_preassembly(stmts,       # Run preassembly
                            return_toplevel=False
                            belief_scorer=belief_scorer,
                            hierarchies=hierarchies,
-                           normalize_equivalences=True,
-                           normalize_opposites=True,
-                           normalize_ns='WM')
+                           normalize_equivalences=True,     # Optional: rewrite equivalent groundings to one standard
+                           normalize_opposites=True,        # Optional: rewrite opposite groundings to one standard
+                           normalize_ns='WM')               # Use 'WM' namespace to normalize equivalences and opposites 
 stmts = ac.filter_belief(stmts, 0.8)    # Optional: apply belief cutoff of e.g., 0.8
 ```
 
