@@ -147,6 +147,52 @@ take Statements as input and produce processed Statements as output. They can
 be composed to form an assembly pipeline connecting knowledge collected from
 sources with an output model.
 
+The choice of assembly functions can vary depending on the domain (e.g. biology
+or world modelers), the purpose (e.g. what output model will be used), desired features (e.g. filter to human genes only or apply belief cutoff), and user preference.
+
+An example of an assembly pipeline for biology statements (adding, removing, and
+reordering the steps might change the output):
+
+```python
+from indra.tools import assemble_corpus as ac
+stmts = <the collection of all raw statements to use>
+stmts = ac.filter_no_hypothesis(stmts)  # Optional: filter out hypothetical statements
+stmts = ac.map_grounding(stmts)         # Map grounding
+stmts = ac.filter_grounded_only(stmts)  # Optional: filter out ungrounded agents
+stmts = ac.filter_human_only(stmts)     # Optional: filter out non-human genes
+stmts = ac.map_sequence(stmts)          # Map sequence
+stmts = ac.run_preassembly(stmts,       # Run preassembly
+                           return_toplevel=False)
+stmts = ac.filter_belief(stmts, 0.8)    # Optional: apply belief cutoff of e.g., 0.8
+```
+
+An example of an assembly pipeline for statements in world modelers domain
+(note how biology specific functions are not used and custom belief_scorer and
+hierarchies are passed to `run_preassembly` here, while the biology pipeline
+used default values):
+
+```python
+from indra.tools import assemble_corpus as ac
+from indra.belief.wm_scorer import get_eidos_scorer
+from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+stmts = <the collection of all raw statements to use>
+stmts = ac.filter_no_hypothesis(stmts)  # Optional: filter out hypothetical statements
+stmts = ac.filter_grounded_only(stmts)  # Optional: filter out ungrounded agents
+hierarchies = get_wm_hierarchies()
+belief_scorer = get_eidos_scorer()
+stmts = ac.run_preassembly(stmts,       # Run preassembly
+                           return_toplevel=False
+                           belief_scorer=belief_scorer,
+                           hierarchies=hierarchies,
+                           normalize_equivalences=True,
+                           normalize_opposites=True,
+                           normalize_ns='WM')
+stmts = ac.filter_belief(stmts, 0.8)    # Optional: apply belief cutoff of e.g., 0.8
+```
+
+Assembled statements returned after running the assembly pipeline can be
+passed into any of the output model assemblers.
+
 INDRA also contains utility modules to access literature content (e.g. PubMed),
 ontological information (e.g. UniProt, HGNC), and other resources.
 
