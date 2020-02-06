@@ -1,10 +1,7 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str, bytes
-from past.builtins import basestring
 import json
 import logging
-import requests
 from .processor import EidosProcessor
+import indra.sources.eidos.client as eidos_client
 
 logger = logging.getLogger(__name__)
 
@@ -57,9 +54,7 @@ def process_text(text, save_json='eidos_output.json',
     else:
         if webservice.endswith('/'):
             webservice = webservice[:-1]
-        res = requests.post('%s/process_text' % webservice,
-                            json={'text': text})
-        json_dict = res.json()
+        json_dict = eidos_client.process_text(text, webservice=webservice)
     if save_json:
         with open(save_json, 'wt') as fh:
             json.dump(json_dict, fh, indent=2)
