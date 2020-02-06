@@ -152,7 +152,7 @@ or world modelers), the purpose (e.g. what output model will be used), desired f
 
 This diagram illustrates the assembly pipeline process.
 
-![assembly](https://user-images.githubusercontent.com/35860871/73950376-d35dfd00-48c9-11ea-905a-68d6e49c205e.png)
+![assembly](doc/images/assembly.png)
 
 An example of an assembly pipeline for biology statements (adding, removing, and
 reordering the steps might change the output):
