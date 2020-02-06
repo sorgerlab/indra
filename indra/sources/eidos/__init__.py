@@ -102,7 +102,7 @@ Then point to the running server with the webservice parameter when calling
 
    from indra.sources import eidos
    ep = eidos.process_text('rainfall causes floods',
-                            webservice='http://localhost:6665')
+                            webservice='http://localhost:6666')
 
 Advantages:
 
