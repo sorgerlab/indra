@@ -150,6 +150,10 @@ sources with an output model.
 The choice of assembly functions can vary depending on the domain (e.g. biology
 or world modelers), the purpose (e.g. what output model will be used), desired features (e.g. filter to human genes only or apply belief cutoff), and user preference.
 
+This diagram illustrates the assembly pipeline process.
+
+![assembly](https://user-images.githubusercontent.com/35860871/73950376-d35dfd00-48c9-11ea-905a-68d6e49c205e.png)
+
 An example of an assembly pipeline for biology statements (adding, removing, and
 reordering the steps might change the output):
 
