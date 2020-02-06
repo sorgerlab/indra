@@ -19,7 +19,7 @@ except Exception as e:
     eidos_reader = None
 
 
-def process_text(text, out_format='json_ld', save_json='eidos_output.json',
+def process_text(text, save_json='eidos_output.json',
                  webservice=None, grounding_ns=None):
     """Return an EidosProcessor by processing the given text.
 
@@ -31,9 +31,6 @@ def process_text(text, out_format='json_ld', save_json='eidos_output.json',
     ----------
     text : str
         The text to be processed.
-    out_format : Optional[str]
-        The type of Eidos output to read into and process. Currently only
-        'json-ld' is supported which is also the default value used.
     save_json : Optional[str]
         The name of a file in which to dump the JSON output of Eidos.
     webservice : Optional[str]
@@ -56,7 +53,7 @@ def process_text(text, out_format='json_ld', save_json='eidos_output.json',
         if eidos_reader is None:
             logger.error('Eidos reader is not available.')
             return None
-        json_dict = eidos_reader.process_text(text, out_format)
+        json_dict = eidos_reader.process_text(text)
     else:
         if webservice.endswith('/'):
             webservice = webservice[:-1]

@@ -80,16 +80,13 @@ class EidosReader(object):
                       for text_grounding in raw_groundings]
         return groundings
 
-    def process_text(self, text, format='json'):
+    def process_text(self, text):
         """Return a mentions JSON object given text.
 
         Parameters
         ----------
         text : str
             Text to be processed.
-        format : str
-            The format of the output to produce, one of "json" or "json_ld".
-            Default: "json"
 
         Returns
         -------
@@ -108,23 +105,17 @@ class EidosReader(object):
             default_arg(today),  # doc creation time
             default_arg(fname)  # file name
             )
-        if format == 'json':
-            mentions = annot_doc.odinMentions()
-            ser = autoclass(eidos_package +
-                            '.serialization.json.WMJSONSerializer')
-            mentions_json = ser.toJsonStr(mentions)
-        elif format == 'json_ld':
-            # We need to get a Scala Seq of annot docs here
-            ml = _list_to_seq([annot_doc])
-            # We currently do not need toinstantiate the adjective grounder
-            # if we want to reinstate it, we would need to do the following
-            # ag = EidosAdjectiveGrounder.fromConfig(
-            #   EidosSystem.defaultConfig.getConfig("adjectiveGrounder"))
-            # We now create a JSON-LD corpus
-            jc = autoclass(eidos_package + '.serialization.json.JLDCorpus')
-            corpus = jc(ml)
-            # Finally, serialize the corpus into JSON string
-            mentions_json = corpus.toJsonStr()
+        # We need to get a Scala Seq of annot docs here
+        ml = _list_to_seq([annot_doc])
+        # We currently do not need toinstantiate the adjective grounder
+        # if we want to reinstate it, we would need to do the following
+        # ag = EidosAdjectiveGrounder.fromConfig(
+        #   EidosSystem.defaultConfig.getConfig("adjectiveGrounder"))
+        # We now create a JSON-LD corpus
+        jc = autoclass(eidos_package + '.serialization.json.JLDCorpus')
+        corpus = jc(ml)
+        # Finally, serialize the corpus into JSON string
+        mentions_json = corpus.toJsonStr()
         json_dict = json.loads(mentions_json)
         return json_dict
 
