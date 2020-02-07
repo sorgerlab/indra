@@ -21,6 +21,22 @@ reliability of causal information.
 The detailed INDRA documentation is available at
 [http://indra.readthedocs.io](http://indra.readthedocs.io).
 
+## Contents
+
+- [INDRA Modules](#indra-modules)
+    - [Knowledge sources](#knowledge-sources)
+    - [Output model assemblers](#output-model-assemblers)
+    - [Internal knowledge assembly](#internal-knowledge-assembly)
+    - [Other modules](#other-modules)
+- [Citation](#citation)
+- [Installation](#installation)
+- [INDRA REST API](#indra-rest-api)
+- [INDRA Docker](#indra-docker)
+- [Using INDRA](#using-indra)
+- [Funding](#funding)
+
+## INDRA Modules
+
 ### Knowledge sources
 
 INDRA is currently integrated with the following natural language processing
@@ -197,8 +213,15 @@ stmts = ac.filter_belief(stmts, 0.8)    # Optional: apply belief cutoff of e.g.,
 Assembled statements returned after running the assembly pipeline can be
 passed into any of the output model assemblers.
 
-INDRA also contains utility modules to access literature content (e.g. PubMed),
-ontological information (e.g. UniProt, HGNC), and other resources.
+### Other modules
+
+INDRA also contains modules to access various resourses:
+
+- Literature content ( e.g. PubMed, Elsevier, available in [`indra.literature`](
+    https://indra.readthedocs.io/en/latest/modules/literature/index.html))
+- Ontological information (e.g. UniProt, HGNC, available in [`indra.databases`](
+    https://indra.readthedocs.io/en/latest/modules/databases/index.html))
+
 
 ## Citation
 
