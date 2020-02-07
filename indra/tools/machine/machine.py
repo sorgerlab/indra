@@ -24,8 +24,8 @@ from indra import get_config, has_config
 
 try:
     import boto3
-    from indra.tools.reading.submit_reading_pipeline import \
-        submit_reading, wait_for_complete
+    from indra_reading.scripts.submit_reading_pipeline import \
+        submit_reading, BatchMonitor
     # Try to make a client
     client = boto3.client('batch')
     from indra.literature.s3_client import get_reader_json_str, get_full_text
@@ -439,8 +439,8 @@ def run_machine(model_path, pmids, belief_threshold, search_genes=None,
         job_list = submit_reading('rasmachine', pmid_fname, ['reach'])
 
         # Wait for reading to complete
-        wait_for_complete('run_reach_queue', job_list, idle_log_timeout=600,
-                          kill_on_log_timeout=True)
+        monitor = BatchMonitor('run_reach_queue', job_list)
+        monitor.watch_and_wait(idle_log_timeout=600, kill_on_log_timeout=True)
 
     # Load the model
     logger.info(time.strftime('%c'))
