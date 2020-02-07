@@ -200,13 +200,17 @@ def test_eidos_to_pysb():
     return
 
 
-@unittest.skip('Grounding not available on Travis.')
+# Grounding not available on Travis.
+@attr('notravis')
 def test_reground_texts():
     er = eidos.reader.EidosReader()
     er.initialize_reader()
     groundings = er.reground_texts(['rainfall', 'hunger'])
-    assert groundings[0][0][0] == 'UN/events/weather/precipitation'
-    assert groundings[1][0][0] == 'UN/events/human/famine'
+    assert groundings[0][0][0] == \
+        ('wm/concept/causal_factor/environmental/'
+         'meteorologic/precipitation/rainfall'), groundings
+    assert groundings[1][0][0] == \
+        'wm/concept/causal_factor/condition/famine', groundings
 
 
 def test_standalone_event():

@@ -10,7 +10,7 @@ from os import path
 from pathlib import Path
 from flask import Flask, request, jsonify, abort, Response
 # Note: preserve EidosReader import as first one from indra
-from indra.sources.eidos.reader import EidosReader
+from indra.sources.eidos import reground_texts
 from indra.belief import BeliefEngine
 from indra.tools import assemble_corpus as ac
 from indra.belief.wm_scorer import get_eidos_bayesian_scorer
@@ -448,11 +448,11 @@ class LiveCurator(object):
         A dictionary mapping corpus IDs to Corpus objects.
     """
 
-    def __init__(self, scorer=None, corpora=None):
+    def __init__(self, scorer=None, corpora=None, eidos_url=None):
         self.corpora = corpora if corpora else {}
         self.scorer = scorer if scorer else get_eidos_bayesian_scorer()
         self.ont_manager = _make_wm_ontology()
-        self.eidos_reader = EidosReader()
+        self.eidos_url = eidos_url
 
     # TODO: generalize this to other kinds of scorers
     def reset_scorer(self):
@@ -641,7 +641,8 @@ class LiveCurator(object):
             for concept in stmt.agent_list():
                 concept_txt = concept.db_refs.get('TEXT')
                 concepts.append(concept_txt)
-        groundings = self.eidos_reader.reground_texts(concepts, yaml_str)
+        groundings = reground_texts(concepts, yaml_str,
+                                    webservice=self.eidos_url)
         # Update the corpus with new groundings
         idx = 0
         for stmt in corpus.raw_statements:
