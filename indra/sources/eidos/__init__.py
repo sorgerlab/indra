@@ -3,7 +3,7 @@ Eidos is an open-domain machine reading system which uses a cascade of grammars
 to extract causal events from free text. It is ideal for modeling applications
 that are not specific to a given domain like molecular biology.
 
-To cover a wide range of use cases and scenarios, there are currently 4
+To cover a wide range of use cases and scenarios, there are currently 5
 different ways in which INDRA can use Eidos.
 
 In all cases for Eidos to provide grounding information to be included in
@@ -134,6 +134,15 @@ Advantages:
 Disadvantages:
 
 * Requires building an Eidos JAR which can be time consuming.
+
+5. Use Eidos separately to produce output files and then process those with INDRA
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In this usage mode Eidos is not directly invoked by INDRA. Rather, Eidos
+is set up and run idenpendently of INDRA to produce JSON-LD output files
+for a set of text content.
+One can then use :py:mod:`indra.sources.eidos.api.process_json_file`
+in INDRA to process the JSON-LD output files.
 """
 
 from .api import process_text, process_json_str, process_json_file, \

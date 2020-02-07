@@ -1,7 +1,7 @@
 import json
 import logging
 from .processor import EidosProcessor
-import indra.sources.eidos.client as eidos_client
+from indra.sources.eidos import client as eidos_client
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ try:
     from .reader import EidosReader
     eidos_reader = EidosReader()
 except Exception as e:
-    logger.warning('Could not instantiate Eidos reader, text reading '
+    logger.warning('Could not instantiate Eidos reader, local reading '
                    'will not be available.')
     eidos_reader = None
 

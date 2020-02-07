@@ -1,4 +1,4 @@
-__all__ = ['process_text', 'reground']
+__all__ = ['process_text', 'reground_texts']
 
 import requests
 
