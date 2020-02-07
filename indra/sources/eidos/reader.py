@@ -50,6 +50,16 @@ class EidosReader(object):
 
     def __init__(self):
         self.eidos_reader = None
+        self.default_ontology = None
+
+    def get_default_ontology(self):
+        if self.default_ontology is None:
+            import yaml
+            from indra.preassembler.make_wm_ontologies import \
+                wm_ont_url, load_yaml_from_url
+            yaml_str = yaml.dump(load_yaml_from_url(wm_ont_url))
+            self.default_ontology = yaml_str
+        return self.default_ontology
 
     def initialize_reader(self):
         """Instantiate the Eidos reader attribute of this reader."""
@@ -57,21 +67,18 @@ class EidosReader(object):
         self.eidos_reader = eidos()
 
     def reground_texts(self, texts, yaml_str=None, topk=10,
-                       is_canonicalized=False):
+                       is_canonicalized=False, filter=True):
         if self.eidos_reader is None:
             self.initialize_reader()
         if yaml_str is None:
-            import yaml
-            from indra.preassembler.make_wm_ontologies import \
-                wm_ont_url, load_yaml_from_url
-            yaml_str = yaml.dump(load_yaml_from_url(wm_ont_url))
+            yaml_str = self.get_default_ontology()
         text_seq = _list_to_seq(texts)
         raw_groundings = \
             self.eidos_reader.components().ontologyHandler().reground(
                 'Custom',  # name
                 yaml_str,  # ontologyYaml
                 text_seq,  # texts
-                True,  # filter
+                filter,  # filter
                 topk,  # topk
                 is_canonicalized  # isAlreadyCanonicalized
             )

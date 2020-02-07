@@ -30,16 +30,16 @@ def process_text(text, webservice):
     return json_dict
 
 
-def reground(ont_yml, texts, webservice, topk=10, is_canonicalized=False,
-             filter=True):
+def reground_texts(texts, ont_yml, webservice, topk=10, is_canonicalized=False,
+                   filter=True):
     """Ground concept texts given an ontology with an Eidos web service.
 
     Parameters
     ----------
-    ont_yml : str
-        A serialized YAML string representing the ontology.
     texts : list[str]
         A list of concept texts to ground.
+    ont_yml : str
+        A serialized YAML string representing the ontology.
     webservice : str
         The address where the Eidos web service is running, e.g.,
         http://localhost:9000.

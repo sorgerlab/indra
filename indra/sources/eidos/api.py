@@ -140,6 +140,46 @@ def process_json(json_dict, grounding_ns=None):
     return ep
 
 
+def reground_texts(texts, ont_yml, webservice=None, topk=10, filter=True,
+                   is_canonicalized=True):
+    """Return grounding for concept texts given an ontology.
+
+    Parameters
+    ----------
+    texts : list[str]
+        A list of concept texts to ground.
+    ont_yml : str
+        A serialized YAML string representing the ontology.
+    webservice : Optional[str]
+        The address where the Eidos web service is running, e.g.,
+        http://localhost:9000. If None, a local Eidos JAR is invoked
+        via pyjnius. Default: None
+    topk : Optional[int]
+        The number of top scoring groundings to return. Default: 10
+    is_canonicalized : Optional[bool]
+        If True, the texts are assumed to be canonicalized. If False,
+        Eidos will canonicalize the texts which yields much better groundings
+        but is slower. Default: False
+    filter : Optional[bool]
+        If True, Eidos filters the ontology to remove determiners from examples
+        and other similar operations. Should typically be set to True.
+        Default: True
+
+    Returns
+    -------
+    list[list]
+        A list of the top k scored groundings for each text in the list.
+    """
+    if not webservice:
+        return eidos_reader.reground_texts(texts, ont_yml, topk=topk,
+                                           filter=filter,
+                                           is_canonicalized=is_canonicalized)
+    else:
+        return eidos_client.reground_texts(texts, ont_yml, webservice,
+                                           topk=topk, filter=filter,
+                                           is_canonicalized=is_canonicalized)
+
+
 def initialize_reader():
     """Instantiate an Eidos reader for fast subsequent reading."""
     eidos_reader.process_text('')
