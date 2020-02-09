@@ -5,9 +5,10 @@ read with Eidos. To run the server, do
 
 and then submit POST requests to the `localhost:5000/process_text` endpoint
 with JSON content as `{'text': 'text to read'}`. The response will be the
-Eidos JSON-LD output.
+Eidos JSON-LD output. Another endpoint for regrounding entity texts
+is also available on the `reground` endpoint.
 """
-
+import sys
 import json
 import requests
 from flask import Flask, request
@@ -25,12 +26,12 @@ def process_text():
     text = request.json.get('text')
     if not text:
         return {}
-    res = er.process_text(text, 'json_ld')
+    res = er.process_text(text)
     return json.dumps(res)
 
 
-@app.route('/reground_text', methods=['POST'])
-def reground_text():
+@app.route('/reground', methods=['POST'])
+def reground():
     text = request.json.get('text')
     ont_yml = request.json.get('ont_yml', wm_yml)
     topk = request.json.get('topk', 10)
@@ -45,6 +46,7 @@ def reground_text():
 
 
 if __name__ == '__main__':
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else 6666
     er = EidosReader()
-    er.process_text('hello', 'json_ld')
-    app.run(host='0.0.0.0', port=6666)
+    er.process_text('hello')  # This is done to initialize the system
+    app.run(host='0.0.0.0', port=port)

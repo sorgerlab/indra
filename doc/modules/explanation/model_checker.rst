@@ -2,7 +2,7 @@ Check whether a model satisfies a property (:py:mod:`indra.explanation.model_che
 ======================================================================================
 
 Shared Model Checking Functionality (:py:mod:`indra.explanation.model_checker.model_checker`)
---------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
 
 .. automodule:: indra.explanation.model_checker.model_checker
     :members:
