@@ -21,6 +21,22 @@ reliability of causal information.
 The detailed INDRA documentation is available at
 [http://indra.readthedocs.io](http://indra.readthedocs.io).
 
+## Contents
+
+- [INDRA Modules](#indra-modules)
+    - [Knowledge sources](#knowledge-sources)
+    - [Output model assemblers](#output-model-assemblers)
+    - [Internal knowledge assembly](#internal-knowledge-assembly)
+    - [Other modules](#other-modules)
+- [Citation](#citation)
+- [Installation](#installation)
+- [INDRA REST API](#indra-rest-api)
+- [INDRA Docker](#indra-docker)
+- [Using INDRA](#using-indra)
+- [Funding](#funding)
+
+## INDRA Modules
+
 ### Knowledge sources
 
 INDRA is currently integrated with the following natural language processing
@@ -97,6 +113,7 @@ Assemblers aimed at model-driven discovery and analysis:
 |------------------------------------------------|------------------------------------------------------|-------------------------|---------------------|
 | PySB (-> SBML, SBGN, BNGL, Kappa, etc.)        | Detailed, mechanistic modeling, simulation, analysis | [`indra.assemblers.pysb`](https://indra.readthedocs.io/en/latest/modules/assemblers/pysb_assembler.html#) | http://pysb.org     |
 | PyBEL                                          | Causal analysis, visualization                       | [`indra.assemblers.pybel`](https://indra.readthedocs.io/en/latest/modules/assemblers/pybel_assembler.html)| https://github.com/pybel/pybel <br/> https://bel-commons.scai.fraunhofer.de/ |
+| IndraNet                                       | Causal analysis, signed and unsigned                 | [`indra.assemblers.indranet`](https://indra.readthedocs.io/en/latest/modules/assemblers/indranet_assembler.html) |                  |
 | SIF                                            | Network analysis, logic modeling, visualization      | [`indra.assemblers.sif`](https://indra.readthedocs.io/en/latest/modules/assemblers/sif_assembler.html)  | [SIF format](http://manual.cytoscape.org/en/stable/Supported_Network_File_Formats.html#sif-format) |
 | Figaro                                         | Bayesian network inference                           | `indra.assemblers.figaro` | https://github.com/p2t2/figaro/ |
 | KAMI                                           | Knowledge aggregation of protein sites/states and Kappa modeling | [`indra.assemblers.kami`](https://indra.readthedocs.io/en/latest/modules/assemblers/kami_assembler.html) | https://github.com/Kappa-Dev/KAMI |
@@ -146,8 +163,67 @@ take Statements as input and produce processed Statements as output. They can
 be composed to form an assembly pipeline connecting knowledge collected from
 sources with an output model.
 
-INDRA also contains utility modules to access literature content (e.g. PubMed),
-ontological information (e.g. UniProt, HGNC), and other resources.
+This diagram illustrates the assembly pipeline process.
+
+![assembly](doc/images/assembly.png)
+
+The choice of assembly functions can vary depending on the domain (i.e,
+biology or world modeling), the modeling goal (i.e., the type of model that
+will be assembled and how that model will be used), desired features, and
+confidence (e.g., filter to human genes only or apply a belief cutoff),
+and any other user preferences.
+
+An example of a typical assembly pipeline for biology statements is as follows.
+Some of the below steps can be removed, rearranged, and other steps added
+to change the assembly pipeline.
+
+```python
+from indra.tools import assemble_corpus as ac
+stmts = <the collection of all raw statements to use>
+stmts = ac.filter_no_hypothesis(stmts)  # Filter out hypothetical statements
+stmts = ac.map_grounding(stmts)         # Map grounding
+stmts = ac.filter_grounded_only(stmts)  # Filter out ungrounded agents
+stmts = ac.filter_human_only(stmts)     # Filter out non-human genes
+stmts = ac.map_sequence(stmts)          # Map sequence
+stmts = ac.run_preassembly(stmts,       # Run preassembly
+                           return_toplevel=False)
+stmts = ac.filter_belief(stmts, 0.8)    # Apply belief cutoff of 0.8
+```
+
+An example of an assembly pipeline for statements in the world modeling domain
+is as follows (note how biology-specific functions are not used, and a custom
+belief_scorer and hierarchies are passed to `run_preassembly` here, while the
+biology pipeline used default values):
+
+```python
+from indra.tools import assemble_corpus as ac
+from indra.belief.wm_scorer import get_eidos_scorer
+from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+stmts = <the collection of all raw statements to use>
+stmts = ac.filter_grounded_only(stmts)  # Filter out ungrounded agents
+hierarchies = get_wm_hierarchies()
+belief_scorer = get_eidos_scorer()
+stmts = ac.run_preassembly(stmts,       # Run preassembly
+                           return_toplevel=False
+                           belief_scorer=belief_scorer,
+                           hierarchies=hierarchies,
+                           normalize_equivalences=True,     # Optional: rewrite equivalent groundings to one standard
+                           normalize_opposites=True,        # Optional: rewrite opposite groundings to one standard
+                           normalize_ns='WM')               # Use 'WM' namespace to normalize equivalences and opposites 
+stmts = ac.filter_belief(stmts, 0.8)    # Apply belief cutoff of e.g., 0.8
+```
+Assembled statements returned after running the assembly pipeline can be
+passed into any of the output model assemblers.
+
+### Other modules
+
+INDRA also contains modules to access literature content (e.g., PubMed, Elsevier), available in [`indra.literature`](
+https://indra.readthedocs.io/en/latest/modules/literature/index.html), and 
+access ontological information and convert between identifiers (e.g., UniProt, 
+HGNC), available in [`indra.databases`](
+https://indra.readthedocs.io/en/latest/modules/databases/index.html).
+A full list of further INDRA modules is available in the [`documentation`](
+https://indra.readthedocs.io/en/latest/modules/index.html).
 
 ## Citation
 
