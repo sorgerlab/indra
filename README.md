@@ -163,41 +163,44 @@ take Statements as input and produce processed Statements as output. They can
 be composed to form an assembly pipeline connecting knowledge collected from
 sources with an output model.
 
-The choice of assembly functions can vary depending on the domain (e.g. biology
-or world modelers), the purpose (e.g. what output model will be used), desired features (e.g. filter to human genes only or apply belief cutoff), and user preference.
-
 This diagram illustrates the assembly pipeline process.
 
 ![assembly](doc/images/assembly.png)
 
-An example of an assembly pipeline for biology statements (adding, removing, and
-reordering the steps might change the output):
+The choice of assembly functions can vary depending on the domain (i.e,
+biology or world modeling), the modeling goal (i.e., the type of model that
+will be assembled and how that model will be used), desired features, and
+confidence (e.g., filter to human genes only or apply a belief cutoff),
+and any other user preferences.
+
+An example of a typical assembly pipeline for biology statements is as follows.
+Some of the below steps can be removed, rearranged, and other steps added
+to change the assembly pipeline.
 
 ```python
 from indra.tools import assemble_corpus as ac
 stmts = <the collection of all raw statements to use>
-stmts = ac.filter_no_hypothesis(stmts)  # Optional: filter out hypothetical statements
+stmts = ac.filter_no_hypothesis(stmts)  # Filter out hypothetical statements
 stmts = ac.map_grounding(stmts)         # Map grounding
-stmts = ac.filter_grounded_only(stmts)  # Optional: filter out ungrounded agents
-stmts = ac.filter_human_only(stmts)     # Optional: filter out non-human genes
+stmts = ac.filter_grounded_only(stmts)  # Filter out ungrounded agents
+stmts = ac.filter_human_only(stmts)     # Filter out non-human genes
 stmts = ac.map_sequence(stmts)          # Map sequence
 stmts = ac.run_preassembly(stmts,       # Run preassembly
                            return_toplevel=False)
-stmts = ac.filter_belief(stmts, 0.8)    # Optional: apply belief cutoff of e.g., 0.8
+stmts = ac.filter_belief(stmts, 0.8)    # Apply belief cutoff of 0.8
 ```
 
-An example of an assembly pipeline for statements in world modelers domain
-(note how biology specific functions are not used and custom belief_scorer and
-hierarchies are passed to `run_preassembly` here, while the biology pipeline
-used default values):
+An example of an assembly pipeline for statements in the world modeling domain
+is as follows (note how biology-specific functions are not used, and a custom
+belief_scorer and hierarchies are passed to `run_preassembly` here, while the
+biology pipeline used default values):
 
 ```python
 from indra.tools import assemble_corpus as ac
 from indra.belief.wm_scorer import get_eidos_scorer
 from indra.preassembler.hierarchy_manager import get_wm_hierarchies
 stmts = <the collection of all raw statements to use>
-stmts = ac.filter_no_hypothesis(stmts)  # Optional: filter out hypothetical statements
-stmts = ac.filter_grounded_only(stmts)  # Optional: filter out ungrounded agents
+stmts = ac.filter_grounded_only(stmts)  # Filter out ungrounded agents
 hierarchies = get_wm_hierarchies()
 belief_scorer = get_eidos_scorer()
 stmts = ac.run_preassembly(stmts,       # Run preassembly
@@ -207,21 +210,20 @@ stmts = ac.run_preassembly(stmts,       # Run preassembly
                            normalize_equivalences=True,     # Optional: rewrite equivalent groundings to one standard
                            normalize_opposites=True,        # Optional: rewrite opposite groundings to one standard
                            normalize_ns='WM')               # Use 'WM' namespace to normalize equivalences and opposites 
-stmts = ac.filter_belief(stmts, 0.8)    # Optional: apply belief cutoff of e.g., 0.8
+stmts = ac.filter_belief(stmts, 0.8)    # Apply belief cutoff of e.g., 0.8
 ```
-
 Assembled statements returned after running the assembly pipeline can be
 passed into any of the output model assemblers.
 
 ### Other modules
 
-INDRA also contains modules to access various resourses:
-
-- Literature content ( e.g. PubMed, Elsevier, available in [`indra.literature`](
-    https://indra.readthedocs.io/en/latest/modules/literature/index.html))
-- Ontological information (e.g. UniProt, HGNC, available in [`indra.databases`](
-    https://indra.readthedocs.io/en/latest/modules/databases/index.html))
-
+INDRA also contains modules to access literature content (e.g., PubMed, Elsevier), available in [`indra.literature`](
+https://indra.readthedocs.io/en/latest/modules/literature/index.html), and 
+access ontological information and convert between identifiers (e.g., UniProt, 
+HGNC), available in [`indra.databases`](
+https://indra.readthedocs.io/en/latest/modules/databases/index.html).
+A full list of further INDRA modules is available in the [`documentation`](
+https://indra.readthedocs.io/en/latest/modules/index.html).
 
 ## Citation
 
