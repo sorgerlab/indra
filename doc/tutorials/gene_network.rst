@@ -8,7 +8,7 @@ discussing the gene of interest. This knowledge is aggregated as a set of
 INDRA Statements which can then be assembled into several different model
 and network formats and possibly shared online.
 
-For the sake of example, assume that the gene of interest is TMEM173.
+For the sake of example, assume that the gene of interest is STING1.
 
 It is important to use the standard HGNC gene symbol of the gene throughout the
 example (this information is available on http://www.genenames.org/ or
@@ -25,7 +25,7 @@ BEL API.
 
     from indra.tools.gene_network import GeneNetwork
 
-    gn = GeneNetwork(['TMEM173'])
+    gn = GeneNetwork(['STING1'])
     biopax_stmts = gn.get_biopax_stmts()
     bel_stmts = gn.get_bel_stmts()
 
@@ -43,7 +43,7 @@ finds associated publications.
 
     from indra import literature
 
-    pmids = literature.pubmed_client.get_ids_for_gene('TMEM173')
+    pmids = literature.pubmed_client.get_ids_for_gene('STING1')
 
 The variable `pmid` now contains a list of PMIDs associated with the gene.
 
