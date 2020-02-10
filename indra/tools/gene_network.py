@@ -17,7 +17,7 @@ class GeneNetwork(object):
 
     Parameters
     ----------
-    gene_list : str
+    gene_list : list[str]
         List of gene names.
     basename : str or None (default)
         Filename prefix to be used for caching of intermediates (Biopax OWL
@@ -28,7 +28,7 @@ class GeneNetwork(object):
 
     Attributes
     ----------
-    gene_list : str
+    gene_list : list[str]
         List of gene names
     basename : str or None
         Filename prefix for cached intermediates, or None if no cached used.
@@ -41,12 +41,7 @@ class GeneNetwork(object):
             raise ValueError("Gene list must contain at least one element.")
         self.gene_list = gene_list
         self.basename = basename
-        # Use Large Corpus by default
-        default_bel_corpus = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            os.path.pardir, os.path.pardir, 'data', 'large_corpus.bel')
-        self.bel_corpus = default_bel_corpus if bel_corpus is None \
-            else bel_corpus
+        self.bel_corpus = bel_corpus
 
     def get_bel_stmts(self, filter=False):
         """Get relevant statements from the BEL large corpus.
