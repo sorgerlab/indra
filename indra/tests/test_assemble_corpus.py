@@ -1,5 +1,6 @@
 import pickle
 from copy import deepcopy
+from collections import namedtuple
 from indra.statements import *
 from indra.tools import assemble_corpus as ac
 from indra.preassembler.hierarchy_manager import get_wm_hierarchies
@@ -692,3 +693,44 @@ def test_normalize_equals_opposites():
     assert stmts[0].concept.db_refs['WM'][2][0] == \
            stmts[1].concept.db_refs['WM'][0][0], \
         stmts[1].concept.db_refs['WM']
+
+
+def test_filter_by_curation():
+    new_st1 = deepcopy(st1)
+    new_ev = Evidence(text='a -> b', source_api='new')
+    new_st1.evidence.append(new_ev)
+    stmts_in = [new_st1, st2, st3]
+    assert len(new_st1.evidence) == 2
+    assert all(st.belief != 1 for st in stmts_in)
+    Curation = namedtuple('Curation', ['pa_hash', 'source_hash', 'tag'])
+    cur1 = Curation(new_st1.get_hash(), new_st1.evidence[0].get_source_hash(),
+                    'grounding')
+    cur2 = Curation(new_st1.get_hash(), new_st1.evidence[1].get_source_hash(),
+                    'wrong_relation')
+    cur3 = Curation(new_st1.get_hash(), new_st1.evidence[0].get_source_hash(),
+                    'correct')
+    cur4 = Curation(st2.get_hash(), st2.evidence[0].get_source_hash(),
+                    'correct')
+    # With 'any' policy it is enough to have one incorrect curation
+    any_incorrect_one_cur = ac.filter_by_curation(stmts_in, [cur1], 'any')
+    assert len(any_incorrect_one_cur) == 2
+    assert new_st1 not in any_incorrect_one_cur
+    # With 'all' policy all evidences have to be curated
+    all_incorrect_one_cur = ac.filter_by_curation(stmts_in, [cur1], 'all')
+    assert len(all_incorrect_one_cur) == 3, len(all_incorrect_one_cur)
+    assert new_st1 in all_incorrect_one_cur
+    all_incorrect_two_cur = ac.filter_by_curation(stmts_in, [cur1, cur2], 'all')
+    assert len(all_incorrect_two_cur) == 2
+    assert new_st1 not in all_incorrect_two_cur
+    # Correct curation cancels out incorrect
+    correct_incorrect = ac.filter_by_curation(
+        stmts_in, [cur1, cur2, cur3, cur4], 'all', update_belief=False)
+    assert len(correct_incorrect) == 3, len(correct_incorrect)
+    assert new_st1 in correct_incorrect
+    assert all(st.belief != 1 for st in correct_incorrect)
+    # Optionally update belief to 1 for correct curation
+    new_belief = ac.filter_by_curation(
+        stmts_in, [cur1, cur2, cur3, cur4], 'all', update_belief=True)
+    assert new_belief[0].belief == 1
+    assert new_belief[1].belief == 1
+    assert new_belief[2].belief == 0.7
