@@ -9,6 +9,7 @@ except ImportError:
     # Python 3
     import pickle
 import logging
+from collections import defaultdict
 from copy import deepcopy, copy
 from indra.statements import *
 from indra.belief import BeliefEngine
@@ -1690,6 +1691,35 @@ def filter_uuid_list(stmts_in, uuids, **kwargs):
     dump_pkl = kwargs.get('save')
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+
+def filter_by_curation(stmts_in, curations, incorrect_policy='any',
+                       correct_tags=['correct'], update_belief=True):
+    correct = [c.pa_hash for c in curations if c.tag in correct_tags]
+    incorrect = [c.pa_hash for c in curations if c.pa_hash not in correct]
+    stmts_out = []
+    if incorrect_policy == 'any':
+        for stmt in stmts_in:
+            if stmt.get_hash() not in incorrect:
+                stmts_out.append(stmt)
+            if update_belief and stmt.get_hash() in correct:
+                stmt.belief = 1
+    elif incorrect_policy == 'all':
+        incorrect_stmt_evid = defaultdict(list)
+        for c in curations:
+            if c.pa_hash in incorrect:
+                incorrect_stmt_evid[c.pa_hash].append(c.source_hash)
+        print(incorrect_stmt_evid)
+        for stmt in stmts_in:
+            if stmt.get_hash() in incorrect_stmt_evid and (
+                    set([ev.get_source_hash() for ev in stmt.evidence]) ==
+                    set(incorrect_stmt_evid[stmt.get_hash()])):
+                continue
+            else:
+                stmts_out.append(stmt)
+            if update_belief and stmt.get_hash() in correct:
+                stmt.belief = 1
     return stmts_out
 
 
