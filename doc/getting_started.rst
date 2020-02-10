@@ -140,3 +140,31 @@ which writes the SBML model into the `model.sbml` file. Other formats for export
 that are supported include BNGL, Kappa and Matlab. For a full list, see the
 `PySB export module
 <http://docs.pysb.org/en/latest/modules/export/index.html>`_.
+
+Exporting Statements As Graph
+`````````````````````````````
+In this example we again assume that there already exists a variable called
+`stmts`, containing a list of statements. We will import the
+`IndraNetAssembler` that produces a multidigraph representations of a list
+of statements.
+
+.. code:: python
+
+    from indra.assemblers.indranet import IndraNetAssembler
+    indranet_assembler = IndraNetAssembler(statements=stmts)
+    indranet = indranet_assembler.make_model()
+
+The indranet object is an instance of a childclass of a Networkx graph,
+making all networkx graph methods available for the indranet object. Each
+edge in the graph represents one statement and has an edge dictionary with
+meta data about the statement.
+
+The indranet graph has methods to map it to other graph types. Here we
+export it to a signed graph:
+
+.. code:: python
+
+    signed_graph = indranet.to_signed_graph()
+
+Read more about the `IndraNetAssembler` in the `documentation
+<modules/assemblers/indranet_assembler.html>`_.
