@@ -69,14 +69,17 @@ Read the content of the publications
 ------------------------------------
 
 We next run the REACH reading system on the publications. Depending on the 
-content type, different calls need to be made via INDRA's REACH API.
+content type, different calls need to be made via INDRA's REACH API. If you
+you plan to use reach reading a lot it might be worth to set it up locally.
+If yo uahve it set up locally, you would change `read_offline` to `False`
+and local reading will be used instead.
 
 .. code-block:: python
 
     from indra import literature
     from indra.sources import reach
 
-    read_offline = True
+    read_offline = False  # Set to True to use local reading if set up
 
     literature_stmts = []
     for pmid, (content, content_type) in paper_contents.items():
