@@ -1702,8 +1702,11 @@ def filter_by_curation(stmts_in, curations, incorrect_policy='any',
     ----------
     stmts_in : list[indra.statements.Statement]
         A list of statements to filter.
-    curations : list
-        A list of curations for evidences.
+    curations : list[Curation]
+        A list of curations for evidences. Curation object should have
+        (at least) the following attributes:
+        pa_hash (preassembled statement hash), source_hash (evidence hash) and
+        tag (e.g. 'correct', 'wrong_relation', etc.)
     incorrect_policy : str
         A policy for filtering out statements given incorrect curations. 'Any'
         policy filters out a statement if at least one of its evidences is
