@@ -120,12 +120,13 @@ that are supported include BNGL, Kappa and Matlab. For a full list, see the
 `PySB export module
 <http://docs.pysb.org/en/latest/modules/export/index.html>`_.
 
-Exporting Statements As Graph
-`````````````````````````````
+Exporting Statements As an IndraNet Graph
+`````````````````````````````````````````
 In this example we again assume that there already exists a variable called
 `stmts`, containing a list of statements. We will import the
-`IndraNetAssembler` that produces a multidigraph representations of a list
-of statements.
+`IndraNetAssembler` that produces an IndraNet object, which is a multidigraph
+representations of the statements, each edge representing a statement and
+each node being an agent.
 
 .. code:: python
 
@@ -133,10 +134,9 @@ of statements.
     indranet_assembler = IndraNetAssembler(statements=stmts)
     indranet = indranet_assembler.make_model()
 
-The indranet object is an instance of a childclass of a Networkx graph,
+The indranet object is an instance of a childclass of a Networkx graph object,
 making all networkx graph methods available for the indranet object. Each
-edge in the graph represents one statement and has an edge dictionary with
-meta data about the statement.
+edge in the has an edge dictionary with meta data from the statement.
 
 The indranet graph has methods to map it to other graph types. Here we
 export it to a signed graph:
