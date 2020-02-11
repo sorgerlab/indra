@@ -50,8 +50,12 @@ The variable `pmid` now contains a list of PMIDs associated with the gene.
 Get the full text or abstract corresponding to the publications
 ---------------------------------------------------------------
 
-Next we use INDRA's literature client to fetch the full text (if available) or
-the abstract corresponding to the PMIDs we have just collected.
+Next we use INDRA's literature client to fetch the abstracts corresponding to
+the PMIDs we have just collected. The client also returns other content
+types, like xml, for full text (if available). Here we cut the list of PMIDs
+short to just the first 10 IDs that contain abstracts to make the processing
+faster. To read a lot of conent at scale, you should set up local reading or
+set up reading on your cluster.
 
 .. code-block:: python
 
@@ -60,41 +64,41 @@ the abstract corresponding to the PMIDs we have just collected.
     paper_contents = {}
     for pmid in pmids:
         content, content_type = literature.get_full_text(pmid, 'pmid')
-        paper_contents[pmid] = (content, content_type)
+        if content_type == 'abstract':
+            paper_contents[pmid] = content
+        if len(paper_contents) == 10:
+            break
 
-We now have a dictionary called `paper_contents` which stores the content and
-the content type of each PMID we looked up.
+We now have a dictionary called `paper_contents` which stores the content for
+each PMID we looked up.
 
 Read the content of the publications
 ------------------------------------
 
-We next run the REACH reading system on the publications. Depending on the 
-content type, different calls need to be made via INDRA's REACH API. If you
-you plan to use reach reading a lot it might be worth to set it up locally.
-If yo uahve it set up locally, you would change `read_offline` to `False`
-and local reading will be used instead.
+We next run the REACH reading system on the publications using the INDRA
+Rest API by using the `post` method of Python's `requests` module. The
+results are returned as json data, and we will use a function called
+`statements_from_json` to convert the json data into statements.
 
 .. code-block:: python
 
+    import requests
     from indra import literature
     from indra.sources import reach
-
-    read_offline = False  # Set to True to use local reading if set up
+    from indra.statements import stmts_from_json
+    indra_api = 'http://api.indra.bio:8000/reach/process_text'
 
     literature_stmts = []
-    for pmid, (content, content_type) in paper_contents.items():
-        rp = None
-        print('Reading %s' % pmid)
-        if content_type == 'abstract':
-            rp = reach.process_text(content, citation=pmid, offline=read_offline)
-        elif content_type == 'pmc_oa_xml':
-            rp = reach.process_nxml_str(content, offline=read_offline)
-        elif content_type == 'elsevier_xml':
-            txt = literature.elsevier_client.extract_text(content)
-            if txt:
-                rp = reach.process_text(txt, citation=pmid, offline=read_offline)
-        if rp is not None:
-            literature_stmts += rp.statements
+    for pmid, content in paper_contents.items():
+        res = requests.post(url=indra_api, json={'text': content})
+
+        if res.status_code == 200:
+            print('Got %d statements from abstract for pmid %s' %
+                (len(res.json()['statements']), pmid))
+            literature_stmts += stmts_from_json(res.json()['statements'])
+        else:
+            print('Got status code %d for pmid %s.' % (res.status_code, pmid))
+    print('Got %d statements' % len(literature_stmts))
 
 The list `literature_stmts` now contains the results of all the statements
 that were read.
@@ -118,7 +122,9 @@ of statements hidden. It is possible to run other filters on the results such
 as to keep only human genes, remove Statements with ungrounded genes, or
 to keep only certain types of interactions. Read more about the pre-assembly
 process in the
-`preassembly module documentation <../modules/preassembler/index.html>`_.
+`preassembly module documentation <../modules/preassembler/index.html>`_ and
+in the `github documentation
+<https://github.com/sorgerlab/indra#internal-knowledge-assembly>`_
 
 Assemble the statements into a network model
 --------------------------------------------
