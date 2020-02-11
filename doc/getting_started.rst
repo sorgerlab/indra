@@ -147,3 +147,14 @@ export it to a signed graph:
 
 Read more about the `IndraNetAssembler` in the `documentation
 <modules/assemblers/indranet_assembler.html>`_.
+
+See More
+--------
+
+For a longer example of using INDRA in an end-to-end pipeline, from getting
+content from different sources to assembling different output models, see
+the tutorial `"Assembling everything known about a particular gene"
+<tutorials/gene_network.html>`_.
+
+More tutorials are available in the `tutorials section <tutorials/index
+.html>`_.
