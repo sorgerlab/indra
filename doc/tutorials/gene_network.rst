@@ -116,7 +116,9 @@ At this point `stmts` contains a list of Statements collected with grounding,
 sequences having been mapped, duplicates combined and less specific variants
 of statements hidden. It is possible to run other filters on the results such
 as to keep only human genes, remove Statements with ungrounded genes, or
-to keep only certain types of interactions.
+to keep only certain types of interactions. Read more about the pre-assembly
+process in the
+`preassembly module documentation <../modules/preassembler/index.html>`_.
 
 Assemble the statements into a network model
 --------------------------------------------
