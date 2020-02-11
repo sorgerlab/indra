@@ -72,27 +72,6 @@ the BEL Large Corpus.
 The `bel_processor` object has a `statements` attribute which contains a list
 of INDRA Statements extracted from the queried neighborhood.
 
-Getting paths between two proteins from PathwayCommons (BioPAX)
-```````````````````````````````````````````````````````````````
-In this example, we search for paths between the BRAF and MAPK3 proteins in the
-PathwayCommons databases using INDRA's BioPAX API. Note that this example will
-only work if all dependencies of the indra.sources.biopax module are
-installed.
-
-See the `Installation instructions <installation.html>`_ for more details.
-
-.. code:: python
-
-    from indra.sources import biopax
-    proteins = ['BRAF', 'MAPK3']
-    limit = 2
-    biopax_processor = biopax.process_pc_pathsbetween(proteins, limit)
-
-We passed the second argument `limit = 2`, which defines the upper limit on
-the length of the paths that are searched. By default the limit is 1.
-The `biopax_processor` object has a `statements` attribute which contains a list
-of INDRA Statements extracted from the queried paths.
-
 Constructing INDRA Statements manually
 ``````````````````````````````````````
 It is possible to construct INDRA Statements manually or in scripts. The following
