@@ -13,14 +13,14 @@ __all__ = ['process_text', 'process_nxml_str', 'process_nxml_file',
 import os
 import json
 import logging
-import signal as sig
 import subprocess as sp
 import xml.etree.ElementTree as ET
 import multiprocessing as mp
 
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
-from .processor import SparserXMLProcessor, SparserJSONProcessor
+from .processor import SparserJSONProcessor
+from .xml_processor import SparserXMLProcessor
 
 logger = logging.getLogger(__name__)
 
