@@ -13,23 +13,6 @@ from indra.databases import uniprot_client, hgnc_client
 logger = logging.getLogger(__name__)
 
 
-def _fix_json_agents(ag_obj):
-    """Fix the json representation of an agent."""
-    if isinstance(ag_obj, str):
-        logger.info("Fixing string agent: %s." % ag_obj)
-        ret = {'name': ag_obj, 'db_refs': {'TEXT': ag_obj}}
-    elif isinstance(ag_obj, list):
-        # Recursive for complexes and similar.
-        ret = [_fix_json_agents(ag) for ag in ag_obj]
-    elif isinstance(ag_obj, dict) and 'TEXT' in ag_obj.keys():
-        ret = deepcopy(ag_obj)
-        text = ret.pop('TEXT')
-        ret['db_refs']['TEXT'] = text
-    else:
-        ret = ag_obj
-    return ret
-
-
 class SparserJSONProcessor(object):
     """Processor extracting INDRA Statements from Sparser's JSON output.
 
@@ -200,7 +183,7 @@ def fix_json_stmt(json_stmt):
     # 1.1 - Check for string agents.
     stmt_class = get_statement_by_name(stmt_type)
     for ag_key in stmt_class._agent_order:
-        json_stmt[ag_key] = _fix_json_agents(json_stmt.get(ag_key))
+        json_stmt[ag_key] = fix_json_agent(json_stmt.get(ag_key))
 
     # 1.2 - Fix other misc things.
     if stmt_type in mod_class_names:
@@ -218,6 +201,8 @@ def fix_json_stmt(json_stmt):
                 logger.error('Invalid residue: %s' % residue)
             else:
                 json_stmt['residue'] = residue[0]
+        elif isinstance(residue, bool):
+            json_stmt['residue'] = None
     elif stmt_type in ('Activation', 'Inhibition'):
         obj_activity = json_stmt.get('obj_activity')
         if isinstance(obj_activity, list):
@@ -252,6 +237,25 @@ def fix_json_stmt(json_stmt):
         # Change to IncreaseAmount
         json_stmt['type'] = 'IncreaseAmount'
     return json_stmt
+
+
+def fix_json_agent(ag_obj):
+    """Fix the JSON representation of an agent or list of agents."""
+    if isinstance(ag_obj, str):
+        logger.info("Fixing string agent: %s." % ag_obj)
+        return {'name': ag_obj, 'db_refs': {'TEXT': ag_obj}}
+    elif isinstance(ag_obj, list):
+        # Recursive for complexes and similar.
+        return [fix_json_agent(ag) for ag in ag_obj]
+    elif isinstance(ag_obj, dict):
+        # If an Agent is missing a name but has a TEXT db_refs then we set
+        # that text as the name.
+        if 'name' not in ag_obj:
+            if 'TEXT' in ag_obj.get('db_refs', {}):
+                ret = deepcopy(ag_obj)
+                ret['name'] = ag_obj['db_refs']['TEXT']
+                return ret
+    return ag_obj
 
 
 def check_statement_sanity(stmt):
