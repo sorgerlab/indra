@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 import os
+import json
 import logging
 from copy import copy, deepcopy
 
@@ -69,20 +70,18 @@ class SparserJSONProcessor(object):
                 self.statements.append(stmt)
             except SparserError as e:
                 self.extraction_errors.append((idx, e))
-            except NotAStatementName:
-                logger.error("%s is not a valid Statement type." %
-                             json_stmt.get('type'))
-            '''
+            except NotAStatementName as e:
+                self.extraction_errors.append((idx, e))
             except Exception as e:
                 # Keep an eye on these and try to fix them as they come up, but
                 # at least a reading job won't fail because of a couple
                 # glitches. The logs should be processed, and processing errors
                 # should be extracted and reported.
                 logger.error("PROCESSING ERROR: Could not process json:\n%s"
-                             % str(json_stmt))
+                             % json.dumps(json_stmt))
                 logger.exception(e)
                 logger.error("END PROCESSING ERROR --------")
-            '''
+                self.extraction_errors.append((idx, e))
 
     def set_statements_pmid(self, pmid):
         """Set the evidence PMID of Statements that have been extracted.
@@ -150,8 +149,8 @@ def fix_agent(agent):
             agent.db_refs[target[0]] = target[1]
     # If the name is an UP ID, change it
     if agent.name and 'UP' not in agent.db_refs \
-        and 'FPLX' not in agent.db_refs:
-        if uniprot_client.get_gene_name(agent.name):
+            and 'FPLX' not in agent.db_refs:
+        if uniprot_client.get_gene_name(agent.name, web_fallback=False):
             agent.db_refs['UP'] = agent.name
 
     # Check what entries we have
@@ -182,7 +181,7 @@ def fix_agent(agent):
             agent.db_refs['HGNC'] = hgnc_id
             agent.name = hgnc_client.get_hgnc_name(hgnc_id)
         else:
-            gene_name = uniprot_client.get_gene_name(up_id)
+            gene_name = uniprot_client.get_gene_name(up_id, web_fallback=False)
             if gene_name:
                 agent.name = gene_name
             # If it doesn't have a gene name, it's better to just
