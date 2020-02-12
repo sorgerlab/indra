@@ -241,6 +241,21 @@ def fix_json_stmt(json_stmt):
             raise MissingSubj
         # Change to IncreaseAmount
         json_stmt['type'] = 'IncreaseAmount'
+
+    # Fix evidence
+    evs = json_stmt.get('evidence')
+    if evs and isinstance(evs, list):
+        ev = evs[0]
+        text = ev.get('text')
+        if not isinstance(text, str) or not text:
+            raise MissingEvidenceText
+        pmid = ev.get('pmid')
+        if isinstance(pmid, str) and pmid.startswith('PMID'):
+            json_stmt['evidence'][0]['pmid'] = \
+                json_stmt['evidence'][0]['pmid'][4:]
+    else:
+        raise InvalidEvidence
+
     return json_stmt
 
 
@@ -348,4 +363,12 @@ class UnaryComplex(SparserError):
 
 
 class NoAgents(SparserError):
+    pass
+
+
+class MissingEvidenceText(SparserError):
+    pass
+
+
+class InvalidEvidence(SparserError):
     pass
