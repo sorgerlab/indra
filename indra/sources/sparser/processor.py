@@ -47,6 +47,7 @@ class SparserJSONProcessor(object):
     def __init__(self, json_dict):
         self.json_stmts = json_dict
         self.statements = []
+        self.extraction_errors = []
 
     def get_statements(self):
         for idx, json_stmt in enumerate(self.json_stmts):
@@ -66,6 +67,8 @@ class SparserJSONProcessor(object):
                     fix_agent(agent)
                 # Step 5: Append to list of Statements
                 self.statements.append(stmt)
+            except SparserError as e:
+                self.extraction_errors.append((idx, e))
             except NotAStatementName:
                 logger.error("%s is not a valid Statement type." %
                              json_stmt.get('type'))
@@ -226,7 +229,7 @@ def fix_json_stmt(json_stmt):
                 json_stmt['obj_activity'] = obj_activity[0]
         obj = json_stmt.get('obj')
         if isinstance(obj, (list, str)):
-            return None
+            raise InvalidAgent
     elif stmt_type == 'Translocation':
         # Fix locations if possible
         for loc_param in ('from_location', 'to_location'):
@@ -241,12 +244,12 @@ def fix_json_stmt(json_stmt):
         # Skip Translocation with both locations None
         if (json_stmt.get('from_location') is None
                 and json_stmt.get('to_location') is None):
-            return None
+            raise TranslocationWithoutLocations
     elif stmt_type == 'GeneTranscriptExpress':
         # Skip if there is no subject
         subj = json_stmt.get('subj')
         if not subj:
-            return None
+            raise MissingSubj
         # Change to IncreaseAmount
         json_stmt['type'] = 'IncreaseAmount'
     return json_stmt
@@ -256,18 +259,20 @@ def check_statement_sanity(stmt):
     """Return True if the statement passes some sanity checks."""
     # Skip Statement if all agents are None
     if not any(stmt.agent_list()):
-        return False
+        raise NoAgents
     # Skip RegulateActivity if object is None
     if isinstance(stmt, RegulateActivity):
-        if stmt.obj is None or stmt.subj is None:
-            return False
+        if stmt.obj is None:
+            raise MissingObj
+        if stmt.subj is None:
+            raise MissingSubj
     if isinstance(stmt, Modification):
         if stmt.sub is None:
-            return False
+            raise MissingSubj
     # Skip Complexes with less than 2 members
     if isinstance(stmt, Complex):
         if len(stmt.members) < 2:
-            return False
+            raise UnaryComplex
     return True
 
 
@@ -306,3 +311,31 @@ def _read_famplex_map():
 
 famplex_map = _read_famplex_map()
 mod_class_names = [cls.__name__ for cls in modclass_to_modtype.keys()]
+
+
+class SparserError(ValueError):
+    pass
+
+
+class InvalidAgent(SparserError):
+    pass
+
+
+class TranslocationWithoutLocations(SparserError):
+    pass
+
+
+class MissingSubj(SparserError):
+    pass
+
+
+class MissingObj(SparserError):
+    pass
+
+
+class UnaryComplex(SparserError):
+    pass
+
+
+class NoAgents(SparserError):
+    pass
