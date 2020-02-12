@@ -219,6 +219,11 @@ def fix_json_stmt(json_stmt):
         for loc_param in ('from_location', 'to_location'):
             loc = json_stmt.get(loc_param)
             if loc:
+                # Some invalid locations are produced very often and can be
+                # silently skipped
+                if loc in known_invalid_locations:
+                    loc = None
+                # Otherwise we try to get a valid location via a mapping
                 try:
                     loc = get_valid_location(loc)
                 except InvalidLocationError:
@@ -314,6 +319,8 @@ def _read_famplex_map():
 
 famplex_map = _read_famplex_map()
 mod_class_names = [cls.__name__ for cls in modclass_to_modtype.keys()]
+
+known_invalid_locations = {'CHEBI:36080', 'GO:0038023'}
 
 
 class SparserError(ValueError):
