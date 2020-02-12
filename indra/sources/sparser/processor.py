@@ -27,6 +27,10 @@ class SparserJSONProcessor(object):
         JSON containing the raw Sparser extractions.
     statements : list[indra.statements.Statement]
         A list of INDRA Statements that were extracted by the processor.
+    extraction_errors : list
+        A list of tuples whose first element is the index of the JSON Statement
+        in json_stmts and whose second element is an Exception that was
+        thrown while processing the Statement with that index.
     """
     def __init__(self, json_dict):
         self.json_stmts = json_dict
@@ -86,6 +90,18 @@ class SparserJSONProcessor(object):
         for stmt in self.statements:
             for ev in stmt.evidence:
                 ev.pmid = pmid
+
+    def get_error_stats(self):
+        """Return a Counter of error types that were encountered.
+
+        Returns
+        -------
+        collections.Counter
+            A Counter of error types that were encountered during processing.
+        """
+        from collections import Counter
+        return Counter([e.__class__.__name__
+                        for _, e in self.extraction_errors])
 
 
 def fix_agent(agent):
