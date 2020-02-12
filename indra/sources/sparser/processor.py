@@ -55,6 +55,8 @@ class SparserJSONProcessor(object):
                 self.extraction_errors.append((idx, e))
             except NotAStatementName as e:
                 self.extraction_errors.append((idx, e))
+            except InvalidResidueError as e:
+                self.extraction_errors.append((idx, e))
             except Exception as e:
                 # Keep an eye on these and try to fix them as they come up, but
                 # at least a reading job won't fail because of a couple
