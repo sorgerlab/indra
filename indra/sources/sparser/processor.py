@@ -176,16 +176,19 @@ def fix_agent(agent):
 
 
 def fix_json_stmt(json_stmt):
-    # If type isn't there, we have a very serious problem.
-    stmt_type = json_stmt['type']
-
     # Step 1: fix JSON directly to reduce errors when deserializing
-    # 1.1 - Check for string agents.
+    # 1.1 Fix statement type issues
+    # Change to IncreaseAmount
+    if json_stmt['type'] == 'GeneTranscriptExpress':
+        json_stmt['type'] = 'IncreaseAmount'
+    stmt_type = json_stmt['type']
     stmt_class = get_statement_by_name(stmt_type)
+
+    # 1.2 - Check for string agents.
     for ag_key in stmt_class._agent_order:
         json_stmt[ag_key] = fix_json_agent(json_stmt.get(ag_key))
 
-    # 1.2 - Fix other misc things.
+    # 1.3 - Fix other misc things that are statement type specific
     if stmt_type in mod_class_names:
         position = json_stmt.get('position')
         residue = json_stmt.get('residue')
@@ -234,15 +237,13 @@ def fix_json_stmt(json_stmt):
         if (json_stmt.get('from_location') is None
                 and json_stmt.get('to_location') is None):
             raise TranslocationWithoutLocations
-    elif stmt_type == 'GeneTranscriptExpress':
+    elif stmt_type == 'IncreaseAmount':
         # Skip if there is no subject
         subj = json_stmt.get('subj')
         if not subj:
             raise MissingSubj
-        # Change to IncreaseAmount
-        json_stmt['type'] = 'IncreaseAmount'
 
-    # Fix evidence
+    # 1.4 - Fix evidence
     evs = json_stmt.get('evidence')
     if evs and isinstance(evs, list):
         ev = evs[0]
