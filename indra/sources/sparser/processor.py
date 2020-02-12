@@ -93,8 +93,12 @@ def fix_agent(agent):
     # First we fix some name spaces
     db_refs_tmp = copy(agent.db_refs)
     for db_ns, db_id in agent.db_refs.items():
+        # Make sure CHEBI prefix is there
+        if db_ns == 'CHEBI':
+            if not db_id.startswith('CHEBI:'):
+                db_refs_tmp['CHEBI'] = 'CHEBI:%s' % db_id
         # Change FA name space
-        if db_ns == 'FA':
+        elif db_ns == 'FA':
             db_refs_tmp.pop('FA', None)
             db_refs_tmp['NXPFA'] = db_id
         # Change IPR name space
@@ -157,6 +161,8 @@ def fix_agent(agent):
         if not up_id:
             up_id = hgnc_client.get_uniprot_id(hgnc_id)
             if up_id:
+                if ', ' in up_id:
+                    up_id = up_id.split(', ')[0]
                 agent.db_refs['UP'] = up_id
     elif up_id:
         hgnc_id = uniprot_client.get_hgnc_id(up_id)
