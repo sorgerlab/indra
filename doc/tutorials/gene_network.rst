@@ -129,6 +129,11 @@ in the `github documentation
 Assemble the statements into a network model
 --------------------------------------------
 
+CX Network Model
+~~~~~~~~~~~~~~~~
+
+We can assemble the statements into e.g. a CX network model:
+
 .. code-block:: python
 
     from indra.assemblers.cx import CxAssembler
@@ -144,3 +149,24 @@ We can now upload this network to the Network Data Exchange (NDEx).
     ndex_cred = {'user': 'myusername', 'password': 'xxx'}
     network_id = ndex_client.create_network(cx_str, ndex_cred)
     print(network_id)
+
+IndraNet Model
+~~~~~~~~~~~~~~
+
+Another network model that can assembled is the IndraNet graph which is a
+light-weight networkx derived object.
+
+.. code:: python
+
+    from indra.assemblers.indranet import IndraNetAssembler
+    indranet_assembler = IndraNetAssembler(statements=stmts)
+    indranet = indranet_assembler.make_model()
+
+Since the IndraNet class is a child class of a networkx Graph, one can use
+networkx's path search algorithms:
+
+.. code:: python
+
+    import networkx as nx
+    path_length = nx.single_source_shortest_path(G=indranet,
+                      source='STING1', cutoff=0)
