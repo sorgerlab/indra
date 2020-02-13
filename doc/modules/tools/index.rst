@@ -38,14 +38,3 @@ The RAS Machine (:py:mod:`indra.tools.machine`)
 .. automodule:: indra.tools.machine
     :members:
 
-
-High-throughput Reading Tools (:py:mod:`indra.tools.reading`)
--------------------------------------------------------------
-
-.. toctree::
-   :maxdepth: 3
-
-   reading/pipelines
-   reading/interfaces
-   reading/tools
-   reading/utils
