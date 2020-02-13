@@ -229,6 +229,10 @@ class ModelChecker(object):
             if result.path_found:
                 logger.info('Found paths for %s' % stmt)
                 return result
+        # Return the result if the subject/input rules were not found
+        if result.result_code in [
+                'SUBJECT_NOT_FOUND', 'INPUT_RULES_NOT_FOUND']:
+            return result
         # If we got here, then there was no path for any observable
         logger.info('No paths found for %s' % stmt)
         return self.make_false_result('NO_PATHS_FOUND',
@@ -262,7 +266,6 @@ class ModelChecker(object):
         if result_code:
             return self.make_false_result(result_code,
                                           max_paths, max_path_length)
-
         # # -- Route to the path sampling function --
         # NOTE this is not generic at this point!
         # if self.do_sampling:

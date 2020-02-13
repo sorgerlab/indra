@@ -68,16 +68,16 @@ class PybelModelChecker(ModelChecker):
             target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
         elif isinstance(stmt, Influence):
             target_polarity = 1 if stmt.overall_polarity() == -1 else 0
-        subj_nodes = self.get_nodes(subj, self.graph, 0)
-        if not subj_nodes:
-            return (None, None, 'SUBJECT_NOT_FOUND')
         obj_nodes = self.get_nodes(obj, self.graph, target_polarity)
         if not obj_nodes:
             return (None, None, 'OBJECT_NOT_FOUND')
-        return (subj_nodes, obj_nodes, None)
+        return ([subj], obj_nodes, None)
 
     def process_subject(self, subj):
-        return [subj], None
+        subj_nodes = self.get_nodes(subj, self.graph, 0)
+        if not subj_nodes:
+            return (None, 'SUBJECT_NOT_FOUND')
+        return subj_nodes, None
 
     def get_nodes(self, agent, graph, target_polarity):
         # This import is done here rather than at the top level to avoid
