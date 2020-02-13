@@ -316,7 +316,7 @@ def check_statement_sanity(stmt):
             raise MissingSubj
     if isinstance(stmt, Modification):
         if stmt.sub is None:
-            raise MissingSubj
+            raise MissingObj
     # Skip Complexes with less than 2 members
     if isinstance(stmt, Complex):
         if len(stmt.members) < 2:
