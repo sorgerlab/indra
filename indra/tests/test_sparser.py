@@ -65,10 +65,10 @@ def test_process_json_str():
 def test_process_json_str_with_bad_agents():
     sp = sparser.process_json_dict(json.loads(json_str2))
     assert sp is not None
-    assert len(sp.statements) == 2, len(sp.statements)
-    types = {type(s) for s in sp.statements}
-    assert types == {Complex, Phosphorylation}, types
-    assert all(len(s.agent_list()) == 2 for s in sp.statements)
+    assert len(sp.statements) == 1, len(sp.statements)
+    assert isinstance(sp.statements[0], Phosphorylation)
+    assert len(sp.extraction_errors) == 1
+    assert len(sp.statements[0].agent_list()) == 2
 
 
 def test_process_json_str_with_missing_agent():
