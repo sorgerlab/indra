@@ -8,7 +8,7 @@ discussing the gene of interest. This knowledge is aggregated as a set of
 INDRA Statements which can then be assembled into several different model
 and network formats and possibly shared online.
 
-For the sake of example, assume that the gene of interest is STING1.
+For the sake of this example, assume that the gene of interest is STING1.
 
 It is important to use the standard HGNC gene symbol of the gene throughout the
 example (this information is available on http://www.genenames.org/ or
@@ -45,17 +45,16 @@ finds associated publications.
 
     pmids = literature.pubmed_client.get_ids_for_gene('STING1')
 
-The variable `pmid` now contains a list of PMIDs associated with the gene.
+The variable `pmids` now contains a list of PMIDs associated with the gene.
 
-Get the full text or abstract corresponding to the publications
----------------------------------------------------------------
+Get the abstracts corresponding to the publications
+---------------------------------------------------
 
 Next we use INDRA's literature client to fetch the abstracts corresponding to
 the PMIDs we have just collected. The client also returns other content
 types, like xml, for full text (if available). Here we cut the list of PMIDs
 short to just the first 10 IDs that contain abstracts to make the processing
-faster. To read a lot of conent at scale, you should set up local reading or
-set up reading on your cluster.
+faster.
 
 .. code-block:: python
 
@@ -72,10 +71,10 @@ set up reading on your cluster.
 We now have a dictionary called `paper_contents` which stores the content for
 each PMID we looked up. While the abstracts are in plain text format,
 some content is sometimes returned as in different xml formats. To process
-xml from different sources, see e.g. the `INDRA Reach API <https://indra
-.readthedocs.io/en/latest/modules/sources/reach/index.html#indra.sources
-.reach.api.process_nxml_str>`_ or the `INDRA Elsevier API <https://indra
-.readthedocs.io/en/latest/modules/literature/index.html#module-indra
+xml from different sources, see e.g. the
+`INDRA Reach API <../modules/sources/reach/index.html#indra.sources.reach
+.api.process_nxml_str>`_ or the
+`INDRA Elsevier API <../modules/literature/index.html#module-indra
 .literature.elsevier_client>`_.
 
 Read the content of the publications
@@ -122,12 +121,13 @@ Combine all statements and run pre-assembly
     stmts = assemble_corpus.map_sequence(stmts)
     stmts = assemble_corpus.run_preassembly(stmts)
 
-At this point `stmts` contains a list of Statements collected with grounding,
-sequences having been mapped, duplicates combined and less specific variants
-of statements hidden. It is possible to run other filters on the results such
-as to keep only human genes, remove Statements with ungrounded genes, or
-to keep only certain types of interactions. Read more about the pre-assembly
-process in the
+At this point `stmts` contains a list of Statements collected with
+`grounding <../modules/preassembler/grounding_mapper.html>`_,
+sequences having been `mapped <../modules/preassembler/site_mapper.html>`_,
+duplicates combined and less specific variants of statements hidden. It is
+possible to run other filters on the results such as to keep only human
+genes, remove Statements with ungrounded genes, or to keep only certain
+types of interactions. Read more about the pre-assembly process in the
 `preassembly module documentation <../modules/preassembler/index.html>`_ and
 in the `github documentation
 <https://github.com/sorgerlab/indra#internal-knowledge-assembly>`_
