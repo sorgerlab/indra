@@ -9,6 +9,7 @@ except ImportError:
     # Python 3
     import pickle
 import logging
+from collections import defaultdict
 from copy import deepcopy, copy
 from indra.statements import *
 from indra.belief import BeliefEngine
@@ -1690,6 +1691,77 @@ def filter_uuid_list(stmts_in, uuids, **kwargs):
     dump_pkl = kwargs.get('save')
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+
+def filter_by_curation(stmts_in, curations, incorrect_policy='any',
+                       correct_tags=None, update_belief=True):
+    """Filter out statements and update beliefs based on curations.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    curations : list[Curation]
+        A list of curations for evidences. Curation object should have
+        (at least) the following attributes:
+        pa_hash (preassembled statement hash), source_hash (evidence hash) and
+        tag (e.g. 'correct', 'wrong_relation', etc.)
+    incorrect_policy : str
+        A policy for filtering out statements given incorrect curations. The
+        'any' policy filters out a statement if at least one of its evidences
+        is curated as incorrect and no evidences are curated as correct, while
+        the 'all' policy only filters out a statement if all of its evidences
+        are curated as incorrect.
+    correct_tags : list[str] or None
+        A list of tags to be considered correct. If no tags are provided,
+        only the 'correct' tag is considered correct.
+    update_belief : Option[bool]
+        If True, set a belief score to 1 for statements curated as correct.
+        Default: True
+    """
+    if correct_tags is None:
+        correct_tags = ['correct']
+    # Here correct is a set of hashes of statements that were curated as
+    # correct (it's not taken into account whether they also have incorrect
+    # curations). Incorrect is a set of hashes of statements that only have
+    # incorrect curations (for all or some of the evidences). These sets do
+    # not intersect.
+    correct = {c.pa_hash for c in curations if c.tag in correct_tags}
+    incorrect = {c.pa_hash for c in curations if c.pa_hash not in correct}
+    stmts_out = []
+    logger.info('Filtering %d statements with %s incorrect curations...' %
+                (len(stmts_in), incorrect_policy))
+    if incorrect_policy == 'any':
+        # Filter statements that have SOME incorrect and NO correct curations
+        # (i.e. their hashes are in incorrect set)
+        for stmt in stmts_in:
+            if stmt.get_hash() not in incorrect:
+                stmts_out.append(stmt)
+            # Set belief to one for statements with correct curations
+            if update_belief and stmt.get_hash() in correct:
+                stmt.belief = 1
+    elif incorrect_policy == 'all':
+        # Filter out statements in which ALL evidences are curated
+        # as incorrect.
+        # First, map curated statements to curated evidences.
+        incorrect_stmt_evid = defaultdict(set)
+        for c in curations:
+            if c.pa_hash in incorrect:
+                incorrect_stmt_evid[c.pa_hash].add(c.source_hash)
+        for stmt in stmts_in:
+            # Compare set of evidence hashes of given statements to set of
+            # hashes of curated evidences.
+            if stmt.get_hash() in incorrect_stmt_evid and (
+                    {ev.get_source_hash() for ev in stmt.evidence} <=
+                    incorrect_stmt_evid[stmt.get_hash()]):
+                continue
+            else:
+                stmts_out.append(stmt)
+            # Set belief to one for statements with correct curations
+            if update_belief and stmt.get_hash() in correct:
+                stmt.belief = 1
+    logger.info('%d statements after filter...' % len(stmts_out))
     return stmts_out
 
 
