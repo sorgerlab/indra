@@ -169,10 +169,28 @@ light-weight networkx derived object.
     indranet = indranet_assembler.make_model()
 
 Since the IndraNet class is a child class of a networkx Graph, one can use
-networkx's path search algorithms:
+networkx's algorithms:
 
 .. code:: python
 
     import networkx as nx
     path_length = nx.single_source_shortest_path(G=indranet,
                       source='STING1', cutoff=0)
+
+Executable PySB Model
+~~~~~~~~~~~~~~~~~~~~~
+
+An executable PySB model can be assembled with the PySB assembler:
+
+.. code:: python
+
+    from indra.assemblers.pysb import PysbAssembler
+    pysb = PysbAssembler(stmts=stmts)
+    pysb_model = pysb.make_model()
+
+Read more about PySB models in the `PySB documentation <http://pysb.org/>`_.
+
+Read more about all assembly output formats in the `README <https://github
+.com/sorgerlab/indra#output-model-assemblers>`_ and in the `module
+references <https://indra.readthedocs.io/en/latest/modules/assemblers/index
+.html>`_.
