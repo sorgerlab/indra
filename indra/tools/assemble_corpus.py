@@ -1708,16 +1708,17 @@ def filter_by_curation(stmts_in, curations, incorrect_policy='any',
         pa_hash (preassembled statement hash), source_hash (evidence hash) and
         tag (e.g. 'correct', 'wrong_relation', etc.)
     incorrect_policy : str
-        A policy for filtering out statements given incorrect curations. 'Any'
-        policy filters out a statement if at least one of its evidences is
-        curated as incorrect and no evidences are curated as correct,
-        while 'all' policy only filters out a statement if all of its
-        evidences are curated as incorrect.
+        A policy for filtering out statements given incorrect curations. The
+        'any' policy filters out a statement if at least one of its evidences
+        is curated as incorrect and no evidences are curated as correct, while
+        the 'all' policy only filters out a statement if all of its evidences
+        are curated as incorrect.
     correct_tags : list[str] or None
         A list of tags to be considered correct. If no tags are provided,
-        only 'correct' tag is assigned.
-    update_belied : bool
-        Whether to set a belief score to 1 for statements curated as correct.
+        only the 'correct' tag is considered correct.
+    update_belief : Option[bool]
+        If True, set a belief score to 1 for statements curated as correct.
+        Default: True
     """
     if correct_tags is None:
         correct_tags = ['correct']
@@ -1725,7 +1726,7 @@ def filter_by_curation(stmts_in, curations, incorrect_policy='any',
     # correct (it's not taken into account whether they also have incorrect
     # curations). Incorrect is a set of hashes of statements that only have
     # incorrect curations (for all or some of the evidences). These sets do
-    # not intesect.
+    # not intersect.
     correct = {c.pa_hash for c in curations if c.tag in correct_tags}
     incorrect = {c.pa_hash for c in curations if c.pa_hash not in correct}
     stmts_out = []
