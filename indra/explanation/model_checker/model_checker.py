@@ -263,7 +263,6 @@ class ModelChecker(object):
         """
         # Get the input set (signed rules or names for source nodes)
         input_set, result_code = self.process_subject(subj)
-        print(input_set, result_code)
         if result_code:
             return self.make_false_result(result_code,
                                           max_paths, max_path_length)
