@@ -70,7 +70,13 @@ set up reading on your cluster.
             break
 
 We now have a dictionary called `paper_contents` which stores the content for
-each PMID we looked up.
+each PMID we looked up. While the abstracts are in plain text format,
+some content is sometimes returned as in different xml formats. To process
+xml from different sources, see e.g. the `INDRA Reach API <https://indra
+.readthedocs.io/en/latest/modules/sources/reach/index.html#indra.sources
+.reach.api.process_nxml_str>`_ or the `INDRA Elsevier API <https://indra
+.readthedocs.io/en/latest/modules/literature/index.html#module-indra
+.literature.elsevier_client>`_.
 
 Read the content of the publications
 ------------------------------------
