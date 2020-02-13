@@ -108,6 +108,10 @@ results are returned as json data, and we will use a function called
 The list `literature_stmts` now contains the results of all the statements
 that were read.
 
+To read a lot of conent at scale, you should set up reading locally on your
+machine or set up reading on your cluster. To set up REACH, see more `here
+<https://github.com/clulab/reach>`_ for using REACH to read content.
+
 Combine all statements and run pre-assembly
 -------------------------------------------
 
