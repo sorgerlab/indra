@@ -192,7 +192,9 @@ An executable PySB model can be assembled with the PySB assembler:
     pysb = PysbAssembler(stmts=stmts)
     pysb_model = pysb.make_model()
 
-Read more about PySB models in the `PySB documentation <http://pysb.org/>`_.
+Read more about PySB models in the `PySB documentation <http://pysb.org/>`_
+and look into the `natural language modeling tutorial <nl_modeling.html>`_
+which uses PySB models.
 
 Read more about all assembly output formats in the `README <https://github
 .com/sorgerlab/indra#output-model-assemblers>`_ and in the `module
