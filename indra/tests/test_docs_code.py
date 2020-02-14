@@ -231,6 +231,7 @@ def test_gene_network():
     import networkx as nx
     paths = nx.single_source_shortest_path(G=indranet, source='BRCA1',
                                            cutoff=1)
+    assert paths
 
     # Chunk 11
     from indra.assemblers.pysb import PysbAssembler
