@@ -21,6 +21,8 @@ We first collect Statements from the PathwayCommons database via INDRA's
 BioPAX API and then collect Statements from the BEL Large Corpus via INDRA's
 BEL API.
 
+.. Update code in tests/test_docs_code.py:test_gene_network as well
+
 .. code-block:: python
 
     from indra.tools.gene_network import GeneNetwork
@@ -39,6 +41,8 @@ the gene of interest. To find articles that are annotated with the given gene,
 INDRA first looks up the Entrez ID corresponding to the gene name and then
 finds associated publications.
 
+.. Update code in tests/test_docs_code.py:test_gene_network as well
+
 .. code-block:: python
 
     from indra import literature
@@ -55,6 +59,8 @@ the PMIDs we have just collected. The client also returns other content
 types, like xml, for full text (if available). Here we cut the list of PMIDs
 short to just the first 10 IDs that contain abstracts to make the processing
 faster.
+
+.. Update code in tests/test_docs_code.py:test_gene_network as well
 
 .. code-block:: python
 
@@ -84,6 +90,8 @@ We next run the REACH reading system on the publications using the INDRA
 Rest API by using the `post` method of Python's `requests` module. The
 results are returned as json data, and we will use a function called
 `statements_from_json` to convert the json data into statements.
+
+.. Update code in tests/test_docs_code.py:test_gene_network as well
 
 .. code-block:: python
 
@@ -115,6 +123,8 @@ machine or set up reading on your cluster. To set up REACH, see more `here
 Combine all statements and run pre-assembly
 -------------------------------------------
 
+.. Update code in tests/test_docs_code.py:test_gene_network as well
+
 .. code-block:: python
 
     from indra.tools import assemble_corpus
@@ -144,6 +154,8 @@ CX Network Model
 
 We can assemble the statements into e.g. a CX network model:
 
+.. Update code in tests/test_docs_code.py:test_gene_network as well
+
 .. code-block:: python
 
     from indra.assemblers.cx import CxAssembler
@@ -153,6 +165,8 @@ We can assemble the statements into e.g. a CX network model:
     cx_str = cxa.make_model()
 
 We can now upload this network to the Network Data Exchange (NDEx).
+
+.. Update code in tests/test_docs_code.py:test_gene_network as well
 
 .. code-block:: python
 
@@ -166,6 +180,8 @@ IndraNet Model
 Another network model that can assembled is the IndraNet graph which is a
 light-weight networkx derived object.
 
+.. Update code in tests/test_docs_code.py:test_gene_network as well
+
 .. code:: python
 
     from indra.assemblers.indranet import IndraNetAssembler
@@ -174,6 +190,8 @@ light-weight networkx derived object.
 
 Since the IndraNet class is a child class of a networkx Graph, one can use
 networkx's algorithms:
+
+.. Update code in tests/test_docs_code.py:test_gene_network as well
 
 .. code:: python
 
@@ -185,6 +203,8 @@ Executable PySB Model
 ~~~~~~~~~~~~~~~~~~~~~
 
 An executable PySB model can be assembled with the PySB assembler:
+
+.. Update code in tests/test_docs_code.py:test_gene_network as well
 
 .. code:: python
 
