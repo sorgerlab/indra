@@ -110,7 +110,7 @@ def test_readme_using_indra5():
 
 
 # CODE IN nl_modeling.rst #
-def test_nl_modeling1():
+def test_nl_modeling():
     # 1 code chunk
     from indra.sources import trips
     model_text = 'MAP2K1 phosphorylates MAPK1 and DUSP6 dephosphorylates MAPK1.'
