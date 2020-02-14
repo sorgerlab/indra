@@ -179,6 +179,8 @@ An example of a typical assembly pipeline for biology statements is as follows.
 Some of the below steps can be removed, rearranged, and other steps added
 to change the assembly pipeline.
 
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
+
 ```python
 from indra.tools import assemble_corpus as ac
 stmts = <the collection of all raw statements to use>
@@ -196,6 +198,8 @@ An example of an assembly pipeline for statements in the world modeling domain
 is as follows (note how biology-specific functions are not used, and a custom
 belief_scorer and hierarchies are passed to `run_preassembly` here, while the
 biology pipeline used default values):
+
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
 
 ```python
 from indra.tools import assemble_corpus as ac
@@ -293,6 +297,8 @@ In this example INDRA assembles a PySB model from the natural language
 description of a mechanism via the [TRIPS reading web
 service](http://trips.ihmc.us/parser/cgi/drum).
 
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
+
 ```python
 from indra.sources import trips
 from indra.assemblers.pysb import PysbAssembler
@@ -311,6 +317,8 @@ processor. In this example, a full paper from [PubMed
 Central](http://www.ncbi.nlm.nih.gov/pmc/) is processed. The paper's PMC ID is
 [PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/).
 
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
+
 ```python
 from indra.sources import reach
 # Process the neighborhood of BRAF and MAP2K1
@@ -321,6 +329,8 @@ extracted from the PMC paper.
 
 Next we look at an example of reading the 10 most recent PubMed abstracts on
 BRAF and collecting the results in INDRA statements.
+
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
 
 ```python
 from indra.sources import reach
@@ -343,6 +353,8 @@ corpus](http://public.ndexbio.org/#/network/9ea3c170-01ad-11e5-ac0f-000c29cb28fb
 network for a neighborhood of a given list of proteins using their
 HGNC gene names. This example performs the query via PyBEL.
 
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
+
 ```python
 from indra.sources import bel
 # Process the neighborhood of BRAF and MAP2K1
@@ -355,6 +367,8 @@ Next, we look at an example of querying the [Pathway Commons
 database](http://pathwaycommons.org) for paths between two lists of proteins.
 Note: see installation notes above for installing pyjnius, which is required
 for using the BioPAX API of INDRA.
+
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
 
 ```python
 from indra.sources import biopax
