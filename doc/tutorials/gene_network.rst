@@ -8,7 +8,7 @@ discussing the gene of interest. This knowledge is aggregated as a set of
 INDRA Statements which can then be assembled into several different model
 and network formats and possibly shared online.
 
-For the sake of this example, assume that the gene of interest is STING1.
+For the sake of this example, assume that the gene of interest is BRCA1.
 
 It is important to use the standard HGNC gene symbol of the gene throughout the
 example (this information is available on http://www.genenames.org/ or
@@ -25,7 +25,7 @@ BEL API.
 
     from indra.tools.gene_network import GeneNetwork
 
-    gn = GeneNetwork(['STING1'])
+    gn = GeneNetwork(['BRCA1'])
     biopax_stmts = gn.get_biopax_stmts()
     bel_stmts = gn.get_bel_stmts()
 
@@ -43,7 +43,7 @@ finds associated publications.
 
     from indra import literature
 
-    pmids = literature.pubmed_client.get_ids_for_gene('STING1')
+    pmids = literature.pubmed_client.get_ids_for_gene('BRCA1')
 
 The variable `pmids` now contains a list of PMIDs associated with the gene.
 
@@ -179,7 +179,7 @@ networkx's algorithms:
 
     import networkx as nx
     path_length = nx.single_source_shortest_path(G=indranet,
-                      source='STING1', cutoff=0)
+                      source='BRCA1', cutoff=0)
 
 Executable PySB Model
 ~~~~~~~~~~~~~~~~~~~~~
