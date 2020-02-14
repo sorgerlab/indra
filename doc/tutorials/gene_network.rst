@@ -196,8 +196,8 @@ networkx's algorithms:
 .. code:: python
 
     import networkx as nx
-    path_length = nx.single_source_shortest_path(G=indranet,
-                      source='BRCA1', cutoff=0)
+    paths = nx.single_source_shortest_path(G=indranet, source='BRCA1',
+                                           cutoff=1)
 
 Executable PySB Model
 ~~~~~~~~~~~~~~~~~~~~~
@@ -209,7 +209,7 @@ An executable PySB model can be assembled with the PySB assembler:
 .. code:: python
 
     from indra.assemblers.pysb import PysbAssembler
-    pysb = PysbAssembler(stmts=stmts)
+    pysb = PysbAssembler(statements=stmts)
     pysb_model = pysb.make_model()
 
 Read more about PySB models in the `PySB documentation <http://pysb.org/>`_
