@@ -18,6 +18,8 @@ def _get_gene_network_stmts():
     return gn.get_statements()
 
 
+gn_stmts = _get_gene_network_stmts()
+
 wm_raw_stmts = corpus.raw_statements
 wm_stmts = corpus.statements
 
@@ -26,7 +28,7 @@ wm_stmts = corpus.statements
 
 # From stmt assembly pipeline description in README.md
 def test_readme_pipeline():
-    stmts = _get_gene_network_stmts()
+    stmts = gn_stmts  # Added only here, not in docs
     from indra.tools import assemble_corpus as ac
     stmts = ac.filter_no_hypothesis(stmts)
     stmts = ac.map_grounding(stmts)
@@ -202,7 +204,8 @@ def test_gene_network():
 
     # Chunk 6
     from indra.tools import assemble_corpus
-    stmts = biopax_stmts + bel_stmts + literature_stmts
+    # stmts = biopax_stmts + bel_stmts + literature_stmts  # tested elsewhere
+    stmts = gn_stmts + literature_stmts
     stmts = assemble_corpus.map_grounding(stmts)
     stmts = assemble_corpus.map_sequence(stmts)
     stmts = assemble_corpus.run_preassembly(stmts)
