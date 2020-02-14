@@ -10,6 +10,8 @@ doesn't automatically import all its submodules, so
 Rather, one has to explicitly import each submodule that is needed.
 For example to access the BEL API, one has to
 
+.. Also update code in tests/test_docs_code.py:test_getting_started
+
 .. code:: python
 
     from indra.sources import bel
@@ -17,6 +19,8 @@ For example to access the BEL API, one has to
 Similarly, each model output assembler has its own submodule under
 `indra.assemblers` with the assembler class accessible at the submodule
 level, so they can be imported as, for instance,
+
+.. Also update code in tests/test_docs_code.py:test_getting_started
 
 .. code:: python
 
@@ -36,6 +40,8 @@ Reading a sentence with TRIPS
 In this example, we read a sentence via INDRA's TRIPS submodule to produce
 an INDRA Statement.
 
+.. Also update code in tests/test_docs_code.py:test_getting_started
+
 .. code:: python
 
     from indra.sources import trips
@@ -51,6 +57,8 @@ In this example, a full paper from `PubMed
 Central <http://www.ncbi.nlm.nih.gov/pmc/>`_ is processed. The paper's PMC ID is
 `PMC3717945 <http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/>`_.
 
+.. Also update code in tests/test_docs_code.py:test_getting_started
+
 .. code:: python
 
     from indra.sources import reach
@@ -63,6 +71,8 @@ Getting the neighborhood of proteins from the BEL Large Corpus
 ``````````````````````````````````````````````````````````````
 In this example, we search the neighborhood of the KRAS and BRAF proteins in
 the BEL Large Corpus.
+
+.. Also update code in tests/test_docs_code.py:test_getting_started
 
 .. code:: python
 
@@ -78,6 +88,8 @@ It is possible to construct INDRA Statements manually or in scripts. The followi
 is a basic example in which we instantiate a Phosphorylation Statement between
 BRAF and MAP2K1.
 
+.. Also update code in tests/test_docs_code.py:test_getting_started
+
 .. code:: python
 
     from indra.statements import Phosphorylation, Agent
@@ -90,6 +102,8 @@ Assembling a PySB model and exporting to SBML
 In this example, assume that we have already collected a list of INDRA Statements
 from any of the input sources and that this list is called `stmts`. We will
 instantiate a PysbAssembler, which produces a PySB model from INDRA Statements.
+
+.. Also update code in tests/test_docs_code.py:test_getting_started
 
 .. code:: python
 
@@ -105,11 +119,15 @@ to other formats.
 For instance, exporting the model to `SBML <http://sbml.org>`_ format can
 be done as
 
+.. Also update code in tests/test_docs_code.py:test_getting_started
+
 .. code:: python
 
     sbml_model = pa.export_model('sbml')
 
 which gives an SBML model string in the `sbml_model` variable, or as
+
+.. Also update code in tests/test_docs_code.py:test_getting_started
 
 .. code:: python
 
@@ -128,6 +146,8 @@ In this example we again assume that there already exists a variable called
 representations of the statements, each edge representing a statement and
 each node being an agent.
 
+.. Also update code in tests/test_docs_code.py:test_getting_started
+
 .. code:: python
 
     from indra.assemblers.indranet import IndraNetAssembler
@@ -140,6 +160,8 @@ edge in the has an edge dictionary with meta data from the statement.
 
 The indranet graph has methods to map it to other graph types. Here we
 export it to a signed graph:
+
+.. Also update code in tests/test_docs_code.py:test_getting_started
 
 .. code:: python
 
