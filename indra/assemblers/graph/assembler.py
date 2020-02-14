@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import logging
 import itertools
 from indra.statements import *
@@ -108,9 +106,8 @@ class GraphAssembler():
         # First, create the nodes of the graph
         for stmt in self.statements:
             # Skip SelfModification (self loops) -- has one node
-            if isinstance(stmt, SelfModification) or \
-               isinstance(stmt, Translocation) or \
-               isinstance(stmt, ActiveForm):
+            if isinstance(stmt, (SelfModification, Translocation,
+                                 ActiveForm, Event)):
                 continue
             # Special handling for Associations -- more than 1 node and members
             # are Events
@@ -132,9 +129,8 @@ class GraphAssembler():
         # Second, create the edges of the graph
         for stmt in self.statements:
             # Skip SelfModification (self loops) -- has one node
-            if isinstance(stmt, SelfModification) or \
-               isinstance(stmt, Translocation) or \
-               isinstance(stmt, ActiveForm):
+            if isinstance(stmt, (SelfModification, Translocation,
+                                 ActiveForm, Event)):
                 continue
             elif isinstance(stmt, Association):
                 self._add_complex(stmt.members, is_association=True)
@@ -221,11 +217,10 @@ class GraphAssembler():
         if edge_key in self.existing_edges:
             return
         self.existing_edges.append(edge_key)
-        if isinstance(stmt, RemoveModification) or \
-             isinstance(stmt, Inhibition) or \
-             isinstance(stmt, DecreaseAmount) or \
-             isinstance(stmt, Gap) or \
-             (isinstance(stmt, Influence) and stmt.overall_polarity() == -1):
+        if isinstance(stmt, (RemoveModification, Inhibition,
+                             DecreaseAmount, Gap)) \
+                or (isinstance(stmt, Influence)
+                    and stmt.overall_polarity() == -1):
             color = '#ff0000'
         else:
             color = '#000000'
@@ -288,6 +283,7 @@ def _get_node_label(agent):
             return sanitize_name(name_for_node)
     name_for_node = agent.name
     return sanitize_name(name_for_node)
+
 
 def _get_node_key(agent):
     #return agent.matches_key()
