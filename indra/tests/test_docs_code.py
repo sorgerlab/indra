@@ -159,3 +159,78 @@ def test_nl_modeling1():
 
 
 # CODE IN gene_network.rst
+def test_gene_network():
+    # Chunk 1
+    from indra.tools.gene_network import GeneNetwork
+    gn = GeneNetwork(['BRCA1'])
+    biopax_stmts = gn.get_biopax_stmts()
+    bel_stmts = gn.get_bel_stmts()
+
+    # Chunk 2
+    from indra import literature
+    pmids = literature.pubmed_client.get_ids_for_gene('BRCA1')
+
+    # Chunk 3
+    from indra import literature
+    paper_contents = {}
+    for pmid in pmids:
+        content, content_type = literature.get_full_text(pmid, 'pmid')
+        if content_type == 'abstract':
+            paper_contents[pmid] = content
+        if len(paper_contents) == 10:
+            break
+
+    # Chunk 4
+    import requests
+    from indra import literature
+    from indra.sources import reach
+    from indra.statements import stmts_from_json
+    indra_api = 'http://api.indra.bio:8000/reach/process_text'
+
+    # Chunk 5
+    literature_stmts = []
+    for pmid, content in paper_contents.items():
+        res = requests.post(url=indra_api, json={'text': content})
+
+        if res.status_code == 200:
+            print('Got %d statements from abstract for pmid %s' %
+                (len(res.json()['statements']), pmid))
+            literature_stmts += stmts_from_json(res.json()['statements'])
+        else:
+            print('Got status code %d for pmid %s.' % (res.status_code, pmid))
+    assert literature_stmts  # replaces a print statements
+
+    # Chunk 6
+    from indra.tools import assemble_corpus
+    stmts = biopax_stmts + bel_stmts + literature_stmts
+    stmts = assemble_corpus.map_grounding(stmts)
+    stmts = assemble_corpus.map_sequence(stmts)
+    stmts = assemble_corpus.run_preassembly(stmts)
+
+    # Chunk 7
+    from indra.assemblers.cx import CxAssembler
+    from indra.databases import ndex_client
+    cxa = CxAssembler(stmts)
+    cx_str = cxa.make_model()
+    assert cx_str  # Added to check output
+
+    # Chunk 8
+    # ndex_cred = {'user': 'myusername', 'password': 'xxx'}
+    # network_id = ndex_client.create_network(cx_str, ndex_cred)
+    # print(network_id)
+
+    # Chunk 9
+    from indra.assemblers.indranet import IndraNetAssembler
+    indranet_assembler = IndraNetAssembler(statements=stmts)
+    indranet = indranet_assembler.make_model()
+
+    # Chunk 10
+    import networkx as nx
+    paths = nx.single_source_shortest_path(G=indranet, source='BRCA1',
+                                           cutoff=1)
+
+    # Chunk 11
+    from indra.assemblers.pysb import PysbAssembler
+    pysb = PysbAssembler(statements=stmts)
+    pysb_model = pysb.make_model()
+
