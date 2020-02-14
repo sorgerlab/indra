@@ -162,11 +162,11 @@ def test_nl_modeling():
 
 # CODE IN gene_network.rst
 def test_gene_network():
-    # Chunk 1
-    from indra.tools.gene_network import GeneNetwork
-    gn = GeneNetwork(['BRCA1'])
-    biopax_stmts = gn.get_biopax_stmts()
-    bel_stmts = gn.get_bel_stmts()
+    # Chunk 1: this is tested in _get_gene_network_stmts
+    # from indra.tools.gene_network import GeneNetwork
+    # gn = GeneNetwork(['BRCA1'])
+    # biopax_stmts = gn.get_biopax_stmts()
+    # bel_stmts = gn.get_bel_stmts()
 
     # Chunk 2
     from indra import literature
