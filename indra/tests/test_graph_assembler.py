@@ -78,7 +78,9 @@ def test_inactivation():
 
 
 def test_influence():
-    st = [Influence(Event(Concept('a')), Event(Concept('b')))]
+    # Add an extra standalone event just to make sure it doesn't error
+    st = [Influence(Event(Concept('a')), Event(Concept('b'))),
+          Event(Concept('a'))]
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
