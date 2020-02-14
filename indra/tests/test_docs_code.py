@@ -237,4 +237,63 @@ def test_gene_network():
     from indra.assemblers.pysb import PysbAssembler
     pysb = PysbAssembler(statements=stmts)
     pysb_model = pysb.make_model()
+    assert pysb_model
+
+
+# CODE IN getting_started.rst
+def test_getting_started():
+    # Chunks 1 & 2
+    from indra.sources import bel
+    from indra.assemblers.pysb import PysbAssembler
+
+    # Chunk 3
+    from indra.sources import trips
+    sentence = 'MAP2K1 phosphorylates MAPK3 at Thr-202 and Tyr-204'
+    trips_processor = trips.process_text(sentence)
+    assert trips_processor.statements
+
+    # Chunk 4
+    from indra.sources import reach
+    reach_processor = reach.process_pmc('3717945')
+    assert reach_processor.statements
+
+    # Chunk 5
+    from indra.sources import bel
+    bel_processor = bel.process_pybel_neighborhood(['KRAS', 'BRAF'])
+    assert bel_processor.statements
+
+    # Chunk 6
+    from indra.statements import Phosphorylation, Agent
+    braf = Agent('BRAF')
+    map2k1 = Agent('MAP2K1')
+    stmt = Phosphorylation(braf, map2k1)
+    assert stmt
+
+    # Chunk 7
+    stmts = gn_stmts  # Added only in this test, not in docs
+    from indra.assemblers.pysb import PysbAssembler
+    pa = PysbAssembler()
+    pa.add_statements(stmts)
+    model = pa.make_model()
+    assert model
+
+    # Chunk 8
+    sbml_model = pa.export_model('sbml')
+    assert sbml_model
+
+    # Chunk 9
+    # pa.export_model('sbml', file_name='model.sbml')
+
+    # Chunk 10
+    from indra.assemblers.indranet import IndraNetAssembler
+    indranet_assembler = IndraNetAssembler(statements=stmts)
+    indranet = indranet_assembler.make_model()
+    assert len(indranet.nodes) > 0, 'indranet contain no nodes'
+    assert len(indranet.edges) > 0, 'indranet contain no edges'
+
+    # Chunk 11
+    signed_graph = indranet.to_signed_graph()
+    assert len(signed_graph.nodes) > 0, 'signed graph contain no nodes'
+    assert len(signed_graph.edges) > 0, 'signed graph conatin no edges'
+
 
