@@ -4,8 +4,7 @@ Any code changed in here needs to be updated in their place in the
 documentation and vice versa, since we are copy pasting code between its
 occurence to the tests.
 
-In general, try to separate tests one test per chunk of code that is
-interdependent.
+In general, try to separate tests to one test per chunk of interdependent code
 """
 from .test_live_curation import _make_corpus
 
@@ -77,7 +76,6 @@ def test_readme_using_indra1():
 # From 2nd example under "Using INDRA"
 def test_readme_using_indra2():
     from indra.sources import reach
-    # Process the neighborhood of BRAF and MAP2K1
     reach_processor = reach.process_pmc('3717945')
 
 
@@ -288,12 +286,12 @@ def test_getting_started():
     from indra.assemblers.indranet import IndraNetAssembler
     indranet_assembler = IndraNetAssembler(statements=stmts)
     indranet = indranet_assembler.make_model()
-    assert len(indranet.nodes) > 0, 'indranet contain no nodes'
-    assert len(indranet.edges) > 0, 'indranet contain no edges'
+    assert len(indranet.nodes) > 0, 'indranet contains no nodes'
+    assert len(indranet.edges) > 0, 'indranet contains no edges'
 
     # Chunk 11
     signed_graph = indranet.to_signed_graph()
-    assert len(signed_graph.nodes) > 0, 'signed graph contain no nodes'
-    assert len(signed_graph.edges) > 0, 'signed graph conatin no edges'
+    assert len(signed_graph.nodes) > 0, 'signed graph contains no nodes'
+    assert len(signed_graph.edges) > 0, 'signed graph conatins no edges'
 
 
