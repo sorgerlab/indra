@@ -6,6 +6,7 @@ occurence to the tests.
 
 In general, try to separate tests to one test per chunk of interdependent code
 """
+from nose.plugins.attrib import attr
 from .test_live_curation import _make_corpus
 
 corpus = _make_corpus()
@@ -74,6 +75,7 @@ def test_readme_using_indra1():
 
 
 # From 2nd example under "Using INDRA"
+@attr('skip')  # This test takes 10+ minutes, stalling Travis
 def test_readme_using_indra2():
     from indra.sources import reach
     reach_processor = reach.process_pmc('3717945')
@@ -159,6 +161,7 @@ def test_nl_modeling():
 
 
 # CODE IN gene_network.rst
+@attr('slow')
 def test_gene_network():
     # Chunk 1: this is tested in _get_gene_network_stmts
     # from indra.tools.gene_network import GeneNetwork
@@ -177,7 +180,7 @@ def test_gene_network():
         content, content_type = literature.get_full_text(pmid, 'pmid')
         if content_type == 'abstract':
             paper_contents[pmid] = content
-        if len(paper_contents) == 10:
+        if len(paper_contents) == 3:  # Is 10 in actual code
             break
 
     # Chunk 4
