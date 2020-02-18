@@ -244,29 +244,38 @@ def test_gene_network():
 
 
 # CODE IN getting_started.rst
-def test_getting_started():
+def test_getting_started1_2():
     # Chunks 1 & 2
     from indra.sources import bel
     from indra.assemblers.pysb import PysbAssembler
     assert bel
     assert PysbAssembler
 
+
+def test_getting_started3():
     # Chunk 3
     from indra.sources import trips
     sentence = 'MAP2K1 phosphorylates MAPK3 at Thr-202 and Tyr-204'
     trips_processor = trips.process_text(sentence)
     assert trips_processor.statements
 
+
+@attr('skip')  # Takes 10+ minutes to run
+def test_getting_started4():
     # Chunk 4
     from indra.sources import reach
     reach_processor = reach.process_pmc('3717945')
     assert reach_processor.statements
 
+
+def test_getting_started5():
     # Chunk 5
     from indra.sources import bel
     bel_processor = bel.process_pybel_neighborhood(['KRAS', 'BRAF'])
     assert bel_processor.statements
 
+
+def test_getting_started6():
     # Chunk 6
     from indra.statements import Phosphorylation, Agent
     braf = Agent('BRAF')
@@ -274,6 +283,9 @@ def test_getting_started():
     stmt = Phosphorylation(braf, map2k1)
     assert stmt
 
+
+@attr('skip')
+def test_getting_started7_8():
     # Chunk 7
     stmts = gn_stmts  # Added only in this test, not in docs
     from indra.assemblers.pysb import PysbAssembler
@@ -286,12 +298,14 @@ def test_getting_started():
     sbml_model = pa.export_model('sbml')
     assert sbml_model
 
+
+def test_getting_started9_10():
     # Chunk 9
     # pa.export_model('sbml', file_name='model.sbml')
 
     # Chunk 10
     from indra.assemblers.indranet import IndraNetAssembler
-    indranet_assembler = IndraNetAssembler(statements=stmts)
+    indranet_assembler = IndraNetAssembler(statements=gn_stmts)
     indranet = indranet_assembler.make_model()
     assert len(indranet.nodes) > 0, 'indranet contains no nodes'
     assert len(indranet.edges) > 0, 'indranet contains no edges'
@@ -300,5 +314,3 @@ def test_getting_started():
     signed_graph = indranet.to_signed_graph()
     assert len(signed_graph.nodes) > 0, 'signed graph contains no nodes'
     assert len(signed_graph.edges) > 0, 'signed graph conatins no edges'
-
-
