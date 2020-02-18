@@ -227,6 +227,8 @@ def test_gene_network():
     from indra.assemblers.indranet import IndraNetAssembler
     indranet_assembler = IndraNetAssembler(statements=stmts)
     indranet = indranet_assembler.make_model()
+    assert len(indranet.nodes) > 0, 'indranet conatins no nodes'
+    assert len(indranet.edges) > 0, 'indranet conatins no edges'
 
     # Chunk 10
     import networkx as nx
@@ -246,6 +248,8 @@ def test_getting_started():
     # Chunks 1 & 2
     from indra.sources import bel
     from indra.assemblers.pysb import PysbAssembler
+    assert bel
+    assert PysbAssembler
 
     # Chunk 3
     from indra.sources import trips
