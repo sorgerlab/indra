@@ -221,8 +221,32 @@ class ModelChecker(object):
         if result_code:
             return self.make_false_result(result_code, max_paths,
                                           max_path_length)
-        for subj, obj in itertools.product(subj_list, obj_list):
-            result = self.find_paths(subj, obj, max_paths, max_path_length)
+        # This is the case if we are checking a Statement whose
+        # subject is genuinely None
+        if all(s is None for s in subj_list):
+            input_set = None
+        # This is the case where the Statement has an actual subject
+        # but we may still run into issues with finding an input
+        # set for it in which case a false result may be returned.
+        else:
+            logger.info('Subject list: %s' % str(subj_list))
+            input_set = []
+            meaningful_res_code = None
+            for subj in subj_list:
+                inp, res_code = self.process_subject(subj)
+                if res_code:
+                    meaningful_res_code = res_code
+                    continue
+                input_set += inp
+            if not input_set and meaningful_res_code:
+                return self.make_false_result(meaningful_res_code, max_paths,
+                                              max_path_length)
+
+        logger.info('Input set: %s' % str(input_set))
+
+        for obj in obj_list:
+            result = self.find_paths(input_set, obj, max_paths,
+                                     max_path_length)
             # If a path was found, then we return it; otherwise, that means
             # there was no path for this object, so we have to try the next
             # one
@@ -238,7 +262,7 @@ class ModelChecker(object):
         return self.make_false_result('NO_PATHS_FOUND',
                                       max_paths, max_path_length)
 
-    def find_paths(self, subj, obj, max_paths=1, max_path_length=5):
+    def find_paths(self, input_set, obj, max_paths=1, max_path_length=5):
         """Check for a source/target path in the model.
 
         Parameters
@@ -261,11 +285,6 @@ class ModelChecker(object):
             PathResult object indicating the results of the attempt to find
             a path.
         """
-        # Get the input set (signed rules or names for source nodes)
-        input_set, result_code = self.process_subject(subj)
-        if result_code:
-            return self.make_false_result(result_code,
-                                          max_paths, max_path_length)
         # # -- Route to the path sampling function --
         # NOTE this is not generic at this point!
         # if self.do_sampling:
@@ -287,7 +306,7 @@ class ModelChecker(object):
             # Keep unique sources but use a list (not set) to preserve order
             if source not in sources:
                 sources.append(source)
-        logger.info('Finding paths between %s and %s' % (subj, obj))
+        logger.info('Finding paths between %s and %s' % (str(input_set), obj))
         # Now, look for paths
         if path_metrics and max_paths == 0:
             pr = PathResult(True, 'MAX_PATHS_ZERO',

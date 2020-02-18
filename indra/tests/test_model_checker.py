@@ -444,8 +444,8 @@ def test_distinguish_path_polarity1():
     assert path_results[1].paths == [(('A_activate_B', 0), ('B_dephos_C', 0),
                                       ('C_T185_p_obs', 1))]
     assert path_results[2].paths == [], path_results[2].paths
-    assert path_results[3].paths == [(('B_dephos_C', 0), ('C_T185_p_obs', 1))]
-
+    assert path_results[3].paths == \
+        [(('B_dephos_C', 0), ('C_T185_p_obs', 1))], path_results[3].paths
 
 @with_model
 def test_distinguish_path_polarity2():
@@ -809,7 +809,7 @@ def test_check_rule_subject1():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
-    assert checks[0][1].paths == []
+    assert checks[0][1].paths == [], checks[0][1].paths
 
 
 def test_gef_activation():
@@ -1583,7 +1583,7 @@ def test_pybel_path():
     assert results[1][1].paths[0] == ((a, 0), (b, 0), (d, 1), (e, 1))
     # Fail cases
     assert results[2][1].result_code == 'NO_PATHS_FOUND'
-    assert results[3][1].result_code == 'SUBJECT_NOT_FOUND'
+    assert results[3][1].result_code == 'SUBJECT_NOT_FOUND', results[3]
     assert results[4][1].result_code == 'OBJECT_NOT_FOUND'
     assert results[5][1].result_code == 'STATEMENT_TYPE_NOT_HANDLED'
     # Loop paths
