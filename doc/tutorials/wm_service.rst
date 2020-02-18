@@ -39,40 +39,6 @@ Run the Eidos web service and expose it on port 9000
     docker run -id -p 9000:9000 eidos-webservice
 
 
-Building an Eidos JAR
----------------------
-In addition, for the live curation service (in particular, to support
-real-time regrounding), a JAR-packaged version of Eidos needs to be
-available. In the top-level Eidos folder, run
-
-.. code-block:: sh
-
-    sbt assembly
-
-to obtain a file called something like `target/scala-2.12/eidos-assembly-0.2
-.3-SNAPSHOT.jar`. We will refer to this file in later sections as the Eidos
-JAR. Note the following details:
-
-- Eidos needs to be configured to use grounding, and one of two large
-  word2vec files needs to be made available to Eidos. The commands to do
-  this are:
-
-.. code-block:: sh
-
-    wget https://s3.amazonaws.com/world-modelers/data/vectors.txt
-    mv vectors.txt src/main/resources/org/clulab/wm/eidos/english/w2v/
-    sed -i 's/useW2V = false/useW2V = true/' src/main/resources/eidos.conf
-    sed -i 's/useW2V = false/useW2V = true/' src/main/resources/reference.conf
-    sed -i 's/glove.840B.300d.txt/vectors.txt/' src/main/resources/eidos.conf
-
-
-- Running :code:`sbt assembly` may fail with an out of memory error, if this
-  happens, run it again with an extra flag to allocate more memory, like
-  :code:`sbt -J-Xmx8G assembly`.
-- Note that it is also possible to obtain the Eidos JAR from a running
-  instance of the Eidos service Docker container using :code:`docker cp`
-  thereby avoiding having to build it manually.
-
 Setting up the general INDRA service
 ------------------------------------
 Pull the INDRA docker image from DockerHub
