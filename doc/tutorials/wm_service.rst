@@ -81,7 +81,7 @@ Submit curations for a set of Statements in a corpus:
 
     URL: http://54.84.114.146:8001/submit_curation
     Method: POST with JSON content header
-    Input parameters: {"corpus_id": "1", "curations": {"38ce0c14-2c7e-4df8-bd53-3006afeaa193": 0}}
+    Input parameters: {"corpus_id": "<corpus-id>", "curations": {"38ce0c14-2c7e-4df8-bd53-3006afeaa193": 0}}
     Output: {}
 
 Update beliefs of a corpus:
@@ -90,7 +90,7 @@ Update beliefs of a corpus:
 
     URL: http://54.84.114.146:8001/update_beliefs
     Method: POST with JSON content header
-    Input parameters: {"corpus_id": "1"}
+    Input parameters: {"corpus_id": "<corpus-id>"}
     Output: {"38ce0c14-2c7e-4df8-bd53-3006afeaa193": 0,
      "6f2b2d69-16af-40ea-aa03-9b3a9a1d2ac3": 0.6979166666666666,
      "727adb95-4890-4bbc-a985-fd985c355215": 0.6979166666666666}
