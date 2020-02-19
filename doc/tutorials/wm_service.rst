@@ -95,6 +95,17 @@ Update beliefs of a corpus:
      "6f2b2d69-16af-40ea-aa03-9b3a9a1d2ac3": 0.6979166666666666,
      "727adb95-4890-4bbc-a985-fd985c355215": 0.6979166666666666}
 
+Update meta data for a corpus:
+
+.. code-block::
+
+    URL: http://54.84.114.146:8001/update_metadata
+    Method: POST with JSON content header
+    Input parameters: {"corpus_id": "<corpus-id>",
+     "meta_data": {"date": "2020-02-15",
+                   "updated": "2020-02-19",
+                   "tags": ["manual curation", "curated by Bob"]}}
+    Output: {}
 
 Reset all submitted curations so far:
 
