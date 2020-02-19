@@ -180,7 +180,7 @@ def test_gene_network():
         content, content_type = literature.get_full_text(pmid, 'pmid')
         if content_type == 'abstract':
             paper_contents[pmid] = content
-        if len(paper_contents) == 3:  # Is 10 in actual code
+        if len(paper_contents) == 5:  # Is 10 in actual code
             break
 
     # Chunk 4
