@@ -1,5 +1,5 @@
 Summary
--------
+=======
 These instructions allow you to have reading and assembly services running
 locally during the evaluation. With this setup, CauseMos can interact with
 the following endpoints:
