@@ -72,6 +72,7 @@ def test_readme_using_indra1():
     pa.add_statements(trips_processor.statements)
     # Assemble the model
     model = pa.make_model(policies='two_step')
+    assert model
 
 
 # From 2nd example under "Using INDRA"
@@ -79,6 +80,7 @@ def test_readme_using_indra1():
 def test_readme_using_indra2():
     from indra.sources import reach
     reach_processor = reach.process_pmc('3717945')
+    assert reach_processor.statements
 
 
 # From 3rd example under "Using INDRA"
