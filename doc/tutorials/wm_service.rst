@@ -64,23 +64,16 @@ Setting up the live feedback service
 Assuming you already have the INDRA docker image, run the INDRA live
 feedback service with the following parameters:
 
-- :code:`<folder with corpus>` needs to be a folder in which you have the
-  corpus file. This folder will be mounted into the Docker container on the
-  :code:`/sw/mounted` path allowing the container to access both the corpus
-  file.
-- :code:`<corpus file>` needs to be the name of the corpus file in the
-  :code:`<folder with corpus>` folder.
-
 .. code-block:: sh
 
-    docker run -v <folder with corpus>:/sw/mounted -id -p 8001:8001 \
-    --entrypoint python labsyspharm/indra \
-    /sw/indra/indra/tools/live_curation.py --json /sw/mounted/<corpus file>
+    docker run -v -id -p 8001:8001 --entrypoint python labsyspharm/indra \
+    /sw/indra/indra/tools/live_curation.py
 
 Using the live feedback service
 -------------------------------
 Below each example uses the remote service, you can replace that IP with
-localhost to do the same locally.
+localhost to do the same locally. Replace :code:`<corpus-id>` with the ID of
+your corpus.
 
 Submit curations for a set of Statements in a corpus:
 
