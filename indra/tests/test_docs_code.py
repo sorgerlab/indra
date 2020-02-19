@@ -14,7 +14,7 @@ corpus = _make_corpus()
 
 def _get_gene_network_stmts():
     from indra.tools.gene_network import GeneNetwork
-    gn = GeneNetwork(['BRCA1'])
+    gn = GeneNetwork(['H2AX'])
     return gn.get_statements()
 
 
@@ -165,13 +165,13 @@ def test_nl_modeling():
 def test_gene_network():
     # Chunk 1: this is tested in _get_gene_network_stmts
     # from indra.tools.gene_network import GeneNetwork
-    # gn = GeneNetwork(['BRCA1'])
+    # gn = GeneNetwork(['H2AX'])
     # biopax_stmts = gn.get_biopax_stmts()
     # bel_stmts = gn.get_bel_stmts()
 
     # Chunk 2
     from indra import literature
-    pmids = literature.pubmed_client.get_ids_for_gene('BRCA1')
+    pmids = literature.pubmed_client.get_ids_for_gene('H2AX')
 
     # Chunk 3
     from indra import literature
@@ -232,7 +232,7 @@ def test_gene_network():
 
     # Chunk 10
     import networkx as nx
-    paths = nx.single_source_shortest_path(G=indranet, source='BRCA1',
+    paths = nx.single_source_shortest_path(G=indranet, source='H2AX',
                                            cutoff=1)
     assert paths
 
