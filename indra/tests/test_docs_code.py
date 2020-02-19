@@ -75,7 +75,7 @@ def test_readme_using_indra1():
 
 
 # From 2nd example under "Using INDRA"
-@attr('skip')  # This test takes 10+ minutes, stalling Travis
+@attr('notravis')  # This test takes 10+ minutes, stalling Travis
 def test_readme_using_indra2():
     from indra.sources import reach
     reach_processor = reach.process_pmc('3717945')
@@ -260,7 +260,7 @@ def test_getting_started3():
     assert trips_processor.statements
 
 
-@attr('skip')  # Takes 10+ minutes to run
+@attr('notravis')  # Takes 10+ minutes to run
 def test_getting_started4():
     # Chunk 4
     from indra.sources import reach
@@ -284,7 +284,7 @@ def test_getting_started6():
     assert stmt
 
 
-@attr('skip')
+@attr('notravis')
 def test_getting_started7_8():
     # Chunk 7
     stmts = gn_stmts  # Added only in this test, not in docs
