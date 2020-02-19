@@ -7,6 +7,7 @@ occurence to the tests.
 In general, try to separate tests to one test per chunk of interdependent code
 """
 from nose.plugins.attrib import attr
+from unittest import skip
 from .test_live_curation import _make_corpus
 
 corpus = _make_corpus()
@@ -262,7 +263,7 @@ def test_getting_started3():
     assert trips_processor.statements
 
 
-@attr('notravis')  # Takes 10+ minutes to run
+@skip('Same as test_readme_using_indra2')
 def test_getting_started4():
     # Chunk 4
     from indra.sources import reach
