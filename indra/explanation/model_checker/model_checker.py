@@ -327,11 +327,11 @@ class ModelChecker(object):
         for source, path_length in self._find_sources(obj, subj):
             # Path already includes edge from common source (if it exists) to
             # the sources and from targets to common target, so we need to
-            # only include meaningful paths that include at least on more edge
-            if subj:
-                path_length = path_length - 2
-            else:
+            # only include meaningful paths that include at least one more edge
+            if not subj or loop:
                 path_length = path_length - 1
+            else:
+                path_length = path_length - 2
             if path_length > 0:
                 pm = PathMetric(source, obj, path_length)
                 path_metrics.append(pm)
@@ -348,10 +348,10 @@ class ModelChecker(object):
             return pr
         elif path_metrics:
             if min(path_lengths) <= max_path_length:
-                if subj:
-                    search_path_length = min(path_lengths) + 2
-                else:
+                if not subj or loop:
                     search_path_length = min(path_lengths) + 1
+                else:
+                    search_path_length = min(path_lengths) + 2
                 pr = PathResult(True, 'PATHS_FOUND',
                                 max_paths, max_path_length)
                 pr.path_metrics = path_metrics
