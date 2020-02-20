@@ -296,7 +296,11 @@ class Corpus(object):
                     meta_json = json.loads(s3.get_object(
                         Bucket=bucket, Key=meta)['Body'].read())
             except Exception as e:
-                logger.warning('No meta data found')
+                if isinstance(e, s3.exceptions.NoSuchKey):
+                    logger.warning('No meta data found on s3')
+                else:
+                    logger.warning('No meta data found')
+                meta_json = {}
             self.meta_data = meta_json
 
         except Exception as e:
