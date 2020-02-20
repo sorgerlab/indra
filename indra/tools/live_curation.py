@@ -6,8 +6,8 @@ import boto3
 import pickle
 import logging
 import argparse
-from os import path
 from pathlib import Path
+from os import path, environ
 from flask import Flask, request, jsonify, abort, Response
 # Note: preserve EidosReader import as first one from indra
 from indra.sources.eidos import reground_texts
@@ -95,8 +95,17 @@ class Corpus(object):
 
     def _get_s3_client(self):
         if self._s3 is None:
-            self._s3 = boto3.session.Session(
-                profile_name=self.aws_name).client('s3')
+            if environ.get('AWS_ACCESS_KEY_ID') and \
+                    environ.get('AWS_SECRET_ACCESS_KEY'):
+                logger.info('Got credentials in environment for client')
+                self._s3 = boto3.session.Session(
+                    aws_access_key_id=environ.get('AWS_ACCESS_KEY_ID'),
+                    aws_secret_access_key=environ.get('AWS_SECRET_ACCESS_KEY')
+                    ).client('s3')
+            else:
+                logger.info('Using stored AWS profile for client')
+                self._s3 = boto3.session.Session(
+                    profile_name=self.aws_name).client('s3')
         return self._s3
 
     def __str__(self):
