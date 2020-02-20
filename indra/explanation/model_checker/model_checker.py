@@ -268,7 +268,7 @@ class ModelChecker(object):
                 self.graph.add_edge(common_source, source)
         else:
             common_source = None
-        result = self.find_paths([common_source] if common_source else None, common_target, max_paths,
+        result = self.find_paths(common_source, common_target, max_paths,
                                  max_path_length, loop)
 
         self.graph.remove_nodes_from([common_source, common_target])
@@ -287,7 +287,7 @@ class ModelChecker(object):
         return self.make_false_result('NO_PATHS_FOUND',
                                       max_paths, max_path_length)
 
-    def find_paths(self, input_set, obj, max_paths=1, max_path_length=5, loop=False):
+    def find_paths(self, subj, obj, max_paths=1, max_path_length=5, loop=False):
         """Check for a source/target path in the model.
 
         Parameters
@@ -324,13 +324,11 @@ class ModelChecker(object):
         path_lengths = []
         path_metrics = []
         sources = []
-        for source, path_length in self._find_sources(obj, input_set):
+        for source, path_length in self._find_sources(obj, subj):
             # Path already includes edge from common source (if it exists) to
             # the sources and from targets to common target, so we need to
             # only include meaningful paths that include at least on more edge
-            # if (input_set and path_length > 2) or \
-            #         (not input_set and path_length > 1):
-            if input_set:
+            if subj:
                 path_length = path_length - 2
             else:
                 path_length = path_length - 1
@@ -341,7 +339,7 @@ class ModelChecker(object):
                 # Keep unique sources but use a list (not set) to preserve order
                 if source not in sources:
                     sources.append(source)
-        logger.info('Finding paths between %s and %s' % (str(input_set), obj))
+        logger.info('Finding paths between %s and %s' % (str(subj), obj))
         # Now, look for paths
         if path_metrics and max_paths == 0:
             pr = PathResult(True, 'MAX_PATHS_ZERO',
@@ -350,7 +348,7 @@ class ModelChecker(object):
             return pr
         elif path_metrics:
             if min(path_lengths) <= max_path_length:
-                if input_set:
+                if subj:
                     search_path_length = min(path_lengths) + 2
                 else:
                     search_path_length = min(path_lengths) + 1
@@ -382,7 +380,7 @@ class ModelChecker(object):
             return PathResult(False, 'NO_PATHS_FOUND',
                               max_paths, max_path_length)
 
-    def _find_sources(self, target, sources):
+    def _find_sources(self, target, source):
         """Get the subset of source nodes with paths to the target.
 
         Given a target, a list of sources, and a path polarity, perform a
@@ -425,7 +423,7 @@ class ModelChecker(object):
                 # Is this child one of the source nodes we're looking for? If
                 # so, yield it along with path length.
                 # Also make sure that found source is positive
-                if (sources is None or child in sources) and child[1] == 0:
+                if (source is None or child == source) and child[1] == 0:
                     logger.debug("Found path to %s from %s with length %d"
                                  % (target, child, path_length+1))
                     yield (child, path_length+1)
