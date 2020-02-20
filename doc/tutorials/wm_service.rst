@@ -66,8 +66,22 @@ feedback service with the following parameters:
 
 .. code-block:: sh
 
-    docker run -v -id -p 8001:8001 --entrypoint python labsyspharm/indra \
-    /sw/indra/indra/tools/live_curation.py
+    docker run -v -id -p 8001:8001 --env-file docker_variables --entrypoint \
+    python labsyspharm/indra /sw/indra/indra/tools/live_curation.py
+
+Here we use the tag :code:`--env-file` to provide a file containing
+environment variables to the docker. In this case, we need to provide
+:code:`AWS_ACCESS_KEY_ID` and :code:`AWS_SECRET_ACCESS_KEY` to allow the
+curation service to access corpora on S3. The file content should look like
+this:
+
+.. code-block:: sh
+
+    AWS_ACCESS_KEY_ID=<aws_access_key_id>
+    AWS_SECRET_ACCESS_KEY=<aws_secret_access_key>
+
+Replace :code:`<aws_access_key_id>` and :code:`<aws_secret_access_key>` with
+your aws access and secret keys.
 
 Using the live feedback service
 -------------------------------
