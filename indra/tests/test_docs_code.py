@@ -190,8 +190,6 @@ def test_gene_network():
 
     # Chunk 4
     import requests
-    from indra import literature
-    from indra.sources import reach
     from indra.statements import stmts_from_json
     indra_api = 'http://api.indra.bio:8000/reach/process_text'
 
