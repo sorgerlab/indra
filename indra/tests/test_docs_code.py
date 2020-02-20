@@ -96,6 +96,7 @@ def test_readme_using_indra3():
             reach_processor = reach.process_text(abs)
             if reach_processor is not None:
                 all_statements += reach_processor.statements
+    assert len(all_statements) > 0
 
 
 # From 4th example under "Using INDRA"
@@ -103,6 +104,7 @@ def test_readme_using_indra4():
     from indra.sources import bel
     # Process the neighborhood of BRAF and MAP2K1
     bel_processor = bel.process_pybel_neighborhood(['BRAF', 'MAP2K1'])
+    assert bel_processor.statements
 
 
 # From 5th example under "Using INDRA"
@@ -111,6 +113,7 @@ def test_readme_using_indra5():
     # Process the neighborhood of BRAF and MAP2K1
     biopax_processor = biopax.process_pc_pathsfromto(['BRAF', 'RAF1'],
                                                      ['MAP2K1', 'MAP2K2'])
+    assert biopax_processor.statements
 
 
 # CODE IN nl_modeling.rst #
@@ -208,17 +211,18 @@ def test_gene_network():
     # Chunk 6
     from indra.tools import assemble_corpus
     # stmts = biopax_stmts + bel_stmts + literature_stmts  # tested elsewhere
-    stmts = gn_stmts + literature_stmts
+    stmts = gn_stmts + literature_stmts  # Added instead of above line
     stmts = assemble_corpus.map_grounding(stmts)
     stmts = assemble_corpus.map_sequence(stmts)
     stmts = assemble_corpus.run_preassembly(stmts)
+    assert stmts
 
     # Chunk 7
     from indra.assemblers.cx import CxAssembler
     from indra.databases import ndex_client
     cxa = CxAssembler(stmts)
     cx_str = cxa.make_model()
-    assert cx_str  # Added to check output
+    assert cx_str
 
     # Chunk 8
     # ndex_cred = {'user': 'myusername', 'password': 'xxx'}
