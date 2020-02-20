@@ -170,7 +170,7 @@ class ModelChecker(object):
         """
         self.statements += stmts
 
-    def check_model(self, max_paths=1, max_path_length=7):
+    def check_model(self, max_paths=1, max_path_length=5):
         """Check all the statements added to the ModelChecker.
 
         Parameters
@@ -328,8 +328,13 @@ class ModelChecker(object):
             # Path already includes edge from common source (if it exists) to
             # the sources and from targets to common target, so we need to
             # only include meaningful paths that include at least on more edge
-            if (input_set and path_length > 2) or \
-                    (not input_set and path_length > 1):
+            # if (input_set and path_length > 2) or \
+            #         (not input_set and path_length > 1):
+            if input_set:
+                path_length = path_length - 2
+            else:
+                path_length = path_length - 1
+            if path_length > 0:
                 pm = PathMetric(source, obj, path_length)
                 path_metrics.append(pm)
                 path_lengths.append(path_length)
@@ -345,6 +350,10 @@ class ModelChecker(object):
             return pr
         elif path_metrics:
             if min(path_lengths) <= max_path_length:
+                if input_set:
+                    search_path_length = min(path_lengths) + 2
+                else:
+                    search_path_length = min(path_lengths) + 1
                 pr = PathResult(True, 'PATHS_FOUND',
                                 max_paths, max_path_length)
                 pr.path_metrics = path_metrics
@@ -352,7 +361,7 @@ class ModelChecker(object):
                 # Try to find paths of fixed length using sources found above
                 for source in sources:
                     path_iter = get_path_iter(self.graph, source, obj,
-                                              min(path_lengths), loop)
+                                              search_path_length, loop)
                     for path in path_iter:
                         pr.add_path(tuple(path))
                         # Do not get next path if reached max_paths
