@@ -84,6 +84,7 @@ def test_readme_using_indra2():
 
 
 # From 3rd example under "Using INDRA"
+@attr('slow')
 def test_readme_using_indra3():
     from indra.sources import reach
     from indra.literature import pubmed_client
@@ -100,6 +101,7 @@ def test_readme_using_indra3():
 
 
 # From 4th example under "Using INDRA"
+@attr('slow')
 def test_readme_using_indra4():
     from indra.sources import bel
     # Process the neighborhood of BRAF and MAP2K1
@@ -108,6 +110,7 @@ def test_readme_using_indra4():
 
 
 # From 5th example under "Using INDRA"
+@attr('slow')
 def test_readme_using_indra5():
     from indra.sources import biopax
     # Process the neighborhood of BRAF and MAP2K1
@@ -272,6 +275,7 @@ def test_getting_started4():
     assert reach_processor.statements
 
 
+@attr('slow')
 def test_getting_started5():
     # Chunk 5
     from indra.sources import bel
