@@ -232,6 +232,8 @@ class ModelChecker(object):
             logger.info('Subject list: %s' % str(subj_list))
             input_set = []
             meaningful_res_code = None
+            # Each subject might produce a different input set and we need to
+            # combine them
             for subj in subj_list:
                 inp, res_code = self.process_subject(subj)
                 if res_code:
@@ -244,6 +246,7 @@ class ModelChecker(object):
 
         logger.info('Input set: %s' % str(input_set))
 
+        # If source and target are the same, we need to handle a loop
         loop = False
         if (input_set and (len(input_set) == len(obj_list) == 1) and
                 (list(input_set)[0] == list(obj_list)[0])):
@@ -273,7 +276,7 @@ class ModelChecker(object):
 
         self.graph.remove_nodes_from([common_source, common_target])
         # If a path was found, then we return it; otherwise, that means
-        # there was no path for this object, so we have to try the next75
+        # there was no path for this object, so we have to try the next
         # one
         if result.path_found:
             logger.info('Found paths for %s' % stmt)
@@ -292,13 +295,11 @@ class ModelChecker(object):
 
         Parameters
         ----------
-        subj : pysb.MonomerPattern or tuple
-            Relevant to the model information about the subject of the
-            Statement being checked (monomer pattern in PySB, source node for
-            other models).
+        subj : tuple or None
+            Tuple representing the source node (usually common source node) or
+            None if the test statement subject is None
         obj : tuple
-            Tuple representing the target node (created from PySB model
-            Observable, PyBEL node, or Agent.name with a target sign).
+            Tuple representing the target node (usually common target node).
         max_paths : int
             The maximum number of specific paths to return.
         max_path_length : int
@@ -381,22 +382,22 @@ class ModelChecker(object):
                               max_paths, max_path_length)
 
     def _find_sources(self, target, source):
-        """Get the subset of source nodes with paths to the target.
+        """Get the set of source nodes with paths to the target.
 
-        Given a target, a list of sources, and a path polarity, perform a
-        breadth-first search upstream from the target to determine whether
-        any of the queried sources have paths to the target with the
-        appropriate polarity. For efficiency, does not return the full path,
+        Given a common target, and common source (or None if test statement
+        subject is None), perform a breadth-first search upstream from the
+        target to determine whether there are any sources thathave paths to
+        the target. For efficiency, does not return the full path,
         but identifies the upstream sources and the length of the path.
 
         Parameters
         ----------
         target : tuple
-            The node (object or rule name with a sign) in the graph to start
+            The node (usually common target node) in the graph to start
             looking upstream for matching sources.
-        sources : list[tuple]
-            Signed nodes corresponding to the subject or upstream influence
-            being checked.
+        source : tuple or None
+            The node (usually common source node) which is the direct parent
+            of all matching sources.
 
         Returns
         -------
@@ -420,8 +421,7 @@ class ModelChecker(object):
             try:
                 # Get the next child in the list
                 child = next(children)
-                # When the source is None and child is positive, it is our
-                # source
+                # When the source is None any positive child will be a source
                 if source is None and child[1] == 0:
                     yield (child, path_length+1)
                 # This is the case when we found common source. We need to
@@ -498,9 +498,7 @@ def get_path_iter(graph, source, target, path_length, loop):
     try:
         for p in path_iter:
             path = deepcopy(p)
-            # # Remove common source and common target now
-            # if ('common_source', 0) in path:
-            #     path.remove(('common_source', 0))
+            # Remove common target from a path. Source is already actual source
             path.remove(('common_target', 0))
             if loop:
                 path.append(path[0])
