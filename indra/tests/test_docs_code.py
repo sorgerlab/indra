@@ -57,8 +57,7 @@ def test_readme_wm_pipeline():
                                normalize_opposites=True,
                                normalize_ns='WM')
     stmts = ac.filter_belief(stmts, 0.8)    # Apply belief cutoff of e.g., 0.8
-    # assert stmts, 'Update example to yield statements list of non-zero
-    # length'
+    assert stmts, 'Update example to yield statements list of non-zero length'
 
 
 # From 1st example under "Using INDRA"
