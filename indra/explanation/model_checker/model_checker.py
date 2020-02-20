@@ -348,10 +348,10 @@ class ModelChecker(object):
             return pr
         elif path_metrics:
             if min(path_lengths) <= max_path_length:
-                if not subj or loop:
+                if not loop:
                     search_path_length = min(path_lengths) + 1
                 else:
-                    search_path_length = min(path_lengths) + 2
+                    search_path_length = min(path_lengths)
                 pr = PathResult(True, 'PATHS_FOUND',
                                 max_paths, max_path_length)
                 pr.path_metrics = path_metrics
@@ -420,20 +420,25 @@ class ModelChecker(object):
             try:
                 # Get the next child in the list
                 child = next(children)
-                # Is this child one of the source nodes we're looking for? If
-                # so, yield it along with path length.
-                # Also make sure that found source is positive
-                if (source is None or child == source) and child[1] == 0:
-                    logger.debug("Found path to %s from %s with length %d"
-                                 % (target, child, path_length+1))
+                # When the source is None and child is positive, it is our
+                # source
+                if source is None and child[1] == 0:
                     yield (child, path_length+1)
+                # This is the case when we found common source. We need to
+                # compare its children to visited nodes to identify the actual
+                # source node.
+                if child == source and child[1] == 0:
+                    parents = self.graph.successors(child)
+                    for p in parents:
+                        if p in visited:
+                            yield(p, path_length+1)
                 # Check this child against the visited list. If we haven't
                 # visited it already (accounting for the path to the node),
                 # then add it to the queue.
                 if child not in visited:
                     visited.add(child)
                     queue.append(
-                        (child, self.graph.predecessors(child), path_length + 1))
+                        (child, self.graph.predecessors(child), path_length+1))
             # Once we've finished iterating over the children of the current
             # node, pop the node off and go to the next one in the queue
             except StopIteration:
@@ -493,9 +498,9 @@ def get_path_iter(graph, source, target, path_length, loop):
     try:
         for p in path_iter:
             path = deepcopy(p)
-            # Remove common source and common target now
-            if ('common_source', 0) in path:
-                path.remove(('common_source', 0))
+            # # Remove common source and common target now
+            # if ('common_source', 0) in path:
+            #     path.remove(('common_source', 0))
             path.remove(('common_target', 0))
             if loop:
                 path.append(path[0])
