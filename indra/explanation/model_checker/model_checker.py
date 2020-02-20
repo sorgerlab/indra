@@ -170,7 +170,7 @@ class ModelChecker(object):
         """
         self.statements += stmts
 
-    def check_model(self, max_paths=1, max_path_length=5):
+    def check_model(self, max_paths=1, max_path_length=7):
         """Check all the statements added to the ModelChecker.
 
         Parameters
@@ -244,15 +244,40 @@ class ModelChecker(object):
 
         logger.info('Input set: %s' % str(input_set))
 
-        for obj in obj_list:
-            result = self.find_paths(input_set, obj, max_paths,
-                                     max_path_length)
-            # If a path was found, then we return it; otherwise, that means
-            # there was no path for this object, so we have to try the next
-            # one
-            if result.path_found:
-                logger.info('Found paths for %s' % stmt)
-                return result
+        loop = False
+        if (input_set and (len(input_set) == len(obj_list) == 1) and
+                (list(input_set)[0] == list(obj_list)[0])):
+            loop = True
+        # Now we add dummy source node as a parent to all nodes in input set
+        # and dummy target node as a child to all nodes in obj_list
+        common_target = ('common_target', 0)
+        self.graph.add_node(common_target)
+        # This is the case when source and target are the same. NetworkX does
+        # not allow loops in the paths, so we work around it by using target
+        # predecessors as new targets
+        if loop:
+            for obj in self.graph.predecessors(list(obj_list)[0]):
+                self.graph.add_edge(obj, common_target)
+        else:
+            for obj in obj_list:
+                self.graph.add_edge(obj, common_target)
+        if input_set:
+            common_source = ('common_source', 0)
+            self.graph.add_node(common_source)
+            for source in input_set:
+                self.graph.add_edge(common_source, source)
+        else:
+            common_source = None
+        result = self.find_paths([common_source] if common_source else None, common_target, max_paths,
+                                 max_path_length, loop)
+
+        self.graph.remove_nodes_from([common_source, common_target])
+        # If a path was found, then we return it; otherwise, that means
+        # there was no path for this object, so we have to try the next75
+        # one
+        if result.path_found:
+            logger.info('Found paths for %s' % stmt)
+            return result
         # Return the result if the subject/input rules were not found
         if result.result_code in [
                 'SUBJECT_NOT_FOUND', 'INPUT_RULES_NOT_FOUND']:
@@ -262,7 +287,7 @@ class ModelChecker(object):
         return self.make_false_result('NO_PATHS_FOUND',
                                       max_paths, max_path_length)
 
-    def find_paths(self, input_set, obj, max_paths=1, max_path_length=5):
+    def find_paths(self, input_set, obj, max_paths=1, max_path_length=5, loop=False):
         """Check for a source/target path in the model.
 
         Parameters
@@ -300,12 +325,17 @@ class ModelChecker(object):
         path_metrics = []
         sources = []
         for source, path_length in self._find_sources(obj, input_set):
-            pm = PathMetric(source, obj, path_length)
-            path_metrics.append(pm)
-            path_lengths.append(path_length)
-            # Keep unique sources but use a list (not set) to preserve order
-            if source not in sources:
-                sources.append(source)
+            # Path already includes edge from common source (if it exists) to
+            # the sources and from targets to common target, so we need to
+            # only include meaningful paths that include at least on more edge
+            if (input_set and path_length > 2) or \
+                    (not input_set and path_length > 1):
+                pm = PathMetric(source, obj, path_length)
+                path_metrics.append(pm)
+                path_lengths.append(path_length)
+                # Keep unique sources but use a list (not set) to preserve order
+                if source not in sources:
+                    sources.append(source)
         logger.info('Finding paths between %s and %s' % (str(input_set), obj))
         # Now, look for paths
         if path_metrics and max_paths == 0:
@@ -322,7 +352,7 @@ class ModelChecker(object):
                 # Try to find paths of fixed length using sources found above
                 for source in sources:
                     path_iter = get_path_iter(self.graph, source, obj,
-                                              min(path_lengths))
+                                              min(path_lengths), loop)
                     for path in path_iter:
                         pr.add_path(tuple(path))
                         # Do not get next path if reached max_paths
@@ -450,30 +480,24 @@ class ModelChecker(object):
         raise NotImplementedError("Method must be implemented in child class.")
 
 
-def get_path_iter(graph, source, target, path_length):
+def get_path_iter(graph, source, target, path_length, loop):
     """Return a generator of paths with path_length cutoff from source to target."""
-    # If source and target are the same node we need to find paths from source
-    # to its predecessors
-    if source == target:
-        new_targets = graph.predecessors(source)
-        for nt in new_targets:
-            path_iter = nx.all_simple_paths(graph, source, nt, path_length - 1)
-            try:
-                for p in path_iter:
-                    path = deepcopy(p)
-                    # Append source to close the loop
-                    path.append(source)
-                    yield path
-            except nx.NetworkXNoPath:
-                pass
-    else:
-        # Regular path search
-        path_iter = nx.all_simple_paths(graph, source, target, path_length)
-        try:
-            for path in path_iter:
-                yield path
-        except nx.NetworkXNoPath:
-            pass
+    path_iter = nx.all_simple_paths(graph, source, target, path_length)
+    try:
+        for p in path_iter:
+            path = deepcopy(p)
+            # Remove common source and common target now
+            if ('common_source', 0) in path:
+                path.remove(('common_source', 0))
+            path.remove(('common_target', 0))
+            if loop:
+                path.append(path[0])
+            # A path should contain at least one edge
+            if len(path) < 2:
+                continue
+            yield path
+    except nx.NetworkXNoPath:
+        pass
 
 
 def signed_edges_to_signed_nodes(graph, prune_nodes=True,
