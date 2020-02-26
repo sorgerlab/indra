@@ -322,11 +322,14 @@ class ModelChecker(object):
         sources = []
         for source, path_length in self._find_sources(target, input_set):
             # Path already includes an edge from targets to common target, so
-            # we need to subtract one edge to only include meaningful paths
-            # that include at least one more edge. In case of loops, we are
+            # we need to subtract one edge. In case of loops, we are
             # already missing one edge, there's no need to subtract one more.
             if not loop:
                 path_length = path_length - 1
+            # There might be a case when sources and targets contain the same
+            # nodes (e.g. different agent state in PyBEL networks) that would
+            # show up as paths of length 0. We only want to include meaningful
+            # paths that contain at least one edge.
             if path_length > 0:
                 pm = PathMetric(source, target, path_length)
                 path_metrics.append(pm)
