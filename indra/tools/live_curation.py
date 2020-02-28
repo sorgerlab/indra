@@ -6,8 +6,8 @@ import boto3
 import pickle
 import logging
 import argparse
-from os import path
 from pathlib import Path
+from os import path, environ
 from flask import Flask, request, jsonify, abort, Response
 # Note: preserve EidosReader import as first one from indra
 from indra.sources.eidos import reground_texts
@@ -95,8 +95,17 @@ class Corpus(object):
 
     def _get_s3_client(self):
         if self._s3 is None:
-            self._s3 = boto3.session.Session(
-                profile_name=self.aws_name).client('s3')
+            if environ.get('AWS_ACCESS_KEY_ID') and \
+                    environ.get('AWS_SECRET_ACCESS_KEY'):
+                logger.info('Got credentials in environment for client')
+                self._s3 = boto3.session.Session(
+                    aws_access_key_id=environ.get('AWS_ACCESS_KEY_ID'),
+                    aws_secret_access_key=environ.get('AWS_SECRET_ACCESS_KEY')
+                    ).client('s3')
+            else:
+                logger.info('Using stored AWS profile for client')
+                self._s3 = boto3.session.Session(
+                    profile_name=self.aws_name).client('s3')
         return self._s3
 
     def __str__(self):
@@ -287,7 +296,11 @@ class Corpus(object):
                     meta_json = json.loads(s3.get_object(
                         Bucket=bucket, Key=meta)['Body'].read())
             except Exception as e:
-                logger.warning('No meta data found')
+                if isinstance(e, s3.exceptions.NoSuchKey):
+                    logger.warning('No meta data found on s3')
+                else:
+                    logger.warning('No meta data found')
+                meta_json = {}
             self.meta_data = meta_json
 
         except Exception as e:
@@ -462,7 +475,7 @@ class LiveCurator(object):
         for corpus_id, corpus in self.corpora.items():
             corpus.curations = {}
 
-    def get_corpus(self, corpus_id, check_s3=False, use_cache=True):
+    def get_corpus(self, corpus_id, check_s3=True, use_cache=True):
         """Return a corpus given an ID.
 
         If the corpus ID cannot be found, an InvalidCorpusError is raised.
@@ -473,7 +486,7 @@ class LiveCurator(object):
             The ID of the corpus to return.
         check_s3 : bool
             If True, look on S3 for the corpus if it's not currently loaded.
-            Default: False.
+            Default: True
         use_cache : bool
             If True, look in local cache before trying to find corpus on s3.
             If True while check_s3 if False, this option will be ignored.
@@ -486,6 +499,8 @@ class LiveCurator(object):
         """
         logger.info('Getting corpus "%s"' % corpus_id)
         corpus = self.corpora.get(corpus_id)
+        if corpus:
+            logger.info('Found corpus loaded in memory')
         if check_s3 and corpus is None:
             logger.info('Corpus not loaded, looking on S3')
             corpus = Corpus.load_from_s3(s3key=corpus_id,
@@ -753,18 +768,19 @@ def update_groundings():
 
 @app.route('/update_metadata', methods=['POST'])
 def update_metadata():
-    if request.json is None:
-        abort(Response('Missing application/json header.', 415))
+    # if request.json is None:
+    #     abort(Response('Missing application/json header.', 415))
 
-    try:
-        # Get input parameters
-        corpus_id = request.json.get('corpus_id')
-        meta_data = request.json.get('meta_data')
-        curator.update_metadata(corpus_id, meta_data, save_to_cache=True)
-    except InvalidCorpusError:
-        abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
-        return
-    return jsonify({})
+    # try:
+    #     # Get input parameters
+    #     corpus_id = request.json.get('corpus_id')
+    #     meta_data = request.json.get('meta_data')
+    #     curator.update_metadata(corpus_id, meta_data, save_to_cache=True)
+    # except InvalidCorpusError:
+    #     abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
+    #     return
+    logger.info('Update metadata is currently disabled')
+    return jsonify({'result': 'endpoint disabled'})
 
 
 @app.route('/save_curation', methods=['POST'])
@@ -792,12 +808,15 @@ if __name__ == '__main__':
     parser.add_argument('--meta-json', help='Meta data json file')
     parser.add_argument('--corpus_id')
     parser.add_argument('--host', default='0.0.0.0')
+    parser.add_argument('--eidos-url', default='http://localhost:9000')
     parser.add_argument('--port', default=8001, type=int)
     parser.add_argument('--aws-cred', type=str, default='default',
                         help='The name of the credential set to use when '
                              'connecting to AWS services. If the name is not '
                              'found in your AWS config, `[default]`  is used.')
     args = parser.parse_args()
+
+    curator.eidos_url = args.eidos_url
 
     # Load corpus from S3 if corpus ID is provided
     if args.corpus_id and not args.json and not args.pickle:
