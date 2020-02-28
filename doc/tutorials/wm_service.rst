@@ -10,14 +10,7 @@ CauseMos UI.
 The instructions below run each Docker container with the :code:`-d` option
 which will run containers in the background. You can list running containers
 with their ids using :code:`docker ps` and stop a container with
-
-.. code-block::
-
-    docker stop <container id>
-
-For interactive text reading, it makes sense to do an initial test reading
-before the demo so that Eidos loads the necessary resources. Subsequent
-reading calls will be much faster.
+:code:`docker stop <container id>`.
 
 Setting up the Eidos service
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
