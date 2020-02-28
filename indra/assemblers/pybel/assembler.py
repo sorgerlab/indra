@@ -63,7 +63,7 @@ class PybelAssembler(object):
     >>> pba = PybelAssembler([stmt])
     >>> belgraph = pba.make_model()
     >>> sorted(node.as_bel() for node in belgraph) # doctest:+IGNORE_UNICODE
-    ['p(HGNC:MAP2K1)', 'p(HGNC:MAPK1)', 'p(HGNC:MAPK1, pmod(Ph, Thr, 185))']
+    ['p(HGNC:6840 ! MAP2K1)', 'p(HGNC:6871 ! MAPK1)', 'p(HGNC:6871 ! MAPK1, pmod(Ph, Thr, 185))']
     >>> len(belgraph)
     3
     >>> belgraph.number_of_edges()

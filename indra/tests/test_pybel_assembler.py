@@ -23,11 +23,11 @@ phos_dsl = pmod('Ph', 'Ser', 218)
 ub_dsl = pmod('Ub', 'Ser', 218)
 egfr_phos_dsl = pmod('Ph', 'Tyr', 1173)
 
-braf_dsl = protein(namespace='HGNC', name='BRAF')
-map2k1_dsl = protein(namespace='HGNC', name='MAP2K1')
-tp53_dsl = protein(namespace='HGNC', name='TP53')
-mdm2_dsl = protein(namespace='HGNC', name='MDM2')
-egfr_dsl = protein(namespace='HGNC', name='EGFR')
+braf_dsl = protein(namespace='HGNC', name='BRAF', identifier='1097')
+map2k1_dsl = protein(namespace='HGNC', name='MAP2K1', identifier='6840')
+tp53_dsl = protein(namespace='HGNC', name='TP53', identifier='11998')
+mdm2_dsl = protein(namespace='HGNC', name='MDM2', identifier='6973')
+egfr_dsl = protein(namespace='HGNC', name='EGFR', identifier='3236')
 
 chebi_17534 = abundance(namespace='CHEBI', name='D-glucose',
                         identifier='17634')
@@ -35,10 +35,10 @@ chebi_4170 = abundance(namespace='CHEBI', name='D-glucopyranose 6-phosphate',
                        identifier='4170')
 chebi_17534_to_4170 = reaction(chebi_17534, chebi_4170)
 
-grb2_dsl = protein(namespace='HGNC', name='GRB2')
-sos1_dsl = protein(namespace='HGNC', name='SOS1')
+grb2_dsl = protein(namespace='HGNC', name='GRB2', identifier='4566')
+sos1_dsl = protein(namespace='HGNC', name='SOS1', identifier='11187')
 sos1_phosphorylated_dsl = sos1_dsl.with_variants(pmod('Ph'))
-kras_node = protein(namespace='HGNC', name='KRAS')
+kras_node = protein(namespace='HGNC', name='KRAS', identifier='6407')
 
 egfr_grb2_sos1_complex_dsl = complex_abundance([
     egfr_dsl,
@@ -90,7 +90,7 @@ def test_simple_modification_no_evidence():
         assert belgraph.number_of_nodes() == 3, belgraph.number_of_nodes()
         map2k1_mod_dsl = map2k1_dsl.with_variants(modtuple)
         assert set(belgraph) == {braf_dsl, map2k1_dsl, map2k1_mod_dsl}, \
-            set(belgraph)
+            (set(belgraph), {braf_dsl, map2k1_dsl, map2k1_mod_dsl})
         assert belgraph.number_of_edges() == 2, belgraph.number_of_edges()
         assert belgraph.has_edge(map2k1_dsl, map2k1_mod_dsl)
         assert belgraph.has_edge(braf_dsl, map2k1_mod_dsl)
@@ -279,7 +279,8 @@ def test_gef():
     assert len(belgraph) == 3
     assert belgraph.number_of_edges() == 2
 
-    gef_reference_node = protein(namespace='HGNC', name='SOS1')
+    gef_reference_node = protein(
+        namespace='HGNC', name='SOS1', identifier='11187')
     gef_node = gef_reference_node.with_variants(pmod('Ph'))
     assert gef_reference_node in belgraph
     assert gef_node in belgraph
@@ -306,9 +307,10 @@ def test_gap():
     assert len(belgraph) == 3
     assert belgraph.number_of_edges() == 2
 
-    gap_reference_node = protein(namespace='HGNC', name='RASA1')
+    gap_reference_node = protein(
+        namespace='HGNC', name='RASA1', identifier='9871')
     gap_node = gap_reference_node.with_variants(pmod('Ph'))
-    ras_node = protein(namespace='HGNC', name='KRAS')
+    ras_node = protein(namespace='HGNC', name='KRAS', identifier='6407')
 
     assert gap_reference_node in belgraph
     assert gap_node in belgraph
@@ -389,7 +391,8 @@ def test_rxn_with_controller():
     belgraph = pba.make_model()
 
     # check the catalyst makes it
-    assert protein(namespace='HGNC', name='HK1') in belgraph
+    assert protein(namespace='HGNC', name='HK1', identifier=id('HK1')) \
+        in belgraph
 
     # The reaction data should be the same as before
     assert chebi_17534 in belgraph
@@ -555,7 +558,7 @@ def test_no_activity_on_bioprocess():
     assert len(belgraph) == 2
     assert belgraph.number_of_edges() == 1
 
-    yfg_pybel = protein('HGNC', 'PPP1R13L')
+    yfg_pybel = protein('HGNC', 'PPP1R13L', identifier='18838')
     apoptosis_pybel = bioprocess('GO', name='apoptotic process',
                                  identifier='GO:0006915')
     assert yfg_pybel in belgraph
