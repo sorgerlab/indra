@@ -766,18 +766,19 @@ def update_groundings():
 
 @app.route('/update_metadata', methods=['POST'])
 def update_metadata():
-    if request.json is None:
-        abort(Response('Missing application/json header.', 415))
+    # if request.json is None:
+    #     abort(Response('Missing application/json header.', 415))
 
-    try:
-        # Get input parameters
-        corpus_id = request.json.get('corpus_id')
-        meta_data = request.json.get('meta_data')
-        curator.update_metadata(corpus_id, meta_data, save_to_cache=True)
-    except InvalidCorpusError:
-        abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
-        return
-    return jsonify({})
+    # try:
+    #     # Get input parameters
+    #     corpus_id = request.json.get('corpus_id')
+    #     meta_data = request.json.get('meta_data')
+    #     curator.update_metadata(corpus_id, meta_data, save_to_cache=True)
+    # except InvalidCorpusError:
+    #     abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
+    #     return
+    logger.info('Update metadata is currently disabled')
+    return jsonify({'result': 'endpoint disabled'})
 
 
 @app.route('/save_curation', methods=['POST'])
