@@ -806,12 +806,15 @@ if __name__ == '__main__':
     parser.add_argument('--meta-json', help='Meta data json file')
     parser.add_argument('--corpus_id')
     parser.add_argument('--host', default='0.0.0.0')
+    parser.add_argument('--eidos-url', default='http://localhost:9000')
     parser.add_argument('--port', default=8001, type=int)
     parser.add_argument('--aws-cred', type=str, default='default',
                         help='The name of the credential set to use when '
                              'connecting to AWS services. If the name is not '
                              'found in your AWS config, `[default]`  is used.')
     args = parser.parse_args()
+
+    curator.eidos_url = args.eidos_url
 
     # Load corpus from S3 if corpus ID is provided
     if args.corpus_id and not args.json and not args.pickle:
