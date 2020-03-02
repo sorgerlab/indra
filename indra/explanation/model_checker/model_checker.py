@@ -221,14 +221,58 @@ class ModelChecker(object):
         if result_code:
             return self.make_false_result(result_code, max_paths,
                                           max_path_length)
-        for subj, obj in itertools.product(subj_list, obj_list):
-            result = self.find_paths(subj, obj, max_paths, max_path_length)
-            # If a path was found, then we return it; otherwise, that means
-            # there was no path for this object, so we have to try the next
-            # one
-            if result.path_found:
-                logger.info('Found paths for %s' % stmt)
-                return result
+        # This is the case if we are checking a Statement whose
+        # subject is genuinely None
+        if all(s is None for s in subj_list):
+            input_set = None
+        # This is the case where the Statement has an actual subject
+        # but we may still run into issues with finding an input
+        # set for it in which case a false result may be returned.
+        else:
+            logger.info('Subject list: %s' % str(subj_list))
+            input_set = []
+            meaningful_res_code = None
+            # Each subject might produce a different input set and we need to
+            # combine them
+            for subj in subj_list:
+                inp, res_code = self.process_subject(subj)
+                if res_code:
+                    meaningful_res_code = res_code
+                    continue
+                input_set += inp
+            if not input_set and meaningful_res_code:
+                return self.make_false_result(meaningful_res_code, max_paths,
+                                              max_path_length)
+
+        logger.info('Input set: %s' % str(input_set))
+
+        # If source and target are the same, we need to handle a loop
+        loop = False
+        if (input_set and (len(input_set) == len(obj_list) == 1) and
+                (list(input_set)[0] == list(obj_list)[0])):
+            loop = True
+        # Now we add a dummy target node as a child to all nodes in obj_list
+        common_target = ('common_target', 0)
+        self.graph.add_node(common_target)
+        # This is the case when source and target are the same. NetworkX does
+        # not allow loops in the paths, so we work around it by using target
+        # predecessors as new targets
+        if loop:
+            for obj in self.graph.predecessors(list(obj_list)[0]):
+                self.graph.add_edge(obj, common_target)
+        else:
+            for obj in obj_list:
+                self.graph.add_edge(obj, common_target)
+        result = self.find_paths(input_set, common_target, max_paths,
+                                 max_path_length, loop)
+
+        self.graph.remove_node(common_target)
+        # If a path was found, then we return it; otherwise, that means
+        # there was no path for this object, so we have to try the next
+        # one
+        if result.path_found:
+            logger.info('Found paths for %s' % stmt)
+            return result
         # Return the result if the subject/input rules were not found
         if result.result_code in [
                 'SUBJECT_NOT_FOUND', 'INPUT_RULES_NOT_FOUND']:
@@ -238,22 +282,23 @@ class ModelChecker(object):
         return self.make_false_result('NO_PATHS_FOUND',
                                       max_paths, max_path_length)
 
-    def find_paths(self, subj, obj, max_paths=1, max_path_length=5):
+    def find_paths(self, input_set, target, max_paths=1, max_path_length=5,
+                   loop=False):
         """Check for a source/target path in the model.
 
         Parameters
         ----------
-        subj : pysb.MonomerPattern or tuple
-            Relevant to the model information about the subject of the
-            Statement being checked (monomer pattern in PySB, source node for
-            other models).
-        obj : tuple
-            Tuple representing the target node (created from PySB model
-            Observable, PyBEL node, or Agent.name with a target sign).
+        input_set : list or None
+            A list of potenital sources or None if the test statement subject
+            is None.
+        target : tuple
+            Tuple representing the target node (usually common target node).
         max_paths : int
             The maximum number of specific paths to return.
         max_path_length : int
             The maximum length of specific paths to return.
+        loop : bool
+            Whether we are looking for a loop path.
 
         Returns
         -------
@@ -261,11 +306,6 @@ class ModelChecker(object):
             PathResult object indicating the results of the attempt to find
             a path.
         """
-        # Get the input set (signed rules or names for source nodes)
-        input_set, result_code = self.process_subject(subj)
-        if result_code:
-            return self.make_false_result(result_code,
-                                          max_paths, max_path_length)
         # # -- Route to the path sampling function --
         # NOTE this is not generic at this point!
         # if self.do_sampling:
@@ -280,14 +320,23 @@ class ModelChecker(object):
         path_lengths = []
         path_metrics = []
         sources = []
-        for source, path_length in self._find_sources(obj, input_set):
-            pm = PathMetric(source, obj, path_length)
-            path_metrics.append(pm)
-            path_lengths.append(path_length)
-            # Keep unique sources but use a list (not set) to preserve order
-            if source not in sources:
-                sources.append(source)
-        logger.info('Finding paths between %s and %s' % (subj, obj))
+        for source, path_length in self._find_sources(target, input_set):
+            # Path already includes an edge from targets to common target, so
+            # we need to subtract one edge. In case of loops, we are
+            # already missing one edge, there's no need to subtract one more.
+            if not loop:
+                path_length = path_length - 1
+            # There might be a case when sources and targets contain the same
+            # nodes (e.g. different agent state in PyBEL networks) that would
+            # show up as paths of length 0. We only want to include meaningful
+            # paths that contain at least one edge.
+            if path_length > 0:
+                pm = PathMetric(source, target, path_length)
+                path_metrics.append(pm)
+                path_lengths.append(path_length)
+                # Keep unique sources but use a list (not set) to preserve order
+                if source not in sources:
+                    sources.append(source)
         # Now, look for paths
         if path_metrics and max_paths == 0:
             pr = PathResult(True, 'MAX_PATHS_ZERO',
@@ -296,14 +345,20 @@ class ModelChecker(object):
             return pr
         elif path_metrics:
             if min(path_lengths) <= max_path_length:
+                if not loop:
+                    search_path_length = min(path_lengths) + 1
+                else:
+                    search_path_length = min(path_lengths)
                 pr = PathResult(True, 'PATHS_FOUND',
                                 max_paths, max_path_length)
                 pr.path_metrics = path_metrics
                 # Get the first path
                 # Try to find paths of fixed length using sources found above
                 for source in sources:
-                    path_iter = get_path_iter(self.graph, source, obj,
-                                              min(path_lengths))
+                    logger.info('Finding paths between %s and %s'
+                                % (str(source), target))
+                    path_iter = get_path_iter(self.graph, source, target,
+                                              search_path_length, loop)
                     for path in path_iter:
                         pr.add_path(tuple(path))
                         # Do not get next path if reached max_paths
@@ -325,18 +380,18 @@ class ModelChecker(object):
                               max_paths, max_path_length)
 
     def _find_sources(self, target, sources):
-        """Get the subset of source nodes with paths to the target.
+        """Get the set of source nodes with paths to the target.
 
-        Given a target, a list of sources, and a path polarity, perform a
-        breadth-first search upstream from the target to determine whether
-        any of the queried sources have paths to the target with the
-        appropriate polarity. For efficiency, does not return the full path,
+        Given a common target and  a list of sources (or None if test statement
+        subject is None), perform a breadth-first search upstream from the
+        target to determine whether there are any sources that have paths to
+        the target. For efficiency, does not return the full path,
         but identifies the upstream sources and the length of the path.
 
         Parameters
         ----------
         target : tuple
-            The node (object or rule name with a sign) in the graph to start
+            The node (usually common target node) in the graph to start
             looking upstream for matching sources.
         sources : list[tuple]
             Signed nodes corresponding to the subject or upstream influence
@@ -431,30 +486,22 @@ class ModelChecker(object):
         raise NotImplementedError("Method must be implemented in child class.")
 
 
-def get_path_iter(graph, source, target, path_length):
+def get_path_iter(graph, source, target, path_length, loop):
     """Return a generator of paths with path_length cutoff from source to target."""
-    # If source and target are the same node we need to find paths from source
-    # to its predecessors
-    if source == target:
-        new_targets = graph.predecessors(source)
-        for nt in new_targets:
-            path_iter = nx.all_simple_paths(graph, source, nt, path_length - 1)
-            try:
-                for p in path_iter:
-                    path = deepcopy(p)
-                    # Append source to close the loop
-                    path.append(source)
-                    yield path
-            except nx.NetworkXNoPath:
-                pass
-    else:
-        # Regular path search
-        path_iter = nx.all_simple_paths(graph, source, target, path_length)
-        try:
-            for path in path_iter:
-                yield path
-        except nx.NetworkXNoPath:
-            pass
+    path_iter = nx.all_simple_paths(graph, source, target, path_length)
+    try:
+        for p in path_iter:
+            path = deepcopy(p)
+            # Remove common target from a path.
+            path.remove(target)
+            if loop:
+                path.append(path[0])
+            # A path should contain at least one edge
+            if len(path) < 2:
+                continue
+            yield path
+    except nx.NetworkXNoPath:
+        pass
 
 
 def signed_edges_to_signed_nodes(graph, prune_nodes=True,
