@@ -84,7 +84,7 @@ the services are running.
 Read a given text with a reader and return INDRA Statements (below, <reader>
 can be eidos, sofia or cwms):
 
-.. code-block::
+.. code-block:: sh
 
     URL: http://SERVICE_HOST:8000/<reader>/process_text
     Method: POST with JSON content header
@@ -93,7 +93,7 @@ can be eidos, sofia or cwms):
 
 Submit curations for a set of Statements in a corpus:
 
-.. code-block::
+.. code-block:: sh
 
     URL: http://SERVICE_HOST:8001/submit_curation
     Method: POST with JSON content header
@@ -102,7 +102,7 @@ Submit curations for a set of Statements in a corpus:
 
 Save curations for a given corpus on S3:
 
-.. code-block::
+.. code-block:: sh
 
     URL: http://SERVICE_HOST:8001/save_curation
     Method: POST with JSON content header
@@ -111,7 +111,7 @@ Save curations for a given corpus on S3:
 
 Update beliefs of a corpus:
 
-.. code-block::
+.. code-block:: sh
 
     URL: http://SERVICE_HOST:8001/update_beliefs
     Method: POST with JSON content header
@@ -122,7 +122,7 @@ Update beliefs of a corpus:
 
 Reset all submitted curations so far:
 
-.. code-block::
+.. code-block:: sh
 
     URL: http://SERVICE_HOST:8001/reset_curation
     Method: POST with JSON content header
@@ -131,7 +131,7 @@ Reset all submitted curations so far:
 
 Add a new ontology entry:
 
-.. code-block::
+.. code-block:: sh
 
     URL: http://SERVICE_HOST:8001/add_ontology_entry
     Method: POST with JSON content header
@@ -140,7 +140,7 @@ Add a new ontology entry:
 
 Reset all customizations to the ontology so far:
 
-.. code-block::
+.. code-block:: sh
 
     URL: http://SERVICE_HOST:8001/reset_ontology
     Method: POST with JSON content header
@@ -149,7 +149,7 @@ Reset all customizations to the ontology so far:
 
 Update groundings and re-assemble corpus based on current ontology:
 
-.. code-block::
+.. code-block:: sh
 
     URL: http://SERVICE_HOST:8001/update_groundings
     Method: POST with JSON content header
