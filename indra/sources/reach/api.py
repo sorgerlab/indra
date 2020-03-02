@@ -2,9 +2,6 @@
 
 Many file formats are supported. Many will run reach.
 """
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str, bytes
-
 import json
 import logging
 import os
@@ -15,10 +12,6 @@ import indra.literature.pmc_client as pmc_client
 import indra.literature.pubmed_client as pubmed_client
 from .processor import ReachProcessor
 
-try:  # Python 2
-    basestring
-except NameError:  # Python 3
-    basestring = str
 
 logger = logging.getLogger(__name__)
 
