@@ -111,7 +111,7 @@ def process_pubmed_abstract(pubmed_id, offline=False,
     return rp
 
 
-def process_text(text, citation=None, offline=False,
+def process_text(text, citation=None, offline=False, url=reach_text_url,
                  output_fname=default_output_fname, timeout=None):
     """Return a ReachProcessor by processing the given text.
 
@@ -126,6 +126,9 @@ def process_text(text, citation=None, offline=False,
     offline : Optional[bool]
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
+    url : Optional[str]
+        URL for REACH service. By default, Arizona REACH web service is called.
+        This only applies when reading online (`offline=False`).
     output_fname : Optional[str]
         The file to output the REACH JSON output to.
         Defaults to reach_output.json in current working directory.
@@ -140,47 +143,96 @@ def process_text(text, citation=None, offline=False,
         in rp.statements.
     """
     if offline:
-        if not try_offline:
-            logger.error('Offline reading is not available.')
-            return None
-        try:
-            api_ruler = reach_reader.get_api_ruler()
-        except ReachOfflineReadingError as e:
-            logger.error(e)
-            logger.error('Cannot read offline because the REACH ApiRuler '
-                         'could not be instantiated.')
-            return None
-        try:
-            result_map = api_ruler.annotateText(text, 'fries')
-        except JavaException as e:
-            logger.error('Could not process text.')
-            logger.error(e)
-            return None
-        # REACH version < 1.3.3
-        json_str = result_map.get('resultJson')
-        if not json_str:
-            # REACH version >= 1.3.3
-            json_str = result_map.get('result')
-        if not isinstance(json_str, bytes):
-            json_str = json_str.encode('utf-8')
+        json_str = get_json_str_offline(text, citation)
     else:
-        data = {'text': text.encode('utf-8')}
-        try:
-            res = requests.post(reach_text_url, data, timeout=timeout)
-        except requests.exceptions.RequestException as e:
-            logger.error('Could not connect to REACH service:')
-            logger.error(e)
-            return None
-        # TODO: we could use res.json() here to get a dict
-        # directly
-        # This is a byte string
-        json_str = res.content
-    if not isinstance(json_str, bytes):
-        raise TypeError('{} is {} instead of {}'.format(json_str, json_str.__class__, bytes))
+        json_str = get_json_str_online(text, citation, url, timeout)
 
-    with open(output_fname, 'wb') as fh:
-        fh.write(json_str)
-    return process_json_str(json_str.decode('utf-8'), citation)
+    if json_str:
+        with open(output_fname, 'wb') as fh:
+            fh.write(json_str)
+        return process_json_str(json_str.decode('utf-8'), citation)
+
+
+def get_json_str_offline(text, citation=None):
+    """Return a json string by processing the given text with offline
+    REACH reader.
+
+    Parameters
+    ----------
+    text : str
+        The text to be processed.
+    citation : Optional[str]
+        A PubMed ID passed to be used in the evidence for the extracted INDRA
+        Statements. This is used when the text to be processed comes from
+        a publication that is not otherwise identified. Default: None
+
+    Returns
+    -------
+    json_str : str
+        The json string produced by REACH reader.
+    """
+    if not try_offline:
+        logger.error('Offline reading is not available.')
+        return None
+    try:
+        api_ruler = reach_reader.get_api_ruler()
+    except ReachOfflineReadingError as e:
+        logger.error(e)
+        logger.error('Cannot read offline because the REACH ApiRuler '
+                     'could not be instantiated.')
+        return None
+    try:
+        result_map = api_ruler.annotateText(text, 'fries')
+    except JavaException as e:
+        logger.error('Could not process text.')
+        logger.error(e)
+        return None
+    # REACH version < 1.3.3
+    json_str = result_map.get('resultJson')
+    if not json_str:
+        # REACH version >= 1.3.3
+        json_str = result_map.get('result')
+    if not isinstance(json_str, bytes):
+        json_str = json_str.encode('utf-8')
+    return json_str
+
+
+def get_json_str_online(text, citation=None, url=reach_text_url, timeout=None):
+    """Return a json string by processing the given text with online REACH API.
+
+    Parameters
+    ----------
+    text : str
+        The text to be processed.
+    citation : Optional[str]
+        A PubMed ID passed to be used in the evidence for the extracted INDRA
+        Statements. This is used when the text to be processed comes from
+        a publication that is not otherwise identified. Default: None
+    url : Optional[str]
+        URL for REACH service. By default, Arizona REACH web service is called.
+    timeout : Optional[float]
+        Only wait for `timeout` seconds for the api to respond.
+
+    Returns
+    -------
+    json_str : str
+        The json string returned by REACH API.
+    """
+    params = {'text': text.encode('utf-8')}
+    try:
+        res = requests.post(url, params=params, timeout=timeout)
+    except requests.exceptions.RequestException as e:
+        logger.error('Could not connect to REACH service:')
+        logger.error(e)
+        return None
+    # TODO: we could use res.json() here to get a dict
+    # directly
+    # This is a byte string
+    json_str = res.content
+    if not isinstance(json_str, bytes):
+        raise TypeError('{} is {} instead of {}'.format(
+            json_str, json_str.__class__, bytes))
+    return json_str
 
 
 def process_nxml_str(nxml_str, citation=None, offline=False,
