@@ -28,10 +28,13 @@ except Exception as e:
 
 reach_text_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/text'
 reach_nxml_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
+local_text_url = 'http://localhost:8080/api/text'
+local_nxml_url = 'http://localhost:8080/api/uploadFile'
 default_output_fname = 'reach_output.json'
 
 
-def process_pmc(pmc_id, offline=False, output_fname=default_output_fname):
+def process_pmc(pmc_id, offline=False, url=reach_nxml_url,
+                output_fname=default_output_fname):
     """Return a ReachProcessor by processing a paper with a given PMC id.
 
     Uses the PMC client to obtain the full text. If it's not available,
@@ -47,6 +50,12 @@ def process_pmc(pmc_id, offline=False, output_fname=default_output_fname):
     offline : Optional[bool]
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
+    url : Optional[str]
+        URL for REACH service. By default, Arizona REACH web service is called.
+        This only applies when reading online (`offline=False`).
+    output_fname : Optional[str]
+        The file to output the REACH JSON output to.
+        Defaults to reach_output.json in current working directory.
 
     Returns
     -------
@@ -65,12 +74,12 @@ def process_pmc(pmc_id, offline=False, output_fname=default_output_fname):
     ids = id_lookup(pmc_id, 'pmcid')
     pmid = ids.get('pmid')
     logger.info('Processing %s with REACH' % pmc_id)
-    rp = process_nxml_file(fname, citation=pmid, offline=offline,
+    rp = process_nxml_file(fname, citation=pmid, offline=offline, url=url,
                            output_fname=output_fname)
     return rp
 
 
-def process_pubmed_abstract(pubmed_id, offline=False,
+def process_pubmed_abstract(pubmed_id, offline=False, url=reach_nxml_url,
                             output_fname=default_output_fname, **kwargs):
     """Return a ReachProcessor by processing an abstract with a given Pubmed id.
 
@@ -87,6 +96,9 @@ def process_pubmed_abstract(pubmed_id, offline=False,
     offline : Optional[bool]
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
+    url : Optional[str]
+        URL for REACH service. By default, Arizona REACH web service is called.
+        This only applies when reading online (`offline=False`).
     output_fname : Optional[str]
         The file to output the REACH JSON output to.
         Defaults to reach_output.json in current working directory.
@@ -102,7 +114,7 @@ def process_pubmed_abstract(pubmed_id, offline=False,
     abs_txt = pubmed_client.get_abstract(pubmed_id)
     if abs_txt is None:
         return None
-    rp = process_text(abs_txt, citation=pubmed_id, offline=offline,
+    rp = process_text(abs_txt, citation=pubmed_id, offline=offline, url=url,
                       output_fname=output_fname, **kwargs)
     if rp and rp.statements:
         for st in rp.statements:
@@ -143,9 +155,9 @@ def process_text(text, citation=None, offline=False, url=reach_text_url,
         in rp.statements.
     """
     if offline:
-        json_str = get_json_str_offline(text, citation)
+        json_str = get_json_str_offline(text, 'text')
     else:
-        json_str = get_json_str_online(text, citation, url, timeout)
+        json_str = text_to_json_str_online(text, url, timeout)
 
     if json_str:
         with open(output_fname, 'wb') as fh:
@@ -153,90 +165,8 @@ def process_text(text, citation=None, offline=False, url=reach_text_url,
         return process_json_str(json_str.decode('utf-8'), citation)
 
 
-def get_json_str_offline(text, citation=None):
-    """Return a json string by processing the given text with offline
-    REACH reader.
-
-    Parameters
-    ----------
-    text : str
-        The text to be processed.
-    citation : Optional[str]
-        A PubMed ID passed to be used in the evidence for the extracted INDRA
-        Statements. This is used when the text to be processed comes from
-        a publication that is not otherwise identified. Default: None
-
-    Returns
-    -------
-    json_str : str
-        The json string produced by REACH reader.
-    """
-    if not try_offline:
-        logger.error('Offline reading is not available.')
-        return None
-    try:
-        api_ruler = reach_reader.get_api_ruler()
-    except ReachOfflineReadingError as e:
-        logger.error(e)
-        logger.error('Cannot read offline because the REACH ApiRuler '
-                     'could not be instantiated.')
-        return None
-    try:
-        result_map = api_ruler.annotateText(text, 'fries')
-    except JavaException as e:
-        logger.error('Could not process text.')
-        logger.error(e)
-        return None
-    # REACH version < 1.3.3
-    json_str = result_map.get('resultJson')
-    if not json_str:
-        # REACH version >= 1.3.3
-        json_str = result_map.get('result')
-    if not isinstance(json_str, bytes):
-        json_str = json_str.encode('utf-8')
-    return json_str
-
-
-def get_json_str_online(text, citation=None, url=reach_text_url, timeout=None):
-    """Return a json string by processing the given text with online REACH API.
-
-    Parameters
-    ----------
-    text : str
-        The text to be processed.
-    citation : Optional[str]
-        A PubMed ID passed to be used in the evidence for the extracted INDRA
-        Statements. This is used when the text to be processed comes from
-        a publication that is not otherwise identified. Default: None
-    url : Optional[str]
-        URL for REACH service. By default, Arizona REACH web service is called.
-    timeout : Optional[float]
-        Only wait for `timeout` seconds for the api to respond.
-
-    Returns
-    -------
-    json_str : str
-        The json string returned by REACH API.
-    """
-    params = {'text': text.encode('utf-8')}
-    try:
-        res = requests.post(url, params=params, timeout=timeout)
-    except requests.exceptions.RequestException as e:
-        logger.error('Could not connect to REACH service:')
-        logger.error(e)
-        return None
-    # TODO: we could use res.json() here to get a dict
-    # directly
-    # This is a byte string
-    json_str = res.content
-    if not isinstance(json_str, bytes):
-        raise TypeError('{} is {} instead of {}'.format(
-            json_str, json_str.__class__, bytes))
-    return json_str
-
-
 def process_nxml_str(nxml_str, citation=None, offline=False,
-                     output_fname=default_output_fname):
+                     url=reach_nxml_url, output_fname=default_output_fname):
     """Return a ReachProcessor by processing the given NXML string.
 
     NXML is the format used by PubmedCentral for papers in the open
@@ -252,6 +182,9 @@ def process_nxml_str(nxml_str, citation=None, offline=False,
     offline : Optional[bool]
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
+    url : Optional[str]
+        URL for REACH service. By default, Arizona REACH web service is called.
+        This only applies when reading online (`offline=False`).
     output_fname : Optional[str]
         The file to output the REACH JSON output to.
         Defaults to reach_output.json in current working directory.
@@ -263,54 +196,23 @@ def process_nxml_str(nxml_str, citation=None, offline=False,
         in rp.statements.
     """
     if offline:
-        if not try_offline:
-            logger.error('Offline reading is not available.')
-            return None
-        try:
-            api_ruler = reach_reader.get_api_ruler()
-        except ReachOfflineReadingError as e:
-            logger.error(e)
-            logger.error('Cannot read offline because the REACH ApiRuler '
-                         'could not be instantiated.')
-            return None
-        try:
-            result_map = api_ruler.annotateNxml(nxml_str, 'fries')
-        except JavaException as e:
-            logger.error('Could not process NXML.')
-            logger.error(e)
-            return None
-        # REACH version < 1.3.3
-        json_str = result_map.get('resultJson')
-        if not json_str:
-            # REACH version >= 1.3.3
-            json_str = result_map.get('result')
-        if json_str is None:
-            logger.warning('No results retrieved')
-            return None
-        if isinstance(json_str, bytes):
-            json_str = json_str.decode('utf-8')
-        return process_json_str(json_str, citation)
+        json_str = get_json_str_offline(nxml_str, 'nxml')
     else:
-        data = {'nxml': nxml_str}
-        try:
-            res = requests.post(reach_nxml_url, data)
-        except requests.exceptions.RequestException as e:
-            logger.error('Could not connect to REACH service:')
-            logger.error(e)
-            return None
-        if res.status_code != 200:
-            logger.error('Could not process NXML via REACH service.'
-                         + 'Status code: %d' % res.status_code)
-            return None
-        json_str = res.text
+        if url == reach_nxml_url:
+            json_str = nxml_to_json_str_remote(nxml_str, url)
+        else:
+            with open('temp_file.nxml', 'wb') as f:
+                f.write(nxml_str)
+            json_str = nxml_file_to_json_str_local('temp_file.nxml', url)
 
+    if json_str:
         with open(output_fname, 'wb') as fh:
-            fh.write(json_str.encode('utf-8'))
-        return process_json_str(json_str, citation)
+            fh.write(json_str)
+        return process_json_str(json_str.decode('utf-8'), citation)
 
 
 def process_nxml_file(file_name, citation=None, offline=False,
-                      output_fname=default_output_fname):
+                      url=reach_nxml_url, output_fname=default_output_fname):
     """Return a ReachProcessor by processing the given NXML file.
 
     NXML is the format used by PubmedCentral for papers in the open
@@ -326,6 +228,9 @@ def process_nxml_file(file_name, citation=None, offline=False,
     offline : Optional[bool]
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
+    url : Optional[str]
+        URL for REACH service. By default, Arizona REACH web service is called.
+        This only applies when reading online (`offline=False`).
     output_fname : Optional[str]
         The file to output the REACH JSON output to.
         Defaults to reach_output.json in current working directory.
@@ -336,10 +241,17 @@ def process_nxml_file(file_name, citation=None, offline=False,
         A ReachProcessor containing the extracted INDRA Statements
         in rp.statements.
     """
-    with open(file_name, 'rb') as f:
-        nxml_str = f.read().decode('utf-8')
-        return process_nxml_str(nxml_str, citation, offline=offline,
-                                output_fname=output_fname)
+    if offline or url == reach_nxml_url:
+        with open(file_name, 'rb') as f:
+            nxml_str = f.read().decode('utf-8')
+            return process_nxml_str(nxml_str, citation, offline=offline,
+                                    url=url, output_fname=output_fname)
+
+    json_str = nxml_file_to_json_str_local(file_name, url)
+    if json_str:
+        with open(output_fname, 'wb') as fh:
+            fh.write(json_str)
+        return process_json_str(json_str.decode('utf-8'), citation)
 
 
 def process_json_file(file_name, citation=None):
@@ -391,10 +303,10 @@ def process_json_str(json_str, citation=None):
         A ReachProcessor containing the extracted INDRA Statements
         in rp.statements.
     """
-    if not isinstance(json_str, basestring):
+    if not isinstance(json_str, str):
         raise TypeError('{} is {} instead of {}'.format(json_str,
                                                         json_str.__class__,
-                                                        basestring))
+                                                        str))
 
     json_str = json_str.replace('frame-id', 'frame_id')
     json_str = json_str.replace('argument-label', 'argument_label')
@@ -416,3 +328,147 @@ def process_json_str(json_str, citation=None):
     rp.get_translocation()
     rp.get_regulate_amounts()
     return rp
+
+
+def get_json_str_offline(content, content_type='text'):
+    """Return a json string by processing the given text with offline
+    REACH reader.
+
+    Parameters
+    ----------
+    content : str
+        The text to be processed.
+    content_type : str
+        Whether the content is a regular text or NXML.
+
+    Returns
+    -------
+    json_str : bytes
+        The json string produced by REACH reader.
+    """
+    if not try_offline:
+        logger.error('Offline reading is not available.')
+        return None
+    try:
+        api_ruler = reach_reader.get_api_ruler()
+    except ReachOfflineReadingError as e:
+        logger.error(e)
+        logger.error('Cannot read offline because the REACH ApiRuler '
+                     'could not be instantiated.')
+        return None
+    try:
+        if content_type == 'text':
+            result_map = api_ruler.annotateText(content, 'fries')
+        elif content_type == 'nxml':
+            result_map = api_ruler.annotateNxml(content, 'fries')
+    except JavaException as e:
+        logger.error('Could not process %d.' % content_type)
+        logger.error(e)
+        return None
+    # REACH version < 1.3.3
+    json_str = result_map.get('resultJson')
+    if not json_str:
+        # REACH version >= 1.3.3
+        json_str = result_map.get('result')
+    if json_str is None:
+        logger.warning('No results retrieved')
+        return None
+    if not isinstance(json_str, bytes):
+        json_str = json_str.encode('utf-8')
+    return json_str
+
+
+def text_to_json_str_online(text, url=reach_text_url, timeout=None):
+    """Return a json string by processing the given text with online REACH API.
+
+    Parameters
+    ----------
+    text : str
+        The text to be processed.
+    url : Optional[str]
+        URL for REACH service. By default, Arizona REACH web service is called.
+    timeout : Optional[float]
+        Only wait for `timeout` seconds for the api to respond.
+
+    Returns
+    -------
+    json_str : bytes
+        The json string returned by REACH API.
+    """
+    params = {'text': text.encode('utf-8')}
+    try:
+        res = requests.post(url, params=params, timeout=timeout)
+    except requests.exceptions.RequestException as e:
+        logger.error('Could not connect to REACH service:')
+        logger.error(e)
+        return None
+    # TODO: we could use res.json() here to get a dict
+    # directly
+    # This is a byte string
+    json_str = res.content
+    if not isinstance(json_str, bytes):
+        raise TypeError('{} is {} instead of {}'.format(
+            json_str, json_str.__class__, bytes))
+    return json_str
+
+
+def nxml_to_json_str_remote(nxml_str, url=reach_nxml_url):
+    """Return a json string by processing the given NXML string with remote
+    REACH webservice.
+
+    Parameters
+    ----------
+    nxml_str : str
+        The NXML string to be processed.
+    url : Optional[str]
+        URL for REACH service. By default, Arizona REACH web service is called.
+
+    Returns
+    -------
+    json_str : bytes
+        The json string returned by REACH API.
+    """
+    data = {'nxml': nxml_str}
+    try:
+        res = requests.post(url, data)
+    except requests.exceptions.RequestException as e:
+        logger.error('Could not connect to REACH service:')
+        logger.error(e)
+        return None
+    if res.status_code != 200:
+        logger.error('Could not process NXML via REACH service.'
+                     + 'Status code: %d' % res.status_code)
+        return None
+    json_str = res.text
+    return res.text
+
+
+def nxml_file_to_json_str_local(file_name, url=local_nxml_url):
+    """Return a json string by processing the given NXML file with locally
+    running instance of REACH webservice.
+
+    Parameters
+    ----------
+    file_name : str
+        The name of the NXML file to be processed.
+    url : Optional[str]
+        URL for REACH service. By default, localhost on port 8080 is called.
+
+    Returns
+    -------
+    json_str : bytes
+        The json string returned by REACH API.
+    """
+    with open(file_name, 'rb') as f:
+        try:
+            res = requests.post(url, files={'file': f})
+    except requests.exceptions.RequestException as e:
+        logger.error('Could not connect to REACH service:')
+        logger.error(e)
+        return None
+    if res.status_code != 200:
+        logger.error('Could not process NXML via REACH service.'
+                     + 'Status code: %d' % res.status_code)
+        return None
+    json_str = res.text
+    return res.text
