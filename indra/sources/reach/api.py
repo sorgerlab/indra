@@ -79,7 +79,7 @@ def process_pmc(pmc_id, offline=False, url=reach_nxml_url,
     return rp
 
 
-def process_pubmed_abstract(pubmed_id, offline=False, url=reach_nxml_url,
+def process_pubmed_abstract(pubmed_id, offline=False, url=reach_text_url,
                             output_fname=default_output_fname, **kwargs):
     """Return a ReachProcessor by processing an abstract with a given Pubmed id.
 
@@ -199,10 +199,13 @@ def process_nxml_str(nxml_str, citation=None, offline=False,
         json_str = get_json_str_offline(nxml_str, 'nxml')
     else:
         if url == reach_nxml_url:
+            logger.warning('Remote REACH webservice might get stuck when ' +
+                           'processing NXML. Running local instance of REACH' +
+                           ' is recommended.')
             json_str = nxml_to_json_str_remote(nxml_str, url)
         else:
             with open('temp_file.nxml', 'wb') as f:
-                f.write(nxml_str)
+                f.write(nxml_str.encode('utf-8'))
             json_str = nxml_file_to_json_str_local('temp_file.nxml', url)
 
     if json_str:
@@ -439,8 +442,8 @@ def nxml_to_json_str_remote(nxml_str, url=reach_nxml_url):
         logger.error('Could not process NXML via REACH service.'
                      + 'Status code: %d' % res.status_code)
         return None
-    json_str = res.text
-    return res.text
+    json_str = res.content
+    return json_str
 
 
 def nxml_file_to_json_str_local(file_name, url=local_nxml_url):
@@ -462,13 +465,13 @@ def nxml_file_to_json_str_local(file_name, url=local_nxml_url):
     with open(file_name, 'rb') as f:
         try:
             res = requests.post(url, files={'file': f})
-    except requests.exceptions.RequestException as e:
-        logger.error('Could not connect to REACH service:')
-        logger.error(e)
-        return None
+        except requests.exceptions.RequestException as e:
+            logger.error('Could not connect to REACH service:')
+            logger.error(e)
+            return None
     if res.status_code != 200:
         logger.error('Could not process NXML via REACH service.'
                      + 'Status code: %d' % res.status_code)
         return None
-    json_str = res.text
-    return res.text
+    json_str = res.content
+    return json_str
