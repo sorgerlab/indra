@@ -124,9 +124,25 @@ def create_network(cx_str, ndex_cred=None, private=True):
         return
 
     network_id = network_uri.rsplit('/')[-1]
+
+    # Set the network to public. This often fails due to time-out issues,
+    # therefore we implement a wait and retry approach here.
     if not private:
-        time.sleep(0.5)
-        nd.make_network_public(network_id)
+        nretries = 3
+        for retry_idx in range(nretries):
+            time.sleep(3)
+            try:
+                logger.info('Making network public.')
+                nd.make_network_public(network_id)
+                break
+            except Exception:
+                msg = 'Setting network to public failed, '
+                if retry_idx + 1 < nretries:
+                    logger.info(msg + 'retrying %d more times.' %
+                                (nretries - (retry_idx + 1)))
+                else:
+                    logger.info(msg + 'the network will remain private.')
+
     logger.info('The UUID for the uploaded network is: %s' % network_id)
     logger.info('View at: http://ndexbio.org/#/network/%s' % network_id)
     return network_id
