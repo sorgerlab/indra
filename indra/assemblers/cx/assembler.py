@@ -345,8 +345,20 @@ class CxAssembler(object):
         network_id = ndex_client.create_network(cx_str, ndex_cred, private)
         if network_id and style:
             template_id = None if style == 'default' else style
-            time.sleep(0.5)
-            ndex_client.set_style(network_id, ndex_cred, template_id)
+            nretries = 3
+            for retry_idx in range(nretries):
+                time.sleep(3)
+                try:
+                    ndex_client.set_style(network_id, ndex_cred, template_id)
+                    break
+                except Exception:
+                    msg = 'Style setting failed, '
+                    if retry_idx + 1 < nretries:
+                        logger.info(msg + 'retrying %d more times' %
+                                    (nretries - (retry_idx+1)))
+                    else:
+                        logger.info(msg + 'the network will be missing style '
+                                    'information.')
         return network_id
 
     def set_context(self, cell_type):

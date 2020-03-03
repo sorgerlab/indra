@@ -124,9 +124,25 @@ def create_network(cx_str, ndex_cred=None, private=True):
         return
 
     network_id = network_uri.rsplit('/')[-1]
+
+    # Set the network to public. This often fails due to time-out issues,
+    # therefore we implement a wait and retry approach here.
     if not private:
-        time.sleep(0.5)
-        nd.make_network_public(network_id)
+        nretries = 3
+        for retry_idx in range(nretries):
+            time.sleep(3)
+            try:
+                logger.info('Making network public.')
+                nd.make_network_public(network_id)
+                break
+            except Exception:
+                msg = 'Setting network to public failed, '
+                if retry_idx + 1 < nretries:
+                    logger.info(msg + 'retrying %d more times.' %
+                                (nretries - (retry_idx + 1)))
+                else:
+                    logger.info(msg + 'the network will remain private.')
+
     logger.info('The UUID for the uploaded network is: %s' % network_id)
     logger.info('View at: http://ndexbio.org/#/network/%s' % network_id)
     return network_id
@@ -195,7 +211,7 @@ def update_network(cx_str, network_id, ndex_cred=None):
                }
     logger.info('Updating NDEx network (%s) profile to %s',
                 network_id, profile)
-    profile_retries = 5
+    profile_retries = 3
     for _ in range(profile_retries):
         try:
             time.sleep(5)
@@ -223,7 +239,8 @@ def set_style(network_id, ndex_cred=None, template_id=None):
     """
     if not template_id:
         template_id = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
-
+    logger.info('Setting network style based on template: %s' %
+                template_id)
     server = 'http://public.ndexbio.org'
     username, password = get_default_ndex_cred(ndex_cred)
 
