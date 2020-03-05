@@ -1,6 +1,9 @@
 REACH (:py:mod:`indra.sources.reach`)
 =====================================
 
+.. automodule:: indra.sources.reach
+    :members:
+
 REACH API (:py:mod:`indra.sources.reach.api`)
 ---------------------------------------------
 
