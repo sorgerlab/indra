@@ -5,11 +5,11 @@ grammars to extract biological mechanisms from free text.
 To cover a wide range of use cases and scenarios, there are currently 4
 different ways in which INDRA can use REACH.
 
-1. INDRA communicating with a locally running REACH API Server (:py:mod:`indra.sources.reach.api`)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. INDRA communicating with a locally running REACH Server (:py:mod:`indra.sources.reach.api`)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Setup and usage: Follow standard instructions to install SBT. Clone REACH and
-run REACH web server.
+Setup and usage: Follow standard instructions to install
+`SBT <www.scala-sbt.org>`_. Then clone REACH and run the REACH web server.
 
 .. code-block:: bash
 
@@ -26,14 +26,18 @@ Then read text by specifying the url parameter when using
    rp = reach.process_text('MEK binds ERK',
                            url='http://localhost:8080/api/text')
 
-It is also possible to read NXML (string or file) and process text of a paper
-given its PMC ID or PubMed ID.
+It is also possible to read NXML (string or file) and process the text of a
+paper given its PMC ID or PubMed ID using other API methods in
+:py:mod:`indra.sources.reach.api`.
 
 Advantages:
 
-* Control the REACH version used to run the service
-* Does not require setting up the pyjnius Python-Java bridge
-* Does not require assembling a REACH JAR file
+* Does not require setting up the pyjnius Python-Java bridge.
+* Does not require assembling a REACH JAR file.
+* Allows local control the REACH version and configuration used to run the
+  service.
+* REACH is running in a separate process and therefore does not need to
+  be initialized if a new Python session is started.
 
 Disadvantages:
 
@@ -43,8 +47,8 @@ Disadvantages:
   full object-level access to REACH components.
 
 
-2. INDRA communicating with a remote REACH API Server (:py:mod:`indra.sources.reach.api`)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2. INDRA communicating with the UA REACH Server (:py:mod:`indra.sources.reach.api`)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Setup and usage: Does not require any additional setup after installing INDRA.
 
@@ -55,22 +59,24 @@ Read text using the default values for `offline` and `url` parameters.
    from indra.sources import reach
    rp = reach.process_text('MEK binds ERK')
 
-It is also possible to read NXML (string or file) and process text of a paper
-given its PMC ID or PubMed ID.
+It is also possible to read NXML (string or file) and process the content of
+a paper given its PMC ID or PubMed ID using other functions in
+:py:mod:`indra.sources.reach.api`.
 
 Advantages:
 
-* Does not require setting up the pyjnius Python-Java bridge
+* Does not require setting up the pyjnius Python-Java bridge.
 * Does not require assembling a REACH JAR file or installing REACH at all
-  locally
-* Suitable for initial prototyping or integration testing
+  locally.
+* Suitable for initial prototyping or integration testing.
 
 Disadvantages:
 
 * Cannot handle high-throughput reading workflows due to limited server
   resources.
-* No control on which REACH version is used to run the service.
-* Difficulties processing NXML-formatted text have been observed in the past.
+* No control over which REACH version is used to run the service.
+* Difficulties processing NXML-formatted text (request times out) have been
+  observed in the past.
 
 3. INDRA using a REACH JAR through a Python-Java bridge (:py:mod:`indra.sources.reach.reader`)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,19 +108,22 @@ function with the offline option.
    from indra.sources import reach
    rp = reach.process_text('MEK binds ERK', offline=True)
 
+Other functions in :py:mod:`indra.sources.reach.api` can also be used
+with the offline option to invoke local, JAR-based reading.
+
 
 Advantages:
 
-* Doesn't require running a separate process for REACH and INDRA
-* Having a single REACH JAR file makes this solution easily portable
+* Doesn't require running a separate process for REACH and INDRA.
+* Having a single REACH JAR file makes this solution easily portable.
 * Through jnius, all classes in REACH become available for programmatic
-  access
+  access.
 
 
 Disadvantages:
 
-* Requires configuring pyjnius which is often difficult (e.g., on Windows)
-* Requires building a large REACH JAR file which can be time consuming
+* Requires configuring pyjnius which is often difficult (e.g., on Windows).
+  Therefore this usage mode is generally not recommended.
 * The ReachReader instance needs to be instantiated every time a new INDRA
   session is started which is time consuming.
 
@@ -122,15 +131,15 @@ Disadvantages:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In this usage mode REACH is not directly invoked by INDRA. Rather, REACH
-is set up and run independent of INDRA to produce output files
+is set up and run independently of INDRA to produce output files
 for a set of text content. For more information on running REACH on a set of
-text or NXML files, see the REACH README and documentation at:
+text or NXML files, see the REACH documentation at:
 https://github.com/clulab/reach. Note that INDRA uses the `fries` output format
 produced by REACH.
 
-Once REACH output has been obtained in the `fries` JSON format, once can
+Once REACH output has been obtained in the `fries` JSON format, one can
 use :py:mod:`indra.sources.reach.api.process_json_file`
-in INDRA to process the JSON files.
+in INDRA to process each JSON file.
 """
 
 
