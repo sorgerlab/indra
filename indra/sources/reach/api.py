@@ -155,9 +155,9 @@ def process_text(text, citation=None, offline=False, url=reach_text_url,
         in rp.statements.
     """
     if offline:
-        json_str = get_json_str_offline(text, 'text')
+        json_str = _get_json_str_offline(text, 'text')
     else:
-        json_str = text_to_json_str_online(text, url, timeout)
+        json_str = _text_to_json_str_online(text, url, timeout)
 
     if json_str:
         with open(output_fname, 'wb') as fh:
@@ -196,17 +196,17 @@ def process_nxml_str(nxml_str, citation=None, offline=False,
         in rp.statements.
     """
     if offline:
-        json_str = get_json_str_offline(nxml_str, 'nxml')
+        json_str = _get_json_str_offline(nxml_str, 'nxml')
     else:
         if url == reach_nxml_url:
             logger.warning('Remote REACH webservice might get stuck when ' +
                            'processing NXML. Running local instance of REACH' +
                            ' is recommended.')
-            json_str = nxml_to_json_str_remote(nxml_str, url)
+            json_str = _nxml_to_json_str_remote(nxml_str, url)
         else:
             with open('temp_file.nxml', 'wb') as f:
                 f.write(nxml_str.encode('utf-8'))
-            json_str = nxml_file_to_json_str_local('temp_file.nxml', url)
+            json_str = _nxml_file_to_json_str_local('temp_file.nxml', url)
 
     if json_str:
         with open(output_fname, 'wb') as fh:
@@ -250,7 +250,7 @@ def process_nxml_file(file_name, citation=None, offline=False,
             return process_nxml_str(nxml_str, citation, offline=offline,
                                     url=url, output_fname=output_fname)
 
-    json_str = nxml_file_to_json_str_local(file_name, url)
+    json_str = _nxml_file_to_json_str_local(file_name, url)
     if json_str:
         with open(output_fname, 'wb') as fh:
             fh.write(json_str)
@@ -333,7 +333,7 @@ def process_json_str(json_str, citation=None):
     return rp
 
 
-def get_json_str_offline(content, content_type='text'):
+def _get_json_str_offline(content, content_type='text'):
     """Return a json string by processing the given text with offline
     REACH reader.
 
@@ -381,7 +381,7 @@ def get_json_str_offline(content, content_type='text'):
     return json_str
 
 
-def text_to_json_str_online(text, url=reach_text_url, timeout=None):
+def _text_to_json_str_online(text, url=reach_text_url, timeout=None):
     """Return a json string by processing the given text with online REACH API.
 
     Parameters
@@ -415,7 +415,7 @@ def text_to_json_str_online(text, url=reach_text_url, timeout=None):
     return json_str
 
 
-def nxml_to_json_str_remote(nxml_str, url=reach_nxml_url):
+def _nxml_to_json_str_remote(nxml_str, url=reach_nxml_url):
     """Return a json string by processing the given NXML string with remote
     REACH webservice.
 
@@ -446,7 +446,7 @@ def nxml_to_json_str_remote(nxml_str, url=reach_nxml_url):
     return json_str
 
 
-def nxml_file_to_json_str_local(file_name, url=local_nxml_url):
+def _nxml_file_to_json_str_local(file_name, url=local_nxml_url):
     """Return a json string by processing the given NXML file with locally
     running instance of REACH webservice.
 
