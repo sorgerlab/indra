@@ -109,7 +109,8 @@ def reach_process_text():
     body = json.loads(response)
     text = body.get('text')
     offline = True if body.get('offline') else False
-    rp = reach.process_text(text, offline=offline)
+    url = body.get('url')
+    rp = reach.process_text(text, offline=offline, url=url)
     return _stmts_from_proc(rp)
 
 
@@ -135,7 +136,8 @@ def reach_process_pmc():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     pmcid = body.get('pmcid')
-    rp = reach.process_pmc(pmcid)
+    url = body.get('url')
+    rp = reach.process_pmc(pmcid, url=url)
     return _stmts_from_proc(rp)
 
 ##################
@@ -701,4 +703,4 @@ def get_evidence_for_stmts():
 app = default_app()
 
 if __name__ == '__main__':
-    run(app, host='0.0.0.0', port='8080')
+    run(app, host='0.0.0.0', port='8081')
