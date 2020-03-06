@@ -176,10 +176,10 @@ var api_spec = {
         "parameters": [
           {
             "in": "body",
-            "name": "textObj",
+            "name": "textUrlObj",
             "description": "An object with keys of \"text\", referencing a string of text to be processed by REACH, and \"url\", referencing a url of REACH API to send request to.",
             "schema": {
-              "$ref": "#/definitions/textObj"
+              "$ref": "#/definitions/textUrlObj"
             }
           }
         ],
@@ -244,10 +244,10 @@ var api_spec = {
         "parameters": [
           {
             "in": "body",
-            "name": "pmcid",
+            "name": "pmcIDUrl",
             "description": "An object with keys of \"pmcid\", referencing a string that contains the PMCID of the publication, and \"url\", referencing a url of REACH API to send request to.",
             "schema": {
-              "$ref": "#/definitions/pmcID"
+              "$ref": "#/definitions/pmcIDUrl"
             }
           }
         ],
