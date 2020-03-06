@@ -19,7 +19,7 @@ import indra.tools.assemble_corpus as ac
 from indra.databases import cbio_client
 from indra.sources.indra_db_rest import get_statements
 from indra.sources.ndex_cx.api import process_ndex_network
-
+from indra.sources.reach.api import reach_nxml_url, reach_text_url
 from indra.belief.wm_scorer import get_eidos_scorer
 from indra.preassembler.ontology_mapper import OntologyMapper, wm_ontomap
 
@@ -109,7 +109,7 @@ def reach_process_text():
     body = json.loads(response)
     text = body.get('text')
     offline = True if body.get('offline') else False
-    url = body.get('url')
+    url = body.get('url', reach_text_url)
     rp = reach.process_text(text, offline=offline, url=url)
     return _stmts_from_proc(rp)
 
@@ -136,7 +136,7 @@ def reach_process_pmc():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     pmcid = body.get('pmcid')
-    url = body.get('url')
+    url = body.get('url', reach_nxml_url)
     rp = reach.process_pmc(pmcid, url=url)
     return _stmts_from_proc(rp)
 
