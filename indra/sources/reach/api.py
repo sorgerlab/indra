@@ -4,7 +4,6 @@ Many file formats are supported. Many will run reach.
 """
 import json
 import logging
-import os
 import requests
 
 from indra.literature import id_lookup
@@ -403,6 +402,8 @@ def _read_content_offline(content, content_type='text'):
             result_map = api_ruler.annotateText(content, 'fries')
         elif content_type == 'nxml':
             result_map = api_ruler.annotateNxml(content, 'fries')
+        else:
+            raise ValueError('Invalid content_type: %s' % content_type)
     except JavaException as e:
         logger.error('Could not process %d.' % content_type)
         logger.error(e)
