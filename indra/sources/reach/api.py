@@ -405,7 +405,7 @@ def _read_content_offline(content, content_type='text'):
         else:
             raise ValueError('Invalid content_type: %s' % content_type)
     except JavaException as e:
-        logger.error('Could not process %d.' % content_type)
+        logger.error('Could not process %s.' % content_type)
         logger.error(e)
         return None
     # REACH version < 1.3.3
