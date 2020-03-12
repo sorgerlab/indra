@@ -82,13 +82,15 @@ Below, SERVICE_HOST should be replaced by the address of the server on which
 the services are running.
 
 Read a given text with a reader and return INDRA Statements (below, <reader>
-can be eidos, sofia or cwms):
+can be eidos, sofia or cwms). Note that for `eidos` specifically, a
+`webservice` parameter should also be passed which points to the address
+on which the Eidos web service is running (see above):
 
 .. code-block:: sh
 
     URL: http://SERVICE_HOST:8000/<reader>/process_text
     Method: POST with JSON content header
-    Input parameters: {"corpus_id": "<corpus-id>", "curations": {"38ce0c14-2c7e-4df8-bd53-3006afeaa193": 0}}
+    Input parameters: {"text": "rainfall causes floods"}
     Output: {}
 
 Submit curations for a set of Statements in a corpus:
