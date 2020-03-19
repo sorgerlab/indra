@@ -230,6 +230,27 @@ def mesh_isa(mesh_id1, mesh_id2):
         return False
 
 
+def get_mesh_tree_number(mesh_id):
+    query_body = """
+        SELECT DISTINCT ?tn
+        FROM <http://id.nlm.nih.gov/mesh>
+        WHERE {
+          mesh:%s meshv:treeNumber ?tn
+        }
+        """ % mesh_id
+    mesh_json = submt_sparql_query(query_body)
+    if mesh_json is None:
+        return None
+    try:
+        results = mesh_json['results']['bindings']
+        tree_uri = results[0]['tn']['value']
+        m = re.match('http://id.nlm.nih.gov/mesh/([A-Z0-9.]*)', tree_uri)
+        tree = m.groups()[0]
+        return tree
+    except Exception:
+        return None
+
+
 def get_go_id(mesh_id):
     """Return a GO ID corresponding to the given MeSH ID.
 
