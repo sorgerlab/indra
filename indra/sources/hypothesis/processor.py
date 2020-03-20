@@ -21,8 +21,8 @@ class HypothesisProcessor:
     def extract_statements(self):
         for annotation in self.annotations:
             stmts = self.stmts_from_annotation(annotation)
-            if stmt:
-                self.statements.append(stmt)
+            if stmts:
+                self.statements += stmts
 
     def stmts_from_annotation(self, annotation):
         text = annotation.get('text')
@@ -30,6 +30,10 @@ class HypothesisProcessor:
             return []
         parts = [t for t in text.split('\n') if t]
         rp = self.reader(parts[0])
+        if not rp or not rp.statements:
+            logger.warning('Could not extract ant statements from %s'
+                           % parts[0])
+            return []
         contexts = {}
         for part in parts[1:]:
             match = re.match(r'(.*): (.*)', part)
@@ -45,14 +49,13 @@ class HypothesisProcessor:
             db_refs['TEXT'] = context_txt
             standard_name = name_from_grounding(terms[0].db, terms[0].id)
             name = standard_name if standard_name else context_txt
-            # TODO: how can we tell what kind of BioContext this is exactly?
-            # Disease, organ, cell type, etc?
             context = RefContext(name=name, db_refs=db_refs)
             contexts[allowed_contexts[context_type]] = context
         bio_context = BioContext(**contexts) if contexts else None
         for stmt in rp.statements:
             stmt.evidence[0].annotations.extend(annotation)
             stmt.evidence[0].context = bio_context
+        return rp.statements
 
 
 allowed_contexts = {
