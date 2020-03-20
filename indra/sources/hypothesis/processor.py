@@ -32,35 +32,16 @@ class HypothesisProcessor:
         text = parts[0]
         rp = self.reader(text)
         if not rp or not rp.statements:
-            logger.warning('Could not extract ant statements from %s'
+            logger.warning('Could not extract any statements from %s'
                            % text)
             return []
-        contexts = {}
-        for part in parts[1:]:
-            match = re.match(r'(.*): (.*)', part)
-            if not match:
-                continue
-            context_type, context_txt = match.groups()
-            if context_type not in allowed_contexts:
-                logger.warning('Unknown context type %s' % context_type)
-                continue
 
-            terms = self.grounder(context_txt)
-            if not terms:
-                logger.warning('Could not ground %s context: %s'
-                               % (context_type, context_txt))
-            db_refs = {}
-            if terms:
-                db_refs = standardize_db_refs({terms[0].term.db:
-                                               terms[0].term.id})
-            db_refs['TEXT'] = context_txt
-            standard_name = None
-            if terms:
-                standard_name = name_from_grounding(terms[0].term.db,
-                                                    terms[0].term.id)
-            name = standard_name if standard_name else context_txt
-            context = RefContext(name=name, db_refs=db_refs)
-            contexts[allowed_contexts[context_type]] = context
+        contexts = {}
+        # We assume that all other parts are related to context
+        for part in parts[1:]:
+            context_dict = get_context_entry(part, self.grounder, text)
+            if context_dict:
+                contexts.update(context_dict)
         bio_context = BioContext(**contexts) if contexts else None
         text_refs = get_text_refs(annotation['uri'])
         # In case we got multiple statements out, we apply the same
@@ -77,6 +58,33 @@ class HypothesisProcessor:
                 ev.annotations['hypothes.is'] = annotation
                 ev.context = bio_context
         return rp.statements
+
+
+def get_context_entry(entry, grounder, sentence):
+    match = re.match(r'(.*): (.*)', entry)
+    if not match:
+        return None
+    context_type, context_txt = match.groups()
+    if context_type not in allowed_contexts:
+        logger.warning('Unknown context type %s' % context_type)
+        return None
+
+    terms = grounder(context_txt, context=sentence)
+    if not terms:
+        logger.warning('Could not ground %s context: %s'
+                       % (context_type, context_txt))
+    db_refs = {}
+    if terms:
+        db_refs = standardize_db_refs({terms[0].term.db:
+                                       terms[0].term.id})
+    db_refs['TEXT'] = context_txt
+    standard_name = None
+    if terms:
+        standard_name = name_from_grounding(terms[0].term.db,
+                                            terms[0].term.id)
+    name = standard_name if standard_name else context_txt
+    context = RefContext(name=name, db_refs=db_refs)
+    return {context_type: context}
 
 
 def get_text_refs(url):
