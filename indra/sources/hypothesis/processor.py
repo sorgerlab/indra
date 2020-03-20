@@ -29,10 +29,11 @@ class HypothesisProcessor:
         if not text:
             return []
         parts = [t for t in text.split('\n') if t]
-        rp = self.reader(parts[0])
+        text = parts[0]
+        rp = self.reader(text)
         if not rp or not rp.statements:
             logger.warning('Could not extract ant statements from %s'
-                           % parts[0])
+                           % text)
             return []
         contexts = {}
         for part in parts[1:]:
@@ -61,11 +62,33 @@ class HypothesisProcessor:
             context = RefContext(name=name, db_refs=db_refs)
             contexts[allowed_contexts[context_type]] = context
         bio_context = BioContext(**contexts) if contexts else None
+        text_refs = get_text_refs(annotation['uri'])
+        # In case we got multiple statements out, we apply the same
+        # annotations to each
         for stmt in rp.statements:
-            stmt.evidence.source_api = 'hypothes.is'
-            stmt.evidence[0].annotations.update(annotation)
-            stmt.evidence[0].context = bio_context
+            # There is expected to be exactly one evidence in all cases
+            # but this is still a good way to work with it
+            for ev in stmt.evidence:
+                ev.source_api = 'hypothes.is'
+                ev.text = text
+                ev.text_refs = text_refs
+                if 'PMID' in text_refs:
+                    ev.pmid = text_refs['PMID']
+                ev.annotations['hypothes.is'] = annotation
+                ev.context = bio_context
         return rp.statements
+
+
+def get_text_refs(url):
+    text_refs = {'URL': url}
+    match = re.match(r'https://www.ncbi.nlm.nih.gov/pubmed/(\d+)', url)
+    if match:
+        text_refs['PMID'] = match.groups()[0]
+    match = re.match(r'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC(\d+)/',
+                     url)
+    if match:
+        text_refs['PMCID'] = match.groups()[0]
+    return text_refs
 
 
 allowed_contexts = {
