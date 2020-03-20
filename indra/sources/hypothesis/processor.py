@@ -45,17 +45,24 @@ class HypothesisProcessor:
                 continue
 
             terms = self.grounder(context_txt)
-            db_refs = standardize_db_refs({terms[0].term.db:
-                                           terms[0].term.id}) \
-                if terms else {}
+            if not terms:
+                logger.warning('Could not ground %s context: %s'
+                               % (context_type, context_txt))
+            db_refs = {}
+            if terms:
+                db_refs = standardize_db_refs({terms[0].term.db:
+                                               terms[0].term.id})
             db_refs['TEXT'] = context_txt
-            standard_name = name_from_grounding(terms[0].term.db,
-                                                terms[0].term.id)
+            standard_name = None
+            if terms:
+                standard_name = name_from_grounding(terms[0].term.db,
+                                                    terms[0].term.id)
             name = standard_name if standard_name else context_txt
             context = RefContext(name=name, db_refs=db_refs)
             contexts[allowed_contexts[context_type]] = context
         bio_context = BioContext(**contexts) if contexts else None
         for stmt in rp.statements:
+            stmt.evidence.source_api = 'hypothes.is'
             stmt.evidence[0].annotations.update(annotation)
             stmt.evidence[0].context = bio_context
         return rp.statements
