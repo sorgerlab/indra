@@ -1,7 +1,10 @@
 import re
+import logging
 from indra.statements import BioContext, RefContext
 from indra.preassembler.grounding_mapper.standardize import \
     standardize_db_refs, name_from_grounding
+
+logger = logging.getLogger(__name__)
 
 
 class HypothesisProcessor:
@@ -27,11 +30,15 @@ class HypothesisProcessor:
             return []
         parts = [t for t in text.split('\n') if t]
         rp = self.reader(parts[0])
+        contexts = {}
         for part in parts[1:]:
-            match = re.match(r'Context: (.*)', part)
+            match = re.match(r'(.*): (.*)', part)
             if not match:
                 continue
-            context_txt = match.groups()[0]
+            context_type, context_txt = match.groups()[0]
+            if context_type not in allowed_contexts:
+                logger.warning('Unknown context type %s' % context_type)
+
             terms = self.grounder(context_txt)
             db_refs = standardize_db_refs({terms[0].db: terms[0].id}) \
                 if terms else {}
@@ -41,6 +48,18 @@ class HypothesisProcessor:
             # TODO: how can we tell what kind of BioContext this is exactly?
             # Disease, organ, cell type, etc?
             context = RefContext(name=name, db_refs=db_refs)
+            contexts[allowed_contexts[context_type]] = context
+        bio_context = BioContext(**contexts) if contexts else None
         for stmt in rp.statements:
             stmt.evidence[0].annotations.extend(annotation)
+            stmt.evidence[0].context = bio_context
 
+
+allowed_contexts = {
+    'Location': 'location',
+    'Cell line': 'cell_line',
+    'Cell type': 'cell_type',
+    'Organ': 'organ',
+    'Disease': 'disease',
+    'Species': 'species'
+}
