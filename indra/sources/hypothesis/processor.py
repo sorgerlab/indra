@@ -25,6 +25,9 @@ class HypothesisProcessor:
                 self.statements += stmts
 
     def stmts_from_annotation(self, annotation):
+        tags = annotation.get('tags', [])
+        if 'gilda' in tags:
+            return []
         text = annotation.get('text')
         if not text:
             return []
@@ -84,7 +87,7 @@ def get_context_entry(entry, grounder, sentence):
                                             terms[0].term.id)
     name = standard_name if standard_name else context_txt
     context = RefContext(name=name, db_refs=db_refs)
-    return {context_type: context}
+    return {allowed_contexts[context_type]: context}
 
 
 def get_text_refs(url):
