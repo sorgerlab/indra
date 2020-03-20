@@ -1,3 +1,5 @@
+__all__ = ['process_annotations']
+
 import requests
 from indra.config import get_config
 from .processor import HypothesisProcessor

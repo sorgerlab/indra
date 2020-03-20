@@ -39,21 +39,24 @@ class HypothesisProcessor:
             match = re.match(r'(.*): (.*)', part)
             if not match:
                 continue
-            context_type, context_txt = match.groups()[0]
+            context_type, context_txt = match.groups()
             if context_type not in allowed_contexts:
                 logger.warning('Unknown context type %s' % context_type)
+                continue
 
             terms = self.grounder(context_txt)
-            db_refs = standardize_db_refs({terms[0].db: terms[0].id}) \
+            db_refs = standardize_db_refs({terms[0].term.db:
+                                           terms[0].term.id}) \
                 if terms else {}
             db_refs['TEXT'] = context_txt
-            standard_name = name_from_grounding(terms[0].db, terms[0].id)
+            standard_name = name_from_grounding(terms[0].term.db,
+                                                terms[0].term.id)
             name = standard_name if standard_name else context_txt
             context = RefContext(name=name, db_refs=db_refs)
             contexts[allowed_contexts[context_type]] = context
         bio_context = BioContext(**contexts) if contexts else None
         for stmt in rp.statements:
-            stmt.evidence[0].annotations.extend(annotation)
+            stmt.evidence[0].annotations.update(annotation)
             stmt.evidence[0].context = bio_context
         return rp.statements
 
