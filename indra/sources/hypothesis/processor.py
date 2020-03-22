@@ -105,7 +105,7 @@ class HypothesisProcessor:
         contexts = {}
         # We assume that all other parts are related to context
         for part in parts[1:]:
-            context_dict = get_context_entry(part, self.grounder, text)
+            context_dict = parse_context_entry(part, self.grounder, text)
             if context_dict:
                 contexts.update(context_dict)
         bio_context = BioContext(**contexts) if contexts else None
@@ -126,8 +126,8 @@ class HypothesisProcessor:
         return rp.statements
 
 
-def get_context_entry(entry, grounder, sentence):
-    """Returnn a dict of context type and object processed from an entry."""
+def parse_context_entry(entry, grounder, sentence=None):
+    """Return a dict of context type and object processed from an entry."""
     match = re.match(r'(.*): (.*)', entry)
     if not match:
         return None
@@ -161,7 +161,7 @@ def parse_grounding_entry(entry):
     match = re.match(r'^\[(.*)\] -> ([^ ]+)$', entry)
     # We log any instances of curations that don't match the pattern
     if not match:
-        logger.warning('"%s" by %s does not match the grounding curation '
+        logger.warning('"%s" does not match the grounding curation '
                        'pattern.' % entry)
         return None
     txt, dbid_str = match.groups()
