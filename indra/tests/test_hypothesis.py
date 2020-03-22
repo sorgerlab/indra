@@ -14,6 +14,27 @@ def test_process_indra_annnotations():
         print(stmt.evidence[0])
 
 
+def test_grounding_annotation():
+    hp = HypothesisProcessor(annotations=[grounding_annot_example])
+    hp.extract_groundings()
+    assert hp.groundings['HCQ'] == {'CHEBI': 'CHEBI:5801'}
+    assert hp.groundings['Plaquenil'] == {'CHEBI': 'CHEBI:5801'}
+
+
+def test_statement_annotation():
+    hp = HypothesisProcessor(annotations=[statement_annot_example])
+    hp.extract_statements()
+    assert len(hp.statements) == 1
+    stmt = hp.statements[0]
+    assert stmt.subj.name == 'AMPK'
+    assert stmt.obj.name == 'STAT3'
+    context = stmt.evidence[0].context
+    assert context.location.name == 'nucleus', context
+    assert context.location.db_refs == {'GO': 'GO:0005634', 'TEXT': 'nucleus'}
+    assert context.organ.name == 'Liver', context
+    assert context.organ.db_refs == {'MESH': 'D008099', 'TEXT': 'liver'}
+
+
 def test_get_text_refs_pmid():
     url = 'https://www.ncbi.nlm.nih.gov/pubmed/32196952'
     refs = get_text_refs(url)
@@ -65,3 +86,20 @@ def test_parse_ungrounded_context_entry():
         context_dict['cell_type'].db_refs
     assert context_dict['cell_type'].db_refs['TEXT'] == \
         'CD4+ T-cells', context_dict['cell_type'].db_refs
+
+
+grounding_annot_example = {
+ 'uri': 'https://en.wikipedia.org/wiki/Hydroxychloroquine',
+ 'text': '[Plaquenil] -> CHEBI:CHEBI:5801\n\n[HCQ] -> CHEBI:CHEBI:5801',
+ 'tags': ['gilda'],
+ 'target': [{'source': 'https://en.wikipedia.org/wiki/Hydroxychloroquine'}],
+ 'document': {'title': ['Hydroxychloroquine - Wikipedia']},
+}
+
+
+statement_annot_example = {
+ 'id': '4nBYAmqwEeq1ujf13__Y-w',
+ 'uri': 'https://www.ncbi.nlm.nih.gov/pubmed/32190173',
+ 'text': 'AMPK activates STAT3\nOrgan: liver\nLocation: nucleus',
+ 'tags': [],
+}
