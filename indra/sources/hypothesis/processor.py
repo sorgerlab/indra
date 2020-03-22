@@ -8,6 +8,34 @@ logger = logging.getLogger(__name__)
 
 
 class HypothesisProcessor:
+    """Processes hypothes.is annotations into INDRA Statements or groundings.
+
+    Parameters
+    ----------
+    annotations : list[dict]
+        A list of annotations fetched from hypothes.is in JSON-deserialized
+        form represented as a list of dicts.
+    reader : Optiona[function]
+        A handle for a function which takes a single str argument
+        (text to process) and returns a processor object with a statements
+        attribute containing INDRA Statements. By default, the REACH reader's
+        process_text function is used with default parameters. Note that
+        if the function requires extra parameters other than the input text,
+        functools.partial can be used to set those.
+    grounder : Optional[function]
+        A handle for a function which takes a positional str argument (entity
+        text to ground) and an optional context key word argument and returns
+        a list of objects matching the structure of gilda.grounder.ScoredMatch.
+        By default, Gilda's ground function is used for grounding.
+
+    Attributes
+    ----------
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements extracted from the given annotations.
+    groundings : dict
+        A dict of entity text keys with an associated dict of grounding
+        references.
+    """
     def __init__(self, annotations, reader=None, grounder=None):
         self.annotations = annotations
         self.statements = []
@@ -20,6 +48,7 @@ class HypothesisProcessor:
             self.grounder = ground
 
     def extract_statements(self):
+        """Sets statements attribute to list of extracted INDRA Statements."""
         for annotation in self.annotations:
             tags = annotation.get('tags')
             # Allow no tags or indra as a tag
@@ -29,6 +58,7 @@ class HypothesisProcessor:
                     self.statements += stmts
 
     def extract_groundings(self):
+        """Sets groundings attribute to list of extracted groundings."""
         for annotation in self.annotations:
             tags = annotation.get('tags')
             if tags and 'gilda' in tags:
@@ -45,40 +75,22 @@ class HypothesisProcessor:
 
                         self.groundings[txt] = refs
 
-    def groundings_from_annotation(self, annotation):
+    @staticmethod
+    def groundings_from_annotation(annotation):
+        """Return a dict of groundings from a single annotation."""
         text = annotation.get('text')
         if not text:
             return {}
         parts = [t for t in text.split('\n') if t]
         groundings = {}
         for entry in parts:
-            grounding = self.parse_grounding_entry(entry)
+            grounding = parse_grounding_entry(entry)
             if grounding:
                 groundings.update(grounding)
         return groundings
 
-    def parse_grounding_entry(self, entry):
-        entry = entry.strip()
-        # We now try to match the standard pattern for grounding curation
-        match = re.match(r'^\[(.*)\] -> ([^ ]+)$', entry)
-        # We log any instances of curations that don't match the pattern
-        if not match:
-            logger.warning('"%s" by %s does not match the grounding curation '
-                           'pattern.' % entry)
-            return None
-        txt, dbid_str = match.groups()
-        # We now get a dict of curated mappings to return
-        try:
-            dbid_entries = [entry.split(':', maxsplit=1)
-                            for entry in dbid_str.split('|')]
-            dbids = {k: v for k, v in dbid_entries}
-        except Exception as e:
-            logger.warning('Could not interpret DB IDs: %s for %s' %
-                           (dbid_str, txt))
-            return None
-        return {txt: dbids}
-
     def stmts_from_annotation(self, annotation):
+        """Return a list of Statements extracted from a single annotation."""
         text = annotation.get('text')
         if not text:
             return []
@@ -115,6 +127,7 @@ class HypothesisProcessor:
 
 
 def get_context_entry(entry, grounder, sentence):
+    """Returnn a dict of context type and object processed from an entry."""
     match = re.match(r'(.*): (.*)', entry)
     if not match:
         return None
@@ -141,7 +154,31 @@ def get_context_entry(entry, grounder, sentence):
     return {allowed_contexts[context_type]: context}
 
 
+def parse_grounding_entry(entry):
+    """Return a dict representing single grounding curation entry string."""
+    entry = entry.strip()
+    # We now try to match the standard pattern for grounding curation
+    match = re.match(r'^\[(.*)\] -> ([^ ]+)$', entry)
+    # We log any instances of curations that don't match the pattern
+    if not match:
+        logger.warning('"%s" by %s does not match the grounding curation '
+                       'pattern.' % entry)
+        return None
+    txt, dbid_str = match.groups()
+    # We now get a dict of curated mappings to return
+    try:
+        dbid_entries = [entry.split(':', maxsplit=1)
+                        for entry in dbid_str.split('|')]
+        dbids = {k: v for k, v in dbid_entries}
+    except Exception as e:
+        logger.warning('Could not interpret DB IDs: %s for %s' %
+                       (dbid_str, txt))
+        return None
+    return {txt: dbids}
+
+
 def get_text_refs(url):
+    """Return the parsed out text reference dict from an URL."""
     text_refs = {'URL': url}
     match = re.match(r'https://www.ncbi.nlm.nih.gov/pubmed/(\d+)', url)
     if match:
