@@ -20,6 +20,7 @@ def main():
                       'trips_offline': ['pykqml'],
                       'reach_offline': ['cython', 'pyjnius==1.1.4'],
                       'eidos_offline': ['pyyaml>=5.1.0', 'cython', 'pyjnius==1.1.4'],
+                      'hypothesis': ['gilda'],
                       'geneways': ['stemming', 'nltk'],
                       'sofia': ['openpyxl'],
                       'bel': ['pybel>=0.14.2,<0.15.0'],
