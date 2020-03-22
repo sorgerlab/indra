@@ -11,6 +11,7 @@ class HypothesisProcessor:
     def __init__(self, annotations, reader=None, grounder=None):
         self.annotations = annotations
         self.statements = []
+        self.groundings = {}
         if reader is None:
             from indra.sources import reach
             self.reader = reach.process_text
@@ -20,14 +21,64 @@ class HypothesisProcessor:
 
     def extract_statements(self):
         for annotation in self.annotations:
-            stmts = self.stmts_from_annotation(annotation)
-            if stmts:
-                self.statements += stmts
+            tags = annotation.get('tags')
+            # Allow no tags or indra as a tag
+            if not tags or 'indra' in tags:
+                stmts = self.stmts_from_annotation(annotation)
+                if stmts:
+                    self.statements += stmts
+
+    def extract_groundings(self):
+        for annotation in self.annotations:
+            tags = annotation.get('tags')
+            if tags and 'gilda' in tags:
+                groundings = self.groundings_from_annotation(annotation)
+                if groundings:
+                    for txt, refs in groundings.items():
+                        if txt in self.groundings and \
+                                (self.groundings[txt] != refs):
+                            logger.info(
+                                'There is already a curation for %s: %s, '
+                                'overwriting with %s' % (txt,
+                                                         str(groundings[txt]),
+                                                         str(refs)))
+
+                        self.groundings[txt] = refs
+
+    def groundings_from_annotation(self, annotation):
+        text = annotation.get('text')
+        if not text:
+            return {}
+        parts = [t for t in text.split('\n') if t]
+        groundings = {}
+        for entry in parts:
+            grounding = self.parse_grounding_entry(entry)
+            if grounding:
+                groundings.update(grounding)
+        return groundings
+
+    def parse_grounding_entry(self, entry):
+        entry = entry.strip()
+        # We now try to match the standard pattern for grounding curation
+        match = re.match(r'^\[(.*)\] -> ([^ ]+)$', entry)
+        # We log any instances of curations that don't match the pattern
+        if not match:
+            logger.warning('"%s" by %s does not match the grounding curation '
+                           'pattern.' % entry)
+            return None
+        txt, dbid_str = match.groups()
+        # We now get a dict of curated mappings to return
+        try:
+            dbid_entries = [entry.split(':', maxsplit=1)
+                            for entry in dbid_str.split('|')]
+            dbids = {k: v for k, v in dbid_entries}
+        except Exception as e:
+            logger.warning('Could not interpret DB IDs: %s for %s' %
+                           (dbid_str, txt))
+            return None
+        return {txt: dbids}
 
     def stmts_from_annotation(self, annotation):
-        tags = annotation.get('tags', [])
-        if 'gilda' in tags:
-            return []
         text = annotation.get('text')
         if not text:
             return []

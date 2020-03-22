@@ -33,4 +33,5 @@ def process_annotations(group=None, reader=None, grounder=None):
     annotations = res.get('rows', [])
     hp = HypothesisProcessor(annotations, reader=reader, grounder=grounder)
     hp.extract_statements()
+    hp.extract_groundings()
     return hp
