@@ -183,7 +183,7 @@ def get_text_refs(url):
     match = re.match(r'https://www.ncbi.nlm.nih.gov/pubmed/(\d+)', url)
     if match:
         text_refs['PMID'] = match.groups()[0]
-    match = re.match(r'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC(\d+)/',
+    match = re.match(r'https://www.ncbi.nlm.nih.gov/pmc/articles/(PMC\d+)/',
                      url)
     if match:
         text_refs['PMCID'] = match.groups()[0]
