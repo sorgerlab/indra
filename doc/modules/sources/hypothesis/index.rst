@@ -1,6 +1,9 @@
 Hypothes.is (:py:mod:`indra.sources.hypothesis`)
 ================================================
 
+.. automodule:: indra.sources.hypothesis
+    :members:
+
 Hypothes.is API (:py:mod:`indra.sources.hypothesis.api`)
 --------------------------------------------------------
 
