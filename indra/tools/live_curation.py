@@ -350,6 +350,17 @@ class Corpus(object):
         if self.curations and save_to_cache and not look_in_cache:
             self._save_to_cache(cur=file_key)
 
+    def get_curations(self, corpus_id, look_in_cache=False):
+        if self.curations:
+            curations = self.curations
+        elif look_in_cache:
+            file_key = _clean_key(corpus_id) + '/' + \
+                       file_defaults['cur'] + '.json'
+            curations = self._load_from_cache(file_key)
+        else:
+            curations = {}
+        return curations
+
     @staticmethod
     def _load_from_cache(file_key):
         # Assuming file_key is cleaned, contains the file name and contains
