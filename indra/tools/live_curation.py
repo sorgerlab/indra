@@ -746,6 +746,23 @@ class LiveCurator(object):
 curator = LiveCurator(corpora=corpora)
 
 
+@app.route('/download_curation', methods=['POST'])
+def download_curation():
+    """Download the curations for the given corpus id"""
+    if request.json is None:
+        abort(Response('Missing application/json header.', 415))
+    # Get corpus id, reader name
+    corpus_id = request.json.get('corpus_id')
+    reader_name = request.json.get('reader', 'all')
+    try:
+        curation_data = curator.get_curations(corpus_id=corpus_id,
+                                              reader=reader_name)
+    except InvalidCorpusError:
+        abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
+        return
+    return jsonify(curation_data)
+
+
 @app.route('/reset_curation', methods=['POST'])
 def reset_curation():
     """Reset the curations submitted until now."""
