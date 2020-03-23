@@ -350,10 +350,26 @@ class Corpus(object):
         if self.curations and save_to_cache and not look_in_cache:
             self._save_to_cache(cur=file_key)
 
-    def get_curations(self, corpus_id, look_in_cache=False):
+    def get_curations(self, corpus_id=None, look_in_cache=False):
+        """Get curations for the corpus
+
+        Parameters
+        ----------
+        corpus_id : str
+            The id of the corpus. Must be provided if look_in_cache is True
+        look_in_cache : bool
+            If True, look in local cache if there are no curations loaded
+
+        Returns
+        -------
+        dict
+            The curations for this corpus, if any
+        """
         if self.curations:
             curations = self.curations
         elif look_in_cache:
+            if corpus_id is None:
+                raise ValueError('Must provide corpus id for cache lookup')
             file_key = _clean_key(corpus_id) + '/' + \
                 file_defaults['cur'] + '.json'
             curations = self._load_from_cache(file_key) or {}
