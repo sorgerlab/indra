@@ -544,6 +544,51 @@ class LiveCurator(object):
 
         return corpus
 
+    def get_curations(self, corpus_id, reader):
+        """Download curations for corpus id filtered to reader
+
+        Parameters
+        ----------
+        corpus_id: str
+            The ID of the corpus to download curations from
+        reader : str
+            The name of the reader to filter to. Has to be among valid
+            reader names of 'all'.
+
+        Returns
+        -------
+        dict
+            A dict containing the requested curations
+        """
+        logger.info('Getting curations for corpus %s' % corpus_id)
+        corpus = self.get_corpus(corpus_id, check_s3=True, use_cache=True)
+        corpus_curations = corpus.get_curations(corpus_id,
+                                                look_in_cache=True)
+        # Get all statements that have curations
+        curated_stmts = {}
+        for uuid in corpus_curations:
+            curated_stmts[uuid] = corpus.statements[uuid]
+        if reader and reader != 'all':
+            # Filter out statements and curations that don't contain material
+            # from provided reader (in source api of statement)
+            filtered_curations = {}
+            filtered_stmts = {}
+            for uuid, stmt in curated_stmts.items():
+                # Check if any of the evidences are from the provided reader
+                for ev in stmt.evidence:
+                    if ev.source_api == reader.lower():
+                        filtered_stmts[uuid] = stmt
+                        filtered_curations[uuid] = corpus_curations[uuid]
+                        break
+            data = {'curations': filtered_curations,
+                    'statements': {uuid: st.to_json() for uuid, st in
+                                   filtered_stmts.items()}}
+        else:
+            data = {'curations': corpus_curations,
+                    'statements': {uuid: st.to_json() for uuid, st in
+                                   curated_stmts.items()}}
+        return data
+
     def submit_curation(self, corpus_id, curations):
         """Submit correct/incorrect curations fo a given corpus.
 
