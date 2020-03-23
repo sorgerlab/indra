@@ -262,30 +262,30 @@ class Corpus(object):
             # Get and process raw statements
             raw_stmt_jsons = []
             if cache:
-                raw_stmt_jsons = self._load_from_cache(raw)
+                raw_stmt_jsons = self._load_from_cache(raw) or []
             if not raw_stmt_jsons:
                 raw_stmt_jsons_str = s3.get_object(
                     Bucket=bucket, Key=raw)['Body'].read()
-                raw_stmt_jsons = json.loads(raw_stmt_jsons_str)
+                raw_stmt_jsons = json.loads(raw_stmt_jsons_str) or []
             self.raw_statements = stmts_from_json(raw_stmt_jsons)
 
             # Get and process assembled statements from list to dict
             json_stmts = []
             if cache:
-                json_stmts = self._load_from_cache(sts)
+                json_stmts = self._load_from_cache(sts) or []
             if not json_stmts:
                 json_stmts = json.loads(s3.get_object(
-                    Bucket=bucket, Key=sts)['Body'].read())
+                    Bucket=bucket, Key=sts)['Body'].read()) or []
 
             self.statements = _json_to_stmts_dict(json_stmts)
 
             # Get and process curations if any
             curation_json = {}
             if cache:
-                curation_json = self._load_from_cache(cur)
+                curation_json = self._load_from_cache(cur) or {}
             if not curation_json:
                 curation_json = json.loads(s3.get_object(
-                    Bucket=bucket, Key=cur)['Body'].read())
+                    Bucket=bucket, Key=cur)['Body'].read()) or {}
             self.curations = curation_json
 
             meta_json = {}
@@ -355,8 +355,8 @@ class Corpus(object):
             curations = self.curations
         elif look_in_cache:
             file_key = _clean_key(corpus_id) + '/' + \
-                       file_defaults['cur'] + '.json'
-            curations = self._load_from_cache(file_key)
+                file_defaults['cur'] + '.json'
+            curations = self._load_from_cache(file_key) or {}
         else:
             curations = {}
         return curations
