@@ -150,29 +150,22 @@ def standardize_agent_name(agent, standardize_refs=True):
     if not db_ns or not db_id:
         return
 
-    # If there's a FamPlex ID, prefer that for the name
+    standard_name = name_from_grounding(db_ns, db_id)
+    if standard_name:
+        agent.name = standard_name
+
+
+def name_from_grounding(db_ns, db_id):
     if db_ns == 'FPLX':
-        agent.name = db_id
-    # Importantly, HGNC here will be a symbol because that is what
-    # get_grounding returns
+        return db_id
     elif db_ns == 'HGNC':
-        agent.name = hgnc_client.get_hgnc_name(db_id)
+        return hgnc_client.get_hgnc_name(db_id)
     elif db_ns == 'UP':
-        # Try for the gene name
-        gene_name = uniprot_client.get_gene_name(db_id, web_fallback=False)
-        if gene_name:
-            agent.name = gene_name
+        return uniprot_client.get_gene_name(db_id, web_fallback=False)
     elif db_ns == 'CHEBI':
-        chebi_name = \
-            chebi_client.get_chebi_name_from_id(db_id)
-        if chebi_name:
-            agent.name = chebi_name
+        return chebi_client.get_chebi_name_from_id(db_id)
     elif db_ns == 'MESH':
-        mesh_name = mesh_client.get_mesh_name(db_id, False)
-        if mesh_name:
-            agent.name = mesh_name
+        return mesh_client.get_mesh_name(db_id, False)
     elif db_ns == 'GO':
-        go_name = go_client.get_go_label(db_id)
-        if go_name:
-            agent.name = go_name
-    return
+        return go_client.get_go_label(db_id)
+    return None

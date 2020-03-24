@@ -52,3 +52,4 @@ Custom Knowledge Bases
    lincs_drug/index
    ndex_cx/index
    indra_db_rest/index
+   hypothesis/index
