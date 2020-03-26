@@ -16,6 +16,7 @@ _stmt_map = {
     'NEGATIVE_INFLUENCE': Inhibition,
     'POSITIVE_INFLUENCE': Activation,
     'binds': Complex,
+    'interacts with': Complex,
 }
 
 
