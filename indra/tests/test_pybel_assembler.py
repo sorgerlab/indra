@@ -123,6 +123,7 @@ def test_modification_with_evidences():
     assert 'source_api' in edge_data[pc.ANNOTATIONS]
     assert edge_data[pc.ANNOTATIONS]['source_api'] == 'test'
     assert 'source_id' not in edge_data[pc.ANNOTATIONS]
+    assert 'source_hash' in edge_data[pc.ANNOTATIONS]
 
 
 def test_modification_with_mutation():
