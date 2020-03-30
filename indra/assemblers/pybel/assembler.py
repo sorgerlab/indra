@@ -589,7 +589,9 @@ def _get_evidence(evidence):
                     pc.CITATION_IDENTIFIER: cit_ref_str}
     pybel_ev[pc.CITATION] = citation
 
-    annotations = {}
+    annotations = {
+        'indra_evidence_hash': evidence.source_hash, 
+    }
     if evidence.source_api:
         annotations['source_api'] = evidence.source_api
     if evidence.source_id:
