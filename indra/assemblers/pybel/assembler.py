@@ -72,11 +72,12 @@ class PybelAssembler(object):
     """
     def __init__(self, stmts=None, name=None, description=None, version=None,
                  authors=None, contact=None, license=None, copyright=None,
-                 disclaimer=None):
+                 disclaimer=None, allow_ungrounded=False):
         if stmts is None:
             self.statements = []
         else:
             self.statements = stmts
+        self.allow_ungrounded = allow_ungrounded
         if name is None:
             name = 'indra'
         if version is None:
@@ -227,8 +228,8 @@ class PybelAssembler(object):
     def _add_nodes_edges(self, subj_agent, obj_agent, relation, stmt_hash,
                          evidences):
         """Given subj/obj agents, relation, and evidence, add nodes/edges."""
-        subj_data, subj_edge = _get_agent_node(subj_agent)
-        obj_data, obj_edge = _get_agent_node(obj_agent)
+        subj_data, subj_edge = _get_agent_node(subj_agent, self.allow_ungrounded)
+        obj_data, obj_edge = _get_agent_node(obj_agent, self.allow_ungrounded)
         # If we failed to create nodes for subject or object, skip it
         if subj_data is None or obj_data is None:
             return
@@ -317,7 +318,7 @@ class PybelAssembler(object):
 
     def _assemble_complex(self, stmt):
         """Example: complex(p(HGNC:MAPK14), p(HGNC:TAB1))"""
-        complex_data, _ = _get_complex_node(stmt.members)
+        complex_data, _ = _get_complex_node(stmt.members, self.allow_ungrounded)
         if complex_data is None:
             logger.info('skip adding complex with no members: %s', stmt.members)
             return
@@ -330,7 +331,7 @@ class PybelAssembler(object):
         for pybel_list, agent_list in \
                             zip(pybel_lists, (stmt.obj_from, stmt.obj_to)):
             for agent in agent_list:
-                node = _get_agent_grounding(agent)
+                node = _get_agent_grounding(agent, self.allow_ungrounded)
                 # TODO check for missing grounding?
                 pybel_list.append(node)
 
@@ -342,7 +343,8 @@ class PybelAssembler(object):
         obj_edge = None  # TODO: Any edge information possible here?
         # Add node for controller, if there is one
         if stmt.subj is not None:
-            subj_attr, subj_edge = _get_agent_node(stmt.subj)
+            subj_attr, subj_edge = _get_agent_node(stmt.subj,
+                                                   self.allow_ungrounded)
             self.model.add_node_from_data(subj_attr)
             edge_data_list = _combine_edge_data(
                 pc.DIRECTLY_INCREASES, subj_edge, obj_edge,
@@ -440,26 +442,26 @@ def _combine_edge_data(relation, subj_edge, obj_edge, stmt_hash, evidences):
     return edge_data_list
 
 
-def _get_agent_node(agent):
+def _get_agent_node(agent, allow_ungrounded=False):
     if not agent.bound_conditions:
-        return _get_agent_node_no_bcs(agent)
+        return _get_agent_node_no_bcs(agent, allow_ungrounded)
 
     # Check if bound conditions are bound to agent
     bound_conditions = [
         bc.agent for bc in agent.bound_conditions if bc.is_bound]
     if not bound_conditions:
-        return _get_agent_node_no_bcs(agent)
+        return _get_agent_node_no_bcs(agent, allow_ungrounded)
     # "Flatten" the bound conditions for the agent at this level
     agent_no_bc = deepcopy(agent)
     agent_no_bc.bound_conditions = []
     members = [agent_no_bc] + bound_conditions
-    return _get_complex_node(members)
+    return _get_complex_node(members, allow_ungrounded)
 
 
-def _get_complex_node(members):
+def _get_complex_node(members, allow_ungrounded=False):
     members_list = []
     for member in members:
-        member_data, member_edge = _get_agent_node(member)
+        member_data, member_edge = _get_agent_node(member, allow_ungrounded)
         if member_data:
             members_list.append(member_data)
 
@@ -470,8 +472,8 @@ def _get_complex_node(members):
     return None, None
 
 
-def _get_agent_node_no_bcs(agent):
-    node_data = _get_agent_grounding(agent)
+def _get_agent_node_no_bcs(agent, allow_ungrounded=False):
+    node_data = _get_agent_grounding(agent, allow_ungrounded)
     if node_data is None:
         logger.warning('Agent %s has no grounding.', agent)
         return None, None
@@ -508,7 +510,7 @@ def _get_agent_node_no_bcs(agent):
     return node_data, edge_data
 
 
-def _get_agent_grounding(agent):
+def _get_agent_grounding(agent, allow_ungrounded=False):
     """Convert an agent to the corresponding PyBEL DSL object (to be filled with variants later)."""
     def _get_id(_agent, key):
         _id = _agent.db_refs.get(key)
@@ -563,8 +565,10 @@ def _get_agent_grounding(agent):
     if mesh_id:
         return bioprocess('MESH', name=agent.name, identifier=mesh_id)
 
-    return
+    if allow_ungrounded:
+        return abundance('FIXME', name=agent.name)
 
+    return
 
 def _get_agent_activity(agent):
     ac = agent.activity
