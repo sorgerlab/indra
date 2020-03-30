@@ -218,11 +218,11 @@ class PybelAssembler(object):
         else:
             with open(path, 'w') as fh:
                 if output_format == 'json':
-                    pybel.to_json_file(self.model, fh)
+                    pybel.to_nodelink_file(self.model, fh)
                 elif output_format == 'cx':
                     pybel.to_cx_file(self.model, fh)
                 else: # output_format == 'bel':
-                    pybel.to_bel(self.model, fh)
+                    pybel.to_bel_script(self.model, fh)
 
     def _add_nodes_edges(self, subj_agent, obj_agent, relation, stmt_hash,
                          evidences):
