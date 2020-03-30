@@ -8,6 +8,7 @@ import pybel
 import pybel.constants as pc
 from pybel.dsl import *
 from pybel.language import pmod_namespace
+from pybel.utils import citation_dict
 from indra.statements import *
 from indra.databases import hgnc_client
 
@@ -414,20 +415,27 @@ def belgraph_to_signed_graph(
 
 
 def _combine_edge_data(relation, subj_edge, obj_edge, stmt_hash, evidences):
-    edge_data = {pc.RELATION: relation}
+    edge_data = {
+        pc.RELATION: relation,
+        pc.ANNOTATIONS: {},
+    }
     if subj_edge:
         edge_data[pc.SUBJECT] = subj_edge
     if obj_edge:
         edge_data[pc.OBJECT] = obj_edge
     if stmt_hash:
-        edge_data['stmt_hash'] = stmt_hash
+        edge_data[pc.ANNOTATIONS]['stmt_hash'] = stmt_hash
     if not evidences:
         return [edge_data]
     edge_data_list = []
     for ev in evidences:
-        pybel_ev = _get_evidence(ev)
         edge_data_one = copy(edge_data)
-        edge_data_one.update(pybel_ev)
+        citation, evidence, annotations = _get_evidence(ev)
+        edge_data.update({
+            pc.CITATION: citation,
+            pc.EVIDENCE: evidence,
+        })
+        edge_data[pc.ANNOTATIONS].update(annotations)
         edge_data_list.append(edge_data_one)
     return edge_data_list
 
@@ -574,20 +582,23 @@ def _get_agent_activity(agent):
 
 def _get_evidence(evidence):
     text = evidence.text if evidence.text else 'No evidence text.'
-    pybel_ev = {pc.EVIDENCE: text}
+
     # If there is a PMID, use it as the citation
     if evidence.pmid:
-        citation = {pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
-                    pc.CITATION_IDENTIFIER: evidence.pmid}
+        citation = citation_dict(
+            db=pc.CITATION_TYPE_PUBMED,
+            db_id=evidence.pmid,
+        )
     # If no PMID, include the interface and source_api for now--
     # in general this should probably be in the annotations for all evidence
     else:
-        cit_source = evidence.source_api if evidence.source_api else 'Unknown'
-        cit_id = evidence.source_id if evidence.source_id else 'Unknown'
+        cit_source = evidence.source_api or 'Unknown'
+        cit_id = evidence.source_id or 'Unknown'
         cit_ref_str = '%s:%s' % (cit_source, cit_id)
-        citation = {pc.CITATION_DB: pc.CITATION_TYPE_OTHER,
-                    pc.CITATION_IDENTIFIER: cit_ref_str}
-    pybel_ev[pc.CITATION] = citation
+        citation = citation_dict(
+            db=pc.CITATION_TYPE_OTHER,
+            db_id=cit_ref_str,
+        )
 
     annotations = {
         'source_hash': evidence.get_source_hash(),
@@ -601,10 +612,7 @@ def _get_evidence(evidence):
             continue
         annotations[key] = value
 
-    if annotations:
-        pybel_ev[pc.ANNOTATIONS] = annotations
-
-    return pybel_ev
+    return citation, text, annotations
 
 
 def get_causal_edge(stmt, activates):
