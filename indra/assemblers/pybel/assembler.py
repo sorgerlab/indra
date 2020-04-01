@@ -431,11 +431,11 @@ def _combine_edge_data(relation, subj_edge, obj_edge, stmt_hash, evidences):
     for ev in evidences:
         edge_data_one = copy(edge_data)
         citation, evidence, annotations = _get_evidence(ev)
-        edge_data.update({
+        edge_data_one.update({
             pc.CITATION: citation,
             pc.EVIDENCE: evidence,
         })
-        edge_data[pc.ANNOTATIONS].update(annotations)
+        edge_data_one[pc.ANNOTATIONS].update(annotations)
         edge_data_list.append(edge_data_one)
     return edge_data_list
 
