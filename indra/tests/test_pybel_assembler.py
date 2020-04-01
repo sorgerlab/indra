@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """Tests for the PyBEL assembler."""
-
+import json
 import networkx as nx
 import pybel.constants as pc
-from indra.assemblers.pybel import assembler as pa
-from indra.databases import hgnc_client
-from indra.statements import *
 from pybel.dsl import abundance, activity, bioprocess, \
     complex_abundance, hgvs, pmod, protein, reaction
 
@@ -115,7 +112,7 @@ def test_modification_with_evidences():
     edge_data = get_edge_data(belgraph, braf_dsl, map2k1_mod_dsl)
     assert edge_data.get(pc.SUBJECT) == activity('kin')
     assert edge_data[pc.RELATION] == pc.INCREASES
-    assert edge_data[pc.EVIDENCE] == 'evidence text'
+    assert edge_data.get(pc.EVIDENCE) == 'evidence text', edge_data
     assert edge_data[pc.CITATION] == {
         pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
         pc.CITATION_IDENTIFIER: '1234',
@@ -151,13 +148,13 @@ def test_activation():
     edge1 = {
         pc.RELATION: pc.INCREASES,
         pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY},
-        'stmt_hash': hash1
+        'annotations': {'stmt_hash': hash1}
     }
     edge2 = {
         pc.RELATION: pc.INCREASES,
         pc.SUBJECT: activity('kin'),
         pc.OBJECT: activity('kin'),
-        'stmt_hash': hash2
+        'annotations': {'stmt_hash': hash2}
     }
     for stmt, edge in ((stmt1, edge1), (stmt2, edge2)):
         pba = pa.PybelAssembler([stmt])
@@ -167,7 +164,7 @@ def test_activation():
         assert map2k1_dsl in belgraph
         assert belgraph.number_of_edges() == 1
         edge_data = get_first_edge_data(belgraph)
-        assert edge_data == edge
+        assert edge_data == edge, edge_data
 
 
 def test_direct_activation():
@@ -191,7 +188,8 @@ def test_direct_activation():
             pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
             pc.CITATION_IDENTIFIER: '1234',
         },
-        'stmt_hash': hash1
+        'annotations': {'stmt_hash': hash1,
+                        'source_hash': stmt1_ev.get_source_hash()}
     }
     edge2 = {
         pc.RELATION: pc.DIRECTLY_INCREASES,
@@ -202,7 +200,8 @@ def test_direct_activation():
             pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
             pc.CITATION_IDENTIFIER: '1234',
         },
-        'stmt_hash': hash2
+        'annotations': {'stmt_hash': hash2,
+                        'source_hash': stmt1_ev.get_source_hash()}
     }
     for stmt, expected_edge in ((stmt1, edge1), (stmt2, edge2)):
         pba = pa.PybelAssembler([stmt])
@@ -212,7 +211,7 @@ def test_direct_activation():
         assert map2k1_dsl in belgraph
         assert belgraph.number_of_edges() == 1
         edge_data = get_first_edge_data(belgraph)
-        assert expected_edge == edge_data
+        assert expected_edge == edge_data, json.dumps(edge_data, indent=1)
 
 
 def test_inhibition():
@@ -225,7 +224,7 @@ def test_inhibition():
         pc.RELATION: pc.DECREASES,
         pc.SUBJECT: activity('kin'),
         pc.OBJECT: activity('kin'),
-        'stmt_hash': stmt_hash
+        'annotations': {'stmt_hash': stmt_hash}
     }
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
@@ -234,7 +233,7 @@ def test_inhibition():
     assert map2k1_dsl in belgraph
     assert belgraph.number_of_edges() == 1
     edge_data = get_first_edge_data(belgraph)
-    assert edge_data == edge
+    assert edge_data == edge, edge_data
 
 
 def test_increase_amount():
@@ -292,9 +291,9 @@ def test_gef():
         pc.RELATION: pc.DIRECTLY_INCREASES,
         pc.SUBJECT: activity('gef'),
         pc.OBJECT: activity('gtp'),
-        'stmt_hash': stmt_hash
+        'annotations': {'stmt_hash': stmt_hash}
     }
-    assert edge_data == edge
+    assert edge_data == edge, edge_data
 
 
 def test_gap():
@@ -321,9 +320,9 @@ def test_gap():
         pc.RELATION: pc.DIRECTLY_DECREASES,
         pc.SUBJECT: activity('gap'),
         pc.OBJECT: activity('gtp'),
-        'stmt_hash': stmt_hash
+        'annotations': {'stmt_hash': stmt_hash}
     }
-    assert edge_data == edge
+    assert edge_data == edge, edge_data
 
 
 def test_active_form():
@@ -421,7 +420,8 @@ def test_autophosphorylation():
     # There will be two edges between these nodes
     edge_dicts = list(belgraph.get_edge_data(egfr_dsl,
                                              egfr_phos_node).values())
-    assert {pc.RELATION: pc.DIRECTLY_INCREASES, 'stmt_hash': stmt_hash} \
+    assert {pc.RELATION: pc.DIRECTLY_INCREASES,
+            'annotations': {'stmt_hash': stmt_hash}} \
         in edge_dicts
 
     # Test an autophosphorylation with a bound condition
@@ -461,9 +461,10 @@ def test_bound_condition():
                  {
                      pc.RELATION: pc.DIRECTLY_INCREASES,
                      pc.OBJECT: activity('gtp'),
-                     'stmt_hash': stmt_hash
+                     'annotations': {'stmt_hash': stmt_hash}
                  })
-    assert edge_data in belgraph.edges(data=True)
+    belgraph_edges = belgraph.edges(data=True)
+    assert edge_data in belgraph_edges, belgraph_edges
 
 
 def test_transphosphorylation():
@@ -481,7 +482,11 @@ def test_transphosphorylation():
     egfr_phos_node = egfr_dsl.with_variants(pmod('Ph', 'Tyr', 1173))
     edge_data = get_edge_data(belgraph, egfr_dimer_node, egfr_phos_node)
     assert edge_data == {
-        pc.RELATION: pc.DIRECTLY_INCREASES, 'stmt_hash': stmt_hash}
+        pc.RELATION: pc.DIRECTLY_INCREASES,
+        'annotations': {
+            'stmt_hash': stmt_hash
+        }
+    }, edge_data
 
 
 """
