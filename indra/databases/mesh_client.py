@@ -2,6 +2,7 @@ import os
 import re
 import json
 import requests
+import itertools
 from functools import lru_cache
 from os.path import abspath, dirname, join, pardir
 from indra.util import read_unicode_csv
@@ -212,6 +213,15 @@ def get_mesh_id_name_from_web(mesh_term):
 
 
 def mesh_isa(mesh_id1, mesh_id2):
+    tns1 = get_mesh_tree_numbers(mesh_id1)
+    tns2 = get_mesh_tree_numbers(mesh_id2)
+    for t1, t2 in itertools.product(tns1, tns2):
+        if t1.startswith(t2):
+            return True
+    return False
+
+
+def mesh_isa_web(mesh_id1, mesh_id2):
     query_body = """
         SELECT DISTINCT ?o
         FROM <http://id.nlm.nih.gov/mesh>
