@@ -11,7 +11,6 @@ HERE = dirname(abspath(__file__))
 RESOURCES = join(HERE, pardir, 'resources')
 MESH_FILE = join(RESOURCES, 'mesh_id_label_mappings.tsv')
 MESH_SUPP_FILE = join(RESOURCES, 'mesh_supp_id_label_mappings.tsv')
-GO_MAPPINGS = join(RESOURCES, 'mesh_go_mappings.tsv')
 DB_MAPPINGS = join(RESOURCES, 'mesh_mappings.tsv')
 
 
@@ -39,18 +38,6 @@ def _load_mesh_file(path):
 _load_mesh_file(MESH_FILE)
 if os.path.exists(MESH_SUPP_FILE):
     _load_mesh_file(MESH_SUPP_FILE)
-
-
-def _load_go_mappings(path):
-    mesh_to_go = {}
-    go_to_mesh = {}
-    for mesh_id, go_id in read_unicode_csv(path, delimiter='\t'):
-        mesh_to_go[mesh_id] = go_id
-        go_to_mesh[go_id] = mesh_id
-    return mesh_to_go, go_to_mesh
-
-
-mesh_to_go, go_to_mesh = _load_go_mappings(GO_MAPPINGS)
 
 
 def _load_db_mappings(path):
@@ -340,7 +327,10 @@ def get_go_id(mesh_id):
     str
         The GO ID corresponding to the given MeSH ID, or None if not available.
     """
-    return mesh_to_go.get(mesh_id)
+    res = get_db_mapping(mesh_id)
+    if res and res[0] == 'GO':
+        return res[1]
+    return None
 
 
 def get_mesh_id_from_go_id(go_id):
@@ -357,7 +347,7 @@ def get_mesh_id_from_go_id(go_id):
         The MeSH ID corresponding to the given GO ID, or None if not
         available.
     """
-    return go_to_mesh.get(go_id)
+    return get_mesh_id_from_db_id('GO', go_id)
 
 
 def get_db_mapping(mesh_id):
