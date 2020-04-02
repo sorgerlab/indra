@@ -148,13 +148,17 @@ def test_activation():
     edge1 = {
         pc.RELATION: pc.INCREASES,
         pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY},
-        'annotations': {'stmt_hash': hash1}
+        pc.ANNOTATIONS: {
+            'stmt_hash': hash1,
+        },
     }
     edge2 = {
         pc.RELATION: pc.INCREASES,
         pc.SUBJECT: activity('kin'),
         pc.OBJECT: activity('kin'),
-        'annotations': {'stmt_hash': hash2}
+        pc.ANNOTATIONS: {
+            'stmt_hash': hash2,
+        },
     }
     for stmt, edge in ((stmt1, edge1), (stmt2, edge2)):
         pba = pa.PybelAssembler([stmt])
@@ -188,8 +192,10 @@ def test_direct_activation():
             pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
             pc.CITATION_IDENTIFIER: '1234',
         },
-        'annotations': {'stmt_hash': hash1,
-                        'source_hash': stmt1_ev.get_source_hash()}
+        pc.ANNOTATIONS: {
+            'stmt_hash': hash1,
+            'source_hash': stmt1_ev.get_source_hash(),
+        },
     }
     edge2 = {
         pc.RELATION: pc.DIRECTLY_INCREASES,
@@ -200,8 +206,10 @@ def test_direct_activation():
             pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
             pc.CITATION_IDENTIFIER: '1234',
         },
-        'annotations': {'stmt_hash': hash2,
-                        'source_hash': stmt1_ev.get_source_hash()}
+        pc.ANNOTATIONS: {
+            'stmt_hash': hash2,
+            'source_hash': stmt1_ev.get_source_hash(),
+        },
     }
     for stmt, expected_edge in ((stmt1, edge1), (stmt2, edge2)):
         pba = pa.PybelAssembler([stmt])
@@ -224,7 +232,9 @@ def test_inhibition():
         pc.RELATION: pc.DECREASES,
         pc.SUBJECT: activity('kin'),
         pc.OBJECT: activity('kin'),
-        'annotations': {'stmt_hash': stmt_hash}
+        pc.ANNOTATIONS: {
+            'stmt_hash': stmt_hash,
+        },
     }
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
@@ -291,7 +301,9 @@ def test_gef():
         pc.RELATION: pc.DIRECTLY_INCREASES,
         pc.SUBJECT: activity('gef'),
         pc.OBJECT: activity('gtp'),
-        'annotations': {'stmt_hash': stmt_hash}
+        pc.ANNOTATIONS: {
+            'stmt_hash': stmt_hash,
+        },
     }
     assert edge_data == edge, edge_data
 
@@ -320,7 +332,9 @@ def test_gap():
         pc.RELATION: pc.DIRECTLY_DECREASES,
         pc.SUBJECT: activity('gap'),
         pc.OBJECT: activity('gtp'),
-        'annotations': {'stmt_hash': stmt_hash}
+        pc.ANNOTATIONS: {
+            'stmt_hash': stmt_hash,
+        },
     }
     assert edge_data == edge, edge_data
 
@@ -421,7 +435,7 @@ def test_autophosphorylation():
     edge_dicts = list(belgraph.get_edge_data(egfr_dsl,
                                              egfr_phos_node).values())
     assert {pc.RELATION: pc.DIRECTLY_INCREASES,
-            'annotations': {'stmt_hash': stmt_hash}} \
+            pc.ANNOTATIONS: {'stmt_hash': stmt_hash}} \
         in edge_dicts
 
     # Test an autophosphorylation with a bound condition
@@ -457,12 +471,17 @@ def test_bound_condition():
     assert kras_node in belgraph
     assert (egfr_grb2_sos1_phos_complex_dsl, kras_node) in belgraph.edges()
 
-    edge_data = (egfr_grb2_sos1_phos_complex_dsl, kras_node,
-                 {
-                     pc.RELATION: pc.DIRECTLY_INCREASES,
-                     pc.OBJECT: activity('gtp'),
-                     'annotations': {'stmt_hash': stmt_hash}
-                 })
+    edge_data = (
+        egfr_grb2_sos1_phos_complex_dsl,
+        kras_node,
+        {
+             pc.RELATION: pc.DIRECTLY_INCREASES,
+             pc.OBJECT: activity('gtp'),
+             pc.ANNOTATIONS: {
+                 'stmt_hash': stmt_hash,
+             },
+        },
+    )
     belgraph_edges = belgraph.edges(data=True)
     assert edge_data in belgraph_edges, belgraph_edges
 
@@ -483,9 +502,9 @@ def test_transphosphorylation():
     edge_data = get_edge_data(belgraph, egfr_dimer_node, egfr_phos_node)
     assert edge_data == {
         pc.RELATION: pc.DIRECTLY_INCREASES,
-        'annotations': {
-            'stmt_hash': stmt_hash
-        }
+        pc.ANNOTATIONS: {
+            'stmt_hash': stmt_hash,
+        },
     }, edge_data
 
 
