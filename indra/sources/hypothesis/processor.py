@@ -43,9 +43,13 @@ class HypothesisProcessor:
         if reader is None:
             from indra.sources import reach
             self.reader = reach.process_text
+        else:
+            self.reader = reader
         if grounder is None:
             from gilda import ground
             self.grounder = ground
+        else:
+            self.grounder = grounder
 
     def extract_statements(self):
         """Sets statements attribute to list of extracted INDRA Statements."""
