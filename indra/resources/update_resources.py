@@ -619,7 +619,9 @@ def update_mesh_names():
         uid = record.find('DescriptorUI').text
         name = record.find('DescriptorName/String').text
         term_name_str = _get_term_name_str(record, name)
-        rows.append((uid, name, term_name_str))
+        tree_numbers = record.findall('TreeNumberList/TreeNumber')
+        tree_numbers_str = '|'.join([t.text for t in tree_numbers])
+        rows.append((uid, name, term_name_str, tree_numbers_str))
 
     fname = os.path.join(path, 'mesh_id_label_mappings.tsv')
     write_unicode_csv(fname, rows, delimiter='\t')
