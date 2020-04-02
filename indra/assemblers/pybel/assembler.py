@@ -234,7 +234,11 @@ class PybelAssembler(object):
         self.model.add_node_from_data(subj_data)
         self.model.add_node_from_data(obj_data)
         edge_data_list = _combine_edge_data(
-            relation, subj_edge, obj_edge, stmt)
+            relation=relation,
+            subj_edge=subj_edge,
+            obj_edge=obj_edge,
+            stmt=stmt,
+        )
         for edge_data in edge_data_list:
             self.model.add_edge(subj_data, obj_data, **edge_data)
 
@@ -334,7 +338,10 @@ class PybelAssembler(object):
             subj_attr, subj_edge = _get_agent_node(stmt.subj)
             self.model.add_node_from_data(subj_attr)
             edge_data_list = _combine_edge_data(
-                pc.DIRECTLY_INCREASES, subj_edge, obj_edge, stmt,
+                relation=pc.DIRECTLY_INCREASES,
+                subj_edge=subj_edge,
+                obj_edge=obj_edge,
+                stmt=stmt,
             )
             for edge_data in edge_data_list:
                 self.model.add_edge(subj_attr, rxn_node_data, **edge_data)
