@@ -21,6 +21,14 @@ def standardize_db_refs(db_refs):
     dict
         The db_refs dict with standardized entries.
     """
+    mesh_id = db_refs.get('MESH')
+    # TODO: in principle we could also do a reverse mapping to MESH IDs from
+    # other name spaces
+    if mesh_id:
+        db_mapping = mesh_client.get_db_mapping(mesh_id)
+        if db_mapping:
+            db_ns, db_id = db_mapping
+            db_refs[db_ns] = db_id
     up_id = db_refs.get('UP')
     hgnc_id = db_refs.get('HGNC')
     # If we have a UP ID and no HGNC ID, we try to get a gene name,
@@ -102,7 +110,6 @@ def standardize_db_refs(db_refs):
         db_refs['PUBCHEM'] = mapped_pc_id
 
     # Try to apply MeSH/GO mappings
-    mesh_id = db_refs.get('MESH')
     go_id = db_refs.get('GO')
     if mesh_id and not go_id:
         mapped_go_id = mesh_client.get_go_id(mesh_id)
