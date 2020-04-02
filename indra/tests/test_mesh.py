@@ -106,3 +106,10 @@ def test_tree_prefixes():
     assert mesh_client.is_enzyme('D005979')
     assert mesh_client.is_molecular('D000077484')
     assert mesh_client.is_protein('D004815')
+
+
+def test_mesh_mapping():
+    assert mesh_client.get_mesh_id_from_db_id('CHEBI', 'CHEBI:4672') == \
+        'D000077143'
+    assert mesh_client.get_db_mapping('D000077143') == \
+        ('CHEBI', 'CHEBI:4672')

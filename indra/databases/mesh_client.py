@@ -360,6 +360,42 @@ def get_mesh_id_from_go_id(go_id):
     return go_to_mesh.get(go_id)
 
 
+def get_db_mapping(mesh_id):
+    """Return mapping to another name space for a MeSH ID, if it exists.
+
+    Parameters
+    ----------
+    mesh_id : str
+        The MeSH ID whose mappings is to be returned.
+
+    Returns
+    -------
+    tuple or None
+        A tuple consisting of a DB namespace and ID for the mapping or None
+        if not available.
+    """
+    return mesh_to_db.get(mesh_id)
+
+
+def get_mesh_id_from_db_id(db_ns, db_id):
+    """Return a MeSH ID mapped from another namespace and ID.
+
+    Parameters
+    ----------
+    db_ns : str
+        A namespace corresponding to db_id.
+    db_id : str
+        An ID in the given namespace.
+
+    Returns
+    -------
+    str or None
+        The MeSH ID corresponding to the given namespace and ID if available,
+        otherwise None.
+    """
+    return db_to_mesh.get((db_ns, db_id))
+
+
 mesh_rdf_prefixes = """
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
