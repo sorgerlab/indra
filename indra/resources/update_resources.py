@@ -603,6 +603,7 @@ def update_lincs_proteins():
 
 
 def update_mesh_names():
+    """Update Mesh ID to name and tree number mappings."""
     url = 'ftp://nlmpubs.nlm.nih.gov/online/mesh/2019/xmlmesh/desc2019.gz'
     desc_path = os.path.join(path, 'mesh_desc2019.gz')
     if not os.path.exists(desc_path):
@@ -628,6 +629,7 @@ def update_mesh_names():
 
 
 def update_mesh_supplementary_names():
+    """Update MeSH ID to name mappings for supplementary terms."""
     supp_url = 'ftp://nlmpubs.nlm.nih.gov/online/mesh/2019/xmlmesh/supp2019.gz'
     supp_path = os.path.join(path, 'mesh_supp2019.gz')
     if not os.path.exists(supp_path):
@@ -646,6 +648,14 @@ def update_mesh_supplementary_names():
 
     fname = os.path.join(path, 'mesh_supp_id_label_mappings.tsv')
     write_unicode_csv(fname, supp_rows, delimiter='\t')
+
+
+def update_mesh_mappings():
+    """Update MeSH mappings to other databases."""
+    url = ('https://raw.githubusercontent.com/indralab/gilda/master/gilda/'
+        'resources/mesh_mappings.tsv')
+    fname = os.path.join(path, 'mesh_mappings.tsv')
+    urlretrieve(url, fname)
 
 
 def _get_term_name_str(record, name):
