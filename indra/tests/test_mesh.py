@@ -99,3 +99,10 @@ def test_get_mesh_tree_numbers():
     assert tns == ['E04.520.050.050'], tns
     tns = mesh_client.get_mesh_tree_numbers('D000031')
     assert set(tns) == {'C01.539.674.173', 'C13.703.039.256', 'C13.703.700.173'}
+
+
+def test_tree_prefixes():
+    assert mesh_client.is_disease('D009369')
+    assert mesh_client.is_enzyme('D005979')
+    assert mesh_client.is_molecular('D000077484')
+    assert mesh_client.is_protein('D004815')

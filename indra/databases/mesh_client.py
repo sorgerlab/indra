@@ -287,6 +287,32 @@ def get_mesh_tree_numbers_from_web(mesh_id):
         return []
 
 
+def has_tree_prefix(mesh_id, tree_prefix):
+    """Return True if the given MeSH ID has the given tree prefix."""
+    tree_numbers = get_mesh_tree_numbers(mesh_id)
+    return any(tn.startswith(tree_prefix) for tn in tree_numbers)
+
+
+def is_disease(mesh_id):
+    """Return True if the given MeSH ID is a disease."""
+    return has_tree_prefix(mesh_id, 'C')
+
+
+def is_molecular(mesh_id):
+    """Return True if the given MeSH ID is a chemical or drug (incl protein)."""
+    return has_tree_prefix(mesh_id, 'D')
+
+
+def is_enzyme(mesh_id):
+    """Return True if the given MeSH ID is an enzyme."""
+    return has_tree_prefix(mesh_id, 'D08')
+
+
+def is_protein(mesh_id):
+    """Return True if the given MeSH ID is a protein."""
+    return has_tree_prefix(mesh_id, 'D12')
+
+
 def get_go_id(mesh_id):
     """Return a GO ID corresponding to the given MeSH ID.
 
