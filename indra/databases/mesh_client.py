@@ -1,10 +1,9 @@
-import json
 import os
 import re
-from functools import lru_cache
-from urllib.parse import urlencode
-from os.path import abspath, dirname, join, pardir
+import json
 import requests
+from functools import lru_cache
+from os.path import abspath, dirname, join, pardir
 from indra.util import read_unicode_csv
 
 MESH_URL = 'https://id.nlm.nih.gov/mesh/'
@@ -18,14 +17,20 @@ GO_MAPPINGS = join(RESOURCES, 'mesh_go_mappings.tsv')
 mesh_id_to_name = {}
 mesh_name_to_id = {}
 mesh_name_to_id_name = {}
+mesh_id_to_tree_numbers = {}
 
 
 def _load_mesh_file(path):
     it = read_unicode_csv(path, delimiter='\t')
-    for mesh_id, mesh_label, mesh_terms_str in it:
+    for terms in it:
+        if len(terms) == 3:
+            mesh_id, mesh_label, mesh_terms_str = terms
+        else:
+            mesh_id, mesh_label, mesh_terms_str, tree_number_str = terms
+            mesh_id_to_tree_numbers[mesh_id] = tree_number_str.split('|')
+        mesh_terms = mesh_terms_str.split('|')
         mesh_id_to_name[mesh_id] = mesh_label
         mesh_name_to_id[mesh_label] = mesh_id
-        mesh_terms = mesh_terms_str.split('|')
         for term in mesh_terms:
             mesh_name_to_id_name[term] = [mesh_id, mesh_label]
 
@@ -230,7 +235,35 @@ def mesh_isa(mesh_id1, mesh_id2):
         return False
 
 
-def get_mesh_tree_number(mesh_id):
+def get_mesh_tree_numbers(mesh_id):
+    """Return MeSH tree IDs associated with a MeSH ID from the resource file.
+
+    Parameters
+    ----------
+    mesh_id : str
+        The MeSH ID whose tree IDs should be returned.
+
+    Returns
+    -------
+    list[str]
+        A list of MeSH tree IDs.
+    """
+    return mesh_id_to_tree_numbers.get(mesh_id, [])
+
+
+def get_mesh_tree_numbers_from_web(mesh_id):
+    """Return MeSH tree IDs associated with a MeSH ID from the web.
+
+    Parameters
+    ----------
+    mesh_id : str
+        The MeSH ID whose tree IDs should be returned.
+
+    Returns
+    -------
+    list[str]
+        A list of MeSH tree IDs.
+    """
     query_body = """
         SELECT DISTINCT ?tn
         FROM <http://id.nlm.nih.gov/mesh>
@@ -240,15 +273,18 @@ def get_mesh_tree_number(mesh_id):
         """ % mesh_id
     mesh_json = submt_sparql_query(query_body)
     if mesh_json is None:
-        return None
+        return []
     try:
+        tree_numbers = []
         results = mesh_json['results']['bindings']
-        tree_uri = results[0]['tn']['value']
-        m = re.match('http://id.nlm.nih.gov/mesh/([A-Z0-9.]*)', tree_uri)
-        tree = m.groups()[0]
-        return tree
+        for res in results:
+            tree_uri = res['tn']['value']
+            m = re.match('http://id.nlm.nih.gov/mesh/([A-Z0-9.]*)', tree_uri)
+            tree = m.groups()[0]
+            tree_numbers.append(tree)
+        return tree_numbers
     except Exception:
-        return None
+        return []
 
 
 def get_go_id(mesh_id):

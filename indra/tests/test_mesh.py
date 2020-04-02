@@ -90,3 +90,12 @@ def test_mesh_isa():
 def test_mesh_go_mappings():
     assert mesh_client.get_go_id('D059765') == 'GO:0035825'
     assert mesh_client.get_mesh_id_from_go_id('GO:0042627') == 'D002914'
+
+
+def test_get_mesh_tree_numbers():
+    tns = mesh_client.get_mesh_tree_numbers('D000025')
+    tnsw = mesh_client.get_mesh_tree_numbers_from_web('D000025')
+    assert sorted(tns) == sorted(tnsw), tns
+    assert tns == ['E04.520.050.050'], tns
+    tns = mesh_client.get_mesh_tree_numbers('D000031')
+    assert set(tns) == {'C01.539.674.173', 'C13.703.039.256', 'C13.703.700.173'}
