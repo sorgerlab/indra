@@ -12,6 +12,7 @@ RESOURCES = join(HERE, pardir, 'resources')
 MESH_FILE = join(RESOURCES, 'mesh_id_label_mappings.tsv')
 MESH_SUPP_FILE = join(RESOURCES, 'mesh_supp_id_label_mappings.tsv')
 GO_MAPPINGS = join(RESOURCES, 'mesh_go_mappings.tsv')
+DB_MAPPINGS = join(RESOURCES, 'mesh_mappings.tsv')
 
 
 mesh_id_to_name = {}
@@ -50,6 +51,19 @@ def _load_go_mappings(path):
 
 
 mesh_to_go, go_to_mesh = _load_go_mappings(GO_MAPPINGS)
+
+
+def _load_db_mappings(path):
+    mesh_to_db = {}
+    db_to_mesh = {}
+    for _, mesh_id, _, db_ns, db_id, _ in \
+            read_unicode_csv(path, delimiter='\t'):
+        mesh_to_db[mesh_id] = (db_ns, db_id)
+        db_to_mesh[(db_ns, db_id)] = mesh_id
+    return mesh_to_db, db_to_mesh
+
+
+mesh_to_db, db_to_mesh = _load_db_mappings(DB_MAPPINGS)
 
 
 @lru_cache(maxsize=1000)
@@ -148,7 +162,7 @@ def get_mesh_id_name(mesh_term, offline=False):
 
 
 @lru_cache(maxsize=1000)
-def submt_sparql_query(query_body):
+def submit_sparql_query(query_body):
     url = MESH_URL + 'sparql'
     query = '%s\n%s' % (mesh_rdf_prefixes, query_body)
     args = {'query': query, 'format': 'JSON', 'inference': 'true'}
@@ -193,7 +207,7 @@ def get_mesh_id_name_from_web(mesh_term):
         }
         ORDER BY ?d
     """ % (mesh_term, mesh_term)
-    mesh_json = submt_sparql_query(query_body)
+    mesh_json = submit_sparql_query(query_body)
     if mesh_json is None:
         return None, None
     try:
@@ -218,7 +232,7 @@ def mesh_isa(mesh_id1, mesh_id2):
           mesh:%s meshv:broaderDescriptor+ ?o .
         }
         """ % mesh_id1
-    mesh_json = submt_sparql_query(query_body)
+    mesh_json = submit_sparql_query(query_body)
     if mesh_json is None:
         return False
     try:
@@ -271,7 +285,7 @@ def get_mesh_tree_numbers_from_web(mesh_id):
           mesh:%s meshv:treeNumber ?tn
         }
         """ % mesh_id
-    mesh_json = submt_sparql_query(query_body)
+    mesh_json = submit_sparql_query(query_body)
     if mesh_json is None:
         return []
     try:
