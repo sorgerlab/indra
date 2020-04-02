@@ -1010,6 +1010,7 @@ MESH	D002453	Cell Cycle	GO	GO:0007049	cell cycle
 MESH	D002454	Cell Differentiation	GO	GO:0030154	cell differentiation
 MESH	D002455	Cell Division	GO	GO:0051301	cell division
 MESH	D002462	Cell Membrane	GO	GO:0005886	plasma membrane
+MESH	D002465	Cell Movement	GO	GO:0048870	cell motility
 MESH	D002473	Cell Wall	GO	GO:0005618	cell wall
 MESH	D002475	Cellobiose	CHEBI	CHEBI:17057	cellobiose
 MESH	D002479	Inclusion Bodies	GO	GO:0016234	inclusion body
@@ -1106,6 +1107,7 @@ MESH	D002865	Chromomycins	CHEBI	CHEBI:51233	chromomycin
 MESH	D002866	Chromonar	CHEBI	CHEBI:135525	carbocromen
 MESH	D002867	Chromones	CHEBI	CHEBI:23238	chromones
 MESH	D002875	Chromosomes	GO	GO:0005694	chromosome
+MESH	D002914	Chylomicrons	GO	GO:0042627	chylomicron
 MESH	D002922	Ciguatoxins	CHEBI	CHEBI:61275	ciguatoxin
 MESH	D002927	Cimetidine	CHEBI	CHEBI:3699	cimetidine
 MESH	D002930	Cinchona Alkaloids	CHEBI	CHEBI:51323	cinchona alkaloid
@@ -2917,6 +2919,7 @@ MESH	D012363	RNA, Transfer, Thr	CHEBI	CHEBI:29180	tRNA(Thr)
 MESH	D012364	RNA, Transfer, Trp	CHEBI	CHEBI:29181	tRNA(Trp)
 MESH	D012365	RNA, Transfer, Tyr	CHEBI	CHEBI:29182	tRNA(Tyr)
 MESH	D012366	RNA, Transfer, Val	CHEBI	CHEBI:29183	tRNA(Val)
+MESH	D012374	Rod Cell Outer Segment	GO	GO:0120200	rod photoreceptor outer segment
 MESH	D012378	Rodenticides	CHEBI	CHEBI:33288	rodenticide
 MESH	D012382	Rolitetracycline	CHEBI	CHEBI:63334	rolitetracycline
 MESH	D012385	Ronidazole	CHEBI	CHEBI:141154	ronidazole
@@ -3250,8 +3253,10 @@ MESH	D014150	Antipsychotic Agents	CHEBI	CHEBI:35476	antipsychotic agent
 MESH	D014151	Anti-Anxiety Agents	CHEBI	CHEBI:35474	anxiolytic drug
 MESH	D014153	Transaldolase	HGNC	11559	TALDO1
 MESH	D014156	Transcortin	HGNC	1540	SERPINA6
+MESH	D014158	Transcription, Genetic	GO	GO:0006351	transcription, DNA-templated
 MESH	D014168	Transferrin	HGNC	11740	TF
 MESH	D014174	Transketolase	HGNC	11834	TKT
+MESH	D014176	Protein Biosynthesis	GO	GO:0006412	translation
 MESH	D014191	Tranylcypromine	CHEBI	CHEBI:9652	tranylcypromine
 MESH	D014192	Trapidil	CHEBI	CHEBI:32254	Trapidil
 MESH	D014196	Trazodone	CHEBI	CHEBI:9654	trazodone
@@ -3895,6 +3900,7 @@ MESH	D018835	Chaperonin 10	HGNC	5269	HSPE1
 MESH	D018840	HSP70 Heat-Shock Proteins	FPLX	HSPA	HSPA
 MESH	D018870	Endoplasmic Reticulum, Rough	GO	GO:0005791	rough endoplasmic reticulum
 MESH	D018871	Endoplasmic Reticulum, Smooth	GO	GO:0005790	smooth endoplasmic reticulum
+MESH	D018919	Neovascularization, Physiologic	GO	GO:0001525	angiogenesis
 MESH	D018925	Chemokines	FPLX	Chemokine	Chemokine
 MESH	D018926	Anti-Allergic Agents	CHEBI	CHEBI:50857	anti-allergic agent
 MESH	D018932	Chemokine CCL2	HGNC	10618	CCL2
@@ -4568,6 +4574,7 @@ MESH	D048669	MAP Kinase Kinase 6	HGNC	6846	MAP2K6
 MESH	D048670	MAP Kinase Kinase 4	HGNC	6844	MAP2K4
 MESH	D048671	MAP Kinase Kinase 5	HGNC	6845	MAP2K5
 MESH	D048688	MAP Kinase Kinase 7	HGNC	6847	MAP2K7
+MESH	D048708	Cell Growth Processes	GO	GO:0016049	cell growth
 MESH	D048728	MAP Kinase Kinase Kinase 1	HGNC	6848	MAP3K1
 MESH	D048730	MAP Kinase Kinase Kinase 2	HGNC	6854	MAP3K2
 MESH	D048748	MAP Kinase Kinase Kinase 3	HGNC	6855	MAP3K3
@@ -5204,6 +5211,7 @@ MESH	D058575	Decorin	HGNC	2705	DCN
 MESH	D058578	Biglycan	HGNC	1044	BGN
 MESH	D058580	Neurocan	HGNC	2465	NCAN
 MESH	D058581	Brevican	HGNC	23059	BCAN
+MESH	D058750	Epithelial-Mesenchymal Transition	GO	GO:0001837	epithelial to mesenchymal transition
 MESH	D058766	Levoleucovorin	CHEBI	CHEBI:63606	(6S)-5-formyltetrahydrofolic acid
 MESH	D058767	Protein Unfolding	GO	GO:0043335	protein unfolding
 MESH	D058785	GABA-A Receptor Agonists	CHEBI	CHEBI:91016	GABAA receptor agonist
@@ -5243,6 +5251,7 @@ MESH	D059547	Stereocilia	GO	GO:0032420	stereocilium
 MESH	D059666	Lysosomal-Associated Membrane Protein 3	HGNC	14582	LAMP3
 MESH	D059748	Proteolysis	GO	GO:0006508	proteolysis
 MESH	D059765	Homologous Recombination	GO	GO:0035825	homologous recombination
+MESH	D059767	Recombinational DNA Repair	GO	GO:0000725	recombinational repair
 MESH	D059805	HLA-DR alpha-Chains	HGNC	4947	HLA-DRA
 MESH	D059808	Polyphenols	CHEBI	CHEBI:26195	polyphenol
 MESH	D059811	HLA-DRB1 Chains	HGNC	4948	HLA-DRB1
