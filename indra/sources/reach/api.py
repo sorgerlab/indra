@@ -344,23 +344,16 @@ def process_json_str(json_str, citation=None):
         A ReachProcessor containing the extracted INDRA Statements
         in rp.statements.
     """
-    if not isinstance(json_str, str):
-        raise TypeError('{} is {} instead of {}'.format(json_str,
-                                                        json_str.__class__,
-                                                        str))
-
-    json_str = json_str.replace('frame-id', 'frame_id')
-    json_str = json_str.replace('argument-label', 'argument_label')
-    json_str = json_str.replace('object-meta', 'object_meta')
-    json_str = json_str.replace('doc-id', 'doc_id')
-    json_str = json_str.replace('is-hypothesis', 'is_hypothesis')
-    json_str = json_str.replace('is-negated', 'is_negated')
-    json_str = json_str.replace('is-direct', 'is_direct')
-    json_str = json_str.replace('found-by', 'found_by')
+    fields = ['frame-id', 'argument-label', 'object-meta',
+              'doc-id', 'is-hypothesis', 'is-negated',
+              'is-direct', 'found-by']
+    for field in fields:
+        json_str = json_str.replace(field, field.replace('-', '_'))
     try:
         json_dict = json.loads(json_str)
-    except ValueError:
+    except ValueError as e:
         logger.error('Could not decode JSON string.')
+        logger.exception(e)
         return None
     rp = ReachProcessor(json_dict, citation)
     rp.get_modifications()
