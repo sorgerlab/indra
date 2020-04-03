@@ -440,6 +440,7 @@ def _update_edge_data_from_evidence(evidence, edge_data):
 def _get_annotations_from_stmt(stmt):
     return {
         'stmt_hash': stmt.get_hash(refresh=True),
+        'uuid': stmt.uuid
     }
 
 

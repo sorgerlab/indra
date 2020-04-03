@@ -150,6 +150,7 @@ def test_activation():
         pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY},
         pc.ANNOTATIONS: {
             'stmt_hash': hash1,
+            'uuid': stmt1.uuid,
         },
     }
     edge2 = {
@@ -158,6 +159,7 @@ def test_activation():
         pc.OBJECT: activity('kin'),
         pc.ANNOTATIONS: {
             'stmt_hash': hash2,
+            'uuid': stmt2.uuid,
         },
     }
     for stmt, edge in ((stmt1, edge1), (stmt2, edge2)):
@@ -195,6 +197,7 @@ def test_direct_activation():
         pc.ANNOTATIONS: {
             'stmt_hash': hash1,
             'source_hash': stmt1_ev.get_source_hash(),
+            'uuid': stmt1.uuid
         },
     }
     edge2 = {
@@ -209,6 +212,7 @@ def test_direct_activation():
         pc.ANNOTATIONS: {
             'stmt_hash': hash2,
             'source_hash': stmt1_ev.get_source_hash(),
+            'uuid': stmt2.uuid
         },
     }
     for stmt, expected_edge in ((stmt1, edge1), (stmt2, edge2)):
@@ -234,6 +238,7 @@ def test_inhibition():
         pc.OBJECT: activity('kin'),
         pc.ANNOTATIONS: {
             'stmt_hash': stmt_hash,
+            'uuid': stmt.uuid,
         },
     }
     pba = pa.PybelAssembler([stmt])
@@ -303,6 +308,7 @@ def test_gef():
         pc.OBJECT: activity('gtp'),
         pc.ANNOTATIONS: {
             'stmt_hash': stmt_hash,
+            'uuid': stmt.uuid,
         },
     }
     assert edge_data == edge, edge_data
@@ -334,6 +340,7 @@ def test_gap():
         pc.OBJECT: activity('gtp'),
         pc.ANNOTATIONS: {
             'stmt_hash': stmt_hash,
+            'uuid': stmt.uuid,
         },
     }
     assert edge_data == edge, edge_data
@@ -435,7 +442,8 @@ def test_autophosphorylation():
     edge_dicts = list(belgraph.get_edge_data(egfr_dsl,
                                              egfr_phos_node).values())
     assert {pc.RELATION: pc.DIRECTLY_INCREASES,
-            pc.ANNOTATIONS: {'stmt_hash': stmt_hash}} \
+            pc.ANNOTATIONS: {'stmt_hash': stmt_hash,
+                             'uuid': stmt.uuid}} \
         in edge_dicts
 
     # Test an autophosphorylation with a bound condition
@@ -479,6 +487,7 @@ def test_bound_condition():
              pc.OBJECT: activity('gtp'),
              pc.ANNOTATIONS: {
                  'stmt_hash': stmt_hash,
+                 'uuid': stmt.uuid,
              },
         },
     )
@@ -504,6 +513,7 @@ def test_transphosphorylation():
         pc.RELATION: pc.DIRECTLY_INCREASES,
         pc.ANNOTATIONS: {
             'stmt_hash': stmt_hash,
+            'uuid': stmt.uuid,
         },
     }, edge_data
 
