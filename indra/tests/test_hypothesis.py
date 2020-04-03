@@ -1,13 +1,14 @@
 from nose.plugins.attrib import attr
 from gilda import ground
 from indra.sources import hypothesis
+from indra.sources import trips
 from indra.sources.hypothesis.processor import HypothesisProcessor, \
     parse_context_entry, parse_grounding_entry, get_text_refs
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'slow', 'notravis')
 def test_process_indra_annnotations():
-    hp = hypothesis.process_annotations()
+    hp = hypothesis.process_annotations(reader=trips.process_text)
     assert hp.statements
     for stmt in hp.statements:
         print(stmt)
@@ -21,8 +22,10 @@ def test_grounding_annotation():
     assert hp.groundings['Plaquenil'] == {'CHEBI': 'CHEBI:5801'}
 
 
+@attr('slow')
 def test_statement_annotation():
-    hp = HypothesisProcessor(annotations=[statement_annot_example])
+    hp = HypothesisProcessor(annotations=[statement_annot_example],
+                             reader=trips.process_text)
     hp.extract_statements()
     assert len(hp.statements) == 1
     stmt = hp.statements[0]

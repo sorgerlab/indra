@@ -1,10 +1,10 @@
-import json
 import os
 import re
-from functools import lru_cache
-from urllib.parse import urlencode
-from os.path import abspath, dirname, join, pardir
+import json
 import requests
+import itertools
+from functools import lru_cache
+from os.path import abspath, dirname, join, pardir
 from indra.util import read_unicode_csv
 
 MESH_URL = 'https://id.nlm.nih.gov/mesh/'
@@ -12,20 +12,26 @@ HERE = dirname(abspath(__file__))
 RESOURCES = join(HERE, pardir, 'resources')
 MESH_FILE = join(RESOURCES, 'mesh_id_label_mappings.tsv')
 MESH_SUPP_FILE = join(RESOURCES, 'mesh_supp_id_label_mappings.tsv')
-GO_MAPPINGS = join(RESOURCES, 'mesh_go_mappings.tsv')
+DB_MAPPINGS = join(RESOURCES, 'mesh_mappings.tsv')
 
 
 mesh_id_to_name = {}
 mesh_name_to_id = {}
 mesh_name_to_id_name = {}
+mesh_id_to_tree_numbers = {}
 
 
 def _load_mesh_file(path):
     it = read_unicode_csv(path, delimiter='\t')
-    for mesh_id, mesh_label, mesh_terms_str in it:
+    for terms in it:
+        if len(terms) == 3:
+            mesh_id, mesh_label, mesh_terms_str = terms
+        else:
+            mesh_id, mesh_label, mesh_terms_str, tree_number_str = terms
+            mesh_id_to_tree_numbers[mesh_id] = tree_number_str.split('|')
+        mesh_terms = mesh_terms_str.split('|')
         mesh_id_to_name[mesh_id] = mesh_label
         mesh_name_to_id[mesh_label] = mesh_id
-        mesh_terms = mesh_terms_str.split('|')
         for term in mesh_terms:
             mesh_name_to_id_name[term] = [mesh_id, mesh_label]
 
@@ -35,16 +41,17 @@ if os.path.exists(MESH_SUPP_FILE):
     _load_mesh_file(MESH_SUPP_FILE)
 
 
-def _load_go_mappings(path):
-    mesh_to_go = {}
-    go_to_mesh = {}
-    for mesh_id, go_id in read_unicode_csv(path, delimiter='\t'):
-        mesh_to_go[mesh_id] = go_id
-        go_to_mesh[go_id] = mesh_id
-    return mesh_to_go, go_to_mesh
+def _load_db_mappings(path):
+    mesh_to_db = {}
+    db_to_mesh = {}
+    for _, mesh_id, _, db_ns, db_id, _ in \
+            read_unicode_csv(path, delimiter='\t'):
+        mesh_to_db[mesh_id] = (db_ns, db_id)
+        db_to_mesh[(db_ns, db_id)] = mesh_id
+    return mesh_to_db, db_to_mesh
 
 
-mesh_to_go, go_to_mesh = _load_go_mappings(GO_MAPPINGS)
+mesh_to_db, db_to_mesh = _load_db_mappings(DB_MAPPINGS)
 
 
 @lru_cache(maxsize=1000)
@@ -143,7 +150,7 @@ def get_mesh_id_name(mesh_term, offline=False):
 
 
 @lru_cache(maxsize=1000)
-def submt_sparql_query(query_body):
+def submit_sparql_query(query_body):
     url = MESH_URL + 'sparql'
     query = '%s\n%s' % (mesh_rdf_prefixes, query_body)
     args = {'query': query, 'format': 'JSON', 'inference': 'true'}
@@ -188,7 +195,7 @@ def get_mesh_id_name_from_web(mesh_term):
         }
         ORDER BY ?d
     """ % (mesh_term, mesh_term)
-    mesh_json = submt_sparql_query(query_body)
+    mesh_json = submit_sparql_query(query_body)
     if mesh_json is None:
         return None, None
     try:
@@ -206,6 +213,15 @@ def get_mesh_id_name_from_web(mesh_term):
 
 
 def mesh_isa(mesh_id1, mesh_id2):
+    tns1 = get_mesh_tree_numbers(mesh_id1)
+    tns2 = get_mesh_tree_numbers(mesh_id2)
+    for t1, t2 in itertools.product(tns1, tns2):
+        if t1.startswith(t2):
+            return True
+    return False
+
+
+def mesh_isa_web(mesh_id1, mesh_id2):
     query_body = """
         SELECT DISTINCT ?o
         FROM <http://id.nlm.nih.gov/mesh>
@@ -213,7 +229,7 @@ def mesh_isa(mesh_id1, mesh_id2):
           mesh:%s meshv:broaderDescriptor+ ?o .
         }
         """ % mesh_id1
-    mesh_json = submt_sparql_query(query_body)
+    mesh_json = submit_sparql_query(query_body)
     if mesh_json is None:
         return False
     try:
@@ -230,6 +246,84 @@ def mesh_isa(mesh_id1, mesh_id2):
         return False
 
 
+def get_mesh_tree_numbers(mesh_id):
+    """Return MeSH tree IDs associated with a MeSH ID from the resource file.
+
+    Parameters
+    ----------
+    mesh_id : str
+        The MeSH ID whose tree IDs should be returned.
+
+    Returns
+    -------
+    list[str]
+        A list of MeSH tree IDs.
+    """
+    return mesh_id_to_tree_numbers.get(mesh_id, [])
+
+
+def get_mesh_tree_numbers_from_web(mesh_id):
+    """Return MeSH tree IDs associated with a MeSH ID from the web.
+
+    Parameters
+    ----------
+    mesh_id : str
+        The MeSH ID whose tree IDs should be returned.
+
+    Returns
+    -------
+    list[str]
+        A list of MeSH tree IDs.
+    """
+    query_body = """
+        SELECT DISTINCT ?tn
+        FROM <http://id.nlm.nih.gov/mesh>
+        WHERE {
+          mesh:%s meshv:treeNumber ?tn
+        }
+        """ % mesh_id
+    mesh_json = submit_sparql_query(query_body)
+    if mesh_json is None:
+        return []
+    try:
+        tree_numbers = []
+        results = mesh_json['results']['bindings']
+        for res in results:
+            tree_uri = res['tn']['value']
+            m = re.match('http://id.nlm.nih.gov/mesh/([A-Z0-9.]*)', tree_uri)
+            tree = m.groups()[0]
+            tree_numbers.append(tree)
+        return tree_numbers
+    except Exception:
+        return []
+
+
+def has_tree_prefix(mesh_id, tree_prefix):
+    """Return True if the given MeSH ID has the given tree prefix."""
+    tree_numbers = get_mesh_tree_numbers(mesh_id)
+    return any(tn.startswith(tree_prefix) for tn in tree_numbers)
+
+
+def is_disease(mesh_id):
+    """Return True if the given MeSH ID is a disease."""
+    return has_tree_prefix(mesh_id, 'C')
+
+
+def is_molecular(mesh_id):
+    """Return True if the given MeSH ID is a chemical or drug (incl protein)."""
+    return has_tree_prefix(mesh_id, 'D')
+
+
+def is_enzyme(mesh_id):
+    """Return True if the given MeSH ID is an enzyme."""
+    return has_tree_prefix(mesh_id, 'D08')
+
+
+def is_protein(mesh_id):
+    """Return True if the given MeSH ID is a protein."""
+    return has_tree_prefix(mesh_id, 'D12')
+
+
 def get_go_id(mesh_id):
     """Return a GO ID corresponding to the given MeSH ID.
 
@@ -243,7 +337,10 @@ def get_go_id(mesh_id):
     str
         The GO ID corresponding to the given MeSH ID, or None if not available.
     """
-    return mesh_to_go.get(mesh_id)
+    res = get_db_mapping(mesh_id)
+    if res and res[0] == 'GO':
+        return res[1]
+    return None
 
 
 def get_mesh_id_from_go_id(go_id):
@@ -260,7 +357,43 @@ def get_mesh_id_from_go_id(go_id):
         The MeSH ID corresponding to the given GO ID, or None if not
         available.
     """
-    return go_to_mesh.get(go_id)
+    return get_mesh_id_from_db_id('GO', go_id)
+
+
+def get_db_mapping(mesh_id):
+    """Return mapping to another name space for a MeSH ID, if it exists.
+
+    Parameters
+    ----------
+    mesh_id : str
+        The MeSH ID whose mappings is to be returned.
+
+    Returns
+    -------
+    tuple or None
+        A tuple consisting of a DB namespace and ID for the mapping or None
+        if not available.
+    """
+    return mesh_to_db.get(mesh_id)
+
+
+def get_mesh_id_from_db_id(db_ns, db_id):
+    """Return a MeSH ID mapped from another namespace and ID.
+
+    Parameters
+    ----------
+    db_ns : str
+        A namespace corresponding to db_id.
+    db_id : str
+        An ID in the given namespace.
+
+    Returns
+    -------
+    str or None
+        The MeSH ID corresponding to the given namespace and ID if available,
+        otherwise None.
+    """
+    return db_to_mesh.get((db_ns, db_id))
 
 
 mesh_rdf_prefixes = """

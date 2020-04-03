@@ -3,6 +3,8 @@ from indra.preassembler.grounding_mapper import GroundingMapper
 from indra.preassembler.grounding_mapper.analysis import *
 from indra.preassembler.grounding_mapper.gilda import ground_statements, \
     get_gilda_models
+from indra.preassembler.grounding_mapper.standardize import \
+    standardize_agent_name, standardize_db_refs
 from indra.statements import Agent, Phosphorylation, Complex, Inhibition, \
     Evidence, BoundCondition
 from indra.util import unicode_strs
@@ -369,6 +371,21 @@ def test_name_standardize_mesh_go():
     GroundingMapper.standardize_agent_name(a1, True)
     assert a1.db_refs['MESH'] == 'D058750'
     assert a1.name == 'epithelial to mesenchymal transition', a1.name
+
+
+def test_name_standardize_mesh_other_db():
+    a1 = Agent('x', db_refs={'MESH': 'D001194'})
+    GroundingMapper.standardize_agent_name(a1, True)
+    assert a1.db_refs['CHEBI'] == 'CHEBI:46661'
+    assert a1.name == 'asbestos', a1.name
+
+    db_refs = {'MESH': 'D000067777'}
+    db_refs = standardize_db_refs(db_refs)
+    assert db_refs.get('HGNC') == '3313', db_refs
+    assert db_refs.get('UP') == 'Q12926', db_refs
+    a2 = Agent('x', db_refs=db_refs)
+    standardize_agent_name(a2)
+    assert a2.name == 'ELAVL2'
 
 
 @attr('nonpublic')

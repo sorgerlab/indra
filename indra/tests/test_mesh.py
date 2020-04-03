@@ -85,8 +85,32 @@ def test_mesh_term_lookups():
 def test_mesh_isa():
     assert mesh_client.mesh_isa('D011506', 'D000602')
     assert not mesh_client.mesh_isa('D000602', 'D011506')
+    assert mesh_client.mesh_isa_web('D011506', 'D000602')
 
 
 def test_mesh_go_mappings():
     assert mesh_client.get_go_id('D059765') == 'GO:0035825'
     assert mesh_client.get_mesh_id_from_go_id('GO:0042627') == 'D002914'
+
+
+def test_get_mesh_tree_numbers():
+    tns = mesh_client.get_mesh_tree_numbers('D000025')
+    tnsw = mesh_client.get_mesh_tree_numbers_from_web('D000025')
+    assert sorted(tns) == sorted(tnsw), tns
+    assert tns == ['E04.520.050.050'], tns
+    tns = mesh_client.get_mesh_tree_numbers('D000031')
+    assert set(tns) == {'C01.539.674.173', 'C13.703.039.256', 'C13.703.700.173'}
+
+
+def test_tree_prefixes():
+    assert mesh_client.is_disease('D009369')
+    assert mesh_client.is_enzyme('D005979')
+    assert mesh_client.is_molecular('D000077484')
+    assert mesh_client.is_protein('D004815')
+
+
+def test_mesh_mapping():
+    assert mesh_client.get_mesh_id_from_db_id('CHEBI', 'CHEBI:4672') == \
+        'D000077143'
+    assert mesh_client.get_db_mapping('D000077143') == \
+        ('CHEBI', 'CHEBI:4672')
