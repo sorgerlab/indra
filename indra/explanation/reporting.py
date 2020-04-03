@@ -168,7 +168,7 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
         hashes = set()
         for j in range(len(edges)):
             try:
-                hashes.add(edges[j]['stmt_hash'])
+                hashes.add(edges[j]['annotations']['stmt_hash'])
             # partOf and hasVariant edges don't have hashes
             except KeyError:
                 continue

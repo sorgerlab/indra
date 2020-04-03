@@ -8,6 +8,7 @@ import pybel
 import pybel.constants as pc
 from pybel.dsl import *
 from pybel.language import pmod_namespace
+from pybel.utils import citation_dict
 from indra.statements import *
 from indra.databases import hgnc_client
 
@@ -217,14 +218,13 @@ class PybelAssembler(object):
         else:
             with open(path, 'w') as fh:
                 if output_format == 'json':
-                    pybel.to_json_file(self.model, fh)
+                    pybel.to_nodelink_file(self.model, fh)
                 elif output_format == 'cx':
                     pybel.to_cx_file(self.model, fh)
                 else: # output_format == 'bel':
-                    pybel.to_bel(self.model, fh)
+                    pybel.to_bel_script(self.model, fh)
 
-    def _add_nodes_edges(self, subj_agent, obj_agent, relation, stmt_hash,
-                         evidences):
+    def _add_nodes_edges(self, subj_agent, obj_agent, relation, stmt):
         """Given subj/obj agents, relation, and evidence, add nodes/edges."""
         subj_data, subj_edge = _get_agent_node(subj_agent)
         obj_data, obj_edge = _get_agent_node(obj_agent)
@@ -234,7 +234,11 @@ class PybelAssembler(object):
         self.model.add_node_from_data(subj_data)
         self.model.add_node_from_data(obj_data)
         edge_data_list = _combine_edge_data(
-            relation, subj_edge, obj_edge, stmt_hash, evidences)
+            relation=relation,
+            subj_edge=subj_edge,
+            obj_edge=obj_edge,
+            stmt=stmt,
+        )
         for edge_data in edge_data_list:
             self.model.add_edge(subj_data, obj_data, **edge_data)
 
@@ -247,8 +251,7 @@ class PybelAssembler(object):
         act_obj.activity.is_active = True
         activates = isinstance(stmt, Activation)
         relation = get_causal_edge(stmt, activates)
-        self._add_nodes_edges(stmt.subj, act_obj, relation,
-                              stmt.get_hash(refresh=True), stmt.evidence)
+        self._add_nodes_edges(stmt.subj, act_obj, relation, stmt)
 
     def _assemble_modification(self, stmt):
         """Example: p(HGNC:MAP2K1) => p(HGNC:MAPK1, pmod(Ph, Thr, 185))"""
@@ -256,15 +259,13 @@ class PybelAssembler(object):
         sub_agent.mods.append(stmt._get_mod_condition())
         activates = isinstance(stmt, AddModification)
         relation = get_causal_edge(stmt, activates)
-        self._add_nodes_edges(stmt.enz, sub_agent, relation,
-                              stmt.get_hash(refresh=True), stmt.evidence)
+        self._add_nodes_edges(stmt.enz, sub_agent, relation, stmt)
 
     def _assemble_regulate_amount(self, stmt):
         """Example: p(HGNC:ELK1) => p(HGNC:FOS)"""
         activates = isinstance(stmt, IncreaseAmount)
         relation = get_causal_edge(stmt, activates)
-        self._add_nodes_edges(stmt.subj, stmt.obj, relation,
-                              stmt.get_hash(refresh=True), stmt.evidence)
+        self._add_nodes_edges(stmt.subj, stmt.obj, relation, stmt)
 
     def _assemble_gef(self, stmt):
         """Example: act(p(HGNC:SOS1), ma(gef)) => act(p(HGNC:KRAS), ma(gtp))"""
@@ -272,8 +273,7 @@ class PybelAssembler(object):
         gef.activity = ActivityCondition('gef', True)
         ras = deepcopy(stmt.ras)
         ras.activity = ActivityCondition('gtpbound', True)
-        self._add_nodes_edges(gef, ras, pc.DIRECTLY_INCREASES,
-                              stmt.get_hash(refresh=True), stmt.evidence)
+        self._add_nodes_edges(gef, ras, pc.DIRECTLY_INCREASES, stmt)
 
     def _assemble_gap(self, stmt):
         """Example: act(p(HGNC:RASA1), ma(gap)) =| act(p(HGNC:KRAS), ma(gtp))"""
@@ -281,8 +281,7 @@ class PybelAssembler(object):
         gap.activity = ActivityCondition('gap', True)
         ras = deepcopy(stmt.ras)
         ras.activity = ActivityCondition('gtpbound', True)
-        self._add_nodes_edges(gap, ras, pc.DIRECTLY_DECREASES,
-                              stmt.get_hash(refresh=True), stmt.evidence)
+        self._add_nodes_edges(gap, ras, pc.DIRECTLY_DECREASES, stmt)
 
     def _assemble_active_form(self, stmt):
         """Example: p(HGNC:ELK1, pmod(Ph)) => act(p(HGNC:ELK1), ma(tscript))"""
@@ -290,29 +289,24 @@ class PybelAssembler(object):
         act_agent.activity = ActivityCondition(stmt.activity, True)
         activates = stmt.is_active
         relation = get_causal_edge(stmt, activates)
-        stmt_hash = stmt.get_hash(refresh=True)
         if not stmt.agent.mods and not stmt.agent.bound_conditions and \
                 not stmt.agent.mutations:
-            self._add_nodes_edges(stmt.agent, act_agent, relation,
-                                  stmt_hash, stmt.evidence)
+            self._add_nodes_edges(stmt.agent, act_agent, relation, stmt)
         else:
             for mod in stmt.agent.mods:
                 mod_agent = Agent(
                     stmt.agent.name, db_refs=stmt.agent.db_refs, mods=[mod])
-                self._add_nodes_edges(mod_agent, act_agent, relation,
-                                      stmt_hash, stmt.evidence)
+                self._add_nodes_edges(mod_agent, act_agent, relation, stmt)
             for bc in stmt.agent.bound_conditions:
                 bound_agent = Agent(
                     stmt.agent.name, db_refs=stmt.agent.db_refs,
                     bound_conditions=[bc])
-                self._add_nodes_edges(bound_agent, act_agent, relation,
-                                      stmt_hash, stmt.evidence)
+                self._add_nodes_edges(bound_agent, act_agent, relation, stmt)
             for mut in stmt.agent.mutations:
                 mut_agent = Agent(
                     stmt.agent.name, db_refs=stmt.agent.db_refs,
                     mutations=[mut])
-                self._add_nodes_edges(mut_agent, act_agent, relation,
-                                      stmt_hash, stmt.evidence)
+                self._add_nodes_edges(mut_agent, act_agent, relation, stmt)
 
     def _assemble_complex(self, stmt):
         """Example: complex(p(HGNC:MAPK14), p(HGNC:TAB1))"""
@@ -344,8 +338,11 @@ class PybelAssembler(object):
             subj_attr, subj_edge = _get_agent_node(stmt.subj)
             self.model.add_node_from_data(subj_attr)
             edge_data_list = _combine_edge_data(
-                pc.DIRECTLY_INCREASES, subj_edge, obj_edge,
-                stmt.get_hash(refresh=True), stmt.evidence)
+                relation=pc.DIRECTLY_INCREASES,
+                subj_edge=subj_edge,
+                obj_edge=obj_edge,
+                stmt=stmt,
+            )
             for edge_data in edge_data_list:
                 self.model.add_edge(subj_attr, rxn_node_data, **edge_data)
 
@@ -361,8 +358,7 @@ class PybelAssembler(object):
         # modifications.
         sub_agent.bound_conditions = []
         # FIXME
-        self._add_nodes_edges(stmt.enz, sub_agent, pc.DIRECTLY_INCREASES,
-                              stmt.get_hash(refresh=True), stmt.evidence)
+        self._add_nodes_edges(stmt.enz, sub_agent, pc.DIRECTLY_INCREASES, stmt)
 
     def _assemble_transphosphorylation(self, stmt):
         """Example: complex(p(HGNC:EGFR)) =>
@@ -373,8 +369,7 @@ class PybelAssembler(object):
         # Create a modified protein node for the bound target
         sub_agent = deepcopy(stmt.enz.bound_conditions[0].agent)
         sub_agent.mods.append(stmt._get_mod_condition())
-        self._add_nodes_edges(stmt.enz, sub_agent, pc.DIRECTLY_INCREASES,
-                              stmt.get_hash(refresh=True), stmt.evidence)
+        self._add_nodes_edges(stmt.enz, sub_agent, pc.DIRECTLY_INCREASES, stmt)
 
     def _assemble_translocation(self, stmt):
         #cc = hierarchies['cellular_component']
@@ -413,23 +408,40 @@ def belgraph_to_signed_graph(
     return graph
 
 
-def _combine_edge_data(relation, subj_edge, obj_edge, stmt_hash, evidences):
-    edge_data = {pc.RELATION: relation}
+def _combine_edge_data(relation, subj_edge, obj_edge, stmt):
+    edge_data = {
+        pc.RELATION: relation,
+        pc.ANNOTATIONS: _get_annotations_from_stmt(stmt),
+    }
     if subj_edge:
         edge_data[pc.SUBJECT] = subj_edge
     if obj_edge:
         edge_data[pc.OBJECT] = obj_edge
-    if stmt_hash:
-        edge_data['stmt_hash'] = stmt_hash
-    if not evidences:
+    if not stmt.evidence:
         return [edge_data]
-    edge_data_list = []
-    for ev in evidences:
-        pybel_ev = _get_evidence(ev)
-        edge_data_one = copy(edge_data)
-        edge_data_one.update(pybel_ev)
-        edge_data_list.append(edge_data_one)
-    return edge_data_list
+
+    return [
+        _update_edge_data_from_evidence(evidence, edge_data)
+        for evidence in stmt.evidence
+    ]
+
+
+def _update_edge_data_from_evidence(evidence, edge_data):
+    edge_data_one = copy(edge_data)
+    citation, evidence, annotations = _get_evidence(evidence)
+    edge_data_one.update({
+        pc.CITATION: citation,
+        pc.EVIDENCE: evidence,
+    })
+    edge_data_one[pc.ANNOTATIONS].update(annotations)
+    return edge_data_one
+
+
+def _get_annotations_from_stmt(stmt):
+    return {
+        'stmt_hash': stmt.get_hash(refresh=True),
+        'uuid': stmt.uuid
+    }
 
 
 def _get_agent_node(agent):
@@ -488,7 +500,8 @@ def _get_agent_node_no_bcs(agent):
         variants.append(var)
 
     if variants and not isinstance(node_data, CentralDogma):
-        logger.warning('Node should not have variants: %s, %s', node_data, variants)
+        logger.warning('Node should not have variants: %s, %s', node_data,
+                       variants)
     elif variants:
         node_data = node_data.with_variants(variants)
 
@@ -501,7 +514,8 @@ def _get_agent_node_no_bcs(agent):
 
 
 def _get_agent_grounding(agent):
-    """Convert an agent to the corresponding PyBEL DSL object (to be filled with variants later)."""
+    """Convert an agent to the corresponding PyBEL DSL object (to be filled
+     with variants later)."""
     def _get_id(_agent, key):
         _id = _agent.db_refs.get(key)
         if isinstance(_id, list):
@@ -555,7 +569,7 @@ def _get_agent_grounding(agent):
     if mesh_id:
         return bioprocess('MESH', name=agent.name, identifier=mesh_id)
 
-    return
+    return abundance('TEXT', name=agent.name)
 
 
 def _get_agent_activity(agent):
@@ -574,22 +588,27 @@ def _get_agent_activity(agent):
 
 def _get_evidence(evidence):
     text = evidence.text if evidence.text else 'No evidence text.'
-    pybel_ev = {pc.EVIDENCE: text}
+
     # If there is a PMID, use it as the citation
     if evidence.pmid:
-        citation = {pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
-                    pc.CITATION_IDENTIFIER: evidence.pmid}
+        citation = citation_dict(
+            db=pc.CITATION_TYPE_PUBMED,
+            db_id=evidence.pmid,
+        )
     # If no PMID, include the interface and source_api for now--
     # in general this should probably be in the annotations for all evidence
     else:
-        cit_source = evidence.source_api if evidence.source_api else 'Unknown'
-        cit_id = evidence.source_id if evidence.source_id else 'Unknown'
+        cit_source = evidence.source_api or 'Unknown'
+        cit_id = evidence.source_id or 'Unknown'
         cit_ref_str = '%s:%s' % (cit_source, cit_id)
-        citation = {pc.CITATION_DB: pc.CITATION_TYPE_OTHER,
-                    pc.CITATION_IDENTIFIER: cit_ref_str}
-    pybel_ev[pc.CITATION] = citation
+        citation = citation_dict(
+            db=pc.CITATION_TYPE_OTHER,
+            db_id=cit_ref_str,
+        )
 
-    annotations = {}
+    annotations = {
+        'source_hash': evidence.get_source_hash(),
+    }
     if evidence.source_api:
         annotations['source_api'] = evidence.source_api
     if evidence.source_id:
@@ -599,10 +618,7 @@ def _get_evidence(evidence):
             continue
         annotations[key] = value
 
-    if annotations:
-        pybel_ev[pc.ANNOTATIONS] = annotations
-
-    return pybel_ev
+    return citation, text, annotations
 
 
 def get_causal_edge(stmt, activates):
