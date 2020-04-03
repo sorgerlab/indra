@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Tests for the PyBEL assembler."""
+
 import json
 import networkx as nx
 import pybel.constants as pc
@@ -197,7 +198,7 @@ def test_direct_activation():
         pc.ANNOTATIONS: {
             'stmt_hash': hash1,
             'source_hash': stmt1_ev.get_source_hash(),
-            'uuid': stmt1.uuid
+            'uuid': stmt1.uuid,
         },
     }
     edge2 = {
@@ -212,7 +213,7 @@ def test_direct_activation():
         pc.ANNOTATIONS: {
             'stmt_hash': hash2,
             'source_hash': stmt1_ev.get_source_hash(),
-            'uuid': stmt2.uuid
+            'uuid': stmt2.uuid,
         },
     }
     for stmt, expected_edge in ((stmt1, edge1), (stmt2, edge2)):
