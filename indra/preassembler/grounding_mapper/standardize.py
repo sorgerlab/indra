@@ -2,7 +2,7 @@ __all__ = ['standardize_agent_name', 'standardize_db_refs']
 
 import logging
 from indra.databases import uniprot_client, hgnc_client, mesh_client, \
-    chebi_client, go_client
+    chebi_client, go_client, efo_client, hp_client, doid_client
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,15 @@ def standardize_db_refs(db_refs):
     dict
         The db_refs dict with standardized entries.
     """
+    # First we normalize out EFO, HP and DOID and map them to MESH
+    for db_ns in ('EFO', 'HP', 'DOID'):
+        if db_ns in db_refs:
+            mesh_id = mesh_client.get_mesh_id_from_db_id(db_ns, db_refs[db_ns])
+            if mesh_id:
+                db_refs['MESH'] = mesh_id
+                break
+
+    # Next we normalize out MESH to other name spaces
     mesh_id = db_refs.get('MESH')
     # TODO: in principle we could also do a reverse mapping to MESH IDs from
     # other name spaces
@@ -28,7 +37,10 @@ def standardize_db_refs(db_refs):
         db_mapping = mesh_client.get_db_mapping(mesh_id)
         if db_mapping:
             db_ns, db_id = db_mapping
-            db_refs[db_ns] = db_id
+            if db_ns not in db_refs:
+                db_refs[db_ns] = db_id
+
+    # Next we look at gene/protein name spaces
     up_id = db_refs.get('UP')
     hgnc_id = db_refs.get('HGNC')
     # If we have a UP ID and no HGNC ID, we try to get a gene name,
@@ -62,7 +74,7 @@ def standardize_db_refs(db_refs):
             else:
                 db_refs['UP'] = mapped_up_id
 
-    # Now try to improve chemical groundings
+    # Now we normalize between chemical name spaces
     pc_id = db_refs.get('PUBCHEM')
     chebi_id = db_refs.get('CHEBI')
     hmdb_id = db_refs.get('HMDB')
@@ -109,7 +121,7 @@ def standardize_db_refs(db_refs):
     elif chebi_id and not pc_id and mapped_pc_id:
         db_refs['PUBCHEM'] = mapped_pc_id
 
-    # Try to apply MeSH/GO mappings
+    # Finally, ew standardize between MESH and GO
     go_id = db_refs.get('GO')
     if mesh_id and not go_id:
         mapped_go_id = mesh_client.get_go_id(mesh_id)
@@ -119,6 +131,7 @@ def standardize_db_refs(db_refs):
         mapped_mesh_id = mesh_client.get_mesh_id_from_go_id(go_id)
         if mapped_mesh_id:
             db_refs['MESH'] = mapped_mesh_id
+
     # Otherwise there is no useful mapping that we can add and no
     # further conflict to resolve.
     return db_refs
@@ -175,4 +188,10 @@ def name_from_grounding(db_ns, db_id):
         return mesh_client.get_mesh_name(db_id, False)
     elif db_ns == 'GO':
         return go_client.get_go_label(db_id)
+    elif db_ns == 'HP':
+        return hp_client.get_hp_name_from_hp_id(db_id)
+    elif db_ns == 'EFO':
+        return efo_client.get_efo_name_from_efo_id(db_id)
+    elif db_ns == 'DOID':
+        return doid_client.get_doid_name_from_doid_id(db_id)
     return None
