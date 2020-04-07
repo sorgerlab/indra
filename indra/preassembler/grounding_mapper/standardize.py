@@ -1,8 +1,9 @@
-__all__ = ['standardize_agent_name', 'standardize_db_refs']
+__all__ = ['standardize_agent_name', 'standardize_db_refs',
+           'name_from_grounding']
 
 import logging
 from indra.databases import uniprot_client, hgnc_client, mesh_client, \
-    chebi_client, go_client
+    chebi_client, go_client, efo_client, hp_client, doid_client
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,15 @@ def standardize_db_refs(db_refs):
     dict
         The db_refs dict with standardized entries.
     """
+    # First we normalize out EFO, HP and DOID and map them to MESH
+    for db_ns in ('EFO', 'HP', 'DOID'):
+        if db_ns in db_refs:
+            mesh_id = mesh_client.get_mesh_id_from_db_id(db_ns, db_refs[db_ns])
+            if mesh_id:
+                db_refs['MESH'] = mesh_id
+                break
+
+    # Next we normalize out MESH to other name spaces
     mesh_id = db_refs.get('MESH')
     # TODO: in principle we could also do a reverse mapping to MESH IDs from
     # other name spaces
@@ -28,9 +38,21 @@ def standardize_db_refs(db_refs):
         db_mapping = mesh_client.get_db_mapping(mesh_id)
         if db_mapping:
             db_ns, db_id = db_mapping
-            db_refs[db_ns] = db_id
+            if db_ns not in db_refs:
+                db_refs[db_ns] = db_id
+
+    # Next we look at gene/protein name spaces
     up_id = db_refs.get('UP')
+    up_pro = db_refs.get('UPPRO')
     hgnc_id = db_refs.get('HGNC')
+
+    # If we have a feature without its protein, we get it
+    if up_pro and not up_id:
+        up_id_mapped = uniprot_client.get_feature_of(up_pro)
+        if up_id_mapped:
+            db_refs['UP'] = up_id_mapped
+            up_id = up_id_mapped
+
     # If we have a UP ID and no HGNC ID, we try to get a gene name,
     # and if possible, a HGNC ID from that
     if up_id and not hgnc_id:
@@ -62,7 +84,7 @@ def standardize_db_refs(db_refs):
             else:
                 db_refs['UP'] = mapped_up_id
 
-    # Now try to improve chemical groundings
+    # Now we normalize between chemical name spaces
     pc_id = db_refs.get('PUBCHEM')
     chebi_id = db_refs.get('CHEBI')
     hmdb_id = db_refs.get('HMDB')
@@ -109,7 +131,7 @@ def standardize_db_refs(db_refs):
     elif chebi_id and not pc_id and mapped_pc_id:
         db_refs['PUBCHEM'] = mapped_pc_id
 
-    # Try to apply MeSH/GO mappings
+    # Finally, we standardize between MESH and GO
     go_id = db_refs.get('GO')
     if mesh_id and not go_id:
         mapped_go_id = mesh_client.get_go_id(mesh_id)
@@ -119,6 +141,7 @@ def standardize_db_refs(db_refs):
         mapped_mesh_id = mesh_client.get_mesh_id_from_go_id(go_id)
         if mapped_mesh_id:
             db_refs['MESH'] = mapped_mesh_id
+
     # Otherwise there is no useful mapping that we can add and no
     # further conflict to resolve.
     return db_refs
@@ -154,15 +177,42 @@ def standardize_agent_name(agent, standardize_refs=True):
 
     # We next look for prioritized grounding, if missing, we return
     db_ns, db_id = agent.get_grounding()
+
+    # We next handle the special case of UPPRO features
+    if 'UPPRO' in agent.db_refs:
+        feature_name = name_from_grounding('UPPRO', agent.db_refs['UPPRO'])
+        if feature_name:
+            agent.name = feature_name
+            return
+
+    # If there's no grounding then we can't do more to standardize the
+    # name and return
     if not db_ns or not db_id:
         return
 
+    # If there is grounding available, we can try to get the standardized name
+    # and in the rare case that we don't get it, we don't set it.
     standard_name = name_from_grounding(db_ns, db_id)
     if standard_name:
         agent.name = standard_name
 
 
 def name_from_grounding(db_ns, db_id):
+    """Return a standardized name given a name space and an ID.
+
+    Parameters
+    ----------
+    db_ns : str
+        The name space in which the ID is defined.
+    db_id : str
+        The ID within the name space.
+
+    Returns
+    -------
+    str or None
+        The standardized name corresponding to the grounding or None if
+        not available.
+    """
     if db_ns == 'FPLX':
         return db_id
     elif db_ns == 'HGNC':
@@ -175,4 +225,14 @@ def name_from_grounding(db_ns, db_id):
         return mesh_client.get_mesh_name(db_id, False)
     elif db_ns == 'GO':
         return go_client.get_go_label(db_id)
+    elif db_ns == 'HP':
+        return hp_client.get_hp_name_from_hp_id(db_id)
+    elif db_ns == 'EFO':
+        return efo_client.get_efo_name_from_efo_id(db_id)
+    elif db_ns == 'DOID':
+        return doid_client.get_doid_name_from_doid_id(db_id)
+    elif db_ns == 'UPPRO':
+        feat = uniprot_client.get_feature_by_id(db_id)
+        if feat and feat.name:
+            return feat.name
     return None

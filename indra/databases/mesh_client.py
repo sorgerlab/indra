@@ -44,10 +44,22 @@ if os.path.exists(MESH_SUPP_FILE):
 def _load_db_mappings(path):
     mesh_to_db = {}
     db_to_mesh = {}
+    to_db_ambigs = set()
+    db_to_ambigs = set()
     for _, mesh_id, _, db_ns, db_id, _ in \
             read_unicode_csv(path, delimiter='\t'):
-        mesh_to_db[mesh_id] = (db_ns, db_id)
-        db_to_mesh[(db_ns, db_id)] = mesh_id
+        # Make sure we don't add any one-to-many mappings
+        if mesh_id in mesh_to_db:
+            to_db_ambigs.add(mesh_id)
+            mesh_to_db.pop(mesh_id, None)
+        elif mesh_id not in to_db_ambigs:
+            mesh_to_db[mesh_id] = (db_ns, db_id)
+        # Make sure we don't add any one-to-many reverse mappings
+        if (db_ns, db_id) in db_to_mesh:
+            db_to_ambigs.add((db_ns, db_id))
+            db_to_mesh.pop((db_ns, db_id), None)
+        elif (db_ns, db_id) not in db_to_ambigs:
+            db_to_mesh[(db_ns, db_id)] = mesh_id
     return mesh_to_db, db_to_mesh
 
 

@@ -2062,3 +2062,16 @@ def test_migration():
     assert isinstance(m.context, MovementContext)
     assert m.context.locations[0]['location'].name == 'South Sudan'
     assert m.context.locations[0]['role'] == 'origin'
+
+
+def test_agent_get_grounding():
+    gr = Agent('x', db_refs={}).get_grounding()
+    assert gr == (None, None), gr
+    gr = Agent('x', db_refs={'FPLX': 'MEK'}).get_grounding()
+    assert gr == ('FPLX', 'MEK')
+
+    ag = Agent('x', db_refs={'XYZ': '123', 'ZYX': '321'})
+    gr = ag.get_grounding(ns_order=['XYZ', 'ZYX'])
+    assert gr == ('XYZ', '123'), gr
+    gr = ag.get_grounding(ns_order=['ZYX', 'XYZ'])
+    assert gr == ('ZYX', '321'), gr

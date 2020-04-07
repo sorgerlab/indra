@@ -388,6 +388,62 @@ def test_name_standardize_mesh_other_db():
     assert a2.name == 'ELAVL2'
 
 
+def test_standardize_db_refs_efo_hp_doid():
+    refs = standardize_db_refs({'EFO': '0009502'})
+    assert refs.get('MESH') == 'D000007', refs
+    refs = standardize_db_refs({'MESH': 'D000007'})
+    assert refs.get('EFO') == '0009502', refs
+
+    refs = standardize_db_refs({'HP': 'HP:0031801'})
+    assert refs.get('MESH') == 'D064706', refs
+    refs = standardize_db_refs({'MESH': 'D064706'})
+    assert refs.get('HP') == 'HP:0031801', refs
+
+    # There would be a one-to-many mapping from this DOID
+    # so we make sure we don't add a mapping for it.
+    refs = standardize_db_refs({'DOID': 'DOID:0060695'})
+    assert 'MESH' not in refs
+    refs = standardize_db_refs({'MESH': 'D000071017'})
+    assert refs.get('DOID') == 'DOID:0060695'
+
+    refs = standardize_db_refs({'DOID': 'DOID:0060495'})
+    assert refs.get('MESH') == 'D000067208'
+
+
+def test_standardize_name_efo_hp_doid():
+    ag = Agent('x', db_refs={'HP': 'HP:0031801'})
+    standardize_agent_name(ag)
+    # Name based on MESH mapping
+    assert ag.name == 'Vocal Cord Dysfunction'
+
+    ag = Agent('x', db_refs={'HP': 'HP:0000002'})
+    standardize_agent_name(ag)
+    # Name based on HP itself
+    assert ag.name == 'Abnormality of body height'
+
+    ag = Agent('x', db_refs={'DOID': 'DOID:0014667'})
+    standardize_agent_name(ag)
+    # Name based on HP itself
+    assert ag.name == 'disease of metabolism'
+
+    ag = Agent('x', db_refs={'EFO': '1002050'})
+    standardize_agent_name(ag)
+    # Name based on HP itself
+    assert ag.name == 'nephritis'
+
+
+def test_standardize_uppro():
+    ag = Agent('x', db_refs={'UP': 'P01019'})
+    standardize_agent_name(ag)
+    assert ag.name == 'AGT'
+    ag = Agent('x', db_refs={'UPPRO': 'PRO_0000032458'})
+    standardize_agent_name(ag)
+    assert ag.name == 'Angiotensin-2', ag.name
+    ag = Agent('x', db_refs={'UPPRO': 'PRO_0000032458', 'UP': 'P01019'})
+    standardize_agent_name(ag)
+    assert ag.name == 'Angiotensin-2', ag.name
+
+
 @attr('nonpublic')
 def test_adeft_mapping():
     er1 = Agent('ER', db_refs={'TEXT': 'ER'})

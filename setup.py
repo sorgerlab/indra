@@ -12,7 +12,7 @@ def main():
     install_list = ['pysb>=1.3.0,<=1.9.1', 'objectpath', 'rdflib',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2', 'pandas', 'ndex2==2.0.1', 'jinja2',
-                    'protmapper>=0.0.14']
+                    'protmapper>=0.0.16', 'obonet']
 
     extras_require = {
                       # Inputs and outputs
@@ -25,7 +25,6 @@ def main():
                       'sofia': ['openpyxl'],
                       'bel': ['pybel>=0.14.2,<0.15.0'],
                       'sbml': ['python-libsbml'],
-                      'obo': ['obonet'],
                       # Tools and analysis
                       'machine': ['pytz', 'tzlocal', 'tweepy', 'pyyaml>=5.1.0',
                                   'click'],
