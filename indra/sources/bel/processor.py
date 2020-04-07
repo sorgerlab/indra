@@ -573,7 +573,7 @@ def get_db_refs_by_name(ns, name, node_data):
         else:
             logger.info('CHEBI name %s not found in map.' % name)
     # SDIS, SCHEM: Include the name as the ID for the namespace
-    elif ns in ('SDIS', 'SCHEM'):
+    elif ns in ('SDIS', 'SCHEM', 'TEXT'):
         db_refs = {ns: name}
     else:
         logger.info("Unhandled namespace: %s: %s (%s)" % (ns, name,
