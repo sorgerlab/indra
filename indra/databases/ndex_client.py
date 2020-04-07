@@ -211,16 +211,18 @@ def update_network(cx_str, network_id, ndex_cred=None):
                }
     logger.info('Updating NDEx network (%s) profile to %s',
                 network_id, profile)
+
+    time.sleep(5)
     profile_retries = 3
     for _ in range(profile_retries):
         try:
-            time.sleep(30)
             nd.update_network_profile(network_id, profile)
             logger.info('Updated NDEx network profile.')
             break
         except Exception as e:
             logger.error('Could not update NDEx network profile.')
             logger.error(e)
+            time.sleep(30)
 
     set_style(network_id, ndex_cred)
 
