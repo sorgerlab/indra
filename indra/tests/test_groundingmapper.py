@@ -410,6 +410,28 @@ def test_standardize_db_refs_efo_hp_doid():
     assert refs.get('MESH') == 'D000067208'
 
 
+def test_standardize_name_efo_hp_doid():
+    ag = Agent('x', db_refs={'HP': 'HP:0031801'})
+    standardize_agent_name(ag)
+    # Name based on MESH mapping
+    assert ag.name == 'Vocal Cord Dysfunction'
+
+    ag = Agent('x', db_refs={'HP': 'HP:0000002'})
+    standardize_agent_name(ag)
+    # Name based on HP itself
+    assert ag.name == 'Abnormality of body height'
+
+    ag = Agent('x', db_refs={'DOID': 'DOID:0014667'})
+    standardize_agent_name(ag)
+    # Name based on HP itself
+    assert ag.name == 'disease of metabolism'
+
+    ag = Agent('x', db_refs={'EFO': '1002050'})
+    standardize_agent_name(ag)
+    # Name based on HP itself
+    assert ag.name == 'nephritis'
+
+
 @attr('nonpublic')
 def test_adeft_mapping():
     er1 = Agent('ER', db_refs={'TEXT': 'ER'})
