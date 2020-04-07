@@ -1,4 +1,5 @@
-__all__ = ['standardize_agent_name', 'standardize_db_refs']
+__all__ = ['standardize_agent_name', 'standardize_db_refs',
+           'name_from_grounding']
 
 import logging
 from indra.databases import uniprot_client, hgnc_client, mesh_client, \
@@ -130,7 +131,7 @@ def standardize_db_refs(db_refs):
     elif chebi_id and not pc_id and mapped_pc_id:
         db_refs['PUBCHEM'] = mapped_pc_id
 
-    # Finally, ew standardize between MESH and GO
+    # Finally, we standardize between MESH and GO
     go_id = db_refs.get('GO')
     if mesh_id and not go_id:
         mapped_go_id = mesh_client.get_go_id(mesh_id)
@@ -176,8 +177,6 @@ def standardize_agent_name(agent, standardize_refs=True):
 
     # We next look for prioritized grounding, if missing, we return
     db_ns, db_id = agent.get_grounding()
-    if not db_ns or not db_id:
-        return
 
     # We next handle the special case of UPPRO features
     if 'UPPRO' in agent.db_refs:
@@ -186,12 +185,34 @@ def standardize_agent_name(agent, standardize_refs=True):
             agent.name = feature_name
             return
 
+    # If there's no grounding then we can't do more to standardize the
+    # name and return
+    if not db_ns or not db_id:
+        return
+
+    # If there is grounding available, we can try to get the standardized name
+    # and in the rare case that we don't get it, we don't set it.
     standard_name = name_from_grounding(db_ns, db_id)
     if standard_name:
         agent.name = standard_name
 
 
 def name_from_grounding(db_ns, db_id):
+    """Return a standardized name given a name space and an ID.
+
+    Parameters
+    ----------
+    db_ns : str
+        The name space in which the ID is defined.
+    db_id : str
+        The ID within the name space.
+
+    Returns
+    -------
+    str or None
+        The standardized name corresponding to the grounding or None if
+        not available.
+    """
     if db_ns == 'FPLX':
         return db_id
     elif db_ns == 'HGNC':
