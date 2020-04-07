@@ -22,11 +22,10 @@ class RLIMSP_Error(Exception):
 def process_from_webservice(id_val, id_type='pmcid', source='pmc'):
     """Return an output from RLIMS-p for the given PubMed ID or PMC ID.
 
-    The web service is documented at: https://research.bioinformatics.udel.
-    edu/itextmine/api/. The /data/rlims URL endpoint is extended with
-    three additional elements /{collection}/{key}/{value} where
-    collection is "medline" or "pmc", key is "pmid" or "pmcid", and
-    value is a specific PMID or PMCID.
+    The web service is documented at: https://research.bioinformatics.udel.edu/itextmine/api/.
+    The /data/rlims URL endpoint is extended with three additional elements:
+    /{collection}/{key}/{value} where collection is "medline" or "pmc", key is
+    "pmid" or "pmcid", and value is a specific PMID or PMCID.
 
     Parameters
     ----------
@@ -36,7 +35,7 @@ def process_from_webservice(id_val, id_type='pmcid', source='pmc'):
     id_type : Optional[str]
         Either 'pmid' or 'pmcid'. The default is 'pmcid'. Corresponds to the
         "key" argument of the REST API.
-    source : str
+    source : Optional[str]
         Either 'pmc' or 'medline', whether you want pmc fulltext or medline
         abstracts. Corresponds to the "collection" argument of the REST API.
 
