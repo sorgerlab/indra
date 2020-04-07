@@ -34,18 +34,26 @@ def process_row(row):
     _, host_tax = row['host_tax'].split(':')
     assert row['vir_tax'].startswith('taxid:'), row['vir_tax']
     _, vir_tax = row['vir_tax'].split(':')
+    assert row['score'].startswith('virhostnet-miscore:'), row['score']
+    _, score = row['score'].split(':')
+    score = float(score)
+
+    source_ids = parse_source_ids(row['source_id'])
 
     annotations = {
         'exp_method': {'id': exp_method_id, 'name': exp_method_name},
         'int_type': {'id': int_type__id, 'name': int_type_name},
         'host_tax': host_tax,
-        'vir_tax': vir_tax
+        'vir_tax': vir_tax,
+        'score': score,
+        **source_ids,
     }
 
     text_refs = parse_text_refs(row['publication'])
 
     ev = Evidence(source_api='virhostnet', annotations=annotations,
-                  text_refs=text_refs, pmid=text_refs.get('PMID'))
+                  text_refs=text_refs, pmid=text_refs.get('PMID'),
+                  source_id=source_ids.get('virhostnet-rid'))
 
     stmt = Complex([host_agent, vir_agent], evidence=[ev])
     return stmt
@@ -85,8 +93,16 @@ def parse_text_refs(text_ref_str):
     if re.match(r'^\d+$', tr_id):
         return {'PMID': tr_id}
     else:
-        match = re.match(r'^https\(//doi.org/(.+)\)$')
+        match = re.match(r'^https\(//doi.org/(.+)\)$', tr_id)
         if not match:
             logger.warning('Failed to parse text ref: %s' % text_ref_str)
+            return {}
         doi = match.groups()[0]
         return {'DOI': doi}
+
+
+def parse_source_ids(source_id_str):
+    ids = source_id_str.split('|')
+    assert len(ids) == 2
+    ids_dict = {id.split(':')[0]: id.split(':')[1] for id in ids}
+    return ids_dict
