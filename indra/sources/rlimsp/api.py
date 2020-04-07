@@ -19,24 +19,26 @@ class RLIMSP_Error(Exception):
     pass
 
 
-def process_from_webservice(id_val, id_type='pmcid', source='pmc',
-                            with_grounding=True):
+def process_from_webservice(id_val, id_type='pmcid', source='pmc'):
     """Return an output from RLIMS-p for the given PubMed ID or PMC ID.
+
+    The web service is documented at: https://research.bioinformatics.udel.
+    edu/itextmine/api/. The /data/rlims URL endpoint is extended with
+    three additional elements /{collection}/{key}/{value} where
+    collection is "medline" or "pmc", key is "pmid" or "pmcid", and
+    value is a specific PMID or PMCID.
 
     Parameters
     ----------
     id_val : str
-        A PMCID, with the prefix PMC, or pmid, with no prefix, of the paper to
-        be "read".
-    id_type : str
-        Either 'pmid' or 'pmcid'. The default is 'pmcid'.
+        A PMCID, with the prefix PMC, or PMID, with no prefix, of the paper to
+        be "read". Corresponds to the "value" argument of the REST API.
+    id_type : Optional[str]
+        Either 'pmid' or 'pmcid'. The default is 'pmcid'. Corresponds to the
+        "key" argument of the REST API.
     source : str
         Either 'pmc' or 'medline', whether you want pmc fulltext or medline
-        abstracts.
-    with_grounding : bool
-        The RLIMS-P web service provides two endpoints, one pre-grounded, the
-        other not so much. The grounded endpoint returns far less content, and
-        may perform some grounding that can be handled by the grounding mapper.
+        abstracts. Corresponds to the "collection" argument of the REST API.
 
     Returns
     -------
@@ -44,12 +46,7 @@ def process_from_webservice(id_val, id_type='pmcid', source='pmc',
         An RlimspProcessor which contains a list of extracted INDRA Statements
         in its statements attribute.
     """
-    if with_grounding:
-        fmt = '%s.normed/%s/%s'
-    else:
-        fmt = '%s/%s/%s'
-
-    resp = requests.get(RLIMSP_URL + fmt % (source, id_type, id_val))
+    resp = requests.get(RLIMSP_URL + '%s/%s/%s' % (source, id_type, id_val))
 
     if resp.status_code != 200:
         raise RLIMSP_Error("Bad status code: %d - %s"
