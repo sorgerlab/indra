@@ -16,8 +16,11 @@ from .resources import get_valid_residue, get_valid_location, activity_types, \
     amino_acids
 
 
-
 logger = logging.getLogger(__name__)
+
+
+default_ns_order = ['FPLX', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH', 'DOID', 'HP',
+                    'EFO']
 
 
 @python_2_unicode_compatible
@@ -112,7 +115,7 @@ class Agent(Concept):
         return str(key)
 
     # Function to get the namespace to look in
-    def get_grounding(self):
+    def get_grounding(self, ns_order=None):
         """Return a tuple of a preferred grounding namespace and ID.
 
         Returns
@@ -123,25 +126,15 @@ class Agent(Concept):
             namespace. If no preferred grounding is available, a tuple of
             Nones is returned.
         """
-        fplx = self.db_refs.get('FPLX')
-        if fplx:
-            return 'FPLX', fplx
-        hgnc = self.db_refs.get('HGNC')
-        if hgnc:
-            if isinstance(hgnc, list):
-                hgnc = hgnc[0]
-            return 'HGNC', str(hgnc)
-        up = self.db_refs.get('UP')
-        if up:
-            if isinstance(up, list):
-                up = up[0]
-            return 'UP', str(up)
-        if 'CHEBI' in self.db_refs:
-            return 'CHEBI', self.db_refs['CHEBI']
-        if 'GO' in self.db_refs:
-            return 'GO', self.db_refs['GO']
-        if 'MESH' in self.db_refs:
-            return 'MESH', self.db_refs['MESH']
+        if ns_order is None:
+            ns_order = default_ns_order
+        for db_ns in ns_order:
+            db_id = self.db_refs.get(db_ns)
+            if not db_id:
+                continue
+            if isinstance(db_id, (list, tuple)):
+                db_id = db_id[0]
+            return db_ns, db_id
         return None, None
 
     def isa(self, other, hierarchies):
