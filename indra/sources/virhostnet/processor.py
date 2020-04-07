@@ -1,6 +1,5 @@
 import re
 import logging
-from indra.databases import uniprot_client
 from indra.statements import Agent, Complex, Evidence
 from indra.preassembler.grounding_mapper import standardize_agent_name
 
@@ -9,6 +8,20 @@ logger = logging.getLogger(__name__)
 
 
 class VirhostnetProcessor:
+    """A processor that takes a pandas DataFrame and extracts INDRA Statements.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        A pandas DataFrame representing VirHostNet interactions.
+
+    Attributes
+    ----------
+    df : pandas.DataFrame
+        A pandas DataFrame representing VirHostNet interactions.
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements extracted from the DataFrame.
+    """
     def __init__(self, df):
         self.df = df
         self.statements = []
@@ -21,6 +34,7 @@ class VirhostnetProcessor:
 
 
 def process_row(row):
+    """Process one row of the DataFrame into an INDRA Statement."""
     host_agent = get_agent_from_grounding(row['host_grounding'])
     vir_agent = get_agent_from_grounding(row['vir_grounding'])
 
@@ -60,6 +74,7 @@ def process_row(row):
 
 
 def get_agent_from_grounding(grounding):
+    """Return an INDRA Agent based on a grounding annotation."""
     db_ns, db_id = grounding.split(':')
     # Assume UniProt or RefSeq IDs
     assert db_ns in {'uniprotkb', 'refseq', 'ddbj/embl/genbank'}, db_ns
@@ -81,6 +96,7 @@ def get_agent_from_grounding(grounding):
 
 
 def parse_psi_mi(psi_mi_str):
+    """Parse a PSI-MI annotation into an ID and name pair."""
     # Example: psi-mi:"MI:0018"(two hybrid)
     match = re.match(r'psi-mi:"(.+)"\((.+)\)', psi_mi_str)
     mi_id, name = match.groups()
@@ -88,6 +104,7 @@ def parse_psi_mi(psi_mi_str):
 
 
 def parse_text_refs(text_ref_str):
+    """Parse a text reference annotation into a text_refs dict."""
     tr_ns, tr_id = text_ref_str.split(':')
     assert tr_ns == 'pubmed', text_ref_str
     if re.match(r'^\d+$', tr_id):
@@ -102,6 +119,7 @@ def parse_text_refs(text_ref_str):
 
 
 def parse_source_ids(source_id_str):
+    """Parse VirHostNet source id annotations into a dict."""
     ids = source_id_str.split('|')
     assert len(ids) == 2
     ids_dict = {id.split(':')[0]: id.split(':')[1] for id in ids}
