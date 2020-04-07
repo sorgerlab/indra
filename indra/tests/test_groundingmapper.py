@@ -432,6 +432,18 @@ def test_standardize_name_efo_hp_doid():
     assert ag.name == 'nephritis'
 
 
+def test_standardize_uppro():
+    ag = Agent('x', db_refs={'UP': 'P01019'})
+    standardize_agent_name(ag)
+    assert ag.name == 'AGT'
+    ag = Agent('x', db_refs={'UPPRO': 'PRO_0000032458'})
+    standardize_agent_name(ag)
+    assert ag.name == 'Angiotensin-2', ag.name
+    ag = Agent('x', db_refs={'UPPRO': 'PRO_0000032458', 'UP': 'P01019'})
+    standardize_agent_name(ag)
+    assert ag.name == 'Angiotensin-2', ag.name
+
+
 @attr('nonpublic')
 def test_adeft_mapping():
     er1 = Agent('ER', db_refs={'TEXT': 'ER'})

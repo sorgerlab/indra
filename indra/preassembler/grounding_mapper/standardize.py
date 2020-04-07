@@ -42,7 +42,16 @@ def standardize_db_refs(db_refs):
 
     # Next we look at gene/protein name spaces
     up_id = db_refs.get('UP')
+    up_pro = db_refs.get('UPPRO')
     hgnc_id = db_refs.get('HGNC')
+
+    # If we have a feature without its protein, we get it
+    if up_pro and not up_id:
+        up_id_mapped = uniprot_client.get_feature_of(up_pro)
+        if up_id_mapped:
+            db_refs['UP'] = up_id_mapped
+            up_id = up_id_mapped
+
     # If we have a UP ID and no HGNC ID, we try to get a gene name,
     # and if possible, a HGNC ID from that
     if up_id and not hgnc_id:
@@ -170,6 +179,13 @@ def standardize_agent_name(agent, standardize_refs=True):
     if not db_ns or not db_id:
         return
 
+    # We next handle the special case of UPPRO features
+    if 'UPPRO' in agent.db_refs:
+        feature_name = name_from_grounding('UPPRO', agent.db_refs['UPPRO'])
+        if feature_name:
+            agent.name = feature_name
+            return
+
     standard_name = name_from_grounding(db_ns, db_id)
     if standard_name:
         agent.name = standard_name
@@ -194,4 +210,8 @@ def name_from_grounding(db_ns, db_id):
         return efo_client.get_efo_name_from_efo_id(db_id)
     elif db_ns == 'DOID':
         return doid_client.get_doid_name_from_doid_id(db_id)
+    elif db_ns == 'UPPRO':
+        feat = uniprot_client.get_feature_by_id(db_id)
+        if feat and feat.name:
+            return feat.name
     return None
