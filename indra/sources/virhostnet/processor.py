@@ -1,10 +1,14 @@
 import re
+import logging
 from indra.databases import uniprot_client
 from indra.statements import Agent, Complex, Evidence
 from indra.preassembler.grounding_mapper import standardize_agent_name
 
 
-class VirhostnetProcessor():
+logger = logging.getLogger(__name__)
+
+
+class VirhostnetProcessor:
     def __init__(self, df):
         self.df = df
         self.statements = []
@@ -26,12 +30,22 @@ def process_row(row):
     exp_method_id, exp_method_name = parse_psi_mi(row['exp_method'])
     int_type__id, int_type_name = parse_psi_mi(row['int_type'])
 
+    assert row['host_tax'].startswith('taxid:'), row['host_tax']
+    _, host_tax = row['host_tax'].split(':')
+    assert row['vir_tax'].startswith('taxid:'), row['vir_tax']
+    _, vir_tax = row['vir_tax'].split(':')
+
     annotations = {
         'exp_method': {'id': exp_method_id, 'name': exp_method_name},
         'int_type': {'id': int_type__id, 'name': int_type_name},
+        'host_tax': host_tax,
+        'vir_tax': vir_tax
     }
 
-    ev = Evidence(source_api='virhostnet', annotations=annotations)
+    text_refs = parse_text_refs(row['publication'])
+
+    ev = Evidence(source_api='virhostnet', annotations=annotations,
+                  text_refs=text_refs, pmid=text_refs.get('PMID'))
 
     stmt = Complex([host_agent, vir_agent], evidence=[ev])
     return stmt
@@ -60,6 +74,19 @@ def get_agent_from_grounding(grounding):
 
 def parse_psi_mi(psi_mi_str):
     # Example: psi-mi:"MI:0018"(two hybrid)
-    match = re.match(r'psi-mi:"(.+)"\((.+)\)')
+    match = re.match(r'psi-mi:"(.+)"\((.+)\)', psi_mi_str)
     mi_id, name = match.groups()
     return mi_id, name
+
+
+def parse_text_refs(text_ref_str):
+    tr_ns, tr_id = text_ref_str.split(':')
+    assert tr_ns == 'pubmed', text_ref_str
+    if re.match(r'^\d+$', tr_id):
+        return {'PMID': tr_id}
+    else:
+        match = re.match(r'^https\(//doi.org/(.+)\)$')
+        if not match:
+            logger.warning('Failed to parse text ref: %s' % text_ref_str)
+        doi = match.groups()[0]
+        return {'DOI': doi}
