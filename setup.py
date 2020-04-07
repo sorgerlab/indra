@@ -78,6 +78,7 @@ def main():
                     'indra.sources.sparser', 'indra.sources.tas',
                     'indra.sources.tees',
                     'indra.sources.trips', 'indra.sources.trrust',
+                    'indra.sources.virhostnet',
                     'indra.resources', 'indra.statements',
                     'indra.tests', 'indra.tests.test_obo_clients',
                     'indra.tools', 'indra.tools.machine', 'indra.util'],
