@@ -1,5 +1,6 @@
 import re
 import logging
+from indra.databases import uniprot_client
 from indra.statements import Agent, Complex, Evidence
 from indra.preassembler.grounding_mapper import standardize_agent_name
 
@@ -22,21 +23,24 @@ class VirhostnetProcessor:
     statements : list[indra.statements.Statement]
         A list of INDRA Statements extracted from the DataFrame.
     """
-    def __init__(self, df):
+    def __init__(self, df, up_web_fallback=False):
         self.df = df
+        self.up_web_fallback = up_web_fallback
         self.statements = []
 
     def extract_statements(self):
         for _, row in self.df.iterrows():
-            stmt = process_row(row)
+            stmt = process_row(row, up_web_fallback=self.up_web_fallback)
             if stmt:
                 self.statements.append(stmt)
 
 
-def process_row(row):
+def process_row(row, up_web_fallback=False):
     """Process one row of the DataFrame into an INDRA Statement."""
-    host_agent = get_agent_from_grounding(row['host_grounding'])
-    vir_agent = get_agent_from_grounding(row['vir_grounding'])
+    host_agent = get_agent_from_grounding(row['host_grounding'],
+                                          up_web_fallback=up_web_fallback)
+    vir_agent = get_agent_from_grounding(row['vir_grounding'],
+                                         up_web_fallback=up_web_fallback)
 
     # There's a column that is always a - character
     assert row['dash'] == '-', row['dash']
@@ -73,7 +77,7 @@ def process_row(row):
     return stmt
 
 
-def get_agent_from_grounding(grounding):
+def get_agent_from_grounding(grounding, up_web_fallback=False):
     """Return an INDRA Agent based on a grounding annotation."""
     db_ns, db_id = grounding.split(':')
     # Assume UniProt or RefSeq IDs
@@ -91,7 +95,14 @@ def get_agent_from_grounding(grounding):
     else:
         db_refs = {'GENBANK': db_id}
     agent = Agent(db_id, db_refs=db_refs)
-    standardize_agent_name(agent, standardize_refs=True)
+    standardized = standardize_agent_name(agent)
+    if up_web_fallback:
+        # Handle special case of unreviewed UP entries
+        if not standardized and 'UP' in db_refs:
+            name = uniprot_client.get_gene_name(db_refs['UP'],
+                                                web_fallback=True)
+            if name:
+                agent.name = name
     return agent
 
 

@@ -104,3 +104,16 @@ def _assert_test_stmt(stmt):
                                             'name': ('affinity chromatography '
                                                      'technology')}
 
+
+def test_get_uppro_name():
+    ag = get_agent_from_grounding('uniprotkb:Q32ZE1-PRO_0000435839')
+    assert ag.db_refs['UP'] == 'Q32ZE1'
+    assert ag.db_refs['UPPRO'] == 'PRO_0000435839'
+    assert ag.name == 'Non-structural protein 4A'
+
+
+def test_name_web_fallback():
+    ag = get_agent_from_grounding('uniprotkb:Q174W8', up_web_fallback=False)
+    assert ag.name == 'Q174W8'
+    ag = get_agent_from_grounding('uniprotkb:Q174W8', up_web_fallback=True)
+    assert ag.name == 'GPRFZ2'

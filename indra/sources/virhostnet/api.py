@@ -7,7 +7,7 @@ from .processor import VirhostnetProcessor
 logger = logging.getLogger(__name__)
 
 
-vhn_url = ('http://virhostnet.prabi.fr:9090/psicquic/webservices/current/'\
+vhn_url = ('http://virhostnet.prabi.fr:9090/psicquic/webservices/current/'
            'search/query/')
 
 
@@ -19,7 +19,7 @@ data_columns = [
 ]
 
 
-def process_from_web(query=None):
+def process_from_web(query=None, up_web_fallback=False):
     """Process host-virus interactions from the VirHostNet website.
 
     Parameters
@@ -41,10 +41,10 @@ def process_from_web(query=None):
     logger.info('Processing VirHostNet data from %s' % url)
     df = pandas.read_csv(url, delimiter='\t', names=data_columns,
                          header=None)
-    return process_df(df)
+    return process_df(df, up_web_fallback=up_web_fallback)
 
 
-def process_tsv(fname):
+def process_tsv(fname, up_web_fallback=False):
     """Process a TSV data file obtained from VirHostNet.
 
     Parameters
@@ -61,10 +61,10 @@ def process_tsv(fname):
     """
     df = pandas.read_csv(fname, delimiter='\t', names=data_columns,
                          header=None)
-    return process_df(df)
+    return process_df(df, up_web_fallback=up_web_fallback)
 
 
-def process_df(df):
+def process_df(df, up_web_fallback=False):
     """Process a VirHostNet pandas DataFrame.
 
     Parameters
@@ -79,6 +79,6 @@ def process_df(df):
         A VirhostnetProcessor object which contains a list of extracted
         INDRA Statements in its statements attribute.
     """
-    vp = VirhostnetProcessor(df)
+    vp = VirhostnetProcessor(df, up_web_fallback=up_web_fallback)
     vp.extract_statements()
     return vp
