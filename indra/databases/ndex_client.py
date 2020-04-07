@@ -222,15 +222,7 @@ def update_network(cx_str, network_id, ndex_cred=None):
             logger.error('Could not update NDEx network profile.')
             logger.error(e)
 
-    for _ in range(profile_retries):
-        try:
-            time.sleep(5)
-            set_style(network_id, ndex_cred)
-            logger.info('Set network style.')
-            break
-        except Exception as e:
-            logger.error('Could not set style of NDEx network.')
-            logger.error(e)
+    set_style(network_id, ndex_cred)
 
 
 def set_style(network_id, ndex_cred=None, template_id=None):
@@ -253,15 +245,21 @@ def set_style(network_id, ndex_cred=None, template_id=None):
     server = 'http://public.ndexbio.org'
     username, password = get_default_ndex_cred(ndex_cred)
 
-    source_network = ndex2.create_nice_cx_from_server(username=username,
-                                                      password=password,
-                                                      uuid=network_id,
-                                                      server=server)
-
-    source_network.apply_template(server, template_id)
-
-    source_network.update_to(network_id, server=server, username=username,
-                             password=password)
+    retries = 3
+    for _ in range(retries):
+        try:
+            time.sleep(5)
+            source_network = ndex2.create_nice_cx_from_server(
+                username=username, password=password, uuid=network_id,
+                server=server)
+            source_network.apply_template(server, template_id)
+            source_network.update_to(network_id, server=server,
+                                     username=username, password=password)
+            logger.info('Set network style.')
+            break
+        except Exception as e:
+            logger.error('Could not set style of NDEx network.')
+            logger.error(e)
 
 
 def set_provenance(provenance, network_id, ndex_cred=None):
