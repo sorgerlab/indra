@@ -1,3 +1,4 @@
+import re
 from indra.databases import uniprot_client
 from indra.statements import Agent, Complex, Evidence
 from indra.preassembler.grounding_mapper import standardize_agent_name
@@ -18,7 +19,21 @@ class VirhostnetProcessor():
 def process_row(row):
     host_agent = get_agent_from_grounding(row['host_grounding'])
     vir_agent = get_agent_from_grounding(row['vir_grounding'])
-    stmt = Complex([host_agent, vir_agent])
+
+    # There's a column that is always a - character
+    assert row['dash'] == '-', row['dash']
+
+    exp_method_id, exp_method_name = parse_psi_mi(row['exp_method'])
+    int_type__id, int_type_name = parse_psi_mi(row['int_type'])
+
+    annotations = {
+        'exp_method': {'id': exp_method_id, 'name': exp_method_name},
+        'int_type': {'id': int_type__id, 'name': int_type_name},
+    }
+
+    ev = Evidence(source_api='virhostnet', annotations=annotations)
+
+    stmt = Complex([host_agent, vir_agent], evidence=[ev])
     return stmt
 
 
@@ -41,3 +56,10 @@ def get_agent_from_grounding(grounding):
     agent = Agent(db_id, db_refs=db_refs)
     standardize_agent_name(agent, standardize_refs=True)
     return agent
+
+
+def parse_psi_mi(psi_mi_str):
+    # Example: psi-mi:"MI:0018"(two hybrid)
+    match = re.match(r'psi-mi:"(.+)"\((.+)\)')
+    mi_id, name = match.groups()
+    return mi_id, name

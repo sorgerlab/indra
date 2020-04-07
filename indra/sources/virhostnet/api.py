@@ -8,7 +8,7 @@ vhn_url = ('http://virhostnet.prabi.fr:9090/psicquic/webservices/current/'\
 data_columns = [
     'host_grounding', 'vir_grounding', 'host_mnemonic', 'vir_mnemonic',
     'host_mnemonic2', 'vir_mnemonic2', 'exp_method',
-    'not_sure', 'publication', 'host_tax', 'vir_tax',
+    'dash', 'publication', 'host_tax', 'vir_tax',
     'int_type', 'source', 'source_id', 'score'
 ]
 
