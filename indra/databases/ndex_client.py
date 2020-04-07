@@ -221,7 +221,15 @@ def update_network(cx_str, network_id, ndex_cred=None):
             logger.error('Could not update NDEx network profile.')
             logger.error(e)
 
+    for _ in range(profile_retries):
+        try:
+            time.sleep(5)
     set_style(network_id, ndex_cred)
+            logger.info('Set network style.')
+            break
+        except Exception as e:
+            logger.error('Could not set style of NDEx network.')
+            logger.error(e)
 
 
 def set_style(network_id, ndex_cred=None, template_id=None):
