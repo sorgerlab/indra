@@ -6,7 +6,7 @@ from indra.statements import stmts_to_json, stmts_from_json
 from . import file_defaults, InvalidCorpusError, CACHE, default_bucket, \
     default_key_base, default_profile
 from .util import _stmts_dict_to_json, _json_to_stmts_dict, _json_dumper, \
-    _json_loader, _clean_key
+    _json_loader
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +37,9 @@ class Corpus(object):
     meta_data : dict
         A dict with meta data associated with the corpus
     """
-    def __init__(self, statements=None, raw_statements=None, meta_data=None,
-                 aws_name=default_profile):
+    def __init__(self, corpus_id, statements=None, raw_statements=None,
+                 meta_data=None, aws_name=default_profile):
+        self.corpus_id = corpus_id
         self.statements = {st.uuid: st for st in statements} if statements \
             else {}
         self.raw_statements = raw_statements if raw_statements else []
@@ -77,7 +78,7 @@ class Corpus(object):
                       raise_exc=raise_exc)
         return corpus
 
-    def s3_put(self, s3key, bucket=default_bucket, cache=True):
+    def s3_put(self, bucket=default_bucket, cache=True):
         """Push a corpus object to S3 in the form of three json files
 
         The json files representing the object have S3 keys of the format
@@ -85,13 +86,6 @@ class Corpus(object):
 
         Parameters
         ----------
-        s3key : str
-            The key to fetch the json files from. The key is assumed to be
-            of the following form: "indra_models/<dirname>/<file>.json" and
-            only <dirname> *must* be provided. Any combination of
-            including/excluding 'indra_models' and/or <file>.json is
-            accepted assuming the file ending '.json' is specified when
-            <file>.json is specified.
         bucket : str
             The S3 bucket to upload the Corpus to. Default: 'world-modelers'.
         cache : bool
@@ -102,7 +96,9 @@ class Corpus(object):
         keys : tuple(str)
             A tuple of three strings giving the S3 key to the pushed objects
         """
-        s3key = _clean_key(s3key) + '/'
+        # Note that the S3 path to each json file is of the form
+        # <bucket>/indra_models/<corpus_id>/<file>.json"
+        s3key = '%s/%s/' % (default_key_base, self.corpus_id)
         raw = s3key + file_defaults['raw'] + '.json'
         sts = s3key + file_defaults['sts'] + '.json'
         cur = s3key + file_defaults['cur'] + '.json'
@@ -179,7 +175,7 @@ class Corpus(object):
                 metaf.touch(exist_ok=True)
             _json_dumper(jsonobj=self.meta_data, fpath=metaf.as_posix())
 
-    def s3_get(self, s3key, bucket=default_bucket, cache=True,
+    def s3_get(self, bucket=default_bucket, cache=True,
                raise_exc=False):
         """Fetch a corpus object from S3 in the form of three json files
 
@@ -188,13 +184,6 @@ class Corpus(object):
 
         Parameters
         ----------
-        s3key : str
-            The key to fetch the json files from. The key is assumed to be
-            of the following form: "indra_models/<dirname>/<file>.json" and
-            only <dirname> *must* be provided. Any combination of
-            including/excluding 'indra_models' and/or <file>.json is
-            accepted assuming the file ending '.json' is specified when
-            <file>.json is specified.
         bucket : str
             The S3 bucket to fetch the Corpus from. Default: 'world-modelers'.
         cache : bool
@@ -204,7 +193,9 @@ class Corpus(object):
             If True, raise InvalidCorpusError when corpus failed to load
 
         """
-        s3key = _clean_key(s3key) + '/'
+        # Note that the S3 path to each json file is of the form
+        # <bucket>/indra_models/<corpus_id>/<file>.json"
+        s3key = '%s/%s/' % (default_key_base, self.corpus_id)
         raw = s3key + file_defaults['raw'] + '.json'
         sts = s3key + file_defaults['sts'] + '.json'
         cur = s3key + file_defaults['cur'] + '.json'
@@ -263,14 +254,12 @@ class Corpus(object):
             else:
                 logger.warning('Failed to get from s3: %s' % e)
 
-    def upload_curations(self, corpus_id, look_in_cache=False,
+    def upload_curations(self, look_in_cache=False,
                          save_to_cache=False, bucket=default_bucket):
         """Upload the current state of curations for the corpus
 
         Parameters
         ----------
-        corpus_id : str
-            The corpus ID of the curations to upload
         look_in_cache : bool
             If True, when no curations are avaialbe check if there are
             curations cached locally. Default: False
@@ -282,9 +271,8 @@ class Corpus(object):
             The bucket to upload to. Default: 'world-modelers'.
         """
         # Get curation file key
-        file_key = _clean_key(corpus_id) + '/' + \
-                   file_defaults['cur'] + '.json'
-
+        file_key = '%s/%s/%s.json' % (default_key_base, self.corpus_id,
+                                      file_defaults['cur'])
         # First see if we have any curations, then check in cache if
         # look_in_cache == True
         if self.curations:
@@ -304,13 +292,11 @@ class Corpus(object):
         if self.curations and save_to_cache and not look_in_cache:
             self._save_to_cache(cur=file_key)
 
-    def get_curations(self, corpus_id=None, look_in_cache=False):
+    def get_curations(self, look_in_cache=False):
         """Get curations for the corpus
 
         Parameters
         ----------
-        corpus_id : str
-            The id of the corpus. Must be provided if look_in_cache is True
         look_in_cache : bool
             If True, look in local cache if there are no curations loaded
 
@@ -322,10 +308,8 @@ class Corpus(object):
         if self.curations:
             curations = self.curations
         elif look_in_cache:
-            if corpus_id is None:
-                raise ValueError('Must provide corpus id for cache lookup')
-            file_key = _clean_key(corpus_id) + '/' + \
-                       file_defaults['cur'] + '.json'
+            file_key = '%s/%s/%s.json' % (default_key_base, self.corpus_id,
+                                          file_defaults['cur'])
             curations = self._load_from_cache(file_key) or {}
         else:
             curations = {}

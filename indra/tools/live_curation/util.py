@@ -1,27 +1,8 @@
 import json
 import logging
 from indra.statements import Statement
-from . import default_key_base
 
 logger = logging.getLogger(__name__)
-
-
-def _clean_key(s3key):
-    # Check if default_key_base ('indra_models') is present in key
-    s3key = s3key if default_key_base in s3key else \
-        default_key_base + '/' + s3key
-
-    # Replace double slashes
-    s3key = s3key.replace('//', '/')
-
-    # Ommit file part of key, assume it ends with json if it is present
-    s3key = '/'.join([s for s in s3key.split('/')[:-1]]) if \
-        s3key.endswith('.json') else s3key
-
-    # Ensure last char in string is not '/'
-    s3key = s3key[:-1] if s3key.endswith('/') else s3key
-
-    return s3key
 
 
 def _json_loader(fpath):
@@ -77,5 +58,3 @@ def _stmts_dict_to_json(stmt_dict):
         A list of json statements
     """
     return [s.to_json() for _, s in stmt_dict.items()]
-
-

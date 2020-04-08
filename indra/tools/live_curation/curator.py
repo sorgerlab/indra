@@ -4,7 +4,7 @@ from indra.belief.wm_scorer import get_eidos_bayesian_scorer
 from indra.sources.eidos import reground_texts
 from indra.tools import assemble_corpus as ac
 from indra.belief import BeliefEngine
-from . import file_defaults, InvalidCorpusError
+from . import file_defaults, default_key_base, InvalidCorpusError
 from .corpus import Corpus
 from .util import _clean_key
 
@@ -217,8 +217,9 @@ class LiveCurator(object):
             corpus.meta_data[k] = v
 
         if save_to_cache:
-            meta_file_key = _clean_key(corpus_id) + '/' + \
-                            file_defaults['meta'] + '.json'
+            meta_file_key = '%s/%s/%s.json' % (default_key_base,
+                                               corpus_id,
+                                               file_defaults['meta'])
             corpus._save_to_cache(meta=meta_file_key)
 
     def update_beliefs(self, corpus_id):

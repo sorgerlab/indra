@@ -4,8 +4,11 @@ import logging
 import unittest
 from nose.plugins.attrib import attr
 from indra.statements import *
-from indra.tools.live_curation import app, curator, Corpus, LiveCurator, \
-    _json_to_stmts_dict, _stmts_dict_to_json
+from indra.tools.live_curation.live_curation import app, curator
+from indra.tools.live_curation.corpus import Corpus
+from indra.tools.live_curation.curator import LiveCurator
+from indra.tools.live_curation.util import _json_to_stmts_dict, \
+    _stmts_dict_to_json
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +37,7 @@ def _make_corpus():
     stmt5.uuid = '5'
     stmts = [stmt1, stmt2, stmt3, stmt4]
     raw_stmts = copy.deepcopy(stmts)
-    return Corpus(statements=stmts, raw_statements=raw_stmts)
+    return Corpus(corpus_id=None, statements=stmts, raw_statements=raw_stmts)
 
 
 def test_no_curation():
