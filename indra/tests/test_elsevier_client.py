@@ -1,10 +1,11 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import logging
 from indra.literature import elsevier_client as ec
 from nose.plugins.attrib import attr
+from nose.plugins.skip import SkipTest
 
 logger = logging.getLogger(__name__)
+
+raise SkipTest('Elsevier credentials currently not operational.')
 
 
 @attr('nonpublic', 'webservice')

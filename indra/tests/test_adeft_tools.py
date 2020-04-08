@@ -1,7 +1,6 @@
-import re
 import logging
+import unittest
 from nose.plugins.attrib import attr
-
 from indra.literature.adeft_tools import universal_extract_paragraphs, \
     filter_paragraphs
 from indra.literature import pmc_client, elsevier_client, pubmed_client
@@ -10,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 @attr('nonpublic', 'webservice')
+@unittest.skip('Elsevier credentials currently not operational')
 def test_universal_extract_paragraphs_elsevier():
     doi = '10.1016/B978-0-12-416673-8.00004-6'
     xml_str = elsevier_client.download_article(doi)
