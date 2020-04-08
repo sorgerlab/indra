@@ -25,7 +25,8 @@
     "geneways": 0.05,
     "tees": 0.05,
     "phosphoelm": 0.01,
-    "hypothes.is": 0.01
+    "hypothes.is": 0.01,
+    "virhostnet": 0.01
   },
   "rand": {
     "eidos": 0.3,
@@ -53,6 +54,7 @@
     "geneways": 0.3,
     "tees": 0.3,
     "phosphoelm": 0.1,
-    "hypothes.is": 0.1
+    "hypothes.is": 0.1,
+    "virhostnet": 0.3
   }
 }

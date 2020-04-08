@@ -167,10 +167,15 @@ def standardize_agent_name(agent, standardize_refs=True):
         If True, this function assumes that the Agent's db_refs need to
         be standardized, e.g., HGNC mapped to UP.
         Default: True
+
+    Returns
+    -------
+    bool
+        True if a new name was set, False otherwise.
     """
     # We return immediately for None Agents
     if agent is None:
-        return
+        return False
 
     if standardize_refs:
         agent.db_refs = standardize_db_refs(agent.db_refs)
@@ -183,18 +188,20 @@ def standardize_agent_name(agent, standardize_refs=True):
         feature_name = name_from_grounding('UPPRO', agent.db_refs['UPPRO'])
         if feature_name:
             agent.name = feature_name
-            return
+            return True
 
     # If there's no grounding then we can't do more to standardize the
     # name and return
     if not db_ns or not db_id:
-        return
+        return False
 
     # If there is grounding available, we can try to get the standardized name
     # and in the rare case that we don't get it, we don't set it.
     standard_name = name_from_grounding(db_ns, db_id)
     if standard_name:
         agent.name = standard_name
+        return True
+    return False
 
 
 def name_from_grounding(db_ns, db_id):
