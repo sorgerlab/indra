@@ -6,7 +6,6 @@ from indra.tools import assemble_corpus as ac
 from indra.belief import BeliefEngine
 from . import file_defaults, default_key_base, InvalidCorpusError
 from .corpus import Corpus
-from .util import _clean_key
 
 logger = logging.getLogger(__name__)
 
@@ -270,7 +269,7 @@ class LiveCurator(object):
         idx = 0
         for stmt in corpus.raw_statements:
             for concept in stmt.agent_list():
-                concept.db_refs['UN'] = groundings[idx]
+                concept.db_refs['WM'] = groundings[idx]
                 idx += 1
         assembled_statements = default_assembly(corpus.raw_statements)
         corpus.statements = {s.uuid: s for s in assembled_statements}

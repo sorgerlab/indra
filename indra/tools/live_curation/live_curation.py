@@ -26,11 +26,10 @@ def _make_wm_ontology():
                                 rdf_graph_from_yaml, True)
 
 
-# From here on, a Flask app built around a LiveCurator is implemented
-
 curator = LiveCurator(corpora=corpora, ont_manager=_make_wm_ontology())
 
 
+# From here on, a Flask app built around a LiveCurator is implemented
 @app.route('/download_curation', methods=['POST'])
 def download_curation():
     """Download the curations for the given corpus id"""
