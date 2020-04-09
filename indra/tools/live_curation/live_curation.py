@@ -194,7 +194,7 @@ if __name__ == '__main__':
     # Load corpus from S3 if corpus ID is provided
     if args.corpus_id and not args.json and not args.pickle:
         curator.corpora[args.corpus_id] = Corpus.load_from_s3(
-            s3key=args.corpus_id,
+            corpus_id=args.corpus_id,
             aws_name=args.aws_cred
         )
         logger.info('Loaded corpus %s from S3 with %d statements and %d '
