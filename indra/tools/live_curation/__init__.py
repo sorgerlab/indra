@@ -19,3 +19,5 @@ class InvalidCorpusError(Exception):
     pass
 
 
+from .corpus import Corpus
+from .curator import LiveCurator
