@@ -96,8 +96,7 @@ class LiveCurator(object):
         """
         logger.info('Getting curations for corpus %s' % corpus_id)
         corpus = self.get_corpus(corpus_id, check_s3=True, use_cache=True)
-        corpus_curations = corpus.get_curations(corpus_id,
-                                                look_in_cache=True)
+        corpus_curations = corpus.get_curations(look_in_cache=True)
         # Get all statements that have curations
         curated_stmts = {}
         for uuid in corpus_curations:
