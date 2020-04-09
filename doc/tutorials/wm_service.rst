@@ -60,7 +60,7 @@ feedback service with the following parameters:
 .. code-block:: sh
 
     docker run -id -p 8001:8001 --env-file docker_variables --entrypoint \
-    python labsyspharm/indra /sw/indra/indra/tools/live_curation.py
+    python labsyspharm/indra /sw/indra/indra/tools/live_curation/live_curation.py
 
 Here we use the tag :code:`--env-file` to provide a file containing
 environment variables to the docker. In this case, we need to provide
