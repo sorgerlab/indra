@@ -4,8 +4,11 @@ import logging
 import unittest
 from nose.plugins.attrib import attr
 from indra.statements import *
-from indra.tools.live_curation import app, curator, Corpus, LiveCurator, \
-    _json_to_stmts_dict, _stmts_dict_to_json
+from indra.tools.live_curation.live_curation import app, curator
+from indra.tools.live_curation.corpus import Corpus
+from indra.tools.live_curation.curator import LiveCurator
+from indra.tools.live_curation.util import _json_to_stmts_dict, \
+    _stmts_dict_to_json
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +37,7 @@ def _make_corpus():
     stmt5.uuid = '5'
     stmts = [stmt1, stmt2, stmt3, stmt4]
     raw_stmts = copy.deepcopy(stmts)
-    return Corpus(statements=stmts, raw_statements=raw_stmts)
+    return Corpus(corpus_id='x', statements=stmts, raw_statements=raw_stmts)
 
 
 def test_no_curation():
@@ -289,20 +292,21 @@ class LiveGroundingTestCase(unittest.TestCase):
         _make_corpus()
         app.testing = True
         self.app = app.test_client()
+        curator.eidos_url = 'http://localhost:9000'
         curator.corpora = {'1': _make_corpus()}
 
     def test_add_ontology_node(self):
         self._send_request('add_ontology_entry',
-                           {'entry': 'UN/animal/dog',
+                           {'entry': 'WM/animal/dog',
                             'examples': ['canine', 'dog', 'puppy']})
         resp = self._send_request('update_groundings', {'corpus_id': '1'})
         res = json.loads(resp.data.decode('utf-8'))
         stmts = stmts_from_json(res)
         assert stmts, stmts
         dr = stmts[0].subj.concept.db_refs
-        assert 'UN' in dr, dr
-        assert dr['UN'], dr
-        assert dr['UN'][0][0] == 'UN/animal/dog', dr
+        assert 'WM' in dr, dr
+        assert dr['WM'], dr
+        assert dr['WM'][0][0] == 'WM/animal/dog', dr
 
 
 def close_enough(probs, ref):
