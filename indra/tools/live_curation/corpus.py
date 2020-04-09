@@ -70,11 +70,11 @@ class Corpus(object):
         return str(self)
 
     @classmethod
-    def load_from_s3(cls, s3key, aws_name=default_profile,
+    def load_from_s3(cls, corpus_id, aws_name=default_profile,
                      bucket=default_bucket, force_s3_reload=False,
                      raise_exc=False):
-        corpus = cls([], aws_name=aws_name)
-        corpus.s3_get(s3key, bucket, cache=(not force_s3_reload),
+        corpus = cls(corpus_id, statements=[], aws_name=aws_name)
+        corpus.s3_get(bucket, cache=(not force_s3_reload),
                       raise_exc=raise_exc)
         return corpus
 

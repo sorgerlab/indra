@@ -64,7 +64,7 @@ class LiveCurator(object):
             logger.info('Found corpus loaded in memory')
         if check_s3 and corpus is None:
             logger.info('Corpus not loaded, looking on S3')
-            corpus = Corpus.load_from_s3(s3key=corpus_id,
+            corpus = Corpus.load_from_s3(corpus_id,
                                          force_s3_reload=not use_cache,
                                          raise_exc=True)
             logger.info('Adding corpus to loaded corpora')
