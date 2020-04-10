@@ -19,8 +19,8 @@ from .resources import get_valid_residue, get_valid_location, activity_types, \
 logger = logging.getLogger(__name__)
 
 
-default_ns_order = ['FPLX', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH', 'DOID', 'HP',
-                    'EFO']
+default_ns_order = ['FPLX', 'UPPRO', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH',
+                    'DOID', 'HP', 'EFO']
 
 
 @python_2_unicode_compatible

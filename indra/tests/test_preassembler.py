@@ -1050,3 +1050,23 @@ def test_matches_key_fun():
     stmts = run_preassembly([e1, e2, e3], matches_fun=event_location_matches,
                             refinement_fun=event_location_refinement)
     assert len(stmts) == 2, stmts
+
+
+def test_uppro_assembly():
+    ag1 = Agent('x', db_refs={'UP': 'P01019', 'UPPRO': 'PRO_0000032457'})
+    ag2 = Agent('y', db_refs={'UP': 'P01019', 'UPPRO': 'PRO_0000032458'})
+    assert ag1.get_grounding() == ('UPPRO', ag1.db_refs['UPPRO'])
+    assert ag2.get_grounding() == ('UPPRO', ag2.db_refs['UPPRO'])
+    stmt1 = Phosphorylation(None, ag1)
+    stmt2 = Phosphorylation(None, ag2)
+    assert stmt1.matches_key() != stmt2.matches_key()
+    pa = Preassembler(hierarchies, [stmt1, stmt2])
+    unique_stmts = pa.combine_duplicates()
+    assert len(unique_stmts) == 2, unique_stmts
+
+    from indra.tools import assemble_corpus as ac
+    stmts = ac.map_grounding([stmt1, stmt2])
+    pa = Preassembler(hierarchies, stmts)
+    unique_stmts = pa.combine_duplicates()
+    assert len(unique_stmts) == 2
+
