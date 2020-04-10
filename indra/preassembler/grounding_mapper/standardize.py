@@ -183,13 +183,6 @@ def standardize_agent_name(agent, standardize_refs=True):
     # We next look for prioritized grounding, if missing, we return
     db_ns, db_id = agent.get_grounding()
 
-    # We next handle the special case of UPPRO features
-    if 'UPPRO' in agent.db_refs:
-        feature_name = name_from_grounding('UPPRO', agent.db_refs['UPPRO'])
-        if feature_name:
-            agent.name = feature_name
-            return True
-
     # If there's no grounding then we can't do more to standardize the
     # name and return
     if not db_ns or not db_id:
@@ -198,10 +191,18 @@ def standardize_agent_name(agent, standardize_refs=True):
     # If there is grounding available, we can try to get the standardized name
     # and in the rare case that we don't get it, we don't set it.
     standard_name = name_from_grounding(db_ns, db_id)
-    if standard_name:
-        agent.name = standard_name
-        return True
-    return False
+    # Handle special case with UPPRO, if we can't get a feature name
+    # we fall back on regular gene/protein naming
+    if not standard_name and db_ns == 'UPPRO':
+        db_ns, db_id = agent.get_grounding(ns_order=['HGNC', 'UP'])
+        if not db_ns or not db_id:
+            return False
+        standard_name = name_from_grounding(db_ns, db_id)
+    if not standard_name:
+        return False
+
+    agent.name = standard_name
+    return True
 
 
 def name_from_grounding(db_ns, db_id):

@@ -95,6 +95,10 @@ def get_identifiers_url(db_name, db_id):
             url = 'http://www.lncrnadb.org/%s/' % db_id
     elif db_name == 'TEXT':
         return None
+    # TODO: we should return the parent UniProt ID here but only once that
+    # can be obtained from protmapper in a faster way
+    elif db_name == 'UPPRO':
+        return None
     else:
         logger.warning('Unhandled name space %s' % db_name)
         url = None
