@@ -554,3 +554,11 @@ def test_gilda_disambiguation():
         annotations
     assert annotations['agents']['gilda'][0] is None
     assert annotations['agents']['gilda'][1] is not None
+
+
+def test_uppro_fallback():
+    # This UP chain has no name currently so we can test that the fallback
+    # to naming by the UP ID is working
+    ag = Agent('x', db_refs={'UP': 'Q6IE75', 'UPPRO': 'PRO_0000383648'})
+    standardize_agent_name(ag)
+    assert ag.name == 'Bace2'
