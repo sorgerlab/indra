@@ -3,6 +3,7 @@ import copy
 import pandas
 import requests
 from . import SimpleScorer, BayesianScorer
+from indra.util.decorators import register
 
 
 default_priors = {'hume': [13, 7], 'cwms': [13, 7], 'sofia': [13, 7]}
@@ -21,6 +22,7 @@ def load_eidos_curation_table():
     return table
 
 
+@register
 def get_eidos_bayesian_scorer(prior_counts=None):
     """Return a BayesianScorer based on Eidos curation counts."""
     table = load_eidos_curation_table()
@@ -35,6 +37,7 @@ def get_eidos_bayesian_scorer(prior_counts=None):
     return scorer
 
 
+@register
 def get_eidos_scorer():
     """Return a SimpleScorer based on Eidos curated precision estimates."""
     table = load_eidos_curation_table()
