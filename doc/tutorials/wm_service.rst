@@ -157,3 +157,15 @@ Update groundings and re-assemble corpus based on current ontology:
     Method: POST with JSON content header
     Input parameters: {"corpus_id": "1"}
     Output: [{"type": "Influence", ...}] (INDRA Statements JSON)
+
+Download curations and the corrseponding curated statements for a corpus.
+If a reader name is provided, filter the results that reader, otherwise all
+curations and their corresponding statements are returned.
+
+.. code-block:: sh
+
+    URL: http://SERVICE_HOST:8001/download_curation
+    Method: POST with JSON content header
+    Input parameters: {"corpus_id": "1", "reader": "<reader name>"}
+    Output: {"curations": {"38ce0c14-2c7e-4df8-bd53-3006afeaa193": 0},
+             "statements": {"38ce0c14-2c7e-4df8-bd53-3006afeaa193": stmt_json}}
