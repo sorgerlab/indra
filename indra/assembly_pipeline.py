@@ -1,9 +1,11 @@
 import types
+import json
 
 from indra.util.decorators import registered_functions, register
 from indra.tools.assemble_corpus import *
 from indra.belief.wm_scorer import *
 from indra.preassembler.hierarchy_manager import *
+from indra.statements import get_statement_by_name
 
 
 class AssemblyPipeline():
@@ -12,7 +14,7 @@ class AssemblyPipeline():
 
     def run(self, statements):
         for step in self.steps:
-            self.run_function(step, statements)
+            statements = self.run_function(step, statements)
         return statements
 
     def append(self, func, *args, **kwargs):
@@ -62,33 +64,44 @@ class AssemblyPipeline():
         new_args = []
         new_kwargs = {}
         for arg in args:
-            if not self.is_function(arg):
-                new_args.append(arg)
-            elif 'no_run' in arg:
-                func = self.get_function_from_name(arg['function'])
-                new_args.append(func)
-            else:
-                result = self.run_function(arg)
-                new_args.append(result)
+            arg_value = self.get_argument_value(arg)
+            new_args.append(arg_value)
         for k, v in kwargs.items():
-            if not self.is_function(v):
-                new_kwargs[k] = v
-            elif 'no_run' in v:
-                func = self.get_function_from_name(v['function'])
-                new_kwargs[k] = func
-            else:
-                result = self.run_function(v)
-                new_kwargs[k] = result
+            kwarg_value = self.get_argument_value(v)
+            new_kwargs[k] = kwarg_value
         if statements:
             new_kwargs['statements'] = statements
         return self.run_simple_function(func_name, *new_args, **new_kwargs)
 
-    def is_function(self, argument):
+    def is_function(self, argument, keyword='function'):
         if not isinstance(argument, dict):
             return False
-        if 'function' not in argument:
+        if keyword not in argument:
             return False
         return True
+
+    def get_argument_value(self, argument):
+        if self.is_function(argument, 'function'):
+            # Argument is a function
+            if argument.get('no_run', False):
+                value = self.get_function_from_name(argument['function'])
+            # Argument is a result of a function
+            else:
+                value = self.run_function(argument)
+        # Argument is a statement type
+        elif self.is_function(argument, 'stmt_type'):
+            value = get_statement_by_name(argument.get('stmt_type'))
+        # Argument is a simple value (str, int, boolean, etc.)
+        else:
+            value = argument
+        return value
+
+    @classmethod
+    def from_json_file(cls, filename):
+        with open(filename, 'r') as f:
+            steps = json.load(f)
+        ap = AssemblyPipeline(steps)
+        return ap
 
 
 class NotRegisteredFunctionError(Exception):
