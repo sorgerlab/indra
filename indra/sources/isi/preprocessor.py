@@ -5,18 +5,11 @@ import zlib
 import codecs
 import shutil
 import logging
-import tempfile
-import subprocess
-
 from unidecode import unidecode
-
-from indra import get_config
+from indra.literature.pmc_client import extract_text
 from indra.resources.greek_alphabet import greek_alphabet
 
 logger = logging.getLogger(__name__)
-
-nxml2txt_path = get_config('NXML2TXT_PATH')
-python2_path = get_config('PYTHON2_PATH')
 
 
 class IsiPreprocessor(object):
@@ -168,42 +161,15 @@ class IsiPreprocessor(object):
             metadata about the source (annotations with the key "interaction"
             will be overridden)
         """
-        # Create a temporary directory
-        tmp_dir = tempfile.mkdtemp('indra_isi_nxml2txt_output')
-
-        # Run nxml2txt
-        if nxml2txt_path is None:
-            logger.error('NXML2TXT_PATH not specified in config file or ' + 
-                         'environment variable')
-            return
-        if python2_path is None:
-            logger.error('PYTHON2_PATH not specified in config file or ' + 
-                         'environment variable')
-            return
-
-        txt_out = os.path.join(tmp_dir, 'out.txt')
-        so_out = os.path.join(tmp_dir, 'out.so')
-        command = [python2_path, os.path.join(nxml2txt_path, 'nxml2txt'),
-                   filename, txt_out, so_out]
-        ret = subprocess.call(command)
-        if ret != 0:
-            logger.warning('nxml2txt returned non-zero error code')
-
-        with open(txt_out, 'r') as f:
-            txt_content = f.read()
-
-        # Remote temporary directory
-        shutil.rmtree(tmp_dir)
+        with open(filename, 'r') as fh:
+            txt_content = extract_text(fh.read())
 
         # We need to remove some common LaTEX commands from the converted text
         # or the reader will get confused
-        cmd1 = '[^ \{\}]+\{[^\{\}]+\}\{[^\{\}]+\}'
-        cmd2 = '[^ \{\}]+\{[^\{\}]+\}'
+        cmd1 = r'[^ \{\}]+\{[^\{\}]+\}\{[^\{\}]+\}'
+        cmd2 = r'[^ \{\}]+\{[^\{\}]+\}'
         txt_content = re.sub(cmd1, '', txt_content)
         txt_content = re.sub(cmd2, '', txt_content)
-
-        with open('tmp.txt', 'w') as f:
-            f.write(txt_content)
 
         # Prepocess text extracted from nxml
         self.preprocess_plain_text_string(txt_content, pmid, extra_annotations)
