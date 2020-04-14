@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 from indra.sources.isi.api import process_text
 from indra.statements import Complex, Phosphorylation
 
@@ -16,12 +14,13 @@ def test_process_complex():
     assert len(s0.members) == 2
 
     m0 = s0.members[0]
-    assert m0.name == 'RAS'
-    assert m0.db_refs == {'TEXT': 'Ras', 'PF': 'PF00071', 'FPLX': 'RAS'}
+    assert m0.name == 'RAS', m0
+    assert m0.db_refs == {'TEXT': 'Ras', 'FPLX': 'RAS'}, \
+        m0.db_refs
 
     m1 = s0.members[1]
-    assert m1.name == 'RAF'
-    assert m1.db_refs == {'TEXT': 'Raf', 'FPLX': 'RAF'}
+    assert m1.name == 'RAF', m1
+    assert m1.db_refs == {'TEXT': 'Raf', 'FPLX': 'RAF'}, m1.db_refs
 
     assert len(s0.evidence) == 1
     ev = s0.evidence[0]
@@ -45,7 +44,7 @@ def test_process_phosphorylation():
 
     enz = s0.enz
     assert enz.name == 'RAS'
-    assert enz.db_refs == {'TEXT': 'Ras', 'PF': 'PF00071', 'FPLX': 'RAS'}
+    assert enz.db_refs == {'TEXT': 'Ras', 'FPLX': 'RAS'}
 
     sub = s0.sub
     assert sub.name == 'RAF'
@@ -54,7 +53,6 @@ def test_process_phosphorylation():
     assert len(s0.evidence) == 1
     ev = s0.evidence[0]
     assert ev.source_api == 'isi'
-    assert ev.source_id is not None
     assert ev.pmid == '42'
     assert ev.text == 'Ras phosphorylates Raf.'
     assert ev.annotations['interaction'] == ['phosphorylates', 'Ras', 'Raf']
