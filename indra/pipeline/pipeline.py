@@ -1,7 +1,7 @@
 import types
 import json
 
-from indra.util.decorators import registered_functions, register
+from .decorators import pipeline_functions, pipeline
 from indra.tools.assemble_corpus import *
 from indra.belief.wm_scorer import *
 from indra.preassembler.hierarchy_manager import *
@@ -19,14 +19,14 @@ class AssemblyPipeline():
 
     def append(self, func, *args, **kwargs):
         if isinstance(func_name, types.FunctionType):
-            register(func_name)
+            pipeline(func_name)
             func_name = func_name.__name__
         new_step = self.create_new_step(func_name, *args, **kwargs)
         self.steps.append(new_step)
 
     def insert(self, ix, func_name, *args, **kwargs):
         if isinstance(func_name, types.FunctionType):
-            register(func_name)
+            pipeline(func_name)
             func_name = func_name.__name__
         new_step = self.create_new_step(func_name, *args, **kwargs)
         self.steps.insert(ix, new_step)
@@ -47,8 +47,8 @@ class AssemblyPipeline():
         return func_name, args, kwargs
 
     def get_function_from_name(self, name):
-        if name in registered_functions:
-            return registered_functions[name]
+        if name in pipeline_functions:
+            return pipeline_functions[name]
         raise NotRegisteredFunctionError('%s is not registered' % name)
 
     def run_simple_function(self, func_name, *args, **kwargs):

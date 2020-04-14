@@ -1,7 +1,7 @@
-registered_functions = {}
+pipeline_functions = {}
 
 
-def register(function):
-    if function.__name__ not in registered_functions:
-        registered_functions[function.__name__] = function
+def pipeline(function):
+    if function.__name__ not in pipeline_functions:
+        pipeline_functions[function.__name__] = function
     return function
