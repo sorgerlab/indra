@@ -64,17 +64,16 @@ def ground_agent(agent, txt, context=None, mode='web'):
         if results:
             db_refs = {'TEXT': txt,
                        results[0]['term']['db']: results[0]['term']['id']}
-            agent.db_refs = db_refs
-            standardize_agent_name(agent, standardize_refs=True)
-        return results
     else:
         from gilda import ground
         results = ground(txt, context)
         if results:
             db_refs = {'TEXT': txt,
                        results[0].term.db: results[0].term.id}
-            agent.db_refs = db_refs
-            standardize_agent_name(agent, standardize_refs=True)
+    if results:
+        agent.db_refs = db_refs
+        standardize_agent_name(agent, standardize_refs=True)
+    return results
 
 
 def ground_statement(stmt, mode='web'):
