@@ -33,6 +33,8 @@ def get_grounding(txt, context=None, mode='web'):
     dict
         If no grounding was found, it is an empty dict. Otherwise, it's a
         dict with the top grounding returned from Gilda.
+    list
+        The list of ScoredMatches
     """
     grounding = {}
     if mode == 'web':
@@ -46,7 +48,8 @@ def get_grounding(txt, context=None, mode='web'):
         results = ground(txt, context)
         if results:
             grounding = {results[0].term.db: results[0].term.id}
-    return grounding
+            results = [sm.to_json() for sm in results]
+    return grounding, results
 
 
 def get_gilda_models(mode='web'):
@@ -92,13 +95,13 @@ def ground_agent(agent, txt, context=None, mode='web'):
         environmental variable is used. Otherwise, the gilda package is
         attempted to be imported and used. Default: web
     """
-    gr = get_grounding(txt, context, mode)
+    gr, results = get_grounding(txt, context, mode)
     if gr:
         db_refs = {'TEXT': txt}
         db_refs.update(gr)
         agent.db_refs = db_refs
         standardize_agent_name(agent, standardize_refs=True)
-    return gr
+    return results
 
 
 def ground_statement(stmt, mode='web', ungrounded_only=False):
