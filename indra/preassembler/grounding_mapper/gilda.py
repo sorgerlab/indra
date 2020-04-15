@@ -14,7 +14,26 @@ grounding_service_url = get_config('GILDA_URL') if has_config('GILDA_URL') \
     else 'http://grounding.indra.bio/'
 
 
-def get_grounding(txt, context, mode):
+def get_grounding(txt, context=None, mode='web'):
+    """Return the top Gilda grounding for a given text.
+
+    Parameters
+    ----------
+    txt : str
+        The text to ground.
+    context : Optional[str]
+        Any context for the grounding.
+    mode : Optional[str]
+        If 'web', the web service given in the GILDA_URL config setting or
+        environmental variable is used. Otherwise, the gilda package is
+        attempted to be imported and used. Default: web
+
+    Returns
+    -------
+    dict
+        If no grounding was found, it is an empty dict. Otherwise, it's a
+        dict with the top grounding returned from Gilda.
+    """
     grounding = {}
     if mode == 'web':
         resp = requests.post(urljoin(grounding_service_url, 'ground'),
