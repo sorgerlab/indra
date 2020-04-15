@@ -14,6 +14,22 @@ grounding_service_url = get_config('GILDA_URL') if has_config('GILDA_URL') \
     else 'http://grounding.indra.bio/'
 
 
+def get_grounding(txt, context, mode):
+    grounding = {}
+    if mode == 'web':
+        resp = requests.post(urljoin(grounding_service_url, 'ground'),
+                             json={'text': txt, 'context': context})
+        results = resp.json()
+        if results:
+            grounding = {results[0]['term']['db']: results[0]['term']['id']}
+    else:
+        from gilda import ground
+        results = ground(txt, context)
+        if results:
+            grounding = {results[0].term.db: results[0].term.id}
+    return grounding
+
+
 def get_gilda_models(mode='web'):
     """Return a list of strings for which Gilda has a disambiguation model.
 
@@ -57,26 +73,16 @@ def ground_agent(agent, txt, context=None, mode='web'):
         environmental variable is used. Otherwise, the gilda package is
         attempted to be imported and used. Default: web
     """
-    if mode == 'web':
-        resp = requests.post(urljoin(grounding_service_url, 'ground'),
-                             json={'text': txt, 'context': context})
-        results = resp.json()
-        if results:
-            db_refs = {'TEXT': txt,
-                       results[0]['term']['db']: results[0]['term']['id']}
-    else:
-        from gilda import ground
-        results = ground(txt, context)
-        if results:
-            db_refs = {'TEXT': txt,
-                       results[0].term.db: results[0].term.id}
-    if results:
+    gr = get_grounding(txt, context, mode)
+    if gr:
+        db_refs = {'TEXT': txt}
+        db_refs.update(gr)
         agent.db_refs = db_refs
         standardize_agent_name(agent, standardize_refs=True)
-    return results
+    return gr
 
 
-def ground_statement(stmt, mode='web'):
+def ground_statement(stmt, mode='web', ungrounded_only=False):
     """Set grounding for Agents in a given Statement using Gilda.
 
     This function modifies the original Statement/Agents in place.
@@ -89,6 +95,9 @@ def ground_statement(stmt, mode='web'):
         If 'web', the web service given in the GILDA_URL config setting or
         environmental variable is used. Otherwise, the gilda package is
         attempted to be imported and used. Default: web
+    ungrounded_only : Optional[str]
+        If True, only ungrounded Agents will be grounded, and ones that
+        are already grounded will not be modified. Default: False
     """
     if stmt.evidence and stmt.evidence[0].text:
         context = stmt.evidence[0].text
@@ -97,10 +106,12 @@ def ground_statement(stmt, mode='web'):
     for agent in stmt.agent_list():
         if agent is not None and 'TEXT' in agent.db_refs:
             txt = agent.db_refs['TEXT']
-            ground_agent(agent, txt, context, mode=mode)
+            gr = agent.get_grounding()
+            if not ungrounded_only or gr[0] is None:
+                ground_agent(agent, txt, context, mode=mode)
 
 
-def ground_statements(stmts, mode='web'):
+def ground_statements(stmts, mode='web', sources=None, ungrounded_only=False):
     """Set grounding for Agents in a list of Statements using Gilda.
 
     This function modifies the original Statements/Agents in place.
@@ -113,9 +124,20 @@ def ground_statements(stmts, mode='web'):
         If 'web', the web service given in the GILDA_URL config setting or
         environmental variable is used. Otherwise, the gilda package is
         attempted to be imported and used. Default: web
+    sources : Optional[list]
+        If given, only statements from the given sources are grounded. The
+        sources have to correspond to valid source_api entries, e.g.,
+        'reach', 'sparser', etc. If not given, statements from all
+        sources are grounded.
+    ungrounded_only : Optional[str]
+        If True, only ungrounded Agents will be grounded, and ones that
+        are already grounded will not be modified. Default: False
     """
+    source_filter = set(sources) if sources else set()
     for stmt in stmts:
-        ground_statement(stmt, mode)
+        if not source_filter or (stmt.evidence and stmt.evidence[0].source_api
+                                 in source_filter):
+            ground_statement(stmt, mode=mode, ungrounded_only=ungrounded_only)
 
 
 def run_gilda_disambiguation(stmt, agent, idx, mode='web'):
