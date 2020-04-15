@@ -106,3 +106,22 @@ class AssemblyPipeline():
 
 class NotRegisteredFunctionError(Exception):
     pass
+
+
+def jsonify_arg_input(arg):
+    """Jsonify user input (in AssemblyPipeline `append` and `insert` methods)
+    into a standard step json."""
+    if isinstance(arg, RunnableArgument):
+        return arg.to_json()
+    # If a function object or name of a function is provided, we assume it
+    # does not have to be run (function itself is argument).
+    if isinstance(arg, types.FunctionType):
+        pipeline(arg)
+        return {'function': arg.__name__, 'no_run': True}
+    if isinstance(arg, str) and arg in pipeline_functions:
+        return {'function': arg, 'no_run': True}
+    # For some functions Statement type has to be argument
+    if isinstance(arg, Statement):
+        return {'stmt_type': arg.__name__}
+    # Argument is a simple value and can be stored as provided
+    return arg
