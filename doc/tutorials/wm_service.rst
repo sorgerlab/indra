@@ -158,9 +158,10 @@ Update groundings and re-assemble corpus based on current ontology:
     Input parameters: {"corpus_id": "1"}
     Output: [{"type": "Influence", ...}] (INDRA Statements JSON)
 
-Download curations and the corrseponding curated statements for a corpus.
-If a reader name is provided, filter the results that reader, otherwise all
-curations and their corresponding statements are returned.
+Download curations and the corresponding curated statements for a corpus.
+If a reader name is provided, filter the results to curations for statements
+that have the provided reader among its sources, otherwise all curations and
+their corresponding statements are returned.
 
 .. code-block:: sh
 
