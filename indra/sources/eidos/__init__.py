@@ -146,4 +146,4 @@ in INDRA to process the JSON-LD output files.
 """
 
 from .api import process_text, process_json_str, process_json_file, \
-    process_json, reground_texts, initialize_reader
+    process_json, reground_texts, initialize_reader, process_json_bio

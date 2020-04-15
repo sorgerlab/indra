@@ -140,6 +140,58 @@ def process_json(json_dict, grounding_ns=None):
     return ep
 
 
+def process_json_bio(json_dict):
+    """Return EidosProcessor with grounded Activation/Inhibition statements.
+
+    Parameters
+    ----------
+    json_dict : dict
+        The JSON-LD dict to be processed.
+
+    Returns
+    -------
+    ep : EidosProcessor
+        A EidosProcessor containing the extracted INDRA Statements
+        in its statements attribute.
+    """
+    import gilda
+    from indra.preassembler.grounding_mapper.standardize \
+        import standardize_agent_name
+    from indra.statements import Agent, Activation, Inhibition
+
+    def get_agent(concept, context=None):
+        txt = concept.name
+        matches = gilda.ground(txt, context=context)
+        if not matches:
+            return None
+        gr = (matches[0].term.db, matches[0].term.id)
+        agent = Agent(concept.name, db_refs={gr[0]: gr[1],
+                                             'TEXT': concept.name})
+        standardize_agent_name(agent, standardize_refs=True)
+        return agent
+
+    def get_regulate_activity(stmt):
+        context = stmt.evidence[0].text
+        subj = get_agent(stmt.subj.concept, context=context)
+        obj = get_agent(stmt.obj.concept, context=context)
+        if not subj or not obj:
+            return None
+        pol = stmt.overall_polarity()
+        stmt_type = Activation if pol == 1 or not pol else Inhibition
+        bio_stmt = stmt_type(subj, obj, evidence=stmt.evidence)
+        return bio_stmt
+
+    ep = EidosProcessor(json_dict)
+    ep.extract_causal_relations()
+
+    bio_stmts = []
+    for stmt in ep.statements:
+        bio_stmt = get_regulate_activity(stmt)
+        if bio_stmt:
+            bio_stmts.append(bio_stmt)
+    ep.statements = bio_stmts
+
+
 def reground_texts(texts, ont_yml, webservice=None, topk=10, filter=True,
                    is_canonicalized=True):
     """Return grounding for concept texts given an ontology.
