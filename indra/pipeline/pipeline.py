@@ -12,32 +12,48 @@ class AssemblyPipeline():
     def __init__(self, steps=None):
         self.steps = steps if steps else []
 
+    @classmethod
+    def from_json_file(cls, filename):
+        with open(filename, 'r') as f:
+            steps = json.load(f)
+        ap = AssemblyPipeline(steps)
+        return ap
+
     def run(self, statements):
         for step in self.steps:
             statements = self.run_function(step, statements)
         return statements
 
     def append(self, func, *args, **kwargs):
-        if isinstance(func_name, types.FunctionType):
-            pipeline(func_name)
-            func_name = func_name.__name__
+        if isinstance(func, types.FunctionType):
+            pipeline(func)
+            func_name = func.__name__
+        elif isinstance(func, str):
+            func_name = func
+        else:
+            raise TypeError('Should be a function object or a string')
         new_step = self.create_new_step(func_name, *args, **kwargs)
         self.steps.append(new_step)
 
-    def insert(self, ix, func_name, *args, **kwargs):
-        if isinstance(func_name, types.FunctionType):
-            pipeline(func_name)
-            func_name = func_name.__name__
+    def insert(self, ix, func, *args, **kwargs):
+        if isinstance(func, types.FunctionType):
+            pipeline(func)
+            func_name = func.__name__
+        elif isinstance(func, str):
+            func_name = func
+        else:
+            raise TypeError('Should be a function object or a string')
         new_step = self.create_new_step(func_name, *args, **kwargs)
         self.steps.insert(ix, new_step)
 
     def create_new_step(self, func_name, *args, **kwargs):
-        self.get_function_from_name(func_name)
+        assert self.get_function_from_name(func_name)
         new_step = {'function': func_name}
         if args:
-            new_step['args'] = args
+            new_step['args'] = [jsonify_arg_input(arg) for arg in args]
         if kwargs:
-            new_step['kwargs'] = kwargs
+            new_step['kwargs'] = {
+                k: jsonify_arg_input(v) for (k, v) in kwargs.items()}
         return new_step
 
     def get_function_parameters(self, func_dict):
@@ -95,13 +111,6 @@ class AssemblyPipeline():
         else:
             value = argument
         return value
-
-    @classmethod
-    def from_json_file(cls, filename):
-        with open(filename, 'r') as f:
-            steps = json.load(f)
-        ap = AssemblyPipeline(steps)
-        return ap
 
 
 class NotRegisteredFunctionError(Exception):
