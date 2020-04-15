@@ -198,9 +198,12 @@ def process_json_bio(json_dict):
     from indra.statements import Agent, Activation, Inhibition
 
     def get_agent(concept, context=None):
+        # Note that currently concept.name is the canonicalized entity text
+        # whereas db_refs['TEXT'] is the unaltered original entity text
         txt = concept.name
         gr, _ = get_grounding(txt, context=context, mode='local')
-        agent = Agent(concept.name, db_refs={'TEXT': concept.name, **gr})
+        agent = Agent(txt, db_refs={'TEXT_NORM': txt,
+                                    'TEXT': concept.db_refs['TEXT'], **gr})
         standardize_agent_name(agent, standardize_refs=True)
         return agent
 
