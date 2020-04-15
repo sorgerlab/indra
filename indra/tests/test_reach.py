@@ -136,6 +136,7 @@ def test_parse_site_multiple():
 def test_phosphorylate():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 phosphorylates ERK2.', offline=offline)
+        assert rp is not None
         assert len(rp.statements) == 1
         s = rp.statements[0]
         assert (s.enz.name == 'MAP2K1')
@@ -147,6 +148,7 @@ def test_indirect_phosphorylate():
     txt = 'DUSP decreases the phosphorylation of ERK.'
     for offline in offline_modes:
         rp = reach.process_text(txt, offline=offline)
+        assert rp is not None
         assert len(rp.statements) == 1
         s = rp.statements[0]
         assert isinstance(s, Dephosphorylation)
@@ -159,6 +161,7 @@ def test_regulate_amount():
     for offline in offline_modes:
         rp = reach.process_text('ERK increases the transcription of DUSP.',
                                 offline=offline)
+        assert rp is not None
         assert len(rp.statements) == 1
         s = rp.statements[0]
         assert isinstance(s, IncreaseAmount)
@@ -179,6 +182,7 @@ def test_multiple_enzymes():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 and MEK2 phosphorylate ERK1.',
                                 offline=offline)
+        assert rp is not None
         assert len(rp.statements) == 2
         s = rp.statements[0]
         if s.enz.name == 'MAP2K1':
@@ -194,6 +198,7 @@ def test_multiple_enzymes():
 def test_activate():
     for offline in offline_modes:
         rp = reach.process_text('HRAS activates BRAF.', offline=offline)
+        assert rp is not None
         assert len(rp.statements) == 1
         s = rp.statements[0]
         assert (s.subj.name == 'HRAS')
@@ -205,6 +210,7 @@ def test_reg_amount_complex_controller():
     txt = 'The FOS-JUN complex increases the amount of ZEB2.'
     for offline in offline_modes:
         rp = reach.process_text(txt, offline=offline)
+        assert rp is not None
         assert len(rp.statements) == 2
         cplx = [s for s in rp.statements if isinstance(s, Complex)][0]
         regam = [s for s in rp.statements if isinstance(s, IncreaseAmount)][0]
@@ -216,6 +222,7 @@ def test_reg_amount_complex_controller():
 def test_bind():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 binds ERK2.', offline=offline)
+        assert rp is not None
         assert len(rp.statements) == 1
         assert unicode_strs(rp.statements)
 
@@ -223,6 +230,7 @@ def test_bind():
 def test_be_grounding():
     for offline in offline_modes:
         rp = reach.process_text('MEK activates ERK.', offline=offline)
+        assert rp is not None
         assert len(rp.statements) == 1
         assert unicode_strs(rp.statements)
         if offline is True:
@@ -234,6 +242,7 @@ def test_be_grounding():
 def test_activity():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 activates ERK2.', offline=offline)
+        assert rp is not None
         assert len(rp.statements) == 1
         assert unicode_strs(rp.statements)
 
@@ -242,6 +251,7 @@ def test_mutation():
     for offline in offline_modes:
         rp = reach.process_text('BRAF(V600E) phosphorylates MEK.',
                                 offline=offline)
+        assert rp is not None
         assert len(rp.statements) == 1
         braf = rp.statements[0].enz
         assert braf.name == 'BRAF'
@@ -272,6 +282,7 @@ def test_parse_mutation():
 def test_process_unicode():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 binds ERK2\U0001F4A9.', offline=offline)
+        assert rp is not None
         assert unicode_strs(rp.statements)
 
 
@@ -279,6 +290,7 @@ def test_process_unicode():
 def test_process_pmc():
     for offline in offline_modes:
         rp = reach.process_pmc('PMC4338247', offline=offline)
+        assert rp is not None
         for stmt in rp.statements:
             assert_pmid(stmt)
         assert unicode_strs(rp.statements)
@@ -287,6 +299,7 @@ def test_process_pmc():
 def test_process_unicode_abstract():
     for offline in offline_modes:
         rp = reach.process_pubmed_abstract('27749056', offline=offline)
+        assert rp is not None
         assert unicode_strs(rp.statements)
 
 
@@ -294,6 +307,7 @@ def test_hgnc_from_up():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 phosphorylates ERK2.',
                                 offline=offline)
+        assert rp is not None
         assert len(rp.statements) == 1
         st = rp.statements[0]
         (map2k1, mapk1) = st.agent_list()
@@ -364,6 +378,7 @@ def test_get_agent_coordinates_phosphorylation():
                  'MEK that is phosphorylated phosphorylates ERK.')
     for offline in offline_modes:
         rp = reach.process_text(test_case, offline=offline)
+        assert rp is not None
         stmt = rp.statements[0]
         annotations = stmt.evidence[0].annotations
 
@@ -375,6 +390,7 @@ def test_get_agent_coordinates_activation():
     test_case = 'MEK1 activates ERK2'
     for offline in offline_modes:
         rp = reach.process_text(test_case, offline=offline)
+        assert rp is not None
         stmt = rp.statements[0]
         annotations = stmt.evidence[0].annotations
         coords = [(0, 4), (15, 19)]
@@ -385,6 +401,7 @@ def test_get_agent_coordinates_regulate_amount():
     test_case = 'ERK increases the transcription of DUSP'
     for offline in offline_modes:
         rp = reach.process_text(test_case, offline=offline)
+        assert rp is not None
         stmt = rp.statements[0]
         annotations = stmt.evidence[0].annotations
         coords = [(0, 3), (35, 39)]
@@ -395,6 +412,7 @@ def test_get_agent_coordinates_binding():
     test_case = 'Everyone has observed that MEK1 binds ERK2'
     for offline in offline_modes:
         rp = reach.process_text(test_case, offline=offline)
+        assert rp is not None
         stmt = rp.statements[0]
         annotations = stmt.evidence[0].annotations
         coords = [(27, 31), (38, 42)]
@@ -407,6 +425,7 @@ def test_get_agent_coordinates_translocation():
                  'translocates to the nucleus promotes cell growth.')
     for offline in offline_modes:
         rp = reach.process_text(test_case, offline=offline)
+        assert rp is not None
         stmt = [stmt for stmt in rp.statements if
                 isinstance(stmt, Translocation)][0]
         annotations = stmt.evidence[0].annotations
@@ -421,8 +440,11 @@ def test_get_agent_coordinates_phosphorylation_missing_controller():
                  'function cooperatively')
     for offline in offline_modes:
         rp = reach.process_text(test_case, offline=offline)
-        stmt = [stmt for stmt in rp.statements if
-                isinstance(stmt, Phosphorylation)][0]
+        assert rp is not None
+        phos_stmts = [stmt for stmt in rp.statements if
+                      isinstance(stmt, Phosphorylation)]
+        assert phos_stmts, rp.statements
+        stmt = phos_stmts[0]
         annotations = stmt.evidence[0].annotations
         coords = [None, (57, 60)]
         assert annotations['agents']['coords'] == coords
@@ -432,6 +454,7 @@ def test_amount_embedded_in_activation():
     here = os.path.dirname(os.path.abspath(__file__))
     test_file = os.path.join(here, 'reach_act_amt.json')
     rp = reach.process_json_file(test_file)
+    assert rp is not None
     assert len(rp.statements) == 1
     assert isinstance(rp.statements[0], IncreaseAmount)
     assert rp.statements[0].subj is not None

@@ -176,10 +176,10 @@ var api_spec = {
         "parameters": [
           {
             "in": "body",
-            "name": "textObj",
-            "description": "An object with a key of \"text\" referencing a string of text to be processed by REACH.",
+            "name": "textUrlObj",
+            "description": "An object with keys of \"text\", referencing a string of text to be processed by REACH, and \"url\", referencing a url of REACH API to send request to.",
             "schema": {
-              "$ref": "#/definitions/textObj"
+              "$ref": "#/definitions/textUrlObj"
             }
           }
         ],
@@ -244,10 +244,10 @@ var api_spec = {
         "parameters": [
           {
             "in": "body",
-            "name": "pmcid",
-            "description": "An object with a key of \"pmcid\" referencing a string that contains the PMCID of the publication.",
+            "name": "pmcIDUrl",
+            "description": "An object with keys of \"pmcid\", referencing a string that contains the PMCID of the publication, and \"url\", referencing a url of REACH API to send request to.",
             "schema": {
-              "$ref": "#/definitions/pmcID"
+              "$ref": "#/definitions/pmcIDUrl"
             }
           }
         ],
@@ -927,6 +927,23 @@ var api_spec = {
         }
       }
     },
+    "pmcIDUrl": {
+      "type": "object",
+      "required": [
+        "pmcid",
+        "url"
+      ],
+      "properties": {
+        "pmcid": {
+          "type": "string",
+          "example": "5148607"
+        },
+        "url": {
+          "type": "string",
+          "example": "http://localhost:8080/api/uploadFile"
+        }
+      }
+    },
     "textObj": {
       "type": "object",
       "required": [
@@ -965,6 +982,23 @@ var api_spec = {
         "auth": {
           "type": "list",
           "example": ['USER', 'PASS']
+        }
+      }
+    },
+    "textUrlObj": {
+      "type": "object",
+      "required": [
+        "text",
+        "url"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "example": "GRB2 binds SHC."
+        },
+        "url": {
+          "type": "string",
+          "example": "http://localhost:8080/api/text"
         }
       }
     },
