@@ -52,6 +52,15 @@ def test_process_text():
     # assert len(stmt.obj.db_refs['UN']) > 5
 
 
+def test_process_text_bio():
+    ep = eidos.process_text_bio('virus increases death')
+    assert ep is not None
+    assert len(ep.statements) == 1
+    stmt = ep.statements[0]
+    from indra.statements import Activation
+    assert isinstance(stmt, Activation)
+
+
 def test_process_polarity():
     test_jsonld = os.path.join(path_this, 'eidos_neg_event.json')
     ep = eidos.process_json_file(test_jsonld)

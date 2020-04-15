@@ -140,6 +140,45 @@ def process_json(json_dict, grounding_ns=None):
     return ep
 
 
+def process_text_bio(text, save_json='eidos_output.json', webservice=None):
+    """Return an EidosProcessor by processing the given text.
+
+    This constructs a reader object via Java and extracts mentions
+    from the text. It then serializes the mentions into JSON and
+    processes the result with process_json.
+
+    Parameters
+    ----------
+    text : str
+        The text to be processed.
+    save_json : Optional[str]
+        The name of a file in which to dump the JSON output of Eidos.
+    webservice : Optional[str]
+        An Eidos reader web service URL to send the request to.
+        If None, the reading is assumed to be done with the Eidos JAR rather
+        than via a web service. Default: None
+
+    Returns
+    -------
+    ep : EidosProcessor
+        An EidosProcessor containing the extracted INDRA Statements in its
+        statements attribute.
+    """
+    if not webservice:
+        if eidos_reader is None:
+            logger.error('Eidos reader is not available.')
+            return None
+        json_dict = eidos_reader.process_text(text)
+    else:
+        if webservice.endswith('/'):
+            webservice = webservice[:-1]
+        json_dict = eidos_client.process_text(text, webservice=webservice)
+    if save_json:
+        with open(save_json, 'wt') as fh:
+            json.dump(json_dict, fh, indent=2)
+    return process_json_bio(json_dict)
+
+
 def process_json_bio(json_dict):
     """Return EidosProcessor with grounded Activation/Inhibition statements.
 
@@ -190,6 +229,7 @@ def process_json_bio(json_dict):
         if bio_stmt:
             bio_stmts.append(bio_stmt)
     ep.statements = bio_stmts
+    return ep
 
 
 def reground_texts(texts, ont_yml, webservice=None, topk=10, filter=True,
