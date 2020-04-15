@@ -192,19 +192,15 @@ def process_json_bio(json_dict):
         A EidosProcessor containing the extracted INDRA Statements
         in its statements attribute.
     """
-    import gilda
     from indra.preassembler.grounding_mapper.standardize \
         import standardize_agent_name
+    from indra.preassembler.grounding_mapper.gilda import get_grounding
     from indra.statements import Agent, Activation, Inhibition
 
     def get_agent(concept, context=None):
         txt = concept.name
-        matches = gilda.ground(txt, context=context)
-        if not matches:
-            return None
-        gr = (matches[0].term.db, matches[0].term.id)
-        agent = Agent(concept.name, db_refs={gr[0]: gr[1],
-                                             'TEXT': concept.name})
+        gr, _ = get_grounding(txt, context=context, mode='local')
+        agent = Agent(concept.name, db_refs={'TEXT': concept.name, **gr})
         standardize_agent_name(agent, standardize_refs=True)
         return agent
 
