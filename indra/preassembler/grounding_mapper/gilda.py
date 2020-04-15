@@ -151,12 +151,18 @@ def ground_statements(stmts, mode='web', sources=None, ungrounded_only=False):
     ungrounded_only : Optional[str]
         If True, only ungrounded Agents will be grounded, and ones that
         are already grounded will not be modified. Default: False
+
+    Returns
+    -------
+    list[indra.statement.Statements]
+        The list of Statements that were changed in place by reference.
     """
     source_filter = set(sources) if sources else set()
     for stmt in stmts:
         if not source_filter or (stmt.evidence and stmt.evidence[0].source_api
                                  in source_filter):
             ground_statement(stmt, mode=mode, ungrounded_only=ungrounded_only)
+    return stmts
 
 
 def run_gilda_disambiguation(stmt, agent, idx, mode='web'):
