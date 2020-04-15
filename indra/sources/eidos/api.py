@@ -46,6 +46,14 @@ def process_text(text, save_json='eidos_output.json',
         An EidosProcessor containing the extracted INDRA Statements in its
         statements attribute.
     """
+    json_dict = _run_eidos_on_text(text, save_json, webservice)
+    if json_dict:
+        return process_json(json_dict, grounding_ns=grounding_ns)
+    return None
+
+
+def _run_eidos_on_text(text, save_json='eidos_output.json',
+                       webservice=None):
     if not webservice:
         if eidos_reader is None:
             logger.error('Eidos reader is not available.')
@@ -55,10 +63,10 @@ def process_text(text, save_json='eidos_output.json',
         if webservice.endswith('/'):
             webservice = webservice[:-1]
         json_dict = eidos_client.process_text(text, webservice=webservice)
-    if save_json:
+    if json_dict and save_json:
         with open(save_json, 'wt') as fh:
             json.dump(json_dict, fh, indent=2)
-    return process_json(json_dict, grounding_ns=grounding_ns)
+    return json_dict
 
 
 def process_json_file(file_name, grounding_ns=None):
@@ -164,19 +172,10 @@ def process_text_bio(text, save_json='eidos_output.json', webservice=None):
         An EidosProcessor containing the extracted INDRA Statements in its
         statements attribute.
     """
-    if not webservice:
-        if eidos_reader is None:
-            logger.error('Eidos reader is not available.')
-            return None
-        json_dict = eidos_reader.process_text(text)
-    else:
-        if webservice.endswith('/'):
-            webservice = webservice[:-1]
-        json_dict = eidos_client.process_text(text, webservice=webservice)
-    if save_json:
-        with open(save_json, 'wt') as fh:
-            json.dump(json_dict, fh, indent=2)
-    return process_json_bio(json_dict)
+    json_dict = _run_eidos_on_text(text, save_json, webservice)
+    if json_dict:
+        return process_json_bio(json_dict)
+    return None
 
 
 def process_json_bio(json_dict):
