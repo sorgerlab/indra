@@ -46,6 +46,14 @@ def process_text(text, save_json='eidos_output.json',
         An EidosProcessor containing the extracted INDRA Statements in its
         statements attribute.
     """
+    json_dict = _run_eidos_on_text(text, save_json, webservice)
+    if json_dict:
+        return process_json(json_dict, grounding_ns=grounding_ns)
+    return None
+
+
+def _run_eidos_on_text(text, save_json='eidos_output.json',
+                       webservice=None):
     if not webservice:
         if eidos_reader is None:
             logger.error('Eidos reader is not available.')
@@ -55,10 +63,10 @@ def process_text(text, save_json='eidos_output.json',
         if webservice.endswith('/'):
             webservice = webservice[:-1]
         json_dict = eidos_client.process_text(text, webservice=webservice)
-    if save_json:
+    if json_dict and save_json:
         with open(save_json, 'wt') as fh:
             json.dump(json_dict, fh, indent=2)
-    return process_json(json_dict, grounding_ns=grounding_ns)
+    return json_dict
 
 
 def process_json_file(file_name, grounding_ns=None):
@@ -137,6 +145,85 @@ def process_json(json_dict, grounding_ns=None):
     ep.extract_causal_relations()
     ep.extract_correlations()
     ep.extract_events()
+    return ep
+
+
+def process_text_bio(text, save_json='eidos_output.json', webservice=None):
+    """Return an EidosProcessor by processing the given text.
+
+    This constructs a reader object via Java and extracts mentions
+    from the text. It then serializes the mentions into JSON and
+    processes the result with process_json.
+
+    Parameters
+    ----------
+    text : str
+        The text to be processed.
+    save_json : Optional[str]
+        The name of a file in which to dump the JSON output of Eidos.
+    webservice : Optional[str]
+        An Eidos reader web service URL to send the request to.
+        If None, the reading is assumed to be done with the Eidos JAR rather
+        than via a web service. Default: None
+
+    Returns
+    -------
+    ep : EidosProcessor
+        An EidosProcessor containing the extracted INDRA Statements in its
+        statements attribute.
+    """
+    json_dict = _run_eidos_on_text(text, save_json, webservice)
+    if json_dict:
+        return process_json_bio(json_dict)
+    return None
+
+
+def process_json_bio(json_dict):
+    """Return EidosProcessor with grounded Activation/Inhibition statements.
+
+    Parameters
+    ----------
+    json_dict : dict
+        The JSON-LD dict to be processed.
+
+    Returns
+    -------
+    ep : EidosProcessor
+        A EidosProcessor containing the extracted INDRA Statements
+        in its statements attribute.
+    """
+    from indra.preassembler.grounding_mapper.standardize \
+        import standardize_agent_name
+    from indra.preassembler.grounding_mapper.gilda import get_grounding
+    from indra.statements import Agent, Activation, Inhibition
+
+    def get_agent(concept, context=None):
+        txt = concept.name
+        gr, _ = get_grounding(txt, context=context, mode='local')
+        agent = Agent(concept.name, db_refs={'TEXT': concept.name, **gr})
+        standardize_agent_name(agent, standardize_refs=True)
+        return agent
+
+    def get_regulate_activity(stmt):
+        context = stmt.evidence[0].text
+        subj = get_agent(stmt.subj.concept, context=context)
+        obj = get_agent(stmt.obj.concept, context=context)
+        if not subj or not obj:
+            return None
+        pol = stmt.overall_polarity()
+        stmt_type = Activation if pol == 1 or not pol else Inhibition
+        bio_stmt = stmt_type(subj, obj, evidence=stmt.evidence)
+        return bio_stmt
+
+    ep = EidosProcessor(json_dict)
+    ep.extract_causal_relations()
+
+    bio_stmts = []
+    for stmt in ep.statements:
+        bio_stmt = get_regulate_activity(stmt)
+        if bio_stmt:
+            bio_stmts.append(bio_stmt)
+    ep.statements = bio_stmts
     return ep
 
 
