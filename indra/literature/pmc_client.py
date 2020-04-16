@@ -245,3 +245,10 @@ def filter_pmids(pmid_list, source_type):
             pmids_fulltext_dict[source_type] = fulltext_list
     return list(set(pmid_list).intersection(
                                 pmids_fulltext_dict.get(source_type)))
+
+
+def _namespace_unaware_xpath(tag_list, from_root=True):
+    out = '' if from_root else '/'
+    for tag in tag_list:
+        out += "/*[local-name()='%s']" % tag
+    return out
