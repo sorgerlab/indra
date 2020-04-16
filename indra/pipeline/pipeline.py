@@ -15,6 +15,14 @@ class AssemblyPipeline():
     Ways to initialize and run the pipeline (examples assume you have a list
     of INDRA Statements stored in `stmts` variable.)
 
+    >>> from indra.statements import *
+    >>> map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
+    >>> mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
+    >>> braf = Agent('BRAF')
+    >>> map2k1 = Agent('MAP2K1')
+    >>> stmts = [Phosphorylation(map2k1, mapk1, 'T', '185'),
+    ...          Phosphorylation(braf, map2k1)]
+
     1) Provide a JSON file containing the steps and use a classmethod
     `from_json_file` and run it with `run` method on a list of statements.
     This option allows to store pipeline versions and reproduce the same
