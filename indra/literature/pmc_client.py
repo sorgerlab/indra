@@ -129,59 +129,21 @@ def extract_text(xml_string):
         return None
 
 
-def _select_main_article_front(xml_string):
-    """Return front of NLM XML string
+def _select_from_top_level(xml_string, tag):
+    """Return top level elements from an NLM XML article
 
     Parameters
     ----------
     xml_str : str
-        A valid NLM XML string
+        A valid NLM XML string for an entire article
 
     list
-        List containing lxml Element of front section of main article
+        List containing lxml Element objects of selected top level elements
     """
     output = []
     tree = etree.fromstring(xml_string.encode('utf-8'))
-    front_xpath = _namespace_unaware_xpath('article', 'front')
+    front_xpath = _namespace_unaware_xpath(tag)
     for element in tree.xpath(front_xpath):
-        output.append(element)
-    return output
-
-
-def _select_main_article_body(xml_string):
-    """Return body of NLM XML string
-
-    Parameters
-    ----------
-    xml_str : str
-        A valid NLM XML string
-
-    list
-        List containing lxml Element of main body.
-    """
-    output = []
-    tree = etree.fromstring(xml_string.encode('utf-8'))
-    body_xpath = _namespace_unaware_xpath('article', 'body')
-    for element in tree.xpath(body_xpath):
-        output.append(element)
-    return output
-
-
-def _select_subarticles(xml_string):
-    """Return sub-articles of NLM XML string
-
-    Parameters
-    ----------
-    xml_str : str
-        A valid NLM XML string
-
-    list
-        List containing lxml Element of front section of main article
-    """
-    output = []
-    tree = etree.fromstring(xml_string.encode('utf-8'))
-    sub_article_xpath = _namespace_unaware_xpath('article', 'sub-article')
-    for element in tree.xpath(sub_article_xpath):
         output.append(element)
     return output
 
