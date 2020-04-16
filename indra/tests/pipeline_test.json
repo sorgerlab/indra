@@ -1,0 +1,20 @@
+[
+ {
+  "function": "filter_no_hypothesis"
+ },
+ {
+  "function": "map_grounding"
+ },
+ {
+  "function": "filter_grounded_only"
+ },
+ {
+  "function": "map_sequence"
+ },
+ {
+  "function": "run_preassembly",
+  "kwargs": {
+   "return_toplevel": false
+  }
+ }
+]
