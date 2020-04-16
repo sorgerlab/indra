@@ -1,11 +1,15 @@
 import types
 import json
+import logging
 
 from .decorators import pipeline_functions, pipeline
 from indra.tools.assemble_corpus import *
 from indra.belief.wm_scorer import *
 from indra.preassembler.hierarchy_manager import *
 from indra.statements import get_statement_by_name
+
+
+logger = logging.getLogger(__name__)
 
 
 class AssemblyPipeline():
@@ -19,7 +23,6 @@ class AssemblyPipeline():
     >>> map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
     >>> mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
     >>> braf = Agent('BRAF')
-    >>> map2k1 = Agent('MAP2K1')
     >>> stmts = [Phosphorylation(map2k1, mapk1, 'T', '185'),
     ...          Phosphorylation(braf, map2k1)]
 
@@ -49,7 +52,8 @@ class AssemblyPipeline():
     require calling a different function, use RunnableArgument class. All
     functions referenced here have to be either imported and passed as function
     objects or registered with @pipeline decorator and passed as function
-    names (strings).
+    names (strings). The pipeline built this way can be optionally saved into
+    a JSON file.
 
     >>> ap = AssemblyPipeline()
     >>> ap.append(filter_no_hypothesis)
@@ -58,6 +62,7 @@ class AssemblyPipeline():
     ...           belief_scorer=RunnableArgument(get_eidos_scorer),
     ...           hierarchies=RunnableArgument(get_wm_hierarchies))
     >>> assembled_stmts = ap.run(stmts)
+    >>> ap.to_json_file('filename.json')
 
     Parameters
     ----------
@@ -84,8 +89,14 @@ class AssemblyPipeline():
         ap = AssemblyPipeline(steps)
         return ap
 
+    def to_json_file(self, filename):
+        """Save AssemblyPipeline to a JSON file."""
+        with open(filename, 'w') as f:
+            json.dump(self.steps, f, indent=1)
+
     def run(self, statements):
         """Run all steps of the pipeline."""
+        logger.info('Running the pipeline')
         for step in self.steps:
             statements = self.run_function(step, statements)
         return statements
@@ -169,6 +180,7 @@ class AssemblyPipeline():
         function.
         """
         func_name, args, kwargs = self.get_function_parameters(func_dict)
+        logger.info('%s is called' % func_name)
         new_args = []
         new_kwargs = {}
         for arg in args:
@@ -207,6 +219,12 @@ class AssemblyPipeline():
         else:
             value = arg_json
         return value
+
+    def __len__(self):
+        return len(self.steps)
+
+    def __iter__(self):
+        return iter(self.steps)
 
 
 class NotRegisteredFunctionError(Exception):
