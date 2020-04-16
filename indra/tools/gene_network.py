@@ -1,13 +1,8 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 import pickle
 import logging
 from indra.sources import bel, biopax
 import indra.tools.assemble_corpus as ac
-from indra.preassembler import Preassembler
-from indra.preassembler.hierarchy_manager import hierarchies
-from indra.preassembler.sitemapper import default_mapper as sm
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +25,8 @@ class GeneNetwork(object):
         List of gene names
     basename : str or None
         Filename prefix for cached intermediates, or None if no cached used.
-    results : dict
-        Dict containing results of preassembly (see return type for
-        :py:meth:`run_preassembly`.
+    results : list[indra.statements.Statement]
+        List of preassembled statements.
     """
     def __init__(self, gene_list, basename=None):
         if not gene_list:
@@ -113,13 +107,13 @@ class GeneNetwork(object):
             biopax_ras_owl_path = '%s_pc_pathsbetween.owl' % self.basename
         # Check for cached Biopax stmt file at the given path
         # if it's there, return the statements from the cache
-        if self.basename is not None and os.path.isfile(biopax_stmt_path):
+        if self.basename is not None and os.path.exists(biopax_stmt_path):
             logger.info("Loading Biopax statements from %s" % biopax_stmt_path)
             with open(biopax_stmt_path, 'rb') as f:
                 bp_statements = pickle.load(f)
             return bp_statements
         # Check for cached file before querying Pathway Commons Web API
-        if self.basename is not None and os.path.isfile(biopax_ras_owl_path):
+        if self.basename is not None and os.path.exists(biopax_ras_owl_path):
             logger.info("Loading Biopax from OWL file %s" % biopax_ras_owl_path)
             bp = biopax.process_owl(biopax_ras_owl_path)
         # OWL file not found; do query and save to file
@@ -211,45 +205,9 @@ class GeneNetwork(object):
             - `related2`: top-level statements after combining the statements
               in `duplicates2`.
         """
-        # First round of preassembly: remove duplicates before sitemapping
-        pa1 = Preassembler(hierarchies, stmts)
-        logger.info("Combining duplicates")
-        pa1.combine_duplicates()
-        # Map sites
-        logger.info("Mapping sites")
-        (valid, mapped) = sm.map_sites(pa1.unique_stmts)
-        # Combine valid and successfully mapped statements into single list
-        correctly_mapped_stmts = []
-        for ms in mapped:
-            if all([True if mm[1] is not None else False
-                         for mm in ms.mapped_mods]):
-                correctly_mapped_stmts.append(ms.mapped_stmt)
-        mapped_stmts = valid + correctly_mapped_stmts 
-        # Second round of preassembly: de-duplicate and combine related
-        pa2 = Preassembler(hierarchies, mapped_stmts)
-        logger.info("Combining duplicates again")
-        pa2.combine_duplicates()
-        pa2.combine_related()
-        # Fill out the results dict
-        self.results = {}
-        self.results['raw'] = stmts
-        self.results['duplicates1'] = pa1.unique_stmts
-        self.results['valid'] = valid
-        self.results['mapped'] = mapped
-        self.results['mapped_stmts'] = mapped_stmts
-        self.results['duplicates2'] = pa2.unique_stmts
-        self.results['related2'] = pa2.related_stmts
-        # Print summary
-        if print_summary:
-            logger.info("\nStarting number of statements: %d" % len(stmts))
-            logger.info("After duplicate removal: %d" % len(pa1.unique_stmts))
-            logger.info("Unique statements with valid sites: %d" % len(valid))
-            logger.info("Unique statements with invalid sites: %d" %
-                        len(mapped))
-            logger.info("After post-mapping duplicate removal: %d" %
-                        len(pa2.unique_stmts))
-            logger.info("After combining related statements: %d" %
-                        len(pa2.related_stmts))
+        stmts = ac.map_grounding(stmts)
+        stmts = ac.map_sequence(stmts)
+        self.results = ac.run_preassembly(stmts)
         # Save the results if we're caching
         if self.basename is not None:
             results_filename = '%s_results.pkl' % self.basename
