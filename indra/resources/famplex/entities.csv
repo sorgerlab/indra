@@ -175,6 +175,7 @@ DYRK
 E2F
 E3_Ub_ligase
 EDN
+EDNR
 EFN
 EGFR_ligand
 EGR
@@ -215,7 +216,22 @@ FLOT
 FLRT
 FNT
 FOS_family
+FOXA
+FOXB
+FOXC
+FOXD
+FOXD4L
+FOXE
+FOXF
+FOXI
+FOXJ
+FOXK
+FOXL
+FOXN
 FOXO
+FOXP
+FOXR
+FOX
 FPR
 FSH
 FUT
@@ -309,7 +325,6 @@ IL2R
 Inhibin
 Inhibin_A
 Inhibin_B
-INS
 INSR
 Integrins
 Interferon
@@ -574,6 +589,7 @@ STAT5
 STT3
 Sulfonylurea_receptor
 SWI_SNF
+TAB
 TAC
 TAOK
 TAP
@@ -613,7 +629,6 @@ TXN
 TXNRD
 UBE2
 Ubiquitin
-UGCG
 UGGT
 UGT
 VAV
@@ -624,4 +639,3 @@ Voltage_gated_ion_channels
 Wnt
 Wnt5
 YBX
-ZACN
