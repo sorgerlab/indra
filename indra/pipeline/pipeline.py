@@ -31,7 +31,7 @@ class AssemblyPipeline():
     `from_json_file` and run it with `run` method on a list of statements.
     This option allows to store pipeline versions and reproduce the same
     results. All functions referenced in JSON file have to be registered with
-    @pipeline decorator.
+    @register_pipeline decorator.
 
     >>> import os
     >>> filename = os.path.join('..', 'tests', 'pipeline_test.json')
@@ -40,7 +40,7 @@ class AssemblyPipeline():
 
     2) Initialize a pipeline with a list of steps and run it with `run` method
     on a list of statements.All functions referenced in steps have to be
-    registered with @pipeline decorator.
+    registered with @register_pipeline decorator.
 
     >>> steps = [
     ...    {"function": "filter_no_hypothesis"},
@@ -54,7 +54,7 @@ class AssemblyPipeline():
     Provide a function and its args and kwargs. For arguments that
     require calling a different function, use RunnableArgument class. All
     functions referenced here have to be either imported and passed as function
-    objects or registered with @pipeline decorator and passed as function
+    objects or registered with @register_pipeline decorator and passed as function
     names (strings). The pipeline built this way can be optionally saved into
     a JSON file.
 
@@ -109,7 +109,7 @@ class AssemblyPipeline():
 
         Args and kwargs here can be of any type. All functions referenced here
         have to be either imported and passed as function objects or
-        registered with @pipeline decorator and passed as function names
+        registered with @register_pipeline decorator and passed as function names
         (strings). For arguments that require calling a different function,
         use RunnableArgument class.
         """
@@ -128,7 +128,7 @@ class AssemblyPipeline():
 
         Args and kwargs here can be of any type. All functions referenced here
         have to be either imported and passed as function objects or
-        registered with @pipeline decorator and passed as function names
+        registered with @register_pipeline decorator and passed as function names
         (strings). For arguments that require calling a different function,
         use RunnableArgument class.
         """

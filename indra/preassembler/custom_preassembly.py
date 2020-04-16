@@ -1,5 +1,5 @@
 from indra.statements import *
-from indra.pipeline.decorators import pipeline
+from indra.pipeline import register_pipeline
 
 
 def has_location(stmt):
@@ -54,7 +54,7 @@ def get_time(stmt):
     return time
 
 
-@pipeline
+@register_pipeline
 def location_matches(stmt):
     """Return a matches_key which takes geo-location into account."""
     if isinstance(stmt, Event):
@@ -70,7 +70,7 @@ def location_matches(stmt):
     return matches_key
 
 
-@pipeline
+@register_pipeline
 def event_location_refinement(st1, st2, hierarchies):
     """Return True if there is a location-aware refinement between Events."""
     ref = st1.refinement_of(st2, hierarchies)
@@ -91,7 +91,7 @@ def event_location_refinement(st1, st2, hierarchies):
     return False
 
 
-@pipeline
+@register_pipeline
 def location_refinement(st1, st2, hierarchies):
     """Return True if there is a location-aware refinement between stmts."""
     if type(st1) != type(st2):
@@ -109,7 +109,7 @@ def location_refinement(st1, st2, hierarchies):
         return st1.refinement_of(st2, hierarchies)
 
 
-@pipeline
+@register_pipeline
 def event_location_time_matches(event):
     """Return Event matches key which takes location and time into account."""
     mk = location_matches(event)
@@ -120,7 +120,7 @@ def event_location_time_matches(event):
     return matches_key
 
 
-@pipeline
+@register_pipeline
 def location_time_matches(stmt):
     """Return matches key which takes location and time into account."""
     if isinstance(stmt, Event):
@@ -133,7 +133,7 @@ def location_time_matches(stmt):
         return stmt.matches_key()
 
 
-@pipeline
+@register_pipeline
 def event_location_time_refinement(st1, st2, hierarchies):
     """Return True if there is a location/time refinement between Events."""
     ref = location_refinement(st1, st2, hierarchies)
@@ -147,7 +147,7 @@ def event_location_time_refinement(st1, st2, hierarchies):
         return st1.context.time.refinement_of(st2.context.time)
 
 
-@pipeline
+@register_pipeline
 def location_time_refinement(st1, st2, hierarchies):
     """Return True if there is a location/time refinement between stmts."""
     if type(st1) != type(st2):
@@ -165,7 +165,7 @@ def location_time_refinement(st1, st2, hierarchies):
         return subj_ref and obj_ref
 
 
-@pipeline
+@register_pipeline
 def agent_grounding_matches(agent):
     """Return an Agent matches key just based on grounding, not state."""
     if agent is None:
@@ -173,7 +173,7 @@ def agent_grounding_matches(agent):
     return str(agent.entity_matches_key())
 
 
-@pipeline
+@register_pipeline
 def agents_stmt_type_matches(stmt):
     """Return a matches key just based on Agent grounding and Stmt type."""
     agents = [agent_grounding_matches(a) for a in stmt.agent_list()]
@@ -181,7 +181,7 @@ def agents_stmt_type_matches(stmt):
     return key
 
 
-@pipeline
+@register_pipeline
 def agent_name_matches(agent):
     """Return a sorted, normalized bag of words as the name."""
     if agent is None:
@@ -190,7 +190,7 @@ def agent_name_matches(agent):
     return bw
 
 
-@pipeline
+@register_pipeline
 def agent_name_stmt_type_matches(stmt):
     """Return True if the statement type and normalized agent name matches."""
     agents = [agent_name_matches(a) for a in stmt.agent_list()]
@@ -212,7 +212,7 @@ def get_delta(stmt):
         return (delta.entity, delta.value, delta.unit, delta.polarity)
 
 
-@pipeline
+@register_pipeline
 def event_location_time_delta_matches(event):
     mk = event_location_time_matches(event)
     if not has_delta:
@@ -222,7 +222,7 @@ def event_location_time_delta_matches(event):
     return matches_key
 
 
-@pipeline
+@register_pipeline
 def location_time_delta_matches(stmt):
     if isinstance(stmt, Event):
         return event_location_time_delta_matches(stmt)
@@ -234,7 +234,7 @@ def location_time_delta_matches(stmt):
         return stmt.matches_key()
 
 
-@pipeline
+@register_pipeline
 def event_location_time_delta_refinement(st1, st2, hierarchies):
     loc_time_ref = event_location_time_refinement(st1, st2, hierarchies)
     if not loc_time_ref:
@@ -247,7 +247,7 @@ def event_location_time_delta_refinement(st1, st2, hierarchies):
         return st1.delta.refinement_of(st2.delta)
 
 
-@pipeline
+@register_pipeline
 def location_time_delta_refinement(st1, st2, hierarchies):
     if isinstance(st1, Event):
         return event_location_time_delta_refinement(st1, st2, hierarchies)
