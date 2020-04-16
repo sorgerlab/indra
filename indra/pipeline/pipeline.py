@@ -33,7 +33,9 @@ class AssemblyPipeline():
     results. All functions referenced in JSON file have to be registered with
     @pipeline decorator.
 
-    >>> ap = AssemblyPipeline.from_json_file('filename.json')
+    >>> import os
+    >>> filename = os.path.join('..', 'tests', 'pipeline_test.json')
+    >>> ap = AssemblyPipeline.from_json_file(filename)
     >>> assembled_stmts = ap.run(stmts)
 
     2) Initialize a pipeline with a list of steps and run it with `run` method
