@@ -129,78 +129,105 @@ def extract_text(xml_string):
         return None
 
 
-def extract_titles(xml_string):
-    """Get list containing article title and also alt title if one exists
-
-    Parameters
-    ----------
-    xml_string : str
-        String containing valid NLM XML
-
-    Returns
-    -------
-    list of str
-        Singleton list containing article title, or a two element
-        list containing the article title and the alt title if
-        the latter exists.
-    """
-    output = []
-    tree = etree.fromstring(xml_string.encode('utf-8'))
-    title_group_path_elements = ['front', 'article-meta', 'title-group']
-    title_group_xpath = '/'
-    for tag in title_group_path_elements:
-        title_group_xpath += "/*[local-name()='%s']" % tag
-    for tag in ['article-title', 'alt-title']:
-        title_xpath = title_group_xpath + "/*[local-name()='%s']" % tag
-        elements = tree.xpath(title_xpath)
-        # Although there should be exaclty one article-title and at most one
-        # alt title we handle this as if there could any number of each as
-        # a guard against unusual input. The only assumption made is that
-        # article-titles appear before alt-titles
-        for element in elements:
-            output.append(' '.join(element.itertext()))
-    return output
-
-
-def select_abstracts(xml_string):
-    """Return list of abstract elements from NLM XML string
+def _select_main_article_front(xml_string):
+    """Return front of NLM XML string
 
     Parameters
     ----------
     xml_str : str
         A valid NLM XML string
 
-    Returns
-    -------
-    list of str
-        List of string representations of abstract elements from
-        input XML
+    list
+        List containing lxml Element of front section of main article
     """
     output = []
     tree = etree.fromstring(xml_string.encode('utf-8'))
-    abstract_path_elements = ['front', 'article-meta', 'abstract']
-    abstract_xpath = '/'
-    for tag in abstract_path_elements:
-        abstract_xpath += "/*[local-name()='%s']" % tag
-    for element in tree.xpath(abstract_xpath):
-        output.append(etree.tostring(element, encoding='unicode'))
+    front_xpath = _namespace_unaware_xpath('article', 'front')
+    for element in tree.xpath(front_xpath):
+        output.append(element)
     return output
 
 
-def extract_paragraphs(xml_string):
-    """Returns list of paragraphs in an NLM XML.
+def _select_main_article_body(xml_string):
+    """Return body of NLM XML string
 
     Parameters
     ----------
-    xml_string : str
-        String containing valid NLM XML.
+    xml_str : str
+        A valid NLM XML string
 
+    list
+        List containing lxml Element of main body.
+    """
+    output = []
+    tree = etree.fromstring(xml_string.encode('utf-8'))
+    body_xpath = _namespace_unaware_xpath('article', 'body')
+    for element in tree.xpath(body_xpath):
+        output.append(element)
+    return output
+
+
+def _select_subarticles(xml_string):
+    """Return sub-articles of NLM XML string
+
+    Parameters
+    ----------
+    xml_str : str
+        A valid NLM XML string
+
+    list
+        List containing lxml Element of front section of main article
+    """
+    output = []
+    tree = etree.fromstring(xml_string.encode('utf-8'))
+    sub_article_xpath = _namespace_unaware_xpath('article', 'sub-article')
+    for element in tree.xpath(sub_article_xpath):
+        output.append(element)
+    return output
+
+
+def _extract_from_front(front_element):
+    """Return list of titles and paragraphs from front of NLM XML
+
+    Parameters
+    ----------
+    front_element : :py:class:`lxml.etree._Element`
+        etree element for front of a valid NLM XML
     Returns
     -------
     list of str
-        List of extracted paragraphs in an NLM XML
+        List of relevant plain text titles and paragraphs taken from front
+        section of NLM XML. These include the article title, alt title,
+        and paragraphs within abstracts. Unwanted paragraphs such as
+        author statements are excluded.
     """
-    tree = etree.fromstring(xml_string.encode('utf-8'))
+    output = []
+    title_xpath = _namespace_unaware_xpath('article-meta', 'title-group',
+                                           'article-title')
+    alt_title_xpath = _namespace_unaware_xpath('article-meta', 'title-group',
+                                               'alt-title')
+    abstracts_xpath = _namespace_unaware_xpath('article-meta', 'abstract')
+    for element in front_element.xpath(_xpath_union(title_xpath,
+                                                    alt_title_xpath,
+                                                    abstracts_xpath)):
+        if element.tag == 'abstract':
+            # Extract paragraphs from abstracts
+            output.extend(_extract_paragraphs_from_tree(element))
+        else:
+            # No paragraphs in titles, Just strip tags
+            output.append(' '.join(element.itertext()))
+    return output
+
+
+def _extract_from_body(body_element):
+    """Return list of paragraphs from main article body of NLM XML
+    """
+    return _extract_paragraphs_from_tree(body_element)
+
+
+def _extract_from_subarticle(subarticle_element):
+    return ''
+
 
 def _extract_paragraphs_from_tree(tree):
     paragraphs = []
