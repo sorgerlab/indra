@@ -146,9 +146,13 @@ def extract_titles(xml_string):
     """
     output = []
     tree = etree.fromstring(xml_string.encode('utf-8'))
-    title_path = '//front/article-meta/title-group'
-    for element_name in ['article-title', 'alt-title']:
-        elements = tree.xpath(os.path.join(title_path, element_name))
+    title_group_path_elements = ['front', 'article-meta', 'title-group']
+    title_group_xpath = '/'
+    for tag in title_group_path_elements:
+        title_group_xpath += "/*[local-name()='%s']" % tag
+    for tag in ['article-title', 'alt-title']:
+        title_xpath = title_group_xpath + "/*[local-name()='%s']" % tag
+        elements = tree.xpath(title_xpath)
         # Although there should be exaclty one article-title and at most one
         # alt title we handle this as if there could any number of each as
         # a guard against unusual input. The only assumption made is that
