@@ -138,13 +138,13 @@ that are supported include BNGL, Kappa and Matlab. For a full list, see the
 `PySB export module
 <http://docs.pysb.org/en/latest/modules/export/index.html>`_.
 
-Exporting Statements As an IndraNet Graph
+Exporting Statements as an IndraNet Graph
 `````````````````````````````````````````
 In this example we again assume that there already exists a variable called
 `stmts`, containing a list of statements. We will import the
-`IndraNetAssembler` that produces an IndraNet object, which is a multidigraph
-representations of the statements, each edge representing a statement and
-each node being an agent.
+`IndraNetAssembler` that produces an IndraNet object, which is a networkx
+MultiDiGraph representations of the statements, each edge representing a
+statement and each node being an agent.
 
 .. Also update code in tests/test_docs_code.py:test_getting_started
 
@@ -154,12 +154,13 @@ each node being an agent.
     indranet_assembler = IndraNetAssembler(statements=stmts)
     indranet = indranet_assembler.make_model()
 
-The indranet object is an instance of a childclass of a Networkx graph object,
-making all networkx graph methods available for the indranet object. Each
-edge in the has an edge dictionary with meta data from the statement.
+The `indranet` object is an instance of a child class of a networkx graph
+object, making all networkx graph methods available for the indranet object.
+Each edge in the has an edge dictionary with meta data from the statement.
 
-The indranet graph has methods to map it to other graph types. Here we
-export it to a signed graph:
+The `indranet` graph has methods to map it to other graph types. Here we
+export it to a signed graph which is represents directed edges with positive
+or negative polarity signs:
 
 .. Also update code in tests/test_docs_code.py:test_getting_started
 
