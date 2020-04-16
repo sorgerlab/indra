@@ -6,7 +6,7 @@ from .decorators import pipeline_functions, register_pipeline
 # It is enough to import one function from files with registered functions
 from indra.belief.wm_scorer import get_eidos_scorer
 from indra.preassembler.custom_preassembly import location_matches
-from indra.statements import get_statement_by_name
+from indra.statements import get_statement_by_name, Statement
 
 
 logger = logging.getLogger(__name__)
