@@ -149,4 +149,6 @@ from .api import (process_pmc,
                   process_nxml_str,
                   process_nxml_file,
                   process_json_str,
-                  process_json_file)
+                  process_json_file,
+                  reach_text_url, reach_nxml_url,
+                  local_text_url, local_nxml_url)
