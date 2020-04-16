@@ -188,7 +188,17 @@ def _extract_from_body(body_element):
 
 
 def _extract_from_subarticle(subarticle_element):
-    return ''
+    """Return list of relevant paragraphs from a subarticle"""
+    # Get only body element
+    body = subarticle_element.xpath(_namespace_unaware_xpath('body'))
+    if not body:
+        return []
+    body = body[0]
+    # Remove float elements. From observation these do not appear to
+    # contain any meaningful information within sub-articles.
+    for element in body.xpath(".//*[@position='float']"):
+        element.getparent().remove(element)
+    return _extract_paragraphs_from_tree(body)
 
 
 def _extract_paragraphs_from_tree(tree):
