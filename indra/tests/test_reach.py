@@ -214,8 +214,10 @@ def test_reg_amount_complex_controller():
         assert len(rp.statements) == 2
         cplx = [s for s in rp.statements if isinstance(s, Complex)][0]
         regam = [s for s in rp.statements if isinstance(s, IncreaseAmount)][0]
-        assert {a.name for a in cplx.members} == {'FOS_family',
-                                                  'JUN_family'}, cplx
+        assert {a.name for a in cplx.members} < {'FOS_family',
+                                                 # Old version: JUN, new:
+                                                 # JUN_family
+                                                 'JUN_family', 'JUN'}, cplx
         assert len(regam.subj.bound_conditions) == 1
         assert unicode_strs(rp.statements)
 
