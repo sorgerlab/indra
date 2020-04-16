@@ -10,8 +10,8 @@ from .adeft import _get_text_for_grounding
 
 logger = logging.getLogger(__name__)
 
-grounding_service_url = get_config('GILDA_URL') if has_config('GILDA_URL') \
-    else 'http://grounding.indra.bio/'
+grounding_service_url = get_config('GILDA_URL', failure_ok=True) \
+    if has_config('GILDA_URL') else 'http://grounding.indra.bio/'
 
 
 def get_grounding(txt, context=None, mode='web'):

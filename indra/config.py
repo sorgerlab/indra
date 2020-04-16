@@ -118,7 +118,6 @@ def get_config(key, failure_ok=True):
     elif not failure_ok:
         raise IndraConfigError(err_msg)
     else:
-        logger.warning(err_msg)
         return None
 
 
@@ -135,5 +134,5 @@ def has_config(key):
     value : bool
         Whether the configuration value is present
     """
-    return get_config(key) is not None
+    return get_config(key, failure_ok=True) is not None
 
