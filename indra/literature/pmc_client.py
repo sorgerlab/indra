@@ -202,17 +202,38 @@ def extract_paragraphs(xml_string):
     """
     tree = etree.fromstring(xml_string.encode('utf-8'))
 
+def _extract_paragraphs_from_tree(tree):
     paragraphs = []
     # In NLM xml, all plaintext is within <p> tags and <title> tags.
     # There can be formatting tags nested within these tags, but no
     # unwanted elements such as figures and tables appear nested
     # within <p> tags and <title> tags. xpath local-name()= syntax
     # is used to ignore namespaces in the NLM XML
-    for element in tree.xpath("//*[local-name()='p'] | "
-                              "//*[local-name()='title']"):
+    pars_xpath = _xpath_union(_namespace_unaware_xpath('p', direct_only=False),
+                              _namespace_unaware_xpath('title',
+                                                       direct_only=False))
+    for element in tree.xpath(pars_xpath):
         paragraph = ' '.join(element.itertext())
         paragraphs.append(paragraph)
     return paragraphs
+
+
+def extract_paragraphs(xml_string):
+    """Returns list of paragraphs in an NLM XML.
+
+    Parameters
+    ----------
+    xml_string : str
+        String containing valid NLM XML.
+
+    Returns
+    -------
+    list of str
+        List of extracted paragraphs in an NLM XML
+    """
+    tree = etree.fromstring(xml_string.encode('utf-8'))
+
+    return _extract_paragraphs_from_tree(tree)
 
 
 def filter_pmids(pmid_list, source_type):
