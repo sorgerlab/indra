@@ -162,6 +162,31 @@ def extract_titles(xml_string):
     return output
 
 
+def select_abstracts(xml_string):
+    """Return list of abstract elements from NLM XML string
+
+    Parameters
+    ----------
+    xml_str : str
+        A valid NLM XML string
+
+    Returns
+    -------
+    list of str
+        List of string representations of abstract elements from
+        input XML
+    """
+    output = []
+    tree = etree.fromstring(xml_string.encode('utf-8'))
+    abstract_path_elements = ['front', 'article-meta', 'abstract']
+    abstract_xpath = '/'
+    for tag in abstract_path_elements:
+        abstract_xpath += "/*[local-name()='%s']" % tag
+    for element in tree.xpath(abstract_xpath):
+        output.append(etree.tostring(element, encoding='unicode'))
+    return output
+
+
 def extract_paragraphs(xml_string):
     """Returns list of paragraphs in an NLM XML.
 
