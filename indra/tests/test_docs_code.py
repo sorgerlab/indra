@@ -192,21 +192,13 @@ def test_gene_network():
             break
 
     # Chunk 4
-    import requests
-    from indra.statements import stmts_from_json
-    indra_api = 'http://api.indra.bio:8000/reach/process_text'
+    from indra.sources import reach
 
-    # Chunk 5
     literature_stmts = []
     for pmid, content in paper_contents.items():
-        res = requests.post(url=indra_api, json={'text': content})
-
-        if res.status_code == 200:
-            print('Got %d statements from abstract for pmid %s' %
-                (len(res.json()['statements']), pmid))
-            literature_stmts += stmts_from_json(res.json()['statements'])
-        else:
-            print('Got status code %d for pmid %s.' % (res.status_code, pmid))
+        rp = reach.process_text(content, url=reach.local_text_url)
+        literature_stmts += rp.statements
+    print('Got %d statements' % len(literature_stmts))
     assert literature_stmts  # replaces a print statements
 
     # Chunk 6

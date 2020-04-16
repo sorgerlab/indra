@@ -76,39 +76,34 @@ faster.
 
 We now have a dictionary called `paper_contents` which stores the content for
 each PMID we looked up. While the abstracts are in plain text format,
-some content is sometimes returned as in different xml formats. To process
-xml from different sources, see e.g. the
+some content is sometimes returned in different either PMC NXML or Elsevier
+XML format. To process
+XML from different sources, some example are:
 `INDRA Reach API <../modules/sources/reach/index.html#indra.sources.reach
 .api.process_nxml_str>`_ or the
-`INDRA Elsevier API <../modules/literature/index.html#module-indra
+`INDRA Elsevier client <../modules/literature/index.html#module-indra
 .literature.elsevier_client>`_.
 
 Read the content of the publications
 ------------------------------------
 
-We next run the REACH reading system on the publications using the INDRA
-Rest API by using the `post` method of Python's `requests` module. The
-results are returned as json data, and we will use a function called
-`statements_from_json` to convert the json data into statements.
+We next run the REACH reading system on the publications. Here we assume
+ that the REACH web service is running locally and is available at
+ `http://localhost:8080` (the default web service endpoints for processing
+ text and nxml are available as importable variables e.g., `local_text_url`.
+ To get started wtih this, see method 1 listed in <`INDRA Reach API
+ <../modules/sources/reach/index.html#indra.sources.reach>`_ documentation.
 
 .. Update code in tests/test_docs_code.py:test_gene_network as well
 
 .. code-block:: python
 
-    import requests
-    from indra.statements import stmts_from_json
-    indra_api = 'http://api.indra.bio:8000/reach/process_text'
+    from indra.sources import reach
 
     literature_stmts = []
     for pmid, content in paper_contents.items():
-        res = requests.post(url=indra_api, json={'text': content})
-
-        if res.status_code == 200:
-            print('Got %d statements from abstract for pmid %s' %
-                (len(res.json()['statements']), pmid))
-            literature_stmts += stmts_from_json(res.json()['statements'])
-        else:
-            print('Got status code %d for pmid %s.' % (res.status_code, pmid))
+        rp = reach.process_text(content, url=reach.local_text_url)
+        literature_stmts += rp.statements
     print('Got %d statements' % len(literature_stmts))
 
 The list `literature_stmts` now contains the results of all the statements
