@@ -6,6 +6,7 @@ from .decorators import pipeline_functions, pipeline
 from indra.tools.assemble_corpus import *
 from indra.belief.wm_scorer import *
 from indra.preassembler.hierarchy_manager import *
+from indra.preassembler.custom_preassembly import *
 from indra.statements import get_statement_by_name
 
 
