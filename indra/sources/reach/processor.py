@@ -423,7 +423,8 @@ class ReachProcessor(object):
             elif ns == 'simple_chemical':
                 if xr['id'].startswith('HMDB'):
                     db_refs['HMDB'] = xr['id']
-            elif ns == 'fplx':
+            # We handle "be" here for compatibility with older versions
+            elif ns in ('fplx', 'be'):
                 db_refs['FPLX'] = xr['id']
             # These name spaces are ignored
             elif ns in ['uaz']:
