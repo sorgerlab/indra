@@ -129,6 +129,35 @@ def extract_text(xml_string):
         return None
 
 
+def extract_titles(xml_string):
+    """Get list containing article title and also alt title if one exists
+
+    Parameters
+    ----------
+    xml_string : str
+        String containing valid NLM XML
+
+    Returns
+    -------
+    list of str
+        Singleton list containing article title, or a two element
+        list containing the article title and the alt title if
+        the latter exists.
+    """
+    output = []
+    tree = etree.fromstring(xml_string.encode('utf-8'))
+    title_path = '//front/article-meta/title-group'
+    for element_name in ['article-title', 'alt-title']:
+        elements = tree.xpath(os.path.join(title_path, element_name))
+        # Although there should be exaclty one article-title and at most one
+        # alt title we handle this as if there could any number of each as
+        # a guard against unusual input. The only assumption made is that
+        # article-titles appear before alt-titles
+        for element in elements:
+            output.append(' '.join(element.itertext()))
+    return output
+
+
 def extract_paragraphs(xml_string):
     """Returns list of paragraphs in an NLM XML.
 
