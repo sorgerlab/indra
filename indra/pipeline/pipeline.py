@@ -284,7 +284,7 @@ def jsonify_arg_input(arg):
     if isinstance(arg, str) and arg in pipeline_functions:
         return {'function': arg, 'no_run': True}
     # For some functions Statement type has to be argument
-    if isinstance(arg, Statement):
+    if isinstance(arg, types.ClassType) and issubclass(arg, Statement):
         return {'stmt_type': arg.__name__}
     # Argument is a simple value and can be stored as provided
     return arg
