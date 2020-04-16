@@ -247,8 +247,26 @@ def filter_pmids(pmid_list, source_type):
                                 pmids_fulltext_dict.get(source_type)))
 
 
-def _namespace_unaware_xpath(tag_list, from_root=True):
-    out = '' if from_root else '/'
+def _namespace_unaware_xpath(*tag_list, direct_only=True):
+    """Create a namespace unaware xpath from a list of tags
+
+    Created xpaths always start with current node, node from
+    root of tree
+
+    Parameters
+    ----------
+    *tag_list
+        Variable length argument list of str. Contains tags for
+        constructing xpath
+    direct_only : Optional[bool]
+        If True, xpath only selects nodes directly beneath the
+        current node. Otherwise any descendents of the current
+        node can be selected. Default: True
+    """
+    if direct_only:
+        out = '.'
+    else:
+        out = './'
     for tag in tag_list:
         out += "/*[local-name()='%s']" % tag
     return out
