@@ -23,8 +23,6 @@ class GeneNetwork(object):
         Filename prefix to be used for caching of intermediates (Biopax OWL
         file, pickled statement lists, etc.). If None, no results are cached
         and no cached files are used.
-    bel_corpus : str
-        Path to a BEL corpus to use. The default uses the BEL Large Corpus.
 
     Attributes
     ----------
@@ -36,12 +34,11 @@ class GeneNetwork(object):
         Dict containing results of preassembly (see return type for
         :py:meth:`run_preassembly`.
     """
-    def __init__(self, gene_list, basename=None, bel_corpus=None):
+    def __init__(self, gene_list, basename=None):
         if not gene_list:
             raise ValueError("Gene list must contain at least one element.")
         self.gene_list = gene_list
         self.basename = basename
-        self.bel_corpus = bel_corpus
 
     def get_bel_stmts(self, filter=False):
         """Get relevant statements from the BEL large corpus.
@@ -65,22 +62,12 @@ class GeneNetwork(object):
         list of :py:class:`indra.statements.Statement`
             List of INDRA statements extracted from the BEL large corpus.
         """
+        bel_proc = bel.process_pybel_neighborhood(self.gene_list)
+        bel_statements = bel_proc.statements
+        # Save to pickle file if we're caching
         if self.basename is not None:
-            bel_stmt_path = '%s_bel_stmts.pkl' % self.basename
-        # Check for cached BEL stmt file
-        if self.basename is not None and os.path.isfile(bel_stmt_path):
-            logger.info("Loading BEL statements from %s" % bel_stmt_path)
-            with open(bel_stmt_path, 'rb') as f:
-                bel_statements = pickle.load(f)
-        # No cache, so perform the queries
-        else:
-            bel_proc = bel.process_pybel_neighborhood(self.gene_list,
-                network_file=self.bel_corpus)
-            bel_statements = bel_proc.statements
-            # Save to pickle file if we're caching
-            if self.basename is not None:
-                with open(bel_stmt_path, 'wb') as f:
-                    pickle.dump(bel_statements, f)
+            with open('%s_bel_stmts.pkl' % self.basename, 'wb') as f:
+                pickle.dump(bel_statements, f)
         # Optionally filter out statements not involving only our gene set
         if filter:
             if len(self.gene_list) > 1:
