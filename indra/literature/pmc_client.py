@@ -270,3 +270,7 @@ def _namespace_unaware_xpath(*tag_list, direct_only=True):
     for tag in tag_list:
         out += "/*[local-name()='%s']" % tag
     return out
+
+
+def _xpath_union(*xpath_list):
+    return ' | '.join(xpath_list)
