@@ -312,17 +312,19 @@ model = pa.make_model(policies='two_step')
 ```
 
 INDRA also provides an interface for the
-[REACH](http://agathon.sista.arizona.edu:8080/odinweb/) natural language
+[REACH](http://github.com/clulab/reach) natural language
 processor. In this example, a full paper from [PubMed
 Central](http://www.ncbi.nlm.nih.gov/pmc/) is processed. The paper's PMC ID is
-[PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/).
+[PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/). The example
+assumest that a REACH server is running locally (see documentation at
+[`indra.sources.reach`](https://indra.readthedocs.io/en/latest/modules/sources/reach/index.html)).
+
 
 [//]: # (If code is changed here, also update it in tests/test_docs_code.py)
 
 ```python
 from indra.sources import reach
-# Process the neighborhood of BRAF and MAP2K1
-reach_processor = reach.process_pmc('3717945')
+reach_processor = reach.process_pmc('3717945', url=reach.local_nxml_url)
 ```
 At this point, `reach_processor.statements` contains a list of INDRA statements
 extracted from the PMC paper.
@@ -341,7 +343,7 @@ all_statements = []
 for pmid in pmids:
     abs = pubmed_client.get_abstract(pmid)
     if abs is not None:
-        reach_processor = reach.process_text(abs)
+        reach_processor = reach.process_text(abs, url=reach.local_text_url)
         if reach_processor is not None:
             all_statements += reach_processor.statements
 ```
@@ -349,7 +351,7 @@ At this point, the `all_statements` list contains all the statements
 extracted from the 10 abstracts.
 
 The next example shows querying the [BEL large
-corpus](http://public.ndexbio.org/#/network/9ea3c170-01ad-11e5-ac0f-000c29cb28fb)
+corpus](https://github.com/cthoyt/selventa-knowledge)
 network for a neighborhood of a given list of proteins using their
 HGNC gene names. This example performs the query via PyBEL.
 
@@ -387,6 +389,6 @@ The development of INDRA has been funded from the following sources:
 | DARPA Big Mechanism                              | W911NF-14-1-0397     |
 | DARPA World Modelers                             | W911NF-18-1-0014     |
 | DARPA Communicating with Computers               | W911NF-15-1-0544     |
-| DARPA Automated Scientific Discovery Framework   | W911NF018-1-0124     |
+| DARPA Automated Scientific Discovery Framework   | W911NF-18-1-0124     |
 | DARPA Automating Scientific Knowledge Extraction | HR00111990009        |
 | DARPA Panacea                                    | HR00111920022        |

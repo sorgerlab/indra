@@ -79,7 +79,7 @@ def test_readme_using_indra1():
 @attr('notravis')  # This test takes 10+ minutes, stalling Travis
 def test_readme_using_indra2():
     from indra.sources import reach
-    reach_processor = reach.process_pmc('3717945')
+    reach_processor = reach.process_pmc('3717945', url=reach.local_nxml_url)
     assert reach_processor.statements
 
 
@@ -94,7 +94,7 @@ def test_readme_using_indra3():
     for pmid in pmids:
         abs = pubmed_client.get_abstract(pmid)
         if abs is not None:
-            reach_processor = reach.process_text(abs)
+            reach_processor = reach.process_text(abs, url=reach.local_text_url)
             if reach_processor is not None:
                 all_statements += reach_processor.statements
     assert len(all_statements) > 0
