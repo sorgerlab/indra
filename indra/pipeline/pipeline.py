@@ -2,7 +2,7 @@ import types
 import json
 import logging
 
-from .decorators import pipeline_functions, pipeline
+from .decorators import pipeline_functions, register_pipeline
 from indra.tools.assemble_corpus import *
 from indra.belief.wm_scorer import *
 from indra.preassembler.hierarchy_manager import *
@@ -114,7 +114,7 @@ class AssemblyPipeline():
         use RunnableArgument class.
         """
         if isinstance(func, types.FunctionType):
-            pipeline(func)
+            register_pipeline(func)
             func_name = func.__name__
         elif isinstance(func, str):
             func_name = func
@@ -133,7 +133,7 @@ class AssemblyPipeline():
         use RunnableArgument class.
         """
         if isinstance(func, types.FunctionType):
-            pipeline(func)
+            register_pipeline(func)
             func_name = func.__name__
         elif isinstance(func, str):
             func_name = func
@@ -248,7 +248,7 @@ class RunnableArgument():
     """
     def __init__(self, func, *args, **kwargs):
         if isinstance(func, types.FunctionType):
-            pipeline(func)
+            register_pipeline(func)
             self.func_name = func.__name__
         elif isinstance(func, str):
             self.func_name = func
@@ -281,7 +281,7 @@ def jsonify_arg_input(arg):
     # If a function object or name of a function is provided, we assume it
     # does not have to be run (function itself is argument).
     if isinstance(arg, types.FunctionType):
-        pipeline(arg)
+        register_pipeline(arg)
         return {'function': arg.__name__, 'no_run': True}
     if isinstance(arg, str) and arg in pipeline_functions:
         return {'function': arg, 'no_run': True}

@@ -1,2 +1,2 @@
 from .pipeline import AssemblyPipeline, RunnableArgument
-from .decorators import pipeline, pipeline_functions
+from .decorators import register_pipeline, pipeline_functions
