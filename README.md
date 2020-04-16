@@ -318,13 +318,14 @@ Central](http://www.ncbi.nlm.nih.gov/pmc/) is processed. The paper's PMC ID is
 [PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/). The example
 assumest that a REACH server is running locally (see documentation at
 [`indra.sources.reach`](https://indra.readthedocs.io/en/latest/modules/sources/reach/index.html)).
+Note that REACH takes about 8 minutes to read this full-text paper.
 
 
 [//]: # (If code is changed here, also update it in tests/test_docs_code.py)
 
 ```python
 from indra.sources import reach
-reach_processor = reach.process_pmc('3717945', url=reach.local_nxml_url)
+reach_processor = reach.process_pmc('PMC3717945', url=reach.local_nxml_url)
 ```
 At this point, `reach_processor.statements` contains a list of INDRA statements
 extracted from the PMC paper.
