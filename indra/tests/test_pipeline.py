@@ -1,3 +1,4 @@
+import os
 from indra.pipeline import AssemblyPipeline, RunnableArgument
 from indra.pipeline.pipeline import jsonify_arg_input
 from indra.tests.test_assemble_corpus import st1, st2, st3, st4
@@ -11,11 +12,13 @@ from indra.statements import Activation
 
 
 stmts = [st1, st2, st3, st4]
+path_this = os.path.dirname(os.path.abspath(__file__))
+test_json = os.path.join(path_this, 'pipeline_test.json')
 
 
 def test_running_pipeline():
     # From json file
-    ap = AssemblyPipeline.from_json_file('pipeline_test.json')
+    ap = AssemblyPipeline.from_json_file(test_json)
     assert ap
     # AssemblyPipeline has methods for length and iteration
     assert len(ap) == 5
