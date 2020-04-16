@@ -23,12 +23,12 @@ Then read text by specifying the url parameter when using
 .. code-block:: python
 
    from indra.sources import reach
-   rp = reach.process_text('MEK binds ERK',
-                           url='http://localhost:8080/api/text')
+   rp = reach.process_text('MEK binds ERK', url=reach.local_text_url)
 
 It is also possible to read NXML (string or file) and process the text of a
 paper given its PMC ID or PubMed ID using other API methods in
-:py:mod:`indra.sources.reach.api`.
+:py:mod:`indra.sources.reach.api`. Note that `reach.local_nxml_url` needs
+to be used as `url` in case NXML content is being read.
 
 Advantages:
 
