@@ -109,10 +109,6 @@ We next run the REACH reading system on the publications. Here we assume
 The list `literature_stmts` now contains the results of all the statements
 that were read.
 
-To read a lot of conent at scale, you should set up reading locally on your
-machine or set up reading on your cluster. To set up REACH, see more `here
-<https://github.com/clulab/reach>`_ for using REACH to read content.
-
 Combine all statements and run pre-assembly
 -------------------------------------------
 
@@ -120,23 +116,29 @@ Combine all statements and run pre-assembly
 
 .. code-block:: python
 
-    from indra.tools import assemble_corpus
+    from indra.tools import assemble_corpus as ac
 
     stmts = biopax_stmts + bel_stmts + literature_stmts
 
-    stmts = assemble_corpus.map_grounding(stmts)
-    stmts = assemble_corpus.map_sequence(stmts)
-    stmts = assemble_corpus.run_preassembly(stmts)
+    stmts = ac.map_grounding(stmts)
+    stmts = ac.map_sequence(stmts)
+    stmts = ac.run_preassembly(stmts)
 
-At this point `stmts` contains a list of Statements collected with
-`grounding <../modules/preassembler/grounding_mapper.html>`_,
-sequences having been `mapped <../modules/preassembler/site_mapper.html>`_,
-duplicates combined and less specific variants of statements hidden. It is
-possible to run other filters on the results such as to keep only human
-genes, remove Statements with ungrounded genes, or to keep only certain
-types of interactions. Read more about the pre-assembly process in the
+At this point `stmts` contains a list of Statements with
+`grounding <../modules/preassembler/grounding_mapper.html>`_, having been
+mapped according to INDRA's built in grounding map and disambiguation
+features, amino acid sites having been
+`mapped <../modules/preassembler/site_mapper.html>`_,
+duplicates combined, and hierarchically subsumed variants of statements hidden.
+It is possible to run other assembly steps and filters on the results such as
+to keep only human genes, remove Statements with ungrounded genes, or to
+keep only certain types of interactions. You can find more assembly steps that
+can be included in your pipeline in the `Assemble Corpus documentation
+<../modules/tools/index.html#module-indra.tools.assemble_corpus>`_.
+You can also read more about the pre-assembly
+process in the
 `preassembly module documentation <../modules/preassembler/index.html>`_ and
-in the `github documentation
+in the `GitHub documentation
 <https://github.com/sorgerlab/indra#internal-knowledge-assembly>`_
 
 Assemble the statements into a network model
@@ -145,7 +147,7 @@ Assemble the statements into a network model
 CX Network Model
 ~~~~~~~~~~~~~~~~
 
-We can assemble the statements into e.g. a CX network model:
+We can assemble the statements into e.g., a CX network model:
 
 .. Update code in tests/test_docs_code.py:test_gene_network as well
 

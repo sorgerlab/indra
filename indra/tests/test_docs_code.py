@@ -202,12 +202,12 @@ def test_gene_network():
     assert literature_stmts  # replaces a print statements
 
     # Chunk 6
-    from indra.tools import assemble_corpus
+    from indra.tools import assemble_corpus as ac
     # stmts = biopax_stmts + bel_stmts + literature_stmts  # tested elsewhere
     stmts = gn_stmts + literature_stmts  # Added instead of above line
-    stmts = assemble_corpus.map_grounding(stmts)
-    stmts = assemble_corpus.map_sequence(stmts)
-    stmts = assemble_corpus.run_preassembly(stmts)
+    stmts = ac.map_grounding(stmts)
+    stmts = ac.map_sequence(stmts)
+    stmts = ac.run_preassembly(stmts)
     assert stmts
 
     # Chunk 7
