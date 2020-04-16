@@ -3,10 +3,9 @@ import json
 import logging
 
 from .decorators import pipeline_functions, register_pipeline
-from indra.tools.assemble_corpus import *
-from indra.belief.wm_scorer import *
-from indra.preassembler.hierarchy_manager import *
-from indra.preassembler.custom_preassembly import *
+# It is enough to import one function from files with registered functions
+from indra.belief.wm_scorer import get_eidos_scorer
+from indra.preassembler.custom_preassembly import location_matches
 from indra.statements import get_statement_by_name
 
 
@@ -82,6 +81,9 @@ class AssemblyPipeline():
         <name of a statement type>}.
     """
     def __init__(self, steps=None):
+        # This import is here to avoid circular imports
+        from indra.tools.assemble_corpus import filter_grounded_only
+        from indra.preassembler.hierarchy_manager import get_wm_hierarchies
         self.steps = steps if steps else []
 
     @classmethod
