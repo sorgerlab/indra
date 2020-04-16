@@ -214,7 +214,10 @@ def test_reg_amount_complex_controller():
         assert len(rp.statements) == 2
         cplx = [s for s in rp.statements if isinstance(s, Complex)][0]
         regam = [s for s in rp.statements if isinstance(s, IncreaseAmount)][0]
-        assert {a.name for a in cplx.members} == {'FOS_family', 'JUN'}
+        assert {a.name for a in cplx.members} < {'FOS_family',
+                                                 # Old version: JUN, new:
+                                                 # JUN_family
+                                                 'JUN_family', 'JUN'}, cplx
         assert len(regam.subj.bound_conditions) == 1
         assert unicode_strs(rp.statements)
 
@@ -355,8 +358,7 @@ def test_get_db_refs_up_human():
         'xrefs': [{'namespace': 'uniprot', 'id': 'Q13422',
                    'object-type': 'db-reference'}]
         }
-    name, db_refs = ReachProcessor._get_db_refs(entity_term)
-    assert name == 'IKZF1', name
+    db_refs = ReachProcessor._get_db_refs(entity_term)
     assert db_refs == {'UP': 'Q13422', 'HGNC': '13176',
                        'TEXT': 'Ikaros'}, db_refs
 
@@ -367,8 +369,7 @@ def test_get_db_refs_up_non_human():
         'xrefs': [{'namespace': 'uniprot', 'id': 'Q9MZT7',
                    'object-type': 'db-reference'}]
         }
-    name, db_refs = ReachProcessor._get_db_refs(entity_term)
-    assert name == 'MYC', name
+    db_refs = ReachProcessor._get_db_refs(entity_term)
     assert db_refs == {'UP': 'Q9MZT7', 'TEXT': 'MYC'}, db_refs
 
 

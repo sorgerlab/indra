@@ -10,6 +10,8 @@ from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.databases import hgnc_client, go_client
 import indra.databases.uniprot_client as up_client
+from indra.preassembler.grounding_mapper.standardize import \
+    standardize_db_refs, standardize_agent_name
 from collections import namedtuple
 
 logger = logging.getLogger(__name__)
@@ -371,7 +373,8 @@ class ReachProcessor(object):
 
         # This is the default name, which can be overwritten
         # below for specific database entries
-        agent_name, db_refs = self._get_db_refs(entity_term)
+        agent_name = entity_term['text']
+        db_refs = self._get_db_refs(entity_term)
 
         mod_terms = entity_term.get('modifications')
         mods, muts = self._get_mods_and_muts_from_mod_terms(mod_terms)
@@ -380,50 +383,27 @@ class ReachProcessor(object):
         coords = self._get_entity_coordinates(entity_term)
 
         agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
+        standardize_agent_name(agent, standardize_refs=True)
         return agent, coords
 
     @staticmethod
     def _get_db_refs(entity_term):
-        agent_name = entity_term['text']
         db_refs = {}
         for xr in entity_term['xrefs']:
             ns = xr['namespace']
             if ns == 'uniprot':
-                up_id = xr['id']
-                db_refs['UP'] = up_id
-                hgnc_id = up_client.get_hgnc_id(up_id)
-                if hgnc_id:
-                    db_refs['HGNC'] = hgnc_id
-                    gene_name = hgnc_client.get_hgnc_name(hgnc_id)
-                    if gene_name:
-                        agent_name = gene_name
-                else:
-                    # Look up official names in UniProt
-                    gene_name = up_client.get_gene_name(up_id)
-                    if gene_name is not None:
-                        agent_name = gene_name
+                db_refs['UP'] = xr['id']
             elif ns == 'hgnc':
-                hgnc_id = xr['id']
-                db_refs['HGNC'] = hgnc_id
-                # Look up the standard gene symbol and set as name
-                hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
-                if hgnc_name:
-                    agent_name = hgnc_name
-                # Look up the corresponding uniprot id
-                up_id = hgnc_client.get_uniprot_id(hgnc_id)
-                if up_id:
-                    db_refs['UP'] = up_id
+                db_refs['HGNC'] = xr['id']
             elif ns == 'pfam':
-                be_id = famplex_map.get(('PF', xr['id']))
-                if be_id:
-                    db_refs['FPLX'] = be_id
-                    agent_name = be_id
+                fplx_id = famplex_map.get(('PF', xr['id']))
+                if fplx_id:
+                    db_refs['FPLX'] = fplx_id
                 db_refs['PF'] = xr['id']
             elif ns == 'interpro':
-                be_id = famplex_map.get(('IP', xr['id']))
-                if be_id:
-                    db_refs['FPLX'] = be_id
-                    agent_name = be_id
+                fplx_id = famplex_map.get(('IP', xr['id']))
+                if fplx_id:
+                    db_refs['FPLX'] = fplx_id
                 db_refs['IP'] = xr['id']
             elif ns == 'chebi':
                 db_refs['CHEBI'] = xr['id']
@@ -443,16 +423,17 @@ class ReachProcessor(object):
             elif ns == 'simple_chemical':
                 if xr['id'].startswith('HMDB'):
                     db_refs['HMDB'] = xr['id']
-            elif ns == 'be':
+            # We handle "be" here for compatibility with older versions
+            elif ns in ('fplx', 'be'):
                 db_refs['FPLX'] = xr['id']
-                agent_name = db_refs['FPLX']
             # These name spaces are ignored
             elif ns in ['uaz']:
                 pass
             else:
                 logger.warning('Unhandled xref namespace: %s' % ns)
         db_refs['TEXT'] = entity_term['text']
-        return agent_name, db_refs
+        db_refs = standardize_db_refs(db_refs)
+        return db_refs
 
     def _get_mods_and_muts_from_mod_terms(self, mod_terms):
         mods = []

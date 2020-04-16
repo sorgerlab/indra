@@ -179,6 +179,8 @@ An example of a typical assembly pipeline for biology statements is as follows.
 Some of the below steps can be removed, rearranged, and other steps added
 to change the assembly pipeline.
 
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
+
 ```python
 from indra.tools import assemble_corpus as ac
 stmts = <the collection of all raw statements to use>
@@ -197,6 +199,8 @@ is as follows (note how biology-specific functions are not used, and a custom
 belief_scorer and hierarchies are passed to `run_preassembly` here, while the
 biology pipeline used default values):
 
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
+
 ```python
 from indra.tools import assemble_corpus as ac
 from indra.belief.wm_scorer import get_eidos_scorer
@@ -206,7 +210,7 @@ stmts = ac.filter_grounded_only(stmts)  # Filter out ungrounded agents
 hierarchies = get_wm_hierarchies()
 belief_scorer = get_eidos_scorer()
 stmts = ac.run_preassembly(stmts,       # Run preassembly
-                           return_toplevel=False
+                           return_toplevel=False,
                            belief_scorer=belief_scorer,
                            hierarchies=hierarchies,
                            normalize_equivalences=True,     # Optional: rewrite equivalent groundings to one standard
@@ -293,6 +297,8 @@ In this example INDRA assembles a PySB model from the natural language
 description of a mechanism via the [TRIPS reading web
 service](http://trips.ihmc.us/parser/cgi/drum).
 
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
+
 ```python
 from indra.sources import trips
 from indra.assemblers.pysb import PysbAssembler
@@ -306,21 +312,28 @@ model = pa.make_model(policies='two_step')
 ```
 
 INDRA also provides an interface for the
-[REACH](http://agathon.sista.arizona.edu:8080/odinweb/) natural language
+[REACH](http://github.com/clulab/reach) natural language
 processor. In this example, a full paper from [PubMed
 Central](http://www.ncbi.nlm.nih.gov/pmc/) is processed. The paper's PMC ID is
-[PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/).
+[PMC3717945](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/). The example
+assumest that a REACH server is running locally (see documentation at
+[`indra.sources.reach`](https://indra.readthedocs.io/en/latest/modules/sources/reach/index.html)).
+Note that REACH takes about 8 minutes to read this full-text paper.
+
+
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
 
 ```python
 from indra.sources import reach
-# Process the neighborhood of BRAF and MAP2K1
-reach_processor = reach.process_pmc('3717945')
+reach_processor = reach.process_pmc('PMC3717945', url=reach.local_nxml_url)
 ```
 At this point, `reach_processor.statements` contains a list of INDRA statements
 extracted from the PMC paper.
 
 Next we look at an example of reading the 10 most recent PubMed abstracts on
 BRAF and collecting the results in INDRA statements.
+
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
 
 ```python
 from indra.sources import reach
@@ -331,7 +344,7 @@ all_statements = []
 for pmid in pmids:
     abs = pubmed_client.get_abstract(pmid)
     if abs is not None:
-        reach_processor = reach.process_text(abs)
+        reach_processor = reach.process_text(abs, url=reach.local_text_url)
         if reach_processor is not None:
             all_statements += reach_processor.statements
 ```
@@ -339,9 +352,11 @@ At this point, the `all_statements` list contains all the statements
 extracted from the 10 abstracts.
 
 The next example shows querying the [BEL large
-corpus](http://public.ndexbio.org/#/network/9ea3c170-01ad-11e5-ac0f-000c29cb28fb)
+corpus](https://github.com/cthoyt/selventa-knowledge)
 network for a neighborhood of a given list of proteins using their
 HGNC gene names. This example performs the query via PyBEL.
+
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
 
 ```python
 from indra.sources import bel
@@ -355,6 +370,8 @@ Next, we look at an example of querying the [Pathway Commons
 database](http://pathwaycommons.org) for paths between two lists of proteins.
 Note: see installation notes above for installing pyjnius, which is required
 for using the BioPAX API of INDRA.
+
+[//]: # (If code is changed here, also update it in tests/test_docs_code.py)
 
 ```python
 from indra.sources import biopax
@@ -373,6 +390,6 @@ The development of INDRA has been funded from the following sources:
 | DARPA Big Mechanism                              | W911NF-14-1-0397     |
 | DARPA World Modelers                             | W911NF-18-1-0014     |
 | DARPA Communicating with Computers               | W911NF-15-1-0544     |
-| DARPA Automated Scientific Discovery Framework   | W911NF018-1-0124     |
+| DARPA Automated Scientific Discovery Framework   | W911NF-18-1-0124     |
 | DARPA Automating Scientific Knowledge Extraction | HR00111990009        |
 | DARPA Panacea                                    | HR00111920022        |
