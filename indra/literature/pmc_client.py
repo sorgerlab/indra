@@ -145,14 +145,15 @@ def extract_paragraphs(xml_string):
     tree = etree.fromstring(xml_string.encode('utf-8'))
 
     paragraphs = []
-    # In NLM xml, all plaintext is within <p> tags, and is the only thing
-    # that can be contained in <p> tags. To handle to possibility of namespaces
-    # uses regex to search for tags either of the form 'p' or '{<namespace>}p'
-    for element in tree.iter():
-        if isinstance(element.tag, basestring) and \
-           re.search('(^|})[p|title]$', element.tag) and element.text:
-            paragraph = ' '.join(element.itertext())
-            paragraphs.append(paragraph)
+    # In NLM xml, all plaintext is within <p> tags and <title> tags.
+    # There can be formatting tags nested within these tags, but no
+    # unwanted elements such as figures and tables appear nested
+    # within <p> tags and <title> tags. xpath local-name()= syntax
+    # is used to ignore namespaces in the NLM XML
+    for element in tree.xpath("//*[local-name()='p'] | "
+                              "//*[local-name()='title']"):
+        paragraph = ' '.join(element.itertext())
+        paragraphs.append(paragraph)
     return paragraphs
 
 
