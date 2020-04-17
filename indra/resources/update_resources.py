@@ -652,10 +652,36 @@ def update_mesh_supplementary_names():
 
 def update_mesh_mappings():
     """Update MeSH mappings to other databases."""
-    url = ('https://raw.githubusercontent.com/indralab/gilda/master/gilda/'
-        'resources/mesh_mappings.tsv')
+    from indra.databases import mesh_client
+    url = ('https://raw.githubusercontent.com/indralab/gilda/ambiguities/gilda/'
+           'resources/mesh_mappings.tsv')
+    df = pandas.read_csv(url, delimiter='\t', dtype=str, header=None)
+    namespaces = ['efo', 'hp', 'doid']
+    xref_mappings = []
+    for ns in namespaces:
+
+        filename = os.path.join(path, '%s.json' % ns)
+        with open(filename) as file:
+            entries = json.load(file)
+        for entry in entries:
+            db, db_id, name = ns.upper(), entry['id'], entry['name']
+            if not df[(df[3] == ns.upper()) & (df[4] == db_id)].empty:
+                continue
+            # We first need to decide if we prioritize another name space
+            xref_dict = {xr['namespace']: xr['id'] for xr in entry['xrefs']}
+            if 'MESH' in xref_dict or 'MSH' in xref_dict:
+                mesh_id = xref_dict.get('MESH') or xref_dict.get('MSH')
+                if not mesh_id.startswith('D'):
+                    continue
+                mesh_name = mesh_client.get_mesh_name(mesh_id)
+                if not mesh_name:
+                    continue
+                xref_mappings.append(('MESH', mesh_id, mesh_name, db,
+                                      db_id, name))
+    df_extend = pandas.DataFrame(xref_mappings, columns=None, dtype=str)
+    df = df.append(df_extend)
     fname = os.path.join(path, 'mesh_mappings.tsv')
-    urlretrieve(url, fname)
+    df.to_csv(fname, sep='\t', index=None)
 
 
 def _get_term_name_str(record, name):
