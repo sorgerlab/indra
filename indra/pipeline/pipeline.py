@@ -52,12 +52,13 @@ class AssemblyPipeline():
     Provide a function and its args and kwargs. For arguments that
     require calling a different function, use RunnableArgument class. All
     functions referenced here have to be either imported and passed as function
-    objects or registered with @register_pipeline decorator and passed as function
-    names (strings). The pipeline built this way can be optionally saved into
-    a JSON file.
+    objects or registered with @register_pipeline decorator and passed as
+    function names (strings). The pipeline built this way can be optionally
+    saved into a JSON file.
 
     >>> from indra.tools.assemble_corpus import *
     >>> from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+    >>> from indra.belief.wm_scorer import get_eidos_scorer
     >>> ap = AssemblyPipeline()
     >>> ap.append(filter_no_hypothesis)
     >>> ap.append(filter_grounded_only, score_threshold=0.8)
@@ -115,9 +116,9 @@ class AssemblyPipeline():
 
         Args and kwargs here can be of any type. All functions referenced here
         have to be either imported and passed as function objects or
-        registered with @register_pipeline decorator and passed as function names
-        (strings). For arguments that require calling a different function,
-        use RunnableArgument class.
+        registered with @register_pipeline decorator and passed as function
+        names (strings). For arguments that require calling a different
+        function, use RunnableArgument class.
         """
         if isinstance(func, types.FunctionType):
             register_pipeline(func)
@@ -134,9 +135,9 @@ class AssemblyPipeline():
 
         Args and kwargs here can be of any type. All functions referenced here
         have to be either imported and passed as function objects or
-        registered with @register_pipeline decorator and passed as function names
-        (strings). For arguments that require calling a different function,
-        use RunnableArgument class.
+        registered with @register_pipeline decorator and passed as function
+        names (strings). For arguments that require calling a different
+        function, use RunnableArgument class.
         """
         if isinstance(func, types.FunctionType):
             register_pipeline(func)
