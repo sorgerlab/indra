@@ -680,8 +680,9 @@ def update_mesh_mappings():
                                       db_id, name))
     df_extend = pandas.DataFrame(xref_mappings, columns=None, dtype=str)
     df = df.append(df_extend)
+    df.sort_values(1, inplace=True)  # sort by MeSH ID
     fname = os.path.join(path, 'mesh_mappings.tsv')
-    df.to_csv(fname, sep='\t', index=None)
+    df.to_csv(fname, sep='\t', index=None, header=None)
 
 
 def _get_term_name_str(record, name):
