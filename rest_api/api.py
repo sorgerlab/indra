@@ -112,12 +112,20 @@ def reach_process_text():
     offline = True if body.get('offline') else False
     given_url = body.get('url')
     config_url = get_config('REACH_TEXT_URL', failure_ok=True)
-    if given_url:
+    # Order: URL given as an explicit argument in the request. Then any URL
+    # set in the configuration. Then, unless offline is set, use the default
+    # REACH web service URL.
+    if 'url' in body:  # This is to take None if explicitly given
         url = given_url
     elif config_url:
         url = config_url
-    else:
+    elif not offline:
         url = reach_text_url
+    else:
+        url = None
+    # If a URL is set, prioritize it over the offline setting
+    if url:
+        offline = False
     rp = reach.process_text(text, offline=offline, url=url)
     return _stmts_from_proc(rp)
 
@@ -147,12 +155,20 @@ def reach_process_pmc():
     offline = True if body.get('offline') else False
     given_url = body.get('url')
     config_url = get_config('REACH_NXML_URL', failure_ok=True)
-    if given_url:
+    # Order: URL given as an explicit argument in the request. Then any URL
+    # set in the configuration. Then, unless offline is set, use the default
+    # REACH web service URL.
+    if 'url' in body:  # This is to take None if explicitly given
         url = given_url
     elif config_url:
         url = config_url
-    else:
+    elif not offline:
         url = reach_nxml_url
+    else:
+        url = None
+    # If a URL is set, prioritize it over the offline setting
+    if url:
+        offline = False
     rp = reach.process_pmc(pmcid, offline=offline, url=url)
     return _stmts_from_proc(rp)
 
