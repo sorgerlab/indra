@@ -33,7 +33,9 @@ class AssemblyPipeline():
     @register_pipeline decorator.
 
     >>> import os
-    >>> filename = os.path.join('..', 'tests', 'pipeline_test.json')
+    >>> path_this = os.path.dirname(os.path.abspath(__file__))
+    >>> filename = os.path.abspath(
+    ... os.path.join(path_this, '..', 'tests', 'pipeline_test.json'))
     >>> ap = AssemblyPipeline.from_json_file(filename)
     >>> assembled_stmts = ap.run(stmts)
 
@@ -57,6 +59,9 @@ class AssemblyPipeline():
     names (strings). The pipeline built this way can be optionally saved into
     a JSON file.
 
+    >>> from indra.tools.assemble_corpus import filter_no_hypothesis, \
+    ...     filter_grounded_only, run_preassembly
+    >>> from indra.preassembler.hierarchy_manager import get_wm_hierarchies
     >>> ap = AssemblyPipeline()
     >>> ap.append(filter_no_hypothesis)
     >>> ap.append(filter_grounded_only, score_threshold=0.8)
