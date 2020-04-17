@@ -4,6 +4,7 @@ import json
 import base64
 import logging
 from bottle import route, run, request, default_app, response, static_file
+from indra import get_config
 from indra.sources import trips, reach, bel, biopax
 from indra.sources import eidos, hume, cwms, sofia
 from indra.databases import hgnc_client
@@ -108,8 +109,16 @@ def reach_process_text():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     text = body.get('text')
+    url = body.get('url')
     offline = True if body.get('offline') else False
-    url = body.get('url', reach_text_url)
+    given_url = body.get('url')
+    config_url = get_config('REACH_URL', failure_ok=True)
+    if given_url:
+        url = given_url
+    elif config_url:
+        url = config_url
+    else:
+        url = None
     rp = reach.process_text(text, offline=offline, url=url)
     return _stmts_from_proc(rp)
 
