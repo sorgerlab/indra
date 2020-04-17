@@ -129,94 +129,6 @@ def extract_text(xml_string):
         return None
 
 
-def _select_from_top_level(xml_string, tag):
-    """Return top level elements from an NLM XML article
-
-    Parameters
-    ----------
-    xml_str : str
-        A valid NLM XML string for an entire article
-
-    list
-        List containing lxml Element objects of selected top level elements
-    """
-    output = []
-    tree = etree.fromstring(xml_string.encode('utf-8'))
-    front_xpath = _namespace_unaware_xpath(tag)
-    for element in tree.xpath(front_xpath):
-        output.append(element)
-    return output
-
-
-def _extract_from_front(front_element):
-    """Return list of titles and paragraphs from front of NLM XML
-
-    Parameters
-    ----------
-    front_element : :py:class:`lxml.etree._Element`
-        etree element for front of a valid NLM XML
-    Returns
-    -------
-    list of str
-        List of relevant plain text titles and paragraphs taken from front
-        section of NLM XML. These include the article title, alt title,
-        and paragraphs within abstracts. Unwanted paragraphs such as
-        author statements are excluded.
-    """
-    output = []
-    title_xpath = _namespace_unaware_xpath('article-meta', 'title-group',
-                                           'article-title')
-    alt_title_xpath = _namespace_unaware_xpath('article-meta', 'title-group',
-                                               'alt-title')
-    abstracts_xpath = _namespace_unaware_xpath('article-meta', 'abstract')
-    for element in front_element.xpath(_xpath_union(title_xpath,
-                                                    alt_title_xpath,
-                                                    abstracts_xpath)):
-        if element.tag == 'abstract':
-            # Extract paragraphs from abstracts
-            output.extend(_extract_paragraphs_from_tree(element))
-        else:
-            # No paragraphs in titles, Just strip tags
-            output.append(' '.join(element.itertext()))
-    return output
-
-
-def _extract_from_body(body_element):
-    """Return list of paragraphs from main article body of NLM XML
-    """
-    return _extract_paragraphs_from_tree(body_element)
-
-
-def _extract_from_subarticle(subarticle_element):
-    """Return list of relevant paragraphs from a subarticle"""
-    # Get only body element
-    body = subarticle_element.xpath(_namespace_unaware_xpath('body'))
-    if not body:
-        return []
-    body = body[0]
-    # Remove float elements. From observation these do not appear to
-    # contain any meaningful information within sub-articles.
-    for element in body.xpath(".//*[@position='float']"):
-        element.getparent().remove(element)
-    return _extract_paragraphs_from_tree(body)
-
-
-def _extract_paragraphs_from_tree(tree):
-    paragraphs = []
-    # In NLM xml, all plaintext is within <p> tags and <title> tags.
-    # There can be formatting tags nested within these tags, but no
-    # unwanted elements such as figures and tables appear nested
-    # within <p> tags and <title> tags. xpath local-name()= syntax
-    # is used to ignore namespaces in the NLM XML
-    pars_xpath = _xpath_union(_namespace_unaware_xpath('p', direct_only=False),
-                              _namespace_unaware_xpath('title',
-                                                       direct_only=False))
-    for element in tree.xpath(pars_xpath):
-        paragraph = ' '.join(element.itertext())
-        paragraphs.append(paragraph)
-    return paragraphs
-
-
 def extract_paragraphs(xml_string):
     """Returns list of paragraphs in an NLM XML.
 
@@ -230,9 +142,28 @@ def extract_paragraphs(xml_string):
     list of str
         List of extracted paragraphs in an NLM XML
     """
+    output = []
     tree = etree.fromstring(xml_string.encode('utf-8'))
-
-    return _extract_paragraphs_from_tree(tree)
+    # Remove namespaces if any exist
+    if tree.tag.startswith('{'):
+        for element in tree.getiterator():
+            element.tag = etree.QName(element).localname
+        etree.cleanup_namespaces(tree)
+    # Strip out latex
+    _remove_elements_by_tag(tree, 'tex-math')
+    # Strip out all content in unwanted elements except the captions
+    _replace_unwanted_elements_with_their_captions(tree)
+    # First process front element
+    front_elements = _select_from_top_level(tree, 'front')
+    for element in front_elements:
+        output.extend(_extract_from_front(element))
+    body_elements = _select_from_top_level(tree, 'body')
+    for element in body_elements:
+        output.extend(_extract_from_body(element))
+    subarticles = _select_from_top_level(tree, 'sub-article')
+    for element in subarticles:
+        output.extend(_extract_from_subarticle(element))
+    return output
 
 
 def filter_pmids(pmid_list, source_type):
@@ -267,29 +198,171 @@ def filter_pmids(pmid_list, source_type):
                                 pmids_fulltext_dict.get(source_type)))
 
 
-def _namespace_unaware_xpath(*tag_list, direct_only=True):
-    """Create a namespace unaware xpath from a list of tags
-
-    Created xpaths always start with current node, node from
-    root of tree
+def _select_from_top_level(tree, tag):
+    """Return top level elements from an NLM XML tree
 
     Parameters
     ----------
-    *tag_list
-        Variable length argument list of str. Contains tags for
-        constructing xpath
-    direct_only : Optional[bool]
-        If True, xpath only selects nodes directly beneath the
-        current node. Otherwise any descendents of the current
-        node can be selected. Default: True
+    tree : :py:class:`lxml.etree._Element`
+        lxml element for entire tree of a valid NLM XML
+
+    tag : str
+        Tag of top level elements to return
+    Returns
+    -------
+    list
+        List containing lxml Element objects of selected top level elements
     """
-    if direct_only:
-        out = '.'
+    if tree.tag == 'article':
+        article = tree
     else:
-        out = './'
-    for tag in tag_list:
-        out += "/*[local-name()='%s']" % tag
-    return out
+        article = tree.xpath('.//article')
+        if not len(article):
+            raise ValueError('Input XML contains no article element')
+        # We make the assumption each NLM XML contains only one article element.
+        # If this is not the case, then only the first article will be processed
+        article = article[0]
+    output = []
+    xpath = './%s' % tag
+    for element in article.xpath(xpath):
+        output.append(element)
+    return output
+
+
+def _extract_from_front(front_element):
+    """Return list of titles and paragraphs from front of NLM XML
+
+    Parameters
+    ----------
+    front_element : :py:class:`lxml.etree._Element`
+        etree element for front of a valid NLM XML
+    Returns
+    -------
+    list of str
+        List of relevant plain text titles and paragraphs taken from front
+        section of NLM XML. These include the article title, alt title,
+        and paragraphs within abstracts. Unwanted paragraphs such as
+        author statements are excluded.
+    """
+    output = []
+    title_xpath = './article-meta/title-group/article-title'
+    alt_title_xpath = './article-meta/title-group/alt-title'
+    abstracts_xpath = './article-meta/abstract'
+    for element in front_element.xpath(_xpath_union(title_xpath,
+                                                    alt_title_xpath,
+                                                    abstracts_xpath)):
+        if element.tag == 'abstract':
+            # Extract paragraphs from abstracts
+            output.extend(_extract_paragraphs_from_tree(element))
+        else:
+            # No paragraphs in titles, Just strip tags
+            output.append(' '.join(element.itertext()))
+    return output
+
+
+def _extract_from_body(body_element):
+    """Return list of paragraphs from main article body of NLM XML
+    """
+    return _extract_paragraphs_from_tree(body_element)
+
+
+def _extract_from_subarticle(subarticle_element):
+    """Return list of relevant paragraphs from a subarticle"""
+    # Get only body element
+    body = subarticle_element.xpath('./body')
+    if not body:
+        return []
+    body = body[0]
+    # Remove float elements. From observation these do not appear to
+    # contain any meaningful information within sub-articles.
+    for element in body.xpath(".//*[@position='float']"):
+        element.getparent().remove(element)
+    return _extract_paragraphs_from_tree(body)
+
+
+def _remove_elements_by_tag(tree, *tags):
+    """Remove elements with given tags
+
+    Parameters
+    ----------
+    xml_str : str
+        String of valid NLM XML
+
+    Returns
+    -------
+    str
+        Copy of input XML string  with desired elements removed
+    """
+    bad_xpath = _xpath_union(*['.//%s' % tag for tag in tags])
+    for element in tree.xpath(bad_xpath):
+        element.getparent().remove(element)
+
+
+def _replace_unwanted_elements_with_their_captions(tree):
+    """Replace an element with its captions"""
+    floats_xpath = "//*[@position='float']"
+    figs_xpath = './/fig'
+    tables_xpath = './/table-wrap'
+    unwanted_xpath = _xpath_union(floats_xpath, figs_xpath, tables_xpath)
+    unwanted = tree.xpath(unwanted_xpath)
+    # Iterating through xpath nodes in reverse leads to processing these
+    # nodes from bottom up.
+    for element in unwanted[::-1]:
+        # Don't remove floats that are boxed-text elements. These often contain
+        # useful information
+        if element.tag == 'boxed-text':
+            continue
+        captions = element.xpath('./caption')
+        captions_element = etree.Element('captions')
+        for caption in captions:
+            captions_element.append(caption)
+        element.getparent().replace(element, captions_element)
+
+
+def _retain_only_pars(tree):
+    """Strip out all tags except title and p tags"""
+    for element in tree.xpath('.//*'):
+        if element.tag == 'title':
+            element.tag = 'p'
+        parent = element.getparent()
+        if parent is not None and element.tag != 'p':
+            etree.strip_tags(element.getparent(), element.tag)
+
+
+def _pull_nested_paragraphs_to_top(tree):
+    """Flatten nexted paragraphs in pre-ordered traversal"""
+    nested_paragraphs = tree.xpath('./p/p')
+    while nested_paragraphs:
+        last = None
+        old_parent = None
+        for p in nested_paragraphs:
+            parent = p.getparent()
+            if parent != old_parent:
+                last = parent
+            parent.remove(p)
+            if p.tail:
+                parent.text += ' ' + p.tail
+                p.tail = ''
+            last.addnext(p)
+            last = p
+        nested_paragraphs = tree.xpath('./p/p')
+
+
+def _extract_paragraphs_from_tree(tree):
+    # In NLM xml, all plaintext is within <p> tags and <title> tags.
+    # There can be formatting tags nested within these tags, but no
+    # unwanted elements such as figures and tables appear nested
+    # within <p> tags and <title> tags. xpath local-name()= syntax
+    # is used to ignore namespaces in the NLM XML. Only elements
+    # directly under the input element are included to avoid
+    # duplication for nested paragraphs.
+    _retain_only_pars(tree)
+    _pull_nested_paragraphs_to_top(tree)
+    paragraphs = []
+    for element in tree.xpath('./p'):
+        paragraph = ''.join([x.strip() for x in element.itertext()])
+        paragraphs.append(paragraph)
+    return paragraphs
 
 
 def _xpath_union(*xpath_list):
