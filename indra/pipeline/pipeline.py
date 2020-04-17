@@ -1,6 +1,7 @@
 import types
 import json
 import logging
+import inspect
 
 from .decorators import pipeline_functions, register_pipeline
 from indra.statements import get_statement_by_name, Statement
@@ -104,11 +105,22 @@ class AssemblyPipeline():
         with open(filename, 'w') as f:
             json.dump(self.steps, f, indent=1)
 
-    def run(self, statements):
-        """Run all steps of the pipeline."""
+    def run(self, statements, **kwargs):
+        """
+        Run all steps of the pipeline.
+
+        It is recommended to define all arguments for the steps functions in
+        the steps definition, but it is also possible to provide some external
+        objects (if it is not possible to provide them as a step argument)
+        as kwargs to the entire pipeline here. One should be cautious
+        to avoid kwargs name clashes between multiple functions (this value
+        will be provided to all functions that expect an argument with the
+        same name). To overwrite this value in other functions, provide it
+        explicitly in corresponding steps kwargs.
+        """
         logger.info('Running the pipeline')
         for step in self.steps:
-            statements = self.run_function(step, statements)
+            statements = self.run_function(step, statements, **kwargs)
         return statements
 
     def append(self, func, *args, **kwargs):
@@ -173,35 +185,40 @@ class AssemblyPipeline():
             return pipeline_functions[name]
         raise NotRegisteredFunctionError('%s is not registered' % name)
 
-    def run_simple_function(self, func_name, *args, **kwargs):
+    def run_simple_function(self, func, *args, **kwargs):
         """Run a simple function - simple here means a function all arguments
         of which are simple values (do not require extra function calls).
         """
-        func = self.get_function_from_name(func_name)
         if 'statements' in kwargs:
             statements = kwargs['statements']
             del kwargs['statements']
             return func(statements, *args, **kwargs)
         return func(*args, **kwargs)
 
-    def run_function(self, func_dict, statements=None):
+    def run_function(self, func_dict, statements=None, **kwargs):
         """Run a function. For each of the arguments, if it requires an extra
         function call, recursively call the functions until we get a simple
         function.
         """
-        func_name, args, kwargs = self.get_function_parameters(func_dict)
+        func_name, func_args, func_kwargs = self.get_function_parameters(
+            func_dict)
+        func = self.get_function_from_name(func_name)
         logger.info('%s is called' % func_name)
         new_args = []
         new_kwargs = {}
-        for arg in args:
+        for arg in func_args:
             arg_value = self.get_argument_value(arg)
             new_args.append(arg_value)
-        for k, v in kwargs.items():
+        for k, v in func_kwargs.items():
             kwarg_value = self.get_argument_value(v)
             new_kwargs[k] = kwarg_value
         if statements:
             new_kwargs['statements'] = statements
-        return self.run_simple_function(func_name, *new_args, **new_kwargs)
+        if kwargs:
+            for k, v in kwargs.items():
+                if k not in new_kwargs and k in inspect.getargspec(func).args:
+                    new_kwargs[k] = v
+        return self.run_simple_function(func, *new_args, **new_kwargs)
 
     def is_function(self, argument, keyword='function'):
         """Check if an argument should be converted to a specific object type,
