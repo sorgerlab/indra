@@ -4,6 +4,7 @@ import json
 import base64
 import logging
 from bottle import route, run, request, default_app, response, static_file
+from indra import get_config
 from indra.sources import trips, reach, bel, biopax
 from indra.sources import eidos, hume, cwms, sofia
 from indra.databases import hgnc_client
@@ -109,7 +110,22 @@ def reach_process_text():
     body = json.loads(response)
     text = body.get('text')
     offline = True if body.get('offline') else False
-    url = body.get('url', reach_text_url)
+    given_url = body.get('url')
+    config_url = get_config('REACH_TEXT_URL', failure_ok=True)
+    # Order: URL given as an explicit argument in the request. Then any URL
+    # set in the configuration. Then, unless offline is set, use the default
+    # REACH web service URL.
+    if 'url' in body:  # This is to take None if explicitly given
+        url = given_url
+    elif config_url:
+        url = config_url
+    elif not offline:
+        url = reach_text_url
+    else:
+        url = None
+    # If a URL is set, prioritize it over the offline setting
+    if url:
+        offline = False
     rp = reach.process_text(text, offline=offline, url=url)
     return _stmts_from_proc(rp)
 
@@ -136,8 +152,24 @@ def reach_process_pmc():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     pmcid = body.get('pmcid')
-    url = body.get('url', reach_nxml_url)
-    rp = reach.process_pmc(pmcid, url=url)
+    offline = True if body.get('offline') else False
+    given_url = body.get('url')
+    config_url = get_config('REACH_NXML_URL', failure_ok=True)
+    # Order: URL given as an explicit argument in the request. Then any URL
+    # set in the configuration. Then, unless offline is set, use the default
+    # REACH web service URL.
+    if 'url' in body:  # This is to take None if explicitly given
+        url = given_url
+    elif config_url:
+        url = config_url
+    elif not offline:
+        url = reach_nxml_url
+    else:
+        url = None
+    # If a URL is set, prioritize it over the offline setting
+    if url:
+        offline = False
+    rp = reach.process_pmc(pmcid, offline=offline, url=url)
     return _stmts_from_proc(rp)
 
 ##################
