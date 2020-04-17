@@ -59,8 +59,7 @@ class AssemblyPipeline():
     names (strings). The pipeline built this way can be optionally saved into
     a JSON file.
 
-    >>> from indra.tools.assemble_corpus import filter_no_hypothesis, \
-    ...     filter_grounded_only, run_preassembly
+    >>> from indra.tools.assemble_corpus import *
     >>> from indra.preassembler.hierarchy_manager import get_wm_hierarchies
     >>> ap = AssemblyPipeline()
     >>> ap.append(filter_no_hypothesis)
