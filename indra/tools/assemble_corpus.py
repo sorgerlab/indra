@@ -128,8 +128,9 @@ def map_grounding(stmts_in, **kwargs):
     if not gm:
         gm = default_grounding_map
     elif kwargs.get('grounding_map_policy') == 'extend':
-        default_grounding_map.update(gm)
-        gm = default_grounding_map
+        default_gm = {k: v for (k, v) in default_grounding_map.items()}
+        default_gm.update(gm)
+        gm = default_gm
     misgm = kwargs.get('misgrounding_map', default_misgrounding_map)
     agent_map = kwargs.get('agent_map', default_agent_map)
     gm = GroundingMapper(gm, agent_map=agent_map,
