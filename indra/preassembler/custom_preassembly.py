@@ -1,5 +1,5 @@
 from indra.statements import *
-from indra.pipeline.decorators import register_pipeline
+from indra.pipeline import register_pipeline
 
 
 def has_location(stmt):

@@ -3,7 +3,7 @@ import copy
 import pandas
 import requests
 from . import SimpleScorer, BayesianScorer
-from indra.pipeline.decorators import register_pipeline
+from indra.pipeline import register_pipeline
 
 
 default_priors = {'hume': [13, 7], 'cwms': [13, 7], 'sofia': [13, 7]}

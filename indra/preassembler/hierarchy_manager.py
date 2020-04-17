@@ -5,7 +5,7 @@ from functools import lru_cache
 
 
 from indra.preassembler.make_entity_hierarchy import ns_map
-from indra.pipeline.decorators import register_pipeline
+from indra.pipeline import register_pipeline
 
 logger = logging.getLogger(__name__)
 

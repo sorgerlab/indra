@@ -14,7 +14,7 @@ from copy import deepcopy, copy
 from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.util import read_unicode_csv
-from indra.pipeline.decorators import register_pipeline
+from indra.pipeline import register_pipeline
 from indra.mechlinker import MechLinker
 from indra.databases import hgnc_client
 from indra.preassembler.hierarchy_manager import hierarchies
