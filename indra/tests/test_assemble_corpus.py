@@ -344,6 +344,18 @@ def test_map_grounding_user_map():
     assert st_out[0].subj.db_refs.get('XXX') == 'YYY'
     assert st_out[0].obj.db_refs.get('FPLX') == 'ERK'
     assert st_out[0].obj.name == 'ERK'
+    gm = {'ERK': {'FPLX': 'ERK_TEST'}}
+    st_out = ac.map_grounding([st], grounding_map=gm,
+                              grounding_map_policy='extend')
+    assert len(st_out) == 1
+    assert st_out[0].subj.db_refs.get('FPLX') == 'MEK'
+    assert st_out[0].obj.db_refs.get('FPLX') == 'ERK_TEST'
+    st_out = ac.map_grounding([st])
+    # Make sure the extension to the default grounding map doesn't persist
+    assert len(st_out) == 1
+    assert st_out[0].subj.db_refs.get('FPLX') == 'MEK'
+    assert st_out[0].obj.db_refs.get('FPLX') == 'ERK'
+    assert st_out[0].obj.name == 'ERK'
 
 
 def test_map_sequence():
