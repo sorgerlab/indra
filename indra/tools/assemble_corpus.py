@@ -109,6 +109,9 @@ def map_grounding(stmts_in, **kwargs):
         imported and used locally.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
+    grounding_map_policy : Optional[str]
+        If a grounding map is provided, use the policy to extend or replace
+        a default grounding map. Default: 'replace'.
 
     Returns
     -------
@@ -121,7 +124,12 @@ def map_grounding(stmts_in, **kwargs):
     logger.info('Mapping grounding on %d statements...' % len(stmts_in))
     do_rename = kwargs.get('do_rename', True)
     ignores = kwargs.get('ignores', default_ignores)
-    gm = kwargs.get('grounding_map', default_grounding_map)
+    gm = kwargs.get('grounding_map')
+    if not gm:
+        gm = default_grounding_map
+    elif kwargs.get('grounding_map_policy') == 'extend':
+        default_grounding_map.update(gm)
+        gm = default_grounding_map
     misgm = kwargs.get('misgrounding_map', default_misgrounding_map)
     agent_map = kwargs.get('agent_map', default_agent_map)
     gm = GroundingMapper(gm, agent_map=agent_map,
