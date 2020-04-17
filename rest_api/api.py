@@ -109,16 +109,15 @@ def reach_process_text():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     text = body.get('text')
-    url = body.get('url')
     offline = True if body.get('offline') else False
     given_url = body.get('url')
-    config_url = get_config('REACH_URL', failure_ok=True)
+    config_url = get_config('REACH_TEXT_URL', failure_ok=True)
     if given_url:
         url = given_url
     elif config_url:
         url = config_url
     else:
-        url = None
+        url = reach_text_url
     rp = reach.process_text(text, offline=offline, url=url)
     return _stmts_from_proc(rp)
 
@@ -145,8 +144,16 @@ def reach_process_pmc():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     pmcid = body.get('pmcid')
-    url = body.get('url', reach_nxml_url)
-    rp = reach.process_pmc(pmcid, url=url)
+    offline = True if body.get('offline') else False
+    given_url = body.get('url')
+    config_url = get_config('REACH_NXML_URL', failure_ok=True)
+    if given_url:
+        url = given_url
+    elif config_url:
+        url = config_url
+    else:
+        url = reach_nxml_url
+    rp = reach.process_pmc(pmcid, offline=offline, url=url)
     return _stmts_from_proc(rp)
 
 ##################
