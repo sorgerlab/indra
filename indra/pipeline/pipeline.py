@@ -61,7 +61,7 @@ class AssemblyPipeline():
     >>> from indra.belief.wm_scorer import get_eidos_scorer
     >>> ap = AssemblyPipeline()
     >>> ap.append(filter_no_hypothesis)
-    >>> ap.append(filter_grounded_only, score_threshold=0.8)
+    >>> ap.append(filter_grounded_only)
     >>> ap.append(run_preassembly,
     ...           belief_scorer=RunnableArgument(get_eidos_scorer),
     ...           hierarchies=RunnableArgument(get_wm_hierarchies))
