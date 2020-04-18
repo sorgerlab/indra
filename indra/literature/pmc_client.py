@@ -156,6 +156,11 @@ def extract_paragraphs(xml_string):
     All tags are removed from each paragraph in the list that is returned.
     LaTeX surrounded by <tex-math> tags is removed entirely.
 
+    Note: Some articles contain subarticles which are processed slightly
+    differently from the article body. Only text from the body element
+    of a subarticle is included, and all unwanted elements are excluded
+    along with their captions. Boxed-text elements are excluded as well.
+
     Parameters
     ----------
     xml_string : str
