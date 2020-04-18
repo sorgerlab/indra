@@ -334,6 +334,8 @@ def _read_hgnc_maps():
     ensembl_ids = {}
     ensembl_ids_reverse = {}
     hgnc_withdrawn_new_ids = {}
+    # Skip the header
+    next(csv_rows)
     for row in csv_rows:
         hgnc_id = row[0][5:]
         hgnc_status = row[3]
