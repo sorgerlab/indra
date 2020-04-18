@@ -173,6 +173,10 @@ def extract_paragraphs(xml_string):
     """
     output = []
     tree = etree.fromstring(xml_string.encode('utf-8'))
+    # Strip out comments
+    comments = tree.xpath('//comment()')
+    for element in comments:
+        element.getparent().remove(element)
     # Remove namespaces if any exist
     if tree.tag.startswith('{'):
         for element in tree.getiterator():
