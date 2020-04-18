@@ -412,7 +412,7 @@ def _pull_nested_paragraphs_to_top(tree):
     """
     # First identify all paragraphs nested within child paragraphs of the root
     nested_paragraphs = tree.xpath('./p/p')
-    # The tree is flattened from the top down. 
+    # The tree is flattened from the top down.
     while nested_paragraphs:
         last = None
         old_parent = None
@@ -430,13 +430,7 @@ def _pull_nested_paragraphs_to_top(tree):
 
 
 def _extract_paragraphs_from_tree(tree):
-    # In NLM xml, all plaintext is within <p> tags and <title> tags.
-    # There can be formatting tags nested within these tags, but no
-    # unwanted elements such as figures and tables appear nested
-    # within <p> tags and <title> tags. xpath local-name()= syntax
-    # is used to ignore namespaces in the NLM XML. Only elements
-    # directly under the input element are included to avoid
-    # duplication for nested paragraphs.
+    """Preprocess tree and return it's paragraphs."""
     _retain_only_pars(tree)
     _pull_nested_paragraphs_to_top(tree)
     paragraphs = []
@@ -447,4 +441,5 @@ def _extract_paragraphs_from_tree(tree):
 
 
 def _xpath_union(*xpath_list):
+    """Form union of xpath expressions"""
     return ' | '.join(xpath_list)
