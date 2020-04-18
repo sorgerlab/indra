@@ -399,15 +399,21 @@ def test_standardize_db_refs_efo_hp_doid():
     refs = standardize_db_refs({'MESH': 'D064706'})
     assert refs.get('HP') == 'HP:0031801', refs
 
-    # There would be a one-to-many mapping from this DOID
-    # so we make sure we don't add a mapping for it.
-    refs = standardize_db_refs({'DOID': 'DOID:0060695'})
-    assert 'MESH' not in refs
+    # Currently there is no one-to-many mapping in the direction towards MeSH
+    # (there used to be) if there is again, we should test it here
+    #refs = standardize_db_refs({'DOID': 'DOID:0060695'})
+    #assert 'MESH' not in refs
+
+    # One-to-many mappings away from MESH
     refs = standardize_db_refs({'MESH': 'D000071017'})
-    assert refs.get('DOID') == 'DOID:0060695'
+    assert 'DOID' not in refs
 
     refs = standardize_db_refs({'DOID': 'DOID:0060495'})
     assert refs.get('MESH') == 'D000067208'
+
+    # This is an xrefs-based mapping that isn't in Gilda's resource file
+    refs = standardize_db_refs({'EFO': '0000694'})
+    assert refs.get('MESH') == 'D045169'
 
 
 def test_standardize_name_efo_hp_doid():
@@ -423,13 +429,18 @@ def test_standardize_name_efo_hp_doid():
 
     ag = Agent('x', db_refs={'DOID': 'DOID:0014667'})
     standardize_agent_name(ag)
-    # Name based on HP itself
-    assert ag.name == 'disease of metabolism'
+    # Name based on MESH mapping
+    assert ag.name == 'Metabolic Diseases'
 
     ag = Agent('x', db_refs={'EFO': '1002050'})
     standardize_agent_name(ag)
-    # Name based on HP itself
-    assert ag.name == 'nephritis'
+    # Name based on MESH mapping
+    assert ag.name == 'Nephritis', (ag.name, ag.db_refs)
+
+    ag = Agent('x', db_refs={'EFO': '0000001'})
+    standardize_agent_name(ag)
+    # Name based on EFO itself
+    assert ag.name == 'experimental factor', (ag.name, ag.db_refs)
 
 
 def test_standardize_uppro():
