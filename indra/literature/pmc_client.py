@@ -110,7 +110,12 @@ def get_xml(pmc_id):
 
 
 def extract_text(xml_string):
-    """Get text from the body of the given NLM XML string.
+    """Get plaintext from the body of the given NLM XML string.
+
+    This plaintext consists of all paragraphs returned by
+    indra.literature.pmc_client.extract_paragraphs separated
+    by newlines and then finally terminated by a newline.
+    See the DocString of extract_paragraphs for more information.
 
     Parameters
     ----------
