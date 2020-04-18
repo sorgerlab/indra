@@ -414,20 +414,39 @@ def _pull_nested_paragraphs_to_top(tree):
     tree : :py:class:`lxml.etree._Element`
         etree element for valid NLM XML
     """
-    # First identify all paragraphs nested within child paragraphs of the root
+    # Since _retain_only_pars must be called first, input will contain only p
+    # tags except for possibly the outer most tag. p elements directly beneath
+    # the root will be called depth 1, those beneath depth 1 elements will be
+    # called depth 2 and so on.  Proceed iteratively. At each step identify all
+    # p elements with depth 2.  Cut all of the depth 2 p elements out of each
+    # parent and append them in order as siblings following the parent (these
+    # depth 2 elements may themselves be the parents of additional p elements).
+    # The algorithm terminates when there are no depth 2 elements remaining.
+    # Find depth 2 p elements
     nested_paragraphs = tree.xpath('./p/p')
-    # The tree is flattened from the top down.
     while nested_paragraphs:
+        # This points to the location where the next depth 2 p element will
+        # be appended
         last = None
+        # Store parent of previously processed element to track when parent
+        # changes. 
         old_parent = None
         for p in nested_paragraphs:
             parent = p.getparent()
+            # When the parent changes last must be set to the new parent
+            # element. This ensures children will be appended in order
+            # after there parents.
             if parent != old_parent:
                 last = parent
+            # Remove child element from its parent
             parent.remove(p)
+            # The parents text occuring after the current child p but before
+            # p's following sibling is stored in p.tail. Append this text to
+            # the parent's text and then clear out p.tail
             if p.tail:
                 parent.text += ' ' + p.tail
                 p.tail = ''
+            # Place child in its new location
             last.addnext(p)
             last = p
         nested_paragraphs = tree.xpath('./p/p')
