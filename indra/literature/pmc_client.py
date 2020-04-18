@@ -308,12 +308,17 @@ def _extract_from_front(front_element):
 
 def _extract_from_body(body_element):
     """Return list of paragraphs from main article body of NLM XML
+
+    See DocString for extract_paragraphs for more info
     """
     return _extract_paragraphs_from_tree(body_element)
 
 
 def _extract_from_subarticle(subarticle_element):
-    """Return list of relevant paragraphs from a subarticle"""
+    """Return list of relevant paragraphs from a subarticle
+
+    See DocString for extract_paragraphs for more info.
+    """
     # Get only body element
     body = subarticle_element.xpath('./body')
     if not body:
@@ -329,15 +334,13 @@ def _extract_from_subarticle(subarticle_element):
 def _remove_elements_by_tag(tree, *tags):
     """Remove elements with given tags
 
+    Removes all element along with all of its content.
+    Modifies input tree inplace
+
     Parameters
     ----------
-    xml_str : str
-        String of valid NLM XML
-
-    Returns
-    -------
-    str
-        Copy of input XML string  with desired elements removed
+    tree : :py:class:`lxml.etree._Element`
+        etree element for valid NLM XML
     """
     bad_xpath = _xpath_union(*['.//%s' % tag for tag in tags])
     for element in tree.xpath(bad_xpath):
@@ -345,7 +348,15 @@ def _remove_elements_by_tag(tree, *tags):
 
 
 def _replace_unwanted_elements_with_their_captions(tree):
-    """Replace an element with its captions"""
+    """Replace all unwanted elements with their captions
+
+    Modifies input tree inplace.
+
+    Parameters
+    ----------
+    tree : :py:class:`lxml.etree._Element`
+        etree element for valid NLM XML
+    """
     floats_xpath = "//*[@position='float']"
     figs_xpath = './/fig'
     tables_xpath = './/table-wrap'
@@ -366,7 +377,19 @@ def _replace_unwanted_elements_with_their_captions(tree):
 
 
 def _retain_only_pars(tree):
-    """Strip out all tags except title and p tags"""
+    """Strip out all tags except title and p tags
+
+    Function also changes title tags into p tags. This is a helpful
+    preprocessing step that makes it easier to extract paragraphs in
+    the order of a pre-ordered traversal.
+
+    Modifies input tree inplace.
+
+    Parameters
+    ----------
+    tree : :py:class:`lxml.etree._Element`
+        etree element for valid NLM XML
+    """
     for element in tree.xpath('.//*'):
         if element.tag == 'title':
             element.tag = 'p'
@@ -376,8 +399,20 @@ def _retain_only_pars(tree):
 
 
 def _pull_nested_paragraphs_to_top(tree):
-    """Flatten nexted paragraphs in pre-ordered traversal"""
+    """Flatten nested paragraphs in pre-ordered traversal
+
+    Requires _retain_only_pars to be run first.
+
+    Modifies input tree inplace.
+
+    Parameters
+    ----------
+    tree : :py:class:`lxml.etree._Element`
+        etree element for valid NLM XML
+    """
+    # First identify all paragraphs nested within child paragraphs of the root
     nested_paragraphs = tree.xpath('./p/p')
+    # The tree is flattened from the top down. 
     while nested_paragraphs:
         last = None
         old_parent = None
