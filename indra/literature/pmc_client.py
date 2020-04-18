@@ -177,13 +177,19 @@ def extract_paragraphs(xml_string):
     _remove_elements_by_tag(tree, 'tex-math')
     # Strip out all content in unwanted elements except the captions
     _replace_unwanted_elements_with_their_captions(tree)
-    # First process front element
+    # First process front element. Titles alt-titles and abstracts
+    # are pulled from here.
     front_elements = _select_from_top_level(tree, 'front')
     for element in front_elements:
         output.extend(_extract_from_front(element))
+    # All paragraphs except those in unwanted elements are extracted
+    # from the article body
     body_elements = _select_from_top_level(tree, 'body')
     for element in body_elements:
         output.extend(_extract_from_body(element))
+    # Only the body sections of subarticles are processed. All
+    # unwanted elements are removed entirely, including captions.
+    # Even boxed-text elements are removed.
     subarticles = _select_from_top_level(tree, 'sub-article')
     for element in subarticles:
         output.extend(_extract_from_subarticle(element))
