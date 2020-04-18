@@ -234,7 +234,17 @@ def filter_pmids(pmid_list, source_type):
 
 
 def _select_from_top_level(tree, tag):
-    """Return top level elements from an NLM XML tree
+    """Select direct children of the article element of a tree by tag.
+
+    Different versions of NLM XML place the article element in different
+    places. We cannot rely on a hard coded path to the article element.  This
+    helper function helps select top level elements beneath article from their
+    tag name. We use this to pull out the front, body, and sub-article elements
+    of an article.
+
+    An assumption is made that there is only one article element in the input
+    XML tree. If this is not the case, only the firt article will be
+    processed.
 
     Parameters
     ----------
@@ -246,7 +256,9 @@ def _select_from_top_level(tree, tag):
     Returns
     -------
     list
-        List containing lxml Element objects of selected top level elements
+        List containing lxml Element objects of selected top level elements.
+        Typically there is only one front and one body that are direct chilren
+        of the article element, but there can be multiple subarticles.
     """
     if tree.tag == 'article':
         article = tree
@@ -254,8 +266,7 @@ def _select_from_top_level(tree, tag):
         article = tree.xpath('.//article')
         if not len(article):
             raise ValueError('Input XML contains no article element')
-        # We make the assumption each NLM XML contains only one article element.
-        # If this is not the case, then only the first article will be processed
+        # Assume there is only one article
         article = article[0]
     output = []
     xpath = './%s' % tag
