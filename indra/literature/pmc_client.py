@@ -137,6 +137,25 @@ def extract_text(xml_string):
 def extract_paragraphs(xml_string):
     """Returns list of paragraphs in an NLM XML.
 
+    This returns a list of the plaintexts for each paragraph and title in
+    the input XML, excluding some paragraphs with text that should not
+    be relevant to biomedical text processing.
+
+    Relevant text includes titles, abstracts, and the contents of many body
+    paragraphs. Within figures, tables, and floating elements, only captions
+    are retained (One exception is that all paragraphs within floating
+    boxed-text elements are retained. These elements often contain short
+    summaries enriched with useful information.) Due to captions, nested
+    paragraphs can appear in an NLM XML document. Occasionally there are
+    multiple levels of nesting. If nested paragraphs appear in the input
+    document their texts are returned in a pre-ordered traversal. The text
+    within child paragraphs is not included in the output associated to the
+    parent. Each parent appears in the output before its children. All children
+    of an element appear before the elements following sibling.
+
+    All tags are removed from each paragraph in the list that is returned.
+    LaTeX surrounded by <tex-math> tags is removed entirely.
+
     Parameters
     ----------
     xml_string : str
@@ -145,7 +164,7 @@ def extract_paragraphs(xml_string):
     Returns
     -------
     list of str
-        List of extracted paragraphs in an NLM XML
+        List of extracted paragraphs from the input NLM XML
     """
     output = []
     tree = etree.fromstring(xml_string.encode('utf-8'))
