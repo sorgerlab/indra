@@ -435,7 +435,7 @@ def test_standardize_name_efo_hp_doid():
     ag = Agent('x', db_refs={'EFO': '1002050'})
     standardize_agent_name(ag)
     # Name based on HP itself
-    assert ag.name == 'nephritis'
+    assert ag.name == 'nephritis', (ag.name, ag.db_refs)
 
 
 def test_standardize_uppro():

@@ -653,7 +653,7 @@ def update_mesh_supplementary_names():
 def update_mesh_mappings():
     """Update MeSH mappings to other databases."""
     from indra.databases import mesh_client
-    url = ('https://raw.githubusercontent.com/indralab/gilda/ambiguities/gilda/'
+    url = ('https://raw.githubusercontent.com/indralab/gilda/master/gilda/'
            'resources/mesh_mappings.tsv')
     df = pandas.read_csv(url, delimiter='\t', dtype=str, header=None)
     namespaces = ['efo', 'hp', 'doid']
