@@ -33,22 +33,22 @@ class OboClient:
         self.directory = directory
         self.mapping_path = _make_resource_path(self.directory, self.prefix)
 
-        self.id_to_name = {}
+        self.entries = {}
         self.alt_to_id = {}
         self.name_to_id = {}
-        self.id_to_xrefs = defaultdict(lambda: defaultdict(list))
-        self.id_to_isa = {}
 
         with open(self.mapping_path) as file:
             entries = json.load(file)
 
-        for entry in entries:
-            db_id, db_name = entry['id'], entry['name']
-            self.id_to_name[db_id] = db_name
-            self.name_to_id[db_name] = db_id
+        self.entries = {entry['id']: entry for entry in entries}
+
+        for db_id, entry in self.entries.items():
+            xrs = defaultdict(list)
             for xref in entry['xrefs']:
-                xref_db, xref_db_id = xref['namespace'], xref['id']
-                self.id_to_xrefs[db_id][xref_db].append(xref_db_id)
+                xrs[xref['namespace']].append(xref['id'])
+            entry['xrefs'] = dict(xrs)
+
+            self.name_to_id[entry['name']] = db_id
 
             for db_alt_id in entry['alt_ids']:
                 if db_alt_id in self.id_to_name:
@@ -58,7 +58,6 @@ class OboClient:
                         )
                     )
                 self.alt_to_id[db_alt_id] = db_id
-            self.id_to_isa[db_id] = entry['is_a']
 
     @staticmethod
     def update_resource(directory, url, prefix, *args, remove_prefix=False,
@@ -155,10 +154,10 @@ class OboClient:
 
         Returns
         -------
-        db_name : str
+        db_name : str or None
             The name corresponding to the given ID.
         """
-        return self.id_to_name.get(db_id)
+        return self.entries.get(db_id, {}).get('name')
 
     def get_id_from_name(self, db_name):
         """Return the database identifier corresponding to the given name.
@@ -185,10 +184,22 @@ class OboClient:
 
         Returns
         -------
-        db_id : str
+        db_id : str or None
             The ID corresponding to the given alt id.
         """
         return self.alt_to_id.get(db_alt_id)
 
     def get_isa(self, db_id):
-        return self.id_to_isa.get(db_id, [])
+        """Return the isa relationships corresponding to a given ID.
+
+        Parameters
+        ----------
+        db_id : str
+            The ID whose isa relationships should be returned
+
+        Returns
+        -------
+        list of str
+            The IDs of the terms that are isa of the given ID.
+        """
+        return self.entries.get(db_id, {}).get('is_a', [])
