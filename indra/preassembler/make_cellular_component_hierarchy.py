@@ -24,8 +24,9 @@ def save_hierarchy(g, path):
 def make_component_hierarchy(obo_client):
     g = rdflib.Graph()
     indra_ns = 'http://sorger.med.harvard.edu/indra/'
-    ln = Namespace('https://identifiers.org/')
+    #ln = Namespace('https://identifiers.org/')
     rn = Namespace(indra_ns + 'relations/')
+    ln = Namespace(indra_ns + 'locations/')
     part_of = rn.term('partof')
     has_name = rn.term('hasName')
     for go_id, entry in obo_client.entries.items():
