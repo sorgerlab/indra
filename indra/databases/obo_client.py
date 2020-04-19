@@ -37,6 +37,7 @@ class OboClient:
         self.alt_to_id = {}
         self.name_to_id = {}
         self.id_to_xrefs = defaultdict(lambda: defaultdict(list))
+        self.id_to_isa = {}
 
         with open(self.mapping_path) as file:
             entries = json.load(file)
@@ -57,6 +58,7 @@ class OboClient:
                         )
                     )
                 self.alt_to_id[db_alt_id] = db_id
+            self.id_to_isa[db_id] = entry['is_a']
 
     @staticmethod
     def update_resource(directory, url, prefix, *args, remove_prefix=False,
@@ -119,8 +121,10 @@ class OboClient:
                 if status in allowed_synonyms:
                     synonyms.append(syn)
 
+            namespace = data.get('namespace', prefix)
+
             entries.append({
-                'namespace': prefix,
+                'namespace': namespace,
                 'id': node,
                 'name': data['name'],
                 'synonyms': synonyms,
@@ -185,3 +189,6 @@ class OboClient:
             The ID corresponding to the given alt id.
         """
         return self.alt_to_id.get(db_alt_id)
+
+    def get_isa(self, db_id):
+        return self.id_to_isa.get(db_id, [])
