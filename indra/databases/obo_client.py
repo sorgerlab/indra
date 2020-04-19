@@ -67,10 +67,7 @@ class OboClient:
         prefix_upper = prefix.upper()
 
         resource_path = _make_resource_path(directory, prefix)
-        obo_path = os.path.join(
-            directory,
-            '{prefix}.obo.pickle'.format(prefix=prefix),
-        )
+        obo_path = os.path.join(directory, '%s.obo.pkl' % prefix)
         if os.path.exists(obo_path):
             with open(obo_path, 'rb') as file:
                 g = pickle.load(file)
@@ -81,6 +78,8 @@ class OboClient:
 
         entries = []
         for node, data in g.nodes(data=True):
+            # There are entries in some OBOs that are actually from other
+            # ontologies
             if not node.startswith(prefix_upper):
                 continue
             if remove_prefix:
@@ -88,20 +87,29 @@ class OboClient:
 
             xrefs = []
             for xref in data.get('xref', []):
-                try:
-                    db, db_id = xref.split(':', 1)
-                except ValueError:
-                    continue
-                else:
-                    db_id = db_id.lstrip()
-                    if ' ' in db_id:
-                        db_id = db_id.split()[0]
-                        logging.debug(
-                            'Likely labeled %s:%s xref: %s. Recovered %s:%s',
-                            prefix, node, xref, db, db_id,
-                        )
+                db, db_id = xref.split(':', maxsplit=1)
+                # Example: for EFO, we have xrefs like
+                # PERSON: James Malone
+                db_id = db_id.lstrip()
+                # Example: for HP, we have xrefs like
+                # MEDDRA:10050185 "Palmoplantar pustulosis"
+                if ' ' in db_id:
+                    db_id = db_id.split()[0]
+                    logging.debug(
+                        'Likely labeled %s:%s xref: %s. Recovered %s:%s',
+                        prefix, node, xref, db, db_id,
+                    )
 
-                    xrefs.append(dict(namespace=db, id=db_id))
+                xrefs.append(dict(namespace=db, id=db_id))
+
+            # For simplicity, here we only take isa from the same ontology
+            # but in principle, we could consider ones across ontologies
+            isa_raw = data.get('is_a', [])
+            isa_own = [entry for entry in
+                       sorted(set(isa_raw)) if entry.startswith(prefix_upper)]
+            isa_own = [(entry if not remove_prefix
+                        else entry.split(':', maxsplit=1)[1])
+                       for entry in isa_own]
 
             entries.append({
                 'namespace': prefix,
@@ -113,6 +121,7 @@ class OboClient:
                 ],
                 'xrefs': xrefs,
                 'alt_ids': data.get('alt_id', []),
+                'is_a': isa_own,
             })
 
         with open(resource_path, 'w') as file:
