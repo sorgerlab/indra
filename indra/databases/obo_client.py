@@ -51,7 +51,7 @@ class OboClient:
             self.name_to_id[entry['name']] = db_id
 
             for db_alt_id in entry['alt_ids']:
-                if db_alt_id in self.id_to_name:
+                if db_alt_id in self.entries:
                     raise ValueError(
                         'Problem with integrity of {}:{}'.format(
                             self.prefix, db_alt_id
