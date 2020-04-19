@@ -738,7 +738,7 @@ def _process_mirbase_file(lines):
             if not element.startswith('DR'):
                 continue
             db, identifier, name = [e.strip() for e in \
-                                       element[len('DR'):].lstrip().split(';')]
+                                    element[len('DR'):].lstrip().split(';')]
             yield mirbase_id, mirbase_name, db, identifier, name.rstrip('.')
 
 

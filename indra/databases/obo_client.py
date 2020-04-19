@@ -24,9 +24,6 @@ def _make_resource_path(directory, prefix):
     return os.path.join(directory, '{prefix}.json'.format(prefix=prefix))
 
 
-OBO_SYNONYM = re.compile('EXACT|RELATED')
-
-
 class OboClient:
     """A base client for data that's been grabbed via OBO"""
 
@@ -62,8 +59,11 @@ class OboClient:
                 self.alt_to_id[db_alt_id] = db_id
 
     @staticmethod
-    def update_resource(directory, url, prefix, *args, remove_prefix=False):
+    def update_resource(directory, url, prefix, *args, remove_prefix=False,
+                        allowed_synonyms=None):
         """Write the OBO information to files in the given directory."""
+        allowed_synonyms = allowed_synonyms if allowed_synonyms is not None \
+            else {'EXACT', 'RELATED'}
         prefix_upper = prefix.upper()
 
         resource_path = _make_resource_path(directory, prefix)
@@ -111,14 +111,19 @@ class OboClient:
                         else entry.split(':', maxsplit=1)[1])
                        for entry in isa_own]
 
+            synonyms = []
+            for synonym in data.get('synonym', []):
+                match = re.match(r'^\"(.+)\" (EXACT|RELATED|NARROW|BROAD)',
+                                 synonym)
+                syn, status = match.groups()
+                if status in allowed_synonyms:
+                    synonyms.append(syn)
+
             entries.append({
                 'namespace': prefix,
                 'id': node,
                 'name': data['name'],
-                'synonyms': [
-                    OBO_SYNONYM.split(synonym)[0].strip('" ')
-                    for synonym in data.get('synonym', [])
-                ],
+                'synonyms': synonyms,
                 'xrefs': xrefs,
                 'alt_ids': data.get('alt_id', []),
                 'is_a': isa_own,
