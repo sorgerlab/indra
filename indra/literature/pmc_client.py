@@ -173,14 +173,16 @@ def extract_paragraphs(xml_string):
     """
     output = []
     tree = etree.fromstring(xml_string.encode('utf-8'))
-    # Strip out comments
-    comments = tree.xpath('//comment()')
-    for element in comments:
-        element.getparent().remove(element)
     # Remove namespaces if any exist
     if tree.tag.startswith('{'):
         for element in tree.getiterator():
-            element.tag = etree.QName(element).localname
+            # The following code will throw a ValueError for some
+            # exceptional tags such as comments and processing instructions.
+            # It's safe to just leave these tag names unchanged.
+            try:
+                element.tag = etree.QName(element).localname
+            except ValueError:
+                continue
         etree.cleanup_namespaces(tree)
     # Strip out latex
     _remove_elements_by_tag(tree, 'tex-math')
@@ -394,7 +396,7 @@ def _retain_only_pars(tree):
     tree : :py:class:`lxml.etree._Element`
         etree element for valid NLM XML
     """
-    for element in tree.xpath('.//*'):
+    for element in tree.getiterator():
         if element.tag == 'title':
             element.tag = 'p'
         parent = element.getparent()
@@ -429,7 +431,7 @@ def _pull_nested_paragraphs_to_top(tree):
         # be appended
         last = None
         # Store parent of previously processed element to track when parent
-        # changes. 
+        # changes.
         old_parent = None
         for p in nested_paragraphs:
             parent = p.getparent()
