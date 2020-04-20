@@ -317,6 +317,10 @@ class ReachProcessor(object):
                     from_location = self._get_location_by_id(a['arg'])
                 elif self._get_arg_type(a) == 'destination':
                     to_location = self._get_location_by_id(a['arg'])
+            # We skip statements that have no locations associated with them
+            # at all
+            if not from_location and not to_location:
+                continue
             annotations['agents']['coords'] = [theme_coords]
             ev = Evidence(source_api='reach', text=sentence,
                           pmid=self.citation, annotations=annotations,
