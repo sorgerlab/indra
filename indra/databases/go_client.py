@@ -96,7 +96,7 @@ def get_valid_location(loc):
         return None
     # If it's actually a GO ID, we do some validation and use it. If it is
     # a text label then we look up the GO ID for it
-    if re.match(r'(?:GO:?)\d+', loc):
+    if re.match(r'^(GO:)?\d+$', loc):
         if not loc.startswith('GO:'):
             loc = 'GO:' + loc
         go_id = loc
