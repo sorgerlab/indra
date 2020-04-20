@@ -29,12 +29,14 @@ def make_component_hierarchy(obo_client):
     ln = Namespace(indra_ns + 'locations/')
     part_of = rn.term('partof')
     has_name = rn.term('hasName')
+    rel_types = ['is_a', 'part_of']
     for go_id, entry in obo_client.entries.items():
         if not entry['namespace'] == 'cellular_component':
             continue
         g.add((ln.term(go_id), has_name, Literal(entry['name'])))
-        for parent_id in entry['is_a']:
-            g.add((ln.term(go_id), part_of, ln.term(parent_id)))
+        for rel_type in rel_types:
+            for parent_id in entry.get('relations', {}).get(rel_type, []):
+                g.add((ln.term(go_id), part_of, ln.term(parent_id)))
     return g
 
 
