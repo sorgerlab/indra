@@ -107,4 +107,5 @@ def test_extract_text():
     xml_str = pmc_client.get_xml(pmc_id)
     text = pmc_client.extract_text(xml_str)
     assert text is not None
+    assert 'RAS VS BRAF ONCOGENES AND TARGETED THERAPIES' in text
     assert unicode_strs(text)

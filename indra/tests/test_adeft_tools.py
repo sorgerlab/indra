@@ -25,7 +25,7 @@ def test_universal_extract_paragraphs_pmc():
     pmc_id = 'PMC3262597'
     xml_str = pmc_client.get_xml(pmc_id)
     paragraphs = universal_extract_paragraphs(xml_str)
-    assert len(paragraphs) > 1
+    assert len(paragraphs) > 1, paragraphs
 
 
 @attr('webservice')
