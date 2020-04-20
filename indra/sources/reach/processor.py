@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
 import os
 import re
 import logging
@@ -8,8 +5,7 @@ import objectpath
 
 from indra.statements import *
 from indra.util import read_unicode_csv
-from indra.databases import hgnc_client, go_client
-import indra.databases.uniprot_client as up_client
+from indra.databases import go_client
 from indra.preassembler.grounding_mapper.standardize import \
     standardize_db_refs, standardize_agent_name
 from collections import namedtuple
@@ -321,6 +317,10 @@ class ReachProcessor(object):
                     from_location = self._get_location_by_id(a['arg'])
                 elif self._get_arg_type(a) == 'destination':
                     to_location = self._get_location_by_id(a['arg'])
+            # We skip statements that have no locations associated with them
+            # at all
+            if not from_location and not to_location:
+                continue
             annotations['agents']['coords'] = [theme_coords]
             ev = Evidence(source_api='reach', text=sentence,
                           pmid=self.citation, annotations=annotations,
@@ -345,19 +345,16 @@ class ReachProcessor(object):
             ns = xr['namespace']
             if ns == 'go':
                 go_id = xr['id']
+
+        # If there is no GO ID, we try to "ground" the name to an ID
+        if go_id is None:
+            go_id = go_client.get_go_id_from_label_or_synonym(name.lower())
+
         # Try to get valid location based on GO id
         if go_id is not None:
-            try:
-                loc = get_valid_location(go_id)
+            loc = go_client.get_go_label(go_id)
+            if loc:
                 return loc
-            except InvalidLocationError:
-                pass
-        # See if the raw name is a valid cellular component
-        try:
-            loc = get_valid_location(name.lower())
-            return loc
-        except InvalidLocationError:
-            pass
         return None
 
     def _get_agent_from_entity(self, entity_id):

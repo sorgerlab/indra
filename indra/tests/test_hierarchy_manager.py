@@ -72,11 +72,11 @@ def test_isa_activity_not():
 
 def test_partof_comp():
     assert comp_hierarchy.partof('INDRA_LOCATIONS', 'cytoplasm',
-                                 'INDRA_LOCATIONS', 'cell')
+                                 'INDRA_LOCATIONS', 'cellular_component')
 
 
 def test_partof_comp_not():
-    assert not comp_hierarchy.partof('INDRA_LOCATIONS', 'cell',
+    assert not comp_hierarchy.partof('INDRA_LOCATIONS', 'cellular_component',
                                      'INDRA_LOCATIONS', 'cytoplasm')
 
 

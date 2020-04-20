@@ -838,14 +838,7 @@ def _get_translocation_target(node_modifier_data):
     # Only use GO Cellular Component location names
     if to_loc_ns not in ('GO', 'GOCC', 'GOCCID') or not to_loc_name:
         return None
-    try:
-        if re.match(r'\d+', to_loc_name) and \
-                not to_loc_name.startswith('GO'):
-            to_loc_name = 'GO:' + to_loc_name
-        valid_loc = get_valid_location(to_loc_name)
-    except InvalidLocationError:
-        return None
-    return valid_loc
+    return go_client.get_valid_location(to_loc_name)
 
 
 def _has_unhandled_modifiers(node_modifier_data):

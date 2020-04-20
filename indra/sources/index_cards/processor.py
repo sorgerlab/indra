@@ -1,9 +1,7 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-import objectpath
-from indra.databases import uniprot_client, chebi_client
-from indra.literature import id_lookup
 from indra.statements import *
+from indra.literature import id_lookup
+from indra.databases import uniprot_client, chebi_client, go_client
+
 
 class IndexCardProcessor(object):
     def __init__(self, index_cards, source_api):
@@ -84,6 +82,12 @@ class IndexCardProcessor(object):
             agent = self._get_agent(participant)
             from_location = inter.get('from_location_id')
             to_location = inter.get('to_location_id')
+            if from_location:
+                from_location = go_client.get_go_label(from_location)
+            if to_location:
+                to_location = go_client.get_go_label(to_location)
+            if not from_location and not to_location:
+                continue
             stmt = Translocation(agent, from_location, to_location,
                                  evidence=ev)
             self.statements.append(stmt)

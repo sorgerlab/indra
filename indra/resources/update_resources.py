@@ -11,16 +11,17 @@ from collections import defaultdict
 from urllib.request import urlretrieve
 from xml.etree import ElementTree as ET
 from indra.util import read_unicode_csv, write_unicode_csv
-from indra.databases import go_client
+from indra.databases.obo_client import OboClient
 from indra.databases import chebi_client, pubchem_client
 from indra.databases.lincs_client import load_lincs_csv
-from indra.preassembler import make_cellular_component_hierarchy as mcch
 from indra.preassembler.make_entity_hierarchy import \
     main as make_ent_hierarchy
 from indra.preassembler.make_activity_hierarchy import \
     main as make_act_hierarchy
 from indra.preassembler.make_modification_hierarchy import \
     main as make_mod_hierarchy
+from indra.preassembler.make_cellular_component_hierarchy import \
+    main as make_cellular_component_hierarchy
 from indra.preassembler.hierarchy_manager import get_bio_hierarchies
 
 path = os.path.dirname(__file__)
@@ -34,17 +35,6 @@ logger.setLevel(logging.INFO)
 # Set a global variable indicating whether we've downloaded the latest GO
 # during this update cycle so that we don't do it more than once
 go_updated = False
-
-
-def load_latest_go():
-    global go_updated
-    go_fname = go_client.go_owl_path
-    if not go_updated:
-        url = 'http://purl.obolibrary.org/obo/go.owl'
-        print("Downloading latest GO from %s" % url)
-        save_from_http(url, go_fname)
-        go_updated = True
-    return go_client.load_go_graph(go_fname)
 
 
 def load_from_http(url):
@@ -298,29 +288,6 @@ def update_chebi_accessions():
                   header=['CAS', 'CHEBI'], index=False)
 
 
-def update_cellular_component_hierarchy():
-    logger.info('--Updating GO cellular components----')
-    g = load_latest_go()
-    component_map, component_part_map = go_client.get_cellular_components(g)
-    # Save the cellular component ID->name mappings
-    fname = os.path.join(path, 'cellular_components.tsv')
-    logger.info('Saving into %s' % fname)
-    with open(fname, 'wb') as fh:
-        fh.write('id\tname\n'.encode('utf-8'))
-        for comp_id, comp_name in sorted(component_map.items(),
-                                          key=lambda x: x[0]):
-            fh.write(('%s\t%s\n' % (comp_id, comp_name)).encode('utf-8'))
-    # Create the cellular component hierarchy
-    gg = mcch.make_component_hierarchy(component_map, component_part_map)
-    mcch.save_hierarchy(gg, mcch.rdf_file)
-
-
-def update_go_id_mappings():
-    g = load_latest_go()
-    go_client.update_id_mappings(g)
-    go_client.update_secondary_mappings(g)
-
-
 def update_bel_chebi_map():
     logger.info('--Updating BEL ChEBI map----')
     id_lines = []
@@ -472,6 +439,11 @@ def update_modification_hierarchy():
 def update_activity_hierarchy():
     logger.info('--Updating activity hierarchy----')
     make_act_hierarchy()
+
+
+def update_cellular_component_hierarchy():
+    logger.info('--Updating cellular component hierarchy----')
+    make_cellular_component_hierarchy()
 
 
 def update_famplex_map():
@@ -738,34 +710,35 @@ def _process_mirbase_file(lines):
             if not element.startswith('DR'):
                 continue
             db, identifier, name = [e.strip() for e in \
-                                       element[len('DR'):].lstrip().split(';')]
+                                    element[len('DR'):].lstrip().split(';')]
             yield mirbase_id, mirbase_name, db, identifier, name.rstrip('.')
 
 
 def update_doid():
     """Update disease ontology."""
-    from indra.databases.obo_client import OboClient
     url = 'http://purl.obolibrary.org/obo/doid.obo'
     OboClient.update_resource(path, url, 'doid', remove_prefix=False)
 
 
 def update_efo():
     """Update experimental factor ontology."""
-    from indra.databases.obo_client import OboClient
     url = 'https://www.ebi.ac.uk/efo/efo.obo'
     OboClient.update_resource(path, url, 'efo', remove_prefix=True)
 
 
 def update_hpo():
     """Update human phenotype ontology."""
-    from indra.databases.obo_client import OboClient
     url = 'http://purl.obolibrary.org/obo/hp.obo'
     OboClient.update_resource(path, url, 'hp', remove_prefix=False)
 
 
+def update_go():
+    """Update gene ontology."""
+    url = 'http://purl.obolibrary.org/obo/go.obo'
+    OboClient.update_resource(path, url, 'go', remove_prefix=False)
+
+
 def main():
-    update_go_id_mappings()
-    update_cellular_component_hierarchy()
     update_famplex()
     update_famplex_map()
     update_hgnc_entries()
@@ -779,6 +752,7 @@ def main():
     update_entity_hierarchy()
     update_modification_hierarchy()
     update_activity_hierarchy()
+    update_cellular_component_hierarchy()
     update_hierarchy_pickle()
     update_ncit_map()
     update_lincs_small_molecules()

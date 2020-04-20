@@ -4,7 +4,7 @@ from indra.databases.efo_client import _client as client
 
 def test_efo_client_loaded():
     assert 'efo' == client.prefix
-    assert client.id_to_name
+    assert client.entries
     assert client.name_to_id
 
 

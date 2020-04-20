@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
 import os
 import json
 import logging
@@ -8,7 +5,7 @@ from copy import copy, deepcopy
 
 from indra.util import read_unicode_csv
 from indra.statements import *
-from indra.databases import uniprot_client, hgnc_client
+from indra.databases import uniprot_client, hgnc_client, go_client
 
 logger = logging.getLogger(__name__)
 
@@ -250,12 +247,8 @@ def fix_json_stmt(json_stmt):
                 # silently skipped
                 if loc in known_invalid_locations:
                     loc = None
-                # Otherwise we try to get a valid location via a mapping
-                try:
-                    loc = get_valid_location(loc)
-                except InvalidLocationError:
-                    logger.error('Invalid location: %s' % loc)
-                    loc = None
+                else:
+                    loc = go_client.get_valid_location(loc)
                 json_stmt[loc_param] = loc
         # Skip Translocation with both locations None
         if (json_stmt.get('from_location') is None

@@ -12,8 +12,7 @@ from collections import OrderedDict as _o
 from indra.util import unicode_strs
 from indra.statements.statements import modtype_conditions, modtype_to_modclass
 from .concept import Concept
-from .resources import get_valid_residue, get_valid_location, activity_types, \
-    amino_acids
+from .resources import get_valid_residue, activity_types, amino_acids
 
 
 logger = logging.getLogger(__name__)
@@ -75,7 +74,7 @@ class Agent(Concept):
             self.mutations = mutations
 
         self.activity = activity
-        self.location = get_valid_location(location)
+        self.location = location
 
     def matches_key(self):
         """Return a key to identify the identity and state of the Agent."""

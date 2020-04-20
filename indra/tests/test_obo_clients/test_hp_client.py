@@ -4,7 +4,7 @@ from indra.databases.hp_client import _client as client
 
 def test_hp_client_loaded():
     assert 'hp' == client.prefix
-    assert client.id_to_name
+    assert client.entries
     assert client.name_to_id
 
 
