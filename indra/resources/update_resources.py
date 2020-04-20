@@ -11,7 +11,6 @@ from collections import defaultdict
 from urllib.request import urlretrieve
 from xml.etree import ElementTree as ET
 from indra.util import read_unicode_csv, write_unicode_csv
-from indra.databases import go_client
 from indra.databases.obo_client import OboClient
 from indra.databases import chebi_client, pubchem_client
 from indra.databases.lincs_client import load_lincs_csv
@@ -21,6 +20,8 @@ from indra.preassembler.make_activity_hierarchy import \
     main as make_act_hierarchy
 from indra.preassembler.make_modification_hierarchy import \
     main as make_mod_hierarchy
+from indra.preassembler.make_cellular_component_hierarchy import \
+    main as make_cellular_component_hierarchy
 from indra.preassembler.hierarchy_manager import get_bio_hierarchies
 
 path = os.path.dirname(__file__)
@@ -34,17 +35,6 @@ logger.setLevel(logging.INFO)
 # Set a global variable indicating whether we've downloaded the latest GO
 # during this update cycle so that we don't do it more than once
 go_updated = False
-
-
-def load_latest_go():
-    global go_updated
-    go_fname = go_client.go_owl_path
-    if not go_updated:
-        url = 'http://purl.obolibrary.org/obo/go.owl'
-        print("Downloading latest GO from %s" % url)
-        save_from_http(url, go_fname)
-        go_updated = True
-    return go_client.load_go_graph(go_fname)
 
 
 def load_from_http(url):
@@ -451,6 +441,11 @@ def update_activity_hierarchy():
     make_act_hierarchy()
 
 
+def update_cellular_component_hierarchy():
+    logger.info('--Updating cellular component hierarchy----')
+    make_cellular_component_hierarchy()
+
+
 def update_famplex_map():
     logger.info('--Updating FamPlex map----')
     # Currently this is a trivial "copy" of the FamPlex equivalences.csv
@@ -757,6 +752,7 @@ def main():
     update_entity_hierarchy()
     update_modification_hierarchy()
     update_activity_hierarchy()
+    update_cellular_component_hierarchy()
     update_hierarchy_pickle()
     update_ncit_map()
     update_lincs_small_molecules()

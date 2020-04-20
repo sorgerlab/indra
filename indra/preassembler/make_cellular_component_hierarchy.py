@@ -38,7 +38,11 @@ def make_component_hierarchy(obo_client):
     return g
 
 
-if __name__ == '__main__':
+def main():
     cl = OboClient(prefix='go')
     g = make_component_hierarchy(cl)
     save_hierarchy(g, rdf_file)
+
+
+if __name__ == '__main__':
+    main()
