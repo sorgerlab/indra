@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
+import copy
 import logging
 import os.path
 import requests
@@ -456,6 +457,7 @@ def _pull_nested_paragraphs_to_top(tree):
 
 def _extract_paragraphs_from_tree(tree):
     """Preprocess tree and return it's paragraphs."""
+    tree = copy.deepcopy(tree)
     _retain_only_pars(tree)
     _pull_nested_paragraphs_to_top(tree)
     paragraphs = []
