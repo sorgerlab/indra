@@ -838,32 +838,7 @@ def _get_translocation_target(node_modifier_data):
     # Only use GO Cellular Component location names
     if to_loc_ns not in ('GO', 'GOCC', 'GOCCID') or not to_loc_name:
         return None
-    # If it's actually a GO ID, we do some validation and use it. If it is
-    # a text label then we look up the GO ID for it
-    if is_go_id(to_loc_name):
-        if not to_loc_name.startswith('GO:'):
-            to_loc_name = 'GO:' + to_loc_name
-        go_id = to_loc_name
-        prim_id = go_client.get_primary_id(go_id)
-        if prim_id:
-            go_id = prim_id
-    else:
-        go_id = go_client.get_go_id_from_label_or_synonym(to_loc_name)
-        if not go_id:
-            return None
-    # If we managed to get a GO ID either way, we get its label and return it
-    # with some extra caution to not return a None name under any
-    # circumstances
-    if go_id:
-        loc = go_client.get_go_label(to_loc_name)
-        if loc:
-            return loc
-    return None
-
-
-def is_go_id(txt):
-    match = re.match(r'(?:GO:?)\d+', txt)
-    return match is not None
+    return go_client.get_valid_location(to_loc_name)
 
 
 def _has_unhandled_modifiers(node_modifier_data):
