@@ -1,10 +1,8 @@
 import os
 import networkx
 from indra.util import read_unicode_csv
-from indra.databases import hgnc_client
-from indra.databases import uniprot_client
-from indra.databases import chebi_client
-from indra.databases import mesh_client
+from indra.databases import hgnc_client, uniprot_client, chebi_client, \
+    mesh_client, obo_client
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -12,12 +10,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 class IndraOntology(networkx.MultiDiGraph):
     def __init__(self):
         super().__init__()
+        # Add all nodes with annotations
         self.add_hgnc_nodes()
         self.add_uniprot_nodes()
-        self.add_hgnc_uniprot_xrefs()
         self.add_famplex_nodes()
-        self.add_famplex_hierarchy()
+        self.add_obo_nodes()
+        # Add xrefs
+        self.add_hgnc_uniprot_xrefs()
         self.add_famplex_xrefs()
+        # Add hierarchies
+        self.add_famplex_hierarchy()
+        self.add_obo_hierarchies()
 
     def add_hgnc_nodes(self):
         nodes = [(label('HGNC', hid),
@@ -81,6 +84,28 @@ class IndraOntology(networkx.MultiDiGraph):
             edges.append((label('FPLX', fplx_id),
                           label(ref_ns, ref_id),
                           {'type': 'xref', 'source': 'fplx'}))
+        self.add_edges_from(edges)
+
+    def add_obo_nodes(self):
+        namespaces = ['go', 'efo', 'hp', 'efo']
+        nodes = []
+        for ns in namespaces:
+            oc = obo_client.OboClient(prefix=ns)
+            for db_id, entry in oc.entries.items():
+                nodes.append((label(ns.upper(), db_id),
+                              {'name': entry['name'], 'id': db_id}))
+        self.add_nodes_from(nodes)
+
+    def add_obo_hierarchies(self):
+        namespaces = ['go', 'efo', 'hp', 'efo']
+        edges = []
+        for ns in namespaces:
+            oc = obo_client.OboClient(prefix=ns)
+            for db_id, entry in oc.entries.items():
+                for rel, targets in entry.get('relations', {}).items():
+                    for target in targets:
+                        edges.append((label(ns.upper(), db_id),
+                                      target, {'type': rel}))
         self.add_edges_from(edges)
 
 
