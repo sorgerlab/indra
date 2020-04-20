@@ -1,10 +1,9 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import json
 import logging
 from indra.statements import *
 from indra.literature import id_lookup
-from indra.databases import hgnc_client, uniprot_client, chebi_client
+from indra.databases import hgnc_client, uniprot_client, chebi_client, \
+    go_client
 
 logger = logging.getLogger(__name__)
 
@@ -275,10 +274,12 @@ def assemble_translocation(stmt):
     interaction['interaction_type'] = 'translocates'
     if stmt.from_location is not None:
         interaction['from_location_text'] = stmt.from_location
-        from_loc_id = cellular_components.get(stmt.from_location)
+        from_loc_id = \
+            go_client.get_go_id_from_label_or_synonym(stmt.from_location)
         interaction['from_location_id'] = from_loc_id
     interaction['to_location_text'] = stmt.to_location
-    to_loc_id = cellular_components.get(stmt.to_location)
+    to_loc_id = \
+        go_client.get_go_id_from_label_or_synonym(stmt.to_location)
     interaction['to_location_id'] = to_loc_id
     interaction['participant_a'] = get_participant(None)
     interaction['participant_b'] = get_participant(stmt.agent)

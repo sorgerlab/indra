@@ -1,9 +1,4 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
-
 __all__ = ['get_valid_residue', 'get_valid_location', 'activity_types',
-           'cellular_components', 'cellular_components_reverse',
            'amino_acids', 'amino_acids_reverse',
            'InvalidLocationError', 'InvalidResidueError']
 
@@ -25,14 +20,18 @@ def get_valid_residue(residue):
 
 def get_valid_location(location):
     """Check if the given location represents a valid cellular component."""
+    from indra.databases import go_client
     # If we're given None, return None
-    if location is not None and cellular_components.get(location) is None:
-        loc = cellular_components_reverse.get(location)
-        if loc is None:
-            raise InvalidLocationError(location)
-        else:
-            return loc
-    return location
+    if location is None:
+        return None
+    # Otherwise, er look up a GO ID by name or synonym and then get the
+    # canonical name for that ID. If the location provided is not a valid
+    # label of synonym, we raise an error
+    go_id = go_client.get_go_id_from_label_or_synonym(location)
+    if not go_id:
+        raise InvalidLocationError(location)
+    standard_name = go_client.get_go_label(go_id)
+    return standard_name
 
 
 def _read_activity_types():
@@ -53,40 +52,6 @@ def _read_activity_types():
 
 
 activity_types = _read_activity_types()
-
-
-def _read_cellular_components():
-    """Read cellular components from a resource file."""
-    # Here we load a patch file in addition to the current cellular components
-    # file to make sure we don't error with InvalidLocationError with some
-    # deprecated cellular location names
-    this_dir = os.path.dirname(os.path.abspath(__file__))
-    cc_file = os.path.join(this_dir, os.pardir, 'resources',
-                           'cellular_components.tsv')
-    cc_patch_file = os.path.join(this_dir, os.pardir, 'resources',
-                                 'cellular_components_patch.tsv')
-    cellular_components = {}
-    cellular_components_reverse = {}
-    with open(cc_file, 'rt') as fh:
-        lines = list(fh.readlines())
-    # We add the patch to the end of the lines list
-    with open(cc_patch_file, 'rt') as fh:
-        lines += list(fh.readlines())
-    for lin in lines[1:]:
-        terms = lin.strip().split('\t')
-        cellular_components[terms[1]] = terms[0]
-        # If the GO -> name mapping doesn't exist yet, we add a mapping
-        # but if it already exists (i.e. the try doesn't error) then
-        # we don't add the GO -> name mapping. This ensures that names from
-        # the patch file aren't mapped to in the reverse list.
-        try:
-            cellular_components_reverse[terms[0]]
-        except KeyError:
-            cellular_components_reverse[terms[0]] = terms[1]
-    return cellular_components, cellular_components_reverse
-
-
-cellular_components, cellular_components_reverse = _read_cellular_components()
 
 
 def _read_amino_acids():

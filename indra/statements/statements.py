@@ -213,7 +213,7 @@ __all__ = [
     'get_valid_residue', 'get_valid_location', 'get_valid_location',
     'draw_stmt_graph', 'get_all_descendants','make_statement_camel',
     'amino_acids', 'amino_acids_reverse', 'activity_types',
-    'cellular_components', 'cellular_components_reverse', 'modtype_to_modclass',
+    'modtype_to_modclass',
     'modclass_to_modtype', 'modtype_conditions', 'modtype_to_inverse',
     'modclass_to_inverse', 'get_statement_by_name', 'make_hash', 'stmt_type'
     ]
