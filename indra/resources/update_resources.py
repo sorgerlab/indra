@@ -15,7 +15,6 @@ from indra.databases import go_client
 from indra.databases.obo_client import OboClient
 from indra.databases import chebi_client, pubchem_client
 from indra.databases.lincs_client import load_lincs_csv
-from indra.preassembler import make_cellular_component_hierarchy as mcch
 from indra.preassembler.make_entity_hierarchy import \
     main as make_ent_hierarchy
 from indra.preassembler.make_activity_hierarchy import \

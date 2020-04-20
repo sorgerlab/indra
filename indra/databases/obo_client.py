@@ -36,12 +36,14 @@ class OboClient:
         self.entries = {}
         self.alt_to_id = {}
         self.name_to_id = {}
+        self.synonym_to_id = {}
 
         with open(self.mapping_path) as file:
             entries = json.load(file)
 
         self.entries = {entry['id']: entry for entry in entries}
 
+        ambig_synonyms = set()
         for db_id, entry in self.entries.items():
             xrs = defaultdict(list)
             for xref in entry['xrefs']:
@@ -49,6 +51,12 @@ class OboClient:
             entry['xrefs'] = dict(xrs)
 
             self.name_to_id[entry['name']] = db_id
+            for synonym in entry['synonyms']:
+                # Make a note of this is an ambiguous synonym so that we can
+                # get rid of it after the loop, e.g., "multiciliation"
+                if synonym in self.synonym_to_id:
+                    ambig_synonyms.add(synonym)
+                self.synonym_to_id[synonym] = db_id
 
             for db_alt_id in entry['alt_ids']:
                 if db_alt_id in self.entries:
@@ -58,6 +66,9 @@ class OboClient:
                         )
                     )
                 self.alt_to_id[db_alt_id] = db_id
+        # Remove all ambiguous synonyms
+        self.synonym_to_id = {k: v for k, v in self.synonym_to_id.items()
+                              if k not in ambig_synonyms}
 
     @staticmethod
     def update_resource(directory, url, prefix, *args, remove_prefix=False,
@@ -173,6 +184,30 @@ class OboClient:
             The ID corresponding to the given name.
         """
         return self.name_to_id.get(db_name)
+
+    def get_id_from_name_or_synonym(self, txt):
+        """Return the database id corresponding to the given name or synonym.
+
+        Note that the way the OboClient is constructed, ambiguous synonyms are
+        filtered out. Further, this function prioritizes names over synonyms
+        (i.e., it first looks up the ID by name, and only if that fails,
+        it attempts a synonym-based lookup). Overall, these mappings are
+        guaranteed to be many-to-one.
+
+        Parameters
+        ----------
+        txt : str
+            The name or synonym to be converted.
+
+        Returns
+        -------
+        db_id : str
+            The ID corresponding to the given name or synonym.
+        """
+        name_id = self.get_id_from_name(txt)
+        if name_id:
+            return name_id
+        return self.synonym_to_id.get(txt)
 
     def get_id_from_alt_id(self, db_alt_id):
         """Return the canonical database id corresponding to the alt id.
