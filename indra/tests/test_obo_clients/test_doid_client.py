@@ -4,7 +4,7 @@ from indra.databases.doid_client import _client as client
 
 def test_doid_client_loaded():
     assert 'doid' == client.prefix
-    assert client.id_to_name
+    assert client.entries
     assert client.name_to_id
 
 

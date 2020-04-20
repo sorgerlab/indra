@@ -2013,6 +2013,8 @@ def test_context_bool_equal():
 
 
 def test_deprecated_cellular_location():
+    # Currently we do not check validity at the statement level so
+    # this goes through without error
     stmt = Translocation(Agent('x'), 'HCN4 channel complex',
                          'pre-autophagosomal structure')
     assert stmt.from_location == 'HCN4 channel complex'
