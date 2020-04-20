@@ -209,8 +209,7 @@ __all__ = [
 
     # Functions and values
     'stmts_from_json', 'get_unresolved_support_uuids', 'stmts_to_json',
-    'stmts_from_json_file', 'stmts_to_json_file',
-    'get_valid_residue', 'get_valid_location', 'get_valid_location',
+    'stmts_from_json_file', 'stmts_to_json_file', 'get_valid_residue',
     'draw_stmt_graph', 'get_all_descendants','make_statement_camel',
     'amino_acids', 'amino_acids_reverse', 'activity_types',
     'modtype_to_modclass',
@@ -1707,11 +1706,11 @@ class Translocation(Statement):
                  evidence=None):
         super(Translocation, self).__init__(evidence)
         self.agent = agent
-        self.from_location = get_valid_location(from_location)
-        self.to_location = get_valid_location(to_location)
+        self.from_location = from_location
+        self.to_location = to_location
 
     def set_agent_list(self, agent_list):
-        if(len(agent_list) != 1):
+        if len(agent_list) != 1:
             raise ValueError("Translocation has 1 agent")
         self.agent = agent_list[0]
 

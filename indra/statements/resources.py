@@ -1,4 +1,4 @@
-__all__ = ['get_valid_residue', 'get_valid_location', 'activity_types',
+__all__ = ['get_valid_residue', 'activity_types',
            'amino_acids', 'amino_acids_reverse',
            'InvalidLocationError', 'InvalidResidueError']
 
@@ -16,22 +16,6 @@ def get_valid_residue(residue):
         else:
             return res
     return residue
-
-
-def get_valid_location(location):
-    """Check if the given location represents a valid cellular component."""
-    from indra.databases import go_client
-    # If we're given None, return None
-    if location is None:
-        return None
-    # Otherwise, er look up a GO ID by name or synonym and then get the
-    # canonical name for that ID. If the location provided is not a valid
-    # label of synonym, we raise an error
-    go_id = go_client.get_go_id_from_label_or_synonym(location)
-    if not go_id:
-        raise InvalidLocationError(location)
-    standard_name = go_client.get_go_label(go_id)
-    return standard_name
 
 
 def _read_activity_types():
