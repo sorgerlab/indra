@@ -400,6 +400,7 @@ def _retain_only_pars(tree):
     for element in tree.getiterator():
         if element.tag == 'title':
             element.tag = 'p'
+    for element in tree.getiterator():
         parent = element.getparent()
         if parent is not None and element.tag != 'p':
             etree.strip_tags(element.getparent(), element.tag)
