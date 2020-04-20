@@ -114,14 +114,22 @@ class OboClient:
 
                 xrefs.append(dict(namespace=db, id=db_id))
 
-            # For simplicity, here we only take isa from the same ontology
+            # For simplicity, here we only take rels from the same ontology
             # but in principle, we could consider ones across ontologies
-            isa_raw = data.get('is_a', [])
-            isa_own = [entry for entry in
-                       sorted(set(isa_raw)) if entry.startswith(prefix_upper)]
-            isa_own = [(entry if not remove_prefix
-                        else entry.split(':', maxsplit=1)[1])
-                       for entry in isa_own]
+            rels_dict = defaultdict(list)
+            if 'is_a' in data:
+                rels_dict['is_a'] = data.get('is_a')
+            for rel in data.get('relationship', []):
+                rel_type, target = rel.split(' ', maxsplit=1)
+                rels_dict[rel_type].append(target)
+            for rel_type, rels in rels_dict.items():
+                rel_own = [entry for entry in
+                           sorted(set(rels)) if entry.startswith(prefix_upper)]
+                rel_own = [(entry if not remove_prefix
+                            else entry.split(':', maxsplit=1)[1])
+                           for entry in rel_own]
+                rels_dict[rel_type] = rel_own
+            rels_dict = dict(rels_dict)
 
             synonyms = []
             for synonym in data.get('synonym', []):
@@ -140,7 +148,7 @@ class OboClient:
                 'synonyms': synonyms,
                 'xrefs': xrefs,
                 'alt_ids': data.get('alt_id', []),
-                'is_a': isa_own,
+                'relations': rels_dict,
             })
 
         with open(resource_path, 'w') as file:
@@ -224,7 +232,7 @@ class OboClient:
         """
         return self.alt_to_id.get(db_alt_id)
 
-    def get_isa(self, db_id):
+    def get_relations(self, db_id):
         """Return the isa relationships corresponding to a given ID.
 
         Parameters
@@ -234,7 +242,26 @@ class OboClient:
 
         Returns
         -------
-        list of str
-            The IDs of the terms that are isa of the given ID.
+        dict
+            A dict keyed by relation type with each entry a list of IDs of the
+            terms that are in the given relation with the given ID.
         """
-        return self.entries.get(db_id, {}).get('is_a', [])
+        return self.entries.get(db_id, {})
+
+    def get_relation(self, db_id, rel_type):
+        """Return the isa relationships corresponding to a given ID.
+
+        Parameters
+        ----------
+        db_id : str
+            The ID whose isa relationships should be returned
+        rel_type : str
+            The type of relationships to get, e.g., is_a, part_of
+
+        Returns
+        -------
+        list of str
+            The IDs of the terms that are in the given relation with the given
+            ID.
+        """
+        return self.entries.get(db_id, {}).get(rel_type, [])
