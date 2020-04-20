@@ -27,3 +27,20 @@ def test_get_valid_location():
     assert go_client.get_valid_location('acrosomal vesicle') == \
         'acrosomal vesicle'
     assert go_client.get_valid_location('acrosome') == 'acrosomal vesicle'
+
+
+def test_id_from_label_or_synonym():
+    assert go_client.get_go_id_from_label_or_synonym(
+        'amoeboidal cell migration') == 'GO:0001667'
+    assert go_client.get_go_id_from_label_or_synonym(
+        'ameboidal-type cell migration') == 'GO:0001667'
+
+
+def test_isa():
+    assert go_client._client.entries['GO:0001671']['is_a'] == \
+        ['GO:0008047', 'GO:0060590']
+
+
+def test_xrefs():
+    xr = go_client._client.entries['GO:0008463']['xrefs']['KEGG_REACTION']
+    assert xr == ['R00653'], xr
