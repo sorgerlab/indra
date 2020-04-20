@@ -1376,8 +1376,8 @@ def test_serialize():
 
 def test_location_refinement():
     a1 = Agent('a', location='plasma membrane')
-    a2 = Agent('a', location='cell')
-    a3 = Agent('a', location='cytoplasm')
+    a2 = Agent('a', location='membrane')
+    a3 = Agent('a', location='endoplasmic reticulum tubular network membrane')
     a4 = Agent('a')
     a5 = Agent('a')
 
@@ -1417,11 +1417,11 @@ def test_translocation_refinement():
     st1 = Translocation(Agent('a'), 'plasma membrane', 'cytoplasm')
     st2 = Translocation(Agent('a'), 'plasma membrane', None)
     st3 = Translocation(Agent('a'), None, 'cytoplasm')
-    st4 = Translocation(Agent('a'), 'cell', 'cytoplasm')
-    st5 = Translocation(Agent('a'), 'cell', 'cell')
-    st6 = Translocation(Agent('a'), 'plasma membrane', 'cell')
+    st4 = Translocation(Agent('a'), 'cellular_component', 'cytoplasm')
+    st5 = Translocation(Agent('a'), 'cellular_component', 'cellular_component')
+    st6 = Translocation(Agent('a'), 'plasma membrane', 'cellular_component')
     st7 = Translocation(Agent('a'), 'nucleus', 'cytoplasm')
-    st8 = Translocation(Agent('a'), None, 'cell')
+    st8 = Translocation(Agent('a'), None, 'cellular_component')
     st9 = Translocation(Agent('a'), None, None)
     assert st3.refinement_of(st8, hierarchies)
     assert st1.refinement_of(st2, hierarchies)
