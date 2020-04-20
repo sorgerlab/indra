@@ -133,8 +133,9 @@ class AssemblyPipeline():
         function, use RunnableArgument class.
         """
         if isinstance(func, types.FunctionType):
-            register_pipeline(func)
             func_name = func.__name__
+            if func_name not in pipeline_functions:
+                register_pipeline(func)
         elif isinstance(func, str):
             func_name = func
         else:
@@ -152,8 +153,9 @@ class AssemblyPipeline():
         function, use RunnableArgument class.
         """
         if isinstance(func, types.FunctionType):
-            register_pipeline(func)
             func_name = func.__name__
+            if func_name not in pipeline_functions:
+                register_pipeline(func)
         elif isinstance(func, str):
             func_name = func
         else:
@@ -272,8 +274,9 @@ class RunnableArgument():
     """
     def __init__(self, func, *args, **kwargs):
         if isinstance(func, types.FunctionType):
-            register_pipeline(func)
             self.func_name = func.__name__
+            if self.func_name not in pipeline_functions:
+                register_pipeline(func)
         elif isinstance(func, str):
             self.func_name = func
         else:
@@ -305,8 +308,10 @@ def jsonify_arg_input(arg):
     # If a function object or name of a function is provided, we assume it
     # does not have to be run (function itself is argument).
     if isinstance(arg, types.FunctionType):
-        register_pipeline(arg)
-        return {'function': arg.__name__, 'no_run': True}
+        func_name = arg.__name__
+        if func_name not in pipeline_functions:
+            register_pipeline(arg)
+        return {'function': func_name, 'no_run': True}
     if isinstance(arg, str) and arg in pipeline_functions:
         return {'function': arg, 'no_run': True}
     # For some functions Statement type has to be argument
