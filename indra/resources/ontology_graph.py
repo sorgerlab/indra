@@ -108,6 +108,15 @@ class IndraOntology(networkx.MultiDiGraph):
                                       target, {'type': rel}))
         self.add_edges_from(edges)
 
+    def add_chebi_nodes(self):
+        nodes = [(label('CHEBI', chebi_id), {'name': name, 'ns': 'CHEBI',
+                                             'id': chebi_id})
+                 for chebi_id, name in chebi_client.chebi_id_to_name.items()]
+        self.add_node(nodes)
+
+    def add_chebi_hierarchy(self):
+        
+
 
 def label(ns, id):
     return '%s:%s' % (ns, id)
