@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 from indra.preassembler.grounding_mapper.standardize \
     import standardize_agent_name
 from indra.config import get_config, has_config
+from indra.pipeline import register_pipeline
 from .adeft import _get_text_for_grounding
 
 logger = logging.getLogger(__name__)
@@ -133,6 +134,7 @@ def ground_statement(stmt, mode='web', ungrounded_only=False):
                 ground_agent(agent, txt, context, mode=mode)
 
 
+@register_pipeline
 def ground_statements(stmts, mode='web', sources=None, ungrounded_only=False):
     """Set grounding for Agents in a list of Statements using Gilda.
 
