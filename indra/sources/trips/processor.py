@@ -1260,8 +1260,8 @@ class TripsProcessor(object):
             # agent name
             if agent_name is None:
                 name = term.find("name")
-                if name is not None:
-                    agent_name = name.text
+                if name is not None and name.text is not None:
+                    agent_name = sanitize_trips_name(name.text)
             # If after all of this, the agent name is still None
             # then we don't extract this term as an agent
             if agent_name is None:
@@ -2088,6 +2088,11 @@ def _get_db_mappings(dbname, dbid):
 
     # TODO: we could do some chemical mappings here i.e. CHEBI/PUBCHEM/CHEMBL
     return db_mappings
+
+
+def sanitize_trips_name(name):
+    name = name.replace('-PUNC-MINUS-', '-')
+    return name
 
 
 def _read_ncit_map():
