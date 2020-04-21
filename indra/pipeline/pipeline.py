@@ -88,6 +88,7 @@ class AssemblyPipeline():
         # It is enough to import one function to get all registered functions
         from indra.tools.assemble_corpus import filter_grounded_only
         from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+        from indra.preassembler.grounding_mapper.gilda import ground_statements
         from indra.belief.wm_scorer import get_eidos_scorer
         from indra.preassembler.custom_preassembly import location_matches
         self.steps = steps if steps else []
