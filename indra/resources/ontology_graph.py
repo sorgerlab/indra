@@ -114,9 +114,6 @@ class IndraOntology(networkx.MultiDiGraph):
                  for chebi_id, name in chebi_client.chebi_id_to_name.items()]
         self.add_node(nodes)
 
-    def add_chebi_hierarchy(self):
-        
-
 
 def label(ns, id):
     return '%s:%s' % (ns, id)
