@@ -1,9 +1,8 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import sys
 from os.path import dirname, join
 import indra.statements as ist
 from indra.sources import trips
+from indra.sources.trips.processor import sanitize_trips_name
 from indra.assemblers.pysb import PysbAssembler
 from indra.util import unicode_strs
 from nose.plugins.attrib import attr
@@ -251,3 +250,9 @@ def test_no_shared_objects():
     hedgehog1 = stmt1.agent_list()[0]
     hedgehog2 = stmt2.agent_list()[0]
     assert hedgehog1 is not hedgehog2
+
+
+def test_sanitize():
+    assert sanitize_trips_name('SB-PUNC-MINUS-525334') == \
+        'SB-525334'
+    assert sanitize_trips_name('MAP-2-K-1') == 'MAP2K1'
