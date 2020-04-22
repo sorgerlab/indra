@@ -192,9 +192,8 @@ class AssemblyPipeline():
         """Run a simple function - simple here means a function all arguments
         of which are simple values (do not require extra function calls).
         """
-        if 'statements' in kwargs:
-            statements = kwargs['statements']
-            del kwargs['statements']
+        statements = kwargs.pop('statements', None)
+        if statements:
             return func(statements, *args, **kwargs)
         return func(*args, **kwargs)
 
