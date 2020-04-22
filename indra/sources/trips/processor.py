@@ -2091,12 +2091,7 @@ def _get_db_mappings(dbname, dbid):
 
 
 def sanitize_trips_name(name):
-    # Since TRIPS replaces dashes with something that contains dashes, and on
-    # top of that, adds arbitrary dashes between letters and numbers, this
-    # is a bit painful but works.
-    name = name.replace('-PUNC-MINUS-', '|DASH|')
-    name = name.replace('-', '')
-    name = name.replace('|DASH|', '-')
+    name = name.replace('-PUNC-MINUS-', '-')
     return name
 
 

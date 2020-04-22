@@ -255,4 +255,3 @@ def test_no_shared_objects():
 def test_sanitize():
     assert sanitize_trips_name('SB-PUNC-MINUS-525334') == \
         'SB-525334'
-    assert sanitize_trips_name('MAP-2-K-1') == 'MAP2K1'
