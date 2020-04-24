@@ -62,6 +62,7 @@ def main():
                     'indra.benchmarks', 'indra.databases',
                     'indra.explanation', 'indra.explanation.model_checker',
                     'indra.literature', 'indra.mechlinker',
+                    'indra.pipeline',
                     'indra.preassembler',
                     'indra.preassembler.grounding_mapper', 'indra.sources',
                     'indra.sources.bel',
