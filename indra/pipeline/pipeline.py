@@ -194,7 +194,22 @@ class AssemblyPipeline():
         self.steps.insert(ix, new_step)
 
     def create_new_step(self, func_name, *args, **kwargs):
-        """Create a dictionary representing a new step in the pipeline."""
+        """Create a dictionary representing a new step in the pipeline.
+
+        Parameters
+        ----------
+        func_name : str
+            The string name of a function to create as a step.
+        args : args
+            Args that are passed to the function when calling it.
+        kwargs : kwargs
+            Kwargs that are passed to the function when calling it.
+
+        Returns
+        -------
+        dict
+            A dict structure representing a step in the pipeline.
+        """
         assert self.get_function_from_name(func_name)
         new_step = {'function': func_name}
         if args:
@@ -204,20 +219,47 @@ class AssemblyPipeline():
                 k: jsonify_arg_input(v) for (k, v) in kwargs.items()}
         return new_step
 
-    def get_function_parameters(self, func_dict):
-        """Retrieve a function name and arguments from function dictionary."""
+    @staticmethod
+    def get_function_parameters(func_dict):
+        """Retrieve a function name and arguments from function dictionary.
+
+        Parameters
+        ----------
+        func_dict : dict
+            A dict structure representing a function and its args and kwargs.
+
+        Returns
+        -------
+        tuple of str, list and dict
+            A tuple with the following elements: the name of the function,
+            the args of the function, and the kwargs of the function.
+        """
         func_name = func_dict['function']
         args = func_dict.get('args', [])
         kwargs = func_dict.get('kwargs', {})
         return func_name, args, kwargs
 
-    def get_function_from_name(self, name):
-        """Return a function object by name if available or raise exception."""
+    @staticmethod
+    def get_function_from_name(name):
+        """Return a function object by name if available or raise exception.
+
+        Parameters
+        ----------
+        name : str
+            The name of the function.
+
+        Returns
+        -------
+        function
+            The function that was found based on its name. If not found,
+            a NotRegisteredFunctionError is raised.
+        """
         if name in pipeline_functions:
             return pipeline_functions[name]
         raise NotRegisteredFunctionError('%s is not registered' % name)
 
-    def run_simple_function(self, func, *args, **kwargs):
+    @staticmethod
+    def run_simple_function(func, *args, **kwargs):
         """Run a simple function - simple here means a function all arguments
         of which are simple values (do not require extra function calls).
         """
@@ -251,7 +293,8 @@ class AssemblyPipeline():
                     new_kwargs[k] = v
         return self.run_simple_function(func, *new_args, **new_kwargs)
 
-    def is_function(self, argument, keyword='function'):
+    @staticmethod
+    def is_function(argument, keyword='function'):
         """Check if an argument should be converted to a specific object type,
         e.g. a function or a statement type.
         """
