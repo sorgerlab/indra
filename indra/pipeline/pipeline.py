@@ -260,8 +260,24 @@ class AssemblyPipeline():
 
     @staticmethod
     def run_simple_function(func, *args, **kwargs):
-        """Run a simple function - simple here means a function all arguments
-        of which are simple values (do not require extra function calls).
+        """Run a simple function and return the result.
+
+        Simple here means a function all arguments of which are simple values
+        (do not require extra function calls).
+
+        Parameters
+        ----------
+        func : function
+            The function to call.
+        args : args
+            Args that are passed to the function when calling it.
+        kwargs : kwargs
+            Kwargs that are passed to the function when calling it.
+
+        Returns
+        -------
+        object
+            Any value that the given function returns.
         """
         statements = kwargs.pop('statements', None)
         if statements:
@@ -269,9 +285,25 @@ class AssemblyPipeline():
         return func(*args, **kwargs)
 
     def run_function(self, func_dict, statements=None, **kwargs):
-        """Run a function. For each of the arguments, if it requires an extra
+        """Run a given function and return the results.
+
+        For each of the arguments, if it requires an extra
         function call, recursively call the functions until we get a simple
         function.
+
+        Parameters
+        ----------
+        func_dict : dict
+            A dict representing the function to call, its args and kwargs.
+        args : args
+            Args that are passed to the function when calling it.
+        kwargs : kwargs
+            Kwargs that are passed to the function when calling it.
+
+        Returns
+        -------
+        object
+            Any value that the given function returns.
         """
         func_name, func_args, func_kwargs = self.get_function_parameters(
             func_dict)
@@ -297,6 +329,15 @@ class AssemblyPipeline():
     def is_function(argument, keyword='function'):
         """Check if an argument should be converted to a specific object type,
         e.g. a function or a statement type.
+
+        Parameters
+        ----------
+        argument : dict or other object
+            The argument is a dict, its keyword entry is checked, and if it is
+            there, we return True, otherwise we return False.
+        keyword : Optional[str]
+            The keyword to check if it's there if the argument is a dict.
+            Default: function
         """
         if not isinstance(argument, dict):
             return False
