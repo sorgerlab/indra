@@ -284,7 +284,7 @@ def process_nxml_file(file_name, citation=None, offline=False,
             json_str = _read_content_offline(nxml_str, 'nxml')
     # If we are using the Arizona service, we use the old protocol
     elif url is None or url == reach_nxml_url:
-        json_str = _read_nxml_file_service_old(file_name, url=url)
+        json_str = _read_nxml_file_service_old(file_name, url=reach_nxml_url)
     # Otherwise we use the new protocol
     else:
         json_str = _read_nxml_file_service_new(file_name, url=url)
