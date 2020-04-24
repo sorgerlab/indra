@@ -14,10 +14,12 @@ from copy import deepcopy, copy
 from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.util import read_unicode_csv
+from indra.pipeline import register_pipeline
 from indra.mechlinker import MechLinker
 from indra.databases import hgnc_client
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import Preassembler, flatten_evidence
+
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +82,7 @@ def load_statements(fname, as_dict=False):
     return stmts
 
 
+@register_pipeline
 def map_grounding(stmts_in, **kwargs):
     """Map grounding using the GroundingMapper.
 
@@ -144,6 +147,7 @@ def map_grounding(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def merge_groundings(stmts_in):
     """Gather and merge original grounding information from evidences.
 
@@ -226,6 +230,7 @@ def merge_groundings(stmts_in):
     return stmts_out
 
 
+@register_pipeline
 def merge_deltas(stmts_in):
     """Gather and merge original Influence delta information from evidence.
 
@@ -297,6 +302,7 @@ def merge_deltas(stmts_in):
     return stmts_out
 
 
+@register_pipeline
 def map_sequence(stmts_in, **kwargs):
     """Map sequences using the SiteMapper.
 
@@ -356,6 +362,7 @@ def map_sequence(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def run_preassembly(stmts_in, **kwargs):
     """Run preassembly on a list of statements.
 
@@ -420,7 +427,6 @@ def run_preassembly(stmts_in, **kwargs):
     matches_fun = kwargs.get('matches_fun')
     refinement_fun = kwargs.get('refinement_fun')
     use_hierarchies = kwargs.get('hierarchies', hierarchies)
-
     be = BeliefEngine(scorer=belief_scorer, matches_fun=matches_fun)
     pa = Preassembler(use_hierarchies, stmts_in, matches_fun=matches_fun,
                       refinement_fun=refinement_fun)
@@ -447,6 +453,7 @@ def run_preassembly(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
     """Run deduplication stage of preassembly on a list of statements.
 
@@ -475,6 +482,7 @@ def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def run_preassembly_related(preassembler, beliefengine, **kwargs):
     """Run related stage of preassembly on a list of statements.
 
@@ -548,6 +556,7 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_by_type(stmts_in, stmt_type, **kwargs):
     """Filter to a given statement type.
 
@@ -655,6 +664,7 @@ def _any_bound_condition_fails_criterion(agent, criterion):
     return False
 
 
+@register_pipeline
 def filter_grounded_only(stmts_in, **kwargs):
     """Filter to statements that have grounded agents.
 
@@ -735,6 +745,7 @@ def _agent_is_gene(agent, specific_only):
     return True
 
 
+@register_pipeline
 def filter_genes_only(stmts_in, **kwargs):
     """Filter to statements containing genes only.
 
@@ -788,6 +799,7 @@ def filter_genes_only(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_belief(stmts_in, belief_cutoff, **kwargs):
     """Filter to statements with belief above a given cutoff.
 
@@ -832,6 +844,7 @@ def filter_belief(stmts_in, belief_cutoff, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
                      **kwargs):
     """Return statements that contain genes given in a list.
@@ -942,6 +955,7 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
     return stmts_out
 
 
+@register_pipeline
 def filter_concept_names(stmts_in, name_list, policy, **kwargs):
     """Return Statements that refer to concepts/agents given as a list of names.
 
@@ -1011,6 +1025,7 @@ def filter_concept_names(stmts_in, name_list, policy, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_by_db_refs(stmts_in, namespace, values, policy, **kwargs):
     """Filter to Statements whose agents are grounded to a matching entry.
 
@@ -1091,6 +1106,7 @@ def filter_by_db_refs(stmts_in, namespace, values, policy, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_human_only(stmts_in, **kwargs):
     """Filter out statements that are grounded, but not to a human gene.
 
@@ -1149,6 +1165,7 @@ def filter_human_only(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_direct(stmts_in, **kwargs):
     """Filter to statements that are direct interactions
 
@@ -1196,6 +1213,7 @@ def filter_direct(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_no_hypothesis(stmts_in, **kwargs):
     """Filter to statements that are not marked as hypothesis in epistemics.
 
@@ -1231,6 +1249,7 @@ def filter_no_hypothesis(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_no_negated(stmts_in, **kwargs):
     """Filter to statements that are not marked as negated in epistemics.
 
@@ -1266,6 +1285,7 @@ def filter_no_negated(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_evidence_source(stmts_in, source_apis, policy='one', **kwargs):
     """Filter to statements that have evidence from a given set of sources.
 
@@ -1310,6 +1330,7 @@ def filter_evidence_source(stmts_in, source_apis, policy='one', **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_top_level(stmts_in, **kwargs):
     """Filter to statements that are at the top-level of the hierarchy.
 
@@ -1336,6 +1357,7 @@ def filter_top_level(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_inconsequential_mods(stmts_in, whitelist=None, **kwargs):
     """Filter out Modifications that modify inconsequential sites
 
@@ -1400,6 +1422,7 @@ def filter_inconsequential_mods(stmts_in, whitelist=None, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_inconsequential_acts(stmts_in, whitelist=None, **kwargs):
     """Filter out Activations that modify inconsequential activities
 
@@ -1458,6 +1481,7 @@ def filter_inconsequential_acts(stmts_in, whitelist=None, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def get_unreachable_mods(stmts_in):
     mods_set = {}
     for stmt in stmts_in:
@@ -1488,6 +1512,7 @@ def get_unreachable_mods(stmts_in):
     return unreachable_mods
 
 
+@register_pipeline
 def filter_mutation_status(stmts_in, mutations, deletions, **kwargs):
     """Filter statements based on existing mutations/deletions
 
@@ -1531,7 +1556,6 @@ def filter_mutation_status(stmts_in, mutations, deletions, **kwargs):
                     return False
         return True
 
-
     logger.info('Filtering %d statements for mutation status...' %
                 len(stmts_in))
     stmts_out = []
@@ -1555,6 +1579,7 @@ def filter_mutation_status(stmts_in, mutations, deletions, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_enzyme_kinase(stmts_in, **kwargs):
     """Filter Phosphorylations to ones where the enzyme is a known kinase.
 
@@ -1591,6 +1616,7 @@ def filter_enzyme_kinase(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_mod_nokinase(stmts_in, **kwargs):
     """Filter non-phospho Modifications to ones with a non-kinase enzyme.
 
@@ -1628,6 +1654,7 @@ def filter_mod_nokinase(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_transcription_factor(stmts_in, **kwargs):
     """Filter out RegulateAmounts where subject is not a transcription factor.
 
@@ -1664,6 +1691,7 @@ def filter_transcription_factor(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_uuid_list(stmts_in, uuids, **kwargs):
     """Filter to Statements corresponding to given UUIDs
 
@@ -1703,6 +1731,7 @@ def filter_uuid_list(stmts_in, uuids, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def filter_by_curation(stmts_in, curations, incorrect_policy='any',
                        correct_tags=None, update_belief=True):
     """Filter out statements and update beliefs based on curations.
@@ -1774,6 +1803,7 @@ def filter_by_curation(stmts_in, curations, incorrect_policy='any',
     return stmts_out
 
 
+@register_pipeline
 def expand_families(stmts_in, **kwargs):
     """Expand FamPlex Agents to individual genes.
 
@@ -1800,6 +1830,7 @@ def expand_families(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def reduce_activities(stmts_in, **kwargs):
     """Reduce the activity types in a list of statements
 
@@ -1827,6 +1858,7 @@ def reduce_activities(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def strip_agent_context(stmts_in, **kwargs):
     """Strip any context on agents within each statement.
 
@@ -1861,6 +1893,7 @@ def strip_agent_context(stmts_in, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def standardize_names_groundings(stmts):
     """Standardize the names of Concepts with respect to an ontology.
 
@@ -1900,6 +1933,7 @@ def dump_stmt_strings(stmts, fname):
             fh.write(('%s\n' % st).encode('utf-8'))
 
 
+@register_pipeline
 def rename_db_ref(stmts_in, ns_from, ns_to, **kwargs):
     """Rename an entry in the db_refs of each Agent.
 
@@ -1936,6 +1970,7 @@ def rename_db_ref(stmts_in, ns_from, ns_to, **kwargs):
     return stmts_out
 
 
+@register_pipeline
 def align_statements(stmts1, stmts2, keyfun=None):
     """Return alignment of two lists of statements by key.
 

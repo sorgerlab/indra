@@ -5,6 +5,7 @@ from functools import lru_cache
 
 
 from indra.preassembler.make_entity_hierarchy import ns_map
+from indra.pipeline import register_pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -640,6 +641,7 @@ class YamlHierarchyManager(HierarchyManager):
         self.load_from_rdf_graph(G)
 
 
+@register_pipeline
 def get_bio_hierarchies(from_pickle=True):
     """Return default hierarchies for the Bio context.
 
@@ -702,6 +704,7 @@ def get_bio_hierarchies(from_pickle=True):
 hierarchies = get_bio_hierarchies()
 
 
+@register_pipeline
 def get_wm_hierarchies():
     """Return default hierarchy managers for the World Modeling context.
 
