@@ -15,7 +15,7 @@ class AssemblyPipeline():
     statements.
 
     Ways to initialize and run the pipeline (examples assume you have a list
-    of INDRA Statements stored in `stmts` variable.)
+    of INDRA Statements stored in the `stmts` variable.)
 
     >>> from indra.statements import *
     >>> map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
@@ -24,11 +24,11 @@ class AssemblyPipeline():
     >>> stmts = [Phosphorylation(map2k1, mapk1, 'T', '185'),
     ...          Phosphorylation(braf, map2k1)]
 
-    1) Provide a JSON file containing the steps and use a classmethod
-    `from_json_file` and run it with `run` method on a list of statements.
-    This option allows to store pipeline versions and reproduce the same
-    results. All functions referenced in JSON file have to be registered with
-    @register_pipeline decorator.
+    1) Provide a JSON file containing the steps, then use the classmethod
+    `from_json_file`, and run it with the `run` method on a list of statements.
+    This option allows storing pipeline versions in a separate file and
+    reproducing the same results. All functions referenced in the JSON file
+    have to be registered with the @register_pipeline decorator.
 
     >>> import os
     >>> path_this = os.path.dirname(os.path.abspath(__file__))
@@ -37,9 +37,9 @@ class AssemblyPipeline():
     >>> ap = AssemblyPipeline.from_json_file(filename)
     >>> assembled_stmts = ap.run(stmts)
 
-    2) Initialize a pipeline with a list of steps and run it with `run` method
-    on a list of statements.All functions referenced in steps have to be
-    registered with @register_pipeline decorator.
+    2) Initialize a pipeline with a list of steps and run it with the `run`
+    method on a list of statements. All functions referenced in steps have to
+    be registered with the @register_pipeline decorator.
 
     >>> steps = [
     ...    {"function": "filter_no_hypothesis"},
@@ -51,9 +51,9 @@ class AssemblyPipeline():
 
     3) Initialize an empty pipeline and append/insert the steps one by one.
     Provide a function and its args and kwargs. For arguments that
-    require calling a different function, use RunnableArgument class. All
+    require calling a different function, use the RunnableArgument class. All
     functions referenced here have to be either imported and passed as function
-    objects or registered with @register_pipeline decorator and passed as
+    objects or registered with the @register_pipeline decorator and passed as
     function names (strings). The pipeline built this way can be optionally
     saved into a JSON file.
 
@@ -76,7 +76,7 @@ class AssemblyPipeline():
         should have a 'function' key and, if appropriate, 'args' and 'kwargs'
         keys. Arguments can be simple values (strings, integers, booleans,
         lists, etc.) or can be functions themselves. In case an argument is a
-        function or a result of another function, it should be also
+        function or a result of another function, it should also be
         represented as a dictionary of a similar structure. If a function
         itself is an argument (and not its result), the dictionary should
         contain a key-value pair {'no_run': True}. If an argument is a type
@@ -95,7 +95,8 @@ class AssemblyPipeline():
 
     @classmethod
     def from_json_file(cls, filename):
-        """Create an instance of AssemblyPipeline from a JSON file with steps."""
+        """Create an instance of AssemblyPipeline from a JSON file with
+        steps."""
         with open(filename, 'r') as f:
             steps = json.load(f)
         ap = AssemblyPipeline(steps)
@@ -107,17 +108,27 @@ class AssemblyPipeline():
             json.dump(self.steps, f, indent=1)
 
     def run(self, statements, **kwargs):
-        """
-        Run all steps of the pipeline.
+        """Run all steps of the pipeline.
 
-        It is recommended to define all arguments for the steps functions in
-        the steps definition, but it is also possible to provide some external
-        objects (if it is not possible to provide them as a step argument)
-        as kwargs to the entire pipeline here. One should be cautious
-        to avoid kwargs name clashes between multiple functions (this value
-        will be provided to all functions that expect an argument with the
-        same name). To overwrite this value in other functions, provide it
-        explicitly in corresponding steps kwargs.
+        Parameters
+        ----------
+        statements : list[indra.statements.Statement]
+            A list of INDRA Statements to run the pipeline on.
+        **kwargs : kwargs
+            It is recommended to define all arguments for the steps functions
+            in the steps definition, but it is also possible to provide some
+            external objects (if it is not possible to provide them as a step
+            argument) as kwargs to the entire pipeline here. One should be
+            cautious to avoid kwargs name clashes between multiple functions
+            (this value will be provided to all functions that expect an
+            argument with the same name). To overwrite this value in other
+            functions, provide it explicitly in the corresponding steps kwargs.
+
+        Returns
+        -------
+        list[indra.statements.Statement]
+            The list of INDRA Statements resulting from running the pipeline
+            on the list of input Statements.
         """
         logger.info('Running the pipeline')
         for step in self.steps:
@@ -132,6 +143,15 @@ class AssemblyPipeline():
         registered with @register_pipeline decorator and passed as function
         names (strings). For arguments that require calling a different
         function, use RunnableArgument class.
+
+        Parameters
+        ----------
+        func : str or function
+            A function or the string name of a function to add to the pipeline.
+        args : args
+            Args that are passed to func when calling it.
+        kwargs : kwargs
+            Kwargs that are passed to func when calling it.
         """
         if isinstance(func, types.FunctionType):
             func_name = func.__name__
@@ -152,6 +172,15 @@ class AssemblyPipeline():
         registered with @register_pipeline decorator and passed as function
         names (strings). For arguments that require calling a different
         function, use RunnableArgument class.
+
+        Parameters
+        ----------
+        func : str or function
+            A function or the string name of a function to add to the pipeline.
+        args : args
+            Args that are passed to func when calling it.
+        kwargs : kwargs
+            Kwargs that are passed to func when calling it.
         """
         if isinstance(func, types.FunctionType):
             func_name = func.__name__
@@ -205,7 +234,7 @@ class AssemblyPipeline():
         func_name, func_args, func_kwargs = self.get_function_parameters(
             func_dict)
         func = self.get_function_from_name(func_name)
-        logger.info('%s is called' % func_name)
+        logger.info('Calling %s' % func_name)
         new_args = []
         new_kwargs = {}
         for arg in func_args:
