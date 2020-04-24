@@ -15,5 +15,6 @@ INDRA modules reference
    mechlinker/index
    assemblers/index
    explanation/index
+   pipeline
    tools/index
    util/index
