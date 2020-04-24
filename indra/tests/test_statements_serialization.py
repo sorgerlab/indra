@@ -377,3 +377,10 @@ def test_file_serialization():
     stmts_to_json_file([stmt], 'test_indra_stmts.json')
     stmts = stmts_from_json_file('test_indra_stmts.json')
     assert stmts[0].matches(stmt)
+
+
+def test_file_serialization_json_lines():
+    stmt = IncreaseAmount(Agent('a'), Agent('b'), evidence=[ev])
+    stmts_to_json_file([stmt], 'test_indra_stmts.json', format='jsonl')
+    stmts = stmts_from_json_file('test_indra_stmts.json', format='jsonl')
+    assert stmts[0].matches(stmt)
