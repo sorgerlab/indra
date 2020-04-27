@@ -1,4 +1,4 @@
-__all__ = ['process_annotations']
+__all__ = ['process_annotations', 'get_annotations']
 
 import requests
 from indra.config import get_config
@@ -35,6 +35,27 @@ def send_request(endpoint, **params):
     return res.json()
 
 
+def get_annotations(group=None):
+    """Return annotations in hypothes.is in a given group.
+
+    Parameters
+    ----------
+    group : Optional[str]
+        The hypothesi.is key of the group (not its name). If not given, the
+        HYPOTHESIS_GROUP configuration in the config file or an environmental
+        variable is used.
+    """
+    if group is None:
+        if indra_group:
+            group = indra_group
+        else:
+            raise ValueError('No group provided and HYPOTHESIS_GROUP '
+                             'is not set.')
+    res = send_request('search', group=group, limit=200)
+    annotations = res.get('rows', [])
+    return annotations
+
+
 def process_annotations(group=None, reader=None, grounder=None):
     """Process annotations in hypothes.is in a given group.
 
@@ -64,14 +85,7 @@ def process_annotations(group=None, reader=None, grounder=None):
         INDRA Statements in its statements attribute, and a list of extracted
         grounding curations in its groundings attribute.
     """
-    if group is None:
-        if indra_group:
-            group = indra_group
-        else:
-            raise ValueError('No group provided and HYPOTHESIS_GROUP '
-                             'is not set.')
-    res = send_request('search', group=group)
-    annotations = res.get('rows', [])
+    annotations = get_annotations(group=group)
     hp = HypothesisProcessor(annotations, reader=reader, grounder=grounder)
     hp.extract_statements()
     hp.extract_groundings()
