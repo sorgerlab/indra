@@ -191,6 +191,9 @@ def get_text_refs(url):
                      url)
     if match:
         text_refs['PMCID'] = match.groups()[0]
+    match = re.match(r'https://www.biorxiv.org/content/([^v]+)v', url)
+    if match:
+        text_refs['DOI'] = match.groups()[0]
     return text_refs
 
 

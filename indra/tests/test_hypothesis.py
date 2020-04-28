@@ -52,6 +52,17 @@ def test_get_text_refs_pmcid():
     assert refs.get('URL') == url, refs
 
 
+def test_get_text_refs_biorxiv():
+    url = 'https://www.biorxiv.org/content/10.1101/2020.04.16.044016v1'
+    refs = get_text_refs(url)
+    assert refs.get('URL') == url, refs
+    assert refs.get('DOI') == '10.1101/2020.04.16.044016', refs
+    url = 'https://www.biorxiv.org/content/10.1101/2020.04.16.044016v1.full'
+    refs = get_text_refs(url)
+    assert refs.get('URL') == url, refs
+    assert refs.get('DOI') == '10.1101/2020.04.16.044016', refs
+
+
 def test_parse_grounding_entry():
     entry = '[a and b] -> CHEBI:CHEBI:1234|PUBCHEM:5678'
     grounding = parse_grounding_entry(entry)
