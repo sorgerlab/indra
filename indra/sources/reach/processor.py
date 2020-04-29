@@ -329,6 +329,41 @@ class ReachProcessor(object):
                                evidence=ev)
             self.statements.append(st)
 
+    def get_conversion(self):
+        qstr = "$.events.frames[@.type is 'conversion']"
+        res = self.tree.execute(qstr)
+        if res is None:
+            return
+        for r in res:
+            epistemics = self._get_epistemics(r)
+            if epistemics.get('negated'):
+                continue
+            sentence = r['verbose-text']
+            annotations, context = self._get_annot_context(r)
+            ev = Evidence(source_api='reach', text=sentence,
+                          pmid=self.citation, annotations=annotations,
+                          context=context, epistemics=epistemics)
+            args = r['arguments']
+            controller_agent = substrate_agent = product_agent = None
+            for a in args:
+                if self._get_arg_type(a) == 'controller':
+                    controller_agent, controller_coords = \
+                        self._get_controller_agent(a)
+                if self._get_arg_type(a) == 'substrate':
+                    substrate_agent, substrate_coords = \
+                        self._get_agent_from_entity(a['arg'])
+                if self._get_arg_type(a) == 'product':
+                    product_agent, product_coords = \
+                        self._get_agent_from_entity(a['arg'])
+            if not all({controller_agent, substrate_agent, product_agent}):
+                continue
+            annotations['agents']['coords'] = [controller_coords,
+                                               substrate_coords,
+                                               product_coords]
+            st = Conversion(controller_agent, [substrate_agent],
+                            [product_agent], evidence=[ev])
+            self.statements.append(st)
+
     def _get_location_by_id(self, loc_id):
         qstr = "$.entities.frames[(@.frame_id is \'%s\')]" % loc_id
         res = self.tree.execute(qstr)

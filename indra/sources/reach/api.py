@@ -361,6 +361,7 @@ def process_json_str(json_str, citation=None):
     rp.get_activation()
     rp.get_translocation()
     rp.get_regulate_amounts()
+    rp.get_conversion()
     return rp
 
 
