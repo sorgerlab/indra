@@ -27,6 +27,7 @@ class EnglishAssembler(object):
         else:
             self.statements = stmts
         self.model = None
+        sb.coords = []
 
     def add_statements(self, stmts):
         """Add INDRA Statements to the assembler's list of statements.
@@ -52,31 +53,33 @@ class EnglishAssembler(object):
         stmt_strs = []
         for stmt in self.statements:
             if isinstance(stmt, ist.Modification):
-                stmt_strs.append(_assemble_modification(stmt))
+                sb = _assemble_modification(stmt)
             elif isinstance(stmt, ist.Autophosphorylation):
-                stmt_strs.append(_assemble_autophosphorylation(stmt))
+                sb = _assemble_autophosphorylation(stmt)
             elif isinstance(stmt, ist.Association):
-                stmt_strs.append(_assemble_association(stmt))
+                sb = _assemble_association(stmt)
             elif isinstance(stmt, ist.Complex):
-                stmt_strs.append(_assemble_complex(stmt))
+                sb = _assemble_complex(stmt)
             elif isinstance(stmt, ist.Influence):
-                stmt_strs.append(_assemble_influence(stmt))
+                sb = _assemble_influence(stmt)
             elif isinstance(stmt, ist.RegulateActivity):
-                stmt_strs.append(_assemble_regulate_activity(stmt))
+                sb = _assemble_regulate_activity(stmt)
             elif isinstance(stmt, ist.RegulateAmount):
-                stmt_strs.append(_assemble_regulate_amount(stmt))
+                sb = _assemble_regulate_amount(stmt)
             elif isinstance(stmt, ist.ActiveForm):
-                stmt_strs.append(_assemble_activeform(stmt))
+                sb = _assemble_activeform(stmt)
             elif isinstance(stmt, ist.Translocation):
-                stmt_strs.append(_assemble_translocation(stmt))
+                sb = _assemble_translocation(stmt)
             elif isinstance(stmt, ist.Gef):
-                stmt_strs.append(_assemble_gef(stmt))
+                sb = _assemble_gef(stmt)
             elif isinstance(stmt, ist.Gap):
-                stmt_strs.append(_assemble_gap(stmt))
+                sb = _assemble_gap(stmt)
             elif isinstance(stmt, ist.Conversion):
-                stmt_strs.append(_assemble_conversion(stmt))
+                sb = _assemble_conversion(stmt)
             else:
                 logger.warning('Unhandled statement type: %s.' % type(stmt))
+            stmt_strs.append(sb.sentence)
+            self.coords.append(sb.coords)
         if stmt_strs:
             return ' '.join(stmt_strs)
         else:
