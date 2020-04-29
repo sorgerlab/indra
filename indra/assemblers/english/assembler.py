@@ -83,6 +83,68 @@ class EnglishAssembler(object):
             return ''
 
 
+class AgentWithCoordinates():
+    def __init__(self, agent_str, name, coords=None):
+        self.agent_str = agent_str
+        self.name = name
+        self.coords = coords if coords else (
+            agent_str.find(name), agent_str.find(name) + len(name))
+
+    def update_coords(self, shift_by):
+        current_coords = self.coords
+        self.coords = (current_coords[0] + shift_by,
+                       current_coords[1] + shift_by)
+
+
+class SentenceBuilder():
+    def __init__(self):
+        self.elements = []
+        self.sentence = ''
+
+    def append(self, element):
+        if isinstance(element, str):
+            self.sentence += element
+        elif isinstance(element, AgentWithCoordinates):
+            element.update_coords(len(self.sentence))
+            self.sentence += element.agent_str
+        self.elements.append(element)
+
+    def prepend(self, element):
+        current_sentence = self.sentence
+        if isinstance(element, str):
+            self.sentence = element + current_sentence
+        elif isinstance(element, AgentWithCoordinates):
+            self.sentence = element.agent_str + current_sentence
+            for el in self.elements:
+                if isinstance(el, AgentWithCoordinates):
+                    el.update_coords(len(element.agent_str))
+        self.elements.insert(0, element)
+
+    def append_as_list(self, lst, oxford=True):
+        """Join a list of words in a gramatically correct way."""
+        if len(lst) > 2:
+            for el in lst[:-1]:
+                self.append(el)
+                self.append(', ')
+            if oxford:
+                self.append(',')
+            self.append(' and ')
+            self.append(lst[-1])
+        elif len(lst) == 2:
+            self.append(lst[0])
+            self.append(' and ')
+            self.append(lst[1])
+        elif len(lst) == 1:
+            self.append(lst[0])
+
+    def append_as_sentence(self, lst):
+        for el in lst:
+            self.append(el)
+
+    def make_sentence(self):
+        self.sentence = _make_sentence(self.sentence)
+
+
 def _assemble_agent_str(agent):
     """Assemble an Agent object to text."""
     agent_str = agent.name
