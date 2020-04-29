@@ -230,7 +230,7 @@ def test_bind():
         assert unicode_strs(rp.statements)
 
 
-def test_be_grounding():
+def test_fplx_grounding():
     for offline in offline_modes:
         rp = reach.process_text('MEK activates ERK.', offline=offline)
         assert rp is not None
@@ -240,6 +240,19 @@ def test_be_grounding():
             st = rp.statements[0]
             assert st.subj.db_refs.get('FPLX') == 'MEK'
             assert st.obj.db_refs.get('FPLX') == 'ERK'
+
+
+def test_conversions():
+    here = os.path.dirname(os.path.abspath(__file__))
+    test_file = os.path.join(here, 'reach_conversion.json')
+    rp = reach.process_json_file(test_file)
+    assert rp is not None
+    assert len(rp.statements) == 1
+    stmt = rp.statements[0]
+    assert stmt.subj.name == 'ACE'
+    assert len(stmt.obj_from) == 1
+    assert stmt.obj_from[0].name == 'angiotensin-I'
+    assert stmt.obj_to[0].name == 'angiotensin-II'
 
 
 def test_activity():
