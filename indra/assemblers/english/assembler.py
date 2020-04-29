@@ -151,7 +151,7 @@ def _assemble_agent_str(agent):
 
     # Only do the more detailed assembly for molecular agents
     if not isinstance(agent, ist.Agent):
-        return agent_str
+        return AgentWithCoordinates(agent_str, agent.name)
 
     # Handle mutation conditions
     if agent.mutations:
@@ -179,7 +179,7 @@ def _assemble_agent_str(agent):
         agent_str += ' in the ' + agent.location
 
     if not agent.mods and not agent.bound_conditions and not agent.activity:
-        return agent_str
+        return AgentWithCoordinates(agent_str, agent.name)
 
     # Handle bound conditions
     bound_to = [bc.agent.name for bc in
@@ -241,7 +241,7 @@ def _assemble_agent_str(agent):
             prefix = pre_prefix + 'inactive'
         agent_str = prefix + ' ' + agent_str
 
-    return agent_str
+    return AgentWithCoordinates(agent_str, agent.name)
 
 
 def english_join(lst):
@@ -280,79 +280,95 @@ def _join_list(lst, oxford=True):
 def _assemble_activeform(stmt):
     """Assemble ActiveForm statements into text."""
     subj_str = _assemble_agent_str(stmt.agent)
+    sb = SentenceBuilder()
+    sb.append(subj_str)
     if stmt.is_active:
         is_active_str = 'active'
     else:
         is_active_str = 'inactive'
     if stmt.activity == 'activity':
-        stmt_str = subj_str + ' is ' + is_active_str
+        sb.append(' is ')
     elif stmt.activity == 'kinase':
-        stmt_str = subj_str + ' is kinase-' + is_active_str
+        sb.append(' is kinase-')
     elif stmt.activity == 'phosphatase':
-        stmt_str = subj_str + ' is phosphatase-' + is_active_str
+        sb.append(' is phosphatase-')
     elif stmt.activity == 'catalytic':
-        stmt_str = subj_str + ' is catalytically ' + is_active_str
+        sb.append(' is catalytically ')
     elif stmt.activity == 'transcription':
-        stmt_str = subj_str + ' is transcriptionally ' + is_active_str
+        sb.append(' is transcriptionally ')
     elif stmt.activity == 'gtpbound':
-        stmt_str = subj_str + ' is GTP-bound ' + is_active_str
-    return _make_sentence(stmt_str)
+        sb.append(' is GTP-bound ')
+    sb.append(is_active_str)
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_modification(stmt):
     """Assemble Modification statements into text."""
     sub_str = _assemble_agent_str(stmt.sub)
+    sb = SentenceBuilder()
     if stmt.enz is not None:
         enz_str = _assemble_agent_str(stmt.enz)
         if _get_is_direct(stmt):
             mod_str = ' ' + _mod_process_verb(stmt) + ' '
         else:
             mod_str = ' leads to the ' + _mod_process_noun(stmt) + ' of '
-        stmt_str = enz_str + mod_str + sub_str
+        sb.append_as_sentence([enz_str, mod_str, sub_str])
     else:
-        stmt_str = sub_str + ' is ' + _mod_state_stmt(stmt)
+        sb.append_as_sentence([sub_str, ' is ', _mod_state_stmt(stmt)])
 
     if stmt.residue is not None:
         if stmt.position is None:
-            mod_str = 'on ' + ist.amino_acids[stmt.residue]['full_name']
+            mod_str = ' on ' + ist.amino_acids[stmt.residue]['full_name']
         else:
-            mod_str = 'on ' + stmt.residue + stmt.position
+            mod_str = ' on ' + stmt.residue + stmt.position
     elif stmt.position is not None:
-        mod_str = 'at position %s' % stmt.position
+        mod_str = ' at position %s' % stmt.position
     else:
         mod_str = ''
-    stmt_str += ' ' + mod_str
-    return _make_sentence(stmt_str)
+    sb.append(mod_str)
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_association(stmt):
     """Assemble Association statements into text."""
     member_strs = [_assemble_agent_str(m.concept) for m in stmt.members]
-    stmt_str = member_strs[0] + ' is associated with ' + \
-        _join_list(member_strs[1:])
-    return _make_sentence(stmt_str)
+    sb = SentenceBuilder()
+    sb.append(member_strs[0])
+    sb.append(' is associated with ')
+    sb.append_list(member_strs[1:])
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_complex(stmt):
     """Assemble Complex statements into text."""
     member_strs = [_assemble_agent_str(m) for m in stmt.members]
-    stmt_str = member_strs[0] + ' binds ' + _join_list(member_strs[1:])
-    return _make_sentence(stmt_str)
+    sb = SentenceBuilder()
+    sb.append(member_strs[0])
+    sb.append(' binds ')
+    sb.append_list(member_strs[1:])
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_autophosphorylation(stmt):
     """Assemble Autophosphorylation statements into text."""
     enz_str = _assemble_agent_str(stmt.enz)
-    stmt_str = enz_str + ' phosphorylates itself'
+    sb = SentenceBuilder()
+    sb.append(enz_str)
+    sb.append(' phosphorylates itself')
     if stmt.residue is not None:
         if stmt.position is None:
-            mod_str = 'on ' + ist.amino_acids[stmt.residue]['full_name']
+            mod_str = ' on ' + ist.amino_acids[stmt.residue]['full_name']
         else:
-            mod_str = 'on ' + stmt.residue + stmt.position
+            mod_str = ' on ' + stmt.residue + stmt.position
     else:
         mod_str = ''
-    stmt_str += ' ' + mod_str
-    return _make_sentence(stmt_str)
+    sb.append(mod_str)
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_regulate_activity(stmt):
@@ -363,67 +379,84 @@ def _assemble_regulate_activity(stmt):
         rel_str = ' activates '
     else:
         rel_str = ' inhibits '
-    stmt_str = subj_str + rel_str + obj_str
+    sb = SentenceBuilder()
+    sb.append_as_sentence([subj_str, rel_str, obj_str])
+    sb.make_sentence()
     return _make_sentence(stmt_str)
 
 
 def _assemble_regulate_amount(stmt):
     """Assemble RegulateAmount statements into text."""
     obj_str = _assemble_agent_str(stmt.obj)
+    sb = SentenceBuilder()
     if stmt.subj is not None:
         subj_str = _assemble_agent_str(stmt.subj)
         if isinstance(stmt, ist.IncreaseAmount):
             rel_str = ' increases the amount of '
         elif isinstance(stmt, ist.DecreaseAmount):
             rel_str = ' decreases the amount of '
-        stmt_str = subj_str + rel_str + obj_str
+        sb.append_as_sentence([subj_str, rel_str, obj_str])
     else:
+        sb.append(obj_str)
         if isinstance(stmt, ist.IncreaseAmount):
-            stmt_str = obj_str + ' is produced'
+            sb.append(' is produced')
         elif isinstance(stmt, ist.DecreaseAmount):
-            stmt_str = obj_str + ' is degraded'
-    return _make_sentence(stmt_str)
+            sb.append(' is degraded')
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_translocation(stmt):
     """Assemble Translocation statements into text."""
     agent_str = _assemble_agent_str(stmt.agent)
-    stmt_str = agent_str + ' translocates'
+    sb = SentenceBuilder()
+    sb.append_as_sentence([agent_str, ' translocates'])
     if stmt.from_location is not None:
-        stmt_str += ' from the ' + stmt.from_location
+        sb.append_as_sentence([' from the ', stmt.from_location])
     if stmt.to_location is not None:
-        stmt_str += ' to the ' + stmt.to_location
-    return _make_sentence(stmt_str)
+        sb.append_as_sentence([' to the ', stmt.to_location])
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_gap(stmt):
     """Assemble Gap statements into text."""
     subj_str = _assemble_agent_str(stmt.gap)
     obj_str = _assemble_agent_str(stmt.ras)
-    stmt_str = subj_str + ' is a GAP for ' + obj_str
-    return _make_sentence(stmt_str)
+    sb = SentenceBuilder()
+    sb.append_as_sentence([subj_str, ' is a GAP for ', obj_str])
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_gef(stmt):
     """Assemble Gef statements into text."""
     subj_str = _assemble_agent_str(stmt.gef)
     obj_str = _assemble_agent_str(stmt.ras)
-    stmt_str = subj_str + ' is a GEF for ' + obj_str
-    return _make_sentence(stmt_str)
+    sb = SentenceBuilder()
+    sb.append_as_sentence([subj_str, ' is a GEF for ', obj_str])
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_conversion(stmt):
     """Assemble a Conversion statement into text."""
-    reactants = _join_list([_assemble_agent_str(r) for r in stmt.obj_from])
-    products = _join_list([_assemble_agent_str(r) for r in stmt.obj_to])
-
+    reactants = [_assemble_agent_str(r) for r in stmt.obj_from]
+    products = [_assemble_agent_str(r) for r in stmt.obj_to]
+    sb = SentenceBuilder()
     if stmt.subj is not None:
         subj_str = _assemble_agent_str(stmt.subj)
-        stmt_str = '%s catalyzes the conversion of %s into %s' % \
-            (subj_str, reactants, products)
+        sb.append(subj_str)
+        sb.append(' catalyzes the conversion of ')
+        sb.append_as_list(reactants)
+        sb.append(' into ')
+        sb.append_as_list(products)
     else:
-        stmt_str = '%s is converted into %s' % (reactants, products)
-    return _make_sentence(stmt_str)
+        sb.append_as_list(reactants)
+        sb.append(' is converted into ')
+        sb.append_as_list(products)
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_influence(stmt):
@@ -431,19 +464,26 @@ def _assemble_influence(stmt):
     subj_str = _assemble_agent_str(stmt.subj.concept)
     obj_str = _assemble_agent_str(stmt.obj.concept)
 
+    sb = SentenceBuilder()
     # Note that n is prepended to increase to make it "an increase"
     if stmt.subj.delta.polarity is not None:
         subj_delta_str = ' decrease' if stmt.subj.delta.polarity == -1 \
             else 'n increase'
-        subj_str = 'a%s in %s' % (subj_delta_str, subj_str)
+        sb.append_as_sentence(['a', subj_delta_str, ' in ', subj_str])
+    else:
+        sb.append(subj_str)
+
+    sb.append(' causes ')
 
     if stmt.obj.delta.polarity is not None:
         obj_delta_str = ' decrease' if stmt.obj.delta.polarity == -1 \
             else 'n increase'
-        obj_str = 'a%s in %s' % (obj_delta_str, obj_str)
+        sb.append_as_sentence(['a', obj_delta_str, ' in ', obj_str])
+    else:
+        sb.append(obj_str)
 
-    stmt_str = '%s causes %s' % (subj_str, obj_str)
-    return _make_sentence(stmt_str)
+    sb.make_sentence()
+    return sb
 
 
 def _make_sentence(txt):
