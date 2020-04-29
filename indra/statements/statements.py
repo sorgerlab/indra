@@ -513,6 +513,14 @@ class Statement(object):
         if not stmt_id:
             stmt_id = '%s' % uuid.uuid4()
         stmt.uuid = stmt_id
+        json_matches_hash = json_dict.get('matches_hash')
+        if json_matches_hash:
+            # This code is so central that we need to handle the corner case
+            # that a non-int string hash is there without erroring
+            try:
+                stmt._shallow_hash = int(json_matches_hash)
+            except ValueError:
+                pass
         return stmt
 
     def to_graph(self):
