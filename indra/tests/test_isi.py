@@ -29,6 +29,8 @@ def test_process_complex():
     assert ev.text == 'Ras binds to Raf.'
     assert ev.annotations['interaction'] == ['binds', None, 'Ras', 'Raf']
     assert ev.annotations['source_id'] is not None
+    ip.retain_molecular_complexes()
+    assert ip.statements
 
 
 def test_process_phosphorylation():
@@ -57,3 +59,6 @@ def test_process_phosphorylation():
     assert ev.text == 'Ras phosphorylates Raf.'
     assert ev.annotations['interaction'] == ['phosphorylates', 'Ras', 'Raf']
     assert ev.annotations['source_id'] is not None
+
+    ip.retain_molecular_complexes()
+    assert not ip.statements

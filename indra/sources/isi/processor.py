@@ -151,6 +151,20 @@ class IsiProcessor(object):
         """
         return ist.Agent(agent_str, db_refs={'TEXT': agent_str})
 
+    def retain_molecular_complexes(self):
+        """Filter the statements to Complexes between molecular entities."""
+        self.statements = [s for s in self.statements
+                           if isinstance(s, ist.Complex) and
+                           all(is_molecular(m) for m in s.members)]
+
+
+def is_molecular(agent):
+    if agent is None:
+        return False
+    db, id = agent.get_grounding()
+    return (db is not None and db in {'HGNC', 'UP', 'CHEBI', 'PUBCHEM',
+                                      'UPPRO', 'FPLX'})
+
 
 # Load the mapping between ISI verb and INDRA statement type
 def _build_verb_statement_mapping():

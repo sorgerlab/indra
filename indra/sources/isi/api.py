@@ -41,6 +41,9 @@ def process_text(text, pmid=None, **kwargs):
         and output are removed. Default: True
     add_grounding : Optional[bool]
         If True the extracted Statements' grounding is mapped
+    molecular_complexes_only : Optional[bool]
+        If True, only Complex statements between molecular entities are retained
+        after grounding.
 
     Returns
     -------
@@ -93,6 +96,9 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None, **kwargs):
         and output are removed. Default: True
     add_grounding : Optional[bool]
         If True the extracted Statements' grounding is mapped
+    molecular_complexes_only : Optional[bool]
+        If True, only Complex statements between molecular entities are retained
+        after grounding.
 
     Returns
     -------
@@ -221,7 +227,8 @@ def get_isi_version():
 
 
 def process_preprocessed(isi_preprocessor, num_processes=1,
-                         output_dir=None, cleanup=True, add_grounding=True):
+                         output_dir=None, cleanup=True, add_grounding=True,
+                         molecular_complexes_only=False):
     """Process a directory of abstracts and/or papers preprocessed using the
     specified IsiPreprocessor, to produce a list of extracted INDRA statements.
 
@@ -240,6 +247,9 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
         and output are removed. Default: True
     add_grounding : Optional[bool]
         If True the extracted Statements' grounding is mapped
+    molecular_complexes_only : Optional[bool]
+        If True, only Complex statements between molecular entities are retained
+        after grounding.
 
     Returns
     -------
@@ -264,7 +274,8 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
     for fname, pmid, extra_annots in isi_preprocessor.iter_outputs(output_dir):
         ip = process_json_file(fname, pmid=pmid,
                                extra_annotations=extra_annots,
-                               add_grounding=add_grounding)
+                               add_grounding=add_grounding,
+                            molecular_complexes_only=molecular_complexes_only)
         ips.append(ip)
 
     # Remove the temporary output directory
@@ -289,7 +300,7 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
 
 
 def process_output_folder(folder_path, pmids=None, extra_annotations=None,
-                          add_grounding=True):
+                          add_grounding=True, molecular_complexes_only=False):
     """Recursively extracts statements from all ISI output files in the
     given directory and subdirectories.
 
@@ -307,6 +318,9 @@ def process_output_folder(folder_path, pmids=None, extra_annotations=None,
         raw ISI output.
     add_grounding : Optional[bool]
         If True the extracted Statements' grounding is mapped
+    molecular_complexes_only : Optional[bool]
+        If True, only Complex statements between molecular entities are retained
+        after grounding.
     """
     pmids = pmids if pmids is not None else {}
     extra_annotations = extra_annotations if \
@@ -318,7 +332,8 @@ def process_output_folder(folder_path, pmids=None, extra_annotations=None,
         pmid = pmids.get(entry_key)
         extra_annotation = extra_annotations.get(entry_key)
         ip = process_json_file(entry, pmid, extra_annotation,
-                               add_grounding=add_grounding)
+                               add_grounding=add_grounding,
+                            molecular_complexes_only=molecular_complexes_only)
         ips.append(ip)
 
     if len(ips) > 1:
@@ -332,7 +347,7 @@ def process_output_folder(folder_path, pmids=None, extra_annotations=None,
 
 
 def process_json_file(file_path, pmid=None, extra_annotations=None,
-                      add_grounding=True):
+                      add_grounding=True, molecular_complexes_only=False):
     """Extracts statements from the given ISI output file.
 
     Parameters
@@ -347,6 +362,9 @@ def process_json_file(file_path, pmid=None, extra_annotations=None,
         (can be the empty dictionary)
     add_grounding : Optional[bool]
         If True the extracted Statements' grounding is mapped
+    molecular_complexes_only : Optional[bool]
+        If True, only Complex statements between molecular entities are retained
+        after grounding.
     """
     logger.info('Extracting from %s' % file_path)
     with open(file_path, 'rb') as fh:
@@ -354,4 +372,6 @@ def process_json_file(file_path, pmid=None, extra_annotations=None,
         ip = IsiProcessor(jd, pmid, extra_annotations,
                           add_grounding=add_grounding)
         ip.get_statements()
+        if molecular_complexes_only:
+            ip.retain_molecular_complexes()
         return ip
