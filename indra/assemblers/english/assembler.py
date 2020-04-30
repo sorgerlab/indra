@@ -51,8 +51,10 @@ class EnglishAssembler(object):
             periods at the end.
         """
         stmt_strs = []
+        # Keep track of current length of the model text.
         text_length = 0
         for stmt in self.statements:
+            # Get a SentenceBuilder object per statement
             if isinstance(stmt, ist.Modification):
                 sb = _assemble_modification(stmt)
             elif isinstance(stmt, ist.Autophosphorylation):
@@ -81,11 +83,17 @@ class EnglishAssembler(object):
                 logger.warning('Unhandled statement type: %s.' % type(stmt))
             if sb:
                 stmt_strs.append(sb.sentence)
+                # If this is not the first sentence, the agents coordinates
+                # should be updated
                 for ag in sb.agents:
                     ag.update_coords(text_length)
                 self.stmt_agents.append(sb.agents)
+                # Update the length of the text by adding a length of new
+                # sentence and a space.
                 text_length += (len(sb.sentence) + 1)
             else:
+                # If sentence wasn't built, add empty list of agents to keep
+                # consistent structure with statements.
                 self.stmt_agents.append([])
         if stmt_strs:
             return ' '.join(stmt_strs)
@@ -94,6 +102,21 @@ class EnglishAssembler(object):
 
 
 class AgentWithCoordinates():
+    """English representation of an agent.
+
+    Parameters
+    ----------
+    agent_str : str
+        Full English description of an agent.
+    name : str
+        Name of an agent.
+    coords : tuple(int)
+        A tuple of integers representing coordinates of agent name in a text.
+        If not provided, coords will be set to coordinates of name in
+        agent_str. When AgentWithCoordinates is a part of SentenceBuilder or
+        EnglishAssembler, the coords represent the location of agent name in
+        the SentenceBuilder.sentence or EnglishAssembler.model.
+    """
     def __init__(self, agent_str, name, coords=None):
         self.agent_str = agent_str
         self.name = name
@@ -101,17 +124,44 @@ class AgentWithCoordinates():
             agent_str.find(name), agent_str.find(name) + len(name))
 
     def update_coords(self, shift_by):
+        """Update coordinates by shifting them by a given number of characters.
+
+        Parameters
+        ----------
+        shift_by : int
+            How many characters to shift the parameters by.
+        """
         current_coords = self.coords
         self.coords = (current_coords[0] + shift_by,
                        current_coords[1] + shift_by)
 
 
 class SentenceBuilder():
+    """Builds a sentence from agents and strings.
+
+    Attributes
+    ----------
+    agents : list[AgentWithCoordinates]
+        A list of AgentWithCoordinates objects that are part of a sentence.
+        The coordinates of the agent name are being dynamically updated as the
+        sentence is being constructed.
+    sentence : str
+        A sentence that is being built by the builder.
+    """
     def __init__(self):
         self.agents = []
         self.sentence = ''
 
     def append(self, element):
+        """Append an element to the end of the sentence.
+
+        Parameters
+        ----------
+        element : str or AgentWithCoordinates
+            A string or AgentWithCoordinates object to be appended in the end
+            of the sentence. Agent's name coordinates are updated relative to
+            the current length of the sentence.
+        """
         if isinstance(element, str):
             self.sentence += element
         elif isinstance(element, AgentWithCoordinates):
@@ -120,6 +170,15 @@ class SentenceBuilder():
             self.agents.append(element)
 
     def prepend(self, element):
+        """Prepend an element to the beginning of the sentence.
+
+        Parameters
+        ----------
+        element : str or AgentWithCoordinates
+            A string or AgentWithCoordinates object to be added in the
+            beginning of the sentence. All existing agents' names coordinates
+            are updated relative to the new length of the sentence.
+        """
         current_sentence = self.sentence
         if isinstance(element, str):
             self.sentence = element + current_sentence
@@ -130,7 +189,17 @@ class SentenceBuilder():
             self.agents.insert(0, element)
 
     def append_as_list(self, lst, oxford=True):
-        """Join a list of words in a gramatically correct way."""
+        """Append a list of elements in a gramatically correct way.
+
+        Parameters
+        ----------
+        lst : list[str] or list[AgentWithCoordinates]
+            A list of elements to append. Elements in this list represent a
+            sequence and grammar standards require the use of appropriate
+            punctuation and conjunction to connect them (e.g. [ag1, ag2, ag3]).
+        oxford : bool
+            Whether to use oxford grammar standards.
+        """
         if len(lst) > 2:
             for el in lst[:-1]:
                 self.append(el)
@@ -147,15 +216,28 @@ class SentenceBuilder():
             self.append(lst[0])
 
     def append_as_sentence(self, lst):
+        """Append a list of elements by concatenating them together.
+        Note: a list of elements here are parts of sentence that do not
+        represent a sequence and do not need to have extra punctuation or
+        conjunction between them.
+
+        Parameters
+        ----------
+        lst : list[str] or list[AgentWithCoordinates]
+            A list of elements to append. Elements in this list do not
+            represent a sequence and do not need to have extra punctuation or
+            conjunction between them (e.g. [subj, ' is a GAP for ', obj]).
+        """
         for el in lst:
             self.append(el)
 
     def make_sentence(self):
+        """After the parts of a sentence are joined, create a sentence."""
         self.sentence = _make_sentence(self.sentence)
 
 
 def _assemble_agent_str(agent):
-    """Assemble an Agent object to text."""
+    """Assemble an Agent object to AgentWithCoordinates object."""
     agent_str = agent.name
 
     # Only do the more detailed assembly for molecular agents
@@ -194,7 +276,7 @@ def _assemble_agent_str(agent):
     bound_to = [bc.agent.name for bc in
                 agent.bound_conditions if bc.is_bound]
     not_bound_to = [bc.agent.name for bc in
-                agent.bound_conditions if not bc.is_bound]
+                    agent.bound_conditions if not bc.is_bound]
     if bound_to:
         agent_str += ' bound to ' + _join_list(bound_to)
         if not_bound_to:
@@ -233,7 +315,6 @@ def _assemble_agent_str(agent):
                 else:
                     mod_lst.append(m.residue + m.position)
             agent_str += _join_list(mod_lst)
-
 
     # Handle activity conditions
     if agent.activity is not None:
@@ -287,7 +368,7 @@ def _join_list(lst, oxford=True):
 
 
 def _assemble_activeform(stmt):
-    """Assemble ActiveForm statements into text."""
+    """Assemble ActiveForm statements into SentenceBuilder object."""
     subj_str = _assemble_agent_str(stmt.agent)
     sb = SentenceBuilder()
     sb.append(subj_str)
@@ -313,7 +394,7 @@ def _assemble_activeform(stmt):
 
 
 def _assemble_modification(stmt):
-    """Assemble Modification statements into text."""
+    """Assemble Modification statements into SentenceBuilder object."""
     sub_str = _assemble_agent_str(stmt.sub)
     sb = SentenceBuilder()
     if stmt.enz is not None:
@@ -341,7 +422,7 @@ def _assemble_modification(stmt):
 
 
 def _assemble_association(stmt):
-    """Assemble Association statements into text."""
+    """Assemble Association statements into SentenceBuilder object."""
     member_strs = [_assemble_agent_str(m.concept) for m in stmt.members]
     sb = SentenceBuilder()
     sb.append(member_strs[0])
@@ -352,7 +433,7 @@ def _assemble_association(stmt):
 
 
 def _assemble_complex(stmt):
-    """Assemble Complex statements into text."""
+    """Assemble Complex statements into SentenceBuilder object."""
     member_strs = [_assemble_agent_str(m) for m in stmt.members]
     sb = SentenceBuilder()
     sb.append(member_strs[0])
@@ -363,7 +444,7 @@ def _assemble_complex(stmt):
 
 
 def _assemble_autophosphorylation(stmt):
-    """Assemble Autophosphorylation statements into text."""
+    """Assemble Autophosphorylation statements into SentenceBuilder object."""
     enz_str = _assemble_agent_str(stmt.enz)
     sb = SentenceBuilder()
     sb.append(enz_str)
@@ -381,7 +462,7 @@ def _assemble_autophosphorylation(stmt):
 
 
 def _assemble_regulate_activity(stmt):
-    """Assemble RegulateActivity statements into text."""
+    """Assemble RegulateActivity statements into SentenceBuilder object."""
     subj_str = _assemble_agent_str(stmt.subj)
     obj_str = _assemble_agent_str(stmt.obj)
     if stmt.is_activation:
@@ -395,7 +476,7 @@ def _assemble_regulate_activity(stmt):
 
 
 def _assemble_regulate_amount(stmt):
-    """Assemble RegulateAmount statements into text."""
+    """Assemble RegulateAmount statements into SentenceBuilder object."""
     obj_str = _assemble_agent_str(stmt.obj)
     sb = SentenceBuilder()
     if stmt.subj is not None:
@@ -416,7 +497,7 @@ def _assemble_regulate_amount(stmt):
 
 
 def _assemble_translocation(stmt):
-    """Assemble Translocation statements into text."""
+    """Assemble Translocation statements into SentenceBuilder object."""
     agent_str = _assemble_agent_str(stmt.agent)
     sb = SentenceBuilder()
     sb.append_as_sentence([agent_str, ' translocates'])
@@ -429,7 +510,7 @@ def _assemble_translocation(stmt):
 
 
 def _assemble_gap(stmt):
-    """Assemble Gap statements into text."""
+    """Assemble Gap statements into SentenceBuilder object."""
     subj_str = _assemble_agent_str(stmt.gap)
     obj_str = _assemble_agent_str(stmt.ras)
     sb = SentenceBuilder()
@@ -439,7 +520,7 @@ def _assemble_gap(stmt):
 
 
 def _assemble_gef(stmt):
-    """Assemble Gef statements into text."""
+    """Assemble Gef statements into SentenceBuilder object."""
     subj_str = _assemble_agent_str(stmt.gef)
     obj_str = _assemble_agent_str(stmt.ras)
     sb = SentenceBuilder()
@@ -449,7 +530,7 @@ def _assemble_gef(stmt):
 
 
 def _assemble_conversion(stmt):
-    """Assemble a Conversion statement into text."""
+    """Assemble a Conversion statement into SentenceBuilder object."""
     reactants = [_assemble_agent_str(r) for r in stmt.obj_from]
     products = [_assemble_agent_str(r) for r in stmt.obj_to]
     sb = SentenceBuilder()
@@ -469,7 +550,7 @@ def _assemble_conversion(stmt):
 
 
 def _assemble_influence(stmt):
-    """Assemble an Influence statement into text."""
+    """Assemble an Influence statement into SentenceBuilder object."""
     subj_str = _assemble_agent_str(stmt.subj.concept)
     obj_str = _assemble_agent_str(stmt.obj.concept)
 
@@ -497,7 +578,7 @@ def _assemble_influence(stmt):
 
 def _make_sentence(txt):
     """Make a sentence from a piece of text."""
-    #Make sure first letter is capitalized
+    # Make sure first letter is capitalized
     txt = txt.strip(' ')
     txt = txt[0].upper() + txt[1:] + '.'
     return txt
