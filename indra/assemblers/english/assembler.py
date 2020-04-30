@@ -27,7 +27,7 @@ class EnglishAssembler(object):
         else:
             self.statements = stmts
         self.model = None
-        sb.coords = []
+        self.stmt_agents = []
 
     def add_statements(self, stmts):
         """Add INDRA Statements to the assembler's list of statements.
@@ -51,6 +51,7 @@ class EnglishAssembler(object):
             periods at the end.
         """
         stmt_strs = []
+        text_length = 0
         for stmt in self.statements:
             if isinstance(stmt, ist.Modification):
                 sb = _assemble_modification(stmt)
@@ -78,8 +79,14 @@ class EnglishAssembler(object):
                 sb = _assemble_conversion(stmt)
             else:
                 logger.warning('Unhandled statement type: %s.' % type(stmt))
+            if sb:
             stmt_strs.append(sb.sentence)
-            self.coords.append(sb.coords)
+                for ag in sb.agents:
+                    ag.update_coords(text_length)
+                self.stmt_agents.append(sb.agents)
+                text_length += (len(sb.sentence) + 1)
+            else:
+                self.stmt_agents.append([])
         if stmt_strs:
             return ' '.join(stmt_strs)
         else:
