@@ -101,7 +101,7 @@ class AgentWithCoordinates():
 
 class SentenceBuilder():
     def __init__(self):
-        self.elements = []
+        self.agents = []
         self.sentence = ''
 
     def append(self, element):
@@ -110,7 +110,7 @@ class SentenceBuilder():
         elif isinstance(element, AgentWithCoordinates):
             element.update_coords(len(self.sentence))
             self.sentence += element.agent_str
-        self.elements.append(element)
+            self.agents.append(element)
 
     def prepend(self, element):
         current_sentence = self.sentence
@@ -118,10 +118,9 @@ class SentenceBuilder():
             self.sentence = element + current_sentence
         elif isinstance(element, AgentWithCoordinates):
             self.sentence = element.agent_str + current_sentence
-            for el in self.elements:
-                if isinstance(el, AgentWithCoordinates):
-                    el.update_coords(len(element.agent_str))
-        self.elements.insert(0, element)
+            for ag in self.agents:
+                ag.update_coords(len(element.agent_str))
+            self.agents.insert(0, element)
 
     def append_as_list(self, lst, oxford=True):
         """Join a list of words in a gramatically correct way."""
