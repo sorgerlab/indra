@@ -80,7 +80,7 @@ class EnglishAssembler(object):
             else:
                 logger.warning('Unhandled statement type: %s.' % type(stmt))
             if sb:
-            stmt_strs.append(sb.sentence)
+                stmt_strs.append(sb.sentence)
                 for ag in sb.agents:
                     ag.update_coords(text_length)
                 self.stmt_agents.append(sb.agents)
@@ -346,7 +346,7 @@ def _assemble_association(stmt):
     sb = SentenceBuilder()
     sb.append(member_strs[0])
     sb.append(' is associated with ')
-    sb.append_list(member_strs[1:])
+    sb.append_as_list(member_strs[1:])
     sb.make_sentence()
     return sb
 
@@ -357,7 +357,7 @@ def _assemble_complex(stmt):
     sb = SentenceBuilder()
     sb.append(member_strs[0])
     sb.append(' binds ')
-    sb.append_list(member_strs[1:])
+    sb.append_as_list(member_strs[1:])
     sb.make_sentence()
     return sb
 
@@ -391,7 +391,7 @@ def _assemble_regulate_activity(stmt):
     sb = SentenceBuilder()
     sb.append_as_sentence([subj_str, rel_str, obj_str])
     sb.make_sentence()
-    return _make_sentence(stmt_str)
+    return sb
 
 
 def _assemble_regulate_amount(stmt):
