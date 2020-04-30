@@ -29,7 +29,7 @@ def _load_mesh_file(path):
         else:
             mesh_id, mesh_label, mesh_terms_str, tree_number_str = terms
             mesh_id_to_tree_numbers[mesh_id] = tree_number_str.split('|')
-        mesh_terms = mesh_terms_str.split('|')
+        mesh_terms = mesh_terms_str.split('|') if mesh_terms_str else []
         mesh_id_to_name[mesh_id] = mesh_label
         mesh_name_to_id[mesh_label] = mesh_id
         for term in mesh_terms:
@@ -145,6 +145,9 @@ def get_mesh_id_name(mesh_term, offline=False):
         a Concept name). If the query failed, or no descriptor corresponding to
         the name was found, returns a tuple of (None, None).
     """
+    if not mesh_term:
+        return None, None
+
     indra_mesh_id = mesh_name_to_id.get(mesh_term)
     if indra_mesh_id is not None:
         return indra_mesh_id, mesh_term
