@@ -1,1 +1,1 @@
-from .assembler import EnglishAssembler
+from .assembler import EnglishAssembler, AgentWithCoordinates, SentenceBuilder
