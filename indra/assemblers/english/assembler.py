@@ -20,6 +20,10 @@ class EnglishAssembler(object):
         A list of INDRA Statements to assemble.
     model : str
         The assembled sentences as a single string.
+    stmt_agents : list[list[AgentWithCoordinates]]
+        A list containing lists of AgentWithCoordinates objects for each of
+        the assembled statements. Coordinates represent the location of
+        agents in the model.
     """
     def __init__(self, stmts=None):
         if stmts is None:
