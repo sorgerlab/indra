@@ -117,9 +117,10 @@ class AgentWithCoordinates():
         EnglishAssembler, the coords represent the location of agent name in
         the SentenceBuilder.sentence or EnglishAssembler.model.
     """
-    def __init__(self, agent_str, name, coords=None):
+    def __init__(self, agent_str, name, db_refs, coords=None):
         self.agent_str = agent_str
         self.name = name
+        self.db_refs = db_refs
         self.coords = coords if coords else (
             agent_str.find(name), agent_str.find(name) + len(name))
 
@@ -242,7 +243,7 @@ def _assemble_agent_str(agent):
 
     # Only do the more detailed assembly for molecular agents
     if not isinstance(agent, ist.Agent):
-        return AgentWithCoordinates(agent_str, agent.name)
+        return AgentWithCoordinates(agent_str, agent.name, agent.db_refs)
 
     # Handle mutation conditions
     if agent.mutations:
@@ -270,7 +271,7 @@ def _assemble_agent_str(agent):
         agent_str += ' in the ' + agent.location
 
     if not agent.mods and not agent.bound_conditions and not agent.activity:
-        return AgentWithCoordinates(agent_str, agent.name)
+        return AgentWithCoordinates(agent_str, agent.name, agent.db_refs)
 
     # Handle bound conditions
     bound_to = [bc.agent.name for bc in
@@ -331,7 +332,7 @@ def _assemble_agent_str(agent):
             prefix = pre_prefix + 'inactive'
         agent_str = prefix + ' ' + agent_str
 
-    return AgentWithCoordinates(agent_str, agent.name)
+    return AgentWithCoordinates(agent_str, agent.name, agent.db_refs)
 
 
 def english_join(lst):
