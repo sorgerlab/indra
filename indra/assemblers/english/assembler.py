@@ -110,6 +110,8 @@ class AgentWithCoordinates():
         Full English description of an agent.
     name : str
         Name of an agent.
+    db_refs : dict
+        Dictionary of database identifiers associated with this agent.
     coords : tuple(int)
         A tuple of integers representing coordinates of agent name in a text.
         If not provided, coords will be set to coordinates of name in
