@@ -13,7 +13,7 @@ from os.path import abspath, dirname, join
 from jinja2 import Environment, FileSystemLoader
 
 from indra.statements import *
-from indra.assemblers.english import EnglishAssembler
+from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.databases import get_identifiers_url
 from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_sort_key
@@ -458,7 +458,8 @@ def _format_stmt_text(stmt):
     english = ea.make_model()
     if not english:
         english = str(stmt)
-    return tag_agents(english, stmt.agent_list())
+        return tag_agents(english, stmt.agent_list())
+    return tag_agents(english, ea.stmt_agents[0])
 
 
 def _cautiously_merge_refs(from_ag, to_ag):
@@ -479,6 +480,7 @@ def _cautiously_merge_refs(from_ag, to_ag):
 
 
 def tag_agents(english, agents):
+    # Agents can be AgentWithCoordinates (preferred) or regular Agent objects
     indices = []
     for ag in agents:
         if ag is None or not ag.name:
@@ -489,16 +491,22 @@ def tag_agents(english, agents):
         # Build up a set of indices
         tag_start = "<a href='%s' target='_blank'>" % url
         tag_close = "</a>"
-        found = False
-        for m in re.finditer(re.escape(ag.name), english):
-            index = (m.start(), m.start() + len(ag.name), ag.name,
-                     tag_start, tag_close)
+        # If coordinates are passed, use them. Otherwise, try to find agent
+        # names in english text
+        if isinstance(ag, AgentWithCoordinates):
+            index = (ag.coords[0], ag.coords[1], ag.name, tag_start, tag_close)
             indices.append(index)
-            found = True
-        if not found and \
-                english.startswith(re.escape(ag.name).capitalize()):
-            index = (0, len(ag.name), ag.name, tag_start, tag_close)
-            indices.append(index)
+        elif isinstance(ag, Agent):
+            found = False
+            for m in re.finditer(re.escape(ag.name), english):
+                index = (m.start(), m.start() + len(ag.name), ag.name,
+                         tag_start, tag_close)
+                indices.append(index)
+                found = True
+            if not found and \
+                    english.startswith(re.escape(ag.name).capitalize()):
+                index = (0, len(ag.name), ag.name, tag_start, tag_close)
+                indices.append(index)
     return tag_text(english, indices)
 
 
@@ -574,6 +582,9 @@ def tag_text(text, tag_info_list):
     format_text = ''
     start_pos = 0
     for i, j, ag_text, tag_start, tag_close in tag_info_list:
+        # Capitalize if it's a beginnine of a sentence
+        if i == 0:
+            ag_text = ag_text[0].upper() + ag_text[1:]
         # Add the text before this agent, if any
         format_text += text[start_pos:i]
         # Add wrapper for this entity
