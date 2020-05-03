@@ -3,35 +3,52 @@ import logging
 import requests
 
 
-logger = logging.getLogger('biorxiv_client')
+logger = logging.getLogger(__name__)
 
 
-covid_json_url = 'https://connect.biorxiv.org/relate/' \
-                  'collection_json.php?grp=181'
+# Browser link at https://connect.biorxiv.org/relate/content/181
+collection_url = 'https://connect.biorxiv.org/relate/collection_json.php?grp='
+covid19_collection_id = '181'
+bio_content_url = 'https://www.biorxiv.org/content/'
+med_content_url = 'https://www.medrxiv.org/content/'
 
 
-def get_covid_dois():
-    """Get current list of Covid-19 relevant DOIs from biorxiv and medrxiv.
+format_map = {
+    'xml': 'source.xml',
+    'txt': 'full',
+    'pdf': 'full.pdf',
+    'abstract': ''
+}
 
-    Browser link at https://connect.biorxiv.org/relate/content/181
+
+def get_collection_dois(collection_id):
+    """Get list of DOIs from a biorxiv/medrxiv collection.
+
+    Parameters
+    ----------
+    collection_id : str
+        The identifier of the collection to fetch.
+
+    Returns
+    -------
+    list of str
+        A list of DOIs in the given collection.
     """
-    res = requests.get(covid_json_url)
-    if res.status_code != 200:
-        logger.error('Error querying biorxiv Covid-19 collection: '
-                     f'status code {res.status_code}')
-        return None
-    res_json = res.json()
-    dois = []
-    for pub in res_json['rels']:
-        dois.append(pub['rel_doi'])
+    res = requests.get(collection_url + collection_id)
+    res.raise_for_status()
+    dois = [pub['rel_doi'] for pub in res.json()['rels']]
     return dois
 
 
-def get_pdf_from_doi(doi):
-    pdf_url = 'https://www.biorxiv.org/content/{doi}.full.pdf'
-    res = request.get(pdf_url)
+def get_content(doi, bio_or_med='bio', format='xml'):
+    url = bio_content_url if bio_or_med == 'bio' else med_content_url
+    url += ('%s.%s' % (doi, format))
+    res = requests.get(url)
+    return res.text
 
 
 if __name__ == '__main__':
-    res = get_covid_dois()
+    covid19_dois = get_collection_dois(covid19_collection_id)
+    get_content(covid19_dois[0])
+
 
