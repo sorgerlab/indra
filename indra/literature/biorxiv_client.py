@@ -31,14 +31,19 @@ def get_collection_pubs(collection_id):
     return res.json()['rels']
 
 
-def get_content(doi, bio_or_med='bio', format='xml'):
-    url = bio_content_url if bio_or_med == 'bio' else med_content_url
-    url += ('%s.%s' % (doi, format))
-    res = requests.get(url)
-    return res.text
-
-
 def get_pdf_xml_url_base(content):
+    """Return base URL to PDF/XML based on the content of the landing page.
+
+    Parameters
+    ----------
+    content : str
+        The content of the landing page for an rxiv paper.
+
+    Returns
+    -------
+    str or None
+        The base URL if available, otherwise None.
+    """
     match = re.match('(?:.*)"citation_pdf_url" content="([^"]+).full.pdf"',
                      content, re.S)
     if match:
@@ -47,6 +52,18 @@ def get_pdf_xml_url_base(content):
 
 
 def get_text_url_base(content):
+    """Return base URL to full text based on the content of the landing page.
+
+    Parameters
+    ----------
+    content : str
+        The content of the landing page for an rxiv paper.
+
+    Returns
+    -------
+    str or None
+        The base URL if available, otherwise None.
+    """
     match = re.match('(?:.*)"citation_html_url" content="([^"]+).full"',
                      content, re.S)
     if match:
@@ -54,12 +71,24 @@ def get_text_url_base(content):
     return None
 
 
-def get_pub_content(pub, format):
-    # If we're looking for an abstract, that is directly accessible
-    # in the pub JSON so we can just return it
-    if format == 'abstract':
-        return pub.get('rel_abs')
+def get_formats(pub):
+    """Return formats available for a publication JSON.
 
+    Parameters
+    ----------
+    pub : dict
+        The JSON dict description a publication.
+
+    Returns
+    -------
+    dict
+        A dict with available formats as its keys (abstract, pdf, xml, txt)
+        and either the content (in case of abstract) or the URL
+        (in case of pdf, xml, txt) as the value.
+    """
+    formats = {}
+    if 'rel_base' in pub:
+        formats['abstract'] = pub['rel_abstract']
     # The publication JSON does not contain enough information generally
     # to identify the URL for the various formats. Therefore we have to
     # load the landing page for the article and parse out various URLs
@@ -72,28 +101,71 @@ def get_pub_content(pub, format):
     # page content therefore we work with the citation_pdf_url and get
     # URLs for both the PDF and the XML.
     pdf_xml_url_base = get_pdf_xml_url_base(landing_page_res.text)
+    if pdf_xml_url_base:
+        formats['pdf'] = pdf_xml_url_base + '.full.pdf'
+        formats['xml'] = pdf_xml_url_base + '.source.xml'
     text_url_base = get_text_url_base(landing_page_res.text)
+    if text_url_base:
+        formats['txt'] = text_url_base + 'txt'
+    return formats
+
+
+def get_content_from_pub_json(pub, format):
+    """Get text content based on a given format from a publication JSON.
+
+    In the case of abstract, the content is returned
+    from the JSON directly. For pdf, the content is returned as bytes
+    that can be dumped into a file. For txt and xml, the text is processed
+    out of either the raw XML or text content that rxiv provides.
+
+    Parameters
+    ----------
+    pub : dict
+        The JSON dict description a publication.
+    format : str
+        The format, if available, via which the content should be
+        obtained.
+    """
+    if format == 'abstract':
+        return pub.get('rel_abstract')
+
+    formats = get_formats(pub)
+    if format not in formats:
+        logger.warning('Content not available in format %s' % format)
+        return None
+
+    # If we're looking for an abstract, that is directly accessible
+    # in the pub JSON so we can just return it
+    if format == 'abstract':
+        return formats.get('abstract')
     # For PDFs we return the result in bytes that can then be dumped
     # into a file.
-    if format == 'pdf':
-        if not pdf_xml_url_base:
-            logger.warning('Could not get PDF URL for this content.')
-            return None
-        url = pdf_xml_url_base + '.full.pdf'
-        return requests.get(url).content
+    elif format == 'pdf':
+        return requests.get(formats[format]).content
     # For xml and text, we return the result as str
     elif format == 'xml':
-        if not pdf_xml_url_base:
-            logger.warning('Could not get XML URL for this content.')
-            return None
-        url = pdf_xml_url_base + 'source.xml'
-        return requests.get(url).text
+        return get_text_from_rxiv_xml(requests.get(formats[format]).text)
     elif format == 'txt':
-        url = text_url_base + 'txt'
-        return requests.get(url).text
-    else:
-        logger.warning('Unknown format: %s' % format)
-        return None
+        return get_text_from_rxiv_text(requests.get(formats[format]).text)
+
+
+def get_text_from_rxiv_xml(rxiv_xml):
+    """Return clean text from the raw rxiv xml content.
+
+    Paramteres
+    ----------
+    rxiv_xml : str
+        The content of the rxiv full xml as obtained from the web.
+
+    Returns
+    -------
+    str
+        The text content stripped out from the raw full xml.
+    """
+    # FIXME: this is a very naive initial solution, we should instead
+    # traverse the XML structure properly to get the content.
+    text = re.sub('<.*?>', '', rxiv_xml)
+    return text
 
 
 def get_text_from_rxiv_text(rxiv_text):
