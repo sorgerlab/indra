@@ -87,8 +87,8 @@ def get_formats(pub):
         (in case of pdf, xml, txt) as the value.
     """
     formats = {}
-    if 'rel_base' in pub:
-        formats['abstract'] = pub['rel_abstract']
+    if 'rel_abs' in pub:
+        formats['abstract'] = pub['rel_abs']
     # The publication JSON does not contain enough information generally
     # to identify the URL for the various formats. Therefore we have to
     # load the landing page for the article and parse out various URLs
@@ -217,8 +217,30 @@ def get_text_from_rxiv_text(rxiv_text):
 
 
 if __name__ == '__main__':
-    covid19_pubs = get_collection_pubs(covid19_collection_id)
-    abs = get_pub_content(covid19_pubs[0], 'abstract')
-    pdf = get_pub_content(covid19_pubs[0], 'pdf')
-
+    import os
+    import json
+    fname = 'covid19_pubs.json'
+    if os.path.exists(fname):
+        with open(fname, 'r') as fh:
+            covid19_pubs = json.load(fh)
+    else:
+        covid19_pubs = get_collection_pubs(covid19_collection_id)
+        with open(fname, 'w') as fh:
+            json.dump(covid19_pubs, fh)
+    contents = {}
+    for pub in covid19_pubs:
+        doi = pub['rel_doi']
+        formats = get_formats(pub)
+        if 'txt' in formats:
+            print('Getting text for %s' % doi)
+            txt = get_content_from_pub_json(pub, 'txt')
+        elif 'xml' in formats:
+            print('Getting xml for %s' % doi)
+            txt = get_content_from_pub_json(pub, 'xml')
+        else:
+            print('Getting abstract for %s' % doi)
+            txt = get_content_from_pub_json(pub, 'abstract')
+        contents[doi] = txt
+    with open('covid19_contents', 'w') as fh:
+        json.dump(contents, fh)
 
