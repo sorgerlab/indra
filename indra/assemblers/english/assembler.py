@@ -58,6 +58,7 @@ class EnglishAssembler(object):
         # Keep track of current length of the model text.
         text_length = 0
         for stmt in self.statements:
+            sb = None
             # Get a SentenceBuilder object per statement
             if isinstance(stmt, ist.Modification):
                 sb = _assemble_modification(stmt)
