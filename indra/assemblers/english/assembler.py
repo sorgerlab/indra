@@ -193,9 +193,9 @@ class SentenceBuilder():
             for ag in self.agents:
                 ag.update_coords(len(element))
         elif isinstance(element, AgentWithCoordinates):
-            self.sentence = element.agent_str + current_sentence
+            self.sentence = element.agent_str + ' ' + current_sentence
             for ag in self.agents:
-                ag.update_coords(len(element.agent_str))
+                ag.update_coords(len(element.agent_str) + 1)
             self.agents.insert(0, element)
 
     def append_as_list(self, lst, oxford=True):
@@ -596,7 +596,7 @@ def _make_sentence(txt):
 
 
 def _get_is_direct(stmt):
-    """Return True if there is evidence that the statement is direct.
+    """Return True if there is any evidence that the statement is direct.
 
     If any of the evidences associated with the statement
     indicates a direct interaction then we assume the interaction
@@ -617,7 +617,7 @@ def _get_is_direct(stmt):
 
 
 def _get_is_hypothesis(stmt):
-    """Return True if there is evidence that the statement is hypothetical.
+    """Return True if there is only evidence that the statement is hypothetical.
 
     If all of the evidences associated with the statement
     indicate a hypothetical interaction then we assume the interaction

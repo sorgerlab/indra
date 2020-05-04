@@ -512,6 +512,13 @@ def test_sentence_builder():
     sb.append(ac)
     assert len(sb.agents) == 1
     assert sb.sentence == 'BRAF'
+
     sb.prepend('phosphorylated ')
     assert sb.sentence == 'phosphorylated BRAF'
     assert sb.agents[0].coords == (15, 19), sb.agents[0].coords
+
+    sb.prepend(ea.AgentWithCoordinates('active KRAS', 'KRAS', {}))
+    assert sb.sentence == 'active KRAS phosphorylated BRAF', sb.sentence
+    assert sb.agents[0].name == 'KRAS'
+    assert sb.agents[1].name == 'BRAF'
+    assert sb.agents[1].coords == (27, 31), sb.agents[1].coords
