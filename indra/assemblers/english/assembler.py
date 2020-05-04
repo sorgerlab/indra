@@ -93,7 +93,7 @@ class EnglishAssembler(object):
                 for ag in sb.agents:
                     ag.update_coords(text_length)
                 self.stmt_agents.append(sb.agents)
-                # Update the length of the text by adding a length of new
+                # Update the length of the text by adding the length of the new
                 # sentence and a space.
                 text_length += (len(sb.sentence) + 1)
             else:
@@ -190,6 +190,8 @@ class SentenceBuilder():
         current_sentence = self.sentence
         if isinstance(element, str):
             self.sentence = element + current_sentence
+            for ag in self.agents:
+                ag.update_coords(len(element))
         elif isinstance(element, AgentWithCoordinates):
             self.sentence = element.agent_str + current_sentence
             for ag in self.agents:
@@ -205,8 +207,8 @@ class SentenceBuilder():
             A list of elements to append. Elements in this list represent a
             sequence and grammar standards require the use of appropriate
             punctuation and conjunction to connect them (e.g. [ag1, ag2, ag3]).
-        oxford : bool
-            Whether to use oxford grammar standards.
+        oxford : Optional[bool]
+            Whether to use oxford grammar standards. Default: True
         """
         if len(lst) > 2:
             for el in lst[:-1]:
@@ -225,6 +227,7 @@ class SentenceBuilder():
 
     def append_as_sentence(self, lst):
         """Append a list of elements by concatenating them together.
+
         Note: a list of elements here are parts of sentence that do not
         represent a sequence and do not need to have extra punctuation or
         conjunction between them.
@@ -360,7 +363,7 @@ def english_join(lst):
 
 
 def _join_list(lst, oxford=True):
-    """Join a list of words in a gramatically correct way."""
+    """Join a list of words in a grammatically correct way."""
     if len(lst) > 2:
         s = ', '.join(lst[:-1])
         if oxford:
@@ -593,11 +596,13 @@ def _make_sentence(txt):
 
 
 def _get_is_direct(stmt):
-    '''Returns true if there is evidence that the statement is a direct
-    interaction. If any of the evidences associated with the statement
-    indicates a direct interatcion then we assume the interaction
+    """Return True if there is evidence that the statement is direct.
+
+    If any of the evidences associated with the statement
+    indicates a direct interaction then we assume the interaction
     is direct. If there is no evidence for the interaction being indirect
-    then we default to direct.'''
+    then we default to direct.
+    """
     any_indirect = False
     for ev in stmt.evidence:
         if ev.epistemics.get('direct') is True:
@@ -612,10 +617,12 @@ def _get_is_direct(stmt):
 
 
 def _get_is_hypothesis(stmt):
-    """Returns true if there is evidence that the statement is only
-    hypothetical. If all of the evidences associated with the statement
+    """Return True if there is evidence that the statement is hypothetical.
+
+    If all of the evidences associated with the statement
     indicate a hypothetical interaction then we assume the interaction
-    is hypothetical."""
+    is hypothetical.
+    """
     for ev in stmt.evidence:
         if not ev.epistemics.get('hypothesis') is True:
             return True

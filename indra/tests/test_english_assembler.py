@@ -2,7 +2,7 @@ import indra.assemblers.english.assembler as ea
 from indra.statements import *
 
 
-def _sustring_by_coords(text, coords):
+def _substring_by_coords(text, coords):
     return text[coords[0]:coords[1]]
 
 
@@ -11,7 +11,7 @@ def test_agent_basic():
     assert isinstance(ag, ea.AgentWithCoordinates)
     print(ag.agent_str)
     assert ag.agent_str == 'EGFR'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
 
 
 def test_agent_mod():
@@ -20,7 +20,7 @@ def test_agent_mod():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'phosphorylated EGFR'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
 
 
 def test_agent_mod2():
@@ -29,7 +29,7 @@ def test_agent_mod2():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'tyrosine-phosphorylated EGFR'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
 
 
 def test_agent_mod3():
@@ -38,7 +38,7 @@ def test_agent_mod3():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'EGFR phosphorylated on Y1111'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
 
 
 def test_agent_mods():
@@ -48,7 +48,7 @@ def test_agent_mods():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'EGFR phosphorylated on Y1111 and Y1234'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
 
 
 def test_agent_mods2():
@@ -58,7 +58,7 @@ def test_agent_mods2():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'EGFR phosphorylated on Y1111 and tyrosine'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
 
 
 def test_agent_mods3():
@@ -77,7 +77,7 @@ def test_agent_mods_pos_only():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'EGFR phosphorylated on amino acid 1111'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
 
 
 def test_agent_bound():
@@ -86,7 +86,7 @@ def test_agent_bound():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'EGFR bound to EGF'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
 
 
 def test_agent_not_bound():
@@ -95,7 +95,7 @@ def test_agent_not_bound():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'EGFR not bound to EGF'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
 
 
 def test_agent_bound_two():
@@ -105,7 +105,7 @@ def test_agent_bound_two():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'EGFR bound to EGF and EGFR'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
 
 
 def test_agent_bound_three():
@@ -116,7 +116,7 @@ def test_agent_bound_three():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'EGFR bound to EGF, EGFR, and GRB2'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
 
 
 def test_agent_bound_mixed():
@@ -126,7 +126,7 @@ def test_agent_bound_mixed():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'EGFR bound to EGF and not bound to EGFR'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'EGFR'
 
 
 def test_phos_noenz():
@@ -135,7 +135,7 @@ def test_phos_noenz():
     sb = ea._assemble_modification(st)
     print(sb.sentence)
     assert sb.sentence == 'MAP2K1 is phosphorylated.'
-    assert _sustring_by_coords(sb.sentence, sb.agents[0].coords) == 'MAP2K1'
+    assert _substring_by_coords(sb.sentence, sb.agents[0].coords) == 'MAP2K1'
 
 
 def test_phos_noenz2():
@@ -144,7 +144,7 @@ def test_phos_noenz2():
     sb = ea._assemble_modification(st)
     print(sb.sentence)
     assert sb.sentence == 'MAP2K1 is phosphorylated on serine.'
-    assert _sustring_by_coords(sb.sentence, sb.agents[0].coords) == 'MAP2K1'
+    assert _substring_by_coords(sb.sentence, sb.agents[0].coords) == 'MAP2K1'
 
 
 def test_phos_noenz3():
@@ -153,7 +153,7 @@ def test_phos_noenz3():
     sb = ea._assemble_modification(st)
     print(sb.sentence)
     assert sb.sentence == 'MAP2K1 is phosphorylated on S222.'
-    assert _sustring_by_coords(sb.sentence, sb.agents[0].coords) == 'MAP2K1'
+    assert _substring_by_coords(sb.sentence, sb.agents[0].coords) == 'MAP2K1'
 
 
 def test_phos_enz():
@@ -163,8 +163,8 @@ def test_phos_enz():
     sb = ea._assemble_modification(st)
     print(sb.sentence)
     assert sb.sentence == 'BRAF phosphorylates MAP2K1 on S222.'
-    assert _sustring_by_coords(sb.sentence, sb.agents[0].coords) == 'BRAF'
-    assert _sustring_by_coords(sb.sentence, sb.agents[1].coords) == 'MAP2K1'
+    assert _substring_by_coords(sb.sentence, sb.agents[0].coords) == 'BRAF'
+    assert _substring_by_coords(sb.sentence, sb.agents[1].coords) == 'MAP2K1'
 
 
 def test_phos_indirect():
@@ -175,8 +175,8 @@ def test_phos_indirect():
     sb = ea._assemble_modification(st)
     print(sb.sentence)
     assert sb.sentence == 'BRAF leads to the phosphorylation of MAP2K1 on S222.'
-    assert _sustring_by_coords(sb.sentence, sb.agents[0].coords) == 'BRAF'
-    assert _sustring_by_coords(sb.sentence, sb.agents[1].coords) == 'MAP2K1'
+    assert _substring_by_coords(sb.sentence, sb.agents[0].coords) == 'BRAF'
+    assert _substring_by_coords(sb.sentence, sb.agents[1].coords) == 'MAP2K1'
 
 
 def test_phos_enz2():
@@ -186,8 +186,8 @@ def test_phos_enz2():
     sb = ea._assemble_modification(st)
     print(sb.sentence)
     assert sb.sentence == 'PP2A dephosphorylates MAP2K1 on S222.'
-    assert _sustring_by_coords(sb.sentence, sb.agents[0].coords) == 'PP2A'
-    assert _sustring_by_coords(sb.sentence, sb.agents[1].coords) == 'MAP2K1'
+    assert _substring_by_coords(sb.sentence, sb.agents[0].coords) == 'PP2A'
+    assert _substring_by_coords(sb.sentence, sb.agents[1].coords) == 'MAP2K1'
 
 
 def test_dephos_no_residue():
@@ -197,8 +197,8 @@ def test_dephos_no_residue():
     sb = ea._assemble_modification(st)
     print(sb.sentence)
     assert sb.sentence == 'PP2A dephosphorylates MAP2K1 at position 222.'
-    assert _sustring_by_coords(sb.sentence, sb.agents[0].coords) == 'PP2A'
-    assert _sustring_by_coords(sb.sentence, sb.agents[1].coords) == 'MAP2K1'
+    assert _substring_by_coords(sb.sentence, sb.agents[0].coords) == 'PP2A'
+    assert _substring_by_coords(sb.sentence, sb.agents[1].coords) == 'MAP2K1'
 
 
 def test_ubiq_stmt():
@@ -206,8 +206,8 @@ def test_ubiq_stmt():
     sb = ea._assemble_modification(st)
     print(sb.sentence)
     assert sb.sentence == 'X ubiquitinates Y.'
-    assert _sustring_by_coords(sb.sentence, sb.agents[0].coords) == 'X'
-    assert _sustring_by_coords(sb.sentence, sb.agents[1].coords) == 'Y'
+    assert _substring_by_coords(sb.sentence, sb.agents[0].coords) == 'X'
+    assert _substring_by_coords(sb.sentence, sb.agents[1].coords) == 'Y'
 
 
 def test_deubiq_stmt():
@@ -215,8 +215,8 @@ def test_deubiq_stmt():
     sb = ea._assemble_modification(st)
     print(sb.sentence)
     assert sb.sentence == 'X deubiquitinates Y.'
-    assert _sustring_by_coords(sb.sentence, sb.agents[0].coords) == 'X'
-    assert _sustring_by_coords(sb.sentence, sb.agents[1].coords) == 'Y'
+    assert _substring_by_coords(sb.sentence, sb.agents[0].coords) == 'X'
+    assert _substring_by_coords(sb.sentence, sb.agents[1].coords) == 'Y'
 
 
 def test_deubiq_noenz():
@@ -224,7 +224,7 @@ def test_deubiq_noenz():
     sb = ea._assemble_modification(st)
     print(sb.sentence)
     assert sb.sentence == 'Y is deubiquitinated.'
-    assert _sustring_by_coords(sb.sentence, sb.agents[0].coords) == 'Y'
+    assert _substring_by_coords(sb.sentence, sb.agents[0].coords) == 'Y'
 
 
 def test_complex_one():
@@ -234,8 +234,8 @@ def test_complex_one():
     sb = ea._assemble_complex(st)
     print(sb.sentence)
     assert sb.sentence == 'MAP2K1 binds BRAF.'
-    assert _sustring_by_coords(sb.sentence, sb.agents[0].coords) == 'MAP2K1'
-    assert _sustring_by_coords(sb.sentence, sb.agents[1].coords) == 'BRAF'
+    assert _substring_by_coords(sb.sentence, sb.agents[0].coords) == 'MAP2K1'
+    assert _substring_by_coords(sb.sentence, sb.agents[1].coords) == 'BRAF'
 
 
 def test_complex_more():
@@ -246,9 +246,9 @@ def test_complex_more():
     sb = ea._assemble_complex(st)
     print(sb.sentence)
     assert sb.sentence == 'MAP2K1 binds BRAF and RAF1.'
-    assert _sustring_by_coords(sb.sentence, sb.agents[0].coords) == 'MAP2K1'
-    assert _sustring_by_coords(sb.sentence, sb.agents[1].coords) == 'BRAF'
-    assert _sustring_by_coords(sb.sentence, sb.agents[2].coords) == 'RAF1'
+    assert _substring_by_coords(sb.sentence, sb.agents[0].coords) == 'MAP2K1'
+    assert _substring_by_coords(sb.sentence, sb.agents[1].coords) == 'BRAF'
+    assert _substring_by_coords(sb.sentence, sb.agents[2].coords) == 'RAF1'
 
 
 def test_assemble_one():
@@ -272,11 +272,11 @@ def test_assemble_more():
     print(s)
     assert s == \
         'PP2A dephosphorylates MAP2K1 on S222. MAP2K1 binds BRAF and RAF1.'
-    assert _sustring_by_coords(s, e.stmt_agents[0][0].coords) == 'PP2A'
-    assert _sustring_by_coords(s, e.stmt_agents[0][1].coords) == 'MAP2K1'
-    assert _sustring_by_coords(s, e.stmt_agents[1][0].coords) == 'MAP2K1'
-    assert _sustring_by_coords(s, e.stmt_agents[1][1].coords) == 'BRAF'
-    assert _sustring_by_coords(s, e.stmt_agents[1][2].coords) == 'RAF1'
+    assert _substring_by_coords(s, e.stmt_agents[0][0].coords) == 'PP2A'
+    assert _substring_by_coords(s, e.stmt_agents[0][1].coords) == 'MAP2K1'
+    assert _substring_by_coords(s, e.stmt_agents[1][0].coords) == 'MAP2K1'
+    assert _substring_by_coords(s, e.stmt_agents[1][1].coords) == 'BRAF'
+    assert _substring_by_coords(s, e.stmt_agents[1][2].coords) == 'RAF1'
 
 
 def test_autophos():
@@ -318,7 +318,7 @@ def test_agent_loc():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'BRAF in the cytoplasm'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'BRAF'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'BRAF'
 
 
 def test_agent_mut():
@@ -326,7 +326,7 @@ def test_agent_mut():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'BRAF-V600E'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'BRAF'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'BRAF'
 
 
 def test_agent_mut_plus():
@@ -335,7 +335,7 @@ def test_agent_mut_plus():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'BRAF-V600E in the nucleus'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'BRAF'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'BRAF'
 
 
 def test_agent_activity():
@@ -343,7 +343,7 @@ def test_agent_activity():
     ag = ea._assemble_agent_str(a)
     print(ag.agent_str)
     assert ag.agent_str == 'active BRAF'
-    assert _sustring_by_coords(ag.agent_str, ag.coords) == 'BRAF'
+    assert _substring_by_coords(ag.agent_str, ag.coords) == 'BRAF'
 
 
 def test_agent_activity_stmt():
@@ -355,8 +355,8 @@ def test_agent_activity_stmt():
     s = e.make_model()
     print(s)
     assert s == 'Active BRAF activates MAP2K1.'
-    assert _sustring_by_coords(s, e.stmt_agents[0][0].coords) == 'BRAF'
-    assert _sustring_by_coords(s, e.stmt_agents[0][1].coords) == 'MAP2K1'
+    assert _substring_by_coords(s, e.stmt_agents[0][0].coords) == 'BRAF'
+    assert _substring_by_coords(s, e.stmt_agents[0][1].coords) == 'MAP2K1'
 
 
 def test_translocation():
@@ -368,22 +368,22 @@ def test_translocation():
     e.add_statements([st1])
     s = e.make_model()
     assert s == 'FOXO3A translocates.'
-    assert _sustring_by_coords(s, e.stmt_agents[0][0].coords) == 'FOXO3A'
+    assert _substring_by_coords(s, e.stmt_agents[0][0].coords) == 'FOXO3A'
     e = ea.EnglishAssembler()
     e.add_statements([st2])
     s = e.make_model()
     assert s == 'FOXO3A translocates from the cytoplasm.'
-    assert _sustring_by_coords(s, e.stmt_agents[0][0].coords) == 'FOXO3A'
+    assert _substring_by_coords(s, e.stmt_agents[0][0].coords) == 'FOXO3A'
     e = ea.EnglishAssembler()
     e.add_statements([st3])
     s = e.make_model()
     assert s == 'FOXO3A translocates to the nucleus.'
-    assert _sustring_by_coords(s, e.stmt_agents[0][0].coords) == 'FOXO3A'
+    assert _substring_by_coords(s, e.stmt_agents[0][0].coords) == 'FOXO3A'
     e = ea.EnglishAssembler()
     e.add_statements([st4])
     s = e.make_model()
     assert s == 'FOXO3A translocates from the cytoplasm to the nucleus.'
-    assert _sustring_by_coords(s, e.stmt_agents[0][0].coords) == 'FOXO3A'
+    assert _substring_by_coords(s, e.stmt_agents[0][0].coords) == 'FOXO3A'
 
 
 def test_gef():
@@ -504,3 +504,14 @@ def _stmt_to_text(st):
     s = e.make_model()
     print(s)
     return s
+
+
+def test_sentence_builder():
+    sb = ea.SentenceBuilder()
+    ac = ea.AgentWithCoordinates('BRAF', 'BRAF', {})
+    sb.append(ac)
+    assert len(sb.agents) == 1
+    assert sb.sentence == 'BRAF'
+    sb.prepend('phosphorylated ')
+    assert sb.sentence == 'phosphorylated BRAF'
+    assert sb.agents[0].coords == (15, 19), sb.agents[0].coords
