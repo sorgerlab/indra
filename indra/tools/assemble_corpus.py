@@ -596,7 +596,7 @@ def filter_by_type(stmts_in, stmt_type, **kwargs):
 
 def _agent_is_grounded(agent, score_threshold):
     grounded = True
-    db_names = list(set(agent.db_refs.keys()) - set(['TEXT']))
+    db_names = list(set(agent.db_refs.keys()) - set(['TEXT', 'TEXT_NORM']))
     # If there are no entries at all other than possibly TEXT
     if not db_names:
         grounded = False
