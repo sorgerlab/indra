@@ -93,7 +93,7 @@ def get_identifiers_url(db_name, db_id):
             url = 'http://www.lncrnadb.org/search/?q=%s' % db_id
         else:  # Assmuing HGNC symbol
             url = 'http://www.lncrnadb.org/%s/' % db_id
-    elif db_name == 'TEXT':
+    elif db_name == 'TEXT' or db_name == 'TEXT_NORM':
         return None
     # TODO: we should return the parent UniProt ID here but only once that
     # can be obtained from protmapper in a faster way
