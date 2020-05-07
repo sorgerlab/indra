@@ -746,3 +746,15 @@ def test_filter_by_curation():
     assert new_belief[0].belief == 1
     assert new_belief[1].belief == 1
     assert new_belief[2].belief == 0.7
+
+
+def test_eidos_ungrounded():
+    a = Agent('x', db_refs={'TEXT': 'x', 'TEXT_NORM': 'y'})
+    b = Agent('x', db_refs={'TEXT': 'x', })
+    c = Agent('x', db_refs={'TEXT': 'x', 'GO': 'GO:1234'})
+    stmts = [Activation(a, b),
+             Activation(a, c),
+             Activation(b, c),
+             Activation(c,c)]
+    stmts_out = ac.filter_grounded_only(stmts)
+    assert len(stmts_out) == 1
