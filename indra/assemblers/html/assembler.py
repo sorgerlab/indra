@@ -369,7 +369,7 @@ class HtmlAssembler(object):
             fh.write(self.model.encode('utf-8'))
 
 
-def _format_evidence_text(stmt, curation_dict=None):
+def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
     """Returns evidence metadata with highlighted evidence text.
 
     Parameters
@@ -388,6 +388,8 @@ def _format_evidence_text(stmt, curation_dict=None):
     """
     if curation_dict is None:
         curation_dict = {}
+    if correct_tags is None:
+        correct_tags = ['correct']
 
     def get_role(ag_ix):
         if isinstance(stmt, Complex) or \
@@ -441,13 +443,19 @@ def _format_evidence_text(stmt, curation_dict=None):
             format_text = tag_text(ev.text, indices)
 
         curation_key = (stmt.get_hash(), ev.source_hash)
-        num_curations = len(curation_dict.get(curation_key, []))
+        curations = curation_dict.get(curation_key, [])
+        num_curations = len(curations)
+        num_correct = len([cur for cur in curations if cur.tag in correct_tags])
+        num_incorrect = num_curations - num_correct
         ev_list.append({'source_api': source_api,
                         'pmid': ev.pmid,
                         'text_refs': ev.text_refs,
                         'text': format_text,
                         'source_hash': str(ev.source_hash),
-                        'num_curations': num_curations})
+                        'num_curations': num_curations,
+                        'num_correct': num_correct,
+                        'num_incorrect': num_incorrect
+                        })
 
     return ev_list
 
