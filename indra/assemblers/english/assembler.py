@@ -143,6 +143,13 @@ class AgentWithCoordinates():
         self.coords = (current_coords[0] + shift_by,
                        current_coords[1] + shift_by)
 
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return 'AgentWithCoordinates(%s (%s), coords=%s)' % (
+            self.agent_str, self.name, self.coords)
+
 
 class SentenceBuilder():
     """Builds a sentence from agents and strings.
