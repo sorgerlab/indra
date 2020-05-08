@@ -337,9 +337,14 @@ class Corpus(object):
 
         # Load json object
         if local_file.is_file():
-            if local_file.as_posix().endswith(file_defaults['sts'] + '.json'):
-                return stmts_from_json_file(local_file.as_posix(),
-                                            format='jsonl')
+            if local_file.as_posix().endswith(
+                    '/' + file_defaults['sts'] + '.json'):
+                with open(local_file.as_posix(), 'r') as fh:
+                    all_lines = fh.readlines()
+                    if len(all_lines) > 1:
+                        return [json.loads(s) for s in all_lines]
+                    else:
+                        return json.loads(all_lines[0])
             else:
                 return _json_loader(local_file.as_posix())
         return None
