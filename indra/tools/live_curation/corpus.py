@@ -3,6 +3,7 @@ import boto3
 import logging
 from os import environ
 from indra.statements import stmts_to_json, stmts_from_json
+from indra.statements.io import stmts_to_json_file
 from . import file_defaults, InvalidCorpusError, CACHE, default_bucket, \
     default_key_base, default_profile
 from .util import _stmts_dict_to_json, _json_to_stmts_dict, _json_dumper, \
@@ -329,3 +330,17 @@ class Corpus(object):
         if local_file.is_file():
             return _json_loader(local_file.as_posix())
         return None
+
+    def to_json_file(self, fname, w_newlines=False):
+        """Dump the statements to a file in json format
+
+        Parameters
+        ----------
+        fname : str
+            A valid file path
+        w_newlines : bool
+            If True, the statements will be separated by newlines in the
+            file. Default: False.
+        """
+        stmts_to_json_file(stmts=self.statements, fname=fname,
+                           format='jsonl' if w_newlines else 'json')
