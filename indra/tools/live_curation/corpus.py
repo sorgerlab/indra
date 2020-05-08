@@ -116,7 +116,7 @@ class Corpus(object):
             # Structure and upload assembled statements
             self._s3_put_file(s3,
                               sts,
-                              '\n'.join(json.dumps(jo, indent=1) for jo in
+                              '\n'.join(json.dumps(jo) for jo in
                                         _stmts_dict_to_json(self.statements)),
                               bucket)
 
