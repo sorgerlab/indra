@@ -3,7 +3,7 @@ import boto3
 import logging
 from os import environ
 from indra.statements import stmts_to_json, stmts_from_json
-from indra.statements.io import stmts_to_json_file
+from indra.statements.io import stmts_to_json_file, stmts_from_json_file
 from . import file_defaults, InvalidCorpusError, CACHE, default_bucket, \
     default_key_base, default_profile
 from .util import _stmts_dict_to_json, _json_to_stmts_dict, _json_dumper, \
@@ -107,18 +107,24 @@ class Corpus(object):
         try:
             s3 = self._get_s3_client()
             # Structure and upload raw statements
-            self._s3_put_file(s3, raw, stmts_to_json(self.raw_statements),
+            self._s3_put_file(s3,
+                              raw,
+                              json.dumps(stmts_to_json(self.raw_statements),
+                                         indent=1),
                               bucket)
 
             # Structure and upload assembled statements
-            self._s3_put_file(s3, sts, _stmts_dict_to_json(self.statements),
+            self._s3_put_file(s3,
+                              sts,
+                              '\n'.join(json.dumps(jo, indent=1) for jo in
+                                        _stmts_dict_to_json(self.statements)),
                               bucket)
 
             # Structure and upload curations
-            self._s3_put_file(s3, cur, self.curations, bucket)
+            self._s3_put_file(s3, cur, json.dumps(self.curations), bucket)
 
             # Upload meta data
-            self._s3_put_file(s3, meta, self.meta_data, bucket)
+            self._s3_put_file(s3, meta, json.dumps(self.meta_data), bucket)
 
             if cache:
                 self._save_to_cache(raw, sts, cur)
@@ -128,13 +134,12 @@ class Corpus(object):
             return None
 
     @staticmethod
-    def _s3_put_file(s3, key, json_obj, bucket=default_bucket):
+    def _s3_put_file(s3, key, json_str, bucket=default_bucket):
         """Does the json.dumps operation for the the upload, i.e. json_obj
         must be an object that can be turned into a bytestring using
         json.dumps"""
         logger.info('Uploading %s to S3' % key)
-        s3.put_object(Body=json.dumps(json_obj, indent=1),
-                      Bucket=bucket, Key=key)
+        s3.put_object(Body=json_str, Bucket=bucket, Key=key)
 
     def _save_to_cache(self, raw=None, sts=None, cur=None, meta=None):
         """Helper method that saves the current state of the provided
@@ -157,8 +162,8 @@ class Corpus(object):
             if not stsf.is_file():
                 stsf.parent.mkdir(exist_ok=True, parents=True)
                 stsf.touch(exist_ok=True)
-            _json_dumper(jsonobj=_stmts_dict_to_json(self.statements),
-                         fpath=stsf.as_posix())
+            stmts_to_json_file(stmts=[s for _, s in self.statements.items()],
+                               fname=stsf.as_posix(), format='jsonl')
 
         # Curation
         if cur:
@@ -220,8 +225,11 @@ class Corpus(object):
             if cache:
                 json_stmts = self._load_from_cache(sts) or []
             if not json_stmts:
-                json_stmts = json.loads(s3.get_object(
-                    Bucket=bucket, Key=sts)['Body'].read()) or []
+                raw_str = s3.get_object(Bucket=bucket, Key=sts)['Body'].read()
+                if len(raw_str.split('\n')) > 1:
+                    json_stmts = [json.loads(s) for s in raw_str.split('\n')]
+                else:
+                    json_stmts = json.loads(raw_str) or []
 
             self.statements = _json_to_stmts_dict(json_stmts)
 
@@ -287,7 +295,7 @@ class Corpus(object):
         if curations:
             self._s3_put_file(s3=self._get_s3_client(),
                               key=file_key,
-                              json_obj=curations,
+                              json_str=json.dumps(curations),
                               bucket=bucket)
 
         if self.curations and save_to_cache and not look_in_cache:
@@ -328,7 +336,11 @@ class Corpus(object):
 
         # Load json object
         if local_file.is_file():
-            return _json_loader(local_file.as_posix())
+            if local_file.as_posix().endswith(file_defaults['sts'] + '.json'):
+                return stmts_from_json_file(local_file.as_posix(),
+                                            format='jsonl')
+            else:
+                return _json_loader(local_file.as_posix())
         return None
 
     def to_json_file(self, fname, w_newlines=False):
