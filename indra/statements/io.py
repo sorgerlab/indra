@@ -103,7 +103,7 @@ def stmts_to_json_file(stmts, fname, format='json', **kwargs):
     """
     sj = stmts_to_json(stmts, **kwargs)
     with open(fname, 'w') as fh:
-        if format == json:
+        if format == 'json':
             json.dump(sj, fh, indent=1)
         else:
             for json_stmt in sj:
