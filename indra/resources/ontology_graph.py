@@ -87,7 +87,7 @@ class IndraOntology(networkx.MultiDiGraph):
         self.add_edges_from(edges)
 
     def add_obo_nodes(self):
-        namespaces = ['go', 'efo', 'hp', 'efo']
+        namespaces = ['go', 'efo', 'hp', 'doid', 'chebi']
         nodes = []
         for ns in namespaces:
             oc = obo_client.OboClient(prefix=ns)
@@ -97,7 +97,7 @@ class IndraOntology(networkx.MultiDiGraph):
         self.add_nodes_from(nodes)
 
     def add_obo_hierarchies(self):
-        namespaces = ['go', 'efo', 'hp', 'efo']
+        namespaces = ['go', 'efo', 'hp', 'doid', 'chebi']
         edges = []
         for ns in namespaces:
             oc = obo_client.OboClient(prefix=ns)
@@ -107,12 +107,6 @@ class IndraOntology(networkx.MultiDiGraph):
                         edges.append((label(ns.upper(), db_id),
                                       target, {'type': rel}))
         self.add_edges_from(edges)
-
-    def add_chebi_nodes(self):
-        nodes = [(label('CHEBI', chebi_id), {'name': name, 'ns': 'CHEBI',
-                                             'id': chebi_id})
-                 for chebi_id, name in chebi_client.chebi_id_to_name.items()]
-        self.add_node(nodes)
 
 
 def label(ns, id):
