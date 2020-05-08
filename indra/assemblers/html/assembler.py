@@ -290,7 +290,7 @@ class HtmlAssembler(object):
                         if isinstance(dbid, set):
                             logger.info("Removing %s from top level refs "
                                         "due to multiple matches: %s"
-                                           % (dbn, dbid))
+                                        % (dbn, dbid))
                             del ag.db_refs[dbn]
                 tl_label = make_top_level_label_from_names_key(tlg['names'])
                 tl_label = re.sub("<b>(.*?)</b>", r"\1", tl_label)
@@ -406,10 +406,10 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
     for ix, ev in enumerate(stmt.evidence):
         # Expand the source api to include the sub-database
         if ev.source_api == 'biopax' and \
-           'source_sub_id' in ev.annotations and \
-           ev.annotations['source_sub_id']:
-           source_api = '%s:%s' % (ev.source_api,
-                                   ev.annotations['source_sub_id'])
+                'source_sub_id' in ev.annotations and \
+                ev.annotations['source_sub_id']:
+            source_api = '%s:%s' % (ev.source_api,
+                                    ev.annotations['source_sub_id'])
         else:
             source_api = ev.source_api
         # Prepare the evidence text
@@ -438,8 +438,7 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
                 # Build up a set of indices
                 indices += [(m.start(), m.start() + len(ag_text),
                              ag_text, tag_start, tag_close)
-                             for m in re.finditer(re.escape(ag_text),
-                                                  ev.text)]
+                            for m in re.finditer(re.escape(ag_text), ev.text)]
             format_text = tag_text(ev.text, indices)
 
         curation_key = (stmt.get_hash(), ev.source_hash)
