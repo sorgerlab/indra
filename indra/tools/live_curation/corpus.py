@@ -225,7 +225,8 @@ class Corpus(object):
             if cache:
                 json_stmts = self._load_from_cache(sts) or []
             if not json_stmts:
-                raw_str = s3.get_object(Bucket=bucket, Key=sts)['Body'].read()
+                raw_str = s3.get_object(Bucket=bucket, Key=sts)[
+                    'Body'].read().decode()
                 if len(raw_str.split('\n')) > 1:
                     json_stmts = [json.loads(s) for s in raw_str.split('\n')]
                 else:
