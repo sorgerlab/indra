@@ -342,5 +342,6 @@ class Corpus(object):
             If True, the statements will be separated by newlines in the
             file. Default: False.
         """
-        stmts_to_json_file(stmts=self.statements, fname=fname,
+        stmts_to_json_file(stmts=[s for _, s in self.statements.items()],
+                           fname=fname,
                            format='jsonl' if w_newlines else 'json')
