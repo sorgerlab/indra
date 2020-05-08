@@ -3,6 +3,7 @@ import networkx
 from indra.util import read_unicode_csv
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
     mesh_client, obo_client
+from .shortest_path import bidirectional_shortest_path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -18,9 +19,40 @@ class IndraOntology(networkx.MultiDiGraph):
         # Add xrefs
         self.add_hgnc_uniprot_xrefs()
         self.add_famplex_xrefs()
+        self.add_chemical_xrefs()
         # Add hierarchies
         self.add_famplex_hierarchy()
         self.add_obo_hierarchies()
+
+    def _check_path(self, ns1, id1, ns2, id2, edge_types):
+        try:
+            path = bidirectional_shortest_path(self,
+                                               label(ns1, id1),
+                                               label(ns2, id2),
+                                               edge_types=edge_types)
+        except networkx.NetworkXError:
+            return False
+        return True
+
+    def get_ns(self, node):
+        return self.nodes[node].get('ns') or \
+            node.split(':', maxsplit=1)[0]
+
+    def maps_to(self, ns1, id1, ns2, id2):
+        return self._check_path(ns1, id1, ns2, id2, {'xref'})
+
+    def isa(self, ns1, id1, ns2, id2):
+        return self._check_path(ns1, id1, ns2, id2, {'isa'})
+
+    def map_to(self, ns1, id1, ns2):
+        source = label(ns1, id1)
+        targets = []
+        for _, target, data in self.edges(source, data=True):
+            if data['type'] == 'xref' and self.get_ns(target) == ns2:
+                targets.append(target)
+        if len(targets) == 1:
+            return targets[0]
+        return None
 
     def add_hgnc_nodes(self):
         nodes = [(label('HGNC', hid),
@@ -106,6 +138,46 @@ class IndraOntology(networkx.MultiDiGraph):
                     for target in targets:
                         edges.append((label(ns.upper(), db_id),
                                       target, {'type': rel}))
+        self.add_edges_from(edges)
+
+    def add_chemical_xrefs(self):
+        edges = []
+        # Chebi/Chembl
+        for chebi_id, chembl_id in chebi_client.chebi_chembl.items():
+            edges.append((label('CHEBI', chebi_id),
+                          label('CHEMBL', chembl_id),
+                          {'type': 'xref', 'source': 'chebi'}))
+            edges.append((label('CHEMBL', chembl_id),
+                          label('CHEBI', chebi_id),
+                          {'type': 'xref', 'source': 'chebi'}))
+
+        # Chebi/PubChem
+        for chebi_id, pubchem_id in chebi_client.chebi_pubchem.items():
+            edges.append((label('CHEBI', chebi_id),
+                          label('PUBCHEM', pubchem_id),
+                          {'type': 'xref', 'source': 'chebi'}))
+            edges.append((label('PUBCHEM', pubchem_id),
+                          label('CHEBI', chebi_id),
+                          {'type': 'xref', 'source': 'chebi'}))
+
+        # Chebi/HMDB
+        for hmdb_id, chebi_id in chebi_client.hmdb_chebi.items():
+            edges.append((label('CHEBI', chebi_id),
+                          label('HMDB', hmdb_id),
+                          {'type': 'xref', 'source': 'chebi'}))
+            edges.append((label('HMDB', hmdb_id),
+                          label('CHEBI', chebi_id),
+                          {'type': 'xref', 'source': 'chebi'}))
+
+        # Chebi/CAS
+        for cas_id, chebi_id in chebi_client.cas_chebi.items():
+            edges.append((label('CHEBI', chebi_id),
+                          label('CAS', cas_id),
+                          {'type': 'xref', 'source': 'chebi'}))
+            edges.append((label('CAS', cas_id),
+                          label('CHEBI', chebi_id),
+                          {'type': 'xref', 'source': 'chebi'}))
+
         self.add_edges_from(edges)
 
 
