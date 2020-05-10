@@ -46,19 +46,19 @@ class OboClient:
         ambig_synonyms = set()
         for db_id, entry in self.entries.items():
             xrs = defaultdict(list)
-            for xref in entry['xrefs']:
+            for xref in entry.get('xrefs', []):
                 xrs[xref['namespace']].append(xref['id'])
             entry['xrefs'] = dict(xrs)
 
             self.name_to_id[entry['name']] = db_id
-            for synonym in entry['synonyms']:
+            for synonym in entry.get('synonyms', []):
                 # Make a note of this is an ambiguous synonym so that we can
                 # get rid of it after the loop, e.g., "multiciliation"
                 if synonym in self.synonym_to_id:
                     ambig_synonyms.add(synonym)
                 self.synonym_to_id[synonym] = db_id
 
-            for db_alt_id in entry['alt_ids']:
+            for db_alt_id in entry.get('alt_ids', []):
                 if db_alt_id in self.entries:
                     raise ValueError(
                         'Problem with integrity of {}:{}'.format(
