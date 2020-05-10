@@ -165,9 +165,11 @@ class IndraNetAssembler():
             *stmt_hash*
                 An unique long integer hash.
             *belief*
+                -
             *source_counts*
                 Get counts of evidence per source
             *initial_sign*
+                -
         """
         rows = []
         if exclude_stmts:
