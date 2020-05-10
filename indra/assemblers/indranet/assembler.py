@@ -118,7 +118,8 @@ class IndraNetAssembler():
             )
         elif graph_type == 'signed':
             model = IndraNet.signed_from_df(df, sign_dict=sign_dict,
-                                            flattening_method=belief_flattening,
+                                            flattening_method=b
+                                            elief_flattening,
                                             weight_mapping=weight_flattening)
         else:
             raise TypeError('Have to specify one of \'multi_graph\', '
@@ -144,7 +145,10 @@ class IndraNetAssembler():
         -------
         df : pd.DataFrame
             Pandas DataFrame object containing information extracted from
-            statements.
+            statements. It contains following columns,
+            `agA_name`, `agB_name`, `agA_ns`, `agA_id`,
+            `agB_ns`, `agB_id`, `stmt_type`, `evidence_count`,
+            `stmt_hash`, `belief`, `source_counts` and `initial_sign`.
         """
         rows = []
         if exclude_stmts:
