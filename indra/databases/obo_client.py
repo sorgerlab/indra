@@ -160,7 +160,9 @@ class OboClient:
             OboClient.entries_from_graph(g, prefix=prefix,
                                          remove_prefix=remove_prefix,
                                          allowed_synonyms=allowed_synonyms)
-
+        entries = prune_empty_entries(entries,
+                                      {'synonyms', 'xrefs',
+                                       'alt_ids', 'relations'})
         with open(resource_path, 'w') as file:
             json.dump(entries, file, indent=2, sort_keys=True)
 
@@ -275,3 +277,11 @@ class OboClient:
             ID.
         """
         return self.entries.get(db_id, {}).get(rel_type, [])
+
+
+def prune_empty_entries(entries, keys):
+    for entry in entries:
+        for key in keys:
+            if key in entry and not entry[key]:
+                entry.pop(key)
+    return entries
