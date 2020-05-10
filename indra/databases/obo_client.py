@@ -164,7 +164,7 @@ class OboClient:
                                       {'synonyms', 'xrefs',
                                        'alt_ids', 'relations'})
         with open(resource_path, 'w') as file:
-            json.dump(entries, file, indent=2, sort_keys=True)
+            json.dump(entries, file, indent=1, sort_keys=True)
 
     def count_xrefs(self):
         """Count how many xrefs there are to each database."""
