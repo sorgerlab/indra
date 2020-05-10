@@ -71,25 +71,15 @@ class OboClient:
                               if k not in ambig_synonyms}
 
     @staticmethod
-    def update_resource(directory, url, prefix, *args, remove_prefix=False,
-                        allowed_synonyms=None):
-        """Write the OBO information to files in the given directory."""
+    def entries_from_graph(obo_graph, prefix, remove_prefix=False,
+                           allowed_synonyms=None):
+        """Return processed entries from an OBO graph."""
         allowed_synonyms = allowed_synonyms if allowed_synonyms is not None \
             else {'EXACT', 'RELATED'}
+
         prefix_upper = prefix.upper()
-
-        resource_path = _make_resource_path(directory, prefix)
-        obo_path = os.path.join(directory, '%s.obo.pkl' % prefix)
-        if os.path.exists(obo_path):
-            with open(obo_path, 'rb') as file:
-                g = pickle.load(file)
-        else:
-            g = obonet.read_obo(url)
-            with open(obo_path, 'wb') as file:
-                pickle.dump(g, file)
-
         entries = []
-        for node, data in g.nodes(data=True):
+        for node, data in obo_graph.nodes(data=True):
             # There are entries in some OBOs that are actually from other
             # ontologies
             if not node.startswith(prefix_upper):
@@ -150,6 +140,26 @@ class OboClient:
                 'alt_ids': data.get('alt_id', []),
                 'relations': rels_dict,
             })
+        return entries
+
+    @staticmethod
+    def update_resource(directory, url, prefix, *args, remove_prefix=False,
+                        allowed_synonyms=None):
+        """Write the OBO information to files in the given directory."""
+        resource_path = _make_resource_path(directory, prefix)
+        obo_path = os.path.join(directory, '%s.obo.pkl' % prefix)
+        if os.path.exists(obo_path):
+            with open(obo_path, 'rb') as file:
+                g = pickle.load(file)
+        else:
+            g = obonet.read_obo(url)
+            with open(obo_path, 'wb') as file:
+                pickle.dump(g, file)
+
+        entries = \
+            OboClient.entries_from_graph(g, prefix=prefix,
+                                         remove_prefix=remove_prefix,
+                                         allowed_synonyms=allowed_synonyms)
 
         with open(resource_path, 'w') as file:
             json.dump(entries, file, indent=2, sort_keys=True)
