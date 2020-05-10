@@ -144,10 +144,30 @@ class IndraNetAssembler():
         -------
         df : pd.DataFrame
             Pandas DataFrame object containing information extracted from
-            statements. It contains following columns, `agA_name`, `agB_name`,
-            `agA_ns`, `agA_id`, `agB_ns`, `agB_id`, `stmt_type`,
-            `evidence_count`, `stmt_hash`, `belief`, `source_counts`
-            and `initial_sign`.
+            statements. It contains following columns:
+            
+            *agA_name*
+                Agent's name
+            *agA_ns*
+                Agent's namespace
+            *agA_id*
+                Agent's ID as per `db_refs`
+            *ags_ns,agB_name,agB_id*
+                As above for the second agent. Note that the Agent may be None
+                (and these fields left empty) if the Statement consists only
+                of a single Agent (e.g., SelfModification, ActiveForm,
+                or Translocation statement).
+            *stmt_type*
+                Statement type, given by the name of the class
+                in indra.statements.
+            *evidence_count*
+                Number of evidence
+            *stmt_hash*
+                An unique long integer hash.
+            *belief*
+            *source_counts*
+                Get counts of evidence per source
+            *initial_sign*
         """
         rows = []
         if exclude_stmts:
