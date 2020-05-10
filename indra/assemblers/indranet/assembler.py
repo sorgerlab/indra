@@ -61,10 +61,10 @@ class IndraNetAssembler():
             Maximum allowed size of a complex to be included in the graph.
             All complexes larger than complex_members will be rejected. For
             accepted complexes, all permutations of their members will be added
-            as edges.
+            as edges. Default is `3`.
         graph_type : str
             Specify the type of graph to assemble. Chose from 'multi_graph'
-            (default), 'digraph', 'signed'.
+            (default), 'digraph', 'signed'. Default is `multi_graph`
         sign_dict : dict
             A dictionary mapping a Statement type to a sign to be used for
             the edge. This parameter is only used with the 'signed' option.
@@ -139,7 +139,7 @@ class IndraNetAssembler():
             Maximum allowed size of a complex to be included in the
             data frame. All complexes larger than complex_members will be
             rejected. For accepted complexes, all permutations of their
-            members will be added as dataframe records.
+            members will be added as dataframe records. Default is `3`.
 
         Returns
         -------
