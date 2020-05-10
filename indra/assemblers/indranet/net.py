@@ -50,10 +50,13 @@ class IndraNet(nx.MultiDiGraph):
             A :py:class:`pandas.DataFrame` with each row containing node and
             edge data for one edge. Indices are used to distinguish
             multiedges between a pair of nodes. Any columns not part of the
-            mandatory columns are considered extra attributes. Columns
-            starting with 'agA\_' or 'agB\_' (excluding the agA/B_name) will
-            be added to its respective nodes as node attributes. Any other
+            below mentioned mandatory columns are considered extra attributes.
+            Columns starting with 'agA\_' or 'agB\_' (excluding the agA/B_name)
+            will be added to its respective nodes as node attributes. Any other
             columns will be added as edge attributes.
+            Mandatory columns are : `agA_name`, `agB_name`, 'agA_ns', 'agA_id',
+            'agB_ns', 'agB_id', 'stmt_type', 'evidence_count', 'stmt_hash',
+            'belief' and `source_counts`.
 
         Returns
         -------
