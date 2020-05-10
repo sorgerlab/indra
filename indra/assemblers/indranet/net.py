@@ -54,7 +54,7 @@ class IndraNet(nx.MultiDiGraph):
             Columns starting with 'agA\_' or 'agB\_' (excluding the agA/B_name)
             will be added to its respective nodes as node attributes. Any other
             columns will be added as edge attributes.
-            
+
             Mandatory columns are : `agA_name`, `agB_name`, `agA_ns`, `agA_id`,
             `agB_ns`, `agB_id`, `stmt_type`, `evidence_count`, `stmt_hash`,
             `belief` and `source_counts`.
@@ -226,7 +226,22 @@ class IndraNet(nx.MultiDiGraph):
 
     @classmethod
     def digraph_from_df(cls, df, flattening_method=None, weight_mapping=None):
-        """Create a digraph from a pandas DataFrame."""
+        """Create a digraph from a pandas DataFrame.
+        
+        Parameters
+        ----------
+        df : pd.DataFrame
+        flattening_method : str|function
+            The method to use when updating the belief for the flattened edge
+        weight_mapping : function
+            A function taking at least the graph G as an argument and
+            returning G after adding edge weights as an edge attribute to the
+            flattened edges using the reserved keyword 'weight'.
+            
+        Returns
+        -------
+        IndraNet(nx.DiGraph)
+             An IndraNet graph flattened to a DiGraph"""
         net = cls.from_df(df)
         return net.to_digraph(flattening_method=flattening_method,
                               weight_mapping=weight_mapping)
