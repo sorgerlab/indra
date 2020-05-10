@@ -227,7 +227,7 @@ class IndraNet(nx.MultiDiGraph):
     @classmethod
     def digraph_from_df(cls, df, flattening_method=None, weight_mapping=None):
         """Create a digraph from a pandas DataFrame.
-        
+
         Parameters
         ----------
         df : pd.DataFrame
@@ -237,7 +237,7 @@ class IndraNet(nx.MultiDiGraph):
             A function taking at least the graph G as an argument and
             returning G after adding edge weights as an edge attribute to the
             flattened edges using the reserved keyword 'weight'.
-            
+
         Returns
         -------
         IndraNet(nx.DiGraph)
@@ -249,7 +249,29 @@ class IndraNet(nx.MultiDiGraph):
     @classmethod
     def signed_from_df(cls, df, sign_dict=None, flattening_method=None,
                        weight_mapping=None):
-        """Create a signed graph from a pandas DataFrame."""
+        """Create a signed graph from a pandas DataFrame.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+        sign_dict : dict
+            A dictionary mapping a Statement type to a sign to be used for
+            the edge. By default only Activation and IncreaseAmount are added
+            as positive edges and Inhibition and DecreaseAmount are added as
+            negative edges, but a user can pass any other Statement types in
+            a dictionary.
+         flattening_method : str|function
+            The method to use when updating the belief for the flattened edge.
+         weight_mapping : function
+            A function taking at least the graph G as an argument and
+            returning G after adding edge weights as an edge attribute to the
+            flattened edges using the reserved keyword 'weight'.
+
+        Returns
+        -------
+        IndraNet(nx.MultiDiGraph)
+            An IndraNet graph flattened to a signed graph
+        """
         net = cls.from_df(df)
         return net.to_signed_graph(sign_dict=sign_dict,
                                    flattening_method=flattening_method,
