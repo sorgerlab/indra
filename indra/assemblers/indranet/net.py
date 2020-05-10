@@ -54,9 +54,10 @@ class IndraNet(nx.MultiDiGraph):
             Columns starting with 'agA\_' or 'agB\_' (excluding the agA/B_name)
             will be added to its respective nodes as node attributes. Any other
             columns will be added as edge attributes.
-            Mandatory columns are : `agA_name`, `agB_name`, 'agA_ns', 'agA_id',
-            'agB_ns', 'agB_id', 'stmt_type', 'evidence_count', 'stmt_hash',
-            'belief' and `source_counts`.
+            
+            Mandatory columns are : `agA_name`, `agB_name`, `agA_ns`, `agA_id`,
+            `agB_ns`, `agB_id`, `stmt_type`, `evidence_count`, `stmt_hash`,
+            `belief` and `source_counts`.
 
         Returns
         -------
