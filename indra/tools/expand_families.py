@@ -1,8 +1,6 @@
 import logging
 import itertools
 from copy import deepcopy
-from indra.preassembler.hierarchy_manager import HierarchyManager, \
-    hierarchies as default_hierarchies
 from indra.statements import Agent, Complex, Evidence
 from indra.preassembler.grounding_mapper import standardize_agent_name
 
@@ -10,11 +8,12 @@ logger = logging.getLogger(__name__)
 
 
 class Expander(object):
-    def __init__(self, hierarchies=None):
-        if hierarchies is None:
-            self.entities = default_hierarchies['entity']
+    def __init__(self, ontology=None):
+        if ontology is None:
+            from indra.ontology.bio import bio_ontology
+            self.ontology = bio_ontology
         else:
-            self.entities = hierarchies['entity']
+            self.ontology = ontology
 
     def expand_families(self, stmts):
         """Generate statements by expanding members of families and complexes.
@@ -26,14 +25,18 @@ class Expander(object):
             # tuples like [(BRAF, RAF1, ARAF), (MAP2K1, MAP2K2)]
             families_list = []
             for ag in stmt.agent_list():
-                ag_children = self.get_children(ag)
-                # If the agent has no children, then we use the agent itself
-                if len(ag_children) == 0:
+                if ag is None:
                     families_list.append([ag])
-                # Otherwise, we add the tuple of namespaces/IDs for the children
                 else:
-                    families_list.append(ag_children)
-            # Now, put together new statements frmo the cross product of the
+                    db_ns, db_id = ag.get_grounding()
+                    if db_ns == 'FPLX':
+                        children = self.ontology.get_children(db_ns, db_id)
+                        children = [c for c in children if c[0] == 'HGNC']
+                        if children:
+                            families_list.append(children)
+                            continue
+                    families_list.append([ag])
+            # Now, put together new statements from the cross product of the
             # expanded family members
             for ag_combo in itertools.product(*families_list):
                 # Create new agents based on the namespaces/IDs, with
@@ -65,48 +68,27 @@ class Expander(object):
                 new_stmts.append(new_stmt)
         return new_stmts
 
-    def get_children(self, agent, ns_filter='HGNC'):
-        if agent is None:
-            return []
-        # Get the grounding for the agent
-        (ns, id) = agent.get_grounding()
-        # If there is no grounding for this agent, then return no children
-        # (empty list)
-        if ns is None or id is None:
-            return []
-        # Get URI for agent
-        ag_uri = self.entities.get_uri(ns, id)
-        # Look up the children for this family
-        children_uris = self.entities.get_children(ag_uri)
-        if not children_uris:
-            return []
-        # Parse children URI list into namespaces and ID
-        children_parsed = []
-        for child_uri in children_uris:
-            child_ns, child_id = self.entities.ns_id_from_uri(child_uri)
-            # If ns_filter is None, add in all children
-            if ns_filter is None:
-                children_parsed.append((child_ns, child_id))
-            # Otherwise, only add children with a matching namespace
-            elif child_ns == ns_filter:
-                children_parsed.append((child_ns, child_id))
-        return children_parsed
-
     def complexes_from_hierarchy(self):
         # Iterate over the partof_closure to determine all of the complexes
         # and all of their members
+        fplx_nodes = [n for n in self.ontology.nodes if n.startswith('FPLX')]
         all_complexes = {}
-        for subunit, complex in self.entities.partof_closure:
-            complex_subunits = all_complexes.get(complex, [])
-            complex_subunits.append(subunit)
-            all_complexes[complex] = complex_subunits
+        for fplx_node in fplx_nodes:
+            parts = self.ontology.get_ancestors(*fplx_node, {'partof'})
+            if not parts:
+                continue
+            complex_subunits = all_complexes.get(fplx_node, [])
+            for part in parts:
+                complex_subunits.append(part)
+            all_complexes[fplx_node] = complex_subunits
+
         # Now iterate over all of the complexes and create Complex statements
         complex_stmts = []
         for complex, subunits in all_complexes.items():
             # Create an Evidence object for the statement with the URI of the
             # complex as the source_id
             ev = Evidence(source_api='famplex', source_id=complex)
-            subunit_agents = [_agent_from_uri(su) for su in subunits]
+            subunit_agents = [_agent_from_ns_id(*su) for su in subunits]
             complex_stmt = Complex(subunit_agents, evidence=[ev])
             complex_stmts.append(complex_stmt)
         return complex_stmts
@@ -115,12 +97,6 @@ class Expander(object):
         complex_stmts = self.complexes_from_hierarchy()
         expanded_complexes = self.expand_families(complex_stmts)
         return expanded_complexes
-
-
-def _agent_from_uri(uri):
-    ag_ns, ag_id = HierarchyManager.ns_id_from_uri(uri)
-    agent = _agent_from_ns_id(ag_ns, ag_id)
-    return agent
 
 
 def _agent_from_ns_id(ag_ns, ag_id):
