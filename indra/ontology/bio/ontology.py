@@ -110,6 +110,9 @@ class BioOntology(IndraOntology):
         namespaces = ['go', 'efo', 'hp', 'doid', 'chebi']
         edges = []
         rel_mappings = {
+            'xref': 'xref',
+            'isa': 'isa',
+            'partof': 'partof',
             'is_a': 'isa',
             'part_of': 'partof',
             # These are for ChEBI: identical to the old behavior but it might
@@ -123,8 +126,10 @@ class BioOntology(IndraOntology):
             oc = obo_client.OboClient(prefix=ns)
             for db_id, entry in oc.entries.items():
                 for rel, targets in entry.get('relations', {}).items():
-                    mapped_rel = rel_mappings[rel] \
-                        if rel in rel_mappings else rel
+                    # Skip unknown relation types
+                    mapped_rel = rel_mappings.get(rel)
+                    if not mapped_rel:
+                        continue
                     for target in targets:
                         edges.append((label(ns.upper(), db_id),
                                       label(ns.upper(), target),
@@ -223,7 +228,7 @@ class BioOntology(IndraOntology):
         self.add_edges_from([
             (label('INDRA_ACTIVITIES', source),
              label('INDRA_ACTIVITIES', target),
-             {'rel': 'isa'})
+             {'type': 'isa'})
             for source, target in rels
         ]
         )
@@ -232,7 +237,7 @@ class BioOntology(IndraOntology):
         self.add_edges_from([
             (label('INDRA_MODS', source),
              label('INDRA_MODS', 'modification'),
-             {'rel': 'isa'})
+             {'type': 'isa'})
             for source in modtype_conditions
             if source != 'modification'
         ]

@@ -48,13 +48,13 @@ def test_isa_activity_not():
 
 
 def test_partof_comp():
-    assert bio_ontology.partof(
+    assert bio_ontology.isa_or_partof(
         'GO', go_client.get_go_id_from_label('cytoplasm'),
         'GO', go_client.get_go_id_from_label('cellular_component'))
 
 
 def test_partof_comp_not():
-    assert not bio_ontology.partof(
+    assert not bio_ontology.isa_or_partof(
         'GO', go_client.get_go_id_from_label('cellular_component'),
         'GO', go_client.get_go_id_from_label('cytoplasm'))
 

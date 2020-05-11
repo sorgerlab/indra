@@ -9,10 +9,12 @@ logger = logging.getLogger(__name__)
 class IndraOntology(networkx.DiGraph):
     def _check_path(self, ns1, id1, ns2, id2, edge_types):
         try:
-            path = bidirectional_shortest_path(self,
-                                               label(ns1, id1),
-                                               label(ns2, id2),
-                                               edge_types=edge_types)
+            bidirectional_shortest_path(self,
+                                        label(ns1, id1),
+                                        label(ns2, id2),
+                                        edge_types=edge_types)
+        except networkx.exception.NodeNotFound:
+            return False
         except networkx.exception.NetworkXNoPath:
             return False
         return True

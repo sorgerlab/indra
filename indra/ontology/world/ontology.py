@@ -10,7 +10,7 @@ from ..ontology_graph import IndraOntology, label
 
 
 wm_ont_url = ('https://raw.githubusercontent.com/WorldModelers/'
-              'Ontologies/master/wm_metadata.yml')
+              'Ontologies/master/wm_flat_metadata.yml')
 
 
 def get_term(node, prefix):
@@ -61,13 +61,13 @@ class WorldOntology(IndraOntology):
 
             if child[0] != '_' and child != 'examples':
                 child_term = get_term(child, this_prefix)
-                edges.append((child_term, this_term, {'rel': 'isa'}))
+                edges.append((child_term, this_term, {'type': 'isa'}))
                 opp = entry.get('opposite')
                 if opp:
                     parts = opp.split('/')
                     opp_term = get_term(parts[-1], '/'.join(parts[:-1]))
-                    edges.append((opp_term, child_term, {'rel': 'is_opposite'}))
-                    edges.append((child_term, opp_term, {'rel': 'is_opposite'}))
+                    edges.append((opp_term, child_term, {'type': 'is_opposite'}))
+                    edges.append((child_term, opp_term, {'type': 'is_opposite'}))
                 pol = entry.get('polarity')
                 if pol is not None:
                     nodes[child_term]['polarity'] = pol
