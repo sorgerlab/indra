@@ -6,6 +6,7 @@ from indra.util import read_unicode_csv
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
     mesh_client, obo_client
 from indra.sources.trips.processor import ncit_map
+from indra.statements import modtype_conditions
 from .shortest_path import bidirectional_shortest_path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -109,7 +110,8 @@ class BioOntology(IndraOntology):
         self.add_famplex_hierarchy()
         self.add_obo_hierarchies()
         self.add_mesh_hierarchy()
-
+        self.add_activity_hierarchy()
+        self.add_modification_hierarchy()
 
     def add_hgnc_nodes(self):
         nodes = [(label('HGNC', hid), {'name': hname})
@@ -275,6 +277,34 @@ class BioOntology(IndraOntology):
                           label(target_ns, target_id),
                           {'type': 'xref', 'source': 'ncit'}))
         self.add_edges_from(edges)
+
+    def add_activity_hierarchy(self):
+        rels = [
+            ('transcription', 'activity'),
+            ('catalytic', 'activity'),
+            ('gtpbound', 'activity'),
+            ('kinase', 'catalytic'),
+            ('phosphatase', 'catalytic'),
+            ('gef', 'catalytic'),
+            ('gap', 'catalytic')
+        ]
+        self.add_edges_from([
+            (label('INDRA_ACTIVITIES', source),
+             label('INDRA_ACTIVITIES', target),
+             {'rel': 'isa'})
+            for source, target in rels
+            ]
+        )
+
+    def add_modification_hierarchy(self):
+        self.add_edges_from([
+            (label('INDRA_MODS', source),
+             label('INDRA_MODS', 'modification'),
+             {'rel': 'isa'})
+            for source in modtype_conditions
+            if source != 'modification'
+            ]
+        )
 
 
 def label(ns, id):
