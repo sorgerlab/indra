@@ -2,9 +2,7 @@ __all__ = ['get_valid_residue', 'activity_types',
            'amino_acids', 'amino_acids_reverse',
            'InvalidLocationError', 'InvalidResidueError']
 
-
 import os
-import rdflib
 
 
 def get_valid_residue(residue):
@@ -18,24 +16,9 @@ def get_valid_residue(residue):
     return residue
 
 
-def _read_activity_types():
-    """Read types of valid activities from a resource file."""
-    this_dir = os.path.dirname(os.path.abspath(__file__))
-    ac_file = os.path.join(this_dir, os.pardir, 'resources',
-                           'activity_hierarchy.rdf')
-    g = rdflib.Graph()
-    with open(ac_file, 'r'):
-        g.parse(ac_file, format='nt')
-    act_types = set()
-    for s, _, o in g:
-        subj = s.rpartition('/')[-1]
-        obj = o.rpartition('/')[-1]
-        act_types.add(subj)
-        act_types.add(obj)
-    return sorted(list(act_types))
-
-
-activity_types = _read_activity_types()
+# FIXME: this list could be read from the ontology or another resource file
+activity_types = {'transcription', 'activity', 'catalytic' 'gtpbound',
+                  'kinase', 'phosphatase', 'gef', 'gap'}
 
 
 def _read_amino_acids():

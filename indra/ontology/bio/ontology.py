@@ -8,7 +8,7 @@ from indra.statements import modtype_conditions
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-resources = os.path.join(HERE, os.pardir, 'resources')
+resources = os.path.join(HERE, os.pardir, os.pardir, 'resources')
 
 
 class BioOntology(IndraOntology):
