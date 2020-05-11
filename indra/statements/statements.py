@@ -1726,21 +1726,23 @@ class Translocation(Statement):
         return s
 
     def refinement_of(self, other, ontology):
+        from indra.databases import go_client
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
         # Check several conditions for refinement
         ref1 = self.agent.refinement_of(other.agent, ontology)
-        # FIXME: this shouldn't be using the INDRA_LOCATIONS name space
+        ofl = go_client.get_go_id_from_label(other.from_location)
+        sfl = go_client.get_go_id_from_label(self.from_location)
+        otl = go_client.get_go_id_from_label(other.to_location)
+        stl = go_client.get_go_id_from_label(self.to_location)
         ref2 = (other.from_location is None or
                 self.from_location == other.from_location or
-            ontology.partof('INDRA_LOCATIONS', self.from_location,
-                            'INDRA_LOCATIONS', other.from_location))
+                ontology.partof('GO', sfl, 'GO', ofl))
         ref3 = (other.to_location is None or
                 self.to_location == other.to_location or
-            ontology.partof('INDRA_LOCATIONS', self.to_location,
-                            'INDRA_LOCATIONS', other.to_location))
-        return (ref1 and ref2 and ref3)
+                ontology.partof('GO', stl, 'GO', otl))
+        return ref1 and ref2 and ref3
 
     def equals(self, other):
         matches = super(Translocation, self).equals(other)

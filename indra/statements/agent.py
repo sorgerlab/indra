@@ -149,6 +149,7 @@ class Agent(Concept):
                                       other_id)
 
     def refinement_of(self, other, ontology):
+        from indra.databases import go_client
         # Make sure the Agent types match
         if type(self) != type(other):
             return False
@@ -246,10 +247,9 @@ class Agent(Concept):
         elif other.location is not None:
             # If the other location is part of this location then
             # self.location is not a refinement
-            # FIXME: this shouldn't be using the INDRA_LOCATIONS name space
-            if not ontology.partof(
-                    'INDRA_LOCATIONS', self.location,
-                    'INDRA_LOCATIONS', other.location):
+            sl = go_client.get_go_id_from_label(self.location)
+            ol = go_client.get_go_id_from_label(other.location)
+            if not ontology.partof('GO', sl, 'GO', ol):
                 return False
 
         # ACTIVITY
