@@ -1,0 +1,1 @@
+from .ontology import bio_ontology

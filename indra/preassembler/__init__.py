@@ -120,7 +120,7 @@ class Preassembler(object):
         De-duplicate and combine evidence for two statements differing only
         in their evidence lists:
 
-        >>> from indra.preassembler.ontology_graph import bio_ontology
+        >>> from indra.ontology.bio import bio_ontology
         >>> map2k1 = Agent('MAP2K1')
         >>> mapk1 = Agent('MAPK1')
         >>> stmt1 = Phosphorylation(map2k1, mapk1, 'T', '185',
@@ -531,7 +531,7 @@ class Preassembler(object):
         A more general statement with no information about a Phosphorylation
         site is identified as supporting a more specific statement:
 
-        >>> from indra.preassembler.ontology_graph import bio_ontology
+        >>> from indra.ontology.bio import bio_ontology
         >>> braf = Agent('BRAF')
         >>> map2k1 = Agent('MAP2K1')
         >>> st1 = Phosphorylation(braf, map2k1)
@@ -785,7 +785,7 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
     --------
     Pattern for getting statements and rendering as a Graphviz graph:
 
-    >>> from indra.preassembler.ontology_graph import bio_ontology
+    >>> from indra.ontology.bio import bio_ontology
     >>> braf = Agent('BRAF')
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1)
@@ -880,7 +880,7 @@ def flatten_stmts(stmts):
     Calling :py:meth:`combine_related` on two statements results in one
     top-level statement; calling :py:func:`flatten_stmts` recovers both:
 
-    >>> from indra.preassembler.ontology_graph import bio_ontology
+    >>> from indra.ontology.bio import bio_ontology
     >>> braf = Agent('BRAF')
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1)
@@ -927,7 +927,7 @@ def flatten_evidence(stmts, collect_from=None):
     Flattening evidence adds the two pieces of evidence from the supporting
     statement to the evidence list of the top-level statement:
 
-    >>> from indra.preassembler.ontology_graph import bio_ontology
+    >>> from indra.ontology.bio import bio_ontology
     >>> braf = Agent('BRAF')
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1,
