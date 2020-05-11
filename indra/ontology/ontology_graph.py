@@ -110,6 +110,9 @@ class IndraOntology(networkx.DiGraph):
         except KeyError:
             return None
 
+    def is_opposite(self, ns1, id1, ns2, id2):
+        return self._check_path(ns1, id1, ns2, id2, {'is_opposite'})
+
 
 def label(ns, id):
     return '%s:%s' % (ns, id)

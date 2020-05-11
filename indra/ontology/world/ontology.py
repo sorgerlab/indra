@@ -67,6 +67,7 @@ class WorldOntology(IndraOntology):
                     parts = opp.split('/')
                     opp_term = get_term(parts[-1], '/'.join(parts[:-1]))
                     edges.append((opp_term, child_term, {'rel': 'is_opposite'}))
+                    edges.append((child_term, opp_term, {'rel': 'is_opposite'}))
                 pol = entry.get('polarity')
                 if pol is not None:
                     nodes[child_term]['polarity'] = pol
