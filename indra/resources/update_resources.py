@@ -16,12 +16,6 @@ from indra.databases import chebi_client, pubchem_client
 from indra.databases.lincs_client import load_lincs_csv
 from indra.preassembler.make_entity_hierarchy import \
     main as make_ent_hierarchy
-from indra.preassembler.make_activity_hierarchy import \
-    main as make_act_hierarchy
-from indra.preassembler.make_modification_hierarchy import \
-    main as make_mod_hierarchy
-from indra.preassembler.make_cellular_component_hierarchy import \
-    main as make_cellular_component_hierarchy
 from indra.preassembler.hierarchy_manager import get_bio_hierarchies
 
 path = os.path.dirname(__file__)
@@ -382,21 +376,6 @@ def update_entity_hierarchy():
         fh.write(rows)
 
 
-def update_modification_hierarchy():
-    logger.info('--Updating modification hierarchy----')
-    make_mod_hierarchy()
-
-
-def update_activity_hierarchy():
-    logger.info('--Updating activity hierarchy----')
-    make_act_hierarchy()
-
-
-def update_cellular_component_hierarchy():
-    logger.info('--Updating cellular component hierarchy----')
-    make_cellular_component_hierarchy()
-
-
 def update_famplex_map():
     logger.info('--Updating FamPlex map----')
     # Currently this is a trivial "copy" of the FamPlex equivalences.csv
@@ -707,9 +686,6 @@ def main():
     update_hmdb_chebi_map()
     update_bel_chebi_map()
     update_entity_hierarchy()
-    update_modification_hierarchy()
-    update_activity_hierarchy()
-    update_cellular_component_hierarchy()
     update_hierarchy_pickle()
     update_ncit_map()
     update_lincs_small_molecules()
