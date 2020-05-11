@@ -93,35 +93,16 @@ def standardize_agent_name(agent, standardize_refs=True):
 
     # If there is grounding available, we can try to get the standardized name
     # and in the rare case that we don't get it, we don't set it.
-    standard_name = name_from_grounding(db_ns, db_id)
+    standard_name = bio_ontology.get_name(db_ns, db_id)
     # Handle special case with UPPRO, if we can't get a feature name
     # we fall back on regular gene/protein naming
     if not standard_name and db_ns == 'UPPRO':
         db_ns, db_id = agent.get_grounding(ns_order=['HGNC', 'UP'])
         if not db_ns or not db_id:
             return False
-        standard_name = name_from_grounding(db_ns, db_id)
+        standard_name = bio_ontology.get_name(db_ns, db_id)
     if not standard_name:
         return False
 
     agent.name = standard_name
     return True
-
-
-def name_from_grounding(db_ns, db_id):
-    """Return a standardized name given a name space and an ID.
-
-    Parameters
-    ----------
-    db_ns : str
-        The name space in which the ID is defined.
-    db_id : str
-        The ID within the name space.
-
-    Returns
-    -------
-    str or None
-        The standardized name corresponding to the grounding or None if
-        not available.
-    """
-    return bio_ontology.get_name(db_ns, db_id)
