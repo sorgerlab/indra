@@ -4,6 +4,7 @@ import networkx
 from indra.util import read_unicode_csv
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
     mesh_client, obo_client
+from indra.sources.trips.processor import ncit_map
 from .shortest_path import bidirectional_shortest_path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -20,10 +21,12 @@ class IndraOntology(networkx.MultiDiGraph):
         self.add_famplex_nodes()
         self.add_obo_nodes()
         self.add_mesh_nodes()
+        self.add_ncit_nodes()
         # Add xrefs
         self.add_hgnc_uniprot_xrefs()
         self.add_famplex_xrefs()
         self.add_chemical_xrefs()
+        self.add_ncit_xrefs()
         # Add hierarchies
         self.add_famplex_hierarchy()
         self.add_obo_hierarchies()
@@ -212,6 +215,21 @@ class IndraOntology(networkx.MultiDiGraph):
                               label('MESH', parent_id),
                               {'type': 'isa'}))
         self.add_edges_from(edges)
+
+    def add_ncit_nodes(self):
+        nodes = [(label('NCIT', ncit_id),
+                  {'ns': 'NCIT', 'id': ncit_id})
+                  for ncit_id in ncit_map]
+        self.add_nodes_from(nodes)
+
+    def add_ncit_xrefs(self):
+        edges = []
+        for ncit_id, (target_ns, target_id) in ncit_map.items():
+            edges.append((label('NCIT', ncit_id),
+                          label(target_ns, target_id),
+                          {'type': 'xref', 'source': 'ncit'})
+        self.add_edges_from(edges)
+
 
 
 def label(ns, id):
