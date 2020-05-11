@@ -13,6 +13,55 @@ logger = logging.getLogger(__name__)
 
 
 class IndraOntology(networkx.MultiDiGraph):
+    def _check_path(self, ns1, id1, ns2, id2, edge_types):
+        try:
+            path = bidirectional_shortest_path(self,
+                                               label(ns1, id1),
+                                               label(ns2, id2),
+                                               edge_types=edge_types)
+        except networkx.NetworkXError:
+            return False
+        return True
+
+    @staticmethod
+    def get_ns_id(node):
+        return node.split(':', maxsplit=1)
+
+    @staticmethod
+    def get_ns(node):
+        return IndraOntology.get_ns_id(node)[0]
+
+    @staticmethod
+    def get_id(node):
+        return IndraOntology.get_ns_id(node)[1]
+
+    def isrel(self, ns1, id1, ns2, id2, rels):
+        return self._check_path(ns1, id1, ns2, id2, rels)
+
+    def isa(self, ns1, id1, ns2, id2):
+        return self.isrel(ns1, id1, ns2, id2, rels={'isa'})
+
+    def partof(self, ns1, id1, ns2, id2):
+        return self.isrel(ns1, id1, ns2, id2, rels={'partof'})
+
+    def isa_or_partof(self, ns1, id1, ns2, id2):
+        return self.isrel(ns1, id1, ns2, id2, rels={'isa', 'partof'})
+
+    def maps_to(self, ns1, id1, ns2, id2):
+        return self._check_path(ns1, id1, ns2, id2, {'xref'})
+
+    def map_to(self, ns1, id1, ns2):
+        source = label(ns1, id1)
+        targets = []
+        for _, target, data in self.edges(source, data=True):
+            if data['type'] == 'xref' and self.get_ns(target) == ns2:
+                targets.append(target)
+        if len(targets) == 1:
+            return targets[0]
+        return None
+
+
+class BioOntology(IndraOntology):
     def __init__(self):
         super().__init__()
         # Add all nodes with annotations
@@ -32,44 +81,14 @@ class IndraOntology(networkx.MultiDiGraph):
         self.add_obo_hierarchies()
         self.add_mesh_hierarchy()
 
-    def _check_path(self, ns1, id1, ns2, id2, edge_types):
-        try:
-            path = bidirectional_shortest_path(self,
-                                               label(ns1, id1),
-                                               label(ns2, id2),
-                                               edge_types=edge_types)
-        except networkx.NetworkXError:
-            return False
-        return True
-
-    def get_ns(self, node):
-        return self.nodes[node].get('ns') or \
-            node.split(':', maxsplit=1)[0]
-
-    def maps_to(self, ns1, id1, ns2, id2):
-        return self._check_path(ns1, id1, ns2, id2, {'xref'})
-
-    def isa(self, ns1, id1, ns2, id2):
-        return self._check_path(ns1, id1, ns2, id2, {'isa'})
-
-    def map_to(self, ns1, id1, ns2):
-        source = label(ns1, id1)
-        targets = []
-        for _, target, data in self.edges(source, data=True):
-            if data['type'] == 'xref' and self.get_ns(target) == ns2:
-                targets.append(target)
-        if len(targets) == 1:
-            return targets[0]
-        return None
 
     def add_hgnc_nodes(self):
-        nodes = [(label('HGNC', hid),
-                  {'name': hname, 'ns': 'HGNC', 'id': hid})
+        nodes = [(label('HGNC', hid), {'name': hname})
                  for (hid, hname) in hgnc_client.hgnc_names.items()]
         self.add_nodes_from(nodes)
 
     def add_uniprot_nodes(self):
-        nodes = [(label('UP', uid), {'name': uname, 'ns': 'UP', 'id': uid})
+        nodes = [(label('UP', uid), {'name': uname})
                  for (uid, uname)
                  in uniprot_client.um.uniprot_gene_name.items()]
         self.add_nodes_from(nodes)
@@ -95,7 +114,7 @@ class IndraOntology(networkx.MultiDiGraph):
                                     delimiter=','):
             entity = row[0]
             nodes.append((label('FPLX', entity),
-                          {'name': entity, 'id': entity}))
+                          {'name': entity}))
         self.add_nodes_from(nodes)
 
     def add_famplex_hierarchy(self):
@@ -133,7 +152,7 @@ class IndraOntology(networkx.MultiDiGraph):
             oc = obo_client.OboClient(prefix=ns)
             for db_id, entry in oc.entries.items():
                 nodes.append((label(ns.upper(), db_id),
-                              {'name': entry['name'], 'id': db_id}))
+                              {'name': entry['name']}))
         self.add_nodes_from(nodes)
 
     def add_obo_hierarchies(self):
@@ -191,7 +210,7 @@ class IndraOntology(networkx.MultiDiGraph):
 
     def add_mesh_nodes(self):
         nodes = [(label('MESH', mesh_id),
-                  {'name': name, 'ns': 'MESH', 'id': mesh_id})
+                  {'name': name})
                  for mesh_id, name in
                  mesh_client.mesh_id_to_name.items()]
         self.add_nodes_from(nodes)
@@ -217,9 +236,7 @@ class IndraOntology(networkx.MultiDiGraph):
         self.add_edges_from(edges)
 
     def add_ncit_nodes(self):
-        nodes = [(label('NCIT', ncit_id),
-                  {'ns': 'NCIT', 'id': ncit_id})
-                  for ncit_id in ncit_map]
+        nodes = [(label('NCIT', ncit_id)) for ncit_id in ncit_map]
         self.add_nodes_from(nodes)
 
     def add_ncit_xrefs(self):
@@ -228,7 +245,7 @@ class IndraOntology(networkx.MultiDiGraph):
             edges.append((label('NCIT', ncit_id),
                           label(target_ns, target_id),
                           {'type': 'xref', 'source': 'ncit'})
-        self.add_edges_from(edges)
+            self.add_edges_from(edges)
 
 
 
