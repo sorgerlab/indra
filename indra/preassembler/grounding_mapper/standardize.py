@@ -2,6 +2,7 @@ __all__ = ['standardize_agent_name', 'standardize_db_refs',
            'name_from_grounding']
 
 import logging
+from ..ontology_graph import bio_ontology
 from indra.databases import uniprot_client, hgnc_client, mesh_client, \
     chebi_client, go_client, efo_client, hp_client, doid_client
 
@@ -221,26 +222,4 @@ def name_from_grounding(db_ns, db_id):
         The standardized name corresponding to the grounding or None if
         not available.
     """
-    if db_ns == 'FPLX':
-        return db_id
-    elif db_ns == 'HGNC':
-        return hgnc_client.get_hgnc_name(db_id)
-    elif db_ns == 'UP':
-        return uniprot_client.get_gene_name(db_id, web_fallback=False)
-    elif db_ns == 'CHEBI':
-        return chebi_client.get_chebi_name_from_id(db_id)
-    elif db_ns == 'MESH':
-        return mesh_client.get_mesh_name(db_id, False)
-    elif db_ns == 'GO':
-        return go_client.get_go_label(db_id)
-    elif db_ns == 'HP':
-        return hp_client.get_hp_name_from_hp_id(db_id)
-    elif db_ns == 'EFO':
-        return efo_client.get_efo_name_from_efo_id(db_id)
-    elif db_ns == 'DOID':
-        return doid_client.get_doid_name_from_doid_id(db_id)
-    elif db_ns == 'UPPRO':
-        feat = uniprot_client.get_feature_by_id(db_id)
-        if feat and feat.name:
-            return feat.name
-    return None
+    return bio_ontology.get_name(db_ns, db_id)

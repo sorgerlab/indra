@@ -1,6 +1,7 @@
 import os
 import logging
 import networkx
+from collections import deque
 from indra.util import read_unicode_csv
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
     mesh_client, obo_client
@@ -8,6 +9,7 @@ from indra.sources.trips.processor import ncit_map
 from .shortest_path import bidirectional_shortest_path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+resources = os.path.join(HERE, os.pardir, 'resources')
 
 logger = logging.getLogger(__name__)
 
@@ -52,13 +54,40 @@ class IndraOntology(networkx.MultiDiGraph):
 
     def map_to(self, ns1, id1, ns2):
         source = label(ns1, id1)
-        targets = []
-        for _, target, data in self.edges(source, data=True):
-            if data['type'] == 'xref' and self.get_ns(target) == ns2:
-                targets.append(target)
+        targets = [target for target in self.xrefs(source)
+                   if self.get_ns(target) == ns2]
         if len(targets) == 1:
             return targets[0]
         return None
+
+    def xrefs(self, source):
+        for _, target, data in self.edges(source, data=True):
+            if data['type'] == 'xref':
+                yield target
+
+    def get_mappings(self, ns, id):
+        source = label(ns, id)
+        visited = {source}
+        queue = deque([(source, self.xrefs(source))])
+        targets = []
+        while queue:
+            parent, children = queue[0]
+            try:
+                child = next(children)
+                if child not in visited:
+                    targets.append(child)
+                    visited.add(child)
+                    queue.append((child, self.xrefs(child)))
+            except StopIteration:
+                queue.popleft()
+        return targets
+
+    def get_name(self, ns, id):
+        node = label(ns, id)
+        try:
+            return self.nodes[node]['name']
+        except KeyError:
+            return None
 
 
 class BioOntology(IndraOntology):
@@ -109,7 +138,7 @@ class BioOntology(IndraOntology):
 
     def add_famplex_nodes(self):
         nodes = []
-        for row in read_unicode_csv(os.path.join(HERE, 'famplex',
+        for row in read_unicode_csv(os.path.join(resources, 'famplex',
                                                  'entities.csv'),
                                     delimiter=','):
             entity = row[0]
@@ -119,7 +148,7 @@ class BioOntology(IndraOntology):
 
     def add_famplex_hierarchy(self):
         edges = []
-        for row in read_unicode_csv(os.path.join(HERE, 'famplex',
+        for row in read_unicode_csv(os.path.join(resources, 'famplex',
                                                  'relations.csv'),
                                     delimiter=','):
             ns1, id1, rel, ns2, id2 = row
@@ -131,7 +160,7 @@ class BioOntology(IndraOntology):
     def add_famplex_xrefs(self):
         edges = []
         include_refs = {'PF', 'IP', 'GO', 'NCIT'}
-        for row in read_unicode_csv(os.path.join(HERE, 'famplex',
+        for row in read_unicode_csv(os.path.join(resources, 'famplex',
                                                  'equivalences.csv'),
                                     delimiter=','):
             ref_ns, ref_id, fplx_id = row
@@ -244,10 +273,12 @@ class BioOntology(IndraOntology):
         for ncit_id, (target_ns, target_id) in ncit_map.items():
             edges.append((label('NCIT', ncit_id),
                           label(target_ns, target_id),
-                          {'type': 'xref', 'source': 'ncit'})
-            self.add_edges_from(edges)
-
+                          {'type': 'xref', 'source': 'ncit'}))
+        self.add_edges_from(edges)
 
 
 def label(ns, id):
     return '%s:%s' % (ns, id)
+
+
+bio_ontology = BioOntology()
