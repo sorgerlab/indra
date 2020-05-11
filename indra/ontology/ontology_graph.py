@@ -1,11 +1,7 @@
-import os
 import logging
 import networkx
 from collections import deque
 from .shortest_path import bidirectional_shortest_path
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-resources = os.path.join(HERE, os.pardir, 'resources')
 
 logger = logging.getLogger(__name__)
 

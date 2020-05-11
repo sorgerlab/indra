@@ -1,9 +1,14 @@
+import os
 from ..ontology_graph import IndraOntology, label
 from indra.util import read_unicode_csv
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
     mesh_client, obo_client
 from indra.sources.trips.processor import ncit_map
 from indra.statements import modtype_conditions
+
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+resources = os.path.join(HERE, os.pardir, 'resources')
 
 
 class BioOntology(IndraOntology):
