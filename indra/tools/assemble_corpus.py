@@ -141,6 +141,13 @@ def map_grounding(stmts_in, **kwargs):
                          use_adeft=kwargs.get('use_adeft', True),
                          gilda_mode=kwargs.get('gilda_mode', None))
     stmts_out = gm.map_stmts(stmts_in, do_rename=do_rename)
+    # Patch wrong locations in Translocation statements
+    for stmt in stmts_out:
+        if isinstance(stmt, Translocation):
+            if not stmt.from_location:
+                stmt.from_location = None
+            if not stmt.to_location:
+                stmt.to_location = None
     dump_pkl = kwargs.get('save')
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
