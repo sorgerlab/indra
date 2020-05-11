@@ -80,6 +80,8 @@ class OboClient:
         prefix_upper = prefix.upper()
         entries = []
         for node, data in obo_graph.nodes(data=True):
+            if 'name' not in data:
+                continue
             # There are entries in some OBOs that are actually from other
             # ontologies
             if not node.startswith(prefix_upper):
@@ -89,7 +91,12 @@ class OboClient:
 
             xrefs = []
             for xref in data.get('xref', []):
-                db, db_id = xref.split(':', maxsplit=1)
+                try:
+                    db, db_id = xref.split(':', maxsplit=1)
+                # This is typically the case when the xref doesn't have
+                # a separate name space in which case we skip it
+                except ValueError:
+                    continue
                 # Example: for EFO, we have xrefs like
                 # PERSON: James Malone
                 db_id = db_id.lstrip()
