@@ -109,14 +109,26 @@ class BioOntology(IndraOntology):
     def add_obo_hierarchies(self):
         namespaces = ['go', 'efo', 'hp', 'doid', 'chebi']
         edges = []
+        rel_mappings = {
+            'is_a': 'isa',
+            'part_of': 'partof',
+            # These are for ChEBI: identical to the old behavior but it might
+            # make sense to add other relations here too
+            'is_conjugate_acid_of': 'isa',
+            'has_functional_parent': 'isa',
+            'has_parent_hydride': 'isa',
+            'has_role': 'isa'
+        }
         for ns in namespaces:
             oc = obo_client.OboClient(prefix=ns)
             for db_id, entry in oc.entries.items():
                 for rel, targets in entry.get('relations', {}).items():
+                    mapped_rel = rel_mappings[rel] \
+                        if rel in rel_mappings else rel
                     for target in targets:
                         edges.append((label(ns.upper(), db_id),
                                       label(ns.upper(), target),
-                                      {'type': rel}))
+                                      {'type': mapped_rel}))
         self.add_edges_from(edges)
 
     def add_chemical_xrefs(self):

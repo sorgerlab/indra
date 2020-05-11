@@ -13,7 +13,7 @@ class IndraOntology(networkx.DiGraph):
                                                label(ns1, id1),
                                                label(ns2, id2),
                                                edge_types=edge_types)
-        except networkx.NetworkXError:
+        except networkx.exception.NetworkXNoPath:
             return False
         return True
 

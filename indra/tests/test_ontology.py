@@ -8,7 +8,7 @@ def test_isa_entity():
 
 
 def test_isa_entity2():
-    assert not bio_ontology.isa('HGNC', '1097', 'HGNC', 'ARAF')
+    assert not bio_ontology.isa('HGNC', '1097', 'HGNC', '646')
 
 
 def test_isa_entity3():
@@ -91,7 +91,7 @@ def test_mtorc_get_parents():
 def test_mtorc_transitive_closure():
     assert bio_ontology.partof('HGNC', hgnc_client.get_hgnc_id('RICTOR'),
                                'FPLX', 'mTORC2')
-    assert not bio_ontology.partof('HGNC', hgnc_client.get_hgnc_id('RICTOR'),
+    assert not bio_ontology.partof('HGNC', hgnc_client.get_hgnc_id('RPTOR'),
                                    'FPLX', 'mTORC2')
 
 
