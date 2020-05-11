@@ -6,7 +6,7 @@ from .shortest_path import bidirectional_shortest_path
 logger = logging.getLogger(__name__)
 
 
-class IndraOntology(networkx.MultiDiGraph):
+class IndraOntology(networkx.DiGraph):
     def _check_path(self, ns1, id1, ns2, id2, edge_types):
         try:
             path = bidirectional_shortest_path(self,
@@ -19,7 +19,7 @@ class IndraOntology(networkx.MultiDiGraph):
 
     @staticmethod
     def get_ns_id(node):
-        return node.split(':', maxsplit=1)
+        return tuple(node.split(':', maxsplit=1))
 
     @staticmethod
     def get_ns(node):
@@ -45,22 +45,18 @@ class IndraOntology(networkx.MultiDiGraph):
         return self._check_path(ns1, id1, ns2, id2, {'xref'})
 
     def map_to(self, ns1, id1, ns2):
-        source = label(ns1, id1)
-        targets = [target for target in self.xrefs(source)
-                   if self.get_ns(target) == ns2]
+        targets = [target for target in
+                   self.descendants_rel(ns1, id1, {'xref'})
+                   if target[0] == ns2]
         if len(targets) == 1:
             return targets[0]
         return None
 
-    def xrefs(self, source):
-        for _, target, data in self.edges(source, data=True):
-            if data['type'] == 'xref':
-                yield target
-
-    def get_mappings(self, ns, id):
+    def _transitive_rel(self, ns, id, rel_fun, rel_types):
         source = label(ns, id)
         visited = {source}
-        queue = deque([(source, self.xrefs(source))])
+        queue = deque([(source,
+                        rel_fun(ns, id, rel_types))])
         targets = []
         while queue:
             parent, children = queue[0]
@@ -69,10 +65,38 @@ class IndraOntology(networkx.MultiDiGraph):
                 if child not in visited:
                     targets.append(child)
                     visited.add(child)
-                    queue.append((child, self.xrefs(child)))
+                    queue.append((child,
+                                  rel_fun(*child, rel_types)))
             except StopIteration:
                 queue.popleft()
-        return [self.get_ns_id(t) for t in targets]
+        return targets
+
+    def descendants_rel(self, ns, id, rel_types):
+        return self._transitive_rel(ns, id, self.child_rel, rel_types)
+
+    def ancestors_rel(self, ns, id, rel_types):
+        return self._transitive_rel(ns, id, self.parent_rel, rel_types)
+
+    def child_rel(self, ns, id, rel_types):
+        source = label(ns, id)
+        for target in self.successors(source):
+            if self.edges[source, target]['type'] in rel_types:
+                yield self.get_ns_id(target)
+
+    def parent_rel(self, ns, id, rel_types):
+        target = label(ns, id)
+        for source in self.predecessors(target):
+            if self.edges[source, target]['type'] in rel_types:
+                yield self.get_ns_id(source)
+
+    def get_children(self, ns, id):
+        return self.ancestors_rel(ns, id, {'isa', 'partof'})
+
+    def get_parents(self, ns, id):
+        return self.descendants_rel(ns, id, {'isa', 'partof'})
+
+    def get_mappings(self, ns, id):
+        return self.descendants_rel(ns, id, {'xref'})
 
     def get_name(self, ns, id):
         return self.get_node_property(ns, id, property='name')
