@@ -1,11 +1,8 @@
-__all__ = ['standardize_agent_name', 'standardize_db_refs',
-           'name_from_grounding']
+__all__ = ['standardize_agent_name', 'standardize_db_refs']
 
 import logging
-from ..ontology_graph import bio_ontology
+from indra.ontology.bio import bio_ontology
 from indra.statements.agent import default_ns_order
-from indra.databases import uniprot_client, hgnc_client, mesh_client, \
-    chebi_client, go_client, efo_client, hp_client, doid_client
 
 logger = logging.getLogger(__name__)
 

@@ -4,10 +4,15 @@ import logging
 from functools import lru_cache
 
 
-from indra.preassembler.make_entity_hierarchy import ns_map
 from indra.pipeline import register_pipeline
 
 logger = logging.getLogger(__name__)
+
+
+ns_map = {'http://identifiers.org/fplx/': 'FPLX',
+          'http://sorger.med.harvard.edu/indra/relations/': 'FPLX',
+          'http://identifiers.org/hgnc/': 'HGNC',
+          'http://identifiers.org/uniprot/': 'UP',}
 
 
 class HierarchyManager(object):
