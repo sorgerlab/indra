@@ -79,9 +79,14 @@ class IndraOntology(networkx.MultiDiGraph):
         return [self.get_ns_id(t) for t in targets]
 
     def get_name(self, ns, id):
-        node = label(ns, id)
+        return self.get_node_property(ns, id, property='name')
+
+    def get_polarity(self, ns, id):
+        return self.get_node_property(ns, id, property='polarity')
+
+    def get_node_property(self, ns, id, property):
         try:
-            return self.nodes[node]['name']
+            return self.nodes[label(ns, id)][property]
         except KeyError:
             return None
 
