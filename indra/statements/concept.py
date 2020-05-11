@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-from future.utils import python_2_unicode_compatible
 import logging
 from collections import OrderedDict as _o
 
@@ -8,7 +5,6 @@ from collections import OrderedDict as _o
 logger = logging.getLogger(__name__)
 
 
-@python_2_unicode_compatible
 class Concept(object):
     """A concept/entity of interest that is the argument of a Statement
 
@@ -69,7 +65,7 @@ class Concept(object):
             db_ns = None
         return db_ns, db_id
 
-    def isa(self, other, hierarchies):
+    def isa(self, other, ontology):
         # Get the namespaces for the comparison
         (self_ns, self_id) = self.get_grounding()
         (other_ns, other_id) = other.get_grounding()
@@ -78,9 +74,9 @@ class Concept(object):
         if not all((self_ns, self_id, other_ns, other_id)):
             return False
         # Check for isa relationship
-        return hierarchies['entity'].isa(self_ns, self_id, other_ns, other_id)
+        return ontology.isa(self_ns, self_id, other_ns, other_id)
 
-    def is_opposite(self, other, hierarchies):
+    def is_opposite(self, other, ontology):
         # Get the namespaces for the comparison
         (self_ns, self_id) = self.get_grounding()
         (other_ns, other_id) = other.get_grounding()
@@ -89,10 +85,10 @@ class Concept(object):
         if not all((self_ns, self_id, other_ns, other_id)):
             return False
         # Check for is_opposite relationship
-        return hierarchies['entity'].is_opposite(self_ns, self_id,
-                                                 other_ns, other_id)
+        return ontology.is_opposite(self_ns, self_id,
+                                    other_ns, other_id)
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
         # Make sure the Agent types match
         if type(self) != type(other):
             return False
@@ -100,7 +96,7 @@ class Concept(object):
         # Check that the basic entity of the agent either matches or is related
         # to the entity of the other agent. If not, no match.
         # If the entities, match, then we can continue
-        if not (self.entity_matches(other) or self.isa(other, hierarchies)):
+        if not (self.entity_matches(other) or self.isa(other, ontology)):
             return False
         return True
 

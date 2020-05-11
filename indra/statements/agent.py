@@ -136,7 +136,7 @@ class Agent(Concept):
             return db_ns, db_id
         return None, None
 
-    def isa(self, other, hierarchies):
+    def isa(self, other, ontology):
         # Get the namespaces for the comparison
         (self_ns, self_id) = self.get_grounding()
         (other_ns, other_id) = other.get_grounding()
@@ -145,10 +145,10 @@ class Agent(Concept):
         if not all((self_ns, self_id, other_ns, other_id)):
             return False
         # Check for isa relationship
-        return hierarchies['entity'].isa_or_partof(self_ns, self_id, other_ns,
-                                                   other_id)
+        return ontology.isa_or_partof(self_ns, self_id, other_ns,
+                                      other_id)
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
         # Make sure the Agent types match
         if type(self) != type(other):
             return False
@@ -158,7 +158,7 @@ class Agent(Concept):
         # to the entity of the other agent. If not, no match.
 
         # If the entities, match, then we can continue
-        if not (self.entity_matches(other) or self.isa(other, hierarchies)):
+        if not (self.entity_matches(other) or self.isa(other, ontology)):
             return False
 
         # BOUND CONDITIONS
@@ -177,7 +177,7 @@ class Agent(Concept):
             bc_found = False
             for bc_self in self.bound_conditions:
                 if (bc_self.is_bound == bc_other.is_bound) and \
-                        bc_self.agent.refinement_of(bc_other.agent, hierarchies):
+                        bc_self.agent.refinement_of(bc_other.agent, ontology):
                     bc_found = True
             # If we didn't find a match for this bound condition in self, then
             # no refinement
@@ -199,8 +199,7 @@ class Agent(Concept):
             # to make sure that each one is used at most once to match
             # the modification of one of the other Agent's modifications.
             for ix, self_mod in enumerate(self.mods):
-                if self_mod.refinement_of(other_mod,
-                                          hierarchies['modification']):
+                if self_mod.refinement_of(other_mod, ontology):
                     # If this modification hasn't been used for matching yet
                     if ix not in matched_indices:
                         # Set the index as used
@@ -247,7 +246,8 @@ class Agent(Concept):
         elif other.location is not None:
             # If the other location is part of this location then
             # self.location is not a refinement
-            if not hierarchies['cellular_component'].partof(
+            # FIXME: this shouldn't be using the INDRA_LOCATIONS name space
+            if not ontology.partof(
                     'INDRA_LOCATIONS', self.location,
                     'INDRA_LOCATIONS', other.location):
                 return False
@@ -257,8 +257,7 @@ class Agent(Concept):
             if other.activity is not None:
                 return False
         elif other.activity is not None:
-            if not self.activity.refinement_of(other.activity,
-                                               hierarchies['activity']):
+            if not self.activity.refinement_of(other.activity, ontology):
                 return False
 
         # Everything checks out
@@ -546,12 +545,12 @@ class ModCondition(object):
             self.position = position
         self.is_modified = is_modified
 
-    def refinement_of(self, other, mod_hierarchy):
+    def refinement_of(self, other, ontology):
         if self.is_modified != other.is_modified:
             return False
         type_match = (self.mod_type == other.mod_type or
-                      mod_hierarchy.isa('INDRA_MODS', self.mod_type,
-                                        'INDRA_MODS', other.mod_type))
+                      ontology.isa('INDRA_MODS', self.mod_type,
+                                   'INDRA_MODS', other.mod_type))
         residue_match = (self.residue == other.residue or
                          (self.residue is not None and other.residue is None))
         pos_match = (self.position == other.position or
@@ -651,13 +650,13 @@ class ActivityCondition(object):
         self.activity_type = activity_type
         self.is_active = is_active
 
-    def refinement_of(self, other, activity_hierarchy):
+    def refinement_of(self, other, ontology):
         if self.is_active != other.is_active:
             return False
         if self.activity_type == other.activity_type:
             return True
-        if activity_hierarchy.isa('INDRA_ACTIVITIES', self.activity_type,
-                                  'INDRA_ACTIVITIES', other.activity_type):
+        if ontology.isa('INDRA_ACTIVITIES', self.activity_type,
+                        'INDRA_ACTIVITIES', other.activity_type):
             return True
 
     def equals(self, other):

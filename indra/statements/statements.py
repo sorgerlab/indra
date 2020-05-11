@@ -441,7 +441,7 @@ class Statement(object):
             return False
         return True
 
-    def contradicts(self, other, hierarchies):
+    def contradicts(self, other, ontology):
         # Placeholder for implementation in subclasses
         return False
 
@@ -645,7 +645,7 @@ class Modification(Statement):
         self.enz = agent_list[0]
         self.sub = agent_list[1]
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
@@ -658,8 +658,8 @@ class Modification(Statement):
         elif self.enz is not None and other.enz is None:
             enz_refinement = True
         else:
-            enz_refinement = self.enz.refinement_of(other.enz, hierarchies)
-        sub_refinement = self.sub.refinement_of(other.sub, hierarchies)
+            enz_refinement = self.enz.refinement_of(other.enz, ontology)
+        sub_refinement = self.sub.refinement_of(other.sub, ontology)
         if not (enz_refinement and sub_refinement):
             return False
         # For this to be a refinement of the other, the modifications either
@@ -678,7 +678,7 @@ class Modification(Statement):
                    and (self.position == other.position))
         return matches
 
-    def contradicts(self, other, hierarchies):
+    def contradicts(self, other, ontology):
         # If the modifications are not the opposite polarity of the
         # same subtype
         if not modclass_to_inverse[self.__class__] == other.__class__:
@@ -693,8 +693,8 @@ class Modification(Statement):
         for self_agent, other_agent in zip(self.agent_list(),
                                            other.agent_list()):
             if not (self_agent.entity_matches(other_agent) or \
-                    self_agent.refinement_of(other_agent, hierarchies) or \
-                    other_agent.refinement_of(self_agent, hierarchies)):
+                    self_agent.refinement_of(other_agent, ontology) or \
+                    other_agent.refinement_of(self_agent, ontology)):
                 return False
         # At this point the entities definitely match so we need to
         # check the specific site that is being modified
@@ -809,13 +809,13 @@ class SelfModification(Statement):
             raise ValueError("SelfModification has one agent.")
         self.enz = agent_list[0]
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
 
         # Check agent arguments
-        if not self.enz.refinement_of(other.enz, hierarchies):
+        if not self.enz.refinement_of(other.enz, ontology):
             return False
         # For this to be a refinement of the other, the modifications either
         # have to match or have this one be a subtype of the other; in
@@ -1040,19 +1040,17 @@ class RegulateActivity(Statement):
         self.subj = agent_list[0]
         self.obj = agent_list[1]
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
         if self.is_activation != other.is_activation:
             return False
-        if self.subj.refinement_of(other.subj, hierarchies) and \
-           self.obj.refinement_of(other.obj, hierarchies):
+        if self.subj.refinement_of(other.subj, ontology) and \
+           self.obj.refinement_of(other.obj, ontology):
             obj_act_match = (self.obj_activity == other.obj_activity) or \
-                hierarchies['activity'].isa('INDRA_ACTIVITIES',
-                                            self.obj_activity,
-                                            'INDRA_ACTIVITIES',
-                                            other.obj_activity)
+                ontology.isa('INDRA_ACTIVITIES', self.obj_activity,
+                             'INDRA_ACTIVITIES', other.obj_activity)
             if obj_act_match:
                 return True
             else:
@@ -1060,7 +1058,7 @@ class RegulateActivity(Statement):
         else:
             return False
 
-    def contradicts(self, other, hierarchies):
+    def contradicts(self, other, ontology):
         # If they aren't opposite classes, it's not a contradiction
         if {self.__class__, other.__class__} != {Activation, Inhibition}:
             return False
@@ -1078,8 +1076,8 @@ class RegulateActivity(Statement):
         for self_agent, other_agent in zip(self.agent_list(),
                                            other.agent_list()):
             if not (self_agent.entity_matches(other_agent) or \
-                    self_agent.refinement_of(other_agent, hierarchies) or \
-                    other_agent.refinement_of(self_agent, hierarchies)):
+                    self_agent.refinement_of(other_agent, ontology) or \
+                    other_agent.refinement_of(self_agent, ontology)):
                 return False
         # Otherwise they are contradicting
         return True
@@ -1264,25 +1262,25 @@ class ActiveForm(Statement):
             raise ValueError("ActiveForm has one agent.")
         self.agent = agent_list[0]
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
 
         # Check agent arguments
-        if not self.agent.refinement_of(other.agent, hierarchies):
+        if not self.agent.refinement_of(other.agent, ontology):
             return False
 
         # Make sure that the relationships and activities match
         if (self.is_active == other.is_active) and \
             (self.activity == other.activity
-             or hierarchies['activity'].isa('INDRA_ACTIVITIES', self.activity,
-                                            'INDRA_ACTIVITIES', other.activity)):
+             or ontology.isa('INDRA_ACTIVITIES', self.activity,
+                             'INDRA_ACTIVITIES', other.activity)):
                 return True
         else:
             return False
 
-    def contradicts(self, other, hierarchies):
+    def contradicts(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
@@ -1304,8 +1302,8 @@ class ActiveForm(Statement):
         # Otherwise, if the two agents are related at the level of entities
         # and their state is exactly the same, then they contradict
         if self.agent.state_matches_key() == other.agent.state_matches_key():
-            if self.agent.isa(other.agent, hierarchies) or \
-                other.agent.isa(self.agent, hierarchies):
+            if self.agent.isa(other.agent, ontology) or \
+                other.agent.isa(self.agent, ontology):
                 return True
         return False
 
@@ -1399,19 +1397,20 @@ class HasActivity(Statement):
             raise ValueError("HasActivity has one agent.")
         self.agent = agent_list[0]
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
 
         # Check agent arguments
-        if not self.agent.refinement_of(other.agent, hierarchies):
+        if not self.agent.refinement_of(other.agent, ontology):
             return False
 
         # Make sure that the relationships and activities match
         if (self.has_activity == other.has_activity) and \
             (self.activity == other.activity
-             or hierarchies['activity'].isa(self.activity, other.activity)):
+             or ontology.isa('INDRA_ACTIVITIES', self.activity,
+                             'INDRA_ACTIVITIES', other.activity)):
                 return True
         else:
             return False
@@ -1473,13 +1472,13 @@ class Gef(Statement):
         s = "Gef(%s, %s)" % (self.gef.name, self.ras.name)
         return s
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
         # Check the GEF
-        if self.gef.refinement_of(other.gef, hierarchies) and \
-           self.ras.refinement_of(other.ras, hierarchies):
+        if self.gef.refinement_of(other.gef, ontology) and \
+           self.ras.refinement_of(other.ras, ontology):
             return True
         else:
             return False
@@ -1557,13 +1556,13 @@ class Gap(Statement):
         self.gap = agent_list[0]
         self.ras = agent_list[1]
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
         # Check the GAP
-        if self.gap.refinement_of(other.gap, hierarchies) and \
-           self.ras.refinement_of(other.ras, hierarchies):
+        if self.gap.refinement_of(other.gap, ontology) and \
+           self.ras.refinement_of(other.ras, ontology):
             return True
         else:
             return False
@@ -1650,7 +1649,7 @@ class Complex(Statement):
                         (', '.join([('%s' % m) for m in self.members])))
         return s
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
@@ -1666,7 +1665,7 @@ class Complex(Statement):
             for (self_idx, self_member), (other_idx, other_member) in \
                 itertools.product(enumerate(self_members),
                                   enumerate(other_members)):
-                if self_member.refinement_of(other_member, hierarchies):
+                if self_member.refinement_of(other_member, ontology):
                     G.add_edge('S%d' % self_idx, 'O%d' % other_idx)
             # Then find a maximal matching in the bipartite graph
             match = networkx.algorithms.max_weight_matching(G)
@@ -1726,21 +1725,21 @@ class Translocation(Statement):
              (self.agent, self.from_location, self.to_location))
         return s
 
-    def refinement_of(self, other, hierarchies=None):
+    def refinement_of(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
         # Check several conditions for refinement
-        ch = hierarchies['cellular_component']
-        ref1 = self.agent.refinement_of(other.agent, hierarchies)
+        ref1 = self.agent.refinement_of(other.agent, ontology)
+        # FIXME: this shouldn't be using the INDRA_LOCATIONS name space
         ref2 = (other.from_location is None or
                 self.from_location == other.from_location or
-                ch.partof('INDRA_LOCATIONS', self.from_location,
-                          'INDRA_LOCATIONS', other.from_location))
+            ontology.partof('INDRA_LOCATIONS', self.from_location,
+                            'INDRA_LOCATIONS', other.from_location))
         ref3 = (other.to_location is None or
                 self.to_location == other.to_location or
-                ch.partof('INDRA_LOCATIONS', self.to_location,
-                          'INDRA_LOCATIONS', other.to_location))
+            ontology.partof('INDRA_LOCATIONS', self.to_location,
+                            'INDRA_LOCATIONS', other.to_location))
         return (ref1 and ref2 and ref3)
 
     def equals(self, other):
@@ -1842,7 +1841,7 @@ class RegulateAmount(Statement):
         stmt = cls(subj, obj)
         return stmt
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
@@ -1855,15 +1854,15 @@ class RegulateAmount(Statement):
         elif self.subj is not None and other.subj is None:
             subj_refinement = True
         else:
-            subj_refinement = self.subj.refinement_of(other.subj, hierarchies)
-        obj_refinement = self.obj.refinement_of(other.obj, hierarchies)
+            subj_refinement = self.subj.refinement_of(other.subj, ontology)
+        obj_refinement = self.obj.refinement_of(other.obj, ontology)
         return (subj_refinement and obj_refinement)
 
     def equals(self, other):
         matches = super(RegulateAmount, self).equals(other)
         return matches
 
-    def contradicts(self, other, hierarchies):
+    def contradicts(self, other, ontology):
         # If they aren't opposite classes, it's not a contradiction
         if {self.__class__, other.__class__} != \
             {IncreaseAmount, DecreaseAmount}:
@@ -1878,8 +1877,8 @@ class RegulateAmount(Statement):
         for self_agent, other_agent in zip(self.agent_list(),
                                            other.agent_list()):
             if not (self_agent.entity_matches(other_agent) or \
-                    self_agent.refinement_of(other_agent, hierarchies) or \
-                    other_agent.refinement_of(self_agent, hierarchies)):
+                    self_agent.refinement_of(other_agent, ontology) or \
+                    other_agent.refinement_of(self_agent, ontology)):
                 return False
         # Otherwise they are contradicting
         return True
@@ -1942,16 +1941,16 @@ class Influence(Statement):
         self.subj = subj
         self.obj = obj
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
 
         # Check agent arguments
         subj_refinement = self.subj.concept.refinement_of(
-            other.subj.concept, hierarchies)
+            other.subj.concept, ontology)
         obj_refinement = self.obj.concept.refinement_of(
-            other.obj.concept, hierarchies)
+            other.obj.concept, ontology)
         op = other.overall_polarity()
         sp = self.overall_polarity()
         # If we have "less" polarity here than in other then it's
@@ -1987,21 +1986,21 @@ class Influence(Statement):
                )
         return mk_str(key)
 
-    def contradicts(self, other, hierarchies):
+    def contradicts(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
 
         # Determine some refinements and opposites up front
         subj_ref = self.subj.concept.refinement_of(other.subj.concept,
-                                                   hierarchies) or \
-            other.subj.concept.refinement_of(self.subj.concept, hierarchies)
+                                                   ontology) or \
+            other.subj.concept.refinement_of(self.subj.concept, ontology)
         obj_ref = self.obj.concept.refinement_of(other.obj.concept,
-                                                 hierarchies) or \
-            other.obj.concept.refinement_of(self.obj.concept, hierarchies)
+                                                 ontology) or \
+            other.obj.concept.refinement_of(self.obj.concept, ontology)
         subj_opp = self.subj.concept.is_opposite(other.subj.concept,
-                                                 hierarchies)
-        obj_opp = self.obj.concept.is_opposite(other.obj.concept, hierarchies)
+                                                 ontology)
+        obj_opp = self.obj.concept.is_opposite(other.obj.concept, ontology)
         sp = self.overall_polarity()
         op = other.overall_polarity()
 
@@ -2124,8 +2123,8 @@ class Association(Complex):
             sorted_agents(self.members)
         return [m.concept for m in members]
 
-    def refinement_of(self, other, hierarchies):
-        members_refinement = super().refinement_of(other, hierarchies)
+    def refinement_of(self, other, ontology):
+        members_refinement = super().refinement_of(other, ontology)
         op = other.overall_polarity()
         sp = self.overall_polarity()
         if self.polarity_count() < other.polarity_count():
@@ -2153,7 +2152,7 @@ class Association(Complex):
         equals = super().equals(other) and members_equal(self, other)
         return equals
 
-    def contradicts(self, other, hierarchies):
+    def contradicts(self, other, ontology):
         if stmt_type(self) != stmt_type(other):
             return False
 
@@ -2166,11 +2165,11 @@ class Association(Complex):
                 if ('S%d' % self_idx) in G or ('O%d' % other_idx) in G:
                     continue
                 if self_member.concept.refinement_of(other_member.concept,
-                                                     hierarchies):
+                                                     ontology):
                     G.add_edge('S%d' % self_idx, 'O%d' % other_idx)
                     rel_types['refinement_of'] += 1
                 elif self_member.concept.is_opposite(other_member.concept,
-                                                     hierarchies):
+                                                     ontology):
                     G.add_edge('S%d' % self_idx, 'O%d' % other_idx)
                     rel_types['is_opposite'] += 1
             return rel_types
@@ -2293,7 +2292,7 @@ class Conversion(Statement):
         stmt = cls(subj, obj_from, obj_to)
         return stmt
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
@@ -2305,7 +2304,7 @@ class Conversion(Statement):
         elif self.subj is not None and other.subj is None:
             subj_refinement = True
         else:
-            subj_refinement = self.subj.refinement_of(other.subj, hierarchies)
+            subj_refinement = self.subj.refinement_of(other.subj, ontology)
 
         def refinement_agents(lst1, lst2):
             if len(lst1) != len(lst2):
@@ -2317,7 +2316,7 @@ class Conversion(Statement):
                 for self_agent_ix, self_agent in enumerate(lst1):
                     if self_agent_ix in self_match_indices:
                         continue
-                    if self_agent.refinement_of(other_agent, hierarchies):
+                    if self_agent.refinement_of(other_agent, ontology):
                         self_match_indices.add(self_agent_ix)
                         break
             if len(self_match_indices) != len(lst2):
@@ -2366,8 +2365,8 @@ class Event(Statement):
         mk = (self.concept.matches_key(),)
         return str(mk)
 
-    def refinement_of(self, other, hierarchies):
-        concept_ref = self.concept.refinement_of(other.concept, hierarchies)
+    def refinement_of(self, other, ontology):
+        concept_ref = self.concept.refinement_of(other.concept, ontology)
         pol_ref = (self.delta.polarity and not other.delta.polarity) or \
             self.delta.polarity == other.delta.polarity
         return concept_ref and pol_ref
