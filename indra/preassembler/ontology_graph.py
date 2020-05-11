@@ -81,7 +81,7 @@ class IndraOntology(networkx.MultiDiGraph):
                     queue.append((child, self.xrefs(child)))
             except StopIteration:
                 queue.popleft()
-        return targets
+        return [self.get_ns_id(t) for t in targets]
 
     def get_name(self, ns, id):
         node = label(ns, id)

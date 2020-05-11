@@ -3,13 +3,25 @@ __all__ = ['standardize_agent_name', 'standardize_db_refs',
 
 import logging
 from ..ontology_graph import bio_ontology
+from indra.statements.agent import default_ns_order
 from indra.databases import uniprot_client, hgnc_client, mesh_client, \
     chebi_client, go_client, efo_client, hp_client, doid_client
 
 logger = logging.getLogger(__name__)
 
 
-def standardize_db_refs(db_refs):
+ns_priorities = {ns: idx for idx, ns in enumerate(default_ns_order)}
+
+
+def default_prioritize(ns1, ns2):
+    ns1p = ns_priorities.get(ns1)
+    ns2p = ns_priorities.get(ns2)
+    if ns2p is not None and (ns1p is None or ns2p < ns1p):
+        return True
+    return False
+
+
+def standardize_db_refs(db_refs, prioritize=default_prioritize):
     """Return a standardized db refs dict for a given db refs dict.
 
     Parameters
@@ -17,134 +29,24 @@ def standardize_db_refs(db_refs):
     db_refs : dict
         A dict of db refs that may not be standardized, i.e., may be
         missing an available UP ID corresponding to an existing HGNC ID.
+    prioritize : function
+        A function which takes two str arguments and returns True
+        if the second should take priority over the first, and False
+        otherwise.
 
     Returns
     -------
     dict
         The db_refs dict with standardized entries.
     """
-    # First we normalize out EFO, HP and DOID and map them to MESH
-    for db_ns in ('EFO', 'HP', 'DOID'):
-        if db_ns in db_refs:
-            mesh_id = mesh_client.get_mesh_id_from_db_id(db_ns, db_refs[db_ns])
-            if mesh_id:
-                db_refs['MESH'] = mesh_id
-                break
-
-    # Next we normalize out MESH to other name spaces
-    mesh_id = db_refs.get('MESH')
-    # TODO: in principle we could also do a reverse mapping to MESH IDs from
-    # other name spaces
-    if mesh_id:
-        db_mapping = mesh_client.get_db_mapping(mesh_id)
-        if db_mapping:
-            db_ns, db_id = db_mapping
-            if db_ns not in db_refs:
-                db_refs[db_ns] = db_id
-
-    # Next we look at gene/protein name spaces
-    up_id = db_refs.get('UP')
-    up_pro = db_refs.get('UPPRO')
-    hgnc_id = db_refs.get('HGNC')
-
-    # If we have a feature without its protein, we get it
-    if up_pro and not up_id:
-        up_id_mapped = uniprot_client.get_feature_of(up_pro)
-        if up_id_mapped:
-            db_refs['UP'] = up_id_mapped
-            up_id = up_id_mapped
-
-    # If we have a UP ID and no HGNC ID, we try to get a gene name,
-    # and if possible, a HGNC ID from that
-    if up_id and not hgnc_id:
-        hgnc_id = uniprot_client.get_hgnc_id(up_id)
-        if hgnc_id:
-            db_refs['HGNC'] = hgnc_id
-    # Otherwise, if we don't have a UP ID but have an HGNC ID, we try to
-    # get the UP ID
-    elif hgnc_id:
-        # Now get the Uniprot ID for the gene
-        mapped_up_id = hgnc_client.get_uniprot_id(hgnc_id)
-        if mapped_up_id:
-            # If we find an inconsistency, we explain it in an error
-            # message and fall back on the mapped ID
-            if up_id and up_id != mapped_up_id:
-                # We handle a special case here in which mapped_up_id is
-                # actually a list of UP IDs that we skip and just keep
-                # the original up_id
-                if ', ' not in mapped_up_id:
-                    # If we got a proper single protein mapping, we use
-                    # the mapped_up_id to standardize to.
-                    msg = ('Inconsistent groundings UP:%s not equal to '
-                           'UP:%s mapped from HGNC:%s, standardizing to '
-                           'UP:%s' % (up_id, mapped_up_id, hgnc_id,
-                                      mapped_up_id))
-                    logger.debug(msg)
-                    db_refs['UP'] = mapped_up_id
-            # If there is no conflict, we can update the UP entry
+    for source_db_ns, source_db_id in db_refs.items():
+        mappings = bio_ontology.get_mappings(source_db_ns, source_db_id)
+        for mapped_db_ns, mapped_db_id in mappings:
+            if mapped_db_ns in db_refs:
+                if prioritize(source_db_ns, mapped_db_ns):
+                    db_refs[mapped_db_ns] = source_db_ns
             else:
-                db_refs['UP'] = mapped_up_id
-
-    # Now we normalize between chemical name spaces
-    pc_id = db_refs.get('PUBCHEM')
-    chebi_id = db_refs.get('CHEBI')
-    hmdb_id = db_refs.get('HMDB')
-    mapped_chebi_id = None
-    mapped_pc_id = None
-    hmdb_mapped_chebi_id = None
-    # If we have original PUBCHEM and CHEBI IDs, we always keep those:
-    if pc_id:
-        mapped_chebi_id = chebi_client.get_chebi_id_from_pubchem(pc_id)
-        if mapped_chebi_id and not mapped_chebi_id.startswith('CHEBI:'):
-            mapped_chebi_id = 'CHEBI:%s' % mapped_chebi_id
-    if chebi_id:
-        mapped_pc_id = chebi_client.get_pubchem_id(chebi_id)
-    if hmdb_id:
-        hmdb_mapped_chebi_id = chebi_client.get_chebi_id_from_hmdb(hmdb_id)
-        if hmdb_mapped_chebi_id and \
-                not hmdb_mapped_chebi_id.startswith('CHEBI:'):
-            hmdb_mapped_chebi_id = 'CHEBI:%s' % hmdb_mapped_chebi_id
-    # We always keep originals if both are present but display warnings
-    # if there are inconsistencies
-    if pc_id and chebi_id and mapped_pc_id and pc_id != mapped_pc_id:
-        msg = ('Inconsistent groundings PUBCHEM:%s not equal to '
-               'PUBCHEM:%s mapped from %s, standardizing to '
-               'PUBCHEM:%s.' % (pc_id, mapped_pc_id, chebi_id, pc_id))
-        logger.debug(msg)
-    elif pc_id and chebi_id and mapped_chebi_id and chebi_id != \
-            mapped_chebi_id:
-        msg = ('Inconsistent groundings %s not equal to '
-               '%s mapped from PUBCHEM:%s, standardizing to '
-               '%s.' % (chebi_id, mapped_chebi_id, pc_id, chebi_id))
-        logger.debug(msg)
-    # If we have PC and not CHEBI but can map to CHEBI, we do that
-    elif pc_id and not chebi_id and mapped_chebi_id:
-        db_refs['CHEBI'] = mapped_chebi_id
-    elif hmdb_id and chebi_id and hmdb_mapped_chebi_id and \
-            hmdb_mapped_chebi_id != chebi_id:
-        msg = ('Inconsistent groundings %s not equal to '
-               '%s mapped from %s, standardizing to '
-               '%s.' % (chebi_id, hmdb_mapped_chebi_id, hmdb_id, chebi_id))
-        logger.debug(msg)
-    elif hmdb_id and not chebi_id and hmdb_mapped_chebi_id:
-        db_refs['CHEBI'] = hmdb_mapped_chebi_id
-    # If we have CHEBI and not PC but can map to PC, we do that
-    elif chebi_id and not pc_id and mapped_pc_id:
-        db_refs['PUBCHEM'] = mapped_pc_id
-
-    # Finally, we standardize between MESH and GO
-    go_id = db_refs.get('GO')
-    if mesh_id and not go_id:
-        mapped_go_id = mesh_client.get_go_id(mesh_id)
-        if mapped_go_id:
-            db_refs['GO'] = mapped_go_id
-    elif go_id and not mesh_id:
-        mapped_mesh_id = mesh_client.get_mesh_id_from_go_id(go_id)
-        if mapped_mesh_id:
-            db_refs['MESH'] = mapped_mesh_id
-
-    # Otherwise there is no useful mapping that we can add and no
-    # further conflict to resolve.
+                db_refs[mapped_db_ns] = source_db_ns
     return db_refs
 
 
