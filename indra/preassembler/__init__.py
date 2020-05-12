@@ -193,7 +193,6 @@ class Preassembler(object):
             # Entity is None: add the None to the entities list
             if a is None and stmt_type != Complex:
                 entities.append(a)
-                continue
             # Entity is not None, but could be ungrounded or not
             # in a family
             else:
@@ -202,21 +201,8 @@ class Preassembler(object):
                 # entity_matches_key
                 if a_ns is None or a_id is None:
                     entities.append(a.entity_matches_key())
-                    continue
-                # We have grounding, now check for a component ID
-                uri = eh.get_uri(a_ns, a_id)
-                # This is the component ID corresponding to the agent
-                # in the entity hierarchy
-                component = eh.components.get(uri)
-                # If no component ID, use the entity_matches_key()
-                if component is None:
-                    entities.append(a.entity_matches_key())
-                # Component ID, so this is in a family
                 else:
-                    # We turn the component ID into a string so that
-                    # we can sort it along with entity_matches_keys
-                    # for Complexes
-                    entities.append(str(component))
+                    entities.append('1')
         return entities
 
     def _get_stmt_by_group(self, stmt_type, stmts_this_type, eh):

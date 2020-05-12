@@ -17,7 +17,7 @@ def get_valid_residue(residue):
 
 
 # FIXME: this list could be read from the ontology or another resource file
-activity_types = {'transcription', 'activity', 'catalytic' 'gtpbound',
+activity_types = {'transcription', 'activity', 'catalytic', 'gtpbound',
                   'kinase', 'phosphatase', 'gef', 'gap'}
 
 
