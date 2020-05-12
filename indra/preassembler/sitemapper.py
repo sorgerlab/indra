@@ -234,6 +234,13 @@ class SiteMapper(ProtMapper):
         mapped_statements = []
 
         for stmt in stmts:
+            # Check for errors in the position str
+            if isinstance(stmt, (Modification, SelfModification)) and \
+                    stmt.residue is not None and stmt.position is not None \
+                    and str(int(float(stmt.position))) != stmt.position:
+                logger.warning('%s has an invalid value for position: "%s".' %
+                               (str(stmt), stmt.position))
+                continue
             mapped_stmt = self.map_stmt_sites(stmt)
             # If we got a MappedStatement as a return value, we add that to the
             # list of mapped statements, otherwise, the original Statement is
