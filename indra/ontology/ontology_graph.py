@@ -7,17 +7,21 @@ logger = logging.getLogger(__name__)
 
 
 class IndraOntology(networkx.DiGraph):
+    def __init__(self):
+        super().__init__()
+        self.name_to_grounding = {}
+
     def _check_path(self, ns1, id1, ns2, id2, edge_types):
         try:
-            bidirectional_shortest_path(self,
-                                        label(ns1, id1),
-                                        label(ns2, id2),
-                                        edge_types=edge_types)
-        except networkx.exception.NodeNotFound:
+            if self._transitive_rel(ns1, id1, self.child_rel,
+                                    edge_types, label(ns2, id2)):
+                return True
+            else:
+                return False
+        # This typically happens if the node is missing from
+        # the graph. Is there a more specific error type?
+        except networkx.NetworkXError:
             return False
-        except networkx.exception.NetworkXNoPath:
-            return False
-        return True
 
     @staticmethod
     def get_ns_id(node):
@@ -54,7 +58,7 @@ class IndraOntology(networkx.DiGraph):
             return targets[0]
         return None
 
-    def _transitive_rel(self, ns, id, rel_fun, rel_types):
+    def _transitive_rel(self, ns, id, rel_fun, rel_types, target=None):
         source = label(ns, id)
         visited = {source}
         queue = deque([(source,
@@ -64,6 +68,8 @@ class IndraOntology(networkx.DiGraph):
             parent, children = queue[0]
             try:
                 child = next(children)
+                if target and child == target:
+                    return [target]
                 if child not in visited:
                     targets.append(child)
                     visited.add(child)
@@ -115,6 +121,17 @@ class IndraOntology(networkx.DiGraph):
     def is_opposite(self, ns1, id1, ns2, id2):
         return self._check_path(ns1, id1, ns2, id2, {'is_opposite'})
 
+    def get_id_from_name(self, name, ns):
+        if not self.name_to_grounding:
+            self._build_name_lookup()
+        return self.name_to_grounding.get((name, ns))
+
+    def _build_name_lookup(self):
+        self.name_to_grounding = {
+            (data['name'], self.get_ns(node)): self.get_ns_id(node)
+            for node, data in self.nodes(data=True)
+            if 'name' in data
+        }
 
 def label(ns, id):
     return '%s:%s' % (ns, id)
