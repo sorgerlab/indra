@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
-import copy
 import logging
 import os.path
 import requests
@@ -397,10 +396,10 @@ def _retain_only_pars(tree):
     tree : :py:class:`lxml.etree._Element`
         etree element for valid NLM XML
     """
-    for element in tree.getiterator():
+    for element in tree.xpath('.//*'):
         if element.tag == 'title':
             element.tag = 'p'
-    for element in tree.getiterator():
+    for element in tree.xpath('.//*'):
         parent = element.getparent()
         if parent is not None and element.tag != 'p':
             etree.strip_tags(element.getparent(), element.tag)
@@ -447,7 +446,7 @@ def _pull_nested_paragraphs_to_top(tree):
             # The parents text occuring after the current child p but before
             # p's following sibling is stored in p.tail. Append this text to
             # the parent's text and then clear out p.tail
-            if p.tail:
+            if parent.text is not None and p.tail:
                 parent.text += ' ' + p.tail
                 p.tail = ''
             # Place child in its new location
@@ -458,7 +457,6 @@ def _pull_nested_paragraphs_to_top(tree):
 
 def _extract_paragraphs_from_tree(tree):
     """Preprocess tree and return it's paragraphs."""
-    tree = copy.deepcopy(tree)
     _retain_only_pars(tree)
     _pull_nested_paragraphs_to_top(tree)
     paragraphs = []
