@@ -447,7 +447,7 @@ def _pull_nested_paragraphs_to_top(tree):
             # The parents text occuring after the current child p but before
             # p's following sibling is stored in p.tail. Append this text to
             # the parent's text and then clear out p.tail
-            if p.tail:
+            if parent.text is not None and p.tail:
                 parent.text += ' ' + p.tail
                 p.tail = ''
             # Place child in its new location
