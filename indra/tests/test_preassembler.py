@@ -3,10 +3,10 @@ import os
 from indra.preassembler import Preassembler, render_stmt_graph, \
                                flatten_evidence, flatten_stmts
 from indra.preassembler.hierarchy_manager import HierarchyManager
-from indra.sources import trips, reach
+from indra.sources import reach
 from indra.statements import *
-from indra.preassembler.hierarchy_manager import hierarchies, \
-    get_wm_hierarchies
+from indra.ontology.bio import bio_ontology
+from indra.ontology.world import world_ontology
 
 
 def test_duplicates():
@@ -14,7 +14,7 @@ def test_duplicates():
     ras = Agent('RAS', db_refs = {'FA': '03663'})
     st1 = Phosphorylation(src, ras)
     st2 = Phosphorylation(src, ras)
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     pa.combine_duplicates()
     assert len(pa.unique_stmts) == 1
 
@@ -25,7 +25,7 @@ def test_duplicates_copy():
     st1 = Phosphorylation(src, ras, evidence=[Evidence(text='Text 1')])
     st2 = Phosphorylation(src, ras, evidence=[Evidence(text='Text 2')])
     stmts = [st1, st2]
-    pa = Preassembler(hierarchies, stmts=stmts)
+    pa = Preassembler(bio_ontology, stmts=stmts)
     pa.combine_duplicates()
     assert len(pa.unique_stmts) == 1
     assert len(stmts) == 2
@@ -41,13 +41,11 @@ def test_duplicates_sorting():
     mc3 = ModCondition('phosphorylation', 'serine', '298')
     map2k1_2 = Agent('MAP2K1', mods=[mc1, mc2, mc3])
     mapk3 = Agent('MAPK3')
-    #ras = Agent('MAPK3', db_refs = {'FA': '03663'})
-    #nras = Agent('NRAS', db_refs = {'FA': '03663'})
     st1 = Phosphorylation(map2k1_1, mapk3, position='218')
     st2 = Phosphorylation(map2k1_2, mapk3)
     st3 = Phosphorylation(map2k1_1, mapk3, position='218')
     stmts = [st1, st2, st3]
-    pa = Preassembler(hierarchies, stmts=stmts)
+    pa = Preassembler(bio_ontology, stmts=stmts)
     pa.combine_duplicates()
     assert len(pa.unique_stmts) == 2
 
@@ -75,7 +73,7 @@ def test_combine_duplicates():
     p9 = Dephosphorylation(Agent('SRC'), Agent('KRAS'),
                            evidence=Evidence(text='beep'))
     stmts = [p1, p2, p3, p4, p5, p6, p7, p8, p9]
-    pa = Preassembler(hierarchies, stmts=stmts)
+    pa = Preassembler(bio_ontology, stmts=stmts)
     pa.combine_duplicates()
     # The statements come out sorted by their matches_key
     assert len(pa.unique_stmts) == 4, len(pa.unique_stmts)
@@ -100,7 +98,7 @@ def test_combine_evidence_exact_duplicates():
     p3 = Phosphorylation(raf, mek,
             evidence=Evidence(text='bar'))
     stmts = [p1, p2, p3]
-    pa = Preassembler(hierarchies, stmts=stmts)
+    pa = Preassembler(bio_ontology, stmts=stmts)
     pa.combine_duplicates()
     # The statements come out sorted by their matches_key
     assert len(pa.unique_stmts) == 1
@@ -120,7 +118,7 @@ def test_combine_evidence_exact_duplicates_different_raw_text():
     p3 = Phosphorylation(raf2, mek,
             evidence=Evidence(text='bar'))
     stmts = [p1, p2, p3]
-    pa = Preassembler(hierarchies, stmts=stmts)
+    pa = Preassembler(bio_ontology, stmts=stmts)
     pa.combine_duplicates()
     # The statements come out sorted by their matches_key
     assert len(pa.unique_stmts) == 1
@@ -137,7 +135,7 @@ def test_superfamily_refinement():
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     st1 = Phosphorylation(src, ras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nras, 'tyrosine', '32')
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the gene-level
     # one, supported by the family one.
@@ -153,7 +151,7 @@ def test_superfamily_refinement_isa_or_partof():
     ampk = Agent('AMPK', db_refs = {'FPLX': 'AMPK'})
     st1 = Phosphorylation(src, ampk, 'tyrosine', '32')
     st2 = Phosphorylation(src, prkag1, 'tyrosine', '32')
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the gene-level
     # one, supported by the family one.
@@ -170,7 +168,7 @@ def test_modification_refinement():
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     st1 = Phosphorylation(src, nras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nras)
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
@@ -184,7 +182,7 @@ def test_modification_refinement_residue_noenz():
     erbb3 = Agent('Erbb3')
     st1 = Phosphorylation(None, erbb3)
     st2 = Phosphorylation(None, erbb3, 'Y')
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     pa.combine_related()
     assert len(pa.related_stmts) == 1
 
@@ -196,7 +194,7 @@ def test_modification_refinement_noenz():
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     st1 = Phosphorylation(src, nras, 'tyrosine', '32')
     st2 = Phosphorylation(None, nras, 'tyrosine', '32')
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
@@ -221,7 +219,7 @@ def test_modification_refinement_noenz2():
                                     'TEXT': 'Beclin 1'})
     st1 = Deacetylation(sirt1, becn1)
     st2 = Deacetylation(None, becn1)
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
@@ -240,7 +238,7 @@ def test_modification_norefinement_noenz():
     st1 = Phosphorylation(src, nras)
     st2 = Phosphorylation(None, nras, 'Y', '32',
                           evidence=[Evidence(text='foo')])
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     stmts = pa.combine_related()
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
@@ -257,7 +255,7 @@ def test_modification_norefinement_subsfamily():
     st1 = Phosphorylation(src, nras)
     st2 = Phosphorylation(src, ras, 'Y', '32',
                           evidence=[Evidence(text='foo')])
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     stmts = pa.combine_related()
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
@@ -274,7 +272,7 @@ def test_modification_norefinement_enzfamily():
     st1 = Phosphorylation(raf, mek, 'Y', '32',
                           evidence=[Evidence(text='foo')])
     st2 = Phosphorylation(braf, mek)
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     stmts = pa.combine_related()
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
@@ -294,7 +292,7 @@ def test_bound_condition_refinement():
     st2 = Phosphorylation(src, nrasgtp, 'tyrosine', '32')
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     stmts = pa.combine_related()
     assert len(stmts) == 1
     assert stmts[0].equals(st2)
@@ -312,7 +310,7 @@ def test_bound_condition_norefinement():
         bound_conditions=[BoundCondition(gtp, True)])
     st1 = Phosphorylation(src, nras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nrasgtp)
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     stmts = pa.combine_related()
     # The bound condition is more specific in st2 but the modification is less
     # specific. Therefore these statements should not be combined.
@@ -334,7 +332,7 @@ def test_bound_condition_deep_refinement():
     st2 = Phosphorylation(src, nrasgtp2, 'tyrosine', '32')
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     stmts = pa.combine_related()
     assert len(stmts) == 1
     assert stmts[0].equals(st2)
@@ -348,7 +346,7 @@ def test_complex_refinement():
     mek = Agent('MEK')
     st1 = Complex([ras, raf])
     st2 = Complex([mek, ras, raf])
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     pa.combine_related()
     assert len(pa.unique_stmts) == 2
     assert len(pa.related_stmts) == 2
@@ -360,7 +358,7 @@ def test_complex_agent_refinement():
     raf2 = Agent('RAF', mods=[ModCondition('ubiquitination', None, None, False)])
     st1 = Complex([ras, raf1])
     st2 = Complex([ras, raf2])
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     pa.combine_related()
     assert len(pa.unique_stmts) == 2
     assert len(pa.related_stmts) == 2
@@ -399,37 +397,37 @@ def test_activating_substitution_refinement():
                      evidence=Evidence(text='bar'))
     st5 = ActiveForm(nras1, 'gtpbound', False,
                      evidence=Evidence(text='bar'))
-    assert st2.refinement_of(st1, hierarchies)
-    assert not st3.refinement_of(st1, hierarchies)
-    assert not st4.refinement_of(st1, hierarchies)
-    assert not st5.refinement_of(st1, hierarchies)
+    assert st2.refinement_of(st1, bio_ontology)
+    assert not st3.refinement_of(st1, bio_ontology)
+    assert not st4.refinement_of(st1, bio_ontology)
+    assert not st5.refinement_of(st1, bio_ontology)
 
-    assert not st1.refinement_of(st2, hierarchies)
-    assert not st3.refinement_of(st2, hierarchies)
-    assert not st4.refinement_of(st2, hierarchies)
-    assert not st5.refinement_of(st2, hierarchies)
+    assert not st1.refinement_of(st2, bio_ontology)
+    assert not st3.refinement_of(st2, bio_ontology)
+    assert not st4.refinement_of(st2, bio_ontology)
+    assert not st5.refinement_of(st2, bio_ontology)
 
-    assert not st1.refinement_of(st3, hierarchies)
-    assert not st2.refinement_of(st3, hierarchies)
-    assert not st4.refinement_of(st3, hierarchies)
-    assert not st5.refinement_of(st3, hierarchies)
+    assert not st1.refinement_of(st3, bio_ontology)
+    assert not st2.refinement_of(st3, bio_ontology)
+    assert not st4.refinement_of(st3, bio_ontology)
+    assert not st5.refinement_of(st3, bio_ontology)
 
-    assert not st1.refinement_of(st4, hierarchies)
-    assert not st2.refinement_of(st4, hierarchies)
-    assert not st3.refinement_of(st4, hierarchies)
-    assert not st5.refinement_of(st4, hierarchies)
+    assert not st1.refinement_of(st4, bio_ontology)
+    assert not st2.refinement_of(st4, bio_ontology)
+    assert not st3.refinement_of(st4, bio_ontology)
+    assert not st5.refinement_of(st4, bio_ontology)
 
-    assert not st1.refinement_of(st5, hierarchies)
-    assert not st2.refinement_of(st5, hierarchies)
-    assert not st3.refinement_of(st5, hierarchies)
-    assert not st4.refinement_of(st5, hierarchies)
+    assert not st1.refinement_of(st5, bio_ontology)
+    assert not st2.refinement_of(st5, bio_ontology)
+    assert not st3.refinement_of(st5, bio_ontology)
+    assert not st4.refinement_of(st5, bio_ontology)
 
 
 def test_translocation():
     st1 = Translocation(Agent('AKT'), None, None)
     st2 = Translocation(Agent('AKT'), None, 'plasma membrane')
     st3 = Translocation(Agent('AKT'), None, 'nucleus')
-    pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
     pa.combine_related()
     assert len(pa.related_stmts) == 2
 
@@ -444,7 +442,7 @@ def test_grounding_aggregation():
     st2 = Phosphorylation(None, braf2)
     st3 = Phosphorylation(None, braf3)
     st4 = Phosphorylation(None, braf4)
-    pa = Preassembler(hierarchies, stmts=[st1, st2, st3, st4])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3, st4])
     unique_stmts = pa.combine_duplicates()
     assert len(unique_stmts) == 3, unique_stmts
 
@@ -457,7 +455,7 @@ def test_grounding_aggregation_complex():
     st1 = Complex([mek, braf1])
     st2 = Complex([braf2, mek])
     st3 = Complex([mek, braf3])
-    pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
     unique_stmts = pa.combine_duplicates()
     assert len(unique_stmts) == 3, unique_stmts
 
@@ -475,7 +473,7 @@ def test_render_stmt_graph():
     p5 = Phosphorylation(braf, mek1, 'serine', '218')
     p6 = Phosphorylation(braf, mek1, 'serine', '222')
     stmts = [p0, p1, p2, p3, p4, p5, p6]
-    pa = Preassembler(hierarchies, stmts=stmts)
+    pa = Preassembler(bio_ontology, stmts=stmts)
     pa.combine_related()
     graph = render_stmt_graph(pa.related_stmts, reduce=False)
     # One node for each statement
@@ -497,7 +495,7 @@ def test_flatten_evidence_hierarchy():
     st1 = Phosphorylation(braf, mek, evidence=[Evidence(text='foo')])
     st2 = Phosphorylation(braf, mek, 'S', '218',
                           evidence=[Evidence(text='bar')])
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     pa.combine_related()
     assert len(pa.related_stmts) == 1
     flattened = flatten_evidence(pa.related_stmts)
@@ -526,7 +524,7 @@ def test_flatten_evidence_multilevel():
                           evidence=[Evidence(text='bar')])
     st3 = Phosphorylation(braf, mek, 'S', '218',
                           evidence=[Evidence(text='baz')])
-    pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
     pa.combine_related()
     assert len(pa.related_stmts) == 1
     flattened = flatten_evidence(pa.related_stmts)
@@ -544,7 +542,7 @@ def test_flatten_evidence_hierarchy_supports():
     st1 = Phosphorylation(braf, mek, evidence=[Evidence(text='foo')])
     st2 = Phosphorylation(braf, mek, 'S', '218',
                           evidence=[Evidence(text='bar')])
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     pa_stmts = pa.combine_related(return_toplevel=False)
     assert len(pa_stmts) == 2
     flattened = flatten_evidence(pa_stmts, collect_from='supports')
@@ -564,7 +562,7 @@ def test_flatten_stmts():
     st3 = Phosphorylation(None, Agent('RAF1'))
     st4 = Phosphorylation(Agent('PAK1'), Agent('RAF1'), 'S', '338')
     st5 = Phosphorylation(None, Agent('RAF1'), evidence=Evidence(text='foo'))
-    pa = Preassembler(hierarchies, stmts=[st1, st2, st3, st4, st5])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3, st4, st5])
     pa.combine_duplicates()
     pa.combine_related()
     assert len(pa.related_stmts) == 2
@@ -576,7 +574,7 @@ def test_complex_refinement_order():
     st1 = Complex([Agent('MED23'), Agent('ELK1')])
     st2 = Complex([Agent('ELK1', mods=[ModCondition('phosphorylation')]),
                    Agent('MED23')])
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     pa.combine_duplicates()
     pa.combine_related()
     assert len(pa.related_stmts) == 1
@@ -590,7 +588,7 @@ def test_activation_refinement():
     obj = Agent('endotoxin', db_refs={'TEXT': 'endotoxin'})
     st1 = Inhibition(subj, obj)
     st2 = Activation(subj, obj)
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     pa.combine_duplicates()
     assert len(pa.unique_stmts) == 2
     pa.combine_related()
@@ -602,7 +600,7 @@ def test_homodimer_refinement():
     erbb = Agent('ERBB2')
     st1 = Complex([erbb, erbb])
     st2 = Complex([erbb, egfr])
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     pa.combine_duplicates()
     assert len(pa.unique_stmts) == 2
     pa.combine_related()
@@ -614,7 +612,7 @@ def test_return_toplevel():
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     st1 = Phosphorylation(src, nras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nras)
-    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2])
     stmts = pa.combine_related(return_toplevel=True)
     assert len(stmts) == 1
     assert len(stmts[0].supported_by) == 1
@@ -642,7 +640,7 @@ def test_multiprocessing():
     p6 = Phosphorylation(braf, mek1, 'serine', '222')
     p7 = Dephosphorylation(braf, mek1)
     stmts = [p0, p1, p2, p3, p4, p5, p6, p7]
-    pa = Preassembler(hierarchies, stmts=stmts)
+    pa = Preassembler(bio_ontology, stmts=stmts)
     # Size cutoff set to a low number so that one group will run remotely
     # and one locally
     toplevel = pa.combine_related(return_toplevel=True, poolsize=1,
@@ -659,50 +657,43 @@ def test_conversion_refinement():
     st2 = Conversion(hras, gtp, gdp)
     st3 = Conversion(hras, [gtp, gdp], gdp)
     st4 = Conversion(hras, [gdp, gtp], gdp)
-    pa = Preassembler(hierarchies, stmts=[st1, st2, st3, st4])
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3, st4])
     toplevel_stmts = pa.combine_related()
     assert len(toplevel_stmts) == 2
 
 
 def test_influence_duplicate():
-    gov = 'UN/entities/human/government/government_entity'
-    agr = 'UN/entities/natural/crop_technology'
-    cgov = Event(Concept('government', db_refs={'UN': [(gov, 1.0)]}))
-    cagr = Event(Concept('agriculture', db_refs={'UN': [(agr, 1.0)]}))
+    gov = 'wm/concept/causal_factor/social_and_political/government'
+    agr = 'wm/concept/causal_factor/agriculture/crop_production'
+    cgov = Event(Concept('government', db_refs={'WM': [(gov, 1.0)]}))
+    cagr = Event(Concept('agriculture', db_refs={'WM': [(agr, 1.0)]}))
     print(cgov.matches_key())
     stmt1 = Influence(cgov, cagr, evidence=[Evidence(source_api='eidos1')])
     stmt2 = Influence(cagr, cgov, evidence=[Evidence(source_api='eidos2')])
     stmt3 = Influence(cgov, cagr, evidence=[Evidence(source_api='eidos3')])
-    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             '../sources/eidos/eidos_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, True, True)
-    hierarchies = {'entity': hm}
-    pa = Preassembler(hierarchies, [stmt1, stmt2, stmt3])
+    pa = Preassembler(world_ontology, [stmt1, stmt2, stmt3])
     unique_stmts = pa.combine_duplicates()
     unique_stmts = sorted(unique_stmts, key=lambda x: len(x.evidence))
     assert len(unique_stmts) == 2
     assert len(unique_stmts[0].evidence) == 1
     assert len(unique_stmts[1].evidence) == 2, unique_stmts
     sources = [e.source_api for e in unique_stmts[1].evidence]
-    assert set(sources) == set(['eidos1', 'eidos3'])
+    assert set(sources) == {'eidos1', 'eidos3'}
 
 
 def test_influence_refinement():
-    tran = 'UN/entities/human/infrastructure/transportation'
-    truck = 'UN/entities/human/infrastructure/transportation/' + \
-        'transportation_methods'
-    agr = 'UN/entities/human/livelihood'
-    ctran = Event(Concept('transportation', db_refs={'UN': [(tran, 1.0)]}))
-    ctruck = Event(Concept('trucking', db_refs={'UN': [(truck, 1.0)]}))
-    cagr = Event(Concept('agriculture', db_refs={'UN': [(agr, 1.0)]}))
+    tran = 'wm/concept/causal_factor/access/infrastructure_access/transportation'
+    truck = 'wm/concept/causal_factor/access/infrastructure_access/' \
+        'transportation/shipping'
+    agr = 'wm/concept/causal_factor/economic_and_commerce/' \
+        'economic_activity/livelihood'
+    ctran = Event(Concept('transportation', db_refs={'WM': [(tran, 1.0)]}))
+    ctruck = Event(Concept('trucking', db_refs={'WM': [(truck, 1.0)]}))
+    cagr = Event(Concept('agriculture', db_refs={'WM': [(agr, 1.0)]}))
     stmt1 = Influence(ctran, cagr, evidence=[Evidence(source_api='eidos1')])
     stmt2 = Influence(ctruck, cagr, evidence=[Evidence(source_api='eidos2')])
     stmt3 = Influence(cagr, ctran, evidence=[Evidence(source_api='eidos3')])
-    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             '../sources/eidos/eidos_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, True, True)
-    hierarchies = {'entity': hm}
-    pa = Preassembler(hierarchies, [stmt1, stmt2, stmt3])
+    pa = Preassembler(bio_ontology, [stmt1, stmt2, stmt3])
     rel_stmts = pa.combine_related()
     assert len(rel_stmts) == 2
     truck_stmt = [st for st in rel_stmts if st.subj.concept.name ==
@@ -722,7 +713,7 @@ def test_find_contradicts():
     st6 = ActiveForm(Agent('a',
             mods=[ModCondition('phosphorylation', None, None, True)]),
             'kinase', False)
-    pa = Preassembler(hierarchies, [st1, st2, st3, st4, st5, st6])
+    pa = Preassembler(bio_ontology, [st1, st2, st3, st4, st5, st6])
     contradicts = pa.find_contradicts()
     assert len(contradicts) == 3
     for s1, s2 in contradicts:
@@ -738,7 +729,7 @@ def test_find_contradicts_refinement():
     st1 = Phosphorylation(Agent('x'), ras)
     st2 = Dephosphorylation(Agent('x'), kras)
     st3 = Dephosphorylation(Agent('x'), hras)
-    pa = Preassembler(hierarchies, [st1, st2, st3])
+    pa = Preassembler(bio_ontology, [st1, st2, st3])
     contradicts = pa.find_contradicts()
     assert len(contradicts) == 2
     for s1, s2 in contradicts:
@@ -754,41 +745,11 @@ def test_preassemble_related_complex():
     st2 = Complex([kras, ras])
     st3 = Complex([hras, kras])
     st4 = Complex([ras, kras])
-    pa = Preassembler(hierarchies, [st1, st2, st3, st4])
+    pa = Preassembler(bio_ontology, [st1, st2, st3, st4])
     uniq = pa.combine_duplicates()
     assert len(uniq) == 2
     top = pa.combine_related()
     assert len(top) == 1
-
-
-def _get_extended_wm_hierarchy():
-    from indra.preassembler.make_wm_ontologies import isequal, get_term
-    hierarchies = get_wm_hierarchies()
-    test_rel = (get_term('flooding', 'wm/x/y/z'), isequal,
-                get_term('flooding', 'wm/a/b/c'))
-    hierarchies['entity'].graph.add(test_rel)
-    test_rel = (get_term('flooding', 'wm/a/b/c'), isequal,
-                get_term('flooding', 'wm/x/y/z'))
-    hierarchies['entity'].graph.add(test_rel)
-    return hierarchies
-
-
-def test_normalize_equals():
-    hierarchies = _get_extended_wm_hierarchy()
-    concept1 = 'wm/a/b/c/flooding'
-    concept2 = 'wm/x/y/z/flooding'
-    concept3 = 'wm/concept/causal_factor/access/food_shortage'
-    dbr = {'WM': [(concept1, 1.0), (concept2, 0.5), (concept3, 0.1)]}
-    ev = Event(Concept('x', db_refs=dbr))
-    pa = Preassembler(hierarchies=hierarchies,
-                      stmts=[ev])
-    pa.normalize_equivalences(ns='WM')
-    assert pa.stmts[0].concept.db_refs['WM'][0] == \
-        (concept1, 1.0), pa.stmts[0].concept.db_refs['WM']
-    assert pa.stmts[0].concept.db_refs['WM'][1] == \
-        (concept1, 0.5), pa.stmts[0].concept.db_refs['WM']
-    assert pa.stmts[0].concept.db_refs['WM'][2] == \
-        (concept3, 0.1), pa.stmts[0].concept.db_refs['WM']
 
 
 def test_normalize_opposites():
@@ -801,7 +762,7 @@ def test_normalize_opposites():
     dbr = {'WM': [(concept1, 1.0), (concept2, 0.5), (concept3, 0.1)]}
     ev = Event(Concept('x', db_refs=dbr),
                delta=QualitativeDelta(polarity=1))
-    pa = Preassembler(hierarchies=get_wm_hierarchies(), stmts=[ev])
+    pa = Preassembler(world_ontology, stmts=[ev])
     pa.normalize_opposites(ns='WM')
     # We are normalizing to food supply since that is the inherently
     # positive concept
@@ -817,7 +778,7 @@ def test_normalize_opposites():
     dbr = {'WM': [(concept2, 1.0), (concept1, 0.5), (concept3, 0.1)]}
     ev = Event(Concept('x', db_refs=dbr),
                delta=QualitativeDelta(polarity=1))
-    pa = Preassembler(hierarchies=get_wm_hierarchies(), stmts=[ev])
+    pa = Preassembler(world_ontology, stmts=[ev])
     pa.normalize_opposites(ns='WM')
     # We are normalizing to food supply since that is the inherently
     # positive concept
@@ -839,8 +800,7 @@ def test_normalize_opposites_influence():
                            delta=QualitativeDelta(polarity=1)),
                      Event(Concept('y', db_refs=dbr2),
                            delta=QualitativeDelta(polarity=-1)))
-    pa = Preassembler(hierarchies=get_wm_hierarchies(),
-                      stmts=[stmt])
+    pa = Preassembler(world_ontology, stmts=[stmt])
     pa.normalize_opposites(ns='WM')
     assert pa.stmts[0].subj.delta.polarity == 1
     assert pa.stmts[0].obj.delta.polarity == 1
@@ -855,7 +815,7 @@ def test_normalize_opposites_association():
                               delta=QualitativeDelta(polarity=1)),
                         Event(Concept('y', db_refs=dbr2),
                               delta=QualitativeDelta(polarity=-1))])
-    pa = Preassembler(hierarchies=get_wm_hierarchies(), stmts=[stmt])
+    pa = Preassembler(world_ontology, stmts=[stmt])
     pa.normalize_opposites(ns='WM')
     assert pa.stmts[0].members[0].delta.polarity == 1
     assert pa.stmts[0].members[1].delta.polarity == 1
@@ -886,7 +846,7 @@ def test_agent_text_storage():
         Conversion(D, [A1], [A1, C],
                    evidence=Evidence(text='D: A -> A C'))
         ]
-    pa = Preassembler(hierarchies, inp)
+    pa = Preassembler(bio_ontology, inp)
     unq1 = pa.combine_duplicates()
     assert len(unq1) == 5, len(unq1)
     assert all([len(ev.annotations['prior_uuids']) == 1
@@ -905,7 +865,7 @@ def test_agent_text_storage():
     inp2 = unq1 + [
         Complex([A1, C, B1], evidence=Evidence(text='A complex C bag.'))
         ]
-    pa2 = Preassembler(hierarchies, inp2)
+    pa2 = Preassembler(bio_ontology, inp2)
     unq2 = pa2.combine_duplicates()
     assert len(unq2) == 5, len(unq2)
     old_ev_list = []
@@ -925,9 +885,8 @@ def test_agent_coordinates():
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                         'reach_coordinates.json')
     stmts = reach.process_json_file(path).statements
-    pa = Preassembler(hierarchies, stmts)
+    pa = Preassembler(bio_ontology, stmts)
     unique_stmt = pa.combine_duplicates()[0]
-    evidence_list = unique_stmt.evidence
     agent_annots = [ev.annotations['agents'] for ev in unique_stmt.evidence]
     assert all(a['raw_text'] == ['MEK1', 'ERK2'] for a in agent_annots)
     assert {tuple(a['coords']) for a in agent_annots} == {((21, 25), (0, 4)),
@@ -946,35 +905,31 @@ def test_association_duplicate():
     st5 = Association([ev2, ev3], evidence=[Evidence(source_api='eidos5')])
     eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              '../sources/eidos/eidos_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, True, True)
-    hierarchies = {'entity': hm}
-    pa = Preassembler(hierarchies, [st1, st2, st3, st4, st5])
+    pa = Preassembler(world_ontology, [st1, st2, st3, st4, st5])
     unique_stmts = pa.combine_duplicates()
     assert len(unique_stmts) == 3
     assert len(unique_stmts[0].evidence) == 2
     assert len(unique_stmts[1].evidence) == 1
     assert len(unique_stmts[2].evidence) == 2
     sources = [e.source_api for e in unique_stmts[0].evidence]
-    assert set(sources) == set(['eidos1', 'eidos3'])
+    assert set(sources) == {'eidos1', 'eidos3'}
 
 
 def test_association_refinement():
-    health = 'UN/entities/human/health'
-    food = 'UN/entities/human/food'
-    food_security = 'UN/entities/human/food/food_security'
-    eh = Event(Concept('health', db_refs={'UN': [(health, 1.0)]}))
-    ef = Event(Concept('food', db_refs={'UN': [(food, 1.0)]}))
-    efs = Event(Concept('food security', db_refs={'UN': [(food_security, 1.0)]}))
+    health = 'wm/concept/causal_factor/health_and_life'
+    food = 'wm/concept/causal_factor/wild_food_sources'
+    food_security = 'wm/concept/causal_factor/health_and_life/' \
+        'living_condition/food_safety'
+    eh = Event(Concept('health', db_refs={'WM': [(health, 1.0)]}))
+    ef = Event(Concept('food', db_refs={'WM': [(food, 1.0)]}))
+    efs = Event(Concept('food security',
+                        db_refs={'WM': [(food_security, 1.0)]}))
     st1 = Association([eh, ef], evidence=[Evidence(source_api='eidos1')])
     st2 = Association([ef, eh], evidence=[Evidence(source_api='eidos2')])
     st3 = Association([eh, efs], evidence=[Evidence(source_api='eidos3')])
     st4 = Association([ef, efs], evidence=[Evidence(source_api='eidos4')])
-    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             '../sources/eidos/eidos_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, True, True)
-    hierarchies = {'entity': hm}
-    pa = Preassembler(hierarchies, [st1, st2, st3, st4])
-    unique_stmts = pa.combine_duplicates() # debugging
+    pa = Preassembler(world_ontology, [st1, st2, st3, st4])
+    unique_stmts = pa.combine_duplicates()
     assert len(unique_stmts) == 3
     rel_stmts = pa.combine_related()
     assert len(rel_stmts) == 2
@@ -1009,9 +964,9 @@ def test_matches_key_fun():
             matches_key = stmt.matches_key()
         return matches_key
 
-    def event_location_refinement(st1, st2, hierarchies):
+    def event_location_refinement(st1, st2, bio_ontology):
         if isinstance(st1, Event) and isinstance(st2, Event):
-            ref = st1.refinement_of(st2, hierarchies)
+            ref = st1.refinement_of(st2, bio_ontology)
             if not ref:
                 return False
             if not has_location(st2):
@@ -1022,24 +977,23 @@ def test_matches_key_fun():
                 return st1.context.geo_location.db_refs['GEOID'] == \
                     st2.context.geo_location.db_refs['GEOID']
 
-
     context1 = WorldContext(geo_location=RefContext('x',
                                                     db_refs={'GEOID': '1'}))
     context2 = WorldContext(geo_location=RefContext('x',
                                                     db_refs={'GEOID': '2'}))
 
-    health = 'UN/entities/human/health'
-    e1 = Event(Concept('health', db_refs={'UN': [(health, 1.0)]}),
+    health = 'wm/concept/causal_factor/health_and_life'
+    e1 = Event(Concept('health', db_refs={'WM': [(health, 1.0)]}),
                context=context1,
                evidence=Evidence(text='1', source_api='eidos'))
-    e2 = Event(Concept('health', db_refs={'UN': [(health, 1.0)]}),
+    e2 = Event(Concept('health', db_refs={'WM': [(health, 1.0)]}),
                context=context2,
                evidence=Evidence(text='2', source_api='eidos'))
-    e3 = Event(Concept('health', db_refs={'UN': [(health, 1.0)]}),
+    e3 = Event(Concept('health', db_refs={'WM': [(health, 1.0)]}),
                context=context2,
                evidence=Evidence(text='3', source_api='eidos'))
 
-    pa = Preassembler(hierarchies, [e1, e2, e3],
+    pa = Preassembler(world_ontology, [e1, e2, e3],
                       matches_fun=event_location_matches,
                       refinement_fun=event_location_refinement)
 
@@ -1060,13 +1014,13 @@ def test_uppro_assembly():
     stmt1 = Phosphorylation(None, ag1)
     stmt2 = Phosphorylation(None, ag2)
     assert stmt1.matches_key() != stmt2.matches_key()
-    pa = Preassembler(hierarchies, [stmt1, stmt2])
+    pa = Preassembler(bio_ontology, [stmt1, stmt2])
     unique_stmts = pa.combine_duplicates()
     assert len(unique_stmts) == 2, unique_stmts
 
     from indra.tools import assemble_corpus as ac
     stmts = ac.map_grounding([stmt1, stmt2])
-    pa = Preassembler(hierarchies, stmts)
+    pa = Preassembler(bio_ontology, stmts)
     unique_stmts = pa.combine_duplicates()
     assert len(unique_stmts) == 2
 
