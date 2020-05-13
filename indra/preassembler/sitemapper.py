@@ -224,6 +224,8 @@ class SiteMapper(ProtMapper):
 
         for stmt in stmts:
             # Check for errors in the position str
+            # TODO: this could also be used on agent conditions, here
+            # it's only applied to statement position arguments
             if isinstance(stmt, (Modification, SelfModification)) and \
                     not _valid_position_str(stmt.position):
                 continue
