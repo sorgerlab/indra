@@ -1,20 +1,10 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-from future.utils import python_2_unicode_compatible
 import logging
 import textwrap
-import requests
 from copy import deepcopy
 from functools import lru_cache
 from protmapper.api import ProtMapper, default_site_map
 from indra.statements import *
 from indra.databases import hgnc_client
-# Python 2
-try:
-    basestring
-# Python 3
-except:
-    basestring = str
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +27,6 @@ class MappedStatement(object):
         self.mapped_mods = mapped_mods
         self.mapped_stmt = mapped_stmt
 
-    @python_2_unicode_compatible
     def __str__(self):
         if not self.mapped_mods:
             mm_str = str(self.mapped_mods)
@@ -134,7 +123,7 @@ class SiteMapper(ProtMapper):
         self.do_orthology_mapping = do_orthology_mapping
         self.do_isoform_mapping = do_isoform_mapping
 
-    def map_stmt_sites(self, stmt, ):
+    def map_stmt_sites(self, stmt):
         stmt_copy = deepcopy(stmt)
         # For all statements, replace agents with invalid modifications
         mapped_sites = []
@@ -169,8 +158,8 @@ class SiteMapper(ProtMapper):
             isinstance(stmt, SelfModification)) and \
            stmt.residue is not None and stmt.position is not None:
             # Make sure we didn't end up with lists by accident
-            assert isinstance(stmt.residue, basestring) and \
-                   isinstance(stmt.position, basestring)
+            assert isinstance(stmt.residue, str) and \
+                   isinstance(stmt.position, str)
             # Get the right agent depending on whether this is a
             # Modification or SelfModification statement
             agent_to_check = (stmt_copy.sub
@@ -236,10 +225,7 @@ class SiteMapper(ProtMapper):
         for stmt in stmts:
             # Check for errors in the position str
             if isinstance(stmt, (Modification, SelfModification)) and \
-                    stmt.residue is not None and stmt.position is not None \
-                    and str(int(float(stmt.position))) != stmt.position:
-                logger.warning('%s has an invalid value for position: "%s".' %
-                               (str(stmt), stmt.position))
+                    not _valid_position_str(stmt.position):
                 continue
             mapped_stmt = self.map_stmt_sites(stmt)
             # If we got a MappedStatement as a return value, we add that to the
@@ -355,7 +341,20 @@ def _get_uniprot_id(agent):
         if up_id is None:
             return None
     # If the UniProt ID is a list then choose the first one.
-    if not isinstance(up_id, basestring) and \
-       isinstance(up_id[0], basestring):
+    if not isinstance(up_id, str) and \
+       isinstance(up_id[0], str):
         up_id = up_id[0]
     return up_id
+
+
+def _valid_position_str(pos):
+    # None positions are valid
+    if pos is None:
+        return True
+    # Check if the string is a simple int
+    try:
+        return pos == str(int(float(pos)))
+    # If the float conversion of the string fails, (e.g., if it
+    # contains a non-numeric character), it is invalid
+    except ValueError:
+        return False
