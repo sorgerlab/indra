@@ -1,7 +1,6 @@
 import logging
 import networkx
 from collections import deque
-from .shortest_path import bidirectional_shortest_path
 
 logger = logging.getLogger(__name__)
 
