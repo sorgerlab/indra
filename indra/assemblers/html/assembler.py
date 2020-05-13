@@ -525,7 +525,7 @@ def id_url(ag):
                     'IP', 'PF', 'NXPFA',
                     'MIRBASEM', 'MIRBASE',
                     'NCIT',
-                    'UN', 'HUME', 'CWMS', 'SOFIA'):
+                    'WM', 'UN', 'HUME', 'CWMS', 'SOFIA'):
         if db_name in ag.db_refs:
             # Handle a special case where a list of IDs is given
             if isinstance(ag.db_refs[db_name], list):
@@ -533,7 +533,7 @@ def id_url(ag):
                 if db_name == 'CHEBI':
                     if not db_id.startswith('CHEBI'):
                         db_id = 'CHEBI:%s' % db_id
-                elif db_name in ('UN', 'HUME'):
+                elif db_name in ('UN', 'WM', 'HUME'):
                     db_id = db_id[0]
             else:
                 db_id = ag.db_refs[db_name]
@@ -589,7 +589,7 @@ def tag_text(text, tag_info_list):
     format_text = ''
     start_pos = 0
     for i, j, ag_text, tag_start, tag_close in tag_info_list:
-        # Capitalize if it's a beginnine of a sentence
+        # Capitalize if it's the beginning of a sentence
         if i == 0:
             ag_text = ag_text[0].upper() + ag_text[1:]
         # Add the text before this agent, if any
