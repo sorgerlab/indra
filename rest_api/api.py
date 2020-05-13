@@ -685,7 +685,7 @@ def filter_belief():
 @route('/preassembly/pipeline', method=['POST', 'OPTIONS'])
 @allow_cors
 def filter_belief():
-    """Filter to beliefs above a given threshold."""
+    """Run an assembly pipeline for a list of Statements."""
     if request.method == 'OPTIONS':
         return {}
     response = request.body.read().decode('utf-8')
