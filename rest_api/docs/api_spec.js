@@ -709,6 +709,42 @@ var api_spec = {
         }
       }
     },
+    "/preassembly/pipeline": {
+      "post": {
+        "tags": [
+          "preassembly"
+        ],
+        "summary": "Run an assembly pipeline for a list of Statements.",
+        "operationId": "assemblyPipeline",
+        "description": "Takes in a list of INDRA statements and a list of AssemblyPipeline steps and runs the pipeline on statements.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "pipelineObj",
+            "description": "object with a key of \"statements\" referencing a list of INDRA statements, " +
+                "and a \"pipeline\" referencing pipeline steps."
+            ,
+            "schema": {
+              "$ref": "#/definitions/pipelineObj"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statements after running pipeline.",
+            "schema": {
+              "$ref": "#/definitions/statementsObj"
+            }
+          }
+        }
+      }
+    },
     "/assemblers/pysb": {
       "post": {
         "tags": [
@@ -1047,6 +1083,12 @@ var api_spec = {
         "type": "object"
       }
     },
+    "pipeline": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
     "statementsObj": {
       "type": "object",
       "required": [
@@ -1121,6 +1163,21 @@ var api_spec = {
         "belief_cutoff": {
           "type": "float",
           "example": 0.7
+        }
+      }
+    },
+    "pipelineObj": {
+      "type": "object",
+      "required": [
+        "statements",
+        "pipeline"
+      ],
+      "properties": {
+        "statements": {
+          "$ref": "#/definitions/statements"
+        },
+        "pipeline": {
+          "$ref": "#definitions/pipeline"
         }
       }
     },
