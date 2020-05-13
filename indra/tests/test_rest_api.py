@@ -210,3 +210,15 @@ def test_assemblers_loopy():
     res_json = res.json()
     assert 'loopy_url' in res_json.keys()
     assert "ERK" in res_json['loopy_url']
+
+
+@attr('webservice')
+def test_pipeline():
+    p = [{'function': 'filter_grounded_only'},
+         {'function': 'run_preassembly',
+          'kwargs': {'return_toplevel': False}}]
+    json_str = json.dumps({'statements': [STMT_JSON], 'pipeline': p})
+    res = _call_api('post', 'preassembly/pipeline', json_str)
+    res_json = res.json()
+    assert 'statements' in res_json
+    assert len(res_json['statements']) == 1
