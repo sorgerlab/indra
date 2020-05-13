@@ -58,22 +58,26 @@ class IndraOntology(networkx.DiGraph):
         return None
 
     def _transitive_rel(self, ns, id, rel_fun, rel_types, target=None):
-        source = label(ns, id)
+        source = (ns, id)
         visited = {source}
         queue = deque([(source,
-                        rel_fun(ns, id, rel_types))])
+                        rel_fun(*source, rel_types))])
+        target_node = self.get_ns_id(target) if target else None
         targets = []
         while queue:
             parent, children = queue[0]
             try:
                 child = next(children)
-                if target and child == target:
+                if target and child == target_node:
                     return [target]
                 if child not in visited:
                     targets.append(child)
                     visited.add(child)
                     queue.append((child,
                                   rel_fun(*child, rel_types)))
+            except networkx.NetworkXError as e:
+                logger.debug(e)
+                return []
             except StopIteration:
                 queue.popleft()
         return targets

@@ -1,6 +1,7 @@
 __all__ = ['standardize_agent_name', 'standardize_db_refs']
 
 import logging
+from copy import deepcopy
 from indra.ontology.bio import bio_ontology
 from indra.statements.agent import default_ns_order
 
@@ -36,7 +37,7 @@ def standardize_db_refs(db_refs, prioritize=default_prioritize):
     dict
         The db_refs dict with standardized entries.
     """
-    for source_db_ns, source_db_id in db_refs.items():
+    for source_db_ns, source_db_id in deepcopy(db_refs).items():
         mappings = bio_ontology.get_mappings(source_db_ns, source_db_id)
         for mapped_db_ns, mapped_db_id in mappings:
             if mapped_db_ns in db_refs:
