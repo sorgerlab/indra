@@ -1,9 +1,8 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 from protmapper import MappedSite
 from indra.statements import *
 from indra.util import unicode_strs
 from indra.preassembler.sitemapper import default_mapper as sm, MappedStatement
+from indra.preassembler.sitemapper import _valid_position_str
 
 
 def test_check_agent_mod():
@@ -211,6 +210,27 @@ def test_site_map_within_bound_condition():
 
     # Verify that the agent in the object's bound condition got site-mapped
     validate_mapk1(mapped_s.obj.bound_conditions[0].agent)
+
+
+def test_invalid_position():
+    stmt = Phosphorylation._from_json({
+        'enz': {'name': 'CFD'},
+        'sub': {'name': 'HP'},
+        'residue': 'F',
+        'position': '2.59'
+    })
+    valid, mapped = sm.map_sites(stmts=[stmt])
+    assert not valid
+    assert not mapped
+
+
+def test_valid_pos_str():
+    assert _valid_position_str('5') is True
+    assert _valid_position_str('005') is False
+    assert _valid_position_str('5.5') is False
+    assert _valid_position_str('xxx') is False
+    assert _valid_position_str(None) is True
+    assert _valid_position_str('') is False
 
 
 def get_invalid_mapks():
