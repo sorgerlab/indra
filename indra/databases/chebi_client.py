@@ -238,7 +238,7 @@ def get_specific_id(chebi_ids):
     if not chebi_ids:
         return chebi_ids
 
-    from indra.preassembler.hierarchy_manager import hierarchies
+    from indra.ontology.bio import bio_ontology
 
     def isa_cmp(a, b):
         """Compare two entries based on isa relationships for sorting."""
@@ -246,10 +246,9 @@ def get_specific_id(chebi_ids):
             a = 'CHEBI:%s' % a
         if not b.startswith('CHEBI:'):
             b = 'CHEBI:%s' % b
-        eh = hierarchies['entity']
-        if eh.isa('CHEBI', a, 'CHEBI', b):
+        if bio_ontology.isa('CHEBI', a, 'CHEBI', b):
             return -1
-        if eh.isa('CHEBI', b, 'CHEBI', a):
+        if bio_ontology.isa('CHEBI', b, 'CHEBI', a):
             return 1
         return 0
 

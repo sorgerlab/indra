@@ -58,14 +58,14 @@ class AssemblyPipeline():
     saved into a JSON file.
 
     >>> from indra.tools.assemble_corpus import *
-    >>> from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+    >>> from indra.ontology.world import world_ontology
     >>> from indra.belief.wm_scorer import get_eidos_scorer
     >>> ap = AssemblyPipeline()
     >>> ap.append(filter_no_hypothesis)
     >>> ap.append(filter_grounded_only)
     >>> ap.append(run_preassembly,
     ...           belief_scorer=RunnableArgument(get_eidos_scorer),
-    ...           hierarchies=RunnableArgument(get_wm_hierarchies))
+    ...           ontology=RunnableArgument(world_ontology))
     >>> assembled_stmts = ap.run(stmts)
     >>> ap.to_json_file('filename.json')
 
@@ -87,7 +87,8 @@ class AssemblyPipeline():
         # This import is here to avoid circular imports
         # It is enough to import one function to get all registered functions
         from indra.tools.assemble_corpus import filter_grounded_only
-        from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+        from indra.ontology.world import world_ontology
+        from indra.ontology.bio import bio_ontology
         from indra.preassembler.grounding_mapper.gilda import ground_statements
         from indra.belief.wm_scorer import get_eidos_scorer
         from indra.preassembler.custom_preassembly import location_matches

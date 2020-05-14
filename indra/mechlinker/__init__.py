@@ -1,13 +1,10 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-from future.utils import python_2_unicode_compatible
 import uuid
 import logging
 import networkx
 import itertools
 from indra.util import fast_deepcopy
 from indra.statements import *
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.ontology.bio import bio_ontology
 
 logger = logging.getLogger(__name__)
 
@@ -466,7 +463,7 @@ class MechLinker(object):
                 continue
             found = False
             for linked_stmt in linked_stmts:
-                if linked_stmt.refinement_of(stmt, hierarchies):
+                if linked_stmt.refinement_of(stmt, bio_ontology):
                     found = True
             if not found:
                 new_stmts.append(stmt)
@@ -604,11 +601,11 @@ class BaseAgent(object):
     def _make_activity_graph(self):
         self.activity_graph = networkx.DiGraph()
         for a1, a2 in itertools.combinations(self.activity_types, 2):
-            if hierarchies['activity'].isa('INDRA_ACTIVITIES', a1,
-                                           'INDRA_ACTIVITIES', a2):
+            if bio_ontology.isa('INDRA_ACTIVITIES', a1,
+                                'INDRA_ACTIVITIES', a2):
                 self.activity_graph.add_edge(a2, a1)
-            if hierarchies['activity'].isa('INDRA_ACTIVITIES', a2,
-                                           'INDRA_ACTIVITIES', a1):
+            if bio_ontology.isa('INDRA_ACTIVITIES', a2,
+                                'INDRA_ACTIVITIES', a1):
                 self.activity_graph.add_edge(a1, a2)
 
     def get_modification_reduction(self, mc):
@@ -629,9 +626,9 @@ class BaseAgent(object):
     def _make_modification_graph(self):
         self.modification_graph = networkx.DiGraph()
         for m1, m2 in itertools.combinations(self.modifications, 2):
-            if m1.refinement_of(m2, hierarchies['modification']):
+            if m1.refinement_of(m2, bio_ontology):
                 self.modification_graph.add_edge(_mc_tuple(m2), _mc_tuple(m1))
-            elif m2.refinement_of(m1, hierarchies['modification']):
+            elif m2.refinement_of(m1, bio_ontology):
                 self.modification_graph.add_edge(_mc_tuple(m1), _mc_tuple(m2))
 
     def add_activity(self, activity_type):

@@ -78,7 +78,7 @@ class IndraOntology(networkx.DiGraph):
                 return []
             except StopIteration:
                 queue.popleft()
-        return list(visited - set(source))
+        return list(visited - {source})
 
     def descendants_rel(self, ns, id, rel_types):
         return self._transitive_rel(ns, id, self.child_rel, rel_types)

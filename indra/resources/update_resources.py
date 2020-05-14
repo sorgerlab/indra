@@ -14,9 +14,6 @@ from indra.util import read_unicode_csv, write_unicode_csv
 from indra.databases.obo_client import OboClient
 from indra.databases import chebi_client, pubchem_client
 from indra.databases.lincs_client import load_lincs_csv
-from indra.preassembler.make_entity_hierarchy import \
-    main as make_ent_hierarchy
-from indra.preassembler.hierarchy_manager import get_bio_hierarchies
 
 path = os.path.dirname(__file__)
 logging.basicConfig(format='%(levelname)s: indra/%(name)s - %(message)s',
@@ -362,20 +359,6 @@ def make_chebi_hierarchy():
     return g
 
 
-def update_entity_hierarchy():
-    logger.info('--Updating entity hierarchy----')
-    fname = os.path.join(path, 'famplex/relations.csv')
-    g = make_ent_hierarchy(fname)
-    g_chebi = make_chebi_hierarchy()
-    g += g_chebi
-    gb = g.serialize(format='nt')
-    gb = gb.replace(b'\n\n', b'\n').strip()
-    rows = b'\n'.join(sorted(gb.split(b'\n')))
-    fname = os.path.join(path, 'entity_hierarchy.rdf')
-    with open(fname, 'wb') as fh:
-        fh.write(rows)
-
-
 def update_famplex_map():
     logger.info('--Updating FamPlex map----')
     # Currently this is a trivial "copy" of the FamPlex equivalences.csv
@@ -463,13 +446,6 @@ def update_famplex():
     for csv_name in csv_names:
         url = famplex_url_pattern % csv_name
         save_from_http(url, os.path.join(path,'famplex/%s.csv' % csv_name))
-
-
-def update_hierarchy_pickle():
-    fname = os.path.join(path, 'bio_hierarchies.pkl')
-    hierarchies = get_bio_hierarchies(from_pickle=False)
-    with open(fname, 'wb') as fh:
-        pickle.dump(hierarchies, fh, protocol=4)
 
 
 def update_lincs_small_molecules():
@@ -685,8 +661,6 @@ def main():
     update_chebi_accessions()
     update_hmdb_chebi_map()
     update_bel_chebi_map()
-    update_entity_hierarchy()
-    update_hierarchy_pickle()
     update_ncit_map()
     update_lincs_small_molecules()
     update_lincs_proteins()

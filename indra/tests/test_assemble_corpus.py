@@ -3,7 +3,7 @@ from copy import deepcopy
 from collections import namedtuple
 from indra.statements import *
 from indra.tools import assemble_corpus as ac
-from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+from indra.ontology.world import world_ontology
 
 a = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'})
 b = Agent('b', db_refs={'UP': 'P15056', 'TEXT': 'b'})
@@ -237,19 +237,22 @@ def test_run_preassembly_all_stmts():
 
 
 def _get_extended_wm_hierarchy():
-    from indra.preassembler.make_wm_ontologies import isequal, get_term
-    hierarchies = get_wm_hierarchies()
-    test_rel = (get_term('flooding', 'wm/x/y/z'), isequal,
-                get_term('flooding', 'wm/a/b/c'))
-    hierarchies['entity'].graph.add(test_rel)
-    test_rel = (get_term('flooding', 'wm/a/b/c'), isequal,
-                get_term('flooding', 'wm/x/y/z'))
-    hierarchies['entity'].graph.add(test_rel)
-    return hierarchies
+    from indra.ontology.world.ontology import get_term
+    world_ontology.add_edge(
+        get_term('flooding', 'wm/x/y/z'),
+        get_term('flooding', 'wm/a/b/c'),
+        {'type': 'isequal'}
+    )
+    world_ontology.add_edge(
+        get_term('flooding', 'wm/a/b/c'),
+        get_term('flooding', 'wm/x/y/z'),
+        {'type': 'isequal'}
+    )
+    return world_ontology
 
 
 def test_run_preassembly_concepts():
-    hierarchies = _get_extended_wm_hierarchy()
+    ont = _get_extended_wm_hierarchy()
     rainfall = Event(Concept('rain', db_refs={
         'WM': 'wm/concept/indicator_and_reported_property/weather/rainfall'}))
     flooding_1 = Event(Concept('flood', db_refs={
@@ -259,7 +262,7 @@ def test_run_preassembly_concepts():
     st_out = ac.run_preassembly([
         Influence(rainfall, flooding_1), Influence(rainfall, flooding_2)],
         normalize_ns='WM', normalize_equivalences=True,
-        hierarchies=hierarchies)
+        ontology=ont)
     assert len(st_out) == 1, st_out
 
 

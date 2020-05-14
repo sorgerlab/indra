@@ -62,7 +62,7 @@ def test_partof_comp_not():
 def test_get_children():
     rafs = bio_ontology.get_children('FPLX', 'RAF')
     assert isinstance(rafs, list), rafs
-    assert len(rafs) == 3
+    assert len(rafs) == 3, rafs
 
     brafs = bio_ontology.get_children('HGNC', hgnc_client.get_hgnc_id('BRAF'))
     assert isinstance(brafs, list), brafs

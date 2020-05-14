@@ -1,4 +1,3 @@
-import os
 from indra.pipeline import AssemblyPipeline, RunnableArgument
 from indra.pipeline.pipeline import jsonify_arg_input
 from indra.tests.test_assemble_corpus import st1, st2, st3, st4
@@ -7,7 +6,7 @@ from indra.preassembler.custom_preassembly import location_matches, \
     location_refinement
 from indra.belief.wm_scorer import *
 from indra.belief import BeliefScorer
-from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+from indra.ontology.world import world_ontology
 from indra.statements import Activation
 
 
@@ -57,7 +56,7 @@ def test_pipeline_methods():
         refinement_fun=location_refinement, normalize_equivalences=True,
         normalize_opposites=True, normalize_ns='WM',
         belief_scoret=RunnableArgument(get_eidos_scorer),
-        hierarchies=RunnableArgument(get_wm_hierarchies))
+        ontology=RunnableArgument(world_ontology))
     assert len(ap) == 4
     assert isinstance(ap.steps[3], dict)
     assert isinstance(ap.steps[3]['kwargs'], dict)

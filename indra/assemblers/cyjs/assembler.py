@@ -1,25 +1,19 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-from copy import deepcopy
 import json
 import logging
 import itertools
 import collections
 import numpy as np
+from copy import deepcopy
 from indra.statements import *
 from indra.databases import hgnc_client
 from indra.databases import context_client, get_identifiers_url
 from indra.tools.expand_families import Expander
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.ontology.bio import bio_ontology
+from indra.preassembler.grounding_mapper.standardize import \
+    standardize_db_refs
 
-expander = Expander(hierarchies)
+expander = Expander(ontology=bio_ontology)
 
-# Python 2
-try:
-    basestring
-# Python 3
-except:
-    basestring = str
 
 logger = logging.getLogger(__name__)
 
@@ -332,20 +326,15 @@ class CyJSAssembler(object):
         self._existing_nodes[node_key] = node_id
         node_name = agent.name
         node_name = node_name.replace('_', ' ')
-        expanded_families = expander.get_children(agent, ns_filter='HGNC')
+        expanded_families = bio_ontology.get_children(agent.get_grounding())
+        expanded_families = [ch for ch in expanded_families if
+                             ch[0] == 'HGNC']
         members = {}
         for member in expanded_families:
-            hgnc_symbol = member[1]
-            hgnc_id = hgnc_client.get_hgnc_id(hgnc_symbol)
-            if hgnc_id:
-                up_id = hgnc_client.get_uniprot_id(hgnc_id)
-                member_agent = Agent(hgnc_symbol,
-                                     db_refs={'HGNC': hgnc_id,
-                                              'UP': up_id})
-                member_db_refs = _get_db_refs(member_agent)
-            else:
-                member_db_refs = {}
-            members[member[1]] = {'db_refs': member_db_refs}
+            db_refs = {member[0]: member[1]}
+            standardize_db_refs(db_refs)
+            gene_name = bio_ontology.get_name(*member)
+            members[gene_name] = {'db_refs': db_refs}
         node = {'data': {'id': node_id, 'name': node_name,
                          'db_refs': db_refs, 'parent': '',
                          'members': members, 'uuid_list': [uuid]}}
