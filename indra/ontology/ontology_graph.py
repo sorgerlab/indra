@@ -138,6 +138,10 @@ class IndraOntology(networkx.DiGraph):
             if 'name' in data
         }
 
+    def nodes_from_suffix(self, suffix):
+        return [node for node in self.nodes
+                if node.endswith(suffix)]
+
 def label(ns, id):
     return '%s:%s' % (ns, id)
 

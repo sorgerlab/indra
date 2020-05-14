@@ -682,20 +682,21 @@ def test_influence_duplicate():
 
 
 def test_influence_refinement():
-    tran = 'wm/concept/causal_factor/access/infrastructure_access/transportation'
-    truck = 'wm/concept/causal_factor/access/infrastructure_access/' \
+    tran = 'wm/concept/causal_factor/access/infrastructure_access/'\
+           'transportation'
+    ship = 'wm/concept/causal_factor/access/infrastructure_access/' \
         'transportation/shipping'
     agr = 'wm/concept/causal_factor/economic_and_commerce/' \
         'economic_activity/livelihood'
     ctran = Event(Concept('transportation', db_refs={'WM': [(tran, 1.0)]}))
-    ctruck = Event(Concept('trucking', db_refs={'WM': [(truck, 1.0)]}))
+    cship = Event(Concept('trucking', db_refs={'WM': [(ship, 1.0)]}))
     cagr = Event(Concept('agriculture', db_refs={'WM': [(agr, 1.0)]}))
     stmt1 = Influence(ctran, cagr, evidence=[Evidence(source_api='eidos1')])
-    stmt2 = Influence(ctruck, cagr, evidence=[Evidence(source_api='eidos2')])
+    stmt2 = Influence(cship, cagr, evidence=[Evidence(source_api='eidos2')])
     stmt3 = Influence(cagr, ctran, evidence=[Evidence(source_api='eidos3')])
-    pa = Preassembler(bio_ontology, [stmt1, stmt2, stmt3])
+    pa = Preassembler(world_ontology, [stmt1, stmt2, stmt3])
     rel_stmts = pa.combine_related()
-    assert len(rel_stmts) == 2
+    assert len(rel_stmts) == 2, rel_stmts
     truck_stmt = [st for st in rel_stmts if st.subj.concept.name ==
                   'trucking'][0]
     assert len(truck_stmt.supported_by) == 1
@@ -755,8 +756,8 @@ def test_preassemble_related_complex():
 def test_normalize_opposites():
     concept1 = 'wm/concept/causal_factor/food_security/food_stability'
     concept2 = 'wm/concept/causal_factor/food_insecurity/food_instability'
-    concept3 = ('wm/concept/causal_factor/environmental/meteorologic/'
-                'precipitation/flooding')
+    concept3 = ('wm/concept/causal_factor/crisis_and_disaster/'
+                'environmental_disasters/natural_disaster/flooding')
 
     # First test the inherently positive being the main grounding
     dbr = {'WM': [(concept1, 1.0), (concept2, 0.5), (concept3, 0.1)]}
@@ -932,11 +933,13 @@ def test_association_refinement():
     unique_stmts = pa.combine_duplicates()
     assert len(unique_stmts) == 3
     rel_stmts = pa.combine_related()
-    assert len(rel_stmts) == 2
+    assert len(rel_stmts) == 2, rel_stmts
     eh_efs_stmt = [st for st in rel_stmts if (st.members[0].concept.name in
-                   {'health', 'food security'} and st.members[1].concept.name
+                   {'health', 'food security'}
+                    and st.members[1].concept.name
                    in {'health', 'food security'})][0]
-    assert len(eh_efs_stmt.supported_by) == 1
+    assert len(eh_efs_stmt.supported_by) == 1, \
+        (eh_efs_stmt, eh_efs_stmt.supported_by)
     assert (eh_efs_stmt.supported_by[0].members[0].concept.name
             in {'food', 'health'})
     assert (eh_efs_stmt.supported_by[0].members[1].concept.name

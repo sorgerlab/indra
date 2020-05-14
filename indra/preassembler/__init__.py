@@ -18,7 +18,7 @@ class Preassembler(object):
 
     Parameters
     ----------
-    ontology : dict[:py:class:`indra.preassembler.ontology_graph.IndraOntology`]
+    ontology : dict[:py:class:`indra.ontology.IndraOntology`]
         An INDRA Ontology object.
     stmts : list of :py:class:`indra.statements.Statement` or None
         A set of statements to perform pre-assembly on. If None, statements
@@ -608,7 +608,7 @@ class Preassembler(object):
             rel_ents = rel_fun(ns, entry)
             if rel_ents:
                 rel_ents = [(ns, e.split('#')[1] if '#' in e else e)
-                            for e in rel_ents]
+                            for ns, e in rel_ents]
                 sorted_entries = sorted([(ns, entry)] + rel_ents,
                                         key=rank_key)
                 _, chosen = sorted_entries[0]
@@ -672,8 +672,9 @@ class Preassembler(object):
             given namespace to allow prioritizing in a controlled way which
             concept is normalized to.
         """
-        self._normalize_relations(ns, rank_key,
-                                  self.ontology.get_equals, False)
+        rel_fun = functools.partial(self.ontology.child_rel,
+                                    rel_types={'is_equal'})
+        self._normalize_relations(ns, rank_key, rel_fun, False)
 
     def normalize_opposites(self, ns, rank_key=None):
         """Normalize to one of a pair of opposite concepts across statements.
@@ -690,9 +691,9 @@ class Preassembler(object):
             given namespace to allow prioritizing in a controlled way which
             concept is normalized to.
         """
-        self._normalize_relations(ns, rank_key,
-                                  self.ontology.get_opposites,
-                                  True)
+        rel_fun = functools.partial(self.ontology.child_rel,
+                                    rel_types={'is_opposite'})
+        self._normalize_relations(ns, rank_key, rel_fun, True)
 
 
 def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, ontology=None,
