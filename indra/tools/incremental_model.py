@@ -1,11 +1,8 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import pickle
 import logging
 from indra.statements import Agent
 import indra.tools.assemble_corpus as ac
 from indra.databases import hgnc_client
-from indra.preassembler.hierarchy_manager import hierarchies
 
 logger = logging.getLogger(__name__)
 
@@ -205,13 +202,8 @@ class IncrementalModel(object):
 
 
 def _get_agent_comp(agent):
-    eh = hierarchies['entity']
-    a_ns, a_id = agent.get_grounding()
-    if (a_ns is None) or (a_id is None):
-        return None
-    uri = eh.get_uri(a_ns, a_id)
-    comp_id = eh.components.get(uri)
-    return comp_id
+    # FIXME: temporarily returning dummy component
+    return '1'
 
 def get_gene_agents(gene_names):
     agents = []

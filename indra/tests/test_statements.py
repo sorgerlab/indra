@@ -1868,8 +1868,6 @@ def influence_association_refinement_of(stmt_type):
 
 
 def test_association_contradicts():
-    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             '../sources/eidos/eidos_ontology.rdf')
     neg = 'wm/concept/causal_factor/food_insecurity/food_unavailability'
     pos = 'wm/concept/causal_factor/food_security/food_availability'
     food_sec_pos = Event(Concept('food security',

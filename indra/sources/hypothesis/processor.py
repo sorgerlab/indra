@@ -1,8 +1,9 @@
 import re
 import logging
 from indra.statements import BioContext, RefContext
+from indra.ontology.bio import bio_ontology
 from indra.preassembler.grounding_mapper.standardize import \
-    standardize_db_refs, name_from_grounding
+    standardize_db_refs
 
 logger = logging.getLogger(__name__)
 
@@ -151,8 +152,8 @@ def parse_context_entry(entry, grounder, sentence=None):
     db_refs['TEXT'] = context_txt
     standard_name = None
     if terms:
-        standard_name = name_from_grounding(terms[0].term.db,
-                                            terms[0].term.id)
+        standard_name = bio_ontology.get_name(terms[0].term.db,
+                                              terms[0].term.id)
     name = standard_name if standard_name else context_txt
     context = RefContext(name=name, db_refs=db_refs)
     return {allowed_contexts[context_type]: context}
