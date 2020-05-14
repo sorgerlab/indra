@@ -297,7 +297,7 @@ class LiveGroundingTestCase(unittest.TestCase):
 
     def test_add_ontology_node(self):
         self._send_request('add_ontology_entry',
-                           {'entry': 'WM/animal/dog',
+                           {'entry': 'wm/animal/dog',
                             'examples': ['canine', 'dog', 'puppy']})
         resp = self._send_request('update_groundings', {'corpus_id': '1'})
         res = json.loads(resp.data.decode('utf-8'))

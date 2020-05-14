@@ -30,10 +30,15 @@ def load_yaml_from_url(ont_url):
 class WorldOntology(IndraOntology):
     def __init__(self, url):
         super().__init__()
+        self.yml = None
         self.add_wm_ontology(url)
 
     def add_wm_ontology(self, url):
-        yml = load_yaml_from_url(url)
+        self.yml = load_yaml_from_url(url)
+        self._load_yml(self.yml)
+
+    def _load_yml(self, yml):
+        self.clear()
         for top_entry in yml:
             node = list(top_entry.keys())[0]
             self.build_relations(node, top_entry[node], None)
@@ -73,6 +78,35 @@ class WorldOntology(IndraOntology):
                     nodes[child_term]['polarity'] = pol
         self.add_nodes_from([(k, v) for k, v in dict(nodes).items()])
         self.add_edges_from(edges)
+
+    def add_entry(self, entry, examples=None):
+        examples = examples if examples else []
+        parts = entry.split('/')
+        root = self.yml
+        for idx, part in enumerate(parts):
+            new_root = None
+            for element in self.yml:
+                # If this is an OntologyNode
+                if 'OntologyNode' in element:
+                    if element['name'] == part:
+                        new_root = element
+                        break
+                else:
+                    assert len(element) == 1
+                    key = list(element.keys())[0]
+                    if key == part:
+                        new_root = element[key]
+                        break
+            if new_root is None:
+                if idx == len(parts) - 1:
+                    root.append({'OntologyNode': None, 'name': part,
+                                 'examples': examples})
+                    break
+                else:
+                    root.append({part: []})
+                    new_root = root[-1][part]
+            root = new_root
+        self._load_yml(self.yml)
 
 
 world_ontology = WorldOntology(wm_ont_url)

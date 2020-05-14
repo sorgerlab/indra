@@ -256,7 +256,7 @@ class LiveCurator(object):
         corpus = self.get_corpus(corpus_id)
 
         # Send the latest ontology and list of concept texts to Eidos
-        yaml_str = yaml.dump(self.ont_manager.yaml_root)
+        yaml_str = yaml.dump(self.ont_manager.yml)
         concepts = []
         for stmt in corpus.raw_statements:
             for concept in stmt.agent_list():
