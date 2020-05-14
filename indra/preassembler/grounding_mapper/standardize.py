@@ -40,11 +40,9 @@ def standardize_db_refs(db_refs, prioritize=default_prioritize):
     for source_db_ns, source_db_id in deepcopy(db_refs).items():
         mappings = bio_ontology.get_mappings(source_db_ns, source_db_id)
         for mapped_db_ns, mapped_db_id in mappings:
-            if mapped_db_ns in db_refs:
-                if prioritize(source_db_ns, mapped_db_ns):
-                    db_refs[mapped_db_ns] = source_db_ns
-            else:
-                db_refs[mapped_db_ns] = source_db_ns
+            if mapped_db_ns not in db_refs or \
+                    prioritize(source_db_ns, mapped_db_ns):
+                db_refs[mapped_db_ns] = mapped_db_id
     return db_refs
 
 

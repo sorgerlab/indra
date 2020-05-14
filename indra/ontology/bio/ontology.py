@@ -137,43 +137,26 @@ class BioOntology(IndraOntology):
         self.add_edges_from(edges)
 
     def add_chemical_xrefs(self):
+        mappings = [
+            (chebi_client.chebi_chembl, 'CHEBI', 'CHEMBL'),
+            (chebi_client.chebi_pubchem, 'CHEBI', 'PUBCHEM'),
+            (chebi_client.hmdb_chebi, 'HMDB', 'CHEBI'),
+            (chebi_client.cas_chebi, 'CAS', 'CHEBI'),
+        ]
         edges = []
-        # Chebi/Chembl
-        for chebi_id, chembl_id in chebi_client.chebi_chembl.items():
-            edges.append((label('CHEBI', chebi_id),
-                          label('CHEMBL', chembl_id),
-                          {'type': 'xref', 'source': 'chebi'}))
-            edges.append((label('CHEMBL', chembl_id),
-                          label('CHEBI', chebi_id),
-                          {'type': 'xref', 'source': 'chebi'}))
+        data = {'type': 'xref', 'source': 'chebi'}
 
-        # Chebi/PubChem
-        for chebi_id, pubchem_id in chebi_client.chebi_pubchem.items():
-            edges.append((label('CHEBI', chebi_id),
-                          label('PUBCHEM', pubchem_id),
-                          {'type': 'xref', 'source': 'chebi'}))
-            edges.append((label('PUBCHEM', pubchem_id),
-                          label('CHEBI', chebi_id),
-                          {'type': 'xref', 'source': 'chebi'}))
+        def label_fix(ns, id):
+            if ns == 'CHEBI' and not id.startswith('CHEBI'):
+                id = 'CHEBI:%s' % id
+            return label(ns, id)
 
-        # Chebi/HMDB
-        for hmdb_id, chebi_id in chebi_client.hmdb_chebi.items():
-            edges.append((label('CHEBI', chebi_id),
-                          label('HMDB', hmdb_id),
-                          {'type': 'xref', 'source': 'chebi'}))
-            edges.append((label('HMDB', hmdb_id),
-                          label('CHEBI', chebi_id),
-                          {'type': 'xref', 'source': 'chebi'}))
-
-        # Chebi/CAS
-        for cas_id, chebi_id in chebi_client.cas_chebi.items():
-            edges.append((label('CHEBI', chebi_id),
-                          label('CAS', cas_id),
-                          {'type': 'xref', 'source': 'chebi'}))
-            edges.append((label('CAS', cas_id),
-                          label('CHEBI', chebi_id),
-                          {'type': 'xref', 'source': 'chebi'}))
-
+        for map_dict, from_ns, to_ns in mappings:
+            for from_id, to_id in map_dict.items():
+                source = label_fix(from_ns, from_id)
+                target = label_fix(to_ns, to_id)
+                edges.append((source, target, data))
+                edges.append((target, source, data))
         self.add_edges_from(edges)
 
     def add_mesh_nodes(self):

@@ -30,7 +30,8 @@ def test_map_standardize_up_hgnc():
     mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     st = mapped_stmts[0]
-    assert st.enz.db_refs['HGNC'] == st.sub.db_refs['HGNC']
+    assert st.enz.db_refs['HGNC'] == st.sub.db_refs['HGNC'], \
+        (st.enz.db_refs, st.sub.db_refs)
     assert st.enz.db_refs['UP'] == st.sub.db_refs['UP']
 
 
