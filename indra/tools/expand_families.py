@@ -71,7 +71,7 @@ class Expander(object):
     def complexes_from_hierarchy(self):
         # Iterate over the partof_closure to determine all of the complexes
         # and all of their members
-        fplx_nodes = [n for n in self.ontology.nodes if n.startswith('FPLX')]
+        fplx_nodes = [n for n in self.ontology.nodes if n[0] == 'FPLX']
         all_complexes = {}
         for fplx_node in fplx_nodes:
             parts = self.ontology.get_ancestors(*fplx_node, {'partof'})

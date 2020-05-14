@@ -31,7 +31,7 @@ def test_cas_to_chebi():
 
 
 def test_chebi_id_to_name():
-    name = chebi_client.get_chebi_name_from_id('63637')
+    name = chebi_client.get_chebi_name_from_id('CHEBI:63637')
     assert name == 'vemurafenib', name
 
 

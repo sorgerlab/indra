@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import sys
 import logging
 import pickle
@@ -9,7 +7,7 @@ import requests
 from matplotlib import pyplot as plt
 from indra.preassembler import grounding_mapper as gm
 from indra.preassembler import Preassembler
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.ontology.bio import bio_ontology
 from indra.util import plot_formatting as pf
 from indra.databases import hgnc_client
 
@@ -113,7 +111,7 @@ def analyze(filename, plot=False):
 
     # Combine duplicates
     logger.info('Removing duplicates...')
-    pa = Preassembler(hierarchies, map_stmts)
+    pa = Preassembler(bio_ontology, map_stmts)
     pa.combine_duplicates()
 
     # Map GO IDs to genes and associated statements

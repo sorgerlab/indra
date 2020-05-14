@@ -1,8 +1,6 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 import pickle
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.ontology.bio import bio_ontology
 from indra.preassembler import Preassembler, render_stmt_graph,\
                                flatten_evidence
 from indra.preassembler.grounding_mapper import GroundingMapper, \
@@ -99,7 +97,7 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
             grounded_stmts.append(st)
 
     # Instantiate the Preassembler
-    pa = Preassembler(hierarchies)
+    pa = Preassembler(bio_ontology)
     pa.add_statements(grounded_stmts)
     print('== %s ====================' % pmcid)
     print('%d statements collected in total.' % len(pa.stmts))
@@ -135,7 +133,7 @@ def run_assembly(stmts, folder, pmcid, background_assertions=None):
     all_statements = related_stmts + [ls.inferred_stmt for ls in linked_stmts]
 
     # Instantiate a new preassembler
-    pa = Preassembler(hierarchies, all_statements)
+    pa = Preassembler(bio_ontology, all_statements)
     # Build hierarchy again
     pa.combine_duplicates()
     # Choose the top-level statements

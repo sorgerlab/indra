@@ -71,18 +71,19 @@ def test_db_ref_keys():
     for st in expanded_stmts:
         for agent in st.agent_list():
             if agent is not None:
-                assert set(list(agent.db_refs)) == {'TEXT', 'UP', 'HGNC'}
+                assert set(agent.db_refs) == {'TEXT', 'UP', 'HGNC'}, \
+                    agent.db_refs
     # Test for case involving None for one of the agents
     st = Phosphorylation(None, shc)
     expanded_stmts = exp.expand_families([st])
     for st in expanded_stmts:
         for agent in st.agent_list():
             if agent is not None:
-                assert set(list(agent.db_refs)) == {'TEXT', 'UP', 'HGNC'}
+                assert set(agent.db_refs) == {'TEXT', 'UP', 'HGNC'}
     # Statement with two families: 4x4 SHC
     st = Activation(shc, shc)
     expanded_stmts = exp.expand_families([st])
     for st in expanded_stmts:
         for agent in st.agent_list():
             if agent is not None:
-                assert set(list(agent.db_refs)) == {'TEXT', 'UP', 'HGNC'}
+                assert set(agent.db_refs) == {'TEXT', 'UP', 'HGNC'}
