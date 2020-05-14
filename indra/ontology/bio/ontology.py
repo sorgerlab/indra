@@ -1,4 +1,6 @@
 import os
+import time
+import logging
 from ..ontology_graph import IndraOntology, label
 from indra.util import read_unicode_csv
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
@@ -9,12 +11,18 @@ from indra.statements import modtype_conditions
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 resources = os.path.join(HERE, os.pardir, os.pardir, 'resources')
+logger = logging.getLogger(__name__)
 
 
 class BioOntology(IndraOntology):
     def __init__(self):
         super().__init__()
+        self._initialized = False
+
+    def initialize(self):
+        logger.info('Initializing bio ontology...')
         # Add all nodes with annotations
+        ts = time.time()
         self.add_hgnc_nodes()
         self.add_uniprot_nodes()
         self.add_famplex_nodes()
@@ -35,6 +43,8 @@ class BioOntology(IndraOntology):
         self.add_activity_hierarchy()
         self.add_modification_hierarchy()
         self.add_uppro_hierarchy()
+        self._initialized = True
+        logger.info('Finished initializing bio ontology...')
 
     def add_hgnc_nodes(self):
         nodes = [(label('HGNC', hid), {'name': hname})

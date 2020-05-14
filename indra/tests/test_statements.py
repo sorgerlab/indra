@@ -5,8 +5,8 @@ import json
 import unittest
 from copy import deepcopy
 from nose.tools import raises
-from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.ontology.bio import bio_ontology
+from indra.ontology.world import world_ontology
 from indra.statements import *
 from indra.util import unicode_strs
 
@@ -1733,8 +1733,8 @@ def test_concept_matches():
     # matches
     assert Concept('x').matches(Concept('x', db_refs={'TEXT': 'x'}))
     assert not Concept('x').matches(Concept('y'))
-    assert Concept('x', db_refs={'EIDOS': 'x'}).matches(
-        Concept('y', db_refs={'EIDOS': 'x'}))
+    assert Concept('x', db_refs={'WM': 'x'}).matches(
+        Concept('y', db_refs={'WM': 'x'}))
     # entity_matches
     assert Concept('x').entity_matches(Concept('x', db_refs={'TEXT': 'x'}))
     assert not Concept('x').entity_matches(Concept('y'))
@@ -1748,68 +1748,35 @@ def test_concept_matches():
 
 def test_concept_get_grounding():
     d1 = {'TEXT': 'a'}
-    d2 = {'TEXT': 'b', 'UN': 'c'}
-    d3 = {'TEXT': 'x', 'UN': 'y', 'HUME': 'z'}
-    d4 = {'TEXT': 'b', 'HUME': 'a'}
-    d5 = {'UN': [('a', 1.0), ('b', 0.8)]}
-    d6 = {'UN': [('b', 0.8), ('a', 1.0)]}
-    d7 = {'UN': []}
-    d8 = {'HUME': [('a', 1.0), ('b', 0.8)]}
+    d2 = {'TEXT': 'b', 'WM': 'c'}
+    d3 = {'TEXT': 'x', 'WM': 'y', 'HUME': 'z'}
+    d5 = {'WM': [('a', 1.0), ('b', 0.8)]}
+    d6 = {'WM': [('b', 0.8), ('a', 1.0)]}
+    d7 = {'WM': []}
     assert Concept('a', db_refs=d1).get_grounding() == (None, None)
-    assert Concept('b', db_refs=d2).get_grounding() == ('UN', 'c')
-    assert Concept('c', db_refs=d3).get_grounding() == ('UN', 'y')
-    assert Concept('d', db_refs=d4).get_grounding() == ('HUME', 'a')
-    assert Concept('e', db_refs=d5).get_grounding() == ('UN', 'a')
-    assert Concept('f', db_refs=d6).get_grounding() == ('UN', 'a')
+    assert Concept('b', db_refs=d2).get_grounding() == ('WM', 'c')
+    assert Concept('c', db_refs=d3).get_grounding() == ('WM', 'y')
+    assert Concept('e', db_refs=d5).get_grounding() == ('WM', 'a')
+    assert Concept('f', db_refs=d6).get_grounding() == ('WM', 'a')
     assert Concept('g', db_refs=d7).get_grounding() == (None, None)
-    assert Concept('h', db_refs=d8).get_grounding() == ('HUME', 'a')
 
 
 def test_concept_isa_eid():
-    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             '../sources/eidos/eidos_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, True, True)
-    c1 = Concept('a', db_refs={'UN': [('UN/events/human/conflict', 1.0)]})
-    c2 = Concept('b', db_refs={'UN': [('UN/events/human', 1.0)]})
+    c1 = Concept('b', db_refs={'WM': [('wm/concept/entity/organization', 1.0)]})
+    c2 = Concept('a', db_refs={'WM': [('wm/concept/entity', 1.0)]})
     print(c1.get_grounding())
     print(c2.get_grounding())
-    assert c1.refinement_of(c2, {'entity': hm})
-    assert not c2.refinement_of(c1, {'entity': hm})
+    assert c1.refinement_of(c2, world_ontology)
+    assert not c2.refinement_of(c1, world_ontology)
 
 
 def test_concept_opposite_eid():
-    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             '../sources/eidos/eidos_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, True, True)
-    c1 = Concept('a', db_refs={'UN':
-                               [('UN/entities/human/food/food_insecurity',
-                                 1.0)]})
-    c2 = Concept('b', db_refs={'UN':
-                               [('UN/entities/human/food/food_security',
-                                 1.0)]})
-    assert c1.is_opposite(c2, {'entity': hm})
-    assert c2.is_opposite(c1, {'entity': hm})
-
-
-def test_concept_isa_cwms():
-    trips_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             '../sources/cwms/trips_ontology.rdf')
-    hm = HierarchyManager(trips_ont, True, True)
-    c1 = Concept('a', db_refs={'CWMS': 'ONT::TRUCK'})
-    c2 = Concept('b', db_refs={'CWMS': 'ONT::VEHICLE'})
-    assert c1.refinement_of(c2, {'entity': hm})
-    assert not c2.refinement_of(c1, {'entity': hm})
-
-
-def test_concept_isa_hume():
-    hume_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            '../sources/hume/hume_ontology.rdf')
-    hm = HierarchyManager(hume_ont, True, True)
-    c1 = Concept('a',
-                 db_refs={'HUME': 'entity/rule/law'})
-    c2 = Concept('b', db_refs={'HUME': 'entity/rule'})
-    assert c1.refinement_of(c2, {'entity': hm})
-    assert not c2.refinement_of(c1, {'entity': hm})
+    a = 'wm/concept/causal_factor/food_security/food_availability'
+    b = 'wm/concept/causal_factor/food_insecurity/food_unavailability'
+    c1 = Concept('a', db_refs={'WM': [(a, 1.0)]})
+    c2 = Concept('b', db_refs={'WM': [(b, 1.0)]})
+    assert c1.is_opposite(c2, world_ontology)
+    assert c2.is_opposite(c1, world_ontology)
 
 
 def test_influence_refinement_of():
@@ -1903,34 +1870,34 @@ def influence_association_refinement_of(stmt_type):
 def test_association_contradicts():
     eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              '../sources/eidos/eidos_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, True, True)
-    bio_ontology = {'entity': hm}
-    sn = Event(Concept('food security',
-                       db_refs={'UN': 'UN/entities/human/food/food_security'}),
-               delta=QualitativeDelta(polarity=-1))
-    sp = Event(Concept('food security',
-                       db_refs={'UN': 'UN/entities/human/food/food_security'}),
-               delta=QualitativeDelta(polarity=1))
-    ip = Event(Concept('food insecurity',
-                       db_refs={'UN':
-                                'UN/entities/human/food/food_insecurity'}),
-               delta=QualitativeDelta(polarity=1))
+    neg = 'wm/concept/causal_factor/food_insecurity/food_unavailability'
+    pos = 'wm/concept/causal_factor/food_security/food_availability'
+    food_sec_pos = Event(Concept('food security',
+                                 db_refs={'WM': pos}),
+                         delta=QualitativeDelta(polarity=-1))
+    food_sec_neg= Event(Concept('food security',
+                                db_refs={'WM': pos}),
+                        delta=QualitativeDelta(polarity=1))
+    food_insec = Event(Concept('food insecurity',
+                               db_refs={'WM': neg}),
+                       delta=QualitativeDelta(polarity=1))
     prp = Event(Concept('production'), delta=QualitativeDelta(polarity=1))
     prn = Event(Concept('production'), delta=QualitativeDelta(polarity=-1))
-    assert Association([sn, prp]).contradicts(Association([sn, prn]),
-                                              bio_ontology)
-    assert Association([prp, sn]).contradicts(Association([sn, prn]),
-                                              bio_ontology)
-    assert Association([prn, sp]).contradicts(Association([sn, prn]),
-                                              bio_ontology)
-    assert Association([sn, prp]).contradicts(Association([ip, prn]),
-                                              bio_ontology)
-    assert Association([sn, sp]).contradicts(Association([ip, sn]),
-                                             bio_ontology)
-    assert Association([ip, sp]).contradicts(Association([sp, sp]),
-                                             bio_ontology)
-    assert Association([ip, sp]).contradicts(Association([sn, sn]),
-                                             bio_ontology)
+
+    assert Association([food_sec_neg, prp]).contradicts(
+        Association([food_sec_neg, prn]), world_ontology)
+    assert Association([prp, food_sec_neg]).contradicts(
+        Association([food_sec_neg, prn]), world_ontology)
+    assert Association([prn, food_sec_neg]).contradicts(
+        Association([food_sec_pos, prn]), world_ontology)
+    assert Association([food_sec_neg, prp]).contradicts(
+        Association([food_insec, prn]), world_ontology)
+    assert Association([food_sec_neg, food_sec_pos]).contradicts(
+        Association([food_insec, food_sec_neg]), world_ontology)
+    assert Association([food_insec, food_sec_pos]).contradicts(
+        Association([food_sec_pos, food_sec_pos]), world_ontology)
+    assert Association([food_insec, food_sec_pos]).contradicts(
+        Association([food_sec_neg, food_sec_neg]), world_ontology)
 
 
 def test_modification_contradicts():

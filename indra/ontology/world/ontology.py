@@ -4,10 +4,13 @@ The script can handle any ontology which uses the same format (yaml ontology
 following the namespace defined at `eidos_ns`).
 """
 import yaml
+import logging
 import requests
 from collections import defaultdict
 from ..ontology_graph import IndraOntology, label
 
+
+logger = logging.getLogger(__name__)
 
 wm_ont_url = ('https://raw.githubusercontent.com/WorldModelers/'
               'Ontologies/master/wm_flat_metadata.yml')
@@ -30,8 +33,15 @@ def load_yaml_from_url(ont_url):
 class WorldOntology(IndraOntology):
     def __init__(self, url):
         super().__init__()
+        self._initialized = False
         self.yml = None
-        self.add_wm_ontology(url)
+        self.url = url
+
+    def initialize(self):
+        logger.info('Initializing world ontology from %s' % self.url)
+        self.add_wm_ontology(self.url)
+        self._initialized = True
+        logger.info('Ontology has %d nodes' % len(self))
 
     def add_wm_ontology(self, url):
         self.yml = load_yaml_from_url(url)
