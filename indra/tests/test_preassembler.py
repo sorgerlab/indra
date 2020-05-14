@@ -429,7 +429,7 @@ def test_translocation():
     st3 = Translocation(Agent('AKT'), None, 'nucleus')
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
     pa.combine_related()
-    assert len(pa.related_stmts) == 2
+    assert len(pa.related_stmts) == 2, pa.related_stmts
 
 
 def test_grounding_aggregation():

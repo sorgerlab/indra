@@ -12,8 +12,9 @@ class IndraOntology(networkx.DiGraph):
 
     def _check_path(self, ns1, id1, ns2, id2, edge_types):
         try:
-            if self._transitive_rel(ns1, id1, self.child_rel,
-                                    edge_types, label(ns2, id2)):
+            target = (ns2, id2)
+            if target in self._transitive_rel(ns1, id1, self.child_rel,
+                                              edge_types, target):
                 return True
             else:
                 return False
@@ -62,16 +63,13 @@ class IndraOntology(networkx.DiGraph):
         visited = {source}
         queue = deque([(source,
                         rel_fun(*source, rel_types))])
-        target_node = self.get_ns_id(target) if target else None
-        targets = []
         while queue:
             parent, children = queue[0]
             try:
                 child = next(children)
-                if target and child == target_node:
+                if target and child == target:
                     return [target]
                 if child not in visited:
-                    targets.append(child)
                     visited.add(child)
                     queue.append((child,
                                   rel_fun(*child, rel_types)))
@@ -80,7 +78,7 @@ class IndraOntology(networkx.DiGraph):
                 return []
             except StopIteration:
                 queue.popleft()
-        return targets
+        return list(visited - set(source))
 
     def descendants_rel(self, ns, id, rel_types):
         return self._transitive_rel(ns, id, self.child_rel, rel_types)
@@ -128,14 +126,14 @@ class IndraOntology(networkx.DiGraph):
     def is_opposite(self, ns1, id1, ns2, id2):
         return self._check_path(ns1, id1, ns2, id2, {'is_opposite'})
 
-    def get_id_from_name(self, name, ns):
+    def get_id_from_name(self, ns, name):
         if not self.name_to_grounding:
             self._build_name_lookup()
-        return self.name_to_grounding.get((name, ns))
+        return self.name_to_grounding.get((ns, name))
 
     def _build_name_lookup(self):
         self.name_to_grounding = {
-            (data['name'], self.get_ns(node)): self.get_ns_id(node)
+            (self.get_ns(node), data['name']): self.get_ns_id(node)
             for node, data in self.nodes(data=True)
             if 'name' in data
         }
