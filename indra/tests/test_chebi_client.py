@@ -31,13 +31,13 @@ def test_cas_to_chebi():
 
 
 def test_chebi_id_to_name():
-    name = chebi_client.get_chebi_name_from_id('63637', offline=True)
+    name = chebi_client.get_chebi_name_from_id('63637')
     assert name == 'vemurafenib', name
 
 
 def test_chebi_name_to_id():
     cid = chebi_client.get_chebi_id_from_name('vemurafenib')
-    assert cid == '63637', cid
+    assert cid == 'CHEBI:63637', cid
 
 
 @attr('webservice')
@@ -65,5 +65,5 @@ def test_hmdb_to_chebi():
 
 
 def test_chebi_to_primary():
-    assert chebi_client.get_primary_id('6281') == '17490'
-    assert chebi_client.get_primary_id('161680') == '161680'
+    assert chebi_client.get_primary_id('CHEBI:6281') == 'CHEBI:17490'
+    assert chebi_client.get_primary_id('CHEBI:161680') == 'CHEBI:161680'

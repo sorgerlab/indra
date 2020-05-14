@@ -563,7 +563,6 @@ class BaseAgentSet(object):
         return self.agents[name]
 
 
-@python_2_unicode_compatible
 class BaseAgent(object):
     """Represents all activity types and active forms of an Agent.
 
@@ -727,7 +726,6 @@ class AgentState(object):
         return s
 
 
-@python_2_unicode_compatible
 class LinkedStatement(object):
     """A tuple containing a list of source Statements and an inferred Statement.
 

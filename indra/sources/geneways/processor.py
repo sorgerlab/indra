@@ -10,13 +10,13 @@ analyzing, visualizing, and integrating molecular pathway data."
 Journal of biomedical informatics 37, no. 1 (2004): 43-53.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import logging
 from indra.statements import Evidence, Agent
 import indra.databases.hgnc_client as hgc
 from indra.literature import *
 from indra.statements import Complex, Phosphorylation
+from indra.preassembler.grounding_mapper.standardize import \
+    standardize_agent_name
 from indra.sources.geneways.action_parser import GenewaysActionParser
 try:
     from indra.sources.geneways.find_full_text_sentence import FullTextMention
@@ -140,15 +140,13 @@ class GenewaysProcessor(object):
 
 
 def get_agent(raw_name, entrez_id):
-    db_refs = {'TEXT': raw_name}
+    db_refs = {'TEXT': raw_name, 'EGID': entrez_id}
     logger.debug('Looking up grounding data for Entrez #%s' % entrez_id)
     hgnc_id = hgc.get_hgnc_from_entrez(entrez_id)
-    if hgnc_id is not None:
-        db_refs['UP'] = hgc.get_uniprot_id(hgnc_id)
-        name = hgc.get_hgnc_name(hgnc_id)
-    else:
-        name = raw_name
-    agent = Agent(name, db_refs=db_refs)
+    if hgnc_id:
+        db_refs['HGNC'] = hgnc_id
+    agent = Agent(raw_name, db_refs=db_refs)
+    standardize_agent_name(agent, standardize_refs=True)
     return agent
 
 

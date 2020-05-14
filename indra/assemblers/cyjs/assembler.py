@@ -326,7 +326,7 @@ class CyJSAssembler(object):
         self._existing_nodes[node_key] = node_id
         node_name = agent.name
         node_name = node_name.replace('_', ' ')
-        expanded_families = bio_ontology.get_children(agent.get_grounding())
+        expanded_families = bio_ontology.get_children(*agent.get_grounding())
         expanded_families = [ch for ch in expanded_families if
                              ch[0] == 'HGNC']
         members = {}
@@ -455,7 +455,7 @@ def _get_db_refs(agent):
     for db_name, db_ids in agent.db_refs.items():
         if isinstance(db_ids, int):
             db_id = str(db_ids)
-        elif isinstance(db_ids, basestring):
+        elif isinstance(db_ids, str):
             db_id = db_ids
         else:
             db_id = db_ids[0]
