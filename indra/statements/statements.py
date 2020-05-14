@@ -1738,10 +1738,10 @@ class Translocation(Statement):
         stl = go_client.get_go_id_from_label(self.to_location)
         ref2 = (other.from_location is None or
                 self.from_location == other.from_location or
-                ontology.partof('GO', sfl, 'GO', ofl))
+                ontology.isa_or_partof('GO', sfl, 'GO', ofl))
         ref3 = (other.to_location is None or
                 self.to_location == other.to_location or
-                ontology.partof('GO', stl, 'GO', otl))
+                ontology.isa_or_partof('GO', stl, 'GO', otl))
         return ref1 and ref2 and ref3
 
     def equals(self, other):

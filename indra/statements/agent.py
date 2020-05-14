@@ -249,7 +249,7 @@ class Agent(Concept):
             # self.location is not a refinement
             sl = go_client.get_go_id_from_label(self.location)
             ol = go_client.get_go_id_from_label(other.location)
-            if not ontology.partof('GO', sl, 'GO', ol):
+            if not ontology.isa_or_partof('GO', sl, 'GO', ol):
                 return False
 
         # ACTIVITY
