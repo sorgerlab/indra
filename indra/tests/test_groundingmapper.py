@@ -136,7 +136,7 @@ def test_ignore():
 
 
 def test_renaming():
-    akt_indra = Agent('pkbA', db_refs={'TEXT': 'Akt', 'FPLX': 'AKT family',
+    akt_indra = Agent('pkbA', db_refs={'TEXT': 'Akt', 'FPLX': 'AKT',
                                        'UP': 'P31749'})
     akt_hgnc_from_up = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP': 'P31749'})
     akt_other = Agent('pkbA', db_refs={'TEXT': 'Akt'})
@@ -148,7 +148,7 @@ def test_renaming():
     renamed_stmts = gm.rename_agents(stmts)
     assert len(renamed_stmts) == 4
     # Should draw on BE first
-    assert renamed_stmts[0].sub.name == 'AKT family'
+    assert renamed_stmts[0].sub.name == 'AKT'
     # Then on the HGNC lookup from Uniprot
     assert renamed_stmts[1].sub.name == 'AKT1', renamed_stmts[1].sub.name
     # Don't fall back on text if there's no grounding

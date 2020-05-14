@@ -21,6 +21,7 @@ class BioOntology(IndraOntology):
         self.add_obo_nodes()
         self.add_mesh_nodes()
         self.add_ncit_nodes()
+        self.add_uppro_nodes()
         # Add xrefs
         self.add_hgnc_uniprot_xrefs()
         self.add_famplex_xrefs()
@@ -33,6 +34,7 @@ class BioOntology(IndraOntology):
         self.add_mesh_hierarchy()
         self.add_activity_hierarchy()
         self.add_modification_hierarchy()
+        self.add_uppro_hierarchy()
 
     def add_hgnc_nodes(self):
         nodes = [(label('HGNC', hid), {'name': hname})
@@ -43,6 +45,15 @@ class BioOntology(IndraOntology):
         nodes = [(label('UP', uid), {'name': uname})
                  for (uid, uname)
                  in uniprot_client.um.uniprot_gene_name.items()]
+        self.add_nodes_from(nodes)
+
+    def add_uppro_nodes(self):
+        nodes = []
+        for prot_id, features in uniprot_client.um.features.items():
+            for feature in features:
+                node = label('UPPRO', feature.id)
+                data = {'name': feature.name}
+                nodes.append((node, data))
         self.add_nodes_from(nodes)
 
     def add_hgnc_uniprot_xrefs(self):
@@ -210,6 +221,16 @@ class BioOntology(IndraOntology):
             edges.append((label('NCIT', ncit_id),
                           label(target_ns, target_id),
                           {'type': 'xref', 'source': 'ncit'}))
+        self.add_edges_from(edges)
+
+    def add_uppro_hierarchy(self):
+        edges = []
+        for prot_id, features in uniprot_client.um.features.items():
+            prot_node = ('UP', prot_id)
+            for feature in features:
+                feat_node = label('UPPRO', feature.id)
+                edges.append((feat_node, prot_node,
+                              {'type': 'partof'}))
         self.add_edges_from(edges)
 
     def add_activity_hierarchy(self):
