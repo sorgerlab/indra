@@ -1870,32 +1870,32 @@ def influence_association_refinement_of(stmt_type):
 def test_association_contradicts():
     neg = 'wm/concept/causal_factor/food_insecurity/food_unavailability'
     pos = 'wm/concept/causal_factor/food_security/food_availability'
-    food_sec_pos = Event(Concept('food security',
-                                 db_refs={'WM': pos}),
-                         delta=QualitativeDelta(polarity=-1))
-    food_sec_neg= Event(Concept('food security',
-                                db_refs={'WM': pos}),
-                        delta=QualitativeDelta(polarity=1))
-    food_insec = Event(Concept('food insecurity',
-                               db_refs={'WM': neg}),
-                       delta=QualitativeDelta(polarity=1))
+    food_avail_neg = Event(Concept('food security',
+                                   db_refs={'WM': pos}),
+                           delta=QualitativeDelta(polarity=-1))
+    food_avail_pos = Event(Concept('food security',
+                                   db_refs={'WM': pos}),
+                           delta=QualitativeDelta(polarity=1))
+    food_unavail = Event(Concept('food insecurity',
+                                 db_refs={'WM': neg}),
+                         delta=QualitativeDelta(polarity=1))
     prp = Event(Concept('production'), delta=QualitativeDelta(polarity=1))
     prn = Event(Concept('production'), delta=QualitativeDelta(polarity=-1))
 
-    assert Association([food_sec_neg, prp]).contradicts(
-        Association([food_sec_neg, prn]), world_ontology)
-    assert Association([prp, food_sec_neg]).contradicts(
-        Association([food_sec_neg, prn]), world_ontology)
-    assert Association([prn, food_sec_neg]).contradicts(
-        Association([food_sec_pos, prn]), world_ontology)
-    assert Association([food_sec_neg, prp]).contradicts(
-        Association([food_insec, prn]), world_ontology)
-    assert Association([food_sec_neg, food_sec_pos]).contradicts(
-        Association([food_insec, food_sec_neg]), world_ontology)
-    assert Association([food_insec, food_sec_pos]).contradicts(
-        Association([food_sec_pos, food_sec_pos]), world_ontology)
-    assert Association([food_insec, food_sec_pos]).contradicts(
-        Association([food_sec_neg, food_sec_neg]), world_ontology)
+    assert Association([food_avail_neg, prp]).contradicts(
+        Association([food_unavail, prn]), world_ontology)
+    assert Association([food_avail_neg, prp]).contradicts(
+        Association([food_avail_neg, prn]), world_ontology)
+    assert Association([prp, food_avail_neg]).contradicts(
+        Association([food_avail_neg, prn]), world_ontology)
+    assert Association([prn, food_avail_neg]).contradicts(
+        Association([food_avail_pos, prn]), world_ontology)
+    assert Association([food_avail_neg, food_avail_pos]).contradicts(
+        Association([food_unavail, food_avail_neg]), world_ontology)
+    assert Association([food_unavail, food_avail_pos]).contradicts(
+        Association([food_avail_pos, food_avail_pos]), world_ontology)
+    assert Association([food_unavail, food_avail_pos]).contradicts(
+        Association([food_avail_neg, food_avail_neg]), world_ontology)
 
 
 def test_modification_contradicts():
