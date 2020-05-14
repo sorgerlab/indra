@@ -65,7 +65,7 @@ class AssemblyPipeline():
     >>> ap.append(filter_grounded_only)
     >>> ap.append(run_preassembly,
     ...           belief_scorer=RunnableArgument(get_eidos_scorer),
-    ...           ontology=RunnableArgument(world_ontology))
+    ...           ontology=world_ontology)
     >>> assembled_stmts = ap.run(stmts)
     >>> ap.to_json_file('filename.json')
 

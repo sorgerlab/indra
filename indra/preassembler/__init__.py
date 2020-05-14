@@ -131,7 +131,7 @@ class Preassembler(object):
         >>> uniq_stmts = pa.combine_duplicate_stmts([stmt1, stmt2])
         >>> uniq_stmts
         [Phosphorylation(MAP2K1(), MAPK1(), T, 185)]
-        >>> sorted([e.text for e in uniq_stmts[0].evidence]) # doctest:+IGNORE_UNICODE
+        >>> sorted([e.text for e in uniq_stmts[0].evidence])
         ['evidence 1', 'evidence 2']
         """
         # Helper function to get a list of evidence matches keys
@@ -924,10 +924,10 @@ def flatten_evidence(stmts, collect_from=None):
     >>> pa = Preassembler(bio_ontology, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
     [Phosphorylation(BRAF(), MAP2K1(), S)]
-    >>> [e.text for e in pa.related_stmts[0].evidence] # doctest:+IGNORE_UNICODE
+    >>> [e.text for e in pa.related_stmts[0].evidence]
     ['baz', 'bak']
     >>> flattened = flatten_evidence(pa.related_stmts)
-    >>> sorted([e.text for e in flattened[0].evidence]) # doctest:+IGNORE_UNICODE
+    >>> sorted([e.text for e in flattened[0].evidence])
     ['bak', 'bar', 'baz', 'foo']
     """
     if collect_from is None:
