@@ -106,6 +106,10 @@ class IndraOntology(networkx.DiGraph):
     def get_parents(self, ns, id):
         return self.descendants_rel(ns, id, {'isa', 'partof'})
 
+    def get_top_level_parents(self, ns, id):
+        parents = self.get_parents(ns, id)
+        return [p for p in parents if not self.get_parents(*p)]
+
     def get_mappings(self, ns, id):
         return self.descendants_rel(ns, id, {'xref'})
 
