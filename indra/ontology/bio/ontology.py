@@ -26,6 +26,7 @@ class BioOntology(IndraOntology):
         self.add_famplex_xrefs()
         self.add_chemical_xrefs()
         self.add_ncit_xrefs()
+        self.add_mesh_xrefs()
         # Add hierarchies
         self.add_famplex_hierarchy()
         self.add_obo_hierarchies()
@@ -165,6 +166,19 @@ class BioOntology(IndraOntology):
                  for mesh_id, name in
                  mesh_client.mesh_id_to_name.items()]
         self.add_nodes_from(nodes)
+
+    def add_mesh_xrefs(self):
+        edges = []
+        data = {'type': 'xref', 'source': 'gilda'}
+        for mesh_id, (db_ns, db_id) in mesh_client.mesh_to_db.items():
+            edges.append((label('MESH', mesh_id),
+                          label(db_ns, db_id),
+                          data))
+        for (db_ns, db_id), mesh_id in mesh_client.db_to_mesh.items():
+            edges.append((label(db_ns, db_id),
+                          label('MESH', mesh_id),
+                          data))
+        self.add_edges_from(edges)
 
     def add_mesh_hierarchy(self):
         mesh_tree_numbers_to_id = {}

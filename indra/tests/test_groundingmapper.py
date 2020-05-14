@@ -346,7 +346,7 @@ def test_name_standardize_hgnc_up():
 
 
 def test_name_standardize_chebi():
-    a1 = Agent('x', db_refs={'CHEBI': '15996'})
+    a1 = Agent('x', db_refs={'CHEBI': 'CHEBI:15996'})
     GroundingMapper.standardize_agent_name(a1, False)
     assert a1.name == 'GTP'
 
