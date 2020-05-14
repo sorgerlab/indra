@@ -115,7 +115,5 @@ def test_extract_text():
 def test_extract_text2():
     xml_str = '<article><body><p><p>some text</p>a</p></body></article>'
     text = pmc_client.extract_text(xml_str)
-    assert text is not None
-    print(text)
-    assert 'some text' in text
+    assert text == 'a\nsome text\n'
     assert unicode_strs(text)
