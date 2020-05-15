@@ -16,6 +16,12 @@ Pubmed Central client (:py:mod:`indra.literature.pmc_client`)
 .. automodule:: indra.literature.pmc_client
     :members:
 
+bioRxiv client (:py:mod:`indra.literature.biorxiv_client`)
+----------------------------------------------------------
+
+.. automodule:: indra.literature.biorxiv_client
+    :members:
+
 CrossRef client (:py:mod:`indra.literature.crossref_client`)
 ------------------------------------------------------------
 
