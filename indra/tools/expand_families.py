@@ -2,7 +2,7 @@ import logging
 import itertools
 from copy import deepcopy
 from indra.statements import Agent, Complex, Evidence
-from indra.preassembler.grounding_mapper import standardize_agent_name
+from indra.ontology.standardize import standardize_agent_name
 
 logger = logging.getLogger(__name__)
 

@@ -2,7 +2,7 @@ import re
 import logging
 from indra.databases import uniprot_client
 from indra.statements import Agent, Complex, Evidence
-from indra.preassembler.grounding_mapper import standardize_agent_name
+from indra.ontology.standardize import standardize_agent_name
 
 
 logger = logging.getLogger(__name__)
