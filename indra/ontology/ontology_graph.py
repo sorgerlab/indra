@@ -20,7 +20,21 @@ class IndraOntology(networkx.DiGraph):
     """
     def __init__(self):
         super().__init__()
+        self._initialized = False
         self.name_to_grounding = {}
+
+    def initialize(self):
+        """Initialize the ontology by adding nodes and edges.
+
+        By convention, ontologies are implemented such that the constructor
+        does not add all the nodes and edges, which can take a long time.
+        This function is called automatically when any of the user-facing
+        methods ot IndraOntology is called. This way, the ontology is only
+        fully constructed if it is used.
+        """
+        raise NotImplementedError('The initialize method needs to be '
+                                  'implemented when subclassing '
+                                  'IndraOntology')
 
     @with_initialize
     def _check_path(self, ns1, id1, ns2, id2, edge_types):

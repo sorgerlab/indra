@@ -31,13 +31,29 @@ def load_yaml_from_url(ont_url):
 
 
 class WorldOntology(IndraOntology):
+    """Represents the ontology used for World Modelers applications.
+
+    Parameters
+    ----------
+    url : str
+        The URL pointing to a World Modelers ontology YAML.
+
+    Attributes
+    ----------
+    url : str
+        The URL pointing to a World Modelers ontology YAML.
+    yml : list
+        The ontology YAML as loaded by the yaml package from the
+        URL.
+    """
     def __init__(self, url):
         super().__init__()
-        self._initialized = False
         self.yml = None
         self.url = url
 
     def initialize(self):
+        """Load the World Modelers ontology from the web and build the
+        graph."""
         logger.info('Initializing world ontology from %s' % self.url)
         self.add_wm_ontology(self.url)
         self._initialized = True
@@ -49,6 +65,13 @@ class WorldOntology(IndraOntology):
 
     @with_initialize
     def dump_yml_str(self):
+        """Return a string-serialized form of the loaded YAML
+
+        Returns
+        -------
+        str
+            The YAML string of the ontology.
+        """
         return yaml.dump(self.yml)
 
     def _load_yml(self, yml):
@@ -94,6 +117,18 @@ class WorldOntology(IndraOntology):
         self.add_edges_from(edges)
 
     def add_entry(self, entry, examples=None):
+        """Add a new ontology entry with examples.
+
+        This works by adding the entry to the yml attribute first
+        and then reloading the entire yaml to build a new graph.
+
+        Parameters
+        ----------
+        entry : str
+            The new entry.
+        examples : list of str
+            Examples for the new entry.
+        """
         examples = examples if examples else []
         parts = entry.split('/')
         root = self.yml

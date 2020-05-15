@@ -24,7 +24,6 @@ logger = logging.getLogger(__name__)
 class BioOntology(IndraOntology):
     def __init__(self):
         super().__init__()
-        self._initialized = False
 
     def initialize(self):
         logger.info('Initializing bio ontology...')
