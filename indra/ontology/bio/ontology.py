@@ -1,6 +1,8 @@
 import os
 import time
+import pickle
 import logging
+from indra.config import get_config
 from ..ontology_graph import IndraOntology, label
 from indra.util import read_unicode_csv
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
@@ -11,6 +13,11 @@ from indra.statements import modtype_conditions
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 resources = os.path.join(HERE, os.pardir, os.pardir, 'resources')
+CACHE_DIR = get_config('INDRA_RESOURCES') or \
+    os.path.join(os.path.expanduser('~'), '.indra')
+CACHE_FILE = os.path.join(CACHE_DIR, 'bio_ontology.pkl')
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -44,6 +51,8 @@ class BioOntology(IndraOntology):
         self.add_modification_hierarchy()
         self.add_uppro_hierarchy()
         self._initialized = True
+        # Build name to ID lookup
+        self._build_name_lookup()
         logger.info('Finished initializing bio ontology...')
 
     def add_hgnc_nodes(self):
@@ -272,4 +281,30 @@ class BioOntology(IndraOntology):
         )
 
 
-bio_ontology = BioOntology()
+def load_bio_ontology(reload=False):
+    if reload or not os.path.exists(CACHE_FILE):
+        ont = BioOntology()
+        ont.initialize()
+        # Try to create the folder first, if it fails, we don't cache
+        if not os.path.exists(CACHE_DIR):
+            try:
+                os.makedirs(CACHE_DIR)
+            except Exception:
+                logger.warning('%s could not be created.' % CACHE_DIR)
+                return ont
+        # Try to dump the file next, if it fails, we don't cache
+        try:
+            logger.info('Caching INDRA bio ontology at %s' % CACHE_FILE)
+            with open(CACHE_FILE, 'wb') as fh:
+                pickle.dump(ont, fh, pickle.HIGHEST_PROTOCOL)
+        except Exception:
+            logger.warning('Failed to cache ontology at %s.' % CACHE_FILE)
+        return ont
+    else:
+        logger.info('Loading INDRA bio ontology from cache at %s' % CACHE_FILE)
+        with open(CACHE_FILE, 'rb') as fh:
+            ont = pickle.load(fh)
+            return ont
+
+
+bio_ontology = load_bio_ontology(reload=False)
