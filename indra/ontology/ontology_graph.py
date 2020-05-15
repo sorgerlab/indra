@@ -107,14 +107,26 @@ class IndraOntology(networkx.DiGraph):
     @with_initialize
     def child_rel(self, ns, id, rel_types):
         source = label(ns, id)
-        for target in self.successors(source):
+        # This is to handle the case where the node is not in the
+        # graph
+        try:
+            succ_iter = self.successors(source)
+        except networkx.NetworkXError:
+            return []
+        for target in succ_iter:
             if self.edges[source, target]['type'] in rel_types:
                 yield self.get_ns_id(target)
 
     @with_initialize
     def parent_rel(self, ns, id, rel_types):
         target = label(ns, id)
-        for source in self.predecessors(target):
+        # This is to handle the case where the node is not in the
+        # graph
+        try:
+            pred_iter = self.predecessors(target)
+        except networkx.NetworkXError:
+            return []
+        for source in pred_iter:
             if self.edges[source, target]['type'] in rel_types:
                 yield self.get_ns_id(source)
 
