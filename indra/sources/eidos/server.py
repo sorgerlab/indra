@@ -10,13 +10,11 @@ is also available on the `reground` endpoint.
 """
 import sys
 import json
-import requests
 from flask import Flask, request
 from indra.sources.eidos.reader import EidosReader
-from indra.preassembler.make_wm_ontologies import wm_ont_url
+from indra.ontology.world import world_ontology
 
-wm_yml = requests.get(wm_ont_url).text
-
+wm_yml = world_ontology.dump_yml_str()
 
 app = Flask(__name__)
 
