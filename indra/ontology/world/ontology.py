@@ -7,7 +7,7 @@ import yaml
 import logging
 import requests
 from collections import defaultdict
-from ..ontology_graph import IndraOntology, label, with_initialize
+from ..ontology_graph import IndraOntology, with_initialize
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ wm_ont_url = ('https://raw.githubusercontent.com/WorldModelers/'
 def get_term(node, prefix):
     node = node.replace(' ', '_')
     path = prefix + '/' + node if prefix else node
-    return label('WM', path)
+    return WorldOntology.label('WM', path)
 
 
 def load_yaml_from_url(ont_url):

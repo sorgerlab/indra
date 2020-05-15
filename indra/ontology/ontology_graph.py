@@ -14,6 +14,10 @@ def with_initialize(func):
 
 
 class IndraOntology(networkx.DiGraph):
+    """A directed graph representing entities and their properties
+    as nodes  and ontological relationships between the entities as
+    edges.
+    """
     def __init__(self):
         super().__init__()
         self.name_to_grounding = {}
@@ -106,7 +110,7 @@ class IndraOntology(networkx.DiGraph):
 
     @with_initialize
     def child_rel(self, ns, id, rel_types):
-        source = label(ns, id)
+        source = self.label(ns, id)
         # This is to handle the case where the node is not in the
         # graph
         try:
@@ -119,7 +123,7 @@ class IndraOntology(networkx.DiGraph):
 
     @with_initialize
     def parent_rel(self, ns, id, rel_types):
-        target = label(ns, id)
+        target = self.label(ns, id)
         # This is to handle the case where the node is not in the
         # graph
         try:
@@ -158,7 +162,7 @@ class IndraOntology(networkx.DiGraph):
     @with_initialize
     def get_node_property(self, ns, id, property):
         try:
-            return self.nodes[label(ns, id)][property]
+            return self.nodes[self.label(ns, id)][property]
         except KeyError:
             return None
 
@@ -185,6 +189,6 @@ class IndraOntology(networkx.DiGraph):
         return [node for node in self.nodes
                 if node.endswith(suffix)]
 
-
-def label(ns, id):
-    return '%s:%s' % (ns, id)
+    @staticmethod
+    def label(ns, id):
+        return '%s:%s' % (ns, id)
