@@ -56,7 +56,7 @@ def test_pipeline_methods():
         refinement_fun=location_refinement, normalize_equivalences=True,
         normalize_opposites=True, normalize_ns='WM',
         belief_scoret=RunnableArgument(get_eidos_scorer),
-        ontology=RunnableArgument(world_ontology))
+        ontology=world_ontology)
     assert len(ap) == 4
     assert isinstance(ap.steps[3], dict)
     assert isinstance(ap.steps[3]['kwargs'], dict)

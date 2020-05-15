@@ -6,7 +6,7 @@ import argparse
 from os import path
 from flask import Flask, request, jsonify, abort, Response
 from indra.statements import stmts_from_json_file, stmts_to_json
-from indra.ontology.world.ontology import WorldOntology, wm_ont_url
+from indra.ontology.world.ontology import world_ontology
 
 from . import InvalidCorpusError
 from .corpus import Corpus
@@ -19,7 +19,9 @@ app = Flask(__name__)
 corpora = {}
 
 
-curator = LiveCurator(corpora=corpora, ont_manager=WorldOntology(wm_ont_url))
+ontology = world_ontology
+ontology.initialize()
+curator = LiveCurator(corpora=corpora, ont_manager=ontology)
 
 
 # From here on, a Flask app built around a LiveCurator is implemented

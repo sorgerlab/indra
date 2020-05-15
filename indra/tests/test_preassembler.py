@@ -2,7 +2,6 @@ import os
 
 from indra.preassembler import Preassembler, render_stmt_graph, \
                                flatten_evidence, flatten_stmts
-from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.sources import reach
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
