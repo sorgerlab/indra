@@ -1,6 +1,7 @@
 import re
 import logging
 import requests
+import datetime
 
 
 logger = logging.getLogger(__name__)
@@ -13,22 +14,61 @@ bio_content_url = 'https://www.biorxiv.org/content/'
 med_content_url = 'https://www.medrxiv.org/content/'
 
 
-def get_collection_pubs(collection_id):
+def get_collection_pubs(collection_id, min_date=None):
     """Get list of DOIs from a biorxiv/medrxiv collection.
 
     Parameters
     ----------
     collection_id : str
         The identifier of the collection to fetch.
+    min_date : Optional[datetime.datetime]
+        A datetime object representing an cutoff. If given, only
+        publications that were released on or after the given date
+        are returned. By default, no date constraint is applied.
 
     Returns
     -------
-    list of str
-        A list of DOIs in the given collection.
+    list of dict
+        A list of the publication entries which include the abstract and other
+        metadata.
     """
     res = requests.get(collection_url + collection_id)
     res.raise_for_status()
-    return res.json()['rels']
+    pubs = res.json()['rels']
+    if min_date:
+        new_rels = []
+        for pub in pubs:
+            try:
+                date = datetime.datetime.strptime(pub.get('rel_date'),
+                                                  '%Y-%m-%d')
+            except Exception:
+                continue
+            if date >= min_date:
+                new_rels.append(pub)
+        return new_rels
+    return pubs
+
+
+def get_collection_dois(collection_id, min_date=None):
+    """Get list of DOIs from a biorxiv/medrxiv collection.
+
+    Parameters
+    ----------
+    collection_id : str
+        The identifier of the collection to fetch.
+    min_date : Optional[datetime.datetime]
+        A datetime object representing an cutoff. If given, only
+        publications that were released on or after the given date
+        are returned. By default, no date constraint is applied.
+
+    Returns
+    -------
+    list of dict
+        The list of DOIs in the collection.
+    """
+    pubs = get_collection_pubs(collection_id, min_date=min_date)
+    dois = [pub.get('rel_doi') for pub in pubs if pub.get('rel_doi')]
+    return dois
 
 
 def get_pdf_xml_url_base(content):
