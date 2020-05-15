@@ -319,8 +319,9 @@ def test_map_entry_hgnc_and_up():
     mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     ms = mapped_stmts[0]
-    assert ms.sub.db_refs == {'TEXT': 'NF-kappaB p65', 'UP': 'Q04206',
-                              'HGNC': '9955'}
+    assert ms.sub.db_refs == \
+           {'TEXT': 'NF-kappaB p65', 'UP': 'Q04206',
+            'HGNC': '9955', 'MESH': 'D051996'}, ms.sub.db_refs
 
 
 def test_map_agent():
