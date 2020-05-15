@@ -1,3 +1,5 @@
+"""A client to obtain metadata and text content from bioRxiv
+(and to some extent medRxiv) preprints."""
 import re
 import logging
 import requests
