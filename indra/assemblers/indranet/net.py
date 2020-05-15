@@ -167,7 +167,7 @@ class IndraNet(nx.MultiDiGraph):
             as positive edges and Inhibition and DecreaseAmount are added as
             negative edges, but a user can pass any other Statement types in
             a dictionary.
-        flattening_method : str|function(G, edge)
+        flattening_method : str or function(networkx.DiGraph, edge)
             The method to use when updating the belief for the flattened edge.
 
             If a string is provided, it must be one of the predefined options
@@ -183,7 +183,7 @@ class IndraNet(nx.MultiDiGraph):
             ...         for s in G.edges[edge]['statements']]
             ...     return sum(all_beliefs)/len(all_beliefs)
 
-        weight_mapping : function(G)
+        weight_mapping : function(networkx.DiGraph)
             A function taking at least the graph G as an argument and
             returning G after adding edge weights as an edge attribute to the
             flattened edges using the reserved keyword 'weight'.
@@ -231,9 +231,10 @@ class IndraNet(nx.MultiDiGraph):
         Parameters
         ----------
         df : pd.DataFrame
-        flattening_method : str|function
-            The method to use when updating the belief for the flattened edge
-        weight_mapping : function
+            The dataframe to build the graph from.
+        flattening_method : str or function(networkx.DiGraph, edge)
+            The method to use when updating the belief for the flattened edge.
+        weight_mapping : function(networkx.DiGraph)
             A function taking at least the graph G as an argument and
             returning G after adding edge weights as an edge attribute to the
             flattened edges using the reserved keyword 'weight'.
@@ -254,15 +255,16 @@ class IndraNet(nx.MultiDiGraph):
         Parameters
         ----------
         df : pd.DataFrame
+            The dataframe to build the signed graph from.
         sign_dict : dict
             A dictionary mapping a Statement type to a sign to be used for
             the edge. By default only Activation and IncreaseAmount are added
             as positive edges and Inhibition and DecreaseAmount are added as
             negative edges, but a user can pass any other Statement types in
             a dictionary.
-        flattening_method : str|function
+        flattening_method : str or function(networkx.DiGraph, edge)
             The method to use when updating the belief for the flattened edge.
-        weight_mapping : function
+        weight_mapping : function(networkx.DiGraph)
             A function taking at least the graph G as an argument and
             returning G after adding edge weights as an edge attribute to the
             flattened edges using the reserved keyword 'weight'.
