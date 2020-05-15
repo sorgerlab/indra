@@ -582,9 +582,8 @@ class Statement(object):
         for attr in ['evidence', 'belief', 'uuid', 'supports', 'supported_by',
                      'is_activation']:
             kwargs.pop(attr, None)
-        for attr in ['_full_hash', '_shallow_hash']:
-            my_hash = kwargs.pop(attr, None)
-            my_shallow_hash = kwargs.pop(attr, None)
+        my_hash = kwargs.pop('_full_hash', None)
+        my_shallow_hash = kwargs.pop('_shallow_hash', None)
         for attr in self._agent_order:
             attr_value = kwargs.get(attr)
             if isinstance(attr_value, list):
