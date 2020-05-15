@@ -18,7 +18,7 @@ class Preassembler(object):
 
     Parameters
     ----------
-    ontology : dict[:py:class:`indra.ontology.IndraOntology`]
+    ontology : :py:class:`indra.ontology.IndraOntology`
         An INDRA Ontology object.
     stmts : list of :py:class:`indra.statements.Statement` or None
         A set of statements to perform pre-assembly on. If None, statements

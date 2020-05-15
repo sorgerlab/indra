@@ -237,16 +237,16 @@ def test_run_preassembly_all_stmts():
 
 
 def _get_extended_wm_hierarchy():
-    from indra.ontology.world.ontology import get_term
+    world_ontology.initialize()
     world_ontology.add_edge(
-        get_term('flooding', 'wm/x/y/z'),
-        get_term('flooding', 'wm/a/b/c'),
-        {'type': 'isequal'}
+        'WM:wm/x/y/z/flooding',
+        'WM:wm/a/b/c/flooding',
+        **{'type': 'is_equal'}
     )
     world_ontology.add_edge(
-        get_term('flooding', 'wm/a/b/c'),
-        get_term('flooding', 'wm/x/y/z'),
-        {'type': 'isequal'}
+        'WM:wm/a/b/c/flooding',
+        'WM:wm/x/y/z/flooding',
+        **{'type': 'is_equal'}
     )
     return world_ontology
 
@@ -254,7 +254,8 @@ def _get_extended_wm_hierarchy():
 def test_run_preassembly_concepts():
     ont = _get_extended_wm_hierarchy()
     rainfall = Event(Concept('rain', db_refs={
-        'WM': 'wm/concept/indicator_and_reported_property/weather/rainfall'}))
+        'WM': ('wm/concept/causal_factor/environmental/meteorologic/'
+               'precipitation/rainfall')}))
     flooding_1 = Event(Concept('flood', db_refs={
         'WM': 'wm/x/y/z/flooding'}))
     flooding_2 = Event(Concept('flooding', db_refs={
