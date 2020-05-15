@@ -1,15 +1,9 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-from future.utils import python_2_unicode_compatible
-
-
 __all__ = ['Agent', 'BoundCondition', 'MutCondition', 'ModCondition',
-           'ActivityCondition']
+           'ActivityCondition', 'default_ns_order']
 
 
 import logging
 from collections import OrderedDict as _o
-from indra.util import unicode_strs
 from indra.statements.statements import modtype_conditions, modtype_to_modclass
 from .concept import Concept
 from .resources import get_valid_residue, activity_types, amino_acids
@@ -22,7 +16,6 @@ default_ns_order = ['FPLX', 'UPPRO', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH',
                     'DOID', 'HP', 'EFO']
 
 
-@python_2_unicode_compatible
 class Agent(Concept):
     """A molecular entity, e.g., a protein.
 
@@ -410,11 +403,9 @@ class BoundCondition(object):
                            'to True.')
             is_bound = True
         bc = BoundCondition(agent, is_bound)
-        assert(unicode_strs(bc))
         return bc
 
 
-@python_2_unicode_compatible
 class MutCondition(object):
     """Mutation state of an amino acid position of an Agent.
 
@@ -475,7 +466,6 @@ class MutCondition(object):
         residue_from = json_dict.get('residue_from')
         residue_to = json_dict.get('residue_to')
         mc = cls(position, residue_from, residue_to)
-        assert(unicode_strs(mc))
         return mc
 
     def __str__(self):
@@ -496,7 +486,6 @@ class MutCondition(object):
         return (from_match and to_match and pos_match)
 
 
-@python_2_unicode_compatible
 class ModCondition(object):
     """Post-translational modification state at an amino acid position.
 
@@ -604,7 +593,6 @@ class ModCondition(object):
                            'to True')
             is_modified = True
         mc = ModCondition(mod_type, residue, position, is_modified)
-        assert(unicode_strs(mc))
         return mc
 
     def equals(self, other):
@@ -689,7 +677,6 @@ class ActivityCondition(object):
                            'defaulting to True')
             is_active = True
         ac = ActivityCondition(activity_type, is_active)
-        assert(unicode_strs(ac))
         return ac
 
     def __str__(self):
