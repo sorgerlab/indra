@@ -10,12 +10,6 @@ Grounding mapping
 .. automodule:: indra.preassembler.grounding_mapper.mapper
     :members:
 
-Grounding and name standardization
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: indra.preassembler.grounding_mapper.standardize
-    :members:
-
 Adeft disambiguation functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -196,7 +196,7 @@ stmts = ac.filter_belief(stmts, 0.8)    # Apply belief cutoff of 0.8
 
 An example of an assembly pipeline for statements in the world modeling domain
 is as follows (note how biology-specific functions are not used, and a custom
-belief_scorer and hierarchies are passed to `run_preassembly` here, while the
+belief_scorer and ontology is passed to `run_preassembly` here, while the
 biology pipeline used default values):
 
 [//]: # (If code is changed here, also update it in tests/test_docs_code.py)
@@ -204,15 +204,14 @@ biology pipeline used default values):
 ```python
 from indra.tools import assemble_corpus as ac
 from indra.belief.wm_scorer import get_eidos_scorer
-from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+from indra.ontology.world import world_ontology
 stmts = <the collection of all raw statements to use>
 stmts = ac.filter_grounded_only(stmts)  # Filter out ungrounded agents
-hierarchies = get_wm_hierarchies()
 belief_scorer = get_eidos_scorer()
 stmts = ac.run_preassembly(stmts,       # Run preassembly
                            return_toplevel=False,
                            belief_scorer=belief_scorer,
-                           hierarchies=hierarchies,
+                           ontology=world_ontology,
                            normalize_equivalences=True,     # Optional: rewrite equivalent groundings to one standard
                            normalize_opposites=True,        # Optional: rewrite opposite groundings to one standard
                            normalize_ns='WM')               # Use 'WM' namespace to normalize equivalences and opposites 

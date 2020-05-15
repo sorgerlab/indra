@@ -5,7 +5,5 @@ Preassembly (:py:mod:`indra.preassembler`)
    :maxdepth: 3
 
    preassembler
-   hierarchy_manager
    grounding_mapper
    site_mapper
-   ontology_mapper
