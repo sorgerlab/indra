@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class BioOntology(IndraOntology):
+    """Represents the ontology used for biology applications."""
     def __init__(self):
         super().__init__()
 
@@ -283,6 +284,20 @@ class BioOntology(IndraOntology):
 
 
 def load_bio_ontology(reload=False):
+    """Return an initialized BioOntology instance.
+
+    Parameters
+    ----------
+    reload : Optional[bool]
+        If True, the cache is bypassed and the ontology is rebuilt from
+        scratch (this can take a long time). Otherwise, the
+        cached ontology is loaded from local pickle file. Default: False
+
+    Returns
+    -------
+    BioOntology
+        An initialized instance of the BioOntology.
+    """
     if reload or not os.path.exists(CACHE_FILE):
         ont = BioOntology()
         ont.initialize()
