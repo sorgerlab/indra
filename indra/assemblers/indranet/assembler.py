@@ -61,15 +61,15 @@ class IndraNetAssembler():
             Maximum allowed size of a complex to be included in the graph.
             All complexes larger than complex_members will be rejected. For
             accepted complexes, all permutations of their members will be added
-            as edges.
+            as edges. Default is `3`.
         graph_type : str
             Specify the type of graph to assemble. Chose from 'multi_graph'
-            (default), 'digraph', 'signed'.
+            (default), 'digraph', 'signed'. Default is `multi_graph`.
         sign_dict : dict
             A dictionary mapping a Statement type to a sign to be used for
             the edge. This parameter is only used with the 'signed' option.
             See IndraNet.to_signed_graph for more info.
-        belief_flattening : str|function(G, edge)
+        belief_flattening : str or function(networkx.DiGraph, edge)
             The method to use when updating the belief for the flattened edge.
 
             If a string is provided, it must be one of the predefined options
@@ -85,7 +85,7 @@ class IndraNetAssembler():
             ...         for s in G.edges[edge]['statements']]
             ...     return sum(all_beliefs)/len(all_beliefs)
 
-        weight_flattening : function(G)
+        weight_flattening : function(networkx.DiGraph)
             A function taking at least the graph G as an argument and
             returning G after adding edge weights as an edge attribute to the
             flattened edges using the reserved keyword 'weight'.
@@ -100,7 +100,6 @@ class IndraNetAssembler():
             ...             for s in G.edges[edge]['statements']]
             ...         G.edges[edge]['weight'] = sum(w)/len(w)
             ...     return G
-
 
         Returns
         -------
@@ -133,18 +132,47 @@ class IndraNetAssembler():
         Parameters
         ----------
         exclude_stmts : list[str]
-            A list of statement type names to not include into a dataframe.
+            A list of statement type names to not include in the dataframe.
         complex_members : int
             Maximum allowed size of a complex to be included in the
             data frame. All complexes larger than complex_members will be
             rejected. For accepted complexes, all permutations of their
-            members will be added as dataframe records.
+            members will be added as dataframe records. Default is `3`.
 
         Returns
         -------
         df : pd.DataFrame
             Pandas DataFrame object containing information extracted from
-            statements.
+            statements. It contains the following columns:
+            
+            *agA_name*
+                The first Agent's name.
+            *agA_ns*
+                The first Agent's identifier namespace as per `db_refs`.
+            *agA_id*
+                The first Agent's identifier as per `db_refs`
+            *ags_ns, agB_name, agB_id*
+                As above for the second agent. Note that the Agent may be None
+                (and these fields left empty) if the Statement consists only
+                of a single Agent (e.g., SelfModification, ActiveForm,
+                or Translocation statement).
+            *stmt_type*
+                Statement type, given by the name of the class
+                in indra.statements.
+            *evidence_count*
+                Number of evidences for the statement.
+            *stmt_hash*
+                An unique long integer hash identifying the content of the
+                statement.
+            *belief*
+                The belief score associated with the statement.
+            *source_counts*
+                The number of evidences per input source for the statement.
+            *initial_sign*
+                The default sign (polarity) associated with the given
+                statement if the statement type has implied polarity.
+                To facilitate weighted path finding, the sign is represented
+                as 0 for positive polarity and 1 for negative polarity.
         """
         rows = []
         if exclude_stmts:
