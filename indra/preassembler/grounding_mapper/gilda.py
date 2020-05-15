@@ -3,7 +3,7 @@ and contains functions to help apply it during the course of INDRA assembly."""
 import logging
 import requests
 from urllib.parse import urljoin
-from indra.preassembler.grounding_mapper.standardize \
+from indra.ontology.standardize \
     import standardize_agent_name
 from indra.config import get_config, has_config
 from indra.pipeline import register_pipeline

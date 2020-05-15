@@ -10,12 +10,11 @@ analyzing, visualizing, and integrating molecular pathway data."
 Journal of biomedical informatics 37, no. 1 (2004): 43-53.
 """
 
-import logging
 from indra.statements import Evidence, Agent
 import indra.databases.hgnc_client as hgc
 from indra.literature import *
 from indra.statements import Complex, Phosphorylation
-from indra.preassembler.grounding_mapper.standardize import \
+from indra.ontology.standardize import \
     standardize_agent_name
 from indra.sources.geneways.action_parser import GenewaysActionParser
 try:

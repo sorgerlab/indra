@@ -1,5 +1,5 @@
 import logging
-from indra.preassembler.grounding_mapper.standardize \
+from indra.ontology.standardize \
     import standardize_agent_name
 
 logger = logging.getLogger(__name__)

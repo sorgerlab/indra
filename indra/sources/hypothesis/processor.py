@@ -2,7 +2,7 @@ import re
 import logging
 from indra.statements import BioContext, RefContext
 from indra.ontology.bio import bio_ontology
-from indra.preassembler.grounding_mapper.standardize import \
+from indra.ontology.standardize import \
     standardize_db_refs
 
 logger = logging.getLogger(__name__)

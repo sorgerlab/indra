@@ -5,11 +5,10 @@ import collections
 import numpy as np
 from copy import deepcopy
 from indra.statements import *
-from indra.databases import hgnc_client
 from indra.databases import context_client, get_identifiers_url
 from indra.tools.expand_families import Expander
 from indra.ontology.bio import bio_ontology
-from indra.preassembler.grounding_mapper.standardize import \
+from indra.ontology.standardize import \
     standardize_db_refs
 
 expander = Expander(ontology=bio_ontology)

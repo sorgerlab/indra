@@ -3,7 +3,7 @@ from indra.preassembler.grounding_mapper import GroundingMapper
 from indra.preassembler.grounding_mapper.analysis import *
 from indra.preassembler.grounding_mapper.gilda import ground_statements, \
     get_gilda_models, ground_statement
-from indra.preassembler.grounding_mapper.standardize import \
+from indra.ontology.standardize import \
     standardize_agent_name, standardize_db_refs
 from indra.statements import Agent, Phosphorylation, Complex, Inhibition, \
     Evidence, BoundCondition
