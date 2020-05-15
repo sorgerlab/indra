@@ -7,7 +7,7 @@ import yaml
 import logging
 import requests
 from collections import defaultdict
-from ..ontology_graph import IndraOntology, label
+from ..ontology_graph import IndraOntology, label, with_initialize
 
 
 logger = logging.getLogger(__name__)
@@ -46,6 +46,10 @@ class WorldOntology(IndraOntology):
     def add_wm_ontology(self, url):
         self.yml = load_yaml_from_url(url)
         self._load_yml(self.yml)
+
+    @with_initialize
+    def dump_yml_str(self):
+        return yaml.dump(self.yml)
 
     def _load_yml(self, yml):
         self.clear()
