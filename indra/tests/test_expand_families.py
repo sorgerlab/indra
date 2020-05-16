@@ -1,13 +1,13 @@
 import itertools
-from indra.util import unicode_strs
-from indra.tools import expand_families as ef
 from indra.ontology.bio import bio_ontology
+from indra.tools.expand_families import Expander
 from indra.statements import Agent, Phosphorylation, Complex, Activation
+
+# Get the Expander
+exp = Expander(bio_ontology)
 
 
 def test_expand_families():
-    # Get the Expander
-    exp = ef.Expander(bio_ontology)
     # Declare some agents
     akt = Agent('AKT', db_refs={'FPLX': 'AKT'})
     raf = Agent('RAF', db_refs={'FPLX': 'RAF'})
@@ -33,7 +33,6 @@ def test_expand_families():
 
 
 def test_complexes_from_hierarchy():
-    exp = ef.Expander(bio_ontology)
     complexes = exp.complexes_from_hierarchy()
     keys = [c.matches_key() for c in complexes]
     probe_stmt = Complex([Agent('AMPK_alpha', db_refs={'FPLX': 'AMPK_alpha'}),
@@ -43,7 +42,6 @@ def test_complexes_from_hierarchy():
 
 
 def test_expanded_complexes_from_hierarchy():
-    exp = ef.Expander(bio_ontology)
     complexes = exp.expanded_complexes_from_hierarchy()
     stmt_ag_names = []
     for stmt in complexes:
@@ -54,13 +52,12 @@ def test_expanded_complexes_from_hierarchy():
     ampk_gammas = ('PRKAG1', 'PRKAG2', 'PRKAG3')
     for alpha, beta, gamma in itertools.product(ampk_alphas, ampk_betas,
                                                 ampk_gammas):
-        assert tuple(sorted((alpha, beta, gamma))) in stmt_ag_names
+        assert tuple(sorted((alpha, beta, gamma))) in stmt_ag_names, \
+            stmt_ag_names
 
 
 def test_db_ref_keys():
     # test that expanded families get TEXT, UP, HGNC keys in their db_refs
-    # Get the Expander
-    exp = ef.Expander(bio_ontology)
     # Declare some agents
     grb2 = Agent('GRB2',
                  db_refs={'TEXT': 'Grb2', 'UP': 'P62993', 'HGNC': '4566'})
@@ -71,7 +68,7 @@ def test_db_ref_keys():
     for st in expanded_stmts:
         for agent in st.agent_list():
             if agent is not None:
-                assert set(agent.db_refs) == {'TEXT', 'UP', 'HGNC'}, \
+                assert set(agent.db_refs) >= {'TEXT', 'UP', 'HGNC'}, \
                     agent.db_refs
     # Test for case involving None for one of the agents
     st = Phosphorylation(None, shc)
@@ -79,11 +76,11 @@ def test_db_ref_keys():
     for st in expanded_stmts:
         for agent in st.agent_list():
             if agent is not None:
-                assert set(agent.db_refs) == {'TEXT', 'UP', 'HGNC'}
+                assert set(agent.db_refs) >= {'TEXT', 'UP', 'HGNC'}
     # Statement with two families: 4x4 SHC
     st = Activation(shc, shc)
     expanded_stmts = exp.expand_families([st])
     for st in expanded_stmts:
         for agent in st.agent_list():
             if agent is not None:
-                assert set(agent.db_refs) == {'TEXT', 'UP', 'HGNC'}
+                assert set(agent.db_refs) >= {'TEXT', 'UP', 'HGNC'}

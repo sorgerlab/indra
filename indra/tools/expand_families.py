@@ -1,3 +1,4 @@
+import os
 import logging
 import itertools
 from copy import deepcopy
@@ -71,10 +72,10 @@ class Expander(object):
     def complexes_from_hierarchy(self):
         # Iterate over the partof_closure to determine all of the complexes
         # and all of their members
-        fplx_nodes = [n for n in self.ontology.nodes if n[0] == 'FPLX']
+        fplx_nodes = [('FPLX', entry) for entry in get_famplex_entities()]
         all_complexes = {}
         for fplx_node in fplx_nodes:
-            parts = self.ontology.get_ancestors(*fplx_node, {'partof'})
+            parts = self.ontology.ancestors_rel(*fplx_node, {'partof'})
             if not parts:
                 continue
             complex_subunits = all_complexes.get(fplx_node, [])
@@ -109,3 +110,11 @@ def _agent_from_ns_id(ag_ns, ag_id):
     standardize_agent_name(agent, standardize_refs=True)
     agent.db_refs['TEXT'] = agent.name
     return agent
+
+
+def get_famplex_entities():
+    here = os.path.dirname(os.path.abspath(__file__))
+    entities = os.path.join(here, os.pardir, 'resources',
+                            'famplex', 'entities.csv')
+    with open(entities, 'r') as fh:
+        return [line.strip() for line in fh.readlines()]
