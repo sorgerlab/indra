@@ -7,6 +7,7 @@ import yaml
 import logging
 import requests
 from collections import defaultdict
+from indra.pipeline import register_pipeline
 from ..ontology_graph import IndraOntology, with_initialize
 
 
@@ -158,4 +159,9 @@ class WorldOntology(IndraOntology):
         self._load_yml(self.yml)
 
 
-world_ontology = WorldOntology(wm_ont_url)
+@register_pipeline
+def load_world_ontology():
+    return WorldOntology(wm_ont_url)
+
+
+world_ontology = load_world_ontology()
