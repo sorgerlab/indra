@@ -1,9 +1,7 @@
 import os
 import json
 import gzip
-import pickle
 import pandas
-import rdflib
 import logging
 import requests
 from zipfile import ZipFile
@@ -270,8 +268,8 @@ def update_chebi_accessions():
     df_cas.sort_values(['ACCESSION_NUMBER', 'COMPOUND_ID'], ascending=True,
                        inplace=True)
     # Here we need to map to primary ChEBI IDs
-    from indra.databases.chebi_client import chebi_to_primary
-    df_cas.COMPOUND_ID.replace(chebi_to_primary, inplace=True)
+    from indra.databases.chebi_client import get_primary_id
+    df_cas.COMPOUND_ID.replace(get_primary_id, inplace=True)
     df_cas.drop_duplicates(subset=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                            inplace=True)
     df_cas.to_csv(fname, sep='\t',
@@ -343,20 +341,6 @@ def update_bel_chebi_map():
                                            key=lambda x: x[0]):
             fh.write(('%s\tCHEBI:%s\n' %
                       (chebi_name, chebi_id)).encode('utf-8'))
-
-
-def make_chebi_hierarchy():
-    from indra.databases.chebi_client import _obo_client as oc
-    g = rdflib.Graph()
-    indra_rn = \
-        rdflib.Namespace('http://sorger.med.harvard.edu/indra/relations/')
-    chebi_ns = rdflib.Namespace('http://identifiers.org/chebi/')
-    isa = indra_rn.term('isa')
-    for db_id, entry in oc.entries.items():
-        for rel, targets in entry.get('relations', {}).items():
-            for target in targets:
-                g.add((chebi_ns.term(db_id), isa, chebi_ns.term(target)))
-    return g
 
 
 def update_famplex_map():
