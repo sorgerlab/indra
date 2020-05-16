@@ -29,7 +29,6 @@ class BioOntology(IndraOntology):
     def initialize(self):
         logger.info('Initializing bio ontology...')
         # Add all nodes with annotations
-        ts = time.time()
         self.add_hgnc_nodes()
         self.add_uniprot_nodes()
         self.add_famplex_nodes()
@@ -124,8 +123,8 @@ class BioOntology(IndraOntology):
             edges.append((self.label(ref_ns, ref_id),
                           self.label('FPLX', fplx_id),
                           {'type': 'xref', 'source': 'fplx'}))
-            edges.append((label('FPLX', fplx_id),
-                          label(ref_ns, ref_id),
+            edges.append((self.label('FPLX', fplx_id),
+                          self.label(ref_ns, ref_id),
                           {'type': 'xref', 'source': 'fplx'}))
         self.add_edges_from(edges)
 
@@ -207,8 +206,8 @@ class BioOntology(IndraOntology):
                           self.label(db_ns, db_id),
                           data))
         for (db_ns, db_id), mesh_id in mesh_client.db_to_mesh.items():
-            edges.append((label(db_ns, db_id),
-                          label('MESH', mesh_id),
+            edges.append((self.label(db_ns, db_id),
+                          self.label('MESH', mesh_id),
                           data))
         self.add_edges_from(edges)
 
@@ -239,8 +238,8 @@ class BioOntology(IndraOntology):
     def add_ncit_xrefs(self):
         edges = []
         for ncit_id, (target_ns, target_id) in ncit_map.items():
-            edges.append((label('NCIT', ncit_id),
-                          label(target_ns, target_id),
+            edges.append((self.label('NCIT', ncit_id),
+                          self.label(target_ns, target_id),
                           {'type': 'xref', 'source': 'ncit'}))
         self.add_edges_from(edges)
 
