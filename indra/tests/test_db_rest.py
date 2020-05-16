@@ -92,7 +92,7 @@ def test_too_big_request_no_persist():
     return resp_some
 
 
-@attr('nonpublic', 'slow')
+@attr('nonpublic', 'slow', 'notravis')
 def test_too_big_request_persist_and_block():
     resp_all1 = __check_request(200, agents=['TP53'], persist=True, timeout=None,
                                 simple_response=False)
@@ -102,7 +102,7 @@ def test_too_big_request_persist_and_block():
     return resp_all1
 
 
-@attr('nonpublic', 'slow')
+@attr('nonpublic', 'slow', 'notravis')
 def test_too_big_request_persist_no_block():
     resp_some = test_too_big_request_no_persist()
     resp_all1 = test_too_big_request_persist_and_block()
