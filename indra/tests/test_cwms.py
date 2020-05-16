@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
 import unittest
 from os.path import join, dirname, abspath
 from nose.plugins.attrib import attr
@@ -12,13 +9,10 @@ from indra.sources.cwms import *
 path_this = dirname(abspath(__file__))
 data_folder = join(path_this, 'cwms_tests_data')
 
-example1_rdf = join(data_folder, 'example_2_sentence_1.rdf')
 example1_txt = join(data_folder, 'example_2_sentence_1.txt')
 
-example2_rdf = join(data_folder, 'example_2_sentence_3.rdf')
 example2_txt = join(data_folder, 'example_2_sentence_3.txt')
 
-example3_rdf = join(data_folder, 'example_2_sentence_4.rdf')
 example3_txt = join(data_folder, 'example_2_sentence_4.txt')
 
 ekb_processing_test_file = join(data_folder, 'ekb_processing_test.ekb')
@@ -103,50 +97,6 @@ def test_cwmsreader_influence():
     ev = s0.evidence[0]
     assert ev.text == 'government influences agriculture.', ev.text
     assert ev.source_api == 'cwms', ev.source_api
-
-
-def test_rdf_example1():
-    # Example: These impacts on livestock and crops have resulted in
-    # livelihoods being decimated.
-
-    txt = load_text(example1_txt)
-    cp = process_rdf_file(txt, example1_rdf)
-    assert len(cp.statements) == 1
-
-    statement0 = cp.statements[0]
-    assert statement0.subj.db_refs['TEXT'] == \
-           'These impacts on livestock and crops'
-    assert statement0.obj.db_refs['TEXT'] == \
-           'in livelihoods being decimated'
-
-
-def test_rdf_example2():
-    # Conflict and economic decline have led to violence and displacement.
-
-    txt = load_text(example2_txt)
-    cp = process_rdf_file(txt, example2_rdf)
-    assert len(cp.statements) == 1
-
-    statement0 = cp.statements[0]
-    assert statement0.subj.db_refs['TEXT'] == \
-           'Conflict and economic decline'
-    assert statement0.obj.db_refs['TEXT'] == \
-           'to violence and displacement'
-
-
-def test_rdf_example3():
-    # Violence has caused livestock to be looted, killed and disease-prone and
-    # crops destroyed, and displacement has caused delayed planting.
-
-    txt = load_text(example3_txt)
-    cp = process_rdf_file(txt, example3_rdf)
-    assert len(cp.statements) == 1
-
-    statement0 = cp.statements[0]
-    assert statement0.subj.db_refs['TEXT'] == 'displacement',\
-        statement0.subj.db_refs['TEXT']
-    assert statement0.obj.db_refs['TEXT'] == 'delayed planting',\
-        statement0.obj.db_refs['TEXT']
 
 
 @attr('slow', 'webservice')
