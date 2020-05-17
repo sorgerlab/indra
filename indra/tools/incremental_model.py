@@ -203,7 +203,8 @@ class IncrementalModel(object):
 
 def _get_agent_comp(agent):
     # FIXME: temporarily returning dummy component
-    return '1'
+    return agent.name
+
 
 def get_gene_agents(gene_names):
     agents = []
