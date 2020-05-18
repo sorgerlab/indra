@@ -916,33 +916,35 @@ def test_association_duplicate():
 
 
 def test_association_refinement():
-    health = 'wm/concept/causal_factor/health_and_life'
-    food = 'wm/concept/causal_factor/wild_food_sources'
-    food_security = 'wm/concept/causal_factor/health_and_life/' \
+    unrelated = 'wm/concept/causal_factor/wild_food_sources'
+    parent = 'wm/concept/causal_factor/health_and_life'
+    child = 'wm/concept/causal_factor/health_and_life/' \
         'living_condition/food_safety'
-    eh = Event(Concept('health', db_refs={'WM': [(health, 1.0)]}))
-    ef = Event(Concept('food', db_refs={'WM': [(food, 1.0)]}))
-    efs = Event(Concept('food security',
-                        db_refs={'WM': [(food_security, 1.0)]}))
-    st1 = Association([eh, ef], evidence=[Evidence(source_api='eidos1')])
-    st2 = Association([ef, eh], evidence=[Evidence(source_api='eidos2')])
-    st3 = Association([eh, efs], evidence=[Evidence(source_api='eidos3')])
-    st4 = Association([ef, efs], evidence=[Evidence(source_api='eidos4')])
+    parent_event = Event(Concept('parent', db_refs={'WM': [(parent, 1.0)]}))
+    unrelated_event = \
+        Event(Concept('unrelated', db_refs={'WM': [(unrelated, 1.0)]}))
+    child_event = Event(Concept('child',
+                                db_refs={'WM': [(child, 1.0)]}))
+    st1 = Association([parent_event, unrelated_event],
+                      evidence=[Evidence(source_api='eidos1')])
+    st2 = Association([unrelated_event, parent_event],
+                      evidence=[Evidence(source_api='eidos2')])
+    st3 = Association([parent_event, child_event],
+                      evidence=[Evidence(source_api='eidos3')])
+    st4 = Association([unrelated_event, child_event],
+                      evidence=[Evidence(source_api='eidos4')])
     pa = Preassembler(world_ontology, [st1, st2, st3, st4])
     unique_stmts = pa.combine_duplicates()
     assert len(unique_stmts) == 3
-    rel_stmts = pa.combine_related()
-    assert len(rel_stmts) == 2, rel_stmts
-    eh_efs_stmt = [st for st in rel_stmts if (st.members[0].concept.name in
-                   {'health', 'food security'}
-                    and st.members[1].concept.name
-                   in {'health', 'food security'})][0]
-    assert len(eh_efs_stmt.supported_by) == 1, \
-        (eh_efs_stmt, eh_efs_stmt.supported_by)
-    assert (eh_efs_stmt.supported_by[0].members[0].concept.name
-            in {'food', 'health'})
-    assert (eh_efs_stmt.supported_by[0].members[1].concept.name
-            in {'food', 'health'})
+    top_level_stmts = pa.combine_related()
+    assert len(top_level_stmts) == 2, top_level_stmts
+
+    names = {tuple(sorted(e.concept.name for e in stmt.members)): stmt
+             for stmt in top_level_stmts}
+    stmt = names[('child', 'unrelated')]
+    assert len(stmt.supported_by) == 1
+    assert {e.concept.name for e in stmt.supported_by[0].members} == \
+           {'parent', 'unrelated'}
 
 
 def test_matches_key_fun():

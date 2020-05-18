@@ -306,7 +306,7 @@ class LiveGroundingTestCase(unittest.TestCase):
         dr = stmts[0].subj.concept.db_refs
         assert 'WM' in dr, dr
         assert dr['WM'], dr
-        assert dr['WM'][0][0] == 'WM/animal/dog', dr
+        assert dr['WM'][0][0] == 'wm/animal/dog', dr
 
 
 def close_enough(probs, ref):
