@@ -1,13 +1,9 @@
 import os
-import time
 import pickle
 import logging
 from indra.config import get_config
 from ..ontology_graph import IndraOntology
 from indra.util import read_unicode_csv
-from indra.databases import hgnc_client, uniprot_client, chebi_client, \
-    mesh_client, obo_client
-from indra.sources.trips.processor import ncit_map
 from indra.statements import modtype_conditions
 
 
@@ -55,17 +51,20 @@ class BioOntology(IndraOntology):
         logger.info('Finished initializing bio ontology...')
 
     def add_hgnc_nodes(self):
+        from indra.databases import hgnc_client
         nodes = [(self.label('HGNC', hid), {'name': hname})
                  for (hid, hname) in hgnc_client.hgnc_names.items()]
         self.add_nodes_from(nodes)
 
     def add_uniprot_nodes(self):
+        from indra.databases import uniprot_client
         nodes = [(self.label('UP', uid), {'name': uname})
                  for (uid, uname)
                  in uniprot_client.um.uniprot_gene_name.items()]
         self.add_nodes_from(nodes)
 
     def add_uppro_nodes(self):
+        from indra.databases import uniprot_client
         nodes = []
         for prot_id, features in uniprot_client.um.features.items():
             for feature in features:
@@ -75,6 +74,8 @@ class BioOntology(IndraOntology):
         self.add_nodes_from(nodes)
 
     def add_hgnc_uniprot_xrefs(self):
+        from indra.databases import hgnc_client
+        from indra.databases import uniprot_client
         edges = []
         for hid, uid in hgnc_client.uniprot_ids.items():
             uids = uid.split(', ')
@@ -99,6 +100,7 @@ class BioOntology(IndraOntology):
         self.add_nodes_from(nodes)
 
     def add_famplex_hierarchy(self):
+        from indra.databases import hgnc_client
         edges = []
         for row in read_unicode_csv(os.path.join(resources, 'famplex',
                                                  'relations.csv'),
@@ -129,6 +131,7 @@ class BioOntology(IndraOntology):
         self.add_edges_from(edges)
 
     def add_obo_nodes(self):
+        from indra.databases import obo_client
         namespaces = ['go', 'efo', 'hp', 'doid', 'chebi']
         nodes = []
         for ns in namespaces:
@@ -139,6 +142,7 @@ class BioOntology(IndraOntology):
         self.add_nodes_from(nodes)
 
     def add_obo_hierarchies(self):
+        from indra.databases import obo_client
         namespaces = ['go', 'efo', 'hp', 'doid', 'chebi']
         edges = []
         rel_mappings = {
@@ -169,6 +173,7 @@ class BioOntology(IndraOntology):
         self.add_edges_from(edges)
 
     def add_chemical_xrefs(self):
+        from indra.databases import chebi_client
         mappings = [
             (chebi_client.chebi_chembl, 'CHEBI', 'CHEMBL'),
             (chebi_client.chebi_pubchem, 'CHEBI', 'PUBCHEM'),
@@ -192,6 +197,7 @@ class BioOntology(IndraOntology):
         self.add_edges_from(edges)
 
     def add_mesh_nodes(self):
+        from indra.databases import mesh_client
         nodes = [(self.label('MESH', mesh_id),
                   {'name': name})
                  for mesh_id, name in
@@ -199,6 +205,7 @@ class BioOntology(IndraOntology):
         self.add_nodes_from(nodes)
 
     def add_mesh_xrefs(self):
+        from indra.databases import mesh_client
         edges = []
         data = {'type': 'xref', 'source': 'gilda'}
         for mesh_id, (db_ns, db_id) in mesh_client.mesh_to_db.items():
@@ -212,6 +219,7 @@ class BioOntology(IndraOntology):
         self.add_edges_from(edges)
 
     def add_mesh_hierarchy(self):
+        from indra.databases import mesh_client
         mesh_tree_numbers_to_id = {}
         for mesh_id, tns in mesh_client.mesh_id_to_tree_numbers.items():
             for tn in tns:
@@ -232,10 +240,12 @@ class BioOntology(IndraOntology):
         self.add_edges_from(edges)
 
     def add_ncit_nodes(self):
+        from indra.sources.trips.processor import ncit_map
         nodes = [(self.label('NCIT', ncit_id)) for ncit_id in ncit_map]
         self.add_nodes_from(nodes)
 
     def add_ncit_xrefs(self):
+        from indra.sources.trips.processor import ncit_map
         edges = []
         for ncit_id, (target_ns, target_id) in ncit_map.items():
             edges.append((self.label('NCIT', ncit_id),
@@ -244,6 +254,7 @@ class BioOntology(IndraOntology):
         self.add_edges_from(edges)
 
     def add_uppro_hierarchy(self):
+        from indra.databases import uniprot_client
         edges = []
         for prot_id, features in uniprot_client.um.features.items():
             prot_node = ('UP', prot_id)
