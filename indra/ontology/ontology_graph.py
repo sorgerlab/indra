@@ -22,6 +22,8 @@ class IndraOntology(networkx.DiGraph):
         super().__init__()
         self._initialized = False
         self.name_to_grounding = {}
+        self.components = {}
+        self.component_counter = 0
 
     def initialize(self):
         """Initialize the ontology by adding nodes and edges.
@@ -592,3 +594,40 @@ class IndraOntology(networkx.DiGraph):
             The ID corresponding to the label.
         """
         return tuple(label.split(':', maxsplit=1))
+
+    def _label_components(self):
+        self.components = {}
+        self.component_counter = 0
+        for xs, ys, edge_type in self.edges.data('type', default=None):
+            if edge_type not in {'isa', 'partof'}:
+                continue
+            xcomp = self.components.get(xs)
+            ycomp = self.components.get(ys)
+            if xcomp is None:
+                if ycomp is None:
+                    # Neither x nor y are in a component so we start a
+                    # new component and assign x and y to the same
+                    # component
+                    self.components[xs] = self.component_counter
+                    self.components[ys] = self.component_counter
+                    self.component_counter += 1
+                else:
+                    # Because y is already part of an existing component
+                    # we assign its component to x
+                    self.components[xs] = ycomp
+            else:
+                if ycomp is None:
+                    # Because x is already part of an existing component
+                    # we assign its component to y
+                    self.components[ys] = xcomp
+                else:
+                    # This is a special case in which both x and y are
+                    # parts of components
+                    # If they are in the same component then there's
+                    # nothing further to do
+                    if xcomp != ycomp:
+                        remove_component = max(xcomp, ycomp)
+                        joint_component = min(xcomp, ycomp)
+                        for k, v in self.components.items():
+                            if v == remove_component:
+                                self.components[k] = joint_component
