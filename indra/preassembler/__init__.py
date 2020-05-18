@@ -202,6 +202,13 @@ class Preassembler(object):
                 if a_ns is None or a_id is None:
                     entities.append(a.entity_matches_key())
                     continue
+                # If there are no components built in the ontology, we
+                # return a single shared dummy component so that things
+                # in the ontology are considered to be potentially
+                # related
+                if not ontology.components:
+                    entities.append('component1')
+                    continue
                 # We have grounding, now check for a component ID
                 label = ontology.label(a_ns, a_id)
                 # This is the component ID corresponding to the agent
