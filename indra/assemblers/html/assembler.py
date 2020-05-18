@@ -444,7 +444,8 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
         curation_key = (stmt.get_hash(), ev.source_hash)
         curations = curation_dict.get(curation_key, [])
         num_curations = len(curations)
-        num_correct = len([cur for cur in curations if cur.tag in correct_tags])
+        num_correct = len(
+            [cur for cur in curations if cur['error_type'] in correct_tags])
         num_incorrect = num_curations - num_correct
         ev_list.append({'source_api': source_api,
                         'pmid': ev.pmid,
