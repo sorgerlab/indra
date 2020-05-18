@@ -187,7 +187,7 @@ class Preassembler(object):
             unique_stmts.append(new_stmt)
         return unique_stmts
 
-    def _get_entities(self, stmt, stmt_type, eh):
+    def _get_entities(self, stmt, stmt_type, ontology):
         entities = []
         for a in stmt.agent_list():
             # Entity is None: add the None to the entities list
@@ -201,11 +201,24 @@ class Preassembler(object):
                 # entity_matches_key
                 if a_ns is None or a_id is None:
                     entities.append(a.entity_matches_key())
+                    continue
+                # We have grounding, now check for a component ID
+                label = ontology.label(a_ns, a_id)
+                # This is the component ID corresponding to the agent
+                # in the entity hierarchy
+                component = ontology.components.get(label)
+                # If no component ID, use the entity_matches_key()
+                if component is None:
+                    entities.append(a.entity_matches_key())
+                # Component ID, so this is in a family
                 else:
-                    entities.append('1')
+                    # We turn the component ID into a string so that
+                    # we can sort it along with entity_matches_keys
+                    # for Complexes
+                    entities.append(str(component))
         return entities
 
-    def _get_stmt_by_group(self, stmt_type, stmts_this_type, eh):
+    def _get_stmt_by_group(self, stmt_type, stmts_this_type, ontology):
         """Group Statements of `stmt_type` by their hierarchical relations."""
         # Dict of stmt group key tuples, indexed by their first Agent
         stmt_by_first = collections.defaultdict(lambda: [])
@@ -222,7 +235,7 @@ class Preassembler(object):
         # components that their agents are part of
         for stmt_tuple in stmts_this_type:
             _, stmt = stmt_tuple
-            entities = self._get_entities(stmt, stmt_type, eh)
+            entities = self._get_entities(stmt, stmt_type, ontology)
             # At this point we have an entity list
             # If we're dealing with Complexes, sort the entities and use
             # as dict key
