@@ -7,17 +7,16 @@ from indra.util import read_unicode_csv
 from indra.statements import modtype_conditions
 
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-resources = os.path.join(HERE, os.pardir, os.pardir, 'resources')
-CACHE_DIR = get_config('INDRA_RESOURCES') or \
-    os.path.join(os.path.expanduser('~'), '.indra')
-CACHE_FILE = os.path.join(CACHE_DIR, 'bio_ontology.pkl')
-
-
 logger = logging.getLogger(__name__)
 
 
 class BioOntology(IndraOntology):
+    # The version is used to determine if the cached pickle is still valid
+    # or not. When updating relevant resource files in INDRA, this version
+    # should be incremented to "force" rebuilding the ontology to be consistent
+    # with the underlying resource files.
+    version = '1.0'
+
     """Represents the ontology used for biology applications."""
     def __init__(self):
         super().__init__()
@@ -304,6 +303,14 @@ class BioOntology(IndraOntology):
             if source != 'modification'
         ]
         )
+
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+resources = os.path.join(HERE, os.pardir, os.pardir, 'resources')
+CACHE_DIR = get_config('INDRA_RESOURCES') or \
+            os.path.join(os.path.expanduser('~'), '.indra',
+                         'bio_ontology', BioOntology.version)
+CACHE_FILE = os.path.join(CACHE_DIR, 'bio_ontology.pkl')
 
 
 def load_bio_ontology(reload=False):
