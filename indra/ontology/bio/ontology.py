@@ -48,7 +48,20 @@ class BioOntology(IndraOntology):
         self._initialized = True
         # Build name to ID lookup
         self._build_name_lookup()
+        # Build transitive closure
+        self._build_fplx_transitive_closure()
+        self._label_components()
         logger.info('Finished initializing bio ontology...')
+
+    def _build_fplx_transitive_closure(self):
+        self._tc = set()
+        for node in self.nodes():
+            ns, id = self.get_ns_id(node)
+            if ns == 'FPLX':
+                children = self.get_children(ns, id)
+                for cns, cid in children:
+                    if cns == 'HGNC':
+                        self._tc.add((cns, cid, ns, id))
 
     def add_hgnc_nodes(self):
         from indra.databases import hgnc_client
@@ -257,7 +270,7 @@ class BioOntology(IndraOntology):
         from indra.databases import uniprot_client
         edges = []
         for prot_id, features in uniprot_client.um.features.items():
-            prot_node = ('UP', prot_id)
+            prot_node = self.label('UP', prot_id)
             for feature in features:
                 feat_node = self.label('UPPRO', feature.id)
                 edges.append((feat_node, prot_node,
