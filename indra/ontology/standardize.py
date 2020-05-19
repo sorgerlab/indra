@@ -45,11 +45,27 @@ def standardize_db_refs(db_refs,
         from indra.ontology.bio import bio_ontology
         ontology = bio_ontology
 
+    # We iterate over all the db_refs entries that currently exist
     for source_db_ns, source_db_id in deepcopy(db_refs).items():
+        # For the entry we get all its xref mappings as a list
+        # of tuples
         mappings = ontology.get_mappings(source_db_ns, source_db_id)
+        ns_mapped = set()
+        # We iterate over these mappings and check if they should
+        # be applied
         for mapped_db_ns, mapped_db_id in mappings:
+            # If the db_refs doesn't yet contain a mapping for this
+            # name space then we always add this mapping. If there
+            # is already an entry for this name space then
+            # we overwrite it if the source name space is higher
+            # priority than the name space being mapped to.
+            # However, we only apply one mapping from the mappings meaning
+            # that if there are multiple mappings to a given name space,
+            # we always just apply the first one.
             if mapped_db_ns not in db_refs or \
-                    prioritize(mapped_db_ns, source_db_ns):
+                    (prioritize(mapped_db_ns, source_db_ns) and
+                     mapped_db_ns not in ns_mapped):
+                ns_mapped.add(mapped_db_ns)
                 db_refs[mapped_db_ns] = mapped_db_id
     return db_refs
 
