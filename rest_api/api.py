@@ -23,6 +23,7 @@ from indra.sources.ndex_cx.api import process_ndex_network
 from indra.sources.reach.api import reach_nxml_url, reach_text_url
 from indra.belief.wm_scorer import get_eidos_scorer
 from indra.preassembler.ontology_mapper import OntologyMapper, wm_ontomap
+from indra.pipeline import AssemblyPipeline
 
 
 logger = logging.getLogger('rest_api')
@@ -678,6 +679,22 @@ def filter_belief():
         belief_cutoff = float(belief_cutoff)
     stmts = stmts_from_json(stmts_json)
     stmts_out = ac.filter_belief(stmts, belief_cutoff)
+    return _return_stmts(stmts_out)
+
+
+@route('/preassembly/pipeline', method=['POST', 'OPTIONS'])
+@allow_cors
+def run_pipeline():
+    """Run an assembly pipeline for a list of Statements."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    pipeline = body.get('pipeline')
+    stmts = stmts_from_json(stmts_json)
+    ap = AssemblyPipeline(pipeline)
+    stmts_out = ap.run(stmts)
     return _return_stmts(stmts_out)
 
 
