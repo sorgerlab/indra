@@ -11,7 +11,8 @@ from pysb import *
 from indra.databases import hgnc_client
 from indra.explanation.model_checker import PysbModelChecker, \
     UnsignedGraphModelChecker, SignedGraphModelChecker, PybelModelChecker, \
-    PathResult, signed_edges_to_signed_nodes
+    PathResult
+from indra.explanation.pathfinding_util import signed_edges_to_signed_nodes
 from indra.explanation.model_checker.pysb import _mp_embeds_into, \
     _cp_embeds_into, _match_lhs, remove_im_params
 from indra.explanation.reporting import stmt_from_rule, stmts_from_pysb_path, \
