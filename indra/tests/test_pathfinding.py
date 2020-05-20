@@ -1,13 +1,15 @@
+import numpy as np
 import networkx as nx
 
-from indra.explanation.pathfinding.pathfinding import bfs_search
+from indra.explanation.pathfinding.pathfinding import bfs_search, \
+    shortest_simple_paths
 from indra.explanation.pathfinding.util import signed_edges_to_signed_nodes
 
 INT_PLUS, INT_MINUS = 0, 1
 
 
 def _digraph_setup():
-    # Ensures alphabetical order
+    # Ensures alphabetical order in reverse traversal
     edge_beliefs = {('Z1', 'A1'): 1 - 0.2,
                     ('A1', 'B1'): 1 - 0.2,
                     ('A2', 'B1'): 1 - 0.3,
@@ -156,3 +158,31 @@ def test_signed_bfs():
     assert len(paths) == 13, len(paths)
 
 
+def test_shortest_simple_paths_mod_unsigned():
+    dg, all_ns = _setup_unsigned_graph()
+    dg.add_edge('B1', 'A3', belief=0.7)  # Create long path between B1 and C1
+    source, target = 'B1', 'D1'
+
+    for edge in dg.edges:
+        dg.edges[edge]['weight'] = -np.log(dg.edges[edge]['belief'],
+                                           dtype=np.longfloat)
+
+    # Unweighted searches
+    paths = [p for p in shortest_simple_paths(dg, source, target)]
+    assert len(paths) == 2
+    assert tuple(paths[0]) == ('B1', 'C1', 'D1')
+    assert tuple(paths[1]) == ('B1', 'A3', 'B2', 'C1', 'D1')
+    assert len([p for p in shortest_simple_paths(
+        dg, source, target, ignore_nodes={'A3'})]) == 1
+    # Test nx.NoPathFound
+    try:
+        len([p for p in shortest_simple_paths(
+            dg, source, target, ignore_nodes={'C1'})]) == 0
+    except Exception as exc:
+        assert isinstance(exc, nx.NetworkXNoPath)
+
+    # Weigthed searches
+    paths = [p for p in shortest_simple_paths(dg, source, target,
+                                              weight='weight')]
+    assert tuple(paths[0]) == ('B1', 'C1', 'D1')
+    assert tuple(paths[1]) == ('B1', 'A3', 'B2', 'C1', 'D1')
