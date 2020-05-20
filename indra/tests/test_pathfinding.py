@@ -58,6 +58,8 @@ def _setup_unsigned_graph():
     # Add belief
     for e in dg.edges:
         dg.edges[e]['belief'] = edge_beliefs[e]
+        dg.edges[e]['weight'] = -np.log(dg.edges[e]['belief'],
+                                        dtype=np.longfloat)
 
     # Add namespaces
     nodes1, nodes2 = list(zip(*edges))
@@ -162,10 +164,6 @@ def test_shortest_simple_paths_mod_unsigned():
     dg, all_ns = _setup_unsigned_graph()
     dg.add_edge('B1', 'A3', belief=0.7)  # Create long path between B1 and C1
     source, target = 'B1', 'D1'
-
-    for edge in dg.edges:
-        dg.edges[edge]['weight'] = -np.log(dg.edges[edge]['belief'],
-                                           dtype=np.longfloat)
 
     # Unweighted searches
     paths = [p for p in shortest_simple_paths(dg, source, target)]
