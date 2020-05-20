@@ -193,10 +193,27 @@ def test_shortest_simple_paths_mod_unsigned():
 
 def test_shortest_simple_paths_mod_signed():
     seg, sng, all_ns = _setup_signed_graph()
+
+    # Add a very long path
+    sng.add_edge(('B3', INT_PLUS), ('Z1', INT_PLUS),
+                 belief=0.6, weight=-np.log(0.6))
+
     source = ('B2', INT_PLUS)
     target = ('D1', INT_PLUS)  # D1 upregulated
     expected_paths = {(source, ('C1', INT_PLUS), target),
                       (source, ('C1', INT_MINUS), target)}
     paths = [tuple(p) for p in shortest_simple_paths(sng, source, target)]
     assert len(paths) == 2
+    assert set(paths) == expected_paths, 'sets of paths not equal'
+
+    # Weighted search
+    source = ('B3', INT_PLUS)
+    expected_paths = {
+        (source, ('C1', 1), target),
+        (source, ('Z1', 0), ('A1', 0), ('B1', 0), ('C1', 0), target),
+        (source, ('Z1', 0), ('A1', 1), ('B1', 1), ('C1', 1), target)
+    }
+    paths = tuple([tuple(p) for p in shortest_simple_paths(sng, source, target,
+                                                           weight='weight')])
+    assert len(paths) == 3
     assert set(paths) == expected_paths, 'sets of paths not equal'
