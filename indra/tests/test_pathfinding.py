@@ -162,7 +162,9 @@ def test_signed_bfs():
 
 def test_shortest_simple_paths_mod_unsigned():
     dg, all_ns = _setup_unsigned_graph()
-    dg.add_edge('B1', 'A3', belief=0.7)  # Create long path between B1 and C1
+    dg.add_edge('B1', 'A3', belief=0.7, weight=-np.log(0.7))  # Add long path
+    # between
+    # B1 and C1
     source, target = 'B1', 'D1'
 
     # Unweighted searches
