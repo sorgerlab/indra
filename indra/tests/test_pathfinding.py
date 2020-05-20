@@ -186,3 +186,14 @@ def test_shortest_simple_paths_mod_unsigned():
                                               weight='weight')]
     assert tuple(paths[0]) == ('B1', 'C1', 'D1')
     assert tuple(paths[1]) == ('B1', 'A3', 'B2', 'C1', 'D1')
+
+
+def test_shortest_simple_paths_mod_signed():
+    seg, sng, all_ns = _setup_signed_graph()
+    source = ('B2', INT_PLUS)
+    target = ('D1', INT_PLUS)  # D1 upregulated
+    expected_paths = {(source, ('C1', INT_PLUS), target),
+                      (source, ('C1', INT_MINUS), target)}
+    paths = [tuple(p) for p in shortest_simple_paths(sng, source, target)]
+    assert len(paths) == 2
+    assert set(paths) == expected_paths, 'sets of paths not equal'
