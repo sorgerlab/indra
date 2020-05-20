@@ -3,7 +3,7 @@ from copy import deepcopy
 from . import ModelChecker
 from indra.statements import *
 from indra.preassembler.hierarchy_manager import hierarchies
-from indra.explanation.pathfinding.util import signed_edges_to_signed_nodes
+from .model_checker import signed_edges_to_signed_nodes
 
 logger = logging.getLogger(__name__)
 

@@ -3,7 +3,8 @@ import networkx as nx
 
 from indra.explanation.pathfinding.pathfinding import bfs_search, \
     shortest_simple_paths
-from indra.explanation.pathfinding.util import signed_edges_to_signed_nodes
+from indra.explanation.model_checker.model_checker import \
+    signed_edges_to_signed_nodes
 
 INT_PLUS = 0
 INT_MINUS = 1
