@@ -2,7 +2,7 @@ __all__ = ['standardize_agent_name', 'standardize_db_refs']
 
 import logging
 from copy import deepcopy
-from indra.ontology.bio import bio_ontology
+from collections import defaultdict
 from indra.statements.agent import default_ns_order
 
 logger = logging.getLogger(__name__)
@@ -17,6 +17,13 @@ def default_prioritize(ns1, ns2):
     if ns2p is not None and (ns1p is None or ns2p < ns1p):
         return True
     return False
+
+
+def get_mappings_dict(mappings):
+    md = defaultdict(list)
+    for db_ns, db_id in mappings:
+        md[db_ns].append(db_id)
+    return md
 
 
 def standardize_db_refs(db_refs,
@@ -48,25 +55,20 @@ def standardize_db_refs(db_refs,
     # We iterate over all the db_refs entries that currently exist
     for source_db_ns, source_db_id in deepcopy(db_refs).items():
         # For the entry we get all its xref mappings as a list
-        # of tuples
-        mappings = ontology.get_mappings(source_db_ns, source_db_id)
-        ns_mapped = set()
+        # of tuples and turn it into a dict keyed by namespace
+        mappings = get_mappings_dict(
+            ontology.get_mappings(source_db_ns, source_db_id))
         # We iterate over these mappings and check if they should
         # be applied
-        for mapped_db_ns, mapped_db_id in mappings:
+        for mapped_db_ns, mapped_db_ids in mappings.items():
             # If the db_refs doesn't yet contain a mapping for this
             # name space then we always add this mapping. If there
             # is already an entry for this name space then
             # we overwrite it if the source name space is higher
             # priority than the name space being mapped to.
-            # However, we only apply one mapping from the mappings meaning
-            # that if there are multiple mappings to a given name space,
-            # we always just apply the first one.
             if mapped_db_ns not in db_refs or \
-                    (prioritize(mapped_db_ns, source_db_ns) and
-                     mapped_db_ns not in ns_mapped):
-                ns_mapped.add(mapped_db_ns)
-                db_refs[mapped_db_ns] = mapped_db_id
+                    prioritize(mapped_db_ns, source_db_ns):
+                db_refs[mapped_db_ns] = sorted(mapped_db_ids)[0]
     return db_refs
 
 
