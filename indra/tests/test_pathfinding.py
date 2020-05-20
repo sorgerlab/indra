@@ -5,7 +5,8 @@ from indra.explanation.pathfinding.pathfinding import bfs_search, \
     shortest_simple_paths
 from indra.explanation.pathfinding.util import signed_edges_to_signed_nodes
 
-INT_PLUS, INT_MINUS = 0, 1
+INT_PLUS = 0
+INT_MINUS = 1
 
 
 def _digraph_setup():
@@ -58,8 +59,7 @@ def _setup_unsigned_graph():
     # Add belief
     for e in dg.edges:
         dg.edges[e]['belief'] = edge_beliefs[e]
-        dg.edges[e]['weight'] = -np.log(dg.edges[e]['belief'],
-                                        dtype=np.longfloat)
+        dg.edges[e]['weight'] = -np.log(edge_beliefs[e], dtype=np.longfloat)
 
     # Add namespaces
     nodes1, nodes2 = list(zip(*edges))
@@ -139,6 +139,7 @@ def test_bfs():
                                    node_filter=all_ns)]
     assert len(paths) == 4, len(paths)
     assert set(paths) == expected_paths, 'sets of paths not equal'
+
     # Terminate on 'a'
     expected_paths = {('D1', 'C1'), ('D1', 'C1', 'B1'), ('D1', 'C1', 'B2'),
                       ('D1', 'C1', 'B3'), ('D1', 'C1', 'B1', 'A1'),
@@ -154,7 +155,7 @@ def test_bfs():
 def test_signed_bfs():
     dg, _ = _setup_unsigned_graph()
     seg, sng, all_ns = _setup_signed_graph()
-    # D1 being upregulated: 12 paths
+    # D1 being upregulated: 13 paths
     paths = [p for p in bfs_search(
         g=sng, source_node=('D1', INT_PLUS), g_nodes=dg.nodes,
         g_edges=seg.edges, reverse=True, depth_limit=5, node_filter=all_ns,
@@ -184,7 +185,7 @@ def test_shortest_simple_paths_mod_unsigned():
     except Exception as exc:
         assert isinstance(exc, nx.NetworkXNoPath)
 
-    # Weigthed searches
+    # Weighted searches
     paths = [p for p in shortest_simple_paths(dg, source, target,
                                               weight='weight')]
     assert tuple(paths[0]) == ('B1', 'C1', 'D1')
