@@ -34,11 +34,11 @@ always_include = {
     'CHEBI:CHEBI:25000', 'CHEBI:CHEBI:35701', 'CHEBI:CHEBI:36963',
     'GO:GO:0005886', 'GO:GO:0005737', 'GO:GO:0098826',
     'GO:GO:0016020', 'GO:GO:0005634',
-    'UP:Q02750', 'UP:P01112', 'UP:P01019', 'UP:Q9MZT7', 'UP:Q13422'
+    'UP:Q02750', 'UP:P01112', 'UP:P01019', 'UP:Q9MZT7', 'UP:Q13422',
+    'HMDB:HMDB0000122', 'HGNC:7', 'HGNC:5'
 }
 
-always_include_ns = {'FPLX', 'HGNC',
-                     'INDRA_ACTIVITIES', 'INDRA_MODS'}
+always_include_ns = {'FPLX', 'INDRA_ACTIVITIES', 'INDRA_MODS'}
 
 
 def keep_node(node):
