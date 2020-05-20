@@ -42,6 +42,19 @@ def signed_nodes_to_signed_edge(source, target):
 
     Assuming source, target forms an edge of signed nodes:
     edge = (a, sign), (b, sign), return the corresponding signed edge triple
+
+    Parameters
+    ----------
+    source : tuple(str|int, sign)
+        A valid signed node
+    target : tuple(str|int, sign)
+        A valid signed node
+
+    Returns
+    -------
+    tuple
+        A tuple, (source, target, sign), representing the corresponding
+        signed edge.
     """
     # Sign definitions: + == 0, - == 1
     # + edge/path -> (a+, b+) and (a-, b-)
