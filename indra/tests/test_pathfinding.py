@@ -1,7 +1,7 @@
 import networkx as nx
 
 from indra.explanation.pathfinding.pathfinding import bfs_search
-from indra.explanation.pathfinding.pathfinding_util import signed_edges_to_signed_nodes
+from indra.explanation.pathfinding.util import signed_edges_to_signed_nodes
 
 INT_PLUS, INT_MINUS = 0, 1
 

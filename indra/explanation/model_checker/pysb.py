@@ -16,7 +16,7 @@ from indra.assemblers.pysb import assembler as pa
 from indra.assemblers.pysb.kappa_util import im_json_to_graph
 
 from . import ModelChecker, PathResult
-from indra.explanation.pathfinding.pathfinding_util import signed_edges_to_signed_nodes
+from indra.explanation.pathfinding.util import signed_edges_to_signed_nodes
 
 logger = logging.getLogger(__name__)
 
