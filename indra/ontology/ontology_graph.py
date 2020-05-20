@@ -1,11 +1,13 @@
 import logging
 import networkx
+import functools
 from collections import deque
 
 logger = logging.getLogger(__name__)
 
 
 def with_initialize(func):
+    @functools.wraps(func)
     def wrapper(obj, *args, **kwargs):
         if not obj._initialized:
             obj.initialize()
