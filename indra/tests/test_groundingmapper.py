@@ -246,9 +246,9 @@ def test_up_with_no_gene_name_with_hgnc_sym():
 def test_multiple_mapped_up():
     ag = Agent('xx', db_refs={'HGNC': '377', 'UP': 'O43687'})
     gm.standardize_agent_name(ag, True)
-    assert ag.db_refs['HGNC'] == '377'
-    assert ag.db_refs['UP'] == 'O43687'
-    assert ag.name == 'AKAP7'
+    assert ag.db_refs['HGNC'] == '377', ag.db_refs
+    assert ag.db_refs['UP'] == 'O43687', ag.db_refs
+    assert ag.name == 'AKAP7', ag.name
 
 
 def test_up_and_mismatched_hgnc():
