@@ -6,7 +6,7 @@ from indra.explanation.pathfinding.util import signed_edges_to_signed_nodes
 INT_PLUS, INT_MINUS = 0, 1
 
 
-def _bfs_setup():
+def _digraph_setup():
     # Ensures alphabetical order
     edge_beliefs = {('Z1', 'A1'): 1 - 0.2,
                     ('A1', 'B1'): 1 - 0.2,
@@ -42,8 +42,8 @@ def _bfs_setup():
     return edges, signed_edges, edge_beliefs, list(all_ns)
 
 
-def _setup_unsigned_bfs():
-    edges, signed_edges, edge_beliefs, all_ns = _bfs_setup()
+def _setup_unsigned_graph():
+    edges, signed_edges, edge_beliefs, all_ns = _digraph_setup()
     dg = nx.DiGraph()
     dg.add_edges_from(edges)
 
@@ -62,8 +62,8 @@ def _setup_unsigned_bfs():
     return dg, all_ns
 
 
-def _setup_signed_bfs():
-    edges, signed_edges, edge_beliefs, all_ns = _bfs_setup()
+def _setup_signed_graph():
+    edges, signed_edges, edge_beliefs, all_ns = _digraph_setup()
     seg = nx.MultiDiGraph()
 
     seg.add_edges_from(signed_edges)
@@ -78,7 +78,7 @@ def _setup_signed_bfs():
 
 
 def test_bfs():
-    dg, all_ns = _setup_unsigned_bfs()
+    dg, all_ns = _setup_unsigned_graph()
 
     # Test basic part of algorithm
     paths = [p for p in bfs_search(dg, 'C1', depth_limit=1, reverse=True)]
@@ -139,8 +139,8 @@ def test_bfs():
 
 
 def test_signed_bfs():
-    dg, _ = _setup_unsigned_bfs()
-    seg, sng, all_ns = _setup_signed_bfs()
+    dg, _ = _setup_unsigned_graph()
+    seg, sng, all_ns = _setup_signed_graph()
     # D1 being upregulated: 12 paths
     paths = [p for p in bfs_search(
         g=sng, source_node=('D1', INT_PLUS), g_nodes=dg.nodes,
@@ -148,3 +148,5 @@ def test_signed_bfs():
         sign=INT_PLUS)
     ]
     assert len(paths) == 13, len(paths)
+
+
