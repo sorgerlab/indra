@@ -37,7 +37,8 @@ always_include = {
     'UP:Q02750', 'UP:P01112', 'UP:P01019', 'UP:Q9MZT7', 'UP:Q13422'
 }
 
-always_include_ns = {'FPLX', 'INDRA_ACTIVITIES', 'INDRA_MODS'}
+always_include_ns = {'FPLX', 'HGNC',
+                     'INDRA_ACTIVITIES', 'INDRA_MODS'}
 
 
 def keep_node(node):
