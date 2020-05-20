@@ -49,12 +49,12 @@ def test_null_request():
     assert False, "Null request did not raise any exception."
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'slow')
 def test_large_request():
     __check_request(40, agents=['AKT1'])
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'slow')
 def test_bigger_request():
     __check_request(60, agents=['MAPK1'])
 
@@ -82,7 +82,7 @@ def test_timeout_no_persist_type_object():
     assert len(resp.statements) > 0.9*EXPECTED_BATCH_SIZE, len(resp.statements)
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'slow')
 def test_too_big_request_no_persist():
     resp_some = __check_request(60, agents=['TP53'], persist=False,
                                 simple_response=False)
