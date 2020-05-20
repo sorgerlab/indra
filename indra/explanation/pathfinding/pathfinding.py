@@ -7,7 +7,7 @@ import networkx.algorithms.simple_paths as simple_paths
 from networkx.classes.reportviews import NodeView, OutEdgeView, \
     OutMultiEdgeView
 
-from indra.explanation.pathfinding.util import signed_nodes_to_signed_edge
+from indra.explanation.pathfinding.util import get_sorted_neighbors
 
 logger = logging.getLogger(__name__)
 
@@ -156,40 +156,6 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
             prev_path = path
         else:
             break
-
-
-def get_sorted_neighbors(G, node, reverse, g_edges):
-    """Sort by aggregated belief per edge
-
-    Assumes g_edges is an OutEdgeView or OutMultiEdgeView object with keys
-    (u, v, sign)
-    """
-    neighbors = G.predecessors(node) if reverse else G.successors(node)
-    # Check signed node
-    if isinstance(node, tuple):
-        if reverse:
-            return sorted(
-                neighbors,
-                key=lambda n:
-                    g_edges[signed_nodes_to_signed_edge(n, node)]['belief'],
-                reverse=True
-            )
-        else:
-            return sorted(
-                neighbors,
-                key=lambda n:
-                    g_edges[signed_nodes_to_signed_edge(node, n)]['belief'],
-                reverse=True)
-
-    else:
-        if reverse:
-            return sorted(neighbors,
-                          key=lambda n: g_edges[(n, node)]['belief'],
-                          reverse=True)
-        else:
-            return sorted(neighbors,
-                          key=lambda n: g_edges[(node, n)]['belief'],
-                          reverse=True)
 
 
 # Implementation inspired by networkx's
