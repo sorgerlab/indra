@@ -1,3 +1,4 @@
+import logging
 from collections import deque
 from copy import deepcopy
 
@@ -7,6 +8,9 @@ from networkx.classes.reportviews import NodeView, OutEdgeView, \
     OutMultiEdgeView
 
 from indra.explanation.pathfinding_util import signed_nodes_to_signed_edge
+
+
+logger = logging.getLogger(__name__)
 
 
 # Copy from networkx.algorithms.simple_paths
@@ -366,3 +370,66 @@ def get_path_iter(graph, source, target, path_length, loop):
             yield path
     except nx.NetworkXNoPath:
         pass
+
+
+def find_sources(graph, target, sources):
+    """Get the set of source nodes with paths to the target.
+
+    Given a common target and  a list of sources (or None if test statement
+    subject is None), perform a breadth-first search upstream from the
+    target to determine whether there are any sources that have paths to
+    the target. For efficiency, does not return the full path,
+    but identifies the upstream sources and the length of the path.
+
+    Parameters
+    ----------
+    graph : nx.DiGraph
+        A DiGraph with signed nodes to find paths in.
+    target : node
+        The signed node (usually common target node) in the graph to start
+        looking upstream for matching sources.
+    sources : list[node]
+        Signed nodes corresponding to the subject or upstream influence
+        being checked.
+
+    Returns
+    -------
+    generator of (source, path_length)
+        Yields tuples of source node and path length (int). If there are no
+        paths to any of the given source nodes, the generator is empty.
+    """
+    # First, create a list of visited nodes
+    # Adapted from
+    # networkx.algorithms.traversal.breadth_first_search.bfs_edges
+    visited = set([target])
+    # Generate list of predecessor nodes with a sign updated according to
+    # the sign of the target node
+
+    # The queue holds tuples of "parents" (in this case downstream nodes)
+    # and their "children" (in this case their upstream influencers)
+    queue = deque([(target, graph.predecessors(target), 0)])
+    while queue:
+        parent, children, path_length = queue[0]
+        try:
+            # Get the next child in the list
+            child = next(children)
+            # Is this child one of the source nodes we're looking for? If
+            # so, yield it along with path length.
+            # Also make sure that found source is positive
+            if (sources is None or child in sources) and child[1] == 0:
+                logger.debug("Found path to %s from %s with length %d"
+                             % (target, child, path_length+1))
+                yield (child, path_length+1)
+            # Check this child against the visited list. If we haven't
+            # visited it already (accounting for the path to the node),
+            # then add it to the queue.
+            if child not in visited:
+                visited.add(child)
+                queue.append(
+                    (child, graph.predecessors(child), path_length + 1))
+        # Once we've finished iterating over the children of the current
+        # node, pop the node off and go to the next one in the queue
+        except StopIteration:
+            queue.popleft()
+    # There was no path; this will produce an empty generator
+    return
