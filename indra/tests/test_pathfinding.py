@@ -83,7 +83,10 @@ def _setup_signed_graph():
         seg.edges[(u, v, sign)]['belief'] = edge_beliefs[(u, v)]
 
     sng = signed_edges_to_signed_nodes(graph=seg, prune_nodes=True,
-                                       copy_edge_data=False)
+                                       copy_edge_data=True)
+    for u, v in sng.edges:
+        sng.edges[(u, v)]['weight'] = -np.log(sng.edges[(u, v)]['belief'])
+
     return seg, sng, all_ns
 
 
