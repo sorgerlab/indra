@@ -1,10 +1,10 @@
 import logging
 import textwrap
 from collections import deque
-from copy import deepcopy
 
 import numpy as np
-import networkx as nx
+
+from indra.explanation.pathfinding import get_path_iter
 
 try:
     import paths_graph as pg
@@ -483,21 +483,3 @@ class ModelChecker(object):
     def _sample_paths(self, input_set, obj_name, target_polarity,
                       max_paths=1, max_path_length=5):
         raise NotImplementedError("Method must be implemented in child class.")
-
-
-def get_path_iter(graph, source, target, path_length, loop):
-    """Return a generator of paths with path_length cutoff from source to target."""
-    path_iter = nx.all_simple_paths(graph, source, target, path_length)
-    try:
-        for p in path_iter:
-            path = deepcopy(p)
-            # Remove common target from a path.
-            path.remove(target)
-            if loop:
-                path.append(path[0])
-            # A path should contain at least one edge
-            if len(path) < 2:
-                continue
-            yield path
-    except nx.NetworkXNoPath:
-        pass

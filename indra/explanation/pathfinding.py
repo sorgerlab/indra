@@ -1,4 +1,5 @@
 from collections import deque
+from copy import deepcopy
 
 import networkx as nx
 import networkx.algorithms.simple_paths as simple_paths
@@ -346,3 +347,22 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
         # Check path limit again to catch the inner break for path_limit
         if path_limit and yielded_paths >= path_limit:
             break
+
+
+def get_path_iter(graph, source, target, path_length, loop):
+    """Return a generator of paths with path_length cutoff from source to
+    target."""
+    path_iter = nx.all_simple_paths(graph, source, target, path_length)
+    try:
+        for p in path_iter:
+            path = deepcopy(p)
+            # Remove common target from a path.
+            path.remove(target)
+            if loop:
+                path.append(path[0])
+            # A path should contain at least one edge
+            if len(path) < 2:
+                continue
+            yield path
+    except nx.NetworkXNoPath:
+        pass
