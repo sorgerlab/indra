@@ -3,7 +3,7 @@ import textwrap
 
 import numpy as np
 
-from indra.explanation.pathfinding import get_path_iter, find_sources
+from indra.explanation.pathfinding.pathfinding import get_path_iter, find_sources
 
 try:
     import paths_graph as pg

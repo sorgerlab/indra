@@ -7,7 +7,7 @@ import networkx.algorithms.simple_paths as simple_paths
 from networkx.classes.reportviews import NodeView, OutEdgeView, \
     OutMultiEdgeView
 
-from indra.explanation.pathfinding_util import signed_nodes_to_signed_edge
+from indra.explanation.pathfinding.pathfinding_util import signed_nodes_to_signed_edge
 
 logger = logging.getLogger(__name__)
 
