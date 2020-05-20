@@ -9,7 +9,6 @@ from networkx.classes.reportviews import NodeView, OutEdgeView, \
 
 from indra.explanation.pathfinding_util import signed_nodes_to_signed_edge
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -160,8 +159,11 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 
 
 def get_sorted_neighbors(G, node, reverse, g_edges):
-    # better sorted key
-    """Sort by aggregated belief per edge"""
+    """Sort by aggregated belief per edge
+
+    Assumes g_edges is an OutEdgeView or OutMultiEdgeView object with keys
+    (u, v, sign)
+    """
     neighbors = G.predecessors(node) if reverse else G.successors(node)
     # Check signed node
     if isinstance(node, tuple):
