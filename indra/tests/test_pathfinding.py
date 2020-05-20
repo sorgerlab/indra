@@ -200,6 +200,12 @@ def test_shortest_simple_paths_mod_signed():
 
     source = ('B2', INT_PLUS)
     target = ('D1', INT_PLUS)  # D1 upregulated
+
+    # Check that beliafs and weights have been set
+    assert sng.edges[(source, ('C1', INT_PLUS))].get('weight', False)
+    assert sng.edges[(source, ('C1', INT_PLUS))].get('belief', False)
+
+    # Unweighted search
     expected_paths = {(source, ('C1', INT_PLUS), target),
                       (source, ('C1', INT_MINUS), target)}
     paths = [tuple(p) for p in shortest_simple_paths(sng, source, target)]
