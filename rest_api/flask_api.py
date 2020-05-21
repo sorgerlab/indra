@@ -8,6 +8,19 @@ from indra.tools.assemble_corpus import *
 from indra.statements import stmts_from_json
 
 
+boolean_args = [
+    'do_rename', 'use_adeft', 'do_methionine_offset', 'do_orthology_mapping',
+    'do_isoform_mapping', 'use_cache', 'return_toplevel', 'flatten_evidence',
+    'normalize_equivalences', 'normalize_opposites', 'invert', 'remove_bound',
+    'specific_only', 'allow_families', 'match_suffix', 'update_belief']
+list_args = [
+    'gene_list', 'name_list', 'values', 'source_apis', 'uuids', 'curations',
+    'correct_tags', 'ignores']
+dict_args = [
+    'grounding_map', 'misgrounding_map', 'hierarchies', 'whitelist',
+    'mutations']
+float_args = ['score_threshold', 'belief_cutoff']
+int_args = ['poolsize', 'size_cutoff']
 app = Flask(__name__)
 api = Api(app)
 parser = reqparse.RequestParser()
@@ -21,6 +34,22 @@ def _return_stmts(stmts):
     else:
         res = {'statements': []}
     return res
+
+
+def add_arg_to_parser(arg, parser):
+    if arg in list_args:
+        dtype = list
+    elif arg in boolean_args:
+        dtype = inputs.boolean
+    elif arg in int_args:
+        dtype = int
+    elif arg in float_args:
+        dtype = float
+    elif arg in dict_args:
+        dtype = dict
+    else:
+        dtype = str
+    parser.add_argument(arg, location='json')
 
 
 class PreassembleStatements(Resource):
