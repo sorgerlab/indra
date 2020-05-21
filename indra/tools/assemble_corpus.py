@@ -2009,7 +2009,6 @@ def rename_db_ref(stmts_in, ns_from, ns_to, **kwargs):
     return stmts_out
 
 
-@register_pipeline
 def align_statements(stmts1, stmts2, keyfun=None):
     """Return alignment of two lists of statements by key.
 
