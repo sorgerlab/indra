@@ -6,6 +6,8 @@ from flask_restx import Api, Resource, reqparse, Namespace, inputs
 from indra.pipeline import AssemblyPipeline, pipeline_functions
 from indra.tools.assemble_corpus import *
 from indra.statements import stmts_from_json, get_statement_by_name
+from indra.belief.wm_scorer import get_eidos_scorer
+from indra.preassembler.custom_preassembly import *
 
 
 boolean_args = [
@@ -50,30 +52,33 @@ def add_arg_to_parser(arg, parser):
         dtype = dict
     else:
         dtype = str
-    parser.add_argument(arg, location='json')
+    parser.add_argument(arg, type=dtype, location='json')
 
 
 class PreassembleStatements(Resource):
     func_name = None
 
     def process_args(self, args_json):
-        args = parsers[self.func_name].parse_args()
         for arg in args_json:
-            if arg not in args:
-                add_arg_to_parser(arg, parsers[self.func_name])
-        args = parsers[self.func_name].parse_args()
-        for arg in args:
             if arg == 'stmt_type':
-                args[arg] = get_statement_by_name(args[arg])
+                args_json[arg] = get_statement_by_name(args_json[arg])
             elif arg in ['matches_fun', 'refinement_fun']:
-                args[arg] = pipeline_functions[args[arg]]
+                args_json[arg] = pipeline_functions[args_json[arg]]
             elif arg == 'curations':
                 Curation = namedtuple(
                     'Curation', ['pa_hash', 'source_hash', 'tag'])
-                args[arg] = [
+                args_json[arg] = [
                     Curation(cur['pa_hash'], cur['source_hash'], cur['tag'])
-                    for cur in args[arg]]
-        return args
+                    for cur in args_json[arg]]
+            elif arg == 'belief_scorer':
+                if args_json[arg] == 'wm' or \
+                        args_json[arg] == 'get_eidos_scorer':
+                    args_json[arg] = get_eidos_scorer()
+            elif arg == 'whitelist' or arg == 'mutations':
+                args_json[arg] = {
+                    gene: [tuple(mod) for mod in mods]
+                    for gene, mods in args_json[arg].items()}
+        return args_json
 
     def post(self):
         args = self.process_args(request.json)
