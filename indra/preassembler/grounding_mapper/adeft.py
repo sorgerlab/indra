@@ -73,8 +73,8 @@ def run_adeft_disambiguation(stmt, agent, idx):
             db_id = 'CHEBI:%s' % db_id
         agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
         agent.name = standard_name
-        logger.info('Disambiguated %s to: %s, %s:%s' %
-                    (agent_txt, standard_name, db_ns, db_id))
+        logger.debug('Disambiguated %s to: %s, %s:%s' %
+                     (agent_txt, standard_name, db_ns, db_id))
         standardize_agent_name(agent, standardize_refs=True)
 
     def remove_grounding(agent, agent_txt):
@@ -138,8 +138,8 @@ def _get_text_for_grounding(stmt, agent_text):
         # Prioritize the pmid attribute if given
         if stmt.evidence[0].pmid:
             refs['PMID'] = stmt.evidence[0].pmid
-        logger.info('Obtaining text for disambiguation with refs: %s' %
-                    refs)
+        logger.debug('Obtaining text for disambiguation with refs: %s' %
+                     refs)
         content = get_text_content_from_text_refs(refs)
         if not content:
             raise ValueError('Text obtained from DB is empty')
@@ -153,8 +153,8 @@ def _get_text_for_grounding(stmt, agent_text):
         from indra.literature import pubmed_client
         pmid = stmt.evidence[0].pmid
         if pmid:
-            logger.info('Obtaining abstract for disambiguation for PMID%s' %
-                        pmid)
+            logger.debug('Obtaining abstract for disambiguation for PMID%s' %
+                         pmid)
             text = pubmed_client.get_abstract(pmid)
             if text:
                 return text

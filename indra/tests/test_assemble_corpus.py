@@ -735,10 +735,16 @@ def test_filter_by_curation():
     assert len(all_incorrect_two_cur) == 2
     assert new_st1 not in all_incorrect_two_cur
     # Correct curation cancels out incorrect
+    assert len(new_st1.evidence) == 2
     correct_incorrect = ac.filter_by_curation(
         stmts_in, [cur1, cur2, cur3, cur4], 'all', update_belief=False)
     assert len(correct_incorrect) == 3, len(correct_incorrect)
     assert new_st1 in correct_incorrect
+    # new_st1.evidence[1] should be filtered out because there's only incorrect
+    # curation(cur2), new_st1.evidence[0] stays because correct cancels out
+    # incorrect (cur1, cur3)
+    assert len(new_st1.evidence) == 1
+    assert new_st1.evidence[0].source_api == 'assertion'
     assert all(st.belief != 1 for st in correct_incorrect)
     # Optionally update belief to 1 for correct curation
     new_belief = ac.filter_by_curation(

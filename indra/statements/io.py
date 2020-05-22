@@ -64,13 +64,16 @@ def stmts_from_json(json_in, on_missing_support='handle'):
     return stmts
 
 
-def stmts_from_json_file(fname):
+def stmts_from_json_file(fname, format='json'):
     """Return a list of statements loaded from a JSON file.
 
     Parameters
     ----------
     fname : str
         Path to the JSON file to load statements from.
+    format : Optional[str]
+        One of 'json' to assume regular JSON formatting or
+        'jsonl' assuming each statement is on a new line.
 
     Returns
     -------
@@ -78,10 +81,14 @@ def stmts_from_json_file(fname):
         The list of INDRA Statements loaded from the JSOn file.
     """
     with open(fname, 'r') as fh:
-        return stmts_from_json(json.load(fh))
+        if format == 'json':
+            return stmts_from_json(json.load(fh))
+        else:
+            return stmts_from_json([json.loads(line)
+                                    for line in fh.readlines()])
 
 
-def stmts_to_json_file(stmts, fname, **kwargs):
+def stmts_to_json_file(stmts, fname, format='json', **kwargs):
     """Serialize a list of INDRA Statements into a JSON file.
 
     Parameters
@@ -90,9 +97,18 @@ def stmts_to_json_file(stmts, fname, **kwargs):
         The list of INDRA Statements to serialize into the JSON file.
     fname : str
         Path to the JSON file to serialize Statements into.
+    format : Optional[str]
+        One of 'json' to use regular JSON with indent=1 formatting or
+        'jsonl' to put each statement on a new line without indents.
     """
+    sj = stmts_to_json(stmts, **kwargs)
     with open(fname, 'w') as fh:
-        json.dump(stmts_to_json(stmts, **kwargs), fh, indent=1)
+        if format == 'json':
+            json.dump(sj, fh, indent=1)
+        else:
+            for json_stmt in sj:
+                json.dump(json_stmt, fh)
+                fh.write('\n')
 
 
 def stmts_to_json(stmts_in, use_sbo=False, matches_fun=None):

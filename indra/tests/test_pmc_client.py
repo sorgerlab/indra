@@ -109,3 +109,11 @@ def test_extract_text():
     assert text is not None
     assert 'RAS VS BRAF ONCOGENES AND TARGETED THERAPIES' in text
     assert unicode_strs(text)
+
+
+@attr('webservice')
+def test_extract_text2():
+    xml_str = '<article><body><p><p>some text</p>a</p></body></article>'
+    text = pmc_client.extract_text(xml_str)
+    assert text == 'a\nsome text\n'
+    assert unicode_strs(text)

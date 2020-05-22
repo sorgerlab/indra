@@ -20,6 +20,10 @@ class EnglishAssembler(object):
         A list of INDRA Statements to assemble.
     model : str
         The assembled sentences as a single string.
+    stmt_agents : list[list[AgentWithCoordinates]]
+        A list containing lists of AgentWithCoordinates objects for each of
+        the assembled statements. Coordinates represent the location of
+        agents in the model.
     """
     def __init__(self, stmts=None):
         if stmts is None:
@@ -27,6 +31,7 @@ class EnglishAssembler(object):
         else:
             self.statements = stmts
         self.model = None
+        self.stmt_agents = []
 
     def add_statements(self, stmts):
         """Add INDRA Statements to the assembler's list of statements.
@@ -50,46 +55,212 @@ class EnglishAssembler(object):
             periods at the end.
         """
         stmt_strs = []
+        # Keep track of current length of the model text.
+        text_length = 0
         for stmt in self.statements:
+            sb = None
+            # Get a SentenceBuilder object per statement
             if isinstance(stmt, ist.Modification):
-                stmt_strs.append(_assemble_modification(stmt))
+                sb = _assemble_modification(stmt)
             elif isinstance(stmt, ist.Autophosphorylation):
-                stmt_strs.append(_assemble_autophosphorylation(stmt))
+                sb = _assemble_autophosphorylation(stmt)
             elif isinstance(stmt, ist.Association):
-                stmt_strs.append(_assemble_association(stmt))
+                sb = _assemble_association(stmt)
             elif isinstance(stmt, ist.Complex):
-                stmt_strs.append(_assemble_complex(stmt))
+                sb = _assemble_complex(stmt)
             elif isinstance(stmt, ist.Influence):
-                stmt_strs.append(_assemble_influence(stmt))
+                sb = _assemble_influence(stmt)
             elif isinstance(stmt, ist.RegulateActivity):
-                stmt_strs.append(_assemble_regulate_activity(stmt))
+                sb = _assemble_regulate_activity(stmt)
             elif isinstance(stmt, ist.RegulateAmount):
-                stmt_strs.append(_assemble_regulate_amount(stmt))
+                sb = _assemble_regulate_amount(stmt)
             elif isinstance(stmt, ist.ActiveForm):
-                stmt_strs.append(_assemble_activeform(stmt))
+                sb = _assemble_activeform(stmt)
             elif isinstance(stmt, ist.Translocation):
-                stmt_strs.append(_assemble_translocation(stmt))
+                sb = _assemble_translocation(stmt)
             elif isinstance(stmt, ist.Gef):
-                stmt_strs.append(_assemble_gef(stmt))
+                sb = _assemble_gef(stmt)
             elif isinstance(stmt, ist.Gap):
-                stmt_strs.append(_assemble_gap(stmt))
+                sb = _assemble_gap(stmt)
             elif isinstance(stmt, ist.Conversion):
-                stmt_strs.append(_assemble_conversion(stmt))
+                sb = _assemble_conversion(stmt)
             else:
                 logger.warning('Unhandled statement type: %s.' % type(stmt))
+            if sb:
+                stmt_strs.append(sb.sentence)
+                # If this is not the first sentence, the agents coordinates
+                # should be updated
+                for ag in sb.agents:
+                    ag.update_coords(text_length)
+                self.stmt_agents.append(sb.agents)
+                # Update the length of the text by adding the length of the new
+                # sentence and a space.
+                text_length += (len(sb.sentence) + 1)
+            else:
+                # If sentence wasn't built, add empty list of agents to keep
+                # consistent structure with statements.
+                self.stmt_agents.append([])
         if stmt_strs:
             return ' '.join(stmt_strs)
         else:
             return ''
 
 
+class AgentWithCoordinates():
+    """English representation of an agent.
+
+    Parameters
+    ----------
+    agent_str : str
+        Full English description of an agent.
+    name : str
+        Name of an agent.
+    db_refs : dict
+        Dictionary of database identifiers associated with this agent.
+    coords : tuple(int)
+        A tuple of integers representing coordinates of agent name in a text.
+        If not provided, coords will be set to coordinates of name in
+        agent_str. When AgentWithCoordinates is a part of SentenceBuilder or
+        EnglishAssembler, the coords represent the location of agent name in
+        the SentenceBuilder.sentence or EnglishAssembler.model.
+    """
+    def __init__(self, agent_str, name, db_refs, coords=None):
+        self.agent_str = agent_str
+        self.name = name
+        self.db_refs = db_refs
+        self.coords = coords if coords else (
+            agent_str.find(name), agent_str.find(name) + len(name))
+
+    def update_coords(self, shift_by):
+        """Update coordinates by shifting them by a given number of characters.
+
+        Parameters
+        ----------
+        shift_by : int
+            How many characters to shift the parameters by.
+        """
+        current_coords = self.coords
+        self.coords = (current_coords[0] + shift_by,
+                       current_coords[1] + shift_by)
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return 'AgentWithCoordinates(%s (%s), coords=%s)' % (
+            self.agent_str, self.name, self.coords)
+
+
+class SentenceBuilder():
+    """Builds a sentence from agents and strings.
+
+    Attributes
+    ----------
+    agents : list[AgentWithCoordinates]
+        A list of AgentWithCoordinates objects that are part of a sentence.
+        The coordinates of the agent name are being dynamically updated as the
+        sentence is being constructed.
+    sentence : str
+        A sentence that is being built by the builder.
+    """
+    def __init__(self):
+        self.agents = []
+        self.sentence = ''
+
+    def append(self, element):
+        """Append an element to the end of the sentence.
+
+        Parameters
+        ----------
+        element : str or AgentWithCoordinates
+            A string or AgentWithCoordinates object to be appended in the end
+            of the sentence. Agent's name coordinates are updated relative to
+            the current length of the sentence.
+        """
+        if isinstance(element, str):
+            self.sentence += element
+        elif isinstance(element, AgentWithCoordinates):
+            element.update_coords(len(self.sentence))
+            self.sentence += element.agent_str
+            self.agents.append(element)
+
+    def prepend(self, element):
+        """Prepend an element to the beginning of the sentence.
+
+        Parameters
+        ----------
+        element : str or AgentWithCoordinates
+            A string or AgentWithCoordinates object to be added in the
+            beginning of the sentence. All existing agents' names coordinates
+            are updated relative to the new length of the sentence.
+        """
+        current_sentence = self.sentence
+        if isinstance(element, str):
+            self.sentence = element + current_sentence
+            for ag in self.agents:
+                ag.update_coords(len(element))
+        elif isinstance(element, AgentWithCoordinates):
+            self.sentence = element.agent_str + ' ' + current_sentence
+            for ag in self.agents:
+                ag.update_coords(len(element.agent_str) + 1)
+            self.agents.insert(0, element)
+
+    def append_as_list(self, lst, oxford=True):
+        """Append a list of elements in a gramatically correct way.
+
+        Parameters
+        ----------
+        lst : list[str] or list[AgentWithCoordinates]
+            A list of elements to append. Elements in this list represent a
+            sequence and grammar standards require the use of appropriate
+            punctuation and conjunction to connect them (e.g. [ag1, ag2, ag3]).
+        oxford : Optional[bool]
+            Whether to use oxford grammar standards. Default: True
+        """
+        if len(lst) > 2:
+            for el in lst[:-1]:
+                self.append(el)
+                self.append(', ')
+            if oxford:
+                self.append(',')
+            self.append(' and ')
+            self.append(lst[-1])
+        elif len(lst) == 2:
+            self.append(lst[0])
+            self.append(' and ')
+            self.append(lst[1])
+        elif len(lst) == 1:
+            self.append(lst[0])
+
+    def append_as_sentence(self, lst):
+        """Append a list of elements by concatenating them together.
+
+        Note: a list of elements here are parts of sentence that do not
+        represent a sequence and do not need to have extra punctuation or
+        conjunction between them.
+
+        Parameters
+        ----------
+        lst : list[str] or list[AgentWithCoordinates]
+            A list of elements to append. Elements in this list do not
+            represent a sequence and do not need to have extra punctuation or
+            conjunction between them (e.g. [subj, ' is a GAP for ', obj]).
+        """
+        for el in lst:
+            self.append(el)
+
+    def make_sentence(self):
+        """After the parts of a sentence are joined, create a sentence."""
+        self.sentence = _make_sentence(self.sentence)
+
+
 def _assemble_agent_str(agent):
-    """Assemble an Agent object to text."""
+    """Assemble an Agent object to AgentWithCoordinates object."""
     agent_str = agent.name
 
     # Only do the more detailed assembly for molecular agents
     if not isinstance(agent, ist.Agent):
-        return agent_str
+        return AgentWithCoordinates(agent_str, agent.name, agent.db_refs)
 
     # Handle mutation conditions
     if agent.mutations:
@@ -117,13 +288,13 @@ def _assemble_agent_str(agent):
         agent_str += ' in the ' + agent.location
 
     if not agent.mods and not agent.bound_conditions and not agent.activity:
-        return agent_str
+        return AgentWithCoordinates(agent_str, agent.name, agent.db_refs)
 
     # Handle bound conditions
     bound_to = [bc.agent.name for bc in
                 agent.bound_conditions if bc.is_bound]
     not_bound_to = [bc.agent.name for bc in
-                agent.bound_conditions if not bc.is_bound]
+                    agent.bound_conditions if not bc.is_bound]
     if bound_to:
         agent_str += ' bound to ' + _join_list(bound_to)
         if not_bound_to:
@@ -163,7 +334,6 @@ def _assemble_agent_str(agent):
                     mod_lst.append(m.residue + m.position)
             agent_str += _join_list(mod_lst)
 
-
     # Handle activity conditions
     if agent.activity is not None:
         # Get the modifier specific to the activity type, if any
@@ -179,7 +349,7 @@ def _assemble_agent_str(agent):
             prefix = pre_prefix + 'inactive'
         agent_str = prefix + ' ' + agent_str
 
-    return agent_str
+    return AgentWithCoordinates(agent_str, agent.name, agent.db_refs)
 
 
 def english_join(lst):
@@ -200,7 +370,7 @@ def english_join(lst):
 
 
 def _join_list(lst, oxford=True):
-    """Join a list of words in a gramatically correct way."""
+    """Join a list of words in a grammatically correct way."""
     if len(lst) > 2:
         s = ', '.join(lst[:-1])
         if oxford:
@@ -216,188 +386,230 @@ def _join_list(lst, oxford=True):
 
 
 def _assemble_activeform(stmt):
-    """Assemble ActiveForm statements into text."""
+    """Assemble ActiveForm statements into SentenceBuilder object."""
     subj_str = _assemble_agent_str(stmt.agent)
+    sb = SentenceBuilder()
+    sb.append(subj_str)
     if stmt.is_active:
         is_active_str = 'active'
     else:
         is_active_str = 'inactive'
     if stmt.activity == 'activity':
-        stmt_str = subj_str + ' is ' + is_active_str
+        sb.append(' is ')
     elif stmt.activity == 'kinase':
-        stmt_str = subj_str + ' is kinase-' + is_active_str
+        sb.append(' is kinase-')
     elif stmt.activity == 'phosphatase':
-        stmt_str = subj_str + ' is phosphatase-' + is_active_str
+        sb.append(' is phosphatase-')
     elif stmt.activity == 'catalytic':
-        stmt_str = subj_str + ' is catalytically ' + is_active_str
+        sb.append(' is catalytically ')
     elif stmt.activity == 'transcription':
-        stmt_str = subj_str + ' is transcriptionally ' + is_active_str
+        sb.append(' is transcriptionally ')
     elif stmt.activity == 'gtpbound':
-        stmt_str = subj_str + ' is GTP-bound ' + is_active_str
-    return _make_sentence(stmt_str)
+        sb.append(' is GTP-bound ')
+    sb.append(is_active_str)
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_modification(stmt):
-    """Assemble Modification statements into text."""
+    """Assemble Modification statements into SentenceBuilder object."""
     sub_str = _assemble_agent_str(stmt.sub)
+    sb = SentenceBuilder()
     if stmt.enz is not None:
         enz_str = _assemble_agent_str(stmt.enz)
         if _get_is_direct(stmt):
             mod_str = ' ' + _mod_process_verb(stmt) + ' '
         else:
             mod_str = ' leads to the ' + _mod_process_noun(stmt) + ' of '
-        stmt_str = enz_str + mod_str + sub_str
+        sb.append_as_sentence([enz_str, mod_str, sub_str])
     else:
-        stmt_str = sub_str + ' is ' + _mod_state_stmt(stmt)
+        sb.append_as_sentence([sub_str, ' is ', _mod_state_stmt(stmt)])
 
     if stmt.residue is not None:
         if stmt.position is None:
-            mod_str = 'on ' + ist.amino_acids[stmt.residue]['full_name']
+            mod_str = ' on ' + ist.amino_acids[stmt.residue]['full_name']
         else:
-            mod_str = 'on ' + stmt.residue + stmt.position
+            mod_str = ' on ' + stmt.residue + stmt.position
     elif stmt.position is not None:
-        mod_str = 'at position %s' % stmt.position
+        mod_str = ' at position %s' % stmt.position
     else:
         mod_str = ''
-    stmt_str += ' ' + mod_str
-    return _make_sentence(stmt_str)
+    sb.append(mod_str)
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_association(stmt):
-    """Assemble Association statements into text."""
+    """Assemble Association statements into SentenceBuilder object."""
     member_strs = [_assemble_agent_str(m.concept) for m in stmt.members]
-    stmt_str = member_strs[0] + ' is associated with ' + \
-        _join_list(member_strs[1:])
-    return _make_sentence(stmt_str)
+    sb = SentenceBuilder()
+    sb.append(member_strs[0])
+    sb.append(' is associated with ')
+    sb.append_as_list(member_strs[1:])
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_complex(stmt):
-    """Assemble Complex statements into text."""
+    """Assemble Complex statements into SentenceBuilder object."""
     member_strs = [_assemble_agent_str(m) for m in stmt.members]
-    stmt_str = member_strs[0] + ' binds ' + _join_list(member_strs[1:])
-    return _make_sentence(stmt_str)
+    sb = SentenceBuilder()
+    sb.append(member_strs[0])
+    sb.append(' binds ')
+    sb.append_as_list(member_strs[1:])
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_autophosphorylation(stmt):
-    """Assemble Autophosphorylation statements into text."""
+    """Assemble Autophosphorylation statements into SentenceBuilder object."""
     enz_str = _assemble_agent_str(stmt.enz)
-    stmt_str = enz_str + ' phosphorylates itself'
+    sb = SentenceBuilder()
+    sb.append(enz_str)
+    sb.append(' phosphorylates itself')
     if stmt.residue is not None:
         if stmt.position is None:
-            mod_str = 'on ' + ist.amino_acids[stmt.residue]['full_name']
+            mod_str = ' on ' + ist.amino_acids[stmt.residue]['full_name']
         else:
-            mod_str = 'on ' + stmt.residue + stmt.position
+            mod_str = ' on ' + stmt.residue + stmt.position
     else:
         mod_str = ''
-    stmt_str += ' ' + mod_str
-    return _make_sentence(stmt_str)
+    sb.append(mod_str)
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_regulate_activity(stmt):
-    """Assemble RegulateActivity statements into text."""
+    """Assemble RegulateActivity statements into SentenceBuilder object."""
     subj_str = _assemble_agent_str(stmt.subj)
     obj_str = _assemble_agent_str(stmt.obj)
     if stmt.is_activation:
         rel_str = ' activates '
     else:
         rel_str = ' inhibits '
-    stmt_str = subj_str + rel_str + obj_str
-    return _make_sentence(stmt_str)
+    sb = SentenceBuilder()
+    sb.append_as_sentence([subj_str, rel_str, obj_str])
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_regulate_amount(stmt):
-    """Assemble RegulateAmount statements into text."""
+    """Assemble RegulateAmount statements into SentenceBuilder object."""
     obj_str = _assemble_agent_str(stmt.obj)
+    sb = SentenceBuilder()
     if stmt.subj is not None:
         subj_str = _assemble_agent_str(stmt.subj)
         if isinstance(stmt, ist.IncreaseAmount):
             rel_str = ' increases the amount of '
         elif isinstance(stmt, ist.DecreaseAmount):
             rel_str = ' decreases the amount of '
-        stmt_str = subj_str + rel_str + obj_str
+        sb.append_as_sentence([subj_str, rel_str, obj_str])
     else:
+        sb.append(obj_str)
         if isinstance(stmt, ist.IncreaseAmount):
-            stmt_str = obj_str + ' is produced'
+            sb.append(' is produced')
         elif isinstance(stmt, ist.DecreaseAmount):
-            stmt_str = obj_str + ' is degraded'
-    return _make_sentence(stmt_str)
+            sb.append(' is degraded')
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_translocation(stmt):
-    """Assemble Translocation statements into text."""
+    """Assemble Translocation statements into SentenceBuilder object."""
     agent_str = _assemble_agent_str(stmt.agent)
-    stmt_str = agent_str + ' translocates'
+    sb = SentenceBuilder()
+    sb.append_as_sentence([agent_str, ' translocates'])
     if stmt.from_location is not None:
-        stmt_str += ' from the ' + stmt.from_location
+        sb.append_as_sentence([' from the ', stmt.from_location])
     if stmt.to_location is not None:
-        stmt_str += ' to the ' + stmt.to_location
-    return _make_sentence(stmt_str)
+        sb.append_as_sentence([' to the ', stmt.to_location])
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_gap(stmt):
-    """Assemble Gap statements into text."""
+    """Assemble Gap statements into SentenceBuilder object."""
     subj_str = _assemble_agent_str(stmt.gap)
     obj_str = _assemble_agent_str(stmt.ras)
-    stmt_str = subj_str + ' is a GAP for ' + obj_str
-    return _make_sentence(stmt_str)
+    sb = SentenceBuilder()
+    sb.append_as_sentence([subj_str, ' is a GAP for ', obj_str])
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_gef(stmt):
-    """Assemble Gef statements into text."""
+    """Assemble Gef statements into SentenceBuilder object."""
     subj_str = _assemble_agent_str(stmt.gef)
     obj_str = _assemble_agent_str(stmt.ras)
-    stmt_str = subj_str + ' is a GEF for ' + obj_str
-    return _make_sentence(stmt_str)
+    sb = SentenceBuilder()
+    sb.append_as_sentence([subj_str, ' is a GEF for ', obj_str])
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_conversion(stmt):
-    """Assemble a Conversion statement into text."""
-    reactants = _join_list([_assemble_agent_str(r) for r in stmt.obj_from])
-    products = _join_list([_assemble_agent_str(r) for r in stmt.obj_to])
-
+    """Assemble a Conversion statement into SentenceBuilder object."""
+    reactants = [_assemble_agent_str(r) for r in stmt.obj_from]
+    products = [_assemble_agent_str(r) for r in stmt.obj_to]
+    sb = SentenceBuilder()
     if stmt.subj is not None:
         subj_str = _assemble_agent_str(stmt.subj)
-        stmt_str = '%s catalyzes the conversion of %s into %s' % \
-            (subj_str, reactants, products)
+        sb.append(subj_str)
+        sb.append(' catalyzes the conversion of ')
+        sb.append_as_list(reactants)
+        sb.append(' into ')
+        sb.append_as_list(products)
     else:
-        stmt_str = '%s is converted into %s' % (reactants, products)
-    return _make_sentence(stmt_str)
+        sb.append_as_list(reactants)
+        sb.append(' is converted into ')
+        sb.append_as_list(products)
+    sb.make_sentence()
+    return sb
 
 
 def _assemble_influence(stmt):
-    """Assemble an Influence statement into text."""
+    """Assemble an Influence statement into SentenceBuilder object."""
     subj_str = _assemble_agent_str(stmt.subj.concept)
     obj_str = _assemble_agent_str(stmt.obj.concept)
 
+    sb = SentenceBuilder()
     # Note that n is prepended to increase to make it "an increase"
     if stmt.subj.delta.polarity is not None:
         subj_delta_str = ' decrease' if stmt.subj.delta.polarity == -1 \
             else 'n increase'
-        subj_str = 'a%s in %s' % (subj_delta_str, subj_str)
+        sb.append_as_sentence(['a', subj_delta_str, ' in ', subj_str])
+    else:
+        sb.append(subj_str)
+
+    sb.append(' causes ')
 
     if stmt.obj.delta.polarity is not None:
         obj_delta_str = ' decrease' if stmt.obj.delta.polarity == -1 \
             else 'n increase'
-        obj_str = 'a%s in %s' % (obj_delta_str, obj_str)
+        sb.append_as_sentence(['a', obj_delta_str, ' in ', obj_str])
+    else:
+        sb.append(obj_str)
 
-    stmt_str = '%s causes %s' % (subj_str, obj_str)
-    return _make_sentence(stmt_str)
+    sb.make_sentence()
+    return sb
 
 
 def _make_sentence(txt):
     """Make a sentence from a piece of text."""
-    #Make sure first letter is capitalized
+    # Make sure first letter is capitalized
     txt = txt.strip(' ')
     txt = txt[0].upper() + txt[1:] + '.'
     return txt
 
 
 def _get_is_direct(stmt):
-    '''Returns true if there is evidence that the statement is a direct
-    interaction. If any of the evidences associated with the statement
-    indicates a direct interatcion then we assume the interaction
+    """Return True if there is any evidence that the statement is direct.
+
+    If any of the evidences associated with the statement
+    indicates a direct interaction then we assume the interaction
     is direct. If there is no evidence for the interaction being indirect
-    then we default to direct.'''
+    then we default to direct.
+    """
     any_indirect = False
     for ev in stmt.evidence:
         if ev.epistemics.get('direct') is True:
@@ -412,10 +624,12 @@ def _get_is_direct(stmt):
 
 
 def _get_is_hypothesis(stmt):
-    """Returns true if there is evidence that the statement is only
-    hypothetical. If all of the evidences associated with the statement
+    """Return True if there is only evidence that the statement is hypothetical.
+
+    If all of the evidences associated with the statement
     indicate a hypothetical interaction then we assume the interaction
-    is hypothetical."""
+    is hypothetical.
+    """
     for ev in stmt.evidence:
         if not ev.epistemics.get('hypothesis') is True:
             return True

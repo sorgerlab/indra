@@ -13,7 +13,7 @@ from os.path import abspath, dirname, join
 from jinja2 import Environment, FileSystemLoader
 
 from indra.statements import *
-from indra.assemblers.english import EnglishAssembler
+from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.databases import get_identifiers_url
 from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_sort_key
@@ -290,7 +290,7 @@ class HtmlAssembler(object):
                         if isinstance(dbid, set):
                             logger.info("Removing %s from top level refs "
                                         "due to multiple matches: %s"
-                                           % (dbn, dbid))
+                                        % (dbn, dbid))
                             del ag.db_refs[dbn]
                 tl_label = make_top_level_label_from_names_key(tlg['names'])
                 tl_label = re.sub("<b>(.*?)</b>", r"\1", tl_label)
@@ -369,7 +369,7 @@ class HtmlAssembler(object):
             fh.write(self.model.encode('utf-8'))
 
 
-def _format_evidence_text(stmt, curation_dict=None):
+def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
     """Returns evidence metadata with highlighted evidence text.
 
     Parameters
@@ -388,6 +388,8 @@ def _format_evidence_text(stmt, curation_dict=None):
     """
     if curation_dict is None:
         curation_dict = {}
+    if correct_tags is None:
+        correct_tags = ['correct']
 
     def get_role(ag_ix):
         if isinstance(stmt, Complex) or \
@@ -404,10 +406,10 @@ def _format_evidence_text(stmt, curation_dict=None):
     for ix, ev in enumerate(stmt.evidence):
         # Expand the source api to include the sub-database
         if ev.source_api == 'biopax' and \
-           'source_sub_id' in ev.annotations and \
-           ev.annotations['source_sub_id']:
-           source_api = '%s:%s' % (ev.source_api,
-                                   ev.annotations['source_sub_id'])
+                'source_sub_id' in ev.annotations and \
+                ev.annotations['source_sub_id']:
+            source_api = '%s:%s' % (ev.source_api,
+                                    ev.annotations['source_sub_id'])
         else:
             source_api = ev.source_api
         # Prepare the evidence text
@@ -436,18 +438,24 @@ def _format_evidence_text(stmt, curation_dict=None):
                 # Build up a set of indices
                 indices += [(m.start(), m.start() + len(ag_text),
                              ag_text, tag_start, tag_close)
-                             for m in re.finditer(re.escape(ag_text),
-                                                  ev.text)]
+                            for m in re.finditer(re.escape(ag_text), ev.text)]
             format_text = tag_text(ev.text, indices)
 
         curation_key = (stmt.get_hash(), ev.source_hash)
-        num_curations = len(curation_dict.get(curation_key, []))
+        curations = curation_dict.get(curation_key, [])
+        num_curations = len(curations)
+        num_correct = len(
+            [cur for cur in curations if cur['error_type'] in correct_tags])
+        num_incorrect = num_curations - num_correct
         ev_list.append({'source_api': source_api,
                         'pmid': ev.pmid,
                         'text_refs': ev.text_refs,
                         'text': format_text,
                         'source_hash': str(ev.source_hash),
-                        'num_curations': num_curations})
+                        'num_curations': num_curations,
+                        'num_correct': num_correct,
+                        'num_incorrect': num_incorrect
+                        })
 
     return ev_list
 
@@ -458,7 +466,8 @@ def _format_stmt_text(stmt):
     english = ea.make_model()
     if not english:
         english = str(stmt)
-    return tag_agents(english, stmt.agent_list())
+        return tag_agents(english, stmt.agent_list())
+    return tag_agents(english, ea.stmt_agents[0])
 
 
 def _cautiously_merge_refs(from_ag, to_ag):
@@ -479,6 +488,7 @@ def _cautiously_merge_refs(from_ag, to_ag):
 
 
 def tag_agents(english, agents):
+    # Agents can be AgentWithCoordinates (preferred) or regular Agent objects
     indices = []
     for ag in agents:
         if ag is None or not ag.name:
@@ -489,16 +499,22 @@ def tag_agents(english, agents):
         # Build up a set of indices
         tag_start = "<a href='%s' target='_blank'>" % url
         tag_close = "</a>"
-        found = False
-        for m in re.finditer(re.escape(ag.name), english):
-            index = (m.start(), m.start() + len(ag.name), ag.name,
-                     tag_start, tag_close)
+        # If coordinates are passed, use them. Otherwise, try to find agent
+        # names in english text
+        if isinstance(ag, AgentWithCoordinates):
+            index = (ag.coords[0], ag.coords[1], ag.name, tag_start, tag_close)
             indices.append(index)
-            found = True
-        if not found and \
-                english.startswith(re.escape(ag.name).capitalize()):
-            index = (0, len(ag.name), ag.name, tag_start, tag_close)
-            indices.append(index)
+        elif isinstance(ag, Agent):
+            found = False
+            for m in re.finditer(re.escape(ag.name), english):
+                index = (m.start(), m.start() + len(ag.name), ag.name,
+                         tag_start, tag_close)
+                indices.append(index)
+                found = True
+            if not found and \
+                    english.startswith(re.escape(ag.name).capitalize()):
+                index = (0, len(ag.name), ag.name, tag_start, tag_close)
+                indices.append(index)
     return tag_text(english, indices)
 
 
@@ -510,7 +526,7 @@ def id_url(ag):
                     'IP', 'PF', 'NXPFA',
                     'MIRBASEM', 'MIRBASE',
                     'NCIT',
-                    'UN', 'HUME', 'CWMS', 'SOFIA'):
+                    'WM', 'UN', 'HUME', 'CWMS', 'SOFIA'):
         if db_name in ag.db_refs:
             # Handle a special case where a list of IDs is given
             if isinstance(ag.db_refs[db_name], list):
@@ -518,7 +534,7 @@ def id_url(ag):
                 if db_name == 'CHEBI':
                     if not db_id.startswith('CHEBI'):
                         db_id = 'CHEBI:%s' % db_id
-                elif db_name in ('UN', 'HUME'):
+                elif db_name in ('UN', 'WM', 'HUME'):
                     db_id = db_id[0]
             else:
                 db_id = ag.db_refs[db_name]
@@ -574,6 +590,9 @@ def tag_text(text, tag_info_list):
     format_text = ''
     start_pos = 0
     for i, j, ag_text, tag_start, tag_close in tag_info_list:
+        # Capitalize if it's the beginning of a sentence
+        if i == 0:
+            ag_text = ag_text[0].upper() + ag_text[1:]
         # Add the text before this agent, if any
         format_text += text[start_pos:i]
         # Add wrapper for this entity

@@ -249,7 +249,11 @@ def fix_json_stmt(json_stmt):
                     loc = None
                 else:
                     loc = go_client.get_valid_location(loc)
-                json_stmt[loc_param] = loc
+                    if not loc:
+                        loc = None
+            else:
+                loc = None
+            json_stmt[loc_param] = loc
         # Skip Translocation with both locations None
         if (json_stmt.get('from_location') is None
                 and json_stmt.get('to_location') is None):

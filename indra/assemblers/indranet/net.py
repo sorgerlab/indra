@@ -50,10 +50,14 @@ class IndraNet(nx.MultiDiGraph):
             A :py:class:`pandas.DataFrame` with each row containing node and
             edge data for one edge. Indices are used to distinguish
             multiedges between a pair of nodes. Any columns not part of the
-            mandatory columns are considered extra attributes. Columns
-            starting with 'agA\_' or 'agB\_' (excluding the agA/B_name) will
-            be added to its respective nodes as node attributes. Any other
+            below mentioned mandatory columns are considered extra attributes.
+            Columns starting with 'agA\_' or 'agB\_' (excluding the agA/B_name)
+            will be added to its respective nodes as node attributes. Any other
             columns will be added as edge attributes.
+
+            Mandatory columns are : `agA_name`, `agB_name`, `agA_ns`, `agA_id`,
+            `agB_ns`, `agB_id`, `stmt_type`, `evidence_count`, `stmt_hash`,
+            `belief` and `source_counts`.
 
         Returns
         -------
@@ -163,7 +167,7 @@ class IndraNet(nx.MultiDiGraph):
             as positive edges and Inhibition and DecreaseAmount are added as
             negative edges, but a user can pass any other Statement types in
             a dictionary.
-        flattening_method : str|function(G, edge)
+        flattening_method : str or function(networkx.DiGraph, edge)
             The method to use when updating the belief for the flattened edge.
 
             If a string is provided, it must be one of the predefined options
@@ -179,7 +183,7 @@ class IndraNet(nx.MultiDiGraph):
             ...         for s in G.edges[edge]['statements']]
             ...     return sum(all_beliefs)/len(all_beliefs)
 
-        weight_mapping : function(G)
+        weight_mapping : function(networkx.DiGraph)
             A function taking at least the graph G as an argument and
             returning G after adding edge weights as an edge attribute to the
             flattened edges using the reserved keyword 'weight'.
@@ -222,7 +226,23 @@ class IndraNet(nx.MultiDiGraph):
 
     @classmethod
     def digraph_from_df(cls, df, flattening_method=None, weight_mapping=None):
-        """Create a digraph from a pandas DataFrame."""
+        """Create a digraph from a pandas DataFrame.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The dataframe to build the graph from.
+        flattening_method : str or function(networkx.DiGraph, edge)
+            The method to use when updating the belief for the flattened edge.
+        weight_mapping : function(networkx.DiGraph)
+            A function taking at least the graph G as an argument and
+            returning G after adding edge weights as an edge attribute to the
+            flattened edges using the reserved keyword 'weight'.
+
+        Returns
+        -------
+        IndraNet(nx.DiGraph)
+             An IndraNet graph flattened to a DiGraph"""
         net = cls.from_df(df)
         return net.to_digraph(flattening_method=flattening_method,
                               weight_mapping=weight_mapping)
@@ -230,7 +250,30 @@ class IndraNet(nx.MultiDiGraph):
     @classmethod
     def signed_from_df(cls, df, sign_dict=None, flattening_method=None,
                        weight_mapping=None):
-        """Create a signed graph from a pandas DataFrame."""
+        """Create a signed graph from a pandas DataFrame.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The dataframe to build the signed graph from.
+        sign_dict : dict
+            A dictionary mapping a Statement type to a sign to be used for
+            the edge. By default only Activation and IncreaseAmount are added
+            as positive edges and Inhibition and DecreaseAmount are added as
+            negative edges, but a user can pass any other Statement types in
+            a dictionary.
+        flattening_method : str or function(networkx.DiGraph, edge)
+            The method to use when updating the belief for the flattened edge.
+        weight_mapping : function(networkx.DiGraph)
+            A function taking at least the graph G as an argument and
+            returning G after adding edge weights as an edge attribute to the
+            flattened edges using the reserved keyword 'weight'.
+
+        Returns
+        -------
+        IndraNet(nx.MultiDiGraph)
+            An IndraNet graph flattened to a signed graph
+        """
         net = cls.from_df(df)
         return net.to_signed_graph(sign_dict=sign_dict,
                                    flattening_method=flattening_method,

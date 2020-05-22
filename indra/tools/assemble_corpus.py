@@ -141,6 +141,13 @@ def map_grounding(stmts_in, **kwargs):
                          use_adeft=kwargs.get('use_adeft', True),
                          gilda_mode=kwargs.get('gilda_mode', None))
     stmts_out = gm.map_stmts(stmts_in, do_rename=do_rename)
+    # Patch wrong locations in Translocation statements
+    for stmt in stmts_out:
+        if isinstance(stmt, Translocation):
+            if not stmt.from_location:
+                stmt.from_location = None
+            if not stmt.to_location:
+                stmt.to_location = None
     dump_pkl = kwargs.get('save')
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
@@ -1767,18 +1774,48 @@ def filter_by_curation(stmts_in, curations, incorrect_policy='any',
     # not intersect.
     correct = {c.pa_hash for c in curations if c.tag in correct_tags}
     incorrect = {c.pa_hash for c in curations if c.pa_hash not in correct}
+    # Store evidence level curations for overall correct statements
+    correct_stmt_evid = {}
+    for c in curations:
+        if c.pa_hash in correct:
+            if c.pa_hash not in correct_stmt_evid:
+                correct_stmt_evid[c.pa_hash] = defaultdict(set)
+            if c.tag in correct_tags:
+                correct_stmt_evid[c.pa_hash]['correct'].add(c.source_hash)
+            else:
+                correct_stmt_evid[c.pa_hash]['incorrect'].add(c.source_hash)
     stmts_out = []
     logger.info('Filtering %d statements with %s incorrect curations...' %
                 (len(stmts_in), incorrect_policy))
+
+    def _is_incorrect(stmt_hash, evid_hash):
+        # Evidence is incorrect if it was only curated as incorrect
+        if evid_hash in correct_stmt_evid[stmt_hash]['incorrect'] and \
+                evid_hash not in correct_stmt_evid[stmt_hash]['correct']:
+            return True
+        return False
+
+    def process_and_append(stmt, stmt_list):
+        # Filter out incorrect evidences for correct statements
+        if stmt.get_hash() in correct_stmt_evid:
+            evidence = []
+            for evid in stmt.evidence:
+                if _is_incorrect(stmt.get_hash(), evid.get_source_hash()):
+                    continue
+                else:
+                    evidence.append(evid)
+            stmt.evidence = evidence
+        # Set belief to one for statements with correct curations
+        if update_belief and stmt.get_hash() in correct:
+            stmt.belief = 1
+        stmt_list.append(stmt)
+
     if incorrect_policy == 'any':
         # Filter statements that have SOME incorrect and NO correct curations
         # (i.e. their hashes are in incorrect set)
         for stmt in stmts_in:
             if stmt.get_hash() not in incorrect:
-                stmts_out.append(stmt)
-            # Set belief to one for statements with correct curations
-            if update_belief and stmt.get_hash() in correct:
-                stmt.belief = 1
+                process_and_append(stmt, stmts_out)
     elif incorrect_policy == 'all':
         # Filter out statements in which ALL evidences are curated
         # as incorrect.
@@ -1795,10 +1832,7 @@ def filter_by_curation(stmts_in, curations, incorrect_policy='any',
                     incorrect_stmt_evid[stmt.get_hash()]):
                 continue
             else:
-                stmts_out.append(stmt)
-            # Set belief to one for statements with correct curations
-            if update_belief and stmt.get_hash() in correct:
-                stmt.belief = 1
+                process_and_append(stmt, stmts_out)
     logger.info('%d statements after filter...' % len(stmts_out))
     return stmts_out
 
