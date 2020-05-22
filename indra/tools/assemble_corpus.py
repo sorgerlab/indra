@@ -1493,7 +1493,6 @@ def filter_inconsequential_acts(stmts_in, whitelist=None, **kwargs):
     return stmts_out
 
 
-@register_pipeline
 def get_unreachable_mods(stmts_in):
     mods_set = {}
     for stmt in stmts_in:
