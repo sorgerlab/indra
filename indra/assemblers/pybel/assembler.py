@@ -377,30 +377,34 @@ class PybelAssembler(object):
 
 def belgraph_to_signed_graph(
         belgraph, include_variants=True, symmetric_variant_links=False,
-        include_components=True, symmetric_component_links=False):
+        include_components=True, symmetric_component_links=False,
+        propagate_annotations=False):
     edge_set = set()
     for u, v, edge_data in belgraph.edges(data=True):
         rel = edge_data.get('relation')
+        pos_edge = \
+            (u, v, ('sign', 0)) + \
+            tuple((k, v)
+                  for k, v in edge_data.get('annotations', {}).items()) \
+            if propagate_annotations else (u, v, ('sign', 0))
+        rev_pos_edge = (pos_edge[1], pos_edge[0], pos_edge[2:])
         if rel in pc.CAUSAL_INCREASE_RELATIONS:
-            edge_set.add((u, v, 0))
+            edge_set.add(pos_edge)
         elif rel in pc.HAS_VARIANT and include_variants:
-            edge_set.add((u, v, 0))
+            edge_set.add(pos_edge)
             if symmetric_variant_links:
-                edge_set.add((v, u, 0))
+                edge_set.add(rev_pos_edge)
         elif rel in pc.PART_OF and include_components:
-            edge_set.add((u, v, 0))
+            edge_set.add(pos_edge)
             if symmetric_component_links:
-                edge_set.add((v, u, 0))
+                edge_set.add(rev_pos_edge)
         elif rel in pc.CAUSAL_DECREASE_RELATIONS:
-            edge_set.add((u, v, 1))
+            edge_set.add((pos_edge[0], pos_edge[1], ('sign', 1), pos_edge[3:]))
         else:
             continue
-    # Turn the tuples into dicts
+
     graph = nx.MultiDiGraph()
-    graph.add_edges_from(
-        (u, v, dict(sign=sign))
-        for u, v, sign in edge_set
-    )
+    graph.add_edges_from((t[0], t[1], dict(t[2:])) for t in edge_set)
     return graph
 
 
