@@ -1,3 +1,5 @@
+__all__ = ['shortest_simple_paths', 'bfs_search', 'find_sources',
+           'get_path_iter']
 import logging
 from collections import deque
 from copy import deepcopy
@@ -7,7 +9,7 @@ import networkx.algorithms.simple_paths as simple_paths
 from networkx.classes.reportviews import NodeView, OutEdgeView, \
     OutMultiEdgeView
 
-from indra.explanation.pathfinding.util import get_sorted_neighbors
+from .util import get_sorted_neighbors
 
 logger = logging.getLogger(__name__)
 

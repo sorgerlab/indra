@@ -5,7 +5,7 @@ from copy import deepcopy
 import numpy as np
 import networkx as nx
 
-from indra.explanation.pathfinding.pathfinding import get_path_iter, find_sources
+from indra.explanation.pathfinding import get_path_iter, find_sources
 
 try:
     import paths_graph as pg
