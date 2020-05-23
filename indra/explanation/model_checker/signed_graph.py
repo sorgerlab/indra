@@ -3,7 +3,6 @@ from . import ModelChecker
 from indra.statements import *
 from .model_checker import signed_edges_to_signed_nodes
 
-
 logger = logging.getLogger(__name__)
 
 

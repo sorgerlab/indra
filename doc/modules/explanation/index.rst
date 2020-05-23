@@ -4,3 +4,4 @@ Explanation (:py:mod:`indra.explanation`)
    :maxdepth: 3
 
    model_checker
+   pathfinding

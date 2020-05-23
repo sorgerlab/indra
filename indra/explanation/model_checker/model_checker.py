@@ -1,11 +1,11 @@
 import logging
 import textwrap
-import itertools
-from collections import deque
 from copy import deepcopy
 
 import numpy as np
 import networkx as nx
+
+from indra.explanation.pathfinding import get_path_iter, find_sources
 
 try:
     import paths_graph as pg
@@ -320,7 +320,7 @@ class ModelChecker(object):
         path_lengths = []
         path_metrics = []
         sources = []
-        for source, path_length in self._find_sources(target, input_set):
+        for source, path_length in find_sources(self.graph, target, input_set):
             # Path already includes an edge from targets to common target, so
             # we need to subtract one edge. In case of loops, we are
             # already missing one edge, there's no need to subtract one more.
@@ -379,67 +379,6 @@ class ModelChecker(object):
             return PathResult(False, 'NO_PATHS_FOUND',
                               max_paths, max_path_length)
 
-    def _find_sources(self, target, sources):
-        """Get the set of source nodes with paths to the target.
-
-        Given a common target and  a list of sources (or None if test statement
-        subject is None), perform a breadth-first search upstream from the
-        target to determine whether there are any sources that have paths to
-        the target. For efficiency, does not return the full path,
-        but identifies the upstream sources and the length of the path.
-
-        Parameters
-        ----------
-        target : tuple
-            The node (usually common target node) in the graph to start
-            looking upstream for matching sources.
-        sources : list[tuple]
-            Signed nodes corresponding to the subject or upstream influence
-            being checked.
-
-        Returns
-        -------
-        generator of (source, path_length)
-            Yields tuples of source node (tuple of string and sign) and path
-            length (int). If there are no paths to any of the given source
-            nodes, the generator is empty.
-        """
-        # First, create a list of visited nodes
-        # Adapted from
-        # networkx.algorithms.traversal.breadth_first_search.bfs_edges
-        visited = set([target])
-        # Generate list of predecessor nodes with a sign updated according to
-        # the sign of the target node
-
-        # The queue holds tuples of "parents" (in this case downstream nodes)
-        # and their "children" (in this case their upstream influencers)
-        queue = deque([(target, self.graph.predecessors(target), 0)])
-        while queue:
-            parent, children, path_length = queue[0]
-            try:
-                # Get the next child in the list
-                child = next(children)
-                # Is this child one of the source nodes we're looking for? If
-                # so, yield it along with path length.
-                # Also make sure that found source is positive
-                if (sources is None or child in sources) and child[1] == 0:
-                    logger.debug("Found path to %s from %s with length %d"
-                                 % (target, child, path_length+1))
-                    yield (child, path_length+1)
-                # Check this child against the visited list. If we haven't
-                # visited it already (accounting for the path to the node),
-                # then add it to the queue.
-                if child not in visited:
-                    visited.add(child)
-                    queue.append(
-                        (child, self.graph.predecessors(child), path_length + 1))
-            # Once we've finished iterating over the children of the current
-            # node, pop the node off and go to the next one in the queue
-            except StopIteration:
-                queue.popleft()
-        # There was no path; this will produce an empty generator
-        return
-
     def make_false_result(self, result_code, max_paths, max_path_length):
         return PathResult(False, result_code, max_paths, max_path_length)
 
@@ -484,24 +423,6 @@ class ModelChecker(object):
     def _sample_paths(self, input_set, obj_name, target_polarity,
                       max_paths=1, max_path_length=5):
         raise NotImplementedError("Method must be implemented in child class.")
-
-
-def get_path_iter(graph, source, target, path_length, loop):
-    """Return a generator of paths with path_length cutoff from source to target."""
-    path_iter = nx.all_simple_paths(graph, source, target, path_length)
-    try:
-        for p in path_iter:
-            path = deepcopy(p)
-            # Remove common target from a path.
-            path.remove(target)
-            if loop:
-                path.append(path[0])
-            # A path should contain at least one edge
-            if len(path) < 2:
-                continue
-            yield path
-    except nx.NetworkXNoPath:
-        pass
 
 
 def signed_edges_to_signed_nodes(graph, prune_nodes=True,
