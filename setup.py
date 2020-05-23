@@ -61,6 +61,7 @@ def main():
                     'indra.belief',
                     'indra.benchmarks', 'indra.databases',
                     'indra.explanation', 'indra.explanation.model_checker',
+                    'indra.explanation.pathfinding',
                     'indra.literature', 'indra.mechlinker',
                     'indra.pipeline',
                     'indra.preassembler',
