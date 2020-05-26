@@ -466,7 +466,6 @@ def run_preassembly(stmts_in, **kwargs):
     return stmts_out
 
 
-@register_pipeline
 def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
     """Run deduplication stage of preassembly on a list of statements.
 
@@ -495,7 +494,6 @@ def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
     return stmts_out
 
 
-@register_pipeline
 def run_preassembly_related(preassembler, beliefengine, **kwargs):
     """Run related stage of preassembly on a list of statements.
 
