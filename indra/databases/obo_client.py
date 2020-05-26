@@ -130,9 +130,11 @@ class OboClient:
 
             synonyms = []
             for synonym in data.get('synonym', []):
-                match = re.match(r'^\"(.+)\" (EXACT|RELATED|NARROW|BROAD)',
+                match = re.match(r'^\"(.+)\" (EXACT|RELATED|NARROW|BROAD|\[\])',
                                  synonym)
                 syn, status = match.groups()
+                if status == '[]':
+                    status = 'EXACT'
                 if status in allowed_synonyms:
                     synonyms.append(syn)
 
