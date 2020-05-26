@@ -3,6 +3,7 @@ __all__ = ['process_pc_neighborhood', 'process_pc_pathsbetween',
            'process_model']
 
 import itertools
+from pybiopax import model_from_owl_file, model_from_owl_str
 from . import pathway_commons_client as pcc
 from .processor import BiopaxProcessor
 
@@ -158,9 +159,7 @@ def process_owl(owl_filename):
     bp : BiopaxProcessor
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
-    model = pcc.owl_to_model(owl_filename)
-    if model is None:
-        return None
+    model = model_from_owl_file(owl_filename)
     return process_model(model)
 
 
@@ -177,7 +176,7 @@ def process_owl_str(owl_str):
     bp : BiopaxProcessor
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
-    model = pcc.owl_str_to_model(owl_str)
+    model = model_from_owl_str(owl_str)
     return process_model(model)
 
 
@@ -196,6 +195,7 @@ def process_model(model):
     """
     bp = BiopaxProcessor(model)
     bp.get_modifications()
+    '''
     bp.get_regulate_activities()
     bp.get_regulate_amounts()
     bp.get_activity_modification()
@@ -203,5 +203,6 @@ def process_model(model):
     bp.get_gap()
     bp.get_conversions()
     # bp.get_complexes()
+    '''
     bp.eliminate_exact_duplicates()
     return bp
