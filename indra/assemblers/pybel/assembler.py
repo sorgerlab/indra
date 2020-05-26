@@ -387,7 +387,8 @@ def belgraph_to_signed_graph(
             tuple((k, v)
                   for k, v in edge_data.get('annotations', {}).items()) \
             if propagate_annotations else (u, v, ('sign', 0))
-        rev_pos_edge = (pos_edge[1], pos_edge[0], pos_edge[2:])
+        # Unpack tuple pairs at indices >1 or they'll be in nested tuples
+        rev_pos_edge = (pos_edge[1], pos_edge[0], *pos_edge[2:])
         if rel in pc.CAUSAL_INCREASE_RELATIONS:
             edge_set.add(pos_edge)
         elif rel in pc.HAS_VARIANT and include_variants:
@@ -399,7 +400,9 @@ def belgraph_to_signed_graph(
             if symmetric_component_links:
                 edge_set.add(rev_pos_edge)
         elif rel in pc.CAUSAL_DECREASE_RELATIONS:
-            edge_set.add((pos_edge[0], pos_edge[1], ('sign', 1), pos_edge[3:]))
+            # Unpack tuples
+            edge_set.add((pos_edge[0], pos_edge[1],
+                          ('sign', 1), *pos_edge[3:]))
         else:
             continue
 
