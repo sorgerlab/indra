@@ -815,22 +815,26 @@ def test_filter_by_curation():
     any_incorrect_one_cur = _post_stmts_preassembly(
         stmts_in, route, curations=[cur1], incorrect_policy='any')
     assert len(any_incorrect_one_cur) == 2
-    assert not any([new_st1.equals(st) for st in any_incorrect_one_cur])
+    assert not any(
+        [new_st1.get_hash() == st.get_hash() for st in any_incorrect_one_cur])
     # With 'all' policy all evidences have to be curated
     all_incorrect_one_cur = _post_stmts_preassembly(
         stmts_in, route, curations=[cur1], incorrect_policy='all')
     assert len(all_incorrect_one_cur) == 3, len(all_incorrect_one_cur)
-    assert any([new_st1.equals(st) for st in all_incorrect_one_cur])
+    assert any(
+        [new_st1.get_hash() == st.get_hash() for st in all_incorrect_one_cur])
     all_incorrect_two_cur = _post_stmts_preassembly(
         stmts_in, route, curations=[cur1, cur2], incorrect_policy='all')
     assert len(all_incorrect_two_cur) == 2
-    assert not any([new_st1.equals(st) for st in all_incorrect_two_cur])
+    assert not any(
+        [new_st1.get_hash() == st.get_hash() for st in all_incorrect_two_cur])
     # Correct curation cancels out incorrect
     correct_incorrect = _post_stmts_preassembly(
         stmts_in, route, curations=[cur1, cur2, cur3, cur4],
         incorrect_policy='all', update_belief=False)
     assert len(correct_incorrect) == 3, len(correct_incorrect)
-    assert any([new_st1.equals(st) for st in correct_incorrect])
+    assert any(
+        [new_st1.get_hash() == st.get_hash() for st in correct_incorrect])
     assert all(st.belief != 1 for st in correct_incorrect)
     # Optionally update belief to 1 for correct curation
     new_belief = _post_stmts_preassembly(
