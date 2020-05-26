@@ -1,10 +1,8 @@
-import pickle
-import requests
+import json
 from datetime import datetime
 from copy import deepcopy
-from collections import namedtuple
+from rest_api.flask_api import api
 from indra.statements import *
-# from indra.tools import assemble_corpus as ac
 from indra.preassembler.hierarchy_manager import get_wm_hierarchies
 
 
@@ -62,8 +60,9 @@ st3.belief = 0.7
 
 
 def _call_api(method, route, *args, **kwargs):
+    tc = api.app.test_client()
     route = route.lstrip('/')
-    req_meth = getattr(requests, method)
+    req_meth = getattr(tc, method)
     start = datetime.now()
     print("Submitting request to '%s' at %s." % ('/' + route, start))
     print("\targs:", args)
@@ -82,8 +81,9 @@ def _post_stmts_preassembly(stmts, route, **kwargs):
     if kwargs:
         req_json.update(kwargs)
     res = _call_api('post', route, json=req_json)
-    assert 'statements' in res.json()
-    st_out = stmts_from_json(res.json().get('statements'))
+    res_json = json.loads(res.get_data())
+    assert 'statements' in res_json
+    st_out = stmts_from_json(res_json.get('statements'))
     return st_out
 
 
