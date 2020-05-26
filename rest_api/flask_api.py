@@ -2,7 +2,7 @@ import argparse
 import inspect
 from collections import namedtuple
 from flask import Flask, request
-from flask_restx import Api, Resource, reqparse, Namespace, inputs
+from flask_restx import Api, Resource, Namespace, inputs, fields
 from indra.pipeline import AssemblyPipeline, pipeline_functions
 from indra.tools.assemble_corpus import *
 from indra.statements import stmts_from_json, get_statement_by_name
@@ -19,8 +19,7 @@ list_args = [
     'gene_list', 'name_list', 'values', 'source_apis', 'uuids', 'curations',
     'correct_tags', 'ignores']
 dict_args = [
-    'grounding_map', 'misgrounding_map', 'hierarchies', 'whitelist',
-    'mutations']
+    'grounding_map', 'misgrounding_map', 'whitelist', 'mutations', 'kwargs']
 float_args = ['score_threshold', 'belief_cutoff']
 int_args = ['poolsize', 'size_cutoff']
 app = Flask(__name__)
@@ -37,22 +36,6 @@ def _return_stmts(stmts):
     else:
         res = {'statements': []}
     return res
-
-
-def add_arg_to_parser(arg, parser):
-    if arg in list_args:
-        dtype = list
-    elif arg in boolean_args:
-        dtype = inputs.boolean
-    elif arg in int_args:
-        dtype = int
-    elif arg in float_args:
-        dtype = float
-    elif arg in dict_args:
-        dtype = dict
-    else:
-        dtype = str
-    parser.add_argument(arg, type=dtype, location='json')
 
 
 class PreassembleStatements(Resource):
@@ -88,20 +71,55 @@ class PreassembleStatements(Resource):
         return _return_stmts(stmts_out)
 
 
+stmt_model = api.model('Statement', {})
+stmts_model = api.model('Statements', {
+    'statements': fields.List(fields.Nested(stmt_model))
+})
+cur_model = api.model('Curation', {})
+cur_dict = api.model('dict', {'cur': fields.Nested(cur_model)})
+
+
+def make_preassembly_model(func):
+    args = inspect.signature(func).parameters
+    if len(args) == 1 and ('stmts_in' in args or 'stmts' in args):
+        return stmts_model
+    model_fields = {}
+    for arg in args:
+        if arg != 'stmts_in' and arg != 'stmts' and arg != 'kwargs':
+            example = None
+            if args[arg].default is not inspect.Parameter.empty:
+                example = args[arg].default
+            if arg in boolean_args:
+                model_fields[arg] = fields.Boolean(example=example)
+            elif arg in int_args:
+                model_fields[arg] = fields.Integer(example=example)
+            elif arg in float_args:
+                model_fields[arg] = fields.Float(example=example)
+            elif arg in list_args:
+                if arg == 'curations':
+                    model_fields[arg] = fields.List(fields.Nested(cur_model))
+                else:
+                    model_fields[arg] = fields.List(
+                        fields.String, example=example)
+            elif arg in dict_args:
+                item_model = api.model(arg, {})
+                model_fields[arg] = fields.Nested(item_model, example=example)
+            else:
+                model_fields[arg] = fields.String(example=example)
+    new_model = api.inherit(
+        ('%s_input' % func.__name__), stmts_model, model_fields)
+    return new_model
+
+
 for func_name, func in pipeline_functions.items():
     if func.__module__ == 'indra.tools.assemble_corpus':
         doc = ''
         if func.__doc__:
             doc = func.__doc__.split('\n')[0]
-        parser = reqparse.RequestParser()
-        parser.add_argument('statements', type=list, location='json')
-        for arg in inspect.getargspec(func).args:
-            if arg != 'stmts_in':
-                add_arg_to_parser(arg, parser)
-        parsers[func_name] = parser
 
-        @preassembly.expect(parsers[func_name])
-        @preassembly.route(f'/{func_name}', doc={'description': doc})
+        new_model = make_preassembly_model(func)
+        @preassembly.expect(new_model)
+        @preassembly.route(('/%s' % func_name), doc={'description': doc})
         class NewFunction(PreassembleStatements):
             func_name = func_name
 
