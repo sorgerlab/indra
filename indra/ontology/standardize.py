@@ -3,7 +3,7 @@ __all__ = ['standardize_agent_name', 'standardize_db_refs']
 import logging
 from copy import deepcopy
 from collections import defaultdict
-from indra.statements.agent import default_ns_order
+from indra.statements.agent import default_ns_order, get_grounding
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +72,43 @@ def standardize_db_refs(db_refs,
     return db_refs
 
 
+def standardize_name_db_refs(db_refs, prioritize=default_prioritize,
+                             ontology=None):
+    db_refs = standardize_db_refs(db_refs, prioritize=prioritize,
+                                  ontology=ontology)
+    name = get_standard_name(db_refs)
+    return name, db_refs
+
+
+def get_standard_name(db_refs, ontology=None):
+    if ontology is None:
+        from indra.ontology.bio import bio_ontology
+        ontology = bio_ontology
+
+    # We next look for prioritized grounding, if missing, we return
+    db_ns, db_id = get_grounding(db_refs)
+
+    # If there's no grounding then we can't do more to standardize the
+    # name and return
+    if not db_ns or not db_id:
+        return None
+
+    # If there is grounding available, we can try to get the standardized name
+    # and in the rare case that we don't get it, we don't set it.
+    standard_name = ontology.get_name(db_ns, db_id)
+    # Handle special case with UPPRO, if we can't get a feature name
+    # we fall back on regular gene/protein naming
+    if not standard_name and db_ns == 'UPPRO':
+        db_ns, db_id = get_grounding(ns_order=['HGNC', 'UP'])
+        if not db_ns or not db_id:
+            return None
+        standard_name = ontology.get_name(db_ns, db_id)
+    if not standard_name:
+        return None
+
+    return standard_name
+
+
 def standardize_agent_name(agent, standardize_refs=True, ontology=None):
     """Standardize the name of an Agent based on grounding information.
 
@@ -101,37 +138,12 @@ def standardize_agent_name(agent, standardize_refs=True, ontology=None):
     bool
         True if a new name was set, False otherwise.
     """
-    if ontology is None:
-        from indra.ontology.bio import bio_ontology
-        ontology = bio_ontology
-
-    # We return immediately for None Agents
     if agent is None:
         return False
-
     if standardize_refs:
         agent.db_refs = standardize_db_refs(agent.db_refs, ontology=ontology)
-
-    # We next look for prioritized grounding, if missing, we return
-    db_ns, db_id = agent.get_grounding()
-
-    # If there's no grounding then we can't do more to standardize the
-    # name and return
-    if not db_ns or not db_id:
-        return False
-
-    # If there is grounding available, we can try to get the standardized name
-    # and in the rare case that we don't get it, we don't set it.
-    standard_name = ontology.get_name(db_ns, db_id)
-    # Handle special case with UPPRO, if we can't get a feature name
-    # we fall back on regular gene/protein naming
-    if not standard_name and db_ns == 'UPPRO':
-        db_ns, db_id = agent.get_grounding(ns_order=['HGNC', 'UP'])
-        if not db_ns or not db_id:
-            return False
-        standard_name = ontology.get_name(db_ns, db_id)
-    if not standard_name:
-        return False
-
-    agent.name = standard_name
-    return True
+    standard_name = get_standard_name(agent.db_refs, ontology=ontology)
+    if standard_name:
+        agent.name = standard_name
+        return True
+    return False
