@@ -10,6 +10,41 @@ from indra.belief.wm_scorer import get_eidos_scorer
 from indra.preassembler.custom_preassembly import *
 
 
+# Create Flask app, api, namespaces, and models
+app = Flask(__name__)
+api = Api(app, title='INDRA REST API', description='REST API for INDRA webservice')
+
+preassembly = Namespace('Preassembly', path='/preassembly/')
+sofia = Namespace('Sofia', path='/sofia/')
+eidos = Namespace('Eidos', path='/eidos/')
+hume = Namespace('Hume', path='/hume/')
+bel = Namespace('BEL', path='/bel/')
+trips = Namespace('TRIPS', path='/trips/')
+reach = Namespace('REACH', path='/reach/')
+cwms = Namespace('CWMS', path='/cwms/')
+biopax = Namespace('BioPAX', path='/biopax/')
+assemblers = Namespace('Assemblers', path='/assemblers/')
+api.add_namespace(preassembly)
+api.add_namespace(sofia)
+api.add_namespace(eidos)
+api.add_namespace(hume)
+api.add_namespace(bel)
+api.add_namespace(trips)
+api.add_namespace(reach)
+api.add_namespace(cwms)
+api.add_namespace(biopax)
+api.add_namespace(assemblers)
+
+stmt_model = api.model('Statement', {})
+stmts_model = api.model('Statements', {
+    'statements': fields.List(fields.Nested(stmt_model))
+})
+cur_model = api.model('Curation', {})
+cur_dict = api.model('dict', {'cur': fields.Nested(cur_model)})
+
+# Store the arguments by type
+int_args = ['poolsize', 'size_cutoff']
+float_args = ['score_threshold', 'belief_cutoff']
 boolean_args = [
     'do_rename', 'use_adeft', 'do_methionine_offset', 'do_orthology_mapping',
     'do_isoform_mapping', 'use_cache', 'return_toplevel', 'flatten_evidence',
@@ -17,16 +52,9 @@ boolean_args = [
     'specific_only', 'allow_families', 'match_suffix', 'update_belief']
 list_args = [
     'gene_list', 'name_list', 'values', 'source_apis', 'uuids', 'curations',
-    'correct_tags', 'ignores']
+    'correct_tags', 'ignores', 'deletions']
 dict_args = [
-    'grounding_map', 'misgrounding_map', 'whitelist', 'mutations', 'kwargs']
-float_args = ['score_threshold', 'belief_cutoff']
-int_args = ['poolsize', 'size_cutoff']
-app = Flask(__name__)
-api = Api(app, title='INDRA REST API')
-preassembly = Namespace('preassembly', path='/preassembly/')
-api.add_namespace(preassembly)
-parsers = {}
+    'grounding_map', 'misgrounding_map', 'whitelist', 'mutations']
 
 
 def _return_stmts(stmts):
@@ -38,7 +66,18 @@ def _return_stmts(stmts):
     return res
 
 
+def _stmts_from_proc(proc):
+    if proc and proc.statements:
+        stmts = stmts_to_json(proc.statements)
+        res = {'statements': stmts}
+    else:
+        res = {'statements': []}
+    return res
+
+
+# Create Resources in Preassembly Namespace
 class PreassembleStatements(Resource):
+    """Parent Resource for Preassembly resources."""
     func_name = None
 
     def process_args(self, args_json):
@@ -66,23 +105,20 @@ class PreassembleStatements(Resource):
     def post(self):
         args = self.process_args(request.json)
         stmts = stmts_from_json(args.pop('statements'))
-        print(args)
         stmts_out = pipeline_functions[self.func_name](stmts, **args)
         return _return_stmts(stmts_out)
 
 
-stmt_model = api.model('Statement', {})
-stmts_model = api.model('Statements', {
-    'statements': fields.List(fields.Nested(stmt_model))
-})
-cur_model = api.model('Curation', {})
-cur_dict = api.model('dict', {'cur': fields.Nested(cur_model)})
-
-
 def make_preassembly_model(func):
+    """Create new Flask model with function arguments."""
     args = inspect.signature(func).parameters
-    if len(args) == 1 and ('stmts_in' in args or 'stmts' in args):
+    # We can reuse Staetments model if only stmts_in or stmts and **kwargs are
+    # arguments of the function
+    if ((len(args) == 1 and ('stmts_in' in args or 'stmts' in args)) or
+            (len(args) == 2 and 'kwargs' in args and
+                ('stmts_in' in args or 'stmts' in args))):
         return stmts_model
+    # Inherit a model if there are other arguments
     model_fields = {}
     for arg in args:
         if arg != 'stmts_in' and arg != 'stmts' and arg != 'kwargs':
@@ -111,13 +147,16 @@ def make_preassembly_model(func):
     return new_model
 
 
+# Create resources for each of assembly_corpus functions
 for func_name, func in pipeline_functions.items():
     if func.__module__ == 'indra.tools.assemble_corpus':
         doc = ''
+        # Get the function description from docstring
         if func.__doc__:
             doc = func.__doc__.split('\n')[0]
 
         new_model = make_preassembly_model(func)
+
         @preassembly.expect(new_model)
         @preassembly.route(('/%s' % func_name), doc={'description': doc})
         class NewFunction(PreassembleStatements):
