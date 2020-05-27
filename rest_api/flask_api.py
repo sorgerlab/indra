@@ -138,26 +138,25 @@ def make_preassembly_model(func):
     model_fields = {}
     for arg in args:
         if arg != 'stmts_in' and arg != 'stmts' and arg != 'kwargs':
-            example = None
+            default = None
             if args[arg].default is not inspect.Parameter.empty:
-                example = args[arg].default
+                default = args[arg].default
             if arg in boolean_args:
-                model_fields[arg] = fields.Boolean(example=example)
+                model_fields[arg] = fields.Boolean(default=default)
             elif arg in int_args:
-                model_fields[arg] = fields.Integer(example=example)
+                model_fields[arg] = fields.Integer(default=default)
             elif arg in float_args:
-                model_fields[arg] = fields.Float(example=example)
+                model_fields[arg] = fields.Float(default=default)
             elif arg in list_args:
                 if arg == 'curations':
-                    model_fields[arg] = fields.List(fields.Nested(cur_model))
+                    model_fields[arg] = fields.List(fields.Nested(dict_model))
                 else:
                     model_fields[arg] = fields.List(
-                        fields.String, example=example)
+                        fields.String, default=default)
             elif arg in dict_args:
-                item_model = api.model(arg, {})
-                model_fields[arg] = fields.Nested(item_model, example=example)
+                model_fields[arg] = fields.Nested(dict_model, default=default)
             else:
-                model_fields[arg] = fields.String(example=example)
+                model_fields[arg] = fields.String(default=default)
     new_model = api.inherit(
         ('%s_input' % func.__name__), stmts_model, model_fields)
     return new_model
