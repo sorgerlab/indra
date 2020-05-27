@@ -3,10 +3,26 @@ import inspect
 from collections import namedtuple
 from flask import Flask, request
 from flask_restx import Api, Resource, Namespace, inputs, fields
-from indra.pipeline import AssemblyPipeline, pipeline_functions
-from indra.tools.assemble_corpus import *
+
+from indra import get_config
+from indra.sources import trips, reach, bel, biopax, eidos, hume, cwms, sofia
+from indra.databases import hgnc_client
 from indra.statements import stmts_from_json, get_statement_by_name
+from indra.assemblers.pysb import PysbAssembler
+import indra.assemblers.pysb.assembler as pysb_assembler
+from indra.assemblers.cx import CxAssembler
+from indra.assemblers.graph import GraphAssembler
+from indra.assemblers.cyjs import CyJSAssembler
+from indra.assemblers.sif import SifAssembler
+from indra.assemblers.english import EnglishAssembler
+from indra.tools.assemble_corpus import *
+from indra.databases import cbio_client
+from indra.sources.indra_db_rest import get_statements
+from indra.sources.ndex_cx.api import process_ndex_network
+from indra.sources.reach.api import reach_nxml_url, reach_text_url
 from indra.belief.wm_scorer import get_eidos_scorer
+from indra.preassembler.ontology_mapper import OntologyMapper, wm_ontomap
+from indra.pipeline import AssemblyPipeline, pipeline_functions
 from indra.preassembler.custom_preassembly import *
 
 
