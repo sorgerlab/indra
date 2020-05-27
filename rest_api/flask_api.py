@@ -300,7 +300,7 @@ eidos_text_model = api.inherit('EidosText', wm_text_model, {
     'grounding_ns': fields.String
 })
 jsonld_model = api.model('jsonld', {
-    'jsonld': })
+    'jsonld': fields.Nested(dict_model)})
 
 
 @eidos_ns.expect(eidos_text_model)
