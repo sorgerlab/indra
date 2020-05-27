@@ -16,6 +16,7 @@ from indra.databases import (
     chebi_client, go_client, hgnc_client, mesh_client,
     mirbase_client, uniprot_client, taxonomy_client
 )
+from indra.ontology.standardize import standardize_name_db_refs
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 
 __all__ = [
@@ -607,7 +608,35 @@ def get_db_refs_by_ident(ns, ident, node_data):
         The grounding for the given entity.
 
     """
-    name = node_data.name
+    ns_list = ['HGNC', 'UNIPROT', 'UP', 'FPLX', 'GO', 'GOBP', 'GOCC',
+               'MESHPP', 'MESHD', 'MESH', 'MGI', 'RGD', 'SFAM', 'EGID',
+               'ENTREZ', 'NCBIGENE', 'MIRBASE', 'CHEBI', 'ECCODE' 'SDIS',
+               'SCHEM', 'TEXT', 'DOID', 'EFO', 'HP', 'PFAM', 'ECCODE']
+    ns_mappings = {'UNIPROT': 'UP',
+                   'GOBP': 'GO',
+                   'GOCC': 'GO',
+                   'MESHPP': 'MESH',
+                   'MESHD': 'MESH',
+                   'ENTREZ': 'EGID',
+                   'NCBIGENE': 'EGID'}
+    raw_name = node_data.name
+    if ns in ns_list:
+        mapped_ns = ns_mappings.get(ns, ns)
+        raw_db_refs = {mapped_ns: ident}
+        std_name, std_db_refs = standardize_name_db_refs(raw_db_refs)
+        if std_name is None:
+            std_name = raw_name
+        if std_db_refs is None:
+            std_db_refs = raw_db_refs
+    else:
+        logger.info("Unhandled namespace %s with name %s and "
+                    "identifier %s (%s)." % (ns, raw_name, ident, node_data))
+        std_name = raw_name
+        std_db_refs = None
+    return std_name, std_db_refs
+
+    """
+    return 
     db_refs = None
     if ns == 'HGNC':
         name = hgnc_client.get_hgnc_name(ident)
@@ -620,7 +649,7 @@ def get_db_refs_by_ident(ns, ident, node_data):
         mirbase_id = mirbase_client.get_mirbase_id_from_hgnc_id(ident)
         if mirbase_id:
             db_refs['MIRBASE'] = mirbase_id
-    elif ns == 'UP':
+    elif ns in ('UNIPROT', 'UP'):
         db_refs = {'UP': ident}
         hgnc_id = uniprot_client.get_hgnc_id(ident)
         if hgnc_id:
@@ -630,6 +659,23 @@ def get_db_refs_by_ident(ns, ident, node_data):
             name = uniprot_client.get_gene_name(ident)
             if not name:
                 return None, None
+    elif ns == 'FPLX':
+        db_refs = {'FPLX': name}
+    elif ns in ('GO', 'GOBP', 'GOCC'):
+        db_refs = {'GO': go_id}
+        name = go_client.get_go_label(go_id)
+    elif ns in ('MESHPP', 'MESHD', 'MESH'):
+        db_refs = {'MESH': mesh_id}
+        mesh_id, mesh_name = mesh_client.get_mesh_id_name(name)
+        if not mesh_id:
+            logger.info('Could not find MESH ID from %s' % name)
+            return name, None
+        name = mesh_name
+    # For now, handle MGI/RGD but putting the name into the db_refs so
+    # it's clear what namespace the name belongs to
+    # FIXME: Full implementation would look up MGI/RGD identifiers from
+    # the names, and obtain corresponding Uniprot IDs
+
     elif ns == 'MIRBASE':
         db_refs = {'MIRBASE': ident}
     elif ns in ('MGI', 'RGD', 'CHEBI', 'HMDB', 'MESH', 'FPLX'):
@@ -641,12 +687,13 @@ def get_db_refs_by_ident(ns, ident, node_data):
     elif ns == 'PFAM':
         db_refs = {'PF': ident}
     else:
+        import ipdb; ipdb.set_trace()
         logger.info("Unhandled namespace %s with name %s and "
                     "identifier %s (%s)." % (ns, name,
                                              node_data.identifier,
                                              node_data))
     return name, db_refs
-
+    """
 
 def extract_context(annotations, annot_manager):
     """Return a BioContext object extracted from the annotations.
