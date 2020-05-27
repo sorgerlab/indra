@@ -118,16 +118,7 @@ class Agent(Concept):
             namespace. If no preferred grounding is available, a tuple of
             Nones is returned.
         """
-        if ns_order is None:
-            ns_order = default_ns_order
-        for db_ns in ns_order:
-            db_id = self.db_refs.get(db_ns)
-            if not db_id:
-                continue
-            if isinstance(db_id, (list, tuple)):
-                db_id = db_id[0]
-            return db_ns, db_id
-        return None, None
+        return get_grounding(self.db_refs, ns_order=ns_order)
 
     def isa(self, other, ontology):
         # Get the namespaces for the comparison
@@ -698,3 +689,33 @@ def _aa_short_caps(res):
         return None
     return res_info['short_name'].capitalize()
 
+
+def get_grounding(db_refs, ns_order=None):
+    """Return a tuple of a preferred grounding namespace and ID.
+
+    Parameters
+    ----------
+    db_refs : dict
+        A dict of namespace to ID references associated with an agent.
+    ns_order : list
+        A list of namespaces which are in order of priority. The first
+        matched namespace will be used as the grounding.
+
+    Returns
+    -------
+    tuple
+        A tuple whose first element is a grounding namespace (HGNC,
+        CHEBI, etc.) and the second element is an identifier in the
+        namespace. If no preferred grounding is available, a tuple of
+        Nones is returned.
+    """
+    if ns_order is None:
+        ns_order = default_ns_order
+    for db_ns in ns_order:
+        db_id = db_refs.get(db_ns)
+        if not db_id:
+            continue
+        if isinstance(db_id, (list, tuple)):
+            db_id = db_id[0]
+        return db_ns, db_id
+    return None, None
