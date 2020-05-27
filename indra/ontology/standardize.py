@@ -1,4 +1,5 @@
-__all__ = ['standardize_agent_name', 'standardize_db_refs']
+__all__ = ['standardize_agent_name', 'standardize_db_refs', 'get_standard_name',
+           'standardize_name_db_refs']
 
 import logging
 from copy import deepcopy
