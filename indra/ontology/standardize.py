@@ -9,10 +9,12 @@ from indra.statements.agent import default_ns_order, get_grounding
 logger = logging.getLogger(__name__)
 
 
-ns_priorities = {ns: idx for idx, ns in enumerate(default_ns_order)}
+default_ns_priorities = {ns: idx for idx, ns in enumerate(default_ns_order)}
 
 
-def default_prioritize(ns1, ns2):
+def prioritize(ns1, ns2, ns_order=None):
+    ns_priorities = {ns: idx for idx, ns in enumerate(ns_order)} \
+        if ns_order is not None else default_ns_priorities
     ns1p = ns_priorities.get(ns1)
     ns2p = ns_priorities.get(ns2)
     if ns2p is not None and (ns1p is None or ns2p < ns1p):
@@ -20,15 +22,14 @@ def default_prioritize(ns1, ns2):
     return False
 
 
-def get_mappings_dict(mappings):
+def _get_mappings_dict(mappings):
     md = defaultdict(list)
     for db_ns, db_id in mappings:
         md[db_ns].append(db_id)
     return md
 
 
-def standardize_db_refs(db_refs,
-                        prioritize=default_prioritize, ontology=None):
+def standardize_db_refs(db_refs, ontology=None, ns_order=None):
     """Return a standardized db refs dict for a given db refs dict.
 
     Parameters
@@ -36,13 +37,12 @@ def standardize_db_refs(db_refs,
     db_refs : dict
         A dict of db refs that may not be standardized, i.e., may be
         missing an available UP ID corresponding to an existing HGNC ID.
-    prioritize : function
-        A function which takes two str arguments and returns True
-        if the second should take priority over the first, and False
-        otherwise.
     ontology : Optional[indra.ontology.IndraOntology]
         An IndraOntology object, if not provided, the default BioOntology
         is used.
+    ns_order : Optional[list]
+        A list of namespaces which are in order of priority with higher
+        priority namespaces appearing earlier in the list.
 
     Returns
     -------
@@ -57,7 +57,7 @@ def standardize_db_refs(db_refs,
     for source_db_ns, source_db_id in deepcopy(db_refs).items():
         # For the entry we get all its xref mappings as a list
         # of tuples and turn it into a dict keyed by namespace
-        mappings = get_mappings_dict(
+        mappings = _get_mappings_dict(
             ontology.get_mappings(source_db_ns, source_db_id))
         # We iterate over these mappings and check if they should
         # be applied
@@ -68,26 +68,66 @@ def standardize_db_refs(db_refs,
             # we overwrite it if the source name space is higher
             # priority than the name space being mapped to.
             if mapped_db_ns not in db_refs or \
-                    prioritize(mapped_db_ns, source_db_ns):
+                    prioritize(mapped_db_ns, source_db_ns,
+                               ns_order=ns_order):
                 db_refs[mapped_db_ns] = sorted(mapped_db_ids)[0]
     return db_refs
 
 
-def standardize_name_db_refs(db_refs, prioritize=default_prioritize,
-                             ontology=None):
-    db_refs = standardize_db_refs(db_refs, prioritize=prioritize,
-                                  ontology=ontology)
+def standardize_name_db_refs(db_refs, ontology=None, ns_order=None):
+    """Return a standardized name and db refs dict for a given db refs dict.
+
+    Parameters
+    ----------
+    db_refs : dict
+        A dict of db refs that may not be standardized, i.e., may be
+        missing an available UP ID corresponding to an existing HGNC ID.
+    ontology : Optional[indra.ontology.IndraOntology]
+        An IndraOntology object, if not provided, the default BioOntology
+        is used.
+    ns_order : Optional[list]
+        A list of namespaces which are in order of priority with higher
+        priority namespaces appearing earlier in the list.
+
+    Returns
+    -------
+    str or None
+        The standard name based on the db refs, None if not available.
+    dict
+        The db_refs dict with standardized entries.
+    """
+    db_refs = standardize_db_refs(db_refs, ontology=ontology,
+                                  ns_order=ns_order)
     name = get_standard_name(db_refs)
     return name, db_refs
 
 
-def get_standard_name(db_refs, ontology=None):
+def get_standard_name(db_refs, ontology=None, ns_order=None):
+    """Return a standardized name for a given db refs dict.
+
+    Parameters
+    ----------
+    db_refs : dict
+        A dict of db refs that may not be standardized, i.e., may be
+        missing an available UP ID corresponding to an existing HGNC ID.
+    ontology : Optional[indra.ontology.IndraOntology]
+        An IndraOntology object, if not provided, the default BioOntology
+        is used.
+    ns_order : Optional[list]
+        A list of namespaces which are in order of priority with higher
+        priority namespaces appearing earlier in the list.
+
+    Returns
+    -------
+    str or None
+        The standard name based on the db refs, None if not available.
+    """
     if ontology is None:
         from indra.ontology.bio import bio_ontology
         ontology = bio_ontology
 
     # We next look for prioritized grounding, if missing, we return
-    db_ns, db_id = get_grounding(db_refs)
+    db_ns, db_id = get_grounding(db_refs, ns_order=ns_order)
 
     # If there's no grounding then we can't do more to standardize the
     # name and return
@@ -100,7 +140,7 @@ def get_standard_name(db_refs, ontology=None):
     # Handle special case with UPPRO, if we can't get a feature name
     # we fall back on regular gene/protein naming
     if not standard_name and db_ns == 'UPPRO':
-        db_ns, db_id = get_grounding(ns_order=['HGNC', 'UP'])
+        db_ns, db_id = get_grounding(db_refs, ns_order=['HGNC', 'UP'])
         if not db_ns or not db_id:
             return None
         standard_name = ontology.get_name(db_ns, db_id)
@@ -110,16 +150,12 @@ def get_standard_name(db_refs, ontology=None):
     return standard_name
 
 
-def standardize_agent_name(agent, standardize_refs=True, ontology=None):
+def standardize_agent_name(agent, standardize_refs=True, ontology=None,
+                           ns_order=None):
     """Standardize the name of an Agent based on grounding information.
 
-    If an agent contains a FamPlex grounding, the FamPlex ID is used as a
-    name. Otherwise if it contains a Uniprot ID, an attempt is made to find
-    the associated HGNC gene name. If one can be found it is used as the
-    agent name and the associated HGNC ID is added as an entry to the
-    db_refs. Similarly, CHEBI, MESH and GO IDs are used in this order of
-    priority to assign a standardized name to the Agent. If no relevant
-    IDs are found, the name is not changed.
+    The priority of which namespace is used as the bases for the
+    standard name depends on
 
     Parameters
     ----------
@@ -133,17 +169,25 @@ def standardize_agent_name(agent, standardize_refs=True, ontology=None):
     ontology : Optional[indra.ontology.IndraOntology]
         An IndraOntology object, if not provided, the default BioOntology
         is used.
+    ns_order : Optional[list]
+        A list of namespaces which are in order of priority with higher
+        priority namespaces appearing earlier in the list.
 
     Returns
     -------
     bool
         True if a new name was set, False otherwise.
     """
+    # If the Agent is None, we return immediately
     if agent is None:
         return False
+    # If we want to standardize the Agent's db_refs, we call this now
     if standardize_refs:
         agent.db_refs = standardize_db_refs(agent.db_refs, ontology=ontology)
-    standard_name = get_standard_name(agent.db_refs, ontology=ontology)
+    # We next try to get a standard name based on the Agent's grounding
+    standard_name = get_standard_name(agent.db_refs, ontology=ontology,
+                                      ns_order=ns_order)
+    # If we got a proper standard name, we apply it
     if standard_name:
         agent.name = standard_name
         return True
