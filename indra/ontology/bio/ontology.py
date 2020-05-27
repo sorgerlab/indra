@@ -150,7 +150,7 @@ class BioOntology(IndraOntology):
 
     def add_famplex_xrefs(self):
         edges = []
-        include_refs = {'PF', 'IP', 'GO', 'NCIT'}
+        include_refs = {'PF', 'IP', 'GO', 'NCIT', 'ECCODE', 'HGNC_GROUP'}
         for row in read_unicode_csv(os.path.join(resources, 'famplex',
                                                  'equivalences.csv'),
                                     delimiter=','):
