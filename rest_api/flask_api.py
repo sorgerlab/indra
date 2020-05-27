@@ -51,12 +51,16 @@ api.add_namespace(cwms_ns)
 api.add_namespace(biopax_ns)
 api.add_namespace(assemblers_ns)
 
+# Models that can be inherited and reused in different namespaces
 stmt_model = api.model('Statement', {})
 stmts_model = api.model('Statements', {
     'statements': fields.List(fields.Nested(stmt_model))
 })
-cur_model = api.model('Curation', {})
-cur_dict = api.model('dict', {'cur': fields.Nested(cur_model)})
+dict_model = api.model('dict', {})
+bio_text_model = api.model('BioText', {
+    'text': fields.String(example='GRB2 binds SHC.')})
+wm_text_model = api.model('WMText', {
+    'text': fields.String(example='Rainfall causes floods.')})
 
 # Store the arguments by type
 int_args = ['poolsize', 'size_cutoff']
@@ -172,11 +176,151 @@ for func_name, func in pipeline_functions.items():
 
         new_model = make_preassembly_model(func)
 
-        @preassembly.expect(new_model)
-        @preassembly.route(('/%s' % func_name), doc={'description': doc})
+        @preassembly_ns.expect(new_model)
+        @preassembly_ns.route(('/%s' % func_name), doc={'description': doc})
         class NewFunction(PreassembleStatements):
             func_name = func_name
 
+# Create models and resources for REACH namespace
+reach_text_model = api.inherit('ReachText', bio_text_model, {
+    'offline': fields.Boolean(default=False),
+    'url': fields.String
+})
+reach_json_model = api.model('ReachJSON', {'json': fields.Nested(dict_model)})
+reach_pmc_model = api.model('ReachPMC', {'pmcid': fields.String})
+
+
+@reach_ns.expect(reach_text_model)
+@reach_ns.route('/process_text')
+class ReachProcessText(Resource):
+    def post(self):
+        args = request.json
+        text = args.get('text')
+        offline = True if args.get('offline') else False
+        given_url = args.get('url')
+        config_url = get_config('REACH_TEXT_URL', failure_ok=True)
+        # Order: URL given as an explicit argument in the request. Then any URL
+        # set in the configuration. Then, unless offline is set, use the
+        # default REACH web service URL.
+        if 'url' in args:  # This is to take None if explicitly given
+            url = given_url
+        elif config_url:
+            url = config_url
+        elif not offline:
+            url = reach_text_url
+        else:
+            url = None
+        # If a URL is set, prioritize it over the offline setting
+        if url:
+            offline = False
+        rp = reach.process_text(text, offline=offline, url=url)
+        return _stmts_from_proc(rp)
+
+
+@reach_ns.expect(reach_json_model)
+@reach_ns.route('/process_json')
+class ReachProcessJson(Resource):
+    def post(self):
+        args = request.json
+        json_str = args.get('json')
+        rp = reach.process_json_str(json_str)
+        return _stmts_from_proc(rp)
+
+
+@reach_ns.expect(reach_pmc_model)
+@reach_ns.route('/process_pmc')
+class ReachProcessPmc(Resource):
+    def post(self):
+        args = request.json
+        pmcid = args.get('pmcid')
+        offline = True if args.get('offline') else False
+        given_url = args.get('url')
+        config_url = get_config('REACH_NXML_URL', failure_ok=True)
+        # Order: URL given as an explicit argument in the request. Then any URL
+        # set in the configuration. Then, unless offline is set, use the
+        # default REACH web service URL.
+        if 'url' in args:  # This is to take None if explicitly given
+            url = given_url
+        elif config_url:
+            url = config_url
+        elif not offline:
+            url = reach_nxml_url
+        else:
+            url = None
+        # If a URL is set, prioritize it over the offline setting
+        if url:
+            offline = False
+        rp = reach.process_pmc(pmcid, offline=offline, url=url)
+        return _stmts_from_proc(rp)
+
+
+# Create models and resources for TRIPS namespace
+xml_model = api.model('XML', {'xml_str': fields.String})
+
+
+@trips_ns.expect(bio_text_model)
+@trips_ns.route('/process_text')
+class TripsProcessText(Resource):
+    def post(self):
+        args = request.json
+        text = args.get('text')
+        tp = trips.process_text(text)
+        return _stmts_from_proc(tp)
+
+
+@trips_ns.expect(xml_model)
+@trips_ns.route('/process_xml')
+class TripsProcessText(Resource):
+    def post(self):
+        args = request.json
+        xml_str = args.get('xml_str')
+        tp = trips.process_xml(xml_str)
+        return _stmts_from_proc(tp)
+
+
+# Create models and resources for Sofia namespace
+text_auth_model = api.inherit('TextAuth', wm_text_model, {
+    'auth': fields.List(fields.String, example=['USER', 'PASS'])})
+
+
+@sofia_ns.expect(text_auth_model)
+@sofia_ns.route('/process_text')
+class SofiaProcessText(Resource):
+    def post(self):
+        args = request.json
+        text = args.get('text')
+        auth = args.get('auth')
+        sp = sofia.process_text(text, auth=auth)
+        return _stmts_from_proc(sp)
+
+
+# Create models and resources for Eidos namespace
+eidos_text_model = api.inherit('EidosText', wm_text_model, {
+    'webservice': fields.String,
+    'grounding_ns': fields.String
+})
+jsonld_model = api.model('jsonld', {
+    'jsonld': })
+
+
+@eidos_ns.expect(eidos_text_model)
+@eidos_ns.route('/process_text')
+class EidosProcessText(Resource):
+    def post(self):
+        args = request.json
+        text = args.get('text')
+        webservice = args.get('webservice')
+        grounding_ns = args.get('grounding_ns')
+        # if not webservice:
+        #     response.status = 400
+        #     response.content_type = 'application/json'
+        #     return json.dumps({'error': 'No web service address provided.'})
+        ep = eidos.process_text(text, webservice=webservice,
+                                grounding_ns=grounding_ns)
+        return _stmts_from_proc(ep)
+
+
+# Create models and resources for Hume namespace
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser('Run the INDRA REST API')
