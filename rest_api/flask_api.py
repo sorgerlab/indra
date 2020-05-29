@@ -1,6 +1,8 @@
 import argparse
 import inspect
 import logging
+import json
+import base64
 from collections import namedtuple
 from flask import Flask, request
 from flask_restx import Api, Resource, Namespace, inputs, fields
@@ -36,7 +38,7 @@ app = Flask(__name__)
 api = Api(
     app, title='INDRA REST API', description='REST API for INDRA webservice')
 
-root_ns = Namespace('Root', path='/')
+
 preassembly_ns = Namespace('Preassembly', path='/preassembly/')
 sofia_ns = Namespace('Sofia', path='/sofia/')
 eidos_ns = Namespace('Eidos', path='/eidos/')
@@ -110,11 +112,14 @@ def _stmts_from_proc(proc):
     return res
 
 
-@root_ns.route('/')
-class Root(Resource):
+@api.route('/', '/root')
+class RootResource(Resource):
+    def options(self):
+        return {}
+
     def get(self):
-        return {'This is the INDRA REST API. See documentation at '
-                'http://www.indra.bio/rest_api/docs.'}
+        return ("This is the INDRA REST API. See documentation at "
+                "http://www.indra.bio/rest_api/docs.")
 
 
 # Create Resources in Preassembly Namespace
@@ -257,6 +262,9 @@ class ReachProcessText(Resource):
             offline = False
         rp = reach.process_text(text, offline=offline, url=url)
         return _stmts_from_proc(rp)
+
+    def get(self):
+        return 'test'
 
 
 @reach_ns.expect(reach_json_model)
@@ -535,10 +543,10 @@ class AssembleCyjs(Resource):
         args = request.json
         stmts_json = args.get('statements')
         stmts = stmts_from_json(stmts_json)
-        ga = CyJSAssembler(stmts)
+        cja = CyJSAssembler(stmts)
         cja.make_model(grouping=True)
         model_str = cja.print_cyjs_graph()
-        return model_str
+        return json.loads(model_str)
 
 
 @assemblers_ns.expect(stmts_model)
