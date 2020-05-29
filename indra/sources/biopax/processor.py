@@ -4,11 +4,11 @@ import itertools
 import collections
 import pybiopax.biopax as bp
 from functools import lru_cache
-from collections import defaultdict
+
+from pybiopax import model_to_owl_file
 
 from indra.databases import hgnc_client, uniprot_client, chebi_client
 from indra.statements import *
-from . import pathway_commons_client as pcc
 from indra.util import decode_obj
 
 logger = logging.getLogger(__name__)
@@ -43,32 +43,27 @@ class BiopaxProcessor(object):
     """
     def __init__(self, model):
         self.model = model
-        self.objects_by_class = defaultdict(list)
-        for obj in self.model.objects.values():
-            self.objects_by_class[obj.__class__.__name__].append(obj)
-        self.objects_by_class = dict(self.objects_by_class)
         self.statements = []
 
-    def get_class_objects(self, class_name):
-        return self.objects_by_class.get(class_name, [])
+    def get_class_objects(self, cls):
+        for obj in self.model.objects.values():
+            if isinstance(obj, cls):
+                yield obj
 
     def print_statements(self):
         """Print all INDRA Statements collected by the processors."""
         for i, stmt in enumerate(self.statements):
             print("%s: %s" % (i, stmt))
 
-    def save_model(self, file_name=None):
+    def save_model(self, file_name):
         """Save the BioPAX model object in an OWL file.
 
         Parameters
         ----------
-        file_name : Optional[str]
+        file_name : str
             The name of the OWL file to save the model in.
         """
-        if file_name is None:
-            logger.error('Missing file name')
-            return
-        pcc.model_to_owl(self.model, file_name)
+        model_to_owl_file(self.model, file_name)
 
     def eliminate_exact_duplicates(self):
         """Eliminate Statements that were extracted multiple times.
@@ -84,60 +79,6 @@ class BiopaxProcessor(object):
         self.statements = list({stmt.get_hash(shallow=False, refresh=True): stmt
                                 for stmt in self.statements}.values())
 
-    def get_complexes(self):
-        """Extract INDRA Complex Statements from the BioPAX model.
-
-        This method searches for org.biopax.paxtools.model.level3.Complex
-        objects which represent molecular complexes. It doesn't reuse
-        BioPAX Pattern's org.biopax.paxtools.pattern.PatternBox.inComplexWith
-        query since that retrieves pairs of complex members rather than
-        the full complex.
-        """
-        for obj in self.model.getObjects().toArray():
-            bpe = _cast_biopax_element(obj)
-            if not _is_complex(bpe):
-                continue
-            ev = self._get_evidence(bpe)
-
-            members = self._get_complex_members(bpe)
-            if members is not None:
-                if len(members) > 10:
-                    logger.debug('Skipping complex with more than 10 members.')
-                    continue
-                complexes = _get_combinations(members)
-                for c in complexes:
-                    self.statements.append(decode_obj(Complex(c, ev),
-                                                      encoding='utf-8'))
-
-    def get_modifications(self):
-        """Extract INDRA Modification Statements from the BioPAX model.
-
-        To extract Modifications, this method reuses the structure of
-        BioPAX Pattern's
-        org.biopax.paxtools.pattern.PatternBox.constrolsStateChange pattern
-        with additional constraints to specify the type of state change
-        occurring (phosphorylation, deubiquitination, etc.).
-        """
-        controls = self.get_class_objects('Control')
-        for control in controls:
-            ev = self._get_evidence(control)
-            conversion = control.controlled
-            control_agents = [self._get_agents_from_entity(c) for c in
-                              control.controller]
-            for inp, outp in self.find_matching_left_right(conversion):
-                inp_agents = self._get_agents_from_entity(inp)
-                outp_agents = self._get_agents_from_entity(outp)
-                gained_feats, lost_feats = self.feature_delta(inp, outp)
-                for feat in gained_feats:
-                    if not _is_modification(feat):
-                        continue
-                    mod = self._extract_mod_from_feature(feat)
-                    for enz, sub in itertools.product(_listify(control_agents),
-                                                      _listify(inp_agents)):
-                        stmt = Phosphorylation(enz, sub, mod.residue,
-                                               mod.position, evidence=ev)
-                        self.statements.append(stmt)
-
     @staticmethod
     def find_matching_left_right(conversion):
         matches = []
@@ -152,6 +93,60 @@ class BiopaxProcessor(object):
         gained_feats = set(to_pe.feature) - set(from_pe.feature)
         lost_feats = set(from_pe.feature) - set(to_pe.feature)
         return gained_feats, lost_feats
+
+    def get_complexes(self):
+        """Extract INDRA Complex Statements from the BioPAX model.
+
+        This method searches for org.biopax.paxtools.model.level3.Complex
+        objects which represent molecular complexes. It doesn't reuse
+        BioPAX Pattern's org.biopax.paxtools.pattern.PatternBox.inComplexWith
+        query since that retrieves pairs of complex members rather than
+        the full complex.
+        """
+        complexes = self.get_class_objects(bp.Complex)
+        for bpe in complexes:
+            ev = self._get_evidence(bpe)
+            members = self._get_complex_members(bpe)
+            if members is not None:
+                if len(members) > 10:
+                    logger.debug('Skipping complex with more than 10 members.')
+                    continue
+                complexes = _get_combinations(members)
+                for c in complexes:
+                    self.statements.append(Complex(c, ev))
+
+    def get_modifications(self):
+        """Extract INDRA Modification Statements from the BioPAX model.
+
+        To extract Modifications, this method reuses the structure of
+        BioPAX Pattern's
+        org.biopax.paxtools.pattern.PatternBox.constrolsStateChange pattern
+        with additional constraints to specify the type of state change
+        occurring (phosphorylation, deubiquitination, etc.).
+        """
+        for control in self.get_class_objects(bp.Conversion):
+            ev = self._get_evidence(control)
+            conversion = control.controlled
+            control_agents = [self._get_agents_from_entity(c) for c in
+                              control.controller]
+            for inp, outp in self.find_matching_left_right(conversion):
+                inp_agents = self._get_agents_from_entity(inp)
+                gained_feats, lost_feats = self.feature_delta(inp, outp)
+                for feats, is_gain in zip([gained_feats, True],
+                                          [lost_feats, False]):
+                    for feat in feats:
+                        if not _is_modification(feat):
+                            continue
+                        mod = self._extract_mod_from_feature(feat)
+                        stmt_class = modtype_to_modclass(mod.mod_type)
+                        if not is_gain:
+                            stmt_class = modclass_to_inverse[stmt_class]
+                        for enz, sub in \
+                                itertools.product(_listify(control_agents),
+                                                  _listify(inp_agents)):
+                            stmt = stmt_class(enz, sub, mod.residue,
+                                              mod.position, evidence=ev)
+                            self.statements.append(stmt)
 
     def get_activity_modification(self):
         """Extract INDRA ActiveForm statements from the BioPAX model.
@@ -908,42 +903,37 @@ class BiopaxProcessor(object):
         mf_type = mf.modification_type
         if mf_type is None:
             return None
-        mf_type_terms = mf_type.term
-        known_mf_type = None
-        for t in mf_type_terms:
+        for t in mf_type.term:
             if t.startswith('MOD_RES '):
                 t = t[8:]
             mf_type_indra = _mftype_dict.get(t)
             if mf_type_indra is not None:
-                known_mf_type = mf_type_indra
                 break
-        if not known_mf_type:
+        else:
             logger.debug('Skipping modification with unknown terms: %s' %
-                         ', '.join(mf_type_terms))
+                         ', '.join(mf_type.term))
             return None
 
-        mod_type, residue = known_mf_type
+        mod_type, residue = mf_type_indra
 
         # getFeatureLocation returns SequenceLocation, which is the
         # generic parent class of SequenceSite and SequenceInterval.
         # Here we need to cast to SequenceSite in order to get to
         # the sequence position.
-        mf_pos = mf.feature_location
-        if mf_pos is not None:
+        if mf.feature_location is not None:
             # If it is not a SequenceSite we can't handle it
-            if not isinstance(mf_pos, bp.SequenceSite):
+            if not isinstance(mf.feature_location, bp.SequenceSite):
                 mod_pos = None
             else:
-                mf_site = mf_pos
-                mf_pos_status = mf_site.position_status
+                mf_pos_status = mf.feature_location.position_status
                 if mf_pos_status is None:
                     mod_pos = None
                 elif mf_pos_status and mf_pos_status != 'EQUAL':
                     logger.debug('Modification site position is %s' %
                                  mf_pos_status)
+                    mod_pos = None
                 else:
-                    mod_pos = mf_site.sequence_position
-                    mod_pos = '%s' % mod_pos
+                    mod_pos = str(mf.feature_location.sequence_position)
         else:
             mod_pos = None
         mc = ModCondition(mod_type, residue, mod_pos, True)
@@ -952,29 +942,26 @@ class BiopaxProcessor(object):
     @staticmethod
     def _get_evidence(bpe: bp.PhysicalEntity):
         citations = BiopaxProcessor._get_citations(bpe)
-        source_id = bpe.uid
         if not citations:
             citations = [None]
         epi = {'direct': True}
-        sources = bpe.data_source
         annotations = {}
-        if sources:
-            if len(sources) > 1:
+        if bpe.data_source:
+            if len(bpe.data_source) > 1:
                 logger.warning('More than one data source for %s' % bpe.uri)
-            db_name = sources[0].display_name
+            db_name = bpe.data_source[0].display_name
             if db_name:
                 annotations['source_sub_id'] = db_name.lower()
         ev = [Evidence(source_api='biopax', pmid=cit,
-                       source_id=source_id, epistemics=epi,
+                       source_id=bpe.uid, epistemics=epi,
                        annotations=annotations)
               for cit in citations]
         return ev
 
     @staticmethod
     def _get_citations(bpe: bp.PhysicalEntity):
-        xrefs = bpe.xref
         refs = []
-        for xr in xrefs:
+        for xr in bpe.xref:
             db_name = xr.db
             if db_name is not None and db_name.upper() == 'PUBMED':
                 refs.append(xr.id)
@@ -1064,7 +1051,7 @@ class BiopaxProcessor(object):
             name = bpe.display_name
         else:
             logger.debug('Unhandled entity type %s' %
-                        bpe.__class__.__name__)
+                         bpe.__class__.__name__)
             name = bpe.display_name
 
         return name
