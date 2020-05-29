@@ -1,5 +1,6 @@
 import argparse
 import inspect
+import logging
 from collections import namedtuple
 from flask import Flask, request
 from flask_restx import Api, Resource, Namespace, inputs, fields
@@ -26,10 +27,16 @@ from indra.pipeline import AssemblyPipeline, pipeline_functions
 from indra.preassembler.custom_preassembly import *
 
 
+logger = logging.getLogger('rest_api')
+logger.setLevel(logging.DEBUG)
+
+
 # Create Flask app, api, namespaces, and models
 app = Flask(__name__)
-api = Api(app, title='INDRA REST API', description='REST API for INDRA webservice')
+api = Api(
+    app, title='INDRA REST API', description='REST API for INDRA webservice')
 
+root_ns = Namespace('Root', path='/')
 preassembly_ns = Namespace('Preassembly', path='/preassembly/')
 sofia_ns = Namespace('Sofia', path='/sofia/')
 eidos_ns = Namespace('Eidos', path='/eidos/')
@@ -40,6 +47,9 @@ reach_ns = Namespace('REACH', path='/reach/')
 cwms_ns = Namespace('CWMS', path='/cwms/')
 biopax_ns = Namespace('BioPAX', path='/biopax/')
 assemblers_ns = Namespace('Assemblers', path='/assemblers/')
+ndex_ns = Namespace('NDEx', path='/')
+indra_db_rest_ns = Namespace('INDRA DB REST', path='/indra_db_rest/')
+databases_ns = Namespace('Databases', path='/databases/')
 api.add_namespace(preassembly_ns)
 api.add_namespace(sofia_ns)
 api.add_namespace(eidos_ns)
@@ -50,17 +60,22 @@ api.add_namespace(reach_ns)
 api.add_namespace(cwms_ns)
 api.add_namespace(biopax_ns)
 api.add_namespace(assemblers_ns)
+api.add_namespace(ndex_ns)
+api.add_namespace(indra_db_rest_ns)
+api.add_namespace(databases_ns)
 
 # Models that can be inherited and reused in different namespaces
-stmt_model = api.model('Statement', {})
-stmts_model = api.model('Statements', {
-    'statements': fields.List(fields.Nested(stmt_model))
-})
 dict_model = api.model('dict', {})
+
+stmts_model = api.model('Statements', {
+    'statements': fields.List(fields.Nested(dict_model))})
 bio_text_model = api.model('BioText', {
     'text': fields.String(example='GRB2 binds SHC.')})
 wm_text_model = api.model('WMText', {
     'text': fields.String(example='Rainfall causes floods.')})
+jsonld_model = api.model('jsonld', {
+    'jsonld': fields.Nested(dict_model)})
+genes_model = api.model('Genes', {'genes': fields.List(fields.String)})
 
 # Store the arguments by type
 int_args = ['poolsize', 'size_cutoff']
@@ -95,7 +110,34 @@ def _stmts_from_proc(proc):
     return res
 
 
+@root_ns.route('/')
+class Root(Resource):
+    def get(self):
+        return {'This is the INDRA REST API. See documentation at '
+                'http://www.indra.bio/rest_api/docs.'}
+
+
 # Create Resources in Preassembly Namespace
+
+# Handle pipeline separately
+pipeline_model = api.inherit('Pipeline', stmts_model, {
+    'pipeline': fields.List(fields.Nested(dict_model))
+})
+
+
+@preassembly_ns.expect(pipeline_model)
+@preassembly_ns.route('/pipeline')
+class RunPipeline(Resource):
+    def post(self):
+        args = request.json
+        stmts = stmts_from_json(args.pop('statements'))
+        pipeline_steps = args.get('pipeline')
+        ap = AssemblyPipeline(pipeline_steps)
+        stmts_out = ap.run(stmts)
+        return _return_stmts(stmts_out)
+
+
+# Dynamically generate endpoints for assembly corpus functions
 class PreassembleStatements(Resource):
     """Parent Resource for Preassembly resources."""
     func_name = None
@@ -181,7 +223,7 @@ for func_name, func in pipeline_functions.items():
         class NewFunction(PreassembleStatements):
             func_name = func_name
 
-# Create models and resources for REACH namespace
+# Create resources for REACH namespace
 reach_text_model = api.inherit('ReachText', bio_text_model, {
     'offline': fields.Boolean(default=False),
     'url': fields.String
@@ -254,7 +296,7 @@ class ReachProcessPmc(Resource):
         return _stmts_from_proc(rp)
 
 
-# Create models and resources for TRIPS namespace
+# Create resources for TRIPS namespace
 xml_model = api.model('XML', {'xml_str': fields.String})
 
 
@@ -278,7 +320,7 @@ class TripsProcessText(Resource):
         return _stmts_from_proc(tp)
 
 
-# Create models and resources for Sofia namespace
+# Create resources for Sofia namespace
 text_auth_model = api.inherit('TextAuth', wm_text_model, {
     'auth': fields.List(fields.String, example=['USER', 'PASS'])})
 
@@ -294,13 +336,14 @@ class SofiaProcessText(Resource):
         return _stmts_from_proc(sp)
 
 
-# Create models and resources for Eidos namespace
+# Create resources for Eidos namespace
 eidos_text_model = api.inherit('EidosText', wm_text_model, {
     'webservice': fields.String,
     'grounding_ns': fields.String
 })
-jsonld_model = api.model('jsonld', {
-    'jsonld': fields.Nested(dict_model)})
+eidos_jsonld_model = api.inherit('EidosJsonld', jsonld_model, {
+    'grounding_ns': fields.String
+})
 
 
 @eidos_ns.expect(eidos_text_model)
@@ -320,7 +363,350 @@ class EidosProcessText(Resource):
         return _stmts_from_proc(ep)
 
 
-# Create models and resources for Hume namespace
+@eidos_ns.expect(eidos_jsonld_model)
+@eidos_ns.route('/process_jsonld')
+class EidosProcessJsonld(Resource):
+    def post(self):
+        args = request.json
+        eidos_json = args.get('jsonld')
+        grounding_ns = args.get('grounding_ns')
+        ep = eidos.process_json_str(eidos_json, grounding_ns=grounding_ns)
+        return _stmts_from_proc(ep)
+
+
+# Create resources for Hume namespace
+@hume_ns.expect(jsonld_model)
+@hume_ns.route('/process_jsonld')
+class HumeProcessJsonld(Resource):
+    def post(self):
+        args = request.json
+        jsonld_str = args.get('jsonld')
+        jsonld = json.loads(jsonld_str)
+        hp = hume.process_jsonld(jsonld)
+        return _stmts_from_proc(hp)
+
+
+# Create resources for CWMS namespace
+@cwms_ns.expect(wm_text_model)
+@cwms_ns.route('/process_text')
+class CwmsProcessText(Resource):
+    def post(self):
+        args = request.json
+        text = args.get('text')
+        cp = cwms.process_text(text)
+        return _stmts_from_proc(cp)
+
+
+# Create resources for BEL namespace
+bel_rdf_model = api.model('BelRdf', {'belrdf': fields.String})
+
+
+@bel_ns.expect(genes_model)
+@bel_ns.route('/process_pybel_neighborhood')
+class BelProcessNeighborhood(Resource):
+    def post(self):
+        args = request.json
+        genes = args.get('genes')
+        bp = bel.process_pybel_neighborhood(genes)
+        return _stmts_from_proc(bp)
+
+
+@bel_ns.expect(bel_rdf_model)
+@bel_ns.route('/process_belrdf')
+class BelProcessBelRdf(Resource):
+    def post(self):
+        args = request.json
+        belrdf = args.get('belrdf')
+        bp = bel.process_belrdf(belrdf)
+        return _stmts_from_proc(bp)
+
+
+# Create resources for BioPax namespace
+source_target_model = api.model('SourceTarget', {
+    'source': fields.List(fields.String),
+    'target': fields.List(fields.String)
+})
+
+
+@biopax_ns.expect(genes_model)
+@biopax_ns.route('/process_pc_pathsbetween')
+class BiopaxPathsBetween(Resource):
+    def post(self):
+        args = request.json
+        genes = args.get('genes')
+        bp = biopax.process_pc_pathsbetween(genes)
+        return _stmts_from_proc(bp)
+
+
+@biopax_ns.expect(source_target_model)
+@biopax_ns.route('/process_pc_pathsfromto')
+class BiopaxPathsFromTo(Resource):
+    def post(self):
+        args = request.json
+        source = args.get('source')
+        target = args.get('target')
+        bp = biopax.process_pc_pathsfromto(source, target)
+        return _stmts_from_proc(bp)
+
+
+@biopax_ns.expect(genes_model)
+@biopax_ns.route('/process_pc_neighborhood')
+class BiopaxNeighborhood(Resource):
+    def post(self):
+        args = request.json
+        genes = args.get('genes')
+        bp = biopax.process_pc_neighborhood(genes)
+        return _stmts_from_proc(bp)
+
+
+# Create resources for Assemblers namespace
+pysb_stmts_model = api.inherit('PysbStatements', stmts_model, {
+    'export_format': fields.String
+})
+
+
+@assemblers_ns.expect(pysb_stmts_model)
+@assemblers_ns.route('/pysb')
+class AssemblePysb(Resource):
+    def post(self):
+        args = request.json
+        stmts_json = args.get('statements')
+        export_format = args.get('export_format')
+        stmts = stmts_from_json(stmts_json)
+        pa = PysbAssembler()
+        pa.add_statements(stmts)
+        pa.make_model()
+        try:
+            for m in pa.model.monomers:
+                pysb_assembler.set_extended_initial_condition(pa.model, m, 0)
+        except Exception as e:
+            logger.exception(e)
+
+        if not export_format:
+            model_str = pa.print_model()
+        elif export_format in ('kappa_im', 'kappa_cm'):
+            fname = 'model_%s.png' % export_format
+            root = os.path.dirname(os.path.abspath(fname))
+            graph = pa.export_model(format=export_format, file_name=fname)
+            with open(fname, 'rb') as fh:
+                data = 'data:image/png;base64,%s' % \
+                    base64.b64encode(fh.read()).decode()
+                return {'image': data}
+        else:
+            try:
+                model_str = pa.export_model(format=export_format)
+            except Exception as e:
+                logger.exception(e)
+                model_str = ''
+        res = {'model': model_str}
+        return res
+
+
+@assemblers_ns.expect(stmts_model)
+@assemblers_ns.route('/cx')
+class AssembleCx(Resource):
+    def post(self):
+        args = request.json
+        stmts_json = args.get('statements')
+        stmts = stmts_from_json(stmts_json)
+        ca = CxAssembler(stmts)
+        model_str = ca.make_model()
+        res = {'model': model_str}
+        return res
+
+
+@assemblers_ns.expect(stmts_model)
+@assemblers_ns.route('/graph')
+class AssembleGraph(Resource):
+    def post(self):
+        args = request.json
+        stmts_json = args.get('statements')
+        stmts = stmts_from_json(stmts_json)
+        ga = GraphAssembler(stmts)
+        model_str = ga.make_model()
+        res = {'model': model_str}
+        return res
+
+
+@assemblers_ns.expect(stmts_model)
+@assemblers_ns.route('/cyjs')
+class AssembleCyjs(Resource):
+    def post(self):
+        args = request.json
+        stmts_json = args.get('statements')
+        stmts = stmts_from_json(stmts_json)
+        ga = CyJSAssembler(stmts)
+        cja.make_model(grouping=True)
+        model_str = cja.print_cyjs_graph()
+        return model_str
+
+
+@assemblers_ns.expect(stmts_model)
+@assemblers_ns.route('/english')
+class AssembleEnglish(Resource):
+    def post(self):
+        args = request.json
+        stmts_json = args.get('statements')
+        stmts = stmts_from_json(stmts_json)
+        sentences = {}
+        for st in stmts:
+            enga = EnglishAssembler()
+            enga.add_statements([st])
+            model_str = enga.make_model()
+            sentences[st.uuid] = model_str
+        res = {'sentences': sentences}
+        return res
+
+
+@assemblers_ns.expect(stmts_model)
+@assemblers_ns.route('/sif/loopy')
+class AssembleLoopy(Resource):
+    def post(self):
+        args = request.json
+        stmts_json = args.get('statements')
+        stmts = stmts_from_json(stmts_json)
+        sa = SifAssembler(stmts)
+        sa.make_model(use_name_as_key=True)
+        model_str = sa.print_loopy(as_url=True)
+        res = {'loopy_url': model_str}
+        return res
+
+
+# Create resources for NDEx namespace
+network_model = api.model('Network', {'network_id': fields.String})
+
+
+@ndex_ns.expect(stmts_model)
+@ndex_ns.route('/share_model_ndex')
+class ShareModelNdex(Resource):
+    def post(self):
+        args = request.json
+        stmts_json = args.get('statements')
+        stmts = stmts_from_json(stmts_json)
+        ca = CxAssembler(stmts)
+        for n, v in args.items():
+            ca.cx['networkAttributes'].append({'n': n, 'v': v, 'd': 'string'})
+        ca.make_model()
+        network_id = ca.upload_model(private=False)
+        return {'network_id': network_id}
+
+
+@ndex_ns.expect(network_model)
+@ndex_ns.route('/fetch_model_ndex')
+class FetchModelNdex(Resource):
+    def post(self):
+        args = request.json
+        network_id = args.get('network_id')
+        cx = process_ndex_network(network_id)
+        network_attr = [x for x in cx.cx if x.get('networkAttributes')]
+        network_attr = network_attr[0]['networkAttributes']
+        keep_keys = ['txt_input', 'parser',
+                     'model_elements', 'preset_pos', 'stmts',
+                     'sentences', 'evidence', 'cell_line', 'mrna', 'mutations']
+        stored_data = {}
+        for d in network_attr:
+            if d['n'] in keep_keys:
+                stored_data[d['n']] = d['v']
+        return stored_data
+
+
+# Create resources for INDRA DB REST namespace
+stmt_model = api.model('Statement', {'statement': fields.Nested(dict_model)})
+
+
+@indra_db_rest_ns.expect(stmt_model)
+@indra_db_rest_ns.route('/get_evidence')
+class GetEvidence(Resource):
+    def post(self):
+        args = request.json
+        stmt_json = args.get('statement')
+        stmt = Statement._from_json(stmt_json)
+
+        def _get_agent_ref(agent):
+            """Get the preferred ref for an agent for db web api."""
+            if agent is None:
+                return None
+            ag_hgnc_id = hgnc_client.get_hgnc_id(agent.name)
+            if ag_hgnc_id is not None:
+                return ag_hgnc_id + "@HGNC"
+            db_refs = agent.db_refs
+            for namespace in ['HGNC', 'FPLX', 'CHEBI', 'TEXT']:
+                if namespace in db_refs.keys():
+                    return '%s@%s' % (db_refs[namespace], namespace)
+            return '%s@%s' % (agent.name, 'TEXT')
+
+        def _get_matching_stmts(stmt_ref):
+            # Filter by statement type.
+            stmt_type = stmt_ref.__class__.__name__
+            agent_name_list = [
+                _get_agent_ref(ag) for ag in stmt_ref.agent_list()]
+            non_binary_statements = (Complex, SelfModification, ActiveForm)
+            # TODO: We should look at more than just the agent name.
+            # Doing so efficiently may require changes to the web api.
+            if isinstance(stmt_ref, non_binary_statements):
+                agent_list = [ag_name for ag_name in agent_name_list
+                              if ag_name is not None]
+                kwargs = {}
+            else:
+                agent_list = []
+                kwargs = {k: v for k, v in zip(['subject', 'object'],
+                                               agent_name_list)}
+                if not any(kwargs.values()):
+                    return []
+                print(agent_list)
+            stmts = get_statements(agents=agent_list, stmt_type=stmt_type,
+                                   simple_response=True, **kwargs)
+            return stmts
+
+        stmts_out = _get_matching_stmts(stmt)
+        agent_name_list = [ag.name for ag in stmt.agent_list()]
+        stmts_out = stmts = ac.filter_concept_names(
+            stmts_out, agent_name_list, 'all')
+        return _return_stmts(stmts_out)
+
+
+# Create resources for Databases namespace
+cbio_model = api.model('Cbio', {
+    'gene_list': fields.List(fields.String),
+    'cell_lines': fields.List(fields.String)
+})
+
+
+@databases_ns.expect(cbio_model)
+@databases_ns.route('/cbio/get_ccle_mrna')
+class CbioMrna(Resource):
+    def post(self):
+        args = request.json
+        gene_list = args.get('gene_list')
+        cell_lines = args.get('cell_lines')
+        mrna_amounts = cbio_client.get_ccle_mrna(gene_list, cell_lines)
+        res = {'mrna_amounts': mrna_amounts}
+        return res
+
+
+@databases_ns.expect(cbio_model)
+@databases_ns.route('/cbio/get_ccle_cna')
+class CbioCna(Resource):
+    def post(self):
+        args = request.json
+        gene_list = args.get('gene_list')
+        cell_lines = args.get('cell_lines')
+        mrna_amounts = cbio_client.get_ccle_cna(gene_list, cell_lines)
+        res = {'cna': cna}
+        return res
+
+
+@databases_ns.expect(cbio_model)
+@databases_ns.route('/cbio/get_ccle_mutations')
+class CbioMutations(Resource):
+    def post(self):
+        args = request.json
+        gene_list = args.get('gene_list')
+        cell_lines = args.get('cell_lines')
+        mrna_amounts = cbio_client.get_ccle_mutations(gene_list, cell_lines)
+        res = {'mutations': mutations}
+        return res
+
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser('Run the INDRA REST API')
