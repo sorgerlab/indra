@@ -133,19 +133,17 @@ def test_bfs():
 
     # Test terminal NS
     # Terminate on 'b'
-    expected_paths = {('D1', 'C1'), ('D1', 'C1', 'B1'), ('D1', 'C1', 'B2'),
+    expected_paths = {('D1', 'C1', 'B1'), ('D1', 'C1', 'B2'),
                       ('D1', 'C1', 'B3')}
     paths = [p for p in bfs_search(dg, 'D1', depth_limit=5,
                                    reverse=True, terminal_ns=['b'],
                                    node_filter=all_ns)]
-    assert len(paths) == 4, len(paths)
+    assert len(paths) == len(expected_paths), len(paths)
     assert set(paths) == expected_paths, 'sets of paths not equal'
 
     # Terminate on 'a'
-    expected_paths = {('D1', 'C1'), ('D1', 'C1', 'B1'), ('D1', 'C1', 'B2'),
-                      ('D1', 'C1', 'B3'), ('D1', 'C1', 'B1', 'A1'),
-                      ('D1', 'C1', 'B1', 'A2'), ('D1', 'C1', 'B2', 'A3'),
-                      ('D1', 'C1', 'B2', 'A4')}
+    expected_paths = {('D1', 'C1', 'B1', 'A1'), ('D1', 'C1', 'B1', 'A2'),
+                      ('D1', 'C1', 'B2', 'A3'), ('D1', 'C1', 'B2', 'A4')}
     paths = [p for p in bfs_search(dg, 'D1', depth_limit=5,
                                    reverse=True, terminal_ns=['a'],
                                    node_filter=all_ns)]
