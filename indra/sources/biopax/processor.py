@@ -115,6 +115,19 @@ class BiopaxProcessor(object):
                 for c in complexes:
                     self.statements.append(Complex(c, ev))
 
+    def _conversion_state_iter(self):
+        for control in self.get_class_objects(bp.Conversion):
+            ev = self._get_evidence(control)
+            conversion = control.controlled
+            control_agents = [self._get_primary_controller(c) for c in
+                              control.controller]
+            for inp, outp in self.find_matching_left_right(conversion):
+                inp_agents = self._get_agents_from_entity(inp)
+                gained_feats, lost_feats = self.feature_delta(inp, outp)
+                for feats, is_gain in zip([gained_feats, True],
+                                          [lost_feats, False]):
+                    yield control_agents, inp_agents, feats, is_gain, ev
+
     def get_modifications(self):
         """Extract INDRA Modification Statements from the BioPAX model.
 
@@ -124,29 +137,47 @@ class BiopaxProcessor(object):
         with additional constraints to specify the type of state change
         occurring (phosphorylation, deubiquitination, etc.).
         """
-        for control in self.get_class_objects(bp.Conversion):
-            ev = self._get_evidence(control)
-            conversion = control.controlled
-            control_agents = [self._get_agents_from_entity(c) for c in
-                              control.controller]
-            for inp, outp in self.find_matching_left_right(conversion):
-                inp_agents = self._get_agents_from_entity(inp)
-                gained_feats, lost_feats = self.feature_delta(inp, outp)
-                for feats, is_gain in zip([gained_feats, True],
-                                          [lost_feats, False]):
-                    for feat in feats:
-                        if not _is_modification(feat):
-                            continue
-                        mod = self._extract_mod_from_feature(feat)
-                        stmt_class = modtype_to_modclass(mod.mod_type)
-                        if not is_gain:
-                            stmt_class = modclass_to_inverse[stmt_class]
-                        for enz, sub in \
-                                itertools.product(_listify(control_agents),
-                                                  _listify(inp_agents)):
-                            stmt = stmt_class(enz, sub, mod.residue,
-                                              mod.position, evidence=ev)
-                            self.statements.append(stmt)
+        for control_agents, inp_agents, feats, is_gain, ev \
+                in self._conversion_state_iter():
+            for feat in feats:
+                if not _is_modification(feat):
+                    continue
+                mod = self._extract_mod_from_feature(feat)
+                stmt_class = modtype_to_modclass(mod.mod_type)
+                if not is_gain:
+                    stmt_class = modclass_to_inverse[stmt_class]
+                for enz, sub in \
+                        itertools.product(_listify(control_agents),
+                                          _listify(inp_agents)):
+                    stmt = stmt_class(enz, sub, mod.residue,
+                                      mod.position, evidence=ev)
+                    self.statements.append(stmt)
+
+    def get_regulate_activities(self):
+        """Get Activation/Inhibition INDRA Statements from the BioPAX model.
+
+        This method extracts Activation/Inhibition Statements and reuses the
+        structure of BioPAX Pattern's
+        org.biopax.paxtools.pattern.PatternBox.constrolsStateChange pattern
+        with additional constraints to specify the gain or loss of
+        activity state but assuring that the activity change is not due to
+        a modification state change (which are extracted by get_modifications
+        and get_activity_modification).
+        """
+        for control_agents, inp_agents, feats, is_gain, ev \
+                in self._conversion_state_iter():
+            mod_feats = [f for f in feats if _is_modification(f)]
+            act_feats = [f for f in feats if _is_activity(f)]
+            # We don't want to have gained or lost modification features
+            if mod_feats or not act_feats:
+                continue
+            stmt_class = Activation if is_gain else Inhibition
+            for subj, obj in \
+                    itertools.product(_listify(control_agents),
+                                      _listify(inp_agents)):
+                stmt = stmt_class(subj, obj, 'activity',
+                                  evidence=ev)
+                self.statements.append(stmt)
 
     def get_activity_modification(self):
         """Extract INDRA ActiveForm statements from the BioPAX model.
@@ -160,126 +191,29 @@ class BiopaxProcessor(object):
         and the gain or loss of activity due to the modification state
         change.
         """
-        mod_filter = 'residue modification, active'
-        for is_active in [True, False]:
-            p = self._construct_modification_pattern()
-            rel = mcct.GAIN if is_active else mcct.LOSS
-            p.add(mcc(rel, mod_filter),
-                  "input simple PE", "output simple PE")
-
-            s = _bpp('Searcher')
-            res = s.searchPlain(self.model, p)
-            res_array = [_match_to_array(m) for m in res.toArray()]
-
-            for r in res_array:
-                reaction = r[p.indexOf('Conversion')]
-                activity = 'activity'
-                input_spe = r[p.indexOf('input simple PE')]
-                output_spe = r[p.indexOf('output simple PE')]
-
-                # Get the modifications
-                mod_in = \
-                    BiopaxProcessor._get_entity_mods(input_spe)
-                mod_out = \
-                    BiopaxProcessor._get_entity_mods(output_spe)
-
-                mod_shared = _get_mod_intersection(mod_in, mod_out)
-                gained_mods = _get_mod_difference(mod_out, mod_in)
-
-                # Here we get the evidence for the BiochemicalReaction
-                ev = self._get_evidence(reaction)
-
-                agents = self._get_agents_from_entity(output_spe)
-                for agent in _listify(agents):
-                    static_mods = _get_mod_difference(agent.mods,
-                                                      gained_mods)
-                    # NOTE: with the ActiveForm representation we cannot
-                    # separate static_mods and gained_mods. We assume here
-                    # that the static_mods are inconsequential and therefore
-                    # are not mentioned as an Agent condition, following
-                    # don't care don't write semantics. Therefore only the
-                    # gained_mods are listed in the ActiveForm as Agent
-                    # conditions.
-                    if gained_mods:
-                        agent.mods = gained_mods
-                        stmt = ActiveForm(agent, activity, is_active,
-                                          evidence=ev)
-                        self.statements.append(decode_obj(stmt,
-                                                          encoding='utf-8'))
-
-    def get_regulate_activities(self):
-        """Get Activation/Inhibition INDRA Statements from the BioPAX model.
-
-        This method extracts Activation/Inhibition Statements and reuses the
-        structure of BioPAX Pattern's
-        org.biopax.paxtools.pattern.PatternBox.constrolsStateChange pattern
-        with additional constraints to specify the gain or loss of
-        activity state but assuring that the activity change is not due to
-        a modification state change (which are extracted by get_modifications
-        and get_activity_modification).
-        """
-        mcc = _bpp('constraint.ModificationChangeConstraint')
-        mcct = _bpp('constraint.ModificationChangeConstraint$Type')
-        mod_filter = 'residue modification, active'
-        # Start with a generic modification pattern
-        p = BiopaxProcessor._construct_modification_pattern()
-        stmts = []
-        for act_class, gain_loss in zip([Activation, Inhibition],
-                                        [mcct.GAIN, mcct.LOSS]):
-            p.add(mcc(gain_loss, mod_filter),
-                      "input simple PE", "output simple PE")
-            s = _bpp('Searcher')
-            res = s.searchPlain(self.model, p)
-            res_array = [_match_to_array(m) for m in res.toArray()]
-            for r in res_array:
-                controller_pe = r[p.indexOf('controller PE')]
-                input_pe = r[p.indexOf('input PE')]
-                input_spe = r[p.indexOf('input simple PE')]
-                output_spe = r[p.indexOf('output simple PE')]
-                reaction = r[p.indexOf('Conversion')]
-                control = r[p.indexOf('Control')]
-
-                if not _is_catalysis(control):
-                    continue
-                cat_dir = control.getCatalysisDirection()
-                if cat_dir is not None and cat_dir.name() != 'LEFT_TO_RIGHT':
-                    logger.debug('Unexpected catalysis direction: %s.' % \
-                        control.getCatalysisDirection())
-                    continue
-
-                subjs = BiopaxProcessor._get_primary_controller(controller_pe)
-                if not subjs:
-                    continue
-
-                '''
-                if _is_complex(input_pe):
-                    # TODO: It is possible to find which member of the complex
-                    # is actually activated. That member will be the substrate
-                    # and all other members of the complex will be bound to it.
-                    logger.info('Cannot handle complex subjects.')
-                    continue
-                '''
-                objs = BiopaxProcessor._get_agents_from_entity(input_spe,
-                                                               expand_pe=False)
-
-                ev = self._get_evidence(control)
-                for subj, obj in itertools.product(_listify(subjs),
-                                                   _listify(objs)):
-                    # Get the modifications
-                    mod_in = \
-                        BiopaxProcessor._get_entity_mods(input_spe)
-                    mod_out = \
-                        BiopaxProcessor._get_entity_mods(output_spe)
-
-                    # We assume if modifications change then this is not really
-                    # a pure activation event
-                    gained_mods = _get_mod_difference(mod_out, mod_in)
-                    lost_mods = _get_mod_difference(mod_in, mod_out)
-                    if gained_mods or lost_mods:
-                        continue
-
-                    stmt = act_class(subj, obj, 'activity', evidence=ev)
-                    self.statements.append(decode_obj(stmt, encoding='utf-8'))
+        for control_agents, inp_agents, feats, is_gain, ev \
+                in self._conversion_state_iter():
+            mod_feats = [f for f in feats if _is_modification(f)]
+            act_feats = [f for f in feats if _is_activity(f)]
+            if not mod_feats or not act_feats:
+                continue
+            mods = [self._extract_mod_from_feature(f)
+                    for f in mod_feats]
+            mods = [m for m in mods if m is not None]
+            if not mods:
+                continue
+            for agent in _listify(inp_agents):
+                # NOTE: with the ActiveForm representation we cannot
+                # separate static_mods and gained_mods. We assume here
+                # that the static_mods are inconsequential and therefore
+                # are not mentioned as an Agent condition, following
+                # don't care don't write semantics. Therefore only the
+                # gained_mods are listed in the ActiveForm as Agent
+                # conditions.
+                agent.mods = mods
+                stmt = ActiveForm(agent, 'activity', is_gain,
+                                  evidence=ev)
+                self.statements.append(stmt)
 
     def get_regulate_amounts(self):
         """Extract INDRA RegulateAmount Statements from the BioPAX model.
