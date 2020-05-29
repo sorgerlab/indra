@@ -1,13 +1,14 @@
 import json
 from datetime import datetime
 from copy import deepcopy
+from nose.plugins.attrib import attr
+from os import path
 from rest_api.flask_api import api
 from indra.statements import *
 from indra.preassembler.hierarchy_manager import get_wm_hierarchies
 
 
-BASE = 'http://0.0.0.0:8081/' 
-
+HERE = path.dirname(path.abspath(__file__))
 
 a = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'})
 b = Agent('b', db_refs={'UP': 'P15056', 'TEXT': 'b'})
@@ -67,7 +68,7 @@ def _call_api(method, route, *args, **kwargs):
     print("Submitting request to '%s' at %s." % ('/' + route, start))
     print("\targs:", args)
     print("\tkwargs:", kwargs)
-    res = req_meth(BASE + route, *args, **kwargs)
+    res = req_meth(route, *args, **kwargs)
     end = datetime.now()
     print("Got result with %s at %s after %s seconds."
           % (res.status_code, end, (end-start).total_seconds()))
@@ -856,3 +857,201 @@ def test_eidos_ungrounded():
              Activation(c, c)]
     st_out = _post_stmts_preassembly(stmts, route)
     assert len(st_out) == 1
+
+
+@attr('webservice')
+def test_responsive():
+    res = _call_api('get', 'root')
+    res_json = json.loads(res.get_data())
+    assert res_json.startswith('This is the INDRA REST API.'), \
+        "Unexpected content: %s" % res_json
+
+
+@attr('webservice')
+def test_options():
+    res = _call_api('options', 'root')
+    res_json = json.loads(res.get_data())
+    assert res_json == '{}' \
+        "Unexpected content: %s" % res_json
+
+
+@attr('webservice', 'notravis')
+def test_trips_process_text():
+    res = _call_api('post', 'trips/process_text',
+                    json={'text': 'MEK phosphorylates ERK.'})
+    res_json = json.loads(res.get_data())
+    assert 'statements' in res_json.keys(), res_json
+    stmts = stmts_from_json(res_json['statements'])
+    assert len(stmts) == 1, len(stmts)
+    stmt = stmts[0]
+    assert isinstance(stmt, Phosphorylation), type(stmt)
+    assert stmt.enz.name == 'MEK', stmt.enz
+    assert stmt.sub.name == 'ERK', stmt.sub
+
+
+@attr('webservice')
+def test_trips_process_xml():
+    test_ekb_path = path.join(HERE, 'trips_ekbs',
+                              'MEK_increases_the_phosphorylation_of_ERK.ekb')
+    with open(test_ekb_path, 'r') as f:
+        xml_str = f.read()
+    res = _call_api('post', 'trips/process_xml', json={'xml_str': xml_str})
+    res_json = json.loads(res.get_data())
+    assert 'statements' in res_json.keys(), res_json
+    stmts = stmts_from_json(res_json['statements'])
+    assert len(stmts) == 1, len(stmts)
+    stmt = stmts[0]
+    assert isinstance(stmt, Phosphorylation), type(stmt)
+    assert stmt.enz.name == 'MEK', stmt.enz
+    assert stmt.sub.name == 'ERK', stmt.sub
+
+
+@attr('webservice', 'notravis')
+def test_reach_process_text():
+    res = _call_api('post', 'reach/process_text',
+                    json={'text': 'MEK phosphorylates ERK.'})
+    res_json = json.loads(res.get_data())
+    assert 'statements' in res_json.keys(), res_json
+    stmts = stmts_from_json(res_json['statements'])
+    assert len(stmts) == 1, len(stmts)
+    stmt = stmts[0]
+    assert isinstance(stmt, Phosphorylation), type(stmt)
+    assert stmt.enz.name == 'MEK', stmt.enz
+    assert stmt.sub.name == 'ERK', stmt.sub
+
+
+@attr('webservice')
+def test_reach_process_json():
+    # TODO: Add test of reach process json
+    return
+
+
+STMT_JSON = {
+    "id": "acc6d47c-f622-41a4-8ae9-d7b0f3d24a2f",
+    "type": "Complex",
+    "members": [
+        {"db_refs": {"TEXT": "MEK", "FPLX": "MEK"}, "name": "MEK"},
+        {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"}
+    ],
+    "sbo": "http://identifiers.org/sbo/SBO:0000526",
+    "evidence": [{"text": "MEK binds ERK", "source_api": "trips"}]
+}
+
+
+@attr('webservice')
+def test_assemblers_cyjs():
+    res = _call_api('post', 'assemblers/cyjs',
+                    json={'statements': [STMT_JSON]})
+    res_json = json.loads(res.get_data())
+    print(res_json)
+    assert len(res_json['edges']) == 1, len(res_json['edges'])
+    assert len(res_json['nodes']) == 2, len(res_json['nodes'])
+    return
+
+
+@attr('webservice')
+def test_assemblers_pysb_no_format():
+    res = _call_api('post', 'assemblers/pysb',
+                    json={'statements': [STMT_JSON]})
+    res_json = json.loads(res.get_data())
+    assert 'model' in res_json.keys()
+    assert res_json['model'] is not None
+    assert 'MEK' in res_json['model'], res_json['model']
+    return
+
+
+@attr('webservice')
+def test_assemblers_pysb_kappa_img_format():
+    for exp_format in ['kappa_im', 'kappa_cm']:
+        print("Testing", exp_format)
+        res = _call_api('post', 'assemblers/pysb', json={
+            'statements': [STMT_JSON], 'export_format': exp_format})
+        res_json = json.loads(res.get_data())
+        assert 'image' in res_json.keys()
+        assert 'image' in res_json.keys()
+        assert res_json['image'] is not None
+    return
+
+
+@attr('webservice')
+def test_assemblers_pysb_kappa_other_formats():
+    # All the formats defined in PysbAssembler.export_model doc string.
+    formats = ['bngl', 'kappa', 'sbml', 'matlab', 'mathematica',
+               'potterswheel']
+    for exp_format in formats:
+        print("Testing", exp_format)
+        res = _call_api('post', 'assemblers/pysb', json={
+            'statements': [STMT_JSON], 'export_format': exp_format})
+        res_json = json.loads(res.get_data())
+        assert 'model' in res_json.keys()
+        assert res_json['model'] is not None
+        assert 'MEK' in res_json['model'], res_json['model']
+    return
+
+
+@attr('webservice')
+def test_assemblers_cx():
+    res = _call_api('post', 'assemblers/cx', json={'statements': [STMT_JSON]})
+    res_json = json.loads(res.get_data())
+    assert 'model' in res_json.keys()
+    assert res_json['model'] is not None
+    assert 'MEK' in res_json['model'], res_json['model']
+
+
+@attr('webservice')
+def test_assemblers_graph():
+    res = _call_api('post', 'assemblers/graph',
+                    json={'statements': [STMT_JSON]})
+    res_json = json.loads(res.get_data())
+    assert 'model' in res_json.keys()
+    assert res_json['model'] is not None
+    assert 'MEK' in res_json['model'], res_json['model']
+
+
+@attr('webservice')
+def test_assemblers_english():
+    res = _call_api('post', 'assemblers/english',
+                    json={'statements': [STMT_JSON]})
+    res_json = json.loads(res.get_data())
+    assert 'sentences' in res_json.keys()
+    assert len(res_json['sentences']) == 1, len(res_json['sentences'])
+    sentence = list(res_json['sentences'].values())[0]
+    assert 'MEK' in sentence, sentence
+
+
+@attr('webservice')
+def test_assemblers_loopy():
+    stmt_jsons = [{
+            "id": "acc6d47c-f622-41a4-8ae9-d7b0f3d24a2f",
+            "type": "Phosphorylation",
+            "enz": {"db_refs": {"TEXT": "MEK", "FPLX": "MEK"}, "name": "MEK"},
+            "sub": {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"},
+            "sbo": "http://identifiers.org/sbo/SBO:0000526",
+            "evidence": [{"text": "MEK phosphorylates ERK", "source_api": "trips"}]
+        },
+        {
+            "id": "bcc6d47c-f622-41a4-8ae9-d7b0f3d24a2f",
+            "type": "Activation",
+            "subj": {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"},
+            "obj": {"db_refs": {"TEXT": "EGFR", "HGNC": "3236"}, "name": "EGFR"},
+            "sbo": "http://identifiers.org/sbo/SBO:0000526",
+            "evidence": [{"text": "ERK activates EGFR", "source_api": "trips"}]
+        }
+    ]
+    res = _call_api('post', 'assemblers/sif/loopy',
+                    json={'statements': stmt_jsons})
+    res_json = json.loads(res.get_data())
+    assert 'loopy_url' in res_json.keys()
+    assert "ERK" in res_json['loopy_url']
+
+
+@attr('webservice')
+def test_pipeline():
+    p = [{'function': 'filter_grounded_only'},
+         {'function': 'run_preassembly',
+          'kwargs': {'return_toplevel': False}}]
+    res = _call_api('post', 'preassembly/pipeline',
+                    json={'statements': [STMT_JSON], 'pipeline': p})
+    res_json = json.loads(res.get_data())
+    assert 'statements' in res_json
+    assert len(res_json['statements']) == 1
