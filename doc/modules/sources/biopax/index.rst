@@ -12,9 +12,3 @@ Biopax Processor (:py:mod:`indra.sources.biopax.processor`)
 
 .. automodule:: indra.sources.biopax.processor
     :members:
-
-Pathway Commons Client (:py:mod:`indra.sources.biopax.pathway_commons_client`)
-------------------------------------------------------------------------------
-
-.. automodule:: indra.sources.biopax.pathway_commons_client
-    :members:
