@@ -83,7 +83,8 @@ class BiopaxProcessor(object):
     def find_matching_left_right(conversion):
         matches = []
         for inp, outp in itertools.product(conversion.left, conversion.right):
-            if not _is_complex(inp) and not _is_complex(outp):
+            if _is_simple_physical_entity(inp) and \
+                    _is_simple_physical_entity(outp):
                 if inp.entity_reference == outp.entity_reference:
                     matches.append((inp, outp))
         return matches
@@ -116,7 +117,6 @@ class BiopaxProcessor(object):
                     self.statements.append(Complex(c, ev))
 
     def _conversion_state_iter(self):
-        import ipdb; ipdb.set_trace()
         for control in self.get_class_objects(bp.Control):
             ev = self._get_evidence(control)
             conversion = control.controlled
@@ -130,14 +130,7 @@ class BiopaxProcessor(object):
                     yield control_agents, inp_agents, feats, is_gain, ev
 
     def get_modifications(self):
-        """Extract INDRA Modification Statements from the BioPAX model.
-
-        To extract Modifications, this method reuses the structure of
-        BioPAX Pattern's
-        org.biopax.paxtools.pattern.PatternBox.constrolsStateChange pattern
-        with additional constraints to specify the type of state change
-        occurring (phosphorylation, deubiquitination, etc.).
-        """
+        """Extract INDRA Modification Statements from the BioPAX model."""
         for control_agents, inp_agents, feats, is_gain, ev \
                 in self._conversion_state_iter():
             for feat in feats:
@@ -155,16 +148,7 @@ class BiopaxProcessor(object):
                     self.statements.append(stmt)
 
     def get_regulate_activities(self):
-        """Get Activation/Inhibition INDRA Statements from the BioPAX model.
-
-        This method extracts Activation/Inhibition Statements and reuses the
-        structure of BioPAX Pattern's
-        org.biopax.paxtools.pattern.PatternBox.constrolsStateChange pattern
-        with additional constraints to specify the gain or loss of
-        activity state but assuring that the activity change is not due to
-        a modification state change (which are extracted by get_modifications
-        and get_activity_modification).
-        """
+        """Get Activation/Inhibition INDRA Statements from the BioPAX model."""
         for control_agents, inp_agents, feats, is_gain, ev \
                 in self._conversion_state_iter():
             mod_feats = [f for f in feats if _is_modification(f)]
@@ -181,17 +165,7 @@ class BiopaxProcessor(object):
                 self.statements.append(stmt)
 
     def get_activity_modification(self):
-        """Extract INDRA ActiveForm statements from the BioPAX model.
-
-        This method extracts ActiveForm Statements that are due to
-        protein modifications. This method reuses the structure of
-        BioPAX Pattern's
-        org.biopax.paxtools.pattern.PatternBox.constrolsStateChange pattern
-        with additional constraints to specify the gain or loss of a
-        modification occurring (phosphorylation, deubiquitination, etc.)
-        and the gain or loss of activity due to the modification state
-        change.
-        """
+        """Extract INDRA ActiveForm statements from the BioPAX model."""
         for control_agents, inp_agents, feats, is_gain, ev \
                 in self._conversion_state_iter():
             mod_feats = [f for f in feats if _is_modification(f)]
@@ -217,14 +191,7 @@ class BiopaxProcessor(object):
                 self.statements.append(stmt)
 
     def get_regulate_amounts(self):
-        """Extract INDRA RegulateAmount Statements from the BioPAX model.
-
-        This method extracts IncreaseAmount/DecreaseAmount Statements from
-        the BioPAX model. It fully reuses BioPAX Pattern's
-        org.biopax.paxtools.pattern.PatternBox.controlsExpressionWithTemplateReac
-        pattern to find TemplateReactions which control the expression of
-        a protein.
-        """
+        """Extract INDRA RegulateAmount Statements from the BioPAX model."""
         temp_reacts = self.get_class_objects(bp.TemplateReaction)
         for temp_react in temp_reacts:
             control = temp_react.controlled_of
@@ -493,13 +460,12 @@ class BiopaxProcessor(object):
         # Get the members of a complex. This is returned as a list
         # of lists since complexes can contain other complexes. The
         # list of lists solution allows us to preserve this.
-        member_pes = cplx.components
+        member_pes = cplx.component
 
         # Make a dict of member URIs and their
         # corresponding stoichiometries
-        member_stos = {mpe.uri:
-                       mpe.stoichiometric_coefficient for
-                       mpe in cplx.component_stoichiometry}
+        member_stos = {mpe.uid: mpe.stoichiometric_coefficient
+                       for mpe in cplx.component_stoichiometry}
 
         # Some complexes do not have any members explicitly listed
         if not member_pes:
@@ -518,7 +484,7 @@ class BiopaxProcessor(object):
             else:
                 ma = BiopaxProcessor._get_agents_from_entity(m)
                 try:
-                    sto = member_stos[ma.uri]
+                    sto = member_stos[m.uid]
                     sto_int = int(sto)
                 except KeyError:
                     # No stoichiometry information - assume it is 1
@@ -543,81 +509,6 @@ class BiopaxProcessor(object):
             if mc is not None:
                 mods.append(mc)
         return mods
-
-    def _get_generic_modification(self, mod_class):
-        """Get all modification reactions given a Modification class."""
-        mod_type = modclass_to_modtype[mod_class]
-        if issubclass(mod_class, RemoveModification):
-            mod_gain_const = mcct.LOSS
-            mod_type = modtype_to_inverse[mod_type]
-        else:
-            mod_gain_const = mcct.GAIN
-        mod_filter = mod_type[:5]
-        # Start with a generic modification pattern
-        p = BiopaxProcessor._construct_modification_pattern()
-        p.add(mcc(mod_gain_const, mod_filter),
-                  "input simple PE", "output simple PE")
-        s = _bpp('Searcher')
-        res = s.searchPlain(self.model, p)
-        res_array = [_match_to_array(m) for m in res.toArray()]
-        stmts = []
-        for r in res_array:
-            controller_pe = r[p.indexOf('controller PE')]
-            input_pe = r[p.indexOf('input PE')]
-            input_spe = to_impl(r[p.indexOf('input simple PE')])
-            output_spe = to_impl(r[p.indexOf('output simple PE')])
-            reaction = r[p.indexOf('Conversion')]
-            control = r[p.indexOf('Control')]
-
-            if not _is_catalysis(control):
-                continue
-            cat_dir = control.getCatalysisDirection()
-            if cat_dir is not None and cat_dir.name() != 'LEFT_TO_RIGHT':
-                logger.debug('Unexpected catalysis direction: %s.' % \
-                    control.getCatalysisDirection())
-                continue
-
-            enzs = BiopaxProcessor._get_primary_controller(controller_pe)
-            if not enzs:
-                continue
-            '''
-            if _is_complex(input_pe):
-                sub_members_in = self._get_complex_members(input_pe)
-                sub_members_out = self._get_complex_members(output_pe)
-                # TODO: It is possible to find which member of the complex is
-                # actually modified. That member will be the substrate and
-                # all other members of the complex will be bound to it.
-                logger.info('Cannot handle complex substrates.')
-                continue
-            '''
-            subs = BiopaxProcessor._get_agents_from_entity(input_spe,
-                                                           expand_pe=False)
-            control = to_impl(control)
-            ev = self._get_evidence(control)
-            for enz, sub in itertools.product(_listify(enzs), _listify(subs)):
-                # Get the modifications
-                mod_in = \
-                    BiopaxProcessor._get_entity_mods(input_spe)
-                mod_out = \
-                    BiopaxProcessor._get_entity_mods(output_spe)
-
-                sub.mods = _get_mod_intersection(mod_in, mod_out)
-
-                if issubclass(mod_class, AddModification):
-                    gained_mods = _get_mod_difference(mod_out, mod_in)
-                else:
-                    gained_mods = _get_mod_difference(mod_in, mod_out)
-
-                for mod in gained_mods:
-                    # Is it guaranteed that these are all modifications
-                    # of the type we are extracting?
-                    if mod.mod_type not in (mod_type,
-                                            modtype_to_inverse[mod_type]):
-                        continue
-                    stmt = mod_class(enz, sub, mod.residue, mod.position,
-                                     evidence=ev)
-                    stmts.append(decode_obj(stmt, encoding='utf-8'))
-        return stmts
 
     @staticmethod
     def _get_primary_controller(controller_pe):
@@ -682,47 +573,6 @@ class BiopaxProcessor(object):
                     'multiple protein members.'
             logger.debug(msg)
             return None
-
-    @staticmethod
-    def _construct_modification_pattern():
-        """Construct the BioPAX pattern to extract modification reactions."""
-        # The following constraints were pieced together based on the
-        # following two higher level constrains: pb.controlsStateChange(),
-        # pb.controlsPhosphorylation().
-        p = _bpp('Pattern')(_bpimpl('PhysicalEntity')().getModelInterface(),
-                            'controller PE')
-        # Getting the control itself
-        p.add(cb.peToControl(), "controller PE", "Control")
-        # Link the control to the conversion that it controls
-        p.add(cb.controlToConv(), "Control", "Conversion")
-        # The controller shouldn't be a participant of the conversion
-        p.add(_bpp('constraint.NOT')(cb.participant()),
-              "Conversion", "controller PE")
-        # Get the input participant of the conversion
-        p.add(pt(rt.INPUT, True), "Control", "Conversion", "input PE")
-        # Get the specific PhysicalEntity
-        p.add(cb.linkToSpecific(), "input PE", "input simple PE")
-        # Link to ER
-        p.add(cb.peToER(), "input simple PE", "input simple ER")
-        # Make sure the participant is a protein
-        p.add(tp(_bpimpl('Protein')().getModelInterface()), "input simple PE")
-        # Link to the other side of the conversion
-        p.add(cs(cst.OTHER_SIDE), "input PE", "Conversion", "output PE")
-        # Make sure the two sides are not the same
-        p.add(_bpp('constraint.Equality')(False), "input PE", "output PE")
-        # Get the specific PhysicalEntity
-        p.add(cb.linkToSpecific(), "output PE", "output simple PE")
-        # Link to ER
-        p.add(cb.peToER(), "output simple PE", "output simple ER")
-        p.add(_bpp('constraint.Equality')(True), "input simple ER",
-              "output simple ER")
-        # Make sure the output is a Protein
-        p.add(tp(_bpimpl('Protein')().getModelInterface()), "output simple PE")
-        p.add(_bpp('constraint.NOT')(cb.linkToSpecific()),
-              "input PE", "output simple PE")
-        p.add(_bpp('constraint.NOT')(cb.linkToSpecific()),
-              "output PE", "input simple PE")
-        return p
 
     @staticmethod
     def _get_agent_from_entity(bpe):
@@ -824,7 +674,7 @@ class BiopaxProcessor(object):
         annotations = {}
         if bpe.data_source:
             if len(bpe.data_source) > 1:
-                logger.warning('More than one data source for %s' % bpe.uri)
+                logger.warning('More than one data source for %s' % bpe.uid)
             db_name = bpe.data_source[0].display_name
             if db_name:
                 annotations['source_sub_id'] = db_name.lower()
@@ -908,7 +758,7 @@ class BiopaxProcessor(object):
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
             uniprot_id = BiopaxProcessor._get_uniprot_id(bpe)
             if hgnc_id is not None:
-                name = BiopaxProcessor._get_hgnc_name(hgnc_id)
+                name = hgnc_client.get_hgnc_name(hgnc_id)
                 if name is None:
                     name = bpe.display_name
             elif uniprot_id is not None:
@@ -976,24 +826,24 @@ class BiopaxProcessor(object):
         bp_entref = BiopaxProcessor._get_entref(bpe)
         if bp_entref is None:
             return None
-        uri = bp_entref.uid
         # First try to match the URI itself to see if it is a UniProt
         # reference.
-        m = re.match('http://identifiers.org/uniprot/([A-Z0-9]+)', uri)
+        m = re.match('http://identifiers.org/uniprot/([A-Z0-9]+)',
+                     bp_entref.uid)
         if m:
             uniprot_id = m.groups()[0]
             primary_id = map_to_up_primary([uniprot_id])
             return primary_id
         # If the URI is not a UniProt reference then we look through xrefs
-        xrefs = bp_entref.getXref().toArray()
+        xrefs = bp_entref.xref
         uniprot_refs = [x for x in xrefs if
-                        (x.getDb() is not None and
-                         x.getDb().lower() in ('uniprot knowledgebase',
-                                               'uniprotkb',
-                                               'uniprot isoform'))]
+                        (x.db is not None and
+                         x.db.lower() in ('uniprot knowledgebase',
+                                          'uniprotkb',
+                                          'uniprot isoform'))]
         if not uniprot_refs:
             return None
-        uniprot_ids = [r.getId() for r in uniprot_refs]
+        uniprot_ids = [r.id for r in uniprot_refs]
         primary_id = map_to_up_primary(uniprot_ids)
         return primary_id
 
@@ -1113,12 +963,6 @@ class BiopaxProcessor(object):
         return hgnc_id
 
     @staticmethod
-    # TODO: can be removed
-    def _get_hgnc_name(hgnc_id):
-        hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
-        return hgnc_name
-
-    @staticmethod
     def _get_entref(bpe: bp.PhysicalEntity):
         """Returns the entity reference of an entity if it exists or
         return the entity reference that was passed in as argument."""
@@ -1134,9 +978,9 @@ class BiopaxProcessor(object):
     def get_coverage(self):
         uids = set()
         objs = self.model.objects
-        for uri, obj in objs.items():
+        for uid, obj in objs.items():
             if isinstance(obj, (bp.Catalysis, bp.TemplateReactionRegulation)):
-                uids.add(uri)
+                uids.add(uid)
         stmt_uids = set()
         for stmt in self.statements:
             for ev in stmt.evidence:
@@ -1258,7 +1102,11 @@ def _is_small_molecule(pe):
 
 def _is_physical_entity(pe):
     """Return True if the element is a physical entity"""
-    return isinstance(bp, bp.PhysicalEntity)
+    return isinstance(pe, bp.PhysicalEntity)
+
+
+def _is_simple_physical_entity(pe):
+    return isinstance(pe, bp.SimplePhysicalEntity)
 
 
 def _is_modification(feature):
@@ -1326,32 +1174,6 @@ def _list_listify(lst):
 
 def _get_combinations(lst):
     return itertools.product(*_list_listify(lst))
-
-
-def _get_mod_intersection(mods1, mods2):
-    shared_mods = []
-    for m1 in mods1:
-        found = False
-        for m2 in mods2:
-            if m1.matches(m2):
-                found = True
-                break
-        if found:
-            shared_mods.append(m1)
-    return shared_mods
-
-
-def _get_mod_difference(mods1, mods2):
-    difference_mods = []
-    for m1 in mods1:
-        found = False
-        for m2 in mods2:
-            if m1.matches(m2):
-                found = True
-                break
-        if not found:
-            difference_mods.append(m1)
-    return difference_mods
 
 
 generic_chebi_ids = {
