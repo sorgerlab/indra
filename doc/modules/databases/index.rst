@@ -98,3 +98,8 @@ Disease Ontology (DOID) client (:py:mod:`indra.databases.doid_client`)
 ----------------------------------------------------------------------
 .. automodule:: indra.databases.doid_client
     :members:
+
+Taxonomy client (:py:mod:`indra.databases.taxonomy_client`)
+-----------------------------------------------------------
+.. automodule:: indra.databases.taxonomy_client
+    :members:
