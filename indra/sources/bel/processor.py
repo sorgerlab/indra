@@ -14,7 +14,7 @@ from indra.statements import *
 from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
 from indra.databases import (
     chebi_client, go_client, hgnc_client, mesh_client,
-    mirbase_client, uniprot_client,
+    mirbase_client, uniprot_client, taxonomy_client
 )
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 
@@ -575,6 +575,12 @@ def get_db_refs_by_name(ns, name, node_data):
     # SDIS, SCHEM: Include the name as the ID for the namespace
     elif ns in ('SDIS', 'SCHEM', 'TEXT'):
         db_refs = {ns: name}
+    elif ns == 'TAX':
+        tid = taxonomy_client.get_taxonomy_id(name)
+        if tid:
+            db_refs = {'TAXONOMY': tid}
+        else:
+            logger.info('Could not get taxonomy ID for %s' % name)
     else:
         logger.info("Unhandled namespace: %s: %s (%s)" % (ns, name,
                                                           node_data))
