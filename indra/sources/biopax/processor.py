@@ -116,7 +116,8 @@ class BiopaxProcessor(object):
                     self.statements.append(Complex(c, ev))
 
     def _conversion_state_iter(self):
-        for control in self.get_class_objects(bp.Conversion):
+        import ipdb; ipdb.set_trace()
+        for control in self.get_class_objects(bp.Control):
             ev = self._get_evidence(control)
             conversion = control.controlled
             control_agents = [self._get_primary_controller(c) for c in
@@ -124,8 +125,8 @@ class BiopaxProcessor(object):
             for inp, outp in self.find_matching_left_right(conversion):
                 inp_agents = self._get_agents_from_entity(inp)
                 gained_feats, lost_feats = self.feature_delta(inp, outp)
-                for feats, is_gain in zip([gained_feats, True],
-                                          [lost_feats, False]):
+                for feats, is_gain in [(gained_feats, True),
+                                       (lost_feats, False)]:
                     yield control_agents, inp_agents, feats, is_gain, ev
 
     def get_modifications(self):
@@ -143,7 +144,7 @@ class BiopaxProcessor(object):
                 if not _is_modification(feat):
                     continue
                 mod = self._extract_mod_from_feature(feat)
-                stmt_class = modtype_to_modclass(mod.mod_type)
+                stmt_class = modtype_to_modclass[mod.mod_type]
                 if not is_gain:
                     stmt_class = modclass_to_inverse[stmt_class]
                 for enz, sub in \
@@ -224,79 +225,20 @@ class BiopaxProcessor(object):
         pattern to find TemplateReactions which control the expression of
         a protein.
         """
-        p = pb.controlsExpressionWithTemplateReac()
-        s = _bpp('Searcher')
-        res = s.searchPlain(self.model, p)
-        res_array = [_match_to_array(m) for m in res.toArray()]
-        stmts = []
-        for res in res_array:
-            # FIXME: for some reason labels are not accessible
-            # for these queries. It would be more reliable
-            # to get results by label instead of index.
-            '''
-            controller_er = res[p.indexOf('controller ER')]
-            generic_controller_er = res[p.indexOf('generic controller ER')]
-            controller_simple_pe = res[p.indexOf('controller simple PE')]
-            controller_pe = res[p.indexOf('controller PE')]
-            control = res[p.indexOf('Control')]
-            conversion = res[p.indexOf('Conversion')]
-            input_pe = res[p.indexOf('input PE')]
-            input_simple_pe = res[p.indexOf('input simple PE')]
-            changed_generic_er = res[p.indexOf('changed generic ER')]
-            output_pe = res[p.indexOf('output PE')]
-            output_simple_pe = res[p.indexOf('output simple PE')]
-            changed_er = res[p.indexOf('changed ER')]
-            '''
-            # TODO: here, res[3] is the complex physical entity
-            # for instance http://pathwaycommons.org/pc2/
-            # Complex_43c6b8330562c1b411d21e9d1185bae9
-            # consists of 3 components: JUN, FOS and NFAT
-            # where NFAT further contains 3 member physical entities.
-            #
-            # However, res[2] iterates over all 5 member physical entities
-            # of the complex which doesn't represent the underlying
-            # structure faithfully. It would be better to use res[3]
-            # (the complex itself) and look at components and then
-            # members. However, then, it would not be clear how to
-            # construct an INDRA Agent for the controller.
-            controller = self._get_agents_from_entity(res[2])
-            controlled_pe = res[6]
-            controlled = self._get_agents_from_entity(controlled_pe)
-
-            conversion = res[5]
-            direction = conversion.getTemplateDirection()
-            if direction is not None:
-                direction = direction.name()
-                if direction != 'FORWARD':
-                    logger.warning('Unhandled conversion direction %s' %
-                                   direction)
-                    continue
-            # Sometimes interaction type is annotated as
-            # term=='TRANSCRIPTION'. Other times this is not
-            # annotated.
-            int_type = conversion.getInteractionType().toArray()
-            if int_type:
-                for it in int_type:
-                    for term in it.getTerm().toArray():
-                        pass
-            control = res[4]
-            control_type = control.getControlType()
-            if control_type:
-                control_type = control_type.name()
+        temp_reacts = self.get_class_objects(bp.TemplateReaction)
+        for temp_react in temp_reacts:
+            control = temp_react.controlled_of
             ev = self._get_evidence(control)
-            for subj, obj in itertools.product(_listify(controller),
-                                               _listify(controlled)):
-                subj_act = ActivityCondition('transcription', True)
-                subj.activity = subj_act
-                if control_type == 'ACTIVATION':
-                    st = IncreaseAmount(subj, obj, evidence=ev)
-                elif control_type == 'INHIBITION':
-                    st = DecreaseAmount(subj, obj, evidence=ev)
-                else:
-                    logger.warning('Unhandled control type %s' % control_type)
-                    continue
-                st_dec = decode_obj(st, encoding='utf-8')
-                self.statements.append(st_dec)
+            stmt_type = IncreaseAmount if control.control_type == 'ACTIVATION' \
+                else DecreaseAmount
+            controller_agents = self._get_primary_controller(control.controller)
+            products = temp_react.right
+            for product in products:
+                product_agents = self._get_agents_from_entity(product)
+                for subj, obj in itertools.product(_listify(controller_agents),
+                                                   _listify(product_agents)):
+                    stmt = stmt_type(subj, obj, evidence=ev)
+                    self.statements.append(stmt)
 
     def get_conversions(self):
         """Extract Conversion INDRA Statements from the BioPAX model.
