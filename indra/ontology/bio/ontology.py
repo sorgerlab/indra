@@ -55,12 +55,14 @@ class BioOntology(IndraOntology):
         self.add_mesh_nodes()
         self.add_ncit_nodes()
         self.add_uppro_nodes()
+        self.add_mirbase_nodes()
         # Add xrefs
         self.add_hgnc_uniprot_xrefs()
         self.add_famplex_xrefs()
         self.add_chemical_xrefs()
         self.add_ncit_xrefs()
         self.add_mesh_xrefs()
+        self.add_mirbase_xrefs()
         # Add hierarchies
         self.add_famplex_hierarchy()
         self.add_obo_hierarchies()
@@ -298,6 +300,29 @@ class BioOntology(IndraOntology):
                 feat_node = self.label('UPPRO', feature.id)
                 edges.append((feat_node, prot_node,
                               {'type': 'partof'}))
+        self.add_edges_from(edges)
+
+    def add_mirbase_nodes(self):
+        from indra.databases import mirbase_client
+        nodes = []
+        for mirbase_id, name in mirbase_client._mirbase_id_to_name.items():
+            nodes.append((self.label('MIRBASE', mirbase_id),
+                          {'name': name}))
+        self.add_nodes_from(nodes)
+
+    def add_mirbase_xrefs(self):
+        from indra.databases import mirbase_client
+        edges = []
+        for mirbase_id, hgnc_id in \
+                mirbase_client._mirbase_id_to_hgnc_id.items():
+            edges.append((self.label('MIRBASE', mirbase_id),
+                          self.label('HGNC', hgnc_id),
+                          {'type': 'xref', 'source': 'mirbase'}))
+        for mirbase_id, hgnc_id in \
+                mirbase_client._hgnc_id_to_mirbase_id.items():
+            edges.append((self.label('HGNC', hgnc_id),
+                          self.label('MIRBASE', mirbase_id),
+                          {'type': 'xref', 'source': 'mirbase'}))
         self.add_edges_from(edges)
 
     def add_activity_hierarchy(self):
