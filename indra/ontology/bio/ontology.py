@@ -11,17 +11,40 @@ logger = logging.getLogger(__name__)
 
 
 class BioOntology(IndraOntology):
+    """Represents the ontology used for biology applications."""
     # The version is used to determine if the cached pickle is still valid
     # or not. When updating relevant resource files in INDRA, this version
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
+    name = 'bio'
     version = '1.0'
 
-    """Represents the ontology used for biology applications."""
     def __init__(self):
         super().__init__()
 
-    def initialize(self):
+    def initialize(self, rebuild=False):
+        if rebuild or not os.path.exists(CACHE_FILE):
+            self._build()
+            # Try to create the folder first, if it fails, we don't cache
+            if not os.path.exists(CACHE_DIR):
+                try:
+                    os.makedirs(CACHE_DIR)
+                except Exception:
+                    logger.warning('%s could not be created.' % CACHE_DIR)
+            # Try to dump the file next, if it fails, we don't cache
+            try:
+                logger.info('Caching INDRA bio ontology at %s' % CACHE_FILE)
+                with open(CACHE_FILE, 'wb') as fh:
+                    pickle.dump(self, fh, pickle.HIGHEST_PROTOCOL)
+            except Exception:
+                logger.warning('Failed to cache ontology at %s.' % CACHE_FILE)
+        else:
+            logger.info(
+                'Loading INDRA bio ontology from cache at %s' % CACHE_FILE)
+            with open(CACHE_FILE, 'rb') as fh:
+                self.__dict__.update(pickle.load(fh).__dict__)
+
+    def _build(self):
         logger.info('Initializing bio ontology...')
         # Add all nodes with annotations
         self.add_hgnc_nodes()
@@ -291,7 +314,7 @@ class BioOntology(IndraOntology):
              self.label('INDRA_ACTIVITIES', target),
              {'type': 'isa'})
             for source, target in rels
-        ]
+            ]
         )
 
     def add_modification_hierarchy(self):
@@ -301,7 +324,7 @@ class BioOntology(IndraOntology):
              {'type': 'isa'})
             for source in modtype_conditions
             if source != 'modification'
-        ]
+            ]
         )
 
 
@@ -309,48 +332,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 resources = os.path.join(HERE, os.pardir, os.pardir, 'resources')
 CACHE_DIR = get_config('INDRA_RESOURCES') or \
             os.path.join(os.path.expanduser('~'), '.indra',
-                         'bio_ontology', BioOntology.version)
+                         '%s_ontology' % BioOntology.name,
+                         BioOntology.version)
 CACHE_FILE = os.path.join(CACHE_DIR, 'bio_ontology.pkl')
-
-
-def load_bio_ontology(reload=False):
-    """Return an initialized BioOntology instance.
-
-    Parameters
-    ----------
-    reload : Optional[bool]
-        If True, the cache is bypassed and the ontology is rebuilt from
-        scratch (this can take a long time). Otherwise, the
-        cached ontology is loaded from local pickle file. Default: False
-
-    Returns
-    -------
-    BioOntology
-        An initialized instance of the BioOntology.
-    """
-    if reload or not os.path.exists(CACHE_FILE):
-        ont = BioOntology()
-        ont.initialize()
-        # Try to create the folder first, if it fails, we don't cache
-        if not os.path.exists(CACHE_DIR):
-            try:
-                os.makedirs(CACHE_DIR)
-            except Exception:
-                logger.warning('%s could not be created.' % CACHE_DIR)
-                return ont
-        # Try to dump the file next, if it fails, we don't cache
-        try:
-            logger.info('Caching INDRA bio ontology at %s' % CACHE_FILE)
-            with open(CACHE_FILE, 'wb') as fh:
-                pickle.dump(ont, fh, pickle.HIGHEST_PROTOCOL)
-        except Exception:
-            logger.warning('Failed to cache ontology at %s.' % CACHE_FILE)
-        return ont
-    else:
-        logger.info('Loading INDRA bio ontology from cache at %s' % CACHE_FILE)
-        with open(CACHE_FILE, 'rb') as fh:
-            ont = pickle.load(fh)
-            return ont
-
-
-bio_ontology = load_bio_ontology(reload=False)

@@ -19,7 +19,17 @@ class IndraOntology(networkx.DiGraph):
     """A directed graph representing entities and their properties
     as nodes  and ontological relationships between the entities as
     edges.
+
+    Attributes
+    ----------
+    name : str
+        A prefix/name for the ontology, used for the purposes of caching.
+    version : str
+        A version for the ontology, used for the purposes of caching.
     """
+    version = None
+    name = None
+
     def __init__(self):
         super().__init__()
         self._initialized = False

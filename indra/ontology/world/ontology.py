@@ -47,6 +47,9 @@ class WorldOntology(IndraOntology):
         The ontology YAML as loaded by the yaml package from the
         URL.
     """
+    name = 'world'
+    version = '1.0'
+
     def __init__(self, url):
         super().__init__()
         self.yml = None
