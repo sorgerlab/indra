@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 default_ns_order = ['FPLX', 'UPPRO', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH',
-                    'DOID', 'HP', 'EFO']
+                    'MIRBASE', 'DOID', 'HP', 'EFO']
 
 
 class Agent(Concept):
