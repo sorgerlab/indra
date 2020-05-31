@@ -32,7 +32,7 @@ if __name__ == '__main__':
         sys.exit(1)
     operation = sys.argv[1]
     if operation == 'build':
-        BioOntology().initialize()
+        BioOntology().initialize(rebuild=True)
     elif operation.startswith('clean'):
         parent_dir = os.path.normpath(os.path.join(CACHE_DIR, os.pardir))
         version_paths = glob.glob(os.path.join(parent_dir, '*', ''))
