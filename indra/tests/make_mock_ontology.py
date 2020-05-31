@@ -3,7 +3,7 @@ which can be put in the appropriate cache location in place of the
 real bio ontology for testing purposes"""
 import os
 import pickle
-from indra.ontology.bio.ontology import bio_ontology, CACHE_DIR
+from indra.ontology.bio.ontology import BioOntology, CACHE_DIR
 
 
 always_include = {
@@ -57,6 +57,8 @@ def keep_node(node):
 
 
 if __name__ == '__main__':
+    bio_ontology = BioOntology()
+    bio_ontology.initialize()
     keep_nodes = set()
     for node in bio_ontology.nodes:
         ns = bio_ontology.get_ns(node)

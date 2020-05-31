@@ -24,6 +24,8 @@ class BioOntology(IndraOntology):
 
     def initialize(self, rebuild=False):
         if rebuild or not os.path.exists(CACHE_FILE):
+            logger.info('Initializing INDRA bio ontology for the first time, '
+                        'this may take a few minutes...')
             self._build()
             # Try to create the folder first, if it fails, we don't cache
             if not os.path.exists(CACHE_DIR):
@@ -45,7 +47,6 @@ class BioOntology(IndraOntology):
                 self.__dict__.update(pickle.load(fh).__dict__)
 
     def _build(self):
-        logger.info('Initializing bio ontology...')
         # Add all nodes with annotations
         self.add_hgnc_nodes()
         self.add_uniprot_nodes()

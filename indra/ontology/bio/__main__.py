@@ -8,7 +8,6 @@ from .ontology import BioOntology, CACHE_DIR
 logger = logging.getLogger('indra.ontology.bio')
 
 if __name__ == '__main__':
-    import ipdb; ipdb.set_trace()
     if len(sys.argv) < 2:
         logger.info('Operation missing. Supported operations: '
                     'build, clean, clean-old, clean-all.')
