@@ -3,7 +3,7 @@ from indra.ontology.bio import bio_ontology
 from indra.ontology.world import world_ontology
 from indra.databases import go_client, hgnc_client
 from indra.ontology.standardize import \
-    standardize_agent_name, standardize_db_refs
+    standardize_agent_name, standardize_db_refs, standardize_name_db_refs
 
 
 def test_isa_entity():
@@ -276,3 +276,14 @@ def test_uppro_fallback():
     ag = Agent('x', db_refs={'UP': 'Q6IE75', 'UPPRO': 'PRO_0000383648'})
     standardize_agent_name(ag)
     assert ag.name == 'Bace2'
+
+
+def test_mirna_standardize():
+    name, db_refs = standardize_name_db_refs({'HGNC': '31476'})
+    assert db_refs['HGNC'] == '31476'
+    assert db_refs['MIRBASE'] == 'MI0000060'
+    assert name == 'MIRLET7A1'
+
+    name, db_refs = standardize_name_db_refs({'MIRBASE': 'MI0001730'})
+    assert db_refs['MIRBASE'] == 'MI0001730'
+    assert name == 'mmu-mir-451a'

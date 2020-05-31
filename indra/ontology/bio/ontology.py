@@ -318,7 +318,7 @@ class BioOntology(IndraOntology):
             edges.append((self.label('MIRBASE', mirbase_id),
                           self.label('HGNC', hgnc_id),
                           {'type': 'xref', 'source': 'mirbase'}))
-        for mirbase_id, hgnc_id in \
+        for hgnc_id, mirbase_id in \
                 mirbase_client._hgnc_id_to_mirbase_id.items():
             edges.append((self.label('HGNC', hgnc_id),
                           self.label('MIRBASE', mirbase_id),

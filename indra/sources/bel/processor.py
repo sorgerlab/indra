@@ -620,6 +620,7 @@ def get_db_refs_by_ident(ns, ident, node_data):
                    'MESHD': 'MESH',
                    'ENTREZ': 'EGID',
                    'NCBIGENE': 'EGID',
+                   'NCBITAXON': 'TAXONOMY',
                    'HGNC.GENEFAMILY': 'HGNC_GROUP'}
     raw_name = node_data.name
     if ns in ns_list:
