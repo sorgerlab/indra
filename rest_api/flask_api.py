@@ -124,6 +124,10 @@ pipeline_model = api.inherit('Pipeline', stmts_model, {
 @preassembly_ns.expect(pipeline_model)
 @preassembly_ns.route('/pipeline')
 class RunPipeline(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         stmts = stmts_from_json(args.pop('statements'))
@@ -159,6 +163,10 @@ class PreassembleStatements(Resource):
                     gene: [tuple(mod) for mod in mods]
                     for gene, mods in args_json[arg].items()}
         return args_json
+
+    @api.doc(False)
+    def options(self):
+        return {}
 
     def post(self):
         args = self.process_args(request.json)
@@ -231,6 +239,10 @@ reach_pmc_model = api.model('ReachPMC', {'pmcid': fields.String})
 @reach_ns.expect(reach_text_model)
 @reach_ns.route('/process_text')
 class ReachProcessText(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         text = args.get('text')
@@ -254,13 +266,14 @@ class ReachProcessText(Resource):
         rp = reach.process_text(text, offline=offline, url=url)
         return _stmts_from_proc(rp)
 
-    def get(self):
-        return 'test'
-
 
 @reach_ns.expect(reach_json_model)
 @reach_ns.route('/process_json')
 class ReachProcessJson(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         json_str = args.get('json')
@@ -271,6 +284,10 @@ class ReachProcessJson(Resource):
 @reach_ns.expect(reach_pmc_model)
 @reach_ns.route('/process_pmc')
 class ReachProcessPmc(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         pmcid = args.get('pmcid')
@@ -302,6 +319,10 @@ xml_model = api.model('XML', {'xml_str': fields.String})
 @trips_ns.expect(bio_text_model)
 @trips_ns.route('/process_text')
 class TripsProcessText(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         text = args.get('text')
@@ -312,6 +333,10 @@ class TripsProcessText(Resource):
 @trips_ns.expect(xml_model)
 @trips_ns.route('/process_xml')
 class TripsProcessText(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         xml_str = args.get('xml_str')
@@ -327,6 +352,10 @@ text_auth_model = api.inherit('TextAuth', wm_text_model, {
 @sofia_ns.expect(text_auth_model)
 @sofia_ns.route('/process_text')
 class SofiaProcessText(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         text = args.get('text')
@@ -348,6 +377,10 @@ eidos_jsonld_model = api.inherit('EidosJsonld', jsonld_model, {
 @eidos_ns.expect(eidos_text_model)
 @eidos_ns.route('/process_text')
 class EidosProcessText(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         text = args.get('text')
@@ -365,6 +398,10 @@ class EidosProcessText(Resource):
 @eidos_ns.expect(eidos_jsonld_model)
 @eidos_ns.route('/process_jsonld')
 class EidosProcessJsonld(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         eidos_json = args.get('jsonld')
@@ -377,6 +414,10 @@ class EidosProcessJsonld(Resource):
 @hume_ns.expect(jsonld_model)
 @hume_ns.route('/process_jsonld')
 class HumeProcessJsonld(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         jsonld_str = args.get('jsonld')
@@ -389,6 +430,10 @@ class HumeProcessJsonld(Resource):
 @cwms_ns.expect(wm_text_model)
 @cwms_ns.route('/process_text')
 class CwmsProcessText(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         text = args.get('text')
@@ -403,6 +448,10 @@ bel_rdf_model = api.model('BelRdf', {'belrdf': fields.String})
 @bel_ns.expect(genes_model)
 @bel_ns.route('/process_pybel_neighborhood')
 class BelProcessNeighborhood(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         genes = args.get('genes')
@@ -413,6 +462,10 @@ class BelProcessNeighborhood(Resource):
 @bel_ns.expect(bel_rdf_model)
 @bel_ns.route('/process_belrdf')
 class BelProcessBelRdf(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         belrdf = args.get('belrdf')
@@ -430,6 +483,10 @@ source_target_model = api.model('SourceTarget', {
 @biopax_ns.expect(genes_model)
 @biopax_ns.route('/process_pc_pathsbetween')
 class BiopaxPathsBetween(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         genes = args.get('genes')
@@ -440,6 +497,10 @@ class BiopaxPathsBetween(Resource):
 @biopax_ns.expect(source_target_model)
 @biopax_ns.route('/process_pc_pathsfromto')
 class BiopaxPathsFromTo(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         source = args.get('source')
@@ -451,6 +512,10 @@ class BiopaxPathsFromTo(Resource):
 @biopax_ns.expect(genes_model)
 @biopax_ns.route('/process_pc_neighborhood')
 class BiopaxNeighborhood(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         genes = args.get('genes')
@@ -467,6 +532,10 @@ pysb_stmts_model = api.inherit('PysbStatements', stmts_model, {
 @assemblers_ns.expect(pysb_stmts_model)
 @assemblers_ns.route('/pysb')
 class AssemblePysb(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         stmts_json = args.get('statements')
@@ -504,6 +573,10 @@ class AssemblePysb(Resource):
 @assemblers_ns.expect(stmts_model)
 @assemblers_ns.route('/cx')
 class AssembleCx(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         stmts_json = args.get('statements')
@@ -517,6 +590,10 @@ class AssembleCx(Resource):
 @assemblers_ns.expect(stmts_model)
 @assemblers_ns.route('/graph')
 class AssembleGraph(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         stmts_json = args.get('statements')
@@ -530,6 +607,10 @@ class AssembleGraph(Resource):
 @assemblers_ns.expect(stmts_model)
 @assemblers_ns.route('/cyjs')
 class AssembleCyjs(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         stmts_json = args.get('statements')
@@ -543,6 +624,10 @@ class AssembleCyjs(Resource):
 @assemblers_ns.expect(stmts_model)
 @assemblers_ns.route('/english')
 class AssembleEnglish(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         stmts_json = args.get('statements')
@@ -560,6 +645,10 @@ class AssembleEnglish(Resource):
 @assemblers_ns.expect(stmts_model)
 @assemblers_ns.route('/sif/loopy')
 class AssembleLoopy(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         stmts_json = args.get('statements')
@@ -578,6 +667,10 @@ network_model = api.model('Network', {'network_id': fields.String})
 @ndex_ns.expect(stmts_model)
 @ndex_ns.route('/share_model_ndex')
 class ShareModelNdex(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         stmts_json = args.get('statements')
@@ -593,6 +686,10 @@ class ShareModelNdex(Resource):
 @ndex_ns.expect(network_model)
 @ndex_ns.route('/fetch_model_ndex')
 class FetchModelNdex(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         network_id = args.get('network_id')
@@ -616,6 +713,10 @@ stmt_model = api.model('Statement', {'statement': fields.Nested(dict_model)})
 @indra_db_rest_ns.expect(stmt_model)
 @indra_db_rest_ns.route('/get_evidence')
 class GetEvidence(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         stmt_json = args.get('statement')
@@ -674,6 +775,10 @@ cbio_model = api.model('Cbio', {
 @databases_ns.expect(cbio_model)
 @databases_ns.route('/cbio/get_ccle_mrna')
 class CbioMrna(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         gene_list = args.get('gene_list')
@@ -686,6 +791,10 @@ class CbioMrna(Resource):
 @databases_ns.expect(cbio_model)
 @databases_ns.route('/cbio/get_ccle_cna')
 class CbioCna(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         gene_list = args.get('gene_list')
@@ -698,6 +807,10 @@ class CbioCna(Resource):
 @databases_ns.expect(cbio_model)
 @databases_ns.route('/cbio/get_ccle_mutations')
 class CbioMutations(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
     def post(self):
         args = request.json
         gene_list = args.get('gene_list')
