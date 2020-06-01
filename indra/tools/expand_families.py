@@ -31,40 +31,21 @@ class Expander(object):
                 else:
                     db_ns, db_id = ag.get_grounding()
                     if db_ns == 'FPLX':
-                        children = self.ontology.get_children(db_ns, db_id)
-                        children = [c for c in children if c[0] == 'HGNC']
-                        if children:
-                            families_list.append(children)
+                        child_agents = expand_agent(ag,
+                                                    ontology=self.ontology,
+                                                    ns_filter={'HGNC'})
+                        if child_agents:
+                            families_list.append(child_agents)
                             continue
                     families_list.append([ag])
             # Now, put together new statements from the cross product of the
             # expanded family members
             for ag_combo in itertools.product(*families_list):
-                # Create new agents based on the namespaces/IDs, with
-                # appropriate name and db_refs entries
-                child_agents = []
-                for ag_entry in ag_combo:
-                    # If we got an agent, or None, that means there were no
-                    # children; so we use the original agent rather than
-                    # construct a new agent
-                    if ag_entry is None or isinstance(ag_entry, Agent):
-                        new_agent = ag_entry
-                    # Otherwise, create a new agent from the ns/ID
-                    elif isinstance(ag_entry, tuple):
-                        # FIXME FIXME FIXME
-                        # This doesn't reproduce agent state from the original
-                        # family-level statements!
-                        ag_ns, ag_id = ag_entry
-                        new_agent = _agent_from_ns_id(ag_ns, ag_id)
-                    else:
-                        raise Exception('Unrecognized agent entry type.')
-                    # Add agent to our list of child agents
-                    child_agents.append(new_agent)
                 # Create a copy of the statement
                 new_stmt = deepcopy(stmt)
                 # Replace the agents in the statement with the newly-created
                 # child agents
-                new_stmt.set_agent_list(child_agents)
+                new_stmt.set_agent_list(list(ag_combo))
                 # Add to list
                 new_stmts.append(new_stmt)
         return new_stmts
@@ -98,6 +79,36 @@ class Expander(object):
         complex_stmts = self.complexes_from_hierarchy()
         expanded_complexes = self.expand_families(complex_stmts)
         return expanded_complexes
+
+
+def expand_agent(agent, ontology, ns_filter=None):
+    """Return children agents of a given parent agent.
+
+    Parameters
+    ----------
+    agent : indra.statements.Agent
+        An INDRA Agent whose children in the given ontology should
+        be returned as Agents.
+    ontology : indra.ontology.IndraOntology
+        An IndraOntology instance to use when finding the given Agent's
+        children,
+    ns_filter : Optional[set]
+        If provided, only children Agents within the set of given
+        name spaces are returned.
+
+    Returns
+    -------
+    list of Agent
+        A list of child INDRA Agents.
+    """
+    if agent is None:
+        return []
+    agns, agid = agent.get_grounding()
+    if agns is None or agid is None:
+        return []
+    children = ontology.get_children(agns, agid, ns_filter=ns_filter)
+    children_agents = [_agent_from_ns_id(*child) for child in children]
+    return sorted(children_agents, key=lambda a: a.name)
 
 
 def _agent_from_ns_id(ag_ns, ag_id):

@@ -329,7 +329,7 @@ class IndraOntology(networkx.DiGraph):
                 yield self.get_ns_id(source)
 
     @with_initialize
-    def get_children(self, ns, id):
+    def get_children(self, ns, id, ns_filter=None):
         """Return all `isa` or `partof` children of a given entity.
 
         Importantly, `isa` and `partof` edges always point towards
@@ -342,6 +342,9 @@ class IndraOntology(networkx.DiGraph):
             The name space of an entity.
         id : str
             The ID of an entity.
+        ns_filter : Optional[set]
+            If provided, only entities within the set of given
+            name spaces are returned.
 
         Returns
         -------
@@ -349,7 +352,10 @@ class IndraOntology(networkx.DiGraph):
             A list of entities (name space, ID pairs) that are the
             children of the given entity.
         """
-        return self.ancestors_rel(ns, id, {'isa', 'partof'})
+        children = self.ancestors_rel(ns, id, {'isa', 'partof'})
+        children = [(cns, cid) for cns, cid in children
+                    if ns_filter is None or cns in ns_filter]
+        return children
 
     @with_initialize
     def get_parents(self, ns, id):
