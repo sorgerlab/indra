@@ -5,7 +5,7 @@ import json
 import base64
 from collections import namedtuple
 from flask import Flask, request
-from flask_restx import Api, Resource, fields
+from flask_restx import Api, Resource, fields, abort
 from flask_cors import CORS
 
 from indra import get_config
@@ -395,10 +395,8 @@ class EidosProcessText(Resource):
         text = args.get('text')
         webservice = args.get('webservice')
         grounding_ns = args.get('grounding_ns')
-        # if not webservice:
-        #     response.status = 400
-        #     response.content_type = 'application/json'
-        #     return json.dumps({'error': 'No web service address provided.'})
+        if not webservice:
+            abort(400, 'No web service address provided.')
         ep = eidos.process_text(text, webservice=webservice,
                                 grounding_ns=grounding_ns)
         return _stmts_from_proc(ep)
