@@ -6,6 +6,7 @@ import base64
 from collections import namedtuple
 from flask import Flask, request
 from flask_restx import Api, Resource, Namespace, inputs, fields
+from flask_cors import CORS
 
 from indra import get_config
 from indra.sources import trips, reach, bel, biopax, eidos, hume, cwms, sofia
@@ -37,7 +38,7 @@ logger.setLevel(logging.DEBUG)
 app = Flask(__name__)
 api = Api(
     app, title='INDRA REST API', description='REST API for INDRA webservice')
-
+CORS(app)
 
 preassembly_ns = Namespace('Preassembly', path='/preassembly/')
 sofia_ns = Namespace('Sofia', path='/sofia/')
