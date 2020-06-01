@@ -113,16 +113,6 @@ def _stmts_from_proc(proc):
     return res
 
 
-@api.route('/', '/root')
-class RootResource(Resource):
-    def options(self):
-        return {}
-
-    def get(self):
-        return ("This is the INDRA REST API. See documentation at "
-                "http://www.indra.bio/rest_api/docs.")
-
-
 # Create Resources in Preassembly Namespace
 
 # Handle pipeline separately
