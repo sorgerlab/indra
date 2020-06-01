@@ -25,6 +25,7 @@ from indra.sources.indra_db_rest import get_statements
 from indra.sources.ndex_cx.api import process_ndex_network
 from indra.sources.reach.api import reach_nxml_url, reach_text_url
 from indra.belief.wm_scorer import get_eidos_scorer
+from indra.preassembler.hierarchy_manager import get_wm_hierarchies
 from indra.preassembler.ontology_mapper import OntologyMapper, wm_ontomap
 from indra.pipeline import AssemblyPipeline, pipeline_functions
 from indra.preassembler.custom_preassembly import *
@@ -115,7 +116,7 @@ def _stmts_from_proc(proc):
 
 # Create Resources in Preassembly Namespace
 
-# Handle pipeline separately
+# Manually add preassembly resources not based on assembly corpus functions
 pipeline_model = api.inherit('Pipeline', stmts_model, {
     'pipeline': fields.List(fields.Nested(dict_model))
 })
@@ -130,14 +131,29 @@ class RunPipeline(Resource):
 
     def post(self):
         args = request.json
-        stmts = stmts_from_json(args.pop('statements'))
+        stmts = stmts_from_json(args.get('statements'))
         pipeline_steps = args.get('pipeline')
         ap = AssemblyPipeline(pipeline_steps)
         stmts_out = ap.run(stmts)
         return _return_stmts(stmts_out)
 
 
-# Dynamically generate endpoints for assembly corpus functions
+@preassembly_ns.expect(stmts_model)
+@preassembly_ns.route('/map_ontologies')
+class MapOntologies(Resource):
+    @api.doc(False)
+    def options(self):
+        return {}
+
+    def post(self):
+        args = request.json
+        stmts = stmts_from_json(args.get('statements'))
+        om = OntologyMapper(stmts, wm_ontomap, scored=True, symmetric=False)
+        om.map_statements()
+        return _return_stmts(stmts)
+
+
+# Dynamically generate resources for assembly corpus functions
 class PreassembleStatements(Resource):
     """Parent Resource for Preassembly resources."""
     func_name = None
@@ -155,9 +171,15 @@ class PreassembleStatements(Resource):
                     Curation(cur['pa_hash'], cur['source_hash'], cur['tag'])
                     for cur in args_json[arg]]
             elif arg == 'belief_scorer':
-                if args_json[arg] == 'wm' or \
-                        args_json[arg] == 'get_eidos_scorer':
+                if args_json[arg] == 'wm':
                     args_json[arg] = get_eidos_scorer()
+                else:
+                    args_json[arg] = None
+            elif arg == 'hierarchies':
+                if args_json[arg] == 'wm':
+                    args_json[arg] = get_wm_hierarchies()
+                else:
+                    args_json[arg] = None
             elif arg == 'whitelist' or arg == 'mutations':
                 args_json[arg] = {
                     gene: [tuple(mod) for mod in mods]

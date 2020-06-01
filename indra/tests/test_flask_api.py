@@ -288,17 +288,22 @@ def test_run_preassembly_concepts():
         'WM': 'wm/x/y/z/flooding'}))
     flooding_2 = Event(Concept('flooding', db_refs={
         'WM': 'wm/a/b/c/flooding'}))
-    # WM belief scorer can be passed as 'wm' or 'get_eidos_scorer'
     st_out = _post_stmts_preassembly(
         [Influence(rainfall, flooding_1), Influence(rainfall, flooding_2)],
         route, normalize_ns='WM', normalize_equivalences=True,
-        belief_scorer='wm')
+        belief_scorer='wm', hierarchies='wm')
     assert len(st_out) == 2, st_out
-    st_out = _post_stmts_preassembly(
-        [Influence(rainfall, flooding_1), Influence(rainfall, flooding_2)],
-        route, normalize_ns='WM', normalize_equivalences=True,
-        belief_scorer='get_eidos_scorer')
-    assert len(st_out) == 2, st_out
+
+
+def test_preassembly_wm_scorer():
+    route = 'preassembly/run_preassembly'
+    ev = Evidence(source_api='eidos',
+                  annotations={'found_by': 'dueToSyntax2-Causal'})
+    st = Influence(Event(Concept('x')), Event(Concept('y')), evidence=[ev])
+    stmts_json = stmts_to_json([st])
+    st_out = _post_stmts_preassembly([st], route, belief_scorer='wm')
+    stmt = st_out[0]
+    assert stmt.belief == 0.8142, stmt.belief
 
 
 def test_expand_families():
@@ -751,46 +756,6 @@ def test_preassemble_flatten():
     assert len(st_out[1].evidence) == 1
 
 
-# def test_normalize_equals_opposites():
-#     from indra.preassembler.make_wm_ontologies import isequal, get_term
-#     hierarchies = get_wm_hierarchies()
-#     test_rel = (get_term('flooding', 'wm/x/y/z'), isequal,
-#                 get_term('flooding', 'wm/a/b/c'))
-#     hierarchies['entity'].graph.add(test_rel)
-#     test_rel = (get_term('flooding', 'wm/a/b/c'), isequal,
-#                 get_term('flooding', 'wm/x/y/z'))
-#     hierarchies['entity'].graph.add(test_rel)
-#     concept1 = 'wm/a/b/c/flooding'
-#     concept2 = 'wm/x/y/z/flooding'
-#     concept3 = 'wm/concept/causal_factor/food_insecurity'
-#     concept4 = 'wm/concept/causal_factor/food_security'
-#     dbr = {'WM': [(concept1, 1.0), (concept2, 0.5), (concept3, 0.1)]}
-#     ev1 = Event(Concept('x', db_refs=dbr))
-
-#     dbr = {'WM': [(concept4, 1.0), (concept2, 0.5)]}
-#     ev2 = Event(Concept('x', db_refs=dbr),
-#                 delta=QualitativeDelta(polarity=1))
-#     stmts = ac.run_preassembly([ev1, ev2], hierarchies=hierarchies)
-#     assert stmts[0].concept.db_refs['WM'][0][0] != \
-#         stmts[0].concept.db_refs['WM'][1][0]
-#     stmts = ac.run_preassembly([ev1, ev2], normalize_equivalences=True,
-#                                normalize_ns='WM',
-#                                hierarchies=hierarchies)
-#     assert stmts[0].concept.db_refs['WM'][0][0] == \
-#         stmts[0].concept.db_refs['WM'][1][0], \
-#         stmts[0].concept.db_refs['WM']
-#     stmts = ac.run_preassembly([ev1, ev2], normalize_equivalences=True,
-#                                normalize_opposites=True, normalize_ns='WM',
-#                                hierarchies=hierarchies)
-#     assert len(stmts) == 2
-#     stmts = sorted(stmts, key=lambda x: len(x.concept.db_refs['WM']),
-#                    reverse=True)
-#     assert len(stmts[0].concept.db_refs['WM']) == 3, stmts[0].concept.db_refs
-#     assert stmts[0].concept.db_refs['WM'][2][0] == \
-#            stmts[1].concept.db_refs['WM'][0][0], \
-#         stmts[1].concept.db_refs['WM']
-
-
 def test_filter_by_curation():
     route = 'preassembly/filter_by_curation'
     new_st1 = deepcopy(st1)
@@ -925,6 +890,39 @@ def test_reach_process_json():
     return
 
 
+def test_cwms_process_text():
+    res = _call_api('post', '/cwms/process_text',
+                    json={'text': 'Hunger causes displacement.'})
+    res_json = json.loads(res.get_data())
+    stmts_json = res_json.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    assert len(stmts) == 1
+
+
+def test_hume_process_jsonld():
+    from indra.tests.test_hume import test_file_new_simple
+    with open(test_file_new_simple, 'r') as fh:
+        test_jsonld = fh.read()
+    res = _call_api('post', '/hume/process_jsonld',
+                    json={'jsonld': test_jsonld})
+    res_json = json.loads(res.get_data())
+    stmts_json = res_json.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    assert len(stmts) == 1
+
+
+def test_eidos_json():
+    from indra.tests.test_eidos import test_jsonld
+    with open(test_jsonld, 'r') as fh:
+        test_json = fh.read()
+    res = _call_api('post', '/eidos/process_jsonld',
+                    json={'jsonld': test_json})
+    res_json = json.loads(res.get_data())              
+    stmts_json = res_json.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    assert len(stmts) == 1
+
+
 STMT_JSON = {
     "id": "acc6d47c-f622-41a4-8ae9-d7b0f3d24a2f",
     "type": "Complex",
@@ -1054,3 +1052,25 @@ def test_pipeline():
     res_json = json.loads(res.get_data())
     assert 'statements' in res_json
     assert len(res_json['statements']) == 1
+
+
+def test_ontology_mapping():
+    route = '/preassembly/map_ontologies'
+    c1 = Concept('x', db_refs={'WM': [('wm/concept/causal_factor/'
+                                       'health_and_life/famine', 1.0)]})
+    c2 = Concept('y', db_refs={'WM': [('wm/concept/causal_factor/'
+                                       'social_and_political/education/'
+                                       'education', 1.0)]})
+
+    st = Influence(Event(c1), Event(c2))
+    # stmts_json = stmts_to_json([st])
+    # url = base_url + '/preassembly/map_ontologies'
+    # res = requests.post(url, json={'statements': stmts_json})
+    # res_json = res.json()
+    # res = _call_api
+    # stmts_json = res_json.get('statements')
+    st_out = _post_stmts_preassembly([st], route)
+    stmt = st_out[0]
+    assert 'SOFIA' in stmt.subj.concept.db_refs, stmt.subj.concept.db_refs
+    assert 'SOFIA' in stmt.obj.concept.db_refs, stmt.obj.concept.db_refs
+    
