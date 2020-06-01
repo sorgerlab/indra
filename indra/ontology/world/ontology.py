@@ -3,7 +3,6 @@
 The script can handle any ontology which uses the same format (yaml ontology
 following the namespace defined at `eidos_ns`).
 """
-import yaml
 import logging
 import requests
 from collections import defaultdict
@@ -25,6 +24,7 @@ def get_term(node, prefix):
 
 def load_yaml_from_url(ont_url):
     """Return a YAML object loaded from a YAML file URL."""
+    import yaml
     res = requests.get(ont_url)
     res.raise_for_status()
     root = yaml.load(res.content, Loader=yaml.FullLoader)
@@ -76,6 +76,7 @@ class WorldOntology(IndraOntology):
         str
             The YAML string of the ontology.
         """
+        import yaml
         return yaml.dump(self.yml)
 
     def _load_yml(self, yml):
