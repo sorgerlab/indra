@@ -117,6 +117,7 @@ class RunPipeline(Resource):
         return {}
 
     def post(self):
+        """Run an assembly pipeline for a list of Statements."""
         args = request.json
         stmts = stmts_from_json(args.get('statements'))
         pipeline_steps = args.get('pipeline')
@@ -133,6 +134,7 @@ class MapOntologies(Resource):
         return {}
 
     def post(self):
+        """Run ontology mapping on a list of INDRA Statements."""
         args = request.json
         stmts = stmts_from_json(args.get('statements'))
         om = OntologyMapper(stmts, wm_ontomap, scored=True, symmetric=False)
@@ -259,6 +261,7 @@ class ReachProcessText(Resource):
         return {}
 
     def post(self):
+        """Process text with REACH and return INDRA Statements."""
         args = request.json
         text = args.get('text')
         offline = True if args.get('offline') else False
@@ -290,6 +293,7 @@ class ReachProcessJson(Resource):
         return {}
 
     def post(self):
+        """Process REACH json and return INDRA Statements."""
         args = request.json
         json_str = args.get('json')
         rp = reach.process_json_str(json_str)
@@ -304,6 +308,7 @@ class ReachProcessPmc(Resource):
         return {}
 
     def post(self):
+        """Process PubMedCentral article and return INDRA Statements."""
         args = request.json
         pmcid = args.get('pmcid')
         offline = True if args.get('offline') else False
@@ -339,6 +344,7 @@ class TripsProcessText(Resource):
         return {}
 
     def post(self):
+        """Process text with TRIPS and return INDRA Statements."""
         args = request.json
         text = args.get('text')
         tp = trips.process_text(text)
@@ -353,6 +359,7 @@ class TripsProcessText(Resource):
         return {}
 
     def post(self):
+        """Process TRIPS EKB XML and return INDRA Statements."""
         args = request.json
         xml_str = args.get('xml_str')
         tp = trips.process_xml(xml_str)
@@ -372,6 +379,7 @@ class SofiaProcessText(Resource):
         return {}
 
     def post(self):
+        """Process text with Sofia and return INDRA Statements."""
         args = request.json
         text = args.get('text')
         auth = args.get('auth')
@@ -397,6 +405,7 @@ class EidosProcessText(Resource):
         return {}
 
     def post(self):
+        """Process text with EIDOS and return INDRA Statements."""
         args = request.json
         text = args.get('text')
         webservice = args.get('webservice')
@@ -416,6 +425,7 @@ class EidosProcessJsonld(Resource):
         return {}
 
     def post(self):
+        """Process an EIDOS JSON-LD and return INDRA Statements."""
         args = request.json
         eidos_json = args.get('jsonld')
         grounding_ns = args.get('grounding_ns')
@@ -432,6 +442,7 @@ class HumeProcessJsonld(Resource):
         return {}
 
     def post(self):
+        """Process Hume JSON-LD and return INDRA Statements."""
         args = request.json
         jsonld_str = args.get('jsonld')
         jsonld = json.loads(jsonld_str)
@@ -448,6 +459,7 @@ class CwmsProcessText(Resource):
         return {}
 
     def post(self):
+        """Process text with CWMS and return INDRA Statements."""
         args = request.json
         text = args.get('text')
         cp = cwms.process_text(text)
@@ -466,6 +478,7 @@ class BelProcessNeighborhood(Resource):
         return {}
 
     def post(self):
+        """Process BEL Large Corpus neighborhood and return INDRA Statements."""
         args = request.json
         genes = args.get('genes')
         bp = bel.process_pybel_neighborhood(genes)
@@ -480,6 +493,7 @@ class BelProcessBelRdf(Resource):
         return {}
 
     def post(self):
+        """Process BEL RDF and return INDRA Statements."""
         args = request.json
         belrdf = args.get('belrdf')
         bp = bel.process_belrdf(belrdf)
@@ -501,6 +515,9 @@ class BiopaxPathsBetween(Resource):
         return {}
 
     def post(self):
+        """
+        Process PathwayCommons paths between genes, return INDRA Statements.
+        """
         args = request.json
         genes = args.get('genes')
         bp = biopax.process_pc_pathsbetween(genes)
@@ -515,6 +532,9 @@ class BiopaxPathsFromTo(Resource):
         return {}
 
     def post(self):
+        """
+        Process PathwayCommons paths from-to genes, return INDRA Statements.
+        """
         args = request.json
         source = args.get('source')
         target = args.get('target')
@@ -530,6 +550,7 @@ class BiopaxNeighborhood(Resource):
         return {}
 
     def post(self):
+        """Process PathwayCommons neighborhood, return INDRA Statements."""
         args = request.json
         genes = args.get('genes')
         bp = biopax.process_pc_neighborhood(genes)
@@ -550,6 +571,7 @@ class AssemblePysb(Resource):
         return {}
 
     def post(self):
+        """Assemble INDRA Statements and return PySB model string."""
         args = request.json
         stmts_json = args.get('statements')
         export_format = args.get('export_format')
@@ -591,6 +613,7 @@ class AssembleCx(Resource):
         return {}
 
     def post(self):
+        """Assemble INDRA Statements and return CX network json."""
         args = request.json
         stmts_json = args.get('statements')
         stmts = stmts_from_json(stmts_json)
@@ -608,6 +631,7 @@ class AssembleGraph(Resource):
         return {}
 
     def post(self):
+        """Assemble INDRA Statements and return Graphviz graph dot string."""
         args = request.json
         stmts_json = args.get('statements')
         stmts = stmts_from_json(stmts_json)
@@ -625,6 +649,7 @@ class AssembleCyjs(Resource):
         return {}
 
     def post(self):
+        """Assemble INDRA Statements and return Cytoscape JS network."""
         args = request.json
         stmts_json = args.get('statements')
         stmts = stmts_from_json(stmts_json)
@@ -642,6 +667,7 @@ class AssembleEnglish(Resource):
         return {}
 
     def post(self):
+        """Assemble each statement into English sentence."""
         args = request.json
         stmts_json = args.get('statements')
         stmts = stmts_from_json(stmts_json)
@@ -663,6 +689,7 @@ class AssembleLoopy(Resource):
         return {}
 
     def post(self):
+        """Assemble INDRA Statements into a Loopy model using SIF Assembler."""
         args = request.json
         stmts_json = args.get('statements')
         stmts = stmts_from_json(stmts_json)
@@ -685,6 +712,7 @@ class ShareModelNdex(Resource):
         return {}
 
     def post(self):
+        """Upload the model to NDEX"""
         args = request.json
         stmts_json = args.get('statements')
         stmts = stmts_from_json(stmts_json)
@@ -704,6 +732,7 @@ class FetchModelNdex(Resource):
         return {}
 
     def post(self):
+        """Download model and associated pieces from NDEX"""
         args = request.json
         network_id = args.get('network_id')
         cx = process_ndex_network(network_id)
@@ -731,6 +760,7 @@ class GetEvidence(Resource):
         return {}
 
     def post(self):
+        """Get all evidence for a given INDRA statement."""
         args = request.json
         stmt_json = args.get('statement')
         stmt = Statement._from_json(stmt_json)
@@ -793,6 +823,7 @@ class CbioMrna(Resource):
         return {}
 
     def post(self):
+        """Get CCLE mRNA amounts using cBioClient"""
         args = request.json
         gene_list = args.get('gene_list')
         cell_lines = args.get('cell_lines')
@@ -809,6 +840,13 @@ class CbioCna(Resource):
         return {}
 
     def post(self):
+        """Get CCLE CNA
+        -2 = homozygous deletion
+        -1 = hemizygous deletion
+        0 = neutral / no change
+        1 = gain
+        2 = high level amplification
+        """
         args = request.json
         gene_list = args.get('gene_list')
         cell_lines = args.get('cell_lines')
@@ -825,6 +863,9 @@ class CbioMutations(Resource):
         return {}
 
     def post(self):
+        """Get CCLE mutations
+        returns the amino acid changes for a given list of genes and cell lines
+        """
         args = request.json
         gene_list = args.get('gene_list')
         cell_lines = args.get('cell_lines')
