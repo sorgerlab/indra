@@ -62,7 +62,6 @@ st3.belief = 0.7
 
 def _call_api(method, route, *args, **kwargs):
     tc = api.app.test_client()
-    route = route.lstrip('/')
     req_meth = getattr(tc, method)
     start = datetime.now()
     print("Submitting request to '%s' at %s." % ('/' + route, start))
@@ -861,17 +860,17 @@ def test_eidos_ungrounded():
 
 @attr('webservice')
 def test_responsive():
-    res = _call_api('get', 'root')
-    res_json = json.loads(res.get_data())
-    assert res_json.startswith('This is the INDRA REST API.'), \
-        "Unexpected content: %s" % res_json
+    res = _call_api('get', '/')
+    assert res.data.startswith(
+        b'<!DOCTYPE html>\n<html>\n<head>\n    <title>INDRA REST API</title>'), \
+        "Unexpected content: %s" % res.data
 
 
 @attr('webservice')
 def test_options():
-    res = _call_api('options', 'root')
+    res = _call_api('options', 'reach/process_text')
     res_json = json.loads(res.get_data())
-    assert res_json == '{}' \
+    assert res_json == {}, \
         "Unexpected content: %s" % res_json
 
 
