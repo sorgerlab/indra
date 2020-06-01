@@ -5,7 +5,7 @@ import json
 import base64
 from collections import namedtuple
 from flask import Flask, request
-from flask_restx import Api, Resource, Namespace, inputs, fields
+from flask_restx import Api, Resource, fields
 from flask_cors import CORS
 
 from indra import get_config
@@ -41,32 +41,19 @@ api = Api(
     app, title='INDRA REST API', description='REST API for INDRA webservice')
 CORS(app)
 
-preassembly_ns = Namespace('Preassembly', path='/preassembly/')
-sofia_ns = Namespace('Sofia', path='/sofia/')
-eidos_ns = Namespace('Eidos', path='/eidos/')
-hume_ns = Namespace('Hume', path='/hume/')
-bel_ns = Namespace('BEL', path='/bel/')
-trips_ns = Namespace('TRIPS', path='/trips/')
-reach_ns = Namespace('REACH', path='/reach/')
-cwms_ns = Namespace('CWMS', path='/cwms/')
-biopax_ns = Namespace('BioPAX', path='/biopax/')
-assemblers_ns = Namespace('Assemblers', path='/assemblers/')
-ndex_ns = Namespace('NDEx', path='/')
-indra_db_rest_ns = Namespace('INDRA DB REST', path='/indra_db_rest/')
-databases_ns = Namespace('Databases', path='/databases/')
-api.add_namespace(preassembly_ns)
-api.add_namespace(sofia_ns)
-api.add_namespace(eidos_ns)
-api.add_namespace(hume_ns)
-api.add_namespace(bel_ns)
-api.add_namespace(trips_ns)
-api.add_namespace(reach_ns)
-api.add_namespace(cwms_ns)
-api.add_namespace(biopax_ns)
-api.add_namespace(assemblers_ns)
-api.add_namespace(ndex_ns)
-api.add_namespace(indra_db_rest_ns)
-api.add_namespace(databases_ns)
+preassembly_ns = api.namespace('Preassembly', path='/preassembly/')
+sofia_ns = api.namespace('Sofia', path='/sofia/')
+eidos_ns = api.namespace('Eidos', path='/eidos/')
+hume_ns = api.namespace('Hume', path='/hume/')
+bel_ns = api.namespace('BEL', path='/bel/')
+trips_ns = api.namespace('TRIPS', path='/trips/')
+reach_ns = api.namespace('REACH', path='/reach/')
+cwms_ns = api.namespace('CWMS', path='/cwms/')
+biopax_ns = api.namespace('BioPAX', path='/biopax/')
+assemblers_ns = api.namespace('Assemblers', path='/assemblers/')
+ndex_ns = api.namespace('NDEx', path='/')
+indra_db_rest_ns = api.namespace('INDRA DB REST', path='/indra_db_rest/')
+databases_ns = api.namespace('Databases', path='/databases/')
 
 # Models that can be inherited and reused in different namespaces
 dict_model = api.model('dict', {})
