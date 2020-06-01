@@ -41,19 +41,23 @@ api = Api(
     app, title='INDRA REST API', description='REST API for INDRA webservice')
 CORS(app)
 
-preassembly_ns = api.namespace('Preassembly', path='/preassembly/')
-sofia_ns = api.namespace('Sofia', path='/sofia/')
-eidos_ns = api.namespace('Eidos', path='/eidos/')
-hume_ns = api.namespace('Hume', path='/hume/')
-bel_ns = api.namespace('BEL', path='/bel/')
-trips_ns = api.namespace('TRIPS', path='/trips/')
-reach_ns = api.namespace('REACH', path='/reach/')
-cwms_ns = api.namespace('CWMS', path='/cwms/')
-biopax_ns = api.namespace('BioPAX', path='/biopax/')
-assemblers_ns = api.namespace('Assemblers', path='/assemblers/')
-ndex_ns = api.namespace('NDEx', path='/')
-indra_db_rest_ns = api.namespace('INDRA DB REST', path='/indra_db_rest/')
-databases_ns = api.namespace('Databases', path='/databases/')
+preassembly_ns = api.namespace(
+    'Preassembly', 'Preassemble INDRA Statements', path='/preassembly/')
+sofia_ns = api.namespace('Sofia', 'Process with Sofia', path='/sofia/')
+eidos_ns = api.namespace('Eidos', 'Process with Eidos', path='/eidos/')
+hume_ns = api.namespace('Hume', 'Process with Hume', path='/hume/')
+bel_ns = api.namespace('BEL', 'Process with BEL', path='/bel/')
+trips_ns = api.namespace('TRIPS', 'Process with TRIPS', path='/trips/')
+reach_ns = api.namespace('REACH', 'Process with REACH', path='/reach/')
+cwms_ns = api.namespace('CWMS', 'Process with CWMS', path='/cwms/')
+biopax_ns = api.namespace('BioPAX', 'Process with BioPax', path='/biopax/')
+assemblers_ns = api.namespace(
+    'Assemblers', 'Assemble INDRA Statements into models', path='/assemblers/')
+ndex_ns = api.namespace('NDEx', 'Use NDEx service', path='/')
+indra_db_rest_ns = api.namespace(
+    'INDRA DB REST', 'Use INDRA DB REST API', path='/indra_db_rest/')
+databases_ns = api.namespace(
+    'Databases', 'Access external databases', path='/databases/')
 
 # Models that can be inherited and reused in different namespaces
 dict_model = api.model('dict', {})
