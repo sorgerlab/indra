@@ -236,6 +236,12 @@ for func_name, func in pipeline_functions.items():
         class NewFunction(PreassembleStatements):
             func_name = func_name
 
+            def post(self):
+                return super().post()
+
+            post.__doc__ = doc
+
+
 # Create resources for REACH namespace
 reach_text_model = api.inherit('ReachText', bio_text_model, {
     'offline': fields.Boolean(default=False),
