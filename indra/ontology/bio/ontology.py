@@ -213,10 +213,11 @@ class BioOntology(IndraOntology):
     def add_chemical_xrefs(self):
         from indra.databases import chebi_client
         mappings = [
-            (chebi_client.chebi_chembl, 'CHEBI', 'CHEMBL'),
-            (chebi_client.chebi_pubchem, 'CHEBI', 'PUBCHEM'),
-            (chebi_client.hmdb_chebi, 'HMDB', 'CHEBI'),
-            (chebi_client.cas_chebi, 'CAS', 'CHEBI'),
+            (chebi_client.chebi_chembl, 'CHEBI', 'CHEMBL', True),
+            (chebi_client.chebi_pubchem, 'CHEBI', 'PUBCHEM', False),
+            (chebi_client.pubchem_chebi, 'PUBCHEM', 'CHEBI', False),
+            (chebi_client.hmdb_chebi, 'HMDB', 'CHEBI', True),
+            (chebi_client.cas_chebi, 'CAS', 'CHEBI', True),
         ]
         edges = []
         data = {'type': 'xref', 'source': 'chebi'}
@@ -226,12 +227,13 @@ class BioOntology(IndraOntology):
                 id = 'CHEBI:%s' % id
             return self.label(ns, id)
 
-        for map_dict, from_ns, to_ns in mappings:
+        for map_dict, from_ns, to_ns, symmetric in mappings:
             for from_id, to_id in map_dict.items():
                 source = label_fix(from_ns, from_id)
                 target = label_fix(to_ns, to_id)
                 edges.append((source, target, data))
-                edges.append((target, source, data))
+                if symmetric:
+                    edges.append((target, source, data))
         self.add_edges_from(edges)
 
     def add_mesh_nodes(self):
