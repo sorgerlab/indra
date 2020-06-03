@@ -85,7 +85,7 @@ class BioOntology(IndraOntology):
             if ns == 'FPLX':
                 children = self.get_children(ns, id)
                 for cns, cid in children:
-                    if cns == 'HGNC':
+                    if cns in {'HGNC', 'FPLX'}:
                         self._tc.add((cns, cid, ns, id))
 
     def add_hgnc_nodes(self):

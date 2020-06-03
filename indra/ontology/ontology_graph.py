@@ -649,3 +649,8 @@ class IndraOntology(networkx.DiGraph):
                         for k, v in self.components.items():
                             if v == remove_component:
                                 self.components[k] = joint_component
+
+    @with_initialize
+    def print_stats(self):
+        logger.info('Number of nodes: %d' % len(self.nodes))
+        logger.info('Number of edges: %d' % len(self.edges))
