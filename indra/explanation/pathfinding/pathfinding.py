@@ -166,7 +166,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
                depth_limit=2, path_limit=None, max_per_node=5,
                node_filter=None, node_blacklist=None, terminal_ns=None,
-               sign=None, max_memory=1073741824, **kwargs):
+               sign=None, max_memory=int(2**29), **kwargs):
     """Do breadth first search from a given node and yield paths
 
     Parameters
@@ -342,6 +342,8 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
 
             # Check for memory
             if sys.getsizeof(queue) + sys.getsizeof(visited) > max_memory:
+                logger.warning('Memory overflow reached: %d' %
+                               (sys.getsizeof(queue) + sys.getsizeof(visited)))
                 raise StopIteration('Reached maxmimum allowed memory usage')
 
             # Check if we've visited enough neighbors
