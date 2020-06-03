@@ -1,5 +1,6 @@
 __all__ = ['shortest_simple_paths', 'bfs_search', 'find_sources',
            'get_path_iter']
+import sys
 import logging
 from collections import deque
 from copy import deepcopy
@@ -165,7 +166,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
                depth_limit=2, path_limit=None, max_per_node=5,
                node_filter=None, node_blacklist=None, terminal_ns=None,
-               sign=None, **kwargs):
+               sign=None, max_memory=1073741824, **kwargs):
     """Do breadth first search from a given node and yield paths
 
     Parameters
@@ -203,7 +204,10 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
         are encountered and only yield paths that terminate at these
         namepsaces
     sign : int
-        If set, defines the search to be a signed search. Default: None.
+        If set, defines the search to be a signed search. Default: None.\
+    max_memory : int
+        The maximum memory usage in bytes allowed for the variables queue
+        and visited. Default: 1073741824 bytes (== 1 GiB).
 
     Yields
     ------
@@ -335,6 +339,10 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
 
             # Append yielded path
             queue.append(new_path)
+
+            # Check for memory
+            if sys.getsizeof(queue) + sys.getsizeof(visited) > max_memory:
+                raise StopIteration('Reached maxmimum allowed memory usage')
 
             # Check if we've visited enough neighbors
             # Todo: add all neighbors to 'visited' and add all skipped
