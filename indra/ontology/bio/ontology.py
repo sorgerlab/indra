@@ -106,6 +106,8 @@ class BioOntology(IndraOntology):
         nodes = []
         for prot_id, features in uniprot_client.um.features.items():
             for feature in features:
+                if feature.id is None:
+                    continue
                 node = self.label('UPPRO', feature.id)
                 data = {'name': feature.name}
                 nodes.append((node, data))
@@ -299,6 +301,8 @@ class BioOntology(IndraOntology):
         for prot_id, features in uniprot_client.um.features.items():
             prot_node = self.label('UP', prot_id)
             for feature in features:
+                if feature.id is None:
+                    continue
                 feat_node = self.label('UPPRO', feature.id)
                 edges.append((feat_node, prot_node,
                               {'type': 'partof'}))
