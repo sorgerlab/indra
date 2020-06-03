@@ -150,6 +150,16 @@ def test_bfs():
     assert len(paths) == len(expected_paths), len(paths)
     assert set(paths) == expected_paths, 'sets of paths not equal'
 
+    # Test memory limit; a very low number should yield one path
+    error = False
+    gen = bfs_search(dg, 'D1', depth_limit=5, reverse=True, max_memory=16)
+    _ = next(gen)
+    try:
+        _ = next(gen)
+    except (RuntimeError, StopIteration):
+        error = True
+    assert error
+
 
 def test_signed_bfs():
     dg, _ = _setup_unsigned_graph()
