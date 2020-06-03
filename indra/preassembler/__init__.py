@@ -32,6 +32,10 @@ class Preassembler(object):
         A function which takes two Statement objects and an ontology
         as an argument and returns True or False. If supplied, it overrides
         the built-in refinement_of method of each Statement being assembled.
+    refinement_ns : Optional[set]
+        A set of name spaces that should be considered for constructing
+        refinements. If not provided, all name spaces are considered.
+        Default: None
 
     Attributes
     ----------
@@ -45,7 +49,7 @@ class Preassembler(object):
         An INDRA Ontology object.
     """
     def __init__(self, ontology, stmts=None, matches_fun=None,
-                 refinement_fun=None):
+                 refinement_fun=None, refinement_ns=None):
         self.ontology = ontology
         if stmts:
             logger.debug("Deepcopying stmts in __init__")
@@ -58,6 +62,7 @@ class Preassembler(object):
             default_matches_fun
         self.refinement_fun = refinement_fun if refinement_fun else \
             default_refinement_fun
+        self.refinement_ns = refinement_ns
 
     def add_statements(self, stmts):
         """Add to the current list of statements.
@@ -209,20 +214,24 @@ class Preassembler(object):
                 if not ontology.components:
                     entities.append('component1')
                     continue
-                # We have grounding, now check for a component ID
-                label = ontology.label(a_ns, a_id)
-                # This is the component ID corresponding to the agent
-                # in the entity hierarchy
-                component = ontology.components.get(label)
-                # If no component ID, use the entity_matches_key()
-                if component is None:
+                if self.refinement_ns is not None \
+                        and a_ns not in self.refinement_ns:
                     entities.append(a.entity_matches_key())
-                # Component ID, so this is in a family
                 else:
-                    # We turn the component ID into a string so that
-                    # we can sort it along with entity_matches_keys
-                    # for Complexes
-                    entities.append(str(component))
+                    # We have grounding, now check for a component ID
+                    label = ontology.label(a_ns, a_id)
+                    # This is the component ID corresponding to the agent
+                    # in the entity hierarchy
+                    component = ontology.components.get(label)
+                    # If no component ID, use the entity_matches_key()
+                    if component is None:
+                        entities.append(a.entity_matches_key())
+                    # Component ID, so this is in a family
+                    else:
+                        # We turn the component ID into a string so that
+                        # we can sort it along with entity_matches_keys
+                        # for Complexes
+                        entities.append(str(component))
         return entities
 
     def _get_stmt_by_group(self, stmt_type, stmts_this_type, ontology):
@@ -331,7 +340,13 @@ class Preassembler(object):
                 # statements to all groups with the matching first arg
                 for first_arg_key in first_arg_keys:
                     stmt_by_group[first_arg_key] += stmts
-        return stmt_by_group
+        ncomp = 0
+        for k, v in stmt_by_group.items():
+            ncomp += 2*len(v)*(len(v)-1)
+        logger.debug('Number of comparisons: %d' % ncomp)
+        logger.debug('Size of largest group: %d' %
+                     max([len(g) for g in stmt_by_group.values()]))
+        return dict(stmt_by_group)
 
     def _generate_id_maps(self, unique_stmts, poolsize=None,
                           size_cutoff=100, split_idx=None):
