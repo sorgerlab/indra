@@ -254,7 +254,11 @@ reach_text_model = api.inherit('ReachText', bio_text_model, {
     'url': fields.String
 })
 reach_json_model = api.model('ReachJSON', {'json': fields.Nested(dict_model)})
-reach_pmc_model = api.model('ReachPMC', {'pmcid': fields.String})
+reach_pmc_model = api.model('ReachPMC', {
+    'pmcid': fields.String,
+    'offline': fields.Boolean(default=False),
+    'url': fields.String
+})
 
 
 @reach_ns.expect(reach_text_model)
