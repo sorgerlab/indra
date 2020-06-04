@@ -5,7 +5,6 @@ from nose.plugins.attrib import attr
 from os import path
 from rest_api.flask_api import api
 from indra.statements import *
-from indra.preassembler.hierarchy_manager import get_wm_hierarchies
 
 
 HERE = path.dirname(path.abspath(__file__))
@@ -823,7 +822,6 @@ def test_eidos_ungrounded():
     assert len(st_out) == 1
 
 
-@attr('webservice')
 def test_responsive():
     res = _call_api('get', '/')
     assert res.data.startswith(
@@ -831,7 +829,6 @@ def test_responsive():
         "Unexpected content: %s" % res.data
 
 
-@attr('webservice')
 def test_options():
     res = _call_api('options', 'reach/process_text')
     res_json = json.loads(res.get_data())
@@ -839,7 +836,7 @@ def test_options():
         "Unexpected content: %s" % res_json
 
 
-@attr('webservice', 'notravis')
+@attr('notravis')
 def test_trips_process_text():
     res = _call_api('post', 'trips/process_text',
                     json={'text': 'MEK phosphorylates ERK.'})
@@ -853,7 +850,6 @@ def test_trips_process_text():
     assert stmt.sub.name == 'ERK', stmt.sub
 
 
-@attr('webservice')
 def test_trips_process_xml():
     test_ekb_path = path.join(HERE, 'trips_ekbs',
                               'MEK_increases_the_phosphorylation_of_ERK.ekb')
@@ -870,7 +866,7 @@ def test_trips_process_xml():
     assert stmt.sub.name == 'ERK', stmt.sub
 
 
-@attr('webservice', 'notravis')
+@attr('notravis')
 def test_reach_process_text():
     res = _call_api('post', 'reach/process_text',
                     json={'text': 'MEK phosphorylates ERK.'})
@@ -884,7 +880,6 @@ def test_reach_process_text():
     assert stmt.sub.name == 'ERK', stmt.sub
 
 
-@attr('webservice')
 def test_reach_process_json():
     test_file = path.join(HERE, 'reach_act_amt.json')
     with open(test_file, 'rb') as fh:
@@ -954,7 +949,6 @@ STMT_JSON = {
 }
 
 
-@attr('webservice')
 def test_assemblers_cyjs():
     res = _call_api('post', 'assemblers/cyjs',
                     json={'statements': [STMT_JSON]})
@@ -965,7 +959,6 @@ def test_assemblers_cyjs():
     return
 
 
-@attr('webservice')
 def test_assemblers_pysb_no_format():
     res = _call_api('post', 'assemblers/pysb',
                     json={'statements': [STMT_JSON]})
@@ -976,7 +969,6 @@ def test_assemblers_pysb_no_format():
     return
 
 
-@attr('webservice')
 def test_assemblers_pysb_kappa_img_format():
     for exp_format in ['kappa_im', 'kappa_cm']:
         print("Testing", exp_format)
@@ -989,7 +981,6 @@ def test_assemblers_pysb_kappa_img_format():
     return
 
 
-@attr('webservice')
 def test_assemblers_pysb_kappa_other_formats():
     # All the formats defined in PysbAssembler.export_model doc string.
     formats = ['bngl', 'kappa', 'sbml', 'matlab', 'mathematica',
@@ -1005,7 +996,6 @@ def test_assemblers_pysb_kappa_other_formats():
     return
 
 
-@attr('webservice')
 def test_assemblers_cx():
     res = _call_api('post', 'assemblers/cx', json={'statements': [STMT_JSON]})
     res_json = json.loads(res.get_data())
@@ -1014,7 +1004,6 @@ def test_assemblers_cx():
     assert 'MEK' in res_json['model'], res_json['model']
 
 
-@attr('webservice')
 def test_assemblers_graph():
     res = _call_api('post', 'assemblers/graph',
                     json={'statements': [STMT_JSON]})
@@ -1024,7 +1013,6 @@ def test_assemblers_graph():
     assert 'MEK' in res_json['model'], res_json['model']
 
 
-@attr('webservice')
 def test_assemblers_english():
     res = _call_api('post', 'assemblers/english',
                     json={'statements': [STMT_JSON]})
@@ -1035,7 +1023,6 @@ def test_assemblers_english():
     assert 'MEK' in sentence, sentence
 
 
-@attr('webservice')
 def test_assemblers_loopy():
     stmt_jsons = [{
             "id": "acc6d47c-f622-41a4-8ae9-d7b0f3d24a2f",
@@ -1061,7 +1048,6 @@ def test_assemblers_loopy():
     assert "ERK" in res_json['loopy_url']
 
 
-@attr('webservice')
 def test_pipeline():
     p = [{'function': 'filter_grounded_only'},
          {'function': 'run_preassembly',
@@ -1082,14 +1068,7 @@ def test_ontology_mapping():
                                        'education', 1.0)]})
 
     st = Influence(Event(c1), Event(c2))
-    # stmts_json = stmts_to_json([st])
-    # url = base_url + '/preassembly/map_ontologies'
-    # res = requests.post(url, json={'statements': stmts_json})
-    # res_json = res.json()
-    # res = _call_api
-    # stmts_json = res_json.get('statements')
     st_out = _post_stmts_preassembly([st], route)
     stmt = st_out[0]
     assert 'SOFIA' in stmt.subj.concept.db_refs, stmt.subj.concept.db_refs
     assert 'SOFIA' in stmt.obj.concept.db_refs, stmt.obj.concept.db_refs
-    
