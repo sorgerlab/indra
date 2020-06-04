@@ -886,8 +886,27 @@ def test_reach_process_text():
 
 @attr('webservice')
 def test_reach_process_json():
-    # TODO: Add test of reach process json
-    return
+    test_file = path.join(HERE, 'reach_act_amt.json')
+    with open(test_file, 'rb') as fh:
+        json_str = fh.read().decode('utf-8')
+    res = _call_api('post', 'reach/process_json',
+                    json={'json': json_str})
+    res_json = json.loads(res.get_data())
+    assert 'statements' in res_json.keys(), res_json
+    stmts = stmts_from_json(res_json['statements'])
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], IncreaseAmount)
+    assert stmts[0].subj is not None
+    assert stmts[0].obj is not None
+
+
+def test_reach_process_pmc():
+    res = _call_api('post', 'reach/process_pmc', json={'pmcid': 'PMC4338247'})
+    res_json = json.loads(res.get_data())
+    assert 'statements' in res_json.keys(), res_json
+    stmts = stmts_from_json(res_json['statements'])
+    assert stmts
+    assert stmts[0].evidence[0].pmid is not None
 
 
 def test_cwms_process_text():
@@ -917,7 +936,7 @@ def test_eidos_json():
         test_json = fh.read()
     res = _call_api('post', '/eidos/process_jsonld',
                     json={'jsonld': test_json})
-    res_json = json.loads(res.get_data())              
+    res_json = json.loads(res.get_data())
     stmts_json = res_json.get('statements')
     stmts = stmts_from_json(stmts_json)
     assert len(stmts) == 1
