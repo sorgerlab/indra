@@ -396,13 +396,16 @@ def run_preassembly(stmts_in, **kwargs):
         Instance of BeliefScorer class to use in calculating Statement
         probabilities. If None is provided (default), then the default
         scorer is used.
-    ontology : IndraOntology
+    ontology : Optional[IndraOntology]
         IndraOntology object to use for preassembly
-    matches_fun : function
+    matches_fun : Optional[function]
         A function to override the built-in matches_key function of statements.
-    refinement_fun : function
+    refinement_fun : Optional[function]
         A function to override the built-in refinement_of function of
         statements.
+    refinement_ns : Optional[set]
+        A set of name spaces over which refinements should be constructed.
+        If not provided, all name spaces are considered.
     flatten_evidence : Optional[bool]
         If True, evidences are collected and flattened via supports/supported_by
         links. Default: False
@@ -434,10 +437,12 @@ def run_preassembly(stmts_in, **kwargs):
     belief_scorer = kwargs.get('belief_scorer')
     matches_fun = kwargs.get('matches_fun')
     refinement_fun = kwargs.get('refinement_fun')
+    refinement_ns = kwargs.get('refinement_ns')
     use_ontology = kwargs.get('ontology', bio_ontology)
     be = BeliefEngine(scorer=belief_scorer, matches_fun=matches_fun)
     pa = Preassembler(use_ontology, stmts_in, matches_fun=matches_fun,
-                      refinement_fun=refinement_fun)
+                      refinement_fun=refinement_fun,
+                      refinement_ns=refinement_ns)
     if kwargs.get('normalize_equivalences'):
         logger.info('Normalizing equals on %d statements' % len(pa.stmts))
         pa.normalize_equivalences(kwargs.get('normalize_ns'))
@@ -455,7 +460,7 @@ def run_preassembly(stmts_in, **kwargs):
                'poolsize': poolsize, 'size_cutoff': size_cutoff,
                'flatten_evidence': kwargs.get('flatten_evidence', False),
                'flatten_evidence_collect_from':
-                   kwargs.get('flatten_evidence_collect_from', 'supported_by')
+                   kwargs.get('flatten_evidence_collect_from', 'supported_by'),
                }
     stmts_out = run_preassembly_related(pa, be, **options)
     return stmts_out
