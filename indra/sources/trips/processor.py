@@ -1259,9 +1259,13 @@ class TripsProcessor(object):
             # If agent_name is still None take the name of the term as
             # agent name
             if agent_name is None:
-                name = term.find("name")
-                if name is not None and name.text is not None:
-                    agent_name = sanitize_trips_name(name.text)
+                input_txt = _get_input_txt(term)
+                if input_txt:
+                    agent_name = input_txt
+                else:
+                    name = term.find("name")
+                    if name is not None and name.text is not None:
+                        agent_name = sanitize_trips_name(name.text)
             # If after all of this, the agent name is still None
             # then we don't extract this term as an agent
             if agent_name is None:
@@ -1746,6 +1750,15 @@ def _is_base_agent_state(agent):
     return False
 
 
+def _get_input_txt(term):
+    drum_terms = term.findall('drum-terms/drum-term')
+    if drum_terms:
+        input_txt = drum_terms[0].attrib.get('input')
+        if input_txt:
+            return input_txt
+    return None
+
+
 def _get_db_refs(term):
     """Extract database references for a TERM."""
     db_refs = {}
@@ -1755,18 +1768,18 @@ def _get_db_refs(term):
     # term but it contains the term in a raw, non-canonicalized form.
     # The <name> tag only contains the name of the entity but it is
     # canonicalized. For instance, MAP2K1 appears as MAP-2-K-1.
-    agent_text_tag = term.find('name')
-    if agent_text_tag is not None:
-        db_refs['TEXT'] = agent_text_tag.text
-        # If we have some drum-terms, the matched-name of the first
-        # drum-term (e.g. "MAP2K1") is a better value for TEXT than
-        # the name of the TERM (e.g. "MAP-2-K-1") so we put that in there
-        drum_terms = term.findall('drum-terms/drum-term')
-        if drum_terms:
-            input_txt = drum_terms[0].attrib.get('input')
-            if input_txt:
-                db_refs['TEXT'] = input_txt
-            else:
+    input_txt = _get_input_txt(term)
+    if input_txt:
+        db_refs['TEXT'] = input_txt
+    else:
+        agent_text_tag = term.find('name')
+        if agent_text_tag is not None:
+            db_refs['TEXT'] = agent_text_tag.text
+            # If we have some drum-terms, the matched-name of the first
+            # drum-term (e.g. "MAP2K1") is a better value for TEXT than
+            # the name of the TERM (e.g. "MAP-2-K-1") so we put that in there
+            drum_terms = term.findall('drum-terms/drum-term')
+            if drum_terms:
                 matched_name = drum_terms[0].attrib.get('matched-name')
                 if matched_name:
                     db_refs['TEXT'] = matched_name
