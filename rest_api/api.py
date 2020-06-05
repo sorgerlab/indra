@@ -63,7 +63,16 @@ databases_ns = api.namespace(
 dict_model = api.model('dict', {})
 
 stmts_model = api.model('Statements', {
-    'statements': fields.List(fields.Nested(dict_model))})
+    'statements': fields.List(fields.Nested(dict_model), example=[{
+        "id": "acc6d47c-f622-41a4-8ae9-d7b0f3d24a2f",
+        "type": "Complex",
+        "members": [
+            {"db_refs": {"TEXT": "MEK", "FPLX": "MEK"}, "name": "MEK"},
+            {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"}
+        ],
+        "sbo": "http://identifiers.org/sbo/SBO:0000526",
+        "evidence": [{"text": "MEK binds ERK", "source_api": "trips"}]
+        }])})
 bio_text_model = api.model('BioText', {
     'text': fields.String(example='GRB2 binds SHC.')})
 wm_text_model = api.model('WMText', {
@@ -110,7 +119,10 @@ def _stmts_from_proc(proc):
 
 # Manually add preassembly resources not based on assembly corpus functions
 pipeline_model = api.inherit('Pipeline', stmts_model, {
-    'pipeline': fields.List(fields.Nested(dict_model))
+    'pipeline': fields.List(fields.Nested(dict_model), example=[
+        {'function': 'filter_grounded_only'},
+        {'function': 'run_preassembly', 'kwargs': {'return_toplevel': False}}
+    ])
 })
 
 
@@ -216,7 +228,10 @@ def make_preassembly_model(func):
                 model_fields[arg] = fields.Float(example=0.7)
             elif arg in list_args:
                 if arg == 'curations':
-                    model_fields[arg] = fields.List(fields.Nested(dict_model))
+                    model_fields[arg] = fields.List(
+                        fields.Nested(dict_model),
+                        example=[{'pa_hash': '1234', 'source_hash': '2345',
+                                  'tag': 'wrong_relation'}])
                 else:
                     model_fields[arg] = fields.List(
                         fields.String, example=default)
