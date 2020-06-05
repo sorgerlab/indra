@@ -69,8 +69,9 @@ bio_text_model = api.model('BioText', {
 wm_text_model = api.model('WMText', {
     'text': fields.String(example='Rainfall causes floods.')})
 jsonld_model = api.model('jsonld', {
-    'jsonld': fields.Nested(dict_model)})
-genes_model = api.model('Genes', {'genes': fields.List(fields.String)})
+    'jsonld': fields.String(example='{}')})
+genes_model = api.model('Genes', {
+    'genes': fields.List(fields.String, example=['BRAF', 'MAP2K1'])})
 
 # Store the arguments by type
 int_args = ['poolsize', 'size_cutoff']
@@ -206,22 +207,23 @@ def make_preassembly_model(func):
             default = None
             if args[arg].default is not inspect.Parameter.empty:
                 default = args[arg].default
+            # Need to use default for boolean and example for other types
             if arg in boolean_args:
                 model_fields[arg] = fields.Boolean(default=default)
             elif arg in int_args:
-                model_fields[arg] = fields.Integer(default=default)
+                model_fields[arg] = fields.Integer(example=default)
             elif arg in float_args:
-                model_fields[arg] = fields.Float(default=default)
+                model_fields[arg] = fields.Float(example=0.7)
             elif arg in list_args:
                 if arg == 'curations':
                     model_fields[arg] = fields.List(fields.Nested(dict_model))
                 else:
                     model_fields[arg] = fields.List(
-                        fields.String, default=default)
+                        fields.String, example=default)
             elif arg in dict_args:
-                model_fields[arg] = fields.Nested(dict_model, default=default)
+                model_fields[arg] = fields.Nested(dict_model)
             else:
-                model_fields[arg] = fields.String(default=default)
+                model_fields[arg] = fields.String(example=default)
     new_model = api.inherit(
         ('%s_input' % func.__name__), stmts_model, model_fields)
     return new_model
@@ -251,13 +253,13 @@ for func_name, func in pipeline_functions.items():
 # Create resources for REACH namespace
 reach_text_model = api.inherit('ReachText', bio_text_model, {
     'offline': fields.Boolean(default=False),
-    'url': fields.String
+    'url': fields.String(example=reach_text_url)
 })
-reach_json_model = api.model('ReachJSON', {'json': fields.Nested(dict_model)})
+reach_json_model = api.model('ReachJSON', {'json': fields.String(example='{}')})
 reach_pmc_model = api.model('ReachPMC', {
-    'pmcid': fields.String,
+    'pmcid': fields.String(example='PMC3717945'),
     'offline': fields.Boolean(default=False),
-    'url': fields.String
+    'url': fields.String(example=reach_nxml_url)
 })
 
 
@@ -379,8 +381,9 @@ text_auth_model = api.inherit('TextAuth', wm_text_model, {
     'auth': fields.List(fields.String, example=['USER', 'PASS'])})
 
 
+# Hide documentation because webservice is unresponsive
 @sofia_ns.expect(text_auth_model)
-@sofia_ns.route('/process_text')
+@sofia_ns.route('/process_text', doc=False)
 class SofiaProcessText(Resource):
     @api.doc(False)
     def options(self):
@@ -398,15 +401,15 @@ class SofiaProcessText(Resource):
 # Create resources for Eidos namespace
 eidos_text_model = api.inherit('EidosText', wm_text_model, {
     'webservice': fields.String,
-    'grounding_ns': fields.String
+    'grounding_ns': fields.String(example='WM')
 })
 eidos_jsonld_model = api.inherit('EidosJsonld', jsonld_model, {
-    'grounding_ns': fields.String
+    'grounding_ns': fields.String(example='WM')
 })
 
 
 @eidos_ns.expect(eidos_text_model)
-@eidos_ns.route('/process_text')
+@eidos_ns.route('/process_text', doc=False)
 class EidosProcessText(Resource):
     @api.doc(False)
     def options(self):
@@ -510,8 +513,8 @@ class BelProcessBelRdf(Resource):
 
 # Create resources for BioPax namespace
 source_target_model = api.model('SourceTarget', {
-    'source': fields.List(fields.String),
-    'target': fields.List(fields.String)
+    'source': fields.List(fields.String, example=['BRAF', 'RAF1', 'ARAF']),
+    'target': fields.List(fields.String, example=['MAP2K1', 'MAP2K2'])
 })
 
 
@@ -567,7 +570,7 @@ class BiopaxNeighborhood(Resource):
 
 # Create resources for Assemblers namespace
 pysb_stmts_model = api.inherit('PysbStatements', stmts_model, {
-    'export_format': fields.String
+    'export_format': fields.String(example='kappa')
 })
 
 
@@ -818,8 +821,8 @@ class GetEvidence(Resource):
 
 # Create resources for Databases namespace
 cbio_model = api.model('Cbio', {
-    'gene_list': fields.List(fields.String),
-    'cell_lines': fields.List(fields.String)
+    'gene_list': fields.List(fields.String, example=["FOSL1", "GRB2"]),
+    'cell_lines': fields.List(fields.String, example=['COLO679_SKIN'])
 })
 
 
