@@ -861,7 +861,7 @@ class CbioCna(Resource):
         args = request.json
         gene_list = args.get('gene_list')
         cell_lines = args.get('cell_lines')
-        mrna_amounts = cbio_client.get_ccle_cna(gene_list, cell_lines)
+        cna = cbio_client.get_ccle_cna(gene_list, cell_lines)
         res = {'cna': cna}
         return res
 
@@ -880,7 +880,7 @@ class CbioMutations(Resource):
         args = request.json
         gene_list = args.get('gene_list')
         cell_lines = args.get('cell_lines')
-        mrna_amounts = cbio_client.get_ccle_mutations(gene_list, cell_lines)
+        mutations = cbio_client.get_ccle_mutations(gene_list, cell_lines)
         res = {'mutations': mutations}
         return res
 
