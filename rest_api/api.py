@@ -235,12 +235,12 @@ for func_name, func in pipeline_functions.items():
         doc = ''
         # Get the function description from docstring
         if func.__doc__:
-            doc = func.__doc__.split('\n')[0]
+            doc = func.__doc__
 
         new_model = make_preassembly_model(func)
 
         @preassembly_ns.expect(new_model)
-        @preassembly_ns.route(('/%s' % func_name), doc={'description': doc})
+        @preassembly_ns.route(('/%s' % func_name))
         class NewFunction(PreassembleStatements):
             func_name = func_name
 
@@ -408,6 +408,7 @@ eidos_jsonld_model = api.inherit('EidosJsonld', jsonld_model, {
 })
 
 
+# Hide docs until webservice is available
 @eidos_ns.expect(eidos_text_model)
 @eidos_ns.route('/process_text', doc=False)
 class EidosProcessText(Resource):
