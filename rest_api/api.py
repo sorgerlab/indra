@@ -248,14 +248,16 @@ def make_preassembly_model(func):
 for func_name, func in pipeline_functions.items():
     if func.__module__ == 'indra.tools.assemble_corpus':
         doc = ''
+        short_doc = ''
         # Get the function description from docstring
         if func.__doc__:
             doc = func.__doc__
-
+            short_doc = doc.split('\n')[0] + '\n'
         new_model = make_preassembly_model(func)
 
         @preassembly_ns.expect(new_model)
-        @preassembly_ns.route(('/%s' % func_name))
+        @preassembly_ns.route(('/%s' % func_name),
+                              doc={'description': short_doc})
         class NewFunction(PreassembleStatements):
             func_name = func_name
 
