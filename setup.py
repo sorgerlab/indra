@@ -37,7 +37,7 @@ def main():
                       'graph': ['pygraphviz'],
                       'plot': ['matplotlib'],
                       'isi': ['nltk', 'unidecode'],
-                      'api': ['flask']
+                      'api': ['flask', 'flask_restx', 'flask_cors']
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
                                   for dep in deps})
