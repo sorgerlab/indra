@@ -1,5 +1,6 @@
 __all__ = ['shortest_simple_paths', 'bfs_search', 'find_sources',
            'get_path_iter']
+import sys
 import logging
 from collections import deque
 from copy import deepcopy
@@ -165,7 +166,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
                depth_limit=2, path_limit=None, max_per_node=5,
                node_filter=None, node_blacklist=None, terminal_ns=None,
-               sign=None, **kwargs):
+               sign=None, max_memory=int(2**29), **kwargs):
     """Do breadth first search from a given node and yield paths
 
     Parameters
@@ -200,9 +201,13 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
         A set of nodes to ignore. Default: None.
     terminal_ns : list[str]
         Force a path to terminate when any of the namespaces in this list
-        are encountered.
+        are encountered and only yield paths that terminate at these
+        namepsaces
     sign : int
-        If set, defines the search to be a signed search. Default: None.
+        If set, defines the search to be a signed search. Default: None.\
+    max_memory : int
+        The maximum memory usage in bytes allowed for the variables queue
+        and visited. Default: 1073741824 bytes (== 1 GiB).
 
     Yields
     ------
@@ -232,7 +237,6 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
 
         # if last node is in terminal_ns, continue to next path
         if terminal_ns and g_nodes[node_name]['ns'].lower() in terminal_ns:
-            # Check correct leaf sign for signed search
             continue
 
         sorted_neighbors = get_sorted_neighbors(G=g, node=last_node,
@@ -266,7 +270,7 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
             # Check yield and break conditions
             if len(new_path) > depth_limit + 1:
                 continue
-            else:
+            elif terminal_ns is None:
                 # Yield newest path and recieve new ignore values
 
                 # Signed search yield
@@ -299,17 +303,48 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
                     yielded_paths += 1
                     yielded_neighbors += 1
 
-                # If new ignore nodes are recieved, update set
-                if ign_vals is not None:
-                    ign_nodes, ign_edges = ign_vals
-                    visited.update(ign_nodes)
+            # terminal_ns is not None: only yield if last node is in
+            # teminal_ns
+            else:
+                # If terminal_ns
+                if g_nodes[neig_name]['ns'].lower() in terminal_ns:
+                    # If signed, reverse, negative start node OR
+                    #    signed, not reverse, wrong sign:
+                    # don't yield this path
+                    if sign is not None and \
+                            reverse and \
+                            new_path[-1][1] == int_minus \
+                            or \
+                            sign is not None and \
+                            not reverse and \
+                            new_path[-1][1] != sign:
+                        ign_vals = None
+                        pass
+                    else:
+                        ign_vals = yield new_path
+                        yielded_paths += 1
+                        yielded_neighbors += 1
+                else:
+                    ign_vals = None
+                    pass
 
-                # Check max paths reached, no need to add to queue
-                if path_limit and yielded_paths >= path_limit:
-                    break
+            # If new ignore nodes are recieved, update set
+            if ign_vals is not None:
+                ign_nodes, ign_edges = ign_vals
+                visited.update(ign_nodes)
+
+            # Check max paths reached, no need to add to queue
+            if path_limit and yielded_paths >= path_limit:
+                break
 
             # Append yielded path
             queue.append(new_path)
+
+            # Check for memory
+            if sys.getsizeof(queue) + sys.getsizeof(visited) > max_memory:
+                logger.warning('Memory overflow reached: %d' %
+                               (sys.getsizeof(queue) + sys.getsizeof(visited)))
+                raise StopIteration('Reached maxmimum allowed memory usage')
 
             # Check if we've visited enough neighbors
             # Todo: add all neighbors to 'visited' and add all skipped
