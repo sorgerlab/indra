@@ -3,6 +3,8 @@ import inspect
 import logging
 import json
 import base64
+
+from docstring_parser import parse
 from collections import namedtuple
 from flask import Flask, request
 from flask_restx import Api, Resource, fields, abort
@@ -244,6 +246,52 @@ def make_preassembly_model(func):
     return new_model
 
 
+def update_docstring(func):
+    doc = func.__doc__
+    docstring = parse(doc)
+    new_doc = docstring.short_description + '\n\n'
+    if docstring.long_description:
+        new_doc += (docstring.long_description + '\n\n')
+    new_doc += '`Parameters`\n\n'
+    for param in docstring.params:
+        if param.arg_name in ['save', 'save_unique']:
+            continue
+        elif param.arg_name in ['stmts', 'stmts_in']:
+            param.arg_name = 'statements'
+            param.type_name = 'list[indra.statements.Statement.to_json()]'
+        elif param.arg_name == 'belief_scorer':
+            param.type_name = 'Optional[str] or None'
+            param.description = (
+                'Type of BeliefScorer to use in calculating Statement '
+                'probabilities. If None is provided (default), then the '
+                'default scorer is used (good for biology use case). '
+                'For WorldModelers use case belief scorer should be set '
+                'to "wm".')
+        elif param.arg_name == 'hierarchies':
+            param.type_name = 'Optional[str] or None'
+            param.description = (
+                'Type of hierarchy managers to use for preassembly. '
+                'If None is provided (default), then the default '
+                'hierarchies are used (good for biology use case). '
+                'For WorldModelers use case hierarchies should be set '
+                'to "wm".')
+        elif param.arg_name in ['matches_fun', 'refinement_fun']:
+            param.type_name = 'str'
+        elif param.arg_name == 'curations':
+            param.type_name = 'list[dict]'
+            param.description = (
+                'A list of dictionaries representing curations. Each '
+                'dictionary must have "pa_hash" (preassembled statement hash)'
+                ', "source_hash", (evidence hash) and "tag" (e.g. "correct", '
+                '"wrong_relation", etc.) keys.')
+        new_doc += (param.arg_name + ' : ' + param.type_name + '\n' +
+                    param.description + '\n\n')
+    new_doc += '`Returns`\n\n'
+    new_doc += 'statements : list[indra.statements.Statement.to_json()]\n'
+    new_doc += 'A list of processed INDRA Statements'
+    return docstring.short_description, new_doc
+
+
 # Create resources for each of assembly_corpus functions
 for func_name, func in pipeline_functions.items():
     if func.__module__ == 'indra.tools.assemble_corpus':
@@ -251,8 +299,7 @@ for func_name, func in pipeline_functions.items():
         short_doc = ''
         # Get the function description from docstring
         if func.__doc__:
-            doc = func.__doc__
-            short_doc = doc.split('\n')[0] + '\n'
+            short_doc, doc = update_docstring(func)
         new_model = make_preassembly_model(func)
 
         @preassembly_ns.expect(new_model)
