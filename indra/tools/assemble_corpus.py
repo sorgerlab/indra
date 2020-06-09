@@ -1918,6 +1918,11 @@ def standardize_names_groundings(stmts):
     NOTE: this function is currently optimized for Influence Statements
     obtained from Eidos, Hume, Sofia and CWMS. It will possibly yield
     unexpected results for biology-specific Statements.
+
+    Parameters
+    ----------
+    stmts : list[indra.statements.Statement]
+        A list of statements whose Concept names should be standardized.
     """
     print('Standardize names to groundings')
     for stmt in stmts:
