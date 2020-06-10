@@ -45,14 +45,8 @@ CORS(app)
 
 preassembly_ns = api.namespace(
     'Preassembly', 'Preassemble INDRA Statements', path='/preassembly/')
-sofia_ns = api.namespace('Sofia', 'Process with Sofia', path='/sofia/')
-eidos_ns = api.namespace('Eidos', 'Process with Eidos', path='/eidos/')
-hume_ns = api.namespace('Hume', 'Process with Hume', path='/hume/')
-bel_ns = api.namespace('BEL', 'Process with BEL', path='/bel/')
-trips_ns = api.namespace('TRIPS', 'Process with TRIPS', path='/trips/')
-reach_ns = api.namespace('REACH', 'Process with REACH', path='/reach/')
-cwms_ns = api.namespace('CWMS', 'Process with CWMS', path='/cwms/')
-biopax_ns = api.namespace('BioPAX', 'Process with BioPax', path='/biopax/')
+sources_ns = api.namespace(
+    'Sources', 'Get INDRA Statements from various sources', path='/')
 assemblers_ns = api.namespace(
     'Assemblers', 'Assemble INDRA Statements into models', path='/assemblers/')
 ndex_ns = api.namespace('NDEx', 'Use NDEx service', path='/')
@@ -314,7 +308,9 @@ for func_name, func in pipeline_functions.items():
             post.__doc__ = doc
 
 
-# Create resources for REACH namespace
+# Create resources for Sources namespace
+
+# REACH
 reach_text_model = api.inherit('ReachText', bio_text_model, {
     'offline': fields.Boolean(default=False),
     'url': fields.String(example=reach_text_url)
@@ -327,8 +323,8 @@ reach_pmc_model = api.model('ReachPMC', {
 })
 
 
-@reach_ns.expect(reach_text_model)
-@reach_ns.route('/process_text')
+@sources_ns.expect(reach_text_model)
+@sources_ns.route('/reach/process_text')
 class ReachProcessText(Resource):
     @api.doc(False)
     def options(self):
@@ -359,8 +355,8 @@ class ReachProcessText(Resource):
         return _stmts_from_proc(rp)
 
 
-@reach_ns.expect(reach_json_model)
-@reach_ns.route('/process_json')
+@sources_ns.expect(reach_json_model)
+@sources_ns.route('/reach/process_json')
 class ReachProcessJson(Resource):
     @api.doc(False)
     def options(self):
@@ -374,8 +370,8 @@ class ReachProcessJson(Resource):
         return _stmts_from_proc(rp)
 
 
-@reach_ns.expect(reach_pmc_model)
-@reach_ns.route('/process_pmc')
+@sources_ns.expect(reach_pmc_model)
+@sources_ns.route('/reach/process_pmc')
 class ReachProcessPmc(Resource):
     @api.doc(False)
     def options(self):
@@ -425,8 +421,8 @@ class TripsProcessText(Resource):
         return _stmts_from_proc(tp)
 
 
-@trips_ns.expect(xml_model)
-@trips_ns.route('/process_xml')
+@sources_ns.expect(xml_model)
+@sources_ns.route('/trips/process_xml')
 class TripsProcessText(Resource):
     @api.doc(False)
     def options(self):
@@ -440,14 +436,14 @@ class TripsProcessText(Resource):
         return _stmts_from_proc(tp)
 
 
-# Create resources for Sofia namespace
+# Sofia
 text_auth_model = api.inherit('TextAuth', wm_text_model, {
     'auth': fields.List(fields.String, example=['USER', 'PASS'])})
 
 
 # Hide documentation because webservice is unresponsive
-@sofia_ns.expect(text_auth_model)
-@sofia_ns.route('/process_text', doc=False)
+@sources_ns.expect(text_auth_model)
+@sources_ns.route('/sofia/process_text', doc=False)
 class SofiaProcessText(Resource):
     @api.doc(False)
     def options(self):
@@ -462,7 +458,7 @@ class SofiaProcessText(Resource):
         return _stmts_from_proc(sp)
 
 
-# Create resources for Eidos namespace
+# Eidos
 eidos_text_model = api.inherit('EidosText', wm_text_model, {
     'webservice': fields.String,
     'grounding_ns': fields.String(example='WM')
@@ -473,8 +469,8 @@ eidos_jsonld_model = api.inherit('EidosJsonld', jsonld_model, {
 
 
 # Hide docs until webservice is available
-@eidos_ns.expect(eidos_text_model)
-@eidos_ns.route('/process_text', doc=False)
+@sources_ns.expect(eidos_text_model)
+@sources_ns.route('/eidos/process_text', doc=False)
 class EidosProcessText(Resource):
     @api.doc(False)
     def options(self):
@@ -493,8 +489,8 @@ class EidosProcessText(Resource):
         return _stmts_from_proc(ep)
 
 
-@eidos_ns.expect(eidos_jsonld_model)
-@eidos_ns.route('/process_jsonld')
+@sources_ns.expect(eidos_jsonld_model)
+@sources_ns.route('/eidos/process_jsonld')
 class EidosProcessJsonld(Resource):
     @api.doc(False)
     def options(self):
@@ -509,9 +505,9 @@ class EidosProcessJsonld(Resource):
         return _stmts_from_proc(ep)
 
 
-# Create resources for Hume namespace
-@hume_ns.expect(jsonld_model)
-@hume_ns.route('/process_jsonld')
+# Hume
+@sources_ns.expect(jsonld_model)
+@sources_ns.route('/hume/process_jsonld')
 class HumeProcessJsonld(Resource):
     @api.doc(False)
     def options(self):
@@ -526,9 +522,9 @@ class HumeProcessJsonld(Resource):
         return _stmts_from_proc(hp)
 
 
-# Create resources for CWMS namespace
-@cwms_ns.expect(wm_text_model)
-@cwms_ns.route('/process_text')
+# CWMS
+@sources_ns.expect(wm_text_model)
+@sources_ns.route('/cwms/process_text')
 class CwmsProcessText(Resource):
     @api.doc(False)
     def options(self):
@@ -542,12 +538,12 @@ class CwmsProcessText(Resource):
         return _stmts_from_proc(cp)
 
 
-# Create resources for BEL namespace
+# BEL
 bel_rdf_model = api.model('BelRdf', {'belrdf': fields.String})
 
 
-@bel_ns.expect(genes_model)
-@bel_ns.route('/process_pybel_neighborhood')
+@sources_ns.expect(genes_model)
+@sources_ns.route('/bel/process_pybel_neighborhood')
 class BelProcessNeighborhood(Resource):
     @api.doc(False)
     def options(self):
@@ -561,8 +557,8 @@ class BelProcessNeighborhood(Resource):
         return _stmts_from_proc(bp)
 
 
-@bel_ns.expect(bel_rdf_model)
-@bel_ns.route('/process_belrdf')
+@sources_ns.expect(bel_rdf_model)
+@sources_ns.route('/bel/process_belrdf')
 class BelProcessBelRdf(Resource):
     @api.doc(False)
     def options(self):
@@ -576,15 +572,15 @@ class BelProcessBelRdf(Resource):
         return _stmts_from_proc(bp)
 
 
-# Create resources for BioPax namespace
+# BioPax
 source_target_model = api.model('SourceTarget', {
     'source': fields.List(fields.String, example=['BRAF', 'RAF1', 'ARAF']),
     'target': fields.List(fields.String, example=['MAP2K1', 'MAP2K2'])
 })
 
 
-@biopax_ns.expect(genes_model)
-@biopax_ns.route('/process_pc_pathsbetween')
+@sources_ns.expect(genes_model)
+@sources_ns.route('/biopax/process_pc_pathsbetween')
 class BiopaxPathsBetween(Resource):
     @api.doc(False)
     def options(self):
@@ -600,8 +596,8 @@ class BiopaxPathsBetween(Resource):
         return _stmts_from_proc(bp)
 
 
-@biopax_ns.expect(source_target_model)
-@biopax_ns.route('/process_pc_pathsfromto')
+@sources_ns.expect(source_target_model)
+@sources_ns.route('/biopax/process_pc_pathsfromto')
 class BiopaxPathsFromTo(Resource):
     @api.doc(False)
     def options(self):
@@ -618,8 +614,8 @@ class BiopaxPathsFromTo(Resource):
         return _stmts_from_proc(bp)
 
 
-@biopax_ns.expect(genes_model)
-@biopax_ns.route('/process_pc_neighborhood')
+@sources_ns.expect(genes_model)
+@sources_ns.route('/biopax/process_pc_neighborhood')
 class BiopaxNeighborhood(Resource):
     @api.doc(False)
     def options(self):
