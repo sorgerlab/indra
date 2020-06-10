@@ -1,8 +1,20 @@
 import requests
-from .ontology_graph import IndraOntology
+from ..ontology_graph import IndraOntology
 
 
 class VirtualOntology(IndraOntology):
+    """A virtual ontology class which uses a remote REST service to perform
+    all operations. It is particularly useful if the host machine has limited
+    resources and keeping the ontology graph in memory is not desirable.
+
+    Parameters
+    ----------
+    url : str
+        The base URL of the ontology graph web service.
+    ontology : Optional[str]
+        The identifier of the ontology recognized by the web service.
+        Default: bio
+    """
     def __init__(self, url, ontology='bio'):
         super().__init__()
         self.url = url
@@ -11,27 +23,31 @@ class VirtualOntology(IndraOntology):
     def initialize(self):
         self._initialized = True
 
-    def _rel(self, ns, id, rel_types, direction):
-        url = self.url + '/%s_rel' % direction
-        res = requests.get(url,
-                           json={'ns': ns,
-                                 'id': id,
-                                 'rel_types': rel_types,
-                                 'ontology':  self.ontology})
-        return res.json()
-
     def child_rel(self, ns, id, rel_types):
-        return self._rel(ns, id, rel_types, 'child')
+        return _send_request(self.url, 'child_rel',
+                             ns=ns, id=id, rel_types=rel_types,
+                             ontology=self.ontology)
 
     def parent_rel(self, ns, id, rel_types):
-        return self._rel(ns, id, rel_types, 'parent')
+        return _send_request(self.url, 'parent_rel',
+                             ns=ns, id=id, rel_types=rel_types,
+                             ontology=self.ontology)
 
     def get_node_property(self, ns, id, property):
-        url = self.url + '/get_node_property'
-        res = requests.get(url,
-                           json={'ns': ns,
-                                 'id': id,
-                                 'property': property,
-                                 'ontology':  self.ontology})
-        return res.json()
+        return _send_request(self.url, 'get_node_property',
+                             ns=ns, id=id, property=property,
+                             ontology=self.ontology)
 
+    def get_id_from_name(self, ns, name):
+        return _send_request(self.url, 'get_id_from_name',
+                             ns=ns, name=name, ontology=self.ontology)
+
+    def get_component_label(self, ns, id):
+        return _send_request(self.url, 'get_component_label',
+                             ns=ns, id=id, ontology=self.ontology)
+
+
+def _send_request(base_url, endpoint, **kwargs):
+    url = '%s/%s' % (base_url, endpoint)
+    res = requests.get(url, json=kwargs)
+    return res.json()
