@@ -121,7 +121,8 @@ pipeline_model = api.inherit('Pipeline', stmts_model, {
     ])
 })
 
-
+# There's an extra blank line between parameters here and in all the following
+# docstrings for better visualization in Swagger
 @preassembly_ns.expect(pipeline_model)
 @preassembly_ns.route('/pipeline')
 class RunPipeline(Resource):
@@ -130,7 +131,25 @@ class RunPipeline(Resource):
         return {}
 
     def post(self):
-        """Run an assembly pipeline for a list of Statements."""
+        """Run an assembly pipeline for a list of Statements.
+
+        Parameters
+        ----------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of INDRA Statements to run the pipeline.
+
+        pipeline : list[dict]
+            A list of dictionaries representing steps in the pipeline. Each
+            step should have a 'function' key and, if appropriate, 'args' and
+            'kwargs' keys. For more documentation and examples, see
+            https://indra.readthedocs.io/en/latest/modules/pipeline.html
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            The list of INDRA Statements resulting from running the pipeline
+            on the list of input Statements.
+        """
         args = request.json
         stmts = stmts_from_json(args.get('statements'))
         pipeline_steps = args.get('pipeline')
@@ -147,7 +166,18 @@ class MapOntologies(Resource):
         return {}
 
     def post(self):
-        """Run ontology mapping on a list of INDRA Statements."""
+        """Run ontology mapping on a list of INDRA Statements.
+
+        Parameters
+        ----------
+        statements : list[indra.statements.Statement.to_json()
+            A list of INDRA Statements to map.
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            The list of mapped INDRA Statements.
+        """
         args = request.json
         stmts = stmts_from_json(args.get('statements'))
         om = OntologyMapper(stmts, wm_ontomap, scored=True, symmetric=False)
@@ -246,7 +276,7 @@ def update_docstring(func):
     new_doc = docstring.short_description + '\n\n'
     if docstring.long_description:
         new_doc += (docstring.long_description + '\n\n')
-    new_doc += '`Parameters`\n\n'
+    new_doc += ('Parameters\n----------\n')
     for param in docstring.params:
         if param.arg_name in ['save', 'save_unique']:
             continue
@@ -280,7 +310,7 @@ def update_docstring(func):
                 '"wrong_relation", etc.) keys.')
         new_doc += (param.arg_name + ' : ' + param.type_name + '\n' +
                     param.description + '\n\n')
-    new_doc += '`Returns`\n\n'
+    new_doc += 'Returns\n----------\n'
     new_doc += 'statements : list[indra.statements.Statement.to_json()]\n'
     new_doc += 'A list of processed INDRA Statements'
     return docstring.short_description, new_doc
@@ -298,7 +328,7 @@ for func_name, func in pipeline_functions.items():
 
         @preassembly_ns.expect(new_model)
         @preassembly_ns.route(('/%s' % func_name),
-                              doc={'description': short_doc})
+                              doc={'summary': short_doc})
         class NewFunction(PreassembleStatements):
             func_name = func_name
 
@@ -331,7 +361,30 @@ class ReachProcessText(Resource):
         return {}
 
     def post(self):
-        """Process text with REACH and return INDRA Statements."""
+        """Process text with REACH and return INDRA Statements.
+
+        Parameters
+        ----------
+        text : str
+            The text to be processed.
+
+        offline : Optional[bool]
+            If set to True, the REACH system is run offline via a JAR file.
+            Otherwise (by default) the web service is called. Default: False
+
+        url : Optional[str]
+            URL for a REACH web service instance, which is used for reading if
+            provided. If not provided but offline is set to False (its default
+            value), REACH_TEXT_URL set in configuration will be used. If not
+            provided in configuration, the Arizona REACH web service is called
+            (http://agathon.sista.arizona.edu:8080/odinweb/api/help).
+            Default: None
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
+        """
         args = request.json
         text = args.get('text')
         offline = True if args.get('offline') else False
@@ -363,7 +416,18 @@ class ReachProcessJson(Resource):
         return {}
 
     def post(self):
-        """Process REACH json and return INDRA Statements."""
+        """Process REACH json and return INDRA Statements.
+
+        Parameters
+        ----------
+        json : str
+            The json string to be processed.
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
+        """
         args = request.json
         json_str = args.get('json')
         rp = reach.process_json_str(json_str)
@@ -378,7 +442,33 @@ class ReachProcessPmc(Resource):
         return {}
 
     def post(self):
-        """Process PubMedCentral article and return INDRA Statements."""
+        """Process PubMedCentral article and return INDRA Statements.
+
+        Parameters
+        ----------
+        pmc_id : str
+            The ID of a PubmedCentral article. The string may start with PMC
+            but passing just the ID also works.
+            Examples: 3717945, PMC3717945
+            https://www.ncbi.nlm.nih.gov/pmc/
+
+        offline : Optional[bool]
+            If set to True, the REACH system is run offline via a JAR file.
+            Otherwise (by default) the web service is called. Default: False
+
+        url : Optional[str]
+            URL for a REACH web service instance, which is used for reading if
+            provided. If not provided but offline is set to False (its default
+            value), REACH_NXML_URL set in configuration will be used. If not
+            provided in configuration, the Arizona REACH web service is called
+            (http://agathon.sista.arizona.edu:8080/odinweb/api/help).
+            Default: None
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
+        """
         args = request.json
         pmcid = args.get('pmcid')
         offline = True if args.get('offline') else False
@@ -402,19 +492,30 @@ class ReachProcessPmc(Resource):
         return _stmts_from_proc(rp)
 
 
-# Create resources for TRIPS namespace
+# TRIPS
 xml_model = api.model('XML', {'xml_str': fields.String})
 
 
-@trips_ns.expect(bio_text_model)
-@trips_ns.route('/process_text')
+@sources_ns.expect(bio_text_model)
+@sources_ns.route('/trips/process_text')
 class TripsProcessText(Resource):
     @api.doc(False)
     def options(self):
         return {}
 
     def post(self):
-        """Process text with TRIPS and return INDRA Statements."""
+        """Process text with TRIPS and return INDRA Statements.
+
+        Parameters
+        ----------
+        text : str
+            The text to be processed.
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
+        """
         args = request.json
         text = args.get('text')
         tp = trips.process_text(text)
@@ -429,7 +530,19 @@ class TripsProcessText(Resource):
         return {}
 
     def post(self):
-        """Process TRIPS EKB XML and return INDRA Statements."""
+        """Process TRIPS EKB XML and return INDRA Statements.
+
+        Parameters
+        ----------
+        xml_string : str
+            A TRIPS extraction knowledge base (EKB) string to be processed.
+            http://trips.ihmc.us/parser/api.html
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
+        """
         args = request.json
         xml_str = args.get('xml_str')
         tp = trips.process_xml(xml_str)
@@ -450,7 +563,23 @@ class SofiaProcessText(Resource):
         return {}
 
     def post(self):
-        """Process text with Sofia and return INDRA Statements."""
+        """Process text with Sofia and return INDRA Statements.
+
+        Parameters
+        ----------
+        text : str
+            A string containing the text to be processed with Sofia.
+
+        auth : Optional[list]
+            A username/password pair for the Sofia web service. If not given,
+            the SOFIA_USERNAME and SOFIA_PASSWORD values are loaded from either
+            the INDRA config or the environment.
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
+        """
         args = request.json
         text = args.get('text')
         auth = args.get('auth')
@@ -477,7 +606,29 @@ class EidosProcessText(Resource):
         return {}
 
     def post(self):
-        """Process text with EIDOS and return INDRA Statements."""
+        """Process text with EIDOS and return INDRA Statements.
+
+        Parameters
+        ----------
+        text : str
+            The text to be processed.
+
+        webservice : Optional[str]
+            An Eidos reader web service URL to send the request to.
+            If None, the reading is assumed to be done with the Eidos JAR
+            rather than via a web service. Default: None
+
+        grounding_ns : Optional[list]
+            A list of name spaces for which INDRA should represent groundings,
+            when given. If not specified or None, all grounding name spaces are
+            propagated. If an empty list, no groundings are propagated.
+            Example: ['UN', 'WM'], Default: None
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
+        """
         args = request.json
         text = args.get('text')
         webservice = args.get('webservice')
@@ -497,7 +648,24 @@ class EidosProcessJsonld(Resource):
         return {}
 
     def post(self):
-        """Process an EIDOS JSON-LD and return INDRA Statements."""
+        """Process an EIDOS JSON-LD and return INDRA Statements.
+
+        Parameters
+        ----------
+        jsonld : str
+            The JSON-LD string to be processed.
+
+        grounding_ns : Optional[list]
+            A list of name spaces for which INDRA should represent groundings,
+            when given. If not specified or None, all grounding name spaces are
+            propagated. If an empty list, no groundings are propagated.
+            Example: ['UN', 'WM'], Default: None
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
+        """
         args = request.json
         eidos_json = args.get('jsonld')
         grounding_ns = args.get('grounding_ns')
@@ -514,7 +682,18 @@ class HumeProcessJsonld(Resource):
         return {}
 
     def post(self):
-        """Process Hume JSON-LD and return INDRA Statements."""
+        """Process Hume JSON-LD and return INDRA Statements.
+
+        Parameters
+        ----------
+        jsonld : str
+            The JSON-LD string to be processed.
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
+        """
         args = request.json
         jsonld_str = args.get('jsonld')
         jsonld = json.loads(jsonld_str)
@@ -531,7 +710,18 @@ class CwmsProcessText(Resource):
         return {}
 
     def post(self):
-        """Process text with CWMS and return INDRA Statements."""
+        """Process text with CWMS and return INDRA Statements.
+
+        Parameters
+        ----------
+        text : str
+            Text to process
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
+        """
         args = request.json
         text = args.get('text')
         cp = cwms.process_text(text)
@@ -550,7 +740,21 @@ class BelProcessNeighborhood(Resource):
         return {}
 
     def post(self):
-        """Process BEL Large Corpus neighborhood and return INDRA Statements."""
+        """Process BEL Large Corpus neighborhood and return INDRA Statements.
+
+        Parameters
+        ----------
+        genes : list[str]
+            A list of entity names (e.g., gene names) which will be used as the
+            basis of filtering the result. If any of the Agents of an extracted
+            INDRA Statement has a name appearing in this list, the Statement is
+            retained in the result.
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
+        """
         args = request.json
         genes = args.get('genes')
         bp = bel.process_pybel_neighborhood(genes)
@@ -565,7 +769,19 @@ class BelProcessBelRdf(Resource):
         return {}
 
     def post(self):
-        """Process BEL RDF and return INDRA Statements."""
+        """Process BEL RDF and return INDRA Statements.
+
+        Parameters
+        ----------
+        belrdf : str
+            A BEL/RDF string to be processed. This will usually come from
+            reading a .rdf file.
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
+        """
         args = request.json
         belrdf = args.get('belrdf')
         bp = bel.process_belrdf(belrdf)
@@ -589,6 +805,17 @@ class BiopaxPathsBetween(Resource):
     def post(self):
         """
         Process PathwayCommons paths between genes, return INDRA Statements.
+
+        Parameters
+        ----------
+        genes : list
+            A list of HGNC gene symbols to search for paths between.
+            Examples: ['BRAF', 'MAP2K1']
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
         """
         args = request.json
         genes = args.get('genes')
@@ -606,6 +833,23 @@ class BiopaxPathsFromTo(Resource):
     def post(self):
         """
         Process PathwayCommons paths from-to genes, return INDRA Statements.
+
+        Parameters
+        ----------
+        source : list
+            A list of HGNC gene symbols that are the sources of paths being
+            searched for.
+            Examples: ['BRAF', 'RAF1', 'ARAF']
+
+        target : list
+            A list of HGNC gene symbols that are the targets of paths being
+            searched for.
+            Examples: ['MAP2K1', 'MAP2K2']
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
         """
         args = request.json
         source = args.get('source')
@@ -622,7 +866,19 @@ class BiopaxNeighborhood(Resource):
         return {}
 
     def post(self):
-        """Process PathwayCommons neighborhood, return INDRA Statements."""
+        """Process PathwayCommons neighborhood, return INDRA Statements.
+
+        Parameters
+        ----------
+        genes : list
+            A list of HGNC gene symbols to search the neighborhood of.
+            Examples: ['BRAF'], ['BRAF', 'MAP2K1']
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of extracted INDRA Statements.
+        """
         args = request.json
         genes = args.get('genes')
         bp = biopax.process_pc_neighborhood(genes)
@@ -643,7 +899,27 @@ class AssemblePysb(Resource):
         return {}
 
     def post(self):
-        """Assemble INDRA Statements and return PySB model string."""
+        """Assemble INDRA Statements and return PySB model string.
+
+        Parameters
+        ----------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of INDRA Statements to assemble.
+
+        export_format : str
+            The format to export into, for instance "kappa", "bngl",
+            "sbml", "matlab", "mathematica", "potterswheel". See
+            http://pysb.readthedocs.io/en/latest/modules/export/index.html
+            for a list of supported formats. In addition to the formats
+            supported by PySB itself, this method also provides "sbgn"
+            output.
+
+        Returns
+        -------
+        image or model
+            Assembled exported model. If export_format is kappa_im or kappa_cm,
+            image is returned. Otherwise model string is returned.
+        """
         args = request.json
         stmts_json = args.get('statements')
         export_format = args.get('export_format')
@@ -685,7 +961,18 @@ class AssembleCx(Resource):
         return {}
 
     def post(self):
-        """Assemble INDRA Statements and return CX network json."""
+        """Assemble INDRA Statements and return CX network json.
+
+        Parameters
+        ----------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of INDRA Statements to assemble.
+
+        Returns
+        -------
+        model
+            Assembled model string.
+        """
         args = request.json
         stmts_json = args.get('statements')
         stmts = stmts_from_json(stmts_json)
@@ -703,7 +990,18 @@ class AssembleGraph(Resource):
         return {}
 
     def post(self):
-        """Assemble INDRA Statements and return Graphviz graph dot string."""
+        """Assemble INDRA Statements and return Graphviz graph dot string.
+
+        Parameters
+        ----------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of INDRA Statements to assemble.
+
+        Returns
+        -------
+        model
+            Assembled model string.
+        """
         args = request.json
         stmts_json = args.get('statements')
         stmts = stmts_from_json(stmts_json)
@@ -721,7 +1019,18 @@ class AssembleCyjs(Resource):
         return {}
 
     def post(self):
-        """Assemble INDRA Statements and return Cytoscape JS network."""
+        """Assemble INDRA Statements and return Cytoscape JS network.
+
+        Parameters
+        ----------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of INDRA Statements to assemble.
+
+        Returns
+        -------
+        json_model : dict
+            Json dictionary containing graph information.
+        """
         args = request.json
         stmts_json = args.get('statements')
         stmts = stmts_from_json(stmts_json)
@@ -739,7 +1048,18 @@ class AssembleEnglish(Resource):
         return {}
 
     def post(self):
-        """Assemble each statement into English sentence."""
+        """Assemble each statement into English sentence.
+
+        Parameters
+        ----------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of INDRA Statements to assemble.
+
+        Returns
+        -------
+        sentences : dict
+            Dictionary mapping Statement UUIDs with English sentences.
+        """
         args = request.json
         stmts_json = args.get('statements')
         stmts = stmts_from_json(stmts_json)
@@ -761,7 +1081,18 @@ class AssembleLoopy(Resource):
         return {}
 
     def post(self):
-        """Assemble INDRA Statements into a Loopy model using SIF Assembler."""
+        """Assemble INDRA Statements into a Loopy model using SIF Assembler.
+
+        Parameters
+        ----------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of INDRA Statements to assemble.
+
+        Returns
+        -------
+        loopy_url : str
+            Assembled Loopy model string.
+        """
         args = request.json
         stmts_json = args.get('statements')
         stmts = stmts_from_json(stmts_json)
@@ -784,7 +1115,18 @@ class ShareModelNdex(Resource):
         return {}
 
     def post(self):
-        """Upload the model to NDEX"""
+        """Upload the model to NDEX.
+
+        Parameters
+        ----------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of INDRA Statements to assemble.
+
+        Returns
+        -------
+        network_id : str
+            ID of uploaded NDEx network.
+        """
         args = request.json
         stmts_json = args.get('statements')
         stmts = stmts_from_json(stmts_json)
@@ -804,7 +1146,18 @@ class FetchModelNdex(Resource):
         return {}
 
     def post(self):
-        """Download model and associated pieces from NDEX"""
+        """Download model and associated pieces from NDEX.
+
+        Parameters
+        ----------
+        network_id : str
+            ID of NDEx network to fetch.
+
+        Returns
+        -------
+        stored_data : dict
+            Dictionary representing the network.
+        """
         args = request.json
         network_id = args.get('network_id')
         cx = process_ndex_network(network_id)
@@ -832,7 +1185,18 @@ class GetEvidence(Resource):
         return {}
 
     def post(self):
-        """Get all evidence for a given INDRA statement."""
+        """Get all evidence for a given INDRA statement.
+
+        Parameters
+        ----------
+        statements : indra.statements.Statement.to_json()
+            An INDRA Statement to get evidence for.
+
+        Returns
+        -------
+        statements : list[indra.statements.Statement.to_json()]
+            A list of retrieved INDRA Statements with evidence.
+        """
         args = request.json
         stmt_json = args.get('statement')
         stmt = Statement._from_json(stmt_json)
@@ -895,7 +1259,22 @@ class CbioMrna(Resource):
         return {}
 
     def post(self):
-        """Get CCLE mRNA amounts using cBioClient"""
+        """Get CCLE mRNA amounts using cBioClient
+
+        Parameters
+        ----------
+        gene_list : list[str]
+            A list of HGNC gene symbols to get mRNA amounts for.
+
+        cell_lines : list[str]
+            A list of CCLE cell line names to get mRNA amounts for.
+
+        Returns
+        -------
+        mrna_amounts : dict[dict[float]]
+            A dict keyed to cell lines containing a dict keyed to genes
+            containing float
+        """
         args = request.json
         gene_list = args.get('gene_list')
         cell_lines = args.get('cell_lines')
@@ -913,11 +1292,26 @@ class CbioCna(Resource):
 
     def post(self):
         """Get CCLE CNA
+
         -2 = homozygous deletion
         -1 = hemizygous deletion
         0 = neutral / no change
         1 = gain
         2 = high level amplification
+
+        Parameters
+        ----------
+        gene_list : list[str]
+            A list of HGNC gene symbols to get mutations in.
+
+        cell_lines : list[str]
+            A list of CCLE cell line names to get mutations for.
+
+        Returns
+        -------
+        cna : dict[dict[int]]
+            A dict keyed to cases containing a dict keyed to genes
+            containing int
         """
         args = request.json
         gene_list = args.get('gene_list')
@@ -936,7 +1330,20 @@ class CbioMutations(Resource):
 
     def post(self):
         """Get CCLE mutations
-        returns the amino acid changes for a given list of genes and cell lines
+
+        Parameters
+        ----------
+        gene_list : list[str]
+            A list of HGNC gene symbols to get mutations in
+
+        cell_lines : list[str]
+            A list of CCLE cell line names to get mutations for.
+
+        Returns
+        -------
+        mutations : dict
+            The result from cBioPortal as a dict in the format
+            {cell_line : {gene : [mutation1, mutation2, ...] }}
         """
         args = request.json
         gene_list = args.get('gene_list')
