@@ -36,6 +36,7 @@ class IndraOntology(networkx.DiGraph):
         self.name_to_grounding = {}
         self.components = {}
         self.component_counter = 0
+        self.has_component_labels = False
 
     def initialize(self):
         """Initialize the ontology by adding nodes and edges.
@@ -613,6 +614,24 @@ class IndraOntology(networkx.DiGraph):
         """
         return tuple(label.split(':', maxsplit=1))
 
+    def get_component_label(self, ns, id):
+        """Return the component label of an entity.
+
+        Parameters
+        ----------
+        ns : str
+            An entity's name space.
+        id : str
+            An entity's ID.
+
+        Returns
+        -------
+        int or None
+            The component label of the given entity or None if not
+            available.
+        """
+        return self.components.get(self.label(ns, id))
+
     def _label_components(self):
         self.components = {}
         self.component_counter = 0
@@ -649,6 +668,7 @@ class IndraOntology(networkx.DiGraph):
                         for k, v in self.components.items():
                             if v == remove_component:
                                 self.components[k] = joint_component
+        self.has_component_labels = True
 
     @with_initialize
     def print_stats(self):

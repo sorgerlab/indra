@@ -211,18 +211,16 @@ class Preassembler(object):
                 # return a single shared dummy component so that things
                 # in the ontology are considered to be potentially
                 # related
-                if not ontology.components:
+                if not ontology.has_component_labels:
                     entities.append('component1')
                     continue
                 if self.refinement_ns is not None \
                         and a_ns not in self.refinement_ns:
                     entities.append(a.entity_matches_key())
                 else:
-                    # We have grounding, now check for a component ID
-                    label = ontology.label(a_ns, a_id)
                     # This is the component ID corresponding to the agent
                     # in the entity hierarchy
-                    component = ontology.components.get(label)
+                    component = ontology.get_component_label(a_ns, a_id)
                     # If no component ID, use the entity_matches_key()
                     if component is None:
                         entities.append(a.entity_matches_key())
@@ -342,7 +340,7 @@ class Preassembler(object):
                     stmt_by_group[first_arg_key] += stmts
         ncomp = 0
         for k, v in stmt_by_group.items():
-            ncomp += 2*len(v)*(len(v)-1)
+            ncomp += len(v)*(len(v)-1)
         logger.debug('Number of comparisons: %d' % ncomp)
         logger.debug('Size of largest group: %d' %
                      max([len(g) for g in stmt_by_group.values()]))
