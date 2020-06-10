@@ -24,14 +24,16 @@ class VirtualOntology(IndraOntology):
         self._initialized = True
 
     def child_rel(self, ns, id, rel_types):
-        return _send_request(self.url, 'child_rel',
-                             ns=ns, id=id, rel_types=rel_types,
-                             ontology=self.ontology)
+        res = _send_request(self.url, 'child_rel',
+                            ns=ns, id=id, rel_types=list(rel_types),
+                            ontology=self.ontology)
+        yield from (tuple(r) for r in res)
 
     def parent_rel(self, ns, id, rel_types):
-        return _send_request(self.url, 'parent_rel',
-                             ns=ns, id=id, rel_types=rel_types,
-                             ontology=self.ontology)
+        res = _send_request(self.url, 'parent_rel',
+                            ns=ns, id=id, rel_types=list(rel_types),
+                            ontology=self.ontology)
+        yield from (tuple(r) for r in res)
 
     def get_node_property(self, ns, id, property):
         return _send_request(self.url, 'get_node_property',
