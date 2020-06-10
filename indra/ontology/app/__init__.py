@@ -1,3 +1,8 @@
+"""This service implements all base functions of the ontology graph as a REST
+service. The three key functions that most ontology methods rely on are
+child_rel, parent_rel, and get_node_property. There are a few other bookkeeping
+functions that also need to be implemented here since they access ontology
+attributes directly."""
 from flask import Flask, request, jsonify
 from indra.ontology.bio import bio_ontology
 
@@ -32,6 +37,24 @@ def get_node_property():
     ontology = ontologies.get(ont)
     kwargs = ('ns', 'id', 'property')
     return jsonify(ontology.get_node_property(
+        **{k: v for k, v in request.json.items() if k in kwargs}))
+
+
+@app.route('/get_id_from_name', methods=['GET'])
+def get_id_from_name():
+    ont = request.json.get('ontology')
+    ontology = ontologies.get(ont)
+    kwargs = ('ns', 'name')
+    return jsonify(ontology.get_id_from_name(
+        **{k: v for k, v in request.json.items() if k in kwargs}))
+
+
+@app.route('/get_component_label', methods=['GET'])
+def get_component_label():
+    ont = request.json.get('ontology')
+    ontology = ontologies.get(ont)
+    kwargs = ('ns', 'id')
+    return jsonify(ontology.get_component_label(
         **{k: v for k, v in request.json.items() if k in kwargs}))
 
 
