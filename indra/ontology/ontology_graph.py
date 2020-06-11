@@ -214,7 +214,8 @@ class IndraOntology(networkx.DiGraph):
             Otherwise False.
         """
         if self.transitive_closure:
-            return (ns1, id1, ns2, id2) in self.transitive_closure
+            return (self.label(ns1, id1),
+                    self.label(ns2, id2)) in self.transitive_closure
         return self.isrel(ns1, id1, ns2, id2, rels={'isa', 'partof'})
 
     @with_initialize
@@ -684,7 +685,8 @@ class IndraOntology(networkx.DiGraph):
             for pns, pid in self.descendants_rel(ns, id,
                                                  rel_types={'isa',
                                                             'partof'}):
-                self.transitive_closure.add((ns, id, pns, pid))
+                self.transitive_closure.add((self.label(ns, id),
+                                             self.label(pns, pid)))
 
     @with_initialize
     def print_stats(self):
