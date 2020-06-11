@@ -674,6 +674,8 @@ class IndraOntology(networkx.DiGraph):
         self.has_component_labels = True
 
     def _build_transitive_closure(self):
+        if self.transitive_closure:
+            return
         logger.info('Building transitive closure for faster '
                     'isa/partof lookups...')
         self.transitive_closure = set()
