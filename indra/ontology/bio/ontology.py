@@ -48,6 +48,7 @@ class BioOntology(IndraOntology):
 
     def _build(self):
         # Add all nodes with annotations
+        logger.info('Adding nodes...')
         self.add_hgnc_nodes()
         self.add_uniprot_nodes()
         self.add_famplex_nodes()
@@ -57,6 +58,7 @@ class BioOntology(IndraOntology):
         self.add_uppro_nodes()
         self.add_mirbase_nodes()
         # Add xrefs
+        logger.info('Adding xrefs...')
         self.add_hgnc_uniprot_xrefs()
         self.add_famplex_xrefs()
         self.add_chemical_xrefs()
@@ -64,6 +66,7 @@ class BioOntology(IndraOntology):
         self.add_mesh_xrefs()
         self.add_mirbase_xrefs()
         # Add hierarchies
+        logger.info('Adding hierarchy...')
         self.add_famplex_hierarchy()
         self.add_obo_hierarchies()
         self.add_mesh_hierarchy()
@@ -72,21 +75,12 @@ class BioOntology(IndraOntology):
         self.add_uppro_hierarchy()
         self._initialized = True
         # Build name to ID lookup
+        logger.info('Building name lookup...')
         self._build_name_lookup()
-        # Build transitive closure
-        self._build_fplx_transitive_closure()
+        # Label components
+        logger.info('Labeling components...')
         self._label_components()
         logger.info('Finished initializing bio ontology...')
-
-    def _build_fplx_transitive_closure(self):
-        self._tc = set()
-        for node in self.nodes():
-            ns, id = self.get_ns_id(node)
-            if ns == 'FPLX':
-                children = self.get_children(ns, id)
-                for cns, cid in children:
-                    if cns in {'HGNC', 'FPLX'}:
-                        self._tc.add((cns, cid, ns, id))
 
     def add_hgnc_nodes(self):
         from indra.databases import hgnc_client

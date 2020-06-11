@@ -37,6 +37,7 @@ class IndraOntology(networkx.DiGraph):
         self.components = {}
         self.component_counter = 0
         self.has_component_labels = False
+        self.transitive_closure = set()
 
     def initialize(self):
         """Initialize the ontology by adding nodes and edges.
@@ -212,6 +213,8 @@ class IndraOntology(networkx.DiGraph):
             a directed path containing edges with type `isa` or `partof`.
             Otherwise False.
         """
+        if self.transitive_closure:
+            return (ns1, id1, ns2, id2) in self.transitive_closure
         return self.isrel(ns1, id1, ns2, id2, rels={'isa', 'partof'})
 
     @with_initialize
@@ -669,6 +672,17 @@ class IndraOntology(networkx.DiGraph):
                             if v == remove_component:
                                 self.components[k] = joint_component
         self.has_component_labels = True
+
+    def _build_transitive_closure(self):
+        logger.info('Building transitive closure for faster '
+                    'isa/partof lookups...')
+        self.transitive_closure = set()
+        for node in self.nodes():
+            ns, id = self.get_ns_id(node)
+            for pns, pid in self.descendants_rel(ns, id,
+                                                 rel_types={'isa',
+                                                            'partof'}):
+                self.transitive_closure.add((ns, id, pns, pid))
 
     @with_initialize
     def print_stats(self):

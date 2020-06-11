@@ -341,14 +341,16 @@ class Preassembler(object):
         ncomp = 0
         for k, v in stmt_by_group.items():
             ncomp += len(v)*(len(v)-1)
-        logger.debug('Number of comparisons: %d' % ncomp)
-        logger.debug('Size of largest group: %d' %
-                     max([len(g) for g in stmt_by_group.values()]))
+        logger.info('Number of comparisons: %d' % ncomp)
+        logger.info('Size of largest group: %d' %
+                    max([len(g) for g in stmt_by_group.values()]))
         return dict(stmt_by_group)
 
     def _generate_id_maps(self, unique_stmts, poolsize=None,
                           size_cutoff=100, split_idx=None):
         """Connect statements using their refinement relationships."""
+        if len(unique_stmts) > 10000:
+            self.ontology._build_transitive_closure()
         # Check arguments relating to multiprocessing
         if poolsize is None:
             logger.debug('combine_related: poolsize not set, '
