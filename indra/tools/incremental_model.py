@@ -3,6 +3,7 @@ import logging
 from indra.statements import Agent
 import indra.tools.assemble_corpus as ac
 from indra.databases import hgnc_client
+from indra.ontology.bio import bio_ontology
 
 logger = logging.getLogger(__name__)
 
@@ -221,6 +222,7 @@ def get_gene_agents(gene_names):
         agents.append(agent)
     return agents
 
+
 def _ref_agents_all_filter(stmts_in, ref_agents):
     # If there is no reference, keep everything by default
     if not ref_agents:
@@ -293,7 +295,9 @@ def _ref_agents_one_filter(stmts_in, ref_agents):
             stmts_out.append(st)
     return stmts_out
 
+
 def _agent_related(a1, a2):
-    if a1.matches(a2) or a1.isa(a2, hierarchies) or a2.isa(a1, hierarchies):
+    if a1.matches(a2) or a1.isa(a2, bio_ontology) or \
+            a2.isa(a1, bio_ontology):
         return True
     return False
