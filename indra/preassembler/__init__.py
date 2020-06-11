@@ -341,9 +341,10 @@ class Preassembler(object):
         ncomp = 0
         for k, v in stmt_by_group.items():
             ncomp += len(v)*(len(v)-1)
-        logger.info('Number of comparisons: %d' % ncomp)
-        logger.info('Size of largest group: %d' %
-                    max([len(g) for g in stmt_by_group.values()]))
+        logger.debug('Number of comparisons: %d' % ncomp)
+        if ncomp > 0:
+            logger.debug('Size of largest group: %d' %
+                         max([len(g) for g in stmt_by_group.values()]))
         return dict(stmt_by_group)
 
     def _generate_id_maps(self, unique_stmts, poolsize=None,
