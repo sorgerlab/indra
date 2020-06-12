@@ -330,10 +330,10 @@ class CyJSAssembler(object):
                              ch[0] == 'HGNC']
         members = {}
         for member in expanded_families:
-            db_refs = {member[0]: member[1]}
-            standardize_db_refs(db_refs)
+            member_db_refs = {member[0]: member[1]}
+            member_db_refs = standardize_db_refs(member_db_refs)
             gene_name = bio_ontology.get_name(*member)
-            members[gene_name] = {'db_refs': db_refs}
+            members[gene_name] = {'db_refs': member_db_refs}
         node = {'data': {'id': node_id, 'name': node_name,
                          'db_refs': db_refs, 'parent': '',
                          'members': members, 'uuid_list': [uuid]}}
