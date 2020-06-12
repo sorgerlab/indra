@@ -501,7 +501,7 @@ class IndraOntology(networkx.DiGraph):
     @with_initialize
     def is_opposite(self, ns1, id1, ns2, id2):
         """Return True if the two entities are opposites of each other.
-    `
+
         Parameters
         ----------
         ns1 : str
