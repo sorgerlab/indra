@@ -31,12 +31,6 @@ Cell type context client (:py:mod:`indra.databases.context_client`)
 .. automodule:: indra.databases.context_client
     :members:
 
-Network relevance client (:py:mod:`indra.databases.relevance_client`)
----------------------------------------------------------------------
-
-.. automodule:: indra.databases.relevance_client
-    :members:
-
 NDEx client (:py:mod:`indra.databases.ndex_client`)
 ----------------------------------------------------
 
