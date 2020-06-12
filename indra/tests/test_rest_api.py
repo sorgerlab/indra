@@ -1078,3 +1078,57 @@ def test_pipeline():
     res_json = json.loads(res.get_data())
     assert 'statements' in res_json
     assert len(res_json['statements']) == 1
+
+
+@attr('webservice')
+def test_ccle_mrna():
+    res = _call_api('post', 'databases/cbio/get_ccle_mrna',
+                    json={'gene_list': ['XYZ', 'MAP2K1'],
+                          'cell_lines': ['A375_SKIN']})
+    res_json = json.loads(res.get_data())
+    assert 'mrna_amounts' in res_json
+    mrna = res_json['mrna_amounts']
+    assert 'A375_SKIN' in mrna
+    assert mrna['A375_SKIN'] is not None
+    assert mrna['A375_SKIN']['MAP2K1'] > 10
+    assert mrna['A375_SKIN']['XYZ'] is None
+    res = _call_api('post', 'databases/cbio/get_ccle_mrna',
+                    json={'gene_list': ['EGFR', 'BRAF'],
+                          'cell_lines': ['XXX']})
+    res_json = json.loads(res.get_data())
+    assert 'mrna_amounts' in res_json
+    mrna = res_json['mrna_amounts']
+    assert 'XXX' in mrna
+    assert mrna['XXX'] is None
+
+
+@attr('webservice')
+def test_ccle_cna():
+    res = _call_api('post', 'databases/cbio/get_ccle_cna',
+                    json={'gene_list': ['BRAF', 'AKT1'],
+                          'cell_lines': ['LOXIMVI_SKIN', 'SKMEL30_SKIN']})
+    res_json = json.loads(res.get_data())
+    assert 'cna' in res_json
+    cna = res_json['cna']
+    assert cna['SKMEL30_SKIN']['BRAF'] == 1
+    assert cna['SKMEL30_SKIN']['AKT1'] == -1
+    assert cna['LOXIMVI_SKIN']['BRAF'] == 0
+    assert cna['LOXIMVI_SKIN']['AKT1'] == 0
+    assert len(cna) == 2
+
+
+@attr('webservice')
+def test_ccle_mutations():
+    res = _call_api('post', 'databases/cbio/get_ccle_mutations',
+                    json={'gene_list': ['BRAF', 'AKT1'],
+                          'cell_lines': ['LOXIMVI_SKIN', 'A101D_SKIN']})
+    res_json = json.loads(res.get_data())
+    assert 'mutations' in res_json
+    muts = res_json['mutations']
+    assert len([x for x in muts]) == 2
+    assert 'V600E' in muts['LOXIMVI_SKIN']['BRAF']
+    assert 'V600E' in muts['A101D_SKIN']['BRAF']
+    assert 'I208V' in muts['LOXIMVI_SKIN']['BRAF']
+    assert 'I208V' not in muts['A101D_SKIN']['BRAF']
+    assert len(muts['LOXIMVI_SKIN']['AKT1']) == 0
+    assert len(muts['A101D_SKIN']['AKT1']) == 0
