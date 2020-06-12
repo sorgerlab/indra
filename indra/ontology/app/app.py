@@ -3,6 +3,7 @@ service. The three key functions that most ontology methods rely on are
 child_rel, parent_rel, and get_node_property. There are a few other bookkeeping
 functions that also need to be implemented here since they access ontology
 attributes directly."""
+import argparse
 from flask import Flask, request, jsonify
 from indra.ontology.bio import bio_ontology
 
@@ -59,4 +60,9 @@ def get_component_label():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=6667)
+    parser = argparse.ArgumentParser(
+        description='Run the INDRA Ontology service.')
+    parser.add_argument('--port', help='The port to run the server on.',
+                        default=8082)
+    args = parser.parse_args()
+    app.run(host='0.0.0.0', port=args.port)
