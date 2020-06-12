@@ -1,15 +1,13 @@
-from __future__ import print_function, unicode_literals, absolute_import
-from builtins import dict, str
 import itertools
-from indra.util import unicode_strs
-from indra.tools import expand_families as ef
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.ontology.bio import bio_ontology
+from indra.tools.expand_families import Expander, expand_agent
 from indra.statements import Agent, Phosphorylation, Complex, Activation
+
+# Get the Expander
+exp = Expander(bio_ontology)
 
 
 def test_expand_families():
-    # Get the Expander
-    exp = ef.Expander(hierarchies)
     # Declare some agents
     akt = Agent('AKT', db_refs={'FPLX': 'AKT'})
     raf = Agent('RAF', db_refs={'FPLX': 'RAF'})
@@ -35,7 +33,6 @@ def test_expand_families():
 
 
 def test_complexes_from_hierarchy():
-    exp = ef.Expander(hierarchies)
     complexes = exp.complexes_from_hierarchy()
     keys = [c.matches_key() for c in complexes]
     probe_stmt = Complex([Agent('AMPK_alpha', db_refs={'FPLX': 'AMPK_alpha'}),
@@ -45,7 +42,6 @@ def test_complexes_from_hierarchy():
 
 
 def test_expanded_complexes_from_hierarchy():
-    exp = ef.Expander(hierarchies)
     complexes = exp.expanded_complexes_from_hierarchy()
     stmt_ag_names = []
     for stmt in complexes:
@@ -56,13 +52,12 @@ def test_expanded_complexes_from_hierarchy():
     ampk_gammas = ('PRKAG1', 'PRKAG2', 'PRKAG3')
     for alpha, beta, gamma in itertools.product(ampk_alphas, ampk_betas,
                                                 ampk_gammas):
-        assert tuple(sorted((alpha, beta, gamma))) in stmt_ag_names
+        assert tuple(sorted((alpha, beta, gamma))) in stmt_ag_names, \
+            stmt_ag_names
 
 
 def test_db_ref_keys():
     # test that expanded families get TEXT, UP, HGNC keys in their db_refs
-    # Get the Expander
-    exp = ef.Expander(hierarchies)
     # Declare some agents
     grb2 = Agent('GRB2',
                  db_refs={'TEXT': 'Grb2', 'UP': 'P62993', 'HGNC': '4566'})
@@ -73,68 +68,29 @@ def test_db_ref_keys():
     for st in expanded_stmts:
         for agent in st.agent_list():
             if agent is not None:
-                assert set(list(agent.db_refs)) == {'TEXT', 'UP', 'HGNC'}
+                assert set(agent.db_refs) >= {'TEXT', 'UP', 'HGNC'}, \
+                    agent.db_refs
     # Test for case involving None for one of the agents
     st = Phosphorylation(None, shc)
     expanded_stmts = exp.expand_families([st])
     for st in expanded_stmts:
         for agent in st.agent_list():
             if agent is not None:
-                assert set(list(agent.db_refs)) == {'TEXT', 'UP', 'HGNC'}
+                assert set(agent.db_refs) >= {'TEXT', 'UP', 'HGNC'}
     # Statement with two families: 4x4 SHC
     st = Activation(shc, shc)
     expanded_stmts = exp.expand_families([st])
     for st in expanded_stmts:
         for agent in st.agent_list():
             if agent is not None:
-                assert set(list(agent.db_refs)) == {'TEXT', 'UP', 'HGNC'}
+                assert set(agent.db_refs) >= {'TEXT', 'UP', 'HGNC'}
 
 
-def test_get_children():
-    exp = ef.Expander(hierarchies)
-    raf = Agent('RAF', db_refs={'FPLX': 'RAF'})
-    braf = Agent('BRAF', db_refs={'HGNC': '1097'})
-    # Look up RAF
-    rafs = exp.get_children(raf)
-    # Should get three family members
-    assert isinstance(rafs, list)
-    assert len(rafs) == 3
-    assert unicode_strs(rafs)
-    # The lookup of a gene-level entity should not return any additional
-    # entities
-    brafs = exp.get_children(braf)
-    assert isinstance(brafs, list)
-    assert len(brafs) == 0
-    assert unicode_strs(brafs)
-    # The lookup for a top-level family (e.g., MAPK, which has as children
-    # both the intermediate family ERK as well as all MAPK1-15 members)
-    # should not return the intermediate families when a filter is applied.
+def test_expand_agent():
     mapk = Agent('MAPK', db_refs={'FPLX': 'MAPK'})
-    mapks = exp.get_children(mapk, ns_filter=None)
-    assert len(mapks) == 12
-    assert ('HGNC', '6871') in mapks
-    assert ('HGNC', '6886') in mapks
-    assert ('FPLX', 'ERK') in mapks
-    assert ('FPLX', 'JNK') in mapks
-    assert unicode_strs(mapks)
-    # Now do the same expansion with a namespace filter
-    mapks = exp.get_children(mapk, ns_filter='HGNC')
-    assert unicode_strs(mapks)
-    assert len(mapks) == 9
-    assert ('HGNC', '6877') in mapks
-    assert ('HGNC', '6872') in mapks
-    assert ('FPLX', 'ERK') not in mapks
-    # Make sure we can also do this in a case involving both family and complex
-    # relationships
-    ampk = Agent('AMPK', db_refs={'FPLX': 'AMPK'})
-    ampks = exp.get_children(ampk, ns_filter=None)
-    assert len(ampks) == 22
-    ampks = exp.get_children(ampk, ns_filter='HGNC')
-    assert len(ampks) == 7
-    # Test that the default filter is HGNC
-    ampks = exp.get_children(ampk)
-    assert len(ampks) == 7
-    ag_none = None
-    none_children = exp.get_children(ag_none)
-    assert isinstance(none_children, list)
-    assert len(none_children) == 0
+    agents = expand_agent(mapk, bio_ontology)
+    names = {a.name for a in agents}
+    assert 'ERK' in names
+    agents = expand_agent(mapk, bio_ontology, ns_filter={'HGNC'})
+    names = {a.name for a in agents}
+    assert 'ERK' not in names

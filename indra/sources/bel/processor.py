@@ -16,6 +16,7 @@ from indra.databases import (
     chebi_client, go_client, hgnc_client, mesh_client,
     mirbase_client, uniprot_client, taxonomy_client
 )
+from indra.ontology.standardize import standardize_name_db_refs
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 
 __all__ = [
@@ -607,45 +608,35 @@ def get_db_refs_by_ident(ns, ident, node_data):
         The grounding for the given entity.
 
     """
-    name = node_data.name
-    db_refs = None
-    if ns == 'HGNC':
-        name = hgnc_client.get_hgnc_name(ident)
-        if not name:
-            return None, None
-        db_refs = {'HGNC': ident}
-        up_id = _get_up_id(ident)
-        if up_id:
-            db_refs['UP'] = up_id
-        mirbase_id = mirbase_client.get_mirbase_id_from_hgnc_id(ident)
-        if mirbase_id:
-            db_refs['MIRBASE'] = mirbase_id
-    elif ns == 'UP':
-        db_refs = {'UP': ident}
-        hgnc_id = uniprot_client.get_hgnc_id(ident)
-        if hgnc_id:
-            db_refs['HGNC'] = hgnc_id
-            name = hgnc_client.get_hgnc_name(hgnc_id)
-        else:
-            name = uniprot_client.get_gene_name(ident)
-            if not name:
-                return None, None
-    elif ns == 'MIRBASE':
-        db_refs = {'MIRBASE': ident}
-    elif ns in ('MGI', 'RGD', 'CHEBI', 'HMDB', 'MESH', 'FPLX'):
-        db_refs = {ns: ident}
-        # raise ValueError('Identifiers for MGI and RGD databases are not '
-        #                 'currently handled: %s' % node_data)
-    elif ns == 'PUBCHEM.COMPOUND':
-        db_refs = {'PUBCHEM': ident}
-    elif ns == 'PFAM':
-        db_refs = {'PF': ident}
+    ns_list = ['HGNC', 'UNIPROT', 'UP', 'FPLX', 'GO', 'GOBP', 'GOCC',
+               'MESHPP', 'MESHD', 'MESH', 'MGI', 'RGD', 'SFAM', 'EGID',
+               'ENTREZ', 'NCBIGENE', 'MIRBASE', 'CHEBI', 'ECCODE' 'SDIS',
+               'SCHEM', 'TEXT', 'DOID', 'EFO', 'HP', 'PFAM', 'ECCODE',
+               'HGNC.GENEFAMILY', 'HGNC_GROUP', 'NCBITAXON']
+    ns_mappings = {'UNIPROT': 'UP',
+                   'GOBP': 'GO',
+                   'GOCC': 'GO',
+                   'MESHPP': 'MESH',
+                   'MESHD': 'MESH',
+                   'ENTREZ': 'EGID',
+                   'NCBIGENE': 'EGID',
+                   'NCBITAXON': 'TAXONOMY',
+                   'HGNC.GENEFAMILY': 'HGNC_GROUP'}
+    raw_name = node_data.name
+    if ns in ns_list:
+        mapped_ns = ns_mappings.get(ns, ns)
+        raw_db_refs = {mapped_ns: ident}
+        std_name, std_db_refs = standardize_name_db_refs(raw_db_refs)
+        if std_name is None:
+            std_name = raw_name
+        if std_db_refs is None:
+            std_db_refs = raw_db_refs
     else:
         logger.info("Unhandled namespace %s with name %s and "
-                    "identifier %s (%s)." % (ns, name,
-                                             node_data.identifier,
-                                             node_data))
-    return name, db_refs
+                    "identifier %s (%s)." % (ns, raw_name, ident, node_data))
+        std_name = raw_name
+        std_db_refs = None
+    return std_name, std_db_refs
 
 
 def extract_context(annotations, annot_manager):

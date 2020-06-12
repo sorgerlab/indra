@@ -4,4 +4,4 @@ natural language understanding system with applications in
 world modeling. For more information, see:
 http://trips.ihmc.us/parser/cgi/cwmsreader
 """
-from .api import process_rdf_file, process_text, process_ekb, process_ekb_file
+from .api import process_text, process_ekb, process_ekb_file

@@ -45,15 +45,14 @@ def test_readme_pipeline():
 def test_readme_wm_pipeline():
     from indra.tools import assemble_corpus as ac
     from indra.belief.wm_scorer import get_eidos_scorer
-    from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+    from indra.ontology.world import world_ontology
     stmts = wm_raw_stmts
     # stmts = ac.filter_grounded_only(stmts)  # Does not work on test stmts
-    hierarchies = get_wm_hierarchies()
     belief_scorer = get_eidos_scorer()
     stmts = ac.run_preassembly(stmts,
                                return_toplevel=False,
                                belief_scorer=belief_scorer,
-                               hierarchies=hierarchies,
+                               ontology=world_ontology,
                                normalize_opposites=True,
                                normalize_ns='WM')
     stmts = ac.filter_belief(stmts, 0.8)    # Apply belief cutoff of e.g., 0.8

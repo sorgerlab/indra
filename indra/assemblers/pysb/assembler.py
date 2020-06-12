@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import re
 import math
 import json
@@ -20,13 +18,6 @@ from .common import *
 from .base_agents import BaseAgentSet
 from .preassembler import PysbPreassembler
 from .export import export_sbgn, export_kappa_im, export_kappa_cm
-
-# Python 2
-try:
-    basestring
-# Python 3
-except:
-    basestring = str
 
 logger = logging.getLogger(__name__)
 
@@ -521,7 +512,7 @@ class PysbAssembler(object):
         if not policies:
             logger.info('Using default assembly policy.')
             return processed_policies
-        elif isinstance(policies, basestring):
+        elif isinstance(policies, str):
             logger.info('Using %s assembly policy.' % policies)
             for stmt in self.statements:
                 processed_policies[stmt.uuid] = Policy(policies)

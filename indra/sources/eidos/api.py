@@ -192,7 +192,7 @@ def process_json_bio(json_dict):
         A EidosProcessor containing the extracted INDRA Statements
         in its statements attribute.
     """
-    from indra.preassembler.grounding_mapper.standardize \
+    from indra.ontology.standardize \
         import standardize_agent_name
     from indra.preassembler.grounding_mapper.gilda import get_grounding
     from indra.statements import Agent, Activation, Inhibition

@@ -6,7 +6,7 @@ import objectpath
 from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.databases import go_client
-from indra.preassembler.grounding_mapper.standardize import \
+from indra.ontology.standardize import \
     standardize_db_refs, standardize_agent_name
 from collections import namedtuple
 

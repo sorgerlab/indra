@@ -4,7 +4,9 @@ import requests
 from lxml import etree
 from functools import lru_cache, cmp_to_key
 from indra.util import read_unicode_csv
+from indra.databases.obo_client import OboClient
 
+_obo_client = OboClient(prefix='chebi')
 
 logger = logging.getLogger(__name__)
 
@@ -90,16 +92,13 @@ def get_chebi_id_from_cas(cas_id):
     return cas_chebi.get(cas_id)
 
 
-def get_chebi_name_from_id(chebi_id, offline=False):
+def get_chebi_name_from_id(chebi_id):
     """Return a ChEBI name corresponding to the given ChEBI ID.
 
     Parameters
     ----------
     chebi_id : str
         The ChEBI ID whose name is to be returned.
-    offline : Optional[bool]
-        Choose whether to allow an online lookup if the local lookup fails. If
-        True, the online lookup is not attempted. Default: False.
 
     Returns
     -------
@@ -107,10 +106,7 @@ def get_chebi_name_from_id(chebi_id, offline=False):
         The name corresponding to the given ChEBI ID. If the lookup
         fails, None is returned.
     """
-    chebi_name = chebi_id_to_name.get(_strip_prefix(chebi_id))
-    if chebi_name is None and not offline:
-        chebi_name = get_chebi_name_from_id_web(_strip_prefix(chebi_id))
-    return chebi_name
+    return _obo_client.get_name_from_id(chebi_id)
 
 
 def get_chebi_id_from_name(chebi_name):
@@ -127,8 +123,7 @@ def get_chebi_id_from_name(chebi_name):
         The ID corresponding to the given ChEBI name. If the lookup
         fails, None is returned.
     """
-    chebi_id = chebi_name_to_id.get(chebi_name)
-    return chebi_id
+    return _obo_client.get_id_from_name(chebi_name)
 
 
 @lru_cache(maxsize=5000)
@@ -204,13 +199,26 @@ def get_inchi_key(chebi_id):
 
 
 def get_primary_id(chebi_id):
-    pid = chebi_to_primary.get(chebi_id)
-    if pid:
-        return pid
-    elif chebi_id in chebi_id_to_name:
+    """Return the primary ID corresponding to a ChEBI ID.
+
+    Note that if the provided ID is a primary ID, it is returned
+    unchanged.
+
+    Parameters
+    ----------
+    chebi_id : str
+        The ChEBI ID that should be mapped to its primary equivalent.
+
+    Returns
+    -------
+    str or None
+        The primary ChEBI ID or None if the provided ID is neither
+        primary nor a secondary ID with a primary mapping.
+    """
+    if chebi_id in _obo_client.entries:
         return chebi_id
-    else:
-        return None
+    prim_id = _obo_client.get_id_from_alt_id(chebi_id)
+    return prim_id
 
 
 def get_specific_id(chebi_ids):
@@ -230,7 +238,7 @@ def get_specific_id(chebi_ids):
     if not chebi_ids:
         return chebi_ids
 
-    from indra.preassembler.hierarchy_manager import hierarchies
+    from indra.ontology.bio import bio_ontology
 
     def isa_cmp(a, b):
         """Compare two entries based on isa relationships for sorting."""
@@ -238,10 +246,9 @@ def get_specific_id(chebi_ids):
             a = 'CHEBI:%s' % a
         if not b.startswith('CHEBI:'):
             b = 'CHEBI:%s' % b
-        eh = hierarchies['entity']
-        if eh.isa('CHEBI', a, 'CHEBI', b):
+        if bio_ontology.isa('CHEBI', a, 'CHEBI', b):
             return -1
-        if eh.isa('CHEBI', b, 'CHEBI', a):
+        if bio_ontology.isa('CHEBI', b, 'CHEBI', a):
             return 1
         return 0
 
@@ -315,23 +322,6 @@ def _read_cas_to_chebi():
     return cas_chebi
 
 
-def _read_chebi_names():
-    csv_reader = _read_resource_csv('chebi_entries.tsv')
-    next(csv_reader)
-    chebi_id_to_name = {}
-    chebi_name_to_id = {}
-    chebi_to_primary = {}
-    for row in csv_reader:
-        chebi_id, name, secondaries = row
-        chebi_id_to_name[chebi_id] = name
-        chebi_name_to_id[name] = chebi_id
-        for secondary_id in secondaries.split(','):
-            if secondary_id.startswith('CHEBI:'):
-                secondary_id = secondary_id[6:]
-            chebi_to_primary[secondary_id] = chebi_id
-    return chebi_id_to_name, chebi_name_to_id, chebi_to_primary
-
-
 def _read_hmdb_to_chebi():
     csv_reader = _read_resource_csv('hmdb_to_chebi.tsv')
     hmdb_chebi = {}
@@ -348,7 +338,6 @@ def _read_resource_csv(fname):
     return csv_reader
 
 
-chebi_id_to_name, chebi_name_to_id, chebi_to_primary = _read_chebi_names()
 chebi_pubchem, pubchem_chebi = _read_chebi_to_pubchem()
 chebi_chembl = _read_chebi_to_chembl()
 cas_chebi = _read_cas_to_chebi()

@@ -6,9 +6,7 @@ import argparse
 from os import path
 from flask import Flask, request, jsonify, abort, Response
 from indra.statements import stmts_from_json_file, stmts_to_json
-from indra.preassembler.hierarchy_manager import YamlHierarchyManager
-from indra.preassembler.make_wm_ontologies import wm_ont_url, \
-    load_yaml_from_url, rdf_graph_from_yaml
+from indra.ontology.world.ontology import world_ontology
 
 from . import InvalidCorpusError
 from .corpus import Corpus
@@ -21,12 +19,9 @@ app = Flask(__name__)
 corpora = {}
 
 
-def _make_wm_ontology():
-    return YamlHierarchyManager(load_yaml_from_url(wm_ont_url),
-                                rdf_graph_from_yaml, True)
-
-
-curator = LiveCurator(corpora=corpora, ont_manager=_make_wm_ontology())
+ontology = world_ontology
+ontology.initialize()
+curator = LiveCurator(corpora=corpora, ont_manager=ontology)
 
 
 # From here on, a Flask app built around a LiveCurator is implemented
@@ -121,7 +116,7 @@ def reset_ontology():
         abort(Response('Missing application/json header.', 415))
 
     # Reload the original ontology
-    curator.ont_manager = _make_wm_ontology()
+    curator.ont_manager = WorldOntology(wm_ont_url)
 
     return jsonify({})
 

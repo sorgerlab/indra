@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
 import pickle
 import pandas
@@ -7,7 +5,7 @@ import logging
 from indra.databases import hgnc_client
 from indra.statements import Phosphorylation, Agent, Evidence
 from indra.preassembler import Preassembler
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.ontology.bio import bio_ontology
 from indra.preassembler.grounding_mapper import default_mapper
 from indra.preassembler.sitemapper import SiteMapper, default_site_map
 
@@ -72,7 +70,7 @@ def extract_phos():
     stmts_valid, _ = sm.map_sites(stmts_enzkinase)
     logger.info('%d valid-sequence phosphorylations in RAS Machine' % len(stmts_valid))
 
-    pa = Preassembler(hierarchies, stmts_valid)
+    pa = Preassembler(bio_ontology, stmts_valid)
     stmts_unique = pa.combine_duplicates()
     logger.info('%d unique phosphorylations in RAS Machine' % len(stmts_unique))
 
@@ -145,7 +143,7 @@ def filter_enzkinase(stmts):
             if stmt.enz.entity_matches(kin.agent):
                 is_kinase = True
                 break
-            if kin.agent.refinement_of(stmt.enz, hierarchies):
+            if kin.agent.refinement_of(stmt.enz, bio_ontology):
                 is_kinase = True
                 break
         if is_kinase:
@@ -161,7 +159,7 @@ def compare_overlap(stmts_pred, stmts_ref):
         found = False
         for stmt_ref in stmts_ref:
             if stmt_pred.matches(stmt_ref) or \
-                stmt_ref.refinement_of(stmt_pred, hierarchies):
+                stmt_ref.refinement_of(stmt_pred, bio_ontology):
                     found = True
                     break
         if found:

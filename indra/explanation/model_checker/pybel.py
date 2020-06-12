@@ -2,7 +2,7 @@ import logging
 from copy import deepcopy
 from . import ModelChecker
 from indra.statements import *
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.ontology.bio import bio_ontology
 from .model_checker import signed_edges_to_signed_nodes
 
 logger = logging.getLogger(__name__)
@@ -94,7 +94,7 @@ class PybelModelChecker(ModelChecker):
                 nodes.add(node)
         # Try get refined versions
         for ag in self.model_agents:
-            if ag is not None and ag.refinement_of(agent, hierarchies):
+            if ag is not None and ag.refinement_of(agent, bio_ontology):
                 agent_node = _get_agent_node(ag)[0]
                 if agent_node:
                     node = (agent_node, target_polarity)

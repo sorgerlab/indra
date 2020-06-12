@@ -256,7 +256,7 @@ class LiveCurator(object):
         corpus = self.get_corpus(corpus_id)
 
         # Send the latest ontology and list of concept texts to Eidos
-        yaml_str = yaml.dump(self.ont_manager.yaml_root)
+        yaml_str = yaml.dump(self.ont_manager.yml)
         concepts = []
         for stmt in corpus.raw_statements:
             for concept in stmt.agent_list():
@@ -277,8 +277,7 @@ class LiveCurator(object):
 
 def default_assembly(stmts):
     from indra.belief.wm_scorer import get_eidos_scorer
-    from indra.preassembler.hierarchy_manager import get_wm_hierarchies
-    hm = get_wm_hierarchies()
+    from indra.ontology.world import world_ontology
     scorer = get_eidos_scorer()
     stmts = ac.run_preassembly(stmts, belief_scorer=scorer,
                                return_toplevel=True,
@@ -288,7 +287,7 @@ def default_assembly(stmts):
                                normalize_ns='WM',
                                flatten_evidence_collect_from='supported_by',
                                poolsize=4,
-                               hierarchies=hm)
+                               ontology=world_ontology)
     stmts = ac.merge_groundings(stmts)
     stmts = ac.merge_deltas(stmts)
     stmts = ac.standardize_names_groundings(stmts)

@@ -1,15 +1,9 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-from future.utils import python_2_unicode_compatible
-
-
 __all__ = ['Agent', 'BoundCondition', 'MutCondition', 'ModCondition',
-           'ActivityCondition']
+           'ActivityCondition', 'default_ns_order']
 
 
 import logging
 from collections import OrderedDict as _o
-from indra.util import unicode_strs
 from indra.statements.statements import modtype_conditions, modtype_to_modclass
 from .concept import Concept
 from .resources import get_valid_residue, activity_types, amino_acids
@@ -19,10 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 default_ns_order = ['FPLX', 'UPPRO', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH',
-                    'DOID', 'HP', 'EFO']
+                    'MIRBASE', 'DOID', 'HP', 'EFO']
 
 
-@python_2_unicode_compatible
 class Agent(Concept):
     """A molecular entity, e.g., a protein.
 
@@ -125,18 +118,9 @@ class Agent(Concept):
             namespace. If no preferred grounding is available, a tuple of
             Nones is returned.
         """
-        if ns_order is None:
-            ns_order = default_ns_order
-        for db_ns in ns_order:
-            db_id = self.db_refs.get(db_ns)
-            if not db_id:
-                continue
-            if isinstance(db_id, (list, tuple)):
-                db_id = db_id[0]
-            return db_ns, db_id
-        return None, None
+        return get_grounding(self.db_refs, ns_order=ns_order)
 
-    def isa(self, other, hierarchies):
+    def isa(self, other, ontology):
         # Get the namespaces for the comparison
         (self_ns, self_id) = self.get_grounding()
         (other_ns, other_id) = other.get_grounding()
@@ -145,10 +129,11 @@ class Agent(Concept):
         if not all((self_ns, self_id, other_ns, other_id)):
             return False
         # Check for isa relationship
-        return hierarchies['entity'].isa_or_partof(self_ns, self_id, other_ns,
-                                                   other_id)
+        return ontology.isa_or_partof(self_ns, self_id, other_ns,
+                                      other_id)
 
-    def refinement_of(self, other, hierarchies):
+    def refinement_of(self, other, ontology):
+        from indra.databases import go_client
         # Make sure the Agent types match
         if type(self) != type(other):
             return False
@@ -158,7 +143,7 @@ class Agent(Concept):
         # to the entity of the other agent. If not, no match.
 
         # If the entities, match, then we can continue
-        if not (self.entity_matches(other) or self.isa(other, hierarchies)):
+        if not (self.entity_matches(other) or self.isa(other, ontology)):
             return False
 
         # BOUND CONDITIONS
@@ -177,7 +162,7 @@ class Agent(Concept):
             bc_found = False
             for bc_self in self.bound_conditions:
                 if (bc_self.is_bound == bc_other.is_bound) and \
-                        bc_self.agent.refinement_of(bc_other.agent, hierarchies):
+                        bc_self.agent.refinement_of(bc_other.agent, ontology):
                     bc_found = True
             # If we didn't find a match for this bound condition in self, then
             # no refinement
@@ -199,8 +184,7 @@ class Agent(Concept):
             # to make sure that each one is used at most once to match
             # the modification of one of the other Agent's modifications.
             for ix, self_mod in enumerate(self.mods):
-                if self_mod.refinement_of(other_mod,
-                                          hierarchies['modification']):
+                if self_mod.refinement_of(other_mod, ontology):
                     # If this modification hasn't been used for matching yet
                     if ix not in matched_indices:
                         # Set the index as used
@@ -247,9 +231,9 @@ class Agent(Concept):
         elif other.location is not None:
             # If the other location is part of this location then
             # self.location is not a refinement
-            if not hierarchies['cellular_component'].partof(
-                    'INDRA_LOCATIONS', self.location,
-                    'INDRA_LOCATIONS', other.location):
+            sl = go_client.get_go_id_from_label(self.location)
+            ol = go_client.get_go_id_from_label(other.location)
+            if not ontology.isa_or_partof('GO', sl, 'GO', ol):
                 return False
 
         # ACTIVITY
@@ -257,8 +241,7 @@ class Agent(Concept):
             if other.activity is not None:
                 return False
         elif other.activity is not None:
-            if not self.activity.refinement_of(other.activity,
-                                               hierarchies['activity']):
+            if not self.activity.refinement_of(other.activity, ontology):
                 return False
 
         # Everything checks out
@@ -411,11 +394,9 @@ class BoundCondition(object):
                            'to True.')
             is_bound = True
         bc = BoundCondition(agent, is_bound)
-        assert(unicode_strs(bc))
         return bc
 
 
-@python_2_unicode_compatible
 class MutCondition(object):
     """Mutation state of an amino acid position of an Agent.
 
@@ -476,7 +457,6 @@ class MutCondition(object):
         residue_from = json_dict.get('residue_from')
         residue_to = json_dict.get('residue_to')
         mc = cls(position, residue_from, residue_to)
-        assert(unicode_strs(mc))
         return mc
 
     def __str__(self):
@@ -497,7 +477,6 @@ class MutCondition(object):
         return (from_match and to_match and pos_match)
 
 
-@python_2_unicode_compatible
 class ModCondition(object):
     """Post-translational modification state at an amino acid position.
 
@@ -546,12 +525,12 @@ class ModCondition(object):
             self.position = position
         self.is_modified = is_modified
 
-    def refinement_of(self, other, mod_hierarchy):
+    def refinement_of(self, other, ontology):
         if self.is_modified != other.is_modified:
             return False
         type_match = (self.mod_type == other.mod_type or
-                      mod_hierarchy.isa('INDRA_MODS', self.mod_type,
-                                        'INDRA_MODS', other.mod_type))
+                      ontology.isa('INDRA_MODS', self.mod_type,
+                                   'INDRA_MODS', other.mod_type))
         residue_match = (self.residue == other.residue or
                          (self.residue is not None and other.residue is None))
         pos_match = (self.position == other.position or
@@ -605,7 +584,6 @@ class ModCondition(object):
                            'to True')
             is_modified = True
         mc = ModCondition(mod_type, residue, position, is_modified)
-        assert(unicode_strs(mc))
         return mc
 
     def equals(self, other):
@@ -651,13 +629,13 @@ class ActivityCondition(object):
         self.activity_type = activity_type
         self.is_active = is_active
 
-    def refinement_of(self, other, activity_hierarchy):
+    def refinement_of(self, other, ontology):
         if self.is_active != other.is_active:
             return False
         if self.activity_type == other.activity_type:
             return True
-        if activity_hierarchy.isa('INDRA_ACTIVITIES', self.activity_type,
-                                  'INDRA_ACTIVITIES', other.activity_type):
+        if ontology.isa('INDRA_ACTIVITIES', self.activity_type,
+                        'INDRA_ACTIVITIES', other.activity_type):
             return True
 
     def equals(self, other):
@@ -690,7 +668,6 @@ class ActivityCondition(object):
                            'defaulting to True')
             is_active = True
         ac = ActivityCondition(activity_type, is_active)
-        assert(unicode_strs(ac))
         return ac
 
     def __str__(self):
@@ -712,3 +689,33 @@ def _aa_short_caps(res):
         return None
     return res_info['short_name'].capitalize()
 
+
+def get_grounding(db_refs, ns_order=None):
+    """Return a tuple of a preferred grounding namespace and ID.
+
+    Parameters
+    ----------
+    db_refs : dict
+        A dict of namespace to ID references associated with an agent.
+    ns_order : list
+        A list of namespaces which are in order of priority. The first
+        matched namespace will be used as the grounding.
+
+    Returns
+    -------
+    tuple
+        A tuple whose first element is a grounding namespace (HGNC,
+        CHEBI, etc.) and the second element is an identifier in the
+        namespace. If no preferred grounding is available, a tuple of
+        Nones is returned.
+    """
+    if ns_order is None:
+        ns_order = default_ns_order
+    for db_ns in ns_order:
+        db_id = db_refs.get(db_ns)
+        if not db_id:
+            continue
+        if isinstance(db_id, (list, tuple)):
+            db_id = db_id[0]
+        return db_ns, db_id
+    return None, None

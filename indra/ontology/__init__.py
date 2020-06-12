@@ -1,0 +1,1 @@
+from .ontology_graph import IndraOntology

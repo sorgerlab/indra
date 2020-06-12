@@ -1,7 +1,7 @@
 import json
 from indra.statements import *
 from indra.preassembler import Preassembler
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.ontology.world import world_ontology
 from indra.preassembler.custom_preassembly import *
 import indra.tools.assemble_corpus as ac
 
@@ -13,12 +13,12 @@ def test_event_assemble_location():
     ev1 = Event(rainfall, context=WorldContext(geo_location=loc1))
     ev2 = Event(rainfall, context=WorldContext(geo_location=loc2))
 
-    pa = Preassembler(hierarchies=hierarchies, stmts=[ev1, ev2],
+    pa = Preassembler(ontology=world_ontology, stmts=[ev1, ev2],
                       matches_fun=None)
     unique_stmts = pa.combine_duplicates()
 
     assert len(unique_stmts) == 1
-    pa = Preassembler(hierarchies=hierarchies, stmts=[ev1, ev2],
+    pa = Preassembler(ontology=world_ontology, stmts=[ev1, ev2],
                       matches_fun=location_matches)
     unique_stmts = pa.combine_duplicates()
     assert len(unique_stmts) == 2

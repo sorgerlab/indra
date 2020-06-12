@@ -5,8 +5,8 @@ import json
 import unittest
 from copy import deepcopy
 from nose.tools import raises
-from indra.preassembler.hierarchy_manager import HierarchyManager
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.ontology.bio import bio_ontology
+from indra.ontology.world import world_ontology
 from indra.statements import *
 from indra.util import unicode_strs
 
@@ -266,8 +266,8 @@ def test_refinement_agent_mod_order():
     hras2 = Agent('MAP2K1',
                   mods=[ModCondition('ubiquitination'),
                         ModCondition('phosphorylation')])
-    assert hras1.refinement_of(hras2, hierarchies)
-    assert not hras2.refinement_of(hras1, hierarchies)
+    assert hras1.refinement_of(hras2, bio_ontology)
+    assert not hras2.refinement_of(hras1, bio_ontology)
     assert unicode_strs((hras1, hras2))
 
 
@@ -277,8 +277,8 @@ def test_refinement_agent_mod_same_order():
                         ModCondition('phosphorylation')])
     hras2 = Agent('MAP2K1',
                   mods=[ModCondition('phosphorylation')])
-    assert hras1.refinement_of(hras2, hierarchies)
-    assert not hras2.refinement_of(hras1, hierarchies)
+    assert hras1.refinement_of(hras2, bio_ontology)
+    assert not hras2.refinement_of(hras1, bio_ontology)
     assert unicode_strs((hras1, hras2))
 
 
@@ -296,10 +296,10 @@ def test_refinement_agent_mod_multiple():
     st1 = Phosphorylation(mek2, erk)
     st2 = Phosphorylation(mek1, erk, 'T', '185')
     st3 = Phosphorylation(mek1, erk, 'Y', '187')
-    assert st2.refinement_of(st1, hierarchies)
-    assert st3.refinement_of(st1, hierarchies)
-    assert not st1.refinement_of(st2, hierarchies)
-    assert not st1.refinement_of(st3, hierarchies)
+    assert st2.refinement_of(st1, bio_ontology)
+    assert st3.refinement_of(st1, bio_ontology)
+    assert not st1.refinement_of(st2, bio_ontology)
+    assert not st1.refinement_of(st3, bio_ontology)
     assert unicode_strs((st1, st2, st3))
 
 
@@ -307,8 +307,8 @@ def test_refinement_agent_mod_generic():
     p = ModCondition('phosphorylation')
     raf3p = Phosphorylation(Agent('RAF', mods=[p,p,p]), Agent('MAP2K1'))
     raf2p = Phosphorylation(Agent('RAF', mods=[p,p]), Agent('MAP2K1'))
-    assert raf3p.refinement_of(raf2p, hierarchies)
-    assert not raf2p.refinement_of(raf3p, hierarchies)
+    assert raf3p.refinement_of(raf2p, bio_ontology)
+    assert not raf2p.refinement_of(raf3p, bio_ontology)
     assert unicode_strs((raf3p, raf2p))
 
 
@@ -619,8 +619,8 @@ def test_agent_superfamily_refinement():
     statement."""
     ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
     nras = Agent('NRAS', db_refs={'HGNC': '7989'})
-    assert nras.refinement_of(ras, hierarchies)
-    assert not ras.refinement_of(nras, hierarchies)
+    assert nras.refinement_of(ras, bio_ontology)
+    assert not ras.refinement_of(nras, bio_ontology)
     # The top-level list should contain only one statement, the gene-level
     # one, supported by the family one.
 
@@ -641,30 +641,30 @@ def test_agent_boundcondition_refinement():
                   bound_conditions=[bc4])
 
     # nras1 (bound to BRAF)
-    assert not nras2.refinement_of(nras1, hierarchies)
-    assert not nras3.refinement_of(nras1, hierarchies)
-    assert not nras4.refinement_of(nras1, hierarchies)
-    assert not nras5.refinement_of(nras1, hierarchies)
+    assert not nras2.refinement_of(nras1, bio_ontology)
+    assert not nras3.refinement_of(nras1, bio_ontology)
+    assert not nras4.refinement_of(nras1, bio_ontology)
+    assert not nras5.refinement_of(nras1, bio_ontology)
     # nras2 (bound to CRAF)
-    assert not nras1.refinement_of(nras2, hierarchies)
-    assert not nras3.refinement_of(nras2, hierarchies)  # Not bound condition
-    assert not nras4.refinement_of(nras2, hierarchies)
-    assert not nras5.refinement_of(nras2, hierarchies)
+    assert not nras1.refinement_of(nras2, bio_ontology)
+    assert not nras3.refinement_of(nras2, bio_ontology)  # Not bound condition
+    assert not nras4.refinement_of(nras2, bio_ontology)
+    assert not nras5.refinement_of(nras2, bio_ontology)
     # nras3 (not bound to CRAF)
-    assert not nras1.refinement_of(nras3, hierarchies)
-    assert not nras2.refinement_of(nras3, hierarchies)  # Not bound condition
-    assert not nras4.refinement_of(nras3, hierarchies)
-    assert not nras5.refinement_of(nras3, hierarchies)
+    assert not nras1.refinement_of(nras3, bio_ontology)
+    assert not nras2.refinement_of(nras3, bio_ontology)  # Not bound condition
+    assert not nras4.refinement_of(nras3, bio_ontology)
+    assert not nras5.refinement_of(nras3, bio_ontology)
     # nras4 (no bound condition)
-    assert nras1.refinement_of(nras4, hierarchies)
-    assert nras2.refinement_of(nras4, hierarchies)
-    assert nras3.refinement_of(nras4, hierarchies)
-    assert nras5.refinement_of(nras4, hierarchies)
+    assert nras1.refinement_of(nras4, bio_ontology)
+    assert nras2.refinement_of(nras4, bio_ontology)
+    assert nras3.refinement_of(nras4, bio_ontology)
+    assert nras5.refinement_of(nras4, bio_ontology)
     # nras5 (RAF family bound condition)
-    assert nras1.refinement_of(nras5, hierarchies)
-    assert nras2.refinement_of(nras5, hierarchies)
-    assert not nras3.refinement_of(nras5, hierarchies)
-    assert not nras4.refinement_of(nras5, hierarchies)
+    assert nras1.refinement_of(nras5, bio_ontology)
+    assert nras2.refinement_of(nras5, bio_ontology)
+    assert not nras3.refinement_of(nras5, bio_ontology)
+    assert not nras4.refinement_of(nras5, bio_ontology)
 
 
 def test_agent_modification_refinement():
@@ -690,69 +690,69 @@ def test_agent_modification_refinement():
                        ModCondition('phosphorylation', 'serine', '222')])
 
     # mek1 agent is refined by all others
-    assert mek2.refinement_of(mek1, hierarchies)
-    assert mek3.refinement_of(mek1, hierarchies)
-    assert mek4.refinement_of(mek1, hierarchies)
-    assert mek5.refinement_of(mek1, hierarchies)
-    assert mek6.refinement_of(mek1, hierarchies)
-    assert mek7.refinement_of(mek1, hierarchies)
-    assert mek8.refinement_of(mek1, hierarchies)
+    assert mek2.refinement_of(mek1, bio_ontology)
+    assert mek3.refinement_of(mek1, bio_ontology)
+    assert mek4.refinement_of(mek1, bio_ontology)
+    assert mek5.refinement_of(mek1, bio_ontology)
+    assert mek6.refinement_of(mek1, bio_ontology)
+    assert mek7.refinement_of(mek1, bio_ontology)
+    assert mek8.refinement_of(mek1, bio_ontology)
     # mek2
-    assert not mek1.refinement_of(mek2, hierarchies)
-    assert not mek3.refinement_of(mek2, hierarchies)  # Different site
-    assert mek4.refinement_of(mek2, hierarchies)
-    assert not mek5.refinement_of(mek2, hierarchies)  # Cross-relationship
-    assert mek6.refinement_of(mek2, hierarchies)
-    assert not mek7.refinement_of(mek2, hierarchies)  # Different site
-    assert mek8.refinement_of(mek2, hierarchies)
+    assert not mek1.refinement_of(mek2, bio_ontology)
+    assert not mek3.refinement_of(mek2, bio_ontology)  # Different site
+    assert mek4.refinement_of(mek2, bio_ontology)
+    assert not mek5.refinement_of(mek2, bio_ontology)  # Cross-relationship
+    assert mek6.refinement_of(mek2, bio_ontology)
+    assert not mek7.refinement_of(mek2, bio_ontology)  # Different site
+    assert mek8.refinement_of(mek2, bio_ontology)
     # mek3
-    assert not mek1.refinement_of(mek3, hierarchies)
-    assert not mek2.refinement_of(mek3, hierarchies)
-    assert mek4.refinement_of(mek3, hierarchies)
-    assert not mek5.refinement_of(mek3, hierarchies)
-    assert not mek6.refinement_of(mek3, hierarchies)
-    assert mek7.refinement_of(mek3, hierarchies)
-    assert mek8.refinement_of(mek3, hierarchies)
+    assert not mek1.refinement_of(mek3, bio_ontology)
+    assert not mek2.refinement_of(mek3, bio_ontology)
+    assert mek4.refinement_of(mek3, bio_ontology)
+    assert not mek5.refinement_of(mek3, bio_ontology)
+    assert not mek6.refinement_of(mek3, bio_ontology)
+    assert mek7.refinement_of(mek3, bio_ontology)
+    assert mek8.refinement_of(mek3, bio_ontology)
     # mek4
-    assert not mek1.refinement_of(mek4, hierarchies)
-    assert not mek2.refinement_of(mek4, hierarchies)
-    assert not mek3.refinement_of(mek4, hierarchies)
-    assert not mek5.refinement_of(mek4, hierarchies)
-    assert not mek6.refinement_of(mek4, hierarchies)
-    assert not mek7.refinement_of(mek4, hierarchies)
-    assert mek8.refinement_of(mek4, hierarchies)
+    assert not mek1.refinement_of(mek4, bio_ontology)
+    assert not mek2.refinement_of(mek4, bio_ontology)
+    assert not mek3.refinement_of(mek4, bio_ontology)
+    assert not mek5.refinement_of(mek4, bio_ontology)
+    assert not mek6.refinement_of(mek4, bio_ontology)
+    assert not mek7.refinement_of(mek4, bio_ontology)
+    assert mek8.refinement_of(mek4, bio_ontology)
     # mek5
-    assert not mek1.refinement_of(mek5, hierarchies)
-    assert not mek2.refinement_of(mek5, hierarchies)
-    assert not mek3.refinement_of(mek5, hierarchies)
-    assert not mek4.refinement_of(mek5, hierarchies)
-    assert mek6.refinement_of(mek5, hierarchies)
-    assert mek7.refinement_of(mek5, hierarchies)
-    assert mek8.refinement_of(mek5, hierarchies)
+    assert not mek1.refinement_of(mek5, bio_ontology)
+    assert not mek2.refinement_of(mek5, bio_ontology)
+    assert not mek3.refinement_of(mek5, bio_ontology)
+    assert not mek4.refinement_of(mek5, bio_ontology)
+    assert mek6.refinement_of(mek5, bio_ontology)
+    assert mek7.refinement_of(mek5, bio_ontology)
+    assert mek8.refinement_of(mek5, bio_ontology)
     # mek6
-    assert not mek1.refinement_of(mek6, hierarchies)
-    assert not mek2.refinement_of(mek6, hierarchies)
-    assert not mek3.refinement_of(mek6, hierarchies)
-    assert not mek4.refinement_of(mek6, hierarchies)
-    assert not mek5.refinement_of(mek6, hierarchies)
-    assert not mek7.refinement_of(mek6, hierarchies)
-    assert mek8.refinement_of(mek6, hierarchies)
+    assert not mek1.refinement_of(mek6, bio_ontology)
+    assert not mek2.refinement_of(mek6, bio_ontology)
+    assert not mek3.refinement_of(mek6, bio_ontology)
+    assert not mek4.refinement_of(mek6, bio_ontology)
+    assert not mek5.refinement_of(mek6, bio_ontology)
+    assert not mek7.refinement_of(mek6, bio_ontology)
+    assert mek8.refinement_of(mek6, bio_ontology)
     # mek7
-    assert not mek1.refinement_of(mek7, hierarchies)
-    assert not mek2.refinement_of(mek7, hierarchies)
-    assert not mek3.refinement_of(mek7, hierarchies)
-    assert not mek4.refinement_of(mek7, hierarchies)
-    assert not mek5.refinement_of(mek7, hierarchies)
-    assert not mek6.refinement_of(mek7, hierarchies)
-    assert mek8.refinement_of(mek7, hierarchies)
+    assert not mek1.refinement_of(mek7, bio_ontology)
+    assert not mek2.refinement_of(mek7, bio_ontology)
+    assert not mek3.refinement_of(mek7, bio_ontology)
+    assert not mek4.refinement_of(mek7, bio_ontology)
+    assert not mek5.refinement_of(mek7, bio_ontology)
+    assert not mek6.refinement_of(mek7, bio_ontology)
+    assert mek8.refinement_of(mek7, bio_ontology)
     # mek8
-    assert not mek1.refinement_of(mek8, hierarchies)
-    assert not mek2.refinement_of(mek8, hierarchies)
-    assert not mek3.refinement_of(mek8, hierarchies)
-    assert not mek4.refinement_of(mek8, hierarchies)
-    assert not mek5.refinement_of(mek8, hierarchies)
-    assert not mek6.refinement_of(mek8, hierarchies)
-    assert not mek7.refinement_of(mek8, hierarchies)
+    assert not mek1.refinement_of(mek8, bio_ontology)
+    assert not mek2.refinement_of(mek8, bio_ontology)
+    assert not mek3.refinement_of(mek8, bio_ontology)
+    assert not mek4.refinement_of(mek8, bio_ontology)
+    assert not mek5.refinement_of(mek8, bio_ontology)
+    assert not mek6.refinement_of(mek8, bio_ontology)
+    assert not mek7.refinement_of(mek8, bio_ontology)
 
 
 def test_phosphorylation_modification_refinement():
@@ -766,41 +766,41 @@ def test_phosphorylation_modification_refinement():
     p6 = Phosphorylation(braf, mek1, 'serine', '222')
 
     # p1
-    assert p2.refinement_of(p1, hierarchies)
-    assert p3.refinement_of(p1, hierarchies)
-    assert p4.refinement_of(p1, hierarchies)
-    assert p5.refinement_of(p1, hierarchies)
-    assert p6.refinement_of(p1, hierarchies)
+    assert p2.refinement_of(p1, bio_ontology)
+    assert p3.refinement_of(p1, bio_ontology)
+    assert p4.refinement_of(p1, bio_ontology)
+    assert p5.refinement_of(p1, bio_ontology)
+    assert p6.refinement_of(p1, bio_ontology)
     # p2
-    assert not p1.refinement_of(p2, hierarchies)
-    assert not p3.refinement_of(p2, hierarchies)
-    assert not p4.refinement_of(p2, hierarchies)
-    assert p5.refinement_of(p2, hierarchies)
-    assert not p6.refinement_of(p2, hierarchies)
+    assert not p1.refinement_of(p2, bio_ontology)
+    assert not p3.refinement_of(p2, bio_ontology)
+    assert not p4.refinement_of(p2, bio_ontology)
+    assert p5.refinement_of(p2, bio_ontology)
+    assert not p6.refinement_of(p2, bio_ontology)
     # p3
-    assert not p1.refinement_of(p3, hierarchies)
-    assert not p2.refinement_of(p3, hierarchies)
-    assert not p4.refinement_of(p3, hierarchies)
-    assert not p5.refinement_of(p3, hierarchies)
-    assert p6.refinement_of(p3, hierarchies)
+    assert not p1.refinement_of(p3, bio_ontology)
+    assert not p2.refinement_of(p3, bio_ontology)
+    assert not p4.refinement_of(p3, bio_ontology)
+    assert not p5.refinement_of(p3, bio_ontology)
+    assert p6.refinement_of(p3, bio_ontology)
     # p4
-    assert not p1.refinement_of(p4, hierarchies)
-    assert not p2.refinement_of(p4, hierarchies)
-    assert not p3.refinement_of(p4, hierarchies)
-    assert p5.refinement_of(p4, hierarchies)
-    assert p6.refinement_of(p4, hierarchies)
+    assert not p1.refinement_of(p4, bio_ontology)
+    assert not p2.refinement_of(p4, bio_ontology)
+    assert not p3.refinement_of(p4, bio_ontology)
+    assert p5.refinement_of(p4, bio_ontology)
+    assert p6.refinement_of(p4, bio_ontology)
     # p5
-    assert not p1.refinement_of(p5, hierarchies)
-    assert not p2.refinement_of(p5, hierarchies)
-    assert not p3.refinement_of(p5, hierarchies)
-    assert not p4.refinement_of(p5, hierarchies)
-    assert not p6.refinement_of(p5, hierarchies)
+    assert not p1.refinement_of(p5, bio_ontology)
+    assert not p2.refinement_of(p5, bio_ontology)
+    assert not p3.refinement_of(p5, bio_ontology)
+    assert not p4.refinement_of(p5, bio_ontology)
+    assert not p6.refinement_of(p5, bio_ontology)
     # p6
-    assert not p1.refinement_of(p6, hierarchies)
-    assert not p2.refinement_of(p6, hierarchies)
-    assert not p3.refinement_of(p6, hierarchies)
-    assert not p4.refinement_of(p6, hierarchies)
-    assert not p5.refinement_of(p6, hierarchies)
+    assert not p1.refinement_of(p6, bio_ontology)
+    assert not p2.refinement_of(p6, bio_ontology)
+    assert not p3.refinement_of(p6, bio_ontology)
+    assert not p4.refinement_of(p6, bio_ontology)
+    assert not p5.refinement_of(p6, bio_ontology)
 
 
 def test_autophosphorylation_modification_refinement():
@@ -813,41 +813,41 @@ def test_autophosphorylation_modification_refinement():
     p6 = Autophosphorylation(braf, 'serine', '222')
 
     # p1
-    assert p2.refinement_of(p1, hierarchies)
-    assert p3.refinement_of(p1, hierarchies)
-    assert p4.refinement_of(p1, hierarchies)
-    assert p5.refinement_of(p1, hierarchies)
-    assert p6.refinement_of(p1, hierarchies)
+    assert p2.refinement_of(p1, bio_ontology)
+    assert p3.refinement_of(p1, bio_ontology)
+    assert p4.refinement_of(p1, bio_ontology)
+    assert p5.refinement_of(p1, bio_ontology)
+    assert p6.refinement_of(p1, bio_ontology)
     # p2
-    assert not p1.refinement_of(p2, hierarchies)
-    assert not p3.refinement_of(p2, hierarchies)
-    assert not p4.refinement_of(p2, hierarchies)
-    assert p5.refinement_of(p2, hierarchies)
-    assert not p6.refinement_of(p2, hierarchies)
+    assert not p1.refinement_of(p2, bio_ontology)
+    assert not p3.refinement_of(p2, bio_ontology)
+    assert not p4.refinement_of(p2, bio_ontology)
+    assert p5.refinement_of(p2, bio_ontology)
+    assert not p6.refinement_of(p2, bio_ontology)
     # p3
-    assert not p1.refinement_of(p3, hierarchies)
-    assert not p2.refinement_of(p3, hierarchies)
-    assert not p4.refinement_of(p3, hierarchies)
-    assert not p5.refinement_of(p3, hierarchies)
-    assert p6.refinement_of(p3, hierarchies)
+    assert not p1.refinement_of(p3, bio_ontology)
+    assert not p2.refinement_of(p3, bio_ontology)
+    assert not p4.refinement_of(p3, bio_ontology)
+    assert not p5.refinement_of(p3, bio_ontology)
+    assert p6.refinement_of(p3, bio_ontology)
     # p4
-    assert not p1.refinement_of(p4, hierarchies)
-    assert not p2.refinement_of(p4, hierarchies)
-    assert not p3.refinement_of(p4, hierarchies)
-    assert p5.refinement_of(p4, hierarchies)
-    assert p6.refinement_of(p4, hierarchies)
+    assert not p1.refinement_of(p4, bio_ontology)
+    assert not p2.refinement_of(p4, bio_ontology)
+    assert not p3.refinement_of(p4, bio_ontology)
+    assert p5.refinement_of(p4, bio_ontology)
+    assert p6.refinement_of(p4, bio_ontology)
     # p5
-    assert not p1.refinement_of(p5, hierarchies)
-    assert not p2.refinement_of(p5, hierarchies)
-    assert not p3.refinement_of(p5, hierarchies)
-    assert not p4.refinement_of(p5, hierarchies)
-    assert not p6.refinement_of(p5, hierarchies)
+    assert not p1.refinement_of(p5, bio_ontology)
+    assert not p2.refinement_of(p5, bio_ontology)
+    assert not p3.refinement_of(p5, bio_ontology)
+    assert not p4.refinement_of(p5, bio_ontology)
+    assert not p6.refinement_of(p5, bio_ontology)
     # p6
-    assert not p1.refinement_of(p6, hierarchies)
-    assert not p2.refinement_of(p6, hierarchies)
-    assert not p3.refinement_of(p6, hierarchies)
-    assert not p4.refinement_of(p6, hierarchies)
-    assert not p5.refinement_of(p6, hierarchies)
+    assert not p1.refinement_of(p6, bio_ontology)
+    assert not p2.refinement_of(p6, bio_ontology)
+    assert not p3.refinement_of(p6, bio_ontology)
+    assert not p4.refinement_of(p6, bio_ontology)
+    assert not p5.refinement_of(p6, bio_ontology)
 
 
 def test_activation_modification_refinement():
@@ -862,30 +862,30 @@ def test_activation_modification_refinement():
     st4 = Activation(braf, mek1, 'kinase')
     st5 = Inhibition(braf, mek1, 'kinase')
     # st1
-    assert st2.refinement_of(st1, hierarchies)
-    assert st3.refinement_of(st1, hierarchies)
-    assert st4.refinement_of(st1, hierarchies)
-    assert not st5.refinement_of(st1, hierarchies)
+    assert st2.refinement_of(st1, bio_ontology)
+    assert st3.refinement_of(st1, bio_ontology)
+    assert st4.refinement_of(st1, bio_ontology)
+    assert not st5.refinement_of(st1, bio_ontology)
     # st2
-    assert not st1.refinement_of(st2, hierarchies)
-    assert not st3.refinement_of(st2, hierarchies)
-    assert st4.refinement_of(st2, hierarchies)
-    assert not st5.refinement_of(st2, hierarchies)
+    assert not st1.refinement_of(st2, bio_ontology)
+    assert not st3.refinement_of(st2, bio_ontology)
+    assert st4.refinement_of(st2, bio_ontology)
+    assert not st5.refinement_of(st2, bio_ontology)
     # st3
-    assert not st1.refinement_of(st3, hierarchies)
-    assert not st2.refinement_of(st3, hierarchies)
-    assert st4.refinement_of(st3, hierarchies)
-    assert not st5.refinement_of(st3, hierarchies)
+    assert not st1.refinement_of(st3, bio_ontology)
+    assert not st2.refinement_of(st3, bio_ontology)
+    assert st4.refinement_of(st3, bio_ontology)
+    assert not st5.refinement_of(st3, bio_ontology)
     # st4
-    assert not st1.refinement_of(st4, hierarchies)
-    assert not st2.refinement_of(st4, hierarchies)
-    assert not st3.refinement_of(st4, hierarchies)
-    assert not st5.refinement_of(st4, hierarchies)
+    assert not st1.refinement_of(st4, bio_ontology)
+    assert not st2.refinement_of(st4, bio_ontology)
+    assert not st3.refinement_of(st4, bio_ontology)
+    assert not st5.refinement_of(st4, bio_ontology)
     # st5
-    assert not st1.refinement_of(st5, hierarchies)
-    assert not st2.refinement_of(st5, hierarchies)
-    assert not st3.refinement_of(st5, hierarchies)
-    assert not st4.refinement_of(st5, hierarchies)
+    assert not st1.refinement_of(st5, bio_ontology)
+    assert not st2.refinement_of(st5, bio_ontology)
+    assert not st3.refinement_of(st5, bio_ontology)
+    assert not st4.refinement_of(st5, bio_ontology)
 
 
 def test_activation_activity_hierarchy_refinement():
@@ -904,14 +904,14 @@ def test_activation_activity_hierarchy_refinement():
     st5 = Activation(raf_c, mek, 'activity')
     st6 = Activation(raf_a, mek, 'activity')
 
-    assert not st1.refinement_of(st2, hierarchies)
-    assert not st2.refinement_of(st1, hierarchies)
-    assert st1.refinement_of(st3, hierarchies)
-    assert st1.refinement_of(st4, hierarchies)
-    assert st5.refinement_of(st6, hierarchies)
-    assert st1.refinement_of(st6, hierarchies)
-    assert not st3.refinement_of(st4, hierarchies)
-    assert not st4.refinement_of(st3, hierarchies)
+    assert not st1.refinement_of(st2, bio_ontology)
+    assert not st2.refinement_of(st1, bio_ontology)
+    assert st1.refinement_of(st3, bio_ontology)
+    assert st1.refinement_of(st4, bio_ontology)
+    assert st5.refinement_of(st6, bio_ontology)
+    assert st1.refinement_of(st6, bio_ontology)
+    assert not st3.refinement_of(st4, bio_ontology)
+    assert not st4.refinement_of(st3, bio_ontology)
 
 
 def test_activitymod_refinement():
@@ -936,54 +936,54 @@ def test_activitymod_refinement():
     p7 = ActiveForm(Agent('MAP2K1', mods=[mc3, mc4], db_refs={'HGNC': '6840'}),
                     'kinase', True)
     # p1
-    assert p2.refinement_of(p1, hierarchies)
-    assert p3.refinement_of(p1, hierarchies)
-    assert p4.refinement_of(p1, hierarchies)
-    assert p5.refinement_of(p1, hierarchies)
-    assert p6.refinement_of(p1, hierarchies)
-    assert p7.refinement_of(p1, hierarchies)
+    assert p2.refinement_of(p1, bio_ontology)
+    assert p3.refinement_of(p1, bio_ontology)
+    assert p4.refinement_of(p1, bio_ontology)
+    assert p5.refinement_of(p1, bio_ontology)
+    assert p6.refinement_of(p1, bio_ontology)
+    assert p7.refinement_of(p1, bio_ontology)
     # p2
-    assert not p1.refinement_of(p2, hierarchies)
-    assert not p3.refinement_of(p2, hierarchies)
-    assert not p4.refinement_of(p2, hierarchies)
-    assert p5.refinement_of(p2, hierarchies)
-    assert not p6.refinement_of(p2, hierarchies)
-    assert p7.refinement_of(p2, hierarchies)
+    assert not p1.refinement_of(p2, bio_ontology)
+    assert not p3.refinement_of(p2, bio_ontology)
+    assert not p4.refinement_of(p2, bio_ontology)
+    assert p5.refinement_of(p2, bio_ontology)
+    assert not p6.refinement_of(p2, bio_ontology)
+    assert p7.refinement_of(p2, bio_ontology)
     # p3
-    assert not p1.refinement_of(p3, hierarchies)
-    assert not p2.refinement_of(p3, hierarchies)
-    assert p4.refinement_of(p3, hierarchies)
-    assert p5.refinement_of(p3, hierarchies)
-    assert p6.refinement_of(p3, hierarchies)
-    assert p7.refinement_of(p3, hierarchies)
+    assert not p1.refinement_of(p3, bio_ontology)
+    assert not p2.refinement_of(p3, bio_ontology)
+    assert p4.refinement_of(p3, bio_ontology)
+    assert p5.refinement_of(p3, bio_ontology)
+    assert p6.refinement_of(p3, bio_ontology)
+    assert p7.refinement_of(p3, bio_ontology)
     # p4
-    assert not p1.refinement_of(p4, hierarchies)
-    assert not p2.refinement_of(p4, hierarchies)
-    assert not p3.refinement_of(p4, hierarchies)
-    assert p5.refinement_of(p4, hierarchies)
-    assert p6.refinement_of(p4, hierarchies)
-    assert p7.refinement_of(p4, hierarchies)
+    assert not p1.refinement_of(p4, bio_ontology)
+    assert not p2.refinement_of(p4, bio_ontology)
+    assert not p3.refinement_of(p4, bio_ontology)
+    assert p5.refinement_of(p4, bio_ontology)
+    assert p6.refinement_of(p4, bio_ontology)
+    assert p7.refinement_of(p4, bio_ontology)
     # p5
-    assert not p1.refinement_of(p5, hierarchies)
-    assert not p2.refinement_of(p5, hierarchies)
-    assert not p3.refinement_of(p5, hierarchies)
-    assert not p4.refinement_of(p5, hierarchies)
-    assert not p6.refinement_of(p5, hierarchies)
-    assert p7.refinement_of(p5, hierarchies)
+    assert not p1.refinement_of(p5, bio_ontology)
+    assert not p2.refinement_of(p5, bio_ontology)
+    assert not p3.refinement_of(p5, bio_ontology)
+    assert not p4.refinement_of(p5, bio_ontology)
+    assert not p6.refinement_of(p5, bio_ontology)
+    assert p7.refinement_of(p5, bio_ontology)
     # p6
-    assert not p1.refinement_of(p6, hierarchies)
-    assert not p2.refinement_of(p6, hierarchies)
-    assert not p3.refinement_of(p6, hierarchies)
-    assert not p4.refinement_of(p6, hierarchies)
-    assert not p5.refinement_of(p6, hierarchies)
-    assert p7.refinement_of(p6, hierarchies)
+    assert not p1.refinement_of(p6, bio_ontology)
+    assert not p2.refinement_of(p6, bio_ontology)
+    assert not p3.refinement_of(p6, bio_ontology)
+    assert not p4.refinement_of(p6, bio_ontology)
+    assert not p5.refinement_of(p6, bio_ontology)
+    assert p7.refinement_of(p6, bio_ontology)
     # p7
-    assert not p1.refinement_of(p7, hierarchies)
-    assert not p2.refinement_of(p7, hierarchies)
-    assert not p3.refinement_of(p7, hierarchies)
-    assert not p4.refinement_of(p7, hierarchies)
-    assert not p5.refinement_of(p7, hierarchies)
-    assert not p6.refinement_of(p7, hierarchies)
+    assert not p1.refinement_of(p7, bio_ontology)
+    assert not p2.refinement_of(p7, bio_ontology)
+    assert not p3.refinement_of(p7, bio_ontology)
+    assert not p4.refinement_of(p7, bio_ontology)
+    assert not p5.refinement_of(p7, bio_ontology)
+    assert not p6.refinement_of(p7, bio_ontology)
 
 
 def test_activeform_activity_hierarchy_refinement():
@@ -992,11 +992,11 @@ def test_activeform_activity_hierarchy_refinement():
     p3 = ActiveForm(Agent('MEK'), 'catalytic', True)
     p4 = ActiveForm(Agent('MEK'), 'activity', True)
 
-    assert not p1.refinement_of(p2, hierarchies)
-    assert p1.refinement_of(p3, hierarchies)
-    assert p1.refinement_of(p4, hierarchies)
-    assert p3.refinement_of(p4, hierarchies)
-    assert not p4.refinement_of(p3, hierarchies)
+    assert not p1.refinement_of(p2, bio_ontology)
+    assert p1.refinement_of(p3, bio_ontology)
+    assert p1.refinement_of(p4, bio_ontology)
+    assert p3.refinement_of(p4, bio_ontology)
+    assert not p4.refinement_of(p3, bio_ontology)
 
 
 def test_activatingsub_family_refinement():
@@ -1009,21 +1009,21 @@ def test_activatingsub_family_refinement():
     st3 = ActiveForm(nras, 'activity', True)
     st4 = ActiveForm(kras, 'activity', False)
     # st1
-    assert st2.refinement_of(st1, hierarchies)
-    assert st3.refinement_of(st1, hierarchies)
-    assert not st4.refinement_of(st1, hierarchies)
+    assert st2.refinement_of(st1, bio_ontology)
+    assert st3.refinement_of(st1, bio_ontology)
+    assert not st4.refinement_of(st1, bio_ontology)
     # st2
-    assert not st1.refinement_of(st2, hierarchies)
-    assert not st3.refinement_of(st2, hierarchies)
-    assert not st4.refinement_of(st2, hierarchies)
+    assert not st1.refinement_of(st2, bio_ontology)
+    assert not st3.refinement_of(st2, bio_ontology)
+    assert not st4.refinement_of(st2, bio_ontology)
     # st3
-    assert not st1.refinement_of(st3, hierarchies)
-    assert not st2.refinement_of(st3, hierarchies)
-    assert not st4.refinement_of(st3, hierarchies)
+    assert not st1.refinement_of(st3, bio_ontology)
+    assert not st2.refinement_of(st3, bio_ontology)
+    assert not st4.refinement_of(st3, bio_ontology)
     # st4
-    assert not st1.refinement_of(st4, hierarchies)
-    assert not st2.refinement_of(st4, hierarchies)
-    assert not st3.refinement_of(st4, hierarchies)
+    assert not st1.refinement_of(st4, bio_ontology)
+    assert not st2.refinement_of(st4, bio_ontology)
+    assert not st3.refinement_of(st4, bio_ontology)
 
 
 def test_gef_family_refinement():
@@ -1043,37 +1043,37 @@ def test_gef_family_refinement():
     st5 = Gef(sos1_a, kras)
     st6 = Gef(sos1_c, kras)
     # st1
-    assert st2.refinement_of(st1, hierarchies)
-    assert st3.refinement_of(st1, hierarchies)
-    assert st4.refinement_of(st1, hierarchies)
-    assert st5.refinement_of(st1, hierarchies)
-    assert st6.refinement_of(st1, hierarchies)
+    assert st2.refinement_of(st1, bio_ontology)
+    assert st3.refinement_of(st1, bio_ontology)
+    assert st4.refinement_of(st1, bio_ontology)
+    assert st5.refinement_of(st1, bio_ontology)
+    assert st6.refinement_of(st1, bio_ontology)
     # st2
-    assert not st1.refinement_of(st2, hierarchies)
-    assert not st3.refinement_of(st2, hierarchies)
-    assert st4.refinement_of(st2, hierarchies)
-    assert st5.refinement_of(st2, hierarchies)
-    assert st6.refinement_of(st2, hierarchies)
+    assert not st1.refinement_of(st2, bio_ontology)
+    assert not st3.refinement_of(st2, bio_ontology)
+    assert st4.refinement_of(st2, bio_ontology)
+    assert st5.refinement_of(st2, bio_ontology)
+    assert st6.refinement_of(st2, bio_ontology)
     # st3
-    assert not st1.refinement_of(st3, hierarchies)
-    assert not st2.refinement_of(st3, hierarchies)
-    assert st4.refinement_of(st3, hierarchies)
-    assert st5.refinement_of(st3, hierarchies)
-    assert st6.refinement_of(st3, hierarchies)
+    assert not st1.refinement_of(st3, bio_ontology)
+    assert not st2.refinement_of(st3, bio_ontology)
+    assert st4.refinement_of(st3, bio_ontology)
+    assert st5.refinement_of(st3, bio_ontology)
+    assert st6.refinement_of(st3, bio_ontology)
     # st4
-    assert not st1.refinement_of(st4, hierarchies)
-    assert not st2.refinement_of(st4, hierarchies)
-    assert not st3.refinement_of(st4, hierarchies)
-    assert st5.refinement_of(st4, hierarchies)
-    assert st6.refinement_of(st4, hierarchies)
+    assert not st1.refinement_of(st4, bio_ontology)
+    assert not st2.refinement_of(st4, bio_ontology)
+    assert not st3.refinement_of(st4, bio_ontology)
+    assert st5.refinement_of(st4, bio_ontology)
+    assert st6.refinement_of(st4, bio_ontology)
     # st5
-    assert not st1.refinement_of(st5, hierarchies)
-    assert not st2.refinement_of(st5, hierarchies)
-    assert not st3.refinement_of(st5, hierarchies)
-    assert not st4.refinement_of(st5, hierarchies)
-    assert st6.refinement_of(st5, hierarchies)
+    assert not st1.refinement_of(st5, bio_ontology)
+    assert not st2.refinement_of(st5, bio_ontology)
+    assert not st3.refinement_of(st5, bio_ontology)
+    assert not st4.refinement_of(st5, bio_ontology)
+    assert st6.refinement_of(st5, bio_ontology)
     # st6
-    assert not st5.refinement_of(st6, hierarchies)
+    assert not st5.refinement_of(st6, bio_ontology)
 
 
 def test_gap_family_refinement():
@@ -1093,37 +1093,37 @@ def test_gap_family_refinement():
     st5 = Gap(rasa1_a, kras)
     st6 = Gap(rasa1_c, kras)
     # st1
-    assert st2.refinement_of(st1, hierarchies)
-    assert st3.refinement_of(st1, hierarchies)
-    assert st4.refinement_of(st1, hierarchies)
-    assert st5.refinement_of(st1, hierarchies)
-    assert st6.refinement_of(st1, hierarchies)
+    assert st2.refinement_of(st1, bio_ontology)
+    assert st3.refinement_of(st1, bio_ontology)
+    assert st4.refinement_of(st1, bio_ontology)
+    assert st5.refinement_of(st1, bio_ontology)
+    assert st6.refinement_of(st1, bio_ontology)
     # st2
-    assert not st1.refinement_of(st2, hierarchies)
-    assert not st3.refinement_of(st2, hierarchies)
-    assert st4.refinement_of(st2, hierarchies)
-    assert st5.refinement_of(st2, hierarchies)
-    assert st6.refinement_of(st2, hierarchies)
+    assert not st1.refinement_of(st2, bio_ontology)
+    assert not st3.refinement_of(st2, bio_ontology)
+    assert st4.refinement_of(st2, bio_ontology)
+    assert st5.refinement_of(st2, bio_ontology)
+    assert st6.refinement_of(st2, bio_ontology)
     # st3
-    assert not st1.refinement_of(st3, hierarchies)
-    assert not st2.refinement_of(st3, hierarchies)
-    assert st4.refinement_of(st3, hierarchies)
-    assert st5.refinement_of(st3, hierarchies)
-    assert st6.refinement_of(st3, hierarchies)
+    assert not st1.refinement_of(st3, bio_ontology)
+    assert not st2.refinement_of(st3, bio_ontology)
+    assert st4.refinement_of(st3, bio_ontology)
+    assert st5.refinement_of(st3, bio_ontology)
+    assert st6.refinement_of(st3, bio_ontology)
     # st4
-    assert not st1.refinement_of(st4, hierarchies)
-    assert not st2.refinement_of(st4, hierarchies)
-    assert not st3.refinement_of(st4, hierarchies)
-    assert st5.refinement_of(st4, hierarchies)
-    assert st6.refinement_of(st4, hierarchies)
+    assert not st1.refinement_of(st4, bio_ontology)
+    assert not st2.refinement_of(st4, bio_ontology)
+    assert not st3.refinement_of(st4, bio_ontology)
+    assert st5.refinement_of(st4, bio_ontology)
+    assert st6.refinement_of(st4, bio_ontology)
     # st5
-    assert not st1.refinement_of(st5, hierarchies)
-    assert not st2.refinement_of(st5, hierarchies)
-    assert not st3.refinement_of(st5, hierarchies)
-    assert not st4.refinement_of(st5, hierarchies)
-    assert st6.refinement_of(st5, hierarchies)
+    assert not st1.refinement_of(st5, bio_ontology)
+    assert not st2.refinement_of(st5, bio_ontology)
+    assert not st3.refinement_of(st5, bio_ontology)
+    assert not st4.refinement_of(st5, bio_ontology)
+    assert st6.refinement_of(st5, bio_ontology)
     # st6
-    assert not st5.refinement_of(st6, hierarchies)
+    assert not st5.refinement_of(st6, bio_ontology)
 
 
 def test_complex_family_refinement():
@@ -1140,30 +1140,30 @@ def test_complex_family_refinement():
     st5 = Complex([braf, raf1])
 
     # st1
-    assert st2.refinement_of(st1, hierarchies)
-    assert st3.refinement_of(st1, hierarchies)
-    assert st4.refinement_of(st1, hierarchies)
-    assert not st5.refinement_of(st1, hierarchies)
+    assert st2.refinement_of(st1, bio_ontology)
+    assert st3.refinement_of(st1, bio_ontology)
+    assert st4.refinement_of(st1, bio_ontology)
+    assert not st5.refinement_of(st1, bio_ontology)
     # st2
-    assert not st1.refinement_of(st2, hierarchies)
-    assert not st3.refinement_of(st2, hierarchies)
-    assert st4.refinement_of(st2, hierarchies)
-    assert not st5.refinement_of(st2, hierarchies)
+    assert not st1.refinement_of(st2, bio_ontology)
+    assert not st3.refinement_of(st2, bio_ontology)
+    assert st4.refinement_of(st2, bio_ontology)
+    assert not st5.refinement_of(st2, bio_ontology)
     # st3
-    assert not st1.refinement_of(st3, hierarchies)
-    assert not st2.refinement_of(st3, hierarchies)
-    assert st4.refinement_of(st3, hierarchies)
-    assert not st5.refinement_of(st3, hierarchies)
+    assert not st1.refinement_of(st3, bio_ontology)
+    assert not st2.refinement_of(st3, bio_ontology)
+    assert st4.refinement_of(st3, bio_ontology)
+    assert not st5.refinement_of(st3, bio_ontology)
     # st4
-    assert not st1.refinement_of(st4, hierarchies)
-    assert not st2.refinement_of(st4, hierarchies)
-    assert not st3.refinement_of(st4, hierarchies)
-    assert not st5.refinement_of(st4, hierarchies)
+    assert not st1.refinement_of(st4, bio_ontology)
+    assert not st2.refinement_of(st4, bio_ontology)
+    assert not st3.refinement_of(st4, bio_ontology)
+    assert not st5.refinement_of(st4, bio_ontology)
     # st5
-    assert not st1.refinement_of(st5, hierarchies)
-    assert not st2.refinement_of(st5, hierarchies)
-    assert not st3.refinement_of(st5, hierarchies)
-    assert not st4.refinement_of(st5, hierarchies)
+    assert not st1.refinement_of(st5, bio_ontology)
+    assert not st2.refinement_of(st5, bio_ontology)
+    assert not st3.refinement_of(st5, bio_ontology)
+    assert not st4.refinement_of(st5, bio_ontology)
 
 
 def test_mismatched_complex_refinement():
@@ -1172,8 +1172,8 @@ def test_mismatched_complex_refinement():
     mek = Agent('MEK')
     st1 = Complex([ras, raf])
     st2 = Complex([mek, ras, raf])
-    assert not st1.refinement_of(st2, hierarchies)
-    assert not st2.refinement_of(st1, hierarchies)
+    assert not st1.refinement_of(st2, bio_ontology)
+    assert not st2.refinement_of(st1, bio_ontology)
 
 
 def test_related_complex_refinement():
@@ -1184,11 +1184,11 @@ def test_related_complex_refinement():
     st2 = Complex([kras, ras])
     st3 = Complex([hras, kras])
     st4 = Complex([ras, kras])
-    assert st1.refinement_of(st2, hierarchies)
-    assert st3.refinement_of(st4, hierarchies)
-    assert st1.refinement_of(st4, hierarchies)
-    assert not st2.refinement_of(st1, hierarchies)
-    assert not st4.refinement_of(st1, hierarchies)
+    assert st1.refinement_of(st2, bio_ontology)
+    assert st3.refinement_of(st4, bio_ontology)
+    assert st1.refinement_of(st4, bio_ontology)
+    assert not st2.refinement_of(st1, bio_ontology)
+    assert not st4.refinement_of(st1, bio_ontology)
 
 
 def test_big_complex_refinement():
@@ -1239,7 +1239,7 @@ def test_big_complex_refinement():
             '"5a03d72c-755e-4262-b8c8-9f632305c703"}')
     c1 = Statement._from_json(json.loads(c1js))
     c2 = Statement._from_json(json.loads(c2js))
-    c1.refinement_of(c2, hierarchies)
+    c1.refinement_of(c2, bio_ontology)
 
 
 def test_mtor_rictor_refinement():
@@ -1248,8 +1248,8 @@ def test_mtor_rictor_refinement():
     rt = Agent('RICTOR')
     c1 = Complex([mt, rt, rt])
     c2 = Complex([mtm, mt, mt])
-    assert not c1.refinement_of(c2, hierarchies)
-    assert not c2.refinement_of(c1, hierarchies)
+    assert not c1.refinement_of(c2, bio_ontology)
+    assert not c2.refinement_of(c1, bio_ontology)
 
 
 @raises(InvalidResidueError)
@@ -1381,13 +1381,13 @@ def test_location_refinement():
     a4 = Agent('a')
     a5 = Agent('a')
 
-    assert a1.refinement_of(a2, hierarchies)
-    assert not a2.refinement_of(a3, hierarchies)
-    assert a4.refinement_of(a5, hierarchies)
-    assert not a1.refinement_of(a3, hierarchies)
-    assert not a3.refinement_of(a1, hierarchies)
-    assert a2.refinement_of(a4, hierarchies)
-    assert a3.refinement_of(a4, hierarchies)
+    assert a1.refinement_of(a2, bio_ontology)
+    assert not a2.refinement_of(a3, bio_ontology)
+    assert a4.refinement_of(a5, bio_ontology)
+    assert not a1.refinement_of(a3, bio_ontology)
+    assert not a3.refinement_of(a1, bio_ontology)
+    assert a2.refinement_of(a4, bio_ontology)
+    assert a3.refinement_of(a4, bio_ontology)
 
 
 def test_activity_refinement():
@@ -1398,19 +1398,19 @@ def test_activity_refinement():
     a5 = Agent('a', activity=ActivityCondition('catalytic', False))
     a6 = Agent('a', activity=ActivityCondition('kinase', False))
 
-    assert a1.refinement_of(a2, hierarchies)
-    assert not a2.refinement_of(a3, hierarchies)
-    assert not a4.refinement_of(a1, hierarchies)
-    assert a1.refinement_of(a3, hierarchies)
-    assert a3.refinement_of(a2, hierarchies)
-    assert not a3.refinement_of(a1, hierarchies)
-    assert a1.refinement_of(a4, hierarchies)
-    assert a2.refinement_of(a4, hierarchies)
-    assert a5.refinement_of(a4, hierarchies)
-    assert not a5.refinement_of(a3, hierarchies)
-    assert not a5.refinement_of(a1, hierarchies)
-    assert a6.refinement_of(a5, hierarchies)
-    assert not a5.refinement_of(a6, hierarchies)
+    assert a1.refinement_of(a2, bio_ontology)
+    assert not a2.refinement_of(a3, bio_ontology)
+    assert not a4.refinement_of(a1, bio_ontology)
+    assert a1.refinement_of(a3, bio_ontology)
+    assert a3.refinement_of(a2, bio_ontology)
+    assert not a3.refinement_of(a1, bio_ontology)
+    assert a1.refinement_of(a4, bio_ontology)
+    assert a2.refinement_of(a4, bio_ontology)
+    assert a5.refinement_of(a4, bio_ontology)
+    assert not a5.refinement_of(a3, bio_ontology)
+    assert not a5.refinement_of(a1, bio_ontology)
+    assert a6.refinement_of(a5, bio_ontology)
+    assert not a5.refinement_of(a6, bio_ontology)
 
 
 def test_translocation_refinement():
@@ -1423,18 +1423,18 @@ def test_translocation_refinement():
     st7 = Translocation(Agent('a'), 'nucleus', 'cytoplasm')
     st8 = Translocation(Agent('a'), None, 'cellular_component')
     st9 = Translocation(Agent('a'), None, None)
-    assert st3.refinement_of(st8, hierarchies)
-    assert st1.refinement_of(st2, hierarchies)
-    assert st1.refinement_of(st3, hierarchies)
-    assert not st2.refinement_of(st3, hierarchies)
-    assert st1.refinement_of(st4, hierarchies)
-    assert not st2.refinement_of(st4, hierarchies)
-    assert st4.refinement_of(st5, hierarchies)
-    assert st6.refinement_of(st5, hierarchies)
-    assert not st1.refinement_of(st7, hierarchies)
-    assert st7.refinement_of(st4, hierarchies)
-    assert st8.refinement_of(st9, hierarchies)
-    assert st7.refinement_of(st9, hierarchies)
+    assert st3.refinement_of(st8, bio_ontology)
+    assert st1.refinement_of(st2, bio_ontology)
+    assert st1.refinement_of(st3, bio_ontology)
+    assert not st2.refinement_of(st3, bio_ontology)
+    assert st1.refinement_of(st4, bio_ontology)
+    assert not st2.refinement_of(st4, bio_ontology)
+    assert st4.refinement_of(st5, bio_ontology)
+    assert st6.refinement_of(st5, bio_ontology)
+    assert not st1.refinement_of(st7, bio_ontology)
+    assert st7.refinement_of(st4, bio_ontology)
+    assert st8.refinement_of(st9, bio_ontology)
+    assert st7.refinement_of(st9, bio_ontology)
 
 
 def test_decrease_amt_refinement():
@@ -1453,21 +1453,21 @@ def test_decrease_amt_refinement():
 
     assert unicode_strs((st1, st2, st3, st4))
     # st1
-    assert st2.refinement_of(st1, hierarchies)
-    assert st3.refinement_of(st1, hierarchies)
-    assert st4.refinement_of(st1, hierarchies)
+    assert st2.refinement_of(st1, bio_ontology)
+    assert st3.refinement_of(st1, bio_ontology)
+    assert st4.refinement_of(st1, bio_ontology)
     # st2
-    assert not st1.refinement_of(st2, hierarchies)
-    assert not st3.refinement_of(st2, hierarchies)
-    assert st4.refinement_of(st2, hierarchies)
+    assert not st1.refinement_of(st2, bio_ontology)
+    assert not st3.refinement_of(st2, bio_ontology)
+    assert st4.refinement_of(st2, bio_ontology)
     # st3
-    assert not st1.refinement_of(st3, hierarchies)
-    assert not st2.refinement_of(st3, hierarchies)
-    assert st4.refinement_of(st3, hierarchies)
+    assert not st1.refinement_of(st3, bio_ontology)
+    assert not st2.refinement_of(st3, bio_ontology)
+    assert st4.refinement_of(st3, bio_ontology)
     # st4
-    assert not st1.refinement_of(st4, hierarchies)
-    assert not st2.refinement_of(st4, hierarchies)
-    assert not st3.refinement_of(st4, hierarchies)
+    assert not st1.refinement_of(st4, bio_ontology)
+    assert not st2.refinement_of(st4, bio_ontology)
+    assert not st3.refinement_of(st4, bio_ontology)
 
 
 def test_increase_amt_refinement():
@@ -1486,29 +1486,29 @@ def test_increase_amt_refinement():
 
     assert unicode_strs((st1, st2, st3, st4))
     # st1
-    assert st2.refinement_of(st1, hierarchies)
-    assert st3.refinement_of(st1, hierarchies)
-    assert st4.refinement_of(st1, hierarchies)
+    assert st2.refinement_of(st1, bio_ontology)
+    assert st3.refinement_of(st1, bio_ontology)
+    assert st4.refinement_of(st1, bio_ontology)
     # st2
-    assert not st1.refinement_of(st2, hierarchies)
-    assert not st3.refinement_of(st2, hierarchies)
-    assert st4.refinement_of(st2, hierarchies)
+    assert not st1.refinement_of(st2, bio_ontology)
+    assert not st3.refinement_of(st2, bio_ontology)
+    assert st4.refinement_of(st2, bio_ontology)
     # st3
-    assert not st1.refinement_of(st3, hierarchies)
-    assert not st2.refinement_of(st3, hierarchies)
-    assert st4.refinement_of(st3, hierarchies)
+    assert not st1.refinement_of(st3, bio_ontology)
+    assert not st2.refinement_of(st3, bio_ontology)
+    assert st4.refinement_of(st3, bio_ontology)
     # st4
-    assert not st1.refinement_of(st4, hierarchies)
-    assert not st2.refinement_of(st4, hierarchies)
-    assert not st3.refinement_of(st4, hierarchies)
+    assert not st1.refinement_of(st4, bio_ontology)
+    assert not st2.refinement_of(st4, bio_ontology)
+    assert not st3.refinement_of(st4, bio_ontology)
 
 
 def test_complex_refinement_order():
     st1 = Complex([Agent('MED23'), Agent('ELK1')])
     st2 = Complex([Agent('ELK1', mods=[ModCondition('phosphorylation')]),
                    Agent('MED23')])
-    assert st2.refinement_of(st1, hierarchies)
-    assert not st1.refinement_of(st2, hierarchies)
+    assert st2.refinement_of(st1, bio_ontology)
+    assert not st1.refinement_of(st2, bio_ontology)
 
 
 def test_homodimer_bound_to():
@@ -1531,7 +1531,7 @@ def test_homodimer_bound_to():
 def test_mod_condition_is_mod():
     mc1 = ModCondition('ubiquitination', 'K', '99', True)
     mc2 = ModCondition('ubiquitination', 'K', '99', False)
-    assert not mc1.refinement_of(mc2, hierarchies)
+    assert not mc1.refinement_of(mc2, bio_ontology)
 
 
 def test_unicode_str_methods():
@@ -1624,8 +1624,8 @@ def test_mut_agent_refinement():
     mc4 = MutCondition(None, None, None)
     a1 = Agent('a', mutations=[mc1])
     a2 = Agent('a', mutations=[mc4])
-    assert a1.refinement_of(a2, hierarchies)
-    assert not a2.refinement_of(a1, hierarchies)
+    assert a1.refinement_of(a2, bio_ontology)
+    assert not a2.refinement_of(a1, bio_ontology)
 
 
 def test_conversion_init():
@@ -1639,8 +1639,8 @@ def test_conversion_refinement():
     gdp = Agent('GDP')
     st1 = Conversion(ras, gtp, gdp)
     st2 = Conversion(hras, gtp, gdp)
-    assert st2.refinement_of(st1, hierarchies)
-    assert not st1.refinement_of(st2, hierarchies)
+    assert st2.refinement_of(st1, bio_ontology)
+    assert not st1.refinement_of(st2, bio_ontology)
 
 
 def test_conversion_set_agent_list():
@@ -1733,8 +1733,8 @@ def test_concept_matches():
     # matches
     assert Concept('x').matches(Concept('x', db_refs={'TEXT': 'x'}))
     assert not Concept('x').matches(Concept('y'))
-    assert Concept('x', db_refs={'EIDOS': 'x'}).matches(
-        Concept('y', db_refs={'EIDOS': 'x'}))
+    assert Concept('x', db_refs={'WM': 'x'}).matches(
+        Concept('y', db_refs={'WM': 'x'}))
     # entity_matches
     assert Concept('x').entity_matches(Concept('x', db_refs={'TEXT': 'x'}))
     assert not Concept('x').entity_matches(Concept('y'))
@@ -1748,68 +1748,35 @@ def test_concept_matches():
 
 def test_concept_get_grounding():
     d1 = {'TEXT': 'a'}
-    d2 = {'TEXT': 'b', 'UN': 'c'}
-    d3 = {'TEXT': 'x', 'UN': 'y', 'HUME': 'z'}
-    d4 = {'TEXT': 'b', 'HUME': 'a'}
-    d5 = {'UN': [('a', 1.0), ('b', 0.8)]}
-    d6 = {'UN': [('b', 0.8), ('a', 1.0)]}
-    d7 = {'UN': []}
-    d8 = {'HUME': [('a', 1.0), ('b', 0.8)]}
+    d2 = {'TEXT': 'b', 'WM': 'c'}
+    d3 = {'TEXT': 'x', 'WM': 'y', 'HUME': 'z'}
+    d5 = {'WM': [('a', 1.0), ('b', 0.8)]}
+    d6 = {'WM': [('b', 0.8), ('a', 1.0)]}
+    d7 = {'WM': []}
     assert Concept('a', db_refs=d1).get_grounding() == (None, None)
-    assert Concept('b', db_refs=d2).get_grounding() == ('UN', 'c')
-    assert Concept('c', db_refs=d3).get_grounding() == ('UN', 'y')
-    assert Concept('d', db_refs=d4).get_grounding() == ('HUME', 'a')
-    assert Concept('e', db_refs=d5).get_grounding() == ('UN', 'a')
-    assert Concept('f', db_refs=d6).get_grounding() == ('UN', 'a')
+    assert Concept('b', db_refs=d2).get_grounding() == ('WM', 'c')
+    assert Concept('c', db_refs=d3).get_grounding() == ('WM', 'y')
+    assert Concept('e', db_refs=d5).get_grounding() == ('WM', 'a')
+    assert Concept('f', db_refs=d6).get_grounding() == ('WM', 'a')
     assert Concept('g', db_refs=d7).get_grounding() == (None, None)
-    assert Concept('h', db_refs=d8).get_grounding() == ('HUME', 'a')
 
 
 def test_concept_isa_eid():
-    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             '../sources/eidos/eidos_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, True, True)
-    c1 = Concept('a', db_refs={'UN': [('UN/events/human/conflict', 1.0)]})
-    c2 = Concept('b', db_refs={'UN': [('UN/events/human', 1.0)]})
+    c1 = Concept('b', db_refs={'WM': [('wm/concept/entity/organization', 1.0)]})
+    c2 = Concept('a', db_refs={'WM': [('wm/concept/entity', 1.0)]})
     print(c1.get_grounding())
     print(c2.get_grounding())
-    assert c1.refinement_of(c2, {'entity': hm})
-    assert not c2.refinement_of(c1, {'entity': hm})
+    assert c1.refinement_of(c2, world_ontology)
+    assert not c2.refinement_of(c1, world_ontology)
 
 
 def test_concept_opposite_eid():
-    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             '../sources/eidos/eidos_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, True, True)
-    c1 = Concept('a', db_refs={'UN':
-                               [('UN/entities/human/food/food_insecurity',
-                                 1.0)]})
-    c2 = Concept('b', db_refs={'UN':
-                               [('UN/entities/human/food/food_security',
-                                 1.0)]})
-    assert c1.is_opposite(c2, {'entity': hm})
-    assert c2.is_opposite(c1, {'entity': hm})
-
-
-def test_concept_isa_cwms():
-    trips_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             '../sources/cwms/trips_ontology.rdf')
-    hm = HierarchyManager(trips_ont, True, True)
-    c1 = Concept('a', db_refs={'CWMS': 'ONT::TRUCK'})
-    c2 = Concept('b', db_refs={'CWMS': 'ONT::VEHICLE'})
-    assert c1.refinement_of(c2, {'entity': hm})
-    assert not c2.refinement_of(c1, {'entity': hm})
-
-
-def test_concept_isa_hume():
-    hume_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            '../sources/hume/hume_ontology.rdf')
-    hm = HierarchyManager(hume_ont, True, True)
-    c1 = Concept('a',
-                 db_refs={'HUME': 'entity/rule/law'})
-    c2 = Concept('b', db_refs={'HUME': 'entity/rule'})
-    assert c1.refinement_of(c2, {'entity': hm})
-    assert not c2.refinement_of(c1, {'entity': hm})
+    a = 'wm/concept/causal_factor/food_security/food_availability'
+    b = 'wm/concept/causal_factor/food_insecurity/food_unavailability'
+    c1 = Concept('a', db_refs={'WM': [(a, 1.0)]})
+    c2 = Concept('b', db_refs={'WM': [(b, 1.0)]})
+    assert c1.is_opposite(c2, world_ontology)
+    assert c2.is_opposite(c1, world_ontology)
 
 
 def test_influence_refinement_of():
@@ -1844,28 +1811,28 @@ def influence_association_refinement_of(stmt_type):
 
     # Has polarity vs doesn't have polarity
     assert S(pos_adj, nopol_noadj, stmt_type).refinement_of(
-        S(nopol_adj, nopol_noadj, stmt_type), hierarchies)
+        S(nopol_adj, nopol_noadj, stmt_type), bio_ontology)
     assert S(nopol_adj, pos_noadj, stmt_type).refinement_of(
-        S(nopol_adj, nopol_noadj, stmt_type), hierarchies)
+        S(nopol_adj, nopol_noadj, stmt_type), bio_ontology)
     assert S(nopol_adj, neg_noadj, stmt_type).refinement_of(
-        S(nopol_adj, nopol_noadj, stmt_type), hierarchies)
+        S(nopol_adj, nopol_noadj, stmt_type), bio_ontology)
     # Has adjective vs doesn't have adjective
     assert S(neg_adj, nopol_adj, stmt_type).refinement_of(
-        S(neg_noadj, nopol_adj, stmt_type), hierarchies)
+        S(neg_noadj, nopol_adj, stmt_type), bio_ontology)
     assert S(pos_adj, nopol_adj, stmt_type).refinement_of(
-        S(pos_noadj, nopol_adj, stmt_type), hierarchies)
+        S(pos_noadj, nopol_adj, stmt_type), bio_ontology)
     assert S(nopol_adj, nopol_adj, stmt_type).refinement_of(
-        S(nopol_noadj, nopol_adj, stmt_type), hierarchies)
+        S(nopol_noadj, nopol_adj, stmt_type), bio_ontology)
     # Opposite polarity
     assert not S(neg_noadj, nopol_noadj, stmt_type).refinement_of(
-            S(pos_noadj, nopol_noadj, stmt_type), hierarchies)
+            S(pos_noadj, nopol_noadj, stmt_type), bio_ontology)
     # Adjectives can be in any relation
     assert S(pos_adj2, nopol_noadj, stmt_type).refinement_of(
-        S(pos_adj, nopol_noadj, stmt_type), hierarchies)
+        S(pos_adj, nopol_noadj, stmt_type), bio_ontology)
     assert S(pos_adj3, nopol_noadj, stmt_type).refinement_of(
-        S(pos_adj, nopol_noadj, stmt_type), hierarchies)
+        S(pos_adj, nopol_noadj, stmt_type), bio_ontology)
     assert S(pos_adj2, nopol_noadj, stmt_type).refinement_of(
-        S(pos_adj3, nopol_noadj, stmt_type), hierarchies)
+        S(pos_adj3, nopol_noadj, stmt_type), bio_ontology)
 
     # Equivalences
     assert not S(nopol_adj, neg_noadj, stmt_type).equals(
@@ -1891,46 +1858,44 @@ def influence_association_refinement_of(stmt_type):
 
     # Contradicts
     assert S(pos_adj, neg_noadj, stmt_type).contradicts(
-        S(neg_adj, neg_noadj, stmt_type), hierarchies)
+        S(neg_adj, neg_noadj, stmt_type), bio_ontology)
     assert S(pos_adj, neg_noadj, stmt_type).contradicts(
-        S(pos_adj, pos_noadj, stmt_type), hierarchies)
+        S(pos_adj, pos_noadj, stmt_type), bio_ontology)
     assert not S(pos_adj, neg_noadj, stmt_type).contradicts(
-            S(pos_adj, neg_adj, stmt_type), hierarchies)
+            S(pos_adj, neg_adj, stmt_type), bio_ontology)
     assert not S(pos_adj, neg_noadj, stmt_type).contradicts(
-            S(neg_adj, pos_adj, stmt_type), hierarchies)
+            S(neg_adj, pos_adj, stmt_type), bio_ontology)
 
 
 def test_association_contradicts():
-    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             '../sources/eidos/eidos_ontology.rdf')
-    hm = HierarchyManager(eidos_ont, True, True)
-    hierarchies = {'entity': hm}
-    sn = Event(Concept('food security',
-                       db_refs={'UN': 'UN/entities/human/food/food_security'}),
-               delta=QualitativeDelta(polarity=-1))
-    sp = Event(Concept('food security',
-                       db_refs={'UN': 'UN/entities/human/food/food_security'}),
-               delta=QualitativeDelta(polarity=1))
-    ip = Event(Concept('food insecurity',
-                       db_refs={'UN':
-                                'UN/entities/human/food/food_insecurity'}),
-               delta=QualitativeDelta(polarity=1))
+    neg = 'wm/concept/causal_factor/food_insecurity/food_unavailability'
+    pos = 'wm/concept/causal_factor/food_security/food_availability'
+    food_avail_neg = Event(Concept('food security',
+                                   db_refs={'WM': pos}),
+                           delta=QualitativeDelta(polarity=-1))
+    food_avail_pos = Event(Concept('food security',
+                                   db_refs={'WM': pos}),
+                           delta=QualitativeDelta(polarity=1))
+    food_unavail = Event(Concept('food insecurity',
+                                 db_refs={'WM': neg}),
+                         delta=QualitativeDelta(polarity=1))
     prp = Event(Concept('production'), delta=QualitativeDelta(polarity=1))
     prn = Event(Concept('production'), delta=QualitativeDelta(polarity=-1))
-    assert Association([sn, prp]).contradicts(Association([sn, prn]),
-                                              hierarchies)
-    assert Association([prp, sn]).contradicts(Association([sn, prn]),
-                                              hierarchies)
-    assert Association([prn, sp]).contradicts(Association([sn, prn]),
-                                              hierarchies)
-    assert Association([sn, prp]).contradicts(Association([ip, prn]),
-                                              hierarchies)
-    assert Association([sn, sp]).contradicts(Association([ip, sn]),
-                                             hierarchies)
-    assert Association([ip, sp]).contradicts(Association([sp, sp]),
-                                             hierarchies)
-    assert Association([ip, sp]).contradicts(Association([sn, sn]),
-                                             hierarchies)
+
+    assert Association([food_avail_neg, prp]).contradicts(
+        Association([food_unavail, prn]), world_ontology)
+    assert Association([food_avail_neg, prp]).contradicts(
+        Association([food_avail_neg, prn]), world_ontology)
+    assert Association([prp, food_avail_neg]).contradicts(
+        Association([food_avail_neg, prn]), world_ontology)
+    assert Association([prn, food_avail_neg]).contradicts(
+        Association([food_avail_pos, prn]), world_ontology)
+    assert Association([food_avail_neg, food_avail_pos]).contradicts(
+        Association([food_unavail, food_avail_neg]), world_ontology)
+    assert Association([food_unavail, food_avail_pos]).contradicts(
+        Association([food_avail_pos, food_avail_pos]), world_ontology)
+    assert Association([food_unavail, food_avail_pos]).contradicts(
+        Association([food_avail_neg, food_avail_neg]), world_ontology)
 
 
 def test_modification_contradicts():
@@ -1943,13 +1908,13 @@ def test_modification_contradicts():
     st7 = Phosphorylation(None, Agent('b'))
     st8 = Dephosphorylation(Agent('a'), Agent('c'))
 
-    assert st1.contradicts(st2, hierarchies)
-    assert not st1.contradicts(st7, hierarchies)
-    assert not st1.contradicts(st5, hierarchies)
-    assert not st4.contradicts(st6, hierarchies)
-    assert st4.contradicts(st5, hierarchies)
-    assert not st3.contradicts(st6, hierarchies)
-    assert not st1.contradicts(st8, hierarchies)
+    assert st1.contradicts(st2, bio_ontology)
+    assert not st1.contradicts(st7, bio_ontology)
+    assert not st1.contradicts(st5, bio_ontology)
+    assert not st4.contradicts(st6, bio_ontology)
+    assert st4.contradicts(st5, bio_ontology)
+    assert not st3.contradicts(st6, bio_ontology)
+    assert not st1.contradicts(st8, bio_ontology)
     # TODO: add tests with Agent refinement
     # TODO: add tests with other Modification types
 
@@ -1959,10 +1924,10 @@ def test_regulate_amount_contradicts():
     st2 = DecreaseAmount(Agent('a'), Agent('b'))
     st3 = DecreaseAmount(Agent('a'), Agent('c'))
     st4 = IncreaseAmount(Agent('b'), Agent('a'))
-    assert st1.contradicts(st2, hierarchies)
-    assert not st1.contradicts(st3, hierarchies)
-    assert not st1.contradicts(st4, hierarchies)
-    assert not st2.contradicts(st4, hierarchies)
+    assert st1.contradicts(st2, bio_ontology)
+    assert not st1.contradicts(st3, bio_ontology)
+    assert not st1.contradicts(st4, bio_ontology)
+    assert not st2.contradicts(st4, bio_ontology)
 
 
 def test_regulate_activity_contradicts():
@@ -1970,10 +1935,10 @@ def test_regulate_activity_contradicts():
     st2 = Inhibition(Agent('a'), Agent('b'))
     st3 = Inhibition(Agent('a'), Agent('c'))
     st4 = Activation(Agent('b'), Agent('a'))
-    assert st1.contradicts(st2, hierarchies)
-    assert not st1.contradicts(st3, hierarchies)
-    assert not st1.contradicts(st4, hierarchies)
-    assert not st2.contradicts(st4, hierarchies)
+    assert st1.contradicts(st2, bio_ontology)
+    assert not st1.contradicts(st3, bio_ontology)
+    assert not st1.contradicts(st4, bio_ontology)
+    assert not st2.contradicts(st4, bio_ontology)
 
 
 def test_active_form_contradicts():
@@ -1983,10 +1948,10 @@ def test_active_form_contradicts():
     st2 = ActiveForm(Agent('a', mods=[mc1]), 'kinase', False)
     st3 = ActiveForm(Agent('a', mods=[mc1]), 'activity', False)
     st4 = ActiveForm(Agent('a', mods=[mc2]), 'activity', False)
-    assert st1.contradicts(st2, hierarchies)
-    assert not st1.contradicts(st3, hierarchies)
-    assert not st3.contradicts(st4, hierarchies)
-    assert not st1.contradicts(st4, hierarchies)
+    assert st1.contradicts(st2, bio_ontology)
+    assert not st1.contradicts(st3, bio_ontology)
+    assert not st3.contradicts(st4, bio_ontology)
+    assert not st1.contradicts(st4, bio_ontology)
 
 
 def test_agent_list_with_bound_condition_agents():

@@ -3,8 +3,6 @@ from indra.preassembler.grounding_mapper import GroundingMapper
 from indra.preassembler.grounding_mapper.analysis import *
 from indra.preassembler.grounding_mapper.gilda import ground_statements, \
     get_gilda_models, ground_statement
-from indra.preassembler.grounding_mapper.standardize import \
-    standardize_agent_name, standardize_db_refs
 from indra.statements import Agent, Phosphorylation, Complex, Inhibition, \
     Evidence, BoundCondition
 from indra.util import unicode_strs
@@ -30,7 +28,8 @@ def test_map_standardize_up_hgnc():
     mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     st = mapped_stmts[0]
-    assert st.enz.db_refs['HGNC'] == st.sub.db_refs['HGNC']
+    assert st.enz.db_refs['HGNC'] == st.sub.db_refs['HGNC'], \
+        (st.enz.db_refs, st.sub.db_refs)
     assert st.enz.db_refs['UP'] == st.sub.db_refs['UP']
 
 
@@ -135,7 +134,7 @@ def test_ignore():
 
 
 def test_renaming():
-    akt_indra = Agent('pkbA', db_refs={'TEXT': 'Akt', 'FPLX': 'AKT family',
+    akt_indra = Agent('pkbA', db_refs={'TEXT': 'Akt', 'FPLX': 'AKT',
                                        'UP': 'P31749'})
     akt_hgnc_from_up = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP': 'P31749'})
     akt_other = Agent('pkbA', db_refs={'TEXT': 'Akt'})
@@ -147,7 +146,7 @@ def test_renaming():
     renamed_stmts = gm.rename_agents(stmts)
     assert len(renamed_stmts) == 4
     # Should draw on BE first
-    assert renamed_stmts[0].sub.name == 'AKT family'
+    assert renamed_stmts[0].sub.name == 'AKT'
     # Then on the HGNC lookup from Uniprot
     assert renamed_stmts[1].sub.name == 'AKT1', renamed_stmts[1].sub.name
     # Don't fall back on text if there's no grounding
@@ -245,9 +244,9 @@ def test_up_with_no_gene_name_with_hgnc_sym():
 def test_multiple_mapped_up():
     ag = Agent('xx', db_refs={'HGNC': '377', 'UP': 'O43687'})
     gm.standardize_agent_name(ag, True)
-    assert ag.db_refs['HGNC'] == '377'
-    assert ag.db_refs['UP'] == 'O43687'
-    assert ag.name == 'AKAP7'
+    assert ag.db_refs['HGNC'] == '377', ag.db_refs
+    assert ag.db_refs['UP'] == 'O43687', ag.db_refs
+    assert ag.name == 'AKAP7', ag.name
 
 
 def test_up_and_mismatched_hgnc():
@@ -318,8 +317,9 @@ def test_map_entry_hgnc_and_up():
     mapped_stmts = gm.map_stmts([stmt])
     assert len(mapped_stmts) == 1
     ms = mapped_stmts[0]
-    assert ms.sub.db_refs == {'TEXT': 'NF-kappaB p65', 'UP': 'Q04206',
-                              'HGNC': '9955'}
+    assert ms.sub.db_refs == \
+           {'TEXT': 'NF-kappaB p65', 'UP': 'Q04206',
+            'HGNC': '9955', 'MESH': 'D051996'}, ms.sub.db_refs
 
 
 def test_map_agent():
@@ -330,129 +330,6 @@ def test_map_agent():
     mapped_ag = mapped_stmts[0].members[1]
     assert mapped_ag.name == 'ERK'
     assert mapped_ag.db_refs.get('FPLX') == 'ERK'
-
-
-def test_name_standardize_hgnc_up():
-    a1 = Agent('x', db_refs={'HGNC': '9387'})
-    GroundingMapper.standardize_agent_name(a1, True)
-    assert a1.name == 'PRKAG3'
-    a1 = Agent('x', db_refs={'UP': 'Q9UGI9'})
-    GroundingMapper.standardize_agent_name(a1, True)
-    assert a1.name == 'PRKAG3'
-    a1 = Agent('x', db_refs={'UP': 'Q8BGM7'})
-    GroundingMapper.standardize_agent_name(a1, True)
-    assert a1.name == 'Prkag3'
-
-
-def test_name_standardize_chebi():
-    a1 = Agent('x', db_refs={'CHEBI': '15996'})
-    GroundingMapper.standardize_agent_name(a1, False)
-    assert a1.name == 'GTP'
-
-
-def test_name_standardize_go():
-    a1 = Agent('x', db_refs={'GO': 'GO:0006915'})
-    GroundingMapper.standardize_agent_name(a1, False)
-    assert a1.name == 'apoptotic process'
-
-
-def test_name_standardize_mesh():
-    a1 = Agent('x', db_refs={'MESH': 'D008545'})
-    GroundingMapper.standardize_agent_name(a1, False)
-    assert a1.name == 'Melanoma', a1.name
-
-
-def test_name_standardize_mesh_go():
-    a1 = Agent('x', db_refs={'MESH': 'D058750'})
-    GroundingMapper.standardize_agent_name(a1, True)
-    assert a1.db_refs['GO'] == 'GO:0001837'
-    assert a1.name == 'epithelial to mesenchymal transition', a1.name
-    a1 = Agent('x', db_refs={'GO': 'GO:0001837'})
-    GroundingMapper.standardize_agent_name(a1, True)
-    assert a1.db_refs['MESH'] == 'D058750'
-    assert a1.name == 'epithelial to mesenchymal transition', a1.name
-
-
-def test_name_standardize_mesh_other_db():
-    a1 = Agent('x', db_refs={'MESH': 'D001194'})
-    GroundingMapper.standardize_agent_name(a1, True)
-    assert a1.db_refs['CHEBI'] == 'CHEBI:46661'
-    assert a1.name == 'asbestos', a1.name
-
-    db_refs = {'MESH': 'D000067777'}
-    db_refs = standardize_db_refs(db_refs)
-    assert db_refs.get('HGNC') == '3313', db_refs
-    assert db_refs.get('UP') == 'Q12926', db_refs
-    a2 = Agent('x', db_refs=db_refs)
-    standardize_agent_name(a2)
-    assert a2.name == 'ELAVL2'
-
-
-def test_standardize_db_refs_efo_hp_doid():
-    refs = standardize_db_refs({'EFO': '0009502'})
-    assert refs.get('MESH') == 'D000007', refs
-    refs = standardize_db_refs({'MESH': 'D000007'})
-    assert refs.get('EFO') == '0009502', refs
-
-    refs = standardize_db_refs({'HP': 'HP:0031801'})
-    assert refs.get('MESH') == 'D064706', refs
-    refs = standardize_db_refs({'MESH': 'D064706'})
-    assert refs.get('HP') == 'HP:0031801', refs
-
-    # Currently there is no one-to-many mapping in the direction towards MeSH
-    # (there used to be) if there is again, we should test it here
-    #refs = standardize_db_refs({'DOID': 'DOID:0060695'})
-    #assert 'MESH' not in refs
-
-    # One-to-many mappings away from MESH
-    refs = standardize_db_refs({'MESH': 'D000071017'})
-    assert 'DOID' not in refs
-
-    refs = standardize_db_refs({'DOID': 'DOID:0060495'})
-    assert refs.get('MESH') == 'D000067208'
-
-    # This is an xrefs-based mapping that isn't in Gilda's resource file
-    refs = standardize_db_refs({'EFO': '0000694'})
-    assert refs.get('MESH') == 'D045169'
-
-
-def test_standardize_name_efo_hp_doid():
-    ag = Agent('x', db_refs={'HP': 'HP:0031801'})
-    standardize_agent_name(ag)
-    # Name based on MESH mapping
-    assert ag.name == 'Vocal Cord Dysfunction'
-
-    ag = Agent('x', db_refs={'HP': 'HP:0000002'})
-    standardize_agent_name(ag)
-    # Name based on HP itself
-    assert ag.name == 'Abnormality of body height'
-
-    ag = Agent('x', db_refs={'DOID': 'DOID:0014667'})
-    standardize_agent_name(ag)
-    # Name based on MESH mapping
-    assert ag.name == 'Metabolic Diseases'
-
-    ag = Agent('x', db_refs={'EFO': '1002050'})
-    standardize_agent_name(ag)
-    # Name based on MESH mapping
-    assert ag.name == 'Nephritis', (ag.name, ag.db_refs)
-
-    ag = Agent('x', db_refs={'EFO': '0000001'})
-    standardize_agent_name(ag)
-    # Name based on EFO itself
-    assert ag.name == 'experimental factor', (ag.name, ag.db_refs)
-
-
-def test_standardize_uppro():
-    ag = Agent('x', db_refs={'UP': 'P01019'})
-    standardize_agent_name(ag)
-    assert ag.name == 'AGT'
-    ag = Agent('x', db_refs={'UPPRO': 'PRO_0000032458'})
-    standardize_agent_name(ag)
-    assert ag.name == 'Angiotensin-2', ag.name
-    ag = Agent('x', db_refs={'UPPRO': 'PRO_0000032458', 'UP': 'P01019'})
-    standardize_agent_name(ag)
-    assert ag.name == 'Angiotensin-2', ag.name
 
 
 @attr('nonpublic')
@@ -613,11 +490,3 @@ def test_gilda_disambiguation_local():
         annotations
     # This is to make sure the to_json of the ScoredMatches works
     assert annotations['agents']['gilda'][1][0]['term']['db'] == 'HGNC'
-
-
-def test_uppro_fallback():
-    # This UP chain has no name currently so we can test that the fallback
-    # to naming by the UP ID is working
-    ag = Agent('x', db_refs={'UP': 'Q6IE75', 'UPPRO': 'PRO_0000383648'})
-    standardize_agent_name(ag)
-    assert ag.name == 'Bace2'

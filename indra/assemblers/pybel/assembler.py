@@ -372,10 +372,6 @@ class PybelAssembler(object):
         self._add_nodes_edges(stmt.enz, sub_agent, pc.DIRECTLY_INCREASES, stmt)
 
     def _assemble_translocation(self, stmt):
-        #cc = hierarchies['cellular_component']
-        #nuc_uri = cc.find_entity('nucleus')
-        #cyto_uri = cc.find_entity('cytoplasm')
-        #cyto_go = cyto_uri.rsplit('/')[-1]
         pass
 
 

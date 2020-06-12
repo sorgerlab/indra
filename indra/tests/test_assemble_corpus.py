@@ -3,7 +3,7 @@ from copy import deepcopy
 from collections import namedtuple
 from indra.statements import *
 from indra.tools import assemble_corpus as ac
-from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+from indra.ontology.world import world_ontology
 
 a = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'})
 b = Agent('b', db_refs={'UP': 'P15056', 'TEXT': 'b'})
@@ -237,21 +237,25 @@ def test_run_preassembly_all_stmts():
 
 
 def _get_extended_wm_hierarchy():
-    from indra.preassembler.make_wm_ontologies import isequal, get_term
-    hierarchies = get_wm_hierarchies()
-    test_rel = (get_term('flooding', 'wm/x/y/z'), isequal,
-                get_term('flooding', 'wm/a/b/c'))
-    hierarchies['entity'].graph.add(test_rel)
-    test_rel = (get_term('flooding', 'wm/a/b/c'), isequal,
-                get_term('flooding', 'wm/x/y/z'))
-    hierarchies['entity'].graph.add(test_rel)
-    return hierarchies
+    world_ontology.initialize()
+    world_ontology.add_edge(
+        'WM:wm/x/y/z/flooding',
+        'WM:wm/a/b/c/flooding',
+        **{'type': 'is_equal'}
+    )
+    world_ontology.add_edge(
+        'WM:wm/a/b/c/flooding',
+        'WM:wm/x/y/z/flooding',
+        **{'type': 'is_equal'}
+    )
+    return world_ontology
 
 
 def test_run_preassembly_concepts():
-    hierarchies = _get_extended_wm_hierarchy()
+    ont = _get_extended_wm_hierarchy()
     rainfall = Event(Concept('rain', db_refs={
-        'WM': 'wm/concept/indicator_and_reported_property/weather/rainfall'}))
+        'WM': ('wm/concept/causal_factor/environmental/meteorologic/'
+               'precipitation/rainfall')}))
     flooding_1 = Event(Concept('flood', db_refs={
         'WM': 'wm/x/y/z/flooding'}))
     flooding_2 = Event(Concept('flooding', db_refs={
@@ -259,7 +263,7 @@ def test_run_preassembly_concepts():
     st_out = ac.run_preassembly([
         Influence(rainfall, flooding_1), Influence(rainfall, flooding_2)],
         normalize_ns='WM', normalize_equivalences=True,
-        hierarchies=hierarchies)
+        ontology=ont)
     assert len(st_out) == 1, st_out
 
 
@@ -668,43 +672,52 @@ def test_preassemble_flatten():
 
 
 def test_normalize_equals_opposites():
-    from indra.preassembler.make_wm_ontologies import isequal, get_term
-    hierarchies = get_wm_hierarchies()
-    test_rel = (get_term('flooding', 'wm/x/y/z'), isequal,
-                get_term('flooding', 'wm/a/b/c'))
-    hierarchies['entity'].graph.add(test_rel)
-    test_rel = (get_term('flooding', 'wm/a/b/c'), isequal,
-                get_term('flooding', 'wm/x/y/z'))
-    hierarchies['entity'].graph.add(test_rel)
-    concept1 = 'wm/a/b/c/flooding'
-    concept2 = 'wm/x/y/z/flooding'
-    concept3 = 'wm/concept/causal_factor/food_insecurity'
-    concept4 = 'wm/concept/causal_factor/food_security'
-    dbr = {'WM': [(concept1, 1.0), (concept2, 0.5), (concept3, 0.1)]}
+    ont = _get_extended_wm_hierarchy()
+    flooding1 = 'wm/a/b/c/flooding'
+    flooding2 = 'wm/x/y/z/flooding'
+    # Note that as of 5/15/2020 food_insecurity and food_security aren't
+    # explicitly opposites in the ontology
+    food_insec = 'wm/concept/causal_factor/food_insecurity/food_nonaccess'
+    food_sec = 'wm/concept/causal_factor/food_security/food_access'
+
+    # Top grounding: flooding1
+    dbr = {'WM': [(flooding1, 1.0), (flooding2, 0.5), (food_insec, 0.1)]}
     ev1 = Event(Concept('x', db_refs=dbr))
 
-    dbr = {'WM': [(concept4, 1.0), (concept2, 0.5)]}
+    # Top grounding: food security
+    dbr = {'WM': [(food_sec, 1.0), (flooding2, 0.5)]}
     ev2 = Event(Concept('x', db_refs=dbr),
                 delta=QualitativeDelta(polarity=1))
-    stmts = ac.run_preassembly([ev1, ev2], hierarchies=hierarchies)
+
+    # Make sure that by default, things don't get normalized out
+    stmts = ac.run_preassembly([ev1, ev2], ontology=ont)
     assert stmts[0].concept.db_refs['WM'][0][0] != \
         stmts[0].concept.db_refs['WM'][1][0]
+
+    # Now we turn on equivalence normalization and expect
+    # that flooding1 and flooding2 have been normalized out
+    # in ev1's db_refs
     stmts = ac.run_preassembly([ev1, ev2], normalize_equivalences=True,
                                normalize_ns='WM',
-                               hierarchies=hierarchies)
+                               ontology=ont)
     assert stmts[0].concept.db_refs['WM'][0][0] == \
         stmts[0].concept.db_refs['WM'][1][0], \
         stmts[0].concept.db_refs['WM']
+
+    # Now we turn on opposite normalization and expect that food
+    # security and insecurity will get normalized out
     stmts = ac.run_preassembly([ev1, ev2], normalize_equivalences=True,
                                normalize_opposites=True, normalize_ns='WM',
-                               hierarchies=hierarchies)
+                               ontology=ont)
     assert len(stmts) == 2
     stmts = sorted(stmts, key=lambda x: len(x.concept.db_refs['WM']),
                    reverse=True)
     assert len(stmts[0].concept.db_refs['WM']) == 3, stmts[0].concept.db_refs
+    # This is to check that food_insecurity was normalized to food_security
     assert stmts[0].concept.db_refs['WM'][2][0] == \
            stmts[1].concept.db_refs['WM'][0][0], \
-        stmts[1].concept.db_refs['WM']
+        (stmts[0].concept.db_refs['WM'],
+         stmts[1].concept.db_refs['WM'])
 
 
 def test_filter_by_curation():

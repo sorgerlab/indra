@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
 import sys
 import time
 import logging
@@ -9,10 +6,6 @@ import functools
 import collections
 import networkx as nx
 import multiprocessing as mp
-try:
-    import pygraphviz as pgv
-except ImportError:
-    pass
 from indra.util import fast_deepcopy
 from indra.statements import *
 from indra.statements import stmt_type as indra_stmt_type
@@ -25,10 +18,8 @@ class Preassembler(object):
 
     Parameters
     ----------
-    hierarchies : dict[:py:class:`indra.preassembler.hierarchy_manager`]
-        A dictionary of hierarchies with keys such as 'entity' (hierarchy of
-        entities, primarily specifying relationships between genes and their
-        families) and 'modification' pointing to HierarchyManagers
+    ontology : :py:class:`indra.ontology.IndraOntology`
+        An INDRA Ontology object.
     stmts : list of :py:class:`indra.statements.Statement` or None
         A set of statements to perform pre-assembly on. If None, statements
         should be added using the :py:meth:`add_statements` method.
@@ -38,9 +29,13 @@ class Preassembler(object):
         supplied, it overrides the use of the built-in matches_key method of
         each Statement being assembled.
     refinement_fun : Optional[function]
-        A function which takes two Statement objects and a hierarchies dict
+        A function which takes two Statement objects and an ontology
         as an argument and returns True or False. If supplied, it overrides
         the built-in refinement_of method of each Statement being assembled.
+    refinement_ns : Optional[set]
+        A set of name spaces that should be considered for constructing
+        refinements. If not provided, all name spaces are considered.
+        Default: None
 
     Attributes
     ----------
@@ -50,13 +45,12 @@ class Preassembler(object):
         Statements resulting from combining duplicates.
     related_stmts : list of :py:class:`indra.statements.Statement`
         Top-level statements after building the refinement hierarchy.
-    hierarchies : dict[:py:class:`indra.preassembler.hierarchy_manager`]
-        A dictionary of hierarchies with keys such as 'entity' and
-        'modification' pointing to HierarchyManagers
+    ontology : dict[:py:class:`indra.preassembler.ontology_graph.IndraOntology`]
+        An INDRA Ontology object.
     """
-    def __init__(self, hierarchies, stmts=None, matches_fun=None,
-                 refinement_fun=None):
-        self.hierarchies = hierarchies
+    def __init__(self, ontology, stmts=None, matches_fun=None,
+                 refinement_fun=None, refinement_ns=None):
+        self.ontology = ontology
         if stmts:
             logger.debug("Deepcopying stmts in __init__")
             self.stmts = fast_deepcopy(stmts)
@@ -68,6 +62,7 @@ class Preassembler(object):
             default_matches_fun
         self.refinement_fun = refinement_fun if refinement_fun else \
             default_refinement_fun
+        self.refinement_ns = refinement_ns
 
     def add_statements(self, stmts):
         """Add to the current list of statements.
@@ -130,18 +125,18 @@ class Preassembler(object):
         De-duplicate and combine evidence for two statements differing only
         in their evidence lists:
 
-        >>> from indra.preassembler.hierarchy_manager import hierarchies
+        >>> from indra.ontology.bio import bio_ontology
         >>> map2k1 = Agent('MAP2K1')
         >>> mapk1 = Agent('MAPK1')
         >>> stmt1 = Phosphorylation(map2k1, mapk1, 'T', '185',
         ... evidence=[Evidence(text='evidence 1')])
         >>> stmt2 = Phosphorylation(map2k1, mapk1, 'T', '185',
         ... evidence=[Evidence(text='evidence 2')])
-        >>> pa = Preassembler(hierarchies)
+        >>> pa = Preassembler(bio_ontology)
         >>> uniq_stmts = pa.combine_duplicate_stmts([stmt1, stmt2])
         >>> uniq_stmts
         [Phosphorylation(MAP2K1(), MAPK1(), T, 185)]
-        >>> sorted([e.text for e in uniq_stmts[0].evidence]) # doctest:+IGNORE_UNICODE
+        >>> sorted([e.text for e in uniq_stmts[0].evidence])
         ['evidence 1', 'evidence 2']
         """
         # Helper function to get a list of evidence matches keys
@@ -197,13 +192,12 @@ class Preassembler(object):
             unique_stmts.append(new_stmt)
         return unique_stmts
 
-    def _get_entities(self, stmt, stmt_type, eh):
+    def _get_entities(self, stmt, stmt_type, ontology):
         entities = []
         for a in stmt.agent_list():
             # Entity is None: add the None to the entities list
             if a is None and stmt_type != Complex:
                 entities.append(a)
-                continue
             # Entity is not None, but could be ungrounded or not
             # in a family
             else:
@@ -213,23 +207,32 @@ class Preassembler(object):
                 if a_ns is None or a_id is None:
                     entities.append(a.entity_matches_key())
                     continue
-                # We have grounding, now check for a component ID
-                uri = eh.get_uri(a_ns, a_id)
-                # This is the component ID corresponding to the agent
-                # in the entity hierarchy
-                component = eh.components.get(uri)
-                # If no component ID, use the entity_matches_key()
-                if component is None:
+                # If there are no components built in the ontology, we
+                # return a single shared dummy component so that things
+                # in the ontology are considered to be potentially
+                # related
+                if not ontology.has_component_labels:
+                    entities.append('component1')
+                    continue
+                if self.refinement_ns is not None \
+                        and a_ns not in self.refinement_ns:
                     entities.append(a.entity_matches_key())
-                # Component ID, so this is in a family
                 else:
-                    # We turn the component ID into a string so that
-                    # we can sort it along with entity_matches_keys
-                    # for Complexes
-                    entities.append(str(component))
+                    # This is the component ID corresponding to the agent
+                    # in the entity hierarchy
+                    component = ontology.get_component_label(a_ns, a_id)
+                    # If no component ID, use the entity_matches_key()
+                    if component is None:
+                        entities.append(a.entity_matches_key())
+                    # Component ID, so this is in a family
+                    else:
+                        # We turn the component ID into a string so that
+                        # we can sort it along with entity_matches_keys
+                        # for Complexes
+                        entities.append(str(component))
         return entities
 
-    def _get_stmt_by_group(self, stmt_type, stmts_this_type, eh):
+    def _get_stmt_by_group(self, stmt_type, stmts_this_type, ontology):
         """Group Statements of `stmt_type` by their hierarchical relations."""
         # Dict of stmt group key tuples, indexed by their first Agent
         stmt_by_first = collections.defaultdict(lambda: [])
@@ -246,7 +249,7 @@ class Preassembler(object):
         # components that their agents are part of
         for stmt_tuple in stmts_this_type:
             _, stmt = stmt_tuple
-            entities = self._get_entities(stmt, stmt_type, eh)
+            entities = self._get_entities(stmt, stmt_type, ontology)
             # At this point we have an entity list
             # If we're dealing with Complexes, sort the entities and use
             # as dict key
@@ -335,11 +338,20 @@ class Preassembler(object):
                 # statements to all groups with the matching first arg
                 for first_arg_key in first_arg_keys:
                     stmt_by_group[first_arg_key] += stmts
-        return stmt_by_group
+        ncomp = 0
+        for k, v in stmt_by_group.items():
+            ncomp += len(v)*(len(v)-1)
+        logger.debug('Number of comparisons: %d' % ncomp)
+        if ncomp > 0:
+            logger.debug('Size of largest group: %d' %
+                         max([len(g) for g in stmt_by_group.values()]))
+        return dict(stmt_by_group)
 
     def _generate_id_maps(self, unique_stmts, poolsize=None,
                           size_cutoff=100, split_idx=None):
         """Connect statements using their refinement relationships."""
+        if len(unique_stmts) > 10000:
+            self.ontology._build_transitive_closure()
         # Check arguments relating to multiprocessing
         if poolsize is None:
             logger.debug('combine_related: poolsize not set, '
@@ -354,7 +366,6 @@ class Preassembler(object):
             use_mp = False
             logger.info('combine_related: Python < 3.4 detected, '
                         'not using multiprocessing.')
-        eh = self.hierarchies['entity']
         # Make a list of Statement types
         stmts_by_type = collections.defaultdict(lambda: [])
         for idx, stmt in enumerate(unique_stmts):
@@ -368,7 +379,7 @@ class Preassembler(object):
             logger.info('Grouping %s (%s)' %
                         (stmt_type.__name__, len(stmts_this_type)))
             stmt_by_group = self._get_stmt_by_group(stmt_type, stmts_this_type,
-                                                    eh)
+                                                    self.ontology)
 
             # Divide statements by group size
             # If we're not using multiprocessing, then all groups are local
@@ -387,7 +398,7 @@ class Preassembler(object):
                       skipped_groups))
 
         supports_func = functools.partial(_set_supports_stmt_pairs,
-                                          hierarchies=self.hierarchies,
+                                          ontology=self.ontology,
                                           split_idx=split_idx,
                                           check_entities_match=False,
                                           refinement_fun=self.refinement_fun)
@@ -542,12 +553,12 @@ class Preassembler(object):
         A more general statement with no information about a Phosphorylation
         site is identified as supporting a more specific statement:
 
-        >>> from indra.preassembler.hierarchy_manager import hierarchies
+        >>> from indra.ontology.bio import bio_ontology
         >>> braf = Agent('BRAF')
         >>> map2k1 = Agent('MAP2K1')
         >>> st1 = Phosphorylation(braf, map2k1)
         >>> st2 = Phosphorylation(braf, map2k1, residue='S')
-        >>> pa = Preassembler(hierarchies, [st1, st2])
+        >>> pa = Preassembler(bio_ontology, [st1, st2])
         >>> combined_stmts = pa.combine_related() # doctest:+ELLIPSIS
         >>> combined_stmts
         [Phosphorylation(BRAF(), MAP2K1(), S)]
@@ -589,8 +600,6 @@ class Preassembler(object):
         contradicts : list(tuple(Statement, Statement))
             A list of Statement pairs that are contradicting.
         """
-        eh = self.hierarchies['entity']
-
         # Make a dict of Statement by type
         stmts_by_type = collections.defaultdict(lambda: [])
         for idx, stmt in enumerate(self.stmts):
@@ -608,12 +617,14 @@ class Preassembler(object):
             poss = stmts_by_type.get(pst, [])
             negs = stmts_by_type.get(nst, [])
 
-            pos_stmt_by_group = self._get_stmt_by_group(pst, poss, eh)
-            neg_stmt_by_group = self._get_stmt_by_group(nst, negs, eh)
+            pos_stmt_by_group = self._get_stmt_by_group(pst, poss,
+                                                        self.ontology)
+            neg_stmt_by_group = self._get_stmt_by_group(nst, negs,
+                                                        self.ontology)
             for key, pg in pos_stmt_by_group.items():
                 ng = neg_stmt_by_group.get(key, [])
                 for (_, st1), (_, st2) in itertools.product(pg, ng):
-                    if st1.contradicts(st2, self.hierarchies):
+                    if st1.contradicts(st2, self.ontology):
                         contradicts.append((st1, st2))
 
         # Handle neutral Statements next
@@ -621,20 +632,19 @@ class Preassembler(object):
         for stt in neu_stmts:
             stmts = stmts_by_type.get(stt, [])
             for (_, st1), (_, st2) in itertools.combinations(stmts, 2):
-                if st1.contradicts(st2, self.hierarchies):
+                if st1.contradicts(st2, self.ontology):
                     contradicts.append((st1, st2))
 
         return contradicts
 
     def _normalize_relations(self, ns, rank_key, rel_fun, flip_polarity):
-
         # Find related entries, sort them, and return the first one which is
         # the one that will be normalized to
         def _replace_grounding(ns, entry, rank_key, rel_fun):
             rel_ents = rel_fun(ns, entry)
             if rel_ents:
                 rel_ents = [(ns, e.split('#')[1] if '#' in e else e)
-                            for e in rel_ents]
+                            for ns, e in rel_ents]
                 sorted_entries = sorted([(ns, entry)] + rel_ents,
                                         key=rank_key)
                 _, chosen = sorted_entries[0]
@@ -647,7 +657,7 @@ class Preassembler(object):
         if rank_key is None:
             def polarity_rank_key(args):
                 ns, entry = args
-                pol = self.hierarchies['entity'].get_polarity(ns, entry)
+                pol = self.ontology.get_polarity(ns, entry)
                 # Here we flip polarities to rank positive polarity before
                 # negative
                 pol_rank = -1 if pol is None else -pol
@@ -698,8 +708,9 @@ class Preassembler(object):
             given namespace to allow prioritizing in a controlled way which
             concept is normalized to.
         """
-        self._normalize_relations(ns, rank_key,
-                                  self.hierarchies['entity'].get_equals, False)
+        rel_fun = functools.partial(self.ontology.child_rel,
+                                    rel_types={'is_equal'})
+        self._normalize_relations(ns, rank_key, rel_fun, False)
 
     def normalize_opposites(self, ns, rank_key=None):
         """Normalize to one of a pair of opposite concepts across statements.
@@ -716,12 +727,12 @@ class Preassembler(object):
             given namespace to allow prioritizing in a controlled way which
             concept is normalized to.
         """
-        self._normalize_relations(ns, rank_key,
-                                  self.hierarchies['entity'].get_opposites,
-                                  True)
+        rel_fun = functools.partial(self.ontology.child_rel,
+                                    rel_types={'is_opposite'})
+        self._normalize_relations(ns, rank_key, rel_fun, True)
 
 
-def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
+def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, ontology=None,
                              check_entities_match=False, refinement_fun=None):
     # This is useful when deep-debugging, but even for normal debug is too much.
     # logger.debug("Getting support pairs for %d tuples with idx %s and stmts "
@@ -751,9 +762,9 @@ def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
         stmt_ix2, stmt2 = stmt_tuple2
         if check_entities_match and not stmt1.entities_match(stmt2):
             continue
-        if refinement_fun(stmt1, stmt2, hierarchies):
+        if refinement_fun(stmt1, stmt2, ontology):
             ix_map.append((stmt_ix1, stmt_ix2))
-        elif refinement_fun(stmt2, stmt1, hierarchies):
+        elif refinement_fun(stmt2, stmt1, ontology):
             ix_map.append((stmt_ix2, stmt_ix1))
     return ix_map
 
@@ -797,12 +808,12 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
     --------
     Pattern for getting statements and rendering as a Graphviz graph:
 
-    >>> from indra.preassembler.hierarchy_manager import hierarchies
+    >>> from indra.ontology.bio import bio_ontology
     >>> braf = Agent('BRAF')
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1)
     >>> st2 = Phosphorylation(braf, map2k1, residue='S')
-    >>> pa = Preassembler(hierarchies, [st1, st2])
+    >>> pa = Preassembler(bio_ontology, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
     [Phosphorylation(BRAF(), MAP2K1(), S)]
     >>> graph = render_stmt_graph(pa.related_stmts)
@@ -816,6 +827,7 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
         :alt: Example statement graph rendered by Graphviz
 
     """
+    import pygraphviz as pgv
     from indra.assemblers.english import EnglishAssembler
     # Set the default agent formatting properties
     if agent_style is None:
@@ -891,12 +903,12 @@ def flatten_stmts(stmts):
     Calling :py:meth:`combine_related` on two statements results in one
     top-level statement; calling :py:func:`flatten_stmts` recovers both:
 
-    >>> from indra.preassembler.hierarchy_manager import hierarchies
+    >>> from indra.ontology.bio import bio_ontology
     >>> braf = Agent('BRAF')
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1)
     >>> st2 = Phosphorylation(braf, map2k1, residue='S')
-    >>> pa = Preassembler(hierarchies, [st1, st2])
+    >>> pa = Preassembler(bio_ontology, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
     [Phosphorylation(BRAF(), MAP2K1(), S)]
     >>> flattened = flatten_stmts(pa.related_stmts)
@@ -938,20 +950,20 @@ def flatten_evidence(stmts, collect_from=None):
     Flattening evidence adds the two pieces of evidence from the supporting
     statement to the evidence list of the top-level statement:
 
-    >>> from indra.preassembler.hierarchy_manager import hierarchies
+    >>> from indra.ontology.bio import bio_ontology
     >>> braf = Agent('BRAF')
     >>> map2k1 = Agent('MAP2K1')
     >>> st1 = Phosphorylation(braf, map2k1,
     ... evidence=[Evidence(text='foo'), Evidence(text='bar')])
     >>> st2 = Phosphorylation(braf, map2k1, residue='S',
     ... evidence=[Evidence(text='baz'), Evidence(text='bak')])
-    >>> pa = Preassembler(hierarchies, [st1, st2])
+    >>> pa = Preassembler(bio_ontology, [st1, st2])
     >>> pa.combine_related() # doctest:+ELLIPSIS
     [Phosphorylation(BRAF(), MAP2K1(), S)]
-    >>> [e.text for e in pa.related_stmts[0].evidence] # doctest:+IGNORE_UNICODE
+    >>> [e.text for e in pa.related_stmts[0].evidence]
     ['baz', 'bak']
     >>> flattened = flatten_evidence(pa.related_stmts)
-    >>> sorted([e.text for e in flattened[0].evidence]) # doctest:+IGNORE_UNICODE
+    >>> sorted([e.text for e in flattened[0].evidence])
     ['bak', 'bar', 'baz', 'foo']
     """
     if collect_from is None:
@@ -997,8 +1009,8 @@ def _flatten_evidence_for_stmt(stmt, collect_from):
     return list(total_evidence)
 
 
-def default_refinement_fun(st1, st2, hierarchies):
-    return st1.refinement_of(st2, hierarchies)
+def default_refinement_fun(st1, st2, ontology):
+    return st1.refinement_of(st2, ontology)
 
 
 def default_matches_fun(st):

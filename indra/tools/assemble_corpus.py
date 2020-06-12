@@ -17,7 +17,8 @@ from indra.util import read_unicode_csv
 from indra.pipeline import register_pipeline
 from indra.mechlinker import MechLinker
 from indra.databases import hgnc_client
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.ontology.bio import bio_ontology
+from indra.ontology.world import world_ontology
 from indra.preassembler import Preassembler, flatten_evidence
 
 
@@ -395,13 +396,16 @@ def run_preassembly(stmts_in, **kwargs):
         Instance of BeliefScorer class to use in calculating Statement
         probabilities. If None is provided (default), then the default
         scorer is used.
-    hierarchies : Optional[dict]
-        Dict of hierarchy managers to use for preassembly
-    matches_fun : function
+    ontology : Optional[IndraOntology]
+        IndraOntology object to use for preassembly
+    matches_fun : Optional[function]
         A function to override the built-in matches_key function of statements.
-    refinement_fun : function
+    refinement_fun : Optional[function]
         A function to override the built-in refinement_of function of
         statements.
+    refinement_ns : Optional[set]
+        A set of name spaces over which refinements should be constructed.
+        If not provided, all name spaces are considered.
     flatten_evidence : Optional[bool]
         If True, evidences are collected and flattened via supports/supported_by
         links. Default: False
@@ -414,7 +418,7 @@ def run_preassembly(stmts_in, **kwargs):
         If True, equivalent groundings are rewritten to a single standard one.
         Default: False
     normalize_opposites : Optional[bool]
-        If True, groundings that have opposites in the hierarchy are rewritten
+        If True, groundings that have opposites in the ontology are rewritten
         to a single standard one.
     normalize_ns : Optional[str]
         The name space with respect to which equivalences and opposites are
@@ -433,10 +437,12 @@ def run_preassembly(stmts_in, **kwargs):
     belief_scorer = kwargs.get('belief_scorer')
     matches_fun = kwargs.get('matches_fun')
     refinement_fun = kwargs.get('refinement_fun')
-    use_hierarchies = kwargs.get('hierarchies', hierarchies)
+    refinement_ns = kwargs.get('refinement_ns')
+    use_ontology = kwargs.get('ontology', bio_ontology)
     be = BeliefEngine(scorer=belief_scorer, matches_fun=matches_fun)
-    pa = Preassembler(use_hierarchies, stmts_in, matches_fun=matches_fun,
-                      refinement_fun=refinement_fun)
+    pa = Preassembler(use_ontology, stmts_in, matches_fun=matches_fun,
+                      refinement_fun=refinement_fun,
+                      refinement_ns=refinement_ns)
     if kwargs.get('normalize_equivalences'):
         logger.info('Normalizing equals on %d statements' % len(pa.stmts))
         pa.normalize_equivalences(kwargs.get('normalize_ns'))
@@ -454,7 +460,7 @@ def run_preassembly(stmts_in, **kwargs):
                'poolsize': poolsize, 'size_cutoff': size_cutoff,
                'flatten_evidence': kwargs.get('flatten_evidence', False),
                'flatten_evidence_collect_from':
-                   kwargs.get('flatten_evidence_collect_from', 'supported_by')
+                   kwargs.get('flatten_evidence_collect_from', 'supported_by'),
                }
     stmts_out = run_preassembly_related(pa, be, **options)
     return stmts_out
@@ -905,11 +911,10 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
             hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
             if not hgnc_id:
                 logger.warning('Could not get HGNC ID for %s.' % hgnc_name)
-            gene_uri = hierarchies['entity'].get_uri('HGNC', hgnc_id)
-            parents = hierarchies['entity'].get_parents(gene_uri)
-            for par_uri in parents:
-                ns, id = hierarchies['entity'].ns_id_from_uri(par_uri)
-                filter_list.append(id)
+                continue
+            parents = bio_ontology.get_parents('HGNC', hgnc_id)
+            filter_list += [db_id for db_ns, db_id in parents
+                            if db_ns == 'FPLX']
     stmts_out = []
 
     if remove_bound:
@@ -1855,7 +1860,7 @@ def expand_families(stmts_in, **kwargs):
     """
     from indra.tools.expand_families import Expander
     logger.info('Expanding families on %d statements...' % len(stmts_in))
-    expander = Expander(hierarchies)
+    expander = Expander(bio_ontology)
     stmts_out = expander.expand_families(stmts_in)
     logger.info('%d statements after expanding families...' % len(stmts_out))
     dump_pkl = kwargs.get('save')
@@ -2050,34 +2055,3 @@ def align_statements(stmts1, stmts2, keyfun=None):
         except ValueError:
             matches.append((None, stmt))
     return matches
-
-
-if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        logger.error('Usage: assemble_corpus.py <pickle_file> <output_folder>')
-        sys.exit()
-    stmts_fname = sys.argv[1]
-    out_folder = sys.argv[2]
-
-    stmts = load_statements(stmts_fname)
-
-    logger.info('All statements: %d' % len(stmts))
-
-    cache_pkl = os.path.join(out_folder, 'mapped_stmts.pkl')
-    options = {'save': cache_pkl, 'do_rename': True}
-    stmts = map_grounding(stmts, **options)
-
-    cache_pkl = os.path.join(out_folder, 'sequence_valid_stmts.pkl')
-    options = {'save': cache_pkl}
-    mapped_stmts = map_sequence(stmts, **options)
-
-    be = BeliefEngine()
-    pa = Preassembler(hierarchies, mapped_stmts)
-
-    cache_pkl = os.path.join(out_folder, 'unique_stmts.pkl')
-    options = {'save': cache_pkl}
-    unique_stmts = run_preassembly_duplicate(pa, be, **options)
-
-    cache_pkl = os.path.join(out_folder, 'top_stmts.pkl')
-    options = {'save': cache_pkl}
-    stmts = run_preassembly_related(pa, be, **options)

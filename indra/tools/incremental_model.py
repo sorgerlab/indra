@@ -1,11 +1,9 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import pickle
 import logging
 from indra.statements import Agent
 import indra.tools.assemble_corpus as ac
 from indra.databases import hgnc_client
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.ontology.bio import bio_ontology
 
 logger = logging.getLogger(__name__)
 
@@ -205,13 +203,9 @@ class IncrementalModel(object):
 
 
 def _get_agent_comp(agent):
-    eh = hierarchies['entity']
-    a_ns, a_id = agent.get_grounding()
-    if (a_ns is None) or (a_id is None):
-        return None
-    uri = eh.get_uri(a_ns, a_id)
-    comp_id = eh.components.get(uri)
-    return comp_id
+    # FIXME: temporarily returning dummy component
+    return agent.name
+
 
 def get_gene_agents(gene_names):
     agents = []
@@ -227,6 +221,7 @@ def get_gene_agents(gene_names):
         agent = Agent(gn, db_refs=db_refs)
         agents.append(agent)
     return agents
+
 
 def _ref_agents_all_filter(stmts_in, ref_agents):
     # If there is no reference, keep everything by default
@@ -300,7 +295,9 @@ def _ref_agents_one_filter(stmts_in, ref_agents):
             stmts_out.append(st)
     return stmts_out
 
+
 def _agent_related(a1, a2):
-    if a1.matches(a2) or a1.isa(a2, hierarchies) or a2.isa(a1, hierarchies):
+    if a1.matches(a2) or a1.isa(a2, bio_ontology) or \
+            a2.isa(a1, bio_ontology):
         return True
     return False

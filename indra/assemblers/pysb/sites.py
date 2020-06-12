@@ -1,8 +1,7 @@
 __all__ = ['abbrevs', 'states', 'mod_acttype_map', 'get_binding_site_name',
            'get_mod_site_name']
 from indra.statements import *
-from indra.tools.expand_families import _agent_from_uri
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.ontology.bio import bio_ontology
 from .common import _n
 
 abbrevs = {
@@ -70,18 +69,12 @@ def get_binding_site_name(agent):
     # Try to construct a binding site name based on parent
     grounding = agent.get_grounding()
     if grounding != (None, None):
-        uri = hierarchies['entity'].get_uri(grounding[0], grounding[1])
-        # Get highest level parents in hierarchy
-        parents = hierarchies['entity'].get_parents(uri, 'top')
-        if parents:
-            # Choose the first parent if there are more than one
-            parent_uri = sorted(parents)[0]
-            parent_agent = _agent_from_uri(parent_uri)
-            binding_site = _n(parent_agent.name).lower()
-            return binding_site
-    # Fall back to Agent's own name if one from parent can't be constructed
-    binding_site = _n(agent.name).lower()
-    return binding_site
+        top_parents = bio_ontology.get_top_level_parents(*grounding)
+        if top_parents:
+            parent_name = bio_ontology.get_name(*top_parents[0])
+            if parent_name:
+                return _n(parent_name).lower()
+    return _n(agent.name).lower()
 
 
 def get_mod_site_name(mod_condition):

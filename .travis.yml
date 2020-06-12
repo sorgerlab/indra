@@ -3,6 +3,7 @@ cache:
   directories:
     - $HOME/.cache/pip
     - $HOME/.pybel
+    - $HOME/build/bgyori/indra/cache/geonames/index
 python:
   - "3.5"
 services:
@@ -18,6 +19,8 @@ install:
         nose-timer doctest-ignore-unicode awscli pycodestyle
   - mkdir -p $HOME/.pybel/data
   - aws s3 cp s3://bigmech/travis/pybel_cache.db $HOME/.pybel/data/ --no-sign-request  --source-region us-east-1
+  - mkdir -p $HOME/.indra/bio_ontology/1.0
+  - aws s3 cp s3://bigmech/travis/mock_ontology.pkl $HOME/.indra/bio_ontology/1.0/bio_ontology.pkl --no-sign-request  --source-region us-east-1
   # PySB and dependencies
   - wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
   - tar xzf bionetgen.tar.gz
@@ -82,6 +85,7 @@ script:
         --ignore-files='.*test_reach.py' --ignore-files='.*test_live_curation.py'
         --with-coverage --cover-inclusive --cover-package=indra
         --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10
+        --processes=0
   # First run TEES and Eidos tests separately for technical reasons
   - python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
     --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;

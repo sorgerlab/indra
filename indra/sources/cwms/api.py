@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import logging
 from indra.sources.cwms.processor import CWMSProcessor
-from indra.sources.cwms.rdf_processor import CWMSRDFProcessor
 from indra.sources.trips import client
 
 logger = logging.getLogger(__name__)
@@ -75,25 +74,4 @@ def process_ekb(ekb_str):
     cp.extract_correlations()
     cp.extract_migrations()
     cp.extract_events()
-    return cp
-
-
-def process_rdf_file(text, rdf_filename):
-    """Process CWMS's RDF output for the given statement and returns a
-    processor populated with INDRA statements.
-
-    Parameters
-    ----------
-    text : str
-        Sentence to process
-    rdf_filename : str
-        The RDF filename to process
-
-    Returns
-    -------
-    cp : indra.sources.cwms.CWMSRDFProcessor
-        A CWMSProcessor instance, which contains a list of INDRA Statements
-        as its statements attribute.
-    """
-    cp = CWMSRDFProcessor(text, rdf_filename)
     return cp

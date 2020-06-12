@@ -1,5 +1,5 @@
 import random
-
+import unittest
 from datetime import datetime
 from unittest import SkipTest
 
@@ -49,12 +49,12 @@ def test_null_request():
     assert False, "Null request did not raise any exception."
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'slow')
 def test_large_request():
     __check_request(40, agents=['AKT1'])
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'slow')
 def test_bigger_request():
     __check_request(60, agents=['MAPK1'])
 
@@ -82,7 +82,7 @@ def test_timeout_no_persist_type_object():
     assert len(resp.statements) > 0.9*EXPECTED_BATCH_SIZE, len(resp.statements)
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'slow')
 def test_too_big_request_no_persist():
     resp_some = __check_request(60, agents=['TP53'], persist=False,
                                 simple_response=False)
@@ -92,7 +92,8 @@ def test_too_big_request_no_persist():
     return resp_some
 
 
-@attr('nonpublic', 'slow')
+@attr('nonpublic', 'slow', 'notravis')
+@unittest.skip('skippping')
 def test_too_big_request_persist_and_block():
     resp_all1 = __check_request(200, agents=['TP53'], persist=True, timeout=None,
                                 simple_response=False)
@@ -102,7 +103,7 @@ def test_too_big_request_persist_and_block():
     return resp_all1
 
 
-@attr('nonpublic', 'slow')
+@attr('nonpublic', 'slow', 'notravis')
 def test_too_big_request_persist_no_block():
     resp_some = test_too_big_request_no_persist()
     resp_all1 = test_too_big_request_persist_and_block()

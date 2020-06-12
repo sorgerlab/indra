@@ -12836,3 +12836,24 @@ MESH	D066259	Betacellulin	HGNC	1121	BTC
 MESH	D066260	Epiregulin	HGNC	3443	EREG
 MESH	D066261	Epigen	HGNC	17470	EPGN
 MESH	D066292	Lipid Droplets	GO	GO:0005811	lipid droplet
+MESH	D005416	Flavivirus	TAXONOMY	11051	Flavivirus
+MESH	D016174	Hepacivirus	TAXONOMY	11102	Hepacivirus
+MESH	D028941	Coronavirus 229E, Human	TAXONOMY	11137	Human coronavirus 229E
+MESH	D006517	Murine hepatitis virus	TAXONOMY	11138	Murine hepatitis virus
+MESH	D003716	Dengue Virus	TAXONOMY	12637	Dengue virus
+MESH	D006678	HIV	TAXONOMY	12721	Human immunodeficiency virus
+MESH	D065207	Middle East Respiratory Syndrome Coronavirus	TAXONOMY	1335626	Middle East respiratory syndrome-related coronavirus
+MESH	D029043	Ebolavirus	TAXONOMY	1570291	Ebola virus
+MESH	D058957	Coronavirus NL63, Human	TAXONOMY	277944	Human coronavirus NL63
+MESH	D028962	Coronavirus OC43, Human	TAXONOMY	31631	Human coronavirus OC43
+MESH	D000071244	Zika Virus	TAXONOMY	64320	Zika virus
+MESH	D000073638	Alphacoronavirus	TAXONOMY	693996	Alphacoronavirus
+MESH	D000073641	Betacoronavirus 1	TAXONOMY	694003	Betacoronavirus 1
+MESH	D045473	SARS Virus	TAXONOMY	694009	Severe acute respiratory syndrome-related coronavirus
+MESH	D000073641	Betacoronavirus 1	TAXONOMY	42005	Porcine hemagglutinating encephalomyelitis virus
+MESH	D000073641	Betacoronavirus 1	TAXONOMY	230237	Porcine hemagglutinating encephalomyelitis virus (strain 67N)
+MESH	D029082	Sendai virus	TAXONOMY	11191	Murine respirovirus
+MESH	D006517	Murine hepatitis virus	TAXONOMY	11142	Murine hepatitis virus strain A59
+MESH	D053118	Influenza A Virus, H1N1 Subtype	TAXONOMY	211044	Influenza A virus (A/Puerto Rico/8/1934(H1N1))
+MESH	D000073640	Betacoronavirus	TAXONOMY	290028	Human coronavirus HKU1
+MESH	D045473	SARS Virus	TAXONOMY	575560	recombinant SARS coronavirus
