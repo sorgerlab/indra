@@ -1,20 +1,9 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import os
-from nose.plugins.attrib import attr
 from indra.statements import Complex
-from indra.databases import biogrid_client
-from indra.util import unicode_strs
 from indra.sources.biogrid import BiogridProcessor
 
 this_dir = os.path.dirname(__file__)
 test_file = os.path.join(this_dir, 'biogrid_tests_data/biogrid_test.txt')
-
-@attr('webservice', 'nonpublic')
-def test_biogrid_request():
-    results = biogrid_client._send_request(['MAP2K1', 'MAPK1'])
-    assert results is not None
-    assert unicode_strs(results)
 
 
 def test_biogrid_tsv():
