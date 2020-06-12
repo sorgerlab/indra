@@ -308,7 +308,7 @@ def test_run_preassembly_concepts():
     st_out = _post_stmts_preassembly(
         [Influence(rainfall, flooding_1), Influence(rainfall, flooding_2)],
         route, normalize_ns='WM', normalize_equivalences=True,
-        belief_scorer='wm', hierarchies='wm')
+        belief_scorer='wm', ontology='wm')
     assert len(st_out) == 2, st_out
 
 
@@ -1078,18 +1078,3 @@ def test_pipeline():
     res_json = json.loads(res.get_data())
     assert 'statements' in res_json
     assert len(res_json['statements']) == 1
-
-
-def test_ontology_mapping():
-    route = '/preassembly/map_ontologies'
-    c1 = Concept('x', db_refs={'WM': [('wm/concept/causal_factor/'
-                                       'health_and_life/famine', 1.0)]})
-    c2 = Concept('y', db_refs={'WM': [('wm/concept/causal_factor/'
-                                       'social_and_political/education/'
-                                       'education', 1.0)]})
-
-    st = Influence(Event(c1), Event(c2))
-    st_out = _post_stmts_preassembly([st], route)
-    stmt = st_out[0]
-    assert 'SOFIA' in stmt.subj.concept.db_refs, stmt.subj.concept.db_refs
-    assert 'SOFIA' in stmt.obj.concept.db_refs, stmt.obj.concept.db_refs

@@ -27,8 +27,8 @@ from indra.sources.indra_db_rest import get_statements
 from indra.sources.ndex_cx.api import process_ndex_network
 from indra.sources.reach.api import reach_nxml_url, reach_text_url
 from indra.belief.wm_scorer import get_eidos_scorer
-from indra.preassembler.hierarchy_manager import get_wm_hierarchies
-from indra.preassembler.ontology_mapper import OntologyMapper, wm_ontomap
+from indra.ontology.bio import bio_ontology
+from indra.ontology.world import world_ontology
 from indra.pipeline import AssemblyPipeline, pipeline_functions
 from indra.preassembler.custom_preassembly import *
 
@@ -158,33 +158,6 @@ class RunPipeline(Resource):
         return _return_stmts(stmts_out)
 
 
-@preassembly_ns.expect(stmts_model)
-@preassembly_ns.route('/map_ontologies')
-class MapOntologies(Resource):
-    @api.doc(False)
-    def options(self):
-        return {}
-
-    def post(self):
-        """Run ontology mapping on a list of INDRA Statements.
-
-        Parameters
-        ----------
-        statements : list[indra.statements.Statement.to_json()
-            A list of INDRA Statements to map.
-
-        Returns
-        -------
-        statements : list[indra.statements.Statement.to_json()]
-            The list of mapped INDRA Statements.
-        """
-        args = request.json
-        stmts = stmts_from_json(args.get('statements'))
-        om = OntologyMapper(stmts, wm_ontomap, scored=True, symmetric=False)
-        om.map_statements()
-        return _return_stmts(stmts)
-
-
 # Dynamically generate resources for assembly corpus functions
 class PreassembleStatements(Resource):
     """Parent Resource for Preassembly resources."""
@@ -207,11 +180,11 @@ class PreassembleStatements(Resource):
                     args_json[arg] = get_eidos_scorer()
                 else:
                     args_json[arg] = None
-            elif arg == 'hierarchies':
+            elif arg == 'ontology':
                 if args_json[arg] == 'wm':
-                    args_json[arg] = get_wm_hierarchies()
+                    args_json[arg] = world_ontology
                 else:
-                    args_json[arg] = None
+                    args_json[arg] = bio_ontology
             elif arg == 'whitelist' or arg == 'mutations':
                 args_json[arg] = {
                     gene: [tuple(mod) for mod in mods]
@@ -291,14 +264,12 @@ def update_docstring(func):
                 'default scorer is used (good for biology use case). '
                 'For WorldModelers use case belief scorer should be set '
                 'to "wm".')
-        elif param.arg_name == 'hierarchies':
+        elif param.arg_name == 'ontology':
             param.type_name = 'Optional[str] or None'
             param.description = (
-                'Type of hierarchy managers to use for preassembly. '
-                'If None is provided (default), then the default '
-                'hierarchies are used (good for biology use case). '
-                'For WorldModelers use case hierarchies should be set '
-                'to "wm".')
+                'Type of ontology to use for preassembly ("bio" or "wm"). '
+                'If None is provided (default), then the bio ontology is used.'
+                'For WorldModelers use case ontology should be set to "wm".')
         elif param.arg_name in ['matches_fun', 'refinement_fun']:
             param.type_name = 'str'
         elif param.arg_name == 'curations':
