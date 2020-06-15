@@ -316,6 +316,8 @@ class BiopaxProcessor(object):
     def find_gdp_gtp_complex(self, cplxes):
         for cplx in cplxes:
             members = self._get_complex_members(cplx)
+            if not members:
+                continue
             gdp_gtp_idx = None
             ras_agent = None
             for idx, member in enumerate(members):
@@ -679,7 +681,10 @@ class BiopaxProcessor(object):
                 if name is None:
                     name = bpe.display_name
             elif uniprot_id is not None:
-                name = uniprot_client.get_gene_name(uniprot_id)
+                try:
+                    name = uniprot_client.get_gene_name(uniprot_id)
+                except Exception:
+                    name = None
                 if name is None:
                     name = bpe.display_name
             else:
