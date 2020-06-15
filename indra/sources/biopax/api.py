@@ -211,6 +211,7 @@ def process_model(model):
     bp.get_activity_modification()
     bp.get_regulate_amounts()
     bp.get_conversions()
+    bp.get_gap_gef()
     '''
     bp.get_gef()
     bp.get_gap()

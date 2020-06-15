@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 # - Extract cellularLocation from each PhysicalEntity
 # - Extract and represent FragmentFeatures
 # - Extract and represent BindingFeatures
+# - direct is not always appropriate, e.g., for CTD as a source
 # - Look at participantStoichiometry within BiochemicalReaction
 # - Check whether to use Control or only Catalysis (Control might not
 #   be direct)
@@ -162,7 +163,7 @@ class BiopaxProcessor(object):
             # Sometimes there is nothing being controlled, we skip
             # those cases. We also want to skip things like Modulation
             # that don't convert anything.
-            if not isinstance(conversion, Conversion):
+            if not isinstance(conversion, bp.Conversion):
                 continue
             control_agents = flatten([self._get_primary_controller(c) for c in
                                       control.controller])
@@ -280,116 +281,90 @@ class BiopaxProcessor(object):
             # that don't convert anything.
             if not isinstance(conversion, bp.Conversion):
                 continue
-            ev = self._get_evidence(control)
+
+            # We only extract conversions for small molecules
             if not all(_is_small_molecule(pe)
                        for pe in (conversion.left + conversion.right)):
                 continue
+
+            # Get the control agents
             control_agents = flatten([self._get_primary_controller(c) for c in
                                       control.controller])
             control_agents = [c for c in control_agents if c is not None]
             if not control_agents:
                 continue
+
+            # Assemble from and to object lists
             obj_from = []
             obj_to = []
-            for participant in conversion.left:
-                agent = self._get_agents_from_entity(participant)
-                if isinstance(agent, list):
-                    obj_from += agent
-                else:
-                    obj_from.append(agent)
-            for participant in conversion.right:
-                agent = self._get_agents_from_entity(participant)
-                if isinstance(agent, list):
-                    obj_to += agent
-                else:
-                    obj_to.append(agent)
+            for participants, obj_list in ((conversion.left, obj_from),
+                                           (conversion.right, obj_to)):
+                for participant in participants:
+                    agent = self._get_agents_from_entity(participant)
+                    if isinstance(agent, list):
+                        obj_list += agent
+                    else:
+                        obj_list.append(agent)
+
+            # Make statements
+            ev = self._get_evidence(control)
             for subj in control_agents:
                 st = Conversion(subj, obj_from, obj_to, evidence=ev)
                 self.statements.append(st)
         return
 
-
-
-        # NOTE: This pattern gets all reactions in which a protein is the
-        # controller and chemicals are converted. But with this pattern only
-        # a single chemical is extracted from each side. This can be misleading
-        # since we want to capture all inputs and all outputs of the
-        # conversion. So we need to step back to the conversion itself and
-        # enumerate all inputs/outputs, make sure they constitute the kind
-        # of conversion we can capture here and then extract as a Conversion
-        # Statement. Another issue here is that the same reaction will be
-        # extracted multiple times if there is more then one input or output.
-        # Therefore we need to cache the ID of the reactions that have already
-        # been handled.
-        p = _bpp('Pattern')(_bpimpl('PhysicalEntity')().getModelInterface(),
-                            'controller PE')
-        # Getting the control itself
-        p.add(cb.peToControl(), "controller PE", "Control")
-        # Make sure the controller is a protein
-        # TODO: possibly allow Complex too
-        p.add(tp(_bpimpl('Protein')().getModelInterface()), "controller PE")
-        # Link the control to the conversion that it controls
-        p.add(cb.controlToConv(), "Control", "Conversion")
-        # Make sure this is a BiochemicalRection (as opposed to, for instance,
-        # ComplexAssembly)
-        p.add(tp(_bpimpl('BiochemicalReaction')().getModelInterface()),
-                         "Conversion")
-        # The controller shouldn't be a participant of the conversion
-        p.add(_bpp('constraint.NOT')(cb.participant()),
-              "Conversion", "controller PE")
-        # Get the input participant of the conversion
-        p.add(pt(rt.INPUT, True), "Control", "Conversion", "input PE")
-        # Link to the other side of the conversion
-        p.add(cs(cst.OTHER_SIDE), "input PE", "Conversion", "output PE")
-        # Make sure the two sides are not the same
-        p.add(_bpp('constraint.Equality')(False), "input PE", "output PE")
-        # Make sure the input/output is a chemical
-        p.add(tp(_bpimpl('SmallMolecule')().getModelInterface()), "input PE")
-        p.add(tp(_bpimpl('SmallMolecule')().getModelInterface()), "output PE")
-
-        s = _bpp('Searcher')
-        res = s.searchPlain(self.model, p)
-        res_array = [_match_to_array(m) for m in res.toArray()]
-        stmts = []
-        reaction_extracted = set()
-        for r in res_array:
-            controller_pe = r[p.indexOf('controller PE')]
-            reaction = r[p.indexOf('Conversion')]
-            control = r[p.indexOf('Control')]
-            input_pe = r[p.indexOf('input PE')]
-            output_pe = r[p.indexOf('output PE')]
-            if control.getUri() in reaction_extracted:
+    def find_gdp_gtp_complex(self, cplxes):
+        for cplx in cplxes:
+            members = self._get_complex_members(cplx)
+            if len(members) != 2:
                 continue
-            # Get controller
-            subj_list = self._get_agents_from_entity(controller_pe)
-            # Get inputs and outputs
-            left = reaction.getLeft().toArray()
-            right = reaction.getRight().toArray()
-            # Skip this if not all participants are chemicals
-            if any([not _is_small_molecule(e) for e in left]):
+            gdp_gtp_idx = None
+            for idx, member in enumerate(members):
+                if isinstance(member, Agent) \
+                        and member.name in {'GDP', 'GTP'}:
+                    gdp_gtp_idx = idx
+                    break
+            if gdp_gtp_idx is None:
                 continue
-            if any([not _is_small_molecule(e) for e in right]):
+            return members[1 - gdp_gtp_idx], members[gdp_gtp_idx].name
+        return None, None
+
+    def get_gap_gef(self):
+        for control in self.model.get_objects_by_type(bp.Control):
+            conversion = control.controlled
+            # Sometimes there is nothing being controlled, we skip
+            # those cases. We also want to skip things like Modulation
+            # that don't convert anything.
+            if not isinstance(conversion, bp.Conversion):
                 continue
-            obj_left = []
-            obj_right = []
-            for participant in left:
-                agent = self._get_agents_from_entity(participant)
-                if isinstance(agent, list):
-                    obj_left += agent
-                else:
-                    obj_left.append(agent)
-            for participant in right:
-                agent = self._get_agents_from_entity(participant)
-                if isinstance(agent, list):
-                    obj_right += agent
-                else:
-                    obj_right.append(agent)
             ev = self._get_evidence(control)
-            for subj in _listify(subj_list):
-                st = Conversion(subj, obj_left, obj_right, evidence=ev)
-                st_dec = decode_obj(st, encoding='utf-8')
-                self.statements.append(st_dec)
-            reaction_extracted.add(control.getUri())
+            left_complexes = [bpe for bpe in conversion.left
+                              if _is_complex(bpe)]
+            right_complexes = [bpe for bpe in conversion.right
+                               if _is_complex(bpe)]
+            left_ras, left_gtp_gdp = \
+                self.find_gdp_gtp_complex(left_complexes)
+            right_ras, right_gtp_gdp = \
+                self.find_gdp_gtp_complex(right_complexes)
+            if left_gtp_gdp == 'GDP' and right_gtp_gdp == 'GTP':
+                stmt_type = Gef
+            elif left_gtp_gdp == 'GTP' and right_gtp_gdp == 'GDP':
+                stmt_type = Gap
+            else:
+                continue
+
+            # Get the control agents
+            control_agents = flatten([self._get_primary_controller(c) for c in
+                                      control.controller])
+            control_agents = [c for c in control_agents if c is not None]
+            if not control_agents:
+                continue
+
+            ev = self._get_evidence(control)
+            for gap_gef, ras in itertools.product(_listify(control_agents),
+                                                  _listify(left_ras)):
+                st = stmt_type(gap_gef, ras, evidence=ev)
+                self.statements.append(st)
 
     def _gef_gap_base(self):
         # The following constraints were pieced together based on the
@@ -603,6 +578,9 @@ class BiopaxProcessor(object):
         return mods
 
     def _get_primary_controller(self, controller_pe):
+        if not isinstance(controller_pe, bp.PhysicalEntity):
+            return None
+
         # If it's not a complex, just return the corresponding agent
         if not _is_complex(controller_pe):
             enzs = self._get_agents_from_entity(controller_pe)
