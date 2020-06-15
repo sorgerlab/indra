@@ -1,4 +1,5 @@
 import re
+import copy
 import logging
 import itertools
 import collections
@@ -44,11 +45,8 @@ class BiopaxProcessor(object):
     def __init__(self, model):
         self.model = model
         self.statements = []
-
-    def get_class_objects(self, cls):
-        for obj in self.model.objects.values():
-            if isinstance(obj, cls):
-                yield obj
+        self._mod_conditions = {}
+        self._activity_conditions = {}
 
     def print_statements(self):
         """Print all INDRA Statements collected by the processors."""
@@ -89,11 +87,40 @@ class BiopaxProcessor(object):
                     matches.append((inp, outp))
         return matches
 
-    @staticmethod
-    def feature_delta(from_pe, to_pe):
-        gained_feats = set(to_pe.feature) - set(from_pe.feature)
-        lost_feats = set(from_pe.feature) - set(to_pe.feature)
-        return gained_feats, lost_feats
+    def feature_delta(self, from_pe: bp.PhysicalEntity,
+                      to_pe: bp.PhysicalEntity):
+        from_mods = {self._mod_conditions[f.uid] for f in from_pe.feature
+                     if f.uid in self._mod_conditions}
+        to_mods = {self._mod_conditions[f.uid] for f in to_pe.feature
+                   if f.uid in self._mod_conditions}
+        from_acts = {self._activity_conditions[f.uid] for f in from_pe.feature
+                     if f.uid in self._activity_conditions}
+        to_acts = {self._activity_conditions[f.uid] for f in to_pe.feature
+                   if f.uid in self._activity_conditions}
+        assert len(from_acts) <= 1
+        assert len(to_acts) <= 1
+        activity_change = None
+        if from_acts == {'active'}:
+            if not to_acts or to_acts == {'inactive'}:
+                activity_change = 'inactive'
+        elif not from_acts or from_acts == {'inactive'}:
+            if to_acts == {'active'}:
+                activity_change = 'active'
+        gained_mods = to_mods - from_mods
+        lost_mods = from_mods - to_mods
+        return gained_mods, lost_mods, activity_change
+
+    def extract_features(self):
+        for feature in self.model.get_objects_by_type(bp.EntityFeature):
+            mf_type = get_modification_type(feature)
+            if mf_type == 'modification':
+                mod = self.mod_condition_from_mod_feature(feature)
+                if mod:
+                    self._mod_conditions[feature.uid] = mod
+            elif mf_type == 'activity':
+                self._activity_conditions[feature.uid] = 'active'
+            elif mf_type == 'inactivity':
+                self._activity_conditions[feature.uid] = 'inactive'
 
     def get_complexes(self):
         """Extract INDRA Complex Statements from the BioPAX model.
@@ -104,8 +131,7 @@ class BiopaxProcessor(object):
         query since that retrieves pairs of complex members rather than
         the full complex.
         """
-        complexes = self.get_class_objects(bp.Complex)
-        for bpe in complexes:
+        for bpe in self.model.get_objects_by_type(bp.Complex):
             ev = self._get_evidence(bpe)
             members = self._get_complex_members(bpe)
             if members is not None:
@@ -117,46 +143,49 @@ class BiopaxProcessor(object):
                     self.statements.append(Complex(c, ev))
 
     def _conversion_state_iter(self):
-        for control in self.get_class_objects(bp.Control):
+        for control in self.model.get_objects_by_type(bp.Control):
             ev = self._get_evidence(control)
             conversion = control.controlled
+            # Sometimes there is nothing being controlled, we skip
+            # those cases.
+            if conversion is None:
+                continue
             control_agents = [self._get_primary_controller(c) for c in
                               control.controller]
             for inp, outp in self.find_matching_left_right(conversion):
                 inp_agents = self._get_agents_from_entity(inp)
-                gained_feats, lost_feats = self.feature_delta(inp, outp)
-                for feats, is_gain in [(gained_feats, True),
-                                       (lost_feats, False)]:
-                    yield control_agents, inp_agents, feats, is_gain, ev
+                gained_mods, lost_mods, activity_change = \
+                    self.feature_delta(inp, outp)
+                print(control_agents, inp_agents, gained_mods,
+                      lost_mods, activity_change, ev)
+                yield control_agents, inp_agents, gained_mods, \
+                    lost_mods, activity_change, ev
 
     def get_modifications(self):
         """Extract INDRA Modification Statements from the BioPAX model."""
-        for control_agents, inp_agents, feats, is_gain, ev \
-                in self._conversion_state_iter():
-            for feat in feats:
-                if not _is_modification(feat):
-                    continue
-                mod = self._extract_mod_from_feature(feat)
-                stmt_class = modtype_to_modclass[mod.mod_type]
-                if not is_gain:
-                    stmt_class = modclass_to_inverse[stmt_class]
-                for enz, sub in \
-                        itertools.product(_listify(control_agents),
-                                          _listify(inp_agents)):
-                    stmt = stmt_class(enz, sub, mod.residue,
-                                      mod.position, evidence=ev)
-                    self.statements.append(stmt)
+        for control_agents, inp_agents, gained_mods, lost_mods, \
+                activity_change, ev in self._conversion_state_iter():
+            for mods, is_gain in ((gained_mods, True), (lost_mods, False)):
+                for mod in mods:
+                    stmt_class = modtype_to_modclass[mod.mod_type]
+                    if not is_gain:
+                        stmt_class = modclass_to_inverse[stmt_class]
+                    for enz, sub in \
+                            itertools.product(_listify(control_agents),
+                                              _listify(inp_agents)):
+                        stmt = stmt_class(enz, sub, mod.residue,
+                                          mod.position, evidence=ev)
+                        self.statements.append(stmt)
 
     def get_regulate_activities(self):
         """Get Activation/Inhibition INDRA Statements from the BioPAX model."""
-        for control_agents, inp_agents, feats, is_gain, ev \
-                in self._conversion_state_iter():
-            mod_feats = [f for f in feats if _is_modification(f)]
-            act_feats = [f for f in feats if _is_activity(f)]
+        for control_agents, inp_agents, gained_mods, lost_mods, \
+                activity_change, ev in self._conversion_state_iter():
             # We don't want to have gained or lost modification features
-            if mod_feats or not act_feats:
+            if not activity_change or (gained_mods or lost_mods):
                 continue
-            stmt_class = Activation if is_gain else Inhibition
+            stmt_class = Activation if activity_change == 'active' \
+                else Inhibition
             for subj, obj in \
                     itertools.product(_listify(control_agents),
                                       _listify(inp_agents)):
@@ -166,17 +195,13 @@ class BiopaxProcessor(object):
 
     def get_activity_modification(self):
         """Extract INDRA ActiveForm statements from the BioPAX model."""
-        for control_agents, inp_agents, feats, is_gain, ev \
-                in self._conversion_state_iter():
-            mod_feats = [f for f in feats if _is_modification(f)]
-            act_feats = [f for f in feats if _is_activity(f)]
-            if not mod_feats or not act_feats:
+        for control_agents, inp_agents, gained_mods, lost_mods, \
+                activity_change, ev in self._conversion_state_iter():
+            # We have to have both a modification change and an activity
+            # change
+            if not (gained_mods or lost_mods) or not activity_change:
                 continue
-            mods = [self._extract_mod_from_feature(f)
-                    for f in mod_feats]
-            mods = [m for m in mods if m is not None]
-            if not mods:
-                continue
+            is_active = (activity_change == 'active')
             for agent in _listify(inp_agents):
                 # NOTE: with the ActiveForm representation we cannot
                 # separate static_mods and gained_mods. We assume here
@@ -185,14 +210,20 @@ class BiopaxProcessor(object):
                 # don't care don't write semantics. Therefore only the
                 # gained_mods are listed in the ActiveForm as Agent
                 # conditions.
-                agent.mods = mods
-                stmt = ActiveForm(agent, 'activity', is_gain,
-                                  evidence=ev)
-                self.statements.append(stmt)
+                if gained_mods:
+                    ag = copy.deepcopy(agent)
+                    ag.mods = gained_mods
+                    stmt = ActiveForm(ag, 'activity', is_active, evidence=ev)
+                    self.statements.append(stmt)
+                if lost_mods:
+                    ag = copy.deepcopy(agent)
+                    ag.mods = lost_mods
+                    stmt = ActiveForm(ag, 'activity', ~is_active, evidence=ev)
+                    self.statements.append(stmt)
 
     def get_regulate_amounts(self):
         """Extract INDRA RegulateAmount Statements from the BioPAX model."""
-        temp_reacts = self.get_class_objects(bp.TemplateReaction)
+        temp_reacts = self.model.get_objects_by_type(bp.TemplateReaction)
         for temp_react in temp_reacts:
             control = temp_react.controlled_of
             ev = self._get_evidence(control)
@@ -505,7 +536,7 @@ class BiopaxProcessor(object):
         for feature in features:
             if not _is_modification(feature):
                 continue
-            mc = BiopaxProcessor._extract_mod_from_feature(feature)
+            mc = BiopaxProcessor.mod_condition_from_mod_feature(feature)
             if mc is not None:
                 mods.append(mc)
         return mods
@@ -622,7 +653,7 @@ class BiopaxProcessor(object):
         return agent
 
     @staticmethod
-    def _extract_mod_from_feature(mf: bp.ModificationFeature):
+    def mod_condition_from_mod_feature(mf: bp.ModificationFeature):
         """Extract the type of modification and the position from
         a ModificationFeature object in the INDRA format."""
         # ModificationFeature / SequenceModificationVocabulary
@@ -642,10 +673,6 @@ class BiopaxProcessor(object):
 
         mod_type, residue = mf_type_indra
 
-        # getFeatureLocation returns SequenceLocation, which is the
-        # generic parent class of SequenceSite and SequenceInterval.
-        # Here we need to cast to SequenceSite in order to get to
-        # the sequence position.
         if mf.feature_location is not None:
             # If it is not a SequenceSite we can't handle it
             if not isinstance(mf.feature_location, bp.SequenceSite):
@@ -1110,27 +1137,27 @@ def _is_simple_physical_entity(pe):
 
 
 def _is_modification(feature):
-    return _is_modification_or_activity(feature) == 'modification'
+    return get_modification_type(feature) == 'modification'
 
 
 def _is_activity(feature):
-    return _is_modification_or_activity(feature) == 'activity'
+    return get_modification_type(feature) in {'activity', 'inactivity'}
 
 
-def _is_modification_or_activity(feature):
-    """Return True if the feature is a modification"""
-    if not isinstance(feature, bp.ModificationFeature):
+def get_modification_type(mf: bp.ModificationFeature):
+    if mf.modification_type is None:
         return None
-    mf_type = feature.modification_type
-    if mf_type is None:
-        return None
-    mf_type_terms = mf_type.term
-    for term in mf_type_terms:
-        if term in ('residue modification, active',
-                    'residue modification, inactive',
-                    'active', 'inactive'):
-            return 'activity'
-    return 'modification'
+
+    mf_type_terms = set(mf.modification_type.term)
+    if not mf_type_terms:
+        return 'modification'
+
+    if mf_type_terms & inactivity_terms:
+        return 'inactivity'
+    elif mf_type_terms & activity_terms:
+        return 'activity'
+    else:
+        return 'modification'
 
 
 def _is_reference(bpe):
@@ -1226,4 +1253,17 @@ def get_specific_chebi_id(chebi_ids, name):
     # the most specific one based on the hierarchy
     specific_chebi_id = chebi_client.get_specific_id(non_generic_ids)
     return specific_chebi_id
+
+
+activity_terms = {
+    'active',
+    'residue modification, active',
+}
+
+
+inactivity_terms = {
+    'inactive',
+    'residue modification, inactive',
+}
+
 
