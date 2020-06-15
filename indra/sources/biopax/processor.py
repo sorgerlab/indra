@@ -92,10 +92,7 @@ class BiopaxProcessor(object):
 
     def feature_delta(self, from_pe: bp.PhysicalEntity,
                       to_pe: bp.PhysicalEntity):
-        from_mods = {self._mod_conditions[f.uid] for f in from_pe.feature
-                     if f.uid in self._mod_conditions}
-        to_mods = {self._mod_conditions[f.uid] for f in to_pe.feature
-                   if f.uid in self._mod_conditions}
+        # First deal with activity changes
         from_acts = {self._activity_conditions[f.uid] for f in from_pe.feature
                      if f.uid in self._activity_conditions}
         to_acts = {self._activity_conditions[f.uid] for f in to_pe.feature
@@ -109,8 +106,19 @@ class BiopaxProcessor(object):
         elif not from_acts or from_acts == {'inactive'}:
             if to_acts == {'active'}:
                 activity_change = 'active'
-        gained_mods = to_mods - from_mods
-        lost_mods = from_mods - to_mods
+
+        # Now look at modification changes
+        from_mods = {self._mod_conditions[f.uid] for f in from_pe.feature
+                     if f.uid in self._mod_conditions}
+        from_mods = {mc.matches_key(): mc for mc in from_mods}
+        to_mods = {self._mod_conditions[f.uid] for f in to_pe.feature
+                   if f.uid in self._mod_conditions}
+        to_mods = {mc.matches_key(): mc for mc in to_mods}
+
+        gained_mods = {to_mods[k] for k in
+                       set(to_mods.keys()) - set(from_mods.keys())}
+        lost_mods = {from_mods[k] for k in
+                     set(from_mods.keys()) - set(to_mods.keys())}
         return gained_mods, lost_mods, activity_change
 
     def extract_features(self):
