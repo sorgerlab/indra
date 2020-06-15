@@ -208,12 +208,12 @@ def process_model(model):
     bp.extract_features()
     bp.get_modifications()
     bp.get_regulate_activities()
-    bp.get_regulate_amounts()
     bp.get_activity_modification()
+    bp.get_regulate_amounts()
+    bp.get_conversions()
     '''
     bp.get_gef()
     bp.get_gap()
-    bp.get_conversions()
     # bp.get_complexes()
     '''
     bp.eliminate_exact_duplicates()

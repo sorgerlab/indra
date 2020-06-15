@@ -158,24 +158,22 @@ class BiopaxProcessor(object):
 
     def _conversion_state_iter(self):
         for control in self.model.get_objects_by_type(bp.Control):
-            ev = self._get_evidence(control)
             conversion = control.controlled
             # Sometimes there is nothing being controlled, we skip
             # those cases. We also want to skip things like Modulation
             # that don't convert anything.
-            if conversion is None or not isinstance(conversion, Conversion):
+            if not isinstance(conversion, Conversion):
                 continue
             control_agents = flatten([self._get_primary_controller(c) for c in
                                       control.controller])
             control_agents = [c for c in control_agents if c is not None]
             if not control_agents:
                 continue
+            ev = self._get_evidence(control)
             for inp, outp in self.find_matching_left_right(conversion):
                 inp_agents = self._get_agents_from_entity(inp)
                 gained_mods, lost_mods, activity_change = \
                     self.feature_delta(inp, outp)
-                print(control_agents, inp_agents, gained_mods,
-                      lost_mods, activity_change, ev)
                 yield control_agents, inp_agents, gained_mods, \
                     lost_mods, activity_change, ev
 
@@ -255,6 +253,9 @@ class BiopaxProcessor(object):
                 else DecreaseAmount
             control_agents = flatten([self._get_primary_controller(c) for c in
                                       control.controller])
+            if not control_agents:
+                continue
+            ev = self._get_evidence(control)
             for product in temp_react.product:
                 product_agents = self._get_agents_from_entity(product)
                 for subj, obj in itertools.product(_listify(control_agents),
@@ -272,6 +273,43 @@ class BiopaxProcessor(object):
         conversions as well as signaling processes via small molecules
         (e.g. lipid phosphorylation or cleavage).
         """
+        for control in self.model.get_objects_by_type(bp.Control):
+            conversion = control.controlled
+            # Sometimes there is nothing being controlled, we skip
+            # those cases. We also want to skip things like Modulation
+            # that don't convert anything.
+            if not isinstance(conversion, bp.Conversion):
+                continue
+            ev = self._get_evidence(control)
+            if not all(_is_small_molecule(pe)
+                       for pe in (conversion.left + conversion.right)):
+                continue
+            control_agents = flatten([self._get_primary_controller(c) for c in
+                                      control.controller])
+            control_agents = [c for c in control_agents if c is not None]
+            if not control_agents:
+                continue
+            obj_from = []
+            obj_to = []
+            for participant in conversion.left:
+                agent = self._get_agents_from_entity(participant)
+                if isinstance(agent, list):
+                    obj_from += agent
+                else:
+                    obj_from.append(agent)
+            for participant in conversion.right:
+                agent = self._get_agents_from_entity(participant)
+                if isinstance(agent, list):
+                    obj_to += agent
+                else:
+                    obj_to.append(agent)
+            for subj in control_agents:
+                st = Conversion(subj, obj_from, obj_to, evidence=ev)
+                self.statements.append(st)
+        return
+
+
+
         # NOTE: This pattern gets all reactions in which a protein is the
         # controller and chemicals are converted. But with this pattern only
         # a single chemical is extracted from each side. This can be misleading
