@@ -161,8 +161,9 @@ class BiopaxProcessor(object):
             ev = self._get_evidence(control)
             conversion = control.controlled
             # Sometimes there is nothing being controlled, we skip
-            # those cases.
-            if conversion is None:
+            # those cases. We also want to skip things like Modulation
+            # that don't convert anything.
+            if conversion is None or not isinstance(conversion, Conversion):
                 continue
             control_agents = flatten([self._get_primary_controller(c) for c in
                                       control.controller])
@@ -245,17 +246,18 @@ class BiopaxProcessor(object):
 
     def get_regulate_amounts(self):
         """Extract INDRA RegulateAmount Statements from the BioPAX model."""
-        temp_reacts = self.model.get_objects_by_type(bp.TemplateReaction)
-        for temp_react in temp_reacts:
-            control = temp_react.controlled_of
+        for control in self.model.get_objects_by_type(bp.Control):
+            if not isinstance(control.controlled, bp.TemplateReaction):
+                continue
+            temp_react = control.controlled
             ev = self._get_evidence(control)
             stmt_type = IncreaseAmount if control.control_type == 'ACTIVATION' \
                 else DecreaseAmount
-            controller_agents = self._get_primary_controller(control.controller)
-            products = temp_react.right
-            for product in products:
+            control_agents = flatten([self._get_primary_controller(c) for c in
+                                      control.controller])
+            for product in temp_react.product:
                 product_agents = self._get_agents_from_entity(product)
-                for subj, obj in itertools.product(_listify(controller_agents),
+                for subj, obj in itertools.product(_listify(control_agents),
                                                    _listify(product_agents)):
                     stmt = stmt_type(subj, obj, evidence=ev)
                     self.statements.append(stmt)
