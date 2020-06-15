@@ -316,17 +316,20 @@ class BiopaxProcessor(object):
     def find_gdp_gtp_complex(self, cplxes):
         for cplx in cplxes:
             members = self._get_complex_members(cplx)
-            if len(members) != 2:
-                continue
             gdp_gtp_idx = None
+            ras_agent = None
             for idx, member in enumerate(members):
                 if isinstance(member, Agent) \
                         and member.name in {'GDP', 'GTP'}:
                     gdp_gtp_idx = idx
                     break
-            if gdp_gtp_idx is None:
+            for idx, member in enumerate(members):
+                if isinstance(member, Agent) \
+                        and 'HGNC' in member.db_refs:
+                    ras_agent = member
+            if gdp_gtp_idx is None or ras_agent is None:
                 continue
-            return members[1 - gdp_gtp_idx], members[gdp_gtp_idx].name
+            return ras_agent, members[gdp_gtp_idx].name
         return None, None
 
     def get_gap_gef(self):
