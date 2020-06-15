@@ -10,12 +10,14 @@ from pybiopax import model_to_owl_file
 
 from indra.databases import hgnc_client, uniprot_client, chebi_client
 from indra.statements import *
-from indra.util import decode_obj
+from indra.util import decode_obj, flatten
 
 logger = logging.getLogger(__name__)
 
 # TODO:
 # - Extract cellularLocation from each PhysicalEntity
+# - Extract and represent FragmentFeatures
+# - Extract and represent BindingFeatures
 # - Look at participantStoichiometry within BiochemicalReaction
 # - Check whether to use Control or only Catalysis (Control might not
 #   be direct)
@@ -47,6 +49,7 @@ class BiopaxProcessor(object):
         self.statements = []
         self._mod_conditions = {}
         self._activity_conditions = {}
+        self._agents = {}
 
     def print_statements(self):
         """Print all INDRA Statements collected by the processors."""
@@ -112,6 +115,9 @@ class BiopaxProcessor(object):
 
     def extract_features(self):
         for feature in self.model.get_objects_by_type(bp.EntityFeature):
+            # TODO: handle BindingFeatures and FragmentFeatures here
+            if not isinstance(feature, bp.ModificationFeature):
+                continue
             mf_type = get_modification_type(feature)
             if mf_type == 'modification':
                 mod = self.mod_condition_from_mod_feature(feature)
@@ -150,8 +156,11 @@ class BiopaxProcessor(object):
             # those cases.
             if conversion is None:
                 continue
-            control_agents = [self._get_primary_controller(c) for c in
-                              control.controller]
+            control_agents = flatten([self._get_primary_controller(c) for c in
+                                      control.controller])
+            control_agents = [c for c in control_agents if c is not None]
+            if not control_agents:
+                continue
             for inp, outp in self.find_matching_left_right(conversion):
                 inp_agents = self._get_agents_from_entity(inp)
                 gained_mods, lost_mods, activity_change = \
@@ -173,6 +182,8 @@ class BiopaxProcessor(object):
                     for enz, sub in \
                             itertools.product(_listify(control_agents),
                                               _listify(inp_agents)):
+                        assert isinstance(enz, Agent)
+                        assert isinstance(sub, Agent)
                         stmt = stmt_class(enz, sub, mod.residue,
                                           mod.position, evidence=ev)
                         self.statements.append(stmt)
@@ -189,6 +200,8 @@ class BiopaxProcessor(object):
             for subj, obj in \
                     itertools.product(_listify(control_agents),
                                       _listify(inp_agents)):
+                assert isinstance(subj, Agent)
+                assert isinstance(obj, Agent)
                 stmt = stmt_class(subj, obj, 'activity',
                                   evidence=ev)
                 self.statements.append(stmt)
@@ -210,6 +223,7 @@ class BiopaxProcessor(object):
                 # don't care don't write semantics. Therefore only the
                 # gained_mods are listed in the ActiveForm as Agent
                 # conditions.
+                assert isinstance(agent, Agent)
                 if gained_mods:
                     ag = copy.deepcopy(agent)
                     ag.mods = gained_mods
@@ -486,8 +500,7 @@ class BiopaxProcessor(object):
                 st_dec = decode_obj(st, encoding='utf-8')
                 self.statements.append(st_dec)
 
-    @staticmethod
-    def _get_complex_members(cplx):
+    def _get_complex_members(self, cplx):
         # Get the members of a complex. This is returned as a list
         # of lists since complexes can contain other complexes. The
         # list of lists solution allows us to preserve this.
@@ -508,12 +521,12 @@ class BiopaxProcessor(object):
         members = []
         for m in member_pes:
             if _is_complex(m):
-                ms = BiopaxProcessor._get_complex_members(m)
+                ms = self._get_complex_members(m)
                 if ms is None:
                     return None
                 members.extend(ms)
             else:
-                ma = BiopaxProcessor._get_agents_from_entity(m)
+                ma = self._get_agents_from_entity(m)
                 try:
                     sto = member_stos[m.uid]
                     sto_int = int(sto)
@@ -541,11 +554,10 @@ class BiopaxProcessor(object):
                 mods.append(mc)
         return mods
 
-    @staticmethod
-    def _get_primary_controller(controller_pe):
+    def _get_primary_controller(self, controller_pe):
         # If it's not a complex, just return the corresponding agent
         if not _is_complex(controller_pe):
-            enzs = BiopaxProcessor._get_agents_from_entity(controller_pe)
+            enzs = self._get_agents_from_entity(controller_pe)
             return enzs
 
         # Identifying the "real" enzyme in a complex may not always be
@@ -555,7 +567,7 @@ class BiopaxProcessor(object):
         # set this as the enzyme to which all other members of the
         # complex are bound.
         # Get complex members
-        members = BiopaxProcessor._get_complex_members(controller_pe)
+        members = self._get_complex_members(controller_pe)
         if members is None:
             return None
         # Separate out protein and non-protein members
@@ -616,9 +628,12 @@ class BiopaxProcessor(object):
         agent = Agent(name, db_refs=db_refs, mods=mcs)
         return agent
 
-    @staticmethod
-    def _get_agents_from_entity(bpe: bp.PhysicalEntity, expand_pe=True,
-                                expand_er=True):
+    def _get_agents_from_entity(self, bpe: bp.PhysicalEntity,
+                                expand_pe=True, expand_er=True):
+        try:
+            return self._agents[bpe.uid]
+        except KeyError:
+            pass
         # If the entity has members (like a protein family),
         # we iterate over them
         if expand_pe:
@@ -626,11 +641,12 @@ class BiopaxProcessor(object):
             if members:
                 agents = []
                 for m in members:
-                    member_agents = BiopaxProcessor._get_agents_from_entity(m)
+                    member_agents = self._get_agents_from_entity(m)
                     if isinstance(member_agents, Agent):
                         agents.append(member_agents)
                     else:
                         agents.extend(member_agents)
+                self._agents[bpe.uid] = agents
                 return agents
 
         # If the entity has a reference which has members, we iterate
@@ -642,14 +658,16 @@ class BiopaxProcessor(object):
                 if members:
                     agents = []
                     for m in members:
-                        agent = BiopaxProcessor._get_agent_from_entity(m)
+                        agent = self._get_agent_from_entity(m)
                         # For entity references, we remove context
                         agent.mods = []
                         agents.append(agent)
+                    self._agents[bpe.uid] = agents
                     return agents
         # If it is a single entity, we get its name and database
         # references
-        agent = BiopaxProcessor._get_agent_from_entity(bpe)
+        agent = self._get_agent_from_entity(bpe)
+        self._agents[bpe.uid] = agent
         return agent
 
     @staticmethod
@@ -1137,11 +1155,13 @@ def _is_simple_physical_entity(pe):
 
 
 def _is_modification(feature):
-    return get_modification_type(feature) == 'modification'
+    return isinstance(feature, bp.ModificationFeature) and \
+        get_modification_type(feature) == 'modification'
 
 
 def _is_activity(feature):
-    return get_modification_type(feature) in {'activity', 'inactivity'}
+    return isinstance(feature, bp.ModificationFeature) and \
+        get_modification_type(feature) in {'activity', 'inactivity'}
 
 
 def get_modification_type(mf: bp.ModificationFeature):
