@@ -967,7 +967,13 @@ class BiopaxProcessor(object):
             # Uniprot ID with the one associated with the HGNC ID
             elif uniprot_id and hgnc_id:
                 hgnc_up_id = hgnc_client.get_uniprot_id(hgnc_id)
-                if hgnc_up_id != uniprot_id:
+                if hgnc_up_id and ',' in hgnc_up_id:
+                    up_ids = hgnc_up_id.split(', ')
+                    if uniprot_id not in up_ids:
+                        logger.info('Uniprot ID %s does not match %s obtained '
+                                    'from HGNC ID %s' %
+                                    (uniprot_id, hgnc_up_id, hgnc_id))
+                elif hgnc_up_id != uniprot_id:
                     logger.info('Uniprot ID %s does not match %s obtained '
                                 'from HGNC ID %s' %
                                 (uniprot_id, hgnc_up_id, hgnc_id))
