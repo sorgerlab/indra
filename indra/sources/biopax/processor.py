@@ -81,26 +81,6 @@ class BiopaxProcessor(object):
         self.statements = list({stmt.get_hash(shallow=False, refresh=True): stmt
                                 for stmt in self.statements}.values())
 
-    @staticmethod
-    def find_matching_left_right(conversion):
-        matches = []
-
-        left_simple = conversion.left[:]
-        for pe in left_simple:
-            if _is_complex(pe):
-                left_simple += pe.component
-        right_simple = conversion.right[:]
-        for pe in right_simple:
-            if _is_complex(pe):
-                right_simple += pe.component
-
-        for inp, outp in itertools.product(left_simple, right_simple):
-            if _is_simple_physical_entity(inp) and \
-                    _is_simple_physical_entity(outp):
-                if inp.entity_reference == outp.entity_reference:
-                    matches.append((inp, outp))
-        return matches
-
     def feature_delta(self, from_pe: bp.PhysicalEntity,
                       to_pe: bp.PhysicalEntity):
         # First deal with activity changes
@@ -166,6 +146,24 @@ class BiopaxProcessor(object):
                 complexes = _get_combinations(members)
                 for c in complexes:
                     self.statements.append(Complex(c, ev))
+
+    @staticmethod
+    def find_matching_left_right(conversion: bp.Conversion):
+        matches = []
+
+        left_simple = []
+        for pe in conversion.left:
+            left_simple += expand_to_simple_physical_entities(pe)
+        right_simple = []
+        for pe in conversion.right:
+            right_simple += expand_to_simple_physical_entities(pe)
+
+        for inp, outp in itertools.product(left_simple, right_simple):
+            if _is_simple_physical_entity(inp) and \
+                    _is_simple_physical_entity(outp):
+                if inp.entity_reference.uid == outp.entity_reference.uid:
+                    matches.append((inp, outp))
+        return matches
 
     def _conversion_state_iter(self):
         for control in self.model.get_objects_by_type(bp.Control):
@@ -353,7 +351,6 @@ class BiopaxProcessor(object):
             # that don't convert anything.
             if not isinstance(conversion, bp.Conversion):
                 continue
-            ev = self._get_evidence(control)
             left_complexes = [bpe for bpe in conversion.left
                               if _is_complex(bpe)]
             right_complexes = [bpe for bpe in conversion.right
@@ -1118,6 +1115,22 @@ def _remove_redundant_mods(stmt):
     stmt.sub = copy.deepcopy(stmt.sub)
     stmt.sub.mods = [mc for mc in stmt.sub.mods if not matches(mc, stmt_mc)]
     return stmt
+
+
+def expand_to_simple_physical_entities(pe: bp.PhysicalEntity):
+    simple_pes = []
+    if _is_complex(pe):
+        for component_pe in pe.component:
+            simple_pes += expand_to_simple_physical_entities(component_pe)
+    elif pe.member_physical_entity:
+        for member_pe in pe.member_physical_entity:
+            member_pe_dressed = copy.deepcopy(member_pe)
+            member_pe_dressed.feature += copy.deepcopy(pe.feature)
+            simple_pes += expand_to_simple_physical_entities(member_pe_dressed)
+    else:
+        simple_pes.append(pe)
+    return simple_pes
+
 
 
 generic_chebi_ids = {
