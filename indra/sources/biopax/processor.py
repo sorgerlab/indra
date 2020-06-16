@@ -251,7 +251,7 @@ class BiopaxProcessor(object):
                 if lost_mods:
                     ag = copy.deepcopy(agent)
                     ag.mods = lost_mods
-                    stmt = ActiveForm(ag, 'activity', ~is_active, evidence=ev)
+                    stmt = ActiveForm(ag, 'activity', not is_active, evidence=ev)
                     self.statements.append(stmt)
 
     def get_regulate_amounts(self):
