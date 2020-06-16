@@ -500,8 +500,11 @@ class BiopaxProcessor(object):
             logger.debug(msg)
             return None
 
-    @staticmethod
-    def _get_agent_from_entity(bpe):
+    def _get_agent_from_entity(self, bpe):
+        try:
+            return copy.deepcopy(self._agents[bpe.uid])
+        except KeyError:
+            pass
         name = BiopaxProcessor._get_element_name(bpe)
         db_refs = BiopaxProcessor._get_db_refs(bpe)
         if _is_protein(bpe):
@@ -513,10 +516,6 @@ class BiopaxProcessor(object):
 
     def _get_agents_from_entity(self, bpe: bp.PhysicalEntity,
                                 expand_pe=True, expand_er=True):
-        try:
-            return copy.deepcopy(self._agents[bpe.uid])
-        except KeyError:
-            pass
         # If the entity has members (like a protein family),
         # we iterate over them
         if expand_pe:
@@ -529,7 +528,6 @@ class BiopaxProcessor(object):
                         agents.append(member_agents)
                     else:
                         agents.extend(member_agents)
-                self._agents[bpe.uid] = agents
                 return agents
 
         # If the entity has a reference which has members, we iterate
@@ -545,12 +543,10 @@ class BiopaxProcessor(object):
                         # For entity references, we remove context
                         agent.mods = []
                         agents.append(agent)
-                    self._agents[bpe.uid] = agents
                     return agents
         # If it is a single entity, we get its name and database
         # references
         agent = self._get_agent_from_entity(bpe)
-        self._agents[bpe.uid] = agent
         return agent
 
     @staticmethod
