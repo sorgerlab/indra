@@ -84,7 +84,17 @@ class BiopaxProcessor(object):
     @staticmethod
     def find_matching_left_right(conversion):
         matches = []
-        for inp, outp in itertools.product(conversion.left, conversion.right):
+
+        left_simple = conversion.left[:]
+        for pe in left_simple:
+            if _is_complex(pe):
+                left_simple += pe.component
+        right_simple = conversion.right[:]
+        for pe in right_simple:
+            if _is_complex(pe):
+                right_simple += pe.component
+
+        for inp, outp in itertools.product(left_simple, right_simple):
             if _is_simple_physical_entity(inp) and \
                     _is_simple_physical_entity(outp):
                 if inp.entity_reference == outp.entity_reference:
@@ -449,7 +459,7 @@ class BiopaxProcessor(object):
         for m in members:
             if isinstance(m, Agent):
                 if m.db_refs.get('UP') or \
-                    m.db_refs.get('HGNC'):
+                        m.db_refs.get('HGNC'):
                     protein_members.append(m)
                 else:
                     non_protein_members.append(m)
@@ -504,7 +514,7 @@ class BiopaxProcessor(object):
     def _get_agents_from_entity(self, bpe: bp.PhysicalEntity,
                                 expand_pe=True, expand_er=True):
         try:
-            return self._agents[bpe.uid]
+            return copy.deepcopy(self._agents[bpe.uid])
         except KeyError:
             pass
         # If the entity has members (like a protein family),
