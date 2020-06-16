@@ -204,6 +204,7 @@ class BiopaxProcessor(object):
                         assert isinstance(sub, Agent)
                         stmt = stmt_class(enz, sub, mod.residue,
                                           mod.position, evidence=ev)
+                        stmt = _remove_redundant_mods(stmt)
                         self.statements.append(stmt)
 
     def get_regulate_activities(self):
@@ -1103,6 +1104,20 @@ def _list_listify(lst):
 
 def _get_combinations(lst):
     return itertools.product(*_list_listify(lst))
+
+
+def _remove_redundant_mods(stmt):
+    """Remove redundant Agent states that are modified by statement."""
+    # A custom matches function is used so we also match conditions
+    # where the polarities are opposite
+    def matches(mc1, mc2):
+        return mc1.mod_type == mc2.mod_type and \
+            mc1.residue == mc2.residue and \
+            mc1.position == mc2.position
+    stmt_mc = stmt._get_mod_condition()
+    stmt.sub = copy.deepcopy(stmt.sub)
+    stmt.sub.mods = [mc for mc in stmt.sub.mods if not matches(mc, stmt_mc)]
+    return stmt
 
 
 generic_chebi_ids = {
