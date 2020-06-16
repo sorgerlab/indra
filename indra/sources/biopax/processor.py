@@ -371,7 +371,7 @@ class BiopaxProcessor(object):
                 st = stmt_type(gap_gef, ras, evidence=ev)
                 self.statements.append(st)
 
-    def _get_complex_members(self, cplx):
+    def _get_complex_members(self, cplx: bp.Complex):
         # Get the members of a complex. This is returned as a list
         # of lists since complexes can contain other complexes. The
         # list of lists solution allows us to preserve this.
@@ -379,8 +379,8 @@ class BiopaxProcessor(object):
 
         # Make a dict of member URIs and their
         # corresponding stoichiometries
-        member_stos = {mpe.uid: mpe.stoichiometric_coefficient
-                       for mpe in cplx.component_stoichiometry}
+        member_stos = {cs.physical_entity.uid: cs.stoichiometric_coefficient
+                       for cs in cplx.component_stoichiometry}
 
         # Some complexes do not have any members explicitly listed
         if not member_pes:
@@ -400,10 +400,9 @@ class BiopaxProcessor(object):
                 ma = self._get_agents_from_entity(m)
                 try:
                     sto = member_stos[m.uid]
-                    sto_int = int(sto)
+                    sto_int = int(float(sto))  # This is needed for e.g., '1.0'
                 except KeyError:
                     # No stoichiometry information - assume it is 1
-                    members.append(ma)
                     sto_int = 1
                 for i in range(sto_int):
                     members.append(ma)
