@@ -1210,7 +1210,7 @@ class GetEvidence(Resource):
 
         stmts_out = _get_matching_stmts(stmt)
         agent_name_list = [ag.name for ag in stmt.agent_list()]
-        stmts_out = stmts = ac.filter_concept_names(
+        stmts_out = stmts = filter_concept_names(
             stmts_out, agent_name_list, 'all')
         return _return_stmts(stmts_out)
 
