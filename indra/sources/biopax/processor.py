@@ -153,16 +153,21 @@ class BiopaxProcessor(object):
 
         left_simple = []
         for pe in conversion.left:
-            left_simple += expand_to_simple_physical_entities(pe)
+            left_simple += expand_complex(pe)
         right_simple = []
         for pe in conversion.right:
-            right_simple += expand_to_simple_physical_entities(pe)
+            right_simple += expand_complex(pe)
 
         for inp, outp in itertools.product(left_simple, right_simple):
-            if _is_simple_physical_entity(inp) and \
-                    _is_simple_physical_entity(outp):
-                if inp.entity_reference.uid == outp.entity_reference.uid:
+            inp_type = infer_pe_type(inp)
+            outp_type = infer_pe_type(outp)
+            if inp_type != outp_type:
+                continue
+            if inp_type in {'complex_named', 'complex_family'}:
+                if inp.uid == outp.uid:
                     matches.append((inp, outp))
+            elif inp.entity_reference.uid == outp.entity_reference.uid:
+                matches.append((inp, outp))
         return matches
 
     def _control_conversion_iter(self):
@@ -184,87 +189,80 @@ class BiopaxProcessor(object):
                     continue
                 primary_controller_agents = \
                     _listify(self._get_agents_from_entity(primary_controller))
-                yield primary_controller_agents, ev, control, conversion
+                for primary_controller_agent in primary_controller_agents:
+                    yield primary_controller_agent, ev, control, conversion
 
     def _conversion_state_iter(self):
-        for primary_controller_agents, ev, control, conversion in \
+        for primary_controller_agent, ev, control, conversion in \
                 self._control_conversion_iter():
             for inp, outp in self.find_matching_left_right(conversion):
-                inp_agents = self._get_agents_from_entity(inp)
-                gained_mods, lost_mods, activity_change = \
-                    self.feature_delta(inp, outp)
-                yield primary_controller_agents, inp_agents, gained_mods, \
-                    lost_mods, activity_change, ev
+                for inp_simple, outp_simple in \
+                        zip(expand_family(inp),
+                            expand_family(outp)):
+                    gained_mods, lost_mods, activity_change = \
+                        self.feature_delta(inp_simple, outp_simple)
+                    inp_agent = self._get_agent_from_entity(inp_simple)
+                    yield primary_controller_agent, inp_agent, gained_mods, \
+                        lost_mods, activity_change, ev
 
     def get_modifications(self):
         """Extract INDRA Modification Statements from the BioPAX model."""
-        for control_agents, inp_agents, gained_mods, lost_mods, \
+        for enz, sub, gained_mods, lost_mods, \
                 activity_change, ev in self._conversion_state_iter():
             for mods, is_gain in ((gained_mods, True), (lost_mods, False)):
                 for mod in mods:
                     stmt_class = modtype_to_modclass[mod.mod_type]
                     if not is_gain:
                         stmt_class = modclass_to_inverse[stmt_class]
-                    for enz, sub in \
-                            itertools.product(_listify(control_agents),
-                                              _listify(inp_agents)):
-                        assert isinstance(enz, Agent)
-                        assert isinstance(sub, Agent)
-                        stmt = stmt_class(enz, sub, mod.residue,
-                                          mod.position, evidence=ev)
-                        stmt = _remove_redundant_mods(stmt)
-                        self.statements.append(stmt)
+                    stmt = stmt_class(enz, sub, mod.residue,
+                                      mod.position, evidence=ev)
+                    stmt = _remove_redundant_mods(stmt)
+                    self.statements.append(stmt)
 
     def get_regulate_activities(self):
         """Get Activation/Inhibition INDRA Statements from the BioPAX model."""
-        for control_agents, inp_agents, gained_mods, lost_mods, \
+        for subj, obj, gained_mods, lost_mods, \
                 activity_change, ev in self._conversion_state_iter():
             # We don't want to have gained or lost modification features
             if not activity_change or (gained_mods or lost_mods):
                 continue
             stmt_class = Activation if activity_change == 'active' \
                 else Inhibition
-            for subj, obj in \
-                    itertools.product(_listify(control_agents),
-                                      _listify(inp_agents)):
-                assert isinstance(subj, Agent)
-                assert isinstance(obj, Agent)
-                stmt = stmt_class(subj, obj, 'activity',
-                                  evidence=ev)
-                self.statements.append(stmt)
+            stmt = stmt_class(subj, obj, 'activity',
+                              evidence=ev)
+            self.statements.append(stmt)
 
     def get_activity_modification(self):
         """Extract INDRA ActiveForm statements from the BioPAX model."""
-        for control_agents, inp_agents, gained_mods, lost_mods, \
+        for _, agent, gained_mods, lost_mods, \
                 activity_change, ev in self._conversion_state_iter():
             # We have to have both a modification change and an activity
             # change
             if not (gained_mods or lost_mods) or not activity_change:
                 continue
             is_active = (activity_change == 'active')
-            for agent in _listify(inp_agents):
-                # NOTE: with the ActiveForm representation we cannot
-                # separate static_mods and gained_mods. We assume here
-                # that the static_mods are inconsequential and therefore
-                # are not mentioned as an Agent condition, following
-                # don't care don't write semantics. Therefore only the
-                # gained_mods are listed in the ActiveForm as Agent
-                # conditions.
-                assert isinstance(agent, Agent)
-                if gained_mods:
-                    ag = copy.deepcopy(agent)
-                    ag.mods = gained_mods
-                    stmt = ActiveForm(ag, 'activity', is_active, evidence=ev)
-                    self.statements.append(stmt)
-                if lost_mods:
-                    ag = copy.deepcopy(agent)
-                    ag.mods = lost_mods
-                    stmt = ActiveForm(ag, 'activity', not is_active, evidence=ev)
-                    self.statements.append(stmt)
+            # NOTE: with the ActiveForm representation we cannot
+            # separate static_mods and gained_mods. We assume here
+            # that the static_mods are inconsequential and therefore
+            # are not mentioned as an Agent condition, following
+            # don't care don't write semantics. Therefore only the
+            # gained_mods are listed in the ActiveForm as Agent
+            # conditions.
+            assert isinstance(agent, Agent)
+            if gained_mods:
+                ag = copy.deepcopy(agent)
+                ag.mods = gained_mods
+                stmt = ActiveForm(ag, 'activity', is_active, evidence=ev)
+                self.statements.append(stmt)
+            if lost_mods:
+                ag = copy.deepcopy(agent)
+                ag.mods = lost_mods
+                stmt = ActiveForm(ag, 'activity', not is_active, evidence=ev)
+                self.statements.append(stmt)
 
     def get_regulate_amounts(self):
         """Extract INDRA RegulateAmount Statements from the BioPAX model."""
-        for primary_controller_agents, ev, control, conversion in \
+        for subj, ev, control, conversion in \
                 self._control_conversion_iter():
             if not isinstance(conversion, bp.TemplateReaction):
                 continue
@@ -272,9 +270,7 @@ class BiopaxProcessor(object):
                 else DecreaseAmount
             for product in conversion.product:
                 product_agents = self._get_agents_from_entity(product)
-                for subj, obj in \
-                        itertools.product(_listify(primary_controller_agents),
-                                          _listify(product_agents)):
+                for obj in _listify(product_agents):
                     stmt = stmt_type(subj, obj, evidence=ev)
                     self.statements.append(stmt)
 
@@ -288,7 +284,7 @@ class BiopaxProcessor(object):
         conversions as well as signaling processes via small molecules
         (e.g. lipid phosphorylation or cleavage).
         """
-        for primary_controller_agents, ev, control, conversion in \
+        for subj, ev, control, conversion in \
                 self._control_conversion_iter():
             # We only extract conversions for small molecules
             if not all(_is_small_molecule(pe)
@@ -308,9 +304,8 @@ class BiopaxProcessor(object):
                         obj_list.append(agent)
 
             # Make statements
-            for subj in primary_controller_agents:
-                st = Conversion(subj, obj_from, obj_to, evidence=ev)
-                self.statements.append(st)
+            st = Conversion(subj, obj_from, obj_to, evidence=ev)
+            self.statements.append(st)
 
     def find_gdp_gtp_complex(self, cplxes):
         for cplx in cplxes:
@@ -334,7 +329,7 @@ class BiopaxProcessor(object):
         return None, None
 
     def get_gap_gef(self):
-        for primary_controller_agents, ev, control, conversion in \
+        for gap_gef, ev, control, conversion in \
                 self._control_conversion_iter():
             left_complexes = [bpe for bpe in conversion.left
                               if _is_complex(bpe)]
@@ -351,9 +346,7 @@ class BiopaxProcessor(object):
             else:
                 continue
 
-            for gap_gef, ras in \
-                    itertools.product(_listify(primary_controller_agents),
-                                      _listify(left_ras)):
+            for ras in _listify(left_ras):
                 st = stmt_type(gap_gef, ras, evidence=ev)
                 self.statements.append(st)
 
@@ -1017,19 +1010,21 @@ def _remove_redundant_mods(stmt):
     return stmt
 
 
-def expand_to_simple_physical_entities(pe: bp.PhysicalEntity):
+def expand_complex(pe: bp.PhysicalEntity):
     simple_pes = []
-    if _is_complex(pe):
+    if _is_complex(pe) and pe.component:
         for component_pe in pe.component:
-            simple_pes += expand_to_simple_physical_entities(component_pe)
-    #elif pe.member_physical_entity:
-    #    for member_pe in pe.member_physical_entity:
-    #        member_pe_dressed = copy.deepcopy(member_pe)
-    #        member_pe_dressed.feature += copy.deepcopy(pe.feature)
-    #        simple_pes += expand_to_simple_physical_entities(member_pe_dressed)
+            simple_pes += expand_complex(component_pe)
     else:
         simple_pes.append(pe)
     return simple_pes
+
+
+def expand_family(pe: bp.PhysicalEntity):
+    if pe.member_physical_entity:
+        return pe.member_physical_entity
+    else:
+        return [pe]
 
 
 def infer_pe_type(pe: bp.PhysicalEntity):
