@@ -1,4 +1,3 @@
-import types
 import json
 import logging
 import inspect
@@ -154,7 +153,7 @@ class AssemblyPipeline():
         kwargs : kwargs
             Kwargs that are passed to func when calling it.
         """
-        if isinstance(func, types.FunctionType):
+        if inspect.isfunction(func):
             func_name = func.__name__
             if func_name not in pipeline_functions:
                 register_pipeline(func)
@@ -183,7 +182,7 @@ class AssemblyPipeline():
         kwargs : kwargs
             Kwargs that are passed to func when calling it.
         """
-        if isinstance(func, types.FunctionType):
+        if inspect.isfunction(func):
             func_name = func.__name__
             if func_name not in pipeline_functions:
                 register_pipeline(func)
@@ -387,7 +386,7 @@ class RunnableArgument():
         value.
     """
     def __init__(self, func, *args, **kwargs):
-        if isinstance(func, types.FunctionType):
+        if inspect.isfunction(func):
             self.func_name = func.__name__
             if self.func_name not in pipeline_functions:
                 register_pipeline(func)
@@ -421,7 +420,7 @@ def jsonify_arg_input(arg):
         return arg.to_json()
     # If a function object or name of a function is provided, we assume it
     # does not have to be run (function itself is argument).
-    if isinstance(arg, types.FunctionType):
+    if inspect.isfunction(arg):
         func_name = arg.__name__
         if func_name not in pipeline_functions:
             register_pipeline(arg)
@@ -429,7 +428,7 @@ def jsonify_arg_input(arg):
     if isinstance(arg, str) and arg in pipeline_functions:
         return {'function': arg, 'no_run': True}
     # For some functions Statement type has to be argument
-    if isinstance(arg, types.ClassType) and issubclass(arg, Statement):
+    if inspect.isclass(arg) and issubclass(arg, Statement):
         return {'stmt_type': arg.__name__}
     # Argument is a simple value and can be stored as provided
     return arg
