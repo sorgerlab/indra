@@ -170,13 +170,15 @@ class BiopaxProcessor(object):
                 matches.append((inp, outp))
         return matches
 
-    def _control_conversion_iter(self):
+    def _control_conversion_iter(self, conversion_type):
         for control in self.model.get_objects_by_type(bp.Control):
+            if control.uid == 'TemplateReactionRegulation_098f14bf2c085ddd214fd7bc0379def6':
+                breakpoint()
             conversion = control.controlled
             # Sometimes there is nothing being controlled, we skip
             # those cases. We also want to skip things like Modulation
             # that don't convert anything.
-            if not isinstance(conversion, bp.Conversion):
+            if not isinstance(conversion, conversion_type):
                 continue
             ev = self._get_evidence(control)
             for controller_pe in control.controller:
@@ -194,7 +196,7 @@ class BiopaxProcessor(object):
 
     def _conversion_state_iter(self):
         for primary_controller_agent, ev, control, conversion in \
-                self._control_conversion_iter():
+                self._control_conversion_iter(bp.Conversion):
             for inp, outp in self.find_matching_left_right(conversion):
                 for inp_simple, outp_simple in \
                         zip(expand_family(inp),
@@ -263,7 +265,7 @@ class BiopaxProcessor(object):
     def get_regulate_amounts(self):
         """Extract INDRA RegulateAmount Statements from the BioPAX model."""
         for subj, ev, control, conversion in \
-                self._control_conversion_iter():
+                self._control_conversion_iter(bp.TemplateReaction):
             if not isinstance(conversion, bp.TemplateReaction):
                 continue
             stmt_type = IncreaseAmount if control.control_type == 'ACTIVATION' \
@@ -285,7 +287,7 @@ class BiopaxProcessor(object):
         (e.g. lipid phosphorylation or cleavage).
         """
         for subj, ev, control, conversion in \
-                self._control_conversion_iter():
+                self._control_conversion_iter(bp.Conversion):
             # We only extract conversions for small molecules
             if not all(_is_small_molecule(pe)
                        for pe in (conversion.left + conversion.right)):
@@ -330,7 +332,7 @@ class BiopaxProcessor(object):
 
     def get_gap_gef(self):
         for gap_gef, ev, control, conversion in \
-                self._control_conversion_iter():
+                self._control_conversion_iter(bp.Conversion):
             left_complexes = [bpe for bpe in conversion.left
                               if _is_complex(bpe)]
             right_complexes = [bpe for bpe in conversion.right
