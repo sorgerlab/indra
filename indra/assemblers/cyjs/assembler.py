@@ -325,15 +325,21 @@ class CyJSAssembler(object):
         self._existing_nodes[node_key] = node_id
         node_name = agent.name
         node_name = node_name.replace('_', ' ')
-        expanded_families = bio_ontology.get_children(*agent.get_grounding())
-        expanded_families = [ch for ch in expanded_families if
-                             ch[0] == 'HGNC']
+        if 'FPLX' in db_refs:
+            expanded_families = bio_ontology.get_children(*agent.get_grounding(),
+                                                          ns_filter={'HGNC'})
+        else:
+            expanded_families = []
         members = {}
         for member in expanded_families:
             member_db_refs = {member[0]: member[1]}
             member_db_refs = standardize_db_refs(member_db_refs)
             gene_name = bio_ontology.get_name(*member)
-            members[gene_name] = {'db_refs': member_db_refs}
+            members[gene_name] = {'db_refs': {}}
+            for dbns, dbid in member_db_refs.items():
+                url = get_identifiers_url(dbns, dbid)
+                if url:
+                    members[gene_name]['db_refs'][dbns] = url
         node = {'data': {'id': node_id, 'name': node_name,
                          'db_refs': db_refs, 'parent': '',
                          'members': members, 'uuid_list': [uuid]}}
