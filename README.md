@@ -267,10 +267,9 @@ which are described in detail in the
 
 
 ## INDRA REST API
-A REST API for INDRA is available at http://api.indra.bio:8000 with
-documentation at http://www.indra.bio/rest_api/docs. Note that the REST API
-is ideal for prototyping and for building light-weight web apps, but should
-not be used for large reading and assembly workflows.
+A REST API for INDRA is available at http://api.indra.bio:8000.
+Note that the REST API is ideal for prototyping and for building light-weight
+web apps, but should not be used for large reading and assembly workflows.
 
 
 ## INDRA Docker
