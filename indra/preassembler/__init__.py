@@ -350,6 +350,7 @@ class Preassembler(object):
     def _generate_id_maps(self, unique_stmts, poolsize=None,
                           size_cutoff=100, split_idx=None):
         """Connect statements using their refinement relationships."""
+        self.ontology.initialize()
         if len(unique_stmts) > 10000:
             self.ontology._build_transitive_closure()
         # Check arguments relating to multiprocessing
