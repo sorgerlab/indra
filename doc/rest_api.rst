@@ -8,7 +8,8 @@ public web service at http://api.indra.bio:8000 and can also be run locally.
 
 Local installation and use
 --------------------------
-Running the REST service requires the `flask`, `flask_restx` and `flask_cors`
+Running the REST service requires the `flask`, `flask_restx`, `flask_cors`
+and `docstring-parser`
 packages to be installed in addition to all the other requirements of INDRA.
 The REST service can be launched by running `api.py` in the `rest_api` folder
 within `indra`.
