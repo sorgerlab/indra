@@ -165,7 +165,7 @@ class BiopaxProcessor(object):
                     matches.append((inp, outp))
         return matches
 
-    def _conversion_state_iter(self):
+    def _control_conversion_iter(self):
         for control in self.model.get_objects_by_type(bp.Control):
             conversion = control.controlled
             # Sometimes there is nothing being controlled, we skip
@@ -173,17 +173,27 @@ class BiopaxProcessor(object):
             # that don't convert anything.
             if not isinstance(conversion, bp.Conversion):
                 continue
-            control_agents = flatten([self._get_primary_controller(c) for c in
-                                      control.controller])
-            control_agents = [c for c in control_agents if c is not None]
-            if not control_agents:
-                continue
             ev = self._get_evidence(control)
+            for controller_pe in control.controller:
+                # We skip e.g., Pathway controllers
+                if not isinstance(controller_pe, bp.PhysicalEntity):
+                    continue
+                primary_controller = \
+                    self._get_primary_controller(controller_pe)
+                if not primary_controller:
+                    continue
+                primary_controller_agents = \
+                    _listify(self._get_agents_from_entity(primary_controller))
+                yield primary_controller_agents, ev, control, conversion
+
+    def _conversion_state_iter(self):
+        for primary_controller_agents, ev, control, conversion in \
+                self._control_conversion_iter():
             for inp, outp in self.find_matching_left_right(conversion):
                 inp_agents = self._get_agents_from_entity(inp)
                 gained_mods, lost_mods, activity_change = \
                     self.feature_delta(inp, outp)
-                yield control_agents, inp_agents, gained_mods, \
+                yield primary_controller_agents, inp_agents, gained_mods, \
                     lost_mods, activity_change, ev
 
     def get_modifications(self):
@@ -254,22 +264,17 @@ class BiopaxProcessor(object):
 
     def get_regulate_amounts(self):
         """Extract INDRA RegulateAmount Statements from the BioPAX model."""
-        for control in self.model.get_objects_by_type(bp.Control):
-            if not isinstance(control.controlled, bp.TemplateReaction):
+        for primary_controller_agents, ev, control, conversion in \
+                self._control_conversion_iter():
+            if not isinstance(conversion, bp.TemplateReaction):
                 continue
-            temp_react = control.controlled
-            ev = self._get_evidence(control)
             stmt_type = IncreaseAmount if control.control_type == 'ACTIVATION' \
                 else DecreaseAmount
-            control_agents = flatten([self._get_primary_controller(c) for c in
-                                      control.controller])
-            if not control_agents:
-                continue
-            ev = self._get_evidence(control)
-            for product in temp_react.product:
+            for product in conversion.product:
                 product_agents = self._get_agents_from_entity(product)
-                for subj, obj in itertools.product(_listify(control_agents),
-                                                   _listify(product_agents)):
+                for subj, obj in \
+                        itertools.product(_listify(primary_controller_agents),
+                                          _listify(product_agents)):
                     stmt = stmt_type(subj, obj, evidence=ev)
                     self.statements.append(stmt)
 
@@ -283,24 +288,11 @@ class BiopaxProcessor(object):
         conversions as well as signaling processes via small molecules
         (e.g. lipid phosphorylation or cleavage).
         """
-        for control in self.model.get_objects_by_type(bp.Control):
-            conversion = control.controlled
-            # Sometimes there is nothing being controlled, we skip
-            # those cases. We also want to skip things like Modulation
-            # that don't convert anything.
-            if not isinstance(conversion, bp.Conversion):
-                continue
-
+        for primary_controller_agents, ev, control, conversion in \
+                self._control_conversion_iter():
             # We only extract conversions for small molecules
             if not all(_is_small_molecule(pe)
                        for pe in (conversion.left + conversion.right)):
-                continue
-
-            # Get the control agents
-            control_agents = flatten([self._get_primary_controller(c) for c in
-                                      control.controller])
-            control_agents = [c for c in control_agents if c is not None]
-            if not control_agents:
                 continue
 
             # Assemble from and to object lists
@@ -316,11 +308,9 @@ class BiopaxProcessor(object):
                         obj_list.append(agent)
 
             # Make statements
-            ev = self._get_evidence(control)
-            for subj in control_agents:
+            for subj in primary_controller_agents:
                 st = Conversion(subj, obj_from, obj_to, evidence=ev)
                 self.statements.append(st)
-        return
 
     def find_gdp_gtp_complex(self, cplxes):
         for cplx in cplxes:
@@ -344,13 +334,8 @@ class BiopaxProcessor(object):
         return None, None
 
     def get_gap_gef(self):
-        for control in self.model.get_objects_by_type(bp.Control):
-            conversion = control.controlled
-            # Sometimes there is nothing being controlled, we skip
-            # those cases. We also want to skip things like Modulation
-            # that don't convert anything.
-            if not isinstance(conversion, bp.Conversion):
-                continue
+        for primary_controller_agents, ev, control, conversion in \
+                self._control_conversion_iter():
             left_complexes = [bpe for bpe in conversion.left
                               if _is_complex(bpe)]
             right_complexes = [bpe for bpe in conversion.right
@@ -366,16 +351,9 @@ class BiopaxProcessor(object):
             else:
                 continue
 
-            # Get the control agents
-            control_agents = flatten([self._get_primary_controller(c) for c in
-                                      control.controller])
-            control_agents = [c for c in control_agents if c is not None]
-            if not control_agents:
-                continue
-
-            ev = self._get_evidence(control)
-            for gap_gef, ras in itertools.product(_listify(control_agents),
-                                                  _listify(left_ras)):
+            for gap_gef, ras in \
+                    itertools.product(_listify(primary_controller_agents),
+                                      _listify(left_ras)):
                 st = stmt_type(gap_gef, ras, evidence=ev)
                 self.statements.append(st)
 
@@ -433,13 +411,10 @@ class BiopaxProcessor(object):
         return mods
 
     def _get_primary_controller(self, controller_pe):
-        if not isinstance(controller_pe, bp.PhysicalEntity):
-            return None
-
-        # If it's not a complex, just return the corresponding agent
-        if not _is_complex(controller_pe):
-            enzs = self._get_agents_from_entity(controller_pe)
-            return enzs
+        # If it's not a real complex, just return the physical entity
+        # as is
+        if infer_pe_type(controller_pe) != 'complex':
+            return controller_pe
 
         # Identifying the "real" enzyme in a complex may not always be
         # possible.
@@ -448,55 +423,15 @@ class BiopaxProcessor(object):
         # set this as the enzyme to which all other members of the
         # complex are bound.
         # Get complex members
-        members = self._get_complex_members(controller_pe)
-        if members is None:
-            return None
         # Separate out protein and non-protein members
-        protein_members = []
-        non_protein_members = []
-        for m in members:
-            if isinstance(m, Agent):
-                if m.db_refs.get('UP') or \
-                        m.db_refs.get('HGNC'):
-                    protein_members.append(m)
-                else:
-                    non_protein_members.append(m)
-            else:
-                all_protein = True
-                for subm in m:
-                    if not (subm.db_refs.get('UP') or \
-                            subm.db_refs.get('HGNC')):
-                        all_protein = False
-                        break
-                if all_protein:
-                    protein_members.append(m)
-                else:
-                    non_protein_members.append(m)
+        protein_members = [p for p in controller_pe.component
+                           if _is_protein(p)]
         # If there is only one protein member, we can assume that
         # it is the enzyme, and everything else is just bound
         # to it.
         if len(protein_members) == 1:
-            enzs = protein_members[0]
-            # Iterate over non-protein members
-            for bound in non_protein_members:
-                if isinstance(bound, Agent):
-                    bc = BoundCondition(bound, True)
-                    if isinstance(enzs, Agent):
-                        enzs.bound_conditions.append(bc)
-                    else:
-                        for enz in enzs:
-                            enz.bound_conditions.append(bc)
-                else:
-                    msg = 'Cannot handle complex enzymes with ' + \
-                            'aggregate non-protein binding partners.'
-                    logger.debug(msg)
-                    continue
-            return enzs
-        else:
-            msg = 'Cannot handle complex enzymes with ' + \
-                    'multiple protein members.'
-            logger.debug(msg)
-            return None
+            return protein_members[0]
+        return None
 
     def _get_agent_from_entity(self, bpe):
         try:
@@ -512,39 +447,22 @@ class BiopaxProcessor(object):
         agent = Agent(name, db_refs=db_refs, mods=mcs)
         return agent
 
-    def _get_agents_from_entity(self, bpe: bp.PhysicalEntity,
-                                expand_pe=True, expand_er=True):
+    def _get_agents_from_entity(self, bpe: bp.PhysicalEntity):
         # If the entity has members (like a protein family),
         # we iterate over them
-        if expand_pe:
-            members = bpe.member_physical_entity
-            if members:
-                agents = []
-                for m in members:
-                    member_agents = self._get_agents_from_entity(m)
-                    if isinstance(member_agents, Agent):
-                        agents.append(member_agents)
-                    else:
-                        agents.extend(member_agents)
-                return agents
+        if bpe.member_physical_entity:
+            agents = []
+            for m in bpe.member_physical_entity:
+                member_agents = self._get_agents_from_entity(m)
+                if isinstance(member_agents, Agent):
+                    agents.append(member_agents)
+                else:
+                    agents.extend(member_agents)
+            return agents
 
-        # If the entity has a reference which has members, we iterate
-        # over them.
-        if expand_er:
-            er = BiopaxProcessor._get_entref(bpe)
-            if er is not None:
-                members = er.member_entity_reference
-                if members:
-                    agents = []
-                    for m in members:
-                        agent = self._get_agent_from_entity(m)
-                        # For entity references, we remove context
-                        agent.mods = []
-                        agents.append(agent)
-                    return agents
         # If it is a single entity, we get its name and database
         # references
-        agent = self._get_agent_from_entity(bpe)
+        agent = [self._get_agent_from_entity(bpe)]
         return agent
 
     @staticmethod
@@ -1070,24 +988,6 @@ def _is_entity(bpe):
     return isinstance(bpe, bp.Entity)
 
 
-def _is_catalysis(bpe):
-    """Return True if the element is Catalysis."""
-    return isinstance(bpe, bp.Catalysis)
-
-
-def _has_members(bpe):
-    if _is_reference(bpe):
-        members =  bpe.member_entity_reference
-    elif _is_entity(bpe):
-        members =  bpe.member_physical_entity
-    else:
-        return False
-    if len(members) > 0:
-        return True
-    else:
-        return False
-
-
 def _listify(lst):
     if not isinstance(lst, collections.Iterable):
         return [lst]
@@ -1122,15 +1022,29 @@ def expand_to_simple_physical_entities(pe: bp.PhysicalEntity):
     if _is_complex(pe):
         for component_pe in pe.component:
             simple_pes += expand_to_simple_physical_entities(component_pe)
-    elif pe.member_physical_entity:
-        for member_pe in pe.member_physical_entity:
-            member_pe_dressed = copy.deepcopy(member_pe)
-            member_pe_dressed.feature += copy.deepcopy(pe.feature)
-            simple_pes += expand_to_simple_physical_entities(member_pe_dressed)
+    #elif pe.member_physical_entity:
+    #    for member_pe in pe.member_physical_entity:
+    #        member_pe_dressed = copy.deepcopy(member_pe)
+    #        member_pe_dressed.feature += copy.deepcopy(pe.feature)
+    #        simple_pes += expand_to_simple_physical_entities(member_pe_dressed)
     else:
         simple_pes.append(pe)
     return simple_pes
 
+
+def infer_pe_type(pe: bp.PhysicalEntity):
+    if isinstance(pe, bp.Complex):
+        if pe.component:
+            return 'complex'
+        elif pe.member_physical_entity:
+            return 'complex_family'
+        else:
+            return 'complex_named'
+    else:
+        if pe.member_physical_entity:
+            return 'family'
+        else:
+            return 'single'
 
 
 generic_chebi_ids = {
