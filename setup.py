@@ -12,7 +12,7 @@ def main():
     install_list = ['pysb>=1.3.0,<=1.9.1', 'objectpath', 'rdflib==4.2.2',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2', 'pandas', 'ndex2==2.0.1', 'jinja2',
-                    'protmapper>=0.0.16', 'obonet']
+                    'protmapper>=0.0.16', 'obonet', 'sympy==1.3']
 
     extras_require = {
                       # Inputs and outputs
@@ -29,8 +29,7 @@ def main():
                       # Tools and analysis
                       'machine': ['pytz', 'tzlocal', 'tweepy', 'pyyaml>=5.1.0',
                                   'click'],
-                      'explanation': ['kappy==4.0.0rc1', 'paths-graph',
-                                      'sympy==1.3'],
+                      'explanation': ['kappy==4.0.0rc1', 'paths-graph'],
                       'grounding': ['adeft', 'gilda'],
                       # AWS interface and database
                       'aws': ['boto3', 'reportlab'],
