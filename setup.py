@@ -12,7 +12,7 @@ def main():
     install_list = ['pysb>=1.3.0,<=1.9.1', 'objectpath', 'rdflib==4.2.2',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2', 'pandas', 'ndex2==2.0.1', 'jinja2',
-                    'protmapper>=0.0.16', 'obonet']
+                    'protmapper>=0.0.16', 'obonet', 'sympy==1.3']
 
     extras_require = {
                       # Inputs and outputs
@@ -37,7 +37,8 @@ def main():
                       'graph': ['pygraphviz'],
                       'plot': ['matplotlib'],
                       'isi': ['nltk', 'unidecode'],
-                      'api': ['flask']
+                      'api': ['flask', 'flask_restx', 'flask_cors',
+                              'docstring-parser']
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
                                   for dep in deps})

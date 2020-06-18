@@ -84,7 +84,9 @@ def load_statements(fname, as_dict=False):
 
 
 @register_pipeline
-def map_grounding(stmts_in, **kwargs):
+def map_grounding(stmts_in, do_rename=True, grounding_map=None,
+                  misgrounding_map=None, agent_map=None, ignores=None, use_adeft=True,
+                  gilda_mode=None, grounding_map_policy='replace', **kwargs):
     """Map grounding using the GroundingMapper.
 
     Parameters
@@ -126,21 +128,19 @@ def map_grounding(stmts_in, **kwargs):
         default_agent_map, default_grounding_map, default_ignores, \
         default_misgrounding_map
     logger.info('Mapping grounding on %d statements...' % len(stmts_in))
-    do_rename = kwargs.get('do_rename', True)
-    ignores = kwargs.get('ignores', default_ignores)
-    gm = kwargs.get('grounding_map')
+    ignores = ignores if ignores else default_ignores
+    gm = grounding_map
     if not gm:
         gm = default_grounding_map
-    elif kwargs.get('grounding_map_policy') == 'extend':
+    elif grounding_map_policy == 'extend':
         default_gm = {k: v for (k, v) in default_grounding_map.items()}
         default_gm.update(gm)
         gm = default_gm
-    misgm = kwargs.get('misgrounding_map', default_misgrounding_map)
-    agent_map = kwargs.get('agent_map', default_agent_map)
+    misgm = misgrounding_map if misgrounding_map else default_misgrounding_map
+    agent_map = agent_map if agent_map else default_agent_map
     gm = GroundingMapper(gm, agent_map=agent_map,
                          misgrounding_map=misgm, ignores=ignores,
-                         use_adeft=kwargs.get('use_adeft', True),
-                         gilda_mode=kwargs.get('gilda_mode', None))
+                         use_adeft=use_adeft, gilda_mode=gilda_mode)
     stmts_out = gm.map_stmts(stmts_in, do_rename=do_rename)
     # Patch wrong locations in Translocation statements
     for stmt in stmts_out:
@@ -311,7 +311,8 @@ def merge_deltas(stmts_in):
 
 
 @register_pipeline
-def map_sequence(stmts_in, **kwargs):
+def map_sequence(stmts_in, do_methionine_offset=True,
+                 do_orthology_mapping=True, do_isoform_mapping=True, **kwargs):
     """Map sequences using the SiteMapper.
 
     Parameters
@@ -350,11 +351,11 @@ def map_sequence(stmts_in, **kwargs):
     """
     from indra.preassembler.sitemapper import SiteMapper, default_site_map
     logger.info('Mapping sites on %d statements...' % len(stmts_in))
-    kwarg_list = ['do_methionine_offset', 'do_orthology_mapping',
-                  'do_isoform_mapping']
     sm = SiteMapper(default_site_map,
                     use_cache=kwargs.pop('use_cache', False),
-                    **_filter(kwargs, kwarg_list))
+                    do_methionine_offset=do_methionine_offset,
+                    do_orthology_mapping=do_orthology_mapping,
+                    do_isoform_mapping=do_isoform_mapping)
     valid, mapped = sm.map_sites(stmts_in)
     correctly_mapped_stmts = []
     for ms in mapped:
@@ -371,7 +372,12 @@ def map_sequence(stmts_in, **kwargs):
 
 
 @register_pipeline
-def run_preassembly(stmts_in, **kwargs):
+def run_preassembly(stmts_in, return_toplevel=True, poolsize=None,
+                    size_cutoff=None, belief_scorer=None, ontology=None,
+                    matches_fun=None, refinement_fun=None, refinement_ns=None,
+                    flatten_evidence=False, flatten_evidence_collect_from=None,
+                    normalize_equivalences=False, normalize_opposites=False,
+                    normalize_ns='WM', **kwargs):
     """Run preassembly on a list of statements.
 
     Parameters
@@ -434,39 +440,33 @@ def run_preassembly(stmts_in, **kwargs):
         A list of preassembled top-level statements.
     """
     dump_pkl_unique = kwargs.get('save_unique')
-    belief_scorer = kwargs.get('belief_scorer')
-    matches_fun = kwargs.get('matches_fun')
-    refinement_fun = kwargs.get('refinement_fun')
-    refinement_ns = kwargs.get('refinement_ns')
-    use_ontology = kwargs.get('ontology', bio_ontology)
+    use_ontology = ontology if ontology is not None else bio_ontology
     be = BeliefEngine(scorer=belief_scorer, matches_fun=matches_fun)
     pa = Preassembler(use_ontology, stmts_in, matches_fun=matches_fun,
                       refinement_fun=refinement_fun,
                       refinement_ns=refinement_ns)
-    if kwargs.get('normalize_equivalences'):
+    if normalize_equivalences:
         logger.info('Normalizing equals on %d statements' % len(pa.stmts))
-        pa.normalize_equivalences(kwargs.get('normalize_ns'))
-    if kwargs.get('normalize_opposites'):
+        pa.normalize_equivalences(normalize_ns)
+    if normalize_opposites:
         logger.info('Normalizing opposites on %d statements' % len(pa.stmts))
-        pa.normalize_opposites(kwargs.get('normalize_ns'))
+        pa.normalize_opposites(normalize_ns)
 
     run_preassembly_duplicate(pa, be, save=dump_pkl_unique)
 
     dump_pkl = kwargs.get('save')
-    return_toplevel = kwargs.get('return_toplevel', True)
-    poolsize = kwargs.get('poolsize', None)
-    size_cutoff = kwargs.get('size_cutoff', 100)
+    size_cutoff = size_cutoff if size_cutoff else 100
+    if not flatten_evidence_collect_from:
+        flatten_evidence_collect_from = 'supported_by'
     options = {'save': dump_pkl, 'return_toplevel': return_toplevel,
                'poolsize': poolsize, 'size_cutoff': size_cutoff,
-               'flatten_evidence': kwargs.get('flatten_evidence', False),
-               'flatten_evidence_collect_from':
-                   kwargs.get('flatten_evidence_collect_from', 'supported_by'),
+               'flatten_evidence': flatten_evidence,
+               'flatten_evidence_collect_from': flatten_evidence_collect_from
                }
     stmts_out = run_preassembly_related(pa, be, **options)
     return stmts_out
 
 
-@register_pipeline
 def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
     """Run deduplication stage of preassembly on a list of statements.
 
@@ -495,7 +495,6 @@ def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
     return stmts_out
 
 
-@register_pipeline
 def run_preassembly_related(preassembler, beliefengine, **kwargs):
     """Run related stage of preassembly on a list of statements.
 
@@ -570,7 +569,7 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
 
 
 @register_pipeline
-def filter_by_type(stmts_in, stmt_type, **kwargs):
+def filter_by_type(stmts_in, stmt_type, invert=False, **kwargs):
     """Filter to a given statement type.
 
     Parameters
@@ -591,7 +590,6 @@ def filter_by_type(stmts_in, stmt_type, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
-    invert = kwargs.get('invert', False)
     logger.info('Filtering %d statements for type %s%s...' %
                 (len(stmts_in), 'not ' if invert else '',
                  stmt_type.__name__))
@@ -678,7 +676,8 @@ def _any_bound_condition_fails_criterion(agent, criterion):
 
 
 @register_pipeline
-def filter_grounded_only(stmts_in, **kwargs):
+def filter_grounded_only(stmts_in, score_threshold=None, remove_bound=False,
+                         **kwargs):
     """Filter to statements that have grounded agents.
 
     Parameters
@@ -700,12 +699,9 @@ def filter_grounded_only(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
-    remove_bound = kwargs.get('remove_bound', False)
-
     logger.info('Filtering %d statements for grounded agents...' % 
                 len(stmts_in))
     stmts_out = []
-    score_threshold = kwargs.get('score_threshold')
     for st in stmts_in:
         grounded = True
         for agent in st.agent_list():
@@ -759,7 +755,8 @@ def _agent_is_gene(agent, specific_only):
 
 
 @register_pipeline
-def filter_genes_only(stmts_in, **kwargs):
+def filter_genes_only(stmts_in, specific_only=False, remove_bound=False,
+                      **kwargs):
     """Filter to statements containing genes only.
 
     Parameters
@@ -782,9 +779,6 @@ def filter_genes_only(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
-    remove_bound = 'remove_bound' in kwargs and kwargs['remove_bound']
-
-    specific_only = kwargs.get('specific_only')
     logger.info('Filtering %d statements for ones containing genes only...' % 
                 len(stmts_in))
     stmts_out = []
@@ -859,7 +853,7 @@ def filter_belief(stmts_in, belief_cutoff, **kwargs):
 
 @register_pipeline
 def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
-                     **kwargs):
+                     remove_bound=False, invert=False, **kwargs):
     """Return statements that contain genes given in a list.
 
     Parameters
@@ -892,9 +886,6 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
-    invert = kwargs.get('invert', False)
-    remove_bound = kwargs.get('remove_bound', False)
-
     if policy not in ('one', 'all'):
         logger.error('Policy %s is invalid, not applying filter.' % policy)
     else:
@@ -968,7 +959,7 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
 
 
 @register_pipeline
-def filter_concept_names(stmts_in, name_list, policy, **kwargs):
+def filter_concept_names(stmts_in, name_list, policy, invert=False, **kwargs):
     """Return Statements that refer to concepts/agents given as a list of names.
 
     Parameters
@@ -993,8 +984,6 @@ def filter_concept_names(stmts_in, name_list, policy, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of filtered Statements.
     """
-    invert = kwargs.get('invert', False)
-
     if policy not in ('one', 'all'):
         logger.error('Policy %s is invalid, not applying filter.' % policy)
     else:
@@ -1038,7 +1027,8 @@ def filter_concept_names(stmts_in, name_list, policy, **kwargs):
 
 
 @register_pipeline
-def filter_by_db_refs(stmts_in, namespace, values, policy, **kwargs):
+def filter_by_db_refs(stmts_in, namespace, values, policy, invert=False,
+                      match_suffix=False, **kwargs):
     """Filter to Statements whose agents are grounded to a matching entry.
 
     Statements are filtered so that the db_refs entry (of the given namespace)
@@ -1072,9 +1062,6 @@ def filter_by_db_refs(stmts_in, namespace, values, policy, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of filtered Statements.
     """
-    invert = kwargs.get('invert', False)
-    match_suffix = kwargs.get('match_suffix', False)
-
     if policy not in ('one', 'all'):
         logger.error('Policy %s is invalid, not applying filter.' % policy)
         return
@@ -1119,7 +1106,7 @@ def filter_by_db_refs(stmts_in, namespace, values, policy, **kwargs):
 
 
 @register_pipeline
-def filter_human_only(stmts_in, **kwargs):
+def filter_human_only(stmts_in, remove_bound=False, **kwargs):
     """Filter out statements that are grounded, but not to a human gene.
 
     Parameters
@@ -1139,11 +1126,6 @@ def filter_human_only(stmts_in, **kwargs):
         A list of filtered statements.
     """
     from indra.databases import uniprot_client
-    if 'remove_bound' in kwargs and kwargs['remove_bound']:
-        remove_bound = True
-    else:
-        remove_bound = False
-
     dump_pkl = kwargs.get('save')
     logger.info('Filtering %d statements for human genes only...' %
                 len(stmts_in))
@@ -1155,7 +1137,6 @@ def filter_human_only(stmts_in, **kwargs):
             return False
         else:
             return True
-
 
     for st in stmts_in:
         human_genes = True
@@ -1493,7 +1474,6 @@ def filter_inconsequential_acts(stmts_in, whitelist=None, **kwargs):
     return stmts_out
 
 
-@register_pipeline
 def get_unreachable_mods(stmts_in):
     mods_set = {}
     for stmt in stmts_in:
@@ -1704,7 +1684,7 @@ def filter_transcription_factor(stmts_in, **kwargs):
 
 
 @register_pipeline
-def filter_uuid_list(stmts_in, uuids, **kwargs):
+def filter_uuid_list(stmts_in, uuids, invert=True, **kwargs):
     """Filter to Statements corresponding to given UUIDs
 
     Parameters
@@ -1724,7 +1704,6 @@ def filter_uuid_list(stmts_in, uuids, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
-    invert = kwargs.get('invert', False)
     logger.info('Filtering %d statements for %d UUID%s...' %
                 (len(stmts_in), len(uuids), 's' if len(uuids) > 1 else ''))
     stmts_out = []
@@ -1939,6 +1918,11 @@ def standardize_names_groundings(stmts):
     NOTE: this function is currently optimized for Influence Statements
     obtained from Eidos, Hume, Sofia and CWMS. It will possibly yield
     unexpected results for biology-specific Statements.
+
+    Parameters
+    ----------
+    stmts : list[indra.statements.Statement]
+        A list of statements whose Concept names should be standardized.
     """
     print('Standardize names to groundings')
     for stmt in stmts:
@@ -2009,7 +1993,6 @@ def rename_db_ref(stmts_in, ns_from, ns_to, **kwargs):
     return stmts_out
 
 
-@register_pipeline
 def align_statements(stmts1, stmts2, keyfun=None):
     """Return alignment of two lists of statements by key.
 

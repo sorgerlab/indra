@@ -5,7 +5,7 @@ cache:
     - $HOME/.pybel
     - $HOME/build/bgyori/indra/cache/geonames/index
 python:
-  - "3.5"
+  - "3.6"
 services:
   # Enable plotting on fake display
   - xvfb
