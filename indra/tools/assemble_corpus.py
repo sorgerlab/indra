@@ -440,7 +440,7 @@ def run_preassembly(stmts_in, return_toplevel=True, poolsize=None,
         A list of preassembled top-level statements.
     """
     dump_pkl_unique = kwargs.get('save_unique')
-    use_ontology = ontology if ontology else bio_ontology
+    use_ontology = ontology if ontology is not None else bio_ontology
     be = BeliefEngine(scorer=belief_scorer, matches_fun=matches_fun)
     pa = Preassembler(use_ontology, stmts_in, matches_fun=matches_fun,
                       refinement_fun=refinement_fun,

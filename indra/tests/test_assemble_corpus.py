@@ -237,18 +237,19 @@ def test_run_preassembly_all_stmts():
 
 
 def _get_extended_wm_hierarchy():
-    world_ontology.initialize()
-    world_ontology.add_edge(
+    wo = deepcopy(world_ontology)
+    wo.initialize()
+    wo.add_edge(
         'WM:wm/x/y/z/flooding',
         'WM:wm/a/b/c/flooding',
         **{'type': 'is_equal'}
     )
-    world_ontology.add_edge(
+    wo.add_edge(
         'WM:wm/a/b/c/flooding',
         'WM:wm/x/y/z/flooding',
         **{'type': 'is_equal'}
     )
-    return world_ontology
+    return wo
 
 
 def test_run_preassembly_concepts():
