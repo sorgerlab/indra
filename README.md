@@ -1,6 +1,10 @@
-[![Build Status](https://travis-ci.org/sorgerlab/indra.svg?branch=travis_ci)](https://travis-ci.org/sorgerlab/indra) [![Documentation Status](https://readthedocs.org/projects/indra/badge/?version=latest)](https://indra.readthedocs.io/en/latest/?badge=latest)
-
 # INDRA
+
+[![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
+[![Build](https://travis-ci.com/sorgerlab/indra.svg)](https://travis-ci.com/sorgerlab/indra)
+[![Documentation](https://readthedocs.org/projects/indra/badge/?version=latest)](https://indra.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version](https://badge.fury.io/py/indra.svg)](https://badge.fury.io/py/indra)
+[![Python 3](https://img.shields.io/pypi/pyversions/indra.svg)](https://www.python.org/downloads/release/python-357/)
 
 <img align="left" src="https://raw.githubusercontent.com/sorgerlab/indra/master/doc/indra_logo.png" width="300" height="224" />
 
@@ -242,8 +246,9 @@ Molecular Systems Biology, 13, 954.
 For detailed installation instructions,
 [see the documentation](http://indra.readthedocs.io/en/latest/installation.html).
 
-INDRA currently supports Python 3.5+. The last release of INDRA compatible
-with Python 2.7 was 1.10.
+INDRA currently supports Python 3.6+. The last release of INDRA compatible
+with Python 2.7 is 1.10, and the last release fully compatible with Python 3.5
+is 1.17.
 
 The preferred way to install INDRA is by pointing pip to the source repository
 as

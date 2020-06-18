@@ -10,8 +10,8 @@ def path_sign_to_signed_nodes(source, target, edge_sign):
 
     Pairs with a negative source node are filtered out.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     source : str|int
         The source node
     target : str|int

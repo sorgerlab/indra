@@ -194,7 +194,7 @@ def get_content_from_pub_json(pub, format):
 def get_text_from_rxiv_xml(rxiv_xml):
     """Return clean text from the raw rxiv xml content.
 
-    Paramteres
+    Parameters
     ----------
     rxiv_xml : str
         The content of the rxiv full xml as obtained from the web.
@@ -218,7 +218,7 @@ def get_text_from_rxiv_text(rxiv_text):
     It filters out some irrelevant content e.g., references and
     footnotes.
 
-    Paramteres
+    Parameters
     ----------
     rxiv_text : str
         The content of the rxiv full text as obtained from the web.
