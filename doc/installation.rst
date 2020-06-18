@@ -5,8 +5,7 @@ Installing Python
 -----------------
 INDRA is a Python package so the basic requirement for using it is to have
 Python installed. Python is shipped with most Linux distributions and with
-OSX. INDRA works with both Python 2 and 3 (tested with
-2.7 and 3.5).
+OSX. INDRA works with Python 3.6 or higher.
 
 On Mac, the preferred way to install Python (over the built-in version) is
 using `Homebrew <http://brew.sh/>`_.
