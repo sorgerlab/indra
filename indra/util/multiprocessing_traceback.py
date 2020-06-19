@@ -32,7 +32,6 @@ def success_callback(res):
 
 def main_func():
     with Pool(2) as pool:
-        # Skip error_callback to raise error instead of printing the traceback
         pool.apply_async(func=f_child, callback=success_callback,
                          error_callback=print_err)
         pool.close()
