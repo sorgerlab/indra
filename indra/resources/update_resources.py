@@ -202,7 +202,15 @@ def update_chebi_references():
     # Save ChEMBL mapping
     fname = os.path.join(path, 'chebi_to_chembl.tsv')
     logger.info('Saving into %s' % fname)
-    df_chembl = df[df['REFERENCE_DB_NAME']=='ChEMBL']
+    df_chembl = df[df['REFERENCE_DB_NAME'] == 'ChEMBL']
+    # Get additional mappings for compounds in tas
+    df_chembl_tas = pandas.read_csv(os.path.join(path, 'chembl_tas.csv'),
+                                    sep=',')[['chebi_id', 'chembl_id']]
+    df_chembl_tas = df_chembl_tas[~df_chembl_tas.chebi_id.isna()]
+    df_chembl_tas['chebi_id'] = df_chembl_tas.chebi_id.\
+        apply(lambda x: str(int(x)))
+    df_chembl_tas.columns = ['COMPOUND_ID', 'REFERENCE_ID']
+    df_chembl = pandas.concat([df_chembl, df_chembl_tas]).drop_duplicates()
     df_chembl.sort_values(['COMPOUND_ID', 'REFERENCE_ID'], ascending=True,
                           inplace=True)
     df_chembl.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
