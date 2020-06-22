@@ -3,13 +3,18 @@ from builtins import dict, str
 
 __all__ = ['process_csv', 'process_from_web']
 
+import os
 import csv
 import logging
 import requests
+from hashlib import md5
+
 from .processor import TasProcessor
 from indra.util import read_unicode_csv, read_unicode_csv_fileobj
 
-tas_data_url = 'https://bigmech.s3.amazonaws.com/indra-db/indra_tas.csv'
+HERE = os.path.dirname(os.path.abspath(__file__))
+resources = os.path.join(HERE, os.pardir, os.pardir, 'resources')
+tas_data_url = 'https://bigmech.s3.amazonaws.com/indra-db/tas.csv'
 
 
 logger = logging.getLogger(__name__)
@@ -52,6 +57,13 @@ def process_from_web(affinity_class_limit=2):
     """
     logger.info('Downloading TAS data from %s' % tas_data_url)
     res = requests.get(tas_data_url)
+    with open(os.path.join(resources, 'indra_tas.md5')) as f:
+        expected_checksum = f.read().strip()
+    observed_checksum = md5(res.text.encode('utf-8')).hexdigest()
+    logger.info('Verifying md5 checksum of data')
+    if expected_checksum != observed_checksum:
+        raise RuntimeError('Checksum for downloaded TAS data does not'
+                           ' match expected value')
     res.raise_for_status()
     logger.info('Finished downloading TAS data from %s' % tas_data_url)
     data_iter = list(csv.reader(res.text.splitlines(), delimiter=','))
