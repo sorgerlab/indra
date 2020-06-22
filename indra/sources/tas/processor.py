@@ -23,10 +23,10 @@ class TasProcessor(object):
         return
 
     def _process_row(self, row):
-        drug = self._extract_drug(row['chembl_id'], row['lspci_id'])
+        drugs = self._extract_drugs(row['compound_ids'], row['lspci_id'])
         prot = self._extract_protein(row['entrez_gene_symbol'],
                                      row['entrez_gene_id'])
-        ev = self._make_evidence(row['tas'])
+        evidences = self._make_evidences(row['tas'], row['references'])
         # NOTE: there are several entries in this data set that refer to
         # non-human Entrez genes, e.g.
         # https://www.ncbi.nlm.nih.gov/gene/3283880
@@ -35,16 +35,22 @@ class TasProcessor(object):
         # pre-assembly issues.
         if 'HGNC' not in prot.db_refs:
             return
-        self.statements.append(Inhibition(drug, prot, evidence=ev))
+        for drug in drugs:
+            for ev in evidences:
+                self.statements.append(Inhibition(drug, prot, evidence=ev))
 
-    def _extract_drug(self, chembl_id, lspci_id):
-        db_refs = {'CHEMBL': chembl_id, 'LSPCI': lspci_id}
-        name = chembl_id
-        chebi_id = chebi_client.get_chebi_id_from_chembl(chembl_id)
-        if chebi_id:
-            db_refs['CHEBI'] = 'CHEBI:' + chebi_id
-            name = chebi_client.get_chebi_name_from_id(chebi_id)
-        return Agent(name, db_refs=db_refs)
+    def _extract_drugs(self, compound_ids, lspci_id):
+        drugs = []
+        for id_ in compound_ids.split('|'):
+            db_refs = {'LSPCI': lspci_id}
+            if id_.startswith('CHEMBL'):
+                db_refs['CHEMBL'] = id_
+            elif id_.startswith('HMSL'):
+                db_refs['HMS-LINCS'] = id_.split('HMSL')[1]
+            # Name standardization will find correct names
+            name = id_
+            drugs.append(Agent(name, db_refs=db_refs))
+        return drugs
 
     def _extract_protein(self, name, gene_id):
         refs = {'EGID': gene_id}
@@ -58,7 +64,22 @@ class TasProcessor(object):
             name = hgnc_client.get_hgnc_name(hgnc_id)
         return Agent(name, db_refs=refs)
 
-    def _make_evidence(self, class_min):
-        ev = Evidence(source_api='tas', epistemics={'direct': True},
-                      annotations={'class_min': CLASS_MAP[class_min]})
-        return ev
+    def _make_evidences(self, class_min, references):
+        evidences = []
+        for reference in references.split('|'):
+            pmid, source_id, text_refs = None, None, None
+            annotations = {'class_min': CLASS_MAP[class_min]}
+            ref, id_ = reference.split(':')
+            if ref == 'pubmed':
+                pmid = id_
+                text_refs = {'PMID': pmid}
+            elif ref == 'doi':
+                text_refs = {'DOI': id_}
+            else:
+                source_id = id_
+                annotations['source_sub_id'] = ref
+            ev = Evidence(source_api='tas', source_id=source_id, pmid=pmid,
+                          annotations=annotations, epistemics={'direct': True},
+                          text_refs=text_refs)
+            evidences.append(ev)
+        return evidences
