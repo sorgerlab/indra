@@ -92,13 +92,16 @@ def get_chebi_id_from_cas(cas_id):
     return cas_chebi.get(cas_id)
 
 
-def get_chebi_name_from_id(chebi_id):
+def get_chebi_name_from_id(chebi_id, offline=True):
     """Return a ChEBI name corresponding to the given ChEBI ID.
 
     Parameters
     ----------
     chebi_id : str
         The ChEBI ID whose name is to be returned.
+    offline : Optional[bool]
+        If False, the ChEBI web service is invoked in case a name mapping
+        could not be found in the local resource file. Default: True
 
     Returns
     -------
@@ -106,7 +109,12 @@ def get_chebi_name_from_id(chebi_id):
         The name corresponding to the given ChEBI ID. If the lookup
         fails, None is returned.
     """
-    return _obo_client.get_name_from_id(_add_prefix(chebi_id))
+    chebi_id = _add_prefix(chebi_id)
+    name = _obo_client.get_name_from_id(chebi_id)
+    if name is None and not offline:
+        return get_chebi_name_from_id_web(chebi_id)
+    else:
+        return name
 
 
 def get_chebi_id_from_name(chebi_name):
