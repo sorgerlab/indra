@@ -22,7 +22,7 @@ def test_urn_to_db_refs():
     # agi-cas
     urn1 = 'urn:agi-cas:89-73-6'
     db_refs_1, _ = _urn_to_db_refs(urn1)
-    assert db_refs_1 == {'CHEBI': 'CHEBI:45615'}
+    assert db_refs_1 == {'CHEBI': 'CHEBI:45615'}, db_refs_1
 
     # agi-llid
     urn2 = 'urn:agi-llid:9451'

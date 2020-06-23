@@ -99,7 +99,8 @@ def test_get_mesh_tree_numbers():
     assert sorted(tns) == sorted(tnsw), tns
     assert tns == ['E04.520.050.050'], tns
     tns = mesh_client.get_mesh_tree_numbers('D000031')
-    assert set(tns) == {'C01.539.674.173', 'C13.703.039.256', 'C13.703.700.173'}
+    assert set(tns) == {'C01.674.173', 'C13.703.039.256',
+                        'C13.703.700.173'}, set(tns)
 
 
 def test_tree_prefixes():
