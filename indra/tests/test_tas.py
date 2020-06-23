@@ -1,6 +1,8 @@
+from nose.plugins.attrib import attr
 from indra.sources.tas import process_from_web
 
 
+@attr('slow')
 def test_processor():
     tp = process_from_web(affinity_class_limit=10)
     assert tp
