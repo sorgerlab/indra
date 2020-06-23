@@ -649,7 +649,7 @@ def update_drugbank_mappings():
     chebi_drugbank = pyobo.get_filtered_xrefs('chebi', 'drugbank')
     rows = []
     for drugbank_id, chembl_id in drugbank_chembl.items():
-        rows.append([drugbank_id, 'CHEBML', chembl_id, 'drugbank'])
+        rows.append([drugbank_id, 'CHEMBL', chembl_id, 'drugbank'])
     for drugbank_id, chebi_id in drugbank_chebi.items():
         rows.append([drugbank_id, 'CHEBI', chebi_id, 'drugbank'])
     for chebi_id, drugbank_id in chebi_drugbank.items():
