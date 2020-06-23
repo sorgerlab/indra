@@ -1781,16 +1781,17 @@ def filter_by_curation(stmts_in, curations, incorrect_policy='any',
 
     def process_and_append(stmt, stmt_list):
         # Filter out incorrect evidences for correct statements
-        if stmt.get_hash() in correct_stmt_evid:
+        stmt_hash = stmt.get_hash()  # Already refreshed when this is called
+        if stmt_hash in correct_stmt_evid:
             evidence = []
             for evid in stmt.evidence:
-                if _is_incorrect(stmt.get_hash(), evid.get_source_hash()):
+                if _is_incorrect(stmt_hash, evid.get_source_hash()):
                     continue
                 else:
                     evidence.append(evid)
             stmt.evidence = evidence
         # Set belief to one for statements with correct curations
-        if update_belief and stmt.get_hash() in correct:
+        if update_belief and stmt_hash in correct:
             stmt.belief = 1
         stmt_list.append(stmt)
 
@@ -1798,7 +1799,8 @@ def filter_by_curation(stmts_in, curations, incorrect_policy='any',
         # Filter statements that have SOME incorrect and NO correct curations
         # (i.e. their hashes are in incorrect set)
         for stmt in stmts_in:
-            if stmt.get_hash() not in incorrect:
+            stmt_hash = stmt.get_hash(refresh=True)
+            if stmt_hash not in incorrect:
                 process_and_append(stmt, stmts_out)
     elif incorrect_policy == 'all':
         # Filter out statements in which ALL evidences are curated
@@ -1811,9 +1813,10 @@ def filter_by_curation(stmts_in, curations, incorrect_policy='any',
         for stmt in stmts_in:
             # Compare set of evidence hashes of given statements to set of
             # hashes of curated evidences.
-            if stmt.get_hash() in incorrect_stmt_evid and (
+            stmt_hash = stmt.get_hash(refresh=True)
+            if stmt_hash in incorrect_stmt_evid and (
                     {ev.get_source_hash() for ev in stmt.evidence} <=
-                    incorrect_stmt_evid[stmt.get_hash()]):
+                    incorrect_stmt_evid[stmt_hash]):
                 continue
             else:
                 process_and_append(stmt, stmts_out)
