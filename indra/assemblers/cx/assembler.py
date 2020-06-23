@@ -530,7 +530,7 @@ class CxAssembler(object):
         edge = {'@id': edge_id,
                 's': source,
                 't': target,
-                'i': interaction}
+                'i': interaction.lower()}
         self.cx['edges'].append(edge)
         self._add_edge_metadata(edge_id, stmt)
         return edge_id
