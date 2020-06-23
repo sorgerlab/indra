@@ -17,7 +17,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.0'
+    version = '1.1'
 
     def __init__(self):
         super().__init__()
