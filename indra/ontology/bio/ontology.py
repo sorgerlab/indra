@@ -231,11 +231,15 @@ class BioOntology(IndraOntology):
                 # Here we assume if no namespace is given, then
                 # we're dealing with a (namespace, id) tuple
                 if from_ns is None:
-                    from_ns, from_id = from_id
+                    from_ns_, from_id = from_id
+                else:
+                    from_ns_ = from_ns
                 if to_ns is None:
-                    to_ns, to_id = to_id
-                source = label_fix(from_ns, from_id)
-                target = label_fix(to_ns, to_id)
+                    to_ns_, to_id = to_id
+                else:
+                    to_ns_ = to_ns
+                source = label_fix(from_ns_, from_id)
+                target = label_fix(to_ns_, to_id)
                 edges.append((source, target, data))
                 if symmetric:
                     edges.append((target, source, data))
