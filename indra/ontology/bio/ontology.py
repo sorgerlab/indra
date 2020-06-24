@@ -57,7 +57,7 @@ class BioOntology(IndraOntology):
         self.add_ncit_nodes()
         self.add_uppro_nodes()
         self.add_mirbase_nodes()
-        self.add_tas_nodes()
+        self.add_chembl_nodes()
         # Add xrefs
         logger.info('Adding xrefs...')
         self.add_hgnc_uniprot_xrefs()
@@ -339,15 +339,12 @@ class BioOntology(IndraOntology):
                           {'type': 'xref', 'source': 'mirbase'}))
         self.add_edges_from(edges)
 
-    def add_tas_nodes(self):
+    def add_chembl_nodes(self):
         nodes = []
         # Add named chembl entries that appear in TAS
-        for row in read_unicode_csv(os.path.join(resources, 'chembl_tas.csv'),
-                                    delimiter=','):
-            # skip header
-            if row[0] == 'chembl_id':
-                continue
-            id_, name = row[0], row[1]
+        for id_, name, _ in read_unicode_csv(os.path.join(resources,
+                                                          'chembl_tas.csv'),
+                                             delimiter=',', skiprows=1):
             if name:
                 nodes.append((self.label('CHEMBL', id_),
                               {'name': name}))
