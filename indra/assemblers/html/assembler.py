@@ -17,6 +17,7 @@ from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.databases import get_identifiers_url
 from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_sort_key
+from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
 HERE = dirname(abspath(__file__))
@@ -307,7 +308,8 @@ class HtmlAssembler(object):
 
         return stmts
 
-    def make_model(self, template=None, with_grouping=True, **template_kwargs):
+    def make_model(self, template=None, with_grouping=True,
+                   add_full_text_search_link=False, **template_kwargs):
         """Return the assembled HTML content as a string.
 
         Parameters
@@ -320,6 +322,9 @@ class HtmlAssembler(object):
             If True, statements will be grouped under multiple sub-headings. If
             False, all headings will be collapsed into one on every level, with
             all statements placed under a single heading.
+        add_full_text_search_link : bool
+            If True, link with Text fragment search in PMC journal will be added
+            for the statements
 
         All other keyword arguments are passed along to the template. If you
         are using a custom template with args that are not passed below, this
@@ -331,6 +336,20 @@ class HtmlAssembler(object):
             The assembled HTML as a string.
         """
         tl_stmts = self.make_json_model(with_grouping)
+
+        if add_full_text_search_link:
+            for statement in tl_stmts:
+                statement = tl_stmts[statement]
+                for stmt_formatted in statement["stmts_formatted"]:
+                    for stmt_info in stmt_formatted["stmt_info_list"]:
+                        for evidence in stmt_info["evidence"]:
+                            if not set(['PMCID', 'pmcid']) \
+                                    .issubset(evidence["text_refs"].keys()):
+                                ev_pmcid = id_lookup(
+                                    evidence['pmid'], 'pmid') \
+                                    .get('pmcid', None)
+                                if ev_pmcid:
+                                    evidence['pmcid'] = ev_pmcid
 
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()
@@ -351,6 +370,7 @@ class HtmlAssembler(object):
         self.model = template.render(stmt_data=tl_stmts,
                                      metadata=metadata, title=self.title,
                                      db_rest_url=db_rest_url,
+                                     add_full_text_search_link=add_full_text_search_link,  # noqa
                                      **template_kwargs)
         return self.model
 
