@@ -3,6 +3,7 @@
 """Tests for the PyBEL assembler."""
 
 import json
+
 import networkx as nx
 import pybel.constants as pc
 from pybel.dsl import abundance, activity, bioprocess, \
@@ -602,3 +603,25 @@ def test_no_activity_on_bioprocess():
 
     _, _, e = list(belgraph.edges(data=True))[0]
     assert pc.OBJECT not in e
+
+
+def test_belgraph_to_signed_graph():
+    braf_no_act = Agent('BRAF', db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
+    stmt = Activation(braf_no_act, mek)
+    hsh = stmt.get_hash(refresh=True)
+
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    pb_seg = pa.belgraph_to_signed_graph(belgraph, propagate_annotations=True)
+
+    assert len(pb_seg.edges) == 1
+
+    edge = (braf_dsl, map2k1_dsl, 0)
+    assert edge in pb_seg.edges
+
+    edge_dict = pb_seg.edges.get(edge)
+    assert edge_dict
+    assert edge_dict.get('stmt_hash') == hsh
+    assert edge_dict.get('uuid') == stmt.uuid
+    assert edge_dict.get('belief') == stmt.belief
