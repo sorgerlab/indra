@@ -384,8 +384,8 @@ class BioOntology(IndraOntology):
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 resources = os.path.join(HERE, os.pardir, os.pardir, 'resources')
-CACHE_DIR = get_config('INDRA_RESOURCES') or \
-            os.path.join(os.path.expanduser('~'), '.indra',
+CACHE_DIR = os.path.join((get_config('INDRA_RESOURCES') or
+                          os.path.join(os.path.expanduser('~'), '.indra')),
                          '%s_ontology' % BioOntology.name,
                          BioOntology.version)
 CACHE_FILE = os.path.join(CACHE_DIR, 'bio_ontology.pkl')
