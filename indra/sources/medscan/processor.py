@@ -1010,7 +1010,7 @@ def _urn_to_db_refs(urn):
         # Identifier is CAS, convert to CHEBI
         chebi_id = get_chebi_id_from_cas(urn_id)
         if chebi_id:
-            db_refs['CHEBI'] = 'CHEBI:%s' % chebi_id
+            db_refs['CHEBI'] = chebi_id
             db_name = get_chebi_name_from_id(chebi_id)
     elif urn_type == 'agi-llid':
         # This is an Entrez ID, convert to HGNC

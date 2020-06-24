@@ -287,3 +287,10 @@ def test_mirna_standardize():
     name, db_refs = standardize_name_db_refs({'MIRBASE': 'MI0001730'})
     assert db_refs['MIRBASE'] == 'MI0001730'
     assert name == 'mmu-mir-451a'
+
+
+def test_drugbank_mappings():
+    name, db_refs = standardize_name_db_refs({'DRUGBANK': 'DB00001'})
+    assert db_refs.get('CHEBI') == 'CHEBI:142437', db_refs
+    assert db_refs.get('CHEMBL') == 'CHEMBL1201666', db_refs
+    assert name == 'lepirudin'

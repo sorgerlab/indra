@@ -49,7 +49,7 @@ class LincsProcessor(object):
         if 'PUBCHEM' in refs:
             chebi_id = chebi_client.get_chebi_id_from_pubchem(refs['PUBCHEM'])
             if chebi_id:
-                refs['CHEBI'] = 'CHEBI:%s' % chebi_id
+                refs['CHEBI'] = chebi_id
 
         return Agent(drug_name, db_refs=refs)
 

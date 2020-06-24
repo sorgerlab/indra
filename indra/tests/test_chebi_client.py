@@ -5,8 +5,8 @@ from nose.plugins.attrib import attr
 
 def test_read_chebi_to_pubchem():
     (ctop, ptoc) = chebi_client._read_chebi_to_pubchem()
-    assert ctop['85673'] == '11652416'
-    assert ptoc['11652416'] == '85673'
+    assert ctop['CHEBI:85673'] == '11652416'
+    assert ptoc['11652416'] == 'CHEBI:85673'
     assert unicode_strs((ctop, ptoc))
 
 
@@ -14,19 +14,19 @@ def test_chebi_pubchem_mapping():
     # This is a non-trivial mapping since there are multiple mappings
     # reported by ChEBI and we need to choose the right one based on
     # InChIKey matches.
-    assert chebi_client.get_chebi_id_from_pubchem('5287993') == '3528'
-    assert chebi_client.get_pubchem_id('3528') == '5287993'
+    assert chebi_client.get_chebi_id_from_pubchem('5287993') == 'CHEBI:3528'
+    assert chebi_client.get_pubchem_id('CHEBI:3528') == '5287993'
 
 
 def test_read_chebi_to_chembl():
     ctoc = chebi_client._read_chebi_to_chembl()
-    assert ctoc['50729'] == 'CHEMBL58'
+    assert ctoc['CHEBI:50729'] == 'CHEMBL58'
     assert unicode_strs(ctoc)
 
 
 def test_cas_to_chebi():
-    assert chebi_client.get_chebi_id_from_cas('23261-20-3') == '18035'
-    assert chebi_client.get_chebi_id_from_cas('100-51-6') == '17987'
+    assert chebi_client.get_chebi_id_from_cas('23261-20-3') == 'CHEBI:18035'
+    assert chebi_client.get_chebi_id_from_cas('100-51-6') == 'CHEBI:17987'
     assert chebi_client.get_chebi_id_from_cas('-1') is None
 
 
@@ -57,11 +57,11 @@ def test_inchi_key():
 def test_specific_chebi_ids():
     ids = ['76971', '37045', '15996', '75771', '37121', '57600']
     spec_id = chebi_client.get_specific_id(ids)
-    assert spec_id == '15996', spec_id
+    assert spec_id == 'CHEBI:15996', spec_id
 
 
 def test_hmdb_to_chebi():
-    assert chebi_client.get_chebi_id_from_hmdb('HMDB0000122') == '4167'
+    assert chebi_client.get_chebi_id_from_hmdb('HMDB0000122') == 'CHEBI:4167'
 
 
 def test_chebi_to_primary():

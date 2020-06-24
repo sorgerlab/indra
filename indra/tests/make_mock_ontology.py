@@ -36,7 +36,7 @@ always_include = {
     'GO:GO:0016020', 'GO:GO:0005634',
     'UP:Q02750', 'UP:P01112', 'UP:P01019', 'UP:Q9MZT7', 'UP:Q13422',
     'HMDB:HMDB0000122', 'HGNC:7', 'HGNC:5', 'MIRBASE:MI0001730',
-    'HGNC:31476'
+    'HGNC:31476', 'DRUGBANK:DB00001'
 }
 
 always_include_ns = {'FPLX', 'INDRA_ACTIVITIES', 'INDRA_MODS'}
@@ -70,7 +70,7 @@ if __name__ == '__main__':
             bio_ontology.remove_node(node)
     bio_ontology._build_name_lookup()
     bio_ontology._label_components()
-    bio_ontology._build_fplx_transitive_closure()
+    bio_ontology._build_transitive_closure()
     fname = os.path.join(CACHE_DIR, 'mock_ontology.pkl')
     with open(fname, 'wb') as fh:
         pickle.dump(bio_ontology, fh, protocol=pickle.HIGHEST_PROTOCOL)

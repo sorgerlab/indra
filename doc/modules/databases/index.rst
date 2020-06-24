@@ -103,3 +103,8 @@ Taxonomy client (:py:mod:`indra.databases.taxonomy_client`)
 -----------------------------------------------------------
 .. automodule:: indra.databases.taxonomy_client
     :members:
+
+DrugBank client (:py:mod:`indra.databases.drugbank_client`)
+-----------------------------------------------------------
+.. automodule:: indra.databases.drugbank_client
+    :members:
