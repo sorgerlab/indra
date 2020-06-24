@@ -2,6 +2,7 @@ __all__ = ['TasProcessor']
 
 from indra.statements import Inhibition, Agent, Evidence
 from indra.databases import hgnc_client, chebi_client, chembl_client
+from indra.ontology.standardize import standardize_name_db_refs
 
 
 CLASS_MAP = {'1': 'Kd < 100nM', '2': '100nM < Kd < 1uM',
@@ -36,8 +37,7 @@ class TasProcessor(object):
         if 'HGNC' not in prot.db_refs:
             return
         for drug in drugs:
-            for ev in evidences:
-                self.statements.append(Inhibition(drug, prot, evidence=ev))
+            self.statements.append(Inhibition(drug, prot, evidence=evidences))
 
     def _extract_drugs(self, compound_ids, lspci_id):
         drugs = []
@@ -47,8 +47,12 @@ class TasProcessor(object):
                 db_refs['CHEMBL'] = id_
             elif id_.startswith('HMSL'):
                 db_refs['HMS-LINCS'] = id_.split('HMSL')[1]
+            else:
+                assert False
             # Name standardization will find correct names
-            name = id_
+            name, db_refs = standardize_name_db_refs(db_refs)
+            if name is None:
+                name = id_
             drugs.append(Agent(name, db_refs=db_refs))
         return drugs
 
@@ -60,8 +64,7 @@ class TasProcessor(object):
             up_id = hgnc_client.get_uniprot_id(hgnc_id)
             if up_id:
                 refs['UP'] = up_id
-            # If there is a HGNC ID, we standardize the gene name
-            name = hgnc_client.get_hgnc_name(hgnc_id)
+        name, db_refs = standardize_name_db_refs(refs)
         return Agent(name, db_refs=refs)
 
     def _make_evidences(self, class_min, references):
@@ -76,8 +79,7 @@ class TasProcessor(object):
             elif ref == 'doi':
                 text_refs = {'DOI': id_}
             else:
-                source_id = id_
-                annotations['source_sub_id'] = ref
+                source_id = reference
             ev = Evidence(source_api='tas', source_id=source_id, pmid=pmid,
                           annotations=annotations, epistemics={'direct': True},
                           text_refs=text_refs)
