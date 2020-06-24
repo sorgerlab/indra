@@ -153,6 +153,7 @@ def test_activation():
         pc.ANNOTATIONS: {
             'stmt_hash': hash1,
             'uuid': stmt1.uuid,
+            'belief': stmt1.belief,
         },
     }
     edge2 = {
@@ -162,6 +163,7 @@ def test_activation():
         pc.ANNOTATIONS: {
             'stmt_hash': hash2,
             'uuid': stmt2.uuid,
+            'belief': stmt2.belief,
         },
     }
     for stmt, edge in ((stmt1, edge1), (stmt2, edge2)):
@@ -200,6 +202,7 @@ def test_direct_activation():
             'stmt_hash': hash1,
             'source_hash': stmt1_ev.get_source_hash(),
             'uuid': stmt1.uuid,
+            'belief': stmt1.belief,
         },
     }
     edge2 = {
@@ -215,6 +218,7 @@ def test_direct_activation():
             'stmt_hash': hash2,
             'source_hash': stmt1_ev.get_source_hash(),
             'uuid': stmt2.uuid,
+            'belief': stmt2.belief,
         },
     }
     for stmt, expected_edge in ((stmt1, edge1), (stmt2, edge2)):
@@ -241,6 +245,7 @@ def test_inhibition():
         pc.ANNOTATIONS: {
             'stmt_hash': stmt_hash,
             'uuid': stmt.uuid,
+            'belief': stmt.belief,
         },
     }
     pba = pa.PybelAssembler([stmt])
@@ -311,6 +316,7 @@ def test_gef():
         pc.ANNOTATIONS: {
             'stmt_hash': stmt_hash,
             'uuid': stmt.uuid,
+            'belief': stmt.belief,
         },
     }
     assert edge_data == edge, edge_data
@@ -343,6 +349,7 @@ def test_gap():
         pc.ANNOTATIONS: {
             'stmt_hash': stmt_hash,
             'uuid': stmt.uuid,
+            'belief': stmt.belief,
         },
     }
     assert edge_data == edge, edge_data
@@ -445,7 +452,8 @@ def test_autophosphorylation():
                                              egfr_phos_node).values())
     assert {pc.RELATION: pc.DIRECTLY_INCREASES,
             pc.ANNOTATIONS: {'stmt_hash': stmt_hash,
-                             'uuid': stmt.uuid}} \
+                             'uuid': stmt.uuid,
+                             'belief': stmt.belief}} \
         in edge_dicts
 
     # Test an autophosphorylation with a bound condition
@@ -490,6 +498,7 @@ def test_bound_condition():
              pc.ANNOTATIONS: {
                  'stmt_hash': stmt_hash,
                  'uuid': stmt.uuid,
+                 'belief': stmt.belief,
              },
         },
     )
@@ -516,6 +525,7 @@ def test_transphosphorylation():
         pc.ANNOTATIONS: {
             'stmt_hash': stmt_hash,
             'uuid': stmt.uuid,
+            'belief': stmt.belief,
         },
     }, edge_data
 
