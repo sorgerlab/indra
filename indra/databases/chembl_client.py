@@ -1,11 +1,11 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
+import os
 import logging
 import requests
 from sympy.physics import units
 from indra.databases import chebi_client, uniprot_client
 from indra.statements import Inhibition, Agent, Evidence
 from collections import defaultdict
+from indra.util import read_unicode_csv
 
 logger = logging.getLogger(__name__)
 
@@ -350,3 +350,36 @@ def get_chembl_id(nlm_mesh):
     chembl_id = [syn for syn in synonyms
                  if 'CHEMBL' in syn and 'SCHEMBL' not in syn][0]
     return chembl_id
+
+
+def get_chembl_name(chembl_id):
+    """Return a standard ChEMBL name from an ID if available in the local resource.
+
+    Parameters
+    ----------
+    chembl_id : str
+        The ChEBML ID to get the name for.
+
+    Returns
+    -------
+    str or None
+        The corresponding ChEBML name or None if not available.
+    """
+    return chembl_names.get(chembl_id)
+
+
+resource_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             os.pardir, 'resources', 'chembl_tas.csv')
+
+
+def _load_resource():
+    chembl_names = {}
+    for chembl_id, chembl_name, _ in read_unicode_csv(resource_file,
+                                                      delimiter=',',
+                                                      skiprows=1):
+        if chembl_name:
+            chembl_names[chembl_id] = chembl_name
+    return chembl_names
+
+
+chembl_names = _load_resource()

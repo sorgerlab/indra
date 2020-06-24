@@ -340,14 +340,11 @@ class BioOntology(IndraOntology):
         self.add_edges_from(edges)
 
     def add_chembl_nodes(self):
+        from indra.databases import chembl_client
         nodes = []
-        # Add named chembl entries that appear in TAS
-        for id_, name, _ in read_unicode_csv(os.path.join(resources,
-                                                          'chembl_tas.csv'),
-                                             delimiter=',', skiprows=1):
-            if name:
-                nodes.append((self.label('CHEMBL', id_),
-                              {'name': name}))
+        for chembl_id, chembl_name in chembl_client.chembl_names.item():
+            nodes.append((self.label('CHEMBL', chembl_id),
+                          {'name': chembl_name}))
         self.add_nodes_from(nodes)
 
     def add_activity_hierarchy(self):
