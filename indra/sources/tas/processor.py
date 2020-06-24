@@ -1,8 +1,12 @@
 __all__ = ['TasProcessor']
 
+import logging
 from indra.statements import Inhibition, Agent, Evidence
-from indra.databases import hgnc_client, chebi_client, chembl_client
+from indra.databases import hgnc_client, chembl_client
 from indra.ontology.standardize import standardize_name_db_refs
+
+
+logger = logging.getLogger(__name__)
 
 
 CLASS_MAP = {'1': 'Kd < 100nM', '2': '100nM < Kd < 1uM',
@@ -48,9 +52,15 @@ class TasProcessor(object):
             elif id_.startswith('HMSL'):
                 db_refs['HMS-LINCS'] = id_.split('HMSL')[1]
             else:
-                assert False
-            # Name standardization will find correct names
+                logger.warning('Unhandled ID type: %s' % id_)
+            # Name standardization finds correct names but because
+            # ChEBML is incomplete as a local resource, we don't
+            # universally standardize its names, instead, we look
+            # it up explicitly when necessary.
             name, db_refs = standardize_name_db_refs(db_refs)
+            if name is None and 'CHEMBL' in db_refs:
+                name = chembl_client.get_chembl_name(db_refs['CHEMBL'])
+            # If name is still None, we just use the ID as the name
             if name is None:
                 name = id_
             drugs.append(Agent(name, db_refs=db_refs))
@@ -61,11 +71,10 @@ class TasProcessor(object):
         hgnc_id = hgnc_client.get_hgnc_from_entrez(gene_id)
         if hgnc_id is not None:
             refs['HGNC'] = hgnc_id
-            up_id = hgnc_client.get_uniprot_id(hgnc_id)
-            if up_id:
-                refs['UP'] = up_id
-        name, db_refs = standardize_name_db_refs(refs)
-        return Agent(name, db_refs=refs)
+        standard_name, db_refs = standardize_name_db_refs(refs)
+        if standard_name:
+            name = standard_name
+        return Agent(name, db_refs=db_refs)
 
     def _make_evidences(self, class_min, references):
         evidences = []
