@@ -6,8 +6,8 @@ mappings_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              os.pardir, 'resources', 'drugbank_mappings.tsv')
 
 
-def get_db_mapping(drugbank_id):
-    return drugbank_to_db.get(drugbank_id)
+def get_db_mapping(drugbank_id, db_ns):
+    return drugbank_to_db.get((drugbank_id, db_ns))
 
 
 def get_drugbank_id_from_db_id(db_ns, db_id):
@@ -15,17 +15,11 @@ def get_drugbank_id_from_db_id(db_ns, db_id):
 
 
 def get_chebi_id(drugbank_id):
-    res = get_db_mapping(drugbank_id)
-    if res and res[0] == 'CHEBI':
-        return res[1]
-    return None
+    return get_db_mapping(drugbank_id, 'CHEBI')
 
 
 def get_chembl_id(drugbank_id):
-    res = get_db_mapping(drugbank_id)
-    if res and res[0] == 'CHEMBL':
-        return res[1]
-    return None
+    return get_db_mapping(drugbank_id, 'CHEMBL')
 
 
 def get_drugbank_id_from_chebi_id(chebi_id):
@@ -45,14 +39,15 @@ def load_mappings():
             read_unicode_csv(mappings_file, delimiter='\t', skiprows=1):
         if db_ns == 'CHEBI':
             db_id = 'CHEBI:%s' % db_id
-        db_key = (db_ns, db_id)
-        if db_key in db_to_drugbank and db_to_drugbank[db_key] != drugbank_id:
-            db_to_ambigs.add(db_key)
-        if drugbank_id in drugbank_to_db and \
-                drugbank_to_db[drugbank_id] != db_key:
-            to_db_ambigs.add(drugbank_id)
-        db_to_drugbank[db_key]  = drugbank_id
-        drugbank_to_db[drugbank_id] = db_key
+        key = (db_ns, db_id)
+        if key in db_to_drugbank and db_to_drugbank[key] != drugbank_id:
+            db_to_ambigs.add(key)
+        db_to_drugbank[key] = drugbank_id
+        key = (drugbank_id, db_ns)
+        if key in drugbank_to_db and \
+                drugbank_to_db[key] != db_id:
+            to_db_ambigs.add(key)
+        drugbank_to_db[key] = db_id
     db_to_drugbank = {k: v for k, v in db_to_drugbank.items()
                       if k not in db_to_ambigs}
     drugbank_to_db = {k: v for k, v in drugbank_to_db.items()

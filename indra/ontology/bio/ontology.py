@@ -235,7 +235,7 @@ class BioOntology(IndraOntology):
                 else:
                     from_ns_ = from_ns
                 if to_ns is None:
-                    to_ns_, to_id = to_id
+                    _, to_ns_ = from_id
                 else:
                     to_ns_ = to_ns
                 source = label_fix(from_ns_, from_id)
