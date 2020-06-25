@@ -3,6 +3,7 @@
 """Tests for the PyBEL assembler."""
 
 import json
+
 import networkx as nx
 import pybel.constants as pc
 from pybel.dsl import abundance, activity, bioprocess, \
@@ -152,6 +153,7 @@ def test_activation():
         pc.ANNOTATIONS: {
             'stmt_hash': hash1,
             'uuid': stmt1.uuid,
+            'belief': stmt1.belief,
         },
     }
     edge2 = {
@@ -161,6 +163,7 @@ def test_activation():
         pc.ANNOTATIONS: {
             'stmt_hash': hash2,
             'uuid': stmt2.uuid,
+            'belief': stmt2.belief,
         },
     }
     for stmt, edge in ((stmt1, edge1), (stmt2, edge2)):
@@ -199,6 +202,7 @@ def test_direct_activation():
             'stmt_hash': hash1,
             'source_hash': stmt1_ev.get_source_hash(),
             'uuid': stmt1.uuid,
+            'belief': stmt1.belief,
         },
     }
     edge2 = {
@@ -214,6 +218,7 @@ def test_direct_activation():
             'stmt_hash': hash2,
             'source_hash': stmt1_ev.get_source_hash(),
             'uuid': stmt2.uuid,
+            'belief': stmt2.belief,
         },
     }
     for stmt, expected_edge in ((stmt1, edge1), (stmt2, edge2)):
@@ -240,6 +245,7 @@ def test_inhibition():
         pc.ANNOTATIONS: {
             'stmt_hash': stmt_hash,
             'uuid': stmt.uuid,
+            'belief': stmt.belief,
         },
     }
     pba = pa.PybelAssembler([stmt])
@@ -310,6 +316,7 @@ def test_gef():
         pc.ANNOTATIONS: {
             'stmt_hash': stmt_hash,
             'uuid': stmt.uuid,
+            'belief': stmt.belief,
         },
     }
     assert edge_data == edge, edge_data
@@ -342,6 +349,7 @@ def test_gap():
         pc.ANNOTATIONS: {
             'stmt_hash': stmt_hash,
             'uuid': stmt.uuid,
+            'belief': stmt.belief,
         },
     }
     assert edge_data == edge, edge_data
@@ -444,7 +452,8 @@ def test_autophosphorylation():
                                              egfr_phos_node).values())
     assert {pc.RELATION: pc.DIRECTLY_INCREASES,
             pc.ANNOTATIONS: {'stmt_hash': stmt_hash,
-                             'uuid': stmt.uuid}} \
+                             'uuid': stmt.uuid,
+                             'belief': stmt.belief}} \
         in edge_dicts
 
     # Test an autophosphorylation with a bound condition
@@ -489,6 +498,7 @@ def test_bound_condition():
              pc.ANNOTATIONS: {
                  'stmt_hash': stmt_hash,
                  'uuid': stmt.uuid,
+                 'belief': stmt.belief,
              },
         },
     )
@@ -515,6 +525,7 @@ def test_transphosphorylation():
         pc.ANNOTATIONS: {
             'stmt_hash': stmt_hash,
             'uuid': stmt.uuid,
+            'belief': stmt.belief,
         },
     }, edge_data
 
@@ -602,3 +613,25 @@ def test_no_activity_on_bioprocess():
 
     _, _, e = list(belgraph.edges(data=True))[0]
     assert pc.OBJECT not in e
+
+
+def test_belgraph_to_signed_graph():
+    braf_no_act = Agent('BRAF', db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
+    stmt = Activation(braf_no_act, mek)
+    hsh = stmt.get_hash(refresh=True)
+
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    pb_seg = pa.belgraph_to_signed_graph(belgraph, propagate_annotations=True)
+
+    assert len(pb_seg.edges) == 1
+
+    edge = (braf_dsl, map2k1_dsl, 0)
+    assert edge in pb_seg.edges
+
+    edge_dict = pb_seg.edges.get(edge)
+    assert edge_dict
+    assert edge_dict.get('stmt_hash') == hsh
+    assert edge_dict.get('uuid') == stmt.uuid
+    assert edge_dict.get('belief') == stmt.belief
