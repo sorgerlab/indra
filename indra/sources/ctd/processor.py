@@ -51,7 +51,8 @@ class CTDChemicalDiseaseProcessor:
         self.statements = []
 
     def extract_statements(self):
-        for _, row in tqdm.tqdm(self.df.iterrows()):
+        df = self.df[self.df[5] != '']
+        for _, row in tqdm.tqdm(df.iterrows(), total=len(df)):
             chem_name, chem_mesh_id, chem_cas_id, disease_name, disease_id,\
                 direct_ev, inf_gene, inf_score, omim_ids, pmids = list(row)
             if not direct_ev:
@@ -60,8 +61,10 @@ class CTDChemicalDiseaseProcessor:
                                             chem_cas_id)
             disease_agent = get_disease_agent(disease_name, disease_id)
             stmt_types = get_statement_types(direct_ev)
-            evs = [Evidence(pmid=pmid) for pmid in pmids.split('|')]
-            for stmt_type in stmt_types:
+            for rel_str, stmt_type in stmt_types.items():
+                anns = {'direct_evidence': rel_str}
+                evs = [Evidence(source_api='ctd', pmid=pmid, annotations=anns)
+                       for pmid in pmids.split('|')]
                 stmt = stmt_type(chem_agent, disease_agent,
                                  evidence=evs)
                 self.statements.append(stmt)
@@ -73,7 +76,8 @@ class CTDGeneDiseaseProcessor:
         self.statements = []
 
     def extract_statements(self):
-        for _, row in tqdm.tqdm(self.df.iterrows()):
+        df = self.df[self.df[4] != '']
+        for _, row in tqdm.tqdm(df.iterrows(), total=len(df)):
             gene_name, gene_entrez_id, disease_name, disease_id, direct_ev, \
                 inf_chem, inf_score, omim_ids, pmids = list(row)
             if not direct_ev:
@@ -81,8 +85,10 @@ class CTDGeneDiseaseProcessor:
             disease_agent = get_disease_agent(disease_name, disease_id)
             gene_agent = get_gene_agent(gene_name, gene_entrez_id)
             stmt_types = get_statement_types(direct_ev)
-            evs = [Evidence(pmid=pmid) for pmid in pmids.split('|')]
-            for stmt_type in stmt_types:
+            for rel_str, stmt_type in stmt_types.items():
+                anns = {'direct_evidence': rel_str}
+                evs = [Evidence(source_api='ctd', pmid=pmid, annotations=anns)
+                       for pmid in pmids.split('|')]
                 stmt = stmt_type(gene_agent, disease_agent,
                                  evidence=evs)
                 self.statements.append(stmt)
@@ -94,7 +100,7 @@ class CTDChemicalGeneProcessor:
         self.statements = []
 
     def extract_statements(self):
-        for _, row in tqdm.tqdm(self.df.iterrows()):
+        for _, row in tqdm.tqdm(self.df.iterrows(), total=len(self.df)):
             chem_name, chem_mesh_id, chem_cas_id, gene_name, gene_entrez_id, \
                 gene_forms, organism_name, organism_tax_id, txt, \
                 rels, pmids = list(row)
@@ -104,15 +110,17 @@ class CTDChemicalGeneProcessor:
             gene_agent = get_gene_agent(gene_name, gene_entrez_id)
             stmt_types = get_statement_types(rels)
             context = get_context(organism_name, organism_tax_id)
-            evs = [Evidence(pmid=pmid, text=txt, context=context)
-                   for pmid in pmids.split('|')]
-            for stmt_type in stmt_types:
+            for rel_str, stmt_type in stmt_types.items():
+                anns = {'interaction_action': rel_str}
+                evs = [Evidence(source_api='ctd', pmid=pmid, annotations=anns,
+                                context=context)
+                       for pmid in pmids.split('|')]
                 stmt = stmt_type(chem_agent, gene_agent, evidence=evs)
                 self.statements.append(stmt)
 
 
 def get_context(organism_name, organism_tax_id):
-    if pandas.isna(organism_tax_id):
+    if not organism_tax_id:
         return None
     tax_id = str(int(organism_tax_id))
     return RefContext(organism_name,
@@ -121,7 +129,7 @@ def get_context(organism_name, organism_tax_id):
 
 def get_statement_types(rel_str):
     rels = rel_str.split('|')
-    return [rel_mapping[rel] for rel in rels if rel in rel_mapping]
+    return {rel: rel_mapping[rel] for rel in rels if rel in rel_mapping}
 
 
 def get_disease_agent(name, disease_id):
