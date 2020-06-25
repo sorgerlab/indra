@@ -43,6 +43,7 @@ Standard Molecular Pathway Databases
    trrust
    phosphoelm/index
    virhostnet/index
+   ctd/index
 
 Custom Knowledge Bases
 ----------------------
