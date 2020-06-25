@@ -19,12 +19,6 @@ ChEBI client (:py:mod:`indra.databases.chebi_client`)
 .. automodule:: indra.databases.chebi_client
     :members:
 
-BioGRID client (:py:mod:`indra.databases.biogrid_client`)
----------------------------------------------------------
-
-.. automodule:: indra.databases.biogrid_client
-    :members:
-
 Cell type context client (:py:mod:`indra.databases.context_client`)
 -------------------------------------------------------------------
 
