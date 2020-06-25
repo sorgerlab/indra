@@ -1,5 +1,4 @@
 import tqdm
-import pandas
 from indra.statements import *
 from indra.databases import hgnc_client
 from indra.ontology.standardize import standardize_db_refs, \
@@ -45,7 +44,12 @@ rel_mapping = {
 }
 
 
-class CTDChemicalDiseaseProcessor:
+class CTDProcessor:
+    pass
+
+
+class CTDChemicalDiseaseProcessor(CTDProcessor):
+    """Processes chemical-disease relationships from CTD."""
     def __init__(self, df):
         self.df = df
         self.statements = []
@@ -70,7 +74,8 @@ class CTDChemicalDiseaseProcessor:
                 self.statements.append(stmt)
 
 
-class CTDGeneDiseaseProcessor:
+class CTDGeneDiseaseProcessor(CTDProcessor):
+    """Processes gene-disease relationships from CTD."""
     def __init__(self, df):
         self.df = df
         self.statements = []
@@ -94,7 +99,8 @@ class CTDGeneDiseaseProcessor:
                 self.statements.append(stmt)
 
 
-class CTDChemicalGeneProcessor:
+class CTDChemicalGeneProcessor(CTDProcessor):
+    """Processes chemical-gene relationships from CTD."""
     def __init__(self, df):
         self.df = df
         self.statements = []
