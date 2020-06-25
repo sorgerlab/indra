@@ -17,22 +17,26 @@ processors = {
 }
 
 
-def process_from_web(subset):
+def process_from_web(subset, url=None):
     if subset not in urls:
-        raise ValueError('%s is not a valid CTD subset.')
-    df = pandas.read_csv(urls[subset], sep='\t', comment='#',
-                         header=None)
-    return process_dataframe(df)
+        raise ValueError('%s is not a valid CTD subset.' % subset)
+    url = url if url else urls[subset]
+    return _process_url_or_file(url, subset)
 
 
 def process_tsv(fname, subset):
-    df = pandas.read_csv(fname, sep='\t', comment='#', header=None)
+    return _process_url_or_file(fname, subset)
+
+
+def _process_url_or_file(path, subset):
+    df = pandas.read_csv(path, sep='\t', comment='#',
+                         header=None, dtype=str, keep_default_na=False)
     return process_dataframe(df, subset)
 
 
 def process_dataframe(df, subset):
     if subset not in processors:
-        raise ValueError('%s is not a valid CTD subset.')
+        raise ValueError('%s is not a valid CTD subset.' % subset)
     cp = processors[subset](df)
     cp.extract_statements()
     return cp
