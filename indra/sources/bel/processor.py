@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Processor for PyBEL."""
-
+import os
 import re
 import logging
 import pybel.dsl as dsl
@@ -11,7 +11,7 @@ from pybel.struct import has_protein_modification
 from pybel.canonicalize import edge_to_bel
 from bel_resources import get_bel_resource
 from indra.statements import *
-from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
+from indra.util import read_unicode_csv
 from indra.databases import (
     chebi_client, go_client, hgnc_client, mesh_client,
     mirbase_client, uniprot_client, taxonomy_client
@@ -872,3 +872,35 @@ def _parse_mutation(s):
         return None, None, None
     from_aa, position, to_aa = m.groups()
     return position, from_aa, to_aa
+
+
+def _build_famplex_map():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         os.pardir, os.pardir, 'resources',
+                         'famplex_map.tsv')
+    bel_to_indra = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    for row in csv_rows:
+        namespace = row[0]
+        entry = row[1]
+        indra_name = row[2]
+        if namespace == 'BEL':
+            bel_to_indra[entry] = indra_name
+    return bel_to_indra
+
+
+def _build_chebi_map():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         os.pardir, os.pardir, 'resources',
+                         'bel_chebi_map.tsv')
+    chebi_name_id = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    for row in csv_rows:
+        chebi_name = row[0]
+        chebi_id = row[1]
+        chebi_name_id[chebi_name] = chebi_id
+    return chebi_name_id
+
+
+bel_to_indra = _build_famplex_map()
+chebi_name_id = _build_chebi_map()
