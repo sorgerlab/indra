@@ -218,9 +218,10 @@ class SentenceBuilder():
             Whether to use oxford grammar standards. Default: True
         """
         if len(lst) > 2:
-            for el in lst[:-1]:
+            for el in lst[:-2]:
                 self.append(el)
                 self.append(', ')
+            self.append(lst[-2])
             if oxford:
                 self.append(',')
             self.append(' and ')
