@@ -129,8 +129,10 @@ def get_context(organism_name, organism_tax_id):
     if not organism_tax_id:
         return None
     tax_id = str(int(organism_tax_id))
-    return RefContext(organism_name,
-                      db_refs={'TAXONOMY': tax_id})
+    species = RefContext(organism_name,
+                         db_refs={'TAXONOMY': tax_id})
+    bc = BioContext(species=species)
+    return bc
 
 
 def get_statement_types(rel_str):
