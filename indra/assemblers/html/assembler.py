@@ -32,7 +32,8 @@ color_schemes = {
     'dark': ['#b2df8a', '#000099', '#6a3d9a', '#1f78b4', '#fdbf6f', '#ff7f00',
              '#cab2d6', '#fb9a99', '#a6cee3', '#33a02c', '#b15928', '#e31a1c'],
     'light': ['#bc80bd', '#fccde5', '#b3de69', '#80b1d3', '#fb8072', '#bebada',
-              '#fdb462', '#8dd3c7', '#ffffb3', '#d9d9d9', '#ccebc5', '#ffed6f']
+              '#fdb462', '#8dd3c7', '#d9d9d9', '#ffed6f', '#ccebc5', '#e0e03d',
+              '#ffe8f4', '#acfcfc']
 }
 
 
@@ -43,10 +44,11 @@ def color_gen(scheme):
 
 
 db_sources = ['phosphosite', 'cbn', 'pc11', 'biopax', 'bel_lc',
-              'signor', 'biogrid', 'tas', 'lincs_drug', 'hprd', 'trrust']
+              'signor', 'biogrid', 'tas', 'lincs_drug', 'hprd', 'trrust',
+              'ctd', 'virhostnet', 'phosphoelm']
 
 reader_sources = ['geneways', 'tees', 'isi', 'trips', 'rlimsp', 'medscan',
-                  'sparser', 'reach']
+                  'sparser', 'eidos', 'reach']
 
 all_sources = db_sources + reader_sources
 
