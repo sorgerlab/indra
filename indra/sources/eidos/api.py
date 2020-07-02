@@ -192,25 +192,12 @@ def process_json_bio(json_dict):
         A EidosProcessor containing the extracted INDRA Statements
         in its statements attribute.
     """
-    from indra.ontology.standardize \
-        import standardize_agent_name
-    from indra.preassembler.grounding_mapper.gilda import get_grounding
-    from indra.statements import Agent, Activation, Inhibition
-
-    def get_agent(concept, context=None):
-        # Note that currently concept.name is the canonicalized entity text
-        # whereas db_refs['TEXT'] is the unaltered original entity text
-        txt = concept.name
-        gr, _ = get_grounding(txt, context=context, mode='local')
-        agent = Agent(txt, db_refs={'TEXT_NORM': txt,
-                                    'TEXT': concept.db_refs['TEXT'], **gr})
-        standardize_agent_name(agent, standardize_refs=True)
-        return agent
+    from indra.statements import Activation, Inhibition
 
     def get_regulate_activity(stmt):
         context = stmt.evidence[0].text
-        subj = get_agent(stmt.subj.concept, context=context)
-        obj = get_agent(stmt.obj.concept, context=context)
+        subj = get_agent_bio(stmt.subj.concept, context=context)
+        obj = get_agent_bio(stmt.obj.concept, context=context)
         if not subj or not obj:
             return None
         pol = stmt.overall_polarity()
@@ -228,6 +215,60 @@ def process_json_bio(json_dict):
             bio_stmts.append(bio_stmt)
     ep.statements = bio_stmts
     return ep
+
+
+def process_json_bio_entities(json_dict):
+    """Return INDRA Agents grounded to biological ontologies extracted
+    from Eidos JSON-LD.
+
+    Parameters
+    ----------
+    json_dict : dict
+        The JSON-LD dict to be processed.
+
+    Returns
+    -------
+    list of indra.statements.Agent
+        A list of INDRA Agents which are derived from concepts extracted
+        by Eidos from text.
+    """
+    ep = process_json(json_dict)
+    events = ep.get_all_events()
+    agents = []
+    for event in events:
+        context = event.evidence[0].text
+        agent = get_agent_bio(event.concept, context=context)
+        agents.append(agent)
+    return agents
+
+
+def process_text_bio_entities(text, webservice=None):
+    """Return INDRA Agents grounded to biological ontologies extracted
+    from text.
+
+    Parameters
+    ----------
+    text : str
+        Text to be processed.
+    webservice : Optional[str]
+        An Eidos reader web service URL to send the request to.
+        If None, the reading is assumed to be done with the Eidos JAR rather
+        than via a web service. Default: None
+
+    Returns
+    -------
+    list of indra.statements.Agent
+        A list of INDRA Agents which are derived from concepts extracted
+        by Eidos from text.
+    """
+    ep = process_text(text, webservice=webservice)
+    events = ep.get_all_events()
+    agents = []
+    for event in events:
+        context = event.evidence[0].text
+        agent = get_agent_bio(event.concept, context=context)
+        agents.append(agent)
+    return agents
 
 
 def reground_texts(texts, ont_yml, webservice=None, topk=10, filter=True,
@@ -273,3 +314,18 @@ def reground_texts(texts, ont_yml, webservice=None, topk=10, filter=True,
 def initialize_reader():
     """Instantiate an Eidos reader for fast subsequent reading."""
     eidos_reader.process_text('')
+
+
+def get_agent_bio(concept, context=None):
+    from indra.ontology.standardize import standardize_agent_name
+    from indra.preassembler.grounding_mapper.gilda import get_grounding
+    from indra.statements import Agent
+    # Note that currently concept.name is the canonicalized entity text
+    # whereas db_refs['TEXT'] is the unaltered original entity text
+    txt = concept.name
+    gr, _ = get_grounding(txt, context=context, mode='local')
+    agent = Agent(txt, db_refs={'TEXT_NORM': txt,
+                                'TEXT': concept.db_refs['TEXT'], **gr})
+    standardize_agent_name(agent, standardize_refs=True)
+    return agent
+
