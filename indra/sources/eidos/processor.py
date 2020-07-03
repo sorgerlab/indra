@@ -308,6 +308,30 @@ class EidosProcessor(object):
             return rc
         return None
 
+    def get_all_events(self):
+        """Return a list of all standalone events from a list
+        of statements."""
+        events = []
+        for stmt in self.statements:
+            stmt = copy.deepcopy(stmt)
+            if isinstance(stmt, Influence):
+                for member in [stmt.subj, stmt.obj]:
+                    member.evidence = stmt.evidence[:]
+                    # Remove the context since it may be for the other member
+                    for ev in member.evidence:
+                        ev.context = None
+                    events.append(member)
+            elif isinstance(stmt, Association):
+                for member in stmt.members:
+                    member.evidence = stmt.evidence[:]
+                    # Remove the context since it may be for the other member
+                    for ev in member.evidence:
+                        ev.context = None
+                    events.append(member)
+            elif isinstance(stmt, Event):
+                events.append(stmt)
+        return events
+
 
 class EidosDocument(object):
     def __init__(self, json_dict):
