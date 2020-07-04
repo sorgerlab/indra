@@ -27,7 +27,8 @@
     "phosphoelm": 0.01,
     "hypothes.is": 0.01,
     "virhostnet": 0.01,
-    "ctd": 0.01
+    "ctd": 0.01,
+    "drugbank": 0.01
   },
   "rand": {
     "eidos": 0.3,
@@ -57,6 +58,7 @@
     "phosphoelm": 0.1,
     "hypothes.is": 0.1,
     "virhostnet": 0.1,
-    "ctd": 0.1
+    "ctd": 0.1,
+    "drugbank": 0.1
   }
 }
