@@ -25,39 +25,45 @@ class DrugbankProcessor:
         for target_element in db_findall(drug_element, 'db:targets/db:target'):
             actions = {a.text for a in db_findall(target_element,
                                                   'db:actions/db:action')}
-            stmt_type = DrugbankProcessor._get_statement_type(actions)
-            if not stmt_type:
-                continue
-            annotations = {'drugbank_actions': actions}
-            evs = DrugbankProcessor._get_evidences(target_element)
-            for ev in evs:
-                ev.annotations = annotations
-            target = DrugbankProcessor._get_target_agent(target_element)
-            yield stmt_type(drug, target, evidence=evs)
+            if not actions:
+                actions = {'N/A'}
+            for action in actions:
+                stmt_type = DrugbankProcessor._get_statement_type(action)
+                if not stmt_type:
+                    continue
+                annotations = {'drugbank_action': action}
+                evs = DrugbankProcessor._get_evidences(target_element)
+                for ev in evs:
+                    ev.annotations = annotations
+                target = DrugbankProcessor._get_target_agent(target_element)
+                yield stmt_type(drug, target, evidence=evs)
 
     @staticmethod
-    def _get_statement_type(actions):
-        if not actions or actions <= neutral_actions:
+    def _get_statement_type(action):
+        if action in neutral_actions:
             return None
-        if actions - neutral_actions <= inhibition_actions:
-            return Inhibition
-        elif actions - neutral_actions <= activation_actions:
+        elif action in activation_actions:
             return Activation
+        elif action in inhibition_actions:
+            return Inhibition
+        elif action in decrease_amount_actions:
+            return DecreaseAmount
+        elif action in increase_amount_actions:
+            return IncreaseAmount
+        elif action == 'N/A':
+            return Inhibition
         else:
-            logger.error('Unhandled actions: %s' % str(actions))
             return None
 
     @staticmethod
     def _get_target_agent(target_element):
         name_tag = db_find(target_element, 'db:name')
         name = name_tag.text
-        assert name is not None
 
         db_refs = {}
 
         # Get Drugbank target ID
         target_id = db_find(target_element, 'db:id').text
-        assert target_id
         db_refs['DRUGBANKV4.TARGET'] = target_id
 
         # Extract other xrefs
@@ -80,7 +86,6 @@ class DrugbankProcessor:
     def _get_drug_agent(drug_element):
         name_tag = db_find(drug_element, 'db:name')
         name = name_tag.text
-        assert name is not None
 
         db_refs = {}
 
@@ -94,7 +99,7 @@ class DrugbankProcessor:
 
         # Extract CAS ID
         cas_tag = db_find(drug_element, 'db:cas-number')
-        if cas_tag is not None:
+        if cas_tag is not None and cas_tag.text is not None:
             db_refs['CAS'] = cas_tag.text
 
         # Extract other xrefs
@@ -102,6 +107,12 @@ class DrugbankProcessor:
                                    'db:external-identifier'):
             resource = db_find(xref_tag, 'db:resource').text
             identifier = db_find(xref_tag, 'db:identifier').text
+            if resource == 'ChEMBL':
+                db_refs['CHEMBL'] = identifier
+            elif resource == 'PubChem Compound':
+                db_refs['PUBCHEM'] = identifier
+            elif resource == 'ChEBI':
+                db_refs['CHEBI'] = identifier
 
         standard_name, db_refs = standardize_name_db_refs(db_refs)
         if standard_name:
@@ -132,15 +143,19 @@ def db_findall(element, path):
 activation_actions = {'substrate', 'agonist', 'inducer', 'potentiator',
                       'stimulator', 'cofactor', 'activator', 'ligand',
                       'chaperone', 'partial agonist', 'protector',
-                      'positive allosteric modulator'}
+                      'positive allosteric modulator', 'positive modulator'}
 
 inhibition_actions = {'antagonist', 'inhibitor', 'binder', 'antibody',
                       'inactivator', 'binding', 'blocker', 'negative modulator',
                       'inverse agonist', 'neutralizer', 'weak inhibitor',
-                      'suppressor', 'disruptor'}
+                      'suppressor', 'disruptor',
+                      'inhibitory allosteric modulator'}
 
-decrease_amount_actions = {'downregulator'}
+decrease_amount_actions = {'downregulator', 'metabolizer', 'chelator',
+                           'degradation',
+                           'incorporation into and destabilization'}
 
+increase_amount_actions = {'stabilization'}
 
 neutral_actions = {'modulator', 'other/unknown', 'unknown', 'other',
                    'regulator'}
