@@ -73,7 +73,7 @@ def main():
                     'indra.preassembler.grounding_mapper', 'indra.sources',
                     'indra.sources.bel',
                     'indra.sources.biopax', 'indra.sources.ctd',
-                    'indra.sources.cwms',
+                    'indra.sources.cwms', 'indra.sources.drugbank',
                     'indra.sources.eidos',
                     'indra.sources.geneways', 'indra.sources.hprd',
                     'indra.sources.hume', 'indra.sources.hypothesis',
