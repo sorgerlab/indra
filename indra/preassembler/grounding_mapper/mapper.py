@@ -455,7 +455,7 @@ def _get_resource_path(*suffixes):
 
 def _load_default_grounding_map():
     default_grounding_map_path = \
-        _get_resource_path('famplex', 'grounding_map.csv')
+        _get_resource_path('grounding', 'grounding_map.csv')
     gmap = load_grounding_map(default_grounding_map_path, hgnc_symbols=True)
     return gmap
 

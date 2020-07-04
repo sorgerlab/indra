@@ -429,7 +429,21 @@ def update_famplex():
                  'grounding_map', 'relations']
     for csv_name in csv_names:
         url = famplex_url_pattern % csv_name
-        save_from_http(url, os.path.join(path,'famplex/%s.csv' % csv_name))
+        save_from_http(url, os.path.join(path, 'famplex',
+                                         '%s.csv' % csv_name))
+
+
+def update_grounding_map():
+    famplex_gmap = os.path.join(path, 'famplex', 'grounding_map.csv')
+    covid_gmap = os.path.join(path, 'grounding', 'covid_grounding.csv')
+    famplex_rows = list(read_unicode_csv(famplex_gmap))
+    row_len = len(famplex_rows[0])
+    covid_rows = list(read_unicode_csv(covid_gmap))
+    covid_rows = [r + [''] * (row_len - len(r))
+                  for r in covid_rows]
+    all_rows = famplex_rows + covid_rows
+    grounding_map = os.path.join(path, 'grounding', 'grounding_map.csv')
+    write_unicode_csv(grounding_map, all_rows)
 
 
 def update_lincs_small_molecules():
@@ -663,6 +677,7 @@ def update_drugbank_mappings():
 def main():
     update_famplex()
     update_famplex_map()
+    update_grounding_map()
     update_hgnc_entries()
     update_kinases()
     update_uniprot_subcell_loc()
