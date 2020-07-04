@@ -9,11 +9,26 @@ drugbank_ns = {'db': 'http://www.drugbank.ca'}
 
 
 class DrugbankProcessor:
+    """Processor to extract INDRA Statements from DrugBank content.
+
+    The processor assumes that an ElementTree is available which it then
+    traverses to find drug-target information.
+
+    Parameters
+    ----------
+    xml_tree : xml.etree.ElementTree.ElementTree
+        An XML ElementTree representing DrugBank XML content.
+
+    Attributes
+    ----------
+    statements : list of indra.statements.Statement
+        A list of INDRA Statements that were extracted from DrugBank content.
+    """
     def __init__(self, xml_tree: ElementTree.ElementTree):
         self.xml_tree = xml_tree
         self.statements = []
 
-    def extract_inhibitions(self):
+    def extract_statements(self):
         root = self.xml_tree.getroot()
         for drug in db_findall(root, 'db:drug'):
             for stmt in self._extract_statements_for_drug(drug):

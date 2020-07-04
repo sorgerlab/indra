@@ -24,5 +24,5 @@ def process_xml(fname):
     et = ElementTree.parse(fname)
     logger.info('Extracting DrugBank statements...')
     dp = DrugbankProcessor(et)
-    dp.extract_inhibitions()
+    dp.extract_statements()
     return dp
