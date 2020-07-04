@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<drugbank xmlns="http://www.drugbank.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.drugbank.ca http://www.drugbank.ca/docs/drugbank.xsd" version="5.1" exported-on="2020-04-23">
+<drug type="biotech" created="2005-06-13" updated="2020-04-02">
+  <drugbank-id primary="true">DB00001</drugbank-id>
+  <drugbank-id>BTD00024</drugbank-id>
+  <drugbank-id>BIOD00024</drugbank-id>
+  <name>Lepirudin</name>
+  <cas-number>138068-37-8</cas-number>
+  <groups>
+    <group>approved</group>
+  </groups>
+  <external-identifiers>
+    <external-identifier>
+      <resource>Drugs Product Database (DPD)</resource>
+      <identifier>11916</identifier>
+    </external-identifier>
+    <external-identifier>
+      <resource>PubChem Substance</resource>
+      <identifier>46507011</identifier>
+    </external-identifier>
+    <external-identifier>
+      <resource>KEGG Drug</resource>
+      <identifier>D06880</identifier>
+    </external-identifier>
+    <external-identifier>
+      <resource>PharmGKB</resource>
+      <identifier>PA450195</identifier>
+    </external-identifier>
+    <external-identifier>
+      <resource>UniProtKB</resource>
+      <identifier>P01050</identifier>
+    </external-identifier>
+    <external-identifier>
+      <resource>Therapeutic Targets Database</resource>
+      <identifier>DAP000541</identifier>
+    </external-identifier>
+    <external-identifier>
+      <resource>Wikipedia</resource>
+      <identifier>Lepirudin</identifier>
+    </external-identifier>
+    <external-identifier>
+      <resource>ChEMBL</resource>
+      <identifier>CHEMBL1201666</identifier>
+    </external-identifier>
+    <external-identifier>
+      <resource>RxCUI</resource>
+      <identifier>237057</identifier>
+    </external-identifier>
+  </external-identifiers>
+  <external-links>
+    <external-link>
+      <resource>RxList</resource>
+      <url>http://www.rxlist.com/cgi/generic/lepirudin.htm</url>
+    </external-link>
+    <external-link>
+      <resource>Drugs.com</resource>
+      <url>http://www.drugs.com/cdi/lepirudin.html</url>
+    </external-link>
+  </external-links>
+  <targets>
+    <target>
+      <id>BE0000048</id>
+      <name>Prothrombin</name>
+      <organism>Humans</organism>
+      <actions>
+        <action>inhibitor</action>
+      </actions>
+      <references>
+        <articles>
+          <article>
+            <ref-id>A1703</ref-id>
+            <pubmed-id>10505536</pubmed-id>
+            <citation>Turpie AG: Anticoagulants in acute coronary syndromes. Am J Cardiol. 1999 Sep 2;84(5A):2M-6M.</citation>
+          </article>
+          <article>
+            <ref-id>A1705</ref-id>
+            <pubmed-id>10912644</pubmed-id>
+            <citation>Warkentin TE: Venous thromboembolism in heparin-induced thrombocytopenia. Curr Opin Pulm Med. 2000 Jul;6(4):343-51.</citation>
+          </article>
+          <article>
+            <ref-id>A1707</ref-id>
+            <pubmed-id>11055889</pubmed-id>
+            <citation>Eriksson BI: New therapeutic options in deep vein thrombosis prophylaxis. Semin Hematol. 2000 Jul;37(3 Suppl 5):7-9.</citation>
+          </article>
+          <article>
+            <ref-id>A1709</ref-id>
+            <pubmed-id>11467439</pubmed-id>
+            <citation>Fabrizio MC: Use of ecarin clotting time (ECT) with lepirudin therapy in heparin-induced thrombocytopenia and cardiopulmonary bypass. J Extra Corpor Technol. 2001 May;33(2):117-25.</citation>
+          </article>
+          <article>
+            <ref-id>A1711</ref-id>
+            <pubmed-id>11807012</pubmed-id>
+            <citation>Szaba FM, Smiley ST: Roles for thrombin and fibrin(ogen) in cytokine/chemokine production and macrophage adhesion in vivo. Blood. 2002 Feb 1;99(3):1053-9.</citation>
+          </article>
+          <article>
+            <ref-id>A9</ref-id>
+            <pubmed-id>11752352</pubmed-id>
+            <citation>Chen X, Ji ZL, Chen YZ: TTD: Therapeutic Target Database. Nucleic Acids Res. 2002 Jan 1;30(1):412-5.</citation>
+          </article>
+        </articles>
+        <textbooks/>
+        <links/>
+        <attachments/>
+      </references>
+      <known-action>yes</known-action>
+      <polypeptide id="P00734" source="Swiss-Prot">
+        <name>Prothrombin</name>
+        <gene-name>F2</gene-name>
+        <cellular-location>Secreted</cellular-location>
+        <transmembrane-regions/>
+        <organism ncbi-taxonomy-id="9606">Humans</organism>
+        <external-identifiers>
+          <external-identifier>
+            <resource>HUGO Gene Nomenclature Committee (HGNC)</resource>
+            <identifier>HGNC:3535</identifier>
+          </external-identifier>
+          <external-identifier>
+            <resource>GenAtlas</resource>
+            <identifier>F2</identifier>
+          </external-identifier>
+          <external-identifier>
+            <resource>GenBank Gene Database</resource>
+            <identifier>M17262</identifier>
+          </external-identifier>
+          <external-identifier>
+            <resource>GenBank Protein Database</resource>
+            <identifier>339641</identifier>
+          </external-identifier>
+          <external-identifier>
+            <resource>Guide to Pharmacology</resource>
+            <identifier>2362</identifier>
+          </external-identifier>
+          <external-identifier>
+            <resource>UniProtKB</resource>
+            <identifier>P00734</identifier>
+          </external-identifier>
+          <external-identifier>
+            <resource>UniProt Accession</resource>
+            <identifier>THRB_HUMAN</identifier>
+          </external-identifier>
+        </external-identifiers>
+        <synonyms>
+          <synonym>3.4.21.5</synonym>
+          <synonym>Coagulation factor II</synonym>
+        </synonyms>
+      </polypeptide>
+    </target>
+  </targets>
+</drug>
+</drugbank>

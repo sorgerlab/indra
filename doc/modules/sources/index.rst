@@ -44,6 +44,7 @@ Standard Molecular Pathway Databases
    phosphoelm/index
    virhostnet/index
    ctd/index
+   drugbank/index
 
 Custom Knowledge Bases
 ----------------------
