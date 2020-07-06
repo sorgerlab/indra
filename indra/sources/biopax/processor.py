@@ -172,8 +172,6 @@ class BiopaxProcessor(object):
 
     def _control_conversion_iter(self, conversion_type):
         for control in self.model.get_objects_by_type(bp.Control):
-            if control.uid == 'TemplateReactionRegulation_098f14bf2c085ddd214fd7bc0379def6':
-                breakpoint()
             conversion = control.controlled
             # Sometimes there is nothing being controlled, we skip
             # those cases. We also want to skip things like Modulation
@@ -193,6 +191,21 @@ class BiopaxProcessor(object):
                     _listify(self._get_agents_from_entity(primary_controller))
                 for primary_controller_agent in primary_controller_agents:
                     yield primary_controller_agent, ev, control, conversion
+
+    def _conversion_no_control_iter(self):
+        for conversion in self.model.get_objects_by_type(bp.Conversion):
+            if conversion.uid == 'BiochemicalReaction_372f76e11b2ef5ef91f83370c1999b30':
+                breakpoint()
+            ev = self._get_evidence(conversion)
+            for inp, outp in self.find_matching_left_right(conversion):
+                for inp_simple, outp_simple in \
+                        zip(expand_family(inp),
+                            expand_family(outp)):
+                    gained_mods, lost_mods, activity_change = \
+                        self.feature_delta(inp_simple, outp_simple)
+                    inp_agent = self._get_agent_from_entity(inp_simple)
+                    yield inp_agent, gained_mods, lost_mods, \
+                        activity_change, ev
 
     def _conversion_state_iter(self):
         for primary_controller_agent, ev, control, conversion in \
@@ -236,8 +249,8 @@ class BiopaxProcessor(object):
 
     def get_activity_modification(self):
         """Extract INDRA ActiveForm statements from the BioPAX model."""
-        for _, agent, gained_mods, lost_mods, \
-                activity_change, ev in self._conversion_state_iter():
+        for agent, gained_mods, lost_mods, activity_change, ev in \
+                self._conversion_no_control_iter():
             # We have to have both a modification change and an activity
             # change
             if not (gained_mods or lost_mods) or not activity_change:
