@@ -125,20 +125,10 @@ class HtmlAssembler(object):
         # If the deprecated parameter is used, we make sure we take it
         if not ev_counts and ev_totals:
             ev_counts = ev_totals
-        # Initialize as empty dict
-        ev_counts = {} if ev_counts is None else ev_counts
-        # Standardize to make sure we use int keys
-        standard_ev_counts = {}
-        for k, v in ev_counts.items():
-            if isinstance(k, str):
-                try:
-                    int_k = int(k)
-                    standard_ev_counts[int_k] = v
-                except ValueError:
-                    logger.warning('Could not convert %s evidence count key'
-                                   'to int: %s' % k)
-        self.ev_counts = standard_ev_counts
-        self.source_counts = {} if source_counts is None else source_counts
+        self.ev_counts = {} if ev_counts is None \
+            else standardize_counts(ev_counts)
+        self.source_counts = {} if source_counts is None \
+            else standardize_counts(source_counts)
         self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
         self.model = None
@@ -620,3 +610,15 @@ def tag_text(text, tag_info_list):
     # Add the last section of text
     format_text += text[start_pos:]
     return format_text
+
+
+def standardize_counts(counts):
+    """Standardize hash-based counts dicts to be int-keyed."""
+    standardized_counts = {}
+    for k, v in counts.items():
+        try:
+            int_k = int(k)
+            standardized_counts[int_k] = v
+        except ValueError:
+            logger.warning('Could not convert statement hash %s to int' % k)
+    return standardized_counts
