@@ -513,8 +513,9 @@ class BiopaxProcessor(object):
             db_name = bpe.data_source[0].display_name
             if db_name:
                 annotations['source_sub_id'] = db_name.lower()
+        source_id = 'http://pathwaycommons.org/pc12/%s' % bpe.uid
         ev = [Evidence(source_api='biopax', pmid=cit,
-                       source_id=bpe.uid, epistemics=epi,
+                       source_id=source_id, epistemics=epi,
                        annotations=annotations)
               for cit in citations]
         return ev
