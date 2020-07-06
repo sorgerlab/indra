@@ -90,7 +90,7 @@ class IndraDBRestProcessor(object):
 
     def get_ev_count_by_hash(self, stmt_hash):
         """Get the total evidence count for a statement hash."""
-        return self.__evidence_counts.get(str(stmt_hash), 0)
+        return self.__evidence_counts.get(stmt_hash, 0)
 
     def get_source_counts(self):
         """Get the source counts as a dict per statement hash."""
@@ -129,11 +129,10 @@ class IndraDBRestProcessor(object):
     def _merge_json(self, stmt_json, ev_counts, source_counts):
         """Merge these statement jsons with new jsons."""
         # Where there is overlap, there _should_ be agreement.
-        self.__evidence_counts.update(ev_counts)
+        self.__evidence_counts.update(standardize_counts(ev_counts))
 
         # We turn source counts into an int-keyed dict and update it that way
-        self.__source_counts.update({int(k): v
-                                     for k, v in source_counts.items()})
+        self.__source_counts.update(standardize_counts(source_counts))
 
         for k, sj in stmt_json.items():
             if k not in self.__statement_jsons:
@@ -522,3 +521,16 @@ class IndraDBRestSearchProcessor(IndraDBRestProcessor):
                          % timeout)
             self.__th.join(timeout)
         return
+
+
+def standardize_counts(counts):
+    """Standardize hash-based counts dicts to be int-keyed."""
+    standardized_counts = {}
+    for k, v in counts.items():
+        try:
+            int_k = int(k)
+            standardized_counts[int_k] = v
+        except ValueError:
+            logger.warning('Could not convert statement hash %s to int' % k)
+    return standardized_counts
+

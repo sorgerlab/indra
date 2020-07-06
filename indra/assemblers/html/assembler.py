@@ -80,9 +80,11 @@ class HtmlAssembler(object):
         INDRA REST API. Default is None. Each value should be a concise
         summary of O(1), not of order the length of the list, such as the
         evidence totals. The keys should be informative human-readable strings.
-    ev_totals : Optional[dict]
+    ev_counts : Optional[dict]
         A dictionary of the total evidence available for each
-        statement indexed by hash. Default: None
+        statement indexed by hash.
+    ev_totals : Optional[dict]
+        DEPRECATED. Same as ev_counts which should be used instead.
     source_counts : Optional[dict]
         A dictionary of the itemized evidence counts, by source, available for
         each statement, indexed by hash. Default: None.
@@ -105,7 +107,7 @@ class HtmlAssembler(object):
     metadata : dict
         Dictionary of statement list metadata such as that provided by the
         INDRA REST API.
-    ev_totals : dict
+    ev_counts : dict
         A dictionary of the total evidence available for each
         statement indexed by hash.
     db_rest_url : str
@@ -113,14 +115,20 @@ class HtmlAssembler(object):
     """
 
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
-                 source_counts=None, curation_dict=None, title='INDRA Results',
+                 ev_counts=None, source_counts=None, curation_dict=None,
+                 title='INDRA Results',
                  db_rest_url=None):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
             else summary_metadata
-        self.ev_totals = {} if ev_totals is None else ev_totals
-        self.source_counts = {} if source_counts is None else source_counts
+        # If the deprecated parameter is used, we make sure we take it
+        if not ev_counts and ev_totals:
+            ev_counts = ev_totals
+        self.ev_counts = {} if ev_counts is None \
+            else standardize_counts(ev_counts)
+        self.source_counts = {} if source_counts is None \
+            else standardize_counts(source_counts)
         self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
         self.model = None
@@ -154,7 +162,7 @@ class HtmlAssembler(object):
         # Get an iterator over the statements, carefully grouped.
         stmt_rows = group_and_sort_statements(
             self.statements,
-            self.ev_totals if self.ev_totals else None,
+            self.ev_counts if self.ev_counts else None,
             self.source_counts if self.source_counts else None)
 
         # Do some extra formatting.
@@ -202,8 +210,8 @@ class HtmlAssembler(object):
                 # Format some strings nicely.
                 ev_list = _format_evidence_text(stmt, self.curation_dict)
                 english = _format_stmt_text(stmt)
-                if self.ev_totals:
-                    tot_ev = self.ev_totals.get(int(stmt_hash), '?')
+                if self.ev_counts:
+                    tot_ev = self.ev_counts.get(int(stmt_hash), '?')
                     if tot_ev == '?':
                         logger.warning('The hash %s was not found in the '
                                        'evidence totals dict.' % stmt_hash)
@@ -602,3 +610,15 @@ def tag_text(text, tag_info_list):
     # Add the last section of text
     format_text += text[start_pos:]
     return format_text
+
+
+def standardize_counts(counts):
+    """Standardize hash-based counts dicts to be int-keyed."""
+    standardized_counts = {}
+    for k, v in counts.items():
+        try:
+            int_k = int(k)
+            standardized_counts[int_k] = v
+        except ValueError:
+            logger.warning('Could not convert statement hash %s to int' % k)
+    return standardized_counts
