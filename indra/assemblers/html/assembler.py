@@ -325,7 +325,7 @@ class HtmlAssembler(object):
         add_full_text_search_link : bool
             If True, link with Text fragment search in PMC journal will be added
             for the statements
-
+            
         All other keyword arguments are passed along to the template. If you
         are using a custom template with args that are not passed below, this
         is how you pass them.
@@ -343,13 +343,15 @@ class HtmlAssembler(object):
                 for stmt_formatted in statement["stmts_formatted"]:
                     for stmt_info in stmt_formatted["stmt_info_list"]:
                         for evidence in stmt_info["evidence"]:
-                            if not set(['PMCID', 'pmcid']) \
-                                    .issubset(evidence["text_refs"].keys()):
+                            if 'PMCID' not in evidence.get('text_refs', {}):
                                 ev_pmcid = id_lookup(
                                     evidence['pmid'], 'pmid') \
                                     .get('pmcid', None)
                                 if ev_pmcid:
                                     evidence['pmcid'] = ev_pmcid
+                            else:
+                                evidence['pmcid'] = \
+                                    evidence['text_refs']['PMCID']
 
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()
