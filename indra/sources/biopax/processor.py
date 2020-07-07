@@ -185,8 +185,6 @@ class BiopaxProcessor(object):
             # that don't convert anything.
             if not isinstance(conversion, conversion_type):
                 continue
-            if control.uid == 'Catalysis_691e62c673ee38318b39187bdd2ab080':
-                breakpoint()
             ev = self._get_evidence(control)
             for controller_pe in control.controller:
                 # We skip e.g., Pathway controllers
@@ -340,23 +338,20 @@ class BiopaxProcessor(object):
 
     def find_gdp_gtp_complex(self, cplxes):
         for cplx in cplxes:
-            members = self._get_complex_members(cplx)
+            members = expand_complex(cplx)
             if not members:
                 continue
             gdp_gtp_idx = None
-            ras_agent = None
+            ras_member = None
             for idx, member in enumerate(members):
-                if isinstance(member, Agent) \
-                        and member.name in {'GDP', 'GTP'}:
+                if _is_small_molecule(member) and \
+                        member.display_name  in {'GDP', 'GTP'}:
                     gdp_gtp_idx = idx
-                    break
-            for idx, member in enumerate(members):
-                if isinstance(member, Agent) \
-                        and 'HGNC' in member.db_refs:
-                    ras_agent = member
-            if gdp_gtp_idx is None or ras_agent is None:
+                elif _is_protein(member):
+                    ras_member = member
+            if gdp_gtp_idx is None or ras_member is None:
                 continue
-            return ras_agent, members[gdp_gtp_idx].name
+            return ras_member, members[gdp_gtp_idx].display_name
         return None, None
 
     def get_gap_gef(self):
@@ -377,7 +372,8 @@ class BiopaxProcessor(object):
             else:
                 continue
 
-            for ras in _listify(left_ras):
+            ras_agents = self._get_agents_from_entity(left_ras)
+            for ras in _listify(ras_agents):
                 st = stmt_type(gap_gef, ras, evidence=ev)
                 self.statements.append(st)
 
