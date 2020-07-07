@@ -159,6 +159,13 @@ class BiopaxProcessor(object):
             right_simple += expand_complex(pe)
 
         for inp, outp in itertools.product(left_simple, right_simple):
+            # Sometimes we get a "raw" PhysicalEntity here that doesn't
+            # actually have an entity reference which is required here so
+            # we skip those.
+            if not isinstance(inp, (bp.SimplePhysicalEntity, bp.Complex)):
+                continue
+            if not isinstance(outp, (bp.SimplePhysicalEntity, bp.Complex)):
+                continue
             inp_type = infer_pe_type(inp)
             outp_type = infer_pe_type(outp)
             if inp_type != outp_type:
