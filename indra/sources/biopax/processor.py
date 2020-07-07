@@ -185,7 +185,7 @@ class BiopaxProcessor(object):
             # that don't convert anything.
             if not isinstance(conversion, conversion_type):
                 continue
-            if control.uid == 'TemplateReactionRegulation_607f076656c70198bef5af4800db0730':
+            if control.uid == 'Catalysis_691e62c673ee38318b39187bdd2ab080':
                 breakpoint()
             ev = self._get_evidence(control)
             for controller_pe in control.controller:
@@ -224,11 +224,16 @@ class BiopaxProcessor(object):
         for primary_controller_agent, ev, control, conversion in \
                 self._control_conversion_iter(bp.Conversion, 'primary'):
             for inp, outp in self.find_matching_left_right(conversion):
+                # There is sometimes activity change at the family level
+                # which we need to capture
+                _, _, overall_activity_change = self.feature_delta(inp, outp)
                 for inp_simple, outp_simple in \
                         zip(expand_family(inp),
                             expand_family(outp)):
                     gained_mods, lost_mods, activity_change = \
                         self.feature_delta(inp_simple, outp_simple)
+                    activity_change = activity_change if activity_change else \
+                        overall_activity_change
                     inp_agent = self._get_agent_from_entity(inp_simple)
                     yield primary_controller_agent, inp_agent, gained_mods, \
                         lost_mods, activity_change, ev
