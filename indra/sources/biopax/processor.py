@@ -52,11 +52,6 @@ class BiopaxProcessor(object):
         self._activity_conditions = {}
         self._agents = {}
 
-    def print_statements(self):
-        """Print all INDRA Statements collected by the processors."""
-        for i, stmt in enumerate(self.statements):
-            print("%s: %s" % (i, stmt))
-
     def save_model(self, file_name):
         """Save the BioPAX model object in an OWL file.
 
@@ -126,26 +121,6 @@ class BiopaxProcessor(object):
                 self._activity_conditions[feature.uid] = 'active'
             elif mf_type == 'inactivity':
                 self._activity_conditions[feature.uid] = 'inactive'
-
-    def get_complexes(self):
-        """Extract INDRA Complex Statements from the BioPAX model.
-
-        This method searches for org.biopax.paxtools.model.level3.Complex
-        objects which represent molecular complexes. It doesn't reuse
-        BioPAX Pattern's org.biopax.paxtools.pattern.PatternBox.inComplexWith
-        query since that retrieves pairs of complex members rather than
-        the full complex.
-        """
-        for bpe in self.model.get_objects_by_type(bp.Complex):
-            ev = self._get_evidence(bpe)
-            members = self._get_complex_members(bpe)
-            if members is not None:
-                if len(members) > 10:
-                    logger.debug('Skipping complex with more than 10 members.')
-                    continue
-                complexes = _get_combinations(members)
-                for c in complexes:
-                    self.statements.append(Complex(c, ev))
 
     @staticmethod
     def find_matching_left_right(conversion: bp.Conversion):
@@ -402,43 +377,6 @@ class BiopaxProcessor(object):
             for ras in _listify(ras_agents):
                 st = stmt_type(gap_gef, ras, evidence=ev)
                 self.statements.append(st)
-
-    def _get_complex_members(self, cplx: bp.Complex):
-        # Get the members of a complex. This is returned as a list
-        # of lists since complexes can contain other complexes. The
-        # list of lists solution allows us to preserve this.
-        member_pes = cplx.component
-
-        # Make a dict of member URIs and their
-        # corresponding stoichiometries
-        member_stos = {cs.physical_entity.uid: cs.stoichiometric_coefficient
-                       for cs in cplx.component_stoichiometry}
-
-        # Some complexes do not have any members explicitly listed
-        if not member_pes:
-            member_pes = cplx.member_physical_entity
-            if not member_pes:
-                logger.debug('Complex "%s" has no members.' %
-                             cplx.display_name)
-                return None
-        members = []
-        for m in member_pes:
-            if _is_complex(m):
-                ms = self._get_complex_members(m)
-                if ms is None:
-                    return None
-                members.extend(ms)
-            else:
-                ma = self._get_agents_from_entity(m)
-                try:
-                    sto = member_stos[m.uid]
-                    sto_int = int(float(sto))  # This is needed for e.g., '1.0'
-                except KeyError:
-                    # No stoichiometry information - assume it is 1
-                    sto_int = 1
-                for i in range(sto_int):
-                    members.append(ma)
-        return members
 
     @staticmethod
     def _get_entity_mods(bpe):
@@ -1006,18 +944,9 @@ def _is_physical_entity(pe):
     return isinstance(pe, bp.PhysicalEntity)
 
 
-def _is_simple_physical_entity(pe):
-    return isinstance(pe, bp.SimplePhysicalEntity)
-
-
 def _is_modification(feature):
     return isinstance(feature, bp.ModificationFeature) and \
         get_modification_type(feature) == 'modification'
-
-
-def _is_activity(feature):
-    return isinstance(feature, bp.ModificationFeature) and \
-        get_modification_type(feature) in {'activity', 'inactivity'}
 
 
 def get_modification_type(mf: bp.ModificationFeature):
@@ -1051,14 +980,6 @@ def _listify(lst):
         return [lst]
     else:
         return lst
-
-
-def _list_listify(lst):
-    return [l if isinstance(l, collections.Iterable) else [l] for l in lst]
-
-
-def _get_combinations(lst):
-    return itertools.product(*_list_listify(lst))
 
 
 def _remove_redundant_mods(stmt):
