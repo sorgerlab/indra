@@ -149,8 +149,6 @@ class BiopaxProcessor(object):
 
     @staticmethod
     def find_matching_left_right(conversion: bp.Conversion):
-        matches = []
-
         left_simple = []
         for pe in conversion.left:
             left_simple += expand_complex(pe)
@@ -158,28 +156,41 @@ class BiopaxProcessor(object):
         for pe in conversion.right:
             right_simple += expand_complex(pe)
 
+        return BiopaxProcessor.find_matching_entities(left_simple, right_simple)
+
+    @staticmethod
+    def find_matching_entities(left_simple, right_simple):
+        matches = []
         for inp, outp in itertools.product(left_simple, right_simple):
-            # Sometimes we get a "raw" PhysicalEntity here that doesn't
-            # actually have an entity reference which is required here so
-            # we skip those.
-            if not isinstance(inp, (bp.SimplePhysicalEntity, bp.Complex)):
-                continue
-            if not isinstance(outp, (bp.SimplePhysicalEntity, bp.Complex)):
-                continue
             inp_type = infer_pe_type(inp)
             outp_type = infer_pe_type(outp)
             if inp_type != outp_type:
                 continue
-            if inp_type == 'family':
+            elif inp_type == 'family':
                 input_ers = {mpe.entity_reference.uid
-                             for mpe in expand_family(inp)}
+                             for mpe in expand_family(inp)
+                             if isinstance(mpe, bp.SimplePhysicalEntity)}
                 output_ers = {mpe.entity_reference.uid
-                              for mpe in expand_family(outp)}
+                              for mpe in expand_family(outp)
+                              if isinstance(mpe, bp.SimplePhysicalEntity)}
                 if input_ers == output_ers:
                     matches.append((inp, outp))
-            elif inp_type in {'complex_named', 'complex_family'}:
+            # Sometimes we get a "raw" PhysicalEntity here that doesn't
+            # actually have an entity reference which is required here so
+            # we skip those.
+            elif not isinstance(inp, (bp.SimplePhysicalEntity, bp.Complex)) or \
+                    not isinstance(outp, (bp.SimplePhysicalEntity, bp.Complex)):
+                continue
+            elif inp_type == 'complex_named':
                 if inp.uid == outp.uid:
                     matches.append((inp, outp))
+            elif inp_type == 'complex_family':
+                inp_members = flatten([expand_complex(m)
+                                      for m in expand_family(inp)])
+                outp_members = flatten([expand_complex(m)
+                                        for m in expand_family(outp)])
+                matches += BiopaxProcessor.find_matching_entities(inp_members,
+                                                                  outp_members)
             elif inp.entity_reference.uid == outp.entity_reference.uid:
                 matches.append((inp, outp))
         return matches
@@ -563,7 +574,8 @@ class BiopaxProcessor(object):
             db_name = bpe.data_source[0].display_name
             if db_name:
                 annotations['source_sub_id'] = db_name.lower()
-        source_id = 'http://pathwaycommons.org/pc12/%s' % bpe.uid
+        source_id = 'http://pathwaycommons.org/pc12/%s' % bpe.uid if \
+            not bpe.uid.startswith('http') else bpe.uid
         ev = [Evidence(source_api='biopax', pmid=cit,
                        source_id=source_id, epistemics=epi,
                        annotations=annotations)
