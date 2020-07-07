@@ -163,14 +163,21 @@ class BiopaxProcessor(object):
             outp_type = infer_pe_type(outp)
             if inp_type != outp_type:
                 continue
-            if inp_type in {'complex_named', 'complex_family'}:
+            if inp_type == 'family':
+                input_ers = {mpe.entity_reference.uid
+                             for mpe in expand_family(inp)}
+                output_ers = {mpe.entity_reference.uid
+                              for mpe in expand_family(outp)}
+                if input_ers == output_ers:
+                    matches.append((inp, outp))
+            elif inp_type in {'complex_named', 'complex_family'}:
                 if inp.uid == outp.uid:
                     matches.append((inp, outp))
             elif inp.entity_reference.uid == outp.entity_reference.uid:
                 matches.append((inp, outp))
         return matches
 
-    def _control_conversion_iter(self, conversion_type):
+    def _control_conversion_iter(self, conversion_type, controller_logic):
         for control in self.model.get_objects_by_type(bp.Control):
             conversion = control.controlled
             # Sometimes there is nothing being controlled, we skip
@@ -178,24 +185,30 @@ class BiopaxProcessor(object):
             # that don't convert anything.
             if not isinstance(conversion, conversion_type):
                 continue
+            if control.uid == 'TemplateReactionRegulation_607f076656c70198bef5af4800db0730':
+                breakpoint()
             ev = self._get_evidence(control)
             for controller_pe in control.controller:
                 # We skip e.g., Pathway controllers
                 if not isinstance(controller_pe, bp.PhysicalEntity):
                     continue
-                primary_controller = \
-                    self._get_primary_controller(controller_pe)
+                if controller_logic == 'primary':
+                    primary_controller = \
+                        self._get_primary_controller(controller_pe)
+                else:
+                    primary_controller = \
+                        self._get_all_protein_controllers(controller_pe)
                 if not primary_controller:
                     continue
-                primary_controller_agents = \
-                    _listify(self._get_agents_from_entity(primary_controller))
+                primary_controller_agents = []
+                for pc in _listify(primary_controller):
+                    primary_controller_agents += \
+                        _listify(self._get_agents_from_entity(pc))
                 for primary_controller_agent in primary_controller_agents:
                     yield primary_controller_agent, ev, control, conversion
 
     def _conversion_no_control_iter(self):
         for conversion in self.model.get_objects_by_type(bp.Conversion):
-            if conversion.uid == 'BiochemicalReaction_372f76e11b2ef5ef91f83370c1999b30':
-                breakpoint()
             ev = self._get_evidence(conversion)
             for inp, outp in self.find_matching_left_right(conversion):
                 for inp_simple, outp_simple in \
@@ -209,7 +222,7 @@ class BiopaxProcessor(object):
 
     def _conversion_state_iter(self):
         for primary_controller_agent, ev, control, conversion in \
-                self._control_conversion_iter(bp.Conversion):
+                self._control_conversion_iter(bp.Conversion, 'primary'):
             for inp, outp in self.find_matching_left_right(conversion):
                 for inp_simple, outp_simple in \
                         zip(expand_family(inp),
@@ -278,9 +291,7 @@ class BiopaxProcessor(object):
     def get_regulate_amounts(self):
         """Extract INDRA RegulateAmount Statements from the BioPAX model."""
         for subj, ev, control, conversion in \
-                self._control_conversion_iter(bp.TemplateReaction):
-            if not isinstance(conversion, bp.TemplateReaction):
-                continue
+                self._control_conversion_iter(bp.TemplateReaction, 'all'):
             stmt_type = IncreaseAmount if control.control_type == 'ACTIVATION' \
                 else DecreaseAmount
             for product in conversion.product:
@@ -300,7 +311,7 @@ class BiopaxProcessor(object):
         (e.g. lipid phosphorylation or cleavage).
         """
         for subj, ev, control, conversion in \
-                self._control_conversion_iter(bp.Conversion):
+                self._control_conversion_iter(bp.Conversion, 'primary'):
             # We only extract conversions for small molecules
             if not all(_is_small_molecule(pe)
                        for pe in (conversion.left + conversion.right)):
@@ -345,7 +356,7 @@ class BiopaxProcessor(object):
 
     def get_gap_gef(self):
         for gap_gef, ev, control, conversion in \
-                self._control_conversion_iter(bp.Conversion):
+                self._control_conversion_iter(bp.Conversion, 'all'):
             left_complexes = [bpe for bpe in conversion.left
                               if _is_complex(bpe)]
             right_complexes = [bpe for bpe in conversion.right
@@ -440,6 +451,16 @@ class BiopaxProcessor(object):
         if len(protein_members) == 1:
             return protein_members[0]
         return None
+
+    def _get_all_protein_controllers(self, controller_pe):
+        # If it's not a real complex, just return the physical entity
+        # as is
+        if infer_pe_type(controller_pe) != 'complex':
+            return controller_pe
+
+        protein_members = [p for p in controller_pe.component
+                           if _is_protein(p)]
+        return protein_members
 
     def _get_agent_from_entity(self, bpe):
         try:
