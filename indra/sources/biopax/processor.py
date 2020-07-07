@@ -319,6 +319,10 @@ class BiopaxProcessor(object):
             if not all(_is_small_molecule(pe)
                        for pe in (conversion.left + conversion.right)):
                 continue
+            # Since we don't extract location, this produces conversions where
+            # the input and output is the same
+            if isinstance(conversion, bp.Transport):
+                continue
 
             # Assemble from and to object lists
             obj_from = []
