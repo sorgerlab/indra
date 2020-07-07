@@ -339,13 +339,13 @@ class BiopaxProcessor(object):
     def find_gdp_gtp_complex(self, cplxes):
         for cplx in cplxes:
             members = expand_complex(cplx)
-            if not members:
+            if not members or len(members) != 2:
                 continue
             gdp_gtp_idx = None
             ras_member = None
             for idx, member in enumerate(members):
                 if _is_small_molecule(member) and \
-                        member.display_name  in {'GDP', 'GTP'}:
+                        member.display_name in {'GDP', 'GTP'}:
                     gdp_gtp_idx = idx
                 elif _is_protein(member):
                     ras_member = member
@@ -356,7 +356,11 @@ class BiopaxProcessor(object):
 
     def get_gap_gef(self):
         for gap_gef, ev, control, conversion in \
-                self._control_conversion_iter(bp.Conversion, 'all'):
+                self._control_conversion_iter(bp.Conversion, 'primary'):
+            assert isinstance(gap_gef, Agent)
+            # We have to make sure that we don't pick up chemicals here
+            if not set(gap_gef.db_refs.keys()) & {'HGNC', 'UP'}:
+                continue
             left_complexes = [bpe for bpe in conversion.left
                               if _is_complex(bpe)]
             right_complexes = [bpe for bpe in conversion.right
