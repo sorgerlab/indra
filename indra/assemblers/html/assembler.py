@@ -539,10 +539,11 @@ def tag_agents(english, agents):
             continue
         url = id_url(ag)
         if url is None:
-            continue
-        # Build up a set of indices
-        tag_start = "<a href='%s' target='_blank'>" % url
-        tag_close = "</a>"
+            tag_start = '<b>'
+            tag_close = '</b>'
+        else:
+            tag_start = "<a href='%s' target='_blank'>" % url
+            tag_close = "</a>"
         # If coordinates are passed, use them. Otherwise, try to find agent
         # names in english text
         if isinstance(ag, AgentWithCoordinates):
