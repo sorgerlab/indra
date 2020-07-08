@@ -533,7 +533,7 @@ class TripsProcessor(object):
                 if affected_type is None:
                     continue
                 affected_id = None
-                if affected_type.text not in molecule_types:
+                if affected_type.text not in entity_types:
                     if affected_type.text == 'ONT::QTY':
                         of = affected.find('of')
                         if of is not None:
