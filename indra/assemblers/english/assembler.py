@@ -308,13 +308,21 @@ def _assemble_agent_str(agent):
 
     # Handle modification conditions
     if agent.mods:
-        # Special case
+        # Special case when we have a single modification without a position
         if len(agent.mods) == 1 and agent.mods[0].position is None:
+            # First we get the modification state string like "phosphorylated"
             prefix = _mod_state_str(agent.mods[0].mod_type)
+            # If there is a residue, we prefix the state with the name of the
+            # residue.
             if agent.mods[0].residue is not None:
                 residue_str =\
                     ist.amino_acids[agent.mods[0].residue]['full_name']
                 prefix = residue_str + '-' + prefix
+            # If there is no residue, we handle negatives by prefixing with
+            # "un"
+            elif not agent.mods[0].is_modified:
+                prefix = 'un' + prefix
+            # Ee add the modification before the agent
             agent_str = prefix + ' ' + agent_str
         else:
             if agent.bound_conditions:
