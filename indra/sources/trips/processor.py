@@ -32,6 +32,11 @@ molecule_types = protein_types + \
      'ONT::PHARMACOLOGIC-SUBSTANCE']
 
 
+entity_types = molecule_types + ['ONT::BIOLOGICAL-PROCESS',
+                                 'ONT::CANCER',
+                                 'ONT::MEDICAL-DISORDERS-AND-CONDITIONS']
+
+
 class TripsProcessor(object):
     """The TripsProcessor extracts INDRA Statements from a TRIPS XML.
 
@@ -518,7 +523,7 @@ class TripsProcessor(object):
                 # If it has a type and is not a molecule then we can skip it
                 affected_type = affected.find('type')
                 if affected_type is not None and \
-                    affected_type.text not in molecule_types:
+                    affected_type.text not in entity_types:
                     continue
                 # Otherwise we need to look up the element
                 affected = self.tree.find("TERM/[@id='%s']" % affected_id)
