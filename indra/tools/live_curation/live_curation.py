@@ -166,7 +166,7 @@ def save_curations():
     return jsonify({})
 
 
-@app.route('/notify')
+@app.route('/notify', methods=['POST'])
 def notify():
     if request.json is None:
         abort(Response('Missing application/json header.', 415))
