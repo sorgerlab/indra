@@ -522,3 +522,11 @@ def test_sentence_builder():
     assert sb.agents[0].name == 'KRAS'
     assert sb.agents[1].name == 'BRAF'
     assert sb.agents[1].coords == (27, 31), sb.agents[1].coords
+
+
+def test_negative_mod_condition():
+    upgrb = Agent('GRB2', mods=[ModCondition('phosphorylation',
+                                             None, None, False)])
+    stmt = Activation(upgrb, Agent('SOS'))
+    txt = _stmt_to_text(stmt)
+    assert txt == 'Unphosphorylated GRB2 activates SOS.', txt
