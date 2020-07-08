@@ -185,7 +185,7 @@ def notify():
                     'error_message': 'Bad Request: missing or invalid body'})
 
 
-@app.route('/health')
+@app.route('/health', methods=['GET', 'POST'])
 def health():
     return jsonify({'state': 'healthy', 'version': '1.0.0'})
 
