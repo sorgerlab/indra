@@ -185,6 +185,11 @@ def notify():
                     'error_message': 'Bad Request: missing or invalid body'})
 
 
+@app.route('/health')
+def health():
+    return jsonify({'state': 'healthy', 'version': '1.0.0'})
+
+
 if __name__ == '__main__':
     # Process arguments
     parser = argparse.ArgumentParser(
