@@ -166,6 +166,30 @@ def save_curations():
     return jsonify({})
 
 
+@app.route('/notify', methods=['POST'])
+def notify():
+    if request.json is None:
+        abort(Response('Missing application/json header.', 415))
+
+    # Check validity of JSON
+    # {
+    #   identity: string,  # Name of the tool, e.g. "MyTool"
+    #   version: string,  # Version of the tool e.g. "3.1.4"
+    #   document_id: string,  # ID of the document, e.g. "qwerty1234"
+    #   storage_key: string,  # Storage key e.g. "uuid.ext"
+    # }
+    req_args = {'identity', 'version', 'document_id', 'storage_key'}
+    if all(k in req_args for k in request.json.keys()):
+        return Response('OK', 200)
+    return jsonify({'status': 400,
+                    'error_message': 'Bad Request: missing or invalid body'})
+
+
+@app.route('/health', methods=['GET', 'POST'])
+def health():
+    return jsonify({'state': 'healthy', 'version': '1.0.0'})
+
+
 if __name__ == '__main__':
     # Process arguments
     parser = argparse.ArgumentParser(
