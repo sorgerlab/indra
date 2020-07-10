@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 import requests
 import logging
 from functools import lru_cache
+from time import sleep
 from indra.databases import hgnc_client, mesh_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
@@ -29,6 +30,9 @@ def send_request(url, data):
         logger.error('url: %s, data: %s' % (url, data))
         logger.error(e)
         return None
+    if res.status_code == 429:
+        sleep(0.5)
+        res = requests.get(url, params=data)
     if not res.status_code == 200:
         logger.error('Got return code %d from pubmed client.'
                      % res.status_code)

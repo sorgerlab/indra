@@ -116,6 +116,41 @@
         tag.style.cssText = setCss
       }
     }
+
+    {% if add_full_text_search_link %}
+    window.onload = function() {
+      // Populate text fragment in Full Text search for PMC journal
+      var elements = document.querySelectorAll('.full_text_search');
+      for (elem_idx = 0 ;elem_idx < elements.length ;elem_idx++ ) {
+        var element = elements[elem_idx];
+        var span = document.createElement('span');  
+        span.innerHTML = decodeURIComponent(element.dataset.sentence);
+        var text = span.innerText;
+        var searchText = "";
+        var words = [];
+        var temp_words= text.split(" ");
+        for(var idx = 0; idx < temp_words.length ; idx++){
+          if(!temp_words[idx].includes("XREF"))
+            words.push(temp_words[idx]);
+        }
+        if(words.length<7)
+          searchText = encodeURIComponent(text);        
+        else{
+          for(var idx = 0; idx < 6 && idx < words.length ; idx++){
+            searchText += " " + encodeURIComponent(words[idx]);
+          }        
+          var secondLastWord = "";
+          if(words.length>7)
+            secondLastWord = words[words.length - 2] + " ";
+          var lastWord = words[words.length - 1];
+          if(lastWord.endsWith("."))
+            lastWord = lastWord.substring(0,lastWord.length-1)
+          searchText += "," + encodeURIComponent(secondLastWord + lastWord);
+        }
+        element.href += "#:~:text="+ searchText.trim()        
+      }
+    };
+    {% endif %}
   </script>
   <style>
     {% for category, data in source_colors %}
@@ -208,6 +243,11 @@
     .curation_toggle {
         cursor: pointer;
     }
+
+    .pmid_link, .pmcid_link, .doi_link {
+      display: block;
+    }
+    
   </style>
 {% endblock %}
 
@@ -350,14 +390,24 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-10">
+                        {% if add_full_text_search_link %}
+                          <div class="col-9">
+                        {% else %}
+                          <div class="col-10">
+                        {% endif %}
+
                           {% if ev['text'] %}
                             "{{ ev['text'] }}"
                           {% else %}
                             <i>No evidence text available</i>
                           {% endif %}
                         </div>
-                        <div class="col-1 text-right">
+                        
+                        {% if add_full_text_search_link %}
+                          <div class="col-2 text-right">
+                        {% else %}
+                          <div class="col-1 text-right">
+                        {% endif %}
                           {% if ev['pmid'] %}
                             <a class="pmid_link"
                                title="Hover again to see info"
@@ -365,26 +415,34 @@
                                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}'
                                target="_blank">
                               {{ ev['pmid'] }}</a>
-                          {% elif 'pmid' in ev['text_refs'] and ev['text_refs']['pmid'] %}
+                          {% elif 'PMID' in ev['text_refs'] and ev['text_refs']['PMID'] %}
                             <a class="pmid_link"
                                title="Hover again to see info"
                                onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
                                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}'
                                target="_blank">
-                              {{ ev['text_refs']['pmid'] }}</a>
+                              {{ ev['text_refs']['PMID'] }}</a>
+                          {% endif %}
+                                                    
+                          {% if add_full_text_search_link and 'pmcid' in ev and ev['pmcid'] %}
+                            <a class="full_text_search"
+                              data-sentence= '{{ev["text"]|urlencode}}'
+                              href="https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["pmcid"] }}" target=_blank rel=noopener >Full-Text Search: {{ev['pmcid']}}</a>
+                            <span style="cursor:default" title="This link will search for and highlight the sentence in the full-text article. Works with Chrome 80+">  &#9432;</span>
+                          {% else %}
+                            {% if 'PMCID' in ev['text_refs'] and ev['text_refs']['PMCID'] %}
+                              | <a class="pmcid_link"
+                                href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'
+                                target="_blank">PMC</a>
+                            {% endif %}
                           {% endif %}
 
-                          {% if 'pmcid' in ev['text_refs'] and ev['text_refs']['pmcid'] %}
-                            | <a class="pmcid_link"
-                               href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'
-                               target="_blank">PMC</a>
-                          {% endif %}
-
-                          {% if 'doi' in ev['text_refs'] and ev['text_refs']['doi'] %}
+                          {% if 'DOI' in ev['text_refs'] and ev['text_refs']['DOI'] %}
                             | <a class="doi_link"
-                               href='https://dx.doi.org/{{ ev["text_refs"]["doi"] }}'
+                               href='https://dx.doi.org/{{ ev["text_refs"]["DOI"] }}'
                                target="_blank">DOI</a>
                           {% endif %}
+
                         </div>
                       </div>
                     {% endfor %}
@@ -398,4 +456,3 @@
      </div> <!-- type groups -->
   {% endfor %}
 {% endblock %}
-
