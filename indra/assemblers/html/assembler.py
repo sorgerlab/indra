@@ -323,9 +323,9 @@ class HtmlAssembler(object):
             False, all headings will be collapsed into one on every level, with
             all statements placed under a single heading.
         add_full_text_search_link : bool
-            If True, link with Text fragment search in PMC journal will be added
-            for the statements
-            
+            If True, link with Text fragment search in PMC journal will be
+            added for the statements.
+
         All other keyword arguments are passed along to the template. If you
         are using a custom template with args that are not passed below, this
         is how you pass them.
