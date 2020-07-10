@@ -344,11 +344,12 @@ class HtmlAssembler(object):
                     for stmt_info in stmt_formatted["stmt_info_list"]:
                         for evidence in stmt_info["evidence"]:
                             if 'PMCID' not in evidence.get('text_refs', {}):
-                                ev_pmcid = id_lookup(
-                                    evidence['pmid'], 'pmid') \
-                                    .get('pmcid', None)
-                                if ev_pmcid:
-                                    evidence['pmcid'] = ev_pmcid
+                                if evidence.get('pmid'):
+                                    ev_pmcid = id_lookup(
+                                        evidence['pmid'], 'pmid') \
+                                        .get('pmcid', None)
+                                    if ev_pmcid:
+                                        evidence['pmcid'] = ev_pmcid
                             else:
                                 evidence['pmcid'] = \
                                     evidence['text_refs']['PMCID']
@@ -477,9 +478,10 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
         num_correct = len(
             [cur for cur in curations if cur['error_type'] in correct_tags])
         num_incorrect = num_curations - num_correct
+        text_refs = {k.upper(): v for k, v in ev.text_refs.items()}
         ev_list.append({'source_api': source_api,
                         'pmid': ev.pmid,
-                        'text_refs': ev.text_refs,
+                        'text_refs': text_refs,
                         'text': format_text,
                         'source_hash': str(ev.source_hash),
                         'num_curations': num_curations,
