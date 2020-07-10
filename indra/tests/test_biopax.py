@@ -19,54 +19,37 @@ def test_listify():
     assert bpc._listify([1] == [1])
 
 
-def test_uniprot_id_pe():
-    bpe = bp.model.objects['http://identifiers.org/reactome/REACT_117886.3']
-    ids = bp._get_uniprot_id(bpe)
-    assert 'Q15303' == ids
-
-
-def test_name_uniprot_id_no_hgnc_pe():
-    bpe = bp.model.objects['http://identifiers.org/reactome/REACT_27053.2']
-    name = bp._get_element_name(bpe)
-    assert name == 'IGHV3-13'
-
-
 def test_uniprot_id_er():
-    bpe = bp.model.objects['http://identifiers.org/uniprot/Q15303']
+    bpe = bp.model.objects['http://identifiers.org/uniprot/P15056']
     ids = bp._get_uniprot_id(bpe)
-    assert 'Q15303' == ids
+    assert 'P15056' == ids
 
 
 def test_get_hgnc_id():
-    bpe = bp.model.objects['http://identifiers.org/uniprot/Q15303']
+    bpe = bp.model.objects['http://identifiers.org/uniprot/Q86YV0']
     hgnc_id = bp._get_hgnc_id(bpe)
-    assert hgnc_id == '3432'
-
-
-def test_get_hgnc_name():
-    hgnc_name = bp._get_hgnc_name('3432')
-    assert hgnc_name == 'ERBB4'
+    assert hgnc_id == '26129', hgnc_id
 
 
 def test_get_mod_feature():
     bpe = bp.model.objects[
-            'ModificationFeature_bd27a53570fb9a5094bb5929bd973217']
+            'ModificationFeature_9b4c5a6e2db0be17ac63ae2adb2e5313']
     mc = bpc.BiopaxProcessor.mod_condition_from_mod_feature(bpe)
     assert mc.mod_type == 'phosphorylation'
     assert mc.residue == 'T'
-    assert mc.position == '274'
+    assert mc.position == '42'
 
 
 def test_get_entity_mods():
-    bpe = bp.model.objects['Protein_7aeb1631f64e49491b7a0303aaaec536']
+    bpe = bp.model.objects['Protein_fb17cc169251fd5c9e0d02fe62df6d33']
     mods = bpc.BiopaxProcessor._get_entity_mods(bpe)
-    assert len(mods) == 5
+    assert len(mods) == 5, mods
     mod_types = set([m.mod_type for m in mods])
-    assert mod_types == set(['phosphorylation'])
-    residues = set([m.residue for m in mods])
-    assert residues == set(['Y'])
-    mod_pos = set([m.position for m in mods])
-    assert mod_pos == set(['1035', '1056', '1128', '1188', '1242'])
+    assert mod_types == {'phosphorylation'}
+    residues = {m.residue for m in mods}
+    assert residues == {'Y', 'T', 'S'}, mods
+    mod_pos = {m.position for m in mods}
+    assert mod_pos == {'302', '452', '576', '299', '455'}
 
 
 @attr('webservice', 'slow')
