@@ -78,6 +78,7 @@ class BiopaxProcessor(object):
 
     def feature_delta(self, from_pe: bp.PhysicalEntity,
                       to_pe: bp.PhysicalEntity):
+        """Return gained and lost modifications and any activity change."""
         # First deal with activity changes
         from_acts = {self._activity_conditions[f.uid] for f in from_pe.feature
                      if f.uid in self._activity_conditions}
@@ -107,7 +108,8 @@ class BiopaxProcessor(object):
                      set(from_mods.keys()) - set(to_mods.keys())}
         return gained_mods, lost_mods, activity_change
 
-    def extract_features(self):
+    def _extract_features(self):
+        """Pre-extract features before processing statements."""
         for feature in self.model.get_objects_by_type(bp.EntityFeature):
             # TODO: handle BindingFeatures and FragmentFeatures here
             if not isinstance(feature, bp.ModificationFeature):
@@ -124,6 +126,7 @@ class BiopaxProcessor(object):
 
     @staticmethod
     def find_matching_left_right(conversion: bp.Conversion):
+        """Find matching entities on the left and right of a conversion."""
         left_simple = []
         for pe in conversion.left:
             left_simple += expand_complex(pe)
@@ -135,6 +138,7 @@ class BiopaxProcessor(object):
 
     @staticmethod
     def find_matching_entities(left_simple, right_simple):
+        """Find matching entities between two lists of simple entities."""
         matches = []
         for inp, outp in itertools.product(left_simple, right_simple):
             inp_type = infer_pe_type(inp)
@@ -171,6 +175,7 @@ class BiopaxProcessor(object):
         return matches
 
     def _control_conversion_iter(self, conversion_type, controller_logic):
+        """An iterator over controlled conversions in the model."""
         for control in self.model.get_objects_by_type(bp.Control):
             conversion = control.controlled
             # Sometimes there is nothing being controlled, we skip
@@ -199,6 +204,7 @@ class BiopaxProcessor(object):
                     yield primary_controller_agent, ev, control, conversion
 
     def _conversion_no_control_iter(self):
+        """An iterator over conversions irrespective of control in the model."""
         for conversion in self.model.get_objects_by_type(bp.Conversion):
             ev = self._get_evidence(conversion)
             for inp, outp in self.find_matching_left_right(conversion):
@@ -212,6 +218,7 @@ class BiopaxProcessor(object):
                         activity_change, ev
 
     def _conversion_state_iter(self):
+        """An iterator over state changed in controlled conversions in the model."""
         for primary_controller_agent, ev, control, conversion in \
                 self._control_conversion_iter(bp.Conversion, 'primary'):
             for inp, outp in self.find_matching_left_right(conversion):
@@ -297,15 +304,7 @@ class BiopaxProcessor(object):
                     self.statements.append(stmt)
 
     def get_conversions(self):
-        """Extract Conversion INDRA Statements from the BioPAX model.
-
-        This method uses a custom BioPAX Pattern
-        (one that is not implemented PatternBox) to query for
-        BiochemicalReactions whose left and right hand sides are collections
-        of SmallMolecules. This pattern thereby extracts metabolic
-        conversions as well as signaling processes via small molecules
-        (e.g. lipid phosphorylation or cleavage).
-        """
+        """Extract Conversion INDRA Statements from the BioPAX model."""
         for subj, ev, control, conversion in \
                 self._control_conversion_iter(bp.Conversion, 'primary'):
             # We only extract conversions for small molecules
@@ -333,7 +332,8 @@ class BiopaxProcessor(object):
             st = Conversion(subj, obj_from, obj_to, evidence=ev)
             self.statements.append(st)
 
-    def find_gdp_gtp_complex(self, cplxes):
+    @staticmethod
+    def find_gdp_gtp_complex(cplxes):
         for cplx in cplxes:
             members = expand_complex(cplx)
             if not members or len(members) != 2:
@@ -352,6 +352,7 @@ class BiopaxProcessor(object):
         return None, None
 
     def get_gap_gef(self):
+        """Extract Gap and Gef INDRA Statements."""
         for gap_gef, ev, control, conversion in \
                 self._control_conversion_iter(bp.Conversion, 'primary'):
             assert isinstance(gap_gef, Agent)
@@ -533,6 +534,67 @@ class BiopaxProcessor(object):
 
     @staticmethod
     def _get_db_refs(bpe: bp.PhysicalEntity):
+        entref = BiopaxProcessor._get_entref(bpe)
+        if not entref:
+            return {}
+
+        primary_ns, primary_id = \
+            BiopaxProcessor._get_reference_primary_id(entref)
+
+        db_refs = {}
+        if primary_ns and primary_id:
+            db_refs[primary_ns] = primary_id
+
+        from collections import defaultdict
+        xrefs = defaultdict(list)
+        for xref in entref.xref:
+            xref_db_ns = xref_ns_map.get(xref.db)
+            if not xref_db_ns:
+                continue
+            xrefs[xref_db_ns].append(xref.id)
+
+        sanitizers = {
+            'CHEBI': sanitize_chebi_ids,
+            'UP': sanitize_up_ids
+        }
+
+        xrefs = dict(xrefs)
+
+        for ns, fun in sanitizers.items():
+            if ns in xrefs:
+                ns_id = fun(xrefs[ns])
+                if not ns_id:
+                    xrefs.pop(ns, None)
+                else:
+                    xrefs[ns] = ns_id
+
+        return xrefs
+
+    def _get_uniprot_ids(self):
+
+    @staticmethod
+    def _get_reference_primary_id(entref: bp.EntityReference):
+        # In practice, it appears that only UniProt and ChEBI appear in this
+        # form.
+        match = re.match('http://identifiers.org/([^/]+)/(.+)$',
+                         entref.uid)
+        if match:
+            ident_ns, ident_id = match.groups()
+            if ident_ns == 'uniprot':
+                primary_ns, primary_id = 'UP', ident_id
+            elif ident_ns == 'chebi':
+                primary_ns, primary_id = 'CHEBI', ident_id
+            else:
+                logger.warning('Unhandled identifiers namespace: %s' %
+                               ident_ns)
+                primary_ns, primary_id = None, None
+        else:
+            primary_ns, primary_id = None, None
+
+        return primary_ns, primary_id
+
+    @staticmethod
+    def _get_db_reffs(bpe: bp.PhysicalEntity):
         db_refs = {}
         if _is_protein(bpe) or _is_rna(bpe):
             hgnc_id = BiopaxProcessor._get_hgnc_id(bpe)
@@ -805,14 +867,9 @@ class BiopaxProcessor(object):
     def _get_entref(bpe: bp.PhysicalEntity):
         """Returns the entity reference of an entity if it exists or
         return the entity reference that was passed in as argument."""
-        if not _is_reference(bpe):
-            try:
-                er = bpe.entity_reference
-            except AttributeError:
-                return None
-            return er
-        else:
-            return bpe
+        if isinstance(bpe, bp.SimplePhysicalEntity):
+            return bpe.entity_reference
+        return None
 
     def get_coverage(self):
         uids = set()
@@ -1080,6 +1137,10 @@ def get_specific_chebi_id(chebi_ids, name):
     return specific_chebi_id
 
 
+def sanitize_up_ids(up_ids):
+
+
+
 activity_terms = {
     'active',
     'residue modification, active',
@@ -1092,3 +1153,25 @@ inactivity_terms = {
 }
 
 
+xref_ns_map = {
+    'chebi': 'CHEBI',
+    'uniprot knowledgebase': 'UP',
+    'ncbi gene': 'EGID',
+    # 'hgnc symbol': 'HGNC.SYMBOL',  # we don't need these as db_refs
+    'uniprot': 'UP',
+    'hgnc': 'HGNC',
+    'mesh': 'MESH',
+    'drugbank': 'DRUGBANK',
+    'pubchem-compound': 'PUBCHEM',
+    'chembl compound': 'CHEMBL',
+    'pubchem': 'PUBCHEM',
+    'cas': 'CAS',
+    'hmdb': 'HMDB',
+    'gene ontology': 'GO',
+    'uniprot isoform': 'UP',
+    'interpro': 'IP',
+    'mirbase': 'MIRBASE',
+    'mirbase mature sequence': 'MIRBASEM',
+    'hugo gene nomenclature committee (hgnc)': 'HGNC',
+    'ensembl': 'ENSEMBL',
+}
