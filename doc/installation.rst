@@ -162,16 +162,6 @@ one has to
 where the --include-path and --library-path needs to be set based on
 where Homebrew installed graphviz.
 
-Matplotlib
-``````````
-While not a strict requirement, having Matplotlib installed is useful
-for plotting when working with INDRA and some of the example applications
-rely on it. It can be installed as
-
-.. code-block:: bash
-
-    pip install matplotlib
-
 Optional additional dependencies
 ````````````````````````````````
 Some dependencies of INDRA are only needed by certain submodules or are only
@@ -209,7 +199,6 @@ of dependencies.
 +-----------------+------------------------------------------------------+
 |Extra list name  |Purpose                                               |
 +=================+======================================================+
-|biopax           |BioPAX input processing and Pathway Commons queries   |
 +-----------------+------------------------------------------------------+
 |bel              |BEL input processing and output assembly              |
 +-----------------+------------------------------------------------------+
