@@ -415,25 +415,13 @@
                                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}'
                                target="_blank">
                               {{ ev['pmid'] }}</a>
-                          {% elif 'pmid' in ev['text_refs'] and ev['text_refs']['pmid'] %}
+                          {% elif 'PMID' in ev['text_refs'] and ev['text_refs']['PMID'] %}
                             <a class="pmid_link"
                                title="Hover again to see info"
                                onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
                                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}'
                                target="_blank">
-                              {{ ev['text_refs']['pmid'] }}</a>
-                          {% endif %}
-
-                          {% if 'pmcid' in ev['text_refs'] and ev['text_refs']['pmcid'] %}
-                            | <a class="pmcid_link"
-                               href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'
-                               target="_blank">PMC</a>
-                          {% endif %}
-
-                          {% if 'doi' in ev['text_refs'] and ev['text_refs']['doi'] %}
-                            | <a class="doi_link"
-                               href='https://dx.doi.org/{{ ev["text_refs"]["doi"] }}'
-                               target="_blank">DOI</a>
+                              {{ ev['text_refs']['PMID'] }}</a>
                           {% endif %}
                                                     
                           {% if add_full_text_search_link and 'pmcid' in ev and ev['pmcid'] %}
@@ -441,7 +429,20 @@
                               data-sentence= '{{ev["text"]|urlencode}}'
                               href="https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["pmcid"] }}" target=_blank rel=noopener >Full-Text Search: {{ev['pmcid']}}</a>
                             <span style="cursor:default" title="This link will search for and highlight the sentence in the full-text article. Works with Chrome 80+">  &#9432;</span>
+                          {% else %}
+                            {% if 'PMCID' in ev['text_refs'] and ev['text_refs']['PMCID'] %}
+                              | <a class="pmcid_link"
+                                href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'
+                                target="_blank">PMC</a>
+                            {% endif %}
                           {% endif %}
+
+                          {% if 'DOI' in ev['text_refs'] and ev['text_refs']['DOI'] %}
+                            | <a class="doi_link"
+                               href='https://dx.doi.org/{{ ev["text_refs"]["DOI"] }}'
+                               target="_blank">DOI</a>
+                          {% endif %}
+
                         </div>
                       </div>
                     {% endfor %}
