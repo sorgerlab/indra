@@ -2045,16 +2045,15 @@ def align_statements(stmts1, stmts2, keyfun=None):
 
 @register_pipeline
 def filter_complexes_by_size(stmts_in, members_allowed=5):
-    """
-    Filter out Complexes if the number of members exceeds specified allowed
+    """Filter out Complexes if the number of members exceeds specified allowed
     number.
 
     Parameters
     ----------
     stmts_in : list[indra.statements.Statement]
         A list of statements from which large Complexes need to be filtered out
-    members_allowed : int
-        Allowed number of members to include.
+    members_allowed : Optional[int]
+        Allowed number of members to include. Default: 5
 
     Returns
     -------

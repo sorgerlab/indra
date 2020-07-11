@@ -778,3 +778,15 @@ def test_eidos_ungrounded():
              Activation(c,c)]
     stmts_out = ac.filter_grounded_only(stmts)
     assert len(stmts_out) == 1
+
+
+def test_filter_large_complexes():
+    stmt1 = Complex([Agent('x'), Agent('y'), Agent('z')])
+    stmt2 = Complex([Agent('x'), Agent('y')])
+    stmt3 = Phosphorylation(None, Agent('x'))
+
+    stmts = ac.filter_complexes_by_size([stmt1, stmt2, stmt3])
+    assert len(stmts) == 3
+    stmts = ac.filter_complexes_by_size([stmt1, stmt2, stmt3],
+                                        members_allowed=2)
+    assert len(stmts) == 2
