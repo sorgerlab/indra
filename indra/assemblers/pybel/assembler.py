@@ -8,7 +8,10 @@ import pybel
 import pybel.constants as pc
 from pybel.dsl import *
 from pybel.language import pmod_namespace
-from pybel.utils import citation_dict
+try:  # this works after pybel pull request #453
+    from pybel.language import citation_dict
+except ImportError: # this works before pybel pull request #453
+    from pybel.utils import citation_dict
 from indra.statements import *
 from indra.databases import hgnc_client
 
