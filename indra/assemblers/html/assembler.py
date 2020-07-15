@@ -7,8 +7,8 @@ import re
 import uuid
 import logging
 import itertools
-from collections import OrderedDict
 from os.path import abspath, dirname, join
+from collections import OrderedDict, Counter
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -42,21 +42,30 @@ def color_gen(scheme):
             yield color
 
 
+db_sources = ['phosphosite', 'cbn', 'pc11', 'biopax', 'bel_lc',
+              'signor', 'biogrid', 'tas', 'lincs_drug', 'hprd', 'trrust']
+
+reader_sources = ['geneways', 'tees', 'isi', 'trips', 'rlimsp', 'medscan',
+                  'sparser', 'reach']
+
+all_sources = db_sources + reader_sources
+
+# These are mappings where the actual INDRA source, as it appears
+# in the evidence source_api is inconsistent with the colors here and
+# with what comes out of the INDRA DB
+internal_source_mappings = {
+    'bel': 'bel_lc'
+}
+
+
 SOURCE_COLORS = [
     ('databases', {'color': 'black',
-                   'sources': dict(zip(['phosphosite', 'cbn', 'pc11',
-                                        'biopax', 'bel_lc',
-                                        'signor', 'biogrid', 'tas',
-                                        'lincs_drug', 'hprd', 'trrust'],
+                   'sources': dict(zip(db_sources,
                                        color_gen('light')))}),
     ('reading', {'color': 'white',
-                 'sources': dict(zip(['geneways', 'tees', 'isi', 'trips',
-                                      'rlimsp', 'medscan', 'sparser', 'reach'],
+                 'sources': dict(zip(reader_sources,
                                      color_gen('light')))}),
 ]
-
-SRC_KEY_DICT = {src: src for _, d in SOURCE_COLORS
-                for src in d['sources'].keys()}
 
 
 class HtmlAssembler(object):
@@ -126,10 +135,10 @@ class HtmlAssembler(object):
         # If the deprecated parameter is used, we make sure we take it
         if not ev_counts and ev_totals:
             ev_counts = ev_totals
-        self.ev_counts = {} if ev_counts is None \
-            else standardize_counts(ev_counts)
-        self.source_counts = {} if source_counts is None \
-            else standardize_counts(source_counts)
+        self.ev_counts = get_available_ev_counts(self.statements) \
+            if ev_counts is None else standardize_counts(ev_counts)
+        self.source_counts = get_available_source_counts(self.statements) \
+            if source_counts is None else standardize_counts(source_counts)
         self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
         self.model = None
@@ -366,7 +375,8 @@ class HtmlAssembler(object):
         if template is None:
             template = default_template
         if self.source_counts and 'source_key_dict' not in template_kwargs:
-            template_kwargs['source_key_dict'] = SRC_KEY_DICT
+            template_kwargs['source_key_dict'] = \
+                {src: src for src in all_sources}
         if 'source_colors' not in template_kwargs:
             template_kwargs['source_colors'] = SOURCE_COLORS
 
@@ -646,3 +656,17 @@ def standardize_counts(counts):
         except ValueError:
             logger.warning('Could not convert statement hash %s to int' % k)
     return standardized_counts
+
+
+def get_available_ev_counts(stmts):
+    return {stmt.get_hash(): len(stmt.evidence) for stmt in stmts}
+
+
+def get_available_source_counts(stmts):
+    return {stmt.get_hash(): get_available_ev_source_counts(stmt.evidence)
+            for stmt in stmts}
+
+
+def get_available_ev_source_counts(evidences):
+    return dict(**Counter([ev.source_api for ev in evidences]))
+
