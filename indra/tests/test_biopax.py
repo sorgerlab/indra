@@ -19,10 +19,16 @@ def test_listify():
     assert bpc._listify([1] == [1])
 
 
-def test_uniprot_id_er():
-    bpe = bp.model.objects['http://identifiers.org/uniprot/P15056']
-    ids = bp._get_uniprot_id(bpe)
-    assert 'P15056' == ids
+def test_protein_agent():
+    bpe = bp.model.objects['Protein_b48159c1c65acd16a40bd7ea46e50e52']
+    agents = bp._get_agents_from_singular_entity(bpe)
+    assert len(agents) == 1
+    agent = agents[0]
+    assert agent.name == 'ARHGAP35'
+    assert len(agent.mods) == 1
+    assert agent.mods[0].position == '1105'
+    assert agent.db_refs['UP'] == 'Q9NRY4'
+    assert agent.db_refs['HGNC'] == '4591'
 
 
 def test_get_hgnc_id():

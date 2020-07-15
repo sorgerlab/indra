@@ -413,9 +413,8 @@ class BiopaxProcessor(object):
         # active and if it is the only active member then
         # set this as the enzyme to which all other members of the
         # complex are bound.
-        # Get complex members
         # Separate out protein and non-protein members
-        protein_members = [p for p in controller_pe.component
+        protein_members = [p for p in expand_complex(controller_pe)
                            if _is_protein(p)]
         # If there is only one protein member, we can assume that
         # it is the enzyme, and everything else is just bound
