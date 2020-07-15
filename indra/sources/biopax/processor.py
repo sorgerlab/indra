@@ -481,9 +481,8 @@ class BiopaxProcessor(object):
                 agents.append(Agent(name, db_refs=db_refs, mods=mcs))
         # Otherwise it's just a regular Agent
         else:
-            assert all(isinstance(v, list) for v in xrefs.values())
-            db_refs = {k: v[0] for k, v in xrefs.items()}
-            standard_name, db_refs = standardize_name_db_refs(db_refs)
+            standard_name, db_refs = \
+                standardize_name_db_refs(clean_up_xrefs(xrefs))
             if standard_name:
                 name = standard_name
             agents.append(Agent(name, db_refs=db_refs, mods=mcs))
@@ -1246,6 +1245,17 @@ def sanitize_hgnc_ids(raw_hgnc_ids):
                 hgnc_ids.add(hgnc_id)
 
     return list(hgnc_ids)
+
+
+def clean_up_xrefs(xrefs):
+    db_refs = {}
+    for k, v in xrefs.items():
+        if isinstance(v, list):
+            if len(v) == 1:
+                db_refs[k] = v[0]
+        else:
+            db_refs[k] = v
+    return db_refs
 
 
 activity_terms = {
