@@ -451,8 +451,8 @@ class BiopaxProcessor(object):
 
         # We now need to harmonize UP and HGNC
         # Case 1. Multiple genes coding for one protein
-        nhgnc_ids = len(xrefs.get('HGNC', []))
-        nup_ids = len(xrefs.get('UP', []))
+        nhgnc_ids = len(xrefs.get('HGNC', {}))
+        nup_ids = len(xrefs.get('UP', {}))
         # One protein coded by many genes
         if nhgnc_ids > 1 and nup_ids == 1:
             for hgnc_id in xrefs['HGNC']:
@@ -584,15 +584,15 @@ class BiopaxProcessor(object):
             BiopaxProcessor._get_reference_primary_id(entref)
 
         from collections import defaultdict
-        xrefs = defaultdict(list)
+        xrefs = defaultdict(set)
         if primary_ns and primary_id:
-            xrefs[primary_ns].append(primary_id)
+            xrefs[primary_ns].add(primary_id)
 
         for xref in entref.xref:
             xref_db_ns = xref_ns_map.get(xref.db)
             if not xref_db_ns:
                 continue
-            xrefs[xref_db_ns].append(xref.id)
+            xrefs[xref_db_ns].add(xref.id)
 
         xrefs = dict(xrefs)
 
@@ -604,7 +604,8 @@ class BiopaxProcessor(object):
             else:
                 xrefs.pop('UP')
         if 'HGNC' in xrefs or 'HGNC.SYMBOL' in xrefs:
-            hgnc_ids = xrefs.get('HGNC', []) + xrefs.get('HGNC.SYMBOL', [])
+            hgnc_ids = xrefs.get('HGNC', set()) | \
+                xrefs.get('HGNC.SYMBOL', set())
             hgnc_ids = sanitize_hgnc_ids(hgnc_ids)
             if hgnc_ids:
                 xrefs['HGNC'] = hgnc_ids
@@ -634,6 +635,8 @@ class BiopaxProcessor(object):
                 primary_ns, primary_id = 'CHEBI', ident_id
             elif ident_ns == 'pubchem.compound':
                 primary_ns, primary_id = 'PUBCHEM', ident_id
+            elif ident_ns == 'pubchem.substance':
+                primary_ns, primary_id = 'PUBCHEM.SUBSTANCE', ident_id
             else:
                 logger.warning('Unhandled identifiers namespace: %s' %
                                ident_ns)
@@ -963,9 +966,9 @@ def sanitize_hgnc_ids(raw_hgnc_ids):
 def clean_up_xrefs(xrefs):
     db_refs = {}
     for k, v in xrefs.items():
-        if isinstance(v, list):
+        if isinstance(v, (list, set)):
             if len(v) == 1:
-                db_refs[k] = v[0]
+                db_refs[k] = list(v)[0]
         else:
             db_refs[k] = v
     return db_refs
