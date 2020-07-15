@@ -212,10 +212,5 @@ def process_model(model):
     bp.get_regulate_amounts()
     bp.get_conversions()
     bp.get_gap_gef()
-    '''
-    bp.get_gef()
-    bp.get_gap()
-    # bp.get_complexes()
-    '''
     bp.eliminate_exact_duplicates()
     return bp
