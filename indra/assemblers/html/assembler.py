@@ -7,8 +7,8 @@ import re
 import uuid
 import logging
 import itertools
+from collections import OrderedDict
 from os.path import abspath, dirname, join
-from collections import OrderedDict, Counter
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -94,12 +94,16 @@ class HtmlAssembler(object):
         evidence totals. The keys should be informative human-readable strings.
     ev_counts : Optional[dict]
         A dictionary of the total evidence available for each
-        statement indexed by hash.
+        statement indexed by hash. If not provided, the statements that are
+        passed to the constructor are used to determine these, with whatever
+        evidences these statements carry.
     ev_totals : Optional[dict]
         DEPRECATED. Same as ev_counts which should be used instead.
     source_counts : Optional[dict]
         A dictionary of the itemized evidence counts, by source, available for
-        each statement, indexed by hash. Default: None.
+        each statement, indexed by hash. If not provided, the statements
+        that are passed to the constructor are used to determine these, with
+        whatever evidences these statements carry.
     title : str
         The title to be printed at the top of the page.
     db_rest_url : Optional[str]
