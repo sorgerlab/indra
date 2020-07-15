@@ -663,10 +663,21 @@ def get_available_ev_counts(stmts):
 
 
 def get_available_source_counts(stmts):
-    return {stmt.get_hash(): get_available_ev_source_counts(stmt.evidence)
+    return {stmt.get_hash(): _get_available_ev_source_counts(stmt.evidence)
             for stmt in stmts}
 
 
-def get_available_ev_source_counts(evidences):
-    return dict(**Counter([ev.source_api for ev in evidences]))
+def _get_available_ev_source_counts(evidences):
+    counts = _get_initial_source_counts()
+    for ev in evidences:
+        sa = internal_source_mappings.get(ev.source_api, ev.source_api)
+        try:
+            counts[sa] += 1
+        except KeyError:
+            continue
+    return counts
+
+
+def _get_initial_source_counts():
+    return {s: 0 for s in all_sources}
 
