@@ -653,8 +653,7 @@ class BiopaxProcessor(object):
 
     def get_coverage(self):
         uids = set()
-        objs = self.model.objects
-        for uid, obj in objs.items():
+        for uid, obj in self.model.objects.items():
             if isinstance(obj, (bp.Catalysis, bp.TemplateReactionRegulation)):
                 uids.add(uid)
         stmt_uids = set()
@@ -662,7 +661,6 @@ class BiopaxProcessor(object):
             for ev in stmt.evidence:
                 stmt_uids.add(ev.source_id)
 
-        uids_not_covered = uids - stmt_uids
         print('Total in model: %d' % len(uids))
         print('Total covered: %d' % len(uids & stmt_uids))
         print('%.2f%% coverage' % (100.0*len(uids & stmt_uids)/len(uids)))
@@ -766,19 +764,9 @@ def _is_protein(pe):
     return isinstance(pe, (bp.Protein, bp.ProteinReference))
 
 
-def _is_rna(pe):
-    """Return True if the element is an RNA"""
-    return isinstance(pe, bp.Rna)
-
-
 def _is_small_molecule(pe):
     """Return True if the element is a small molecule"""
     return isinstance(pe, (bp.SmallMolecule, bp.SmallMoleculeReference))
-
-
-def _is_physical_entity(pe):
-    """Return True if the element is a physical entity"""
-    return isinstance(pe, bp.PhysicalEntity)
 
 
 def _is_modification(feature):
@@ -800,11 +788,6 @@ def get_modification_type(mf: bp.ModificationFeature):
         return 'activity'
     else:
         return 'modification'
-
-
-def _is_reference(bpe):
-    """Return True if the element is an entity reference."""
-    return isinstance(bpe, bp.EntityReference)
 
 
 def _is_entity(bpe):
@@ -866,20 +849,20 @@ def infer_pe_type(pe: bp.PhysicalEntity):
 
 
 generic_chebi_ids = {
-    '76971',  # E-coli metabolite
-    '75771',  # mouse metabolite
-    '77746',  # human metabolite
-    '27027',  # micronutrient
-    '78675',  # fundamental metabolite
-    '50860',  # organic molecular entity
+    'CHEBI:76971',  # E-coli metabolite
+    'CHEBI:75771',  # mouse metabolite
+    'CHEBI:77746',  # human metabolite
+    'CHEBI:27027',  # micronutrient
+    'CHEBI:78675',  # fundamental metabolite
+    'CHEBI:50860',  # organic molecular entity
 }
 
 
 manual_chebi_map = {
-    'H2O': '15377',
-    'phosphate': '18367',
-    'H+': '15378',
-    'O2': '15379'
+    'H2O': 'CHEBI:15377',
+    'phosphate': 'CHEBI:18367',
+    'H+': 'CHEBI:15378',
+    'O2': 'CHEBI:15379'
 }
 
 
