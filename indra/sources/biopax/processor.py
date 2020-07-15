@@ -11,6 +11,7 @@ from pybiopax import model_to_owl_file
 from indra.databases import hgnc_client, uniprot_client, chebi_client
 from indra.statements import *
 from indra.util import decode_obj, flatten
+from indra.ontology.standardize import standardize_name_db_refs
 
 logger = logging.getLogger(__name__)
 
@@ -213,12 +214,15 @@ class BiopaxProcessor(object):
                             expand_family(outp)):
                     gained_mods, lost_mods, activity_change = \
                         self.feature_delta(inp_simple, outp_simple)
-                    inp_agent = self._get_agent_from_entity(inp_simple)
-                    yield inp_agent, gained_mods, lost_mods, \
-                        activity_change, ev
+                    inp_agents = \
+                        self._get_agents_from_singular_entity(inp_simple)
+                    for inp_agent in inp_agents:
+                        yield inp_agent, gained_mods, lost_mods, \
+                            activity_change, ev
 
     def _conversion_state_iter(self):
-        """An iterator over state changed in controlled conversions in the model."""
+        """An iterator over state changed in controlled conversions
+        in the model."""
         for primary_controller_agent, ev, control, conversion in \
                 self._control_conversion_iter(bp.Conversion, 'primary'):
             for inp, outp in self.find_matching_left_right(conversion):
@@ -232,9 +236,11 @@ class BiopaxProcessor(object):
                         self.feature_delta(inp_simple, outp_simple)
                     activity_change = activity_change if activity_change else \
                         overall_activity_change
-                    inp_agent = self._get_agent_from_entity(inp_simple)
-                    yield primary_controller_agent, inp_agent, gained_mods, \
-                        lost_mods, activity_change, ev
+                    inp_agents = \
+                        self._get_agents_from_singular_entity(inp_simple)
+                    for inp_agent in inp_agents:
+                        yield primary_controller_agent, inp_agent, \
+                              gained_mods, lost_mods, activity_change, ev
 
     def get_modifications(self):
         """Extract INDRA Modification Statements from the BioPAX model."""
@@ -428,19 +434,60 @@ class BiopaxProcessor(object):
                            if _is_protein(p)]
         return protein_members
 
-    def _get_agent_from_entity(self, bpe):
+    def _get_agents_from_singular_entity(self, bpe: bp.PhysicalEntity):
+        """This is for extracting one or more Agents from a PhysicalEntity
+        which doesn't have member_physical_entities."""
         try:
             return copy.deepcopy(self._agents[bpe.uid])
         except KeyError:
             pass
-        name = BiopaxProcessor._get_element_name(bpe)
-        db_refs = BiopaxProcessor._get_db_refs(bpe)
-        if _is_protein(bpe):
-            mcs = BiopaxProcessor._get_entity_mods(bpe)
+
+        mcs = BiopaxProcessor._get_entity_mods(bpe) if _is_protein(bpe) else []
+        name = bpe.display_name
+        agents = []
+
+        # We first get processed xrefs
+        xrefs = BiopaxProcessor._get_processed_xrefs(bpe)
+
+        # We now need to harmonize UP and HGNC
+        # Case 1. Multiple genes coding for one protein
+        nhgnc_ids = len(xrefs.get('HGNC', []))
+        nup_ids = len(xrefs.get('UP', []))
+        # One protein coded by many genes
+        if nhgnc_ids > 1 and nup_ids == 1:
+            for hgnc_id in xrefs['HGNC']:
+                standard_name, db_refs = \
+                    standardize_name_db_refs({'HGNC': hgnc_id})
+                if standard_name:
+                    name = standard_name
+                agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+        # One gene coding for many proteins
+        elif nhgnc_ids == 1 and nup_ids > 1:
+            for up_id in xrefs['UP']:
+                standard_name, db_refs = \
+                    standardize_name_db_refs({'UP': up_id})
+                if standard_name:
+                    name = standard_name
+                agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+        # This is secretly a family, i.e., we have more than one
+        # gene/protein IDs and so we can go by one of the ID sets and
+        # standardize from there
+        elif nhgnc_ids > 1 and nhgnc_ids == nup_ids:
+            for up_id in xrefs['UP']:
+                standard_name, db_refs = \
+                    standardize_name_db_refs({'UP': up_id})
+                if standard_name:
+                    name = standard_name
+                agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+        # Otherwise it's just a regular Agent
         else:
-            mcs = []
-        agent = Agent(name, db_refs=db_refs, mods=mcs)
-        return agent
+            assert all(isinstance(v, list) for v in xrefs.values())
+            db_refs = {k: v[0] for k, v in xrefs.items()}
+            standard_name, db_refs = standardize_name_db_refs(db_refs)
+            if standard_name:
+                name = standard_name
+            agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+        return agents
 
     def _get_agents_from_entity(self, bpe: bp.PhysicalEntity):
         # If the entity has members (like a protein family),
@@ -449,16 +496,12 @@ class BiopaxProcessor(object):
             agents = []
             for m in bpe.member_physical_entity:
                 member_agents = self._get_agents_from_entity(m)
-                if isinstance(member_agents, Agent):
-                    agents.append(member_agents)
-                else:
-                    agents.extend(member_agents)
+                agents += member_agents
             return agents
 
         # If it is a single entity, we get its name and database
         # references
-        agent = [self._get_agent_from_entity(bpe)]
-        return agent
+        return self._get_agents_from_singular_entity(bpe)
 
     @staticmethod
     def mod_condition_from_mod_feature(mf: bp.ModificationFeature):
@@ -533,7 +576,7 @@ class BiopaxProcessor(object):
         return refs
 
     @staticmethod
-    def _get_db_refs(bpe: bp.PhysicalEntity):
+    def _get_processed_xrefs(bpe: bp.PhysicalEntity):
         entref = BiopaxProcessor._get_entref(bpe)
         if not entref:
             return {}
@@ -541,36 +584,42 @@ class BiopaxProcessor(object):
         primary_ns, primary_id = \
             BiopaxProcessor._get_reference_primary_id(entref)
 
-        db_refs = {}
-        if primary_ns and primary_id:
-            db_refs[primary_ns] = primary_id
-
         from collections import defaultdict
         xrefs = defaultdict(list)
+        if primary_ns and primary_id:
+            xrefs[primary_ns].append(primary_id)
+
         for xref in entref.xref:
             xref_db_ns = xref_ns_map.get(xref.db)
             if not xref_db_ns:
                 continue
             xrefs[xref_db_ns].append(xref.id)
 
-        sanitizers = {
-            'CHEBI': sanitize_chebi_ids,
-            'UP': sanitize_up_ids
-        }
-
         xrefs = dict(xrefs)
 
-        for ns, fun in sanitizers.items():
-            if ns in xrefs:
-                ns_id = fun(xrefs[ns])
-                if not ns_id:
-                    xrefs.pop(ns, None)
-                else:
-                    xrefs[ns] = ns_id
+        # We now sanitize certain key name spaces
+        if 'UP' in xrefs:
+            up_ids = sanitize_up_ids(xrefs['UP'])
+            if up_ids:
+                xrefs['UP'] = up_ids
+            else:
+                xrefs.pop('UP')
+        if 'HGNC' in xrefs or 'HGNC.SYMBOL' in xrefs:
+            hgnc_ids = xrefs.get('HGNC', []) + xrefs.get('HGNC.SYMBOL', [])
+            hgnc_ids = sanitize_hgnc_ids(hgnc_ids)
+            if hgnc_ids:
+                xrefs['HGNC'] = hgnc_ids
+            else:
+                xrefs.pop('HGNC', None)
+            xrefs.pop('HGNC.SYMBOL', None)
+        if 'CHEBI' in xrefs:
+            chebi_id = sanitize_chebi_ids(xrefs['CHEBI'], bpe.display_name)
+            if chebi_id:
+                xrefs['CHEBI'] = chebi_id
+            else:
+                xrefs.pop('CHEBI')
 
         return xrefs
-
-    def _get_uniprot_ids(self):
 
     @staticmethod
     def _get_reference_primary_id(entref: bp.EntityReference):
@@ -584,6 +633,8 @@ class BiopaxProcessor(object):
                 primary_ns, primary_id = 'UP', ident_id
             elif ident_ns == 'chebi':
                 primary_ns, primary_id = 'CHEBI', ident_id
+            elif ident_ns == 'pubchem.compound':
+                primary_ns, primary_id = 'PUBCHEM', ident_id
             else:
                 logger.warning('Unhandled identifiers namespace: %s' %
                                ident_ns)
@@ -1138,7 +1189,63 @@ def get_specific_chebi_id(chebi_ids, name):
 
 
 def sanitize_up_ids(up_ids):
+    # First, we map any secondary IDs to primary IDs
+    up_ids = {uniprot_client.get_primary_id(up_id)
+              for up_id in up_ids}
+    # We filter out IDs that are actually mnemonics, these are just mixed
+    # in without any differentiation from other IDs
+    up_ids = {up_id for up_id in up_ids if '_' not in up_id}
+    # TODO: should we do anything about isoforms?
+    # We separate out specific sets of IDs
+    human_ids = [up_id for up_id in up_ids
+                 if uniprot_client.is_human(up_id)]
+    reviewed_non_human_ids = [
+        up_id for up_id in up_ids
+        if not uniprot_client.is_human(up_id)
+        # get_mnemonic is just a quick way to see if we have this entry
+        and uniprot_client.get_mnemonic(up_id, web_fallback=False)]
+    if human_ids:
+        return human_ids
+    elif reviewed_non_human_ids:
+        return reviewed_non_human_ids
+    else:
+        return []
 
+
+def sanitize_chebi_ids(chebi_ids, name):
+    chebi_ids = {chebi_id if chebi_id.startswith('CHEBI:')
+                 else 'CHEBI:%s' % chebi_id for chebi_id in chebi_ids}
+    chebi_ids = {chebi_client.get_primary_id(chebi_id)
+                 for chebi_id in chebi_ids}
+    if len(chebi_ids) == 1:
+        return list(chebi_ids)
+    specific_chebi_id = get_specific_chebi_id(frozenset(chebi_ids),
+                                              name)
+    return specific_chebi_id
+
+
+def sanitize_hgnc_ids(raw_hgnc_ids):
+    # First we get a list of primary IDs
+    hgnc_ids = set()
+    for raw_hgnc_id in raw_hgnc_ids:
+        # Check if it's an ID first
+        m1 = re.match('([0-9]+)', raw_hgnc_id)
+        m2 = re.match('hgnc:([0-9]+)', raw_hgnc_id.lower())
+        if m1:
+            hgnc_id = str(m1.groups()[0])
+            hgnc_ids.add(hgnc_id)
+        elif m2:
+            hgnc_id = str(m2.groups()[0])
+            hgnc_ids.add(hgnc_id)
+        # If not, we assume it's a symbol
+        else:
+            hgnc_id = hgnc_client.get_current_hgnc_id(raw_hgnc_id)
+            if isinstance(hgnc_id, list):
+                hgnc_ids |= set(hgnc_id)
+            elif hgnc_id:
+                hgnc_ids.add(hgnc_id)
+
+    return list(hgnc_ids)
 
 
 activity_terms = {
@@ -1155,10 +1262,11 @@ inactivity_terms = {
 
 xref_ns_map = {
     'chebi': 'CHEBI',
+    'uniprot': 'UP',
+    'uniprot isoform': 'UP',
     'uniprot knowledgebase': 'UP',
     'ncbi gene': 'EGID',
-    # 'hgnc symbol': 'HGNC.SYMBOL',  # we don't need these as db_refs
-    'uniprot': 'UP',
+    'hgnc symbol': 'HGNC.SYMBOL',
     'hgnc': 'HGNC',
     'mesh': 'MESH',
     'drugbank': 'DRUGBANK',
@@ -1168,7 +1276,6 @@ xref_ns_map = {
     'cas': 'CAS',
     'hmdb': 'HMDB',
     'gene ontology': 'GO',
-    'uniprot isoform': 'UP',
     'interpro': 'IP',
     'mirbase': 'MIRBASE',
     'mirbase mature sequence': 'MIRBASEM',
