@@ -217,11 +217,9 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
     while queue:
         cur_path = queue.popleft()
         last_node = cur_path[-1]
-        node_name = last_node[0] if isinstance(last_node, tuple) else \
-            last_node
 
         # if last node is in terminal_ns, continue to next path
-        if terminal_ns and G.nodes[node_name]['ns'].lower() in terminal_ns:
+        if terminal_ns and g.nodes[last_node]['ns'].lower() in terminal_ns:
             continue
 
         sorted_neighbors = get_sorted_neighbors(G=g, node=last_node,
@@ -244,7 +242,7 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
 
             # Check namespace
             if node_filter and len(node_filter) > 0:
-                if G.nodes[neig_name]['ns'].lower() not in node_filter:
+                if g.nodes[neighb]['ns'].lower() not in node_filter:
                     continue
 
             # Add to visited nodes and create new path
@@ -291,7 +289,7 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
             # teminal_ns
             else:
                 # If terminal_ns
-                if G.nodes[neig_name]['ns'].lower() in terminal_ns:
+                if g.nodes[neighb]['ns'].lower() in terminal_ns:
                     # If signed, reverse, negative start node OR
                     #    signed, not reverse, wrong sign:
                     # don't yield this path
