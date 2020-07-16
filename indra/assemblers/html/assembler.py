@@ -32,7 +32,8 @@ color_schemes = {
     'dark': ['#b2df8a', '#000099', '#6a3d9a', '#1f78b4', '#fdbf6f', '#ff7f00',
              '#cab2d6', '#fb9a99', '#a6cee3', '#33a02c', '#b15928', '#e31a1c'],
     'light': ['#bc80bd', '#fccde5', '#b3de69', '#80b1d3', '#fb8072', '#bebada',
-              '#fdb462', '#8dd3c7', '#ffffb3', '#d9d9d9', '#ccebc5', '#ffed6f']
+              '#fdb462', '#d9d9d9', '#8dd3c7', '#ffed6f', '#ccebc5', '#e0e03d',
+              '#ffe8f4', '#acfcfc', '#dd99ff']
 }
 
 
@@ -42,21 +43,31 @@ def color_gen(scheme):
             yield color
 
 
+db_sources = ['phosphosite', 'cbn', 'pc11', 'biopax', 'bel_lc',
+              'signor', 'biogrid', 'lincs_drug', 'tas', 'hprd', 'trrust',
+              'ctd', 'virhostnet', 'phosphoelm', 'drugbank']
+
+reader_sources = ['geneways', 'tees', 'isi', 'trips', 'rlimsp', 'medscan',
+                  'sparser', 'eidos', 'reach']
+
+all_sources = db_sources + reader_sources
+
+# These are mappings where the actual INDRA source, as it appears
+# in the evidence source_api is inconsistent with the colors here and
+# with what comes out of the INDRA DB
+internal_source_mappings = {
+    'bel': 'bel_lc'
+}
+
+
 SOURCE_COLORS = [
     ('databases', {'color': 'black',
-                   'sources': dict(zip(['phosphosite', 'cbn', 'pc11',
-                                        'biopax', 'bel_lc',
-                                        'signor', 'biogrid', 'tas',
-                                        'lincs_drug', 'hprd', 'trrust'],
+                   'sources': dict(zip(db_sources,
                                        color_gen('light')))}),
     ('reading', {'color': 'white',
-                 'sources': dict(zip(['geneways', 'tees', 'isi', 'trips',
-                                      'rlimsp', 'medscan', 'sparser', 'reach'],
+                 'sources': dict(zip(reader_sources,
                                      color_gen('light')))}),
 ]
-
-SRC_KEY_DICT = {src: src for _, d in SOURCE_COLORS
-                for src in d['sources'].keys()}
 
 
 class HtmlAssembler(object):
@@ -83,12 +94,16 @@ class HtmlAssembler(object):
         evidence totals. The keys should be informative human-readable strings.
     ev_counts : Optional[dict]
         A dictionary of the total evidence available for each
-        statement indexed by hash.
+        statement indexed by hash. If not provided, the statements that are
+        passed to the constructor are used to determine these, with whatever
+        evidences these statements carry.
     ev_totals : Optional[dict]
         DEPRECATED. Same as ev_counts which should be used instead.
     source_counts : Optional[dict]
         A dictionary of the itemized evidence counts, by source, available for
-        each statement, indexed by hash. Default: None.
+        each statement, indexed by hash. If not provided, the statements
+        that are passed to the constructor are used to determine these, with
+        whatever evidences these statements carry.
     title : str
         The title to be printed at the top of the page.
     db_rest_url : Optional[str]
@@ -126,10 +141,10 @@ class HtmlAssembler(object):
         # If the deprecated parameter is used, we make sure we take it
         if not ev_counts and ev_totals:
             ev_counts = ev_totals
-        self.ev_counts = {} if ev_counts is None \
-            else standardize_counts(ev_counts)
-        self.source_counts = {} if source_counts is None \
-            else standardize_counts(source_counts)
+        self.ev_counts = get_available_ev_counts(self.statements) \
+            if ev_counts is None else standardize_counts(ev_counts)
+        self.source_counts = get_available_source_counts(self.statements) \
+            if source_counts is None else standardize_counts(source_counts)
         self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
         self.model = None
@@ -366,7 +381,8 @@ class HtmlAssembler(object):
         if template is None:
             template = default_template
         if self.source_counts and 'source_key_dict' not in template_kwargs:
-            template_kwargs['source_key_dict'] = SRC_KEY_DICT
+            template_kwargs['source_key_dict'] = \
+                {src: src for src in all_sources}
         if 'source_colors' not in template_kwargs:
             template_kwargs['source_colors'] = SOURCE_COLORS
 
@@ -527,10 +543,11 @@ def tag_agents(english, agents):
             continue
         url = id_url(ag)
         if url is None:
-            continue
-        # Build up a set of indices
-        tag_start = "<a href='%s' target='_blank'>" % url
-        tag_close = "</a>"
+            tag_start = '<b>'
+            tag_close = '</b>'
+        else:
+            tag_start = "<a href='%s' target='_blank'>" % url
+            tag_close = "</a>"
         # If coordinates are passed, use them. Otherwise, try to find agent
         # names in english text
         if isinstance(ag, AgentWithCoordinates):
@@ -646,3 +663,28 @@ def standardize_counts(counts):
         except ValueError:
             logger.warning('Could not convert statement hash %s to int' % k)
     return standardized_counts
+
+
+def get_available_ev_counts(stmts):
+    return {stmt.get_hash(): len(stmt.evidence) for stmt in stmts}
+
+
+def get_available_source_counts(stmts):
+    return {stmt.get_hash(): _get_available_ev_source_counts(stmt.evidence)
+            for stmt in stmts}
+
+
+def _get_available_ev_source_counts(evidences):
+    counts = _get_initial_source_counts()
+    for ev in evidences:
+        sa = internal_source_mappings.get(ev.source_api, ev.source_api)
+        try:
+            counts[sa] += 1
+        except KeyError:
+            continue
+    return counts
+
+
+def _get_initial_source_counts():
+    return {s: 0 for s in all_sources}
+
