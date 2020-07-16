@@ -54,6 +54,16 @@ class BiopaxProcessor(object):
         self._agents = {}
         self.use_conversion_level_evidence = use_conversion_level_evidence
 
+    def process_all(self):
+        self._extract_features()
+        self.get_modifications()
+        self.get_regulate_activities()
+        self.get_activity_modification()
+        self.get_regulate_amounts()
+        self.get_conversions()
+        self.get_gap_gef()
+        self.eliminate_exact_duplicates()
+
     def save_model(self, file_name):
         """Save the BioPAX model object in an OWL file.
 
