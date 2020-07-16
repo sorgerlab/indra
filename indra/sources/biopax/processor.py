@@ -46,12 +46,13 @@ class BiopaxProcessor(object):
     statements : list[indra.statements.Statement]
         A list of INDRA Statements that were extracted from the model.
     """
-    def __init__(self, model):
+    def __init__(self, model, use_conversion_level_evidence=True):
         self.model = model
         self.statements = []
         self._mod_conditions = {}
         self._activity_conditions = {}
         self._agents = {}
+        self.use_conversion_level_evidence = use_conversion_level_evidence
 
     def save_model(self, file_name):
         """Save the BioPAX model object in an OWL file.
@@ -541,9 +542,10 @@ class BiopaxProcessor(object):
         mc = ModCondition(mod_type, residue, mod_pos, True)
         return mc
 
-    @staticmethod
-    def _get_evidence(bpe: bp.PhysicalEntity):
+    def _get_evidence(self, bpe: bp.PhysicalEntity):
         citations = BiopaxProcessor._get_citations(bpe)
+        if self.use_conversion_level_evidence and hasattr(bpe, 'controller'):
+            citations += BiopaxProcessor._get_citations(bpe.controlled)
         if not citations:
             citations = [None]
         epi = {'direct': True}
@@ -565,12 +567,12 @@ class BiopaxProcessor(object):
     @staticmethod
     def _get_citations(bpe: bp.PhysicalEntity):
         refs = []
-        for xr in bpe.xref:
+        xrefs = bpe.xref + flatten([ev.xref for ev in bpe.evidence])
+        for xr in xrefs:
             db_name = xr.db
             if db_name is not None and db_name.upper() == 'PUBMED':
                 refs.append(xr.id)
         # TODO: handle non-pubmed evidence
-        # TODO: do we need to look at bpe.getEvidence()
         return refs
 
     @staticmethod
