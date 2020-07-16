@@ -83,6 +83,10 @@ def _setup_signed_graph():
         seg.edges[(u, v, sign)]['sign'] = sign
         seg.edges[(u, v, sign)]['belief'] = edge_beliefs[(u, v)]
 
+    for node, data in seg.nodes(data=True):
+        data['ns'] = node[0]
+        data['id'] = node[1]
+
     sng = signed_edges_to_signed_nodes(graph=seg, prune_nodes=True,
                                        copy_edge_data=True)
     for u, v in sng.edges:
@@ -162,13 +166,11 @@ def test_bfs():
 
 
 def test_signed_bfs():
-    dg, _ = _setup_unsigned_graph()
     seg, sng, all_ns = _setup_signed_graph()
     # D1 being upregulated: 13 paths
     paths = [p for p in bfs_search(
-        g=sng, source_node=('D1', INT_PLUS), g_nodes=dg.nodes,
-        g_edges=seg.edges, reverse=True, depth_limit=5, node_filter=all_ns,
-        sign=INT_PLUS)
+        g=sng, source_node=('D1', INT_PLUS), reverse=True, depth_limit=5,
+        node_filter=all_ns, sign=INT_PLUS)
     ]
     assert len(paths) == 13, len(paths)
 
