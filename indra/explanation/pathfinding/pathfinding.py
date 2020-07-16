@@ -163,26 +163,19 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 
 # Implementation inspired by networkx's
 # networkx.algorithms.traversal.breadth_first_search::generic_bfs_edges
-def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
-               depth_limit=2, path_limit=None, max_per_node=5,
-               node_filter=None, node_blacklist=None, terminal_ns=None,
-               sign=None, max_memory=int(2**29), **kwargs):
+def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
+               max_per_node=5, node_filter=None, node_blacklist=None,
+               terminal_ns=None, sign=None, max_memory=int(2**29), **kwargs):
     """Do breadth first search from a given node and yield paths
 
     Parameters
     ----------
     g : nx.Digraph
-        An nx.DiGraph to search in. Can also be a signed node graph.
+        An nx.DiGraph to search in. Can also be a signed node graph. It is
+        required that node data contains 'ns' (namespace) and edge data
+        contains 'belief'.
     source_node : node
         Node in the graph to start from.
-    g_nodes : nx.classes.reportviews.nodesNodeView
-        The nodes property to look up nodes from. Set this if the node
-        attribute 'ns' needs to be looked up from another graph object than
-        the one provided as `g`. Default: g.nodes
-    g_edges : nx.classes.reportviews.OutMultiEdgeView|OutEdgeView
-        The edges property to look up edges and their data from. Set this if
-        the edge beliefs needs to be looked up from another grapth object
-        than `g`. Default: d.edges
     reverse : bool
         If True go upstream from source, otherwise go downstream. Default:
         False.
@@ -216,14 +209,6 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
     """
     int_plus = 0
     int_minus = 1
-    g_nodes = g.nodes if g_nodes is None else g_nodes
-    g_edges = g.edges if g_edges is None else g_edges
-    if not isinstance(g_nodes, NodeView):
-        raise ValueError('Provided object for g_nodes is not a valid '
-                         'NodeView object')
-    if not isinstance(g_edges, (OutEdgeView, OutMultiEdgeView)):
-        raise ValueError('Provided object for g_edges is not a valid '
-                         'OutEdgeView or OutMultiEdgeView object')
 
     queue = deque([(source_node,)])
     visited = ({source_node}).union(node_blacklist) \
@@ -236,12 +221,11 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
             last_node
 
         # if last node is in terminal_ns, continue to next path
-        if terminal_ns and g_nodes[node_name]['ns'].lower() in terminal_ns:
+        if terminal_ns and G.nodes[node_name]['ns'].lower() in terminal_ns:
             continue
 
         sorted_neighbors = get_sorted_neighbors(G=g, node=last_node,
-                                                reverse=reverse,
-                                                g_edges=g_edges)
+                                                reverse=reverse)
 
         yielded_neighbors = 0
         # for neighb in neighbors:
@@ -260,7 +244,7 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
 
             # Check namespace
             if node_filter and len(node_filter) > 0:
-                if g_nodes[neig_name]['ns'].lower() not in node_filter:
+                if G.nodes[neig_name]['ns'].lower() not in node_filter:
                     continue
 
             # Add to visited nodes and create new path
@@ -307,7 +291,7 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
             # teminal_ns
             else:
                 # If terminal_ns
-                if g_nodes[neig_name]['ns'].lower() in terminal_ns:
+                if G.nodes[neig_name]['ns'].lower() in terminal_ns:
                     # If signed, reverse, negative start node OR
                     #    signed, not reverse, wrong sign:
                     # don't yield this path
