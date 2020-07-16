@@ -294,3 +294,10 @@ def test_drugbank_mappings():
     assert db_refs.get('CHEBI') == 'CHEBI:142437', db_refs
     assert db_refs.get('CHEMBL') == 'CHEMBL1201666', db_refs
     assert name == 'lepirudin'
+
+
+def test_standardize_up_isoform():
+    assert standardize_db_refs({'UP': 'Q99490'}) == \
+           {'UP': 'Q99490', 'HGNC': '16921'}
+    assert standardize_db_refs({'UP': 'Q99490-123'}) == \
+           {'UP': 'Q99490-123', 'HGNC': '16921'}
