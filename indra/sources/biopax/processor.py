@@ -588,7 +588,9 @@ class BiopaxProcessor(object):
             xrefs[primary_ns].add(primary_id)
 
         for xref in entref.xref:
-            xref_db_ns = xref_ns_map.get(xref.db)
+            if not xref.db:
+                continue
+            xref_db_ns = xref_ns_map.get(xref.db.lower())
             if not xref_db_ns:
                 continue
             xrefs[xref_db_ns].add(xref.id)
@@ -990,6 +992,7 @@ xref_ns_map = {
     'uniprot': 'UP',
     'uniprot isoform': 'UP',
     'uniprot knowledgebase': 'UP',
+    'uniprotkb': 'UP',
     'ncbi gene': 'EGID',
     'hgnc symbol': 'HGNC.SYMBOL',
     'hgnc': 'HGNC',
@@ -1006,4 +1009,5 @@ xref_ns_map = {
     'mirbase mature sequence': 'MIRBASEM',
     'hugo gene nomenclature committee (hgnc)': 'HGNC',
     'ensembl': 'ENSEMBL',
+    'taxonomy': 'TAXONOMY',
 }
