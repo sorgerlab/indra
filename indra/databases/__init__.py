@@ -32,6 +32,8 @@ url_prefixes = {
     'ECCODE': '%s/ec-code:' % identifiers_url,
     'CAS': '%s/cas:' % identifiers_url,
     'DRUGBANK': '%s/drugbank:' % identifiers_url,
+    'TAXONOMY': '%s/taxonomy:' % identifiers_url,
+    'BTO': '%s/BTO:' % identifiers_url,
     'NXPFA': 'https://www.nextprot.org/term/FA-',
     'SIGNOR': 'https://signor.uniroma2.it/relation_result.php?id=',
     'NONCODE': 'http://www.noncode.org/show_gene.php?id=NONHSAG',
@@ -42,6 +44,9 @@ url_prefixes = {
              '/hume_ontology/'),
     'CWMS': 'http://trips.ihmc.us/',
     'SOFIA': 'http://cs.cmu.edu/sofia/',
+    'HGNC_GROUP': 'https://www.genenames.org/data/genegroup/#!/group/',
+    'PR': 'https://proconsortium.org/app/entry/PR%3A',
+    'GENBANK': 'https://www.ncbi.nlm.nih.gov/protein/'
 }
 
 
@@ -81,8 +86,6 @@ def get_identifiers_url(db_name, db_id):
         url = identifiers_url + '/chembl.compound/%s' % db_id
     elif db_name == 'HMS-LINCS':
         url = 'http://lincs.hms.harvard.edu/db/sm/%s-101' % db_id
-    elif db_name == 'HGNC_GROUP':
-        url = 'https://www.genenames.org/data/genegroup/#!/group/%s' % db_id
     # Special cases with no identifiers entry
     elif db_name == 'SCHEM':
         url = bel_scai_url + 'selventa-legacy-chemicals/' + \
