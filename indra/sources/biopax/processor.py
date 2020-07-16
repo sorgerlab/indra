@@ -46,7 +46,7 @@ class BiopaxProcessor(object):
     statements : list[indra.statements.Statement]
         A list of INDRA Statements that were extracted from the model.
     """
-    def __init__(self, model, use_conversion_level_evidence=True):
+    def __init__(self, model, use_conversion_level_evidence=False):
         self.model = model
         self.statements = []
         self._mod_conditions = {}
