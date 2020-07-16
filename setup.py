@@ -13,11 +13,10 @@ def main():
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2', 'pandas', 'ndex2==2.0.1', 'jinja2',
                     'protmapper>=0.0.16', 'obonet', 'sympy==1.3',
-                    'tqdm']
+                    'tqdm', 'pybiopax']
 
     extras_require = {
                       # Inputs and outputs
-                      'biopax': ['cython', 'pyjnius==1.1.4'],
                       'trips_offline': ['pykqml'],
                       'reach_offline': ['cython', 'pyjnius==1.1.4'],
                       'eidos_offline': ['pyyaml>=5.1.0', 'cython',

@@ -92,11 +92,11 @@ Detailed instructions are given in the
 
 Pyjnius
 ```````
-To be able to use INDRA's BioPAX API and optional offline reading
-via the REACH and Eidos APIs, an additional package called
-`pyjnius <https://github.com/kivy/pyjnius>`_ is needed to allow using Java/Scala
-classes from Python. This is only strictly required in these input sources and
-the rest of INDRA will work without pyjnius.
+Pyjnius is currently not required for any of INDRA's features.
+However, to be able to use INDRA's optional JAR-based offline reading
+via the REACH and Eidos APIs,
+`pyjnius <https://github.com/kivy/pyjnius>`_ is needed to allow using
+Java/Scala classes from Python.
 
 1. Install JDK from Oracle: `<https://www.oracle.com/technetwork/java/javase/downloads/index.html>`_.
 We recommend using Java 8 (INDRA is regularly tested with Java 8),
@@ -162,16 +162,6 @@ one has to
 where the --include-path and --library-path needs to be set based on
 where Homebrew installed graphviz.
 
-Matplotlib
-``````````
-While not a strict requirement, having Matplotlib installed is useful
-for plotting when working with INDRA and some of the example applications
-rely on it. It can be installed as
-
-.. code-block:: bash
-
-    pip install matplotlib
-
 Optional additional dependencies
 ````````````````````````````````
 Some dependencies of INDRA are only needed by certain submodules or are only
@@ -209,7 +199,6 @@ of dependencies.
 +-----------------+------------------------------------------------------+
 |Extra list name  |Purpose                                               |
 +=================+======================================================+
-|biopax           |BioPAX input processing and Pathway Commons queries   |
 +-----------------+------------------------------------------------------+
 |bel              |BEL input processing and output assembly              |
 +-----------------+------------------------------------------------------+

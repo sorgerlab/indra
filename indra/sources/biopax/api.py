@@ -3,8 +3,14 @@ __all__ = ['process_pc_neighborhood', 'process_pc_pathsbetween',
            'process_model']
 
 import itertools
-from . import pathway_commons_client as pcc
+from pybiopax import model_from_owl_file, model_from_owl_str, \
+    model_from_pc_query
 from .processor import BiopaxProcessor
+
+default_databases = ['wp', 'smpdb', 'reconx', 'reactome', 'psp', 'pid',
+                     'panther', 'netpath', 'msigdb', 'mirtarbase', 'kegg',
+                     'intact', 'inoh', 'humancyc', 'hprd',
+                     'drugbank', 'dip', 'corum']
 
 
 def process_pc_neighborhood(gene_names, neighbor_limit=1,
@@ -33,12 +39,14 @@ def process_pc_neighborhood(gene_names, neighbor_limit=1,
 
     Returns
     -------
-    bp : BiopaxProcessor
-        A BiopaxProcessor containing the obtained BioPAX model in bp.model.
+    BiopaxProcessor
+        A BiopaxProcessor containing the obtained BioPAX model in its model
+        attribute and a list of extracted INDRA Statements from the model in
+        its statements attribute.
     """
-    model = pcc.graph_query('neighborhood', gene_names,
-                            neighbor_limit=neighbor_limit,
-                            database_filter=database_filter)
+    model = model_from_pc_query('neighborhood', source=gene_names,
+                                limit=neighbor_limit,
+                                datasource=database_filter)
     if model is not None:
         return process_model(model)
 
@@ -80,9 +88,11 @@ def process_pc_pathsbetween(gene_names, neighbor_limit=1,
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
     if not block_size:
-        model = pcc.graph_query('pathsbetween', gene_names,
-                                neighbor_limit=neighbor_limit,
-                                database_filter=database_filter)
+        model = model_from_pc_query('pathsbetween',
+                                    source=gene_names,
+                                    limit=neighbor_limit,
+                                    datasource=database_filter)
+
         if model is not None:
             return process_model(model)
     else:
@@ -138,9 +148,11 @@ def process_pc_pathsfromto(source_genes, target_genes, neighbor_limit=1,
     bp : BiopaxProcessor
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
-    model = pcc.graph_query('pathsfromto', source_genes,
-                             target_genes, neighbor_limit=neighbor_limit,
-                             database_filter=database_filter)
+    model = model_from_pc_query('pathsfromto',
+                                source=source_genes,
+                                target=target_genes,
+                                limit=neighbor_limit,
+                                datasource=database_filter)
     if model is not None:
         return process_model(model)
 
@@ -158,9 +170,7 @@ def process_owl(owl_filename):
     bp : BiopaxProcessor
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
-    model = pcc.owl_to_model(owl_filename)
-    if model is None:
-        return None
+    model = model_from_owl_file(owl_filename)
     return process_model(model)
 
 
@@ -177,7 +187,7 @@ def process_owl_str(owl_str):
     bp : BiopaxProcessor
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
-    model = pcc.owl_str_to_model(owl_str)
+    model = model_from_owl_str(owl_str)
     return process_model(model)
 
 
@@ -195,13 +205,5 @@ def process_model(model):
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
     bp = BiopaxProcessor(model)
-    bp.get_modifications()
-    bp.get_regulate_activities()
-    bp.get_regulate_amounts()
-    bp.get_activity_modification()
-    bp.get_gef()
-    bp.get_gap()
-    bp.get_conversions()
-    # bp.get_complexes()
-    bp.eliminate_exact_duplicates()
+    bp.process_all()
     return bp
