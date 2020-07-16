@@ -55,6 +55,7 @@ def standardize_db_refs(db_refs, ontology=None, ns_order=None):
 
     # We iterate over all the db_refs entries that currently exist
     for source_db_ns, source_db_id in deepcopy(db_refs).items():
+        source_db_id = _preprocess_for_mapping(source_db_ns, source_db_id)
         # For the entry we get all its xref mappings as a list
         # of tuples and turn it into a dict keyed by namespace
         mappings = _get_mappings_dict(
@@ -72,6 +73,12 @@ def standardize_db_refs(db_refs, ontology=None, ns_order=None):
                                ns_order=ns_order):
                 db_refs[mapped_db_ns] = sorted(mapped_db_ids)[0]
     return db_refs
+
+
+def _preprocess_for_mapping(db_ns, db_id):
+    if db_ns == 'UP' and db_id is not None and '-' in db_id:
+        return db_id.split('-')[0]
+    return db_id
 
 
 def standardize_name_db_refs(db_refs, ontology=None, ns_order=None):

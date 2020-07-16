@@ -139,11 +139,20 @@ class DrugbankProcessor:
     def _get_evidences(target_element):
         # TODO: is there a source ID we can use here?
         # TODO: is there context we can extract?
-        # refs also has: textbooks, links, attachments
+        # refs also has: textbooks, attachments
         pmids = db_findall(target_element,
                            'db:references/db:articles/db:article/db:pubmed-id')
-        evs = [Evidence(source_api='drugbank', pmid=pmid.text)
-               for pmid in pmids]
+        urls = db_findall(target_element,
+                          'db:references/db:links/db:link/db:url')
+        if pmids:
+            evs = [Evidence(source_api='drugbank', pmid=pmid.text)
+                   for pmid in pmids]
+        elif urls:
+            evs = [Evidence(source_api='drugbank',
+                            text_refs={'URL': url.text})
+                   for url in urls]
+        else:
+            evs = [Evidence(source_api='drugbank')]
         return evs
 
 

@@ -3,15 +3,15 @@ import copy
 import logging
 import itertools
 import collections
-import pybiopax.biopax as bp
 from functools import lru_cache
 
+import pybiopax.biopax as bp
 from pybiopax import model_to_owl_file
 
-from indra.databases import hgnc_client, uniprot_client, chebi_client
 from indra.statements import *
-from indra.util import decode_obj, flatten
+from indra.util import flatten
 from indra.ontology.standardize import standardize_name_db_refs
+from indra.databases import hgnc_client, uniprot_client, chebi_client
 
 logger = logging.getLogger(__name__)
 
@@ -566,7 +566,7 @@ class BiopaxProcessor(object):
             db_name = bpe.data_source[0].display_name
             if db_name:
                 annotations['source_sub_id'] = db_name.lower()
-        source_id = 'http://pathwaycommons.org/pc12/%s' % bpe.uid if \
+        source_id = '%s%s' % (self.model.xml_base, bpe.uid) if \
             not bpe.uid.startswith('http') else bpe.uid
         ev = [Evidence(source_api='biopax', pmid=cit,
                        source_id=source_id, epistemics=epi,
