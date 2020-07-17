@@ -496,6 +496,10 @@ class BiopaxProcessor(object):
             if standard_name:
                 name = standard_name
             agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+        # There is a potential here that an Agent name was set to None
+        # if both the display name and the standard name are missing.
+        # We filter these out
+        agents = [a for a in agents if a.name is not None]
         return agents
 
     def _get_agents_from_entity(self, bpe: bp.PhysicalEntity):
@@ -631,7 +635,6 @@ class BiopaxProcessor(object):
                 xrefs['CHEBI'] = chebi_id
             else:
                 xrefs.pop('CHEBI')
-
         return xrefs
 
     @staticmethod
@@ -945,7 +948,12 @@ def sanitize_chebi_ids(chebi_ids, name):
                  else 'CHEBI:%s' % chebi_id for chebi_id in chebi_ids}
     chebi_ids = {chebi_client.get_primary_id(chebi_id)
                  for chebi_id in chebi_ids}
-    if len(chebi_ids) == 1:
+    # Make sure we eliminate Nones here which can appear as a result
+    # of failed primary ID lookups
+    chebi_ids = {ci for ci in chebi_ids if ci is not None}
+    if not chebi_ids:
+        return []
+    elif len(chebi_ids) == 1:
         return list(chebi_ids)
     specific_chebi_id = get_specific_chebi_id(frozenset(chebi_ids),
                                               name)
