@@ -17,7 +17,10 @@ from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.databases import get_identifiers_url
 from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_sort_key
-from indra.literature import id_lookup
+try:
+    from indra.literature import id_lookup
+except:
+    id_lookup = None
 
 logger = logging.getLogger(__name__)
 HERE = dirname(abspath(__file__))
@@ -363,11 +366,12 @@ class HtmlAssembler(object):
                         for evidence in stmt_info["evidence"]:
                             if 'PMCID' not in evidence.get('text_refs', {}):
                                 if evidence.get('pmid'):
-                                    ev_pmcid = id_lookup(
-                                        evidence['pmid'], 'pmid') \
-                                        .get('pmcid', None)
-                                    if ev_pmcid:
-                                        evidence['pmcid'] = ev_pmcid
+                                    if id_lookup:
+                                        ev_pmcid = id_lookup(
+                                            evidence['pmid'], 'pmid') \
+                                            .get('pmcid', None)
+                                        if ev_pmcid:
+                                            evidence['pmcid'] = ev_pmcid
                             else:
                                 evidence['pmcid'] = \
                                     evidence['text_refs']['PMCID']
