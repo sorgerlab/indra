@@ -253,7 +253,10 @@ class HtmlAssembler(object):
                         del ag.db_refs[dbn]
 
             # Update the top level grouping.
-            tl_names = key[1]
+            if isinstance(stmt, ActiveForm):
+                tl_names = [key[1][0]]
+            else:
+                tl_names = key[1]
             if with_grouping:
                 tl_key = '-'.join([str(name) for name in tl_names])
                 tl_agents = {name: Agent(name) for name in tl_names
