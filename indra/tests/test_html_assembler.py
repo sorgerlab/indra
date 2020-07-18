@@ -117,3 +117,10 @@ def test_influence():
     stmt2 = Influence(Event(c1), Event(c3))
     ha = HtmlAssembler([stmt, stmt2])
     ha.make_model()
+
+
+def test_active_form():
+    stmt = ActiveForm(Agent('MAPK1', mods=[ModCondition('phosphorylation')]),
+                      'kinase', True)
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
