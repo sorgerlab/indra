@@ -68,7 +68,11 @@ def get_binding_site_name(agent):
     """Return a binding site name from a given agent."""
     # Try to construct a binding site name based on parent
     grounding = agent.get_grounding()
-    if grounding != (None, None):
+    # We don't want to accidentally deal with very deep ontological
+    # cases here such as CHEBI (e.g., GTP) which requires thousands
+    # of lookups to resolve
+    if grounding != (None, None) and grounding[0] in {'HGNC', 'FPLX'}:
+        print('Getting parents for %s' % str(grounding))
         top_parents = bio_ontology.get_top_level_parents(*grounding)
         if top_parents:
             parent_name = bio_ontology.get_name(*top_parents[0])
