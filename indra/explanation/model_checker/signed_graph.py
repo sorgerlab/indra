@@ -27,7 +27,8 @@ class SignedGraphModelChecker(ModelChecker):
     def get_graph(self):
         if self.graph:
             return self.graph
-        self.graph = signed_edges_to_signed_nodes(self.model)
+        self.graph = signed_edges_to_signed_nodes(
+            self.model, copy_edge_data={'belief'})
         return self.graph
 
     def process_statement(self, stmt):

@@ -29,8 +29,12 @@ class UnsignedGraphModelChecker(ModelChecker):
         if self.graph:
             return self.graph
         self.graph = nx.DiGraph()
-        for (u, v) in self.model.edges:
-            self.graph.add_edge((u, 0), (v, 0))
+        nodes = []
+        for node, node_data in self.model.nodes(data=True):
+            nodes.append(((node, 0), node_data))
+        self.graph.add_nodes_from(nodes)
+        for (u, v, data) in self.model.edges(data=True):
+            self.graph.add_edge((u, 0), (v, 0), belief=data['belief'])
         return self.graph
 
     def process_statement(self, stmt):
