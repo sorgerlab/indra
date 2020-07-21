@@ -7,8 +7,6 @@ from copy import deepcopy
 
 import networkx as nx
 import networkx.algorithms.simple_paths as simple_paths
-from networkx.classes.reportviews import NodeView, OutEdgeView, \
-    OutMultiEdgeView
 
 from .util import get_sorted_neighbors
 
