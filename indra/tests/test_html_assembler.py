@@ -152,3 +152,82 @@ def test_has_activity():
     stmt = HasActivity(Agent('MAPK1'), 'activity', True)
     ha = HtmlAssembler([stmt])
     ha.make_model()
+
+
+def test_phosphorylation():
+    stmt = Phosphorylation(Agent('MAP2K1'), Agent('MAPK1'), 'T', '185')
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_autophosphorylation():
+    stmt = Autophosphorylation(
+        Agent('P38', bound_conditions=[BoundCondition(Agent('TAB1'))]))
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_dephosphorylation():
+    stmt = Dephosphorylation(Agent('DUSP6'), Agent('MAPK1'), 'T', '185')
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_inhibition():
+    stmt = Inhibition(Agent('DUSP4'), Agent('MAPK1'))
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_activation():
+    stmt = Activation(Agent('MAP2K1'), Agent('MAPK1'), 'kinase')
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_gef():
+    stmt = Gef(Agent('SOS1'), Agent('KRAS'))
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_gap():
+    stmt = Gap(Agent('RASA1'), Agent('KRAS'))
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_translocation():
+    stmt = Translocation(Agent('FOXO3A'), None, 'nucleus')
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_increase_amount():
+    stmt = IncreaseAmount(Agent('TP53'), Agent('MDM2'))
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_decrease_amount():
+    stmt = DecreaseAmount(Agent('TP53'), Agent('MDM2'))
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_association():
+    stmt = Association([Event(Concept('a')), Event(Concept('b'))])
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_event():
+    stmt = Event(Concept('a'))
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_migration():
+    stmt = Migration(Concept('migration'))
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
