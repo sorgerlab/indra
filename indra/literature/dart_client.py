@@ -1,13 +1,13 @@
 import logging
 import requests
-from indra.config import CONFIG_DICT
+from indra.config import get_config
 
 
 logger = logging.getLogger(__name__)
 
 
-dart_uname = CONFIG_DICT['DART_WM_USERNAME']
-dart_pwd = CONFIG_DICT['DART_WM_PASSWORD']
+dart_uname = get_config('DART_WM_USERNAME')
+dart_pwd = get_config('DART_WM_PASSWORD')
 
 
 dart_url = 'https://indra-ingest-pipeline-rest-1.prod.dart.worldmodelers.com' \
