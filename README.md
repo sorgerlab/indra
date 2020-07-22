@@ -374,8 +374,6 @@ extracted from the neighborhood query.
 
 Next, we look at an example of querying the [Pathway Commons
 database](http://pathwaycommons.org) for paths between two lists of proteins.
-Note: see installation notes above for installing pyjnius, which is required
-for using the BioPAX API of INDRA.
 
 [//]: # (If code is changed here, also update it in tests/test_docs_code.py)
 
