@@ -176,6 +176,9 @@ def make_stmt_from_sort_key(key, verb, agents=None):
     elif verb == 'Influence':
         agents.extend([make_agent(inp) for inp in inps[:2]])
         stmt = Influence(*[Event(ag) for ag in agents])
+    elif verb == 'Association':
+        agents.extend([make_agent(inp) for inp in inps])
+        stmt = StmtClass([Event(ag) for ag in agents])
     else:
         agents.extend([make_agent(name) for name in inps])
         stmt = StmtClass(*agents)
