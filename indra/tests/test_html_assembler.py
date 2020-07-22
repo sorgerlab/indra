@@ -124,3 +124,31 @@ def test_active_form():
                       'kinase', True)
     ha = HtmlAssembler([stmt])
     ha.make_model()
+    # Case when it's not active
+    stmt = ActiveForm(Agent('MAPK1', mods=[ModCondition('phosphorylation')]),
+                      'activity', False)
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_complex():
+    stmt = Complex([Agent('BRAF'), Agent('RAF1')])
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+    # Complex with more than two members
+    stmt = Complex([Agent('BRAF'), Agent('RAF1'), Agent('YWAH')])
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_conversion():
+    stmt = Conversion(Agent('RAS'), [Agent('GTP'), Agent('B')],
+                      [Agent('GDP'), Agent('C')])
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
+
+
+def test_has_activity():
+    stmt = HasActivity(Agent('MAPK1'), 'activity', True)
+    ha = HtmlAssembler([stmt])
+    ha.make_model()
