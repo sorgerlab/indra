@@ -83,7 +83,7 @@ def test_readme_using_indra2():
 
 
 # From 3rd example under "Using INDRA"
-@attr('slow')
+@attr('slow', 'notravis')
 def test_readme_using_indra3():
     from indra.sources import reach
     from indra.literature import pubmed_client
@@ -168,7 +168,7 @@ def test_nl_modeling():
 
 
 # CODE IN gene_network.rst
-@attr('slow')
+@attr('slow', 'notravis')
 def test_gene_network():
     # Chunk 1: this is tested in _get_gene_network_stmts
     # from indra.tools.gene_network import GeneNetwork
