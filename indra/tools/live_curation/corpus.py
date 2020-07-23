@@ -130,7 +130,7 @@ class Corpus(object):
                 self._save_to_cache(raw, sts, cur)
             return list((raw, sts, cur))
         except Exception as e:
-            logger.exception('Failed to put on s3: %s' % e)
+            logger.exception('Failed to put on S3: %s' % e)
             return None
 
     @staticmethod
