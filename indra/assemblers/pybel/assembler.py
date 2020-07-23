@@ -387,7 +387,7 @@ def belgraph_to_signed_graph(
         rel = edge_data.get('relation')
         pos_edge = \
             (u, v, ('sign', 0)) + \
-            tuple((k, v)
+            tuple((k, (tuple(v) if isinstance(v, list) else v))
                   for k, v in edge_data.get('annotations', {}).items()) \
             if propagate_annotations else (u, v, ('sign', 0))
         # Unpack tuple pairs at indices >1 or they'll be in nested tuples
