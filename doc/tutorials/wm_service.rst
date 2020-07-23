@@ -81,6 +81,15 @@ Using the services
 Below, SERVICE_HOST should be replaced by the address of the server on which
 the services are running.
 
+Check that the service is running:
+
+.. code-block:: sh
+
+    URL: http://SERVICE_HOST:8001/health
+    Method: GET
+    Output: {"state": "healthy", "version": "1.0.0"}
+
+
 Read a given text with a reader and return INDRA Statements (below, <reader>
 can be eidos, sofia or cwms). Note that for `eidos` specifically, a
 `webservice` parameter should also be passed which points to the address
