@@ -107,6 +107,18 @@ their corresponding statements are returned.
     Output: {"curations": {"38ce0c14-2c7e-4df8-bd53-3006afeaa193": 0},
              "statements": {"38ce0c14-2c7e-4df8-bd53-3006afeaa193": stmt_json}}
 
+Notify INDRA of a new reader output in DART.
+
+.. code-block:: sh
+
+    URL: http://SERVICE_HOST:8001/notify
+    Method: POST with JSON content header
+    Input parameters: {"identity": "eidos",
+                       "version": "3.1.4",
+                       "document_id": "38ce0c14-2c7e-4df8-bd53-3006afeaa193",
+                       "storage_key": "uuid.ext"}
+    Output: {}
+
 
 .. _wm-service-s3:
 INDRA assemblies on S3
