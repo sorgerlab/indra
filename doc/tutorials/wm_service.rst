@@ -168,8 +168,14 @@ for each corpus are as follows
   - `display_name`: a human-readable display name for the corpus.
   - `readers`: a list of the names of the reading systems from which
     statements were obtained in the corpus.
-  - `assembly_resolution`: a string identifying what assembly resolution was
-    used to assemble the corpus (e.g., "location_and_time").
+  - `assembly`: a dictionary identifying attributes of the assembly process with
+    the following keys:
+
+      - `level`: the level of resolution used to assemble the corpus
+        (e.g., "location_and_time").
+      - `grounding_threshold`: the threshold (if any) which was used to filter
+        statements by grounding score (e.g., 0.7)
+
   - `num_statements`: the number of assembled INDRA Statements in the corpus (
     i.e., statements.json).
   - `num_documents`: the number of documents that were read by readers to
