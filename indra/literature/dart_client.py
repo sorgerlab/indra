@@ -1,6 +1,7 @@
 import json
 import logging
 import requests
+from datetime import datetime
 from indra.config import get_config
 
 
@@ -35,13 +36,23 @@ def check_timestamp_dict(timestamp):
     -------
     dict
     """
+    def _is_valid_ts(ts):
+        try:
+            dt = datetime.utcfromtimestamp(int(ts))
+            if dt < datetime(year=1900):
+                return False
+        except (ValueError, OverflowError):
+            return False
+        return True
+
     ek = {'on', 'before', 'after'}
     if sum(k in ek for k in timestamp) > 0:
         if 'on' in timestamp:
             logger.warning('Ignoring any other keys than "on"')
             ts = {'on': timestamp['on']}
         else:
-            ts = {k: v for k, v in timestamp.items() if k in ek}
+            ts = {k: v for k, v in timestamp.items() if k in ek and
+                  _is_valid_ts(v)}
     else:
         raise ValueError(f'None of the allowed keys '
                          f'{", ".join(list(ek))} were provided')
