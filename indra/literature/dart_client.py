@@ -7,8 +7,8 @@ from indra.config import get_config
 logger = logging.getLogger(__name__)
 
 
-dart_uname = get_config('DART_WM_USERNAME')
-dart_pwd = get_config('DART_WM_PASSWORD')
+dart_uname = get_config('DART_WM_USERNAME', failure_ok=False)
+dart_pwd = get_config('DART_WM_PASSWORD', failure_ok=False)
 
 
 dart_url = 'https://indra-ingest-pipeline-rest-1.prod.dart.worldmodelers.com' \
