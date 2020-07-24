@@ -46,3 +46,8 @@ Deft Tools (:py:mod:`indra.literature.adeft_tools`)
 .. automodule:: indra.literature.adeft_tools
     :members:
 
+DART client (:py:mod:`indra.literature.dart_client`)
+----------------------------------------------------
+
+.. automodule:: indra.literature.dart_client
+    :members:
