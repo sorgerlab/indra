@@ -91,24 +91,6 @@ def jsonify_query_data(readers=None, versions=None, document_ids=None,
                        timestamp=None):
     """Check and json.dumps the metadata dictionary
 
-    Query json structure:
-    {"readers": [
-        "MyAwesomeTool",
-        "SomeOtherAwesomeTool"
-      ],
-      "versions": [
-        "3.1.4",
-        "1.3.3.7"
-      ],
-      "document_ids": [
-        "qwerty1234",
-        "poiuyt0987"
-      ],
-      "timestamp": {
-        "before": {},
-        "after": {},
-        "on": {}}}
-
     Parameters
     ----------
     readers : list
@@ -141,14 +123,38 @@ def jsonify_query_data(readers=None, versions=None, document_ids=None,
 
 def query_dart_api(readers=None, versions=None, document_ids=None,
                    timestamp=None):
-    """
+    """Query the DART API
+
+    Query json structure:
+    {"readers": [
+        "MyAwesomeTool",
+        "SomeOtherAwesomeTool"
+      ],
+      "versions": [
+        "3.1.4",
+        "1.3.3.7"
+      ],
+      "document_ids": [
+        "qwerty1234",
+        "poiuyt0987"
+      ],
+      "timestamp": {
+        "before": {},
+        "after": {},
+        "on": {}}
+    }
 
     Parameters
     ----------
     readers : list
+        A list of reader names
     versions : list
+        A list of versions to match with the reader name(s)
     document_ids : list
+        A list of document identifiers
     timestamp : dict("on"|"before"|"after",str)
+        The timestamp string must of format "yyyy-mm-dd" or "yyyy-mm-dd
+        hh:mm:ss" (only for "before" and "after").
 
     Returns
     -------
