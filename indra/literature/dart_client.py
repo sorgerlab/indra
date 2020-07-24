@@ -25,12 +25,12 @@ def _check_lists(lst):
     return True
 
 
-def check_timestamp_dict(timestamp):
-    """
+def check_timestamp_dict(ts_dict):
+    """Check the timestamp dict
 
     Parameters
     ----------
-    timestamp : dict
+    ts_dict : dict
         Timestamp should be of format "yyyy-mm-dd". "yyyy-mm-dd hh:mm:ss"
         is allowed as well for the keys "before" and "after".
 
@@ -72,14 +72,14 @@ def check_timestamp_dict(timestamp):
         return True
 
     ek = {'on', 'before', 'after'}
-    if sum(k in ek for k in timestamp) > 0:
-        if 'on' in timestamp and \
-                sum(k in ek for k in timestamp) > 1 and \
-                _is_valid_ts('on', timestamp['on']):
+    if sum(k in ek for k in ts_dict) > 0:
+        if 'on' in ts_dict and \
+                sum(k in ek for k in ts_dict) > 1 and \
+                _is_valid_ts('on', ts_dict['on']):
             logger.warning('Ignoring any other keys than "on"')
-            ts = {'on': timestamp['on']}
+            ts = {'on': ts_dict['on']}
         else:
-            ts = {k: v for k, v in timestamp.items() if k in ek and
+            ts = {k: v for k, v in ts_dict.items() if k in ek and
                   _is_valid_ts(k, v)}
     else:
         raise ValueError(f'None of the allowed keys '
