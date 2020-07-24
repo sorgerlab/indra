@@ -31,28 +31,56 @@ def check_timestamp_dict(timestamp):
     Parameters
     ----------
     timestamp : dict
+        Timestamp should be of format "yyyy-mm-dd". "yyyy-mm-dd hh:mm:ss"
+        is allowed as well for the keys "before" and "after".
 
     Returns
     -------
     dict
     """
-    def _is_valid_ts(ts):
+    def _is_valid_ts(k, ts):
+        """
+        %Y - Year as Zero padded decimal
+        %m - month as zero padded number
+        %d - day as zero padded number
+        %H - 24h hour as zero padded number
+        %M - minute as zero padded number
+        %S - second as zero padded number
+        """
+        ts_fmt = '%Y-%m-%d'
+        ts_long_fmt = '%Y-%m-%d %H:%M:%S'
+        if k == 'on':
+            dt = datetime.strptime(ts, ts_fmt)
+        else:
+            try:
+                dt = datetime.strptime(ts, ts_long_fmt)
+            except ValueError:
+                try:
+                    dt = datetime.strptime(ts, ts_fmt)
+                except ValueError as err:
+                    raise ValueError(
+                        f'Timestamp "{ts}" is not in a valid format. Format '
+                        f'must be "%Y-%m-%d" or "%Y-%m-%d %H:%M:%S" (for '
+                        f'"before" and "after" only)') from err
         try:
-            dt = datetime.utcfromtimestamp(int(ts))
             if dt < datetime(1900, 1, 1):
+                logger.warning('Timestamp is before 1900-JAN-01, ignoring')
                 return False
         except (ValueError, OverflowError):
+            logger.warning('Could not parse timestamp, ignoring')
             return False
         return True
 
     ek = {'on', 'before', 'after'}
     if sum(k in ek for k in timestamp) > 0:
-        if 'on' in timestamp:
+        if 'on' in timestamp and \
+                sum(k in ek for k in timestamp) > 1 and \
+                _is_valid_ts('on', timestamp['on']):
             logger.warning('Ignoring any other keys than "on"')
             ts = {'on': timestamp['on']}
         else:
             ts = {k: v for k, v in timestamp.items() if k in ek and
-                  _is_valid_ts(v)}
+                  _is_valid_ts(k, v)}
     else:
         raise ValueError(f'None of the allowed keys '
                          f'{", ".join(list(ek))} were provided')
