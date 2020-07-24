@@ -38,7 +38,7 @@ def check_timestamp_dict(timestamp):
     -------
     dict
     """
-    def _is_valid_ts(k, ts):
+    def _is_valid_ts(k, tstr):
         """
         %Y - Year as Zero padded decimal
         %m - month as zero padded number
@@ -50,18 +50,18 @@ def check_timestamp_dict(timestamp):
         ts_fmt = '%Y-%m-%d'
         ts_long_fmt = '%Y-%m-%d %H:%M:%S'
         if k == 'on':
-            dt = datetime.strptime(ts, ts_fmt)
+            dt = datetime.strptime(tstr, ts_fmt)
         else:
             try:
-                dt = datetime.strptime(ts, ts_long_fmt)
+                dt = datetime.strptime(tstr, ts_long_fmt)
             except ValueError:
                 try:
-                    dt = datetime.strptime(ts, ts_fmt)
+                    dt = datetime.strptime(tstr, ts_fmt)
                 except ValueError as err:
                     raise ValueError(
-                        f'Timestamp "{ts}" is not in a valid format. Format '
-                        f'must be "%Y-%m-%d" or "%Y-%m-%d %H:%M:%S" (for '
-                        f'"before" and "after" only)') from err
+                        f'Timestamp "{tstr}" is not in a valid format. '
+                        f'Format must be "%Y-%m-%d" or "%Y-%m-%d %H:%M:%S" '
+                        f'(for "before" and "after" only)') from err
         try:
             if dt < datetime(1900, 1, 1):
                 logger.warning('Timestamp is before 1900-JAN-01, ignoring')
