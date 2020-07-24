@@ -253,8 +253,10 @@ class HtmlAssembler(object):
                         del ag.db_refs[dbn]
 
             # Update the top level grouping.
-            if isinstance(stmt, ActiveForm):
+            if isinstance(stmt, (ActiveForm, HasActivity)):
                 tl_names = [key[1][0]]
+            elif isinstance(stmt, Conversion):
+                tl_names = [key[1][0]] + [*key[1][1]] + [*key[1][2]]
             else:
                 tl_names = key[1]
             if with_grouping:
