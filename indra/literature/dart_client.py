@@ -15,6 +15,15 @@ dart_url = 'https://indra-ingest-pipeline-rest-1.prod.dart.worldmodelers.com' \
            '/dart/api/v1/readers/query'
 
 
+def _check_lists(lst):
+    if not isinstance(lst, (list, tuple)):
+        return False
+    elif any(not isinstance(s, str) for s in lst):
+        logger.warning('At least one object in list is not a string')
+        return False
+    return True
+
+
 def check_timestamp_dict(timestamp):
     """
 
@@ -77,11 +86,11 @@ def jsonify_query_data(readers=None, versions=None, document_ids=None,
         logger.warning('No query parameters were filled out')
         return ''
     pd = {}
-    if readers:
+    if readers and _check_lists(readers):
         pd['readers'] = readers
-    if versions:
+    if versions and _check_lists(versions):
         pd['versions'] = versions
-    if document_ids:
+    if document_ids and _check_lists(document_ids):
         pd['document_ids'] = document_ids
     if isinstance(timestamp, dict):
         pd['timestamp'] = check_timestamp_dict(timestamp)
