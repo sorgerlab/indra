@@ -126,23 +126,12 @@ def query_dart_api(readers=None, versions=None, document_ids=None,
     """Query the DART API
 
     Query json structure:
-    {"readers": [
-        "MyAwesomeTool",
-        "SomeOtherAwesomeTool"
-      ],
-      "versions": [
-        "3.1.4",
-        "1.3.3.7"
-      ],
-      "document_ids": [
-        "qwerty1234",
-        "poiuyt0987"
-      ],
-      "timestamp": {
-        "before": {},
-        "after": {},
-        "on": {}}
-    }
+        {"readers": ["MyAwesomeTool", "SomeOtherAwesomeTool"],
+        "versions": ["3.1.4", "1.3.3.7"],
+        "document_ids": ["qwerty1234", "poiuyt0987"],
+        "timestamp": {"before": "yyyy-mm-dd"|"yyyy-mm-dd hh:mm:ss",
+            "after": "yyyy-mm-dd"|"yyyy-mm-dd hh:mm:ss",
+            "on": "yyyy-mm-dd"}}
 
     Parameters
     ----------
