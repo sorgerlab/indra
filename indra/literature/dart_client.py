@@ -39,7 +39,7 @@ def check_timestamp_dict(timestamp):
     def _is_valid_ts(ts):
         try:
             dt = datetime.utcfromtimestamp(int(ts))
-            if dt < datetime(year=1900):
+            if dt < datetime(1900, 1, 1):
                 return False
         except (ValueError, OverflowError):
             return False
