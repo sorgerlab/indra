@@ -1,6 +1,7 @@
 import json
 import boto3
 import logging
+import datetime
 from os import environ
 from indra.statements import stmts_to_json, stmts_from_json
 from indra.statements.io import stmts_to_json_file, stmts_from_json_file
@@ -126,11 +127,24 @@ class Corpus(object):
             # Upload meta data
             self._s3_put_file(s3, meta, json.dumps(self.meta_data), bucket)
 
+            # Update index
+            index_obj = s3.get_object(Bucket=bucket,
+                                      Key='%s/index.csv' % default_key_base)
+            index_str = index_obj['Body'].read().decode('utf-8')
+            if not index_str.endswith('\n'):
+                index_str += '\n'
+            index_str += '%s,%s\n' % (
+                self.corpus_id,
+                datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S'))
+            index_bytes = index_str.encode('utf-8')
+            s3.put_object(Bucket=bucket, Key='%s/index.csv' % default_key_base,
+                          Body=index_bytes)
+
             if cache:
                 self._save_to_cache(raw, sts, cur)
             return list((raw, sts, cur))
         except Exception as e:
-            logger.exception('Failed to put on s3: %s' % e)
+            logger.exception('Failed to put on S3: %s' % e)
             return None
 
     @staticmethod
