@@ -1,3 +1,5 @@
+"""A client for accessing reader output from the DART system."""
+
 import json
 import logging
 import requests
@@ -8,8 +10,8 @@ from indra.config import get_config
 logger = logging.getLogger(__name__)
 
 
-dart_uname = get_config('DART_WM_USERNAME', failure_ok=False)
-dart_pwd = get_config('DART_WM_PASSWORD', failure_ok=False)
+dart_uname = get_config('DART_WM_USERNAME')
+dart_pwd = get_config('DART_WM_PASSWORD')
 
 
 dart_url = 'https://indra-ingest-pipeline-rest-1.prod.dart.worldmodelers.com' \
@@ -150,6 +152,10 @@ def query_dart_api(readers=None, versions=None, document_ids=None,
     dict
         The JSON payload of the response from the DART API
     """
+    if not dart_uname:
+        raise ValueError('DART_WM_USERNAME is not configured.')
+    if not dart_pwd:
+        raise ValueError('DART_WM_PASSWORD is not configured.')
     query_data = jsonify_query_data(readers, versions, document_ids, timestamp)
     if not query_data:
         return {}
