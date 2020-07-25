@@ -18,6 +18,48 @@ dart_url = 'https://indra-ingest-pipeline-rest-1.prod.dart.worldmodelers.com' \
            '/dart/api/v1/readers/query'
 
 
+def get_reader_outputs(readers=None, versions=None, document_ids=None,
+                       timestamp=None):
+    """Return reader output metadata by querying the DART API.
+
+    Query json structure:
+        {"readers": ["MyAwesomeTool", "SomeOtherAwesomeTool"],
+        "versions": ["3.1.4", "1.3.3.7"],
+        "document_ids": ["qwerty1234", "poiuyt0987"],
+        "timestamp": {"before": "yyyy-mm-dd"|"yyyy-mm-dd hh:mm:ss",
+        "after": "yyyy-mm-dd"|"yyyy-mm-dd hh:mm:ss",
+        "on": "yyyy-mm-dd"}}
+
+    Parameters
+    ----------
+    readers : list
+        A list of reader names
+    versions : list
+        A list of versions to match with the reader name(s)
+    document_ids : list
+        A list of document identifiers
+    timestamp : dict("on"|"before"|"after",str)
+        The timestamp string must of format "yyyy-mm-dd" or "yyyy-mm-dd
+        hh:mm:ss" (only for "before" and "after").
+
+    Returns
+    -------
+    dict
+        The JSON payload of the response from the DART API
+    """
+    if not dart_uname:
+        raise ValueError('DART_WM_USERNAME is not configured.')
+    if not dart_pwd:
+        raise ValueError('DART_WM_PASSWORD is not configured.')
+    query_data = _jsonify_query_data(readers, versions, document_ids, timestamp)
+    if not query_data:
+        return {}
+    res = requests.post(dart_url, data={'metadata': query_data},
+                        auth=(dart_uname, dart_pwd))
+    res.raise_for_status()
+    return res.json()
+
+
 def _check_lists(lst):
     if not isinstance(lst, (list, tuple)):
         return False
@@ -27,7 +69,7 @@ def _check_lists(lst):
     return True
 
 
-def check_timestamp_dict(ts_dict):
+def _check_timestamp_dict(ts_dict):
     """Check the timestamp dict
 
     Parameters
@@ -89,16 +131,20 @@ def check_timestamp_dict(ts_dict):
     return ts
 
 
-def jsonify_query_data(readers=None, versions=None, document_ids=None,
-                       timestamp=None):
+def _jsonify_query_data(readers=None, versions=None, document_ids=None,
+                        timestamp=None):
     """Check and json.dumps the metadata dictionary
 
     Parameters
     ----------
     readers : list
+        The list of reading systems.
     versions : list
+        Versions of reading systems.
     document_ids : list
+        Document IDs.
     timestamp : dict("on"|"before"|"after",str)
+        Reader output time stamp constraint.
 
     Returns
     -------
@@ -116,54 +162,8 @@ def jsonify_query_data(readers=None, versions=None, document_ids=None,
     if document_ids and _check_lists(document_ids):
         pd['document_ids'] = document_ids
     if isinstance(timestamp, dict):
-        pd['timestamp'] = check_timestamp_dict(timestamp)
+        pd['timestamp'] = _check_timestamp_dict(timestamp)
     elif timestamp is not None:
         raise ValueError('Argument "timestamp" must be of type dict')
 
     return json.dumps(pd)
-
-
-def query_dart_api(readers=None, versions=None, document_ids=None,
-                   timestamp=None):
-    """Query the DART API
-
-    Query json structure:
-        {"readers": ["MyAwesomeTool", "SomeOtherAwesomeTool"],
-        "versions": ["3.1.4", "1.3.3.7"],
-        "document_ids": ["qwerty1234", "poiuyt0987"],
-        "timestamp": {"before": "yyyy-mm-dd"|"yyyy-mm-dd hh:mm:ss",
-            "after": "yyyy-mm-dd"|"yyyy-mm-dd hh:mm:ss",
-            "on": "yyyy-mm-dd"}}
-
-    Parameters
-    ----------
-    readers : list
-        A list of reader names
-    versions : list
-        A list of versions to match with the reader name(s)
-    document_ids : list
-        A list of document identifiers
-    timestamp : dict("on"|"before"|"after",str)
-        The timestamp string must of format "yyyy-mm-dd" or "yyyy-mm-dd
-        hh:mm:ss" (only for "before" and "after").
-
-    Returns
-    -------
-    dict
-        The JSON payload of the response from the DART API
-    """
-    if not dart_uname:
-        raise ValueError('DART_WM_USERNAME is not configured.')
-    if not dart_pwd:
-        raise ValueError('DART_WM_PASSWORD is not configured.')
-    query_data = jsonify_query_data(readers, versions, document_ids, timestamp)
-    if not query_data:
-        return {}
-    res = requests.post(dart_url, data={'metadata': query_data},
-                        auth=(dart_uname, dart_pwd))
-    if res.status_code != 200:
-        logger.warning(f'Dart Notifications Endpoint returned with status '
-                       f'{res.status_code}: {res.text}')
-
-        return {}
-    return res.json()
