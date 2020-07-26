@@ -19,14 +19,15 @@ def test_chebi_pubchem_mapping():
 
 
 def test_read_chebi_to_chembl():
-    ctoc = chebi_client._read_chebi_to_chembl()
-    assert ctoc['CHEBI:50729'] == 'CHEMBL58'
-    assert unicode_strs(ctoc)
+    chebi_to_chembl, _ = chebi_client._read_chebi_to_chembl()
+    assert chebi_to_chembl['CHEBI:50729'] == 'CHEMBL58'
+    assert unicode_strs(chebi_to_chembl)
 
 
 def test_chebi_chembl():
-    assert chebi_client.get_chebi_id_from_chembl('CHEMBL525191') == '83405'
-    assert chebi_client.get_chembl_id('83405') == 'CHEMBL525191'
+    assert chebi_client.get_chebi_id_from_chembl('CHEMBL525191') == \
+        'CHEBI:83405'
+    assert chebi_client.get_chembl_id('CHEBI:83405') == 'CHEMBL525191'
 
 
 def test_cas_to_chebi():
