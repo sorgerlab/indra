@@ -17,7 +17,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.1'
+    version = '1.2'
 
     def __init__(self):
         super().__init__()
@@ -342,7 +342,7 @@ class BioOntology(IndraOntology):
     def add_chembl_nodes(self):
         from indra.databases import chembl_client
         nodes = []
-        for chembl_id, chembl_name in chembl_client.chembl_names.item():
+        for chembl_id, chembl_name in chembl_client.chembl_names.items():
             nodes.append((self.label('CHEMBL', chembl_id),
                           {'name': chembl_name}))
         self.add_nodes_from(nodes)
