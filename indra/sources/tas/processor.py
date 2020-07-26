@@ -15,9 +15,12 @@ CLASS_MAP = {'1': 'Kd < 100nM', '2': '100nM < Kd < 1uM',
 
 class TasProcessor(object):
     """A processor for the Target Affinity Spectrum data table."""
-    def __init__(self, data, affinity_class_limit):
+    def __init__(self, data, affinity_class_limit=2, named_only=False,
+                 standardized_only=False):
         self._data = data
         self.affinity_class_limit = affinity_class_limit
+        self.named_only = named_only
+        self.standardized_only = standardized_only
 
         self.statements = []
         for row in data:
@@ -58,10 +61,20 @@ class TasProcessor(object):
             # universally standardize its names, instead, we look
             # it up explicitly when necessary.
             name, db_refs = standardize_name_db_refs(db_refs)
-            if name is None and 'CHEMBL' in db_refs:
-                name = chembl_client.get_chembl_name(db_refs['CHEMBL'])
+            if name is None:
+                # This is one way to detect that the drug could not be
+                # standardized beyond just its name so in the
+                # standardized_only condition, we skip this drug
+                if self.standardized_only:
+                    continue
+                if 'CHEMBL' in db_refs:
+                    name = chembl_client.get_chembl_name(db_refs['CHEMBL'])
             # If name is still None, we just use the ID as the name
             if name is None:
+                # With the named_only restriction, we skip drugs without
+                # a proper name.
+                if self.named_only:
+                    continue
                 name = id_
             drugs.append(Agent(name, db_refs=db_refs))
         return drugs
