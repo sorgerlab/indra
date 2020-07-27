@@ -84,6 +84,8 @@ class TasProcessor(object):
                     continue
                 name = id_
             drugs.append(Agent(name, db_refs=db_refs))
+        drugs = list({agent.matches_key():
+                      agent for agent in drugs}.values())
         return drugs
 
     def _extract_protein(self, name, gene_id):
