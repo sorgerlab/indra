@@ -46,6 +46,7 @@ def get_documents(readers=None, versions=None, document_ids=None,
     # Loop document keys and get documents
     documents = {}
     if metdata_json:
+        logger.info('Got document storage keys. Fetching output...')
         for record in metdata_json['records']:
             storage_key = record['storage_key']
             doc_res = requests.get(url=downl_endpoint + storage_key,
@@ -205,7 +206,7 @@ def _jsonify_query_data(readers=None, versions=None, document_ids=None,
     if document_ids and _check_lists(document_ids):
         pd['document_ids'] = document_ids
     if isinstance(timestamp, dict):
-        pd['timestamp'] = _check_timestamp_dict(timestamp)
+        pd = {**pd, **_check_timestamp_dict(timestamp)}
     elif timestamp is not None:
         raise ValueError('Argument "timestamp" must be of type dict')
 
