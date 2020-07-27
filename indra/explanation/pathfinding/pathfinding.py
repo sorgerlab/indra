@@ -217,7 +217,8 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
         last_node = cur_path[-1]
 
         # if last node is in terminal_ns, continue to next path
-        if terminal_ns and g.nodes[last_node]['ns'].lower() in terminal_ns:
+        if terminal_ns and g.nodes[last_node]['ns'].lower() in terminal_ns \
+                and source_node != last_node:
             continue
 
         sorted_neighbors = get_sorted_neighbors(G=g, node=last_node,
