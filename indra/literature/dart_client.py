@@ -19,8 +19,39 @@ meta_endpoint = dart_base_url + '/query'
 downl_endpoint = dart_base_url + '/download/'
 
 
-dart_url = 'https://indra-ingest-pipeline-rest-1.prod.dart.worldmodelers.com' \
-           '/dart/api/v1/readers/query'
+def get_documents(readers=None, versions=None, document_ids=None,
+                  timestamp=None):
+    """Return a list of contents constrained by the provided parameters
+
+    Parameters
+    ----------
+    readers : list
+        A list of reader names
+    versions : list
+        A list of versions to match with the reader name(s)
+    document_ids : list
+        A list of document identifiers
+    timestamp : dict("on"|"before"|"after",str)
+        The timestamp string must of format "yyyy-mm-dd" or "yyyy-mm-dd
+        hh:mm:ss" (only for "before" and "after").
+
+    Returns
+    -------
+    dict(str, str)
+        A dict of document content keyed by document id
+    """
+    metdata_json = get_reader_outputs(readers=readers, versions=versions,
+                                      document_ids=document_ids,
+                                      timestamp=timestamp)
+    # Loop document keys and get documents
+    documents = {}
+    if metdata_json:
+        for doc_key in metdata_json:
+            doc = requests.get(url=downl_endpoint + doc_key)
+            documents[doc_key] = doc
+    else:
+        logger.warning('Empty meta data json returned')
+    return documents
 
 
 def get_reader_outputs(readers=None, versions=None, document_ids=None,
