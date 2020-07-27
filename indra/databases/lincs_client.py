@@ -76,7 +76,12 @@ class LincsClient(object):
                         pubchem='PubChem CID', lincs='LINCS ID')
         for k, v in mappings.items():
             if entry.get(v):
-                refs[k.upper()] = entry.get(v)
+                key = k.upper()
+                value = entry[v]
+                # Swap in primary PubChem IDs where there is an outdated one
+                if key == 'PUBCHEM' and value in pc_to_primary_mappings:
+                    value = pc_to_primary_mappings[value]
+                refs[key] = value
         return refs
 
     def get_protein_refs(self, hms_lincs_id):
@@ -156,3 +161,31 @@ def load_lincs_csv(url):
     return [{header: val for header, val in zip(headers, line_elements)}
             for line_elements in data_rows[1:]]
 
+
+# This is a set of mappings specific to HMS-LINCS that map outdated compound
+# IDs appearing in HMS-LINCS to preferred compound IDs. This can be obtained
+# more generally via indra.databases.pubchem_client, but this is a pre-compiled
+# version here for fast lookups in this client.
+pc_to_primary_mappings = \
+    {'23624255': '135564985',
+     '10451420': '135465539',
+     '10196499': '135398501',
+     '57899889': '135564632',
+     '53239990': '135564599',
+     '71433937': '136240579',
+     '53401173': '135539077',
+     '71543332': '135398499',
+     '5353940': '5169',
+     '49830557': '135398510',
+     '11258443': '135451019',
+     '68925359': '135440466',
+     '16750408': '135565545',
+     '57347681': '135565635',
+     '5357795': '92577',
+     '56965966': '135398516',
+     '24906282': '448949',
+     '66524294': '135398492',
+     '11696609': '135398495',
+     '9549301': '135473382',
+     '56965894': '135423438',
+     }
