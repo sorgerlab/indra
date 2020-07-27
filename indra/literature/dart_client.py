@@ -13,6 +13,11 @@ logger = logging.getLogger(__name__)
 dart_uname = get_config('DART_WM_USERNAME')
 dart_pwd = get_config('DART_WM_PASSWORD')
 
+dart_base_url = 'https://indra-ingest-pipeline-rest-1.prod.dart' \
+                '.worldmodelers.com/dart/api/v1/readers'
+meta_endpoint = dart_base_url + '/query'
+downl_endpoint = dart_base_url + '/download/'
+
 
 dart_url = 'https://indra-ingest-pipeline-rest-1.prod.dart.worldmodelers.com' \
            '/dart/api/v1/readers/query'
@@ -20,7 +25,7 @@ dart_url = 'https://indra-ingest-pipeline-rest-1.prod.dart.worldmodelers.com' \
 
 def get_reader_outputs(readers=None, versions=None, document_ids=None,
                        timestamp=None):
-    """Return reader output metadata by querying the DART API.
+    """Return reader output metadata by querying the DART API
 
     Query json structure:
         {"readers": ["MyAwesomeTool", "SomeOtherAwesomeTool"],
@@ -54,7 +59,7 @@ def get_reader_outputs(readers=None, versions=None, document_ids=None,
     query_data = _jsonify_query_data(readers, versions, document_ids, timestamp)
     if not query_data:
         return {}
-    res = requests.post(dart_url, data={'metadata': query_data},
+    res = requests.post(meta_endpoint, data={'metadata': query_data},
                         auth=(dart_uname, dart_pwd))
     res.raise_for_status()
     return res.json()
