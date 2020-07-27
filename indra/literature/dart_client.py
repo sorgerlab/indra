@@ -46,9 +46,16 @@ def get_documents(readers=None, versions=None, document_ids=None,
     # Loop document keys and get documents
     documents = {}
     if metdata_json:
-        for doc_key in metdata_json:
-            doc = requests.get(url=downl_endpoint + doc_key)
-            documents[doc_key] = doc
+        for record in metdata_json['records']:
+            storage_key = record['storage_key']
+            doc_res = requests.get(url=downl_endpoint + storage_key,
+                                   auth=(dart_uname, dart_pwd))
+            if doc_res.status_code == 200:
+                record['document'] = doc_res.json()
+                documents[storage_key] = record
+            else:
+                logger.warning(f'Status code {doc_res.status_code} for '
+                               f'storage key {storage_key}')
     else:
         logger.warning('Empty meta data json returned')
     return documents
