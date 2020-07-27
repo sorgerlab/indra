@@ -2,7 +2,7 @@ __all__ = ['TasProcessor']
 
 import logging
 from indra.statements import Inhibition, Agent, Evidence
-from indra.databases import hgnc_client, chembl_client
+from indra.databases import hgnc_client, chembl_client, lincs_client
 from indra.ontology.standardize import standardize_name_db_refs
 
 
@@ -11,6 +11,9 @@ logger = logging.getLogger(__name__)
 
 CLASS_MAP = {'1': 'Kd < 100nM', '2': '100nM < Kd < 1uM',
              '3': '1uM < Kd < 10uM', '10': 'Kd > 10uM'}
+
+
+lincs_client_obj = lincs_client.LincsClient()
 
 
 class TasProcessor(object):
@@ -67,7 +70,11 @@ class TasProcessor(object):
                 # standardized_only condition, we skip this drug
                 if self.standardized_only:
                     continue
-                if 'CHEMBL' in db_refs:
+                elif 'HMS-LINCS' in db_refs:
+                    name = \
+                        lincs_client_obj.get_small_molecule_name(
+                            db_refs['HMS-LINCS'])
+                elif 'CHEMBL' in db_refs:
                     name = chembl_client.get_chembl_name(db_refs['CHEMBL'])
             # If name is still None, we just use the ID as the name
             if name is None:

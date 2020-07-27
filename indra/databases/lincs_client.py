@@ -110,14 +110,14 @@ class LincsClient(object):
         if '-' not in hms_lincs_id:
             keys = [k for k in resource.keys() if k.startswith(hms_lincs_id)]
             if not keys:
-                logger.error('Couldn\'t find entry for %s' % hms_lincs_id)
+                logger.debug('Couldn\'t find entry for %s' % hms_lincs_id)
                 return None
             entry = resource[keys[0]]
         # This means it's a full ID
         else:
             entry = resource.get(hms_lincs_id)
             if not entry:
-                logger.error('Couldn\'t find entry for %s' % hms_lincs_id)
+                logger.debug('Couldn\'t find entry for %s' % hms_lincs_id)
                 return None
         return entry
 
