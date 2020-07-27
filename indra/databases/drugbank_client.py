@@ -103,6 +103,23 @@ def get_drugbank_id_from_chembl_id(chembl_id):
     return get_drugbank_id_from_db_id('CHEMBL', chembl_id)
 
 
+def get_drugbank_name(drugbank_id):
+    """Return the DrugBank standard name for a given DrugBank ID.
+
+    Parameters
+    ----------
+    drugbank_id : str
+        DrugBank ID to get the name for
+
+    Returns
+    -------
+    str or None
+        The name corresponding to the given DrugBank ID or None if not
+        available.
+    """
+    return drugbank_names.get(drugbank_id)
+
+
 mappings_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              os.pardir, 'resources', 'drugbank_mappings.tsv')
 
@@ -110,12 +127,16 @@ mappings_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 def _load_mappings():
     drugbank_to_db = {}
     db_to_drugbank = {}
+    drugbank_names = {}
     to_db_ambigs = set()
     db_to_ambigs = set()
     for drugbank_id, db_ns, db_id, source in \
             read_unicode_csv(mappings_file, delimiter='\t', skiprows=1):
         if db_ns == 'CHEBI':
             db_id = 'CHEBI:%s' % db_id
+        if db_ns == 'NAME':
+            drugbank_names[drugbank_id] = db_id
+            continue
         key = (db_ns, db_id)
         if key in db_to_drugbank and db_to_drugbank[key] != drugbank_id:
             db_to_ambigs.add(key)
@@ -129,7 +150,7 @@ def _load_mappings():
                       if k not in db_to_ambigs}
     drugbank_to_db = {k: v for k, v in drugbank_to_db.items()
                       if k not in to_db_ambigs}
-    return drugbank_to_db, db_to_drugbank
+    return drugbank_to_db, db_to_drugbank, drugbank_names
 
 
-drugbank_to_db, db_to_drugbank = _load_mappings()
+drugbank_to_db, db_to_drugbank, drugbank_names = _load_mappings()

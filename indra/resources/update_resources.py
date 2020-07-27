@@ -669,6 +669,7 @@ def update_drugbank_mappings():
     drugbank_chembl = pyobo.get_filtered_xrefs('drugbank', 'chembl.compound')
     drugbank_chebi = pyobo.get_filtered_xrefs('drugbank', 'chebi')
     chebi_drugbank = pyobo.get_filtered_xrefs('chebi', 'drugbank')
+    drugbank_names = pyobo.get_id_name_mapping('drugbank')
     rows = []
     for drugbank_id, chembl_id in drugbank_chembl.items():
         rows.append([drugbank_id, 'CHEMBL', chembl_id, 'drugbank'])
@@ -676,6 +677,8 @@ def update_drugbank_mappings():
         rows.append([drugbank_id, 'CHEBI', chebi_id, 'drugbank'])
     for chebi_id, drugbank_id in chebi_drugbank.items():
         rows.append([drugbank_id, 'CHEBI', chebi_id, 'chebi'])
+    for drugbank_id, name in drugbank_names.items():
+        rows.append([drugbank_id, 'NAME', name, 'drugbank'])
     fname = os.path.join(path, 'drugbank_mappings.tsv')
     header = ['DRUGBANK_ID', 'NAMESPACE', 'ID', 'SOURCE']
     rows = [header] + sorted(rows)
