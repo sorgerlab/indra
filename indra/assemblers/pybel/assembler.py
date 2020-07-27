@@ -382,6 +382,13 @@ def belgraph_to_signed_graph(
         belgraph, include_variants=True, symmetric_variant_links=False,
         include_components=True, symmetric_component_links=False,
         propagate_annotations=False):
+    graph = nx.MultiDiGraph()
+    for n in belgraph.nodes:
+        if isinstance(n, complex_abundance):
+            ns = n.members[0].namespace
+        else:
+            ns = n.namespace
+        graph.add_node(n, ns=ns)
     edge_set = set()
     for u, v, edge_data in belgraph.edges(data=True):
         rel = edge_data.get('relation')
@@ -409,7 +416,6 @@ def belgraph_to_signed_graph(
         else:
             continue
 
-    graph = nx.MultiDiGraph()
     graph.add_edges_from((t[0], t[1], dict(t[2:])) for t in edge_set)
     return graph
 
