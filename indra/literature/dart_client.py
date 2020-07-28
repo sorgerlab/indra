@@ -40,14 +40,14 @@ def get_documents(readers=None, versions=None, document_ids=None,
     dict(str, str)
         A dict of document content keyed by document id
     """
-    metdata_json = get_reader_outputs(readers=readers, versions=versions,
-                                      document_ids=document_ids,
-                                      timestamp=timestamp)
+    metadata_json = get_reader_outputs(readers=readers, versions=versions,
+                                       document_ids=document_ids,
+                                       timestamp=timestamp)
     # Loop document keys and get documents
     documents = {}
-    if metdata_json:
+    if metadata_json and 'records' in metadata_json:
         logger.info('Got document storage keys. Fetching output...')
-        for record in metdata_json['records']:
+        for record in metadata_json['records']:
             storage_key = record['storage_key']
             doc_res = requests.get(url=downl_endpoint + storage_key,
                                    auth=(dart_uname, dart_pwd))
