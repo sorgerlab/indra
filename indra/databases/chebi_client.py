@@ -75,6 +75,23 @@ def get_chembl_id(chebi_id):
     return chebi_chembl.get(_add_prefix(chebi_id))
 
 
+def get_chebi_id_from_chembl(chembl_id):
+    """Return a ChEBI ID from a given ChEBML ID.
+
+    Parameters
+    ----------
+    chembl_id : str
+        ChEBML ID to be converted.
+
+    Returns
+    -------
+    chebi_id : str
+        ChEBI ID corresponding to the given ChEBML ID. If the lookup fails,
+        None is returned.
+    """
+    return chembl_chebi.get(chembl_id)
+
+
 def get_chebi_id_from_cas(cas_id):
     """Return a ChEBI ID corresponding to the given CAS ID.
 
@@ -313,9 +330,13 @@ def _read_chebi_to_pubchem():
 def _read_chebi_to_chembl():
     csv_reader = _read_resource_csv('chebi_to_chembl.tsv')
     chebi_chembl = {}
+    chembl_chebi = {}
     for row in csv_reader:
-        chebi_chembl['CHEBI:%s' % row[0]] = row[1]
-    return chebi_chembl
+        chebi_id, chembl_id = row
+        chebi_id = 'CHEBI:%s' % chebi_id
+        chebi_chembl[chebi_id] = chembl_id
+        chembl_chebi[chembl_id] = chebi_id
+    return chebi_chembl, chembl_chebi
 
 
 def _read_cas_to_chebi():
@@ -350,6 +371,6 @@ def _read_resource_csv(fname):
 
 
 chebi_pubchem, pubchem_chebi = _read_chebi_to_pubchem()
-chebi_chembl = _read_chebi_to_chembl()
+chebi_chembl, chembl_chebi = _read_chebi_to_chembl()
 cas_chebi = _read_cas_to_chebi()
 hmdb_chebi = _read_hmdb_to_chebi()

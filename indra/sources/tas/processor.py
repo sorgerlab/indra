@@ -1,36 +1,43 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
 __all__ = ['TasProcessor']
 
+import logging
 from indra.statements import Inhibition, Agent, Evidence
-from indra.databases import hgnc_client, chebi_client
-from indra.databases.lincs_client import LincsClient
+from indra.databases import hgnc_client, chembl_client, lincs_client
+from indra.ontology.standardize import standardize_name_db_refs
+
+
+logger = logging.getLogger(__name__)
 
 
 CLASS_MAP = {'1': 'Kd < 100nM', '2': '100nM < Kd < 1uM',
              '3': '1uM < Kd < 10uM', '10': 'Kd > 10uM'}
 
 
+lincs_client_obj = lincs_client.LincsClient()
+
+
 class TasProcessor(object):
     """A processor for the Target Affinity Spectrum data table."""
-    def __init__(self, data, affinity_class_limit):
+    def __init__(self, data, affinity_class_limit=2, named_only=False,
+                 standardized_only=False):
         self._data = data
-        self._lc = LincsClient()
         self.affinity_class_limit = affinity_class_limit
+        self.named_only = named_only
+        self.standardized_only = standardized_only
 
         self.statements = []
         for row in data:
             # Skip rows that are above the affinity class limit
-            if int(row['class_min']) > affinity_class_limit:
+            if int(row['tas']) > affinity_class_limit:
                 continue
             self._process_row(row)
         return
 
     def _process_row(self, row):
-        drug = self._extract_drug(row['hms_id'])
-        prot = self._extract_protein(row['approved_symbol'], row['gene_id'])
-        ev = self._make_evidence(row['class_min'])
+        drugs = self._extract_drugs(row['compound_ids'], row['lspci_id'])
+        prot = self._extract_protein(row['entrez_gene_symbol'],
+                                     row['entrez_gene_id'])
+        evidences = self._make_evidences(row['tas'], row['references'])
         # NOTE: there are several entries in this data set that refer to
         # non-human Entrez genes, e.g.
         # https://www.ncbi.nlm.nih.gov/gene/3283880
@@ -39,30 +46,73 @@ class TasProcessor(object):
         # pre-assembly issues.
         if 'HGNC' not in prot.db_refs:
             return
-        self.statements.append(Inhibition(drug, prot, evidence=ev))
+        for drug in drugs:
+            self.statements.append(Inhibition(drug, prot, evidence=evidences))
 
-    def _extract_drug(self, hms_id):
-        refs = self._lc.get_small_molecule_refs(hms_id)
-        name = self._lc.get_small_molecule_name(hms_id)
-        if 'PUBCHEM' in refs:
-            chebi_id = chebi_client.get_chebi_id_from_pubchem(refs['PUBCHEM'])
-            if chebi_id:
-                refs['CHEBI'] = chebi_id
-        return Agent(name, db_refs=refs)
+    def _extract_drugs(self, compound_ids, lspci_id):
+        drugs = []
+        for id_ in compound_ids.split('|'):
+            db_refs = {'LSPCI': lspci_id}
+            if id_.startswith('CHEMBL'):
+                db_refs['CHEMBL'] = id_
+            elif id_.startswith('HMSL'):
+                db_refs['HMS-LINCS'] = id_.split('HMSL')[1]
+            else:
+                logger.warning('Unhandled ID type: %s' % id_)
+            # Name standardization finds correct names but because
+            # ChEBML is incomplete as a local resource, we don't
+            # universally standardize its names, instead, we look
+            # it up explicitly when necessary.
+            name, db_refs = standardize_name_db_refs(db_refs)
+            if name is None:
+                # This is one way to detect that the drug could not be
+                # standardized beyond just its name so in the
+                # standardized_only condition, we skip this drug
+                if self.standardized_only:
+                    continue
+                elif 'HMS-LINCS' in db_refs:
+                    name = \
+                        lincs_client_obj.get_small_molecule_name(
+                            db_refs['HMS-LINCS'])
+                elif 'CHEMBL' in db_refs:
+                    name = chembl_client.get_chembl_name(db_refs['CHEMBL'])
+            # If name is still None, we just use the ID as the name
+            if name is None:
+                # With the named_only restriction, we skip drugs without
+                # a proper name.
+                if self.named_only:
+                    continue
+                name = id_
+            drugs.append(Agent(name, db_refs=db_refs))
+        drugs = list({agent.matches_key():
+                      agent for agent in drugs}.values())
+        return drugs
 
     def _extract_protein(self, name, gene_id):
         refs = {'EGID': gene_id}
         hgnc_id = hgnc_client.get_hgnc_from_entrez(gene_id)
         if hgnc_id is not None:
             refs['HGNC'] = hgnc_id
-            up_id = hgnc_client.get_uniprot_id(hgnc_id)
-            if up_id:
-                refs['UP'] = up_id
-            # If there is a HGNC ID, we standardize the gene name
-            name = hgnc_client.get_hgnc_name(hgnc_id)
-        return Agent(name, db_refs=refs)
+        standard_name, db_refs = standardize_name_db_refs(refs)
+        if standard_name:
+            name = standard_name
+        return Agent(name, db_refs=db_refs)
 
-    def _make_evidence(self, class_min):
-        ev = Evidence(source_api='tas', epistemics={'direct': True},
-                      annotations={'class_min': CLASS_MAP[class_min]})
-        return ev
+    def _make_evidences(self, class_min, references):
+        evidences = []
+        for reference in references.split('|'):
+            pmid, source_id, text_refs = None, None, None
+            annotations = {'class_min': CLASS_MAP[class_min]}
+            ref, id_ = reference.split(':')
+            if ref == 'pubmed':
+                pmid = id_
+                text_refs = {'PMID': pmid}
+            elif ref == 'doi':
+                text_refs = {'DOI': id_}
+            else:
+                source_id = reference
+            ev = Evidence(source_api='tas', source_id=source_id, pmid=pmid,
+                          annotations=annotations, epistemics={'direct': True},
+                          text_refs=text_refs)
+            evidences.append(ev)
+        return evidences

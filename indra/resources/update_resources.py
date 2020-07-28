@@ -202,7 +202,15 @@ def update_chebi_references():
     # Save ChEMBL mapping
     fname = os.path.join(path, 'chebi_to_chembl.tsv')
     logger.info('Saving into %s' % fname)
-    df_chembl = df[df['REFERENCE_DB_NAME']=='ChEMBL']
+    df_chembl = df[df['REFERENCE_DB_NAME'] == 'ChEMBL']
+    # Get additional mappings for compounds in tas
+    df_chembl_tas = pandas.read_csv(os.path.join(path, 'chembl_tas.csv'),
+                                    sep=',')[['chebi_id', 'chembl_id']]
+    df_chembl_tas = df_chembl_tas[~df_chembl_tas.chebi_id.isna()]
+    df_chembl_tas['chebi_id'] = df_chembl_tas.chebi_id.\
+        apply(lambda x: str(int(x)))
+    df_chembl_tas.columns = ['COMPOUND_ID', 'REFERENCE_ID']
+    df_chembl = pandas.concat([df_chembl, df_chembl_tas]).drop_duplicates()
     df_chembl.sort_values(['COMPOUND_ID', 'REFERENCE_ID'], ascending=True,
                           inplace=True)
     df_chembl.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
@@ -661,6 +669,7 @@ def update_drugbank_mappings():
     drugbank_chembl = pyobo.get_filtered_xrefs('drugbank', 'chembl.compound')
     drugbank_chebi = pyobo.get_filtered_xrefs('drugbank', 'chebi')
     chebi_drugbank = pyobo.get_filtered_xrefs('chebi', 'drugbank')
+    drugbank_names = pyobo.get_id_name_mapping('drugbank')
     rows = []
     for drugbank_id, chembl_id in drugbank_chembl.items():
         rows.append([drugbank_id, 'CHEMBL', chembl_id, 'drugbank'])
@@ -668,6 +677,8 @@ def update_drugbank_mappings():
         rows.append([drugbank_id, 'CHEBI', chebi_id, 'drugbank'])
     for chebi_id, drugbank_id in chebi_drugbank.items():
         rows.append([drugbank_id, 'CHEBI', chebi_id, 'chebi'])
+    for drugbank_id, name in drugbank_names.items():
+        rows.append([drugbank_id, 'NAME', name, 'drugbank'])
     fname = os.path.join(path, 'drugbank_mappings.tsv')
     header = ['DRUGBANK_ID', 'NAMESPACE', 'ID', 'SOURCE']
     rows = [header] + sorted(rows)

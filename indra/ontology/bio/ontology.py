@@ -17,7 +17,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.1'
+    version = '1.2'
 
     def __init__(self):
         super().__init__()
@@ -57,6 +57,9 @@ class BioOntology(IndraOntology):
         self.add_ncit_nodes()
         self.add_uppro_nodes()
         self.add_mirbase_nodes()
+        self.add_chembl_nodes()
+        self.add_hms_lincs_nodes()
+        self.add_drugbank_nodes()
         # Add xrefs
         logger.info('Adding xrefs...')
         self.add_hgnc_uniprot_xrefs()
@@ -65,6 +68,7 @@ class BioOntology(IndraOntology):
         self.add_ncit_xrefs()
         self.add_mesh_xrefs()
         self.add_mirbase_xrefs()
+        self.add_hms_lincs_xrefs()
         # Add hierarchies
         logger.info('Adding hierarchy...')
         self.add_famplex_hierarchy()
@@ -338,6 +342,56 @@ class BioOntology(IndraOntology):
                           {'type': 'xref', 'source': 'mirbase'}))
         self.add_edges_from(edges)
 
+    def add_chembl_nodes(self):
+        from indra.databases import chembl_client
+        nodes = []
+        for chembl_id, chembl_name in chembl_client.chembl_names.items():
+            nodes.append((self.label('CHEMBL', chembl_id),
+                          {'name': chembl_name}))
+        self.add_nodes_from(nodes)
+
+    def add_hms_lincs_nodes(self):
+        from indra.databases.lincs_client import LincsClient
+        lc = LincsClient()
+
+        nodes = []
+        for hmsl_id, data in lc._sm_data.items():
+            hmsl_base_id, suffix = hmsl_id.split('-') if '-' in hmsl_id else \
+                hmsl_id, None
+            if suffix == '999':
+                continue
+            nodes.append((self.label('HMS-LINCS', hmsl_base_id),
+                          {'name': data['Name']}))
+        self.add_nodes_from(nodes)
+
+    def add_hms_lincs_xrefs(self):
+        from indra.databases.lincs_client import LincsClient
+        lc = LincsClient()
+
+        edges = []
+        for hmsl_id, data in lc._sm_data.items():
+            hmsl_base_id, suffix = hmsl_id.split('-') if '-' in hmsl_id else \
+                hmsl_id, None
+            if suffix == '999':
+                continue
+            refs = lc.get_small_molecule_refs(hmsl_id)
+            for ref_ns, ref_id in refs.items():
+                edges.append((self.label('HMS-LINCS', hmsl_base_id),
+                              self.label(ref_ns, ref_id),
+                              {'type': 'xref', 'source': 'hms-lincs'}))
+                edges.append((self.label(ref_ns, ref_id),
+                              self.label('HMS-LINCS', hmsl_base_id),
+                              {'type': 'xref', 'source': 'hms-lincs'}))
+        self.add_edges_from(edges)
+
+    def add_drugbank_nodes(self):
+        from indra.databases import drugbank_client
+        nodes = []
+        for db_id, db_name in drugbank_client.drugbank_names.items():
+            nodes.append((self.label('DRUGBANK', db_id),
+                          {'name': db_name}))
+        self.add_nodes_from(nodes)
+
     def add_activity_hierarchy(self):
         rels = [
             ('transcription', 'activity'),
@@ -369,8 +423,8 @@ class BioOntology(IndraOntology):
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 resources = os.path.join(HERE, os.pardir, os.pardir, 'resources')
-CACHE_DIR = get_config('INDRA_RESOURCES') or \
-            os.path.join(os.path.expanduser('~'), '.indra',
+CACHE_DIR = os.path.join((get_config('INDRA_RESOURCES') or
+                          os.path.join(os.path.expanduser('~'), '.indra')),
                          '%s_ontology' % BioOntology.name,
                          BioOntology.version)
 CACHE_FILE = os.path.join(CACHE_DIR, 'bio_ontology.pkl')

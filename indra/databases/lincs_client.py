@@ -29,6 +29,9 @@ class LincsClient(object):
     def __init__(self):
         with open(lincs_sm, 'r') as fh:
             self._sm_data = json.load(fh)
+        extra_sm_data = load_lincs_extras()
+        self._sm_data.update(extra_sm_data)
+
         with open(lincs_prot, 'r') as fh:
             self._prot_data = json.load(fh)
 
@@ -76,7 +79,12 @@ class LincsClient(object):
                         pubchem='PubChem CID', lincs='LINCS ID')
         for k, v in mappings.items():
             if entry.get(v):
-                refs[k.upper()] = entry.get(v)
+                key = k.upper()
+                value = entry[v]
+                # Swap in primary PubChem IDs where there is an outdated one
+                if key == 'PUBCHEM' and value in pc_to_primary_mappings:
+                    value = pc_to_primary_mappings[value]
+                refs[key] = value
         return refs
 
     def get_protein_refs(self, hms_lincs_id):
@@ -110,14 +118,14 @@ class LincsClient(object):
         if '-' not in hms_lincs_id:
             keys = [k for k in resource.keys() if k.startswith(hms_lincs_id)]
             if not keys:
-                logger.error('Couldn\'t find entry for %s' % hms_lincs_id)
+                logger.debug('Couldn\'t find entry for %s' % hms_lincs_id)
                 return None
             entry = resource[keys[0]]
         # This means it's a full ID
         else:
             entry = resource.get(hms_lincs_id)
             if not entry:
-                logger.error('Couldn\'t find entry for %s' % hms_lincs_id)
+                logger.debug('Couldn\'t find entry for %s' % hms_lincs_id)
                 return None
         return entry
 
@@ -156,3 +164,41 @@ def load_lincs_csv(url):
     return [{header: val for header, val in zip(headers, line_elements)}
             for line_elements in data_rows[1:]]
 
+
+def load_lincs_extras():
+    fname = os.path.join(resources, 'hms_lincs_extra.tsv')
+    with open(fname, 'r') as fh:
+        rows = [line.strip('\n').split('\t') for line in fh.readlines()]
+    return {r[0]: {'HMS LINCS ID': r[0],
+                   'Name': r[1],
+                   'ChEMBL ID': r[2] if r[2] else ''}
+            for r in rows[1:]}
+
+
+# This is a set of mappings specific to HMS-LINCS that map outdated compound
+# IDs appearing in HMS-LINCS to preferred compound IDs. This can be obtained
+# more generally via indra.databases.pubchem_client, but this is a pre-compiled
+# version here for fast lookups in this client.
+pc_to_primary_mappings = \
+    {'23624255': '135564985',
+     '10451420': '135465539',
+     '10196499': '135398501',
+     '57899889': '135564632',
+     '53239990': '135564599',
+     '71433937': '136240579',
+     '53401173': '135539077',
+     '71543332': '135398499',
+     '5353940': '5169',
+     '49830557': '135398510',
+     '11258443': '135451019',
+     '68925359': '135440466',
+     '16750408': '135565545',
+     '57347681': '135565635',
+     '5357795': '92577',
+     '56965966': '135398516',
+     '24906282': '448949',
+     '66524294': '135398492',
+     '11696609': '135398495',
+     '9549301': '135473382',
+     '56965894': '135423438',
+     }
