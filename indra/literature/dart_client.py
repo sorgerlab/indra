@@ -206,7 +206,7 @@ def _jsonify_query_data(readers=None, versions=None, document_ids=None,
     if document_ids and _check_lists(document_ids):
         pd['document_ids'] = document_ids
     if isinstance(timestamp, dict):
-        pd = {**pd, **_check_timestamp_dict(timestamp)}
+        pd['timestamp'] = _check_timestamp_dict(timestamp)
     elif timestamp is not None:
         raise ValueError('Argument "timestamp" must be of type dict')
 
