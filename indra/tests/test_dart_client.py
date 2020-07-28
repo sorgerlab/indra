@@ -1,5 +1,6 @@
 import json
 import requests
+from nose.plugins.attrib import attr
 from indra.config import get_config
 from indra.literature.dart_client import _jsonify_query_data, dart_base_url
 
@@ -22,6 +23,7 @@ def test_lists():
         json.dumps({'versions': ['123', '456']})
 
 
+@attr('nonpublic')
 def test_api():
     health_ep = dart_base_url + '/health'
     dart_uname = get_config('DART_WM_USERNAME', failure_ok=False)
