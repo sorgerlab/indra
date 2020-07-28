@@ -1,5 +1,7 @@
 import json
-from indra.literature.dart_client import _jsonify_query_data
+import requests
+from indra.config import get_config
+from indra.literature.dart_client import _jsonify_query_data, dart_base_url
 
 
 def test_timestamp():
@@ -18,3 +20,11 @@ def test_lists():
     assert _jsonify_query_data(readers=['hume', 123456],
                                versions=['123', '456']) ==\
         json.dumps({'versions': ['123', '456']})
+
+
+def test_api():
+    health_ep = dart_base_url + '/health'
+    dart_uname = get_config('DART_WM_USERNAME', failure_ok=False)
+    dart_pwd = get_config('DART_WM_PASSWORD', failure_ok=False)
+    res = requests.get(health_ep, auth=(dart_uname, dart_pwd))
+    assert res.status_code == 200
