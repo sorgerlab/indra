@@ -29,6 +29,9 @@ class LincsClient(object):
     def __init__(self):
         with open(lincs_sm, 'r') as fh:
             self._sm_data = json.load(fh)
+        extra_sm_data = load_lincs_extras()
+        self._sm_data.update(extra_sm_data)
+
         with open(lincs_prot, 'r') as fh:
             self._prot_data = json.load(fh)
 
@@ -160,6 +163,16 @@ def load_lincs_csv(url):
     headers = data_rows[0]
     return [{header: val for header, val in zip(headers, line_elements)}
             for line_elements in data_rows[1:]]
+
+
+def load_lincs_extras():
+    fname = os.path.join(resources, 'hms_lincs_extra.tsv')
+    with open(fname, 'r') as fh:
+        rows = [line.strip('\n').split('\t') for line in fh.readlines()]
+    return {r[0]: {'HMS LINCS ID': r[0],
+                   'Name': r[1],
+                   'ChEMBL ID': r[2] if r[2] else ''}
+            for r in rows[1:]}
 
 
 # This is a set of mappings specific to HMS-LINCS that map outdated compound
