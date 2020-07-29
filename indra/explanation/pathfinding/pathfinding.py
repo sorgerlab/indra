@@ -163,7 +163,8 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 # networkx.algorithms.traversal.breadth_first_search::generic_bfs_edges
 def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
                max_per_node=5, node_filter=None, node_blacklist=None,
-               terminal_ns=None, sign=None, max_memory=int(2**29), **kwargs):
+               terminal_ns=None, sign=None, max_memory=int(2**29), hashes=[], 
+               **kwargs):
     """Do breadth first search from a given node and yield paths
 
     Parameters
@@ -199,6 +200,8 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
     max_memory : int
         The maximum memory usage in bytes allowed for the variables queue
         and visited. Default: 1073741824 bytes (== 1 GiB).
+    hashes : list
+        List of hashes used (if not empty) to select edges for path finding
 
     Yields
     ------
@@ -222,7 +225,8 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
             continue
 
         sorted_neighbors = get_sorted_neighbors(G=g, node=last_node,
-                                                reverse=reverse)
+                                                reverse=reverse, 
+                                                hashes=hashes)
 
         yielded_neighbors = 0
         # for neighb in neighbors:

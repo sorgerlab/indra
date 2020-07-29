@@ -74,7 +74,7 @@ def signed_nodes_to_signed_edge(source, target):
         return None, None, None
 
 
-def get_sorted_neighbors(G, node, reverse):
+def get_sorted_neighbors(G, node, reverse, hashes=[]):
     """Sort the returned neighbors in descending order by belief
 
     Parameters
@@ -86,9 +86,16 @@ def get_sorted_neighbors(G, node, reverse):
     reverse : bool
         Indicates direction of search. Neighbors are either successors
         (downstream search) or predecessors (reverse search).
+    hashes : list
+        List of hashes specifying (if not empty) the edges to be used for
+        getting the neighbors
     """
-    neighbors = G.predecessors(node) if reverse else G.successors(node)
     if reverse:
+        neighbors = G.predecessors(node)
+        if hashes:
+            neighbors = list(n for n in neighbors 
+                             if G.get_edge_data(n, node)['hash_stmt']
+                             in hashes)
         return sorted(
             neighbors,
             key=lambda n:
@@ -96,6 +103,11 @@ def get_sorted_neighbors(G, node, reverse):
             reverse=True
         )
     else:
+        neighbors = G.successors(node)
+        if hashes:
+            neighbors = list(n for n in neighbors
+                             if G.get_edge_data(node, n)['hash_stmt']
+                             in hashes)
         return sorted(
             neighbors,
             key=lambda n:
