@@ -576,7 +576,7 @@ def id_url(ag):
     # Return identifier URLs in a prioritized order
     for db_name in ('FPLX', 'HGNC', 'UP',
                     'GO', 'MESH',
-                    'CHEBI', 'PUBCHEM', 'HMDB', 'DRUGBANK',
+                    'CHEBI', 'PUBCHEM', 'HMDB', 'DRUGBANK', 'CHEMBL',
                     'HMS-LINCS', 'CAS',
                     'IP', 'PF', 'NXPFA',
                     'MIRBASEM', 'MIRBASE',
