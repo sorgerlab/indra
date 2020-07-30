@@ -6,8 +6,7 @@ from os import environ
 from indra.statements import stmts_to_json, stmts_from_json, stmts_to_json_file
 from . import file_defaults, InvalidCorpusError, CACHE, default_bucket, \
     default_key_base, default_profile
-from .util import _stmts_dict_to_json, _json_to_stmts_dict, _json_dumper, \
-    _json_loader
+from .util import _json_dumper, _json_loader
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +116,8 @@ class Corpus(object):
             self._s3_put_file(s3,
                               sts,
                               '\n'.join(json.dumps(jo) for jo in
-                                        _stmts_dict_to_json(self.statements)),
+                                        stmts_to_json(
+                                            list(self.statements.values()))),
                               bucket)
 
             # Structure and upload curations
@@ -245,7 +245,7 @@ class Corpus(object):
                 else:
                     json_stmts = json.loads(raw_str) or []
 
-            self.statements = _json_to_stmts_dict(json_stmts)
+            self.statements = {s.uuid: s for s in stmts_from_json(json_stmts)}
 
             # Get and process curations if any
             curation_json = {}
