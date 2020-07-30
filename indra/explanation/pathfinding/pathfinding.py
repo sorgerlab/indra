@@ -340,14 +340,36 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
 
 
 def bfs_search_multiple_nodes(g, source_nodes, path_limit=None, **kwargs):
+    """Do breadth first search from each of given nodes and yield paths
+    until path limit is met.
+
+    Parameters
+    ----------
+    g : nx.Digraph
+        An nx.DiGraph to search in. Can also be a signed node graph. It is
+        required that node data contains 'ns' (namespace) and edge data
+        contains 'belief'.
+    source_nodes : list[node]
+        List of nodes in the graph to start from.
+    path_limit : int
+        The maximum number of paths to return. Default: no limit.
+    **kwargs : keyword arguments
+        Any kwargs to pass to bfs_search.
+    Yields
+    ------
+    path : tuple(node)
+        Paths in the bfs search starting from `source`.
+    """
     yielded_paths = 0
     for n in source_nodes:
         paths = bfs_search(g, n, path_limit=path_limit, **kwargs)
         for p in paths:
             yield p
             yielded_paths += 1
-    if path_limit and yielded_paths >= path_limit:
-        break
+            if path_limit and yielded_paths >= path_limit:
+                break
+        if path_limit and yielded_paths >= path_limit:
+            break
 
 
 def get_path_iter(graph, source, target, path_length, loop):
