@@ -13,14 +13,74 @@ logger = logging.getLogger(__name__)
 dart_uname = get_config('DART_WM_USERNAME')
 dart_pwd = get_config('DART_WM_PASSWORD')
 
+dart_base_url = 'https://indra-ingest-pipeline-rest-1.prod.dart' \
+                '.worldmodelers.com/dart/api/v1/readers'
+meta_endpoint = dart_base_url + '/query'
+downl_endpoint = dart_base_url + '/download/'
 
-dart_url = 'https://indra-ingest-pipeline-rest-1.prod.dart.worldmodelers.com' \
-           '/dart/api/v1/readers/query'
+
+def get_content_by_storage_key(storage_key):
+    """Return content from DART based on its storage key.
+
+    Parameters
+    ----------
+    storage_key : str
+        A DART storage key.
+
+    Returns
+    -------
+    dict
+        The content corresponding to the storage key.
+    """
+    res = requests.get(url=downl_endpoint + storage_key,
+                       auth=(dart_uname, dart_pwd))
+    res.raise_for_status()
+    return res.json()
 
 
 def get_reader_outputs(readers=None, versions=None, document_ids=None,
                        timestamp=None):
-    """Return reader output metadata by querying the DART API.
+    """Return reader outputs by querying the DART API.
+
+    Parameters
+    ----------
+    readers : list
+        A list of reader names
+    versions : list
+        A list of versions to match with the reader name(s)
+    document_ids : list
+        A list of document identifiers
+    timestamp : dict("on"|"before"|"after",str)
+        The timestamp string must of format "yyyy-mm-dd" or "yyyy-mm-dd
+        hh:mm:ss" (only for "before" and "after").
+
+    Returns
+    -------
+    dict(str, str)
+        A dict of document content keyed by document id
+    """
+    metadata_json = get_reader_output_records(readers=readers, versions=versions,
+                                              document_ids=document_ids,
+                                              timestamp=timestamp)
+    # Loop document keys and get documents
+    documents = {}
+    if metadata_json and 'records' in metadata_json:
+        logger.info('Got document storage keys. Fetching output...')
+        for record in metadata_json['records']:
+            storage_key = record['storage_key']
+            try:
+                documents[storage_key] = \
+                    get_content_by_storage_key(storage_key)
+            except Exception as e:
+                logger.warning('Error downloading %s' % storage_key)
+    else:
+        logger.warning('Empty meta data json returned')
+    return documents
+
+
+def get_reader_output_records(readers=None, versions=None, document_ids=None,
+                              timestamp=None):
+    """Return reader output metadata records by querying the DART API
 
     Query json structure:
         {"readers": ["MyAwesomeTool", "SomeOtherAwesomeTool"],
@@ -54,7 +114,7 @@ def get_reader_outputs(readers=None, versions=None, document_ids=None,
     query_data = _jsonify_query_data(readers, versions, document_ids, timestamp)
     if not query_data:
         return {}
-    res = requests.post(dart_url, data={'metadata': query_data},
+    res = requests.post(meta_endpoint, data={'metadata': query_data},
                         auth=(dart_uname, dart_pwd))
     res.raise_for_status()
     return res.json()
