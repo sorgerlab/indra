@@ -1,5 +1,5 @@
 __all__ = ['shortest_simple_paths', 'bfs_search', 'find_sources',
-           'get_path_iter']
+           'get_path_iter', 'bfs_search_multiple_nodes']
 import sys
 import logging
 from collections import deque
@@ -355,6 +355,7 @@ def bfs_search_multiple_nodes(g, source_nodes, path_limit=None, **kwargs):
         The maximum number of paths to return. Default: no limit.
     **kwargs : keyword arguments
         Any kwargs to pass to bfs_search.
+
     Yields
     ------
     path : tuple(node)
