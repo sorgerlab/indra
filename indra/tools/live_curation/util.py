@@ -1,6 +1,6 @@
 import json
 import logging
-from indra.statements import Statement
+from indra.statements import stmts_from_json, stmts_to_json
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +36,9 @@ def _json_to_stmts_dict(stmt_jsons):
     Returns
     -------
     dict
-        Dict with statements keyed by their uuid's: {uuid: stmt}
+        Dict with statements keyed by their uuids: {uuid: stmt}
     """
-    loaded_stmts = [Statement._from_json(s) for s in stmt_jsons]
+    loaded_stmts = stmts_from_json(stmt_jsons)
     return {s.uuid: s for s in loaded_stmts}
 
 
@@ -57,4 +57,4 @@ def _stmts_dict_to_json(stmt_dict):
     list(json)
         A list of json statements
     """
-    return [s.to_json() for _, s in stmt_dict.items()]
+    return stmts_to_json(list(stmt_dict.values()))
