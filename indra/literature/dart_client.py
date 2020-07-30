@@ -19,9 +19,28 @@ meta_endpoint = dart_base_url + '/query'
 downl_endpoint = dart_base_url + '/download/'
 
 
-def get_documents(readers=None, versions=None, document_ids=None,
-                  timestamp=None):
-    """Return a list of contents constrained by the provided parameters
+def get_content_by_storage_key(storage_key):
+    """Return content from DART based on its storage key.
+
+    Parameters
+    ----------
+    storage_key : str
+        A DART storage key.
+
+    Returns
+    -------
+    dict
+        The content corresponding to the storage key.
+    """
+    res = requests.get(url=downl_endpoint + storage_key,
+                       auth=(dart_uname, dart_pwd))
+    res.raise_for_status()
+    return res.json()
+
+
+def get_reader_outputs(readers=None, versions=None, document_ids=None,
+                       timestamp=None):
+    """Return reader outputs by querying the DART API.
 
     Parameters
     ----------
@@ -40,31 +59,28 @@ def get_documents(readers=None, versions=None, document_ids=None,
     dict(str, str)
         A dict of document content keyed by document id
     """
-    metadata_json = get_reader_outputs(readers=readers, versions=versions,
-                                       document_ids=document_ids,
-                                       timestamp=timestamp)
+    metadata_json = get_reader_output_records(readers=readers, versions=versions,
+                                              document_ids=document_ids,
+                                              timestamp=timestamp)
     # Loop document keys and get documents
     documents = {}
     if metadata_json and 'records' in metadata_json:
         logger.info('Got document storage keys. Fetching output...')
         for record in metadata_json['records']:
             storage_key = record['storage_key']
-            doc_res = requests.get(url=downl_endpoint + storage_key,
-                                   auth=(dart_uname, dart_pwd))
-            if doc_res.status_code == 200:
-                record['document'] = doc_res.json()
-                documents[storage_key] = record
-            else:
-                logger.warning(f'Status code {doc_res.status_code} for '
-                               f'storage key {storage_key}')
+            try:
+                documents[storage_key] = \
+                    get_content_by_storage_key(storage_key)
+            except Exception as e:
+                logger.warning('Error downloading %s' % storage_key)
     else:
         logger.warning('Empty meta data json returned')
     return documents
 
 
-def get_reader_outputs(readers=None, versions=None, document_ids=None,
-                       timestamp=None):
-    """Return reader output metadata by querying the DART API
+def get_reader_output_records(readers=None, versions=None, document_ids=None,
+                              timestamp=None):
+    """Return reader output metadata records by querying the DART API
 
     Query json structure:
         {"readers": ["MyAwesomeTool", "SomeOtherAwesomeTool"],
