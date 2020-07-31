@@ -356,8 +356,10 @@ class BioOntology(IndraOntology):
 
         nodes = []
         for hmsl_id, data in lc._sm_data.items():
-            hmsl_base_id, suffix = hmsl_id.split('-') if '-' in hmsl_id else \
-                hmsl_id, None
+            if '-' in hmsl_id:
+                hmsl_base_id, suffix = hmsl_id.split('-')
+            else:
+                hmsl_base_id, suffix = hmsl_id, None
             if suffix == '999':
                 continue
             nodes.append((self.label('HMS-LINCS', hmsl_base_id),
@@ -370,8 +372,10 @@ class BioOntology(IndraOntology):
 
         edges = []
         for hmsl_id, data in lc._sm_data.items():
-            hmsl_base_id, suffix = hmsl_id.split('-') if '-' in hmsl_id else \
-                hmsl_id, None
+            if '-' in hmsl_id:
+                hmsl_base_id, suffix = hmsl_id.split('-')
+            else:
+                hmsl_base_id, suffix = hmsl_id, None
             if suffix == '999':
                 continue
             refs = lc.get_small_molecule_refs(hmsl_id)
