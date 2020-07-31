@@ -221,6 +221,8 @@ __all__ = [
 import abc
 import sys
 import uuid
+import json
+import gzip
 import logging
 import networkx
 import itertools
@@ -261,16 +263,7 @@ class Statement(object):
     _agent_order = NotImplemented
 
     def __init__(self, evidence=None, supports=None, supported_by=None):
-        if evidence is None:
-            self.evidence = []
-        elif isinstance(evidence, Evidence):
-            self.evidence = [evidence]
-        elif isinstance(evidence, list):
-            self.evidence = evidence
-        else:
-            raise ValueError('evidence must be an Evidence object, a list '
-                             '(of Evidence objects), or None.')
-
+        self.evidence = evidence
         # Initialize supports/supported_by fields, which should be lists
         self.supports = supports if supports else []
         self.supported_by = supported_by if supported_by else []
@@ -279,6 +272,41 @@ class Statement(object):
         self._full_hash = None
         self._shallow_hash = None
         return
+
+    @property
+    def evidence(self):
+        # Decompress, decode, and then deserialize each Evidence from JSON
+        evs = [Evidence._from_json(e) for e in
+               json.loads(gzip.decompress(self._evidence).decode('utf-8'))]
+        return evs
+
+    @evidence.setter
+    def evidence(self, evidence):
+        if evidence is None:
+            evs = []
+        elif isinstance(evidence, Evidence):
+            evs = [evidence]
+        elif isinstance(evidence, list):
+            evs = evidence
+        else:
+            raise ValueError('evidence must be an Evidence object, a list '
+                             '(of Evidence objects), or None.')
+        self._evidence = \
+            gzip.compress(json.dumps([e.to_json()
+                                      for e in evs]).encode('utf-8'))
+
+    def add_evidence(self, ev):
+        """Extend the Statement's evidence list with a new Evidence.
+
+        Parameters
+        ----------
+        ev : indra.statements.Evidence
+            An Evidence object to be added to the Statement's list of
+            evidences.
+        """
+        evs = self.evidence
+        evs.append(ev)
+        self.evidence = evs
 
     def matches_key(self):
         raise NotImplementedError("Method must be implemented in child class.")
@@ -580,7 +608,7 @@ class Statement(object):
             kwargs = deepcopy(self.__dict__)
         else:
             kwargs = self.__dict__.copy()
-        for attr in ['evidence', 'belief', 'uuid', 'supports', 'supported_by',
+        for attr in ['_evidence', 'belief', 'uuid', 'supports', 'supported_by',
                      'is_activation']:
             kwargs.pop(attr, None)
         my_hash = kwargs.pop('_full_hash', None)

@@ -57,7 +57,11 @@ def run_adeft_disambiguation(stmt, agent, idx):
         return False
     # Initialize annotations if needed so Adeft predicted
     # probabilities can be added to Agent annotations
-    annots = stmt.evidence[0].annotations
+
+    evs = stmt.evidence
+    # Note that the assumption here is that the statement only has a single
+    # piece of evidence (typically a raw statement)
+    annots = evs[0].annotations
     agent_txt = agent.db_refs['TEXT']
     if 'agents' in annots:
         if 'adeft' not in annots['agents']:
@@ -103,6 +107,7 @@ def run_adeft_disambiguation(stmt, agent, idx):
                 remove_grounding(agent, agent_txt)
 
         success = True
+    stmt.evidence = evs
     return success
 
 

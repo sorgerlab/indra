@@ -35,6 +35,7 @@ def clockit(func):
 
 
 def unicode_strs(obj, attr_filter=None):
+    from indra.statements import Statement
     if isinstance(obj, non_unicode):
         return False
     # Check for an iterable
@@ -46,6 +47,8 @@ def unicode_strs(obj, attr_filter=None):
                 return False
     if hasattr(obj, '__dict__'):
         for item_name, item in obj.__dict__.items():
+            if isinstance(obj, Statement) and item_name == '_evidence':
+                continue
             if attr_filter and item_name in attr_filter:
                 continue
             has_unicode_strs = unicode_strs(item)
@@ -61,12 +64,15 @@ def unicode_strs(obj, attr_filter=None):
 
 
 def decode_obj(obj, encoding='utf-8'):
+    from indra.statements import Statement
     if isinstance(obj, non_unicode):
         return obj.decode(encoding)
     elif isinstance(obj, list) or isinstance(obj, tuple):
         return [decode_obj(item) for item in obj]
     elif hasattr(obj, '__dict__'):
         for k, v in obj.__dict__.items():
+            if isinstance(obj, Statement) and k == '_evidence':
+                continue
             obj.__dict__[k] = decode_obj(v)
         return obj
     elif isinstance(obj, dict):

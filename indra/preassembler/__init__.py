@@ -181,7 +181,7 @@ class Preassembler(object):
                         if 'prior_uuids' not in ev.annotations:
                             ev.annotations['prior_uuids'] = []
                         ev.annotations['prior_uuids'].append(stmt.uuid)
-                        new_stmt.evidence.append(ev)
+                        new_stmt.add_evidence(ev)
                         ev_keys.add(ev_key)
             end_ev_keys = _ev_keys([new_stmt])
             if len(end_ev_keys) != len(start_ev_keys):
@@ -1004,10 +1004,14 @@ def flatten_evidence(stmts, collect_from=None):
 def _flatten_evidence_for_stmt(stmt, collect_from):
     supp_stmts = (stmt.supports if collect_from == 'supports'
                                 else stmt.supported_by)
-    total_evidence = set(stmt.evidence)
+    evs = {ev.matches_key(): ev for ev in stmt.evidence}
+    total_evidence = set(evs.values())
     for supp_stmt in supp_stmts:
         child_evidence = _flatten_evidence_for_stmt(supp_stmt, collect_from)
-        total_evidence = total_evidence.union(child_evidence)
+        chevs = {ev.matches_key(): ev for ev in child_evidence}
+        for k, v in chevs.items():
+            evs[k] = v
+        total_evidence = list(evs.values())
     return list(total_evidence)
 
 

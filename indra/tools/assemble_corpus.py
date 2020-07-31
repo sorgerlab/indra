@@ -273,9 +273,11 @@ def merge_deltas(stmts_in):
             for info in ('polarity', 'adjectives'):
                 key = (role, info)
                 deltas[key] = []
+                evs = stmt.evidence
                 for ev in stmt.evidence:
                     entry = ev.annotations.get('%s_%s' % key)
                     deltas[key].append(entry if entry else None)
+                stmt.evidence = evs
         # POLARITY
         # For polarity we need to work in pairs
         polarity_pairs = list(zip(deltas[('subj', 'polarity')],

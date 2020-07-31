@@ -606,11 +606,13 @@ def test_merge_groundings():
 
 def test_merge_deltas():
     def add_annots(stmt):
-        for ev in stmt.evidence:
+        evs = stmt.evidence
+        for ev in evs:
             ev.annotations['subj_adjectives'] = stmt.subj.delta.adjectives
             ev.annotations['obj_adjectives'] = stmt.obj.delta.adjectives
             ev.annotations['subj_polarity'] = stmt.subj.delta.polarity
             ev.annotations['obj_polarity'] = stmt.obj.delta.polarity
+        stmt.evidence = evs
         return stmt
     # d1 = {'adjectives': ['a', 'b', 'c'], 'polarity': 1}
     # d2 = {'adjectives': [], 'polarity': -1}

@@ -85,8 +85,10 @@ class SparserJSONProcessor(object):
                 ev['pmid'] = pmid
         # Replace PMID value in extracted Statements next
         for stmt in self.statements:
-            for ev in stmt.evidence:
+            evs = stmt.evidence
+            for ev in evs:
                 ev.pmid = pmid
+            stmt.evidence = evs
 
     def get_error_stats(self):
         """Return a Counter of error types that were encountered.

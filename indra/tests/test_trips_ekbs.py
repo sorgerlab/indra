@@ -739,7 +739,7 @@ def test_53():
     assert mek.name == 'MEK'
     assert erk.name == 'ERK'
     for ev in st.evidence:
-        assert ev.epistemics.get('direct') is False
+        assert ev.epistemics.get('direct') is False, ev.epistemics
 
 
 def test_54():
@@ -753,7 +753,7 @@ def test_54():
     assert mek.name == 'EGF'
     assert erk.name == 'ERK'
     for ev in st.evidence:
-        assert ev.epistemics.get('direct') is False
+        assert ev.epistemics.get('direct') is False, ev.epistemics
 
 
 def test_55():

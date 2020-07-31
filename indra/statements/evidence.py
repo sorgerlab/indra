@@ -54,6 +54,10 @@ class Evidence(object):
         and is set by said Statement. It is useful for tracing ownership of
         an Evidence object.
     """
+    __slots__ = ['source_api', 'source_id', 'pmid', 'text',
+                 'text', 'annotations', 'epistemics', 'context', 'text_refs',
+                 'source_hash', 'stmt_tag']
+
     def __init__(self, source_api=None, source_id=None, pmid=None, text=None,
                  annotations=None, epistemics=None, context=None,
                  text_refs=None):
@@ -80,15 +84,10 @@ class Evidence(object):
         self.stmt_tag = None
 
     def __setstate__(self, state):
-        if 'context' not in state:
-            state['context'] = None
-        if 'text_refs' not in state:
-            state['text_refs'] = {}
-        if 'stmt_tag' not in state:
-            state['stmt_tag'] = None
-        if 'source_hash' not in state:
-            state['source_hash'] = None
-        self.__dict__ = state
+        # With a slots-based object, state is a tuple, otherwise it's a dict
+        state = state[1] if isinstance(state, tuple) else state
+        for slot in self.__slots__:
+            setattr(self, slot, state.get(slot, None))
 
     def get_source_hash(self, refresh=False):
         """Get a hash based off of the source of this statement.
