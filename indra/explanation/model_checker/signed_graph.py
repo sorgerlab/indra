@@ -46,11 +46,25 @@ class SignedGraphModelChecker(ModelChecker):
         elif isinstance(stmt, Influence):
             target_polarity = 1 if stmt.overall_polarity() == -1 else 0
         subj, obj = stmt.agent_list()
-        if subj is None or (subj.name, 0) not in self.graph.nodes:
-            return (None, None, 'SUBJECT_NOT_FOUND')
-        if obj is None or (obj.name, target_polarity) not in self.graph.nodes:
-            return (None, None, 'OBJECT_NOT_FOUND')
-        return ([(subj.name, 0)], [(obj.name, target_polarity)], None)
+        if obj is None:
+            obj_nodes = [None]
+        else:
+            obj_nodes = self.get_nodes(obj, self.graph, target_polarity)
+            # Statement has object but it's not in the graph
+            if not obj_nodes:
+                return (None, None, 'OBJECT_NOT_FOUND')
+        return ([subj], obj_nodes, None)
 
     def process_subject(self, subj):
-        return [subj], None
+        # We will not get here if subject is None
+        subj_nodes = self.get_nodes(subj, self.graph, 0)
+        # Statement has subject but it's not in the graph
+        if not subj_nodes:
+            return (None, 'SUBJECT_NOT_FOUND')
+        return subj_nodes, None
+
+    def get_nodes(self, agent, graph, target_polarity):
+        node = (agent.name, target_polarity)
+        if node not in graph.nodes:
+            return None
+        return [node]

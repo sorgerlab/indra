@@ -70,13 +70,19 @@ class PybelModelChecker(ModelChecker):
             target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
         elif isinstance(stmt, Influence):
             target_polarity = 1 if stmt.overall_polarity() == -1 else 0
-        obj_nodes = self.get_nodes(obj, self.graph, target_polarity)
-        if not obj_nodes:
-            return (None, None, 'OBJECT_NOT_FOUND')
+        if obj is None:
+            obj_nodes = [None]
+        else:
+            obj_nodes = self.get_nodes(obj, self.graph, target_polarity)
+            # Statement has object but it's not in the graph
+            if not obj_nodes:
+                return (None, None, 'OBJECT_NOT_FOUND')
         return ([subj], obj_nodes, None)
 
     def process_subject(self, subj):
+        # We will not get here if subject is None
         subj_nodes = self.get_nodes(subj, self.graph, 0)
+        # Statement has subject but it's not in the graph
         if not subj_nodes:
             return (None, 'SUBJECT_NOT_FOUND')
         return subj_nodes, None
@@ -86,8 +92,6 @@ class PybelModelChecker(ModelChecker):
         # making pybel an implicit dependency of the model checker
         from indra.assemblers.pybel.assembler import _get_agent_node
         nodes = set()
-        if agent is None:
-            return nodes
         # First get exact match
         agent_node = _get_agent_node(agent)[0]
         if agent_node:

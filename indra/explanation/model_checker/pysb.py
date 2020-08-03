@@ -149,29 +149,43 @@ class PysbModelChecker(ModelChecker):
         for stmt in self.statements:
             # Generate observables for Modification statements
             if isinstance(stmt, Modification):
-                mod_condition_name = modclass_to_modtype[stmt.__class__]
-                if isinstance(stmt, RemoveModification):
-                    mod_condition_name = modtype_to_inverse[mod_condition_name]
-                # Add modification to substrate agent
-                modified_sub = _add_modification_to_agent(
-                    stmt.sub, mod_condition_name, stmt.residue, stmt.position)
-                obs_list = add_obs_for_agent(modified_sub)
-                # Associate this statement with this observable
-                self.stmt_to_obs[stmt] = obs_list
+                if stmt.sub is None:
+                    self.stmt_to_obs[stmt] = [None]
+                else:
+                    mod_condition_name = modclass_to_modtype[stmt.__class__]
+                    if isinstance(stmt, RemoveModification):
+                        mod_condition_name = modtype_to_inverse[
+                            mod_condition_name]
+                    # Add modification to substrate agent
+                    modified_sub = _add_modification_to_agent(
+                        stmt.sub, mod_condition_name, stmt.residue,
+                        stmt.position)
+                    obs_list = add_obs_for_agent(modified_sub)
+                    # Associate this statement with this observable
+                    self.stmt_to_obs[stmt] = obs_list
             # Generate observables for Activation/Inhibition statements
             elif isinstance(stmt, RegulateActivity):
-                regulated_obj, polarity = \
-                        _add_activity_to_agent(stmt.obj, stmt.obj_activity,
-                                               stmt.is_activation)
-                obs_list = add_obs_for_agent(regulated_obj)
-                # Associate this statement with this observable
-                self.stmt_to_obs[stmt] = obs_list
+                if stmt.obj is None:
+                    self.stmt_to_obs[stmt] = [None]
+                else:
+                    regulated_obj, polarity = \
+                            _add_activity_to_agent(stmt.obj, stmt.obj_activity,
+                                                   stmt.is_activation)
+                    obs_list = add_obs_for_agent(regulated_obj)
+                    # Associate this statement with this observable
+                    self.stmt_to_obs[stmt] = obs_list
             elif isinstance(stmt, RegulateAmount):
-                obs_list = add_obs_for_agent(stmt.obj)
-                self.stmt_to_obs[stmt] = obs_list
+                if stmt.obj is None:
+                    self.stmt_to_obs[stmt] = [None]
+                else:
+                    obs_list = add_obs_for_agent(stmt.obj)
+                    self.stmt_to_obs[stmt] = obs_list
             elif isinstance(stmt, Influence):
-                obs_list = add_obs_for_agent(stmt.obj.concept)
-                self.stmt_to_obs[stmt] = obs_list
+                if stmt.obj is None:
+                    self.stmt_to_obs[stmt] = [None]
+                else:
+                    obs_list = add_obs_for_agent(stmt.obj.concept)
+                    self.stmt_to_obs[stmt] = obs_list
         # Add observables for each agent
         for ag in self.agent_obs:
             obs_list = add_obs_for_agent(ag)
@@ -253,8 +267,12 @@ class PysbModelChecker(ModelChecker):
         if not obs_names:
             logger.info("No observables for stmt %s, returning False" % stmt)
             return (None, None, 'OBSERVABLES_NOT_FOUND')
-        obs_signed = [(obs, target_polarity) for obs in obs_names]
-        result_code = None
+        # Statement object is None
+        if all(obs is None for obs in obs_names):
+            obs_signed = [None]
+        else:
+            obs_signed = [(obs, target_polarity) for obs in obs_names]
+            result_code = None
         return subj_mps, obs_signed, result_code
 
     def process_subject(self, subj_mp):
