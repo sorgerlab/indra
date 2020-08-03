@@ -88,7 +88,7 @@ def main():
                     'indra.sources.virhostnet',
                     'indra.resources', 'indra.statements',
                     'indra.tests', 'indra.tests.test_obo_clients',
-                    'indra.tools', 'indra.tools.live_curation',
+                    'indra.tools',
                     'indra.tools.machine', 'indra.util'],
           install_requires=install_list,
           extras_require=extras_require,
