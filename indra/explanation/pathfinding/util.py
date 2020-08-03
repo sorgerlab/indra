@@ -74,7 +74,7 @@ def signed_nodes_to_signed_edge(source, target):
         return None, None, None
 
 
-def get_sorted_neighbors(G, node, reverse, hashes=[]):
+def get_sorted_neighbors(G, node, reverse, hashes=None):
     """Sort the returned neighbors in descending order by belief
 
     Parameters
@@ -98,7 +98,7 @@ def get_sorted_neighbors(G, node, reverse, hashes=[]):
 
     if reverse:
         neighbors = G.predecessors(node)
-        if hashes:
+        if hashes is not None:
             neighbors = list(n for n in neighbors 
                              if statements_allowed(n, node))
         return sorted(
@@ -109,7 +109,7 @@ def get_sorted_neighbors(G, node, reverse, hashes=[]):
         )
     else:
         neighbors = G.successors(node)
-        if hashes:
+        if hashes is not None:
             neighbors = list(n for n in neighbors
                              if statements_allowed(node, n))
         return sorted(

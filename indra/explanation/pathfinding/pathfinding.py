@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 # Copy from networkx.algorithms.simple_paths
 # Added ignore_nodes and ignore_edges arguments
 def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
-                          ignore_edges=None, hashes=[]):
+                          ignore_edges=None, hashes=None):
     """Generate all simple paths in the graph G from source to target,
        starting from shortest ones.
 
@@ -167,7 +167,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 # networkx.algorithms.traversal.breadth_first_search::generic_bfs_edges
 def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
                max_per_node=5, node_filter=None, node_blacklist=None,
-               terminal_ns=None, sign=None, max_memory=int(2**29), hashes=[], 
+               terminal_ns=None, sign=None, max_memory=int(2**29), hashes=None, 
                **kwargs):
     """Do breadth first search from a given node and yield paths
 
@@ -472,7 +472,7 @@ def _bidirectional_shortest_path(G, source, target,
                                  ignore_nodes=None,
                                  ignore_edges=None,
                                  weight=None,
-                                 hashes=[]):
+                                 hashes=None):
     """Returns the shortest path between source and target ignoring
        nodes and edges in the containers ignore_nodes and ignore_edges.
 
@@ -536,7 +536,7 @@ def _bidirectional_shortest_path(G, source, target,
     return len(path), path
 
 
-def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=None, hashes=[]):
+def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=None, hashes=None):
     """Bidirectional shortest path helper.
        Returns (pred,succ,w) where
        pred is a dictionary of predecessors from w to the source, and
@@ -639,7 +639,7 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
 
 
 def _bidirectional_dijkstra(G, source, target, weight='weight',
-                            ignore_nodes=None, ignore_edges=None, hashes=[]):
+                            ignore_nodes=None, ignore_edges=None, hashes=None):
     """Dijkstra's algorithm for shortest paths using bidirectional search.
 
     This function returns the shortest path between source and target
