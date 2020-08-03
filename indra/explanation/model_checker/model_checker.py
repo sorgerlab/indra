@@ -214,38 +214,10 @@ class ModelChecker(object):
         result : indra.explanation.modelchecker.PathResult
             A PathResult object containing the result of a test.
         """
-        # Make sure graph is created
-        self.get_graph()
-        # Extract subject and object info from test statement
-        subj_list, obj_list, result_code = self.process_statement(stmt)
+        input_set, obj_list, result_code = self.get_all_subjects_objects(stmt)
         if result_code:
             return self.make_false_result(result_code, max_paths,
                                           max_path_length)
-        # This is the case if we are checking a Statement whose
-        # subject is genuinely None
-        if all(s is None for s in subj_list):
-            input_set = None
-        # This is the case where the Statement has an actual subject
-        # but we may still run into issues with finding an input
-        # set for it in which case a false result may be returned.
-        else:
-            logger.info('Subject list: %s' % str(subj_list))
-            input_set = []
-            meaningful_res_code = None
-            # Each subject might produce a different input set and we need to
-            # combine them
-            for subj in subj_list:
-                inp, res_code = self.process_subject(subj)
-                if res_code:
-                    meaningful_res_code = res_code
-                    continue
-                input_set += inp
-            if not input_set and meaningful_res_code:
-                return self.make_false_result(meaningful_res_code, max_paths,
-                                              max_path_length)
-
-        logger.info('Input set: %s' % str(input_set))
-
         # If source and target are the same, we need to handle a loop
         loop = False
         if (input_set and (len(input_set) == len(obj_list) == 1) and
@@ -276,14 +248,43 @@ class ModelChecker(object):
         if result.path_found:
             logger.info('Found paths for %s' % stmt)
             return result
-        # Return the result if the subject/input rules were not found
-        if result.result_code in [
-                'SUBJECT_NOT_FOUND', 'INPUT_RULES_NOT_FOUND']:
-            return result
+
         # If we got here, then there was no path for any observable
         logger.info('No paths found for %s' % stmt)
         return self.make_false_result('NO_PATHS_FOUND',
                                       max_paths, max_path_length)
+
+    def get_all_subjects_objects(self, stmt):
+        # Make sure graph is created
+        self.get_graph()
+        # Extract subject and object info from test statement
+        subj_list, obj_list, result_code = self.process_statement(stmt)
+        if result_code:
+            return None, None, result_code
+        # This is the case if we are checking a Statement whose
+        # subject is genuinely None
+        if all(s is None for s in subj_list):
+            input_set = None
+        # This is the case where the Statement has an actual subject
+        # but we may still run into issues with finding an input
+        # set for it in which case a false result may be returned.
+        else:
+            logger.info('Subject list: %s' % str(subj_list))
+            input_set = []
+            meaningful_res_code = None
+            # Each subject might produce a different input set and we need to
+            # combine them
+            for subj in subj_list:
+                inp, res_code = self.process_subject(subj)
+                if res_code:
+                    meaningful_res_code = res_code
+                    continue
+                input_set += inp
+            if not input_set and meaningful_res_code:
+                return None, None, meaningful_res_code
+
+        logger.info('Input set: %s' % str(input_set))
+        return input_set, obj_list, None
 
     def find_paths(self, input_set, target, max_paths=1, max_path_length=5,
                    loop=False, dummy_target=False):
