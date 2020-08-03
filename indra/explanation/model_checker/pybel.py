@@ -54,25 +54,30 @@ class PybelModelChecker(ModelChecker):
                         stmt.__class__.__name__)
             return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
         subj, obj = stmt.agent_list()
-        # Get the polarity for the statement
-        if isinstance(stmt, Modification):
-            target_polarity = 1 if isinstance(stmt, RemoveModification) else 0
-            obj_agent = deepcopy(obj)
-            obj_agent.mods.append(stmt._get_mod_condition())
-            obj = obj_agent
-        elif isinstance(stmt, RegulateActivity):
-            target_polarity = 0 if stmt.is_activation else 1
-            obj_agent = deepcopy(obj)
-            obj_agent.activity = stmt._get_activity_condition()
-            obj_agent.activity.is_active = True
-            obj = obj_agent
-        elif isinstance(stmt, RegulateAmount):
-            target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
-        elif isinstance(stmt, Influence):
-            target_polarity = 1 if stmt.overall_polarity() == -1 else 0
         if obj is None:
+            # Cannot check modifications for statements without object
+            if isinstance(stmt, Modification):
+                return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
             obj_nodes = [None]
         else:
+            # Get the polarity for the statement
+            if isinstance(stmt, Modification):
+                target_polarity = 1 if isinstance(stmt, RemoveModification) \
+                    else 0
+                obj_agent = deepcopy(obj)
+                obj_agent.mods.append(stmt._get_mod_condition())
+                obj = obj_agent
+            elif isinstance(stmt, RegulateActivity):
+                target_polarity = 0 if stmt.is_activation else 1
+                obj_agent = deepcopy(obj)
+                obj_agent.activity = stmt._get_activity_condition()
+                obj_agent.activity.is_active = True
+                obj = obj_agent
+            elif isinstance(stmt, RegulateAmount):
+                target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
+            elif isinstance(stmt, Influence):
+                target_polarity = 1 if stmt.overall_polarity() == -1 else 0
+
             obj_nodes = self.get_nodes(obj, self.graph, target_polarity)
             # Statement has object but it's not in the graph
             if not obj_nodes:

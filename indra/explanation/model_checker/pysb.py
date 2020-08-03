@@ -269,6 +269,9 @@ class PysbModelChecker(ModelChecker):
             return (None, None, 'OBSERVABLES_NOT_FOUND')
         # Statement object is None
         if all(obs is None for obs in obs_names):
+            # Cannot check modifications in this case
+            if isinstance(stmt, Modification):
+                return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
             obs_signed = [None]
         else:
             obs_signed = [(obs, target_polarity) for obs in obs_names]
