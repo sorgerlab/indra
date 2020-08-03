@@ -100,7 +100,6 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
        (Jul., 1971), pp. 712-716.
 
     """
-    print("SHORTEST SIMPLE PATHS")
     if source not in G:
         s = source[0] if isinstance(source, tuple) else source
         raise nx.NodeNotFound('source node %s not in graph' % s)
@@ -149,7 +148,6 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                 cur_ignore_nodes.add(root[-1])
         if listB:
             path = listB.pop()
-            #print("PATH: " + str(path))
             rcvd_ignore_values = yield path
             if rcvd_ignore_values is not None:
                 culled_ignored_nodes = culled_ignored_nodes.union(
@@ -230,7 +228,6 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
         sorted_neighbors = get_sorted_neighbors(G=g, node=last_node,
                                                 reverse=reverse, 
                                                 hashes=hashes)
-
         yielded_neighbors = 0
         # for neighb in neighbors:
         for neighb in sorted_neighbors:
@@ -465,9 +462,7 @@ def find_sources(graph, target, sources):
 def statements_allowed(stmts, hashes):
     for stmt in stmts:
         if stmt['stmt_hash'] in hashes:
-            #print("STATEMENTS ALLOWED TRUE")
             return True
-    #print("STATEMENTS ALLOWED FALSE")
     return False
 
 def _bidirectional_shortest_path(G, source, target,

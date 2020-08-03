@@ -109,7 +109,6 @@ def get_sorted_neighbors(G, node, reverse, hashes=[]):
         )
     else:
         neighbors = G.successors(node)
-        print("NEIGHBORS " + str(neighbors))
         if hashes:
             neighbors = list(n for n in neighbors
                              if statements_allowed(node, n))
