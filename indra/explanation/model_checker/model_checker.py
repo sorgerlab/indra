@@ -284,6 +284,11 @@ class ModelChecker(object):
                 return None, None, meaningful_res_code
 
         logger.info('Input set: %s' % str(input_set))
+
+        # Statement object is None
+        if all(o is None for o in obj_list):
+            obj_list = None
+
         return input_set, obj_list, None
 
     def find_paths(self, input_set, target, max_paths=1, max_path_length=5,
