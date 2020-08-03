@@ -6,11 +6,10 @@ occurence to the tests.
 
 In general, try to separate tests to one test per chunk of interdependent code
 """
+import copy
+from indra.statements import Event, Concept, Influence, Evidence
 from nose.plugins.attrib import attr
 from unittest import skip
-from .test_live_curation import _make_corpus
-
-corpus = _make_corpus()
 
 
 def _get_gene_network_stmts():
@@ -20,10 +19,6 @@ def _get_gene_network_stmts():
 
 
 gn_stmts = _get_gene_network_stmts()
-
-wm_raw_stmts = corpus.raw_statements
-wm_stmts = corpus.statements
-
 
 # CODE IN README.md #
 
@@ -313,3 +308,31 @@ def test_getting_started9_10():
     signed_graph = indranet.to_signed_graph()
     assert len(signed_graph.nodes) > 0, 'signed graph contains no nodes'
     assert len(signed_graph.edges) > 0, 'signed graph conatins no edges'
+
+
+def _make_wm_stmts():
+    ev1 = Evidence(source_api='eidos', text='A',
+                   annotations={'found_by': 'ported_syntax_1_verb-Causal'})
+    ev2 = Evidence(source_api='eidos', text='B',
+                   annotations={'found_by': 'dueToSyntax2-Causal'})
+    ev3 = Evidence(source_api='hume', text='C')
+    ev4 = Evidence(source_api='cwms', text='D')
+    ev5 = Evidence(source_api='sofia', text='E')
+    ev6 = Evidence(source_api='sofia', text='F')
+    x = Event(Concept('x', db_refs={'TEXT': 'dog'}))
+    y = Event(Concept('y', db_refs={'TEXT': 'cat'}))
+    stmt1 = Influence(x, y, evidence=[ev1, ev2])
+    stmt2 = Influence(x, y, evidence=[ev1, ev3])
+    stmt3 = Influence(x, y, evidence=[ev3, ev4, ev5])
+    stmt4 = Influence(x, y, evidence=[ev5])
+    stmt5 = Influence(x, y, evidence=[ev6])
+    stmt1.uuid = '1'
+    stmt2.uuid = '2'
+    stmt3.uuid = '3'
+    stmt4.uuid = '4'
+    stmt5.uuid = '5'
+    stmts = [stmt1, stmt2, stmt3, stmt4]
+    return stmts
+
+
+wm_raw_stmts = _make_wm_stmts()
