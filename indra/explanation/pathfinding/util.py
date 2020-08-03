@@ -90,12 +90,17 @@ def get_sorted_neighbors(G, node, reverse, hashes=[]):
         List of hashes specifying (if not empty) the edges to be used for
         getting the neighbors
     """
+    def statements_allowed(u, v):
+        for stmt in G.get_edge_data(u, v)['statements']:
+            if stmt['stmt_hash'] in hashes:
+                return True
+        return False
+
     if reverse:
         neighbors = G.predecessors(node)
         if hashes:
             neighbors = list(n for n in neighbors 
-                             if G.get_edge_data(n, node)['hash_stmt']
-                             in hashes)
+                             if statements_allowed(n, node))
         return sorted(
             neighbors,
             key=lambda n:
@@ -104,10 +109,10 @@ def get_sorted_neighbors(G, node, reverse, hashes=[]):
         )
     else:
         neighbors = G.successors(node)
+        print("NEIGHBORS " + str(neighbors))
         if hashes:
             neighbors = list(n for n in neighbors
-                             if G.get_edge_data(node, n)['hash_stmt']
-                             in hashes)
+                             if statements_allowed(node, n))
         return sorted(
             neighbors,
             key=lambda n:
