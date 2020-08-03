@@ -45,6 +45,9 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
     ignore_edges : container of edges
        edges to ignore, optional
 
+    hashes : list
+        hashes specifying (if not empty) allowed edges
+
     Returns
     -------
     path_generator: generator
@@ -496,6 +499,9 @@ def _bidirectional_shortest_path(G, source, target,
        This function accepts a weight argument for convenience of
        shortest_simple_paths function. It will be ignored.
 
+    hashes : list
+        hashes specifying (if not empty) allowed edges
+
     Returns
     -------
     path: list
@@ -661,6 +667,9 @@ def _bidirectional_dijkstra(G, source, target, weight='weight',
 
     ignore_edges : container of edges
        edges to ignore, optional
+
+    hashes : list
+        hashes specifying (if not empty) allowed edges
 
     Returns
     -------
