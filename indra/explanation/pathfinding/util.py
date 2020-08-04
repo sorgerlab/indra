@@ -99,5 +99,5 @@ def get_sorted_neighbors(G, node, reverse):
         return sorted(
             neighbors,
             key=lambda n:
-                G.edges[(node, n)]['belief'],
+                G.edges[(node, n)].get('belief', 0),
             reverse=True)

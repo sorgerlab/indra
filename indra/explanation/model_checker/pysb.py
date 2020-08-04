@@ -275,7 +275,7 @@ class PysbModelChecker(ModelChecker):
             obs_signed = [None]
         else:
             obs_signed = [(obs, target_polarity) for obs in obs_names]
-            result_code = None
+        result_code = None
         return subj_mps, obs_signed, result_code
 
     def process_subject(self, subj_mp):
