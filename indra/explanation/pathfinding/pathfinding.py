@@ -119,13 +119,6 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
             return sum(G.adj[u][v][weight] for (u, v) in zip(path, path[1:]))
         shortest_path_func = _bidirectional_dijkstra
 
-    # if hashes is None:
-    #     allowed_edges = None
-    # else:
-    #     allowed_edges = set()
-    #     for h in hashes:
-    #         allowed_edges = allowed_edges.union(edge_by_hash[h])
-
     edge_by_hash = G.graph['edge_by_hash']
     allowed_edges = {edge_by_hash.get(h, None) for h in hashes if h in edge_by_hash.keys()}
 
@@ -474,12 +467,6 @@ def find_sources(graph, target, sources):
             queue.popleft()
     # There was no path; this will produce an empty generator
     return
-
-def statements_allowed(stmts, hashes):
-    for stmt in stmts:
-        if stmt['stmt_hash'] in hashes:
-            return True
-    return False
 
 def _bidirectional_shortest_path(G, source, target,
                                  ignore_nodes=None,
