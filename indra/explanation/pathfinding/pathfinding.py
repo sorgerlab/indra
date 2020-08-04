@@ -119,6 +119,16 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
             return sum(G.adj[u][v][weight] for (u, v) in zip(path, path[1:]))
         shortest_path_func = _bidirectional_dijkstra
 
+    # if hashes is None:
+    #     allowed_edges = None
+    # else:
+    #     allowed_edges = set()
+    #     for h in hashes:
+    #         allowed_edges = allowed_edges.union(edge_by_hash[h])
+
+    edge_by_hash = G.graph['edge_by_hash']
+    allowed_edges = {edge_by_hash.get(h, None) for h in hashes if h in edge_by_hash.keys()}
+
     culled_ignored_nodes = set() if ignore_nodes is None else set(ignore_nodes)
     culled_ignored_edges = set() if ignore_edges is None else set(ignore_edges)
     listA = list()
@@ -131,7 +141,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
             length, path = shortest_path_func(G, source, target, weight=weight,
                                               ignore_nodes=cur_ignore_nodes,
                                               ignore_edges=cur_ignore_edges,
-                                              hashes=hashes)
+                                              force_edges=allowed_edges)
             listB.push(length, path)
         else:
             for i in range(1, len(prev_path)):
@@ -215,6 +225,9 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
     int_plus = 0
     int_minus = 1
 
+    edge_by_hash = g.graph['edge_by_hash']
+    allowed_edges = {edge_by_hash[h] for h in hashes if h in edge_by_hash.keys()}
+
     queue = deque([(source_node,)])
     visited = ({source_node}).union(node_blacklist) \
         if node_blacklist else {source_node}
@@ -230,7 +243,7 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
 
         sorted_neighbors = get_sorted_neighbors(G=g, node=last_node,
                                                 reverse=reverse, 
-                                                hashes=hashes)
+                                                force_edges=allowed_edges)
         yielded_neighbors = 0
         # for neighb in neighbors:
         for neighb in sorted_neighbors:
@@ -472,7 +485,8 @@ def _bidirectional_shortest_path(G, source, target,
                                  ignore_nodes=None,
                                  ignore_edges=None,
                                  weight=None,
-                                 hashes=None):
+                                 hashes=None,
+                                 force_edges=None):
     """Returns the shortest path between source and target ignoring
        nodes and edges in the containers ignore_nodes and ignore_edges.
 
@@ -518,7 +532,7 @@ def _bidirectional_shortest_path(G, source, target,
 
     """
     # call helper to do the real work
-    results = _bidirectional_pred_succ(G, source, target, ignore_nodes, ignore_edges, hashes=hashes)
+    results = _bidirectional_pred_succ(G, source, target, ignore_nodes, ignore_edges, force_edges=force_edges)
     pred, succ, w = results
 
     # build path from pred+w+succ
@@ -536,7 +550,7 @@ def _bidirectional_shortest_path(G, source, target,
     return len(path), path
 
 
-def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=None, hashes=None):
+def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=None, force_edges=None):
     """Bidirectional shortest path helper.
        Returns (pred,succ,w) where
        pred is a dictionary of predecessors from w to the source, and
@@ -569,21 +583,29 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
         Gsucc = filter_iter(Gsucc)
 
     # support optional edges filter
-    if ignore_edges or hashes:
+    if ignore_edges or force_edges:
         if G.is_directed():
             def filter_pred_iter(pred_iter):
                 def iterate(v):
-                    for w in pred_iter(v):
-                        if (w, v) not in ignore_edges:
-                            if not hashes or statements_allowed(G.get_edge_data(w, v)['statements'], hashes):
+                    if force_edges:
+                        for w in pred_iter(v):
+                            if (w, v) not in ignore_edges and (w, v) in force_edges:
+                                yield w
+                    else:
+                        for w in pred_iter(v):
+                            if (w, v) not in ignore_edges:
                                 yield w
                 return iterate
 
             def filter_succ_iter(succ_iter):
                 def iterate(v):
-                    for w in succ_iter(v):
-                        if (v, w) not in ignore_edges:
-                            if not hashes or statements_allowed(G.get_edge_data(v, w)['statements'], hashes):
+                    if force_edges:
+                        for w in succ_iter(v):
+                            if (v, w) not in ignore_edges and (v, w) in force_edges:
+                                yield w
+                    else:
+                        for w in succ_iter(v):
+                            if (v, w) not in ignore_edges:
                                 yield w
                 return iterate
 
@@ -593,11 +615,17 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
         else:
             def filter_iter(nodes):
                 def iterate(v):
-                    for w in nodes(v):
-                        if (v, w) not in ignore_edges \
+                    if force_edges:
+                        for w in nodes(v):
+                            if (v, w) not in ignore_edges \
+                                and (w, v) not in ignore_edges \
+                                    and (v, w) in force_edges and (w, v) in force_edges:
+                                        yield w
+                    else:
+                        for w in nodes(v):
+                            if (v, w) not in ignore_edges \
                                 and (w, v) not in ignore_edges:
-                            if not hashes or statements_allowed(G.get_edge_data(v, w)['statements'], hashes):
-                                yield w
+                                    yield w
                 return iterate
 
             Gpred = filter_iter(Gpred)
@@ -639,7 +667,7 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
 
 
 def _bidirectional_dijkstra(G, source, target, weight='weight',
-                            ignore_nodes=None, ignore_edges=None, hashes=None):
+                            ignore_nodes=None, ignore_edges=None, force_edges=None):
     """Dijkstra's algorithm for shortest paths using bidirectional search.
 
     This function returns the shortest path between source and target
@@ -735,21 +763,29 @@ def _bidirectional_dijkstra(G, source, target, weight='weight',
         Gsucc = filter_iter(Gsucc)
 
     # support optional edges filter
-    if ignore_edges or hashes:
+    if ignore_edges or force_edges:
         if G.is_directed():
             def filter_pred_iter(pred_iter):
                 def iterate(v):
-                    for w in pred_iter(v):
-                        if (w, v) not in ignore_edges:
-                            if not hashes or statements_allowed(G.get_edge_data(w, v)['statements'], hashes):
+                    if force_edges:
+                        for w in pred_iter(v):
+                            if (w, v) not in ignore_edges and (w, v) in force_edges:
+                                yield w
+                    else:
+                        for w in pred_iter(v):
+                            if (w, v) not in ignore_edges:
                                 yield w
                 return iterate
 
             def filter_succ_iter(succ_iter):
                 def iterate(v):
-                    for w in succ_iter(v):
-                        if (v, w) not in ignore_edges:
-                            if not hashes or statements_allowed(G.get_edge_data(v, w)['statements'], hashes):
+                    if force_edges:
+                        for w in succ_iter(v):
+                            if (v, w) not in ignore_edges and (v, w) in force_edges:
+                                yield w
+                    else:
+                        for w in succ_iter(v):
+                            if (v, w) not in ignore_edges:
                                 yield w
                 return iterate
 
@@ -759,11 +795,17 @@ def _bidirectional_dijkstra(G, source, target, weight='weight',
         else:
             def filter_iter(nodes):
                 def iterate(v):
-                    for w in nodes(v):
-                        if (v, w) not in ignore_edges \
+                    if force_edge is None:
+                        for w in nodes(v):
+                            if (v, w) not in ignore_edges \
                                 and (w, v) not in ignore_edges:
-                            if not hashes or statements_allowed(G.get_edge_data(v, w)['statements'], hashes):
-                                yield w
+                                    yield w
+                    else:
+                        for w in nodes(v):
+                            if (v, w) not in ignore_edges \
+                                and (w, v) not in ignore_edges \
+                                    and (v, w) in force_edges and (w, v) in force_edges:
+                                        yield w
                 return iterate
 
             Gpred = filter_iter(Gpred)
