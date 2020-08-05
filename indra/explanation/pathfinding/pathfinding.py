@@ -500,8 +500,8 @@ def _bidirectional_shortest_path(G, source, target,
        This function accepts a weight argument for convenience of
        shortest_simple_paths function. It will be ignored.
 
-    hashes : list
-        hashes specifying (if not empty) allowed edges
+    force_edges : list
+        list specifying (if not empty) allowed edges
 
     Returns
     -------
@@ -683,8 +683,8 @@ def _bidirectional_dijkstra(G, source, target, weight='weight',
     ignore_edges : container of edges
        edges to ignore, optional
 
-    hashes : list
-        hashes specifying (if not empty) allowed edges
+    force_edges : list
+        list specifying (if not empty) allowed edges
 
     Returns
     -------
