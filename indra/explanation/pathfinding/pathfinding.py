@@ -8,6 +8,9 @@ from copy import deepcopy
 import networkx as nx
 import networkx.algorithms.simple_paths as simple_paths
 
+from heapq import heappush, heappop
+from itertools import count
+
 from .util import get_sorted_neighbors
 
 logger = logging.getLogger(__name__)
@@ -111,7 +114,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
         t = target[0] if isinstance(target, tuple) else target
         raise nx.NodeNotFound('target node %s not in graph' % t)
 
-    if weight is None:
+    if weight is None and not hashes:
         length_func = len
         shortest_path_func = _bidirectional_shortest_path
     else:
@@ -818,6 +821,7 @@ def _bidirectional_dijkstra(G, source, target, weight='weight',
     finalpath = []
     dir = 1
     while fringe[0] and fringe[1]:
+        print("FRINGE")
         # choose direction
         # dir == 0 is forward direction and dir == 1 is back
         dir = 1 - dir
@@ -833,21 +837,43 @@ def _bidirectional_dijkstra(G, source, target, weight='weight',
             # we have now discovered the shortest path
             return (finaldist, finalpath)
 
+        print("NEIGHS: " + str(list(neighs[dir](v))))
         for w in neighs[dir](v):
-            if(dir == 0):  # forward
-                if G.is_multigraph():
-                    minweight = min((dd.get(weight, 1)
-                                     for k, dd in G[v][w].items()))
-                else:
-                    minweight = G[v][w].get(weight, 1)
-                vwLength = dists[dir][v] + minweight  # G[v][w].get(weight,1)
-            else:  # back, must remember to change v,w->w,v
-                if G.is_multigraph():
-                    minweight = min((dd.get(weight, 1)
-                                     for k, dd in G[w][v].items()))
-                else:
-                    minweight = G[w][v].get(weight, 1)
-                vwLength = dists[dir][v] + minweight  # G[w][v].get(weight,1)
+            if force_edges:
+                def edge_weight(edge):
+                    return 1
+                if(dir == 0):  # forward
+                    if G.is_multigraph():
+                        print("I AM A MULTIGRAPH")
+                        minweight = min((dd.get(weight, 1)
+                                        for k, dd in G[v][w].items()))
+                    else:
+                        print("I AM NOT A MULTIGRAPH")
+                        minweight = G[v][w].get(weight, 1)
+                    vwLength = dists[dir][v] + minweight  # G[v][w].get(weight,1)
+                else:  # back, must remember to change v,w->w,v
+                    if G.is_multigraph():
+                        minweight = min((dd.get(weight, 1)
+                                        for k, dd in G[w][v].items()))
+                    else:
+                        minweight = G[w][v].get(weight, 1)
+                    vwLength = dists[dir][v] + minweight  # G[w][v].get(weight,1)
+            else:
+                print("NOT FORCE_EDGES")
+                if(dir == 0):  # forward
+                    if G.is_multigraph():
+                        minweight = min((dd.get(weight, 1)
+                                        for k, dd in G[v][w].items()))
+                    else:
+                        minweight = G[v][w].get(weight, 1)
+                    vwLength = dists[dir][v] + minweight  # G[v][w].get(weight,1)
+                else:  # back, must remember to change v,w->w,v
+                    if G.is_multigraph():
+                        minweight = min((dd.get(weight, 1)
+                                        for k, dd in G[w][v].items()))
+                    else:
+                        minweight = G[w][v].get(weight, 1)
+                    vwLength = dists[dir][v] + minweight  # G[w][v].get(weight,1)
 
             if w in dists[dir]:
                 if vwLength < dists[dir][w]:
