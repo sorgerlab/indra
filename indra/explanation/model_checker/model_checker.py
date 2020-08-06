@@ -253,7 +253,7 @@ class ModelChecker(object):
             loop = True
 
         # If we have several objects in obj_list or we have a loop, we add a
-        # dummy target node ∂as a child to all nodes in obj_list
+        # dummy target node as a child to all nodes in obj_list
         if len(obj_list) > 1 or loop:
             common_target = ('common_target', 0)
             self.graph.add_node(common_target)
