@@ -251,25 +251,28 @@ class ModelChecker(object):
         if (input_set and (len(input_set) == len(obj_list) == 1) and
                 (list(input_set)[0] == list(obj_list)[0])):
             loop = True
-        # Now we add a dummy target node as a child to all nodes in obj_list
-        common_target = ('common_target', 0)
-        self.graph.add_node(common_target)
-        # This is the case when source and target are the same. NetworkX does
-        # not allow loops in the paths, so we work around it by using target
-        # predecessors as new targets
-        if loop:
-            for obj in self.graph.predecessors(list(obj_list)[0]):
-                self.graph.add_edge(obj, common_target)
-        else:
-            for obj in obj_list:
-                self.graph.add_edge(obj, common_target)
-        result = self.find_paths(input_set, common_target, max_paths,
-                                 max_path_length, loop)
 
-        self.graph.remove_node(common_target)
-        # If a path was found, then we return it; otherwise, that means
-        # there was no path for this object, so we have to try the next
-        # one
+        # If we have several objects in obj_list or we have a loop, we add a
+        # dummy target node ∂as a child to all nodes in obj_list
+        if len(obj_list) > 1 or loop:
+            common_target = ('common_target', 0)
+            self.graph.add_node(common_target)
+            # This is the case when source and target are the same. NetworkX
+            # does not allow loops in the paths, so we work around it by using
+            # target predecessors as new targets
+            if loop:
+                for obj in self.graph.predecessors(list(obj_list)[0]):
+                    self.graph.add_edge(obj, common_target)
+            else:
+                for obj in obj_list:
+                    self.graph.add_edge(obj, common_target)
+            result = self.find_paths(input_set, common_target, max_paths,
+                                     max_path_length, loop, dummy_target=True)
+
+            self.graph.remove_node(common_target)
+        else:
+            result = self.find_paths(input_set, list(obj_list)[0], max_paths,
+                                     max_path_length, loop, dummy_target=False)
         if result.path_found:
             logger.info('Found paths for %s' % stmt)
             return result
@@ -283,7 +286,7 @@ class ModelChecker(object):
                                       max_paths, max_path_length)
 
     def find_paths(self, input_set, target, max_paths=1, max_path_length=5,
-                   loop=False):
+                   loop=False, dummy_target=False):
         """Check for a source/target path in the model.
 
         Parameters
@@ -299,6 +302,8 @@ class ModelChecker(object):
             The maximum length of specific paths to return.
         loop : bool
             Whether we are looking for a loop path.
+        dummy_target : False
+            Whether the target is a dummy node.
 
         Returns
         -------
@@ -321,10 +326,10 @@ class ModelChecker(object):
         path_metrics = []
         sources = []
         for source, path_length in find_sources(self.graph, target, input_set):
-            # Path already includes an edge from targets to common target, so
-            # we need to subtract one edge. In case of loops, we are
-            # already missing one edge, there's no need to subtract one more.
-            if not loop:
+            # If a dummy target is used, we need to subtract one edge.
+            # In case of loops, we are already missing one edge, there's no
+            # need to subtract one more.
+            if dummy_target and not loop:
                 path_length = path_length - 1
             # There might be a case when sources and targets contain the same
             # nodes (e.g. different agent state in PyBEL networks) that would
@@ -334,7 +339,7 @@ class ModelChecker(object):
                 pm = PathMetric(source, target, path_length)
                 path_metrics.append(pm)
                 path_lengths.append(path_length)
-                # Keep unique sources but use a list (not set) to preserve order
+                # Keep unique sources but use a list, not set to preserve order
                 if source not in sources:
                     sources.append(source)
         # Now, look for paths
@@ -345,7 +350,7 @@ class ModelChecker(object):
             return pr
         elif path_metrics:
             if min(path_lengths) <= max_path_length:
-                if not loop:
+                if dummy_target and not loop:
                     search_path_length = min(path_lengths) + 1
                 else:
                     search_path_length = min(path_lengths)
@@ -357,8 +362,9 @@ class ModelChecker(object):
                 for source in sources:
                     logger.info('Finding paths between %s and %s'
                                 % (str(source), target))
-                    path_iter = get_path_iter(self.graph, source, target,
-                                              search_path_length, loop)
+                    path_iter = get_path_iter(
+                        self.graph, source, target, search_path_length, loop,
+                        dummy_target)
                     for path in path_iter:
                         pr.add_path(tuple(path))
                         # Do not get next path if reached max_paths
