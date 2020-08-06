@@ -45,14 +45,13 @@ rel_mapping = {
 
 
 class CTDProcessor:
-    pass
+    def __init__(self, df):
+        self.df = df
+        self.statements = []
 
 
 class CTDChemicalDiseaseProcessor(CTDProcessor):
     """Processes chemical-disease relationships from CTD."""
-    def __init__(self, df):
-        self.df = df
-        self.statements = []
 
     def extract_statements(self):
         df = self.df[self.df[5] != '']
@@ -76,9 +75,6 @@ class CTDChemicalDiseaseProcessor(CTDProcessor):
 
 class CTDGeneDiseaseProcessor(CTDProcessor):
     """Processes gene-disease relationships from CTD."""
-    def __init__(self, df):
-        self.df = df
-        self.statements = []
 
     def extract_statements(self):
         df = self.df[self.df[4] != '']
@@ -101,9 +97,6 @@ class CTDGeneDiseaseProcessor(CTDProcessor):
 
 class CTDChemicalGeneProcessor(CTDProcessor):
     """Processes chemical-gene relationships from CTD."""
-    def __init__(self, df):
-        self.df = df
-        self.statements = []
 
     def extract_statements(self):
         for _, row in tqdm.tqdm(self.df.iterrows(), total=len(self.df)):
