@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Copy from networkx.algorithms.simple_paths
 # Added ignore_nodes and ignore_edges arguments
 def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
-                          ignore_edges=None, hashes=None):
+                          ignore_edges=None, hashes=None, strict_hash_filtering=False):
     """Generate all simple paths in the graph G from source to target,
        starting from shortest ones.
 
@@ -114,13 +114,19 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
         t = target[0] if isinstance(target, tuple) else target
         raise nx.NodeNotFound('target node %s not in graph' % t)
 
-    if weight is None and not hashes:
-        length_func = len
-        shortest_path_func = _bidirectional_shortest_path
-    else:
+    if weight is not None:
         def length_func(path):
             return sum(G.adj[u][v][weight] for (u, v) in zip(path, path[1:]))
         shortest_path_func = _bidirectional_dijkstra
+    elif not hashes:
+        length_func = len
+        shortest_path_func = _bidirectional_shortest_path
+    else:
+        length_func = len
+        if strict_hash_filtering:
+            shortest_path_func = _bidirectional_shortest_path
+        else:
+            shortest_path_func = _bidirectional_dijkstra
 
     edge_by_hash = G.graph['edge_by_hash']
     allowed_edges = {edge_by_hash.get(h, None) for h in hashes if h in edge_by_hash.keys()}
