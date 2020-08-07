@@ -840,21 +840,21 @@ def _bidirectional_dijkstra(G, source, target, weight='weight',
 
         for w in neighs[dir](v):
             if force_edges:
-                def edge_weight(edge):
+                def edge_weight(u, v):
                     return 1
                 if(dir == 0):  # forward
-                    minweight = edge_weight((v, w))#G[v][w].get(weight, 1)
-                    vwLength = dists[dir][v] + minweight  # G[v][w].get(weight,1)
+                    minweight = edge_weight(v, w)
+                    vwLength = dists[dir][v] + minweight
                 else:  # back, must remember to change v,w->w,v
-                    minweight = edge_weight((w, v))#G[w][v].get(weight, 1)
-                    vwLength = dists[dir][v] + minweight  # G[w][v].get(weight,1)
+                    minweight = edge_weight(w, v)
+                    vwLength = dists[dir][v] + minweight
             else:
                 if(dir == 0):  # forward
                     minweight = G[v][w].get(weight, 1)
-                    vwLength = dists[dir][v] + minweight  # G[v][w].get(weight,1)
+                    vwLength = dists[dir][v] + minweight
                 else:  # back, must remember to change v,w->w,v
                     minweight = G[w][v].get(weight, 1)
-                    vwLength = dists[dir][v] + minweight  # G[w][v].get(weight,1)
+                    vwLength = dists[dir][v] + minweight
 
             if w in dists[dir]:
                 if vwLength < dists[dir][w]:
