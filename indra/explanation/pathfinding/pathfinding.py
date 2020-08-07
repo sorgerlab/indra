@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Copy from networkx.algorithms.simple_paths
 # Added ignore_nodes and ignore_edges arguments
 def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
-                          ignore_edges=None, hashes=None, strict_hash_filtering=False):
+                          ignore_edges=None, hashes=None, strict_mesh_id_filtering=False):
     """Generate all simple paths in the graph G from source to target,
        starting from shortest ones.
 
@@ -775,26 +775,16 @@ def _bidirectional_dijkstra(G, source, target, weight='weight',
         if G.is_directed():
             def filter_pred_iter(pred_iter):
                 def iterate(v):
-                    if force_edges:
-                        for w in pred_iter(v):
-                            if (w, v) not in ignore_edges and (w, v) in force_edges:
-                                yield w
-                    else:
-                        for w in pred_iter(v):
-                            if (w, v) not in ignore_edges:
-                                yield w
+                    for w in pred_iter(v):
+                        if (w, v) not in ignore_edges and (w, v) in force_edges:
+                            yield w
                 return iterate
 
             def filter_succ_iter(succ_iter):
                 def iterate(v):
-                    if force_edges:
-                        for w in succ_iter(v):
-                            if (v, w) not in ignore_edges and (v, w) in force_edges:
-                                yield w
-                    else:
-                        for w in succ_iter(v):
-                            if (v, w) not in ignore_edges:
-                                yield w
+                    for w in succ_iter(v):
+                        if (v, w) not in ignore_edges and (v, w) in force_edges:
+                            yield w
                 return iterate
 
             Gpred = filter_pred_iter(Gpred)
@@ -803,17 +793,11 @@ def _bidirectional_dijkstra(G, source, target, weight='weight',
         else:
             def filter_iter(nodes):
                 def iterate(v):
-                    if force_edge is None:
-                        for w in nodes(v):
-                            if (v, w) not in ignore_edges \
-                                and (w, v) not in ignore_edges:
+                    for w in nodes(v):
+                        if (v, w) not in ignore_edges \
+                            and (w, v) not in ignore_edges \
+                                and (v, w) in force_edges and (w, v) in force_edges:
                                     yield w
-                    else:
-                        for w in nodes(v):
-                            if (v, w) not in ignore_edges \
-                                and (w, v) not in ignore_edges \
-                                    and (v, w) in force_edges and (w, v) in force_edges:
-                                        yield w
                 return iterate
 
             Gpred = filter_iter(Gpred)
