@@ -114,22 +114,25 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
         t = target[0] if isinstance(target, tuple) else target
         raise nx.NodeNotFound('target node %s not in graph' % t)
 
-    if weight is not None:
-        def length_func(path):
-            return sum(G.adj[u][v][weight] for (u, v) in zip(path, path[1:]))
-        shortest_path_func = _bidirectional_dijkstra
-    elif not hashes:
-        length_func = len
-        shortest_path_func = _bidirectional_shortest_path
-    else:
-        length_func = len
-        if strict_hash_filtering:
+    if hashes:
+        if strict_mesh_id_filtering:
             shortest_path_func = _bidirectional_shortest_path
         else:
             shortest_path_func = _bidirectional_dijkstra
+    else:
+        if weight is None:
+            shortest_path_func = _bidirectional_shortest_path
+        else:
+            def shortest_path_func(G, source, target, ignore_nodes, ignore_edges,
+                                   weight, force_edges):
+                return simple_paths._bidirectional_dijkstra(G, source, target,
+                                                            ignore_nodes=ignore_nodes,
+                                                            ignore_edges=ignore_edges,
+                                                            weight=weight)
+
 
     edge_by_hash = G.graph['edge_by_hash']
-    allowed_edges = {edge_by_hash.get(h, None) for h in hashes if h in edge_by_hash.keys()}
+    allowed_edges = {edge_by_hash[h] for h in hashes if h in edge_by_hash.keys()}
 
     culled_ignored_nodes = set() if ignore_nodes is None else set(ignore_nodes)
     culled_ignored_edges = set() if ignore_edges is None else set(ignore_edges)
@@ -170,6 +173,8 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                     rcvd_ignore_values[0])
                 culled_ignored_edges = culled_ignored_edges.union(
                     rcvd_ignore_values[1])
+            else:
+                break
             listA.append(path)
             prev_path = path
         else:
@@ -694,7 +699,7 @@ def _bidirectional_dijkstra(G, source, target, weight='weight',
        edges to ignore, optional
 
     force_edges : list
-        list specifying (if not empty) allowed edges
+       accepted for convenience and will be ignored
 
     Returns
     -------
@@ -734,8 +739,14 @@ def _bidirectional_dijkstra(G, source, target, weight='weight',
     shortest_path
     shortest_path_length
     """
-    if ignore_nodes and (source in ignore_nodes or target in ignore_nodes):
-        raise nx.NetworkXNoPath("No path between %s and %s." % (source, target))
+    if ignore_nodes:
+        if source in ignore_nodes or target in ignore_nodes:
+            raise nx.NetworkXNoPath("No path between %s and %s." % (source, target))
+    else:
+        ignore_nodes = []
+    if ignore_edges is None:
+        ignore_edges = []
+
     if source == target:
         return (0, [source])
 
