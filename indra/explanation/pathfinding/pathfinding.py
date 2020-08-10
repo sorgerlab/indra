@@ -358,7 +358,7 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
             break
 
 
-def get_path_iter(graph, source, target, path_length, loop):
+def get_path_iter(graph, source, target, path_length, loop, dummy_target):
     """Return a generator of paths with path_length cutoff from source to
     target."""
     path_iter = nx.all_simple_paths(graph, source, target, path_length)
@@ -366,7 +366,8 @@ def get_path_iter(graph, source, target, path_length, loop):
         for p in path_iter:
             path = deepcopy(p)
             # Remove common target from a path.
-            path.remove(target)
+            if dummy_target:
+                path.remove(target)
             if loop:
                 path.append(path[0])
             # A path should contain at least one edge
