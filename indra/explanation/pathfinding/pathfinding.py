@@ -118,7 +118,11 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
         if strict_mesh_id_filtering:
             shortest_path_func = _bidirectional_shortest_path
         else:
-            shortest_path_func = _bidirectional_dijkstra
+            def shortest_path_func(G, source, target, ignore_nodes, ignore_edges,
+                                   weight, force_edges):
+                return _bidirectional_dijkstra(G, source, target, ignore_nodes,
+                                               ignore_edges, weight, hashes=hashes)
+
     else:
         if weight is None:
             shortest_path_func = _bidirectional_shortest_path
@@ -669,7 +673,7 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
 
 
 def _bidirectional_dijkstra(G, source, target, weight='weight',
-                            ignore_nodes=None, ignore_edges=None, force_edges=None):
+                            ignore_nodes=None, ignore_edges=None, hashes=None):
     """Dijkstra's algorithm for shortest paths using bidirectional search.
 
     This function returns the shortest path between source and target
@@ -771,7 +775,7 @@ def _bidirectional_dijkstra(G, source, target, weight='weight',
         Gsucc = filter_iter(Gsucc)
 
     # support optional edges filter
-    if ignore_edges or force_edges:
+    if ignore_edges:
         if G.is_directed():
             def filter_pred_iter(pred_iter):
                 def iterate(v):
@@ -839,23 +843,21 @@ def _bidirectional_dijkstra(G, source, target, weight='weight',
             return (finaldist, finalpath)
 
         for w in neighs[dir](v):
-            if force_edges:
-                def edge_weight(u, v):
-                    return 1
-                if(dir == 0):  # forward
-                    minweight = edge_weight(v, w)
-                    vwLength = dists[dir][v] + minweight
-                else:  # back, must remember to change v,w->w,v
-                    minweight = edge_weight(w, v)
-                    vwLength = dists[dir][v] + minweight
-            else:
-                if(dir == 0):  # forward
-                    minweight = G[v][w].get(weight, 1)
-                    vwLength = dists[dir][v] + minweight
-                else:  # back, must remember to change v,w->w,v
-                    minweight = G[w][v].get(weight, 1)
-                    vwLength = dists[dir][v] + minweight
+            def edge_weight(u, v):
+                n_hashes = sum(1 for s in G.get_edge_data(u, v)['statements']
+                              if s['stmt_hash'] in hashes)
+                if n_hashes == 0:
+                    return 4
+                ret = float(n_hashes + 2) / n_hashes
+                return ret
 
+            if(dir == 0):  # forward
+                minweight = edge_weight(v, w)
+                vwLength = dists[dir][v] + minweight
+            else:  # back, must remember to change v,w->w,v
+                minweight = edge_weight(w, v)
+                vwLength = dists[dir][v] + minweight
+        
             if w in dists[dir]:
                 if vwLength < dists[dir][w]:
                     raise ValueError(
