@@ -118,25 +118,30 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
         if strict_mesh_id_filtering:
             shortest_path_func = _bidirectional_shortest_path
         else:
-            def shortest_path_func(G, source, target, ignore_nodes, ignore_edges,
-                                   weight, force_edges):
-                return _bidirectional_dijkstra(G, source, target, ignore_nodes,
-                                               ignore_edges, weight, hashes=hashes)
+            def shortest_path_func(G, source, target, weight, ignore_nodes, ignore_edges,
+                                   force_edges):
+                
+                return simple_paths._bidirectional_dijkstra(G, source, target, weight, 
+                                                            ignore_nodes, ignore_edges)
 
     else:
         if weight is None:
             shortest_path_func = _bidirectional_shortest_path
         else:
-            def shortest_path_func(G, source, target, ignore_nodes, ignore_edges,
-                                   weight, force_edges):
-                return simple_paths._bidirectional_dijkstra(G, source, target,
-                                                            ignore_nodes=ignore_nodes,
-                                                            ignore_edges=ignore_edges,
-                                                            weight=weight)
+            def shortest_path_func(G, source, target, weight, ignore_nodes, ignore_edges,
+                                   force_edges):
+                return simple_paths._bidirectional_dijkstra(G, source, target, weight,
+                                                            ignore_nodes, ignore_edges)
 
 
     edge_by_hash = G.graph['edge_by_hash']
-    allowed_edges = {edge_by_hash[h] for h in hashes if h in edge_by_hash.keys()}
+    allowed_edges = [edge_by_hash[h] for h in hashes if h in edge_by_hash.keys()]
+    if hashes and not strict_mesh_id_filtering:
+        allowed_edges_ctr = Counter(allowed_edges)
+        for u, v, d in G.edges(data=True):
+            d['weight'] = 1
+        for (u, v), n_hashes in shortest_path_func.allowed_edges_ctr.items():
+            G[u][v]['weight'] = 2 / float(n_hashes + 2)
 
     culled_ignored_nodes = set() if ignore_nodes is None else set(ignore_nodes)
     culled_ignored_edges = set() if ignore_edges is None else set(ignore_edges)
@@ -672,32 +677,6 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
     raise nx.NetworkXNoPath("No path between %s and %s." % (source, target))
 
 
-def _bidirectional_dijkstra(G, source, target, weight='weight',
-                            ignore_nodes=None, ignore_edges=None, hashes=None):
-    """Dijkstra's algorithm for shortest paths using bidirectional search.
-
-    This function returns the shortest path between source and target
-    ignoring nodes and edges in the containers ignore_nodes and
-    ignore_edges.
-
-    This is a custom modification of the standard Dijkstra bidirectional
-    shortest path implementation at networkx.algorithms.weighted
-
-    Parameters
-    ----------
-    G : NetworkX graph
-
-    source : node
-       Starting node.
-
-    target : node
-       Ending node.
-
-    weight: string, optional (default='weight')
-       Edge data key corresponding to the edge weight
-
-    ignore_nodes : container of nodes
-       nodes to ignore, optional
 
     ignore_edges : container of edges
        edges to ignore, optional
