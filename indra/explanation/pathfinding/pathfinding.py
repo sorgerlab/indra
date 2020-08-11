@@ -13,6 +13,8 @@ from itertools import count
 
 from .util import get_sorted_neighbors
 
+from collections import Counter
+
 logger = logging.getLogger(__name__)
 
 
@@ -140,7 +142,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
         allowed_edges_ctr = Counter(allowed_edges)
         for u, v, d in G.edges(data=True):
             d['weight'] = 1
-        for (u, v), n_hashes in shortest_path_func.allowed_edges_ctr.items():
+        for (u, v), n_hashes in allowed_edges_ctr.items():
             G[u][v]['weight'] = 2 / float(n_hashes + 2)
 
     culled_ignored_nodes = set() if ignore_nodes is None else set(ignore_nodes)
@@ -674,185 +676,4 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
                         # found path
                         return pred, succ, w
 
-    raise nx.NetworkXNoPath("No path between %s and %s." % (source, target))
-
-
-
-    ignore_edges : container of edges
-       edges to ignore, optional
-
-    force_edges : list
-       accepted for convenience and will be ignored
-
-    Returns
-    -------
-    length : number
-        Shortest path length.
-
-    Returns a tuple of two dictionaries keyed by node.
-    The first dictionary stores distance from the source.
-    The second stores the path from the source to that node.
-
-    Raises
-    ------
-    NetworkXNoPath
-        If no path exists between source and target.
-
-    Notes
-    -----
-    Edge weight attributes must be numerical.
-    Distances are calculated as sums of weighted edges traversed.
-
-    In practice  bidirectional Dijkstra is much more than twice as fast as
-    ordinary Dijkstra.
-
-    Ordinary Dijkstra expands nodes in a sphere-like manner from the
-    source. The radius of this sphere will eventually be the length
-    of the shortest path. Bidirectional Dijkstra will expand nodes
-    from both the source and the target, making two spheres of half
-    this radius. Volume of the first sphere is pi*r*r while the
-    others are 2*pi*r/2*r/2, making up half the volume.
-
-    This algorithm is not guaranteed to work if edge weights
-    are negative or are floating point numbers
-    (overflows and roundoff errors can cause problems).
-
-    See Also
-    --------
-    shortest_path
-    shortest_path_length
-    """
-    if ignore_nodes:
-        if source in ignore_nodes or target in ignore_nodes:
-            raise nx.NetworkXNoPath("No path between %s and %s." % (source, target))
-    else:
-        ignore_nodes = []
-    if ignore_edges is None:
-        ignore_edges = []
-
-    if source == target:
-        return (0, [source])
-
-    # handle either directed or undirected
-    if G.is_directed():
-        Gpred = G.predecessors
-        Gsucc = G.successors
-    else:
-        Gpred = G.neighbors
-        Gsucc = G.neighbors
-
-    # support optional nodes filter
-    if ignore_nodes:
-        def filter_iter(nodes):
-            def iterate(v):
-                for w in nodes(v):
-                    if w not in ignore_nodes:
-                        yield w
-            return iterate
-
-        Gpred = filter_iter(Gpred)
-        Gsucc = filter_iter(Gsucc)
-
-    # support optional edges filter
-    if ignore_edges:
-        if G.is_directed():
-            def filter_pred_iter(pred_iter):
-                def iterate(v):
-                    for w in pred_iter(v):
-                        if (w, v) not in ignore_edges and (w, v) in force_edges:
-                            yield w
-                return iterate
-
-            def filter_succ_iter(succ_iter):
-                def iterate(v):
-                    for w in succ_iter(v):
-                        if (v, w) not in ignore_edges and (v, w) in force_edges:
-                            yield w
-                return iterate
-
-            Gpred = filter_pred_iter(Gpred)
-            Gsucc = filter_succ_iter(Gsucc)
-
-        else:
-            def filter_iter(nodes):
-                def iterate(v):
-                    for w in nodes(v):
-                        if (v, w) not in ignore_edges \
-                            and (w, v) not in ignore_edges \
-                                and (v, w) in force_edges and (w, v) in force_edges:
-                                    yield w
-                return iterate
-
-            Gpred = filter_iter(Gpred)
-            Gsucc = filter_iter(Gsucc)
-
-    push = heappush
-    pop = heappop
-    # Init:   Forward             Backward
-    dists = [{},                {}]  # dictionary of final distances
-    paths = [{source: [source]}, {target: [target]}]  # dictionary of paths
-    fringe = [[],                []]  # heap of (distance, node) tuples for
-    # extracting next node to expand
-    seen = [{source: 0},        {target: 0}]  # dictionary of distances to
-    # nodes seen
-    c = count()
-    # initialize fringe heap
-    push(fringe[0], (0, next(c), source))
-    push(fringe[1], (0, next(c), target))
-    # neighs for extracting correct neighbor information
-    neighs = [Gsucc, Gpred]
-    # variables to hold shortest discovered path
-    #finaldist = 1e30000
-    finalpath = []
-    dir = 1
-    while fringe[0] and fringe[1]:
-        # choose direction
-        # dir == 0 is forward direction and dir == 1 is back
-        dir = 1 - dir
-        # extract closest to expand
-        (dist, _, v) = pop(fringe[dir])
-        if v in dists[dir]:
-            # Shortest path to v has already been found
-            continue
-        # update distance
-        dists[dir][v] = dist  # equal to seen[dir][v]
-        if v in dists[1 - dir]:
-            # if we have scanned v in both directions we are done
-            # we have now discovered the shortest path
-            return (finaldist, finalpath)
-
-        for w in neighs[dir](v):
-            def edge_weight(u, v):
-                n_hashes = sum(1 for s in G.get_edge_data(u, v)['statements']
-                              if s['stmt_hash'] in hashes)
-                if n_hashes == 0:
-                    return 4
-                ret = float(n_hashes + 2) / n_hashes
-                return ret
-
-            if(dir == 0):  # forward
-                minweight = edge_weight(v, w)
-                vwLength = dists[dir][v] + minweight
-            else:  # back, must remember to change v,w->w,v
-                minweight = edge_weight(w, v)
-                vwLength = dists[dir][v] + minweight
-        
-            if w in dists[dir]:
-                if vwLength < dists[dir][w]:
-                    raise ValueError(
-                        "Contradictory paths found: negative weights?")
-            elif w not in seen[dir] or vwLength < seen[dir][w]:
-                # relaxing
-                seen[dir][w] = vwLength
-                push(fringe[dir], (vwLength, next(c), w))
-                paths[dir][w] = paths[dir][v] + [w]
-                if w in seen[0] and w in seen[1]:
-                    # see if this path is better than than the already
-                    # discovered shortest path
-                    totaldist = seen[0][w] + seen[1][w]
-                    if finalpath == [] or finaldist > totaldist:
-                        finaldist = totaldist
-                        revpath = paths[1][w][:]
-                        revpath.reverse()
-                        finalpath = paths[0][w] + revpath[1:]
     raise nx.NetworkXNoPath("No path between %s and %s." % (source, target))
