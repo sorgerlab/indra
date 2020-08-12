@@ -139,6 +139,8 @@ class PysbModelChecker(ModelChecker):
                 obs_list.append(obs_name)
                 try:
                     self.model.add_component(obj_obs)
+                    self.model.add_annotation(
+                        Annotation(obs_name, agent.name, 'from_indra_agent'))
                 except ComponentDuplicateNameError as e:
                     pass
             return obs_list
