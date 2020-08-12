@@ -8,12 +8,13 @@ import kappy
 import itertools
 import numpy as np
 import networkx as nx
-from pysb import WILD, export, Observable, ComponentSet
+from pysb import WILD, export, Observable, ComponentSet, Annotation
 from pysb.core import as_complex_pattern, ComponentDuplicateNameError
-from indra.explanation.reporting import stmt_from_rule
+from indra.explanation.reporting import stmt_from_rule, agent_from_obs
 from indra.statements import *
 from indra.assemblers.pysb import assembler as pa
 from indra.assemblers.pysb.kappa_util import im_json_to_graph
+from indra.statements.agent import default_ns_order
 
 from . import ModelChecker, PathResult
 from .model_checker import signed_edges_to_signed_nodes
@@ -215,7 +216,7 @@ class PysbModelChecker(ModelChecker):
         return self._im
 
     def get_graph(self, prune_im=True, prune_im_degrade=True,
-                  prune_im_subj_obj=False):
+                  prune_im_subj_obj=False, add_namespaces=False):
         """Get influence map and convert it to a graph with signed nodes."""
         if self.graph:
             return self.graph
@@ -226,9 +227,31 @@ class PysbModelChecker(ModelChecker):
             self.prune_influence_map_degrade_bind_positive(self.model_stmts)
         if prune_im_subj_obj:
             self.prune_influence_map_subj_obj()
+        if add_namespaces:
+            self.add_namespace_to_influence_map(self.model_stmts)
         self.graph = signed_edges_to_signed_nodes(
             im, prune_nodes=False, edge_signs={'pos': 1, 'neg': -1})
         return self.graph
+
+    def add_namespace_to_influence_map(self, model_stmts):
+        """Add a namespace to each node in influence map."""
+        im = self.get_im()
+        for node, data in im.nodes(data=True):
+            # Node is observable
+            if node.endswith('obs'):
+                ag = agent_from_obs(node, self.model)
+            # Node is rule
+            else:
+                stmt = stmt_from_rule(node, self.model, model_stmts)
+                agents = [ag for ag in stmt.agent_list() if ag is not None]
+                if agents:
+                    ag = agents[0]
+            if ag:
+                ns_order = default_ns_order + ['PUBCHEM', 'TEXT']
+                ns = ag.get_grounding(ns_order)[0]
+                data['ns'] = ns
+            else:
+                logger.warning('Could not get grounding for %s' % node)
 
     def process_statement(self, stmt):
         self.get_im()
