@@ -4,7 +4,7 @@ from nose.plugins.attrib import attr
 
 
 @attr('webservice')
-def test_get_ids():
+def test_get_ids1():
     time.sleep(0.5)
     ids = pubmed_client.get_ids('braf', retmax=10, db='pubmed')
     assert len(ids) == 10
@@ -18,7 +18,7 @@ def test_get_no_ids():
 
 
 @attr('webservice')
-def test_get_ids():
+def test_get_ids2():
     time.sleep(0.5)
     ids1 = pubmed_client.get_ids('JUN', use_text_word=False)
     ids2 = pubmed_client.get_ids('JUN', use_text_word=True)
