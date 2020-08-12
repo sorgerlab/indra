@@ -189,8 +189,6 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                     rcvd_ignore_values[0])
                 culled_ignored_edges = culled_ignored_edges.union(
                     rcvd_ignore_values[1])
-            else:
-                break
             listA.append(path)
             prev_path = path
         else:
