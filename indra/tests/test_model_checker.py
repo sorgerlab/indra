@@ -1269,6 +1269,32 @@ def test_prune_influence_map_degrade_bind():
     assert len(im.edges()) == 2, im.edges()
 
 
+def test_add_namespaces():
+    a = Agent('a', db_refs={'HGNC': '1'})
+    b = Agent('b', db_refs={'CHEBI': '2'})
+    c = Agent('c', db_refs={'GO': '3'})
+    d = Agent('d', db_refs={'HGNC': '4'})
+    stmts = [Activation(a, b), Inhibition(b, c), IncreaseAmount(a, c),
+             DecreaseAmount(c, d)]
+    pa = PysbAssembler(stmts)
+    model = pa.make_model()
+    mc = PysbModelChecker(
+        model, statements=[IncreaseAmount(a, d)], model_stmts=stmts)
+    mc.get_graph(add_namespaces=True)
+    im = mc.get_im()
+    # All nodes have ns
+    assert {'a_activates_b_activity', 'a_produces_c', 'd__obs',
+            'b_deactivates_c_activity', 'c_degrades_d'} == set(im.nodes)
+    for n, data in im.nodes(data=True):
+        assert data.get('ns')
+        if n in ['a_activates_b_activity', 'a_produces_c', 'd__obs']:
+            assert data['ns'] =='HGNC'
+        elif n == 'b_deactivates_c_activity':
+            assert data['ns'] == 'CHEBI'
+        elif n == 'c_degrades_d':
+            assert data['ns'] == 'GO'
+
+
 @unittest.skip('Skip sampling tests for now')
 def test_weighted_sampling1():
     """Test sampling with different path lengths but no data."""

@@ -237,15 +237,17 @@ class PysbModelChecker(ModelChecker):
         """Add a namespace to each node in influence map."""
         im = self.get_im()
         for node, data in im.nodes(data=True):
+            ag = None
             # Node is observable
             if node.endswith('obs'):
                 ag = agent_from_obs(node, self.model)
             # Node is rule
             else:
                 stmt = stmt_from_rule(node, self.model, model_stmts)
-                agents = [ag for ag in stmt.agent_list() if ag is not None]
-                if agents:
-                    ag = agents[0]
+                if stmt:
+                    agents = [ag for ag in stmt.agent_list() if ag is not None]
+                    if agents:
+                        ag = agents[0]
             if ag:
                 ns_order = default_ns_order + ['PUBCHEM', 'TEXT']
                 ns = ag.get_grounding(ns_order)[0]
