@@ -196,6 +196,11 @@ def get_ids_for_mesh(mesh_id, major_topic=False, **kwargs):
     suffix = 'majr' if major_topic else 'mh'
     search_term = '%s [%s]' % (mesh_name, suffix)
     ids = get_ids(search_term, use_text_word=False, **kwargs)
+    if mesh_id.startswith('C') and not major_topic:
+        # Get pmids for supplementary concepts as well
+        search_term = '%s [nm]' % mesh_name
+        ids2 = get_ids(search_term, use_text_word=False, **kwargs)
+        ids = list(set(ids) | set(ids2))
     return ids
 
 
