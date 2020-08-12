@@ -373,7 +373,7 @@ def bfs_search_multiple_nodes(g, source_nodes, path_limit=None, **kwargs):
             break
 
 
-def get_path_iter(graph, source, target, path_length, loop):
+def get_path_iter(graph, source, target, path_length, loop, dummy_target):
     """Return a generator of paths with path_length cutoff from source to
     target."""
     path_iter = nx.all_simple_paths(graph, source, target, path_length)
