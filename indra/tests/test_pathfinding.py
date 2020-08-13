@@ -50,7 +50,6 @@ def _digraph_setup():
         all_ns.add(e[1][0].lower())
     edge_by_hash = {
         'HASH1': [
-            ('A3', 'B2'),
             ('A4', 'B2'),
             ('A1', 'B1'),
             ('B1', 'C1'),
@@ -282,15 +281,16 @@ def test_bfs_multiple_nodes():
 
 
 def test_shortest_simple_paths_strict_mesh_id_filtering():
-    dg = _setup_signed_graph()[0]
-    dg.add_edge('A2', 'B3', belief=0.7, weight=-np.log(0.7))
-    dg.add_edge('B3', 'B1', belief=0.7, weight=-np.log(0.7))
-    dg.graph['edge_by_hash']['HASH1'] += [('A2', 'B3'), ('B3', 'B1')]
+    G = _setup_unsigned_graph()[0]
+    G.add_edge('A2', 'B3', belief=0.7, weight=-np.log(0.7))
+    G.add_edge('B3', 'B1', belief=0.7, weight=-np.log(0.7))
+    G.graph['edge_by_hash']['HASH1'] += [('A2', 'B3'), ('B3', 'B1')]
     
     def count_paths(source, target, hashes):
         try:
-            paths = [p for p in shortest_simple_paths(dg, source, target, 
+            paths = [p for p in shortest_simple_paths(G, source, target, 
                                                       hashes=hashes, 
+                                                      weight='weight',
                                                       strict_mesh_id_filtering=True)]
             return len(paths)
         except nx.NetworkXNoPath:
@@ -315,3 +315,18 @@ def test_shortest_simple_paths_strict_mesh_id_filtering():
     assert count_paths('A1', 'C1', ['HASH1', 'HASH2']) == 1
     assert count_paths('A2', 'C1', ['HASH1', 'HASH2']) == 3
     assert count_paths('A2', 'D1', ['HASH1', 'HASH2']) == 0
+
+
+def test_shortest_simple_paths_weighed_by_mesh_ids():
+    G = _setup_unsigned_graph()[0]
+    G.add_edge('A3', 'B1', belief=0.7, weight=-np.log(0.7))
+    G.graph['edge_by_hash']['HASH1'].append(('A3', 'B1'))
+    source = 'A3'
+    target = 'C1'
+    paths = list(shortest_simple_paths(G, source, target, hashes=['HASH1']))
+    print(paths)
+    assert paths == [['A3', 'B1', 'C1'], ['A3', 'B2', 'C1']]
+    paths = list(shortest_simple_paths(G, source, target, hashes=['HASH2']))
+    assert paths == [['A3', 'B2', 'C1'], ['A3', 'B1', 'C1']]
+    paths = list(shortest_simple_paths(G, source, target, hashes=['HASH1', 'HASH2']))
+    assert paths == [['A3', 'B1', 'C1'], ['A3', 'B2', 'C1']]
