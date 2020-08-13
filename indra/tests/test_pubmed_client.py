@@ -4,7 +4,7 @@ from nose.plugins.attrib import attr
 
 
 @attr('webservice')
-def test_get_ids():
+def test_get_ids1():
     time.sleep(0.5)
     ids = pubmed_client.get_ids('braf', retmax=10, db='pubmed')
     assert len(ids) == 10
@@ -18,7 +18,7 @@ def test_get_no_ids():
 
 
 @attr('webservice')
-def test_get_ids():
+def test_get_ids2():
     time.sleep(0.5)
     ids1 = pubmed_client.get_ids('JUN', use_text_word=False)
     ids2 = pubmed_client.get_ids('JUN', use_text_word=True)
@@ -41,6 +41,13 @@ def test_get_id_mesh():
     assert len(ids) > 35000
     ids_maj = pubmed_client.get_ids_for_mesh('D009101', major_topic=True)
     assert len(ids_maj) < len(ids)
+
+
+@attr('webservice')
+def test_get_id_mesh_supc():
+    time.sleep(0.5)
+    ids = pubmed_client.get_ids_for_mesh('C000657245')
+    assert len(ids) > 15000
 
 
 @attr('webservice')

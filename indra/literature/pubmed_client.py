@@ -6,7 +6,6 @@ import requests
 import logging
 from functools import lru_cache
 from time import sleep
-from indra.databases import hgnc_client, mesh_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger(__name__)
@@ -145,7 +144,7 @@ def get_ids_for_gene(hgnc_name, **kwargs):
         (using the hgnc_client module) and in turn used to obtain the Entrez
         ID associated with the gene. Entrez is then queried for that ID.
     """
-
+    from indra.databases import hgnc_client
     # Get the HGNC ID for the HGNC name
     hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
     if hgnc_id is None:
@@ -189,6 +188,7 @@ def get_ids_for_mesh(mesh_id, major_topic=False, **kwargs):
         Any further PudMed search arguments that are passed to
         get_ids.
     """
+    from indra.databases import mesh_client
     mesh_name = mesh_client.get_mesh_name(mesh_id)
     if not mesh_name:
         logger.error('Could not get MeSH name for ID %s' % mesh_id)
@@ -196,6 +196,11 @@ def get_ids_for_mesh(mesh_id, major_topic=False, **kwargs):
     suffix = 'majr' if major_topic else 'mh'
     search_term = '%s [%s]' % (mesh_name, suffix)
     ids = get_ids(search_term, use_text_word=False, **kwargs)
+    if mesh_id.startswith('C') and not major_topic:
+        # Get pmids for supplementary concepts as well
+        search_term = '%s [nm]' % mesh_name
+        ids2 = get_ids(search_term, use_text_word=False, **kwargs)
+        ids = list(set(ids) | set(ids2))
     return ids
 
 
