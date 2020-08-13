@@ -59,6 +59,7 @@ def _digraph_setup():
             ('B1', 'C1'),
             ('A2', 'B1'),
             ('A3', 'B2'),
+            ('A4', 'B2'),
         ]
     }
 
@@ -328,3 +329,52 @@ def test_shortest_simple_paths_weighed_by_mesh_ids():
     assert paths == [['A3', 'B2', 'C1'], ['A3', 'B1', 'C1']]
     paths = list(shortest_simple_paths(G, source, target, hashes=['HASH1', 'HASH2']))
     assert paths == [['A3', 'B1', 'C1'], ['A3', 'B2', 'C1']]
+
+
+def test_bfs_strict_mesh_id_filtering():
+    dg = _setup_unsigned_graph()[0]
+
+    paths = [p for p in bfs_search(dg, 'C1', depth_limit=6, reverse=True, 
+                                   strict_mesh_id_filtering=True, hashes=[])]
+                                   
+    expected = {('C1', 'B3'), 
+                ('C1', 'B2'), 
+                ('C1', 'B2', 'A3'), 
+                ('C1', 'B2', 'A4'), 
+                ('C1', 'B1'), 
+                ('C1', 'B1', 'A2'),
+                ('C1', 'B1', 'A1'),
+                ('C1', 'B1', 'A1', 'Z1')}
+    assert len(paths) == 8
+    assert set(paths) == expected
+    
+    paths = [p for p in bfs_search(dg, 'C1', depth_limit=6, reverse=True, 
+                                   strict_mesh_id_filtering=True, hashes=['HASH1'])]
+    expected = {('C1', 'B3'),
+                ('C1', 'B1'),
+                ('C1', 'B1', 'A1')}
+    assert len(paths) == 3
+    assert set(paths) == expected
+
+    paths = [p for p in bfs_search(dg, 'C1', depth_limit=6, reverse=True,
+                                   strict_mesh_id_filtering=True, hashes=['HASH2'])]
+    expected = {('C1', 'B2'),
+                ('C1', 'B2', 'A3'),
+                ('C1', 'B2', 'A4'),
+                ('C1', 'B1'),
+                ('C1', 'B1', 'A2')}
+    assert len(paths) == 5
+    assert set(paths) == expected
+
+    paths = [p for p in bfs_search(dg, 'C1', depth_limit=6, reverse=True,
+                                   strict_mesh_id_filtering=True,
+                                   hashes=['HASH1', 'HASH2'])]
+    expected = {('C1', 'B3'),
+                ('C1', 'B2'),
+                ('C1', 'B2', 'A3'),
+                ('C1', 'B2', 'A4'),
+                ('C1', 'B1'),
+                ('C1', 'B1', 'A2'),
+                ('C1', 'B1', 'A1')}
+    assert len(paths) == 7
+    assert set(paths) == expected
