@@ -130,8 +130,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                                                             ignore_nodes, ignore_edges)
     else:
         if weight is None:
-            def length_func(path):
--                return sum(G.adj[u][v][weight] for (u, v) in zip(path, path[1:]))
+            length_func = len
             shortest_path_func = _bidirectional_shortest_path
         else:
             def length_func(path):
@@ -141,19 +140,17 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                 return simple_paths._bidirectional_dijkstra(G, source, target, weight,
                                                             ignore_nodes, ignore_edges)
 
-
     edge_by_hash = G.graph['edge_by_hash']
-    allowed_edges = set()
+    allowed_edges = []
     if hashes:
         for h in hashes:
             if h in edge_by_hash:
-                allowed_edges = allowed_edges.union(edge_by_hash[h])
+                allowed_edges += edge_by_hash[h]
         if not strict_mesh_id_filtering:
             allowed_edges_ctr = Counter(allowed_edges)
             for u, v, d in G.edges(data=True):
                 d['weight'] = 1
             for (u, v), n_hashes in allowed_edges_ctr.items():
-                print(u + ' ' + v + ': ' + str(G[u][v]['weight']))
                 G[u][v]['weight'] = 2 / float(n_hashes + 2)
 
     culled_ignored_nodes = set() if ignore_nodes is None else set(ignore_nodes)
