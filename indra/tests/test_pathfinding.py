@@ -48,12 +48,27 @@ def _digraph_setup():
     for e in edges:
         all_ns.add(e[0][0].lower())
         all_ns.add(e[1][0].lower())
+    edge_by_hash = {
+        'HASH1': [
+            ('A3', 'B2'),
+            ('A4', 'B2'),
+            ('A1', 'B1'),
+            ('B1', 'C1'),
+            ('B3', 'C1'),
+        ],
+        'HASH2': [
+            ('A4', 'B2'),
+            ('B2', 'C1'),
+            ('B1', 'C1'),
+            ('A2', 'B1'),
+        ]
+    }
 
-    return edges, signed_edges, edge_beliefs, list(all_ns)
+    return edges, signed_edges, edge_beliefs, list(all_ns), edge_by_hash
 
 
 def _setup_unsigned_graph():
-    edges, signed_edges, edge_beliefs, all_ns = _digraph_setup()
+    edges, signed_edges, edge_beliefs, all_ns, edge_by_hash = _digraph_setup()
     dg = nx.DiGraph()
     dg.add_edges_from(edges)
 
@@ -61,6 +76,9 @@ def _setup_unsigned_graph():
     for e in dg.edges:
         dg.edges[e]['belief'] = edge_beliefs[e]
         dg.edges[e]['weight'] = -np.log(edge_beliefs[e], dtype=np.longfloat)
+    
+    # Add edge_by_hash
+    dg.graph['edge_by_hash'] = edge_by_hash
 
     # Add namespaces
     nodes1, nodes2 = list(zip(*edges))
@@ -74,7 +92,7 @@ def _setup_unsigned_graph():
 
 
 def _setup_signed_graph():
-    edges, signed_edges, edge_beliefs, all_ns = _digraph_setup()
+    edges, signed_edges, edge_beliefs, all_ns, edge_by_hash = _digraph_setup()
     seg = nx.MultiDiGraph()
 
     seg.add_edges_from(signed_edges)
@@ -91,6 +109,9 @@ def _setup_signed_graph():
                                        copy_edge_data=True)
     for u, v in sng.edges:
         sng.edges[(u, v)]['weight'] = -np.log(sng.edges[(u, v)]['belief'])
+    
+    seg.graph['edge_by_hash'] = edge_by_hash
+    sng.graph['edge_by_hash'] = edge_by_hash
 
     return seg, sng, all_ns
 
@@ -256,4 +277,41 @@ def test_bfs_multiple_nodes():
     assert len(paths) == 9, len(paths)
     paths = [p for p in bfs_search_multiple_nodes(
         dg, ['C1', 'D1'], depth_limit=2, reverse=True, path_limit=5)]
+    print(len(paths))
     assert len(paths) == 5, len(paths)
+
+
+def test_shortest_simple_paths_strict_mesh_id_filtering():
+    dg = _setup_signed_graph()[0]
+    dg.add_edge('A2', 'B3', belief=0.7, weight=-np.log(0.7))
+    dg.add_edge('B3', 'B1', belief=0.7, weight=-np.log(0.7))
+    dg.graph['edge_by_hash']['HASH1'] += [('A2', 'B3'), ('B3', 'B1')]
+    
+    def count_paths(source, target, hashes):
+        try:
+            paths = [p for p in shortest_simple_paths(dg, source, target, 
+                                                      hashes=hashes, 
+                                                      strict_mesh_id_filtering=True)]
+            return len(paths)
+        except nx.NetworkXNoPath:
+            return 0
+
+    assert count_paths('Z1', 'C1', []) == 1
+    assert count_paths('A1', 'C1', []) == 1
+    assert count_paths('A2', 'C1', []) == 3
+    assert count_paths('A2', 'D1', []) == 3
+
+    assert count_paths('Z1', 'C1', ['HASH1']) == 0
+    assert count_paths('A1', 'C1', ['HASH1']) == 1
+    assert count_paths('A2', 'C1', ['HASH1']) == 2
+    assert count_paths('A2', 'D1', ['HASH1']) == 0
+    
+    assert count_paths('Z1', 'C1', ['HASH2']) == 0
+    assert count_paths('A1', 'C1', ['HASH2']) == 0
+    assert count_paths('A2', 'C1', ['HASH2']) == 1
+    assert count_paths('A2', 'D1', ['HASH2']) == 0
+
+    assert count_paths('Z1', 'C1', ['HASH1', 'HASH2']) == 0
+    assert count_paths('A1', 'C1', ['HASH1', 'HASH2']) == 1
+    assert count_paths('A2', 'C1', ['HASH1', 'HASH2']) == 3
+    assert count_paths('A2', 'D1', ['HASH1', 'HASH2']) == 0
