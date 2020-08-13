@@ -142,13 +142,17 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 
 
     edge_by_hash = G.graph['edge_by_hash']
-    allowed_edges = [edge_by_hash[h] for h in hashes if h in edge_by_hash.keys()]
-    if hashes and not strict_mesh_id_filtering:
-        allowed_edges_ctr = Counter(allowed_edges)
-        for u, v, d in G.edges(data=True):
-            d['weight'] = 1
-        for (u, v), n_hashes in allowed_edges_ctr.items():
-            G[u][v]['weight'] = 2 / float(n_hashes + 2)
+    allowed_edges = set()
+    if hashes:
+        for h in hashes:
+            if h in edge_by_hash:
+                allowed_edges = allowed_edges.union(edge_by_hash[h])
+        if not strict_mesh_id_filtering:
+            allowed_edges_ctr = Counter(allowed_edges)
+            for u, v, d in G.edges(data=True):
+                d['weight'] = 1
+            for (u, v), n_hashes in allowed_edges_ctr.items():
+                G[u][v]['weight'] = 2 / float(n_hashes + 2)
 
     culled_ignored_nodes = set() if ignore_nodes is None else set(ignore_nodes)
     culled_ignored_edges = set() if ignore_edges is None else set(ignore_edges)
@@ -248,7 +252,10 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
     int_minus = 1
 
     edge_by_hash = g.graph['edge_by_hash']
-    allowed_edges = {edge_by_hash[h] for h in hashes if h in edge_by_hash.keys()}
+    if hashes:
+        allowed_edges = {edge_by_hash[h] for h in hashes if h in edge_by_hash}
+    else:
+        allowed_edges = {}
 
     queue = deque([(source_node,)])
     visited = ({source_node}).union(node_blacklist) \
