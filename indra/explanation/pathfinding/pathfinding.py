@@ -203,7 +203,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
                max_per_node=5, node_filter=None, node_blacklist=None,
                terminal_ns=None, sign=None, max_memory=int(2**29), hashes=None, 
-               **kwargs):
+               strict_mesh_id_filtering=False, **kwargs):
     """Do breadth first search from a given node and yield paths
 
     Parameters
@@ -251,10 +251,11 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
     int_minus = 1
 
     edge_by_hash = g.graph['edge_by_hash']
+    allowed_edges = []
     if hashes:
-        allowed_edges = {edge_by_hash[h] for h in hashes if h in edge_by_hash}
-    else:
-        allowed_edges = {}
+        for h in hashes:
+            if h in edge_by_hash:
+                allowed_edges += edge_by_hash[h]
 
     queue = deque([(source_node,)])
     visited = ({source_node}).union(node_blacklist) \
