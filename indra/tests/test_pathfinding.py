@@ -50,16 +50,15 @@ def _digraph_setup():
         all_ns.add(e[1][0].lower())
     edge_by_hash = {
         'HASH1': [
-            ('A4', 'B2'),
             ('A1', 'B1'),
             ('B1', 'C1'),
             ('B3', 'C1'),
         ],
         'HASH2': [
-            ('A4', 'B2'),
             ('B2', 'C1'),
             ('B1', 'C1'),
             ('A2', 'B1'),
+            ('A3', 'B2'),
         ]
     }
 
@@ -324,7 +323,6 @@ def test_shortest_simple_paths_weighed_by_mesh_ids():
     source = 'A3'
     target = 'C1'
     paths = list(shortest_simple_paths(G, source, target, hashes=['HASH1']))
-    print(paths)
     assert paths == [['A3', 'B1', 'C1'], ['A3', 'B2', 'C1']]
     paths = list(shortest_simple_paths(G, source, target, hashes=['HASH2']))
     assert paths == [['A3', 'B2', 'C1'], ['A3', 'B1', 'C1']]
