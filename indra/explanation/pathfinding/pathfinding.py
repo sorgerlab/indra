@@ -130,7 +130,8 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                                                             ignore_nodes, ignore_edges)
     else:
         if weight is None:
-            length_func = len
+            def length_func(path):
+-                return sum(G.adj[u][v][weight] for (u, v) in zip(path, path[1:]))
             shortest_path_func = _bidirectional_shortest_path
         else:
             def length_func(path):
