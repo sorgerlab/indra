@@ -140,9 +140,9 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                 return simple_paths._bidirectional_dijkstra(G, source, target, weight,
                                                             ignore_nodes, ignore_edges)
 
-    edge_by_hash = G.graph['edge_by_hash']
     allowed_edges = []
     if hashes:
+        edge_by_hash = G.graph['edge_by_hash']
         for h in hashes:
             if h in edge_by_hash:
                 allowed_edges += edge_by_hash[h]
@@ -252,7 +252,7 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
 
     edge_by_hash = g.graph['edge_by_hash']
     allowed_edges = []
-    if hashes:
+    if hashes and strict_mesh_id_filtering:
         for h in hashes:
             if h in edge_by_hash:
                 allowed_edges += edge_by_hash[h]
@@ -687,3 +687,48 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
                         return pred, succ, w
 
     raise nx.NetworkXNoPath("No path between %s and %s." % (source, target))
+
+
+def open_dijkstra_search(g, start, reverse=False, hashes=None, depth_limit=2, path_limit=None):
+    """Do Dijkstra search from a given node and yield paths
+
+    Parameters
+    ----------
+    g : nx.Digraph
+        An nx.DiGraph to search in.
+    start : node
+        Node in the graph to start from.
+    reverse : bool
+        If True go upstream from source, otherwise go downstream. Default:
+        False.
+    depth_limit : int
+        Stop when all paths with this many edges have been found. Default: 2.
+    path_limit : int
+        The maximum number of paths to return. Default: no limit.
+    hashes : list
+        List of hashes used to set edge weights
+
+    Yields
+    ------
+    path : tuple(node)
+        Paths in the bfs search starting from `source`.
+    """
+    allowed_edges = []
+    if hashes:
+        edge_by_hash = g.graph['edge_by_hash']
+        for h in hashes:
+            if h in edge_by_hash:
+                allowed_edges += edge_by_hash[h]
+        allowed_edges_ctr = Counter(allowed_edges)
+        for u, v, d in g.edges(data=True):
+            d['weight'] = 1
+        for (u, v), n_hashes in allowed_edges_ctr.items():
+            g[u][v]['weight'] = 2 / float(n_hashes + 2)
+
+    if reverse:
+        g = g.reverse(copy=False)
+
+    paths = [p for p in nx.single_source_dijkstra_path(g, start, cutoff=depth_limit).values()][1:]
+    if path_limit is not None:
+        return paths[:path_limit]
+    return tuple(paths)
