@@ -242,6 +242,63 @@ def _get_modifications():
         return res.json()
 
 
+def _get_interactions(datasets=None):
+    """
+
+    Some interesting options:
+    format: json;tab;table;text;tsv
+    datasets: dorothea;kinaseextra;ligrecextra;lncrna_mrna;mirnatarget;
+              omnipath;pathwayextra;tf_mirna;tf_target;tfregulons
+    types: lncrna_post_transcriptional;mirna_transcriptional;
+           post_transcriptional;post_translational;transcriptional
+    databases: ABS;ACSN;ARN;Adhesome;AlzPathway;Baccin2019;BioGRID;CA1;
+               CancerCellMap;CellPhoneDB;DEPOD;DIP;DOMINO;DeathDomain;
+               DoRothEA_A;DoRothEA_B;DoRothEA_C;DoRothEA_D;ELM;EMBRACE;
+               ENCODE-distal;ENCODE-proximal;ENCODE_tf-mirna;Guide2Pharma;
+               HPMR;HPRD-phos;HTRIdb;ICELLNET;InnateDB;KEA;KEGG;KEGG-MEDICUS;
+               Kirouac2010;LMPID;LRdb;Li2012;LncRNADisease;MIMP;MPPI;
+               Macrophage;MatrixDB;NRF2ome;NetPath;ORegAnno;PAZAR;PDZBase;
+               PhosphoNetworks;PhosphoPoint;PhosphoSite;PhosphoSite_noref;
+               ProtMapper;Ramilowski2015;SIGNOR;SPIKE;SignaLink3;TRIP;TransmiR;
+               Wang;dbPTM;iPTMnet;iTALK;lncrnadb;miR2Disease;miRDeathDB;
+               miRTarBase;miRecords;ncRDeathDB;phosphoELM
+    genesymbols: 0;1;no;yes
+    fields: curation_effort;databases;dorothea_chipseq;dorothea_coexp;
+            dorothea_curated;dorothea_level;dorothea_tfbs;entity_type;
+            ncbi_tax_id;organism;references;resources;sources;
+            tfregulons_chipseq;tfregulons_coexp;tfregulons_curated;
+            tfregulons_level;tfregulons_tfbs;type
+    organisms: 10090;10116;9606 (9606 is human)
+    directed: 0;1;no;yes
+    signed: 0;1;no;yes
+    entity_types: complex;lncrna;mirna;protein;small_molecule
+
+    See full list of options here:
+    https://omnipathdb.org/queries/interactions
+
+    Parameters
+    ----------
+    datasets
+        A list of dataset names
+
+    Returns
+    -------
+    dict
+        json of database request
+    """
+    interactions_url = op_url + '/interactions'
+    params = {
+        'fields': ['sources', 'references', 'type'],
+        'format': 'json',
+        'datasets': datasets or ['ligrecextra'],
+        'genesymbols': '1',
+    }
+    res = requests.get(interactions_url, params=params)
+    res.raise_for_status()
+
+    return res.json()
+
+
 def _delete_omnipath_cache(force=False):
     if not has_pypath:
         logger.warning('PyPath cache is not available: PyPath could not'
