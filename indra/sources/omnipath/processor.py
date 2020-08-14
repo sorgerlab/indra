@@ -48,15 +48,18 @@ class OmniPathProcessor(object):
             return stmt_list
 
         for lr_entry in ligrec_json:
-            agents = self._complex_agents_from_op_complex(lr_entry[
-                                                             'agent_list'])
-            evidence = Evidence(source_api='omnipath',
-                                source_id=None,
-                                pmid=lr_entry['pmid'],
-                                annotations=lr_entry['annotations'],
-                                text_refs=lr_entry['text_refs'])
-            stmt_list.append(Complex(members=agents,
-                                     evidence=evidence))
+            for source_pmid in lr_entry['references']:
+                source_id, pmid = source_pmid.split(':')
+                agents = self._complex_agents_from_op_complex(
+                    [lr_entry['source'], lr_entry['target']]
+                )
+                evidence = Evidence(source_api='omnipath',
+                                    source_id=source_id,
+                                    pmid=pmid,
+                                    annotations=None,
+                                    text_refs=None)
+                stmt_list.append(Complex(members=agents,
+                                         evidence=evidence))
 
         return stmt_list
 
