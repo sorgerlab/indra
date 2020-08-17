@@ -57,6 +57,7 @@ class OmniPathProcessor(object):
     def _stmt_from_pp_lr(self, ligrec_json):
         """Make ligand-receptor Complexes from Omnipath API interactions db"""
         ligrec_stmts = []
+        ign_annot = {'source_sub_id', 'source', 'target', 'references'}
         no_refs = 0
         if ligrec_json is None:
             return ligrec_stmts
@@ -75,13 +76,11 @@ class OmniPathProcessor(object):
             evidence = []
             for source_pmid in lr_entry['references']:
                 source_db, pmid = source_pmid.split(':')
-                evidence.append(Evidence(
-                    source_api='omnipath',
-                    source_id=source_db,
-                    pmid=pmid,
-                    annotations={k: v for k, v in lr_entry.items() if k not
-                                 in {'source', 'target', 'references'}}
-                ))
+                annot = {k: v for k, v in lr_entry.items() if k not in
+                         ign_annot}
+                annot['source_sub_id'] = source_db
+                evidence.append(Evidence(source_api='omnipath', pmid=pmid,
+                                         annotations=annot))
             ligrec_stmts.append(Complex(members=agents, evidence=evidence))
         if no_refs:
             logger.warning(f'{no_refs} entries without references were '
