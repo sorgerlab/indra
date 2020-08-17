@@ -1,7 +1,7 @@
 import requests
 from indra.sources.omnipath import OmniPathProcessor
 from indra.sources.omnipath.api import op_url
-from indra.statements import Agent, Phosphorylation, Complex
+from indra.statements import Agent
 from indra.preassembler.grounding_mapper import GroundingMapper
 
 BRAF_UPID = 'P15056'
