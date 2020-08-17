@@ -50,6 +50,10 @@ class OmniPathProcessor(object):
             if not lr_entry['references']:
                 no_refs += 1
                 continue
+            if len(lr_entry['sources']) == 1 and \
+                    lr_entry['sources'][0].lower() == 'protmapper':
+                logger.warning('Protmapper only source, skipping...')
+                continue
             agents = self._complex_agents_from_op_complex(
                 [lr_entry['source'], lr_entry['target']]
             )
