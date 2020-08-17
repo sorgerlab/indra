@@ -6,10 +6,17 @@ from indra.preassembler.grounding_mapper import GroundingMapper
 
 BRAF_UPID = 'P15056'
 JAK2_UPID = 'O60674'
+CALM1_UPID = 'P0DP23'
+TRPC3_UPID = 'Q13507'
+
 BRAF_AG = Agent(None, db_refs={'UP': BRAF_UPID})
 GroundingMapper.standardize_agent_name(BRAF_AG)
 JAK2_AG = Agent(None, db_refs={'UP': JAK2_UPID})
 GroundingMapper.standardize_agent_name(JAK2_AG)
+CALM1_AG = Agent(None, db_refs={'UP': CALM1_UPID})
+GroundingMapper.standardize_agent_name(CALM1_AG)
+TRPC3_AG = Agent(None, db_refs={'UP': TRPC3_UPID})
+GroundingMapper.standardize_agent_name(TRPC3_AG)
 
 
 def test_omnipath_web_api():
@@ -34,3 +41,20 @@ def test_mods_from_web():
         stmts[0].evidence[0].source_api
 
 
+def test_ligrec_from_web():
+    params = {'format': 'json', 'datasets': ['ligrecextra'],
+              'fields': ['curation_effort', 'entity_type', 'references',
+                         'resources', 'sources', 'type'],
+              'sources': [CALM1_UPID]}
+    query_url = '%s/interactions' % op_url
+    res = requests.get(query_url, params)
+    assert res.status_code == 200
+    assert res.text
+    assert 'error' not in res.text.lower()
+    ligrec_json = res.json()
+    assert ligrec_json[0]['source'] == CALM1_UPID
+    stmts = OmniPathProcessor(ligrec_json=ligrec_json).statements
+    assert CALM1_AG.name in [a.name for a in stmts[0].agent_list()], \
+        stmts[0].agent_list()
+    assert 'omnipath' == stmts[0].evidence[0].source_api,\
+        stmts[0].evidence[0].source_api
