@@ -56,8 +56,11 @@ class OmniPathProcessor(object):
                 evidence = Evidence(source_api='omnipath',
                                     source_id=source_id,
                                     pmid=pmid,
-                                    annotations=None,
-                                    text_refs=None)
+                                    annotations={
+                                        k: v for k, v in lr_entry.items()
+                                        if k not in {'source', 'target',
+                                                     'references'}
+                                    })
                 stmt_list.append(Complex(members=agents,
                                          evidence=evidence))
 
