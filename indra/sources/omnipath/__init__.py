@@ -1,2 +1,2 @@
-from .api import process_from_web, process_from_pypath
+from .api import process_from_web
 from .processor import OmniPathProcessor
