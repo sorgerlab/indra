@@ -68,7 +68,10 @@ def _get_interactions(datasets=None):
     Parameters
     ----------
     datasets
-        A list of dataset names
+        A list of dataset names. Options are:
+            dorothea, kinaseextra, ligrecextra, lncrna_mrna, mirnatarget,
+            omnipath, pathwayextra, tf_mirna, tf_target, tfregulons
+        Default: 'ligrecextra'
 
     Returns
     -------
@@ -77,10 +80,8 @@ def _get_interactions(datasets=None):
     """
     interactions_url = '%s/interactions' % op_url
     params = {
-        'fields': ['curation_effort', 'dorothea_chipseq', 'dorothea_coexp',
-                   'dorothea_curated', 'dorothea_level', 'dorothea_tfbs',
-                   'entity_type', 'references', 'resources', 'sources',
-                   'type'],
+        'fields': ['curation_effort', 'entity_type', 'references',
+                   'resources', 'sources', 'type'],
         'format': 'json',
         'datasets': datasets or ['ligrecextra']
     }
