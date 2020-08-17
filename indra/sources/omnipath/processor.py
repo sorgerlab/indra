@@ -40,31 +40,33 @@ class OmniPathProcessor(object):
         return ptm_stmts
 
     def _stmt_from_pp_lr(self, ligrec_json):
-        """Build Complex statements from a json containing ligand-receptor
-        interactions built from PyPath
-        """
-        stmt_list = []
+        """Make ligand-receptor Complexes from Omnipath API interactions db"""
+        ligrec_stmts = []
         if ligrec_json is None:
-            return stmt_list
+            return ligrec_stmts
 
         for lr_entry in ligrec_json:
+            if not lr_entry['references']:
+                logger.warning(f'Interaction {lr_entry["source"]}-'
+                               f'{lr_entry["target"]} does not have '
+                               f'references. Skipping...')
+                continue
+            agents = self._complex_agents_from_op_complex(
+                [lr_entry['source'], lr_entry['target']]
+            )
+            evidence = []
             for source_pmid in lr_entry['references']:
-                source_id, pmid = source_pmid.split(':')
-                agents = self._complex_agents_from_op_complex(
-                    [lr_entry['source'], lr_entry['target']]
-                )
-                evidence = Evidence(source_api='omnipath',
-                                    source_id=source_id,
-                                    pmid=pmid,
-                                    annotations={
-                                        k: v for k, v in lr_entry.items()
-                                        if k not in {'source', 'target',
-                                                     'references'}
-                                    })
-                stmt_list.append(Complex(members=agents,
-                                         evidence=evidence))
+                source_db, pmid = source_pmid.split(':')
+                evidence.append(Evidence(
+                    source_api='omnipath',
+                    source_id=source_db,
+                    pmid=pmid,
+                    annotations={k: v for k, v in lr_entry.items() if k not
+                                 in {'source', 'target', 'references'}}
+                ))
+            ligrec_stmts.append(Complex(members=agents, evidence=evidence))
 
-        return stmt_list
+        return ligrec_stmts
 
     @staticmethod
     def _agent_from_up_id(up_id):
