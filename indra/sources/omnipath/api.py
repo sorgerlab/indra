@@ -32,7 +32,7 @@ def _get_modifications():
 
 
 def _get_interactions(datasets=None):
-    """
+    """Wrapper for calling the interactions omnipath interactions API
 
     Some interesting options:
     format: json,tab,table,text,tsv
