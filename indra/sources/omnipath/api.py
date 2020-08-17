@@ -75,12 +75,14 @@ def _get_interactions(datasets=None):
     dict
         json of database request
     """
-    interactions_url = op_url + '/interactions'
+    interactions_url = '%s/interactions' % op_url
     params = {
-        'fields': ['sources', 'references', 'type'],
+        'fields': ['curation_effort', 'dorothea_chipseq', 'dorothea_coexp',
+                   'dorothea_curated', 'dorothea_level', 'dorothea_tfbs',
+                   'entity_type', 'references', 'resources', 'sources',
+                   'type'],
         'format': 'json',
-        'datasets': datasets or ['ligrecextra'],
-        'genesymbols': '1',
+        'datasets': datasets or ['ligrecextra']
     }
     res = requests.get(interactions_url, params=params)
     res.raise_for_status()
