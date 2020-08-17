@@ -129,6 +129,8 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                 return simple_paths._bidirectional_dijkstra(G, source, target, weight, 
                                                             ignore_nodes, ignore_edges)
     else:
+        if strict_mesh_id_filtering:
+            return []
         if weight is None:
             length_func = len
             shortest_path_func = _bidirectional_shortest_path
@@ -253,10 +255,13 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
 
     edge_by_hash = g.graph['edge_by_hash']
     allowed_edges = []
-    if hashes and strict_mesh_id_filtering:
-        for h in hashes:
-            if h in edge_by_hash:
-                allowed_edges.append(edge_by_hash[h])
+    if strict_mesh_id_filtering:
+        if hashes:
+            for h in hashes:
+                if h in edge_by_hash:
+                    allowed_edges.append(edge_by_hash[h])
+    else:
+        return []
 
     queue = deque([(source_node,)])
     visited = ({source_node}).union(node_blacklist) \
