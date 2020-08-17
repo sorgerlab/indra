@@ -42,14 +42,13 @@ class OmniPathProcessor(object):
     def _stmt_from_pp_lr(self, ligrec_json):
         """Make ligand-receptor Complexes from Omnipath API interactions db"""
         ligrec_stmts = []
+        no_refs = 0
         if ligrec_json is None:
             return ligrec_stmts
 
         for lr_entry in ligrec_json:
             if not lr_entry['references']:
-                logger.warning(f'Interaction {lr_entry["source"]}-'
-                               f'{lr_entry["target"]} does not have '
-                               f'references. Skipping...')
+                no_refs += 1
                 continue
             agents = self._complex_agents_from_op_complex(
                 [lr_entry['source'], lr_entry['target']]
@@ -65,6 +64,9 @@ class OmniPathProcessor(object):
                                  in {'source', 'target', 'references'}}
                 ))
             ligrec_stmts.append(Complex(members=agents, evidence=evidence))
+        if no_refs:
+            logger.warning(f'{no_refs} entries without references were '
+                           f'skipped')
 
         return ligrec_stmts
 
