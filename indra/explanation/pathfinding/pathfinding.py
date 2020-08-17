@@ -145,7 +145,8 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
         edge_by_hash = G.graph['edge_by_hash']
         for h in hashes:
             if h in edge_by_hash:
-                allowed_edges += edge_by_hash[h]
+                allowed_edges.append(edge_by_hash[h])
+
         if not strict_mesh_id_filtering:
             allowed_edges_ctr = Counter(allowed_edges)
             for u, v, d in G.edges(data=True):
@@ -255,7 +256,7 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
     if hashes and strict_mesh_id_filtering:
         for h in hashes:
             if h in edge_by_hash:
-                allowed_edges += edge_by_hash[h]
+                allowed_edges.append(edge_by_hash[h])
 
     queue = deque([(source_node,)])
     visited = ({source_node}).union(node_blacklist) \
@@ -718,7 +719,7 @@ def open_dijkstra_search(g, start, reverse=False, hashes=None, depth_limit=2, pa
         edge_by_hash = g.graph['edge_by_hash']
         for h in hashes:
             if h in edge_by_hash:
-                allowed_edges += edge_by_hash[h]
+                allowed_edges.append(edge_by_hash[h])
         allowed_edges_ctr = Counter(allowed_edges)
         for u, v, d in g.edges(data=True):
             d['weight'] = 1
