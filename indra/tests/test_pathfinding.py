@@ -50,18 +50,14 @@ def _digraph_setup():
         all_ns.add(e[0][0].lower())
         all_ns.add(e[1][0].lower())
     edge_by_hash = {
-        'HASH1': [
-            ('A1', 'B1'),
-            ('B1', 'C1'),
-            ('B3', 'C1'),
-        ],
-        'HASH2': [
-            ('B2', 'C1'),
-            ('B1', 'C1'),
-            ('A2', 'B1'),
-            ('A3', 'B2'),
-            ('A4', 'B2'),
-        ]
+            11: ('A1', 'B1'),
+            12: ('B1', 'C1'),
+            13: ('B3', 'C1'),
+            21: ('B2', 'C1'),
+            22: ('B1', 'C1'),
+            23: ('A2', 'B1'),
+            24: ('A3', 'B2'),
+            25: ('A4', 'B2'),
     }
 
     return edges, signed_edges, edge_beliefs, list(all_ns), edge_by_hash
@@ -277,7 +273,6 @@ def test_bfs_multiple_nodes():
     assert len(paths) == 9, len(paths)
     paths = [p for p in bfs_search_multiple_nodes(
         dg, ['C1', 'D1'], depth_limit=2, reverse=True, path_limit=5)]
-    print(len(paths))
     assert len(paths) == 5, len(paths)
 
 
@@ -285,14 +280,15 @@ def test_shortest_simple_paths_strict_mesh_id_filtering():
     G = _setup_unsigned_graph()[0]
     G.add_edge('A2', 'B3', belief=0.7, weight=-np.log(0.7))
     G.add_edge('B3', 'B1', belief=0.7, weight=-np.log(0.7))
-    G.graph['edge_by_hash']['HASH1'] += [('A2', 'B3'), ('B3', 'B1')]
+    G.graph['edge_by_hash'][14] = ('A2', 'B3')
+    G.graph['edge_by_hash'][15] = ('B3', 'B1')
 
     def count_paths(source, target, hashes):
         try:
-            paths = [p for p in shortest_simple_paths(G, source, target, 
-                                                      hashes=hashes, 
-                                                      weight='weight',
-                                                      strict_mesh_id_filtering=True)]
+            paths = [p for p in shortest_simple_paths(G, source, target,
+                hashes=hashes,
+                weight='weight',
+                strict_mesh_id_filtering=True)]
             return len(paths)
         except nx.NetworkXNoPath:
             return 0
@@ -302,33 +298,48 @@ def test_shortest_simple_paths_strict_mesh_id_filtering():
     assert count_paths('A2', 'C1', []) == 3
     assert count_paths('A2', 'D1', []) == 3
 
-    assert count_paths('Z1', 'C1', ['HASH1']) == 0
-    assert count_paths('A1', 'C1', ['HASH1']) == 1
-    assert count_paths('A2', 'C1', ['HASH1']) == 2
-    assert count_paths('A2', 'D1', ['HASH1']) == 0
+    assert count_paths('Z1', 'C1',
+        [11, 12, 13, 14, 15]) == 0
+    assert count_paths('A1', 'C1',
+        [11, 12, 13, 14, 15]) == 1
+    assert count_paths('A2', 'C1',
+        [11, 12, 13, 14, 15]) == 2
+    assert count_paths('A2', 'D1',
+        [11, 12, 13, 14, 15]) == 0
     
-    assert count_paths('Z1', 'C1', ['HASH2']) == 0
-    assert count_paths('A1', 'C1', ['HASH2']) == 0
-    assert count_paths('A2', 'C1', ['HASH2']) == 1
-    assert count_paths('A2', 'D1', ['HASH2']) == 0
+    assert count_paths('Z1', 'C1',
+        [21, 22, 23, 24, 25]) == 0
+    assert count_paths('A1', 'C1',
+        [21, 22, 23, 24, 25]) == 0
+    assert count_paths('A2', 'C1',
+        [21, 22, 23, 24, 25]) == 1
+    assert count_paths('A2', 'D1',
+        [21, 22, 23, 24, 25]) == 0
 
-    assert count_paths('Z1', 'C1', ['HASH1', 'HASH2']) == 0
-    assert count_paths('A1', 'C1', ['HASH1', 'HASH2']) == 1
-    assert count_paths('A2', 'C1', ['HASH1', 'HASH2']) == 3
-    assert count_paths('A2', 'D1', ['HASH1', 'HASH2']) == 0
+    assert count_paths('Z1', 'C1',
+        [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 0
+    assert count_paths('A1', 'C1',
+        [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 1
+    assert count_paths('A2', 'C1',
+        [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 3
+    assert count_paths('A2', 'D1',
+        [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 0
 
 
 def test_shortest_simple_paths_weighed_by_mesh_ids():
     G = _setup_unsigned_graph()[0]
     G.add_edge('A3', 'B1', belief=0.7, weight=-np.log(0.7))
-    G.graph['edge_by_hash']['HASH1'].append(('A3', 'B1'))
+    G.graph['edge_by_hash'][14] = ('A3', 'B1')
     source = 'A3'
     target = 'C1'
-    paths = list(shortest_simple_paths(G, source, target, hashes=['HASH1']))
+    paths = list(shortest_simple_paths(G, source, target,
+        hashes=[11, 12, 13, 14]))
     assert paths == [['A3', 'B1', 'C1'], ['A3', 'B2', 'C1']]
-    paths = list(shortest_simple_paths(G, source, target, hashes=['HASH2']))
+    paths = list(shortest_simple_paths(G, source, target,
+        hashes=[21, 22, 23, 24, 25]))
     assert paths == [['A3', 'B2', 'C1'], ['A3', 'B1', 'C1']]
-    paths = list(shortest_simple_paths(G, source, target, hashes=['HASH1', 'HASH2']))
+    paths = list(shortest_simple_paths(G, source, target,
+        hashes=[11, 12, 13, 14, 21, 22, 23, 24, 25]))
     assert paths == [['A3', 'B1', 'C1'], ['A3', 'B2', 'C1']]
 
 
@@ -336,12 +347,12 @@ def test_bfs_strict_mesh_id_filtering():
     dg = _setup_unsigned_graph()[0]
 
     paths = [p for p in bfs_search(dg, 'C1', depth_limit=6, reverse=True, 
-                                   strict_mesh_id_filtering=True, hashes=[])]                               
-    expected = {('C1', 'B3'), 
-                ('C1', 'B2'), 
-                ('C1', 'B2', 'A3'), 
-                ('C1', 'B2', 'A4'), 
-                ('C1', 'B1'), 
+        strict_mesh_id_filtering=True, hashes=[])]
+    expected = {('C1', 'B3'),
+                ('C1', 'B2'),
+                ('C1', 'B2', 'A3'),
+                ('C1', 'B2', 'A4'),
+                ('C1', 'B1'),
                 ('C1', 'B1', 'A2'),
                 ('C1', 'B1', 'A1'),
                 ('C1', 'B1', 'A1', 'Z1')}
@@ -349,7 +360,7 @@ def test_bfs_strict_mesh_id_filtering():
     assert set(paths) == expected
 
     paths = [p for p in bfs_search(dg, 'C1', depth_limit=6, reverse=True, 
-                                   strict_mesh_id_filtering=True, hashes=['HASH1'])]
+        strict_mesh_id_filtering=True, hashes=[11, 12, 13])]
     expected = {('C1', 'B3'),
                 ('C1', 'B1'),
                 ('C1', 'B1', 'A1')}
@@ -357,7 +368,7 @@ def test_bfs_strict_mesh_id_filtering():
     assert set(paths) == expected
 
     paths = [p for p in bfs_search(dg, 'C1', depth_limit=6, reverse=True,
-                                   strict_mesh_id_filtering=True, hashes=['HASH2'])]
+        strict_mesh_id_filtering=True, hashes=[21, 22, 23, 24, 25])]
     expected = {('C1', 'B2'),
                 ('C1', 'B2', 'A3'),
                 ('C1', 'B2', 'A4'),
@@ -368,7 +379,7 @@ def test_bfs_strict_mesh_id_filtering():
 
     paths = [p for p in bfs_search(dg, 'C1', depth_limit=6, reverse=True,
                                    strict_mesh_id_filtering=True,
-                                   hashes=['HASH1', 'HASH2'])]
+                                   hashes=[11, 12, 13, 21, 22, 23, 24, 25])]
     expected = {('C1', 'B3'),
                 ('C1', 'B2'),
                 ('C1', 'B2', 'A3'),
@@ -383,7 +394,7 @@ def test_bfs_strict_mesh_id_filtering():
 def test_open_dijksta():
     dg = _setup_unsigned_graph()[0]
     dg.add_edge('A3', 'B1', belief=0.7, weight=-np.log(0.7))
-    dg.graph['edge_by_hash']['HASH1'].append(('A3', 'B1'))
+    dg.graph['edge_by_hash'][14] = ('A3', 'B1')
 
     paths = open_dijkstra_search(dg, 'C1', reverse=True, hashes=[], 
                                  depth_limit=6, path_limit=9)
@@ -398,7 +409,8 @@ def test_open_dijksta():
         ['C1', 'B1', 'A1', 'Z1']
     ]
 
-    paths = open_dijkstra_search(dg, 'C1', reverse=True, hashes=['HASH1'],
+    paths = open_dijkstra_search(dg, 'C1', reverse=True,
+                                 hashes=[11, 12, 13, 14],
                                  depth_limit=2, path_limit=9)
     assert paths == [
         ['C1', 'B1'],
@@ -433,7 +445,7 @@ def test_open_dijksta():
         ['A3', 'B1', 'C1', 'D1'],
     ]
 
-    paths = open_dijkstra_search(dg, 'A3', hashes=['HASH1'],
+    paths = open_dijkstra_search(dg, 'A3', hashes=[11, 12, 13, 14],
                                  depth_limit=6, path_limit=9)
     assert paths == [
         ['A3', 'B2'],
@@ -442,7 +454,7 @@ def test_open_dijksta():
         ['A3', 'B1', 'C1', 'D1'],
     ]
 
-    paths = open_dijkstra_search(dg, 'A3', hashes=['HASH2'],
+    paths = open_dijkstra_search(dg, 'A3', hashes=[21, 22, 23, 24, 25],
                                  depth_limit=6, path_limit=9)
     assert paths == [
         ['A3', 'B2'],
@@ -451,8 +463,9 @@ def test_open_dijksta():
         ['A3', 'B2', 'C1', 'D1'],
     ]
 
-    paths = open_dijkstra_search(dg, 'A3', hashes=['HASH1', 'HASH2'],
-                                 depth_limit=6, path_limit=9)
+    paths = open_dijkstra_search(
+        dg, 'A3', hashes=[11, 12, 13, 14, 21, 22, 23, 24, 25],
+        depth_limit=6, path_limit=9)
     assert paths == [
         ['A3', 'B2'],
         ['A3', 'B1'],
@@ -460,9 +473,11 @@ def test_open_dijksta():
         ['A3', 'B1', 'C1', 'D1'],
     ]
 
-    dg.graph['edge_by_hash']['HASH1'] += [('A3', 'B2'), ('B2', 'C1')]
-    paths = open_dijkstra_search(dg, 'A3', hashes=['HASH1', 'HASH2'],
-                                 depth_limit=6, path_limit=9)
+    dg.graph['edge_by_hash'][15] = ('A3', 'B2')
+    dg.graph['edge_by_hash'][16] = ('B2', 'C1')
+    paths = open_dijkstra_search(dg, 'A3',
+        hashes=[11, 12, 13, 14, 15, 16, 21, 22, 23, 24, 25],
+        depth_limit=6, path_limit=9)
     assert paths == [
         ['A3', 'B2'],
         ['A3', 'B1'],
