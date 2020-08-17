@@ -18,6 +18,8 @@ class OmniPathProcessor(object):
         """
         ptm_stmts = []
         unhandled_mod_types = []
+        annot_ignore = {'enzyme', 'substrate', 'residue_type',
+                        'residue_offset', 'references', 'modification'}
         if ptm_json is None:
             return []
         for mod_entry in ptm_json:
@@ -25,9 +27,22 @@ class OmniPathProcessor(object):
             sub = self._agent_from_up_id(mod_entry['substrate'])
             res = mod_entry['residue_type']
             pos = mod_entry['residue_offset']
-            # evidence = [Evidence('omnipath', None, pmid)
-            #            for pmid in mod_entry['references']]
-            evidence = [Evidence('omnipath', None, None)]
+            evidence = []
+            for source_pmid in mod_entry['references']:
+                source_db, pmid = source_pmid.split(':', 1)
+                if 'pmc' in pmid.lower():
+                    text_refs = {'PMCID': pmid.split('/')[-1]}
+                    pmid = None
+                else:
+                    text_refs = None
+                evidence.append(Evidence(
+                    source_api='omnipath',
+                    source_id=source_db,
+                    pmid=pmid,
+                    text_refs=text_refs,
+                    annotations={k: v for k, v in mod_entry.items() if k not
+                                 in annot_ignore}
+                ))
             mod_type = mod_entry['modification']
             modclass = modtype_to_modclass.get(mod_type)
             if modclass is None:

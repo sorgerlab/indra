@@ -21,8 +21,9 @@ def _get_modifications():
     -------
     JSON content for PTMs.
     """
-    #params = {'format': 'json', 'fields':['sources', 'references']}
-    params = {'format': 'json', 'fields':['sources']}
+    params = {'format': 'json',
+              'fields': ['curation_effort', 'isoforms', 'references',
+                         'resources', 'sources']}
     ptm_url = '%s/ptms' % op_url
     res = requests.get(ptm_url, params=params)
     if not res.status_code == 200 or not res.text:
