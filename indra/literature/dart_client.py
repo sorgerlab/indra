@@ -4,6 +4,7 @@ import json
 import logging
 import requests
 from datetime import datetime
+from collections import defaultdict
 from indra.config import get_config
 
 
@@ -35,7 +36,7 @@ def get_content_by_storage_key(storage_key):
     res = requests.get(url=downl_endpoint + storage_key,
                        auth=(dart_uname, dart_pwd))
     res.raise_for_status()
-    return res.json()
+    return res.text
 
 
 def get_reader_outputs(readers=None, versions=None, document_ids=None,
@@ -56,26 +57,30 @@ def get_reader_outputs(readers=None, versions=None, document_ids=None,
 
     Returns
     -------
-    dict(str, str)
-        A dict of document content keyed by document id
+    dict(str, dict)
+        A two-level dict of reader output keyed by reader and then
+        document id.
     """
     metadata_json = get_reader_output_records(readers=readers, versions=versions,
                                               document_ids=document_ids,
                                               timestamp=timestamp)
     # Loop document keys and get documents
-    documents = {}
+    reader_outputs = defaultdict(dict)
     if metadata_json and 'records' in metadata_json:
-        logger.info('Got document storage keys. Fetching output...')
+        logger.info('Got %d document storage keys. Fetching output...' %
+                    len(metadata_json['records']))
         for record in metadata_json['records']:
+            reader = record['identity']
+            doc_id = record['document_id']
             storage_key = record['storage_key']
             try:
-                documents[storage_key] = \
+                reader_outputs[reader][doc_id] = \
                     get_content_by_storage_key(storage_key)
             except Exception as e:
                 logger.warning('Error downloading %s' % storage_key)
     else:
         logger.warning('Empty meta data json returned')
-    return documents
+    return dict(reader_outputs)
 
 
 def get_reader_output_records(readers=None, versions=None, document_ids=None,
