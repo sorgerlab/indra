@@ -9,6 +9,7 @@ op_url = 'http://omnipathdb.org'
 
 
 def process_from_web():
+    """Query the omnipath web API and return an OmniPathProcessor"""
     ptm_json = _get_modifications()
     ligrec_json = _get_interactions()
     return OmniPathProcessor(ptm_json=ptm_json, ligrec_json=ligrec_json)
