@@ -2,7 +2,8 @@ from __future__ import unicode_literals
 import logging
 from collections import Counter
 from indra.preassembler.grounding_mapper import GroundingMapper
-from indra.statements import modtype_to_modclass, Agent, Evidence, Complex
+from indra.statements import modtype_to_modclass, Agent, Evidence, Complex, \
+    get_statement_by_name as stmt_by_name, BoundCondition
 
 logger = logging.getLogger(__file__)
 
@@ -60,6 +61,7 @@ class OmniPathProcessor(object):
         ign_annot = {'source_sub_id', 'source', 'target', 'references'}
         no_refs = 0
         bad_pmid = 0
+        no_consensus = 0
         if ligrec_json is None:
             return ligrec_stmts
 
@@ -71,9 +73,8 @@ class OmniPathProcessor(object):
                     lr_entry['sources'][0].lower() == 'protmapper':
                 logger.warning('Protmapper only source, skipping...')
                 continue
-            agents = self._complex_agents_from_op_complex(
-                [lr_entry['source'], lr_entry['target']]
-            )
+
+            # Assemble evidence
             evidence = []
             for source_pmid in lr_entry['references']:
                 source_db, pmid = source_pmid.split(':')
@@ -85,13 +86,33 @@ class OmniPathProcessor(object):
                 annot['source_sub_id'] = source_db
                 evidence.append(Evidence(source_api='omnipath', pmid=pmid,
                                          annotations=annot))
-            ligrec_stmts.append(Complex(members=agents, evidence=evidence))
+
+            # Get complexes
+            ligrec_stmts.append(self._get_op_complex(lr_entry['source'],
+                                                     lr_entry['target'],
+                                                     evidence))
+
+            # On consensus, make Activations or Inhibitions as well
+            if bool(lr_entry['consensus_stimulation']) ^ \
+               bool(lr_entry['consensus_inhibition']):
+                activation = True if lr_entry['consensus_stimulation'] else \
+                    False
+                ligrec_stmts.append(self._get_ligrec_regs(
+                    lr_entry['source'], lr_entry['target'], evidence,
+                    activation=activation))
+            elif lr_entry['consensus_stimulation'] and \
+                    lr_entry['consensus_inhibition']:
+                no_consensus += 1
+
         if no_refs:
             logger.warning(f'{no_refs} entries without references were '
                            f'skipped')
         if bad_pmid:
             logger.warning(f'{bad_pmid} references with bad pmids were '
                            f'skipped')
+        if no_consensus:
+            logger.warning(f'{no_consensus} entries with conflicting '
+                           f'regulation were skipped')
 
         return ligrec_stmts
 
@@ -104,14 +125,51 @@ class OmniPathProcessor(object):
         GroundingMapper.standardize_agent_name(ag)
         return ag
 
-    def _complex_agents_from_op_complex(self, up_id_list):
+    def _bc_agent_from_up_list(self, up_id_list):
+        # Return the first agent with the remaining agents as a bound condition
+        agents_list = [self._agent_from_up_id(up_id) for up_id in up_id_list]
+        agent = agents_list[0]
+        agent.bound_conditions = \
+            [BoundCondition(a, True) for a in agents_list[1:]]
+        return agent
+
+    def _complex_agents_from_op_complex(self, up_id_str):
         """Return a list of agents from a string containing multiple UP ids
         """
-        # Return list of contained agents
-        if isinstance(up_id_list, list):
-            return [self._agent_from_up_id(up_id) for up_id in up_id_list]
-        elif isinstance(up_id_list, str):
-            return [self._agent_from_up_id(up_id_list)]
+        # Get agents
+        if 'complex' in up_id_str.lower():
+            up_id_list = [up for up in up_id_str.split(':')[1].split('_')]
         else:
-            raise TypeError('Unable to produce agents from object %s' %
-                            up_id_list.__class__)
+            up_id_list = [up_id_str]
+
+        return [self._agent_from_up_id(up_id) for up_id in up_id_list]
+
+    def _get_op_complex(self, source, target, evidence_list):
+        ag_list = self._complex_agents_from_op_complex(source) + \
+                  self._complex_agents_from_op_complex(target)
+        return Complex(members=ag_list,
+                       evidence=evidence_list)
+
+    def _get_ligrec_regs(self, source, target, evidence_list, activation=True):
+        # Check if any of the agents is a complex
+        # Source
+        if 'complex' in source.lower():
+            # Make bound condition agent
+            up_id_list = [up for up in source.split(':')[1].split('_')]
+            subj = self._bc_agent_from_up_list(up_id_list)
+        else:
+            subj = self._agent_from_up_id(source)
+        # Target
+        if 'complex' in target.lower():
+            # Make bound condition agent
+            up_id_list = [up for up in target.split(':')[1].split('_')]
+            obj = self._bc_agent_from_up_list(up_id_list)
+        else:
+            obj = self._agent_from_up_id(target)
+
+        # Regular case:
+        Regulation = stmt_by_name('activation') if activation else \
+            stmt_by_name('inhibition')
+
+        regulation = Regulation(subj=subj, obj=obj, evidence=evidence_list)
+        return regulation
