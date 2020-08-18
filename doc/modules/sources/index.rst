@@ -45,6 +45,7 @@ Standard Molecular Pathway Databases
    virhostnet/index
    ctd/index
    drugbank/index
+   omnipath/index
 
 Custom Knowledge Bases
 ----------------------
