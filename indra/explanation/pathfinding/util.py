@@ -91,10 +91,11 @@ def get_sorted_neighbors(G, node, reverse, force_edges=None):
         getting the neighbors
     """
     if reverse:
-        neighbors = G.predecessors(node)
         if force_edges:
-            neighbors = list(n for n in neighbors 
-                             if (n, node) in force_edges)
+            neighbors = list(e[0] for e in 
+                set(G.in_edges(node)).intersection(set(force_edges)))
+        else:
+            neighbors = G.predecessors(node)
         return sorted(
             neighbors,
             key=lambda n:
@@ -102,10 +103,11 @@ def get_sorted_neighbors(G, node, reverse, force_edges=None):
             reverse=True
         )
     else:
-        neighbors = G.successors(node)
         if force_edges:
-            neighbors = list(n for n in neighbors
-                             if (node, n) in force_edges)
+            neighbors = list(e[1] for e in 
+                set(G.out_edges(node)).intersection(set(force_edges)))
+        else:
+            neighbors = G.successors(node)
         return sorted(
             neighbors,
             key=lambda n:

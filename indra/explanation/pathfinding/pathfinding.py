@@ -260,8 +260,8 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
             for h in hashes:
                 if h in edge_by_hash:
                     allowed_edges.append(edge_by_hash[h])
-    else:
-        return []
+        else:
+            return []
 
     queue = deque([(source_node,)])
     visited = ({source_node}).union(node_blacklist) \
