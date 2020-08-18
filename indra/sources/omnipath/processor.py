@@ -59,6 +59,7 @@ class OmniPathProcessor(object):
         ligrec_stmts = []
         ign_annot = {'source_sub_id', 'source', 'target', 'references'}
         no_refs = 0
+        bad_pmid = 0
         if ligrec_json is None:
             return ligrec_stmts
 
@@ -76,6 +77,9 @@ class OmniPathProcessor(object):
             evidence = []
             for source_pmid in lr_entry['references']:
                 source_db, pmid = source_pmid.split(':')
+                if len(pmid) > 8:
+                    bad_pmid += 1
+                    continue
                 annot = {k: v for k, v in lr_entry.items() if k not in
                          ign_annot}
                 annot['source_sub_id'] = source_db
@@ -84,6 +88,9 @@ class OmniPathProcessor(object):
             ligrec_stmts.append(Complex(members=agents, evidence=evidence))
         if no_refs:
             logger.warning(f'{no_refs} entries without references were '
+                           f'skipped')
+        if bad_pmid:
+            logger.warning(f'{bad_pmid} references with bad pmids were '
                            f'skipped')
 
         return ligrec_stmts
