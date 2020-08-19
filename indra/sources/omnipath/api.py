@@ -2,7 +2,7 @@ import logging
 import requests
 from .processor import OmniPathProcessor
 
-logger = logging.getLogger("omnipath")
+logger = logging.getLogger(__name__)
 
 
 op_url = 'http://omnipathdb.org'

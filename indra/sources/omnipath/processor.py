@@ -5,7 +5,7 @@ from indra.preassembler.grounding_mapper import GroundingMapper
 from indra.statements import modtype_to_modclass, Agent, Evidence, Complex, \
     get_statement_by_name as stmt_by_name, BoundCondition
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class OmniPathProcessor(object):
