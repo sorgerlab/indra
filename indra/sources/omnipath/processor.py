@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import logging
 from collections import Counter
-from indra.preassembler.grounding_mapper import GroundingMapper
+from indra.ontology.standardize import standardize_agent_name
 from indra.statements import modtype_to_modclass, Agent, Evidence, Complex, \
     get_statement_by_name as stmt_by_name, BoundCondition
 
@@ -122,7 +122,7 @@ class OmniPathProcessor(object):
         Uniprot and HGNC where available."""
         db_refs = {'UP': up_id}
         ag = Agent(None, db_refs=db_refs)
-        GroundingMapper.standardize_agent_name(ag)
+        standardize_agent_name(ag)
         return ag
 
     def _bc_agent_from_up_list(self, up_id_list):
