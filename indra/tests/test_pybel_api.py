@@ -5,7 +5,7 @@
 import os
 from urllib import request
 
-from pybel import BELGraph, constants as pc
+from pybel import BELGraph
 from pybel.dsl import *
 from pybel.language import Entity
 from pybel.io import from_nodelink_file
@@ -374,8 +374,7 @@ def test_phosphorylation_one_site_with_evidence():
     ev_pmid = '123456'
     edge_hash = g.add_directly_increases(
         mek, erk, evidence=ev_text,
-        citation={pc.CITATION_DB: pc.CITATION_TYPES[pc.CITATION_TYPE_PUBMED],
-                  pc.CITATION_IDENTIFIER: ev_pmid},
+        citation=ev_pmid,
         annotations={"TextLocation": 'Abstract'},
     )
     pbp = bel.process_pybel_graph(g)
@@ -461,7 +460,7 @@ def test_regulate_amount3_deg():
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
-    assert isinstance(pbp.statements[0], DecreaseAmount)
+    assert isinstance(pbp.statements[0], DecreaseAmount), pbp.statements[0]
     assert len(pbp.statements[0].evidence) == 1
 
 
@@ -477,13 +476,14 @@ def test_regulate_amount4_subj_act():
     assert isinstance(pbp.statements[0], IncreaseAmount)
     subj = pbp.statements[0].subj
     assert subj.name == 'MAP2K1'
-    assert isinstance(subj.activity, ActivityCondition)
+    assert subj.activity is not None
+    assert isinstance(subj.activity, ActivityCondition), subj.activity.__class__
     assert subj.activity.activity_type == 'transcription'
     assert subj.activity.is_active
     assert len(pbp.statements[0].evidence) == 1
 
     g = BELGraph()
-    g.add_increases(mek, erk, subject_modifier=activity(name='act'),
+    g.add_increases(mek, erk, subject_modifier=activity(),
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -507,7 +507,7 @@ def test_regulate_activity():
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
-    assert isinstance(pbp.statements[0], Activation)
+    assert isinstance(pbp.statements[0], Activation), pbp.statements[0].__class__
     subj = pbp.statements[0].subj
     assert subj.name == 'MAP2K1'
     assert isinstance(subj.activity, ActivityCondition)
@@ -550,7 +550,7 @@ def test_gef():
     kras = Protein(name='KRAS', namespace='HGNC')
     g = BELGraph()
     g.add_directly_increases(sos, kras,
-                             subject_modifier=activity(name='activity'),
+                             subject_modifier=activity(),
                              object_modifier=activity(name='gtp'),
                              evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
@@ -570,7 +570,7 @@ def test_indirect_gef_is_activation():
     sos = Protein(name='SOS1', namespace='HGNC')
     kras = Protein(name='KRAS', namespace='HGNC')
     g = BELGraph()
-    g.add_increases(sos, kras, subject_modifier=activity(name='activity'),
+    g.add_increases(sos, kras, subject_modifier=activity(),
                     object_modifier=activity(name='gtp'),
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
@@ -592,7 +592,7 @@ def test_gap():
     kras = Protein(name='KRAS', namespace='HGNC')
     g = BELGraph()
     g.add_directly_decreases(sos, kras,
-                             subject_modifier=activity(name='activity'),
+                             subject_modifier=activity(),
                              object_modifier=activity(name='gtp'),
                              evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
@@ -637,7 +637,7 @@ def test_gtpactivation():
     assert pbp.statements
     assert len(pbp.statements) == 1
     stmt = pbp.statements[0]
-    assert isinstance(stmt, GtpActivation)
+    assert isinstance(stmt, GtpActivation), stmt
     assert stmt.subj.name == 'KRAS'
     assert stmt.subj.activity.activity_type == 'gtpbound'
     assert stmt.subj.activity.is_active is True
@@ -660,7 +660,7 @@ def test_conversion():
     )
     g = BELGraph()
     g.add_directly_increases(enz, rxn,
-                             subject_modifier=activity(name='activity'),
+                             subject_modifier=activity(),
                              evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -668,7 +668,9 @@ def test_conversion():
     stmt = pbp.statements[0]
     assert isinstance(stmt, Conversion)
     assert stmt.subj.name == 'PLCG1'
-    assert stmt.subj.activity.activity_type == 'activity'
+    assert stmt.subj.activity is not None
+    assert stmt.subj.activity.activity_type is not None
+    assert stmt.subj.activity.activity_type == 'molecular function'
     assert stmt.subj.activity.is_active is True
     assert len(stmt.obj_from) == 1
     assert isinstance(stmt.obj_from[0], Agent)
@@ -695,7 +697,7 @@ def test_controlled_transloc_loc_cond():
     g.add_increases(subj, obj, object_modifier=transloc,
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
-    assert not pbp.statements
+    assert not pbp.statements, pbp.statements
 
 
 def test_subject_transloc_loc_cond():
@@ -716,6 +718,7 @@ def test_subject_transloc_loc_cond():
     stmt = pbp.statements[0]
     assert isinstance(stmt, IncreaseAmount)
     assert stmt.subj.name == 'MAP2K1'
+    assert stmt.subj.location is not None
     assert stmt.subj.location == 'extracellular space'
     assert stmt.obj.name == 'MAPK1'
 

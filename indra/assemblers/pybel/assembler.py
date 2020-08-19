@@ -7,7 +7,7 @@ from copy import deepcopy, copy
 import pybel
 import pybel.constants as pc
 from pybel.dsl import *
-from pybel.language import pmod_namespace
+from pybel.language import pmod_namespace, activity_mapping
 try:  # this works after pybel pull request #453
     from pybel.language import citation_dict
 except ImportError: # this works before pybel pull request #453
@@ -19,13 +19,13 @@ logger = logging.getLogger(__name__)
 
 
 _indra_pybel_act_map = {
-    'kinase': 'kin',
-    'phosphatase': 'phos',
-    'catalytic': 'cat',
-    'gtpbound': 'gtp',
-    'transcription': 'tscript',
-    'gef': 'gef',
-    'gap': 'gap'
+    'kinase': activity_mapping['kin'],
+    'phosphatase': activity_mapping['phos'],
+    'catalytic': activity_mapping['cat'],
+    'gtpbound': activity_mapping['gtp'],
+    'transcription': activity_mapping['tscript'],
+    'gef': activity_mapping['gef'],
+    'gap': activity_mapping['gap'],
 }
 
 _pybel_indra_act_map = {v: k for k, v in _indra_pybel_act_map.items()}
