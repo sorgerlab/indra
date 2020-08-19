@@ -131,7 +131,7 @@ class OmniPathProcessor(object):
         """Build an Agent object from a Uniprot ID. Adds db_refs for both
         Uniprot and HGNC where available."""
         db_refs = {'UP': up_id}
-        ag = Agent(None, db_refs=db_refs)
+        ag = Agent(up_id, db_refs=db_refs)
         standardize_agent_name(ag)
         return ag
 
