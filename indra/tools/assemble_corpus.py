@@ -576,9 +576,11 @@ def filter_by_type(stmts_in, stmt_type, invert=False, **kwargs):
     ----------
     stmts_in : list[indra.statements.Statement]
         A list of statements to filter.
-    stmt_type : indra.statements.Statement
-        The class of the statement type to filter for.
-        Example: indra.statements.Modification
+    stmt_type : str or indra.statements.Statement
+        The class of the statement type to filter for. Alternatively,
+        a string matching the name of the statement class, e.g.,
+        "Activation" can be used.
+        Example: indra.statements.Modification or "Modification"
     invert : Optional[bool]
         If True, the statements that are not of the given type
         are returned. Default: False
@@ -590,6 +592,8 @@ def filter_by_type(stmts_in, stmt_type, invert=False, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
+    if isinstance(stmt_type, str):
+        stmt_type = get_statement_by_name(stmt_type)
     logger.info('Filtering %d statements for type %s%s...' %
                 (len(stmts_in), 'not ' if invert else '',
                  stmt_type.__name__))

@@ -395,6 +395,8 @@ def test_map_sequence_blank_entries():
 def test_filter_by_type():
     st_out = ac.filter_by_type([st1, st14], Phosphorylation)
     assert len(st_out) == 1
+    st_out = ac.filter_by_type([st1, st14], "Phosphorylation")
+    assert len(st_out) == 1
 
 
 def test_filter_top_level():
