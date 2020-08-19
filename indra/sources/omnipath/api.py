@@ -34,7 +34,7 @@ def _get_modifications():
 
 
 def _get_interactions(datasets=None):
-    """Wrapper for calling the interactions omnipath interactions API
+    """Wrapper for calling the omnipath interactions API
 
     See full list of query options here:
     https://omnipathdb.org/queries/interactions
