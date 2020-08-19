@@ -94,7 +94,6 @@ class OmniPathProcessor(object):
                 continue
             if len(lr_entry['sources']) == 1 and \
                     lr_entry['sources'][0].lower() in ignore_srcs:
-                logger.warning('Protmapper only source, skipping...')
                 continue
 
             # Assemble evidence
