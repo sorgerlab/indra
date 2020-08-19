@@ -34,7 +34,9 @@ def test_mods_from_web():
     assert res.text
     ptm_json = res.json()
     assert ptm_json[0]['substrate'] == JAK2_UPID, ptm_json[0]['substrate']
-    stmts = OmniPathProcessor(ptm_json=ptm_json).statements
+    op = OmniPathProcessor(ptm_json=ptm_json)
+    op.process_ptm_mods()
+    stmts = op.statements
     assert JAK2_AG.name in [a.name for a in stmts[0].agent_list()],\
         stmts[0].agent_list()
     assert 'omnipath' == stmts[0].evidence[0].source_api,\
@@ -53,7 +55,9 @@ def test_ligrec_from_web():
     assert 'error' not in res.text.lower()
     ligrec_json = res.json()
     assert ligrec_json[0]['source'] == CALM1_UPID
-    stmts = OmniPathProcessor(ligrec_json=ligrec_json).statements
+    op = OmniPathProcessor(ligrec_json=ligrec_json)
+    op.process_ligrec_interactions()
+    stmts = op.statements
     assert CALM1_AG.name in [a.name for a in stmts[0].agent_list()], \
         stmts[0].agent_list()
     assert 'omnipath' == stmts[0].evidence[0].source_api,\

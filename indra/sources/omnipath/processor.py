@@ -11,8 +11,18 @@ logger = logging.getLogger(__name__)
 class OmniPathProcessor(object):
     def __init__(self, ptm_json=None, ligrec_json=None):
         self.statements = []
-        self.statements.extend(self._stmts_from_op_mods(ptm_json))
-        self.statements.extend(self._stmt_from_op_lr(ligrec_json))
+        self.ptm_json = ptm_json
+        self.ligrec_json = ligrec_json
+
+    def process_ptm_mods(self):
+        """Process ptm json if present"""
+        if self.ptm_json:
+            self.statements += self._stmts_from_op_mods(self.ptm_json)
+
+    def process_ligrec_interactions(self):
+        """Process ligand-receptor json if present"""
+        if self.ligrec_json:
+            self.statements += self._stmt_from_op_lr(self.ligrec_json)
 
     def _stmts_from_op_mods(self, ptm_json):
         """Build Modification Statements from a list of Omnipath PTM entries

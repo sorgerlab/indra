@@ -12,7 +12,10 @@ def process_from_web():
     """Query the omnipath web API and return an OmniPathProcessor"""
     ptm_json = _get_modifications()
     ligrec_json = _get_interactions()
-    return OmniPathProcessor(ptm_json=ptm_json, ligrec_json=ligrec_json)
+    op = OmniPathProcessor(ptm_json=ptm_json, ligrec_json=ligrec_json)
+    op.process_ptm_mods()
+    op.process_ligrec_interactions()
+    return op
 
 
 def _get_modifications():
