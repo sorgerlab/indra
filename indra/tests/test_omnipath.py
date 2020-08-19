@@ -2,7 +2,7 @@ import requests
 from indra.sources.omnipath import OmniPathProcessor
 from indra.sources.omnipath.api import op_url
 from indra.statements import Agent
-from indra.preassembler.grounding_mapper import GroundingMapper
+from indra.ontology.standardize import standardize_agent_name
 
 BRAF_UPID = 'P15056'
 JAK2_UPID = 'O60674'
@@ -10,13 +10,13 @@ CALM1_UPID = 'P0DP23'
 TRPC3_UPID = 'Q13507'
 
 BRAF_AG = Agent(None, db_refs={'UP': BRAF_UPID})
-GroundingMapper.standardize_agent_name(BRAF_AG)
+standardize_agent_name(BRAF_AG)
 JAK2_AG = Agent(None, db_refs={'UP': JAK2_UPID})
-GroundingMapper.standardize_agent_name(JAK2_AG)
+standardize_agent_name(JAK2_AG)
 CALM1_AG = Agent(None, db_refs={'UP': CALM1_UPID})
-GroundingMapper.standardize_agent_name(CALM1_AG)
+standardize_agent_name(CALM1_AG)
 TRPC3_AG = Agent(None, db_refs={'UP': TRPC3_UPID})
-GroundingMapper.standardize_agent_name(TRPC3_AG)
+standardize_agent_name(TRPC3_AG)
 
 
 def test_omnipath_web_api():
