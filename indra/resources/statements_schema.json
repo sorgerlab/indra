@@ -302,7 +302,7 @@
                     "properties": {
                         "type": {
                             "type": "string",
-                            "pattern": "^((Phosphorylation)|(Dephosphorylation)|(Ubiquitination)|(Deubiquitination)|(Sumoylation)|(Desumoylation)|(Hydroxylation)|(Dehydroxylation)|(Acetylation)|(Deacetylation)|(Glycosylation)|(Deglycosylation)|(Farnesylation)|(Defarnesylation)|(Geranylgeranylation)|(Degeranylgeranylation)|(Palmitoylation)|(Depalmitoylation)|(Myristoylation)|(Demyristoylation)|(Ribosylation)|(Deribosylation)|(Methylation)|(Demethylation))$",
+                            "pattern": "^((Phosphorylation)|(Dephosphorylation)|(Ubiquitination)|(Deubiquitination)|(Sumoylation)|(Desumoylation)|(Hydroxylation)|(Dehydroxylation)|(Acetylation)|(Deacetylation)|(Glycosylation)|(Deglycosylation)|(Farnesylation)|(Defarnesylation)|(Geranylgeranylation)|(Degeranylgeranylation)|(Palmitoylation)|(Depalmitoylation)|(Myristoylation)|(Demyristoylation)|(Ribosylation)|(Deribosylation)|(Methylation)|(Demethylation)|(Carboxylation)|(Decarboxylation)|(Amidation)|(Deamidation)|(Sulfation)|(Desulfation)|(Neddylation)|(Deneddylation)|(Alkylation)|(Dealkylation)|(Prenylation)|(Deprenylation'))$",
                             "description": "The type of the statement"
                         },
                         "enz": {
