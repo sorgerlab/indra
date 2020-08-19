@@ -8,6 +8,10 @@ from indra.statements import modtype_to_modclass, Agent, Evidence, Complex, \
 logger = logging.getLogger(__name__)
 
 
+ignore_srcs = [db.lower() for db in ['NetPath', 'SIGNOR', 'ProtMapper',
+                                     'BioGRID',  'HPRD-phos', 'phosphoELM']]
+
+
 class OmniPathProcessor(object):
     def __init__(self, ptm_json=None, ligrec_json=None):
         self.statements = []
@@ -34,6 +38,9 @@ class OmniPathProcessor(object):
         if ptm_json is None:
             return []
         for mod_entry in ptm_json:
+            # Skip entries without references
+            if not mod_entry['references']:
+                continue
             enz = self._agent_from_up_id(mod_entry['enzyme'])
             sub = self._agent_from_up_id(mod_entry['substrate'])
             res = mod_entry['residue_type']
@@ -41,6 +48,9 @@ class OmniPathProcessor(object):
             evidence = []
             for source_pmid in mod_entry['references']:
                 source_db, pmid = source_pmid.split(':', 1)
+                # Skip evidence from already known sources
+                if source_db.lower() in ignore_srcs:
+                    continue
                 if 'pmc' in pmid.lower():
                     text_refs = {'PMCID': pmid.split('/')[-1]}
                     pmid = None
@@ -60,6 +70,9 @@ class OmniPathProcessor(object):
                 unhandled_mod_types.append(mod_type)
                 continue
             else:
+                # All evidences filtered out
+                if not evidence:
+                    continue
                 stmt = modclass(enz, sub, res, pos, evidence)
             ptm_stmts.append(stmt)
         print(Counter(unhandled_mod_types))
@@ -80,7 +93,7 @@ class OmniPathProcessor(object):
                 no_refs += 1
                 continue
             if len(lr_entry['sources']) == 1 and \
-                    lr_entry['sources'][0].lower() == 'protmapper':
+                    lr_entry['sources'][0].lower() in ignore_srcs:
                 logger.warning('Protmapper only source, skipping...')
                 continue
 
@@ -88,6 +101,9 @@ class OmniPathProcessor(object):
             evidence = []
             for source_pmid in lr_entry['references']:
                 source_db, pmid = source_pmid.split(':')
+                # Skip evidence from already known sources
+                if source_db.lower() in ignore_srcs:
+                    continue
                 if len(pmid) > 8:
                     bad_pmid += 1
                     continue
@@ -97,22 +113,27 @@ class OmniPathProcessor(object):
                 evidence.append(Evidence(source_api='omnipath', pmid=pmid,
                                          annotations=annot))
 
-            # Get complexes
-            ligrec_stmts.append(self._get_op_complex(lr_entry['source'],
-                                                     lr_entry['target'],
-                                                     evidence))
+            # Get statements if we have evidences
+            if evidence:
+                # Get complexes
+                ligrec_stmts.append(self._get_op_complex(lr_entry['source'],
+                                                         lr_entry['target'],
+                                                         evidence))
 
-            # On consensus, make Activations or Inhibitions as well
-            if bool(lr_entry['consensus_stimulation']) ^ \
-               bool(lr_entry['consensus_inhibition']):
-                activation = True if lr_entry['consensus_stimulation'] else \
-                    False
-                ligrec_stmts.append(self._get_ligrec_regs(
-                    lr_entry['source'], lr_entry['target'], evidence,
-                    activation=activation))
-            elif lr_entry['consensus_stimulation'] and \
-                    lr_entry['consensus_inhibition']:
-                no_consensus += 1
+                # On consensus, make Activations or Inhibitions as well
+                if bool(lr_entry['consensus_stimulation']) ^ \
+                   bool(lr_entry['consensus_inhibition']):
+                    activation = True if lr_entry['consensus_stimulation'] else \
+                        False
+                    ligrec_stmts.append(self._get_ligrec_regs(
+                        lr_entry['source'], lr_entry['target'], evidence,
+                        activation=activation))
+                elif lr_entry['consensus_stimulation'] and \
+                        lr_entry['consensus_inhibition']:
+                    no_consensus += 1
+            # All evidences were filtered out
+            else:
+                no_refs += 1
 
         if no_refs:
             logger.warning(f'{no_refs} entries without references were '
