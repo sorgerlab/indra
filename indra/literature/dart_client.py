@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 dart_uname = get_config('DART_WM_USERNAME')
 dart_pwd = get_config('DART_WM_PASSWORD')
 
-dart_base_url = 'https://indra-ingest-pipeline-rest-1.prod.dart' \
+dart_base_url = 'https://wm-ingest-pipeline-rest-1.prod.dart' \
                 '.worldmodelers.com/dart/api/v1/readers'
 meta_endpoint = dart_base_url + '/query'
 downl_endpoint = dart_base_url + '/download/'
@@ -119,7 +119,8 @@ def get_reader_output_records(readers=None, versions=None, document_ids=None,
     query_data = _jsonify_query_data(readers, versions, document_ids, timestamp)
     if not query_data:
         return {}
-    res = requests.post(meta_endpoint, data={'metadata': query_data},
+    full_query_data = {'metadata': query_data}
+    res = requests.post(meta_endpoint, data=full_query_data,
                         auth=(dart_uname, dart_pwd))
     res.raise_for_status()
     return res.json()
