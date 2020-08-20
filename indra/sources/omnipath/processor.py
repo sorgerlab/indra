@@ -13,6 +13,7 @@ ignore_srcs = [db.lower() for db in ['NetPath', 'SIGNOR', 'ProtMapper',
 
 
 class OmniPathProcessor(object):
+    """Class to process OmniPath JSON into INDRA Statements."""
     def __init__(self, ptm_json=None, ligrec_json=None):
         self.statements = []
         self.ptm_json = ptm_json
