@@ -75,7 +75,6 @@ class OmniPathProcessor(object):
                     continue
                 stmt = modclass(enz, sub, res, pos, evidence)
             ptm_stmts.append(stmt)
-        print(Counter(unhandled_mod_types))
         return ptm_stmts
 
     def _stmt_from_op_lr(self, ligrec_json):
