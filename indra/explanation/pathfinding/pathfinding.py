@@ -734,7 +734,9 @@ def open_dijkstra_search(g, start, reverse=False, hashes=None, depth_limit=2, pa
     if reverse:
         g = g.reverse(copy=False)
 
-    paths = [p for p in nx.single_source_dijkstra_path(g, start, cutoff=depth_limit).values()][1:]
-    if path_limit is not None:
-        return paths[:path_limit]
-    return tuple(paths)
+    paths_gen = iter(nx.single_source_dijkstra_path(g, start, cutoff=depth_limit).values())
++   if path_limit is None:
++       return paths_gen
++   else:
++       return iter(list(paths_gen)[:path_limit])
+
