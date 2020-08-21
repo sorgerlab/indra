@@ -238,7 +238,7 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
         are encountered and only yield paths that terminate at these
         namepsaces
     sign : int
-        If set, defines the search to be a signed search. Default: None.\
+        If set, defines the search to be a signed search. Default: None.
     max_memory : int
         The maximum memory usage in bytes allowed for the variables queue
         and visited. Default: 1073741824 bytes (== 1 GiB).
@@ -695,7 +695,7 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
     raise nx.NetworkXNoPath("No path between %s and %s." % (source, target))
 
 
-def open_dijkstra_search(g, start, reverse=False, hashes=None, depth_limit=2, path_limit=None):
+def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None, hashes=None, terminal_ns=None):
     """Do Dijkstra search from a given node and yield paths
 
     Parameters
@@ -711,6 +711,10 @@ def open_dijkstra_search(g, start, reverse=False, hashes=None, depth_limit=2, pa
         Stop when all paths with this many edges have been found. Default: 2.
     path_limit : int
         The maximum number of paths to return. Default: no limit.
+    terminal_ns : list[str]
+        Force a path to terminate when any of the namespaces in this list
+        are encountered and only yield paths that terminate at these
+        namepsaces
     hashes : list
         List of hashes used to set edge weights
 
@@ -734,9 +738,9 @@ def open_dijkstra_search(g, start, reverse=False, hashes=None, depth_limit=2, pa
     if reverse:
         g = g.reverse(copy=False)
 
-    paths_gen = iter(nx.single_source_dijkstra_path(g, start, cutoff=depth_limit).values())
-+   if path_limit is None:
-+       return paths_gen
-+   else:
-+       return iter(list(paths_gen)[:path_limit])
-
+    paths = [p for p in nx.single_source_dijkstra_path(g, start, cutoff=depth_limit).values()][1:]
+    if path_limit is not None:
+        paths = paths[:path_limit]
+    if terminal_ns is not None:
+        paths = [p for p in paths if g.nodes[p[-1]]['ns'].lower() in terminal_ns]
+    return iter(paths)
