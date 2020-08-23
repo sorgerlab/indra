@@ -742,5 +742,12 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None
     if path_limit is not None:
         paths = paths[:path_limit]
     if terminal_ns is not None:
-        paths = [p for p in paths if g.nodes[p[-1]]['ns'].lower() in terminal_ns]
+        def proper_path(path):
+            if g.nodes[path[-1]]['ns'].lower() not in terminal_ns:
+                return False
+            for n in path[:-1]:
+                if g.nodes[n]['ns'].lower() in terminal_ns:
+                    return False
+            return True
+        paths = [p for p in paths if proper_path(p)]
     return iter(paths)
