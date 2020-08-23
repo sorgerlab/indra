@@ -293,10 +293,8 @@ def test_shortest_simple_paths_strict_mesh_id_filtering():
         except nx.NetworkXNoPath:
             return 0
 
-    assert count_paths('Z1', 'C1', []) == 1
-    assert count_paths('A1', 'C1', []) == 1
-    assert count_paths('A2', 'C1', []) == 3
-    assert count_paths('A2', 'D1', []) == 3
+    assert count_paths('Z1', 'C1', []) == 0
+    assert count_paths('A2', 'C1', []) == 0
 
     assert count_paths('Z1', 'C1',
         [11, 12, 13, 14, 15]) == 0
@@ -348,16 +346,7 @@ def test_bfs_strict_mesh_id_filtering():
 
     paths = [p for p in bfs_search(dg, 'C1', depth_limit=6, reverse=True, 
         strict_mesh_id_filtering=True, hashes=[])]
-    expected = {('C1', 'B3'),
-                ('C1', 'B2'),
-                ('C1', 'B2', 'A3'),
-                ('C1', 'B2', 'A4'),
-                ('C1', 'B1'),
-                ('C1', 'B1', 'A2'),
-                ('C1', 'B1', 'A1'),
-                ('C1', 'B1', 'A1', 'Z1')}
-    assert len(paths) == 8
-    assert set(paths) == expected
+    assert len(paths) == 0
 
     paths = [p for p in bfs_search(dg, 'C1', depth_limit=6, reverse=True, 
         strict_mesh_id_filtering=True, hashes=[11, 12, 13])]
@@ -392,12 +381,12 @@ def test_bfs_strict_mesh_id_filtering():
 
 
 def test_open_dijksta():
-    dg = _setup_unsigned_graph()[0]
+    dg, all_ns = _setup_unsigned_graph()
     dg.add_edge('A3', 'B1', belief=0.7, weight=-np.log(0.7))
     dg.graph['edge_by_hash'][14] = ('A3', 'B1')
 
-    paths = open_dijkstra_search(dg, 'C1', reverse=True, hashes=[], 
-                                 depth_limit=6, path_limit=9)
+    paths = list(open_dijkstra_search(dg, 'C1', reverse=True, hashes=[], 
+                                 depth_limit=6, path_limit=9))
     assert paths == [
         ['C1', 'B1'],
         ['C1', 'B2'],
@@ -409,9 +398,9 @@ def test_open_dijksta():
         ['C1', 'B1', 'A1', 'Z1']
     ]
 
-    paths = open_dijkstra_search(dg, 'C1', reverse=True,
+    paths = list(open_dijkstra_search(dg, 'C1', reverse=True,
                                  hashes=[11, 12, 13, 14],
-                                 depth_limit=2, path_limit=9)
+                                 depth_limit=2, path_limit=9))
     assert paths == [
         ['C1', 'B1'],
         ['C1', 'B2'],
@@ -419,11 +408,12 @@ def test_open_dijksta():
         ['C1', 'B1', 'A1'],
         ['C1', 'B1', 'A2'],
         ['C1', 'B1', 'A3'],
-        ['C1', 'B2', 'A4']
+        ['C1', 'B2', 'A4'],
+        ['C1', 'B1', 'A1', 'Z1']
     ]
 
-    paths = open_dijkstra_search(dg, 'C1', reverse=True, hashes=[], 
-                                 depth_limit=6, path_limit=5)
+    paths = list(open_dijkstra_search(dg, 'C1', reverse=True, hashes=[], 
+                                 depth_limit=6, path_limit=5))
     assert paths == [
         ['C1', 'B1'],
         ['C1', 'B2'],
@@ -432,12 +422,12 @@ def test_open_dijksta():
         ['C1', 'B1', 'A2']
     ]
 
-    paths = open_dijkstra_search(dg, 'C1', hashes=[],
-                                 depth_limit=6, path_limit=5)
+    paths = list(open_dijkstra_search(dg, 'C1', hashes=[],
+                                 depth_limit=6, path_limit=5))
     assert paths == [['C1', 'D1']]
 
-    paths = open_dijkstra_search(dg, 'A3', hashes=[],
-                                 depth_limit=6, path_limit=5)
+    paths = list(open_dijkstra_search(dg, 'A3', hashes=[],
+                                 depth_limit=6, path_limit=5))
     assert paths == [
         ['A3', 'B2'],
         ['A3', 'B1'],
@@ -445,8 +435,8 @@ def test_open_dijksta():
         ['A3', 'B1', 'C1', 'D1'],
     ]
 
-    paths = open_dijkstra_search(dg, 'A3', hashes=[11, 12, 13, 14],
-                                 depth_limit=6, path_limit=9)
+    paths = list(open_dijkstra_search(dg, 'A3', hashes=[11, 12, 13, 14],
+                                 depth_limit=6, path_limit=9))
     assert paths == [
         ['A3', 'B2'],
         ['A3', 'B1'],
@@ -454,18 +444,18 @@ def test_open_dijksta():
         ['A3', 'B1', 'C1', 'D1'],
     ]
 
-    paths = open_dijkstra_search(dg, 'A3', hashes=[21, 22, 23, 24, 25],
-                                 depth_limit=6, path_limit=9)
+    paths = list(open_dijkstra_search(dg, 'A3', hashes=[21, 22, 23, 24, 25],
+                                 depth_limit=6, path_limit=9))
     assert paths == [
         ['A3', 'B2'],
         ['A3', 'B1'],
-        ['A3', 'B2', 'C1'],
-        ['A3', 'B2', 'C1', 'D1'],
+        ['A3', 'B1', 'C1'],
+        ['A3', 'B1', 'C1', 'D1'],
     ]
 
-    paths = open_dijkstra_search(
+    paths = list(open_dijkstra_search(
         dg, 'A3', hashes=[11, 12, 13, 14, 21, 22, 23, 24, 25],
-        depth_limit=6, path_limit=9)
+        depth_limit=6, path_limit=9))
     assert paths == [
         ['A3', 'B2'],
         ['A3', 'B1'],
@@ -475,12 +465,12 @@ def test_open_dijksta():
 
     dg.graph['edge_by_hash'][15] = ('A3', 'B2')
     dg.graph['edge_by_hash'][16] = ('B2', 'C1')
-    paths = open_dijkstra_search(dg, 'A3',
+    paths = list(open_dijkstra_search(dg, 'A3',
         hashes=[11, 12, 13, 14, 15, 16, 21, 22, 23, 24, 25],
-        depth_limit=6, path_limit=9)
+        depth_limit=6, path_limit=9))
     assert paths == [
         ['A3', 'B2'],
         ['A3', 'B1'],
-        ['A3', 'B2', 'C1'],
-        ['A3', 'B2', 'C1', 'D1'],
+        ['A3', 'B1', 'C1'],
+        ['A3', 'B1', 'C1', 'D1'],
     ]
