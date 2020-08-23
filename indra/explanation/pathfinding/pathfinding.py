@@ -695,7 +695,7 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
     raise nx.NetworkXNoPath("No path between %s and %s." % (source, target))
 
 
-def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None, hashes=None, terminal_ns=None):
+def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None, hashes=None, terminal_ns=None, weight=None):
     """Do Dijkstra search from a given node and yield paths
 
     Parameters
@@ -717,6 +717,9 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None
         namepsaces
     hashes : list
         List of hashes used to set edge weights
+    weight : str
+        Name of edge's attribute used as its weight
+    
 
     Yields
     ------
@@ -738,7 +741,7 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None
     if reverse:
         g = g.reverse(copy=False)
 
-    paths = [p for p in nx.single_source_dijkstra_path(g, start, cutoff=depth_limit).values()][1:]
+    paths = [p for p in nx.single_source_dijkstra_path(g, start, cutoff=depth_limit, weight=weight).values()][1:]
     if path_limit is not None:
         paths = paths[:path_limit]
     if terminal_ns is not None:
