@@ -1,6 +1,7 @@
 __all__ = ['process_text', 'reground_texts']
 
 import requests
+from indra.util import batch_iter
 
 
 def process_text(text, webservice):
@@ -59,17 +60,20 @@ def reground_texts(texts, ont_yml, webservice, topk=10, is_canonicalized=False,
     dict
         A JSON dict of the results from the Eidos webservice.
     """
-    params = {
-        'ontologyYaml': ont_yml,
-        'texts': texts,
-        'topk': topk,
-        'isAlreadyCanonicalized': is_canonicalized,
-        'filter': filter
-    }
-    res = requests.post('%s/reground' % webservice,
-                        json=params)
-    res.raise_for_status()
-    return grounding_dict_to_list(res.json())
+    all_results = []
+    for text_batch in batch_iter(texts, batch_size=500, return_func=list):
+        params = {
+            'ontologyYaml': ont_yml,
+            'texts': text_batch,
+            'topk': topk,
+            'isAlreadyCanonicalized': is_canonicalized,
+            'filter': filter
+        }
+        res = requests.post('%s/reground' % webservice,
+                            json=params)
+        res.raise_for_status()
+        all_results += grounding_dict_to_list(res.json())
+    return all_results
 
 
 def grounding_dict_to_list(groundings):
