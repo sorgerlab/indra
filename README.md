@@ -85,6 +85,7 @@ Biological pathway databases:
 | VirHostNet                | [`indra.sources.virhostnet`](https://indra.readthedocs.io/en/latest/modules/sources/virhostnet/index.html) | http://virhostnet.prabi.fr/ |
 | CTD                  | [`indra.sources.ctd`](https://indra.readthedocs.io/en/latest/modules/sources/ctd/index.html) | http://ctdbase.org |
 | DrugBank                  | [`indra.sources.drugbank`](https://indra.readthedocs.io/en/latest/modules/sources/drugbank/index.html) | https://www.drugbank.ca/ |
+| OmniPath                  | [`indra.sources.omnipath`](https://indra.readthedocs.io/en/latest/modules/sources/omnipath/index.html) | https://omnipathdb.org/ |
 
 
 Custom knowledge bases:
