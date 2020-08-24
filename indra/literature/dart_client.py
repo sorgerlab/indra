@@ -64,18 +64,28 @@ def get_reader_outputs(readers=None, versions=None, document_ids=None,
         A two-level dict of reader output keyed by reader and then
         document id.
     """
-    records_json = get_reader_output_records(readers=readers, versions=versions,
-                                             document_ids=document_ids,
-                                             timestamp=timestamp)
-    if records_json and 'records' in records_json:
-        logger.info('Got %d document storage keys. Fetching output...' %
-                    len(records_json['records']))
-        return download_records(records_json['records'])
-    else:
-        logger.info('No records found')
+    records = get_reader_output_records(readers=readers, versions=versions,
+                                        document_ids=document_ids,
+                                        timestamp=timestamp)
+    logger.info('Got %d document storage keys. Fetching output...' %
+                len(records))
+    return download_records(records)
 
 
 def download_records(records):
+    """Return reader outputs corresponding to a list of records.
+
+    Parameters
+    ----------
+    records : list of dict
+        A list of records returned from the reader output query.
+
+    Returns
+    -------
+    dict(str, dict)
+        A two-level dict of reader output keyed by reader and then
+        document id.
+    """
     # Loop document keys and get documents
     reader_outputs = defaultdict(dict)
     for record in records:
@@ -91,10 +101,28 @@ def download_records(records):
 
 
 def prioritize_records(records, priorities=None):
+    """Return unique records per reader and document prioritizing by version.
+
+    Parameters
+    ----------
+    records : list of dict
+        A list of records returned from the reader output query.
+    priorities : dict of list
+        A dict keyed by reader names (e.g., cwms, eidos) with values representing
+        reader versions in decreasing order of priority.
+
+    Returns
+    -------
+    records : list of dict
+        A list of records that are unique per reader and document, picked by
+        version priority when multiple records exist for the same reader
+        and document.
+    """
     priorities = {} if not priorities else priorities
     prioritized_records = []
     key = lambda x: (x['identity'], x['document_id'])
-    for (reader, doc_id), group in itertools.groupby(sorted(records, key=key), key=key):
+    for (reader, doc_id), group in itertools.groupby(sorted(records, key=key),
+                                                     key=key):
         group_records = list(group)
         if len(group_records) == 1:
             prioritized_records.append(group_records[0])
@@ -151,7 +179,12 @@ def get_reader_output_records(readers=None, versions=None, document_ids=None,
     res = requests.post(meta_endpoint, data=full_query_data,
                         auth=(dart_uname, dart_pwd))
     res.raise_for_status()
-    return res.json()
+    rj = res.json()
+
+    # This handles both empty list and dict
+    if not rj or 'records' not in rj:
+        return []
+    return rj['records']
 
 
 def _check_lists(lst):
