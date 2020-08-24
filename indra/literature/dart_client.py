@@ -13,9 +13,11 @@ logger = logging.getLogger(__name__)
 
 dart_uname = get_config('DART_WM_USERNAME')
 dart_pwd = get_config('DART_WM_PASSWORD')
-
-dart_base_url = 'https://wm-ingest-pipeline-rest-1.prod.dart' \
-                '.worldmodelers.com/dart/api/v1/readers'
+# The URL is configurable since it is subject to change per use case
+dart_base_url = get_config('DART_WM_URL')
+if dart_base_url is None:
+    dart_base_url = ('https://wm-ingest-pipeline-rest-1.prod.dart'
+                     '.worldmodelers.com/dart/api/v1/readers')
 meta_endpoint = dart_base_url + '/query'
 downl_endpoint = dart_base_url + '/download/'
 
