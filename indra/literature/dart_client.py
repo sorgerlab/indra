@@ -3,6 +3,7 @@
 import json
 import logging
 import requests
+import itertools
 from datetime import datetime
 from collections import defaultdict
 from indra.config import get_config
@@ -63,26 +64,51 @@ def get_reader_outputs(readers=None, versions=None, document_ids=None,
         A two-level dict of reader output keyed by reader and then
         document id.
     """
-    metadata_json = get_reader_output_records(readers=readers, versions=versions,
-                                              document_ids=document_ids,
-                                              timestamp=timestamp)
+    records_json = get_reader_output_records(readers=readers, versions=versions,
+                                             document_ids=document_ids,
+                                             timestamp=timestamp)
+    if records_json and 'records' in records_json:
+        logger.info('Got %d document storage keys. Fetching output...' %
+                    len(records_json['records']))
+        return download_records(records_json['records'])
+    else:
+        logger.info('No records found')
+
+
+def download_records(records):
     # Loop document keys and get documents
     reader_outputs = defaultdict(dict)
-    if metadata_json and 'records' in metadata_json:
-        logger.info('Got %d document storage keys. Fetching output...' %
-                    len(metadata_json['records']))
-        for record in metadata_json['records']:
-            reader = record['identity']
-            doc_id = record['document_id']
-            storage_key = record['storage_key']
-            try:
-                reader_outputs[reader][doc_id] = \
-                    get_content_by_storage_key(storage_key)
-            except Exception as e:
-                logger.warning('Error downloading %s' % storage_key)
-    else:
-        logger.warning('Empty meta data json returned')
+    for record in records:
+        reader = record['identity']
+        doc_id = record['document_id']
+        storage_key = record['storage_key']
+        try:
+            reader_outputs[reader][doc_id] = \
+                get_content_by_storage_key(storage_key)
+        except Exception as e:
+            logger.warning('Error downloading %s' % storage_key)
     return dict(reader_outputs)
+
+
+def prioritize_records(records, priorities=None):
+    priorities = {} if not priorities else priorities
+    prioritized_records = []
+    key = lambda x: (x['identity'], x['document_id'])
+    for (reader, doc_id), group in itertools.groupby(sorted(records, key=key), key=key):
+        group_records = list(group)
+        if len(group_records) == 1:
+            prioritized_records.append(group_records[0])
+        else:
+            reader_prio = priorities.get(reader)
+            if reader_prio:
+                first_rec = sorted(group_records,
+                                   key=lambda x: reader_prio.index(x['version']))[0]
+                prioritized_records.append(first_rec)
+            else:
+                logger.warning('Could not prioritize between records: %s' %
+                               str(group_records))
+                prioritized_records.append(group_records[0])
+    return prioritized_records
 
 
 def get_reader_output_records(readers=None, versions=None, document_ids=None,
