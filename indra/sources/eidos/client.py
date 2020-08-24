@@ -1,5 +1,6 @@
 __all__ = ['process_text', 'reground_texts']
 
+import tqdm
 import requests
 from indra.util import batch_iter
 
@@ -61,7 +62,8 @@ def reground_texts(texts, ont_yml, webservice, topk=10, is_canonicalized=False,
         A JSON dict of the results from the Eidos webservice.
     """
     all_results = []
-    for text_batch in batch_iter(texts, batch_size=500, return_func=list):
+    for text_batch in tqdm.tqdm(batch_iter(texts, batch_size=500,
+                                           return_func=list)):
         params = {
             'ontologyYaml': ont_yml,
             'texts': text_batch,
