@@ -1,4 +1,3 @@
-import tqdm
 import logging
 from datetime import datetime
 import xml.etree.ElementTree as ET
@@ -104,7 +103,7 @@ class CWMSProcessor(object):
     def extract_causal_relations(self):
         """Extract Influence Statements from the EKB."""
         relations = self.tree.findall("CC/[type]")
-        for relation in tqdm.tqdm(relations):
+        for relation in relations:
             st = self.influence_from_relation(relation)
             if st:
                 self.statements.append(st)
@@ -126,7 +125,7 @@ class CWMSProcessor(object):
         """Extract standalone Events from the EKB."""
         events = [(1, self.tree.findall("EVENT/[type='ONT::INCREASE']")),
                   (-1, self.tree.findall("EVENT/[type='ONT::DECREASE']"))]
-        for polarity, event_list in tqdm.tqdm(events):
+        for polarity, event_list in events:
             for event_term in event_list:
                 event_id = event_term.attrib.get('id')
                 if event_id in self.subsumed_events or \
@@ -148,7 +147,7 @@ class CWMSProcessor(object):
             evs = self.tree.findall("EVENT/[type='%s']" % et)
             events += evs
 
-        for event_term in tqdm.tqdm(events):
+        for event_term in events:
             event_id = event_term.attrib.get('id')
             if event_id in self.subsumed_events or \
                     event_id in self.relation_events:
@@ -160,7 +159,7 @@ class CWMSProcessor(object):
 
     def extract_correlations(self):
         correlations = self.tree.findall("EPI/[type='ONT::ASSOCIATE']")
-        for cor in tqdm.tqdm(correlations):
+        for cor in correlations:
             st = self._association_from_element(cor, 'EPI', 'NEUTRAL1',
                                                 'NEUTRAL2', False)
             if st:
@@ -476,11 +475,11 @@ class CWMSProcessor(object):
         return event_obj
 
     def get_event_or_migration(self, event_term):
-        if event_term.find('type').text in [
-           'ONT::MOVE', 'ONT::DEPART', 'ONT::ARRIVE']:
-                return self.migration_from_event(event_term)
-        else:
-            return self._get_event(event_term)
+        #if event_term.find('type').text in [
+        #   'ONT::MOVE', 'ONT::DEPART', 'ONT::ARRIVE']:
+        #        return self.migration_from_event(event_term)
+        #else:
+        return self._get_event(event_term)
 
     def get_context(self, element):
         time = self._extract_time(element)
