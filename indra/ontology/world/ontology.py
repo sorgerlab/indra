@@ -61,6 +61,7 @@ class WorldOntology(IndraOntology):
         logger.info('Initializing world ontology from %s' % self.url)
         self.add_wm_ontology(self.url)
         self._initialized = True
+        self._build_transitive_closure()
         logger.info('Ontology has %d nodes' % len(self))
 
     def add_wm_ontology(self, url):
