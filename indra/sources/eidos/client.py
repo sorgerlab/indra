@@ -1,6 +1,7 @@
 __all__ = ['process_text', 'reground_texts']
 
 import tqdm
+import math
 import requests
 from indra.util import batch_iter
 
@@ -63,7 +64,8 @@ def reground_texts(texts, ont_yml, webservice, topk=10, is_canonicalized=False,
     """
     all_results = []
     for text_batch in tqdm.tqdm(batch_iter(texts, batch_size=500,
-                                           return_func=list)):
+                                           return_func=list),
+                                total=math.ceil(len(texts)/500)):
         params = {
             'ontologyYaml': ont_yml,
             'texts': text_batch,
@@ -84,8 +86,11 @@ def grounding_dict_to_list(groundings):
     for entry in groundings:
         grounding_list = []
         for grounding_dict in entry:
-            grounding_list.append((grounding_dict['grounding'],
-                                   grounding_dict['score']))
+            gr = grounding_dict['grounding']
+            # Strip off trailing slashes
+            if gr.endswith('/'):
+                gr = gr[:-1]
+            grounding_list.append((gr, grounding_dict['score']))
         grounding_list = sorted(grounding_list, key=lambda x: x[1],
                                 reverse=True)
         all_grounding_lists.append(grounding_list)
