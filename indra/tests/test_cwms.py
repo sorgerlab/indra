@@ -104,7 +104,7 @@ def test_cwms_agriculture_increases():
     text = 'Agriculture increases food security.'
     cp = process_text(text)
     assert cp
-    assert len(cp.statements) == 1
+    assert len(cp.statements) == 1, cp.statements
 
 
 @attr('slow', 'webservice')
@@ -144,6 +144,7 @@ def test_three_sentences():
 def test_context_influence_obj():
     text = 'Hunger causes displacement in 2018 in South Sudan.'
     cp = process_text(text)
+    cp.extract_migrations()
     stmt = cp.statements[0]
     assert isinstance(stmt.obj, Migration)
     cont = stmt.obj.context
@@ -166,7 +167,7 @@ def test_context_influence_subj_obj():
     text = 'Hunger in 2018 causes displacement in South Sudan.'
     cp = process_text(text)
     stmt = cp.statements[0]
-    assert stmt.subj.context.time and stmt.obj.context.locations
+    assert stmt.subj.context.time and stmt.obj.context.geo_location
 
 
 def test_ekb_process():
@@ -177,6 +178,7 @@ def test_ekb_process():
 def test_process_increase_event_ekb():
     fname = join(data_folder, 'cwms_increase.ekb')
     cp = process_ekb_file(fname)
+    cp.extract_events()
     assert len(cp.statements) == 1
     stmt = cp.statements[0]
     assert isinstance(stmt, Event)
@@ -211,6 +213,7 @@ def test_process_cause_increase_event_ekb():
 def test_process_correlation():
     fname = join(data_folder, 'association.ekb')
     cp = process_ekb_file(fname)
+    cp.extract_correlations()
     assert len(cp.statements) == 1, cp.statements
     stmt = cp.statements[0]
     assert isinstance(stmt, Association), stmt
@@ -222,6 +225,7 @@ def test_process_correlation():
 def test_process_migration1():
     fname = join(data_folder, 'migration_sentence1.ekb')
     cp = process_ekb_file(fname)
+    cp.extract_migrations()
     assert len(cp.statements) == 1
     stmt = cp.statements[0]
     assert isinstance(stmt, Migration)
@@ -241,6 +245,7 @@ def test_process_migration1():
 def test_process_migration2():
     fname = join(data_folder, 'migration_sentence2.ekb')
     cp = process_ekb_file(fname)
+    cp.extract_migrations()
     assert len(cp.statements) == 1
     stmt = cp.statements[0]
     assert isinstance(stmt, Migration)
