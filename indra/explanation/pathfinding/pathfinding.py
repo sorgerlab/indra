@@ -253,10 +253,10 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
     int_plus = 0
     int_minus = 1
 
-    edge_by_hash = g.graph['edge_by_hash']
     allowed_edges = []
     if strict_mesh_id_filtering:
         if hashes:
+            edge_by_hash = g.graph['edge_by_hash']
             for h in hashes:
                 if h in edge_by_hash:
                     allowed_edges.append(edge_by_hash[h])
