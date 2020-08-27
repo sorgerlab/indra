@@ -74,7 +74,7 @@ def signed_nodes_to_signed_edge(source, target):
         return None, None, None
 
 
-def get_sorted_neighbors(G, node, reverse, g_edges):
+def get_sorted_neighbors(G, node, reverse):
     """Sort the returned neighbors in descending order by belief
 
     Parameters
@@ -86,33 +86,18 @@ def get_sorted_neighbors(G, node, reverse, g_edges):
     reverse : bool
         Indicates direction of search. Neighbors are either successors
         (downstream search) or predecessors (reverse search).
-    g_edges : nx.classes.reportviews.OutMultiEdgeView|OutEdgeView
-        The edges graph property to look up edges and their data from.
-        Typically this is G.edges.
     """
     neighbors = G.predecessors(node) if reverse else G.successors(node)
-    # Check signed node
-    if isinstance(node, tuple):
-        if reverse:
-            return sorted(
-                neighbors,
-                key=lambda n:
-                    g_edges[signed_nodes_to_signed_edge(n, node)]['belief'],
-                reverse=True
-            )
-        else:
-            return sorted(
-                neighbors,
-                key=lambda n:
-                    g_edges[signed_nodes_to_signed_edge(node, n)]['belief'],
-                reverse=True)
-
+    if reverse:
+        return sorted(
+            neighbors,
+            key=lambda n:
+                G.edges[(n, node)].get('belief', 0),
+            reverse=True
+        )
     else:
-        if reverse:
-            return sorted(neighbors,
-                          key=lambda n: g_edges[(n, node)]['belief'],
-                          reverse=True)
-        else:
-            return sorted(neighbors,
-                          key=lambda n: g_edges[(node, n)]['belief'],
-                          reverse=True)
+        return sorted(
+            neighbors,
+            key=lambda n:
+                G.edges[(node, n)].get('belief', 0),
+            reverse=True)

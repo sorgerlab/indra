@@ -1,9 +1,12 @@
 from collections import namedtuple
+from pysb import Monomer
 
 from indra.sources.indra_db_rest.api import get_statements_by_hash
 from indra.statements import *
 from indra.assemblers.english.assembler import _assemble_agent_str, \
     SentenceBuilder
+from indra.assemblers.pysb.assembler import parse_identifiers_url
+from indra.assemblers.pysb.common import _n
 
 
 def stmts_from_pysb_path(path, model, stmts):
@@ -226,3 +229,22 @@ def stmt_from_rule(rule_name, model, stmts):
         for stmt in stmts:
             if stmt.uuid == stmt_uuid:
                 return stmt
+
+
+def agent_from_obs(obs_name, model):
+    db_refs = {}
+    ag_name = None
+    for ann in model.annotations:
+        if ann.subject == obs_name:
+            if ann.predicate == 'from_indra_agent':
+                ag_name = ann.object
+                break
+    if ag_name:
+        mon_name = _n(ag_name)
+        for ann in model.annotations:
+            if isinstance(ann.subject, Monomer) and \
+                    ann.subject.name == mon_name and ann.predicate == 'is':
+                db_name, db_ref = parse_identifiers_url(ann.object)
+                db_refs[db_name] = db_ref
+        ag = Agent(ag_name, db_refs=db_refs)
+        return ag

@@ -29,8 +29,12 @@ class UnsignedGraphModelChecker(ModelChecker):
         if self.graph:
             return self.graph
         self.graph = nx.DiGraph()
-        for (u, v) in self.model.edges:
-            self.graph.add_edge((u, 0), (v, 0))
+        nodes = []
+        for node, node_data in self.model.nodes(data=True):
+            nodes.append(((node, 0), node_data))
+        self.graph.add_nodes_from(nodes)
+        for (u, v, data) in self.model.edges(data=True):
+            self.graph.add_edge((u, 0), (v, 0), belief=data['belief'])
         return self.graph
 
     def process_statement(self, stmt):
@@ -41,16 +45,30 @@ class UnsignedGraphModelChecker(ModelChecker):
                         stmt.__class__.__name__)
             return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
         subj, obj = stmt.agent_list()
-        if subj is None or (subj.name, 0) not in self.graph.nodes:
-            return (None, None, 'SUBJECT_NOT_FOUND')
-        if obj is None or (obj.name, 0) not in self.graph.nodes:
-            return (None, None, 'OBJECT_NOT_FOUND')
-        return ([(subj.name, 0)], [(obj.name, 0)], None)
+        if obj is None:
+            obj_nodes = [None]
+        else:
+            obj_nodes = self.get_nodes(obj, self.graph)
+            # Statement has object but it's not in the graph
+            if not obj_nodes:
+                return (None, None, 'OBJECT_NOT_FOUND')
+        return ([subj], obj_nodes, None)
 
     def process_subject(self, subj):
-        return [subj], None
+        # We will not get here if subject is None
+        subj_nodes = self.get_nodes(subj, self.graph)
+        # Statement has subject but it's not in the graph
+        if not subj_nodes:
+            return (None, 'SUBJECT_NOT_FOUND')
+        return subj_nodes, None
 
     def _sample_paths(self, input_set, obj_name, target_polarity,
                       max_paths=1, max_path_length=5):
         # TODO implement sampling
         pass
+
+    def get_nodes(self, agent, graph):
+        node = (agent.name, 0)
+        if node not in graph.nodes:
+            return None
+        return [node]

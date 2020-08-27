@@ -208,6 +208,11 @@ class IndraNet(nx.MultiDiGraph):
 
         SG = nx.MultiDiGraph()
         for u, v, data in self.edges(data=True):
+            # Add nodes and their attributes
+            if u not in SG.nodes:
+                SG.add_node(u, **self.nodes[u])
+            if v not in SG.nodes:
+                SG.add_node(v, **self.nodes[v])
             # Explicit 'is not None' needed to accept 0
             if data.get('initial_sign') is not None:
                 sign = data['initial_sign']

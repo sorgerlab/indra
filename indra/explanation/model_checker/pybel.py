@@ -40,8 +40,10 @@ class PybelModelChecker(ModelChecker):
             include_variants=include_variants,
             symmetric_variant_links=symmetric_variant_links,
             include_components=include_components,
-            symmetric_component_links=symmetric_component_links)
-        self.graph = signed_edges_to_signed_nodes(signed_edges)
+            symmetric_component_links=symmetric_component_links,
+            propagate_annotations=True)
+        self.graph = signed_edges_to_signed_nodes(
+            signed_edges, copy_edge_data={'belief'})
         return self.graph
 
     def process_statement(self, stmt):
@@ -52,29 +54,40 @@ class PybelModelChecker(ModelChecker):
                         stmt.__class__.__name__)
             return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
         subj, obj = stmt.agent_list()
-        # Get the polarity for the statement
-        if isinstance(stmt, Modification):
-            target_polarity = 1 if isinstance(stmt, RemoveModification) else 0
-            obj_agent = deepcopy(obj)
-            obj_agent.mods.append(stmt._get_mod_condition())
-            obj = obj_agent
-        elif isinstance(stmt, RegulateActivity):
-            target_polarity = 0 if stmt.is_activation else 1
-            obj_agent = deepcopy(obj)
-            obj_agent.activity = stmt._get_activity_condition()
-            obj_agent.activity.is_active = True
-            obj = obj_agent
-        elif isinstance(stmt, RegulateAmount):
-            target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
-        elif isinstance(stmt, Influence):
-            target_polarity = 1 if stmt.overall_polarity() == -1 else 0
-        obj_nodes = self.get_nodes(obj, self.graph, target_polarity)
-        if not obj_nodes:
-            return (None, None, 'OBJECT_NOT_FOUND')
+        if obj is None:
+            # Cannot check modifications for statements without object
+            if isinstance(stmt, Modification):
+                return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
+            obj_nodes = [None]
+        else:
+            # Get the polarity for the statement
+            if isinstance(stmt, Modification):
+                target_polarity = 1 if isinstance(stmt, RemoveModification) \
+                    else 0
+                obj_agent = deepcopy(obj)
+                obj_agent.mods.append(stmt._get_mod_condition())
+                obj = obj_agent
+            elif isinstance(stmt, RegulateActivity):
+                target_polarity = 0 if stmt.is_activation else 1
+                obj_agent = deepcopy(obj)
+                obj_agent.activity = stmt._get_activity_condition()
+                obj_agent.activity.is_active = True
+                obj = obj_agent
+            elif isinstance(stmt, RegulateAmount):
+                target_polarity = 1 if isinstance(stmt, DecreaseAmount) else 0
+            elif isinstance(stmt, Influence):
+                target_polarity = 1 if stmt.overall_polarity() == -1 else 0
+
+            obj_nodes = self.get_nodes(obj, self.graph, target_polarity)
+            # Statement has object but it's not in the graph
+            if not obj_nodes:
+                return (None, None, 'OBJECT_NOT_FOUND')
         return ([subj], obj_nodes, None)
 
     def process_subject(self, subj):
+        # We will not get here if subject is None
         subj_nodes = self.get_nodes(subj, self.graph, 0)
+        # Statement has subject but it's not in the graph
         if not subj_nodes:
             return (None, 'SUBJECT_NOT_FOUND')
         return subj_nodes, None
@@ -84,8 +97,6 @@ class PybelModelChecker(ModelChecker):
         # making pybel an implicit dependency of the model checker
         from indra.assemblers.pybel.assembler import _get_agent_node
         nodes = set()
-        if agent is None:
-            return nodes
         # First get exact match
         agent_node = _get_agent_node(agent)[0]
         if agent_node:

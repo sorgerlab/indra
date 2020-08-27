@@ -1,5 +1,5 @@
 __all__ = ['shortest_simple_paths', 'bfs_search', 'find_sources',
-           'get_path_iter']
+           'get_path_iter', 'bfs_search_multiple_nodes']
 import sys
 import logging
 from collections import deque
@@ -7,8 +7,6 @@ from copy import deepcopy
 
 import networkx as nx
 import networkx.algorithms.simple_paths as simple_paths
-from networkx.classes.reportviews import NodeView, OutEdgeView, \
-    OutMultiEdgeView
 
 from .util import get_sorted_neighbors
 
@@ -163,26 +161,19 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 
 # Implementation inspired by networkx's
 # networkx.algorithms.traversal.breadth_first_search::generic_bfs_edges
-def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
-               depth_limit=2, path_limit=None, max_per_node=5,
-               node_filter=None, node_blacklist=None, terminal_ns=None,
-               sign=None, max_memory=int(2**29), **kwargs):
+def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
+               max_per_node=5, node_filter=None, node_blacklist=None,
+               terminal_ns=None, sign=None, max_memory=int(2**29), **kwargs):
     """Do breadth first search from a given node and yield paths
 
     Parameters
     ----------
     g : nx.Digraph
-        An nx.DiGraph to search in. Can also be a signed node graph.
+        An nx.DiGraph to search in. Can also be a signed node graph. It is
+        required that node data contains 'ns' (namespace) and edge data
+        contains 'belief'.
     source_node : node
         Node in the graph to start from.
-    g_nodes : nx.classes.reportviews.nodesNodeView
-        The nodes property to look up nodes from. Set this if the node
-        attribute 'ns' needs to be looked up from another graph object than
-        the one provided as `g`. Default: g.nodes
-    g_edges : nx.classes.reportviews.OutMultiEdgeView|OutEdgeView
-        The edges property to look up edges and their data from. Set this if
-        the edge beliefs needs to be looked up from another grapth object
-        than `g`. Default: d.edges
     reverse : bool
         If True go upstream from source, otherwise go downstream. Default:
         False.
@@ -216,14 +207,6 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
     """
     int_plus = 0
     int_minus = 1
-    g_nodes = g.nodes if g_nodes is None else g_nodes
-    g_edges = g.edges if g_edges is None else g_edges
-    if not isinstance(g_nodes, NodeView):
-        raise ValueError('Provided object for g_nodes is not a valid '
-                         'NodeView object')
-    if not isinstance(g_edges, (OutEdgeView, OutMultiEdgeView)):
-        raise ValueError('Provided object for g_edges is not a valid '
-                         'OutEdgeView or OutMultiEdgeView object')
 
     queue = deque([(source_node,)])
     visited = ({source_node}).union(node_blacklist) \
@@ -232,16 +215,14 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
     while queue:
         cur_path = queue.popleft()
         last_node = cur_path[-1]
-        node_name = last_node[0] if isinstance(last_node, tuple) else \
-            last_node
 
         # if last node is in terminal_ns, continue to next path
-        if terminal_ns and g_nodes[node_name]['ns'].lower() in terminal_ns:
+        if terminal_ns and g.nodes[last_node]['ns'].lower() in terminal_ns \
+                and source_node != last_node:
             continue
 
         sorted_neighbors = get_sorted_neighbors(G=g, node=last_node,
-                                                reverse=reverse,
-                                                g_edges=g_edges)
+                                                reverse=reverse)
 
         yielded_neighbors = 0
         # for neighb in neighbors:
@@ -260,7 +241,7 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
 
             # Check namespace
             if node_filter and len(node_filter) > 0:
-                if g_nodes[neig_name]['ns'].lower() not in node_filter:
+                if g.nodes[neighb]['ns'].lower() not in node_filter:
                     continue
 
             # Add to visited nodes and create new path
@@ -307,7 +288,7 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
             # teminal_ns
             else:
                 # If terminal_ns
-                if g_nodes[neig_name]['ns'].lower() in terminal_ns:
+                if g.nodes[neighb]['ns'].lower() in terminal_ns:
                     # If signed, reverse, negative start node OR
                     #    signed, not reverse, wrong sign:
                     # don't yield this path
@@ -354,6 +335,40 @@ def bfs_search(g, source_node, g_nodes=None, g_edges=None, reverse=False,
                 break
 
         # Check path limit again to catch the inner break for path_limit
+        if path_limit and yielded_paths >= path_limit:
+            break
+
+
+def bfs_search_multiple_nodes(g, source_nodes, path_limit=None, **kwargs):
+    """Do breadth first search from each of given nodes and yield paths
+    until path limit is met.
+
+    Parameters
+    ----------
+    g : nx.Digraph
+        An nx.DiGraph to search in. Can also be a signed node graph. It is
+        required that node data contains 'ns' (namespace) and edge data
+        contains 'belief'.
+    source_nodes : list[node]
+        List of nodes in the graph to start from.
+    path_limit : int
+        The maximum number of paths to return. Default: no limit.
+    **kwargs : keyword arguments
+        Any kwargs to pass to bfs_search.
+
+    Yields
+    ------
+    path : tuple(node)
+        Paths in the bfs search starting from `source`.
+    """
+    yielded_paths = 0
+    for n in source_nodes:
+        paths = bfs_search(g, n, path_limit=path_limit, **kwargs)
+        for p in paths:
+            yield p
+            yielded_paths += 1
+            if path_limit and yielded_paths >= path_limit:
+                break
         if path_limit and yielded_paths >= path_limit:
             break
 

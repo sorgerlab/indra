@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 
 from indra.explanation.pathfinding.pathfinding import bfs_search, \
-    shortest_simple_paths
+    shortest_simple_paths, bfs_search_multiple_nodes
 from indra.explanation.model_checker.model_checker import \
     signed_edges_to_signed_nodes
 
@@ -83,6 +83,10 @@ def _setup_signed_graph():
         seg.edges[(u, v, sign)]['sign'] = sign
         seg.edges[(u, v, sign)]['belief'] = edge_beliefs[(u, v)]
 
+    for node, data in seg.nodes(data=True):
+        data['ns'] = node[0]
+        data['id'] = node[1]
+
     sng = signed_edges_to_signed_nodes(graph=seg, prune_nodes=True,
                                        copy_edge_data=True)
     for u, v in sng.edges:
@@ -162,13 +166,11 @@ def test_bfs():
 
 
 def test_signed_bfs():
-    dg, _ = _setup_unsigned_graph()
     seg, sng, all_ns = _setup_signed_graph()
     # D1 being upregulated: 13 paths
     paths = [p for p in bfs_search(
-        g=sng, source_node=('D1', INT_PLUS), g_nodes=dg.nodes,
-        g_edges=seg.edges, reverse=True, depth_limit=5, node_filter=all_ns,
-        sign=INT_PLUS)
+        g=sng, source_node=('D1', INT_PLUS), reverse=True, depth_limit=5,
+        node_filter=all_ns, sign=INT_PLUS)
     ]
     assert len(paths) == 13, len(paths)
 
@@ -233,3 +235,25 @@ def test_shortest_simple_paths_mod_signed():
                                                            weight='weight')])
     assert len(paths) == 3
     assert set(paths) == expected_paths, 'sets of paths not equal'
+
+
+def test_bfs_multiple_nodes():
+    dg, all_ns = _setup_unsigned_graph()
+
+    # Run regular bfs search for nodes separately
+    paths = [p for p in bfs_search(dg, 'C1', depth_limit=2, reverse=True)]
+    assert len(paths) == 7, len(paths)
+    paths = [p for p in bfs_search(dg, 'D1', depth_limit=2, reverse=True)]
+    assert len(paths) == 4, len(paths)
+    # number of paths with several nodes bfs should be a sum of separate runs
+    paths = [p for p in bfs_search_multiple_nodes(
+        dg, ['C1', 'D1'], depth_limit=2, reverse=True)]
+    assert len(paths) == 11, len(paths)
+    # Path limit should limit the number of paths (both across all paths and
+    # within one node search)
+    paths = [p for p in bfs_search_multiple_nodes(
+        dg, ['C1', 'D1'], depth_limit=2, reverse=True, path_limit=9)]
+    assert len(paths) == 9, len(paths)
+    paths = [p for p in bfs_search_multiple_nodes(
+        dg, ['C1', 'D1'], depth_limit=2, reverse=True, path_limit=5)]
+    assert len(paths) == 5, len(paths)
