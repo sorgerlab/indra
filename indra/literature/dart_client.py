@@ -108,8 +108,8 @@ def prioritize_records(records, priorities=None):
     records : list of dict
         A list of records returned from the reader output query.
     priorities : dict of list
-        A dict keyed by reader names (e.g., cwms, eidos) with values representing
-        reader versions in decreasing order of priority.
+        A dict keyed by reader names (e.g., cwms, eidos) with values
+        representing reader versions in decreasing order of priority.
 
     Returns
     -------
@@ -129,8 +129,9 @@ def prioritize_records(records, priorities=None):
         else:
             reader_prio = priorities.get(reader)
             if reader_prio:
-                first_rec = sorted(group_records,
-                                   key=lambda x: reader_prio.index(x['version']))[0]
+                first_rec = sorted(
+                    group_records,
+                    key=lambda x: reader_prio.index(x['version']))[0]
                 prioritized_records.append(first_rec)
             else:
                 logger.warning('Could not prioritize between records: %s' %
