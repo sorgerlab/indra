@@ -1,8 +1,6 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import logging
-import xml.etree.ElementTree as ET
 from datetime import datetime
+import xml.etree.ElementTree as ET
 
 from indra.statements import *
 from indra.statements.statements import Migration
@@ -85,11 +83,11 @@ class CWMSProcessor(object):
 
         # Keep a list of events that are part of relations and events
         # subsumed by other events
-        self.relation_events = []
-        self.subsumed_events = []
+        self.relation_events = set()
+        self.subsumed_events = set()
 
         # Keep a list of unhandled events for development purposes
-        self._unhandled_events = []
+        self._unhandled_events = set()
 
         self._preprocess_events()
 
@@ -100,7 +98,7 @@ class CWMSProcessor(object):
             if affected is not None:
                 affected_id = affected.attrib.get('id')
                 if affected_id:
-                    self.subsumed_events.append(affected_id)
+                    self.subsumed_events.add(affected_id)
 
     def extract_causal_relations(self):
         """Extract Influence Statements from the EKB."""
@@ -121,7 +119,7 @@ class CWMSProcessor(object):
 
         # Print unhandled event types
         logger.debug('Unhandled event types: %s' %
-                     (', '.join(sorted(list(set(self._unhandled_events))))))
+                     (', '.join(sorted(self._unhandled_events))))
 
     def extract_events(self):
         """Extract standalone Events from the EKB."""
@@ -199,7 +197,7 @@ class CWMSProcessor(object):
         element_id = element.attrib.get('id')
         rel_type = element.find('type').text
         if rel_type not in POLARITY_DICT[element_type]:
-            self._unhandled_events.append(rel_type)
+            self._unhandled_events.add(rel_type)
             return None
         member1_id, member1_term = self._get_term_by_role(
             element, member1_arg, is_arg)
@@ -213,7 +211,7 @@ class CWMSProcessor(object):
         if member1 is None or member2 is None:
             return None
 
-        self.relation_events += [member1_id, member2_id, element_id]
+        self.relation_events |= {member1_id, member2_id, element_id}
 
         evidence = self._get_evidence(element)
 
@@ -286,7 +284,7 @@ class CWMSProcessor(object):
                     size = self._get_size(size_arg.attrib['id'])
                     break
         # Get more locations from arguments and inevents
-        if agent_arg_term:
+        if agent_arg_term is not None:
             locs = self._get_migration_locations(
                 agent_arg_term, locs, 'destination')
             inevent_term = self._get_inevent_term(agent_arg_term)
@@ -303,7 +301,7 @@ class CWMSProcessor(object):
                     time = self._extract_time(other_event_term)
                 if size is None:
                     size = self._get_size_and_entity(other_event_term)
-        if affected_arg_term:
+        if affected_arg_term is not None:
             locs = self._get_migration_locations(
                 affected_arg_term, locs, 'destination')
         context = MovementContext(locations=locs, time=time)
@@ -326,7 +324,7 @@ class CWMSProcessor(object):
         if inevent is None:
             return None
         inevent_id = inevent.attrib['id']
-        self.subsumed_events.append(inevent_id)
+        self.subsumed_events.add(inevent_id)
         inevent_term = self.tree.find("*[@id='%s']" % inevent_id)
         return inevent_term
 
@@ -342,7 +340,7 @@ class CWMSProcessor(object):
                     if refset_arg is not None:
                         if arg.attrib.get('id') == refset_arg.attrib.get('id'):
                             event_id = ev.attrib['id']
-                            self.subsumed_events.append(event_id)
+                            self.subsumed_events.add(event_id)
                             event_term = self.tree.find("*[@id='%s']"
                                                         % event_id)
                             return event_term
@@ -355,7 +353,7 @@ class CWMSProcessor(object):
                                 if arg_refset_arg.attrib.get('id') == \
                                         arg_term.attrib.get('id'):
                                     event_id = ev.attrib['id']
-                                    self.subsumed_events.append(event_id)
+                                    self.subsumed_events.add(event_id)
                                     event_term = self.tree.find("*[@id='%s']"
                                                                 % event_id)
                                     return event_term
@@ -477,11 +475,11 @@ class CWMSProcessor(object):
         return event_obj
 
     def get_event_or_migration(self, event_term):
-        if event_term.find('type').text in [
-           'ONT::MOVE', 'ONT::DEPART', 'ONT::ARRIVE']:
-                return self.migration_from_event(event_term)
-        else:
-            return self._get_event(event_term)
+        #if event_term.find('type').text in [
+        #   'ONT::MOVE', 'ONT::DEPART', 'ONT::ARRIVE']:
+        #        return self.migration_from_event(event_term)
+        #else:
+        return self._get_event(event_term)
 
     def get_context(self, element):
         time = self._extract_time(element)

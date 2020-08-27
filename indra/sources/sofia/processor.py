@@ -157,36 +157,33 @@ class SofiaProcessor(object):
 
 
 class SofiaJsonProcessor(SofiaProcessor):
-    def __init__(self, json_list):
-        self._events = self.process_events(json_list)
+    def __init__(self, jd):
+        self._events = self.process_events(jd)
         self.statements = []
         self.relation_subj_obj_ids = []
 
-    def process_events(self, json_list):
+    def process_events(self, jd):
         event_dict = {}
         # First get all events from reader output
-        for _dict in json_list:
-            events = _dict['Events']
-            for event in events:
-                event_index = event.get('Event Index')
-                event_dict[event_index] = self.process_event(event)
+        events = jd['events']
+        for event in events:
+            event_index = event.get('Event Index')
+            event_dict[event_index] = self.process_event(event)
         processed_event_dict = self.get_meaningful_events(event_dict)
         return processed_event_dict
 
-    def extract_relations(self, json_list):
+    def extract_relations(self, jd):
         stmts = []
-        for _dict in json_list:
-            json_relations = _dict['Causal']
-            for rel_dict in json_relations:
-                # Save indexes of causes and effects
-                current_relation_events = self.get_relation_events(rel_dict)
-                for ix in current_relation_events:
-                    self.relation_subj_obj_ids.append(ix)
-                # Make Influence Statements
-                stmt_list = self._build_influences(rel_dict)
-                if not stmt_list:
-                    continue
-                stmts = stmts + stmt_list
+        for rel_dict in jd['causal']:
+            # Save indexes of causes and effects
+            current_relation_events = self.get_relation_events(rel_dict)
+            for ix in current_relation_events:
+                self.relation_subj_obj_ids.append(ix)
+            # Make Influence Statements
+            stmt_list = self._build_influences(rel_dict)
+            if not stmt_list:
+                continue
+            stmts = stmts + stmt_list
         for stmt in stmts:
             self.statements.append(stmt)
 

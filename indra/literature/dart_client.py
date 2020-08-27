@@ -3,6 +3,7 @@
 import json
 import logging
 import requests
+import itertools
 from datetime import datetime
 from collections import defaultdict
 from indra.config import get_config
@@ -13,9 +14,11 @@ logger = logging.getLogger(__name__)
 
 dart_uname = get_config('DART_WM_USERNAME')
 dart_pwd = get_config('DART_WM_PASSWORD')
-
-dart_base_url = 'https://indra-ingest-pipeline-rest-1.prod.dart' \
-                '.worldmodelers.com/dart/api/v1/readers'
+# The URL is configurable since it is subject to change per use case
+dart_base_url = get_config('DART_WM_URL')
+if dart_base_url is None:
+    dart_base_url = ('https://wm-ingest-pipeline-rest-1.prod.dart'
+                     '.worldmodelers.com/dart/api/v1/readers')
 meta_endpoint = dart_base_url + '/query'
 downl_endpoint = dart_base_url + '/download/'
 
@@ -61,26 +64,80 @@ def get_reader_outputs(readers=None, versions=None, document_ids=None,
         A two-level dict of reader output keyed by reader and then
         document id.
     """
-    metadata_json = get_reader_output_records(readers=readers, versions=versions,
-                                              document_ids=document_ids,
-                                              timestamp=timestamp)
+    records = get_reader_output_records(readers=readers, versions=versions,
+                                        document_ids=document_ids,
+                                        timestamp=timestamp)
+    logger.info('Got %d document storage keys. Fetching output...' %
+                len(records))
+    return download_records(records)
+
+
+def download_records(records):
+    """Return reader outputs corresponding to a list of records.
+
+    Parameters
+    ----------
+    records : list of dict
+        A list of records returned from the reader output query.
+
+    Returns
+    -------
+    dict(str, dict)
+        A two-level dict of reader output keyed by reader and then
+        document id.
+    """
     # Loop document keys and get documents
     reader_outputs = defaultdict(dict)
-    if metadata_json and 'records' in metadata_json:
-        logger.info('Got %d document storage keys. Fetching output...' %
-                    len(metadata_json['records']))
-        for record in metadata_json['records']:
-            reader = record['identity']
-            doc_id = record['document_id']
-            storage_key = record['storage_key']
-            try:
-                reader_outputs[reader][doc_id] = \
-                    get_content_by_storage_key(storage_key)
-            except Exception as e:
-                logger.warning('Error downloading %s' % storage_key)
-    else:
-        logger.warning('Empty meta data json returned')
+    for record in records:
+        reader = record['identity']
+        doc_id = record['document_id']
+        storage_key = record['storage_key']
+        try:
+            reader_outputs[reader][doc_id] = \
+                get_content_by_storage_key(storage_key)
+        except Exception as e:
+            logger.warning('Error downloading %s' % storage_key)
     return dict(reader_outputs)
+
+
+def prioritize_records(records, priorities=None):
+    """Return unique records per reader and document prioritizing by version.
+
+    Parameters
+    ----------
+    records : list of dict
+        A list of records returned from the reader output query.
+    priorities : dict of list
+        A dict keyed by reader names (e.g., cwms, eidos) with values
+        representing reader versions in decreasing order of priority.
+
+    Returns
+    -------
+    records : list of dict
+        A list of records that are unique per reader and document, picked by
+        version priority when multiple records exist for the same reader
+        and document.
+    """
+    priorities = {} if not priorities else priorities
+    prioritized_records = []
+    key = lambda x: (x['identity'], x['document_id'])
+    for (reader, doc_id), group in itertools.groupby(sorted(records, key=key),
+                                                     key=key):
+        group_records = list(group)
+        if len(group_records) == 1:
+            prioritized_records.append(group_records[0])
+        else:
+            reader_prio = priorities.get(reader)
+            if reader_prio:
+                first_rec = sorted(
+                    group_records,
+                    key=lambda x: reader_prio.index(x['version']))[0]
+                prioritized_records.append(first_rec)
+            else:
+                logger.warning('Could not prioritize between records: %s' %
+                               str(group_records))
+                prioritized_records.append(group_records[0])
+    return prioritized_records
 
 
 def get_reader_output_records(readers=None, versions=None, document_ids=None,
@@ -119,10 +176,16 @@ def get_reader_output_records(readers=None, versions=None, document_ids=None,
     query_data = _jsonify_query_data(readers, versions, document_ids, timestamp)
     if not query_data:
         return {}
-    res = requests.post(meta_endpoint, data={'metadata': query_data},
+    full_query_data = {'metadata': query_data}
+    res = requests.post(meta_endpoint, data=full_query_data,
                         auth=(dart_uname, dart_pwd))
     res.raise_for_status()
-    return res.json()
+    rj = res.json()
+
+    # This handles both empty list and dict
+    if not rj or 'records' not in rj:
+        return []
+    return rj['records']
 
 
 def _check_lists(lst):

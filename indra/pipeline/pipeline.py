@@ -280,7 +280,7 @@ class AssemblyPipeline():
             Any value that the given function returns.
         """
         statements = kwargs.pop('statements', None)
-        if statements:
+        if statements is not None:
             return func(statements, *args, **kwargs)
         return func(*args, **kwargs)
 
@@ -317,7 +317,7 @@ class AssemblyPipeline():
         for k, v in func_kwargs.items():
             kwarg_value = self.get_argument_value(v)
             new_kwargs[k] = kwarg_value
-        if statements:
+        if statements is not None:
             new_kwargs['statements'] = statements
         if kwargs:
             for k, v in kwargs.items():
