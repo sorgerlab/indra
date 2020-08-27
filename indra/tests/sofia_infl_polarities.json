@@ -1,6 +1,6 @@
 [
  {
-  "Causal": [
+  "causal": [
    {
     "Cause": "rainfall",
     "Cause Index": "E1",
@@ -16,8 +16,8 @@
     "Source_File": "userinput"
    }
   ],
-  "Entities": [],
-  "Events": [
+  "entities": [],
+  "events": [
    {
     "Agent": "",
     "Agent Index": "",
@@ -87,7 +87,7 @@
     "Time": ""
    }
   ],
-  "Variables": {
+  "variables": {
    "Index": "V1",
    "Indicator": "None",
    "Scoring": "",

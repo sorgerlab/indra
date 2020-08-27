@@ -1,8 +1,7 @@
-[
  {
-  "Causal": [],
-  "Entities": [],
-  "Events": [
+  "causal": [],
+  "entities": [],
+  "events": [
    {
     "Agent": "",
     "Agent Index": "",
@@ -38,7 +37,7 @@
     "Time": ""
    }
   ],
-  "Variables": {
+  "variables": {
    "Index": "V1",
    "Indicator": "None",
    "Scoring": "",
@@ -46,4 +45,3 @@
    "Source_File": "userinput"
   }
  }
-]
