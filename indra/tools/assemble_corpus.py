@@ -377,7 +377,7 @@ def run_preassembly(stmts_in, return_toplevel=True, poolsize=None,
                     matches_fun=None, refinement_fun=None, refinement_ns=None,
                     flatten_evidence=False, flatten_evidence_collect_from=None,
                     normalize_equivalences=False, normalize_opposites=False,
-                    normalize_ns='WM', **kwargs):
+                    normalize_ns='WM', run_refinement=True, **kwargs):
     """Run preassembly on a list of statements.
 
     Parameters
@@ -452,7 +452,9 @@ def run_preassembly(stmts_in, return_toplevel=True, poolsize=None,
         logger.info('Normalizing opposites on %d statements' % len(pa.stmts))
         pa.normalize_opposites(normalize_ns)
 
-    run_preassembly_duplicate(pa, be, save=dump_pkl_unique)
+    dedupl_stmts = run_preassembly_duplicate(pa, be, save=dump_pkl_unique)
+    if not run_refinement:
+        return dedupl_stmts
 
     dump_pkl = kwargs.get('save')
     size_cutoff = size_cutoff if size_cutoff else 100
