@@ -359,6 +359,16 @@ class CWMSProcessor(object):
                                     return event_term
         return None
 
+    def _get_arg_event_term(self, term):
+        potential_args = term.findall('arg1') + term.findall('arg2')
+        for arg in potential_args:
+            if arg.attrib.get('id'):
+                new_term = self.tree.find("*[@id='%s']" % arg.attrib['id'])
+                if new_term is not None:
+                    self.subsumed_events.add(new_term.attrib['id'])
+                    return new_term
+
+
     def _get_migration_locations(self, event_term, existing_locs=None,
                                  default_role='unknown'):
         if existing_locs is None:
@@ -447,7 +457,7 @@ class CWMSProcessor(object):
         """Extract and Event from the given EKB element."""
         # Now see if there is a modifier like assoc-with connected
         # to the main concept
-        assoc_with = self._get_assoc_with(event_term)
+        assoc_with = self._get_assoc_with_text(event_term)
 
         # Get the element's text and use it to construct a Concept
         element_text_element = event_term.find('text')
@@ -466,6 +476,19 @@ class CWMSProcessor(object):
             if assoc_with is not None:
                 element_db_refs['CWMS'] += ('|%s' % assoc_with)
 
+        theme_gr, theme_prop_gr, theme_proc_gr, theme_proc_prop_gr = \
+            None, None, None, None
+        theme_gr = self._get_wm_grounding(event_term)
+        if not theme_gr:
+            arg_term = self._get_arg_event_term(event_term)
+            if arg_term is not None:
+                assoc_term = self._get_assoc_with_term(arg_term)
+                if assoc_term is not None:
+                    theme_gr = self._get_wm_grounding(assoc_term)
+                    theme_prop_gr = self._get_wm_grounding(arg_term)
+
+        element_db_refs['WM'] = (theme_gr, theme_prop_gr, theme_proc_gr,
+                                 theme_proc_prop_gr)
         concept = Concept(element_name, db_refs=element_db_refs)
 
         ev_type = event_term.find('type').text
@@ -475,6 +498,15 @@ class CWMSProcessor(object):
         event_obj = Event(concept, delta=delta, context=context,
                           evidence=evidence)
         return event_obj
+
+    def _get_wm_grounding(self, element):
+        wm_gr = None
+        wm_type_element = element.find('wm-type')
+        if wm_type_element is not None:
+            grounding_element = wm_type_element.find('grounding')
+            if grounding_element is not None:
+                wm_gr = grounding_element.text
+        return wm_gr
 
     def get_event_or_migration(self, event_term):
         #if event_term.find('type').text in [
@@ -595,7 +627,7 @@ class CWMSProcessor(object):
         geoloc_context = RefContext(name=text, db_refs=db_refs)
         return geoloc_context
 
-    def _get_assoc_with(self, element_term):
+    def _get_assoc_with_text(self, element_term):
         # NOTE: there could be multiple assoc-withs here that we may
         # want to handle
         assoc_with = element_term.find('assoc-with')
@@ -615,6 +647,14 @@ class CWMSProcessor(object):
                 assoc_with_grounding = assoc_with_term.find('type').text
                 return assoc_with_grounding
         return None
+
+    def _get_assoc_with_term(self, element_term):
+        assoc_with = element_term.find('assoc-with')
+        if assoc_with is not None:
+            assoc_with_id = assoc_with.attrib.get('id')
+            if assoc_with_id is not None:
+                assoc_with_term = self.tree.find("*[@id='%s']" % assoc_with_id)
+                return assoc_with_term
 
     def _get_evidence(self, event_tag):
         text = self._get_evidence_text(event_tag)
