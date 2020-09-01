@@ -484,8 +484,14 @@ class CWMSProcessor(object):
             if arg_term is not None:
                 assoc_term = self._get_assoc_with_term(arg_term)
                 if assoc_term is not None:
-                    theme_gr = self._get_wm_grounding(assoc_term)
-                    theme_prop_gr = self._get_wm_grounding(arg_term)
+                    new_arg_term = self._get_arg_event_term(assoc_term)
+                    if new_arg_term is not None:
+                        theme_gr = self._get_wm_grounding(new_arg_term)
+                        theme_proc_gr = self._get_wm_grounding(assoc_term)
+                        theme_proc_prop_gr = self._get_wm_grounding(arg_term)
+                    else:
+                        theme_gr = self._get_wm_grounding(assoc_term)
+                        theme_prop_gr = self._get_wm_grounding(arg_term)
 
         element_db_refs['WM'] = (theme_gr, theme_prop_gr, theme_proc_gr,
                                  theme_proc_prop_gr)
