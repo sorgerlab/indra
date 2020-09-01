@@ -368,7 +368,6 @@ class CWMSProcessor(object):
                     self.subsumed_events.add(new_term.attrib['id'])
                     return new_term
 
-
     def _get_migration_locations(self, event_term, existing_locs=None,
                                  default_role='unknown'):
         if existing_locs is None:
@@ -702,7 +701,8 @@ class CWMSProcessor(object):
         logger.debug('Starting with %d Statements.' % len(self.statements))
         for stmt in self.statements:
             if isinstance(stmt, Event):
-                evmk = stmt.evidence[0].matches_key()
+                evmk = stmt.evidence[0].matches_key() + \
+                    stmt.concept.matches_key()
             elif isinstance(stmt, Influence):
                 evmk = (stmt.evidence[0].matches_key() +
                         stmt.subj.matches_key() + stmt.obj.matches_key())
