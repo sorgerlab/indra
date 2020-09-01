@@ -28,6 +28,22 @@ class SofiaProcessor(object):
         ]
         return {k: event_dict.get(v) for k, v in mappings}
 
+    @staticmethod
+    def process_entity(ent_dict):
+        key_mappings = [
+            # Our key: their key
+            {'Source': 'Source_File',
+             'Query': 'Query',
+             'Score': 'Score',
+             'Entity_Index': 'Entity Index',
+             'Entity': 'Entity',
+             'Entity_Type': 'Entity_Type',
+             'Indicator': 'Indicator',
+             'Qualifier': 'Qualifier',
+             'Text': 'Sentence'}
+        ]
+        return {k: ent_dict.get(v) for k, v in key_mappings}
+
     def _build_influences(self, rel_dict):
         stmt_list = []
         cause_entries = rel_dict.get('Cause Index')
@@ -158,9 +174,19 @@ class SofiaProcessor(object):
 
 class SofiaJsonProcessor(SofiaProcessor):
     def __init__(self, jd):
+        self._entities = self.process_entities(jd)
         self._events = self.process_events(jd)
         self.statements = []
         self.relation_subj_obj_ids = []
+
+    def process_entities(self, jd):
+        ent_dict = {}
+        entity_list = jd['entities']
+        for entity in entity_list:
+            ent_index = entity['Entity_Index']
+            ent_dict[ent_index] = self.process_entity(entity)
+
+        return ent_dict
 
     def process_events(self, jd):
         event_dict = {}
