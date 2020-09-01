@@ -243,16 +243,29 @@ class EidosProcessor(object):
             if not grounding:
                 return None
 
+            entry_types = ['theme', 'themeProperties', 'themeProcess',
+                           'themeProcessProperties']
             entries = []
             values = grounding.get('values', [])
             # Values could still have been a None entry here
             if values:
                 for entry in values:
-                    ont_concept = entry.get('ontologyConcept')
-                    value = entry.get('value')
-                    if ont_concept is None or value is None:
-                        continue
-                    entries.append((ont_concept, value))
+                    compositional_entry = [None, None, None, None]
+                    for idx, entry_type in enumerate(entry_types):
+                        val = entry.get(entry_type)
+                        if val is None:
+                            continue
+                        # FIXME: can there be multiple entries here?
+                        val = val[0]
+                        ont_concept = val.get('ontologyConcept')
+                        score = val.get('value')
+                        if ont_concept is None or score is None:
+                            continue
+                        if ont_concept.endswith('/'):
+                            ont_concept = ont_concept[:-1]
+                        compositional_entry[idx] = \
+                            (ont_concept, score)
+                    entries.append(compositional_entry)
             return entries
 
         # Save raw text and Eidos scored groundings as db_refs
@@ -271,9 +284,8 @@ class EidosProcessor(object):
                 if key == 'UN':
                     db_refs[key] = [(s[0].replace(' ', '_'), s[1])
                                     for s in entries]
-                elif key == 'WM_FLATTENED' or key == 'WM':
-                    db_refs['WM'] = [(s[0].strip('/'), s[1])
-                                     for s in entries]
+                elif key in {'WM', 'WM_FLATTENED', 'WM_COMPOSITIONAL'}:
+                    db_refs['WM'] = entries
                 else:
                     db_refs[key] = entries
         return db_refs

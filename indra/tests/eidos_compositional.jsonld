@@ -1,0 +1,2979 @@
+{
+  "@context" : {
+    "Argument" : "https://w3id.org/wm/cag/argument",
+    "Corpus" : "https://w3id.org/wm/cag/corpus",
+    "Dependency" : "https://w3id.org/wm/cag/dependency",
+    "Document" : "https://w3id.org/wm/cag/document",
+    "Extraction" : "https://w3id.org/wm/cag/extraction",
+    "Grounding" : "https://w3id.org/wm/cag/grounding",
+    "Groundings" : "https://w3id.org/wm/cag/groundings",
+    "Interval" : "https://w3id.org/wm/cag/interval",
+    "Provenance" : "https://w3id.org/wm/cag/provenance",
+    "Sentence" : "https://w3id.org/wm/cag/sentence",
+    "State" : "https://w3id.org/wm/cag/state",
+    "Trigger" : "https://w3id.org/wm/cag/trigger",
+    "Word" : "https://w3id.org/wm/cag/word"
+  },
+  "@type" : "Corpus",
+  "documents" : [ {
+    "@type" : "Document",
+    "@id" : "_:Document_1",
+    "id" : "test.txt",
+    "text" : "The XXX increased the price of water transportation.\nThe XXX increased food insecurity.\nThe XXX increased the price of wheat.\nThe XXX increased food imports.\nThe XXX increased water trucking.\nThe XXX increased the import tax.\nThe XXX increased the cost of feeding the children.\nThe XXX increased the cost of production.\nThe XXX increased the cost of oil exports.",
+    "sentences" : [ {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_1",
+      "text" : "The XXX increased the price of water transportation .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_1",
+        "text" : "The",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 0,
+        "endOffset" : 3,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_2",
+        "text" : "XXX",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 4,
+        "endOffset" : 7,
+        "lemma" : "xxx",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_3",
+        "text" : "increased",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 8,
+        "endOffset" : 17,
+        "lemma" : "increase",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_4",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 18,
+        "endOffset" : 21,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_5",
+        "text" : "price",
+        "tag" : "NN",
+        "entity" : "B-Property",
+        "startOffset" : 22,
+        "endOffset" : 27,
+        "lemma" : "price",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_6",
+        "text" : "of",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 28,
+        "endOffset" : 30,
+        "lemma" : "of",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_7",
+        "text" : "water",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 31,
+        "endOffset" : 36,
+        "lemma" : "water",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_8",
+        "text" : "transportation",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 37,
+        "endOffset" : 51,
+        "lemma" : "transportation",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_9",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 51,
+        "endOffset" : 52,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_5"
+        },
+        "destination" : {
+          "@id" : "_:Word_4"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_3"
+        },
+        "destination" : {
+          "@id" : "_:Word_5"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_2"
+        },
+        "destination" : {
+          "@id" : "_:Word_1"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_3"
+        },
+        "destination" : {
+          "@id" : "_:Word_2"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_8"
+        },
+        "destination" : {
+          "@id" : "_:Word_6"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_8"
+        },
+        "destination" : {
+          "@id" : "_:Word_7"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_3"
+        },
+        "destination" : {
+          "@id" : "_:Word_9"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_5"
+        },
+        "destination" : {
+          "@id" : "_:Word_8"
+        },
+        "relation" : "nmod_of"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_2",
+      "text" : "The XXX increased food insecurity .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_10",
+        "text" : "The",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 53,
+        "endOffset" : 56,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_11",
+        "text" : "XXX",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 57,
+        "endOffset" : 60,
+        "lemma" : "xxx",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_12",
+        "text" : "increased",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 61,
+        "endOffset" : 70,
+        "lemma" : "increase",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_13",
+        "text" : "food",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 71,
+        "endOffset" : 75,
+        "lemma" : "food",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_14",
+        "text" : "insecurity",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 76,
+        "endOffset" : 86,
+        "lemma" : "insecurity",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_15",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 86,
+        "endOffset" : 87,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_12"
+        },
+        "destination" : {
+          "@id" : "_:Word_14"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_12"
+        },
+        "destination" : {
+          "@id" : "_:Word_15"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_14"
+        },
+        "destination" : {
+          "@id" : "_:Word_13"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_11"
+        },
+        "destination" : {
+          "@id" : "_:Word_10"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_12"
+        },
+        "destination" : {
+          "@id" : "_:Word_11"
+        },
+        "relation" : "nsubj"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_3",
+      "text" : "The XXX increased the price of wheat .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_16",
+        "text" : "The",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 88,
+        "endOffset" : 91,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_17",
+        "text" : "XXX",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 92,
+        "endOffset" : 95,
+        "lemma" : "xxx",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_18",
+        "text" : "increased",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 96,
+        "endOffset" : 105,
+        "lemma" : "increase",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_19",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 106,
+        "endOffset" : 109,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_20",
+        "text" : "price",
+        "tag" : "NN",
+        "entity" : "B-Property",
+        "startOffset" : 110,
+        "endOffset" : 115,
+        "lemma" : "price",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_21",
+        "text" : "of",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 116,
+        "endOffset" : 118,
+        "lemma" : "of",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_22",
+        "text" : "wheat",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 119,
+        "endOffset" : 124,
+        "lemma" : "wheat",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_23",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 124,
+        "endOffset" : 125,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_20"
+        },
+        "destination" : {
+          "@id" : "_:Word_22"
+        },
+        "relation" : "nmod_of"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_20"
+        },
+        "destination" : {
+          "@id" : "_:Word_19"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_18"
+        },
+        "destination" : {
+          "@id" : "_:Word_20"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_18"
+        },
+        "destination" : {
+          "@id" : "_:Word_23"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_22"
+        },
+        "destination" : {
+          "@id" : "_:Word_21"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_17"
+        },
+        "destination" : {
+          "@id" : "_:Word_16"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_18"
+        },
+        "destination" : {
+          "@id" : "_:Word_17"
+        },
+        "relation" : "nsubj"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_4",
+      "text" : "The XXX increased food imports .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_24",
+        "text" : "The",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 126,
+        "endOffset" : 129,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_25",
+        "text" : "XXX",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 130,
+        "endOffset" : 133,
+        "lemma" : "xxx",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_26",
+        "text" : "increased",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 134,
+        "endOffset" : 143,
+        "lemma" : "increase",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_27",
+        "text" : "food",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 144,
+        "endOffset" : 148,
+        "lemma" : "food",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_28",
+        "text" : "imports",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 149,
+        "endOffset" : 156,
+        "lemma" : "import",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_29",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 156,
+        "endOffset" : 157,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_26"
+        },
+        "destination" : {
+          "@id" : "_:Word_28"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_26"
+        },
+        "destination" : {
+          "@id" : "_:Word_29"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_28"
+        },
+        "destination" : {
+          "@id" : "_:Word_27"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_25"
+        },
+        "destination" : {
+          "@id" : "_:Word_24"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_26"
+        },
+        "destination" : {
+          "@id" : "_:Word_25"
+        },
+        "relation" : "nsubj"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_5",
+      "text" : "The XXX increased water trucking .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_30",
+        "text" : "The",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 158,
+        "endOffset" : 161,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_31",
+        "text" : "XXX",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 162,
+        "endOffset" : 165,
+        "lemma" : "xxx",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_32",
+        "text" : "increased",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 166,
+        "endOffset" : 175,
+        "lemma" : "increase",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_33",
+        "text" : "water",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 176,
+        "endOffset" : 181,
+        "lemma" : "water",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_34",
+        "text" : "trucking",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 182,
+        "endOffset" : 190,
+        "lemma" : "trucking",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_35",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 190,
+        "endOffset" : 191,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_32"
+        },
+        "destination" : {
+          "@id" : "_:Word_34"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_32"
+        },
+        "destination" : {
+          "@id" : "_:Word_35"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_34"
+        },
+        "destination" : {
+          "@id" : "_:Word_33"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_31"
+        },
+        "destination" : {
+          "@id" : "_:Word_30"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_32"
+        },
+        "destination" : {
+          "@id" : "_:Word_31"
+        },
+        "relation" : "nsubj"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_6",
+      "text" : "The XXX increased the import tax .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_36",
+        "text" : "The",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 192,
+        "endOffset" : 195,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_37",
+        "text" : "XXX",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 196,
+        "endOffset" : 199,
+        "lemma" : "xxx",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_38",
+        "text" : "increased",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 200,
+        "endOffset" : 209,
+        "lemma" : "increase",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_39",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 210,
+        "endOffset" : 213,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_40",
+        "text" : "import",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 214,
+        "endOffset" : 220,
+        "lemma" : "import",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_41",
+        "text" : "tax",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 221,
+        "endOffset" : 224,
+        "lemma" : "tax",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_42",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 224,
+        "endOffset" : 225,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_38"
+        },
+        "destination" : {
+          "@id" : "_:Word_42"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_41"
+        },
+        "destination" : {
+          "@id" : "_:Word_40"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_37"
+        },
+        "destination" : {
+          "@id" : "_:Word_36"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_38"
+        },
+        "destination" : {
+          "@id" : "_:Word_41"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_38"
+        },
+        "destination" : {
+          "@id" : "_:Word_37"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_41"
+        },
+        "destination" : {
+          "@id" : "_:Word_39"
+        },
+        "relation" : "det"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_7",
+      "text" : "The XXX increased the cost of feeding the children .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_43",
+        "text" : "The",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 226,
+        "endOffset" : 229,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_44",
+        "text" : "XXX",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 230,
+        "endOffset" : 233,
+        "lemma" : "xxx",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_45",
+        "text" : "increased",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 234,
+        "endOffset" : 243,
+        "lemma" : "increase",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_46",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 244,
+        "endOffset" : 247,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_47",
+        "text" : "cost",
+        "tag" : "NN",
+        "entity" : "B-Property",
+        "startOffset" : 248,
+        "endOffset" : 252,
+        "lemma" : "cost",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_48",
+        "text" : "of",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 253,
+        "endOffset" : 255,
+        "lemma" : "of",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_49",
+        "text" : "feeding",
+        "tag" : "VBG",
+        "entity" : "O",
+        "startOffset" : 256,
+        "endOffset" : 263,
+        "lemma" : "feed",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_50",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 264,
+        "endOffset" : 267,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_51",
+        "text" : "children",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 268,
+        "endOffset" : 276,
+        "lemma" : "child",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_52",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 276,
+        "endOffset" : 277,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_47"
+        },
+        "destination" : {
+          "@id" : "_:Word_46"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_45"
+        },
+        "destination" : {
+          "@id" : "_:Word_47"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_49"
+        },
+        "destination" : {
+          "@id" : "_:Word_48"
+        },
+        "relation" : "mark"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_51"
+        },
+        "destination" : {
+          "@id" : "_:Word_50"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_47"
+        },
+        "destination" : {
+          "@id" : "_:Word_49"
+        },
+        "relation" : "acl_of"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_45"
+        },
+        "destination" : {
+          "@id" : "_:Word_52"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_44"
+        },
+        "destination" : {
+          "@id" : "_:Word_43"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_45"
+        },
+        "destination" : {
+          "@id" : "_:Word_44"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_49"
+        },
+        "destination" : {
+          "@id" : "_:Word_51"
+        },
+        "relation" : "dobj"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_8",
+      "text" : "The XXX increased the cost of production .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_53",
+        "text" : "The",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 278,
+        "endOffset" : 281,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_54",
+        "text" : "XXX",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 282,
+        "endOffset" : 285,
+        "lemma" : "xxx",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_55",
+        "text" : "increased",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 286,
+        "endOffset" : 295,
+        "lemma" : "increase",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_56",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 296,
+        "endOffset" : 299,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_57",
+        "text" : "cost",
+        "tag" : "NN",
+        "entity" : "B-Property",
+        "startOffset" : 300,
+        "endOffset" : 304,
+        "lemma" : "cost",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_58",
+        "text" : "of",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 305,
+        "endOffset" : 307,
+        "lemma" : "of",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_59",
+        "text" : "production",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 308,
+        "endOffset" : 318,
+        "lemma" : "production",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_60",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 318,
+        "endOffset" : 319,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_57"
+        },
+        "destination" : {
+          "@id" : "_:Word_59"
+        },
+        "relation" : "nmod_of"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_57"
+        },
+        "destination" : {
+          "@id" : "_:Word_56"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_55"
+        },
+        "destination" : {
+          "@id" : "_:Word_57"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_55"
+        },
+        "destination" : {
+          "@id" : "_:Word_60"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_59"
+        },
+        "destination" : {
+          "@id" : "_:Word_58"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_54"
+        },
+        "destination" : {
+          "@id" : "_:Word_53"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_55"
+        },
+        "destination" : {
+          "@id" : "_:Word_54"
+        },
+        "relation" : "nsubj"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_9",
+      "text" : "The XXX increased the cost of oil exports .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_61",
+        "text" : "The",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 320,
+        "endOffset" : 323,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_62",
+        "text" : "XXX",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 324,
+        "endOffset" : 327,
+        "lemma" : "xxx",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_63",
+        "text" : "increased",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 328,
+        "endOffset" : 337,
+        "lemma" : "increase",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_64",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 338,
+        "endOffset" : 341,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_65",
+        "text" : "cost",
+        "tag" : "NN",
+        "entity" : "B-Property",
+        "startOffset" : 342,
+        "endOffset" : 346,
+        "lemma" : "cost",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_66",
+        "text" : "of",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 347,
+        "endOffset" : 349,
+        "lemma" : "of",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_67",
+        "text" : "oil",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 350,
+        "endOffset" : 353,
+        "lemma" : "oil",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_68",
+        "text" : "exports",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 354,
+        "endOffset" : 361,
+        "lemma" : "export",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_69",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 361,
+        "endOffset" : 362,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_65"
+        },
+        "destination" : {
+          "@id" : "_:Word_64"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_63"
+        },
+        "destination" : {
+          "@id" : "_:Word_65"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_62"
+        },
+        "destination" : {
+          "@id" : "_:Word_61"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_68"
+        },
+        "destination" : {
+          "@id" : "_:Word_67"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_68"
+        },
+        "destination" : {
+          "@id" : "_:Word_66"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_63"
+        },
+        "destination" : {
+          "@id" : "_:Word_62"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_63"
+        },
+        "destination" : {
+          "@id" : "_:Word_69"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_65"
+        },
+        "destination" : {
+          "@id" : "_:Word_68"
+        },
+        "relation" : "nmod_of"
+      } ]
+    } ]
+  } ],
+  "extractions" : [ {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_1",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "XXX",
+    "rule" : "simple-np",
+    "canonicalName" : "XXX",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional/concept",
+      "category" : "concept",
+      "values" : [ {
+        "@type" : "Grounding",
+        "value" : 0.0,
+        "display" : "Empty Compositional Grounding"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 4,
+        "end" : 6
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_1"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 2
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_2",
+    "type" : "relation",
+    "subtype" : "causation",
+    "labels" : [ "Causal", "DirectedRelation", "EntityLinker", "Event" ],
+    "text" : "XXX increased the price of water transportation",
+    "rule" : "ported_syntax_1_verb-Causal",
+    "canonicalName" : "XXX increased water transportation",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional"
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 4,
+        "end" : 50
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_1"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 8
+      } ]
+    } ],
+    "trigger" : {
+      "@type" : "Trigger",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 8,
+          "end" : 16
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_1"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    },
+    "arguments" : [ {
+      "@type" : "Argument",
+      "type" : "source",
+      "value" : {
+        "@id" : "_:Extraction_1"
+      }
+    }, {
+      "@type" : "Argument",
+      "type" : "destination",
+      "value" : {
+        "@id" : "_:Extraction_3"
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_3",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "price of water transportation",
+    "rule" : "gazetteer++simple-np++Increase_ported_syntax_1_verb",
+    "canonicalName" : "water transportation",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional",
+      "values" : [ {
+        "@type" : "Grounding",
+        "theme" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/process/transport/",
+          "value" : 0.7079063057899475
+        } ],
+        "themeProperties" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/property/price_or_cost",
+          "value" : 0.8224437832832336
+        } ],
+        "value" : 0.7079063057899475,
+        "display" : "THEME: wm_compositional/process/transport/ (Properties: wm_compositional/property/price_or_cost)"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 22,
+        "end" : 50
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_1"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 5,
+        "end" : 8
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "INC",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 8,
+          "end" : 16
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_1"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    }, {
+      "@type" : "State",
+      "type" : "PROP",
+      "text" : "price"
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_4",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "XXX",
+    "rule" : "simple-np",
+    "canonicalName" : "XXX",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional/concept",
+      "category" : "concept",
+      "values" : [ {
+        "@type" : "Grounding",
+        "value" : 0.0,
+        "display" : "Empty Compositional Grounding"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 57,
+        "end" : 59
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_2"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 2
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_5",
+    "type" : "relation",
+    "subtype" : "causation",
+    "labels" : [ "Causal", "DirectedRelation", "EntityLinker", "Event" ],
+    "text" : "XXX increased food insecurity",
+    "rule" : "ported_syntax_1_verb-Causal",
+    "canonicalName" : "XXX increased food insecurity",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional"
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 57,
+        "end" : 85
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_2"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 5
+      } ]
+    } ],
+    "trigger" : {
+      "@type" : "Trigger",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 61,
+          "end" : 69
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_2"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    },
+    "arguments" : [ {
+      "@type" : "Argument",
+      "type" : "source",
+      "value" : {
+        "@id" : "_:Extraction_4"
+      }
+    }, {
+      "@type" : "Argument",
+      "type" : "destination",
+      "value" : {
+        "@id" : "_:Extraction_6"
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_6",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "food insecurity",
+    "rule" : "simple-np++Increase_ported_syntax_1_verb",
+    "canonicalName" : "food insecurity",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional",
+      "values" : [ {
+        "@type" : "Grounding",
+        "theme" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/concept/goods/food",
+          "value" : 1.0
+        } ],
+        "themeProperties" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/property/insecurity",
+          "value" : 1.0
+        } ],
+        "value" : 1.0,
+        "display" : "THEME: wm_compositional/concept/goods/food (Properties: wm_compositional/property/insecurity)"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 71,
+        "end" : 85
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_2"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 4,
+        "end" : 5
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "INC",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 61,
+          "end" : 69
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_2"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_7",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "XXX",
+    "rule" : "simple-np",
+    "canonicalName" : "XXX",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional/concept",
+      "category" : "concept",
+      "values" : [ {
+        "@type" : "Grounding",
+        "value" : 0.0,
+        "display" : "Empty Compositional Grounding"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 92,
+        "end" : 94
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_3"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 2
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_8",
+    "type" : "relation",
+    "subtype" : "causation",
+    "labels" : [ "Causal", "DirectedRelation", "EntityLinker", "Event" ],
+    "text" : "XXX increased the price of wheat",
+    "rule" : "ported_syntax_1_verb-Causal",
+    "canonicalName" : "XXX increased wheat",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional"
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 92,
+        "end" : 123
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_3"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 7
+      } ]
+    } ],
+    "trigger" : {
+      "@type" : "Trigger",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 96,
+          "end" : 104
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_3"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    },
+    "arguments" : [ {
+      "@type" : "Argument",
+      "type" : "source",
+      "value" : {
+        "@id" : "_:Extraction_7"
+      }
+    }, {
+      "@type" : "Argument",
+      "type" : "destination",
+      "value" : {
+        "@id" : "_:Extraction_9"
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_9",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "price of wheat",
+    "rule" : "gazetteer++simple-np++Increase_ported_syntax_1_verb",
+    "canonicalName" : "wheat",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional",
+      "values" : [ {
+        "@type" : "Grounding",
+        "theme" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/concept/agriculture/crop/cereals",
+          "value" : 0.8639863133430481
+        } ],
+        "themeProperties" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/property/price_or_cost",
+          "value" : 0.8224437832832336
+        } ],
+        "value" : 0.8639863133430481,
+        "display" : "THEME: wm_compositional/concept/agriculture/crop/cereals (Properties: wm_compositional/property/price_or_cost)"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 110,
+        "end" : 123
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_3"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 5,
+        "end" : 7
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "INC",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 96,
+          "end" : 104
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_3"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    }, {
+      "@type" : "State",
+      "type" : "PROP",
+      "text" : "price"
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_10",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "XXX",
+    "rule" : "simple-np",
+    "canonicalName" : "XXX",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional/concept",
+      "category" : "concept",
+      "values" : [ {
+        "@type" : "Grounding",
+        "value" : 0.0,
+        "display" : "Empty Compositional Grounding"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 130,
+        "end" : 132
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_4"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 2
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_11",
+    "type" : "relation",
+    "subtype" : "causation",
+    "labels" : [ "Causal", "DirectedRelation", "EntityLinker", "Event" ],
+    "text" : "XXX increased food imports",
+    "rule" : "ported_syntax_1_verb-Causal",
+    "canonicalName" : "XXX increased food imports",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional"
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 130,
+        "end" : 155
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_4"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 5
+      } ]
+    } ],
+    "trigger" : {
+      "@type" : "Trigger",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 134,
+          "end" : 142
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_4"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    },
+    "arguments" : [ {
+      "@type" : "Argument",
+      "type" : "source",
+      "value" : {
+        "@id" : "_:Extraction_10"
+      }
+    }, {
+      "@type" : "Argument",
+      "type" : "destination",
+      "value" : {
+        "@id" : "_:Extraction_12"
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_12",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "food imports",
+    "rule" : "simple-np++Increase_ported_syntax_1_verb",
+    "canonicalName" : "food imports",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional",
+      "values" : [ {
+        "@type" : "Grounding",
+        "theme" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/process/trade/import",
+          "value" : 0.8322694897651672
+        } ],
+        "themeProperties" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/concept/goods/food",
+          "value" : 1.0
+        } ],
+        "value" : 0.8322694897651672,
+        "display" : "THEME: wm_compositional/process/trade/import (Properties: wm_compositional/concept/goods/food)"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 144,
+        "end" : 155
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_4"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 4,
+        "end" : 5
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "INC",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 134,
+          "end" : 142
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_4"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_13",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "XXX",
+    "rule" : "simple-np",
+    "canonicalName" : "XXX",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional/concept",
+      "category" : "concept",
+      "values" : [ {
+        "@type" : "Grounding",
+        "value" : 0.0,
+        "display" : "Empty Compositional Grounding"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 162,
+        "end" : 164
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_5"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 2
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_14",
+    "type" : "relation",
+    "subtype" : "causation",
+    "labels" : [ "Causal", "DirectedRelation", "EntityLinker", "Event" ],
+    "text" : "XXX increased water trucking",
+    "rule" : "ported_syntax_1_verb-Causal",
+    "canonicalName" : "XXX increased water trucking",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional"
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 162,
+        "end" : 189
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_5"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 5
+      } ]
+    } ],
+    "trigger" : {
+      "@type" : "Trigger",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 166,
+          "end" : 174
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_5"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    },
+    "arguments" : [ {
+      "@type" : "Argument",
+      "type" : "source",
+      "value" : {
+        "@id" : "_:Extraction_13"
+      }
+    }, {
+      "@type" : "Argument",
+      "type" : "destination",
+      "value" : {
+        "@id" : "_:Extraction_15"
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_15",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "water trucking",
+    "rule" : "simple-np++Increase_ported_syntax_1_verb",
+    "canonicalName" : "water trucking",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional/concept",
+      "category" : "concept",
+      "values" : [ {
+        "@type" : "Grounding",
+        "theme" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/concept/water",
+          "value" : 0.7541308999061584
+        } ],
+        "value" : 0.7541308999061584,
+        "display" : "THEME: wm_compositional/concept/water"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 176,
+        "end" : 189
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_5"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 4,
+        "end" : 5
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "INC",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 166,
+          "end" : 174
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_5"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_16",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "XXX",
+    "rule" : "simple-np",
+    "canonicalName" : "XXX",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional/concept",
+      "category" : "concept",
+      "values" : [ {
+        "@type" : "Grounding",
+        "value" : 0.0,
+        "display" : "Empty Compositional Grounding"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 196,
+        "end" : 198
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_6"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 2
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_17",
+    "type" : "relation",
+    "subtype" : "causation",
+    "labels" : [ "Causal", "DirectedRelation", "EntityLinker", "Event" ],
+    "text" : "XXX increased the import tax",
+    "rule" : "ported_syntax_1_verb-Causal",
+    "canonicalName" : "XXX increased import tax",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional"
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 196,
+        "end" : 223
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_6"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 6
+      } ]
+    } ],
+    "trigger" : {
+      "@type" : "Trigger",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 200,
+          "end" : 208
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_6"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    },
+    "arguments" : [ {
+      "@type" : "Argument",
+      "type" : "source",
+      "value" : {
+        "@id" : "_:Extraction_16"
+      }
+    }, {
+      "@type" : "Argument",
+      "type" : "destination",
+      "value" : {
+        "@id" : "_:Extraction_18"
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_18",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "import tax",
+    "rule" : "simple-np++Increase_ported_syntax_1_verb",
+    "canonicalName" : "import tax",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional/concept",
+      "category" : "concept",
+      "values" : [ {
+        "@type" : "Grounding",
+        "theme" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/concept/economy/income",
+          "value" : 0.6054170727729797
+        } ],
+        "value" : 0.6054170727729797,
+        "display" : "THEME: wm_compositional/concept/economy/income"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 214,
+        "end" : 223
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_6"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 5,
+        "end" : 6
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "INC",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 200,
+          "end" : 208
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_6"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_19",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "XXX",
+    "rule" : "simple-np",
+    "canonicalName" : "XXX",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional/concept",
+      "category" : "concept",
+      "values" : [ {
+        "@type" : "Grounding",
+        "value" : 0.0,
+        "display" : "Empty Compositional Grounding"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 230,
+        "end" : 232
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_7"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 2
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_20",
+    "type" : "relation",
+    "subtype" : "causation",
+    "labels" : [ "Causal", "DirectedRelation", "EntityLinker", "Event" ],
+    "text" : "XXX increased the cost of feeding the children",
+    "rule" : "ported_syntax_1_verb-Causal",
+    "canonicalName" : "XXX increased feeding children",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional"
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 230,
+        "end" : 275
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_7"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 9
+      } ]
+    } ],
+    "trigger" : {
+      "@type" : "Trigger",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 234,
+          "end" : 242
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_7"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    },
+    "arguments" : [ {
+      "@type" : "Argument",
+      "type" : "source",
+      "value" : {
+        "@id" : "_:Extraction_19"
+      }
+    }, {
+      "@type" : "Argument",
+      "type" : "destination",
+      "value" : {
+        "@id" : "_:Extraction_21"
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_21",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "cost of feeding the children",
+    "rule" : "gazetteer++simple-np++Increase_ported_syntax_1_verb++simple-vp",
+    "canonicalName" : "feeding children",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional",
+      "values" : [ {
+        "@type" : "Grounding",
+        "theme" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/concept/health/nutrition/supplementary_feeding/",
+          "value" : 0.7722854018211365
+        } ],
+        "value" : 0.7722854018211365,
+        "display" : "THEME: wm_compositional/concept/health/nutrition/supplementary_feeding/"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 248,
+        "end" : 275
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_7"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 5,
+        "end" : 9
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "INC",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 234,
+          "end" : 242
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_7"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    }, {
+      "@type" : "State",
+      "type" : "PROP",
+      "text" : "cost"
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_22",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "XXX",
+    "rule" : "simple-np",
+    "canonicalName" : "XXX",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional/concept",
+      "category" : "concept",
+      "values" : [ {
+        "@type" : "Grounding",
+        "value" : 0.0,
+        "display" : "Empty Compositional Grounding"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 282,
+        "end" : 284
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_8"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 2
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_23",
+    "type" : "relation",
+    "subtype" : "causation",
+    "labels" : [ "Causal", "DirectedRelation", "EntityLinker", "Event" ],
+    "text" : "XXX increased the cost of production",
+    "rule" : "ported_syntax_1_verb-Causal",
+    "canonicalName" : "XXX increased cost of production",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional"
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 282,
+        "end" : 317
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_8"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 7
+      } ]
+    } ],
+    "trigger" : {
+      "@type" : "Trigger",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 286,
+          "end" : 294
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_8"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    },
+    "arguments" : [ {
+      "@type" : "Argument",
+      "type" : "source",
+      "value" : {
+        "@id" : "_:Extraction_22"
+      }
+    }, {
+      "@type" : "Argument",
+      "type" : "destination",
+      "value" : {
+        "@id" : "_:Extraction_24"
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_24",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "cost of production",
+    "rule" : "gazetteer++simple-np++Increase_ported_syntax_1_verb",
+    "canonicalName" : "cost of production",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional",
+      "values" : [ {
+        "@type" : "Grounding",
+        "theme" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/process/produce",
+          "value" : 0.7258864045143127
+        } ],
+        "themeProperties" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/property/price_or_cost",
+          "value" : 0.807763934135437
+        } ],
+        "value" : 0.7258864045143127,
+        "display" : "THEME: wm_compositional/process/produce (Properties: wm_compositional/property/price_or_cost)"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 300,
+        "end" : 317
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_8"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 5,
+        "end" : 7
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "INC",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 286,
+          "end" : 294
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_8"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    }, {
+      "@type" : "State",
+      "type" : "PROP",
+      "text" : "cost"
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_25",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "XXX",
+    "rule" : "simple-np",
+    "canonicalName" : "XXX",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional/concept",
+      "category" : "concept",
+      "values" : [ {
+        "@type" : "Grounding",
+        "value" : 0.0,
+        "display" : "Empty Compositional Grounding"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 324,
+        "end" : 326
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_9"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 2
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_26",
+    "type" : "relation",
+    "subtype" : "causation",
+    "labels" : [ "Causal", "DirectedRelation", "EntityLinker", "Event" ],
+    "text" : "XXX increased the cost of oil exports",
+    "rule" : "ported_syntax_1_verb-Causal",
+    "canonicalName" : "XXX increased oil exports",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional"
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 324,
+        "end" : 360
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_9"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 2,
+        "end" : 8
+      } ]
+    } ],
+    "trigger" : {
+      "@type" : "Trigger",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 328,
+          "end" : 336
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_9"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    },
+    "arguments" : [ {
+      "@type" : "Argument",
+      "type" : "source",
+      "value" : {
+        "@id" : "_:Extraction_25"
+      }
+    }, {
+      "@type" : "Argument",
+      "type" : "destination",
+      "value" : {
+        "@id" : "_:Extraction_27"
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_27",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "cost of oil exports",
+    "rule" : "gazetteer++simple-np++Increase_ported_syntax_1_verb",
+    "canonicalName" : "oil exports",
+    "groundings" : [ {
+      "@type" : "Groundings",
+      "name" : "wm_compositional",
+      "values" : [ {
+        "@type" : "Grounding",
+        "theme" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/concept/environment/natural_resources/fossil_fuels",
+          "value" : 0.8279272317886353
+        } ],
+        "themeProcess" : [ {
+          "@type" : "Grounding",
+          "ontologyConcept" : "wm_compositional/process/trade/export",
+          "value" : 0.8240621089935303
+        } ],
+        "value" : 0.9697259068489075,
+        "display" : "THEME: wm_compositional/concept/environment/natural_resources/fossil_fuels; THEME PROCESS: wm_compositional/process/trade/export)"
+      } ]
+    } ],
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharPositions" : [ {
+        "@type" : "Interval",
+        "start" : 342,
+        "end" : 360
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_9"
+      },
+      "sentenceWordPositions" : [ {
+        "@type" : "Interval",
+        "start" : 5,
+        "end" : 8
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "INC",
+      "text" : "increased",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharPositions" : [ {
+          "@type" : "Interval",
+          "start" : 328,
+          "end" : 336
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_9"
+        },
+        "sentenceWordPositions" : [ {
+          "@type" : "Interval",
+          "start" : 3,
+          "end" : 3
+        } ]
+      } ]
+    }, {
+      "@type" : "State",
+      "type" : "PROP",
+      "text" : "cost"
+    } ]
+  } ]
+}
