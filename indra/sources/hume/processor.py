@@ -243,8 +243,18 @@ class HumeJsonLdProcessor(object):
             if theme_id else None
 
         process_grounding = concept.db_refs['WM']
-        theme_grounding = _get_grounding(theme) if theme else None
-        property_grounding = _get_grounding(property) if property else None
+        theme_grounding = _get_grounding(theme).get('WM') if theme else None
+        property_grounding = _get_grounding(property).get('WM') \
+            if property else None
+        # FIXME: what do we do if there are multiple entries in
+        #  theme/property grounding?
+        assert property_grounding is None or len(property_grounding) == 1
+        assert property_grounding is None or len(property_grounding) == 1
+        assert theme_grounding is None or len(theme_grounding) == 1
+        property_grounding = property_grounding[0] \
+            if property_grounding else None
+        theme_grounding = theme_grounding[0] if theme_grounding else None
+        process_grounding = process_grounding[0] if process_grounding else None
 
         # First case: we have a theme so we apply the property and the process
         # to it
@@ -256,6 +266,7 @@ class HumeJsonLdProcessor(object):
         else:
             compositional_grounding = [process_grounding, property_grounding,
                                        None, None]
+        concept.db_refs['WM'] = compositional_grounding
 
         # Migrations turned off for now
         #for grounding_en in process_grounding:
