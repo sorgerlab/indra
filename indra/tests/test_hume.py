@@ -99,3 +99,13 @@ def test_compositional_grounding():
     bp = process_jsonld_file(fname)
     assert bp
     assert bp.statements
+    for stmt in bp.statements:
+        for concept in stmt.agent_list():
+            refs = concept.db_refs
+            assert 'WM' in refs
+            wm = refs['WM']
+            assert len(wm) == 4
+            assert wm[0] is not None
+            assert all(len(entry) == 2 for entry in wm if entry is not None)
+            assert all(entry[0].startswith('wm_compositional') for entry
+                       in wm if entry is not None)
