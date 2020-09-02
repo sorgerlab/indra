@@ -281,3 +281,9 @@ def test_get_agent_bio():
             assert agent.db_refs.get(ns) == id, agent.db_refs
         assert agent.db_refs['TEXT'] == raw_text
         assert agent.db_refs['TEXT_NORM'] == norm_text
+
+
+def test_compositional_grounding():
+    jsonld = os.path.join(path_this, 'eidos_compositional.jsonld')
+    ep = eidos.process_json_file(jsonld)
+    assert ep.statements

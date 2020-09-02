@@ -92,3 +92,10 @@ def test_migration_events():
     # Test extraction filter
     bp = process_jsonld_file(migration_events, extract_filter={'influence'})
     assert len(bp.statements) == 0
+
+
+def test_compositional_grounding():
+    fname = os.path.join(path_this, 'hume.compositional.output.json-ld')
+    bp = process_jsonld_file(fname)
+    assert bp
+    assert bp.statements

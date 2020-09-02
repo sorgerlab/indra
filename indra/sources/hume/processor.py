@@ -41,8 +41,16 @@ class HumeJsonLdProcessor(object):
         self.concept_dict = {}
         self.relation_dict = {}
         self.eid_stmt_dict = {}
+        self.extractions_by_id = {}
         self._get_documents()
         self.relation_subj_obj_ids = []
+        self._get_extractions_by_id()
+
+    def _get_extractions_by_id(self):
+        self.extractions_by_id = {
+            extr['@id']: extr for extr in
+            self.tree.execute("$.extractions[(@.@type is 'Extraction')]")
+            if '@id' in extr}
 
     def extract_relations(self):
         relations = self._find_relations()
@@ -101,17 +109,13 @@ class HumeJsonLdProcessor(object):
 
     def _find_relations(self):
         """Find all relevant relation elements and return them in a list."""
-        # Get all extractions
-        extractions = \
-            list(self.tree.execute("$.extractions[(@.@type is 'Extraction')]"))
-
         # Get relations from extractions
         relations = []
-        for e in extractions:
+        for eid, e in self.extractions_by_id.items():
             label_set = set(e.get('labels', []))
             # If this is a DirectedRelation
             if 'DirectedRelation' in label_set:
-                self.relation_dict[e['@id']] = e
+                self.relation_dict[eid] = e
                 subtype = e.get('subtype')
                 if any(t in subtype for t in polarities.keys()):
                     relations.append((subtype, e))
@@ -229,23 +233,46 @@ class HumeJsonLdProcessor(object):
         ev = self.concept_dict[eid]
         concept, metadata = self._make_concept(ev)
 
-        is_migration_event = False
-        hume_grounding = {x[0] for x in concept.db_refs['WM']}
-        for grounding_en in hume_grounding:
-            if "wm/concept/causal_factor/social_and_political/migration" in \
-                    grounding_en:
-                is_migration_event = True
-        if is_migration_event:
-            movement_context, quantitative_state = (
-                self._make_movement_context(ev))
-            event_obj = Migration(concept, delta=quantitative_state,
-                                  context=movement_context, evidence=evidence)
+        # is_migration_event = False
+
+        property_id = _choose_id(event, 'has_property')
+        theme_id = _choose_id(event, 'has_theme')
+        property = self.extractions_by_id[property_id] \
+            if property_id else None
+        theme = self.extractions_by_id[theme_id] \
+            if theme_id else None
+
+        process_grounding = concept.db_refs['WM']
+        theme_grounding = _get_grounding(theme) if theme else None
+        property_grounding = _get_grounding(property) if property else None
+
+        # First case: we have a theme so we apply the property and the process
+        # to it
+        if theme_grounding:
+            compositional_grounding = [theme_grounding, property_grounding,
+                                       process_grounding, None]
+        # Second case: we don't have a theme so we take the process as the theme
+        # and apply any property to it
         else:
-            ev_delta = QualitativeDelta(
-                polarity=get_polarity(ev), adjectives=None)
-            context = self._make_world_context(ev)
-            event_obj = Event(concept, delta=ev_delta, context=context,
-                              evidence=evidence)
+            compositional_grounding = [process_grounding, property_grounding,
+                                       None, None]
+
+        # Migrations turned off for now
+        #for grounding_en in process_grounding:
+        #    if "wm/concept/causal_factor/social_and_political/migration" in \
+        #            grounding_en:
+        #        is_migration_event = True
+        #if is_migration_event:
+        #    movement_context, quantitative_state = (
+        #        self._make_movement_context(ev))
+        #    event_obj = Migration(concept, delta=quantitative_state,
+        #                          context=movement_context, evidence=evidence)
+        #else:
+        ev_delta = QualitativeDelta(
+            polarity=get_polarity(ev))
+        context = self._make_world_context(ev)
+        event_obj = Event(concept, delta=ev_delta, context=context,
+                          evidence=evidence)
         return event_obj
 
     def _get_evidence(self, event, adjectives):
@@ -283,7 +310,7 @@ class HumeJsonLdProcessor(object):
 
 
 def _choose_id(event, arg_type):
-    args = event.get('arguments', {})
+    args = event.get('arguments', [])
     obj_tag = [arg for arg in args if arg['type'] == arg_type]
     if obj_tag:
         obj_id = obj_tag[0]['value']['@id']
@@ -303,7 +330,10 @@ def get_states(event):
 
 def _get_grounding(entity):
     """Return Hume grounding."""
-    db_refs = {'TEXT': entity['text']}
+    db_refs = {}
+    txt = entity.get('text')
+    if txt:
+        db_refs['TEXT'] = txt
     groundings = entity.get('grounding')
     if not groundings:
         return db_refs
