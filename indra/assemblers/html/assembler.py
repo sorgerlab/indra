@@ -164,10 +164,16 @@ class HtmlAssembler(object):
 
         Parameters
         ----------
-        with_grouping : bool
+        with_grouping : Optional[bool]
             If True, statements will be grouped under multiple sub-headings. If
             False, all headings will be collapsed into one on every level, with
-            all statements placed under a single heading.
+            all statements placed under a single heading. Default: False
+        no_redundancy : Optional[bool]
+            If True, any group of statements that was already presented under
+            a previous heading will be skipped. This is typically the case
+            for complexes where different permutations of complex members
+            are presented. By setting this argument to True, these can be
+            eliminated. Default: False
 
         Returns
         -------
@@ -350,6 +356,12 @@ class HtmlAssembler(object):
         add_full_text_search_link : bool
             If True, link with Text fragment search in PMC journal will be
             added for the statements.  
+        no_redundancy : Optional[bool]
+            If True, any group of statements that was already presented under
+            a previous heading will be skipped. This is typically the case
+            for complexes where different permutations of complex members
+            are presented. By setting this argument to True, these can be
+            eliminated. Default: False
 
             All other keyword arguments are passed along to the template. If you
             are using a custom template with args that are not passed below, this
