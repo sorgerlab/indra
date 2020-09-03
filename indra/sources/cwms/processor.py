@@ -510,7 +510,7 @@ class CWMSProcessor(object):
         if wm_type_element is not None:
             grounding_element = wm_type_element.find('grounding')
             if grounding_element is not None:
-                wm_gr = grounding_element.text
+                wm_gr = (grounding_element.text, 1.0)
         return wm_gr
 
     def get_event_or_migration(self, event_term):
