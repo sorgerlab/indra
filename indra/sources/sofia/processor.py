@@ -223,7 +223,8 @@ class SofiaProcessor(object):
 
         # Return 4-tuple of:
         # Theme, Theme Property, Theme Process, Theme Process Property
-        return theme, theme_prop, theme_proc, theme_proc_prop
+        return self._clean_comp_grnd(theme, theme_prop, theme_proc,
+                                     theme_proc_prop)
 
     def _get_theme_prop(self, entity_inds):
         qualifiers = [
@@ -244,6 +245,20 @@ class SofiaProcessor(object):
         if grnd_ent_list:
             return grnd_ent_list[0]
         return None, 0.0
+
+    def _clean_comp_grnd(self, *args):
+        def clean_grnd(grnd, score):
+            # Remove initial slash
+            if grnd.startswith('/'):
+                grnd = grnd[1:]
+            # Add initial wm
+            if not grnd.startswith('wm'):
+                grnd = 'wm_compositional/' + grnd
+            return grnd, score
+        out = ()
+        for arg in args:
+            out += (clean_grnd(*arg), ) if arg is not None else (None, )
+        return out
 
 
 class SofiaJsonProcessor(SofiaProcessor):
