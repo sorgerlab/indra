@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # Copy from networkx.algorithms.simple_paths
 # Added ignore_nodes and ignore_edges arguments
 def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
-                          ignore_edges=None, hashes=None, strict_mesh_id_filtering=False):
+                          ignore_edges=None, hashes=None, ref_counts_function=None, strict_mesh_id_filtering=False):
     """Generate all simple paths in the graph G from source to target,
        starting from shortest ones.
 
@@ -52,6 +52,10 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 
     hashes : list
         hashes specifying (if not empty) allowed edges
+    
+    ref_count_function : function
+        function calculating reference count of an edge from its
+        statement hashes
 
     Returns
     -------
@@ -145,16 +149,22 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
     allowed_edges = []
     if hashes:
         edge_by_hash = G.graph['edge_by_hash']
-        for h in hashes:
-            if h in edge_by_hash:
-                allowed_edges.append(edge_by_hash[h])
+        for u, v, d, in G.edges(data=True):
+            edge_hashes = ref_counts_function([d['stmt_hash'] for d in d['statements']])
+            d['mesh_ids_weight'] = 2 / float(edge_hashes + 2)
 
-        if not strict_mesh_id_filtering:
-            allowed_edges_ctr = Counter(allowed_edges)
-            for u, v, d in G.edges(data=True):
-                d['mesh_ids_weight'] = 1
-            for (u, v), n_hashes in allowed_edges_ctr.items():
-                G[u][v]['mesh_ids_weight'] = 2 / float(n_hashes + 2)
+        # for h in hashes:
+        #     if h in edge_by_hash:
+        #         allowed_edges.append(edge_by_hash[h])
+
+        # if not strict_mesh_id_filtering:
+        #     allowed_edges_ctr = Counter(allowed_edges)
+        #     for u, v, d in G.edges(data=True):
+        #         d['mesh_ids_weight'] = 1
+        #     for (u, v), n_hashes in allowed_edges_ctr.items():
+        #         G[u][v]['mesh_ids_weight'] = 2 / float(n_hashes + 2)
+
+    print("CHECKED HASHES")
 
     culled_ignored_nodes = set() if ignore_nodes is None else set(ignore_nodes)
     culled_ignored_edges = set() if ignore_edges is None else set(ignore_edges)
