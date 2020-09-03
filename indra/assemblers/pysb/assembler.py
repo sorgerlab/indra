@@ -428,7 +428,7 @@ def set_extended_initial_condition(model, monomer=None, value=0):
             except InvalidInitialConditionError:
                 pass
 
-https://identifiers.org
+
 def get_annotation(component, db_name, db_ref):
     """Construct model Annotations for each component.
 
