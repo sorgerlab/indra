@@ -11,7 +11,8 @@ from pysb.core import SelfExporter
 import pysb.export
 
 from indra import statements as ist
-from indra.databases import context_client, get_identifiers_url
+from indra.databases import context_client, get_identifiers_url, \
+    parse_identifiers_url as parse_url
 
 from .sites import *
 from .common import *
@@ -440,28 +441,7 @@ def get_annotation(component, db_name, db_ref):
 
 def parse_identifiers_url(url):
     """Parse an identifiers.org URL into (namespace, ID) tuple."""
-    url_pattern = r'(?:https?)://identifiers.org/([A-Za-z]+)/([A-Za-z0-9:]+)'
-    match = re.match(url_pattern, url)
-    if match is not None:
-        g = match.groups()
-        if not len(g) == 2:
-            return (None, None)
-        ns_map = {'hgnc': 'HGNC', 'uniprot': 'UP', 'chebi':'CHEBI',
-                  'interpro':'IP', 'pfam':'XFAM', 'fplx': 'FPLX',
-                  'go': 'GO', 'mesh': 'MESH', 'pubchem.compound': 'PUBCHEM'}
-        ns = g[0]
-        id = g[1]
-        if not ns in ns_map.keys():
-            return (None, None)
-        if ns == 'hgnc':
-            if id.startswith('HGNC:'):
-                id = id[5:]
-            else:
-                logger.warning('HGNC URL missing "HGNC:" prefix: %s' % url)
-                return (None, None)
-        indra_ns = ns_map[ns]
-        return (indra_ns, id)
-    return (None, None)
+    return parse_url(url)
 
 # PysbAssembler #######################################################
 
