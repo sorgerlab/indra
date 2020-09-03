@@ -492,6 +492,10 @@ class CWMSProcessor(object):
                         theme_gr = self._get_wm_grounding(assoc_term)
                         theme_prop_gr = self._get_wm_grounding(arg_term)
 
+        if any([theme_gr, theme_prop_gr, theme_proc_gr, theme_proc_prop_gr]):
+            assert theme_gr
+        if theme_proc_prop_gr:
+            assert theme_proc_gr
         element_db_refs['WM'] = (theme_gr, theme_prop_gr, theme_proc_gr,
                                  theme_proc_prop_gr)
         concept = Concept(element_name, db_refs=element_db_refs)
