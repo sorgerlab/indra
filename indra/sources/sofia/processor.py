@@ -174,6 +174,72 @@ class SofiaProcessor(object):
                 processed_event_dict[event_index] = raw_event_dict[event_index]
         return processed_event_dict
 
+    def get_compositional_grounding(self, event_entry):
+        # Decision tree:
+        #                     Theme
+        #                   Y/     \N
+        #                  Proc    continue
+        #                Y/    \N
+        #            Prop        Prop
+        #          Y/    \N      Y/    \N
+        #   (,-,P,P) (,-,P,-)  (,P,-,-) (,-,-,-)
+        #
+        # ToDo:
+        #  - How do we pick among multiple agents or patients? Are they
+        #    assumed to be referring to the same grounded entity?
+        #  - How to decide if we have a process property?
+
+        theme, theme_prop, theme_proc, theme_proc_prop = (None, )*4
+
+        # First, try to get the theme. Without a theme, we can't continue
+        if event_entry['Patient_index']:
+            event_patients = event_entry['Patient_index'].strip().split(', ')
+            theme = self._get_entity_grounding(event_patients)
+            if not theme or theme[0] is None:
+                return (None,) * 4
+        else:
+            return (None,) * 4
+
+        # See if we have a theme process
+        proc = (event_entry['Event_Type'], 1.0) if \
+            event_entry['Event_Type'] else (None, 0.0)
+
+        # Next, see if we have a theme property
+        prop = self._get_theme_prop(event_patients)
+
+        # Set correct combination of groundings
+        if proc[0] is not None:
+            theme_proc = proc
+            if prop[0] is not None:
+                theme_proc_prop = prop
+        # If have property, but no process
+        elif prop[0] is not None:
+            theme_prop = prop
+
+        # Return 4-tuple of:
+        # Theme, Theme Property, Theme Process, Theme Process Property
+        return theme, theme_prop, theme_proc, theme_proc_prop
+
+    def _get_theme_prop(self, entity_inds):
+        qualifiers = [
+            (self._entities[ai]['Qualifier'],
+             float(self._entities[ai]['Score']) or 1.0)  # ignore zero scores
+            for ai in entity_inds if self._entities[ai]['Qualifier']
+        ]
+        if qualifiers:
+            return qualifiers[0]
+        return None, 0.0
+
+    def _get_entity_grounding(self, entity_inds):
+        grnd_ent_list = [
+            (self._entities[ai]['Entity_Type'],
+             float(self._entities[ai]['Score']) or 1.0)  # ignore zero scores
+            for ai in entity_inds if self._entities[ai]['Entity_Type']
+        ]
+        if grnd_ent_list:
+            return grnd_ent_list[0]
+        return None, 0.0
+
 
 class SofiaJsonProcessor(SofiaProcessor):
     def __init__(self, jd):
