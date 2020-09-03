@@ -11,6 +11,10 @@ neu_rels = ['affect', 'impact', 'due', 'caus', 'because']
 
 
 class SofiaProcessor(object):
+    def __init__(self):
+        self._entities = {}
+        self._events = {}
+
     @staticmethod
     def process_event(event_dict):
         mappings = [
@@ -173,6 +177,7 @@ class SofiaProcessor(object):
 
 class SofiaJsonProcessor(SofiaProcessor):
     def __init__(self, jd):
+        super().__init__()
         self._entities = self.process_entities(jd)
         self._events = self.process_events(jd)
         self.statements = []
@@ -227,6 +232,7 @@ class SofiaJsonProcessor(SofiaProcessor):
 
 class SofiaExcelProcessor(SofiaProcessor):
     def __init__(self, relation_rows, event_rows, entity_rows):
+        super().__init__()
         self._events = self.process_events(event_rows)
         self.statements = []
         self.relation_subj_obj_ids = []
