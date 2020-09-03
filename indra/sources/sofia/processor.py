@@ -31,16 +31,15 @@ class SofiaProcessor(object):
     @staticmethod
     def process_entity(ent_dict):
         key_mappings = [
-            # Our key: their key
-            {'Source': 'Source_File',
-             'Query': 'Query',
-             'Score': 'Score',
-             'Entity_Index': 'Entity Index',
-             'Entity': 'Entity',
-             'Entity_Type': 'Entity_Type',
-             'Indicator': 'Indicator',
-             'Qualifier': 'Qualifier',
-             'Text': 'Sentence'}
+            ('Source', 'Source_File'),
+            ('Query', 'Query'),
+            ('Score', 'Score'),
+            ('Entity_Index', 'Entity Index'),
+            ('Entity', 'Entity'),
+            ('Entity_Type', 'Entity_Type'),
+            ('Indicator', 'Indicator'),
+            ('Qualifier', 'Qualifier'),
+            ('Text', 'Sentence')
         ]
         return {k: ent_dict.get(v) for k, v in key_mappings}
 
