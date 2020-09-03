@@ -34,7 +34,7 @@ class SofiaProcessor(object):
             ('Source', 'Source_File'),
             ('Query', 'Query'),
             ('Score', 'Score'),
-            ('Entity_Index', 'Entity Index'),
+            ('Entity Index', 'Entity Index'),
             ('Entity', 'Entity'),
             ('Entity_Type', 'Entity_Type'),
             ('Indicator', 'Indicator'),
@@ -182,7 +182,7 @@ class SofiaJsonProcessor(SofiaProcessor):
         ent_dict = {}
         entity_list = jd['entities']
         for entity in entity_list:
-            ent_index = entity['Entity_Index']
+            ent_index = entity['Entity Index']
             ent_dict[ent_index] = self.process_entity(entity)
 
         return ent_dict
