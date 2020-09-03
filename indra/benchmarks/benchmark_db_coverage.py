@@ -51,7 +51,7 @@ if __name__ == '__main__':
             stats[group][gene]['bel'] = (num_all, num_extracted)
             print(num_all, num_extracted)
             if gene.startswith('CHEBI:'):
-                bpx_query = 'http://identifiers.org/chebi/' + gene
+                bpx_query = 'https://identifiers.org/chebi/' + gene
             else:
                 bpx_query = gene
             biopp = biopax.process_pc_neighborhood([bpx_query])

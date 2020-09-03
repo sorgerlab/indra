@@ -641,7 +641,7 @@ class BiopaxProcessor(object):
     def _get_reference_primary_id(entref: bp.EntityReference):
         # In practice, it appears that only UniProt and ChEBI appear in this
         # form.
-        match = re.match('http://identifiers.org/([^/]+)/(.+)$',
+        match = re.match('https://identifiers.org/([^/]+)/(.+)$',
                          entref.uid)
         if match:
             ident_ns, ident_id = match.groups()

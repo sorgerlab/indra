@@ -129,7 +129,7 @@ class NiceCxAssembler(object):
                 ev_txt = ev.text
             # Construct a clickable PMID link with the source and evidence text
             ev_str = ('<a target="_blank" '
-                      'href="http://identifiers.org/pubmed/%s">'
+                      'href="https://identifiers.org/pubmed/%s">'
                       'pubmed:%s</a> (%s) %s') % (ev.pmid, ev.pmid,
                                                   ev.source_api, ev_txt)
             evs.append((ev_str, 0 if ev.text is None else 1))
