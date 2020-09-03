@@ -111,3 +111,48 @@ def get_identifiers_url(db_name, db_id):
         logger.warning('Unhandled name space %s' % db_name)
         url = None
     return url
+
+
+def parse_identifiers_url(url):
+    """Retrieve database name and ID given the URL.
+
+    Parameters
+    ----------
+    url : str
+        An identifiers.org URL to parse.
+
+    Returns
+    -------
+    db_name : str
+        An internal database name: HGNC, UP, CHEBI, etc. corresponding to the
+        given URL.
+    db_id : str
+        An identifier in the database.
+    """
+
+    for db_name, prefix in url_prefixes.items():
+        if db_name != 'DOID' and url.startswith(prefix):
+            return db_name, url[len(prefix):]
+    if 'DOID' in url:
+        return 'DOID', url[len(url_prefixes['DOID']):]
+    for part in ['/lincs.smallmolecule/', '/lincs.cell/', '/lincs.protein/']:
+        if part in url:
+            return 'LINCS', url[len(identifiers_url + part):]
+    if '/chembl.compound/' in url:
+        return 'CHEMBL', url[len(identifiers_url + '/chembl.compound/')]
+    if 'lincs.hms.harvard.edu' in url:
+        return 'HMS-LINCS', url[len('http://lincs.hms.harvard.edu/db/sm/'):-4]
+    if 'selventa-legacy-chemicals/' in url:
+        return 'SCHEM', None
+    if 'selventa-named-complexes/' in url:
+        return 'SCOMP', None
+    if 'selventa-protein-families/' in url:
+        return 'SFAM', None
+    if 'lncrnadb' in url:
+        if 'ENSG' in url:
+            return 'LNCRNADB', url[len('http://www.lncrnadb.org/search/?q='):]
+        else:
+            return 'LNCRNADB', url[len('http://www.lncrnadb.org/'):-1]
+    else:
+        logger.warning('Could not parse URL %s' % url)
+    return None, None
