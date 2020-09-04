@@ -184,8 +184,8 @@ class SofiaProcessor(object):
 
     def get_compositional_grounding(self, event_entry):
         # According to the Sofia team:
-        # Theme is the "Entity_Type" of patient of event
         # Process is the "Event_Type" of event
+        # Theme is the "Entity_Type" of patient of event
         # Property is the "Qualifier" of patient of event
         #
         # Decision tree:
@@ -200,7 +200,9 @@ class SofiaProcessor(object):
         # ToDo:
         #  - How do we pick among multiple agents or patients? Are they
         #    assumed to be referring to the same grounded entity?
-        #  - How to decide if we have a process property?
+        #  - If we have process and process property available, but the
+        #    process gets removed because it's not grounded properly,
+        #    should the property be remove or put to the theme property?
 
         theme, theme_prop, theme_proc, theme_proc_prop = (None, )*4
 
@@ -225,7 +227,7 @@ class SofiaProcessor(object):
             theme_proc = proc
             if prop[0] is not None:
                 theme_proc_prop = prop
-        # If have property, but no process
+        # If we have property, but no process
         elif prop[0] is not None:
             theme_prop = prop
 
