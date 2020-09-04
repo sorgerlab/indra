@@ -206,33 +206,41 @@ class SofiaProcessor(object):
 
         theme, theme_prop, theme_proc, theme_proc_prop = (None, )*4
 
-        # First, try to get the theme. Without a theme, we can't continue
-        if event_entry['Patient_index']:
-            event_patients = event_entry['Patient_index'].strip().split(', ')
+        # First, try to get the theme
+        event_patients = event_entry['Patient_index'].strip().split(', ')
+        if event_patients != ['']:
             theme = self._get_entity_grounding(event_patients)
-            if not theme or theme[0] is None:
-                return (None,) * 4
-        else:
-            return (None,) * 4
 
         # See if we have a theme process
         proc = self._clean_grnd_filter(event_entry['Event_Type'],
                                        event_entry['Score'])
 
         # Next, see if we have a theme property
-        prop = self._get_theme_prop(event_patients)
+        if event_patients != ['']:
+            prop = self._get_theme_prop(event_patients)
+        else:
+            prop = None
 
-        # Set correct combination of groundings
-        if proc[0] is not None:
+        # Set correct combination of groundings:
+        # If no theme, see if we have a process that can be promoted to
+        # theme, and add theme property if it exists
+        if not theme or theme[0] is None:
+            if proc and proc[0] is not None:
+                theme = proc
+                if prop and prop is not None:
+                    theme_prop = prop
+        # If we have a theme and process
+        elif proc and proc[0] is not None:
             theme_proc = proc
-            if prop[0] is not None:
+            # If we have a process, add property as process property
+            if prop and prop[0] is not None:
                 theme_proc_prop = prop
-        # If we have property, but no process
+        # If we have theme and property, but no process
         elif prop[0] is not None:
             theme_prop = prop
 
         # Return 4-tuple of:
-        # Theme, Theme Property, Theme Process, Theme Process Property
+        # Theme, Theme Property, Theme Process, Theme Process Property  
         return theme, theme_prop, theme_proc, theme_proc_prop
 
     def _get_theme_prop(self, entity_inds):
