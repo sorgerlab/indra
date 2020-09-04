@@ -8,12 +8,14 @@ pos_rels = ['provide', 'led', 'lead', 'driv', 'support', 'enabl', 'develop',
 neg_rels = ['restrict', 'worsen', 'declin', 'limit', 'constrain',
             'decreas', 'hinder', 'deplet', 'reduce', 'hamper']
 neu_rels = ['affect', 'impact', 'due', 'caus', 'because']
+first_gen_ont_nodes = ['concept', 'process', 'property', 'entity', 'time']
 
 
 class SofiaProcessor(object):
-    def __init__(self):
+    def __init__(self, score_cutoff=None):
         self._entities = {}
         self._events = {}
+        self._score_cutoff = score_cutoff
 
     @staticmethod
     def process_event(event_dict):
@@ -211,8 +213,8 @@ class SofiaProcessor(object):
             return (None,) * 4
 
         # See if we have a theme process
-        proc = (event_entry['Event_Type'], 1.0) if \
-            event_entry['Event_Type'] else (None, 0.0)
+        proc = self._clean_grnd_filter(event_entry['Event_Type'],
+                                       event_entry['Score'])
 
         # Next, see if we have a theme property
         prop = self._get_theme_prop(event_patients)
@@ -237,7 +239,13 @@ class SofiaProcessor(object):
             for ai in entity_inds if self._entities[ai]['Qualifier']
         ]
         if qualifiers:
-            return qualifiers[0]
+            # Sort by highest score first
+            qualifiers.sort(key=lambda t: t[1], reverse=True)
+            for qlfr in qualifiers:
+                qlfr = self._clean_grnd_filter(
+                    *qlfr, score_cutoff=self._score_cutoff or None)
+                if qlfr[0] is not None:
+                    return qlfr
         return None, 0.0
 
     def _get_entity_grounding(self, entity_inds):
@@ -247,22 +255,33 @@ class SofiaProcessor(object):
             for ai in entity_inds if self._entities[ai]['Entity_Type']
         ]
         if grnd_ent_list:
-            return grnd_ent_list[0]
+            # Sort by highest score first
+            grnd_ent_list.sort(key=lambda t: t[1], reverse=True)
+            for grnd_ent in grnd_ent_list:
+                grnd_ent = self._clean_grnd_filter(
+                    *grnd_ent, score_cutoff=self._score_cutoff or None
+                )
+                if grnd_ent[0] is not None:
+                    return grnd_ent
         return None, 0.0
 
-    def _clean_comp_grnd(self, *args):
-        def clean_grnd(grnd, score):
-            # Remove initial slash
-            if grnd.startswith('/'):
-                grnd = grnd[1:]
-            # Add initial wm
-            if not grnd.startswith('wm'):
-                grnd = 'wm_compositional/' + grnd
-            return grnd, score
-        out = ()
-        for arg in args:
-            out += (clean_grnd(*arg), ) if arg is not None else (None, )
-        return out
+    @staticmethod
+    def _clean_grnd_filter(grnd, score, score_cutoff=0.0):
+        if not grnd:
+            return None, 0.0
+        # Filter low scores if provided
+        if score_cutoff and score < score_cutoff:
+            return None, 0.0
+        # Check if there is a grounding
+        if grnd and not any(n in grnd for n in first_gen_ont_nodes):
+            return None, 0.0
+        # Remove initial slash
+        if grnd.startswith('/'):
+            grnd = grnd[1:]
+        # Add initial wm
+        if grnd and not grnd.startswith('wm'):
+            grnd = 'wm_compositional/' + grnd
+        return grnd, score
 
 
 class SofiaJsonProcessor(SofiaProcessor):
