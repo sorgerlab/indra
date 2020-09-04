@@ -25,6 +25,7 @@ class SofiaProcessor(object):
             ('Location', 'Location'),
             ('Time', 'Time'),
             ('Source', 'Source_File'),
+            ('Score', 'Score'),
             ('Text', 'Sentence'),
             ('Agent_index', 'Agent Index'),
             ('Patient_index', 'Patient Index'),
