@@ -180,6 +180,11 @@ class SofiaProcessor(object):
         return processed_event_dict
 
     def get_compositional_grounding(self, event_entry):
+        # According to the Sofia team:
+        # Theme is the "Entity_Type" of patient of event
+        # Process is the "Event_Type" of event
+        # Property is the "Qualifier" of patient of event
+        #
         # Decision tree:
         #                     Theme
         #                   Y/     \N
@@ -187,7 +192,7 @@ class SofiaProcessor(object):
         #                Y/    \N
         #            Prop        Prop
         #          Y/    \N      Y/    \N
-        #   (,-,P,P) (,-,P,-)  (,P,-,-) (,-,-,-)
+        #   (,-,P,P) (,-,P,-)  (,P,-,-) (,-,-,-) <- Grounding results
         #
         # ToDo:
         #  - How do we pick among multiple agents or patients? Are they
@@ -223,8 +228,7 @@ class SofiaProcessor(object):
 
         # Return 4-tuple of:
         # Theme, Theme Property, Theme Process, Theme Process Property
-        return self._clean_comp_grnd(theme, theme_prop, theme_proc,
-                                     theme_proc_prop)
+        return theme, theme_prop, theme_proc, theme_proc_prop
 
     def _get_theme_prop(self, entity_inds):
         qualifiers = [
