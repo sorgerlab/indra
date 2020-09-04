@@ -185,10 +185,10 @@ def test_multiple_enzymes():
         assert rp is not None
         assert len(rp.statements) == 2
         stmts = sorted(rp.statements, key=lambda x: x.enz.name)
-        assert stmts[0].enz.name == 'MAP2K1'
-        assert stmts[1].enz.name == 'MAP2K2'
-        assert stmts[0].sub.name == 'MAPK3'
-        assert stmts[1].sub.name == 'MAPK3'
+        assert stmts[0].enz.name == 'MAP2K1', stmts
+        assert stmts[1].enz.name == 'MAP2K2', stmts
+        assert stmts[0].sub.name == 'MAPK3', stmts
+        assert stmts[1].sub.name == 'MAPK3', stmts
 
 
 def test_activate():
