@@ -4,6 +4,7 @@ cache:
     - $HOME/.cache/pip
     - $HOME/.pybel
     - $HOME/build/bgyori/indra/cache/geonames/index
+    - $HOME/build/sorgerlab/indra/cache/geonames/index
 python:
   - "3.6"
 services:

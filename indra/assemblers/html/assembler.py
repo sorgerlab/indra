@@ -159,15 +159,21 @@ class HtmlAssembler(object):
         """
         self.statements += statements
 
-    def make_json_model(self, with_grouping=True):
+    def make_json_model(self, with_grouping=True, no_redundancy=False):
         """Return the JSON used to create the HTML display.
 
         Parameters
         ----------
-        with_grouping : bool
+        with_grouping : Optional[bool]
             If True, statements will be grouped under multiple sub-headings. If
             False, all headings will be collapsed into one on every level, with
-            all statements placed under a single heading.
+            all statements placed under a single heading. Default: False
+        no_redundancy : Optional[bool]
+            If True, any group of statements that was already presented under
+            a previous heading will be skipped. This is typically the case
+            for complexes where different permutations of complex members
+            are presented. By setting this argument to True, these can be
+            eliminated. Default: False
 
         Returns
         -------
@@ -185,6 +191,7 @@ class HtmlAssembler(object):
         stmts = OrderedDict()
         agents = {}
         previous_stmt_set = set()
+        all_previous_stmts = set()
         for row in stmt_rows:
             # Distinguish between the cases with source counts and without.
             if self.source_counts:
@@ -196,8 +203,11 @@ class HtmlAssembler(object):
             curr_stmt_set = {s.get_hash() for s in stmts_group}
             if curr_stmt_set == previous_stmt_set:
                 continue
+            elif no_redundancy and curr_stmt_set <= all_previous_stmts:
+                continue
             else:
                 previous_stmt_set = curr_stmt_set
+                all_previous_stmts |= curr_stmt_set
 
             # We will keep track of some of the meta data for this stmt group.
             # NOTE: Much of the code relies heavily on the fact that the Agent
@@ -329,7 +339,8 @@ class HtmlAssembler(object):
         return stmts
 
     def make_model(self, template=None, with_grouping=True,
-                   add_full_text_search_link=False, **template_kwargs):
+                   add_full_text_search_link=False, no_redundancy=False,
+                   **template_kwargs):
         """Return the assembled HTML content as a string.
 
         Parameters
@@ -345,6 +356,12 @@ class HtmlAssembler(object):
         add_full_text_search_link : bool
             If True, link with Text fragment search in PMC journal will be
             added for the statements.  
+        no_redundancy : Optional[bool]
+            If True, any group of statements that was already presented under
+            a previous heading will be skipped. This is typically the case
+            for complexes where different permutations of complex members
+            are presented. By setting this argument to True, these can be
+            eliminated. Default: False
 
             All other keyword arguments are passed along to the template. If you
             are using a custom template with args that are not passed below, this
@@ -355,7 +372,8 @@ class HtmlAssembler(object):
         str
             The assembled HTML as a string.
         """
-        tl_stmts = self.make_json_model(with_grouping)
+        tl_stmts = self.make_json_model(with_grouping,
+                                        no_redundancy=no_redundancy)
 
         if add_full_text_search_link:
             for statement in tl_stmts:

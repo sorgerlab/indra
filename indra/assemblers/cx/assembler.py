@@ -624,8 +624,10 @@ class CxAssembler(object):
 
 
 def _get_support_type(stmt):
-    dbs = ['bel', 'biopax', 'phosphosite', 'biogrid']
-    readers = ['reach', 'trips', 'sparser', 'r3']
+    dbs = ['bel', 'biopax', 'phosphosite', 'biogrid', 'signor', 'tas', 'hprd',
+           'trrust', 'ctd', 'virhostnet', 'phosphoelm', 'drugbank', 'omnipath']
+    readers = ['reach', 'trips', 'sparser', 'r3', 'eidos', 'geneways', 'tees',
+               'rlimsp', 'medscan']
     has_db = False
     has_reading = False
     for ev in stmt.evidence:
