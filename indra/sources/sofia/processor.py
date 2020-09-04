@@ -105,7 +105,7 @@ class SofiaProcessor(object):
 
         # Get get compositional grounding
         comp_grnd = self.get_compositional_grounding(event_entry)
-        if comp_grnd[0] is not None:
+        if comp_grnd[0] is not None and comp_grnd[0][0] is not None:
             concept.db_refs['WM'] = comp_grnd
 
         context = WorldContext()
