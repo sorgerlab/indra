@@ -432,7 +432,7 @@ def set_extended_initial_condition(model, monomer=None, value=0):
 def get_annotation(component, db_name, db_ref):
     """Construct model Annotations for each component.
 
-    Annotation formats follow guidelines at http://identifiers.org/.
+    Annotation formats follow guidelines at https://identifiers.org/.
     """
     url = get_identifiers_url(db_name, db_ref)
     if not url:
