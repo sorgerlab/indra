@@ -490,15 +490,25 @@ class CWMSProcessor(object):
                         theme_proc_prop_gr = self._get_wm_grounding(arg_term)
                     else:
                         theme_gr = self._get_wm_grounding(assoc_term)
-                        theme_prop_gr = self._get_wm_grounding(arg_term)
+                        extra_gr = self._get_wm_grounding(arg_term)
+                        if extra_gr:
+                            if 'process' in extra_gr[0]:
+                                theme_proc_gr = extra_gr
+                            else:
+                                theme_prop_gr = extra_gr
 
-        if any([theme_gr, theme_prop_gr, theme_proc_gr, theme_proc_prop_gr]):
-            assert theme_gr
-        if theme_proc_prop_gr:
-            assert theme_proc_gr
+        # Promote process grounding to theme if theme is missing
+        if not theme_gr and theme_proc_gr:
+            theme_gr = theme_proc_gr
+            theme_proc_gr = None
+        # Drop process property grounding in process is missing
+        if not theme_proc_gr:
+            theme_proc_prop_gr = None
+
+        # Only add WM grounding if there's a theme grounding
         if theme_gr:
             element_db_refs['WM'] = (theme_gr, theme_prop_gr, theme_proc_gr,
-                                    theme_proc_prop_gr)
+                                     theme_proc_prop_gr)
         concept = Concept(element_name, db_refs=element_db_refs)
 
         ev_type = event_term.find('type').text
