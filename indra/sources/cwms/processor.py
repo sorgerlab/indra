@@ -477,6 +477,7 @@ class CWMSProcessor(object):
 
         theme_gr, theme_prop_gr, theme_proc_gr, theme_proc_prop_gr = \
             None, None, None, None
+        # Grounding can be provided on multiple levels
         theme_gr = self._get_wm_grounding(event_term)
         if not theme_gr:
             arg_term = self._get_arg_event_term(event_term)
@@ -484,6 +485,7 @@ class CWMSProcessor(object):
                 assoc_term = self._get_assoc_with_term(arg_term)
                 if assoc_term is not None:
                     new_arg_term = self._get_arg_event_term(assoc_term)
+                    # Theme grounding is usually at the "deepest" level
                     if new_arg_term is not None:
                         theme_gr = self._get_wm_grounding(new_arg_term)
                         theme_proc_gr = self._get_wm_grounding(assoc_term)
@@ -491,6 +493,7 @@ class CWMSProcessor(object):
                     else:
                         theme_gr = self._get_wm_grounding(assoc_term)
                         extra_gr = self._get_wm_grounding(arg_term)
+                        # This can be process or property, look at ontology
                         if extra_gr:
                             if 'process' in extra_gr[0]:
                                 theme_proc_gr = extra_gr
