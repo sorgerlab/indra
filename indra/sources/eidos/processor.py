@@ -239,7 +239,7 @@ class EidosProcessor(object):
 
     def get_groundings(self, entity):
         """Return groundings as db_refs for an entity."""
-        def get_grounding_entries(grounding):
+        def get_grounding_entries_comp(grounding):
             if not grounding:
                 return None
 
@@ -265,6 +265,19 @@ class EidosProcessor(object):
                             ont_concept = ont_concept[:-1]
                         compositional_entry[idx] = \
                             (ont_concept, score)
+                    # Some special cases
+                    # Promote process into theme
+                    if compositional_entry[2] and not compositional_entry[0]:
+                        compositional_entry[0] = compositional_entry[2]
+                        compositional_entry[2] = None
+                        if compositional_entry[3]:
+                            compositional_entry[1] = compositional_entry[3]
+                            compositional_entry[3] = None
+                    # Promote dangling property
+                    if compositional_entry[1] and not compositional_entry[0]:
+                        compositional_entry[0] = compositional_entry[1]
+                        compositional_entry[1] = None
+
                     entries.append(compositional_entry)
             return entries
 
@@ -274,20 +287,12 @@ class EidosProcessor(object):
         if not groundings:
             return db_refs
         for g in groundings:
-            entries = get_grounding_entries(g)
-            # Only add these groundings if there are actual values listed
-            if entries:
-                key = g['name'].upper()
-                if self.grounding_ns is not None and \
-                        key not in self.grounding_ns:
-                    continue
-                if key == 'UN':
-                    db_refs[key] = [(s[0].replace(' ', '_'), s[1])
-                                    for s in entries]
-                elif key in {'WM', 'WM_FLATTENED', 'WM_COMPOSITIONAL'}:
-                    db_refs['WM'] = entries
-                else:
-                    db_refs[key] = entries
+            key = g['name'].upper()
+            if key == 'WM_COMPOSITIONAL':
+                entries = get_grounding_entries_comp(g)
+                db_refs['WM'] = entries
+            else:
+                continue
         return db_refs
 
     def get_concept(self, entity):
