@@ -9,6 +9,7 @@ neg_rels = ['restrict', 'worsen', 'declin', 'limit', 'constrain',
             'decreas', 'hinder', 'deplet', 'reduce', 'hamper']
 neu_rels = ['affect', 'impact', 'due', 'caus', 'because']
 first_gen_ont_nodes = ['concept', 'process', 'property', 'entity', 'time']
+bad_grnd = {'event1'}
 
 
 class SofiaProcessor(object):
@@ -218,7 +219,8 @@ class SofiaProcessor(object):
 
         # See if we have a theme process
         proc = self._clean_grnd_filter(event_entry['Event_Type'],
-                                       event_entry['Score'])
+                                       float(event_entry['Score']) or 0.7,
+                                       'process')
 
         # Next, see if we have a theme property
         if event_patients != ['']:
@@ -263,7 +265,8 @@ class SofiaProcessor(object):
             qualifiers.sort(key=lambda t: t[1], reverse=True)
             for qlfr in qualifiers:
                 qlfr = self._clean_grnd_filter(
-                    *qlfr, score_cutoff=self._score_cutoff or None)
+                    *qlfr, grnd_type='property',
+                    score_cutoff=self._score_cutoff or None)
                 if qlfr[0] is not None:
                     return qlfr
         return None, 0.0
@@ -282,15 +285,17 @@ class SofiaProcessor(object):
             for grnd_ent in grnd_ent_list:
                 name, ent = grnd_ent
                 ent = self._clean_grnd_filter(
-                    *ent, score_cutoff=self._score_cutoff or None
+                    *ent, grnd_type='concept',
+                    score_cutoff=self._score_cutoff or None
                 )
                 if ent[0] is not None:
                     return name, ent
         return None, (None, 0.0)
 
     @staticmethod
-    def _clean_grnd_filter(grnd, score, score_cutoff=0.0):
-        if not grnd:
+    def _clean_grnd_filter(grnd, score, grnd_type, score_cutoff=0.0):
+        assert isinstance(score, float)
+        if not grnd or '/' not in grnd:
             return None, 0.0
         # Filter low scores if provided
         if score_cutoff and score < score_cutoff:
@@ -304,7 +309,13 @@ class SofiaProcessor(object):
             grnd = grnd[1:]
         # Add initial wm
         if grnd and not grnd.startswith('wm'):
-            grnd = 'wm_compositional/' + grnd
+            grnd = f'wm_compositional/{grnd_type}/{grnd}'
+
+        # Remove special misgrounding
+        if any(mg in grnd for mg in bad_grnd):
+            grnd = '/'.join([g for g in grnd.split('/') if g not in bad_grnd])
+
+        grnd.replace('//', '/')
         return grnd, score
 
 
