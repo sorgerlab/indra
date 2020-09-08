@@ -302,10 +302,6 @@ class SofiaProcessor(object):
         # Filter low scores if provided
         if score_cutoff and score < score_cutoff:
             return None, 0.0
-        # Check if there is a grounding
-        if grnd and not any(any(n == s for s in grnd.split('/')) for n in
-                            first_gen_ont_nodes):
-            return None, 0.0
         # Remove initial slash
         if grnd.startswith('/'):
             grnd = grnd[1:]
