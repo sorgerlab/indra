@@ -41,6 +41,22 @@ def test_process_json():
     assert sp.statements[1].context.geo_location.name == 'South Sudan'
 
 
+def test_compositional_grounding():
+    test_file = os.path.join(path_here, 'sofia_test_comp_no_causal.json')
+    sp = sofia.process_json_file(test_file)
+    assert len(sp.statements) == 2
+    assert isinstance(sp.statements[0], Event)
+    assert isinstance(sp.statements[1], Event)
+
+    assert sp.statements[0].concept.db_refs['TEXT'] == 'wheat'
+    assert isinstance(sp.statements[0].concept.db_refs['WM'], tuple)
+    assert isinstance(sp.statements[0].concept.db_refs['WM'], tuple)
+
+    assert sp.statements[1].concept.db_refs['TEXT'] == 'cereal'
+    assert isinstance(sp.statements[1].concept.db_refs['WM'], tuple)
+    assert isinstance(sp.statements[1].concept.db_refs['WM'], tuple)
+
+
 def test_event_decrease():
     test_file = os.path.join(path_here, 'sofia_event_decreased.json')
     sp = sofia.process_json_file(test_file)
