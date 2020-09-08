@@ -105,7 +105,7 @@ class SofiaProcessor(object):
                 comp_grnd[0][0] is not None:
             concept = Concept(comp_name, db_refs={
                 'TEXT': comp_name,
-                'WM': comp_grnd
+                'WM': [comp_grnd]
             })
         # If not try to get old style Sofia grounding
         else:
