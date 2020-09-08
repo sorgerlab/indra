@@ -510,8 +510,8 @@ class CWMSProcessor(object):
 
         # Only add WM grounding if there's a theme grounding
         if theme_gr:
-            element_db_refs['WM'] = (theme_gr, theme_prop_gr, theme_proc_gr,
-                                     theme_proc_prop_gr)
+            element_db_refs['WM'] = [(theme_gr, theme_prop_gr, theme_proc_gr,
+                                      theme_proc_prop_gr)]
         concept = Concept(element_name, db_refs=element_db_refs)
 
         ev_type = event_term.find('type').text
