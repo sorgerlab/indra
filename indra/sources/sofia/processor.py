@@ -230,6 +230,9 @@ class SofiaProcessor(object):
                 theme = proc
                 if prop and prop is not None:
                     theme_prop = prop
+            # We don't have a grounding, return nothing
+            else:
+                return None, (None, ) * 4
         # If we have a theme and process
         elif proc and proc[0] is not None:
             theme_proc = proc
