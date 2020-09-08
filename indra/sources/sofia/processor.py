@@ -235,7 +235,7 @@ class SofiaProcessor(object):
             if proc and proc[0] is not None:
                 name = event_entry['Relation']  # Match name to theme (process)
                 theme = proc
-                if prop and prop is not None:
+                if prop and prop[0] is not None:
                     theme_prop = prop
             # We don't have a grounding, return nothing
             else:
@@ -247,11 +247,13 @@ class SofiaProcessor(object):
             if prop and prop[0] is not None:
                 theme_proc_prop = prop
         # If we have theme and property, but no process
-        elif prop[0] is not None:
+        elif prop and prop[0] is not None:
             theme_prop = prop
 
         # Return 4-tuple of:
-        # Theme, Theme Property, Theme Process, Theme Process Property  
+        # Theme, Theme Property, Theme Process, Theme Process Property
+        assert not all(co == (None, 0.0) for co in
+                       [theme, theme_prop, theme_proc, theme_proc_prop])
         return name, (theme, theme_prop, theme_proc, theme_proc_prop)
 
     def _get_theme_prop(self, entity_inds):
