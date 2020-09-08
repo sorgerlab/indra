@@ -259,7 +259,7 @@ class SofiaProcessor(object):
     def _get_theme_prop(self, entity_inds):
         qualifiers = [
             (self._entities[ai]['Qualifier'],
-             float(self._entities[ai]['Score']) or 1.0)  # ignore zero scores
+             float(self._entities[ai]['Score']) or 0.7)  # ignore zero scores
             for ai in entity_inds if self._entities[ai]['Qualifier']
         ]
         if qualifiers:
@@ -278,7 +278,7 @@ class SofiaProcessor(object):
         grnd_ent_list = [
             (self._entities[ai]['Entity'] or None,  # Set None if ''
              (self._entities[ai]['Entity_Type'],
-              float(self._entities[ai]['Score']) or 1.0))  # ignore zero scores
+              float(self._entities[ai]['Score']) or 0.7))  # ignore zero scores
             for ai in entity_inds if self._entities[ai]['Entity_Type']
         ]
         if grnd_ent_list:
