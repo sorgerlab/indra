@@ -259,13 +259,13 @@ class HumeJsonLdProcessor(object):
         # First case: we have a theme so we apply the property and the process
         # to it
         if theme_grounding:
-            compositional_grounding = [theme_grounding, property_grounding,
-                                       process_grounding, None]
+            compositional_grounding = [[theme_grounding, property_grounding,
+                                       process_grounding, None]]
         # Second case: we don't have a theme so we take the process as the theme
         # and apply any property to it
         else:
-            compositional_grounding = [process_grounding, property_grounding,
-                                       None, None]
+            compositional_grounding = [[process_grounding, property_grounding,
+                                        None, None]]
         concept.db_refs['WM'] = compositional_grounding
 
         # Migrations turned off for now
