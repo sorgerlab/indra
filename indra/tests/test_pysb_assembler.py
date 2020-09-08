@@ -781,24 +781,39 @@ def test_translocation_loc_special_char():
 
 
 def test_parse_identifiers_url():
-    url1 = 'https://identifiers.org/foo/bar'
-    url2 = 'https://identifiers.org/hgnc/HGNC:12345'
-    url3 = 'https://identifiers.org/uniprot/12345'
-    url4 = 'https://identifiers.org/chebi/12345'
-    url5 = 'https://identifiers.org/interpro/12345'
-    url6 = 'https://identifiers.org/pfam/12345'
+    url1 = 'http://identifiers.org/foo/bar'
+    url2 = 'http://identifiers.org/hgnc/12345'
+    url3 = 'http://identifiers.org/hgnc/HGNC:12345'
+    url4 = 'http://identifiers.org/uniprot/12345'
+    url5 = 'http://identifiers.org/chebi/12345'
+    url6 = 'http://identifiers.org/interpro/12345'
+    url7 = 'http://identifiers.org/pfam/12345'
+    url8 = 'https://identifiers.org/hgnc/HGNC:12345'
+    url9 = 'https://identifiers.org/hgnc:12345'
+    url10 = 'https://identifiers.org/GO:12345'
+    url11 = 'https://identifiers.org/DOID:12345'
     (ns, id) = pa.parse_identifiers_url(url1)
     assert ns is None and id is None
     (ns, id) = pa.parse_identifiers_url(url2)
     assert ns == 'HGNC' and id == '12345'
     (ns, id) = pa.parse_identifiers_url(url3)
-    assert ns == 'UP' and id == '12345'
+    assert ns == 'HGNC' and id == '12345'
     (ns, id) = pa.parse_identifiers_url(url4)
-    assert ns == 'CHEBI' and id == '12345'
+    assert ns == 'UP' and id == '12345'
     (ns, id) = pa.parse_identifiers_url(url5)
-    assert ns == 'IP' and id == '12345'
+    assert ns == 'CHEBI' and id == '12345'
     (ns, id) = pa.parse_identifiers_url(url6)
-    assert ns == 'PF' and id == '12345'
+    assert ns == 'IP' and id == '12345'
+    (ns, id) = pa.parse_identifiers_url(url7)
+    assert ns == 'XFAM' and id == '12345'
+    (ns, id) = pa.parse_identifiers_url(url8)
+    assert ns == 'HGNC' and id == '12345', (ns, id)
+    (ns, id) = pa.parse_identifiers_url(url9)
+    assert ns == 'HGNC' and id == '12345', (ns, id)
+    (ns, id) = pa.parse_identifiers_url(url10)
+    assert ns == 'GO' and id == '12345', (ns, id)
+    (ns, id) = pa.parse_identifiers_url(url11)
+    assert ns == 'DOID' and id == 'DOID:12345', (ns, id)
 
 
 @with_model
