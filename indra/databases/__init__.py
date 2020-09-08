@@ -1,4 +1,5 @@
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -129,12 +130,37 @@ def parse_identifiers_url(url):
     db_id : str
         An identifier in the database.
     """
+    # Try reverse dictionary lookup first
+    for ns, prefix in url_prefixes.items():
+        if ns != 'DOID' and url.startswith(prefix):
+            return ns, url[len(prefix):]
 
-    for db_name, prefix in url_prefixes.items():
-        if db_name != 'DOID' and url.startswith(prefix):
-            return db_name, url[len(prefix):]
     if 'DOID' in url:
         return 'DOID', url[len(url_prefixes['DOID']):]
+
+    # Try matching by string pattern
+    db_name, db_id = None, None
+    url_pattern = r'(?:https?)://identifiers.org/([A-Za-z]+)(/|:)([A-Za-z0-9:]+)'
+    match = re.match(url_pattern, url)
+    if match is not None:
+        g = match.groups()
+        if len(g) == 3:
+            ns, db_id = g[0], g[2]
+            ns_map = {'hgnc': 'HGNC', 'uniprot': 'UP', 'chebi': 'CHEBI',
+                      'interpro': 'IP', 'pfam': 'XFAM', 'fplx': 'FPLX',
+                      'go': 'GO', 'mesh': 'MESH',
+                      'pubchem.compound': 'PUBCHEM'}
+            if ns in ns_map.keys():
+                db_name = ns_map[ns]
+            elif ns in url_prefixes.keys():
+                db_name = ns.upper()
+            if db_name == 'HGNC':
+                if db_id.startswith('HGNC:'):
+                    db_id = db_id[5:]
+            if db_name and db_id:
+                return db_name, db_id
+
+    # Handle other special cases
     for part in ['/lincs.smallmolecule/', '/lincs.cell/', '/lincs.protein/']:
         if part in url:
             return 'LINCS', url[len(identifiers_url + part):]
