@@ -203,13 +203,13 @@ class SofiaProcessor(object):
         #  - If we have process and process property available, but the
         #    process gets removed because it's not grounded properly,
         #    should the property be remove or put to the theme property?
-
+        name = None
         theme, theme_prop, theme_proc, theme_proc_prop = (None, )*4
 
         # First, try to get the theme
         event_patients = event_entry['Patient_index'].strip().split(', ')
         if event_patients != ['']:
-            theme = self._get_entity_grounding(event_patients)
+            name, theme = self._get_entity_grounding(event_patients)
 
         # See if we have a theme process
         proc = self._clean_grnd_filter(event_entry['Event_Type'],
@@ -226,6 +226,7 @@ class SofiaProcessor(object):
         # theme, and add theme property if it exists
         if not theme or theme[0] is None:
             if proc and proc[0] is not None:
+                name = event_entry['Relation']  # Match name to theme (process)
                 theme = proc
                 if prop and prop is not None:
                     theme_prop = prop
@@ -241,7 +242,7 @@ class SofiaProcessor(object):
 
         # Return 4-tuple of:
         # Theme, Theme Property, Theme Process, Theme Process Property  
-        return theme, theme_prop, theme_proc, theme_proc_prop
+        return name, (theme, theme_prop, theme_proc, theme_proc_prop)
 
     def _get_theme_prop(self, entity_inds):
         qualifiers = [
@@ -260,21 +261,24 @@ class SofiaProcessor(object):
         return None, 0.0
 
     def _get_entity_grounding(self, entity_inds):
+        # Get name and grounding
         grnd_ent_list = [
-            (self._entities[ai]['Entity_Type'],
-             float(self._entities[ai]['Score']) or 1.0)  # ignore zero scores
+            (self._entities[ai]['Entity'] or None,  # Set None if ''
+             (self._entities[ai]['Entity_Type'],
+              float(self._entities[ai]['Score']) or 1.0))  # ignore zero scores
             for ai in entity_inds if self._entities[ai]['Entity_Type']
         ]
         if grnd_ent_list:
             # Sort by highest score first
-            grnd_ent_list.sort(key=lambda t: t[1], reverse=True)
+            grnd_ent_list.sort(key=lambda t: t[1][1], reverse=True)
             for grnd_ent in grnd_ent_list:
-                grnd_ent = self._clean_grnd_filter(
-                    *grnd_ent, score_cutoff=self._score_cutoff or None
+                name, ent = grnd_ent
+                ent = self._clean_grnd_filter(
+                    *ent, score_cutoff=self._score_cutoff or None
                 )
-                if grnd_ent[0] is not None:
-                    return grnd_ent
-        return None, 0.0
+                if ent[0] is not None:
+                    return name, ent
+        return None, (None, 0.0)
 
     @staticmethod
     def _clean_grnd_filter(grnd, score, score_cutoff=0.0):
