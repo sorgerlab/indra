@@ -93,9 +93,9 @@ class HumeJsonLdProcessor(object):
                     events.append(e)
 
         if not events:
-            logger.info('No standalone events found.')
+            logger.debug('No standalone events found.')
         else:
-            logger.info('%d standalone events found.' % len(events))
+            logger.debug('%d standalone events found.' % len(events))
 
         return events
 
@@ -127,12 +127,12 @@ class HumeJsonLdProcessor(object):
                 self.concept_dict[e['@id']] = e
 
         if not relations and not self.relation_dict:
-            logger.info("No relations found.")
+            logger.debug("No relations found.")
         else:
-            logger.info('%d relations of types %s found'
+            logger.debug('%d relations of types %s found'
                         % (len(relations), ', '.join(polarities.keys())))
-            logger.info('%d relations in dict.' % len(self.relation_dict))
-            logger.info('%d concepts found.' % len(self.concept_dict))
+            logger.debug('%d relations in dict.' % len(self.relation_dict))
+            logger.debug('%d concepts found.' % len(self.concept_dict))
         return relations
 
     def _get_documents(self):
