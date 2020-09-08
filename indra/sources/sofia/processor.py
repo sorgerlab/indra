@@ -97,16 +97,21 @@ class SofiaProcessor(object):
         return stmt_list
 
     def get_event(self, event_entry):
-        name = event_entry['Relation']
-        concept = Concept(name, db_refs={'TEXT': name})
-        grounding = event_entry['Event_Type']
-        if grounding:
-            concept.db_refs['SOFIA'] = grounding
-
         # Get get compositional grounding
-        comp_grnd = self.get_compositional_grounding(event_entry)
-        if comp_grnd[0] is not None and comp_grnd[0][0] is not None:
-            concept.db_refs['WM'] = comp_grnd
+        comp_name, comp_grnd = self.get_compositional_grounding(event_entry)
+        if comp_name is not None and \
+                comp_grnd[0] is not None and \
+                comp_grnd[0][0] is not None:
+            concept = Concept(comp_name, db_refs={
+                'TEXT': comp_name,
+                'WM': comp_grnd
+            })
+        # If not try to get old style Sofia grounding
+        else:
+            name = event_entry['Relation']
+            concept = Concept(name, db_refs={'TEXT': name})
+            if event_entry['Event_Type']:
+                concept.db_refs['SOFIA'] = event_entry['Event_Type']
 
         context = WorldContext()
         time = event_entry.get('Time')
