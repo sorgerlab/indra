@@ -165,8 +165,8 @@ class WorldOntology(IndraOntology):
 
 
 @register_pipeline
-def load_world_ontology():
-    return WorldOntology(wm_ont_url)
+def load_world_ontology(url=wm_ont_url):
+    return WorldOntology(url)
 
 
 world_ontology = load_world_ontology()
