@@ -11,11 +11,18 @@ import networkx.algorithms.simple_paths as simple_paths
 from heapq import heappush, heappop
 from itertools import count
 
+from numpy import log as ln
+
 from .util import get_sorted_neighbors
 
-from collections import Counter
 
 logger = logging.getLogger(__name__)
+
+# Constants used in weighing algorithms
+C = 1
+K = 2
+T_K = 10
+M_PRIME = 1e-15
 
 
 # Copy from networkx.algorithms.simple_paths
@@ -54,7 +61,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
         hashes specifying (if not empty) allowed edges
     
     ref_count_function : function
-        function calculating reference count of an edge from its
+        function counting references and PMIDs of an edge from its
         statement hashes
 
     Returns
@@ -125,7 +132,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
             length_func = len
             shortest_path_func = _bidirectional_shortest_path
         else:
-            weight = 'mesh_ids_weight'
+            weight = 'context_weight'
             def length_func(path):
                 return sum(G.adj[u][v][weight] for (u, v) in zip(path, path[1:]))
             def shortest_path_func(G, source, target, weight, ignore_nodes, ignore_edges,
@@ -148,23 +155,11 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 
     allowed_edges = []
     if hashes:
-        edge_by_hash = G.graph['edge_by_hash']
-        for u, v, d, in G.edges(data=True):
-            edge_hashes = ref_counts_function([d['stmt_hash'] for d in d['statements']])
-            d['mesh_ids_weight'] = 2 / float(edge_hashes + 2)
-
-        # for h in hashes:
-        #     if h in edge_by_hash:
-        #         allowed_edges.append(edge_by_hash[h])
-
-        # if not strict_mesh_id_filtering:
-        #     allowed_edges_ctr = Counter(allowed_edges)
-        #     for u, v, d in G.edges(data=True):
-        #         d['mesh_ids_weight'] = 1
-        #     for (u, v), n_hashes in allowed_edges_ctr.items():
-        #         G[u][v]['mesh_ids_weight'] = 2 / float(n_hashes + 2)
-
-    print("CHECKED HASHES")
+        for u, v, data, in G.edges(data=True):
+            ref_counts, total = ref_counts_function([d['stmt_hash'] for d in data['statements']])
+            if not ref_counts:
+                ref_counts = M_PRIME
+            data['context_weight'] = -C * ln(ref_counts / (total + T_K))
 
     culled_ignored_nodes = set() if ignore_nodes is None else set(ignore_nodes)
     culled_ignored_edges = set() if ignore_edges is None else set(ignore_edges)
@@ -571,7 +566,8 @@ def _bidirectional_shortest_path(G, source, target,
 
     """
     # call helper to do the real work
-    results = _bidirectional_pred_succ(G, source, target, ignore_nodes, ignore_edges, force_edges=force_edges)
+    results = _bidirectional_pred_succ(G, source, target, ignore_nodes, ignore_edges, 
+                                       force_edges=force_edges)
     pred, succ, w = results
 
     # build path from pred+w+succ
@@ -705,7 +701,8 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
     raise nx.NetworkXNoPath("No path between %s and %s." % (source, target))
 
 
-def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None, hashes=None, terminal_ns=None, weight=None):
+def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None, 
+                         hashes=None, terminal_ns=None, weight=None, ref_counts_function=None):
     """Do Dijkstra search from a given node and yield paths
 
     Parameters
@@ -729,6 +726,9 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None
         List of hashes used to set edge weights
     weight : str
         Name of edge's attribute used as its weight
+    ref_count_function : function
+        function counting references and PMIDs of an edge from its
+        statement hashes
     
 
     Yields
@@ -742,11 +742,11 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None
         for h in hashes:
             if h in edge_by_hash:
                 allowed_edges.append(edge_by_hash[h])
-        allowed_edges_ctr = Counter(allowed_edges)
-        for u, v, d in g.edges(data=True):
-            d['mesh_ids_weight'] = 1
-        for (u, v), n_hashes in allowed_edges_ctr.items():
-            g[u][v]['mesh_ids_weight'] = 2 / float(n_hashes + 2)
+        for u, v, data in g.edges(data=True):
+            ref_counts, total = ref_counts_function([d['stmt_hash'] for d in data['statements']])
+            if not ref_counts:
+                ref_counts = M_PRIME
+            data['context_weight'] = -C * ln(ref_counts / (total + T_K))
 
     if reverse:
         g = g.reverse(copy=False)
