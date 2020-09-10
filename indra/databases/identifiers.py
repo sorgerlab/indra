@@ -21,6 +21,7 @@ url_prefixes = {
     'GO': '%s/' % identifiers_url,   # note that IDs start with GO:
     'PCID': '%s/pubchem.compound:' % identifiers_url,
     'PUBCHEM': '%s/pubchem.compound:' % identifiers_url,
+    'PUBCHEM.SUBSTANCE': '%s/pubchem.substance:' % identifiers_url,
     'PF': '%s/pfam:' % identifiers_url,
     'MIRBASEM': '%s/mirbase.mature:' % identifiers_url,
     'MIRBASE': '%s/mirbase:' % identifiers_url,
