@@ -149,16 +149,17 @@ class GroundingMapper(object):
             # then filter out the Statement
             agent_txts = {agent.db_refs[t] for t in {'TEXT', 'TEXT_NORM'}
                           if t in agent.db_refs}
-            if agent_txts and agent_txts & self.ignores:
+            if agent_txts and agent_txts & set(self.ignores):
                 return None
 
             # Check if an adeft model exists for agent text
             adeft_success = False
             if self.use_adeft and agent_txts and agent_txts & \
-                    adeft_disambiguators:
+                    set(adeft_disambiguators):
                 try:
                     # Us the longest match for disambiguation
-                    txt_for_adeft = sorted(agent_txts & adeft_disambiguators,
+                    txt_for_adeft = sorted(agent_txts &
+                                           set(adeft_disambiguators),
                                            key=lambda x: len(x))[-1]
                     adeft_success = run_adeft_disambiguation(mapped_stmt,
                                                              agent, idx,
