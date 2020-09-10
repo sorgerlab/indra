@@ -1,5 +1,7 @@
 import logging
 import re
+from urllib import parse
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +39,6 @@ url_prefixes = {
     'BTO': '%s/BTO:' % identifiers_url,
     'NXPFA': 'https://www.nextprot.org/term/FA-',
     'SIGNOR': 'https://signor.uniroma2.it/relation_result.php?id=',
-    'NONCODE': 'http://www.noncode.org/show_gene.php?id=NONHSAG',
     'UN': 'https://github.com/clulab/eidos/wiki/JSON-LD#Grounding/',
     'WDI': 'https://github.com/clulab/eidos/wiki/JSON-LD#Grounding/',
     'FAO': 'https://github.com/clulab/eidos/wiki/JSON-LD#Grounding/',
@@ -76,15 +77,15 @@ def get_identifiers_url(db_name, db_id):
     bel_scai_url = 'https://arty.scai.fraunhofer.de/artifactory/bel/namespace/'
     if db_name == 'LINCS':
         if db_id.startswith('LSM-'):  # Lincs Small Molecule ID
-            url = identifiers_url + '/lincs.smallmolecule/%s' % db_id
+            url = identifiers_url + '/lincs.smallmolecule:%s' % db_id
         elif db_id.startswith('LCL-'):  # Lincs Cell Line ID
-            url = identifiers_url + '/lincs.cell/%s' % db_id
+            url = identifiers_url + '/lincs.cell:%s' % db_id
         else:  # Assume LINCS Protein
-            url = identifiers_url + '/lincs.protein/%s' % db_id
+            url = identifiers_url + '/lincs.protein:%s' % db_id
     elif db_name == 'CHEMBL':
         if not db_id.startswith('CHEMBL'):
             db_id = 'CHEMBL%s' % db_id
-        url = identifiers_url + '/chembl.compound/%s' % db_id
+        url = identifiers_url + '/chembl.compound:%s' % db_id
     elif db_name == 'HMS-LINCS':
         url = 'http://lincs.hms.harvard.edu/db/sm/%s-101' % db_id
     # Special cases with no identifiers entry
@@ -98,10 +99,18 @@ def get_identifiers_url(db_name, db_id):
         url = bel_scai_url + 'selventa-protein-families/' + \
             'selventa-protein-families-20150601.belns'
     elif db_name == 'LNCRNADB':
+        # Note that this website is disabled
         if db_id.startswith('ENSG'):
             url = 'http://www.lncrnadb.org/search/?q=%s' % db_id
         else:  # Assmuing HGNC symbol
             url = 'http://www.lncrnadb.org/%s/' % db_id
+    elif db_name == 'NONCODE':
+        if '.' in db_id:
+            _id, version = db_id.split('.')
+            url = 'http://www.noncode.org/show_gene.php?id=%s&version=%s' \
+                % (_id, version)
+        else:
+            url = 'http://www.noncode.org/show_gene.php?id=%s' % db_id
     elif db_name == 'TEXT' or db_name == 'TEXT_NORM':
         return None
     # TODO: we should return the parent UniProt ID here but only once that
@@ -150,8 +159,8 @@ def parse_identifiers_url(url):
 
     # Special handling for IDs including prefix
     for ns in prefixed_ids:
-        if ns.lower() in url.lower() and url.startswith(url_prefixes[ns]):
-            return ns, url[len(url_prefixes[ns]):]
+        if ns in url and url.startswith(url_prefixes[ns]):
+            return ns, url[url.find(ns):]
 
     # Try matching by string pattern
     db_name, db_id = None, None
@@ -174,16 +183,18 @@ def parse_identifiers_url(url):
                 if db_id.startswith('HGNC:'):
                     db_id = db_id[5:]
             if db_name in prefixed_ids:
-                db_id = db_name + ':' + db_id
+                if not db_id.startswith(db_name):
+                    db_id = db_name + ':' + db_id
             if db_name and db_id:
                 return db_name, db_id
 
     # Handle other special cases
-    for part in ['/lincs.smallmolecule/', '/lincs.cell/', '/lincs.protein/']:
+    for part in ['/lincs.smallmolecule', '/lincs.cell', '/lincs.protein']:
         if part in url:
-            return 'LINCS', url[len(identifiers_url + part):]
-    if '/chembl.compound/' in url:
-        return 'CHEMBL', url[len(identifiers_url + '/chembl.compound/')]
+            return 'LINCS', url[(url.find(part) + len(part) + 1):]
+    if '/chembl.compound' in url:
+        return 'CHEMBL', url[
+            (url.find('/chembl.compound') + len('/chembl.compound:')):]
     if 'lincs.hms.harvard.edu' in url:
         return 'HMS-LINCS', url[len('http://lincs.hms.harvard.edu/db/sm/'):-4]
     if 'selventa-legacy-chemicals/' in url:
@@ -193,10 +204,19 @@ def parse_identifiers_url(url):
     if 'selventa-protein-families/' in url:
         return 'SFAM', None
     if 'lncrnadb' in url:
+        # Note that this website is disabled
         if 'ENSG' in url:
             return 'LNCRNADB', url[len('http://www.lncrnadb.org/search/?q='):]
         else:
             return 'LNCRNADB', url[len('http://www.lncrnadb.org/'):-1]
+    if 'noncode' in url:
+        q = parse.parse_qs(parse.urlparse(url).query)
+        _id, version = q.get('id'), q.get('version')
+        if version:
+            db_id = _id[0] + '.' + version[0]
+        else:
+            db_id = _id[0]
+        return 'NONCODE', db_id
     else:
         logger.warning('Could not parse URL %s' % url)
     return None, None
