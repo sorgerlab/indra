@@ -170,7 +170,7 @@ def ground_statements(stmts, mode='web', sources=None, ungrounded_only=False):
     return stmts
 
 
-def run_gilda_disambiguation(stmt, agent, idx, mode='web'):
+def run_gilda_disambiguation(stmt, agent, idx, agent_txt, mode='web'):
     """Run Gilda disambiguation on an Agent in a given Statement.
 
     This function looks at the evidence of the given Statement and attempts
@@ -215,7 +215,6 @@ def run_gilda_disambiguation(stmt, agent, idx, mode='web'):
     # Initialize annotations if needed so predicted
     # probabilities can be added to Agent annotations
     annots = stmt.evidence[0].annotations
-    agent_txt = agent.db_refs['TEXT']
     if 'agents' in annots:
         if 'gilda' not in annots['agents']:
             annots['agents']['gilda'] = \

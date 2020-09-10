@@ -147,32 +147,41 @@ class GroundingMapper(object):
                 continue
             # If the agent's TEXT is in the ignores list, we return None to
             # then filter out the Statement
-            agent_txt = agent.db_refs.get('TEXT')
-            if agent_txt and agent_txt in self.ignores:
+            agent_txts = {agent.db_refs[t] for t in {'TEXT', 'TEXT_NORM'}
+                          if t in agent.db_refs}
+            if agent_txts and agent_txts & self.ignores:
                 return None
 
             # Check if an adeft model exists for agent text
             adeft_success = False
-            if self.use_adeft and agent_txt and agent_txt in \
+            if self.use_adeft and agent_txts and agent_txts & \
                     adeft_disambiguators:
                 try:
+                    # Us the longest match for disambiguation
+                    txt_for_adeft = sorted(agent_txts & adeft_disambiguators,
+                                           key=lambda x: len(x))[-1]
                     adeft_success = run_adeft_disambiguation(mapped_stmt,
-                                                             agent, idx)
+                                                             agent, idx,
+                                                             txt_for_adeft)
                 except Exception as e:
                     logger.error('There was an error during Adeft'
-                                 ' disambiguation of %s.' % agent_txt)
+                                 ' disambiguation of %s.' % str(agent_txts))
                     logger.error(e)
 
             gilda_success = False
             if not adeft_success and self.gilda_mode and \
-                    agent_txt in self.gilda_models:
+                    agent_txts & set(self.gilda_models):
                 try:
+                    # Us the longest match for disambiguation
+                    txt_for_gilda = sorted(agent_txts & set(self.gilda_models),
+                                           key=lambda x: len(x))[-1]
                     gilda_success = \
                         run_gilda_disambiguation(mapped_stmt, agent, idx,
+                                                 txt_for_gilda,
                                                  mode=self.gilda_mode)
                 except Exception as e:
                     logger.error('There was an error during Gilda'
-                                 ' disambiguation of %s.' % agent_txt)
+                                 ' disambiguation of %s.' % str(agent_txts))
                     logger.error(e)
 
             # If Adeft and Gilda were not used or didn't succeed, we do
