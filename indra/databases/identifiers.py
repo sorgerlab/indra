@@ -14,9 +14,9 @@ url_prefixes = {
     'HGNC': '%s/hgnc:' % identifiers_url,
     'IP': '%s/interpro:' % identifiers_url,
     'IPR': '%s/interpro:' % identifiers_url,
-    'CHEBI': '%s/CHEBI:' % identifiers_url,
+    'CHEBI': '%s/' % identifiers_url,  # note that IDs start with CHEBI:
     'NCIT': '%s/ncit:' % identifiers_url,
-    'GO': '%s/GO:' % identifiers_url,
+    'GO': '%s/' % identifiers_url,   # note that IDs start with GO:
     'PCID': '%s/pubchem.compound:' % identifiers_url,
     'PUBCHEM': '%s/pubchem.compound:' % identifiers_url,
     'PF': '%s/pfam:' % identifiers_url,
@@ -28,7 +28,7 @@ url_prefixes = {
     'FPLX': '%s/fplx:' % identifiers_url,
     'REFSEQ_PROT': '%s/refseq:' % identifiers_url,
     'EFO': '%s/efo:' % identifiers_url,
-    'HP': '%s/HP:' % identifiers_url,
+    'HP': '%s/' % identifiers_url,  # note that IDs start with HP:
     'DOID': '%s/' % identifiers_url,  # note that IDs start with DOID:
     'ECCODE': '%s/ec-code:' % identifiers_url,
     'CAS': '%s/cas:' % identifiers_url,
@@ -130,33 +130,51 @@ def parse_identifiers_url(url):
     db_id : str
         An identifier in the database.
     """
+    prefixed_ids = ['CHEBI', 'DOID', 'GO', 'HP']
     # Try reverse dictionary lookup first
+    ns_options = {}
     for ns, prefix in url_prefixes.items():
-        if ns != 'DOID' and url.startswith(prefix):
-            return ns, url[len(prefix):]
+        if ns not in prefixed_ids and url.startswith(prefix):
+            ns_options[ns] = url[len(prefix):]
 
-    if 'DOID' in url:
-        return 'DOID', url[len(url_prefixes['DOID']):]
+    # If we got the only possible option, return it
+    if len(ns_options) == 1:
+        return [(k, v) for (k, v) in ns_options.items()][0]
+    # Handle cases when 2 matches are possible
+    elif len(ns_options) == 2:
+        for ns in ['PUBCHEM', 'IP', 'MIRBASEM']:
+            if ns in ns_options:
+                return ns, ns_options[ns]
+    elif len(ns_options) > 2:
+        logger.warning('Got too many options: %s' % ns_options)
+
+    # Special handling for IDs including prefix
+    for ns in prefixed_ids:
+        if ns.lower() in url.lower() and url.startswith(url_prefixes[ns]):
+            return ns, url[len(url_prefixes[ns]):]
 
     # Try matching by string pattern
     db_name, db_id = None, None
-    url_pattern = r'(?:https?)://identifiers.org/([A-Za-z]+)(/|:)([A-Za-z0-9:]+)'
+    url_pattern = \
+        r'(?:https?)://identifiers.org/([A-Za-z.-]+)(/|:)([A-Za-z0-9:_.-]+)'
     match = re.match(url_pattern, url)
     if match is not None:
         g = match.groups()
         if len(g) == 3:
             ns, db_id = g[0], g[2]
-            ns_map = {'hgnc': 'HGNC', 'uniprot': 'UP', 'chebi': 'CHEBI',
-                      'interpro': 'IP', 'pfam': 'XFAM', 'fplx': 'FPLX',
-                      'go': 'GO', 'mesh': 'MESH',
-                      'pubchem.compound': 'PUBCHEM'}
+            ns_map = {'uniprot': 'UP', 'interpro': 'IP', 'pfam': 'PF',
+                      'pubchem.compound': 'PUBCHEM',
+                      'mirbase.mature': 'MIRBASEM', 'ncbigene': 'EGID',
+                      'refseq': 'REFSEQ_PROT', 'ec-code': 'ECCODE'}
             if ns in ns_map.keys():
                 db_name = ns_map[ns]
-            elif ns in url_prefixes.keys():
+            elif ns.upper() in url_prefixes.keys():
                 db_name = ns.upper()
             if db_name == 'HGNC':
                 if db_id.startswith('HGNC:'):
                     db_id = db_id[5:]
+            if db_name in prefixed_ids:
+                db_id = db_name + ':' + db_id
             if db_name and db_id:
                 return db_name, db_id
 
