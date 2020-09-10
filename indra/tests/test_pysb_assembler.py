@@ -787,8 +787,8 @@ def test_get_mp_with_grounding():
     b = Agent('B', db_refs={'HGNC': '6871'})
     Monomer('A_monomer')
     Monomer('B_monomer')
-    Annotation(A_monomer, 'https://identifiers.org/hgnc/HGNC:6840')
-    Annotation(B_monomer, 'https://identifiers.org/hgnc/HGNC:6871')
+    Annotation(A_monomer, 'https://identifiers.org/hgnc:6840')
+    Annotation(B_monomer, 'https://identifiers.org/hgnc:6871')
     mps = list(pa.grounded_monomer_patterns(model, foo))
     assert len(mps) == 0
     mps = list(pa.grounded_monomer_patterns(model, a))
@@ -807,7 +807,7 @@ def test_get_mp_with_grounding_2():
                db_refs={'HGNC': '6840'})
     Monomer('A_monomer', ['phospho', 'T185', 'Y187'],
             {'phospho': 'y', 'T185': ['u', 'p'], 'Y187': ['u', 'p']})
-    Annotation(A_monomer, 'https://identifiers.org/hgnc/HGNC:6840')
+    Annotation(A_monomer, 'https://identifiers.org/hgnc:6840')
     A_monomer.site_annotations = [
         Annotation(('phospho', 'y'), 'phosphorylation', 'is_modification'),
         Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
