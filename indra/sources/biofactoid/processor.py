@@ -5,6 +5,18 @@ from indra.util import flatten
 
 
 class BioFactoidProcessor:
+    """Processor which extracts INDRA Statements from BioFactoid JSON.
+
+    Parameters
+    ----------
+    biofactoid_json : json
+        BioFactoid JSON to process.
+
+    Attributes
+    ----------
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements extracted from the BioFactoid JSON.
+    """
     def __init__(self, biofactoid_json):
         self.biofactoid_json = biofactoid_json
         self.statements = []
@@ -76,6 +88,8 @@ class BioFactoidProcessor:
     def agent_from_element(self, element):
         name = element['name']
         db_refs = {}
+        if not element['completed']:
+            return None
         mapped_ns, mapped_id = \
             process_db_refs(element['association']['namespace'],
                             element['association']['id'])
