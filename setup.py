@@ -70,7 +70,7 @@ def main():
                     'indra.ontology.app', 'indra.pipeline',
                     'indra.preassembler',
                     'indra.preassembler.grounding_mapper', 'indra.sources',
-                    'indra.sources.bel',
+                    'indra.sources.bel', 'indra.sources.biofactoid',
                     'indra.sources.biopax', 'indra.sources.ctd',
                     'indra.sources.cwms', 'indra.sources.drugbank',
                     'indra.sources.eidos',
