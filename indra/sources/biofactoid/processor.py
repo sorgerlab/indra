@@ -1,5 +1,7 @@
-import copy
+from copy import deepcopy
+from collections import defaultdict
 from indra.statements import *
+from indra.util import flatten
 
 
 class BioFactoidProcessor:
@@ -15,25 +17,60 @@ class BioFactoidProcessor:
         ev = self.get_evidence(document)
         stmts = []
         for interaction in self.find_interactions(document['elements']):
-            if interaction['type'] == 'phosphorylation':
+            groups = defaultdict(list)
+            for entry in interaction['entries']:
+                groups[entry['group']].append(
+                    self.agent_from_element(
+                        self.find_element(document['elements'], entry['id'])
+                    )
+                )
+            groups = dict(groups)
+            if interaction['type'] in mod_types:
+                stmt_type = interaction_types[interaction['type']]
+                enz = groups[None][0] if None in groups else None
                 sub = None
-                enz = None
-                stmt_type = None
-                for entry in interaction['entries']:
-                    element = self.find_element(document['elements'],
-                                                entry['id'])
-                    agent = self.agent_from_element(element)
-                    if entry['group'] is None:
-                        enz = agent
-                    elif entry['group'] == 'positive':
-                        sub = agent
-                        stmt_type = Phosphorylation
-                    elif entry['group'] == 'negative':
-                        sub = agent
-                        stmt_type = Dephosphorylation
-                if sub and enz and stmt_type:
-                    stmt = stmt_type(enz, sub, evidence=copy.deepcopy(ev))
+                act_inh_stmt = None
+                for polarity in {'positive', 'unsigned', 'negative'}:
+                    if polarity in groups:
+                        if polarity == 'positive':
+                            act_inh_stmt = Activation
+                        elif polarity == 'negative':
+                            act_inh_stmt = Inhibition
+                        sub = groups[polarity][0]
+                        break
+                if sub and enz:
+                    stmt = stmt_type(deepcopy(enz),
+                                     deepcopy(sub),
+                                     evidence=deepcopy(ev))
                     stmts.append(stmt)
+                    if act_inh_stmt:
+                        stmt = act_inh_stmt(deepcopy(enz),
+                                            deepcopy(sub),
+                                            evidence=deepcopy(ev))
+                        stmts.append(stmt)
+            elif interaction['type'] == 'transcription-translation':
+                subj = groups[None][0] if None in groups else None
+                obj = None
+                for polarity in {'positive', 'unsigned', 'negative'}:
+                    if polarity in groups:
+                        obj = groups[polarity][0]
+                        break
+                else:
+                    polarity = None
+                if polarity == 'positive':
+                    stmt_type = IncreaseAmount
+                elif polarity == 'negative':
+                    stmt_type = DecreaseAmount
+                if subj and obj and polarity:
+                    stmt = stmt_type(deepcopy(subj),
+                                     deepcopy(obj),
+                                     evidence=deepcopy(ev))
+                    stmts.append(stmt)
+            elif interaction['type'] == 'binding':
+                members = flatten(list(groups.values()))
+                stmt = Complex(deepcopy(members),
+                               evidence=deepcopy(ev))
+                stmts.append(stmt)
         return stmts
 
     def agent_from_element(self, element):
@@ -44,7 +81,7 @@ class BioFactoidProcessor:
                             element['association']['id'])
         if mapped_ns and mapped_id:
             db_refs[mapped_ns] = mapped_id
-        for ref in element['association']['dbXrefs']:
+        for ref in element['association'].get('dbXrefs', []):
             mapped_ns, mapped_id = process_db_refs(ref['db'], ref['id'])
             if mapped_ns and mapped_id:
                 db_refs[mapped_ns] = mapped_id
@@ -99,9 +136,26 @@ def process_db_refs(db_ns, db_id):
         return 'EGID', db_id
     elif db_ns == 'MGI':
         return 'MGI', db_id.replace('MGI:', '')
+    elif db_ns == 'RGD':
+        return 'RGD', db_id
+    elif db_ns == 'ChEBI':
+        return 'CHEBI', 'CHEBI:%s' % db_id
     return None, None
 
 
 # TODO: there's probably more but this is what is visible so far
-interaction_types = {'binding', 'interaction', 'modification',
-                     'phosphorylation', 'transcription-translation'}
+interaction_types = {
+    'binding': Complex,
+    'interaction': Complex,
+    'modification': AddModification,
+    'phosphorylation': Phosphorylation,
+    'methylation': Methylation,
+    'demethylation': Demethylation,
+    'ubiquitination': Ubiquitination,
+    'deubiquitination': Deubiquitination,
+    'transcription-translation': IncreaseAmount,
+}
+
+mod_types = {'phosphorylation', 'dephosphorylation',
+             'ubiquitination', 'deubiquitination',
+             'modification', 'methylation', 'demethylation'}
