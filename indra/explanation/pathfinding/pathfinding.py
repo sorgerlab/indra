@@ -18,16 +18,12 @@ from .util import get_sorted_neighbors
 
 logger = logging.getLogger(__name__)
 
-# Constants used in weighing algorithms
-C = 1
-T_K = 10
-M_PRIME = 1e-15
-
 
 # Copy from networkx.algorithms.simple_paths
 # Added ignore_nodes and ignore_edges arguments
 def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
-                          ignore_edges=None, hashes=None, ref_counts_function=None, strict_mesh_id_filtering=False):
+                          ignore_edges=None, hashes=None, ref_counts_function=None, strict_mesh_id_filtering=False,
+                          const_c=1, const_tk=10):
     """Generate all simple paths in the graph G from source to target,
        starting from shortest ones.
 
@@ -62,6 +58,12 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
     ref_count_function : function
         function counting references and PMIDs of an edge from its
         statement hashes
+
+    const_c : int
+            Constant used in MeSH IDs-based weight calculation
+
+    const_tk : int
+        Constant used in MeSH IDs-based weight calculation
 
     Returns
     -------
@@ -157,8 +159,8 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
         for u, v, data, in G.edges(data=True):
             ref_counts, total = ref_counts_function([d['stmt_hash'] for d in data['statements']])
             if not ref_counts:
-                ref_counts = M_PRIME
-            data['context_weight'] = -C * ln(ref_counts / (total + T_K))
+                ref_counts = 1e-15
+            data['context_weight'] = -const_c * ln(ref_counts / (total + const_tk))
 
     culled_ignored_nodes = set() if ignore_nodes is None else set(ignore_nodes)
     culled_ignored_edges = set() if ignore_edges is None else set(ignore_edges)
@@ -701,7 +703,8 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
 
 
 def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None, 
-                         hashes=None, terminal_ns=None, weight=None, ref_counts_function=None):
+                         hashes=None, terminal_ns=None, weight=None, ref_counts_function=None,
+                         const_c=1, const_tk=10):
     """Do Dijkstra search from a given node and yield paths
 
     Parameters
@@ -728,6 +731,10 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None
     ref_count_function : function
         function counting references and PMIDs of an edge from its
         statement hashes
+    const_c : int
+        Constant used in MeSH IDs-based weight calculation
+    const_tk : int
+        Constant used in MeSH IDs-based weight calculation
     
 
     Yields
@@ -744,8 +751,8 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None
         for u, v, data in g.edges(data=True):
             ref_counts, total = ref_counts_function([d['stmt_hash'] for d in data['statements']])
             if not ref_counts:
-                ref_counts = M_PRIME
-            data['context_weight'] = -C * ln(ref_counts / (total + T_K))
+                ref_counts = 1e-15
+            data['context_weight'] = -const_c * ln(ref_counts / (total + const_tk))
 
     if reverse:
         g = g.reverse(copy=False)
@@ -761,7 +768,7 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None
     else:
         proper_path = lambda x: True
     paths = list(nx.single_source_dijkstra_path(g, start,
-                                                weight='context_weight').values())[1:]
+                                                weight='weight').values())[1:]
     if path_limit is not None:
         for p in paths:
             path_limit -= 1
