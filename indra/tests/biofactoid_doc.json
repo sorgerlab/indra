@@ -1,0 +1,1145 @@
+{
+ "id": "3d2a77ba-55c1-463b-aff3-9acaa0307b62",
+ "secret": "read-only",
+ "organisms": [
+  "9606"
+ ],
+ "elements": [
+  {
+   "id": "e21f0a6a-3812-409a-8986-a811bcc0a84b",
+   "secret": "read-only",
+   "position": {
+    "x": 96.70886075949367,
+    "y": 96.70886075949366
+   },
+   "name": "AKT1",
+   "description": "",
+   "type": "protein",
+   "completed": true,
+   "association": {
+    "combinedOrganismIndex": 1,
+    "dbName": "NCBI Gene",
+    "dbPrefix": "ncbigene",
+    "dbXrefs": [
+     {
+      "db": "MIM",
+      "id": "164730"
+     },
+     {
+      "db": "HGNC",
+      "id": "HGNC:391"
+     },
+     {
+      "db": "Ensembl",
+      "id": "ENSG00000142208"
+     }
+    ],
+    "defaultOrganismIndex": 1,
+    "distance": 0,
+    "esScore": 10.2244835,
+    "id": "207",
+    "name": "AKT1",
+    "nameDistance": 0,
+    "namespace": "ncbi",
+    "organism": "9606",
+    "organismIndex": 0,
+    "organismName": "Homo sapiens",
+    "overallDistance": 100000,
+    "shortSynonyms": [
+     "AKT",
+     "PKB",
+     "PKB-ALPHA",
+     "PRKBA",
+     "RAC",
+     "AKT1m",
+     "proto-oncogene c-Akt",
+     "AKT serine/threonine kinase 1",
+     "v-akt murine thymoma viral oncogene homolog 1",
+     "v-akt murine thymoma viral oncogene-like protein 1"
+    ],
+    "synonyms": [
+     "AKT",
+     "PKB",
+     "PKB-ALPHA",
+     "PRKBA",
+     "RAC",
+     "RAC-ALPHA",
+     "RAC-alpha serine/threonine-protein kinase",
+     "AKT1m",
+     "PKB alpha",
+     "RAC-PK-alpha",
+     "protein kinase B alpha",
+     "proto-oncogene c-Akt",
+     "rac protein kinase alpha",
+     "serine-threonine protein kinase",
+     "v-akt murine thymoma viral oncogene homolog 1",
+     "v-akt murine thymoma viral oncogene-like protein 1",
+     "AKT serine/threonine kinase 1"
+    ],
+    "type": "protein"
+   }
+  },
+  {
+   "id": "312c0751-52d4-43ec-8d71-924f0edac65f",
+   "secret": "read-only",
+   "position": {
+    "x": 234.9367088607595,
+    "y": 129.62025316455697
+   },
+   "name": "FOXO3",
+   "description": "",
+   "type": "protein",
+   "completed": true,
+   "association": {
+    "charge": 0,
+    "combinedOrganismIndex": 1,
+    "dbName": "NCBI Gene",
+    "dbPrefix": "ncbigene",
+    "dbXrefs": [
+     {
+      "db": "MIM",
+      "id": "602681"
+     },
+     {
+      "db": "HGNC",
+      "id": "HGNC:3821"
+     },
+     {
+      "db": "Ensembl",
+      "id": "ENSG00000118689"
+     }
+    ],
+    "defaultOrganismIndex": 1,
+    "distance": 0,
+    "esScore": 10.564225,
+    "formulae": [
+     "CHO"
+    ],
+    "id": "2309",
+    "mass": 29.01804,
+    "monoisotopicMass": 29.00274,
+    "name": "FOXO3",
+    "nameDistance": 0,
+    "namespace": "ncbi",
+    "organism": "9606",
+    "organismIndex": 1,
+    "organismName": "Homo sapiens",
+    "overallDistance": 100000,
+    "shortSynonyms": [
+     "AF6q21",
+     "FKHRL1",
+     "FKHRL1P2",
+     "FOXO2",
+     "FOXO3A",
+     "forkhead box O3",
+     "forkhead box O3A",
+     "forkhead box protein O3",
+     "forkhead in rhabdomyosarcoma-like 1",
+     "forkhead homolog (rhabdomyosarcoma) like 1"
+    ],
+    "synonyms": [
+     "AF6q21",
+     "FKHRL1",
+     "FKHRL1P2",
+     "FOXO2",
+     "FOXO3A",
+     "forkhead box protein O3",
+     "forkhead box O3A",
+     "forkhead homolog (rhabdomyosarcoma) like 1",
+     "forkhead in rhabdomyosarcoma-like 1",
+     "forkhead, Drosophila, homolog of, in rhabdomyosarcoma-like 1",
+     "forkhead box O3"
+    ],
+    "type": "protein"
+   }
+  },
+  {
+   "id": "0c87ef76-3618-423a-ade1-fff8522d94f9",
+   "secret": "read-only",
+   "position": {
+    "x": -168.88291139240505,
+    "y": -144.0506329113924
+   },
+   "name": "",
+   "description": "",
+   "type": "phosphorylation",
+   "completed": true,
+   "association": "phosphorylation",
+   "entries": [
+    {
+     "group": null,
+     "id": "e21f0a6a-3812-409a-8986-a811bcc0a84b"
+    },
+    {
+     "group": "negative",
+     "id": "312c0751-52d4-43ec-8d71-924f0edac65f"
+    }
+   ]
+  }
+ ],
+ "publicUrl": "/document/3d2a77ba-55c1-463b-aff3-9acaa0307b62",
+ "privateUrl": "/document/3d2a77ba-55c1-463b-aff3-9acaa0307b62",
+ "citation": {
+  "title": "Encoding Growth Factor Identity in the Temporal Dynamics of FOXO3 under the Combinatorial Control of ERK and AKT Kinases.",
+  "authors": {
+   "abbreviation": "Somponnat Sampattavanich, Bernhard Steiert, Bernhard A Kramer, ..., Peter K Sorger",
+   "contacts": [
+    {
+     "name": "Somponnat Sampattavanich",
+     "email": [
+      "somponnat.sam@mahidol.edu"
+     ]
+    },
+    {
+     "name": "Peter K Sorger",
+     "email": [
+      "peter_sorger@hms.harvard.edu"
+     ]
+    }
+   ],
+   "authorList": [
+    {
+     "name": "Somponnat Sampattavanich",
+     "email": "somponnat.sam@mahidol.edu",
+     "abbrevName": "Sampattavanich S",
+     "isCollectiveName": false
+    },
+    {
+     "name": "Bernhard Steiert",
+     "email": null,
+     "abbrevName": "Steiert B",
+     "isCollectiveName": false
+    },
+    {
+     "name": "Bernhard A Kramer",
+     "email": null,
+     "abbrevName": "Kramer BA",
+     "isCollectiveName": false
+    },
+    {
+     "name": "Benjamin M Gyori",
+     "email": null,
+     "abbrevName": "Gyori BM",
+     "isCollectiveName": false
+    },
+    {
+     "name": "John G Albeck",
+     "email": null,
+     "abbrevName": "Albeck JG",
+     "isCollectiveName": false
+    },
+    {
+     "name": "Peter K Sorger",
+     "email": "peter_sorger@hms.harvard.edu",
+     "abbrevName": "Sorger PK",
+     "isCollectiveName": false
+    }
+   ]
+  },
+  "reference": "Cell Syst 6 (2018)",
+  "abstract": "Extracellular growth factors signal to transcription factors via a limited number of cytoplasmic kinase cascades. It remains unclear how such cascades encode ligand identities and concentrations. In this paper, we use live-cell imaging and statistical modeling to study FOXO3, a transcription factor regulating diverse aspects of cellular physiology that is under combinatorial control. We show that FOXO3 nuclear-to-cytosolic translocation has two temporally distinct phases varying in magnitude with growth factor identity and cell type. These phases comprise synchronous translocation soon after ligand addition followed by an extended back-and-forth shuttling; this shuttling is pulsatile and does not have a characteristic frequency, unlike a simple oscillator. Early and late dynamics are differentially regulated by Akt and ERK and have low mutual information, potentially allowing the two phases to encode different information. In cancer cells in which ERK and Akt are dysregulated by oncogenic mutation, the diversity of states is lower.",
+  "pmid": "29886111",
+  "doi": "10.1016/j.cels.2018.05.004"
+ },
+ "text": "AKT1 inhibits FOXO3 via phosphorylation.",
+ "article": {
+  "MedlineCitation": {
+   "Article": {
+    "Abstract": "Extracellular growth factors signal to transcription factors via a limited number of cytoplasmic kinase cascades. It remains unclear how such cascades encode ligand identities and concentrations. In this paper, we use live-cell imaging and statistical modeling to study FOXO3, a transcription factor regulating diverse aspects of cellular physiology that is under combinatorial control. We show that FOXO3 nuclear-to-cytosolic translocation has two temporally distinct phases varying in magnitude with growth factor identity and cell type. These phases comprise synchronous translocation soon after ligand addition followed by an extended back-and-forth shuttling; this shuttling is pulsatile and does not have a characteristic frequency, unlike a simple oscillator. Early and late dynamics are differentially regulated by Akt and ERK and have low mutual information, potentially allowing the two phases to encode different information. In cancer cells in which ERK and Akt are dysregulated by oncogenic mutation, the diversity of states is lower.",
+    "ArticleTitle": "Encoding Growth Factor Identity in the Temporal Dynamics of FOXO3 under the Combinatorial Control of ERK and AKT Kinases.",
+    "AuthorList": [
+     {
+      "AffiliationInfo": [
+       {
+        "Affiliation": "HMS LINCS Center and Laboratory of Systems Pharmacology, Department of Systems Biology, Harvard Medical School, WAB Room 438, 200 Longwood Avenue, Boston, MA 02115, USA; Siriraj Laboratory for Systems Pharmacology, Department of Pharmacology, Faculty of Medicine Siriraj Hospital, Mahidol University, 12th Floor Srisavarindhira Building, 2 Wanglang Road, Bangkoknoi, Bangkok 10700, Thailand. Electronic address: somponnat.sam@mahidol.edu.",
+        "email": [
+         "somponnat.sam@mahidol.edu"
+        ]
+       }
+      ],
+      "CollectiveName": null,
+      "ForeName": "Somponnat",
+      "Identifier": [],
+      "Initials": "S",
+      "LastName": "Sampattavanich"
+     },
+     {
+      "AffiliationInfo": [
+       {
+        "Affiliation": "HMS LINCS Center and Laboratory of Systems Pharmacology, Department of Systems Biology, Harvard Medical School, WAB Room 438, 200 Longwood Avenue, Boston, MA 02115, USA; Institute of Physics, University of Freiburg, Freiburg, Germany; Freiburg Center for Systems Biology, University of Freiburg, Freiburg, Germany.",
+        "email": null
+       }
+      ],
+      "CollectiveName": null,
+      "ForeName": "Bernhard",
+      "Identifier": [],
+      "Initials": "B",
+      "LastName": "Steiert"
+     },
+     {
+      "AffiliationInfo": [
+       {
+        "Affiliation": "HMS LINCS Center and Laboratory of Systems Pharmacology, Department of Systems Biology, Harvard Medical School, WAB Room 438, 200 Longwood Avenue, Boston, MA 02115, USA; Division of Systems Biology of Signal Transduction, German Cancer Research Center, Heidelberg, Germany.",
+        "email": null
+       }
+      ],
+      "CollectiveName": null,
+      "ForeName": "Bernhard A",
+      "Identifier": [],
+      "Initials": "BA",
+      "LastName": "Kramer"
+     },
+     {
+      "AffiliationInfo": [
+       {
+        "Affiliation": "HMS LINCS Center and Laboratory of Systems Pharmacology, Department of Systems Biology, Harvard Medical School, WAB Room 438, 200 Longwood Avenue, Boston, MA 02115, USA.",
+        "email": null
+       }
+      ],
+      "CollectiveName": null,
+      "ForeName": "Benjamin M",
+      "Identifier": [],
+      "Initials": "BM",
+      "LastName": "Gyori"
+     },
+     {
+      "AffiliationInfo": [
+       {
+        "Affiliation": "Department of Molecular and Cellular Biology, University of California, Davis, Davis, CA, USA.",
+        "email": null
+       }
+      ],
+      "CollectiveName": null,
+      "ForeName": "John G",
+      "Identifier": [],
+      "Initials": "JG",
+      "LastName": "Albeck"
+     },
+     {
+      "AffiliationInfo": [
+       {
+        "Affiliation": "HMS LINCS Center and Laboratory of Systems Pharmacology, Department of Systems Biology, Harvard Medical School, WAB Room 438, 200 Longwood Avenue, Boston, MA 02115, USA. Electronic address: peter_sorger@hms.harvard.edu.",
+        "email": [
+         "peter_sorger@hms.harvard.edu"
+        ]
+       }
+      ],
+      "CollectiveName": null,
+      "ForeName": "Peter K",
+      "Identifier": [],
+      "Initials": "PK",
+      "LastName": "Sorger"
+     }
+    ],
+    "Journal": {
+     "ISOAbbreviation": "Cell Syst",
+     "ISSN": {
+      "IssnType": "Print",
+      "value": "2405-4712"
+     },
+     "JournalIssue": {
+      "Issue": "6",
+      "PubDate": {
+       "Day": "27",
+       "Month": "06",
+       "Year": "2018"
+      },
+      "Volume": "6"
+     },
+     "Title": "Cell systems"
+    }
+   },
+   "ChemicalList": [
+    {
+     "NameOfSubstance": {
+      "UI": "C499517",
+      "value": "FOXO3 protein, human"
+     },
+     "RegistryNumber": "0"
+    },
+    {
+     "NameOfSubstance": {
+      "UI": "D000071316",
+      "value": "Forkhead Box Protein O3"
+     },
+     "RegistryNumber": "0"
+    },
+    {
+     "NameOfSubstance": {
+      "UI": "D051858",
+      "value": "Forkhead Transcription Factors"
+     },
+     "RegistryNumber": "0"
+    },
+    {
+     "NameOfSubstance": {
+      "UI": "D036341",
+      "value": "Intercellular Signaling Peptides and Proteins"
+     },
+     "RegistryNumber": "0"
+    },
+    {
+     "NameOfSubstance": {
+      "UI": "D051057",
+      "value": "Proto-Oncogene Proteins c-akt"
+     },
+     "RegistryNumber": "EC 2.7.11.1"
+    }
+   ],
+   "InvestigatorList": [],
+   "KeywordList": [
+    "AKT",
+    "ERK",
+    "FOXO proteins",
+    "combinatorial control",
+    "oncogenes",
+    "signal transduction",
+    "transcription"
+   ],
+   "MeshheadingList": [
+    {
+     "DescriptorName": {
+      "MajorTopicYN": "N",
+      "UI": "D002460",
+      "value": "Cell Line"
+     },
+     "QualifierName": []
+    },
+    {
+     "DescriptorName": {
+      "MajorTopicYN": "N",
+      "UI": "D003600",
+      "value": "Cytosol"
+     },
+     "QualifierName": [
+      {
+       "MajorTopicYN": "N",
+       "UI": "Q000378",
+       "value": "metabolism"
+      }
+     ]
+    },
+    {
+     "DescriptorName": {
+      "MajorTopicYN": "N",
+      "UI": "D000071316",
+      "value": "Forkhead Box Protein O3"
+     },
+     "QualifierName": [
+      {
+       "MajorTopicYN": "Y",
+       "UI": "Q000378",
+       "value": "metabolism"
+      },
+      {
+       "MajorTopicYN": "Y",
+       "UI": "Q000502",
+       "value": "physiology"
+      }
+     ]
+    },
+    {
+     "DescriptorName": {
+      "MajorTopicYN": "N",
+      "UI": "D051858",
+      "value": "Forkhead Transcription Factors"
+     },
+     "QualifierName": [
+      {
+       "MajorTopicYN": "N",
+       "UI": "Q000378",
+       "value": "metabolism"
+      }
+     ]
+    },
+    {
+     "DescriptorName": {
+      "MajorTopicYN": "N",
+      "UI": "D006801",
+      "value": "Humans"
+     },
+     "QualifierName": []
+    },
+    {
+     "DescriptorName": {
+      "MajorTopicYN": "N",
+      "UI": "D036341",
+      "value": "Intercellular Signaling Peptides and Proteins"
+     },
+     "QualifierName": [
+      {
+       "MajorTopicYN": "N",
+       "UI": "Q000378",
+       "value": "metabolism"
+      }
+     ]
+    },
+    {
+     "DescriptorName": {
+      "MajorTopicYN": "N",
+      "UI": "D020935",
+      "value": "MAP Kinase Signaling System"
+     },
+     "QualifierName": [
+      {
+       "MajorTopicYN": "N",
+       "UI": "Q000502",
+       "value": "physiology"
+      }
+     ]
+    },
+    {
+     "DescriptorName": {
+      "MajorTopicYN": "N",
+      "UI": "D061986",
+      "value": "MCF-7 Cells"
+     },
+     "QualifierName": []
+    },
+    {
+     "DescriptorName": {
+      "MajorTopicYN": "N",
+      "UI": "D010766",
+      "value": "Phosphorylation"
+     },
+     "QualifierName": []
+    },
+    {
+     "DescriptorName": {
+      "MajorTopicYN": "N",
+      "UI": "D021381",
+      "value": "Protein Transport"
+     },
+     "QualifierName": []
+    },
+    {
+     "DescriptorName": {
+      "MajorTopicYN": "N",
+      "UI": "D051057",
+      "value": "Proto-Oncogene Proteins c-akt"
+     },
+     "QualifierName": [
+      {
+       "MajorTopicYN": "N",
+       "UI": "Q000378",
+       "value": "metabolism"
+      }
+     ]
+    },
+    {
+     "DescriptorName": {
+      "MajorTopicYN": "N",
+      "UI": "D015398",
+      "value": "Signal Transduction"
+     },
+     "QualifierName": [
+      {
+       "MajorTopicYN": "N",
+       "UI": "Q000502",
+       "value": "physiology"
+      }
+     ]
+    }
+   ]
+  },
+  "PubmedData": {
+   "ArticleIdList": [
+    {
+     "IdType": "pubmed",
+     "id": "29886111"
+    },
+    {
+     "IdType": "pii",
+     "id": "S2405-4712(18)30192-3"
+    },
+    {
+     "IdType": "doi",
+     "id": "10.1016/j.cels.2018.05.004"
+    },
+    {
+     "IdType": "pmc",
+     "id": "PMC6322215"
+    },
+    {
+     "IdType": "mid",
+     "id": "NIHMS972919"
+    }
+   ],
+   "History": [
+    {
+     "PubMedPubDate": {
+      "Day": "03",
+      "Month": "08",
+      "Year": "2016"
+     },
+     "PubStatus": "received"
+    },
+    {
+     "PubMedPubDate": {
+      "Day": "19",
+      "Month": "12",
+      "Year": "2017"
+     },
+     "PubStatus": "revised"
+    },
+    {
+     "PubMedPubDate": {
+      "Day": "04",
+      "Month": "05",
+      "Year": "2018"
+     },
+     "PubStatus": "accepted"
+    },
+    {
+     "PubMedPubDate": {
+      "Day": "11",
+      "Month": "6",
+      "Year": "2018"
+     },
+     "PubStatus": "pubmed"
+    },
+    {
+     "PubMedPubDate": {
+      "Day": "1",
+      "Month": "10",
+      "Year": "2019"
+     },
+     "PubStatus": "medline"
+    },
+    {
+     "PubMedPubDate": {
+      "Day": "11",
+      "Month": "6",
+      "Year": "2018"
+     },
+     "PubStatus": "entrez"
+    }
+   ],
+   "ReferenceList": [
+    {
+     "Reference": [
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "12048182"
+        }
+       ],
+       "Citation": "J Biol Chem. 2002 Aug 23;277(34):31099-106"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "21460183"
+        }
+       ],
+       "Citation": "Mol Biol Cell. 2011 May 15;22(10):1791-805"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "21915097"
+        }
+       ],
+       "Citation": "EMBO J. 2011 Nov 16;30(22):4554-70"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "7953555"
+        }
+       ],
+       "Citation": "Curr Biol. 1994 Aug 1;4(8):694-701"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "16336276"
+        }
+       ],
+       "Citation": "FEBS J. 2005 Dec;272(24):6400-11"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "24655548"
+        }
+       ],
+       "Citation": "BMC Biol. 2014 Mar 21;12:20"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "10035754"
+        }
+       ],
+       "Citation": "Phys Rev Lett. 1987 Jul 27;59(4):381-384"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "11964479"
+        }
+       ],
+       "Citation": "Science. 2002 Apr 19;296(5567):530-4"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "9965304"
+        }
+       ],
+       "Citation": "Phys Rev E Stat Phys Plasmas Fluids Relat Interdiscip Topics. 1996 Aug;54(2):2154-2157"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "15244698"
+        }
+       ],
+       "Citation": "Phys Rev E Stat Nonlin Soft Matter Phys. 2004 Jun;69(6 Pt 2):066138"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "26304118"
+        }
+       ],
+       "Citation": "J Biol Chem. 2015 Oct 9;290(41):24784-92"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "27135539"
+        }
+       ],
+       "Citation": "Cell Syst. 2016 Apr 27;2(4):272-82"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "11016968"
+        }
+       ],
+       "Citation": "Proc Natl Acad Sci U S A. 2000 Oct 10;97(21):11250-5"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "14730303"
+        }
+       ],
+       "Citation": "Nat Genet. 2004 Feb;36(2):147-50"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "15084260"
+        }
+       ],
+       "Citation": "Cell. 2004 Apr 16;117(2):225-37"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "10377430"
+        }
+       ],
+       "Citation": "Proc Natl Acad Sci U S A. 1999 Jun 22;96(13):7421-6"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "24140422"
+        }
+       ],
+       "Citation": "Mol Cell. 2013 Nov 21;52(4):529-40"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "12779383"
+        }
+       ],
+       "Citation": "Chaos. 2000 Mar;10(1):278-288"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "23325358"
+        }
+       ],
+       "Citation": "Nat Rev Mol Cell Biol. 2013 Feb;14(2):83-97"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "11108481"
+        }
+       ],
+       "Citation": "J Comput Biol. 2000;7(3-4):601-20"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "21976697"
+        }
+       ],
+       "Citation": "Mol Biol Cell. 2011 Dec;22(23):4647-56"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "18391970"
+        }
+       ],
+       "Citation": "Oncogene. 2008 Apr 7;27(16):2276-88"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "17038621"
+        }
+       ],
+       "Citation": "Science. 2006 Oct 13;314(5797):294-7"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "10102273"
+        }
+       ],
+       "Citation": "Cell. 1999 Mar 19;96(6):857-68"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "10659856"
+        }
+       ],
+       "Citation": "Nature. 2000 Jan 20;403(6767):335-8"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "18471974"
+        }
+       ],
+       "Citation": "Mol Cell. 2008 May 9;30(3):277-89"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "22700930"
+        }
+       ],
+       "Citation": "Science. 2012 Jun 15;336(6087):1440-4"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "26466562"
+        }
+       ],
+       "Citation": "Nature. 2015 Nov 5;527(7576):54-8"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "22206868"
+        }
+       ],
+       "Citation": "Mol Cell. 2012 Jan 27;45(2):196-209"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "21921160"
+        }
+       ],
+       "Citation": "Science. 2011 Oct 21;334(6054):354-8"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "25985085"
+        }
+       ],
+       "Citation": "Elife. 2015 May 18;4:"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "24311681"
+        }
+       ],
+       "Citation": "Science. 2013 Dec 6;342(6163):1193-200"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "26040286"
+        }
+       ],
+       "Citation": "J Cell Sci. 2015 Jul 15;128(14):2509-19"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "17711846"
+        }
+       ],
+       "Citation": "J Biol Chem. 2007 Oct 12;282(41):30107-19"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "21556066"
+        }
+       ],
+       "Citation": "Mol Syst Biol. 2011 May 10;7:488"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "18971947"
+        }
+       ],
+       "Citation": "Nat Rev Mol Cell Biol. 2008 Dec;9(12):981-91"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "23219535"
+        }
+       ],
+       "Citation": "Mol Cell. 2013 Jan 24;49(2):249-61"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "17522590"
+        }
+       ],
+       "Citation": "Nat Rev Mol Cell Biol. 2007 Jun;8(6):440-50"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "22179789"
+        }
+       ],
+       "Citation": "Nat Struct Mol Biol. 2011 Dec 18;19(1):31-9"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "18818649"
+        }
+       ],
+       "Citation": "Nature. 2008 Sep 25;455(7212):485-90"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "11896055"
+        }
+       ],
+       "Citation": "J Biol Chem. 2002 May 31;277(22):19382-8"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "22923301"
+        }
+       ],
+       "Citation": "Bioinformatics. 2012 Nov 1;28(21):2804-10"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "16751106"
+        }
+       ],
+       "Citation": "Cell. 2006 Jun 2;125(5):987-1001"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "21349861"
+        }
+       ],
+       "Citation": "Bioinformatics. 2011 Apr 15;27(8):1179-80"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "27046808"
+        }
+       ],
+       "Citation": "Curr Biol. 2016 Apr 4;26(7):R269-71"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "25635454"
+        }
+       ],
+       "Citation": "Cell. 2015 Jan 29;160(3):381-92"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "11154281"
+        }
+       ],
+       "Citation": "Mol Cell Biol. 2001 Feb;21(3):952-65"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "18204439"
+        }
+       ],
+       "Citation": "Nat Cell Biol. 2008 Feb;10(2):138-48"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "15538382"
+        }
+       ],
+       "Citation": "EMBO J. 2004 Dec 8;23(24):4802-12"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "20581820"
+        }
+       ],
+       "Citation": "Nature. 2010 Jul 8;466(7303):267-71"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "11864996"
+        }
+       ],
+       "Citation": "J Cell Biol. 2002 Mar 4;156(5):817-28"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "17768165"
+        }
+       ],
+       "Citation": "Bioinformatics. 2007 Oct 15;23(20):2747-53"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "20824469"
+        }
+       ],
+       "Citation": "Methods Mol Biol. 2010;662:121-47"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "23526806"
+        }
+       ],
+       "Citation": "Adv Healthc Mater. 2013 Oct;2(10):1377-87"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "19896442"
+        }
+       ],
+       "Citation": "Cell Stem Cell. 2009 Nov 6;5(5):515-26"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "23452846"
+        }
+       ],
+       "Citation": "Cell. 2013 Feb 28;152(5):945-56"
+      },
+      {
+       "ArticleIdList": [
+        {
+         "IdType": "pubmed",
+         "id": "15499023"
+        }
+       ],
+       "Citation": "Science. 2004 Oct 22;306(5696):704-8"
+      }
+     ],
+     "ReferenceList": [],
+     "Title": null
+    }
+   ]
+  }
+ },
+ "createdDate": "2020-09-07T16:38:08.837Z",
+ "lastEditedDate": "2020-09-10T01:13:41.528Z",
+ "status": "published",
+ "verified": false
+}
