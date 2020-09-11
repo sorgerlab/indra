@@ -1,4 +1,4 @@
-"""This module implements an interface to BioFactoid
+"""This module implements an interface to Biofactoid (https://biofactoid.org/)
 which contains interactions curated from publications by
 authors. Documents are retrieved from the web and processed into
 INDRA Statements."""
