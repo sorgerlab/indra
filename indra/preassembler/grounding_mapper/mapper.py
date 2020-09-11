@@ -239,27 +239,34 @@ class GroundingMapper(object):
         agent.db_refs = self.standardize_db_refs(agent.db_refs)
         # If there is no TEXT available, we can return immediately since we
         # can't do mapping
-        agent_text = agent.db_refs.get('TEXT')
-        if not agent_text:
+        agent_txts = sorted({agent.db_refs[t] for t in {'TEXT', 'TEXT_NORM'}
+                             if t in agent.db_refs}, key=lambda x: len(x),
+                            reverse=True)
+        if not agent_txts:
             # We still do the name standardization here
             if do_rename:
                 self.standardize_agent_name(agent, standardize_refs=False)
             return agent
 
         # 1. Check if there is a full agent mapping and apply if there is
-        if agent_text in self.agent_map:
-            mapped_to_agent = \
-                Agent._from_json(self.agent_map[agent_text]['agent'])
-            return mapped_to_agent
+        for agent_text in agent_txts:
+            if agent_text in self.agent_map:
+                mapped_to_agent = \
+                    Agent._from_json(self.agent_map[agent_text]['agent'])
+                return mapped_to_agent
 
         # 2. Look agent text up in the grounding map
-        if agent_text in self.grounding_map:
-            self.update_agent_db_refs(agent, self.grounding_map[agent_text],
-                                      do_rename)
+        for agent_text in agent_txts:
+            if agent_text in self.grounding_map:
+                self.update_agent_db_refs(agent, self.grounding_map[agent_text],
+                                          do_rename)
+                return agent
 
         # 3. Look agent text up in the misgrounding map
-        if agent_text in self.misgrounding_map:
-            self.remove_agent_db_refs(agent, self.misgrounding_map[agent_text])
+        for agent_text in agent_txts:
+            if agent_text in self.misgrounding_map:
+                self.remove_agent_db_refs(agent,
+                                          self.misgrounding_map[agent_text])
         # This happens when there is an Agent text but it is not in the
         # grounding map. We still do the name standardization here.
         if do_rename:
@@ -303,12 +310,14 @@ class GroundingMapper(object):
         # that are to be eliminated, we consider the Agent's db_refs to be
         # invalid and remove them. We then reset the Agent's name to
         # its TEXT value if available.
-        agent_txt = agent.db_refs.get('TEXT')
+        preserve_refs = {k: agent.db_refs[k] for k in {'TEXT', 'TEXT_NORM'}
+                         if k in agent.db_refs}
         if set(standard_refs.items()) & set(agent.db_refs.items()):
-            agent.db_refs = {}
-            if agent_txt:
-                agent.db_refs['TEXT'] = agent_txt
-                agent.name = agent_txt
+            agent.db_refs = preserve_refs
+            if 'TEXT_NORM' in agent.db_refs:
+                agent.name = agent.db_refs['TEXT_NORM']
+            elif 'TEXT' in agent.db_refs:
+                agent.name = agent.db_refs['TEXT']
 
     @staticmethod
     def standardize_db_refs(db_refs):
