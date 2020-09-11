@@ -147,32 +147,42 @@ class GroundingMapper(object):
                 continue
             # If the agent's TEXT is in the ignores list, we return None to
             # then filter out the Statement
-            agent_txt = agent.db_refs.get('TEXT')
-            if agent_txt and agent_txt in self.ignores:
+            agent_txts = {agent.db_refs[t] for t in {'TEXT', 'TEXT_NORM'}
+                          if t in agent.db_refs}
+            if agent_txts and agent_txts & set(self.ignores):
                 return None
 
             # Check if an adeft model exists for agent text
             adeft_success = False
-            if self.use_adeft and agent_txt and agent_txt in \
-                    adeft_disambiguators:
+            if self.use_adeft and agent_txts and agent_txts & \
+                    set(adeft_disambiguators):
                 try:
+                    # Us the longest match for disambiguation
+                    txt_for_adeft = sorted(agent_txts &
+                                           set(adeft_disambiguators),
+                                           key=lambda x: len(x))[-1]
                     adeft_success = run_adeft_disambiguation(mapped_stmt,
-                                                             agent, idx)
+                                                             agent, idx,
+                                                             txt_for_adeft)
                 except Exception as e:
                     logger.error('There was an error during Adeft'
-                                 ' disambiguation of %s.' % agent_txt)
+                                 ' disambiguation of %s.' % str(agent_txts))
                     logger.error(e)
 
             gilda_success = False
             if not adeft_success and self.gilda_mode and \
-                    agent_txt in self.gilda_models:
+                    agent_txts & set(self.gilda_models):
                 try:
+                    # Us the longest match for disambiguation
+                    txt_for_gilda = sorted(agent_txts & set(self.gilda_models),
+                                           key=lambda x: len(x))[-1]
                     gilda_success = \
                         run_gilda_disambiguation(mapped_stmt, agent, idx,
+                                                 txt_for_gilda,
                                                  mode=self.gilda_mode)
                 except Exception as e:
                     logger.error('There was an error during Gilda'
-                                 ' disambiguation of %s.' % agent_txt)
+                                 ' disambiguation of %s.' % str(agent_txts))
                     logger.error(e)
 
             # If Adeft and Gilda were not used or didn't succeed, we do
@@ -229,27 +239,34 @@ class GroundingMapper(object):
         agent.db_refs = self.standardize_db_refs(agent.db_refs)
         # If there is no TEXT available, we can return immediately since we
         # can't do mapping
-        agent_text = agent.db_refs.get('TEXT')
-        if not agent_text:
+        agent_txts = sorted({agent.db_refs[t] for t in {'TEXT', 'TEXT_NORM'}
+                             if t in agent.db_refs}, key=lambda x: len(x),
+                            reverse=True)
+        if not agent_txts:
             # We still do the name standardization here
             if do_rename:
                 self.standardize_agent_name(agent, standardize_refs=False)
             return agent
 
         # 1. Check if there is a full agent mapping and apply if there is
-        if agent_text in self.agent_map:
-            mapped_to_agent = \
-                Agent._from_json(self.agent_map[agent_text]['agent'])
-            return mapped_to_agent
+        for agent_text in agent_txts:
+            if agent_text in self.agent_map:
+                mapped_to_agent = \
+                    Agent._from_json(self.agent_map[agent_text]['agent'])
+                return mapped_to_agent
 
         # 2. Look agent text up in the grounding map
-        if agent_text in self.grounding_map:
-            self.update_agent_db_refs(agent, self.grounding_map[agent_text],
-                                      do_rename)
+        for agent_text in agent_txts:
+            if agent_text in self.grounding_map:
+                self.update_agent_db_refs(agent, self.grounding_map[agent_text],
+                                          do_rename)
+                return agent
 
         # 3. Look agent text up in the misgrounding map
-        if agent_text in self.misgrounding_map:
-            self.remove_agent_db_refs(agent, self.misgrounding_map[agent_text])
+        for agent_text in agent_txts:
+            if agent_text in self.misgrounding_map:
+                self.remove_agent_db_refs(agent,
+                                          self.misgrounding_map[agent_text])
         # This happens when there is an Agent text but it is not in the
         # grounding map. We still do the name standardization here.
         if do_rename:
@@ -293,12 +310,14 @@ class GroundingMapper(object):
         # that are to be eliminated, we consider the Agent's db_refs to be
         # invalid and remove them. We then reset the Agent's name to
         # its TEXT value if available.
-        agent_txt = agent.db_refs.get('TEXT')
+        preserve_refs = {k: agent.db_refs[k] for k in {'TEXT', 'TEXT_NORM'}
+                         if k in agent.db_refs}
         if set(standard_refs.items()) & set(agent.db_refs.items()):
-            agent.db_refs = {}
-            if agent_txt:
-                agent.db_refs['TEXT'] = agent_txt
-                agent.name = agent_txt
+            agent.db_refs = preserve_refs
+            if 'TEXT_NORM' in agent.db_refs:
+                agent.name = agent.db_refs['TEXT_NORM']
+            elif 'TEXT' in agent.db_refs:
+                agent.name = agent.db_refs['TEXT']
 
     @staticmethod
     def standardize_db_refs(db_refs):

@@ -17,7 +17,7 @@ except Exception:
     adeft_disambiguators = {}
 
 
-def run_adeft_disambiguation(stmt, agent, idx):
+def run_adeft_disambiguation(stmt, agent, idx, agent_txt):
     """Run Adeft disambiguation on an Agent in a given Statement.
 
     This function looks at the evidence of the given Statement and attempts
@@ -58,7 +58,6 @@ def run_adeft_disambiguation(stmt, agent, idx):
     # Initialize annotations if needed so Adeft predicted
     # probabilities can be added to Agent annotations
     annots = stmt.evidence[0].annotations
-    agent_txt = agent.db_refs['TEXT']
     if 'agents' in annots:
         if 'adeft' not in annots['agents']:
             annots['agents']['adeft'] = \
