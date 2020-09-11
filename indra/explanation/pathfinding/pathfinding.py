@@ -750,7 +750,7 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None
     if reverse:
         g = g.reverse(copy=False)
 
-    if terminal_ns is not None:
+    if terminal_ns: # If not set, terminal_ns will be an empty list []
         def proper_path(path):
             if g.nodes[path[-1]]['ns'].lower() not in terminal_ns:
                 return False
