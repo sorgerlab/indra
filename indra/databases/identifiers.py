@@ -1,6 +1,7 @@
 import logging
 import re
 from urllib import parse
+from protmapper.uniprot_client import get_feature_of
 
 
 logger = logging.getLogger(__name__)
@@ -114,10 +115,9 @@ def get_identifiers_url(db_name, db_id):
             url = 'http://www.noncode.org/show_gene.php?id=%s' % db_id
     elif db_name == 'TEXT' or db_name == 'TEXT_NORM':
         return None
-    # TODO: we should return the parent UniProt ID here but only once that
-    # can be obtained from protmapper in a faster way
     elif db_name == 'UPPRO':
-        return None
+        up_id = get_feature_of(db_id)
+        url = '%s%s#%s' % (url_prefixes['UP'], up_id, db_id)
     else:
         logger.warning('Unhandled name space %s' % db_name)
         url = None
@@ -145,7 +145,12 @@ def parse_identifiers_url(url):
     ns_options = {}
     for ns, prefix in url_prefixes.items():
         if ns not in prefixed_ids and url.startswith(prefix):
-            ns_options[ns] = url[len(prefix):]
+            db_id = url[len(prefix):]
+            # If we got UP and UPPRO, return UPPRO
+            if ns == 'UP' and '#PRO_' in db_id:
+                ns = 'UPPRO'
+                db_id = db_id[db_id.find('PRO_'):]
+            ns_options[ns] = db_id
 
     # If we got the only possible option, return it
     if len(ns_options) == 1:
@@ -183,6 +188,10 @@ def parse_identifiers_url(url):
             if db_name == 'HGNC':
                 if db_id.startswith('HGNC:'):
                     db_id = db_id[5:]
+            # If we got UP and UPPRO, return UPPRO
+            if db_name == 'UP' and '#PRO_' in url:
+                db_name = 'UPPRO'
+                db_id = url[url.find('PRO_'):]
             if db_name in prefixed_ids:
                 if not db_id.startswith(db_name):
                     db_id = db_name + ':' + db_id
@@ -221,3 +230,5 @@ def parse_identifiers_url(url):
     else:
         logger.warning('Could not parse URL %s' % url)
     return None, None
+
+parse_identifiers_url('http://identifiers.org/uniprot:P01019#PRO_0000032458')

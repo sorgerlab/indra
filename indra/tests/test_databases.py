@@ -97,6 +97,9 @@ ns_mapping = {
         'http://identifiers.org/lincs.smallmolecule:LSM-6357',
         'https://identifiers.org/lincs.smallmolecule/LSM-6357',
         'http://identifiers.org/lincs.smallmolecule/LSM-6357'),
+    ('UPPRO', 'PRO_0000032458'): (
+        'https://identifiers.org/uniprot:P01019#PRO_0000032458',
+        'http://identifiers.org/uniprot:P01019#PRO_0000032458'),
     ('NXPFA', '00880'): ('https://www.nextprot.org/term/FA-00880', ),
     ('SIGNOR', 'SIGNOR-PF15'): (
         'https://signor.uniroma2.it/relation_result.php?id=SIGNOR-PF15', ),
