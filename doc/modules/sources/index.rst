@@ -57,3 +57,4 @@ Custom Knowledge Bases
    ndex_cx/index
    indra_db_rest/index
    hypothesis/index
+   biofactoid/index
