@@ -230,5 +230,3 @@ def parse_identifiers_url(url):
     else:
         logger.warning('Could not parse URL %s' % url)
     return None, None
-
-parse_identifiers_url('http://identifiers.org/uniprot:P01019#PRO_0000032458')
