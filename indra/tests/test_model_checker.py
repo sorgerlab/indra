@@ -120,8 +120,8 @@ def test_one_step_phosphorylation():
     Initial(A(), Parameter('A_0', 100))
     Initial(B(T185='u'), Parameter('B_0', 100))
     # Add annotations
-    Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
-    Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
+    Annotation(A, 'https://identifiers.org/hgnc:1')
+    Annotation(B, 'https://identifiers.org/hgnc:2')
     Annotation('A_phos_B', 'A', 'rule_has_subject')
     Annotation('A_phos_B', 'B', 'rule_has_object')
     B.site_annotations = [
@@ -159,8 +159,8 @@ def test_two_step_phosphorylation():
     Initial(A(b=None, other='u'), Parameter('Au_0', 100))
     Initial(B(b=None, T185='u'), Parameter('B_0', 100))
     # Add annotations
-    Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
-    Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
+    Annotation(A, 'https://identifiers.org/hgnc:1')
+    Annotation(B, 'https://identifiers.org/hgnc:2')
     Annotation('A_phos_B', 'A', 'rule_has_subject')
     Annotation('A_phos_B', 'B', 'rule_has_object')
     B.site_annotations = [
@@ -317,8 +317,8 @@ def test_consumption_rule():
          DUSP(b=1) % MAPK1(b=1, T185='p') >>
          DUSP(b=None) % MAPK1(b=None, T185='u'),
          Parameter('k5', 1))
-    Annotation(Pervanadate, 'http://identifiers.org/hgnc/HGNC:1')
-    Annotation(MAPK1, 'http://identifiers.org/hgnc/HGNC:2')
+    Annotation(Pervanadate, 'https://identifiers.org/hgnc:1')
+    Annotation(MAPK1, 'https://identifiers.org/hgnc:2')
     Annotation('Pvd_binds_DUSP', 'Pervanadate', 'rule_has_subject')
     Annotation('Pvd_binds_DUSP', 'Pervanadate', 'rule_has_object')
     Annotation('Pvd_binds_DUSP', 'DUSP', 'rule_has_subject')
@@ -423,9 +423,9 @@ def test_distinguish_path_polarity1():
     Initial(A(), k)
     Initial(B(act='y'), k)
     Initial(C(T185='p'), k)
-    Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
-    Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
-    Annotation(C, 'http://identifiers.org/hgnc/HGNC:3')
+    Annotation(A, 'https://identifiers.org/hgnc:1')
+    Annotation(B, 'https://identifiers.org/hgnc:2')
+    Annotation(C, 'https://identifiers.org/hgnc:3')
     Annotation('A_activate_B', 'A', 'rule_has_subject')
     Annotation('A_activate_B', 'B', 'rule_has_object')
     Annotation('B_dephos_C', 'B', 'rule_has_subject')
@@ -462,9 +462,9 @@ def test_distinguish_path_polarity2():
     Initial(A(), k)
     Initial(B(act='y'), k)
     Initial(C(T185='p'), k)
-    Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
-    Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
-    Annotation(C, 'http://identifiers.org/hgnc/HGNC:3')
+    Annotation(A, 'https://identifiers.org/hgnc:1')
+    Annotation(B, 'https://identifiers.org/hgnc:2')
+    Annotation(C, 'https://identifiers.org/hgnc:3')
     Annotation('A_inhibit_B', 'A', 'rule_has_subject')
     Annotation('A_inhibit_B', 'B', 'rule_has_object')
     Annotation('B_dephos_C', 'B', 'rule_has_subject')
@@ -582,8 +582,8 @@ def test_none_phosphorylation_stmt():
          Parameter('k', 1))
     Initial(A(), Parameter('A_0', 100))
     Initial(B(T185='u', Y187='p'), Parameter('B_0', 100))
-    Annotation(A, 'http://identifiers.org/hgnc/HGNC:1')
-    Annotation(B, 'http://identifiers.org/hgnc/HGNC:2')
+    Annotation(A, 'https://identifiers.org/hgnc:1')
+    Annotation(B, 'https://identifiers.org/hgnc:2')
     B.site_annotations = [
         Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
         Annotation('T185', 'T', 'is_residue'),
@@ -620,8 +620,8 @@ def test_phosphorylation_annotations():
     Initial(A_monomer(), Parameter('A_0', 100))
     Initial(B_monomer(Thr185='un', Y187='u'), Parameter('B_0', 100))
     # Add agent grounding
-    Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
-    Annotation(B_monomer, 'http://identifiers.org/hgnc/HGNC:6871')
+    Annotation(A_monomer, 'https://identifiers.org/hgnc:6840')
+    Annotation(B_monomer, 'https://identifiers.org/hgnc:6871')
     Annotation('A_phos_B', 'A_monomer', 'rule_has_subject')
     Annotation('A_phos_B', 'B_monomer', 'rule_has_object')
     # Add annotations to the sites/states of the Monomer itself
@@ -666,8 +666,8 @@ def test_activation_annotations():
     Initial(A_monomer(), Parameter('A_0', 100))
     Initial(B_monomer(Thr185='un', Y187='u'), Parameter('B_0', 100))
     # Add agent grounding
-    Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
-    Annotation(B_monomer, 'http://identifiers.org/hgnc/HGNC:6871')
+    Annotation(A_monomer, 'https://identifiers.org/hgnc:6840')
+    Annotation(B_monomer, 'https://identifiers.org/hgnc:6871')
     Annotation(B_monomer, {'Thr185':'phos'}, 'has_active_pattern')
     Annotation('A_phos_B', 'A_monomer', 'rule_has_subject')
     Annotation('A_phos_B', 'B_monomer', 'rule_has_object')

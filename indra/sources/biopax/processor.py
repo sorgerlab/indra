@@ -11,7 +11,8 @@ from pybiopax import model_to_owl_file
 from indra.statements import *
 from indra.util import flatten
 from indra.ontology.standardize import standardize_name_db_refs
-from indra.databases import hgnc_client, uniprot_client, chebi_client
+from indra.databases import hgnc_client, uniprot_client, chebi_client, \
+    parse_identifiers_url
 
 logger = logging.getLogger(__name__)
 
@@ -639,27 +640,10 @@ class BiopaxProcessor(object):
 
     @staticmethod
     def _get_reference_primary_id(entref: bp.EntityReference):
-        # In practice, it appears that only UniProt and ChEBI appear in this
-        # form.
-        match = re.match('http://identifiers.org/([^/]+)/(.+)$',
-                         entref.uid)
-        if match:
-            ident_ns, ident_id = match.groups()
-            if ident_ns == 'uniprot':
-                primary_ns, primary_id = 'UP', ident_id
-            elif ident_ns == 'chebi':
-                primary_ns, primary_id = 'CHEBI', ident_id
-            elif ident_ns == 'pubchem.compound':
-                primary_ns, primary_id = 'PUBCHEM', ident_id
-            elif ident_ns == 'pubchem.substance':
-                primary_ns, primary_id = 'PUBCHEM.SUBSTANCE', ident_id
-            else:
-                logger.warning('Unhandled identifiers namespace: %s' %
-                               ident_ns)
-                primary_ns, primary_id = None, None
-        else:
-            primary_ns, primary_id = None, None
-
+        # This is a simple check to see if we should treat this as a URL
+        if not entref.uid.startswith('http'):
+            return None, None
+        primary_ns, primary_id = parse_identifiers_url(entref.uid)
         return primary_ns, primary_id
 
     @staticmethod

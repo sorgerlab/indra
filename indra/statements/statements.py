@@ -497,7 +497,7 @@ class Statement(object):
         if use_sbo:
             sbo_term = get_sbo_term(self.__class__)
             json_dict['sbo'] = \
-                'http://identifiers.org/sbo/SBO:%s' % sbo_term
+                'https://identifiers.org/SBO:%s' % sbo_term
         return json_dict
 
     @classmethod
@@ -720,13 +720,13 @@ class Modification(Statement):
             if use_sbo:
                 # enzymatic catalyst
                 json_dict['enz']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000460'
+                    'https://identifiers.org/SBO:0000460'
         if self.sub is not None:
             json_dict['sub'] = self.sub.to_json()
             if use_sbo:
                 # substrate
                 json_dict['sub']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000015'
+                    'https://identifiers.org/SBO:0000015'
         if self.residue is not None:
             json_dict['residue'] = self.residue
         if self.position is not None:
@@ -848,7 +848,7 @@ class SelfModification(Statement):
             if use_sbo:
                 # enzymatic catalyst
                 json_dict['enz']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000460'
+                    'https://identifiers.org/SBO:0000460'
         if self.residue is not None:
             json_dict['residue'] = self.residue
         if self.position is not None:
@@ -1091,19 +1091,19 @@ class RegulateActivity(Statement):
             if use_sbo:
                 if self.is_activation:
                     json_dict['subj']['sbo'] = \
-                        'http://identifiers.org/sbo/SBO:0000459'  # stimulator
+                        'https://identifiers.org/SBO:0000459'  # stimulator
                 else:
                     json_dict['subj']['sbo'] = \
-                        'http://identifiers.org/sbo/SBO:0000020'  # inhibitor
+                        'https://identifiers.org/SBO:0000020'  # inhibitor
         if self.obj is not None:
             json_dict['obj'] = self.obj.to_json()
             if use_sbo:
                 if self.is_activation:
                     json_dict['obj']['sbo'] = \
-                        'http://identifiers.org/sbo/SBO:0000643'  # stimulated
+                        'https://identifiers.org/SBO:0000643'  # stimulated
                 else:
                     json_dict['obj']['sbo'] = \
-                        'http://identifiers.org/sbo/SBO:0000642'  # inhibited
+                        'https://identifiers.org/SBO:0000642'  # inhibited
         if self.obj_activity is not None:
             json_dict['obj_activity'] = self.obj_activity
         json_dict.update(generic)
@@ -1316,7 +1316,7 @@ class ActiveForm(Statement):
                           'is_active': self.is_active})
         if use_sbo:
             json_dict['agent']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000644'  # modified
+                'https://identifiers.org/SBO:0000644'  # modified
         json_dict.update(generic)
         return json_dict
 
@@ -1495,12 +1495,12 @@ class Gef(Statement):
             json_dict['gef'] = self.gef.to_json()
             if use_sbo:
                 json_dict['gef']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000013'  # catalyst
+                    'https://identifiers.org/SBO:0000013'  # catalyst
         if self.ras is not None:
             json_dict['ras'] = self.ras.to_json()
             if use_sbo:
                 json_dict['ras']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000015'  # substrate
+                    'https://identifiers.org/SBO:0000015'  # substrate
         json_dict.update(generic)
         return json_dict
 
@@ -1583,12 +1583,12 @@ class Gap(Statement):
             json_dict['gap'] = self.gap.to_json()
             if use_sbo:
                 json_dict['gap']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000013'  # catalyst
+                    'https://identifiers.org/SBO:0000013'  # catalyst
         if self.ras is not None:
             json_dict['ras'] = self.ras.to_json()
             if use_sbo:
                 json_dict['ras']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000015'  # substrate
+                    'https://identifiers.org/SBO:0000015'  # substrate
         json_dict.update(generic)
         return json_dict
 
@@ -1817,19 +1817,19 @@ class RegulateAmount(Statement):
             if use_sbo:
                 if isinstance(self, IncreaseAmount):
                     json_dict['subj']['sbo'] = \
-                        'http://identifiers.org/sbo/SBO:0000459'  # stimulator
+                        'https://identifiers.org/SBO:0000459'  # stimulator
                 else:
                     json_dict['subj']['sbo'] = \
-                        'http://identifiers.org/sbo/SBO:0000020'  # inhibitor
+                        'https://identifiers.org/SBO:0000020'  # inhibitor
         if self.obj is not None:
             json_dict['obj'] = self.obj.to_json()
             if use_sbo:
                 if isinstance(self, IncreaseAmount):
                     json_dict['obj']['sbo'] = \
-                        'http://identifiers.org/sbo/SBO:0000011'  # product
+                        'https://identifiers.org/SBO:0000011'  # product
                 else:
                     json_dict['obj']['sbo'] = \
-                        'http://identifiers.org/sbo/SBO:0000010'  # reactant
+                        'https://identifiers.org/SBO:0000010'  # reactant
         json_dict.update(generic)
         return json_dict
 
@@ -2267,17 +2267,17 @@ class Conversion(Statement):
             json_dict['subj'] = self.subj.to_json()
             if use_sbo:
                 json_dict['subj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000013'  # catalyst
+                    'https://identifiers.org/SBO:0000013'  # catalyst
         json_dict['obj_from'] = [o.to_json() for o in self.obj_from]
         if use_sbo:
             for of in json_dict['obj_from']:
                 of['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000010'  # reactant
+                    'https://identifiers.org/SBO:0000010'  # reactant
         json_dict['obj_to'] = [o.to_json() for o in self.obj_to]
         if use_sbo:
             for ot in json_dict['obj_to']:
                 ot['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000011'  # product
+                    'https://identifiers.org/SBO:0000011'  # product
         json_dict.update(generic)
         return json_dict
 

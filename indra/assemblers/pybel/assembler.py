@@ -384,8 +384,12 @@ def belgraph_to_signed_graph(
         propagate_annotations=False):
 
     def get_ns(n):
+        # For nodes containing several agents (complex abundance or reaction)
+        # return namespace of the first member
         if isinstance(n, complex_abundance):
             return get_ns(n.members[0])
+        if isinstance(n, reaction):
+            return get_ns(n.products[0])
         return n.namespace
 
     graph = nx.MultiDiGraph()

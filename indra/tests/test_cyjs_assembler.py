@@ -38,7 +38,7 @@ def test_act():
     for node, refs in zip(cja._nodes, db_refs):
         if node['data']['name'] == 'MAP2K1':
             assert refs.get('HGNC') == \
-                'https://identifiers.org/hgnc/HGNC:6840', refs
+                'https://identifiers.org/hgnc:6840', refs
             assert refs.get('TEXT') == 'mek1', refs
         if node['data']['name'] == 'MAPK1':
             assert refs.get('UniProt')

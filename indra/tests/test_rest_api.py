@@ -963,7 +963,7 @@ STMT_JSON = {
         {"db_refs": {"TEXT": "MEK", "FPLX": "MEK"}, "name": "MEK"},
         {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"}
     ],
-    "sbo": "http://identifiers.org/sbo/SBO:0000526",
+    "sbo": "https://identifiers.org/SBO:0000526",
     "evidence": [{"text": "MEK binds ERK", "source_api": "trips"}]
 }
 
@@ -1048,7 +1048,7 @@ def test_assemblers_loopy():
             "type": "Phosphorylation",
             "enz": {"db_refs": {"TEXT": "MEK", "FPLX": "MEK"}, "name": "MEK"},
             "sub": {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"},
-            "sbo": "http://identifiers.org/sbo/SBO:0000526",
+            "sbo": "https://identifiers.org/SBO:0000526",
             "evidence": [
                 {"text": "MEK phosphorylates ERK", "source_api": "trips"}]
         },
@@ -1058,7 +1058,7 @@ def test_assemblers_loopy():
             "subj": {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"},
             "obj": {"db_refs": {"TEXT": "EGFR", "HGNC": "3236"},
                     "name": "EGFR"},
-            "sbo": "http://identifiers.org/sbo/SBO:0000526",
+            "sbo": "https://identifiers.org/SBO:0000526",
             "evidence": [{"text": "ERK activates EGFR", "source_api": "trips"}]
         }
     ]

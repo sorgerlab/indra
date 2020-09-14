@@ -592,6 +592,9 @@ def tag_agents(english, agents):
 
 def id_url(ag):
     # Return identifier URLs in a prioritized order
+    # TODO: we should add handling for UPPRO here, however, that would require
+    # access to UniProt client resources in the context of the DB REST API
+    # which could be problematic
     for db_name in ('FPLX', 'HGNC', 'UP',
                     'GO', 'MESH',
                     'CHEBI', 'PUBCHEM', 'HMDB', 'DRUGBANK', 'CHEMBL',

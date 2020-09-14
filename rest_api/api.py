@@ -66,7 +66,7 @@ stmts_model = api.model('Statements', {
             {"db_refs": {"TEXT": "MEK", "FPLX": "MEK"}, "name": "MEK"},
             {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"}
         ],
-        "sbo": "http://identifiers.org/sbo/SBO:0000526",
+        "sbo": "https://identifiers.org/SBO:0000526",
         "evidence": [{"text": "MEK binds ERK", "source_api": "trips"}]
         }])})
 bio_text_model = api.model('BioText', {

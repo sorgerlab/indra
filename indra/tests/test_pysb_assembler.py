@@ -248,12 +248,12 @@ def test_pysb_assembler_actmod2():
     mek = Agent('MEK', activity=ActivityCondition('activity', True))
     erk = Agent('ERK')
     stmts = []
-    stmts.append(ActiveForm(Agent('MEK',
-                    mods=[ModCondition('phosphorylation', 'serine', '218')]),
-                    'activity', True))
-    stmts.append(ActiveForm(Agent('MEK',
-                    mods=[ModCondition('phosphorylation', 'serine', '222')]),
-                    'activity', True))
+    stmts.append(ActiveForm(Agent(
+        'MEK', mods=[ModCondition('phosphorylation', 'serine', '218')]),
+        'activity', True))
+    stmts.append(ActiveForm(Agent(
+        'MEK', mods=[ModCondition('phosphorylation', 'serine', '222')]),
+        'activity', True))
     stmts.append(Phosphorylation(mek, erk, 'threonine', '185'))
     stmts.append(Phosphorylation(mek, erk, 'tyrosine', '187'))
     pa = PysbAssembler(stmts)
@@ -780,33 +780,6 @@ def test_translocation_loc_special_char():
     assert r.rate_forward.name == 'kf_ksr1_cytoplasm_cell_surface_1'
 
 
-def test_parse_identifiers_url():
-    url1 = 'http://identifiers.org/foo/bar'
-    url2 = 'http://identifiers.org/hgnc/12345'
-    url3 = 'http://identifiers.org/hgnc/HGNC:12345'
-    url4 = 'http://identifiers.org/uniprot/12345'
-    url5 = 'http://identifiers.org/chebi/12345'
-    url6 = 'http://identifiers.org/interpro/12345'
-    url7 = 'http://identifiers.org/pfam/12345'
-    url8 = 'https://identifiers.org/hgnc/HGNC:12345'
-    (ns, id) = pa.parse_identifiers_url(url1)
-    assert ns is None and id is None
-    (ns, id) = pa.parse_identifiers_url(url2)
-    assert ns is None and id is None
-    (ns, id) = pa.parse_identifiers_url(url3)
-    assert ns == 'HGNC' and id == '12345'
-    (ns, id) = pa.parse_identifiers_url(url4)
-    assert ns == 'UP' and id == '12345'
-    (ns, id) = pa.parse_identifiers_url(url5)
-    assert ns == 'CHEBI' and id == '12345'
-    (ns, id) = pa.parse_identifiers_url(url6)
-    assert ns == 'IP' and id == '12345'
-    (ns, id) = pa.parse_identifiers_url(url7)
-    assert ns == 'XFAM' and id == '12345'
-    (ns, id) = pa.parse_identifiers_url(url8)
-    assert ns == 'HGNC' and id == '12345', (ns, id)
-
-
 @with_model
 def test_get_mp_with_grounding():
     foo = Agent('Foo', db_refs={'HGNC': 'foo'})
@@ -814,12 +787,12 @@ def test_get_mp_with_grounding():
     b = Agent('B', db_refs={'HGNC': '6871'})
     Monomer('A_monomer')
     Monomer('B_monomer')
-    Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
-    Annotation(B_monomer, 'http://identifiers.org/hgnc/HGNC:6871')
+    Annotation(A_monomer, 'https://identifiers.org/hgnc:6840')
+    Annotation(B_monomer, 'https://identifiers.org/hgnc:6871')
     mps = list(pa.grounded_monomer_patterns(model, foo))
     assert len(mps) == 0
     mps = list(pa.grounded_monomer_patterns(model, a))
-    assert len(mps) == 1
+    assert len(mps) == 1, mps
     assert mps[0].monomer == A_monomer
     mps = list(pa.grounded_monomer_patterns(model, b))
     assert len(mps) == 1
@@ -829,12 +802,12 @@ def test_get_mp_with_grounding():
 @with_model
 def test_get_mp_with_grounding_2():
     a1 = Agent('A', mods=[ModCondition('phosphorylation', None, None)],
-                db_refs={'HGNC': '6840'})
+               db_refs={'HGNC': '6840'})
     a2 = Agent('A', mods=[ModCondition('phosphorylation', 'Y', '187')],
-                db_refs={'HGNC': '6840'})
+               db_refs={'HGNC': '6840'})
     Monomer('A_monomer', ['phospho', 'T185', 'Y187'],
-            {'phospho': 'y', 'T185':['u', 'p'], 'Y187':['u','p']})
-    Annotation(A_monomer, 'http://identifiers.org/hgnc/HGNC:6840')
+            {'phospho': 'y', 'T185': ['u', 'p'], 'Y187': ['u', 'p']})
+    Annotation(A_monomer, 'https://identifiers.org/hgnc:6840')
     A_monomer.site_annotations = [
         Annotation(('phospho', 'y'), 'phosphorylation', 'is_modification'),
         Annotation(('T185', 'p'), 'phosphorylation', 'is_modification'),
@@ -860,9 +833,10 @@ def test_phospho_assemble_grounding():
     a = Agent('MEK1', db_refs={'HGNC': '6840'})
     b = Agent('ERK2', db_refs={'HGNC': '6871'})
     b_phos = Agent('Foo', mods=[ModCondition('phosphorylation', None, None)],
-                    db_refs={'HGNC': '6871'})
+                   db_refs={'HGNC': '6871'})
     st1 = Phosphorylation(a, b, 'T', '185')
     # One step
+
     def check_policy(policy):
         pysb_asmb = pa.PysbAssembler([st1])
         model = pysb_asmb.make_model(policies=policy)
@@ -881,7 +855,7 @@ def test_phospho_mod_grounding():
               db_refs={'HGNC': '6840'})
     b = Agent('ERK2', db_refs={'HGNC': '6871'})
     a_phos = Agent('Foo', mods=[ModCondition('phosphorylation', None, None)],
-                    db_refs={'HGNC': '6840'})
+                   db_refs={'HGNC': '6840'})
     st1 = Phosphorylation(a, b, 'T', '185')
     pysb_asmb = pa.PysbAssembler([st1])
     model = pysb_asmb.make_model(policies='one_step')
@@ -904,10 +878,11 @@ def test_multiple_grounding_mods():
     mek = Agent('MEK1', db_refs={'HGNC': '6840'})
     erk = Agent('ERK2', db_refs={'HGNC': '6871'})
     cbl = Agent('CBL', db_refs={'HGNC': '1541'})
-    ub_phos_erk = Agent('ERK2',
-            mods=[ModCondition('phosphorylation', None, None),
-                  ModCondition('ubiquitination', None, None)],
-            db_refs={'HGNC': '6871'})
+    ub_phos_erk = Agent(
+        'ERK2',
+        mods=[ModCondition('phosphorylation', None, None),
+              ModCondition('ubiquitination', None, None)],
+        db_refs={'HGNC': '6871'})
     st1 = Phosphorylation(mek, erk, 'T', '185')
     st2 = Phosphorylation(mek, erk, 'Y', '187')
     st3 = Ubiquitination(cbl, erk, 'K', '40')
@@ -928,7 +903,7 @@ def test_grounded_active_pattern():
     b_phos = Agent('B', mods=[ModCondition('phosphorylation', 'S', '100')],
                    db_refs={'HGNC': '5678'})
     b_act = Agent('B', activity=ActivityCondition('activity', True),
-                   db_refs={'HGNC': '5678'})
+                  db_refs={'HGNC': '5678'})
     st1 = Phosphorylation(a, b, 'S', '100')
     st2 = ActiveForm(b_phos, 'activity', True)
     pysba = PysbAssembler([st1, st2])
@@ -974,14 +949,14 @@ def test_rule_annotation():
         subj = [ann.object for ann in model.annotations
                 if ann.predicate == 'rule_has_subject']
         obj = [ann.object for ann in model.annotations
-                if ann.predicate == 'rule_has_object']
+               if ann.predicate == 'rule_has_object']
         assert len(subj) == 1
         assert subj[0] == 'A'
         assert len(obj) == 1
         assert obj[0] == 'B'
 
     classes = AddModification.__subclasses__() + \
-              RemoveModification.__subclasses__()
+        RemoveModification.__subclasses__()
     for mod_class in classes:
         stmt = mod_class(a, b)
         check_rule_annotation(stmt, 'one_step')
@@ -1209,7 +1184,6 @@ def test_policy_parameters():
     pa = PysbAssembler([stmt])
     model = pa.make_model(policies={stmt.uuid: pol})
     assert model.parameters['c'].value == 3.0
-
 
 
 @raises(pa.UnknownPolicyError)
