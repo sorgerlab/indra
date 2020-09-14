@@ -1,7 +1,6 @@
 import logging
 import re
 from urllib import parse
-from protmapper.uniprot_client import get_feature_of
 
 
 logger = logging.getLogger(__name__)
@@ -116,6 +115,7 @@ def get_identifiers_url(db_name, db_id):
     elif db_name == 'TEXT' or db_name == 'TEXT_NORM':
         return None
     elif db_name == 'UPPRO':
+        from indra.databases.uniprot_client import get_feature_of
         up_id = get_feature_of(db_id)
         url = '%s%s#%s' % (url_prefixes['UP'], up_id, db_id)
     else:

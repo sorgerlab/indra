@@ -640,9 +640,11 @@ class BiopaxProcessor(object):
 
     @staticmethod
     def _get_reference_primary_id(entref: bp.EntityReference):
-        # In practice, it appears that only UniProt and ChEBI appear in this
-        # form.
+        # This is a simple check to see if we should treat this as a URL
+        if not entref.uid.startswith('http'):
+            return None, None
         primary_ns, primary_id = parse_identifiers_url(entref.uid)
+        print(entref.uid, primary_ns, primary_id)
         return primary_ns, primary_id
 
     @staticmethod
