@@ -644,7 +644,6 @@ class BiopaxProcessor(object):
         if not entref.uid.startswith('http'):
             return None, None
         primary_ns, primary_id = parse_identifiers_url(entref.uid)
-        print(entref.uid, primary_ns, primary_id)
         return primary_ns, primary_id
 
     @staticmethod
