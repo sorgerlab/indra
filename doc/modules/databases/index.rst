@@ -1,8 +1,17 @@
 Database clients (:py:mod:`indra.databases`)
 ============================================
 
-HGNC client (:py:mod:`indra.hgnc_client`)
------------------------------------------
+.. automodule:: indra.databases
+    :members:
+
+Generate and parse identifiers.org URLs (:py:mod:`indra.databases.identifiers`)
+-------------------------------------------------------------------------------
+
+.. automodule:: indra.databases.identifiers
+    :members:
+
+HGNC client (:py:mod:`indra.databases.hgnc_client`)
+---------------------------------------------------
 
 .. automodule:: indra.databases.hgnc_client
     :members:
