@@ -567,8 +567,8 @@ def _bidirectional_shortest_path(G, source, target,
 
     """
     # call helper to do the real work
-    results = _bidirectional_pred_succ(G, source, target, ignore_nodes, ignore_edges, 
-                                       force_edges=force_edges)
+    results = _bidirectional_pred_succ(G, source, target, ignore_nodes,
+                                       ignore_edges, force_edges=force_edges)
     pred, succ, w = results
 
     # build path from pred+w+succ
@@ -586,7 +586,8 @@ def _bidirectional_shortest_path(G, source, target,
     return len(path), path
 
 
-def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=None, force_edges=None):
+def _bidirectional_pred_succ(G, source, target, ignore_nodes=None,
+                             ignore_edges=None, force_edges=None):
     """Bidirectional shortest path helper.
        Returns (pred,succ,w) where
        pred is a dictionary of predecessors from w to the source, and
@@ -594,7 +595,8 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
     """
     # does BFS from both source and target and meets in the middle
     if ignore_nodes and (source in ignore_nodes or target in ignore_nodes):
-        raise nx.NetworkXNoPath("No path between %s and %s." % (source, target))
+        raise nx.NetworkXNoPath("No path between %s and %s."
+                                % (source, target))
     if target == source:
         return ({target: None}, {source: None}, source)
 
@@ -625,8 +627,9 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
                 def iterate(v):
                     if force_edges:
                         for w in pred_iter(v):
-                            if (w, v) not in ignore_edges and (w, v) in force_edges:
-                                yield w
+                            if (w, v) not in ignore_edges and (w, v)\
+                                in force_edges:
+                                    yield w
                     else:
                         for w in pred_iter(v):
                             if (w, v) not in ignore_edges:
@@ -637,8 +640,9 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
                 def iterate(v):
                     if force_edges:
                         for w in succ_iter(v):
-                            if (v, w) not in ignore_edges and (v, w) in force_edges:
-                                yield w
+                            if (v, w) not in ignore_edges and (v, w)\
+                                in force_edges:
+                                    yield w
                     else:
                         for w in succ_iter(v):
                             if (v, w) not in ignore_edges:
@@ -655,8 +659,9 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
                         for w in nodes(v):
                             if (v, w) not in ignore_edges \
                                 and (w, v) not in ignore_edges \
-                                    and (v, w) in force_edges and (w, v) in force_edges:
-                                        yield w
+                                    and (v, w) in force_edges and (w, v)\
+                                        in force_edges:
+                                            yield w
                     else:
                         for w in nodes(v):
                             if (v, w) not in ignore_edges \
@@ -702,9 +707,10 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None, ignore_edges=
     raise nx.NetworkXNoPath("No path between %s and %s." % (source, target))
 
 
-def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None, 
-                         hashes=None, terminal_ns=None, weight=None, ref_counts_function=None,
-                         const_c=1, const_tk=10):
+def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
+                         path_limit=None, hashes=None, terminal_ns=None,
+                         weight=None, ref_counts_function=None, const_c=1,
+                         const_tk=10):
     """Do Dijkstra search from a given node and yield paths
 
     Parameters
@@ -749,7 +755,8 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None
             if h in edge_by_hash:
                 allowed_edges.append(edge_by_hash[h])
         for u, v, data in g.edges(data=True):
-            ref_counts, total = ref_counts_function([d['stmt_hash'] for d in data['statements']])
+            ref_counts, total = ref_counts_function([d['stmt_hash']
+                for d in data['statements']])
             if not ref_counts:
                 ref_counts = 1e-15
             data['context_weight'] = -const_c * ln(ref_counts / (total + const_tk))
@@ -768,7 +775,7 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2, path_limit=None
     else:
         proper_path = lambda x: True
     paths = list(nx.single_source_dijkstra_path(g, start,
-                                                weight=('context_weight' if hashes else weight)).values())[1:]
+        weight=('context_weight' if hashes else weight)).values())[1:]
     if path_limit is not None:
         for p in paths:
             path_limit -= 1
