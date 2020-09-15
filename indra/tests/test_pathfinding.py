@@ -2,7 +2,8 @@ import numpy as np
 import networkx as nx
 
 from indra.explanation.pathfinding.pathfinding import bfs_search, \
-    shortest_simple_paths, bfs_search_multiple_nodes, open_dijkstra_search
+    shortest_simple_paths, bfs_search_multiple_nodes, open_dijkstra_search, \
+    simple_paths_with_constraints
 from indra.explanation.model_checker.model_checker import \
     signed_edges_to_signed_nodes
 
@@ -506,3 +507,50 @@ def test_open_dijksta():
         ['A3', 'B2', 'C1'],
         ['A3', 'B2', 'C1', 'D1'],
     ]
+
+
+def test_simple_paths_with_constraints():
+    dg, all_ns = _setup_unsigned_graph()
+    # Add more edges to create more paths
+    dg.add_edge('B2', 'B1')
+    dg.add_edge('B1', 'D1')
+
+    # Run without cutoff and constraints
+    paths = tuple(
+        [tuple(p) for p in simple_paths_with_constraints(dg, 'A3', 'D1')])
+    assert len(paths) == 3
+    expected_paths = {('A3', 'B2', 'B1', 'D1'),
+                      ('A3', 'B2', 'C1', 'D1'),
+                      ('A3', 'B2', 'B1', 'C1', 'D1')}
+    assert expected_paths == set(paths), set(paths)
+
+    # Test cutoff
+    paths = tuple([tuple(p) for p in simple_paths_with_constraints(
+        dg, 'A3', 'D1', cutoff=3)])
+    assert len(paths) == 2
+    expected_paths = {('A3', 'B2', 'B1', 'D1'),
+                      ('A3', 'B2', 'C1', 'D1')}
+    assert expected_paths == set(paths), set(paths)
+
+    # Test constraints
+    def _isC(n):
+        # Filter out nodes starting with C
+        if n.startswith('C'):
+            return True
+        return False
+
+    def _isB(n):
+        # Filter out nodes starting with B
+        if n.startswith('B'):
+            return True
+        return False
+
+    paths = tuple([tuple(p) for p in simple_paths_with_constraints(
+        dg, 'A3', 'D1', filter_func=_isC)])
+    assert len(paths) == 1, paths
+    expected_paths = {('A3', 'B2', 'B1', 'D1')}
+    assert expected_paths == set(paths), set(paths)
+
+    paths = tuple([tuple(p) for p in simple_paths_with_constraints(
+        dg, 'A3', 'D1', filter_func=_isB)])
+    assert len(paths) == 0
