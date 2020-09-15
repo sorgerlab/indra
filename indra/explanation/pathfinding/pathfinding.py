@@ -4,7 +4,7 @@ __all__ = ['shortest_simple_paths', 'bfs_search', 'find_sources',
            'open_dijkstra_search']
 import sys
 import logging
-from collections import deque
+from collections import deque, OrderedDict
 from copy import deepcopy
 
 import networkx as nx
@@ -446,7 +446,8 @@ def bfs_search_multiple_nodes(g, source_nodes, path_limit=None, **kwargs):
 def get_path_iter(graph, source, target, path_length, loop, dummy_target):
     """Return a generator of paths with path_length cutoff from source to
     target."""
-    path_iter = nx.all_simple_paths(graph, source, target, path_length)
+    path_iter = simple_paths_with_constraints(
+        graph, source, target, path_length)
     try:
         for p in path_iter:
             path = deepcopy(p)
@@ -809,3 +810,65 @@ def open_dijkstra_search(g, start, reverse=False, path_limit=None,
         for p in paths:
             if proper_path(p):
                 yield p
+
+
+# This code is adapted from nx.algorithms.simple_paths._all_simple_paths_graph
+def simple_paths_with_constraints(G, source, target, cutoff=None,
+                                  filter_func=None):
+    """Find all simple paths between source and target with given constraints.
+
+    Parameters
+    ----------
+    G : nx.Digraph
+        An nx.DiGraph to search in.
+    source : node
+        Starting node for path.
+    target : node
+        Ending node for path.
+    cutoff : Optional[int]
+        Maximum depth of the paths.
+    filter_func : Optional[function]
+        A function to constrain the search. A function should take a node as
+        a parameter and return True if the node should be filtered and False
+        otherwise.
+
+    Returns
+    -------
+    path_generator: generator
+        A generator of the paths between source and target.
+    """
+    if cutoff is None:
+        cutoff = len(G) - 1
+    visited = OrderedDict.fromkeys([source])
+    new_nodes = iter(G[source])
+    if filter_func:
+        new_nodes = _filter_nodes(new_nodes, filter_func)
+    stack = [new_nodes]
+    while stack:
+        children = stack[-1]
+        child = next(children, None)
+        if child is None:
+            stack.pop()
+            visited.popitem()
+        elif len(visited) < cutoff:
+            if child == target:
+                yield list(visited) + [target]
+            elif child not in visited:
+                visited[child] = None
+                new_nodes = iter(G[child])
+                if filter_func:
+                    new_nodes = _filter_nodes(new_nodes, filter_func)
+                stack.append(new_nodes)
+        else:  # len(visited) == cutoff:
+            if child == target or target in children:
+                yield list(visited) + [target]
+            stack.pop()
+            visited.popitem()
+
+
+def _filter_nodes(nodes, filter_func):
+    filtered_nodes = set()
+    for n in nodes:
+        if not filter_func(n):
+            filtered_nodes.add(n)
+    return iter(filtered_nodes)
