@@ -1,5 +1,6 @@
 """A client for accessing reader output from the DART system."""
 import os
+import tqdm
 import json
 import logging
 import requests
@@ -97,7 +98,7 @@ def download_records(records, local_storage=None):
     """
     # Loop document keys and get documents
     reader_outputs = defaultdict(dict)
-    for record in records:
+    for record in tqdm.tqdm(records):
         storage_key = record['storage_key']
         try:
             output = get_content_by_storage_key(storage_key)
