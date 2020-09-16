@@ -60,7 +60,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
         statement hashes
 
     const_c : int
-            Constant used in MeSH IDs-based weight calculation
+        Constant used in MeSH IDs-based weight calculation
 
     const_tk : int
         Constant used in MeSH IDs-based weight calculation
@@ -711,7 +711,8 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None,
 
 
 def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
-                         path_limit=None, hashes=None, terminal_ns=None,
+                         path_limit=None, hashes=None, ignore_nodes=None,
+                         ignore_edges=None, terminal_ns=None,
                          weight=None, ref_counts_function=None, const_c=1,
                          const_tk=10):
     """Do Dijkstra search from a given node and yield paths
@@ -729,12 +730,16 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
         Stop when all paths with this many edges have been found. Default: 2.
     path_limit : int
         The maximum number of paths to return. Default: no limit.
+    hashes : list
+        List of hashes used to set edge weights
     terminal_ns : list[str]
         Force a path to terminate when any of the namespaces in this list
         are encountered and only yield paths that terminate at these
         namepsaces
-    hashes : list
-        List of hashes used to set edge weights
+    ignore_nodes : container of nodes
+       nodes to ignore, optional
+    ignore_edges : container of edges
+       edges to ignore, optional
     weight : str
         Name of edge's attribute used as its weight
     ref_count_function : function
@@ -762,22 +767,35 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
                 for d in data['statements']])
             if not ref_counts:
                 ref_counts = 1e-15
-            data['context_weight'] = -const_c * ln(ref_counts / (total + const_tk))
-        collect_weights = lambda path : [g[u][v]['context_weight'] for u, v in zip(path[:-1], path[1:])]
+            data['context_weight'] = \
+                -const_c * ln(ref_counts / (total + const_tk))
+        collect_weights = lambda path : [g[u][v]['context_weight']
+            for u, v in zip(path[:-1], path[1:])]
 
     if reverse:
         g = g.reverse(copy=False)
 
     if terminal_ns: # If not set, terminal_ns will be an empty list []
         def proper_path(path):
-            if g.nodes[path[-1]]['ns'].lower() not in terminal_ns:
-                return False
-            for n in path[:-1]:
-                if g.nodes[n]['ns'].lower() in terminal_ns:
+            if g.nodes[path[-1]]['ns'].lower() not in terminal_ns\
+                or path[-1] in ignore_nodes:
+                    return False
+            for u, v in zip(path[:-1], path[1:]):
+                if g.nodes[u]['ns'].lower() in terminal_ns\
+                    or u in ignore_nodes:
+                        return False
+                if (u, v) in ignore_edges:
                     return False
             return True
     else:
-        proper_path = lambda x: True
+        def proper_path(path):
+            for u, v in zip(path[-1:], path[1:]):
+                if (u, v) in ignore_edges or u in ignore_nodes:
+                    return False
+            if path[-1] in ignore_nodes:
+                return False
+            return True 
+
     paths = list(nx.single_source_dijkstra_path(g, start,
         weight=('context_weight' if hashes else weight)).values())[1:]
     if path_limit is not None:
