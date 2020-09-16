@@ -101,7 +101,14 @@ def download_records(records, local_storage=None):
     for record in tqdm.tqdm(records):
         storage_key = record['storage_key']
         try:
-            output = get_content_by_storage_key(storage_key)
+            output = None
+            if local_storage:
+                fname = get_local_storage_path(local_storage, record)
+                if os.path.exists(fname):
+                    with open(fname, 'r') as fh:
+                        output = fh.read()
+            if output is None:
+                output = get_content_by_storage_key(storage_key)
             reader_outputs[record['identity']][record['document_id']] = output
             if local_storage:
                 store_reader_output(local_storage, record, output)
@@ -113,12 +120,17 @@ def download_records(records, local_storage=None):
 
 def store_reader_output(path, record, output):
     """Save a reader output in a standardized form locally."""
+    fname = get_local_storage_path(path, record)
+    with open(fname, 'w') as fh:
+        fh.write(output)
+
+
+def get_local_storage_path(path, record):
     folder = os.path.join(path, record['identity'], record['version'])
     if not os.path.exists(folder):
         os.makedirs(folder)
     fname = os.path.join(folder, record['document_id'])
-    with open(fname, 'w') as fh:
-        fh.write(output)
+    return fname
 
 
 def prioritize_records(records, priorities=None):
