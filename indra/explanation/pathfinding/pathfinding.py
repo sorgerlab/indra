@@ -312,7 +312,7 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
             # Check yield and break conditions
             if len(new_path) > depth_limit + 1:
                 continue
-            elif terminal_ns is None:
+            elif not terminal_ns:
                 # Yield newest path and recieve new ignore values
 
                 # Signed search yield
