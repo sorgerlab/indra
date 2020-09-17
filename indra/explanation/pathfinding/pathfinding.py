@@ -781,7 +781,7 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
         g = g.reverse(copy=False)
 
     proper_nodes = (lambda p : not set(p).intersection(set(ignore_nodes))) if ignore_nodes else lambda p : True
-    proper_edges = (lambda p : not sum(1 for u, v in zip(path[:-1], path[1:]) if (u, v) in ignore_edges)) if ignore_edges else lambda p : True
+    proper_edges = (lambda p : not sum(1 for u, v in zip(p[:-1], p[1:]) if (u, v) in ignore_edges)) if ignore_edges else lambda p : True
 
     if terminal_ns: # If not set, terminal_ns will be an empty list []
         def proper_path(path):
