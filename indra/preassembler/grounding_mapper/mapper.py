@@ -240,7 +240,10 @@ class GroundingMapper(object):
         # If there is no TEXT available, we can return immediately since we
         # can't do mapping
         agent_txts = sorted({agent.db_refs[t] for t in {'TEXT', 'TEXT_NORM'}
-                             if t in agent.db_refs}, key=lambda x: len(x),
+                             # Note that get here will correctly handle both
+                             # a non-existent entry and a None entry which
+                             # sometimes appears
+                             if agent.db_refs.get(t)}, key=lambda x: len(x),
                             reverse=True)
         if not agent_txts:
             # We still do the name standardization here

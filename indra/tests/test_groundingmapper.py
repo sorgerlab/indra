@@ -526,3 +526,10 @@ def test_text_and_norm_text():
     stmt = Phosphorylation(None, ag)
     res = gm.map_stmts([stmt])
     assert res[0].sub.name == 'ERK', res[0]
+
+
+def test_none_text_corner_case():
+    ag = Agent('x', db_refs={'TEXT': None, 'TEXT_NORM': None})
+    stmt = Phosphorylation(None, ag)
+    res = gm.map_stmts([stmt])
+    assert res[0].sub.name == 'x', res[0]
