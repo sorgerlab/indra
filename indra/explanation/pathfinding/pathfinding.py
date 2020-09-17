@@ -473,7 +473,7 @@ def get_path_iter(graph, source, target, path_length, loop, dummy_target,
         A generator of the paths between source and target.
     """
     path_iter = simple_paths_with_constraints(
-        graph, source, target, path_length, filter_func)
+        graph, source, target, path_length, filter_func, True)
     try:
         for p in path_iter:
             path = deepcopy(p)
@@ -490,7 +490,7 @@ def get_path_iter(graph, source, target, path_length, loop, dummy_target,
         pass
 
 
-def find_sources(graph, target, sources):
+def find_sources(graph, target, sources, filter_func=None, allow_source=True):
     """Get the set of source nodes with paths to the target.
 
     Given a common target and  a list of sources (or None if test statement
@@ -516,6 +516,8 @@ def find_sources(graph, target, sources):
         Yields tuples of source node and path length (int). If there are no
         paths to any of the given source nodes, the generator is empty.
     """
+    if allow_source and sources:
+        filter_func = filter_except(filter_func, sources)
     # First, create a list of visited nodes
     # Adapted from
     # networkx.algorithms.traversal.breadth_first_search.bfs_edges
@@ -525,7 +527,11 @@ def find_sources(graph, target, sources):
 
     # The queue holds tuples of "parents" (in this case downstream nodes)
     # and their "children" (in this case their upstream influencers)
-    queue = deque([(target, graph.predecessors(target), 0)])
+
+    pred = graph.predecessors(target)
+    if filter_func:
+        pred = filter(filter_func, pred)
+    queue = deque([(target, pred, 0)])
     while queue:
         parent, children, path_length = queue[0]
         try:
@@ -543,8 +549,11 @@ def find_sources(graph, target, sources):
             # then add it to the queue.
             if child not in visited:
                 visited.add(child)
+                pred = graph.predecessors(child)
+                if filter_func:
+                    pred = filter(filter_func, pred)
                 queue.append(
-                    (child, graph.predecessors(child), path_length + 1))
+                    (child, pred, path_length + 1))
         # Once we've finished iterating over the children of the current
         # node, pop the node off and go to the next one in the queue
         except StopIteration:
@@ -840,7 +849,7 @@ def open_dijkstra_search(g, start, reverse=False, path_limit=None,
 
 # This code is adapted from nx.algorithms.simple_paths._all_simple_paths_graph
 def simple_paths_with_constraints(G, source, target, cutoff=None,
-                                  filter_func=None):
+                                  filter_func=None, allow_target=True):
     """Find all simple paths between source and target with given constraints.
 
     Parameters
@@ -865,10 +874,12 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
     """
     if cutoff is None:
         cutoff = len(G) - 1
+    if allow_target:
+        filter_func = filter_except(filter_func, {target})
     visited = OrderedDict.fromkeys([source])
     new_nodes = iter(G[source])
     if filter_func:
-        new_nodes = _filter_nodes(new_nodes, filter_func)
+        new_nodes = filter(filter_func, new_nodes)
     stack = [new_nodes]
     while stack:
         children = stack[-1]
@@ -883,7 +894,7 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
                 visited[child] = None
                 new_nodes = iter(G[child])
                 if filter_func:
-                    new_nodes = _filter_nodes(new_nodes, filter_func)
+                    new_nodes = filter(filter_func, new_nodes)
                 stack.append(new_nodes)
         else:  # len(visited) == cutoff:
             if child == target or target in children:
@@ -892,9 +903,12 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
             visited.popitem()
 
 
-def _filter_nodes(nodes, filter_func):
-    filtered_nodes = set()
-    for n in nodes:
-        if not filter_func(n):
-            filtered_nodes.add(n)
-    return iter(filtered_nodes)
+def filter_except(filter_func, nodes_to_keep):
+    if filter_func is None:
+        return None
+
+    def new_filter(n):
+        if n in nodes_to_keep:
+            return True
+        return filter_func(n)
+    return new_filter
