@@ -776,6 +776,9 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
                 -const_c * ln(ref_counts / (total + const_tk))
         collect_weights = lambda path : [g[u][v]['context_weight']
             for u, v in zip(path[:-1], path[1:])]
+    else:
+        collect_weights = lambda path : [g[u][v][weight]
+            for u, v in zip(path[:-1], path[1:])]
 
     if reverse:
         g = g.reverse(copy=False)
