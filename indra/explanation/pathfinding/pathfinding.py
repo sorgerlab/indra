@@ -443,11 +443,37 @@ def bfs_search_multiple_nodes(g, source_nodes, path_limit=None, **kwargs):
             break
 
 
-def get_path_iter(graph, source, target, path_length, loop, dummy_target):
+def get_path_iter(graph, source, target, path_length, loop, dummy_target,
+                  filter_func):
     """Return a generator of paths with path_length cutoff from source to
-    target."""
+    target.
+
+    Parameters
+    ----------
+    graph : nx.Digraph
+        An nx.DiGraph to search in.
+    source : node
+        Starting node for path.
+    target : node
+        Ending node for path.
+    path_length : int
+        Maximum depth of the paths.
+    loop : bool
+        Whether the path should be a loop. If True, source is appended to path.
+    dummy_target : bool
+        Whether provided target is a dummy node and should be removed from path
+    filter_func : function or None
+        A function to constrain the search. A function should take a node as
+        a parameter and return True if the node should be filtered and False
+        otherwise. If None, then no filtering is done.
+
+    Returns
+    -------
+    path_generator: generator
+        A generator of the paths between source and target.
+    """
     path_iter = simple_paths_with_constraints(
-        graph, source, target, path_length)
+        graph, source, target, path_length, filter_func)
     try:
         for p in path_iter:
             path = deepcopy(p)
