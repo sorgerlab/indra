@@ -22,8 +22,10 @@ class UnsignedGraphModelChecker(ModelChecker):
     seed : int
         Random seed for sampling (optional, default is None).
     """
-    def __init__(self, model, statements=None, do_sampling=False, seed=None):
+    def __init__(self, model, statements=None, do_sampling=False, seed=None,
+                 model_agents=None):
         super().__init__(model, statements, do_sampling, seed)
+        self.model_agents = model_agents if model_agents else []
 
     def get_graph(self):
         if self.graph:
