@@ -519,6 +519,7 @@ def find_sources(graph, target, sources):
     # There was no path; this will produce an empty generator
     return
 
+
 def _bidirectional_shortest_path(G, source, target,
                                  ignore_nodes=None,
                                  ignore_edges=None,
@@ -711,9 +712,10 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None,
 
 
 def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
-                         path_limit=None, hashes=None, ignore_nodes=None,
-                         ignore_edges=None, terminal_ns=None,
-                         weight=None, ref_counts_function=None, const_c=1,
+                         path_limit=None, node_filter=None, hashes=None, 
+                         ignore_nodes=None, ignore_edges=None, 
+                         terminal_ns=None, weight=None,
+                         ref_counts_function=None, const_c=1,
                          const_tk=10):
     """Do Dijkstra search from a given node and yield paths
 
@@ -730,6 +732,9 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
         Stop when all paths with this many edges have been found. Default: 2.
     path_limit : int
         The maximum number of paths to return. Default: no limit.
+    node_filter : list[str]
+        The allowed namespaces (node attribute 'ns') for the nodes in the
+        path
     hashes : list
         List of hashes used to set edge weights
     terminal_ns : list[str]
@@ -775,26 +780,21 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
     if reverse:
         g = g.reverse(copy=False)
 
+    proper_nodes = (lambda p : not set(p).intersection(set(ignore_nodes))) if ignore_nodes else lambda p : True
+    proper_edges = (lambda p : not sum(1 for u, v in zip(path[:-1], path[1:]) if (u, v) in ignore_edges)) if ignore_edges else lambda p : True
+
     if terminal_ns: # If not set, terminal_ns will be an empty list []
         def proper_path(path):
-            if g.nodes[path[-1]]['ns'].lower() not in terminal_ns\
-                or path[-1] in ignore_nodes:
+            if not proper_nodes(path) or not proper_edges(path)\
+                or g.nodes[path[-1]]['ns'].lower() not in terminal_ns:
                     return False
-            for u, v in zip(path[:-1], path[1:]):
-                if g.nodes[u]['ns'].lower() in terminal_ns\
-                    or u in ignore_nodes:
-                        return False
-                if (u, v) in ignore_edges:
+            for u in path:
+                if g.nodes[u]['ns'].lower() in terminal_ns:
                     return False
             return True
     else:
         def proper_path(path):
-            for u, v in zip(path[-1:], path[1:]):
-                if (u, v) in ignore_edges or u in ignore_nodes:
-                    return False
-            if path[-1] in ignore_nodes:
-                return False
-            return True 
+            return proper_nodes(path) and proper_edges(path) 
 
     paths = list(nx.single_source_dijkstra_path(g, start,
         weight=('context_weight' if hashes else weight)).values())[1:]
