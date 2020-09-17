@@ -1,5 +1,5 @@
 __all__ = ['shortest_simple_paths', 'bfs_search', 'find_sources',
-           'get_path_iter', 'bfs_search_multiple_nodes']
+``           'get_path_iter', 'bfs_search_multiple_nodes']
 import sys
 import logging
 from collections import deque
@@ -15,6 +15,8 @@ from numpy import log as ln
 
 from .util import get_sorted_neighbors
 
+from math import trunc
+truncate = lambda n : trunc(n * 100) / 100
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +142,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                                    force_edges):
                 return simple_paths._bidirectional_dijkstra(G, source, target, weight,
                                                             ignore_nodes, ignore_edges)
-            collect_weights = lambda path : [G[u][v]['context_weight'] for u, v in zip(path[:-1], path[1:])]
+            collect_weights = lambda path : [truncate(G[u][v]['context_weight']) for u, v in zip(path[:-1], path[1:])]
     else:
         if strict_mesh_id_filtering:
             return []
@@ -155,7 +157,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                                    force_edges):
                 return simple_paths._bidirectional_dijkstra(G, source, target, weight,
                                                             ignore_nodes, ignore_edges)
-            collect_weights = lambda path : [G[u][v][weight] for u, v in zip(path[:-1], path[1:])]
+            collect_weights = lambda path : [truncate(G[u][v][weight]) for u, v in zip(path[:-1], path[1:])]
 
     allowed_edges = []
     if hashes:
@@ -774,17 +776,21 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
                 ref_counts = 1e-15
             data['context_weight'] = \
                 -const_c * ln(ref_counts / (total + const_tk))
-        collect_weights = lambda path : [g[u][v]['context_weight']
+        collect_weights = lambda path : [truncate(g[u][v]['context_weight'])
             for u, v in zip(path[:-1], path[1:])]
+        weight='context_weight'
     else:
-        collect_weights = lambda path : [g[u][v][weight]
+        collect_weights = lambda path : [truncate(g[u][v][weight])
             for u, v in zip(path[:-1], path[1:])]
 
     if reverse:
         g = g.reverse(copy=False)
 
-    proper_nodes = (lambda p : not set(p).intersection(set(ignore_nodes))) if ignore_nodes else lambda p : True
-    proper_edges = (lambda p : not sum(1 for u, v in zip(p[:-1], p[1:]) if (u, v) in ignore_edges)) if ignore_edges else lambda p : True
+    proper_nodes = (lambda p : not set(p).intersection(set(ignore_nodes)))\
+                    if ignore_nodes else lambda p : True
+    proper_edges = (lambda p : not sum(1 for u, v in zip(p[:-1], p[1:])\
+                                       if (u, v) in ignore_edges))\
+                    if ignore_edges else lambda p : True
 
     if terminal_ns: # If not set, terminal_ns will be an empty list []
         def proper_path(path):
@@ -800,7 +806,7 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
             return proper_nodes(path) and proper_edges(path) 
 
     paths = list(nx.single_source_dijkstra_path(g, start,
-        weight=('context_weight' if hashes else weight)).values())[1:]
+                                                weight=weight).values())[1:]
     if path_limit is not None:
         for p in paths:
             path_limit -= 1
