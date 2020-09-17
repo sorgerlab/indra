@@ -170,7 +170,8 @@ class ModelChecker(object):
         """
         self.statements += stmts
 
-    def check_model(self, max_paths=1, max_path_length=5):
+    def check_model(self, max_paths=1, max_path_length=5,
+                    agent_filter_func=None):
         """Check all the statements added to the ModelChecker.
 
         Parameters
@@ -180,6 +181,10 @@ class ModelChecker(object):
             to be explained. Default: 1
         max_path_length : Optional[int]
             The maximum length of specific paths to return. Default: 5
+        agent_filter_func : Optional[function]
+            A function to constrain the search. A function should take an agent
+            as a parameter and return True if the agent should be filtered and
+            False otherwise.
 
         Returns
         -------
@@ -192,11 +197,13 @@ class ModelChecker(object):
             logger.info('---')
             logger.info('Checking statement (%d/%d): %s' %
                         (idx + 1, len(self.statements), stmt))
-            result = self.check_statement(stmt, max_paths, max_path_length)
+            result = self.check_statement(stmt, max_paths, max_path_length,
+                                          agent_filter_func)
             results.append((stmt, result))
         return results
 
-    def check_statement(self, stmt, max_paths=1, max_path_length=5):
+    def check_statement(self, stmt, max_paths=1, max_path_length=5,
+                        agent_filter_func=None):
         """Check a single Statement against the model.
 
         Parameters
@@ -208,6 +215,10 @@ class ModelChecker(object):
             to be explained. Default: 1
         max_path_length : Optional[int]
             The maximum length of specific paths to return. Default: 5
+        agent_filter_func : Optional[function]
+            A function to constrain the search. A function should take an agent
+            as a parameter and return True if the agent should be filtered and
+            False otherwise.
 
         Returns
         -------
@@ -224,6 +235,7 @@ class ModelChecker(object):
                 (list(input_set)[0] == list(obj_list)[0])):
             loop = True
 
+        node_filter_func = self.update_filter_func(agent_filter_func)
         # If we have several objects in obj_list or we have a loop, we add a
         # dummy target node as a child to all nodes in obj_list
         if len(obj_list) > 1 or loop:
@@ -239,7 +251,8 @@ class ModelChecker(object):
                 for obj in obj_list:
                     self.graph.add_edge(obj, common_target)
             result = self.find_paths(input_set, common_target, max_paths,
-                                     max_path_length, loop, dummy_target=True)
+                                     max_path_length, loop, dummy_target=True,
+                                     filter_func=node_filter_func)
 
             self.graph.remove_node(common_target)
         else:
@@ -292,7 +305,7 @@ class ModelChecker(object):
         return input_set, obj_list, None
 
     def find_paths(self, input_set, target, max_paths=1, max_path_length=5,
-                   loop=False, dummy_target=False):
+                   loop=False, dummy_target=False, filter_func=None):
         """Check for a source/target path in the model.
 
         Parameters
@@ -310,6 +323,10 @@ class ModelChecker(object):
             Whether we are looking for a loop path.
         dummy_target : False
             Whether the target is a dummy node.
+        filter_func : function or None
+            A function to constrain the search. A function should take a node
+            as a parameter and return True if the node should be filtered and
+            False otherwise. If None, then no filtering is done.
 
         Returns
         -------
@@ -370,7 +387,7 @@ class ModelChecker(object):
                                 % (str(source), target))
                     path_iter = get_path_iter(
                         self.graph, source, target, search_path_length, loop,
-                        dummy_target)
+                        dummy_target, filter_func)
                     for path in path_iter:
                         pr.add_path(tuple(path))
                         # Do not get next path if reached max_paths
@@ -393,6 +410,19 @@ class ModelChecker(object):
 
     def make_false_result(self, result_code, max_paths, max_path_length):
         return PathResult(False, result_code, max_paths, max_path_length)
+
+    def update_filter_func(self, agent_filter_func):
+        """Converts a function filtering agents to a function filtering nodes
+        depending on the model type.
+        """
+        def node_filter_func(n):
+            ag = self.get_agent(n)
+            return agent_filter_func(ag)
+        return node_filter_func
+
+    def get_agent(node):
+        """Get an INDRA agent given graph node."""
+        raise NotImplementedError("Method must be implemented in child class.")
 
     def get_graph(self, **kwargs):
         """Return a graph  with signed nodes to find the path."""
