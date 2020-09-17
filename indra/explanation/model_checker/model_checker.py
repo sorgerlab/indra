@@ -159,6 +159,7 @@ class ModelChecker(object):
         # Whether to do sampling
         self.do_sampling = do_sampling
         self.graph = None
+        self.nodes_to_agents = {}
 
     def add_statements(self, stmts):
         """Add to the list of statements to check against the model.
@@ -257,7 +258,8 @@ class ModelChecker(object):
             self.graph.remove_node(common_target)
         else:
             result = self.find_paths(input_set, list(obj_list)[0], max_paths,
-                                     max_path_length, loop, dummy_target=False)
+                                     max_path_length, loop, dummy_target=False,
+                                     filter_func=node_filter_func)
         if result.path_found:
             logger.info('Found paths for %s' % stmt)
             return result
@@ -348,7 +350,8 @@ class ModelChecker(object):
         path_lengths = []
         path_metrics = []
         sources = []
-        for source, path_length in find_sources(self.graph, target, input_set):
+        for source, path_length in find_sources(self.graph, target, input_set,
+                                                filter_func):
             # If a dummy target is used, we need to subtract one edge.
             # In case of loops, we are already missing one edge, there's no
             # need to subtract one more.
@@ -415,8 +418,11 @@ class ModelChecker(object):
         """Converts a function filtering agents to a function filtering nodes
         depending on the model type.
         """
+        if agent_filter_func is None:
+            return None
+
         def node_filter_func(n):
-            ag = self.get_agent(n)
+            ag = self.nodes_to_agents[n[0]]
             return agent_filter_func(ag)
         return node_filter_func
 
