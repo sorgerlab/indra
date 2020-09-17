@@ -1,5 +1,6 @@
 """A client for accessing reader output from the DART system."""
-
+import os
+import tqdm
 import json
 import logging
 import requests
@@ -43,7 +44,7 @@ def get_content_by_storage_key(storage_key):
 
 
 def get_reader_outputs(readers=None, versions=None, document_ids=None,
-                       timestamp=None):
+                       timestamp=None, local_storage=None):
     """Return reader outputs by querying the DART API.
 
     Parameters
@@ -57,6 +58,10 @@ def get_reader_outputs(readers=None, versions=None, document_ids=None,
     timestamp : dict("on"|"before"|"after",str)
         The timestamp string must of format "yyyy-mm-dd" or "yyyy-mm-dd
         hh:mm:ss" (only for "before" and "after").
+    local_storage : Optional[str]
+        The path to a local folder in which the downloaded reader
+        outputs should be stored. If not given, the outputs are
+        just returned, not stored.
 
     Returns
     -------
@@ -69,16 +74,21 @@ def get_reader_outputs(readers=None, versions=None, document_ids=None,
                                         timestamp=timestamp)
     logger.info('Got %d document storage keys. Fetching output...' %
                 len(records))
-    return download_records(records)
+    reader_outputs = download_records(records, local_storage)
+    return reader_outputs
 
 
-def download_records(records):
+def download_records(records, local_storage=None):
     """Return reader outputs corresponding to a list of records.
 
     Parameters
     ----------
     records : list of dict
         A list of records returned from the reader output query.
+    local_storage : Optional[str]
+        The path to a local folder in which the downloaded reader
+        outputs should be stored. If not given, the outputs are
+        just returned, not stored.
 
     Returns
     -------
@@ -88,16 +98,39 @@ def download_records(records):
     """
     # Loop document keys and get documents
     reader_outputs = defaultdict(dict)
-    for record in records:
-        reader = record['identity']
-        doc_id = record['document_id']
+    for record in tqdm.tqdm(records):
         storage_key = record['storage_key']
         try:
-            reader_outputs[reader][doc_id] = \
-                get_content_by_storage_key(storage_key)
+            output = None
+            if local_storage:
+                fname = get_local_storage_path(local_storage, record)
+                if os.path.exists(fname):
+                    with open(fname, 'r') as fh:
+                        output = fh.read()
+            if output is None:
+                output = get_content_by_storage_key(storage_key)
+            reader_outputs[record['identity']][record['document_id']] = output
+            if local_storage:
+                store_reader_output(local_storage, record, output)
         except Exception as e:
             logger.warning('Error downloading %s' % storage_key)
-    return dict(reader_outputs)
+    reader_outputs = dict(reader_outputs)
+    return reader_outputs
+
+
+def store_reader_output(path, record, output):
+    """Save a reader output in a standardized form locally."""
+    fname = get_local_storage_path(path, record)
+    with open(fname, 'w') as fh:
+        fh.write(output)
+
+
+def get_local_storage_path(path, record):
+    folder = os.path.join(path, record['identity'], record['version'])
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    fname = os.path.join(folder, record['document_id'])
+    return fname
 
 
 def prioritize_records(records, priorities=None):
@@ -186,6 +219,12 @@ def get_reader_output_records(readers=None, versions=None, document_ids=None,
     if not rj or 'records' not in rj:
         return []
     return rj['records']
+
+
+def get_reader_versions(reader):
+    """Return the available versions for a given reader."""
+    records = get_reader_output_records([reader])
+    return {record['version'] for record in records}
 
 
 def _check_lists(lst):
