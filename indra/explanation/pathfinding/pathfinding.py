@@ -24,7 +24,9 @@ logger = logging.getLogger(__name__)
 # Copy from networkx.algorithms.simple_paths
 # Added ignore_nodes and ignore_edges arguments
 def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
-                          ignore_edges=None, hashes=None, ref_counts_function=None, strict_mesh_id_filtering=False,
+                          ignore_edges=None, hashes=None,
+                          ref_counts_function=None,
+                          strict_mesh_id_filtering=False,
                           const_c=1, const_tk=10):
     """Generate all simple paths in the graph G from source to target,
        starting from shortest ones.
@@ -137,12 +139,17 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
         else:
             weight = 'context_weight'
             def length_func(path):
-                return sum(G.adj[u][v][weight] for (u, v) in zip(path, path[1:]))
-            def shortest_path_func(G, source, target, weight, ignore_nodes, ignore_edges,
-                                   force_edges):
-                return simple_paths._bidirectional_dijkstra(G, source, target, weight,
-                                                            ignore_nodes, ignore_edges)
-            collect_weights = lambda path : [G[u][v]['context_weight'] for u, v in zip(path[:-1], path[1:])]
+                return sum(G.adj[u][v][weight]
+                           for (u, v) in zip(path, path[1:]))
+            def shortest_path_func(G, source, target, weight, ignore_nodes,
+                                   ignore_edges, force_edges):
+                return simple_paths._bidirectional_dijkstra(G, source, target,
+                                                            weight,
+                                                            ignore_nodes,
+                                                            ignore_edges)
+            collect_weights = lambda path : [G[u][v]['context_weight']
+                                             for u, v in zip(path[:-1],
+                                                             path[1:])]
     else:
         if strict_mesh_id_filtering:
             return []
@@ -152,23 +159,33 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
             collect_weights = lambda path : ['N/A'] * (len(path) - 1)
         else:
             def length_func(path):
-                return sum(G.adj[u][v][weight] for (u, v) in zip(path, path[1:]))
-            def shortest_path_func(G, source, target, weight, ignore_nodes, ignore_edges,
-                                   force_edges):
-                return simple_paths._bidirectional_dijkstra(G, source, target, weight,
-                                                            ignore_nodes, ignore_edges)
-            collect_weights = lambda path : [G[u][v][weight] for u, v in zip(path[:-1], path[1:])]
+                return sum(G.adj[u][v][weight]
+                           for (u, v) in zip(path, path[1:]))
+            def shortest_path_func(G, source, target, weight, ignore_nodes,
+                                   ignore_edges, force_edges):
+                return simple_paths._bidirectional_dijkstra(G, source, target,
+                                                            weight,
+                                                            ignore_nodes,
+                                                            ignore_edges)
+            collect_weights = lambda path : [G[u][v][weight]
+                                            for u, v in zip(path[:-1],
+                                                            path[1:])]
 
     allowed_edges = []
     if hashes:
         for u, v, data, in G.edges(data=True):
-            ref_counts, total = ref_counts_function([d['stmt_hash'] for d in data['statements']])
+            ref_counts, total = \
+                ref_counts_function([d['stmt_hash']
+                                     for d in data['statements']])
             if not ref_counts:
                 ref_counts = 1e-15
-            data['context_weight'] = -const_c * ln(ref_counts / (total + const_tk))
+            data['context_weight'] = \
+                -const_c * ln(ref_counts / (total + const_tk))
 
-    culled_ignored_nodes = set() if ignore_nodes is None else set(ignore_nodes)
-    culled_ignored_edges = set() if ignore_edges is None else set(ignore_edges)
+    culled_ignored_nodes = set() \
+        if ignore_nodes is None else set(ignore_nodes)
+    culled_ignored_edges = set() \
+        if ignore_edges is None else set(ignore_edges)
     listA = list()
     listB = simple_paths.PathBuffer()
     prev_path = None
@@ -200,7 +217,8 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                 cur_ignore_nodes.add(root[-1])
         if listB:
             path = listB.pop()
-            rcvd_ignore_values = yield path, [truncate(w) for w in collect_weights(path)]
+            rcvd_ignore_values = yield path, [truncate(w)
+                                              for w in collect_weights(path)]
             if rcvd_ignore_values is not None:
                 culled_ignored_nodes = culled_ignored_nodes.union(
                     rcvd_ignore_values[0])
@@ -329,7 +347,8 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
                             ign_vals = None
                             pass
                         else:
-                            ign_vals = yield new_path, ['N/A'] * (len(new_path) - 1)
+                            ign_vals = yield new_path, \
+                                       ['N/A'] * (len(new_path) - 1)
                             yielded_paths += 1
                             yielded_neighbors += 1
 
@@ -340,7 +359,8 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
                             ign_vals = None
                             pass
                         else:
-                            ign_vals = yield new_path, ['N/A'] * (len(new_path) - 1)
+                            ign_vals = yield new_path, \
+                                       ['N/A'] * (len(new_path) - 1)
                             yielded_paths += 1
                             yielded_neighbors += 1
 
@@ -368,7 +388,8 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
                         ign_vals = None
                         pass
                     else:
-                        ign_vals = yield new_path, ['N/A'] * (len(new_path) - 1)
+                        ign_vals = yield new_path, \
+                                   ['N/A'] * (len(new_path) - 1)
                         yielded_paths += 1
                         yielded_neighbors += 1
                 else:
