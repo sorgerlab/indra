@@ -1,5 +1,5 @@
 __all__ = ['shortest_simple_paths', 'bfs_search', 'find_sources',
-``           'get_path_iter', 'bfs_search_multiple_nodes']
+           'get_path_iter', 'bfs_search_multiple_nodes']
 import sys
 import logging
 from collections import deque
@@ -142,7 +142,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                                    force_edges):
                 return simple_paths._bidirectional_dijkstra(G, source, target, weight,
                                                             ignore_nodes, ignore_edges)
-            collect_weights = lambda path : [truncate(G[u][v]['context_weight']) for u, v in zip(path[:-1], path[1:])]
+            collect_weights = lambda path : [G[u][v]['context_weight'] for u, v in zip(path[:-1], path[1:])]
     else:
         if strict_mesh_id_filtering:
             return []
@@ -157,7 +157,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                                    force_edges):
                 return simple_paths._bidirectional_dijkstra(G, source, target, weight,
                                                             ignore_nodes, ignore_edges)
-            collect_weights = lambda path : [truncate(G[u][v][weight]) for u, v in zip(path[:-1], path[1:])]
+            collect_weights = lambda path : [G[u][v][weight] for u, v in zip(path[:-1], path[1:])]
 
     allowed_edges = []
     if hashes:
@@ -200,7 +200,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                 cur_ignore_nodes.add(root[-1])
         if listB:
             path = listB.pop()
-            rcvd_ignore_values = yield path, collect_weights(path)
+            rcvd_ignore_values = yield path, [truncate(w) for w in collect_weights(path)]
             if rcvd_ignore_values is not None:
                 culled_ignored_nodes = culled_ignored_nodes.union(
                     rcvd_ignore_values[0])
@@ -776,11 +776,11 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
                 ref_counts = 1e-15
             data['context_weight'] = \
                 -const_c * ln(ref_counts / (total + const_tk))
-        collect_weights = lambda path : [truncate(g[u][v]['context_weight'])
+        collect_weights = lambda path : [g[u][v]['context_weight']
             for u, v in zip(path[:-1], path[1:])]
         weight='context_weight'
     else:
-        collect_weights = lambda path : [truncate(g[u][v][weight])
+        collect_weights = lambda path : [g[u][v][weight]
             for u, v in zip(path[:-1], path[1:])]
 
     if reverse:
@@ -797,7 +797,7 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
             if not proper_nodes(path) or not proper_edges(path)\
                 or g.nodes[path[-1]]['ns'].lower() not in terminal_ns:
                     return False
-            for u in path:
+            for u in path[:-1]:
                 if g.nodes[u]['ns'].lower() in terminal_ns:
                     return False
             return True
@@ -807,14 +807,15 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
 
     paths = list(nx.single_source_dijkstra_path(g, start,
                                                 weight=weight).values())[1:]
+    paths.sort(key=lambda x : sum(collect_weights(x)))
     if path_limit is not None:
         for p in paths:
             path_limit -= 1
             if proper_path(p):
-                yield p, collect_weights(p)
+                yield p, [truncate(w) for w in collect_weights(p)]
             if not path_limit:
                 break
     else:
         for p in paths:
             if proper_path(p):
-                yield p, collect_weights(p)
+                yield p, [truncate(w) for w in collect_weights(p)]
