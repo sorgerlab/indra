@@ -16,7 +16,7 @@ from numpy import log as ln
 from .util import get_sorted_neighbors
 
 from math import trunc
-truncate = lambda n : trunc(n * 100) / 100
+truncate = lambda n : n if type(n) if str else (trunc(n * 100) / 100)
 
 logger = logging.getLogger(__name__)
 
