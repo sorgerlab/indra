@@ -1,5 +1,5 @@
 __all__ = ['shortest_simple_paths', 'bfs_search', 'find_sources',
-           'get_path_iter', 'bfs_search_multiple_nodes']
+           'get_path_iter', 'bfs_search_multiple_nodes', 'open_dijkstra_search']
 import sys
 import logging
 from collections import deque
@@ -16,7 +16,7 @@ from numpy import log as ln
 from .util import get_sorted_neighbors
 
 from math import trunc
-truncate = lambda n : n if type(n) if str else (trunc(n * 100) / 100)
+truncate = lambda n : n if type(n) is str else (trunc(n * 100) / 100)
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +59,12 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
     hashes : list
         hashes specifying (if not empty) allowed edges
     
-    ref_count_function : function
+    ref_counts_function : function
         function counting references and PMIDs of an edge from its
         statement hashes
+
+    strict_mesh_id_filtering : bool
+        if true, exclude all edges not relevant to provided hashes
 
     const_c : int
         Constant used in MeSH IDs-based weight calculation
@@ -136,6 +139,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
         if strict_mesh_id_filtering:
             length_func = len
             shortest_path_func = _bidirectional_shortest_path
+            collect_weights = lambda path : ['N/A'] * len(path)
         else:
             weight = 'context_weight'
             def length_func(path):
@@ -175,8 +179,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
     if hashes:
         for u, v, data, in G.edges(data=True):
             ref_counts, total = \
-                ref_counts_function([d['stmt_hash']
-                                     for d in data['statements']])
+                ref_counts_function(u, v)
             if not ref_counts:
                 ref_counts = 1e-15
             data['context_weight'] = \
@@ -273,6 +276,8 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
         and visited. Default: 1073741824 bytes (== 1 GiB).
     hashes : list
         List of hashes used (if not empty) to select edges for path finding
+    strict_mesh_id_filtering : bool
+        If true, exclude all edges not relevant to provided hashes
 
     Yields
     ------
@@ -770,7 +775,7 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
        edges to ignore, optional
     weight : str
         Name of edge's attribute used as its weight
-    ref_count_function : function
+    ref_counts_function : function
         function counting references and PMIDs of an edge from its
         statement hashes
     const_c : int
@@ -784,15 +789,9 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
     path : tuple(node)
         Paths in the bfs search starting from `source`.
     """
-    allowed_edges = []
     if hashes:
-        edge_by_hash = g.graph['edge_by_hash']
-        for h in hashes:
-            if h in edge_by_hash:
-                allowed_edges.append(edge_by_hash[h])
         for u, v, data in g.edges(data=True):
-            ref_counts, total = ref_counts_function([d['stmt_hash']
-                for d in data['statements']])
+            ref_counts, total = ref_counts_function(u, v)
             if not ref_counts:
                 ref_counts = 1e-15
             data['context_weight'] = \
