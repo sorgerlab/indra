@@ -221,20 +221,21 @@ class PysbModelChecker(ModelChecker):
         if self.graph:
             return self.graph
         im = self.get_im(force_update=True)
+        self.update_nodes_to_agents(self.model_stmts, add_namespaces)
         if prune_im:
             self.prune_influence_map()
         if prune_im_degrade:
             self.prune_influence_map_degrade_bind_positive(self.model_stmts)
         if prune_im_subj_obj:
             self.prune_influence_map_subj_obj()
-        if add_namespaces:
-            self.add_namespace_to_influence_map(self.model_stmts)
         self.graph = signed_edges_to_signed_nodes(
             im, prune_nodes=False, edge_signs={'pos': 1, 'neg': -1})
         return self.graph
 
-    def add_namespace_to_influence_map(self, model_stmts):
-        """Add a namespace to each node in influence map."""
+    def update_nodes_to_agents(self, model_stmts, add_namespaces=False):
+        """Update influence map nodes to agents mapping, optionally add
+        namespaces to influence map.
+        """
         im = self.get_im()
         for node, data in im.nodes(data=True):
             ag = None
@@ -249,11 +250,13 @@ class PysbModelChecker(ModelChecker):
                     if agents:
                         ag = agents[0]
             if ag:
-                ns_order = default_ns_order + ['PUBCHEM', 'TEXT']
-                ns = ag.get_grounding(ns_order)[0]
-                data['ns'] = ns
+                self.nodes_to_agents[node] = ag
+                if add_namespaces:
+                    ns_order = default_ns_order + ['PUBCHEM', 'TEXT']
+                    ns = ag.get_grounding(ns_order)[0]
+                    data['ns'] = ns
             else:
-                logger.warning('Could not get grounding for %s' % node)
+                logger.warning('Could not get agent for %s' % node)
 
     def process_statement(self, stmt):
         self.get_im()
