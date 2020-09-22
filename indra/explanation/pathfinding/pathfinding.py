@@ -1,5 +1,7 @@
 __all__ = ['shortest_simple_paths', 'bfs_search', 'find_sources',
-           'get_path_iter', 'bfs_search_multiple_nodes', 'open_dijkstra_search']
+           'get_path_iter', 'bfs_search_multiple_nodes',
+           '_bidirectional_shortest_path', '_bidirectional_pred_succ',
+           'open_dijkstra_search']
 import sys
 import logging
 from collections import deque
@@ -765,14 +767,14 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
         path
     hashes : list
         List of hashes used to set edge weights
-    terminal_ns : list[str]
-        Force a path to terminate when any of the namespaces in this list
-        are encountered and only yield paths that terminate at these
-        namepsaces
     ignore_nodes : container of nodes
        nodes to ignore, optional
     ignore_edges : container of edges
        edges to ignore, optional
+    terminal_ns : list[str]
+        Force a path to terminate when any of the namespaces in this list
+        are encountered and only yield paths that terminate at these
+        namepsaces
     weight : str
         Name of edge's attribute used as its weight
     ref_counts_function : function
@@ -782,7 +784,7 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
         Constant used in MeSH IDs-based weight calculation
     const_tk : int
         Constant used in MeSH IDs-based weight calculation
-    
+
 
     Yields
     ------
