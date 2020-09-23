@@ -286,6 +286,8 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
             allowed_edges = [(u, v) for u, v in g.edges() if allow_edge(u, v)]
         else:
             return []
+    else:
+        allowed_edges = []
 
     queue = deque([(source_node,)])
     visited = ({source_node}).union(node_blacklist) \
