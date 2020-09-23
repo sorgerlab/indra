@@ -109,9 +109,9 @@ def download_records(records, local_storage=None):
                         output = fh.read()
             if output is None:
                 output = get_content_by_storage_key(storage_key)
+                if local_storage:
+                    store_reader_output(local_storage, record, output)
             reader_outputs[record['identity']][record['document_id']] = output
-            if local_storage:
-                store_reader_output(local_storage, record, output)
         except Exception as e:
             logger.warning('Error downloading %s' % storage_key)
     reader_outputs = dict(reader_outputs)

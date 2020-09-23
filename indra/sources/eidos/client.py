@@ -1,9 +1,15 @@
 __all__ = ['process_text', 'reground_texts']
 
+import os
 import tqdm
 import math
+import pickle
+import logging
 import requests
 from indra.util import batch_iter
+
+
+logger = logging.getLogger(__name__)
 
 
 def process_text(text, webservice):
@@ -34,7 +40,7 @@ def process_text(text, webservice):
 
 
 def reground_texts(texts, ont_yml, webservice, topk=10, is_canonicalized=False,
-                   filter=True):
+                   filter=True, cache_path=None):
     """Ground concept texts given an ontology with an Eidos web service.
 
     Parameters
@@ -63,9 +69,18 @@ def reground_texts(texts, ont_yml, webservice, topk=10, is_canonicalized=False,
         A JSON dict of the results from the Eidos webservice.
     """
     all_results = []
-    for text_batch in tqdm.tqdm(batch_iter(texts, batch_size=500,
+    grounding_cache = {}
+    if cache_path:
+        if os.path.exists(cache_path):
+            with open(cache_path, 'rb') as fh:
+                grounding_cache = pickle.load(fh)
+                logger.info('Loaded %d groundings from cache' %
+                            len(grounding_cache))
+    texts_to_ground = list(set(texts) - set(grounding_cache.keys()))
+    logger.info('Grounding a total of %d texts' % len(texts_to_ground))
+    for text_batch in tqdm.tqdm(batch_iter(texts_to_ground, batch_size=500,
                                            return_func=list),
-                                total=math.ceil(len(texts)/500)):
+                                total=math.ceil(len(texts_to_ground)/500)):
         params = {
             'ontologyYaml': ont_yml,
             'texts': text_batch,
@@ -76,7 +91,16 @@ def reground_texts(texts, ont_yml, webservice, topk=10, is_canonicalized=False,
         res = requests.post('%s/reground' % webservice,
                             json=params)
         res.raise_for_status()
-        all_results += grounding_dict_to_list(res.json())
+        grounding_for_texts = grounding_dict_to_list(res.json())
+
+        for txt, grounding in zip(text_batch,
+                                  grounding_for_texts):
+            grounding_cache[txt] = grounding
+
+    all_results = [grounding_cache[txt] for txt in texts]
+    if cache_path:
+        with open(cache_path, 'wb') as fh:
+            pickle.dump(grounding_cache, fh)
     return all_results
 
 
