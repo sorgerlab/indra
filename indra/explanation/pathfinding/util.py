@@ -86,9 +86,6 @@ def get_sorted_neighbors(G, node, reverse, force_edges=None):
     reverse : bool
         Indicates direction of search. Neighbors are either successors
         (downstream search) or predecessors (reverse search).
-    hashes : list
-        List of hashes specifying (if not empty) the edges to be used for
-        getting the neighbors
     """
     if reverse:
         if force_edges:

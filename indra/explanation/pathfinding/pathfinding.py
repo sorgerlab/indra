@@ -36,36 +36,26 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
     Parameters
     ----------
     G : NetworkX graph
-
     source : node
        Starting node for path
-
     target : node
        Ending node for path
-
     weight : string
         Name of the edge attribute to be used as a weight. If None all
         edges are considered to have unit weight. Default value None.
-
     ignore_nodes : container of nodes
        nodes to ignore, optional
-
     ignore_edges : container of edges
        edges to ignore, optional
-
     hashes : list
         hashes specifying (if not empty) allowed edges
-    
     ref_counts_function : function
         function counting references and PMIDs of an edge from its
         statement hashes
-
     strict_mesh_id_filtering : bool
         if true, exclude all edges not relevant to provided hashes
-
     const_c : int
         Constant used in MeSH IDs-based weight calculation
-
     const_tk : int
         Constant used in MeSH IDs-based weight calculation
 
@@ -79,10 +69,8 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
     ------
     NetworkXNoPath
        If no path exists between source and target.
-
     NetworkXError
        If source or target nodes are not in the input graph.
-
     NetworkXNotImplemented
        If the input graph is a Multi[Di]Graph.
 
@@ -549,23 +537,17 @@ def _bidirectional_shortest_path(G, source, target,
     Parameters
     ----------
     G : NetworkX graph
-
     source : node
        starting node for path
-
     target : node
        ending node for path
-
     ignore_nodes : container of nodes
        nodes to ignore, optional
-
     ignore_edges : container of edges
        edges to ignore, optional
-
     weight : None
        This function accepts a weight argument for convenience of
        shortest_simple_paths function. It will be ignored.
-
     force_edges : list
         list specifying (if not empty) allowed edges
 
