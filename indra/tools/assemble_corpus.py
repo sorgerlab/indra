@@ -29,7 +29,8 @@ def _filter(kwargs, arg_list):
     return dict(filter(lambda x: x[0] in arg_list, kwargs.items()))
 
 
-def dump_statements(stmts, fname, protocol=4):
+@register_pipeline
+def dump_statements(stmts_in, fname, protocol=4):
     """Dump a list of statements into a pickle file.
 
     Parameters
@@ -40,9 +41,10 @@ def dump_statements(stmts, fname, protocol=4):
         The pickle protocol to use (use 2 for Python 2 compatibility).
         Default: 4
     """
-    logger.info('Dumping %d statements into %s...' % (len(stmts), fname))
+    logger.info('Dumping %d statements into %s...' % (len(stmts_in), fname))
     with open(fname, 'wb') as fh:
-        pickle.dump(stmts, fh, protocol=protocol)
+        pickle.dump(stmts_in, fh, protocol=protocol)
+    return stmts_in
 
 
 def load_statements(fname, as_dict=False):

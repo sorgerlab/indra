@@ -454,6 +454,8 @@ class CWMSProcessor(object):
         if element_text_element is None:
             return None
         element_text = element_text_element.text
+        if element_text is None:
+            return None
         element_db_refs = {'TEXT': element_text}
         element_name = sanitize_name(element_text)
 
