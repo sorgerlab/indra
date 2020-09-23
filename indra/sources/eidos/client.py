@@ -1,9 +1,15 @@
 __all__ = ['process_text', 'reground_texts']
 
+import os
 import tqdm
 import math
+import pickle
+import logging
 import requests
 from indra.util import batch_iter
+
+
+logger = logging.getLogger(__name__)
 
 
 def process_text(text, webservice):
@@ -34,7 +40,7 @@ def process_text(text, webservice):
 
 
 def reground_texts(texts, ont_yml, webservice, topk=10, is_canonicalized=False,
-                   filter=True):
+                   filter=True, cache_path=None):
     """Ground concept texts given an ontology with an Eidos web service.
 
     Parameters
@@ -64,30 +70,40 @@ def reground_texts(texts, ont_yml, webservice, topk=10, is_canonicalized=False,
     """
     all_results = []
     grounding_cache = {}
+    if cache_path:
+        if os.path.exists(cache_path):
+            with open(cache_path, 'rb') as fh:
+                grounding_cache = pickle.load(fh)
+                logger.info('Loaded %d groundings from cache' %
+                            len(grounding_cache))
     for text_batch in tqdm.tqdm(batch_iter(texts, batch_size=500,
                                            return_func=list),
                                 total=math.ceil(len(texts)/500)):
-        text_lookup = {idx: txt for idx, txt in enumerate(text_batch)}
         texts_to_ground = sorted({t for t in text_batch
                                   if t not in grounding_cache})
-        params = {
-            'ontologyYaml': ont_yml,
-            'texts': texts_to_ground,
-            'topk': topk,
-            'isAlreadyCanonicalized': is_canonicalized,
-            'filter': filter
-        }
-        res = requests.post('%s/reground' % webservice,
-                            json=params)
-        res.raise_for_status()
-        grounding_for_texts_to_ground = grounding_dict_to_list(res.json())
+        logger.info('Grounding %d texts in this batch' % len(texts_to_ground))
+        if texts_to_ground:
+            params = {
+                'ontologyYaml': ont_yml,
+                'texts': texts_to_ground,
+                'topk': topk,
+                'isAlreadyCanonicalized': is_canonicalized,
+                'filter': filter
+            }
+            res = requests.post('%s/reground' % webservice,
+                                json=params)
+            res.raise_for_status()
+            grounding_for_texts_to_ground = grounding_dict_to_list(res.json())
 
-        for txt, grounding in zip(texts_to_ground,
-                                  grounding_for_texts_to_ground):
-            grounding_cache[txt] = grounding
+            for txt, grounding in zip(texts_to_ground,
+                                      grounding_for_texts_to_ground):
+                grounding_cache[txt] = grounding
 
         for txt in text_batch:
             all_results.append(grounding_cache[txt])
+    if cache_path:
+        with open(cache_path, 'wb') as fh:
+            pickle.dump(grounding_cache, fh)
     return all_results
 
 
