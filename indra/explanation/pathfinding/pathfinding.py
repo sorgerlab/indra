@@ -135,10 +135,14 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
         t = target[0] if isinstance(target, tuple) else target
         raise nx.NodeNotFound('target node %s not in graph' % t)
 
+    allowed_edges = []
     if hashes:
         if strict_mesh_id_filtering:
             length_func = len
             shortest_path_func = _bidirectional_shortest_path
+            for u, v in G.edges():
+                if ref_counts_function(u, v)[0]:
+                    allowed_edges.append((u, v))
         else:
             weight = 'context_weight'
             def length_func(path):
@@ -149,7 +153,14 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                 return simple_paths._bidirectional_dijkstra(G, source, target,
                                                             weight,
                                                             ignore_nodes,
-                                                            ignore_edges)]
+                                                            ignore_edges)
+            for u, v, data, in G.edges(data=True):
+                ref_counts, total = \
+                    ref_counts_function(u, v)
+                if not ref_counts:
+                    ref_counts = 1e-15
+                data['context_weight'] = \
+                    -const_c * ln(ref_counts / (total + const_tk))
     else:
         if strict_mesh_id_filtering:
             return []
@@ -166,16 +177,6 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                                                             weight,
                                                             ignore_nodes,
                                                             ignore_edges)
-
-    allowed_edges = []
-    if hashes:
-        for u, v, data, in G.edges(data=True):
-            ref_counts, total = \
-                ref_counts_function(u, v)
-            if not ref_counts:
-                ref_counts = 1e-15
-            data['context_weight'] = \
-                -const_c * ln(ref_counts / (total + const_tk))
 
     culled_ignored_nodes = set() \
         if ignore_nodes is None else set(ignore_nodes)
@@ -228,8 +229,8 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 # networkx.algorithms.traversal.breadth_first_search::generic_bfs_edges
 def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
                max_per_node=5, node_filter=None, node_blacklist=None,
-               terminal_ns=None, sign=None, max_memory=int(2**29), hashes=None, 
-               strict_mesh_id_filtering=False, **kwargs):
+               terminal_ns=None, sign=None, max_memory=int(2**29), hashes=None,
+               allow_edge=None, strict_mesh_id_filtering=False, **kwargs):
     """Do breadth first search from a given node and yield paths
 
     Parameters
@@ -267,6 +268,8 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
         and visited. Default: 1073741824 bytes (== 1 GiB).
     hashes : list
         List of hashes used (if not empty) to select edges for path finding
+    allow_edge : function(str, str): bool
+        Function telling the edge must be omitted
     strict_mesh_id_filtering : bool
         If true, exclude all edges not relevant to provided hashes
 
@@ -278,13 +281,9 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
     int_plus = 0
     int_minus = 1
 
-    allowed_edges = []
     if strict_mesh_id_filtering:
         if hashes:
-            edge_by_hash = g.graph['edge_by_hash']
-            for h in hashes:
-                if h in edge_by_hash:
-                    allowed_edges.append(edge_by_hash[h])
+            allowed_edges = [(u, v) for u, v in g.edges() if allow_edge(u, v)]
         else:
             return []
 
@@ -782,16 +781,15 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
             ref_counts, total = ref_counts_function(u, v)
             if not ref_counts:
                 ref_counts = 1e-15
-            data['context_weight'] = \
+            data[weight] = \
                 -const_c * ln(ref_counts / (total + const_tk))
-        def weight_sum(path):
-            return sum([g[u][v]['context_weight']
-                        for u, v in zip(path[:-1], path[1:])])
-        weight='context_weight'
+        def weights_sum(path):
+            return sum(g[u][v][weight]
+                       for u, v in zip(path[:-1], path[1:]))
     else:
-        def weight_sum(path):
-            return sum([g[u][v][weight]
-                        for u, v in zip(path[:-1], path[1:])])
+        def weights_sum(path):
+            return sum(g[u][v][weight]
+                       for u, v in zip(path[:-1], path[1:]))
 
     if reverse:
         g = g.reverse(copy=False)
