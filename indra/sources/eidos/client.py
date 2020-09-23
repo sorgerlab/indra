@@ -63,12 +63,16 @@ def reground_texts(texts, ont_yml, webservice, topk=10, is_canonicalized=False,
         A JSON dict of the results from the Eidos webservice.
     """
     all_results = []
+    grounding_cache = {}
     for text_batch in tqdm.tqdm(batch_iter(texts, batch_size=500,
                                            return_func=list),
                                 total=math.ceil(len(texts)/500)):
+        text_lookup = {idx: txt for idx, txt in enumerate(text_batch)}
+        texts_to_ground = sorted({t for t in text_batch
+                                  if t not in grounding_cache})
         params = {
             'ontologyYaml': ont_yml,
-            'texts': text_batch,
+            'texts': texts_to_ground,
             'topk': topk,
             'isAlreadyCanonicalized': is_canonicalized,
             'filter': filter
@@ -76,7 +80,14 @@ def reground_texts(texts, ont_yml, webservice, topk=10, is_canonicalized=False,
         res = requests.post('%s/reground' % webservice,
                             json=params)
         res.raise_for_status()
-        all_results += grounding_dict_to_list(res.json())
+        grounding_for_texts_to_ground = grounding_dict_to_list(res.json())
+
+        for txt, grounding in zip(texts_to_ground,
+                                  grounding_for_texts_to_ground):
+            grounding_cache[txt] = grounding
+
+        for txt in text_batch:
+            all_results.append(grounding_cache[txt])
     return all_results
 
 
