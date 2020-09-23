@@ -10,9 +10,6 @@ from copy import deepcopy
 import networkx as nx
 import networkx.algorithms.simple_paths as simple_paths
 
-from heapq import heappush, heappop
-from itertools import count
-
 from numpy import log as ln
 
 from .util import get_sorted_neighbors
