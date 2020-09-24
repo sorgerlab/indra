@@ -144,8 +144,11 @@ class HumeJsonLdProcessor(object):
         documents = self.tree.execute("$.documents")
         for doc in documents:
             sentences = {s['@id']: s['text'] for s in doc.get('sentences', [])}
+            full_text = ' '.join(sentence for sentence_id, sentence
+                                 in sorted(sentences.items()))
             self.document_dict[doc['@id']] = {'sentences': sentences,
-                                              'location': doc['location']}
+                                              'location': doc['location'],
+                                              'full_text': full_text}
 
     def _make_world_context(self, entity):
         """Get place and time info from the json for this entity."""
@@ -259,7 +262,8 @@ class HumeJsonLdProcessor(object):
         minb, maxb = self._get_bounds([theme_grounding, process_grounding,
                                        property_grounding])
         event_sentence, _ = self._get_text_and_bounds(event['provenance'][0])
-        entity_text = event_sentence[minb:maxb+1]
+        entity_text = \
+            list(self.document_dict.values())[0]['full_text'][minb:maxb+1]
         concept.db_refs['TEXT'] = entity_text
 
         process_grounding_wm = process_grounding.get('WM')
@@ -268,7 +272,7 @@ class HumeJsonLdProcessor(object):
 
         # FIXME: what do we do if there are multiple entries in
         #  theme/property grounding?
-        assert process_grounding_wm is None or len(process_grounding_wm) == 1
+        #assert process_grounding_wm is None or len(process_grounding_wm) == 1
         assert property_grounding_wm is None or len(property_grounding_wm) == 1
         assert theme_grounding_wm is None or len(theme_grounding_wm) == 1
         property_grounding_wm = property_grounding_wm[0] \
@@ -277,6 +281,13 @@ class HumeJsonLdProcessor(object):
             if theme_grounding_wm else None
         process_grounding_wm = process_grounding_wm[0] \
             if process_grounding_wm else None
+
+        # For some reason the event's grounding is sometimes duplicated as
+        # property grounding (e.g., price), in this case we treat the grounding
+        # as a property
+        if process_grounding_wm and property_grounding_wm and \
+                process_grounding_wm[0] == property_grounding_wm[0]:
+            process_grounding_wm = None
 
         # First case: we have a theme so we apply the property and the process
         # to it
@@ -352,8 +363,11 @@ class HumeJsonLdProcessor(object):
         grounding_entries = sorted(list(set(groundings)),
                                    key=lambda x: (x[1], x[0].count('/'), x[0]),
                                    reverse=True)
-
-        _, bounds = self._get_text_and_bounds(entity['provenance'][0])
+        if 'mentions' in entity:
+            _, bounds = self._get_text_and_bounds(
+                entity['mentions'][0]['provenance'][0])
+        else:
+            _, bounds = self._get_text_and_bounds(entity['provenance'][0])
         db_refs['BOUNDS'] = bounds
         # We could get an empty list here in which case we don't add the
         # grounding
