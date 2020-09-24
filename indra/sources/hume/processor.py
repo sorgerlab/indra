@@ -258,6 +258,9 @@ class HumeJsonLdProcessor(object):
 
         minb, maxb = self._get_bounds([theme_grounding, process_grounding,
                                        property_grounding])
+        event_sentence, _ = self._get_text_and_bounds(event['provenance'][0])
+        entity_text = event_sentence[minb:maxb+1]
+        concept.db_refs['TEXT'] = entity_text
 
         process_grounding_wm = process_grounding.get('WM')
         theme_grounding_wm = theme_grounding.get('WM')
@@ -280,7 +283,7 @@ class HumeJsonLdProcessor(object):
         if theme_grounding:
             compositional_grounding = [[theme_grounding_wm,
                                         property_grounding_wm,
-                                       process_grounding_wm, None]]
+                                        process_grounding_wm, None]]
         # Second case: we don't have a theme so we take the process as the theme
         # and apply any property to it
         else:
@@ -350,7 +353,7 @@ class HumeJsonLdProcessor(object):
                                    key=lambda x: (x[1], x[0].count('/'), x[0]),
                                    reverse=True)
 
-        text, bounds = self._get_text_and_bounds(entity.get('provenance', {}))
+        _, bounds = self._get_text_and_bounds(entity['provenance'][0])
         db_refs['BOUNDS'] = bounds
         # We could get an empty list here in which case we don't add the
         # grounding
