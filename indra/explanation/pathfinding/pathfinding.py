@@ -490,7 +490,7 @@ def get_path_iter(graph, source, target, path_length, loop, dummy_target,
         pass
 
 
-def find_sources(graph, target, sources, filter_func=None, allow_source=True):
+def find_sources(graph, target, sources, filter_func=None):
     """Get the set of source nodes with paths to the target.
 
     Given a common target and  a list of sources (or None if test statement
@@ -509,6 +509,10 @@ def find_sources(graph, target, sources, filter_func=None, allow_source=True):
     sources : list[node]
         Signed nodes corresponding to the subject or upstream influence
         being checked.
+    filter_func : Optional[function]
+        A function to constrain the intermediate nodes in the path. A
+        function should take a node as a parameter and return True if the node
+        is allowed to be a path of a path and False otherwise.
 
     Returns
     -------
@@ -516,7 +520,8 @@ def find_sources(graph, target, sources, filter_func=None, allow_source=True):
         Yields tuples of source node and path length (int). If there are no
         paths to any of the given source nodes, the generator is empty.
     """
-    if allow_source and sources:
+    # Update filter function to not filter the sources
+    if sources is not None:
         filter_func = filter_except(filter_func, sources)
     # First, create a list of visited nodes
     # Adapted from
@@ -849,7 +854,7 @@ def open_dijkstra_search(g, start, reverse=False, path_limit=None,
 
 # This code is adapted from nx.algorithms.simple_paths._all_simple_paths_graph
 def simple_paths_with_constraints(G, source, target, cutoff=None,
-                                  filter_func=None, allow_target=True):
+                                  filter_func=None):
     """Find all simple paths between source and target with given constraints.
 
     Parameters
@@ -863,9 +868,9 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
     cutoff : Optional[int]
         Maximum depth of the paths.
     filter_func : Optional[function]
-        A function to constrain the search. A function should take a node as
-        a parameter and return True if the node should be filtered and False
-        otherwise.
+        A function to constrain the intermediate nodes in the path. A
+        function should take a node as a parameter and return True if the node
+        is allowed to be a path of a path and False otherwise.
 
     Returns
     -------
@@ -874,8 +879,8 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
     """
     if cutoff is None:
         cutoff = len(G) - 1
-    if allow_target:
-        filter_func = filter_except(filter_func, {target})
+    # Update filter function to not filter target
+    filter_func = filter_except(filter_func, {target})
     visited = OrderedDict.fromkeys([source])
     new_nodes = iter(G[source])
     if filter_func:
@@ -904,6 +909,7 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
 
 
 def filter_except(filter_func, nodes_to_keep):
+    """Update the filter function to keep some nodes."""
     if filter_func is None:
         return None
 
