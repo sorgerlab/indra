@@ -458,15 +458,19 @@ class CWMSProcessor(object):
         # to the main concept
         assoc_with = self._get_assoc_with_text(event_term)
 
+        # We're using a union of texts from multiple terms instead
         # Get the element's text and use it to construct a Concept
-        element_text_element = event_term.find('text')
-        if element_text_element is None:
-            return None
-        element_text = element_text_element.text
-        if element_text is None:
-            return None
-        element_db_refs = {'TEXT': element_text}
-        element_name = sanitize_name(element_text)
+
+        # element_text_element = event_term.find('text')
+        # if element_text_element is None:
+        #     return None
+        # element_text = element_text_element.text
+        # element_db_refs = {'TEXT': element_text}
+        # element_name = sanitize_name(element_text)
+
+        element_db_refs = {}
+        par = event_term.attrib['paragraph']
+        starts, ends = self._add_start_end(event_term, [], [])
 
         element_type_element = event_term.find('type')
         if element_type_element is not None:
@@ -482,11 +486,16 @@ class CWMSProcessor(object):
         if not theme_gr:
             arg_term = self._get_arg_event_term(event_term)
             if arg_term is not None:
+                starts, ends = self._add_start_end(arg_term, starts, ends)
                 assoc_term = self._get_assoc_with_term(arg_term)
                 if assoc_term is not None:
+                    starts, ends = self._add_start_end(
+                        assoc_term, starts, ends)
                     new_arg_term = self._get_arg_event_term(assoc_term)
                     # Theme grounding is usually at the "deepest" level
                     if new_arg_term is not None:
+                        starts, ends = self._add_start_end(
+                            new_arg_term, starts, ends)
                         theme_gr = self._get_wm_grounding(new_arg_term)
                         theme_proc_gr = self._get_wm_grounding(assoc_term)
                         theme_proc_prop_gr = self._get_wm_grounding(arg_term)
@@ -499,6 +508,11 @@ class CWMSProcessor(object):
                                 theme_proc_gr = extra_gr
                             else:
                                 theme_prop_gr = extra_gr
+
+        # Get a union of all texts
+        element_text = self.paragraphs[par][min(starts): max(ends)].rstrip()
+        element_db_refs['TEXT'] = element_text
+        element_name = sanitize_name(element_text)
 
         # Promote process grounding to theme if theme is missing
         if not theme_gr and theme_proc_gr:
@@ -530,6 +544,15 @@ class CWMSProcessor(object):
             if grounding_element is not None:
                 wm_gr = (grounding_element.text, 0.7)
         return wm_gr
+
+    def _add_start_end(self, term, starts, ends):
+        start = term.attrib.get('start')
+        end = term.attrib.get('end')
+        if start:
+            starts.append(int(start))
+        if end:
+            ends.append(int(end))
+        return starts, ends
 
     def get_event_or_migration(self, event_term):
         #if event_term.find('type').text in [
