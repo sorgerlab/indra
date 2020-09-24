@@ -203,7 +203,8 @@ class SofiaProcessor(object):
         #                Y/    \N
         #            Prop        Prop
         #          Y/    \N      Y/    \N
-        #   (,-,P,P) (,-,P,-)  (,P,-,-) (,-,-,-) <- Grounding results
+        #   (,-,P,P) (,-,P,-)  (,P,-,-) (,-,-,-) <- Grounding results all
+        #   should have a theme
         #
         # ToDo:
         #  - How do we pick among multiple agents or patients? Are they
@@ -234,6 +235,7 @@ class SofiaProcessor(object):
             prop = None
 
         # Set correct combination of groundings:
+
         # If no theme, see if we have a process that can be promoted to
         # theme, and add theme property if it exists
         if not theme or theme[0] is None:
