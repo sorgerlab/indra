@@ -104,8 +104,9 @@ def test_compositional_grounding():
             refs = concept.db_refs
             assert 'WM' in refs
             wm = refs['WM']
-            assert len(wm) == 4
+            assert len(wm) == 1, refs
             assert wm[0] is not None
-            assert all(len(entry) == 2 for entry in wm if entry is not None)
+            wmg = wm[0]
+            assert all(len(entry) == 2 for entry in wmg if entry is not None)
             assert all(entry[0].startswith('wm_compositional') for entry
-                       in wm if entry is not None)
+                       in wmg if entry is not None)
