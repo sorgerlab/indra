@@ -218,12 +218,22 @@ class HumeJsonLdProcessor(object):
                 name = head_text
         """
         # Save raw text and Hume scored groundings as db_refs
-        db_refs = _get_grounding(entity)
+        db_refs = self._get_grounding(entity)
         concept = Concept(name, db_refs=db_refs)
         metadata = {arg['type']: arg['value']['@id']
                     for arg in entity['arguments']}
 
         return concept, metadata
+
+    def _get_bounds(self, ref_dicts):
+        minb = None
+        maxb = None
+        for ref_dict in ref_dicts:
+            bounds = ref_dict.pop('BOUNDS', None)
+            if bounds:
+                minb = min(bounds[0], minb if minb is not None else bounds[0])
+                maxb = max(bounds[1], maxb if maxb is not None else bounds[1])
+        return minb, maxb
 
     def _get_event_and_context(self, event, eid=None, arg_type=None,
                                evidence=None):
@@ -242,29 +252,40 @@ class HumeJsonLdProcessor(object):
         theme = self.extractions_by_id[theme_id] \
             if theme_id else None
 
-        process_grounding = concept.db_refs['WM']
-        theme_grounding = _get_grounding(theme).get('WM') if theme else None
-        property_grounding = _get_grounding(property).get('WM') \
-            if property else None
+        process_grounding = concept.db_refs
+        theme_grounding = self._get_grounding(theme) if theme else {}
+        property_grounding = self._get_grounding(property) if property else {}
+
+        minb, maxb = self._get_bounds([theme_grounding, process_grounding,
+                                       property_grounding])
+
+        process_grounding_wm = process_grounding.get('WM')
+        theme_grounding_wm = theme_grounding.get('WM')
+        property_grounding_wm = property_grounding.get('WM')
+
         # FIXME: what do we do if there are multiple entries in
         #  theme/property grounding?
-        assert property_grounding is None or len(property_grounding) == 1
-        assert property_grounding is None or len(property_grounding) == 1
-        assert theme_grounding is None or len(theme_grounding) == 1
-        property_grounding = property_grounding[0] \
-            if property_grounding else None
-        theme_grounding = theme_grounding[0] if theme_grounding else None
-        process_grounding = process_grounding[0] if process_grounding else None
+        assert process_grounding_wm is None or len(process_grounding_wm) == 1
+        assert property_grounding_wm is None or len(property_grounding_wm) == 1
+        assert theme_grounding_wm is None or len(theme_grounding_wm) == 1
+        property_grounding_wm = property_grounding_wm[0] \
+            if property_grounding_wm else None
+        theme_grounding_wm = theme_grounding_wm[0] \
+            if theme_grounding_wm else None
+        process_grounding_wm = process_grounding_wm[0] \
+            if process_grounding_wm else None
 
         # First case: we have a theme so we apply the property and the process
         # to it
         if theme_grounding:
-            compositional_grounding = [[theme_grounding, property_grounding,
-                                       process_grounding, None]]
+            compositional_grounding = [[theme_grounding_wm,
+                                        property_grounding_wm,
+                                       process_grounding_wm, None]]
         # Second case: we don't have a theme so we take the process as the theme
         # and apply any property to it
         else:
-            compositional_grounding = [[process_grounding, property_grounding,
+            compositional_grounding = [[process_grounding_wm,
+                                        property_grounding_wm,
                                         None, None]]
         concept.db_refs['WM'] = compositional_grounding
 
@@ -286,17 +307,22 @@ class HumeJsonLdProcessor(object):
                           evidence=evidence)
         return event_obj
 
+    def _get_text_and_bounds(self, provenance):
+        # First try looking up the full sentence through provenance
+        doc_id = provenance['document']['@id']
+        sent_id = provenance['sentence']
+        text = self.document_dict[doc_id]['sentences'][sent_id]
+        text = self._sanitize(text)
+        bounds = [provenance['documentCharPositions'][k]
+                  for k in ['start', 'end']]
+        return text, bounds
+
     def _get_evidence(self, event, adjectives):
         """Return the Evidence object for the INDRA Statement."""
         provenance = event.get('provenance')
 
         # First try looking up the full sentence through provenance
-        doc_id = provenance[0]['document']['@id']
-        sent_id = provenance[0]['sentence']
-        text = self.document_dict[doc_id]['sentences'][sent_id]
-        text = self._sanitize(text)
-        bounds = [provenance[0]['documentCharPositions'][k]
-                  for k in ['start', 'end']]
+        text, bounds = self._get_text_and_bounds(provenance[0])
 
         annotations = {
             'found_by': event.get('rule'),
@@ -305,10 +331,32 @@ class HumeJsonLdProcessor(object):
             'adjectives': adjectives,
             'bounds': bounds
             }
-        location = self.document_dict[doc_id]['location']
-        ev = Evidence(source_api='hume', text=text, annotations=annotations,
-                      pmid=location)
+        ev = Evidence(source_api='hume', text=text, annotations=annotations)
         return [ev]
+
+    def _get_grounding(self, entity):
+        """Return Hume grounding."""
+        db_refs = {}
+        txt = entity.get('text')
+        if txt:
+            db_refs['TEXT'] = txt
+        groundings = entity.get('grounding')
+        if not groundings:
+            return db_refs
+        # Get rid of leading slash
+        groundings = [(x['ontologyConcept'][1:], x['value']) for x in
+                      groundings]
+        grounding_entries = sorted(list(set(groundings)),
+                                   key=lambda x: (x[1], x[0].count('/'), x[0]),
+                                   reverse=True)
+
+        text, bounds = self._get_text_and_bounds(entity.get('provenance', {}))
+        db_refs['BOUNDS'] = bounds
+        # We could get an empty list here in which case we don't add the
+        # grounding
+        if grounding_entries:
+            db_refs['WM'] = grounding_entries
+        return db_refs
 
     @staticmethod
     def _sanitize(text):
@@ -337,27 +385,6 @@ def get_states(event):
             if state_property['type'] != 'polarity':
                 ret_list.append(state_property['text'])
     return ret_list
-
-
-def _get_grounding(entity):
-    """Return Hume grounding."""
-    db_refs = {}
-    txt = entity.get('text')
-    if txt:
-        db_refs['TEXT'] = txt
-    groundings = entity.get('grounding')
-    if not groundings:
-        return db_refs
-    # Get rid of leading slash
-    groundings = [(x['ontologyConcept'][1:], x['value']) for x in groundings]
-    grounding_entries = sorted(list(set(groundings)),
-                               key=lambda x: (x[1], x[0].count('/'), x[0]),
-                               reverse=True)
-    # We could get an empty list here in which case we don't add the
-    # grounding
-    if grounding_entries:
-        db_refs['WM'] = grounding_entries
-    return db_refs
 
 
 def get_polarity(event):
