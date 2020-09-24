@@ -5,7 +5,7 @@
       "Query": "None",
       "Score": "0.0",
       "Entity Index": "N1",
-      "Span": [0, 20],
+      "Span": [24, 30],
       "Entity": "cereal",
       "Entity_Type": "concept/agriculture/crop/cereals",
       "FrameNet_Frame": "",
@@ -18,10 +18,7 @@
       "Query": "None",
       "Score": "0.0",
       "Entity Index": "N2",
-      "Span": [
-        0,
-        20
-      ],
+      "Span": [120, 130],
       "Entity": "households",
       "Entity_Type": "entity/household",
       "FrameNet_Frame": "",
@@ -34,10 +31,7 @@
       "Query": "None",
       "Score": "0.0",
       "Entity Index": "N3",
-      "Span": [
-        0,
-        20
-      ],
+      "Span": [154, 159],
       "Entity": "wheat",
       "Entity_Type": "concept/agriculture/crop/cereals",
       "FrameNet_Frame": "",
@@ -50,11 +44,8 @@
       "Query": "None",
       "Score": "0.0",
       "Entity Index": "N4",
-      "Span": [
-        0,
-        20
-      ],
-      "Entity": "food_insecurity",
+      "Span": [62, 77],
+      "Entity": "food insecurity",
       "Entity_Type": "concept/food_security",
       "FrameNet_Frame": "",
       "Indicator": "",
@@ -68,10 +59,7 @@
       "Query": "None",
       "Score": "0.0",
       "Event Index": "E1",
-      "Span": [
-        42,
-        49
-      ],
+      "Span": [135, 139],
       "Relation": "rely",
       "Event_Type": "",
       "FrameNet_Frame": "",
@@ -89,10 +77,7 @@
       "Query": "None",
       "Score": "0.0",
       "Event Index": "E2",
-      "Span": [
-        42,
-        49
-      ],
+      "Span": [4, 14],
       "Relation": "increasing",
       "Event_Type": "",
       "FrameNet_Frame": "",
