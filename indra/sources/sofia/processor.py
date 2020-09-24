@@ -212,22 +212,24 @@ class SofiaProcessor(object):
         #  - If we have process and process property available, but the
         #    process gets removed because it's not grounded properly,
         #    should the property be remove or put to the theme property?
-        name = None
+        spans = []
         theme, theme_prop, theme_proc, theme_proc_prop = (None, )*4
+        sentence = event_entry['Text']
 
         # First, try to get the theme
         event_patients = event_entry['Patient_index'].strip().split(', ')
         if event_patients != ['']:
-            name, theme = self._get_entity_grounding(event_patients)
+            theme_span, theme = self._get_entity_grounding(event_patients)
 
         # See if we have a theme process
         proc = self._clean_grnd_filter(event_entry['Event_Type'],
                                        float(event_entry['Score']) or 0.7,
                                        'process')
+        proc_span = event_entry['Span']
 
         # Next, see if we have a theme property
         if event_patients != ['']:
-            prop = self._get_theme_prop(event_patients)
+            prop_span, prop = self._get_theme_prop(event_patients)
         else:
             prop = None
 
@@ -236,22 +238,34 @@ class SofiaProcessor(object):
         # theme, and add theme property if it exists
         if not theme or theme[0] is None:
             if proc and proc[0] is not None:
-                name = event_entry['Relation']  # Match name to theme (process)
                 theme = proc
+                spans.extend(proc_span)
                 if prop and prop[0] is not None:
                     theme_prop = prop
+                    spans.extend(prop_span)
             # We don't have a grounding, return nothing
             else:
                 return None, (None, ) * 4
-        # If we have a theme and process
-        elif proc and proc[0] is not None:
-            theme_proc = proc
-            # If we have a process, add property as process property
-            if prop and prop[0] is not None:
-                theme_proc_prop = prop
-        # If we have theme and property, but no process
-        elif prop and prop[0] is not None:
-            theme_prop = prop
+
+        # If we have a theme
+        else:
+            spans.extend(theme_span)
+            # If we have a process
+            if proc and proc[0] is not None:
+                theme_proc = proc
+                spans.extend(proc_span)
+                # If we have a property, add it as process property
+                if prop and prop[0] is not None:
+                    theme_proc_prop = prop
+                    spans.extend(prop_span)
+
+            # If we have property, but no process
+            elif prop and prop[0] is not None:
+                theme_prop = prop
+                spans.extend(prop_span)
+
+        # Get name from maximum span of span
+        name = sentence[min(spans):max(spans)]
 
         # Return 4-tuple of:
         # Theme, Theme Property, Theme Process, Theme Process Property
@@ -261,41 +275,41 @@ class SofiaProcessor(object):
 
     def _get_theme_prop(self, entity_inds):
         qualifiers = [
-            (self._entities[ai]['Qualifier'],
+            (self._entities[ai]['Span'],
+             self._entities[ai]['Qualifier'],
              float(self._entities[ai]['Score']) or 0.7)  # ignore zero scores
             for ai in entity_inds if self._entities[ai]['Qualifier']
         ]
         if qualifiers:
             # Sort by highest score first
-            qualifiers.sort(key=lambda t: t[1], reverse=True)
-            for qlfr in qualifiers:
-                qlfr = self._clean_grnd_filter(
-                    *qlfr, grnd_type='property',
+            qualifiers.sort(key=lambda t: t[2], reverse=True)
+            for span, q, sc in qualifiers:
+                qf = self._clean_grnd_filter(
+                    q, sc, grnd_type='property',
                     score_cutoff=self._score_cutoff or None)
-                if qlfr[0] is not None:
-                    return qlfr
-        return None, 0.0
+                if qf[0] is not None:
+                    return span, qf
+        return [], (None, 0.0)
 
     def _get_entity_grounding(self, entity_inds):
-        # Get name and grounding
+        # Get Span tuple and grounding
         grnd_ent_list = [
-            (self._entities[ai]['Entity'] or None,  # Set None if ''
-             (self._entities[ai]['Entity_Type'],
-              float(self._entities[ai]['Score']) or 0.7))  # ignore zero scores
+            (self._entities[ai]['Span'],
+             self._entities[ai]['Entity_Type'],
+             float(self._entities[ai]['Score']) or 0.7)  # ignore zero scores
             for ai in entity_inds if self._entities[ai]['Entity_Type']
         ]
         if grnd_ent_list:
             # Sort by highest score first
-            grnd_ent_list.sort(key=lambda t: t[1][1], reverse=True)
-            for grnd_ent in grnd_ent_list:
-                name, ent = grnd_ent
+            grnd_ent_list.sort(key=lambda t: t[2], reverse=True)
+            for span, grnd_ent, sc in grnd_ent_list:
                 ent = self._clean_grnd_filter(
-                    *ent, grnd_type='concept',
+                    grnd_ent, sc, grnd_type='concept',
                     score_cutoff=self._score_cutoff or None
                 )
                 if ent[0] is not None:
-                    return name, ent
-        return None, (None, 0.0)
+                    return span, ent
+        return [], (None, 0.0)
 
     @staticmethod
     def _clean_grnd_filter(grnd, score, grnd_type, score_cutoff=0.0):
