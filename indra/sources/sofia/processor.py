@@ -32,7 +32,8 @@ class SofiaProcessor(object):
             ('Patient_index', 'Patient Index'),
             ('Agent', 'Agent'),
             ('Patient', 'Patient'),
-            ('Event Index', 'Event Index')
+            ('Event Index', 'Event Index'),
+            ('Span', 'Span')
         ]
         return {k: event_dict.get(v) for k, v in mappings}
 
@@ -47,7 +48,8 @@ class SofiaProcessor(object):
             ('Entity_Type', 'Entity_Type'),
             ('Indicator', 'Indicator'),
             ('Qualifier', 'Qualifier'),
-            ('Text', 'Sentence')
+            ('Text', 'Sentence'),
+            ('Span', 'Span')
         ]
         return {k: ent_dict.get(v) for k, v in key_mappings}
 
