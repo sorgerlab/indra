@@ -909,7 +909,23 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
 
 
 def filter_except(filter_func, nodes_to_keep):
-    """Update the filter function to keep some nodes."""
+    """Update the filter function to keep some nodes.
+
+    Parameters
+    ----------
+    filter_func : function
+        A function to constrain the intermediate nodes in the path. A
+        function should take a node as a parameter and return True if the node
+        is allowed to be a path of a path and False otherwise.
+    nodes_to_keep : iterable
+        A collection of nodes to keep regardless of filter function.
+
+    Returns
+    -------
+    new_filter : function
+        Updated filter function that filters out everything according to
+        original filter_func except nodes_to_keep.
+    """
     if filter_func is None:
         return None
 
