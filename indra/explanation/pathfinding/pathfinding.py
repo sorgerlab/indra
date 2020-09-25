@@ -512,7 +512,7 @@ def find_sources(graph, target, sources, filter_func=None):
     filter_func : Optional[function]
         A function to constrain the intermediate nodes in the path. A
         function should take a node as a parameter and return True if the node
-        is allowed to be a path of a path and False otherwise.
+        is allowed to be in a path and False otherwise.
 
     Returns
     -------
@@ -870,7 +870,7 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
     filter_func : Optional[function]
         A function to constrain the intermediate nodes in the path. A
         function should take a node as a parameter and return True if the node
-        is allowed to be a path of a path and False otherwise.
+        is allowed to be in a path and False otherwise.
 
     Returns
     -------

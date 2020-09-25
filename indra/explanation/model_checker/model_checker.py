@@ -142,13 +142,17 @@ class ModelChecker(object):
         generate paths. Default is False (breadth-first search).
     seed : int
         Random seed for sampling (optional, default is None).
+    nodes_to_agents : dict
+        A dictionary mapping nodes of intermediate signed edges graph to INDRA
+        agents.
 
     Attributes
     ----------
     graph : nx.Digraph
         A DiGraph with signed nodes to find paths in.
     """
-    def __init__(self, model, statements=None, do_sampling=False, seed=None):
+    def __init__(self, model, statements=None, do_sampling=False, seed=None,
+                 nodes_to_agents=None):
         self.model = model
         if statements:
             self.statements = statements
@@ -156,10 +160,10 @@ class ModelChecker(object):
             self.statements = []
         if seed is not None:
             np.random.seed(seed)
+        self.nodes_to_agents = nodes_to_agents if nodes_to_agents else {}
         # Whether to do sampling
         self.do_sampling = do_sampling
         self.graph = None
-        self.nodes_to_agents = {}
 
     def add_statements(self, stmts):
         """Add to the list of statements to check against the model.
@@ -183,9 +187,9 @@ class ModelChecker(object):
         max_path_length : Optional[int]
             The maximum length of specific paths to return. Default: 5
         agent_filter_func : Optional[function]
-            A function to constrain the search. A function should take an agent
-            as a parameter and return True if the agent should be filtered and
-            False otherwise.
+            A function to constrain the intermediate nodes in the path. A
+            function should take an agent as a parameter and return True if the
+            agent is allowed to be in a path and False otherwise.
 
         Returns
         -------
@@ -217,9 +221,9 @@ class ModelChecker(object):
         max_path_length : Optional[int]
             The maximum length of specific paths to return. Default: 5
         agent_filter_func : Optional[function]
-            A function to constrain the search. A function should take an agent
-            as a parameter and return True if the agent should be filtered and
-            False otherwise.
+            A function to constrain the intermediate nodes in the path. A
+            function should take an agent as a parameter and return True if the
+            agent is allowed to be in a path and False otherwise.
 
         Returns
         -------
@@ -236,6 +240,7 @@ class ModelChecker(object):
                 (list(input_set)[0] == list(obj_list)[0])):
             loop = True
 
+        # Convert agent filter function to node filter function
         node_filter_func = self.update_filter_func(agent_filter_func)
         # If we have several objects in obj_list or we have a loop, we add a
         # dummy target node as a child to all nodes in obj_list
@@ -416,18 +421,33 @@ class ModelChecker(object):
 
     def update_filter_func(self, agent_filter_func):
         """Converts a function filtering agents to a function filtering nodes
-        depending on the model type.
+
+        Parameters
+        ----------
+        agent_filter_func : function
+            A function to constrain the intermediate nodes in the path. A
+            function should take an agent as a parameter and return True if the
+            agent is allowed to be in a path and False otherwise.
+
+        Returns
+        -------
+        node_filter_func : function
+            A new filter function applying the logic from agent_filter_func to
+            nodes instead of agents.
         """
         if agent_filter_func is None:
             return None
 
         def node_filter_func(n):
-            ag = self.nodes_to_agents[n[0]]
+            ag = self.nodes_to_agents.get(n[0])
             return agent_filter_func(ag)
+
         return node_filter_func
 
-    def get_agent(node):
-        """Get an INDRA agent given graph node."""
+    def get_nodes_to_agents(self, *args, **kwargs):
+        """Return a dictionary mapping nodes of intermediate signed edges graph
+        to INDRA agents.
+        """
         raise NotImplementedError("Method must be implemented in child class.")
 
     def get_graph(self, **kwargs):

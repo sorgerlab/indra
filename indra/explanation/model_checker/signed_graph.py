@@ -20,17 +20,25 @@ class SignedGraphModelChecker(ModelChecker):
         generate paths. Default is False (breadth-first search).
     seed : int
         Random seed for sampling (optional, default is None).
+    nodes_to_agents : dict
+        A dictionary mapping nodes of intermediate signed edges graph to INDRA
+        agents.
+
+    Attributes
+    ----------
+    graph : nx.Digraph
+        A DiGraph with signed nodes to find paths in.
     """
     def __init__(self, model, statements=None, do_sampling=False, seed=None,
-                 model_agents=None):
-        super().__init__(model, statements, do_sampling, seed)
-        self.model_agents = model_agents if model_agents else []
+                 nodes_to_agents=None):
+        super().__init__(model, statements, do_sampling, seed, nodes_to_agents)
 
     def get_graph(self):
         if self.graph:
             return self.graph
         self.graph = signed_edges_to_signed_nodes(
             self.model, copy_edge_data={'belief'})
+        self.get_nodes_to_agents()
         return self.graph
 
     def process_statement(self, stmt):
@@ -70,3 +78,15 @@ class SignedGraphModelChecker(ModelChecker):
         if node not in graph.nodes:
             return None
         return [node]
+
+    def get_nodes_to_agents(self):
+        """Return a dictionary mapping IndraNet nodes to INDRA agents."""
+        if self.nodes_to_agents:
+            return self.nodes_to_agents
+
+        # NOTE: this way of retrieving agents might miss some important
+        # agent properties. The recommended way is to provide this mapping
+        # externally.
+        graph = self.get_graph()
+        for node, data in graph.nodes(data=True):
+            ag = Agent(node, db_refs={data.get('ns'): data.get('id')])

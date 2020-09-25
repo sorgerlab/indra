@@ -48,11 +48,20 @@ class PysbModelChecker(ModelChecker):
         Random seed for sampling (optional, default is None).
     model_stmts : list[indra.statements.Statement]
         A list of INDRA statements used to assemble PySB model.
+    nodes_to_agents : dict
+        A dictionary mapping nodes of intermediate signed edges graph to INDRA
+        agents.
+
+    Attributes
+    ----------
+    graph : nx.Digraph
+        A DiGraph with signed nodes to find paths in.
     """
 
     def __init__(self, model, statements=None, agent_obs=None,
-                 do_sampling=False, seed=None, model_stmts=None):
-        super().__init__(model, statements, do_sampling, seed)
+                 do_sampling=False, seed=None, model_stmts=None,
+                 nodes_to_agents=None):
+        super().__init__(model, statements, do_sampling, seed, nodes_to_agents)
         if agent_obs:
             self.agent_obs = agent_obs
         else:
@@ -221,7 +230,7 @@ class PysbModelChecker(ModelChecker):
         if self.graph:
             return self.graph
         im = self.get_im(force_update=True)
-        self.update_nodes_to_agents(self.model_stmts, add_namespaces)
+        self.get_nodes_to_agents(self.model_stmts, add_namespaces)
         if prune_im:
             self.prune_influence_map()
         if prune_im_degrade:
@@ -232,10 +241,24 @@ class PysbModelChecker(ModelChecker):
             im, prune_nodes=False, edge_signs={'pos': 1, 'neg': -1})
         return self.graph
 
-    def update_nodes_to_agents(self, model_stmts, add_namespaces=False):
-        """Update influence map nodes to agents mapping, optionally add
-        namespaces to influence map.
+    def get_nodes_to_agents(self, model_stmts, add_namespaces=False):
+        """Return a dictionary mapping influence map nodes to INDRA agents.
+
+        Parameters
+        ----------
+        model_stmts : list[indra.statements.Statement]
+            A list of INDRA statements used to assemble PySB model.
+        add_namespaces : bool
+            Whether to propagate namespaces to node data. Default: False.
+
+        Returns
+        -------
+        nodes_to_agents : dict
+            A dictionary mapping influence map nodes to INDRA agents.
         """
+        if self.nodes_to_agents:
+            return self.nodes_to_agents
+
         im = self.get_im()
         for node, data in im.nodes(data=True):
             ag = None
@@ -257,6 +280,7 @@ class PysbModelChecker(ModelChecker):
                     data['ns'] = ns
             else:
                 logger.warning('Could not get agent for %s' % node)
+        return self.nodes_to_agents
 
     def process_statement(self, stmt):
         self.get_im()
