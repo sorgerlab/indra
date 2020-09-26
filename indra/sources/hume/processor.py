@@ -144,11 +144,8 @@ class HumeJsonLdProcessor(object):
         documents = self.tree.execute("$.documents")
         for doc in documents:
             sentences = {s['@id']: s['text'] for s in doc.get('sentences', [])}
-            full_text = ' '.join(sentence for sentence_id, sentence
-                                 in sorted(sentences.items()))
             self.document_dict[doc['@id']] = {'sentences': sentences,
-                                              'location': doc['location'],
-                                              'full_text': full_text}
+                                              'location': doc['location']}
 
     def _make_world_context(self, entity):
         """Get place and time info from the json for this entity."""
@@ -232,7 +229,7 @@ class HumeJsonLdProcessor(object):
         minb = None
         maxb = None
         for ref_dict in ref_dicts:
-            bounds = ref_dict.pop('BOUNDS', None)
+            bounds = ref_dict.get('BOUNDS', None)
             if bounds:
                 minb = min(bounds[0], minb if minb is not None else bounds[0])
                 maxb = max(bounds[1], maxb if maxb is not None else bounds[1])
@@ -262,8 +259,9 @@ class HumeJsonLdProcessor(object):
         minb, maxb = self._get_bounds([theme_grounding, process_grounding,
                                        property_grounding])
         event_sentence, _ = self._get_text_and_bounds(event['provenance'][0])
-        entity_text = \
-            list(self.document_dict.values())[0]['full_text'][minb:maxb+1]
+        doc_id = event['provenance'][0]['document']['@id']
+        sent_id = event['provenance'][0]['sentence']
+        entity_text = self.document_dict[doc_id]['sentences'][sent_id][minb:maxb+1]
         concept.db_refs['TEXT'] = entity_text
 
         process_grounding_wm = process_grounding.get('WM')
@@ -327,7 +325,7 @@ class HumeJsonLdProcessor(object):
         sent_id = provenance['sentence']
         text = self.document_dict[doc_id]['sentences'][sent_id]
         text = self._sanitize(text)
-        bounds = [provenance['documentCharPositions'][k]
+        bounds = [provenance['sentenceCharPositions'][k]
                   for k in ['start', 'end']]
         return text, bounds
 
@@ -363,11 +361,7 @@ class HumeJsonLdProcessor(object):
         grounding_entries = sorted(list(set(groundings)),
                                    key=lambda x: (x[1], x[0].count('/'), x[0]),
                                    reverse=True)
-        if 'mentions' in entity:
-            _, bounds = self._get_text_and_bounds(
-                entity['mentions'][0]['provenance'][0])
-        else:
-            _, bounds = self._get_text_and_bounds(entity['provenance'][0])
+        _, bounds = self._get_text_and_bounds(entity['provenance'][0])
         db_refs['BOUNDS'] = bounds
         # We could get an empty list here in which case we don't add the
         # grounding
@@ -432,7 +426,10 @@ def _resolve_geo(hume_loc_entity):
 
 
 def _resolve_time(hume_temporal_entity):
-    text = hume_temporal_entity['mentions'][0]['text']
+    if 'mentions' in hume_temporal_entity:
+        text = hume_temporal_entity['mentions'][0]['text']
+    else:
+        text = hume_temporal_entity['text']
     if len(hume_temporal_entity.get("timeInterval", [])) < 1:
         return TimeContext(text=text)
     time = hume_temporal_entity["timeInterval"][0]
