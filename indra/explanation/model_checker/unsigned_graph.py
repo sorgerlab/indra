@@ -93,4 +93,4 @@ class UnsignedGraphModelChecker(ModelChecker):
         # externally.
         graph = self.get_graph()
         for node, data in graph.nodes(data=True):
-            ag = Agent(node, db_refs={data.get('ns'): data.get('id')])
+            ag = Agent(node, db_refs={data.get('ns'): data.get('id')})
