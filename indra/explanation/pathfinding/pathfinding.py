@@ -318,7 +318,7 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
             if len(new_path) > depth_limit + 1:
                 continue
             elif not terminal_ns:
-                # Yield newest path and recieve new ignore values
+                # Yield newest path and receive new ignore values
 
                 # Signed search yield
                 if sign is not None:
@@ -375,7 +375,7 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
                     ign_vals = None
                     pass
 
-            # If new ignore nodes are recieved, update set
+            # If new ignore nodes are received, update set
             if ign_vals is not None:
                 ign_nodes, ign_edges = ign_vals
                 visited.update(ign_nodes)
@@ -391,7 +391,7 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
             if sys.getsizeof(queue) + sys.getsizeof(visited) > max_memory:
                 logger.warning('Memory overflow reached: %d' %
                                (sys.getsizeof(queue) + sys.getsizeof(visited)))
-                raise StopIteration('Reached maxmimum allowed memory usage')
+                raise StopIteration('Reached maximum allowed memory usage')
 
             # Check if we've visited enough neighbors
             # Todo: add all neighbors to 'visited' and add all skipped
@@ -628,8 +628,8 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None,
                     if force_edges:
                         for w in pred_iter(v):
                             if (w, v) not in ignore_edges and (w, v)\
-                                in force_edges:
-                                    yield w
+                                    in force_edges:
+                                yield w
                     else:
                         for w in pred_iter(v):
                             if (w, v) not in ignore_edges:
@@ -641,8 +641,8 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None,
                     if force_edges:
                         for w in succ_iter(v):
                             if (v, w) not in ignore_edges and (v, w)\
-                                in force_edges:
-                                    yield w
+                                    in force_edges:
+                                yield w
                     else:
                         for w in succ_iter(v):
                             if (v, w) not in ignore_edges:
@@ -660,13 +660,13 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None,
                             if (v, w) not in ignore_edges \
                                 and (w, v) not in ignore_edges \
                                     and (v, w) in force_edges and (w, v)\
-                                        in force_edges:
-                                            yield w
+                                    in force_edges:
+                                yield w
                     else:
                         for w in nodes(v):
                             if (v, w) not in ignore_edges \
-                                and (w, v) not in ignore_edges:
-                                    yield w
+                                    and (w, v) not in ignore_edges:
+                                yield w
                 return iterate
 
             Gpred = filter_iter(Gpred)
@@ -775,17 +775,19 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
     if reverse:
         g = g.reverse(copy=False)
 
-    proper_nodes = (lambda p : not set(p).intersection(set(ignore_nodes)))\
-                    if ignore_nodes else lambda p : True
-    proper_edges = (lambda p : not sum(1 for u, v in zip(p[:-1], p[1:])\
-                                       if (u, v) in ignore_edges))\
-                    if ignore_edges else lambda p : True
+    proper_nodes =\
+        (lambda p: not set(p).intersection(set(ignore_nodes)))\
+        if ignore_nodes else lambda p: True
+    proper_edges = \
+        (lambda p: not sum(1 for u, v in zip(p[:-1], p[1:])
+                           if (u, v) in ignore_edges))\
+        if ignore_edges else lambda p: True
 
-    if terminal_ns: # If not set, terminal_ns will be an empty list []
+    if terminal_ns:  # If not set, terminal_ns will be an empty list []
         def proper_path(path):
             if not proper_nodes(path) or not proper_edges(path)\
-                or g.nodes[path[-1]]['ns'].lower() not in terminal_ns:
-                    return False
+                    or g.nodes[path[-1]]['ns'].lower() not in terminal_ns:
+                return False
             for u in path[:-1]:
                 if g.nodes[u]['ns'].lower() in terminal_ns:
                     return False
@@ -796,7 +798,7 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
 
     paths = list(nx.single_source_dijkstra_path(g, start,
                                                 weight=weight).values())[1:]
-    paths.sort(key=lambda x : weights_sum(x))
+    paths.sort(key=lambda x: weights_sum(x))
     if path_limit is not None:
         for p in paths:
             path_limit -= 1
