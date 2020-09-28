@@ -89,4 +89,6 @@ class SignedGraphModelChecker(ModelChecker):
         # externally.
         graph = self.get_graph()
         for node, data in graph.nodes(data=True):
-            ag = Agent(node, db_refs={data.get('ns'): data.get('id')})
+            ag = Agent(node[0], db_refs={data.get('ns'): data.get('id')})
+            self.nodes_to_agents[node[0]] = ag
+        return self.nodes_to_agents
