@@ -473,7 +473,7 @@ def get_path_iter(graph, source, target, path_length, loop, dummy_target,
         A generator of the paths between source and target.
     """
     path_iter = simple_paths_with_constraints(
-        graph, source, target, path_length, filter_func, True)
+        graph, source, target, path_length, filter_func)
     try:
         for p in path_iter:
             path = deepcopy(p)

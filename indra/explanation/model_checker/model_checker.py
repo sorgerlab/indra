@@ -440,6 +440,10 @@ class ModelChecker(object):
 
         def node_filter_func(n):
             ag = self.nodes_to_agents.get(n[0])
+            if ag is None:
+                logger.warning('Could not get agent for node %s' % n[0])
+                # Do not filter the node if we can't map it to agent
+                return True
             return agent_filter_func(ag)
 
         return node_filter_func
