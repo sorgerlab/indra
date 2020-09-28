@@ -86,11 +86,14 @@ def get_sorted_neighbors(G, node, reverse, force_edges=None):
     reverse : bool
         Indicates direction of search. Neighbors are either successors
         (downstream search) or predecessors (reverse search).
+    force_edges : list
+        A list of allowed edges. If provided, only allow neighbors that
+        can be reached by the allowed edges.
     """
     if reverse:
         if force_edges:
-            neighbors = list(e[0] for e in 
-                set(G.in_edges(node)).intersection(set(force_edges)))
+            neighbors = list(e[0] for e in set(G.in_edges(
+                node)).intersection(set(force_edges)))
         else:
             neighbors = G.predecessors(node)
         return sorted(
@@ -101,8 +104,8 @@ def get_sorted_neighbors(G, node, reverse, force_edges=None):
         )
     else:
         if force_edges:
-            neighbors = list(e[1] for e in 
-                set(G.out_edges(node)).intersection(set(force_edges)))
+            neighbors = list(e[1] for e in set(G.out_edges(
+                node)).intersection(set(force_edges)))
         else:
             neighbors = G.successors(node)
         return sorted(
