@@ -269,6 +269,10 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
     if strict_mesh_id_filtering:
         if hashes:
             allowed_edges = [(u, v) for u, v in g.edges() if allow_edge(u, v)]
+            logger.warning('No edges were allowed in strict mesh id '
+                           'filtering')
+            if not allowed_edges:
+                return []
         else:
             return []
     else:
