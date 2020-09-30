@@ -54,13 +54,33 @@
 </head>
 
 <body>
-<div class="container">
+<div class="navbar navbar-expand-md fixed-top bg-white shadow-sm border-bottom">
+  <img src="https://bigmech.s3.amazonaws.com/indra-db/indralab_bare_logo.png"
+       width="30em">
+  {% block title %}
+  <a class="navbar-brand" href="#" style="padding-left: 0.5em;">{{ title }}</a>
+  {% endblock %}
+  <button class="navbar-toggler" type="button" data-toggle="collapse"
+          data-target="#navbarCollapse" aria-controls="navbarCollapse"
+          aria-expanded="navbarCollapse" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  {% block navbar %}
+  <div class="collapse navbar-collapse" id="navbarCollapse">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="https://db.indra.bio">Database Service</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="http://dialogue.bio">Dialogue Systems</a>
+      </li>
+    </ul>
+  </div>
+  {% endblock %}
+</div>
+<main role="main" class="container">
+  <div class="jumbotron bg-white">
     <!-- Page Header -->
-    <div class="page-header">
-        {% block header %}
-            <h1>{{ title }}</h1>
-        {% endblock %}
-    </div>
     {% block header_desc %}
     {% endblock %}
     <hr>
@@ -77,6 +97,7 @@
         {% block additional_footer %}
         {% endblock %}
     </footer>
-</div>
+  </div>
+</main>
 </body>
 </html>
