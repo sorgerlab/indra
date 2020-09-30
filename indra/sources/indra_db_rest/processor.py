@@ -51,6 +51,10 @@ class IndraDBRestProcessor(object):
         Select the maximum number of statements to return. When set less than
         1000 the effect is much the same as setting persist to false, and will
         guarantee a faster response. Default is None.
+    use_obtained_counts : Optional[bool]
+        If set to True, the statement evidence counts and source counts are
+        calculated based on the actual obtained statements and evidences
+        rather than the counts provided by the DB API. Default: False.
 
     Attributes
     ----------
@@ -84,7 +88,6 @@ class IndraDBRestProcessor(object):
         # specified by the user.
         kwargs.update((k, kwargs.get(k, default_api_params[k]))
                       for k in default_api_params.keys())
-
         self._run(*args, **kwargs)
         return
 
@@ -528,16 +531,3 @@ class IndraDBRestSearchProcessor(IndraDBRestProcessor):
                          % timeout)
             self.__th.join(timeout)
         return
-
-
-def standardize_counts(counts):
-    """Standardize hash-based counts dicts to be int-keyed."""
-    standardized_counts = {}
-    for k, v in counts.items():
-        try:
-            int_k = int(k)
-            standardized_counts[int_k] = v
-        except ValueError:
-            logger.warning('Could not convert statement hash %s to int' % k)
-    return standardized_counts
-
