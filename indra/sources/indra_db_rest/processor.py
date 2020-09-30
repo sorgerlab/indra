@@ -12,6 +12,8 @@ from indra.statements import stmts_from_json, get_statement_by_name, \
 from indra.sources.indra_db_rest.util import submit_query_request, \
     submit_statement_request
 from indra.sources.indra_db_rest.exceptions import IndraDBRestResponseError
+from indra.util.statement_presentation import get_available_source_counts, \
+    get_available_ev_counts, standardize_counts
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +65,8 @@ class IndraDBRestProcessor(object):
         self.__statement_jsons = {}
         self.__evidence_counts = {}
         self.__source_counts = {}
+
+        self.use_obtained_counts = kwargs.pop('use_obtained_counts', False)
 
         # Define the basic generic defaults.
         default_api_params = dict(timeout=None, ev_limit=10, best_first=True,
@@ -147,6 +151,9 @@ class IndraDBRestProcessor(object):
     def _compile_statements(self):
         """Generate statements from the jsons."""
         self.statements = stmts_from_json(self.__statement_jsons.values())
+        if self.use_obtained_counts:
+            self.__source_counts = get_available_source_counts(self.statements)
+            self.__evidence_counts = get_available_ev_counts(self.statements)
 
     def _unload_and_merge_resp(self, resp):
         resp_dict = resp.json(object_pairs_hook=OrderedDict)
