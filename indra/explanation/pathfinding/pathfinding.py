@@ -759,6 +759,10 @@ def open_dijkstra_search(g, start, reverse=False, path_limit=None,
     path : tuple(node)
         Paths in the bfs search starting from `source`.
     """
+    def weights_sum(path):
+        return sum(g[u][v][weight]
+                   for u, v in zip(path[:-1], path[1:]))
+
     if hashes:
         for u, v, data in g.edges(data=True):
             ref_counts, total = ref_counts_function(g, u, v)
@@ -766,13 +770,6 @@ def open_dijkstra_search(g, start, reverse=False, path_limit=None,
                 ref_counts = 1e-15
             data[weight] = \
                 -const_c * ln(ref_counts / (total + const_tk))
-        def weights_sum(path):
-            return sum(g[u][v][weight]
-                       for u, v in zip(path[:-1], path[1:]))
-    else:
-        def weights_sum(path):
-            return sum(g[u][v][weight]
-                       for u, v in zip(path[:-1], path[1:]))
 
     if reverse:
         g = g.reverse(copy=False)
