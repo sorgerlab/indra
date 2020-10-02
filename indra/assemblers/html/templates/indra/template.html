@@ -35,7 +35,7 @@
           crossorigin="anonymous">
 
     <style>
-        a {
+        a, .parent-a {
             color: #256DC5;
             target-new: tab;
         }
@@ -46,6 +46,42 @@
             padding: 1em;
         }
 
+        /* The sidebar menu */
+        .side-info {
+          height: 100%; /* Full-height: remove this if you want "auto" height */
+          width: 16em; /* Set the width of the sidebar */
+          position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+          z-index: 1; /* Stay on top */
+          top: 0; /* Stay at the top */
+          left: 0;
+          background-color: #000000; /* Black */
+          color: #606060;
+          overflow-x: hidden; /* Disable horizontal scroll */
+          padding-top: 85px;
+          padding-left: 1em;
+          padding-right: 1em;
+        }
+
+        /* The navigation menu links */
+        .side-info .il-nav-link {
+          font-size: 12pt;
+          target-new: tab;
+          display: block;
+        }
+
+        .side-info h4 {
+          font-size: 14pt;
+          display: block;
+          text-decoration: none;
+        }
+
+        .side-info-block {
+          padding: 1em 8px 1em 16px;
+        }
+
+        .content {
+          padding-top:85px;
+        }
     </style>
 
     {% block scripts %}
@@ -54,7 +90,7 @@
 </head>
 
 <body>
-<div class="navbar navbar-expand-md fixed-top bg-white shadow-sm border-bottom">
+<div class="navbar navbar-expand-md fixed-top bg-light shadow-sm border-bottom">
   <img src="https://bigmech.s3.amazonaws.com/indra-db/indralab_bare_logo.png"
        width="30em">
   {% block title %}
@@ -62,7 +98,7 @@
   {% endblock %}
   <button class="navbar-toggler" type="button" data-toggle="collapse"
           data-target="#navbarCollapse" aria-controls="navbarCollapse"
-          aria-expanded="navbarCollapse" aria-label="Toggle navigation">
+          aria-expanded="true" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
   {% block navbar %}
@@ -78,25 +114,34 @@
   </div>
   {% endblock %}
 </div>
-<main role="main" class="container">
-  <div class="jumbotron bg-white">
-    <!-- Page Header -->
+<div class="side-info bg-white " id="left-side-panel">
+  <div class="side-info-block">
+    <h4>About this service</h4>
     {% block header_desc %}
     {% endblock %}
-    <hr>
+  </div>
+
+  <div class="side-info-block">
+    <h4>Other services</h4>
+    <a class=il-nav-link href="https://emmaa.indra.bio">EMMAA</a>
+    <a class=il-nav-link href="http://dialogue.bio">Bob with Bioagents</a>
+  </div>
+
+  <div class="side-info-block">
+    <h4>Abount this Project</h4>
+    INDRA is developed by <a class="parent-a" href="https://indralab.github.io/">indralabs</a>,
+    a part of the Harvard Medical School Laboratory of Systems Pharmacology.
+  </div>
+
+  <div class="side-info-block">
+    {% block additional_footer %}
+    {% endblock %}
+  </div>
+</div>
+<main role="main" class="container">
+  <div class="content">
     {% block body %}
     {% endblock %}
-    <hr>
-    <!-- Footer -->
-    <footer class="footer text-muted" id="about">
-        <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
-
-        INDRA is developed by <a href="https://indralab.github.io/">indralabs</a>,
-        a part of the Harvard Medical School Laboratory of Systems Pharmacology.
-
-        {% block additional_footer %}
-        {% endblock %}
-    </footer>
   </div>
 </main>
 </body>
