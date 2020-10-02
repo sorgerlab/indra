@@ -685,6 +685,17 @@ def update_drugbank_mappings():
     write_unicode_csv(fname, rows, delimiter='\t')
 
 
+def update_identifiers_registry():
+    url = 'https://registry.api.identifiers.org/resolutionApi/getResolverDataset'
+    res = requests.get(url)
+    regj = res.json()
+    patterns = {entry['prefix']: entry['pattern'] for entry in
+                sorted(regj['payload']['namespaces'],
+                       key=lambda x: x['prefix'])}
+    with open(os.path.join(path, 'identifiers_patterns.json'), 'w') as fh:
+        json.dump(patterns, fh, indent=1)
+
+
 def main():
     update_famplex()
     update_famplex_map()
@@ -707,6 +718,7 @@ def main():
     update_efo()
     update_hpo()
     update_drugbank_mappings()
+    update_identifiers_registry()
 
 
 if __name__ == '__main__':
