@@ -229,7 +229,7 @@ class HumeJsonLdProcessor(object):
         minb = None
         maxb = None
         for ref_dict in ref_dicts:
-            bounds = ref_dict.get('BOUNDS', None)
+            bounds = ref_dict.pop('BOUNDS', None)
             if bounds:
                 minb = min(bounds[0], minb if minb is not None else bounds[0])
                 maxb = max(bounds[1], maxb if maxb is not None else bounds[1])
@@ -263,6 +263,7 @@ class HumeJsonLdProcessor(object):
         sent_id = event['provenance'][0]['sentence']
         entity_text = self.document_dict[doc_id]['sentences'][sent_id][minb:maxb+1]
         concept.db_refs['TEXT'] = entity_text
+        concept.name = entity_text
 
         process_grounding_wm = process_grounding.get('WM')
         theme_grounding_wm = theme_grounding.get('WM')
