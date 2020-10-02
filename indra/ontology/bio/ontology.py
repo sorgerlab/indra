@@ -5,6 +5,7 @@ from indra.config import get_config
 from ..ontology_graph import IndraOntology
 from indra.util import read_unicode_csv
 from indra.statements import modtype_conditions
+from indra.resources import get_resource_path
 
 
 logger = logging.getLogger(__name__)
@@ -126,9 +127,8 @@ class BioOntology(IndraOntology):
 
     def add_famplex_nodes(self):
         nodes = []
-        for row in read_unicode_csv(os.path.join(resources, 'famplex',
-                                                 'entities.csv'),
-                                    delimiter=','):
+        for row in read_unicode_csv(get_resource_path(
+                os.path.join('famplex', 'entities.csv')), delimiter=','):
             entity = row[0]
             nodes.append((self.label('FPLX', entity),
                           {'name': entity}))
@@ -137,9 +137,8 @@ class BioOntology(IndraOntology):
     def add_famplex_hierarchy(self):
         from indra.databases import hgnc_client
         edges = []
-        for row in read_unicode_csv(os.path.join(resources, 'famplex',
-                                                 'relations.csv'),
-                                    delimiter=','):
+        for row in read_unicode_csv(get_resource_path(
+                os.path.join('famplex', 'relations.csv')), delimiter=','):
             ns1, id1, rel, ns2, id2 = row
             if ns1 == 'HGNC':
                 id1 = hgnc_client.get_hgnc_id(id1)
@@ -150,10 +149,10 @@ class BioOntology(IndraOntology):
 
     def add_famplex_xrefs(self):
         edges = []
-        include_refs = {'PF', 'IP', 'GO', 'NCIT', 'ECCODE', 'HGNC_GROUP'}
-        for row in read_unicode_csv(os.path.join(resources, 'famplex',
-                                                 'equivalences.csv'),
-                                    delimiter=','):
+        include_refs = {'PF', 'IP', 'GO', 'NCIT', 'ECCODE', 'HGNC_GROUP',
+                        'MESH'}
+        for row in read_unicode_csv(get_resource_path('famplex_map.tsv'),
+                                    delimiter='\t'):
             ref_ns, ref_id, fplx_id = row
             if ref_ns not in include_refs:
                 continue
@@ -422,8 +421,6 @@ class BioOntology(IndraOntology):
         )
 
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-resources = os.path.join(HERE, os.pardir, os.pardir, 'resources')
 CACHE_DIR = os.path.join((get_config('INDRA_RESOURCES') or
                           os.path.join(os.path.expanduser('~'), '.indra')),
                          '%s_ontology' % BioOntology.name,
