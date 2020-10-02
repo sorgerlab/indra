@@ -686,7 +686,9 @@ def update_drugbank_mappings():
 
 
 def update_identifiers_registry():
-    url = 'https://registry.api.identifiers.org/resolutionApi/getResolverDataset'
+    """Update prefixes and patterns for identifiers namespaces."""
+    url = \
+        'https://registry.api.identifiers.org/resolutionApi/getResolverDataset'
     res = requests.get(url)
     regj = res.json()
     patterns = {entry['prefix']: entry['pattern'] for entry in
