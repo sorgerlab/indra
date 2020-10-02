@@ -711,8 +711,8 @@ def _bidirectional_pred_succ(G, source, target, ignore_nodes=None,
     raise nx.NetworkXNoPath("No path between %s and %s." % (source, target))
 
 
-def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
-                         path_limit=None, node_filter=None, hashes=None, 
+def open_dijkstra_search(g, start, reverse=False, path_limit=None,
+                         node_filter=None, hashes=None,
                          ignore_nodes=None, ignore_edges=None, 
                          terminal_ns=None, weight=None,
                          ref_counts_function=None, const_c=1,
@@ -728,8 +728,6 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
     reverse : bool
         If True go upstream from source, otherwise go downstream. Default:
         False.
-    depth_limit : int
-        Stop when all paths with this many edges have been found. Default: 2.
     path_limit : int
         The maximum number of paths to return. Default: no limit.
     node_filter : list[str]
