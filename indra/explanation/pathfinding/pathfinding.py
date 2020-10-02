@@ -126,7 +126,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
             length_func = len
             shortest_path_func = _bidirectional_shortest_path
             for u, v in G.edges():
-                if ref_counts_function(u, v)[0]:
+                if ref_counts_function(G, u, v)[0]:
                     allowed_edges.append((u, v))
         else:
             weight = 'context_weight'
@@ -141,7 +141,7 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
                                                             ignore_edges)
             for u, v, data, in G.edges(data=True):
                 ref_counts, total = \
-                    ref_counts_function(u, v)
+                    ref_counts_function(G, u, v)
                 if not ref_counts:
                     ref_counts = 1e-15
                 data['context_weight'] = \
@@ -763,7 +763,7 @@ def open_dijkstra_search(g, start, reverse=False, depth_limit=2,
     """
     if hashes:
         for u, v, data in g.edges(data=True):
-            ref_counts, total = ref_counts_function(u, v)
+            ref_counts, total = ref_counts_function(g, u, v)
             if not ref_counts:
                 ref_counts = 1e-15
             data[weight] = \
