@@ -381,10 +381,9 @@ class Statement(object):
                                 "type %s." % type(ag_attr))
         return ag_list
 
-    def get_agent_by_role(self, role):
-        if not role in self._agent_order:
-            raise ValueError('Invalid role %s' % role)
-        return getattr(self, role)
+    def real_agent_list(self):
+        """Return all agents in the statement that are not None."""
+        return [a for a in self.agent_list() if a is not None]
 
     def entities_match(self, other):
         self_key = self.entities_match_key()
