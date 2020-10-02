@@ -2,8 +2,7 @@ import numpy as np
 import networkx as nx
 
 from indra.explanation.pathfinding.pathfinding import bfs_search, \
-    shortest_simple_paths, bfs_search_multiple_nodes, \
-        open_dijkstra_search
+    shortest_simple_paths, bfs_search_multiple_nodes, open_dijkstra_search
 from indra.explanation.model_checker.model_checker import \
     signed_edges_to_signed_nodes
 
@@ -286,7 +285,8 @@ def test_shortest_simple_paths_strict_mesh_id_filtering():
     def count_paths(source, target, hashes):
         def ref_counts_function(u, v):
             try:
-                return len(set(hashes).intersection(set(edge_hashes[(u, v)]))), None
+                return len(set(hashes).intersection(
+                    set(edge_hashes[(u, v)]))), None
             except KeyError:
                 return 0, None
         try:
@@ -302,32 +302,24 @@ def test_shortest_simple_paths_strict_mesh_id_filtering():
     assert count_paths('Z1', 'C1', []) == 0
     assert count_paths('A2', 'C1', []) == 0
 
-    assert count_paths('Z1', 'C1',
-        [11, 12, 13, 14, 15]) == 0
-    assert count_paths('A1', 'C1',
-        [11, 12, 13, 14, 15]) == 1
-    assert count_paths('A2', 'C1',
-        [11, 12, 13, 14, 15]) == 2
-    assert count_paths('A2', 'D1',
-        [11, 12, 13, 14, 15]) == 0
+    assert count_paths('Z1', 'C1', [11, 12, 13, 14, 15]) == 0
+    assert count_paths('A1', 'C1', [11, 12, 13, 14, 15]) == 1
+    assert count_paths('A2', 'C1', [11, 12, 13, 14, 15]) == 2
+    assert count_paths('A2', 'D1', [11, 12, 13, 14, 15]) == 0
     
-    assert count_paths('Z1', 'C1',
-        [21, 22, 23, 24, 25]) == 0
-    assert count_paths('A1', 'C1',
-        [21, 22, 23, 24, 25]) == 0
-    assert count_paths('A2', 'C1',
-        [21, 22, 23, 24, 25]) == 1
-    assert count_paths('A2', 'D1',
-        [21, 22, 23, 24, 25]) == 0
+    assert count_paths('Z1', 'C1', [21, 22, 23, 24, 25]) == 0
+    assert count_paths('A1', 'C1', [21, 22, 23, 24, 25]) == 0
+    assert count_paths('A2', 'C1', [21, 22, 23, 24, 25]) == 1
+    assert count_paths('A2', 'D1', [21, 22, 23, 24, 25]) == 0
 
     assert count_paths('Z1', 'C1',
-        [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 0
+                       [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 0
     assert count_paths('A1', 'C1',
-        [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 1
+                       [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 1
     assert count_paths('A2', 'C1',
-        [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 3
+                       [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 3
     assert count_paths('A2', 'D1',
-        [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 0
+                       [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 0
 
 
 def test_shortest_simple_paths_weighed_by_mesh_ids():
@@ -338,11 +330,14 @@ def test_shortest_simple_paths_weighed_by_mesh_ids():
     def find_paths(hashes):
         def ref_counts_function(u, v):
             try:
-                return len(set(hashes).intersection(set(edge_hashes[(u, v)]))), sum(hashes)
+                return \
+                    len(set(hashes).intersection(set(edge_hashes[(u, v)]))),\
+                    sum(hashes)
             except KeyError:
                 return 0, sum(hashes)
-        return list(shortest_simple_paths(G, source, target, hashes=hashes, 
-                                          ref_counts_function=ref_counts_function))
+        return list(shortest_simple_paths(
+            G, source, target, hashes=hashes,
+            ref_counts_function=ref_counts_function))
     source = 'A3'
     target = 'C1'
     paths = find_paths(hashes=[11, 12, 13, 14])
@@ -404,19 +399,27 @@ def test_open_dijksta():
     edge_hashes = dg.graph['hashes']
     edge_hashes[('A3', 'B1')] = [14]
 
-    def find_paths(source, reverse=False, hashes=None, depth_limit=6, path_limit=9):
+    def find_paths(source, reverse=False, hashes=None, depth_limit=6,
+                   path_limit=9):
         def ref_counts_function(u, v):
             try:
-                return len(set(hashes).intersection(set(edge_hashes[(u, v)]))), len(hashes)
+                return len(
+                    set(hashes).intersection(set(edge_hashes[(u, v)]))),\
+                       len(hashes)
             except KeyError:
                 return 0, len(hashes)
-        return list(open_dijkstra_search(dg, source, reverse=reverse, hashes=hashes,
-        ref_counts_function=ref_counts_function, depth_limit=depth_limit, path_limit=path_limit,
-        weight='context_weight' if hashes else 'weight'))
+        return list(open_dijkstra_search(
+            dg, source, reverse=reverse, hashes=hashes,
+            ref_counts_function=ref_counts_function,
+            depth_limit=depth_limit, path_limit=path_limit,
+            weight='context_weight' if hashes else 'weight'))
 
     def sort_by_weight(paths, reverse):
-        return sorted(paths, key=lambda path : sum((dg[v][u] if reverse else dg[u][v])['weight'] \
-                                                   for u, v in zip(path[:-1], path[1:])))
+        return sorted(
+            paths,
+            key=lambda path: sum(
+                (dg[v][u] if reverse else dg[u][v])['weight']
+                for u, v in zip(path[:-1], path[1:])))
 
     paths = find_paths('C1', reverse=True, hashes=[], path_limit=9)
     assert paths == sort_by_weight([
@@ -430,7 +433,8 @@ def test_open_dijksta():
         ['C1', 'B1', 'A1', 'Z1']
     ], True)
 
-    paths = find_paths('C1', reverse=True, hashes=[11, 12, 13, 14], depth_limit=2, path_limit=9)
+    paths = find_paths('C1', reverse=True, hashes=[11, 12, 13, 14],
+                       depth_limit=2, path_limit=9)
     assert paths == [
         ['C1', 'B1'],
         ['C1', 'B3'],
@@ -442,7 +446,8 @@ def test_open_dijksta():
         ['C1', 'B2', 'A4']
     ]
 
-    paths = find_paths('C1', reverse=True, hashes=[], depth_limit=6, path_limit=5)
+    paths = find_paths('C1', reverse=True, hashes=[], depth_limit=6,
+                       path_limit=5)
     assert paths == sort_by_weight([
         ['C1', 'B1'],
         ['C1', 'B2'],
@@ -462,7 +467,8 @@ def test_open_dijksta():
         ['A3', 'B1', 'C1', 'D1'],
     ], False)
 
-    paths = find_paths('A3', hashes=[11, 12, 13, 14], depth_limit=6, path_limit=9)
+    paths = find_paths('A3', hashes=[11, 12, 13, 14], depth_limit=6,
+                       path_limit=9)
     assert paths == [
         ['A3', 'B1'],
         ['A3', 'B1', 'C1'],
@@ -470,7 +476,8 @@ def test_open_dijksta():
         ['A3', 'B1', 'C1', 'D1'],
     ]
 
-    paths = find_paths('A3', hashes=[21, 22, 23, 24, 25], depth_limit=6, path_limit=9)
+    paths = find_paths('A3', hashes=[21, 22, 23, 24, 25], depth_limit=6,
+                       path_limit=9)
     assert paths == [
         ['A3', 'B2'],
         ['A3', 'B2', 'C1'],
@@ -479,7 +486,7 @@ def test_open_dijksta():
     ]
 
     paths = find_paths('A3', hashes=[11, 12, 13, 14, 21, 22, 23, 24, 25],
-        depth_limit=6, path_limit=9)
+                       depth_limit=6, path_limit=9)
     assert paths == [
         ['A3', 'B2'],
         ['A3', 'B1'],
@@ -489,8 +496,9 @@ def test_open_dijksta():
 
     edge_hashes[('A3', 'B2')].append(15)
     edge_hashes[('B2', 'C1')].append(16)
-    paths = find_paths('A3', hashes=[11, 12, 13, 14, 15, 16, 21, 22, 23, 24, 25],
-        depth_limit=6, path_limit=9)
+    paths = find_paths('A3',
+                       hashes=[11, 12, 13, 14, 15, 16, 21, 22, 23, 24, 25],
+                       depth_limit=6, path_limit=9)
     
     assert paths == [
         ['A3', 'B2'],
