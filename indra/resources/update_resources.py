@@ -691,9 +691,11 @@ def update_identifiers_registry():
         'https://registry.api.identifiers.org/resolutionApi/getResolverDataset'
     res = requests.get(url)
     regj = res.json()
-    patterns = {entry['prefix']: entry['pattern'] for entry in
-                sorted(regj['payload']['namespaces'],
-                       key=lambda x: x['prefix'])}
+    patterns = {entry['prefix']:
+                    {'pattern': entry['pattern'],
+                     'namespace_embedded': entry['namespaceEmbeddedInLui']}
+                for entry in sorted(regj['payload']['namespaces'],
+                                    key=lambda x: x['prefix'])}
     with open(os.path.join(path, 'identifiers_patterns.json'), 'w') as fh:
         json.dump(patterns, fh, indent=1)
 

@@ -22,7 +22,8 @@ identifiers_mappings = {
     'PUBCHEM': 'pubchem.compound',
     'UPPRO': 'uniprot.chain',
     'PF': 'pfam',
-    'CHEMBL': 'chembl.compound'
+    'CHEMBL': 'chembl.compound',
+    'MIRBASEM': 'mirbase.mature'
 }
 
 non_registry = {
@@ -50,7 +51,7 @@ def assert_valid_ns(db_ns):
 def validate_id(db_ns, db_id):
     identifiers_ns = identifiers_mappings.get(db_ns, db_ns.lower())
     if identifiers_ns in identifiers_registry:
-        if re.match(identifiers_registry[identifiers_ns], db_id):
+        if re.match(identifiers_registry[identifiers_ns]['pattern'], db_id):
             return True
         else:
             return False
