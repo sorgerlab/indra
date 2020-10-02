@@ -23,11 +23,14 @@ identifiers_mappings = {
     'UPPRO': 'uniprot.chain',
     'PF': 'pfam',
     'CHEMBL': 'chembl.compound',
-    'MIRBASEM': 'mirbase.mature'
+    'MIRBASEM': 'mirbase.mature',
+    'HGNC_GROUP': 'hgnc.genefamily',
+    'CTD': 'ctd.chemical'
 }
 
 non_registry = {
-    'SDIS', 'SCHEM', 'SIGNOR', 'HMS-LINCS', 'NXPFA'
+    'SDIS', 'SCHEM', 'SIGNOR', 'HMS-LINCS', 'NXPFA', 'GENBANK',
+    'OMIM', 'LSPCI'
 }
 
 non_grounding = {
