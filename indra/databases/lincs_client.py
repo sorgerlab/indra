@@ -10,6 +10,7 @@ import logging
 import requests
 from io import StringIO, BytesIO
 from indra.util import read_unicode_csv_fileobj
+from indra.databases.identifiers import ensure_chembl_prefix
 
 
 logger = logging.getLogger(__name__)
@@ -84,6 +85,9 @@ class LincsClient(object):
                 # Swap in primary PubChem IDs where there is an outdated one
                 if key == 'PUBCHEM' and value in pc_to_primary_mappings:
                     value = pc_to_primary_mappings[value]
+                # Fix CHEMBL IDs
+                if key == 'CHEMBL':
+                    value = ensure_chembl_prefix(value)
                 refs[key] = value
         return refs
 
