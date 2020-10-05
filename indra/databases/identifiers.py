@@ -230,3 +230,19 @@ def parse_identifiers_url(url):
     else:
         logger.warning('Could not parse URL %s' % url)
     return None, None
+
+
+def ensure_chebi_prefix(chebi_id):
+    if chebi_id is None:
+        return None
+    if not chebi_id.startswith('CHEBI:'):
+        return f'CHEBI:{chebi_id}'
+    return chebi_id
+
+
+def ensure_chembl_prefix(chembl_id):
+    if chembl_id is None:
+        return None
+    if not chembl_id.startswith('CHEMBL'):
+        return f'CHEMBL{chembl_id}'
+    return chembl_id
