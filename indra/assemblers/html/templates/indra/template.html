@@ -141,26 +141,30 @@
 <!-- THE LEFT SIDEBAR -->
 <div class="side-info left bg-white " id="left-side-panel">
   <div class="side-info-block">
-    <h4>About this service</h4>
-    {% block header_desc %}
-    {% endblock %}
-  </div>
-
-  <div class="side-info-block">
     <h4>Other services</h4>
     <a class=il-nav-link href="https://emmaa.indra.bio">EMMAA</a>
     <a class=il-nav-link href="http://dialogue.bio">Bob with Bioagents</a>
   </div>
 
   <div class="side-info-block">
-    <h4>Abount this Project</h4>
-    INDRA is developed by <a class="parent-a" href="https://indralab.github.io/">indralabs</a>,
-    a part of the Harvard Medical School Laboratory of Systems Pharmacology.
-  </div>
+    <h4 class="bg-white" type="button" data-toggle="collapse"
+        data-target="#about-this-service">
+      About this service
+    </h4>
+    <div id="about-this-service" class="collapse">
+      {% block header_desc %}
+      {% endblock %}
+    </div>
 
-  <div class="side-info-block">
-    {% block additional_footer %}
-    {% endblock %}
+
+    <h4 class="bg-white" type="button" data-toggle="collapse"
+        data-target="#about-this-project">About this Project</h4>
+    <div id="about-this-project" class="collapse">
+      <p>INDRA is developed by <a class="parent-a" href="https://indralab.github.io/">indralabs</a>,
+        a part of the Harvard Medical School Laboratory of Systems Pharmacology.</p>
+      {% block additional_footer %}
+      {% endblock %}
+    </div>
   </div>
 </div>
 
