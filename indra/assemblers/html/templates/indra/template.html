@@ -49,17 +49,24 @@
         /* The sidebar menu */
         .side-info {
           height: 100%; /* Full-height: remove this if you want "auto" height */
-          width: 16em; /* Set the width of the sidebar */
-          position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+          width: 20em; /* Set the width of the sidebar */
           z-index: 1; /* Stay on top */
+          position: fixed; /* Fixed Sidebar (stay in place on scroll) */
           top: 0; /* Stay at the top */
-          left: 0;
           background-color: #000000; /* Black */
           color: #606060;
           overflow-x: hidden; /* Disable horizontal scroll */
           padding-top: 85px;
           padding-left: 1em;
           padding-right: 1em;
+        }
+
+        .left {
+          left: 0;
+        }
+
+        .right {
+          right: 0;
         }
 
         /* The navigation menu links */
@@ -79,9 +86,24 @@
           padding: 1em 8px 1em 16px;
         }
 
+        .source-desc {
+          border-radius: 4px;
+          padding: 0.25em 0.5em 0.25em 0.5em;
+          margin: 4px;
+        }
+
         .content {
           padding-top:85px;
         }
+
+        {% for category, data in source_colors %}
+          {% for source, font_color in data['sources'].items() %}
+            .source-{{ source }} {
+              background-color: {{ font_color }};
+              color: {{ data['color'] }};
+            }
+          {% endfor %}
+        {% endfor %}
     </style>
 
     {% block scripts %}
@@ -90,6 +112,7 @@
 </head>
 
 <body>
+<!-- THE TOP NAVBAR -->
 <div class="navbar navbar-expand-md fixed-top bg-light shadow-sm border-bottom">
   <img src="https://bigmech.s3.amazonaws.com/indra-db/indralab_bare_logo.png"
        width="30em">
@@ -114,7 +137,9 @@
   </div>
   {% endblock %}
 </div>
-<div class="side-info bg-white " id="left-side-panel">
+
+<!-- THE LEFT SIDEBAR -->
+<div class="side-info left bg-white " id="left-side-panel">
   <div class="side-info-block">
     <h4>About this service</h4>
     {% block header_desc %}
@@ -138,11 +163,43 @@
     {% endblock %}
   </div>
 </div>
+
+<!-- THE MAIN BODY -->
 <main role="main" class="container">
   <div class="content">
     {% block body %}
     {% endblock %}
   </div>
 </main>
+
+<!-- THE RIGHT SIDEBAR -->
+<div class="side-info right bg-white" id="right-side-panel">
+  <div class="side-info-block">
+    <h3 class="bg-white"
+        type="button" data-toggle="collapse"
+        data-target="#sources-explanation">
+      Our Sources:
+    </h3>
+    <p id="sources-explanation" class="collapse">
+      INDRA allows us to combine the results from a multitude of sources. In
+      particular, the INDRA Database draws on the following...
+    </p>
+  </div>
+  {% for category, data in source_colors %}
+    <div class="side-info-block">
+      <h4>{{ category }}</h4>
+      {%  for source in data['sources'].keys() %}
+        <button class="source-desc source-{{ source }} btn"
+                type="button"
+                data-toggle="collapse" data-target="#source-info-{{ source }}">
+          {{ source }}
+        </button>
+        <div id="source-info-{{ source }}" class="source-desc collapse">
+          Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+</div>
 </body>
 </html>
