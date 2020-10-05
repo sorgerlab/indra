@@ -301,3 +301,9 @@ def test_standardize_up_isoform():
            {'UP': 'Q99490', 'HGNC': '16921'}
     assert standardize_db_refs({'UP': 'Q99490-123'}) == \
            {'UP': 'Q99490-123', 'HGNC': '16921'}
+
+
+def test_standardize_chembl():
+    db_refs = standardize_db_refs({'DRUGBANK': 'DB00305'})
+    assert 'CHEMBL' in db_refs, db_refs
+    assert db_refs['CHEMBL'] == 'CHEMBL105', db_refs

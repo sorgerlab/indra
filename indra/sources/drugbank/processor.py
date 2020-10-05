@@ -1,6 +1,9 @@
 import logging
 from xml.etree import ElementTree
 from indra.statements import *
+from indra.databases.identifiers import ensure_chebi_prefix, \
+    ensure_chembl_prefix
+from indra.tools.stmt_validator import assert_valid_db_refs
 from indra.ontology.standardize import standardize_name_db_refs
 
 logger = logging.getLogger(__name__)
@@ -123,13 +126,14 @@ class DrugbankProcessor:
             resource = db_find(xref_tag, 'db:resource').text
             identifier = db_find(xref_tag, 'db:identifier').text
             if resource == 'ChEMBL':
-                db_refs['CHEMBL'] = identifier
+                db_refs['CHEMBL'] = ensure_chembl_prefix(identifier)
             elif resource == 'PubChem Compound':
                 db_refs['PUBCHEM'] = identifier
             elif resource == 'ChEBI':
-                db_refs['CHEBI'] = identifier
-
+                db_refs['CHEBI'] = ensure_chebi_prefix(identifier)
+        assert_valid_db_refs(db_refs)
         standard_name, db_refs = standardize_name_db_refs(db_refs)
+        assert_valid_db_refs(db_refs)
         if standard_name:
             name = standard_name
         agent = Agent(name, db_refs=db_refs)
