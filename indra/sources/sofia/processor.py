@@ -274,7 +274,7 @@ class SofiaProcessor(object):
         # Get name from maximum span of span
         #name = sentence[min(span_text):max(span_text)]
         span_text.sort(key=lambda t: t[0][0])
-        name = ' '.join(t[1] for t in span_text).replace('  ', ' ')
+        name = ' '.join(t[1].lower() for t in span_text).replace('  ', ' ')
 
         # Return 4-tuple of:
         # Theme, Theme Property, Theme Process, Theme Process Property
