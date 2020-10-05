@@ -6,6 +6,7 @@ from ..ontology_graph import IndraOntology
 from indra.util import read_unicode_csv
 from indra.statements import modtype_conditions
 from indra.resources import get_resource_path
+from indra.tools.stmt_validator import assert_valid_db_refs
 
 
 logger = logging.getLogger(__name__)
@@ -290,7 +291,7 @@ class BioOntology(IndraOntology):
 
     def add_ncit_nodes(self):
         from indra.sources.trips.processor import ncit_map
-        nodes = [(self.label('NCIT', ncit_id)) for ncit_id in ncit_map]
+        nodes = [(self.label('NCIT', ncit_id), {}) for ncit_id in ncit_map]
         self.add_nodes_from(nodes)
 
     def add_ncit_xrefs(self):
@@ -419,6 +420,25 @@ class BioOntology(IndraOntology):
             if source != 'modification'
             ]
         )
+
+    def add_nodes_from(self, nodes_for_adding, **attr):
+        for label, _ in nodes_for_adding:
+            db_ns, db_id = self.get_ns_id(label)
+            try:
+                assert_valid_db_refs({db_ns: db_id})
+            except Exception:
+                breakpoint()
+        super().add_nodes_from(nodes_for_adding, **attr)
+
+    def add_edges_from(self, ebunch_to_add, **attr):
+        for source, target, _ in ebunch_to_add:
+            for label in [source, target]:
+                db_ns, db_id = self.get_ns_id(label)
+                try:
+                    assert_valid_db_refs({db_ns: db_id})
+                except Exception:
+                    breakpoint()
+        super().add_edges_from(ebunch_to_add, **attr)
 
 
 CACHE_DIR = os.path.join((get_config('INDRA_RESOURCES') or
