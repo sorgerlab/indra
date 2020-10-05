@@ -270,7 +270,7 @@ class SofiaProcessor(object):
 
         # Get name from maximum span of span
         #name = sentence[min(span_text):max(span_text)]
-        span_text.sort(key=lambda t: 0.5*(t[0][0]+t[0][1]))
+        span_text.sort(key=lambda t: t[0][0])
         name = ' '.join(t[1] for t in span_text).replace('  ', ' ')
 
         # Return 4-tuple of:
