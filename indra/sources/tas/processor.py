@@ -4,6 +4,7 @@ import logging
 from indra.statements import Inhibition, Agent, Evidence
 from indra.databases import hgnc_client, chembl_client, lincs_client
 from indra.ontology.standardize import standardize_name_db_refs
+from indra.tools.stmt_validator import assert_valid_db_refs
 
 
 logger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ class TasProcessor(object):
             else:
                 logger.warning('Unhandled ID type: %s' % id_)
             # Name standardization finds correct names but because
-            # ChEBML is incomplete as a local resource, we don't
+            # ChEMBL is incomplete as a local resource, we don't
             # universally standardize its names, instead, we look
             # it up explicitly when necessary.
             name, db_refs = standardize_name_db_refs(db_refs)
@@ -83,6 +84,7 @@ class TasProcessor(object):
                 if self.named_only:
                     continue
                 name = id_
+            assert_valid_db_refs(db_refs)
             drugs.append(Agent(name, db_refs=db_refs))
         drugs = list({agent.matches_key():
                       agent for agent in drugs}.values())
@@ -96,6 +98,7 @@ class TasProcessor(object):
         standard_name, db_refs = standardize_name_db_refs(refs)
         if standard_name:
             name = standard_name
+        assert_valid_db_refs(db_refs)
         return Agent(name, db_refs=db_refs)
 
     def _make_evidences(self, class_min, references):

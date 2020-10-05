@@ -25,12 +25,13 @@ identifiers_mappings = {
     'CHEMBL': 'chembl.compound',
     'MIRBASEM': 'mirbase.mature',
     'HGNC_GROUP': 'hgnc.genefamily',
-    'CTD': 'ctd.chemical'
+    'CTD': 'ctd.chemical',
+    'IP': 'interpro',
 }
 
 non_registry = {
     'SDIS', 'SCHEM', 'SIGNOR', 'HMS-LINCS', 'NXPFA', 'GENBANK',
-    'OMIM', 'LSPCI'
+    'OMIM', 'LSPCI', 'ECCODE'
 }
 
 non_grounding = {
