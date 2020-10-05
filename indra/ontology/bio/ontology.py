@@ -423,22 +423,23 @@ class BioOntology(IndraOntology):
 
     def add_nodes_from(self, nodes_for_adding, **attr):
         for label, _ in nodes_for_adding:
-            db_ns, db_id = self.get_ns_id(label)
-            try:
-                assert_valid_db_refs({db_ns: db_id})
-            except Exception:
-                breakpoint()
+            self.assert_valid_node(label)
         super().add_nodes_from(nodes_for_adding, **attr)
 
     def add_edges_from(self, ebunch_to_add, **attr):
         for source, target, _ in ebunch_to_add:
             for label in [source, target]:
-                db_ns, db_id = self.get_ns_id(label)
-                try:
-                    assert_valid_db_refs({db_ns: db_id})
-                except Exception:
-                    breakpoint()
+                self.assert_valid_node(label)
         super().add_edges_from(ebunch_to_add, **attr)
+
+    def assert_valid_node(self, label):
+        db_ns, db_id = self.get_ns_id(label)
+        if db_ns in {'INDRA_ACTIVITIES', 'INDRA_MODS'}:
+            return
+        try:
+            assert_valid_db_refs({db_ns: db_id})
+        except Exception as e:
+            logger.warning('Invalid node: %s' % e)
 
 
 CACHE_DIR = os.path.join((get_config('INDRA_RESOURCES') or
