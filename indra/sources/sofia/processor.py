@@ -217,12 +217,14 @@ class SofiaProcessor(object):
         # For events: extracted text is in 'Relation'
         # For entities: extracted text is in 'Entity'
         theme, theme_prop, theme_proc, theme_proc_prop = (None, )*4
-        sentence = event_entry['Text']
+        #sentence = event_entry['Text']
 
         # First, try to get the theme
         event_patients = event_entry['Patient_index'].strip().split(', ')
         if event_patients != ['']:
             theme_span, theme = self._get_entity_grounding(event_patients)
+        else:
+            theme_span = (None, None), None
 
         # See if we have a theme process
         proc = self._clean_grnd_filter(event_entry['Event_Type'],
@@ -235,6 +237,7 @@ class SofiaProcessor(object):
             prop_span, prop = self._get_theme_prop(event_patients)
         else:
             prop = None
+            prop_span = (None, None), None
 
         # Set correct combination of groundings:
 
