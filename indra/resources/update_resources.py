@@ -373,8 +373,7 @@ def update_ncit_map():
     url_chebi = 'https://ncit.nci.nih.gov/ncitbrowser/ajax?action=' + \
                 'export_mapping&dictionary=NCIt_to_ChEBI_Mapping&version=1.0'
 
-    url_swissprot = 'https://ncit.nci.nih.gov/ncitbrowser/ajax?action=' \
-                    'export_mapping&uri=https://evs.nci.nih.gov/ftp1/' \
+    url_swissprot = 'https://evs.nci.nih.gov/ftp1/' \
                     'NCI_Thesaurus/Mappings/NCIt-SwissProt_Mapping.txt'
 
     def get_ncit_df(url):
@@ -407,15 +406,21 @@ def update_ncit_map():
 
     # Add UniProt mappings
     ncit_swissprot_file = 'NCIt-SwissProt.txt'
+    # These entries represent non-Uniprot (nuccode?) IDs and
+    # we exclude them for validity
+    exclude_list = {'M74558', 'U37690', 'U65002'}
     save_from_http(url_swissprot, ncit_swissprot_file)
     df_uniprot = pandas.read_csv(ncit_swissprot_file, sep='\t',
                                  index_col=None)
     up_entries = {'Source Code': [], 'Target Coding Scheme': [],
                   'Target Code': []}
     for entry in df_uniprot.iterrows():
+        up_id = entry[1]['SwissProt ID'].strip()
+        if up_id in exclude_list:
+            continue
         up_entries['Source Code'].append(entry[1]['NCIt Code'].strip())
         up_entries['Target Coding Scheme'].append('UP')
-        up_entries['Target Code'].append(entry[1]['SwissProt ID'].strip())
+        up_entries['Target Code'].append(up_id)
     df_uniprot = pandas.DataFrame.from_dict(up_entries)
     df_uniprot.sort_values(['Source Code', 'Target Code'], ascending=True,
                            inplace=True)

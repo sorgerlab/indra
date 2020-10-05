@@ -67,7 +67,7 @@ def validate_id(db_ns, db_id):
 
 def assert_valid_id(db_ns, db_id):
     if not validate_id(db_ns, db_id):
-        raise InvalidIdentifier(db_id)
+        raise InvalidIdentifier(f'{db_ns}:{db_id}')
 
 
 def assert_valid_db_refs(db_refs):
