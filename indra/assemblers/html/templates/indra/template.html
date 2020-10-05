@@ -104,6 +104,18 @@
             }
           {% endfor %}
         {% endfor %}
+
+        @media (max-width: 1800px) {
+          .left {
+            display: none;
+          }
+        }
+
+        @media (max-width: 1250px) {
+          .right {
+            display: none;
+          }
+        }
     </style>
 
     {% block scripts %}
