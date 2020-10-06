@@ -1,3 +1,5 @@
+"""This module contains a number of resource files that INDRA uses
+to perform tasks such as name standardization and ID mapping."""
 import os
 import json
 
@@ -20,6 +22,17 @@ def get_resource_path(fname):
 
 
 def load_resource_json(fname):
-    """Return a loaded INDRA JSON resource file."""
+    """Load a given JSON file from the resources folder.
+
+    Parameters
+    ----------
+    fname: str
+        The name of the json file in the resources folder.
+
+    Returns
+    -------
+    json
+        The content of the JSON file loaded into a dict/list.
+    """
     with open(get_resource_path(fname), 'r') as fh:
         return json.load(fh)

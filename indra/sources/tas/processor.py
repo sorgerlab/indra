@@ -2,9 +2,9 @@ __all__ = ['TasProcessor']
 
 import logging
 from indra.statements import Inhibition, Agent, Evidence
-from indra.databases import hgnc_client, chembl_client, lincs_client
+from indra.statements.validate import assert_valid_db_refs
 from indra.ontology.standardize import standardize_name_db_refs
-from indra.tools.stmt_validator import assert_valid_db_refs
+from indra.databases import hgnc_client, chembl_client, lincs_client
 
 
 logger = logging.getLogger(__name__)

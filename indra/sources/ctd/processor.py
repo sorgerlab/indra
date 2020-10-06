@@ -1,7 +1,7 @@
 import tqdm
 from indra.statements import *
 from indra.databases import hgnc_client
-from indra.tools.stmt_validator import assert_valid_db_refs
+from indra.statements.validate import assert_valid_db_refs
 from indra.ontology.standardize import standardize_db_refs, \
     standardize_name_db_refs
 

@@ -3,7 +3,7 @@ from xml.etree import ElementTree
 from indra.statements import *
 from indra.databases.identifiers import ensure_chebi_prefix, \
     ensure_chembl_prefix
-from indra.tools.stmt_validator import assert_valid_db_refs
+from indra.statements.validate import assert_valid_db_refs
 from indra.ontology.standardize import standardize_name_db_refs
 
 logger = logging.getLogger(__name__)
