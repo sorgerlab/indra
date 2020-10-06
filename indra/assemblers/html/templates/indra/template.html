@@ -102,6 +102,9 @@
               background-color: {{ font_color }};
               color: {{ data['color'] }};
             }
+            .source-{{ source }} a {
+              color: {{ data['color'] }};
+            }
           {% endfor %}
         {% endfor %}
 
@@ -207,10 +210,12 @@
       {%  for source in data['sources'].keys() %}
         <button class="source-desc source-{{ source }} btn"
                 type="button"
-                data-toggle="collapse" data-target="#source-info-{{ source }}"
-                {% if source_info %}href="{{ source_info[source]['link'] }}"{% endif %}>
+                data-toggle="collapse" data-target="#source-info-{{ source }}">
           {% if source_info %}
-            {{ source_info[source]['name'] }}
+            <a href="{{ source_info[source]['link'] }}"
+              target="_blank">
+              {{ source_info[source]['name'] }}
+            </a>
           {% else %}
             {{ source }}
           {% endif %}
