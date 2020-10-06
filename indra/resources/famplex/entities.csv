@@ -136,6 +136,7 @@ CHRN
 CK2
 Clathrin
 CLCN
+CLEC
 CLIC
 CLK
 CNG
@@ -234,6 +235,7 @@ EXOC
 EXT
 F_actin
 FANC
+FERMT
 FGF
 FGFR
 Fibrin
@@ -268,6 +270,7 @@ G_12_alpha
 GABBR
 GABR
 G_actin
+GAD
 GALNT
 G_alpha
 Gamma_secretase
@@ -349,6 +352,7 @@ HTR
 HTR1
 HTR2
 HVCN
+IFITM
 IFNA
 IFNAR
 IFNB
@@ -390,6 +394,7 @@ KLK
 KSR
 Laminin_111
 Laminin_332
+LATS
 LDH
 LFA_1
 LH
@@ -419,6 +424,9 @@ Mitochondrial_Ribosome
 MKNK
 MMP
 MOB
+MOB1
+MRC
+MRN_complex
 MRPL
 MRPS
 mTORC1
@@ -491,7 +499,7 @@ p38
 p53_family
 P70S6K
 P90RSK
-Paf1/RNA_polymerase_II_complex
+PAF1_complex
 PAK
 PARP
 PARV
