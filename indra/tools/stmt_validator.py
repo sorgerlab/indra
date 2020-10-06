@@ -21,6 +21,7 @@ identifiers_mappings = {
     'LNCRNADB': 'rnacentral',
     'PUBCHEM': 'pubchem.compound',
     'UPPRO': 'uniprot.chain',
+    'UPISO': 'uniprot.isoform',
     'PF': 'pfam',
     'CHEMBL': 'chembl.compound',
     'MIRBASEM': 'mirbase.mature',

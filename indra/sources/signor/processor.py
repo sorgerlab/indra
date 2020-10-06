@@ -15,6 +15,7 @@ from os.path import join, dirname
 from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.resources import get_resource_path
+from indra.ontology.standardize import standardize_name_db_refs
 from indra.sources.reach.processor import parse_amino_acid_string
 from indra.databases import hgnc_client, uniprot_client, chebi_client
 
@@ -172,6 +173,7 @@ class SignorProcessor(object):
         # Returns a list of agents corresponding to this id
         # (If it is a signor complex, returns an Agent object with complex
         # constituents as BoundConditions
+        name = ent_name
         if database == 'SIGNOR' and id in self.complex_map:
             components = self.complex_map[id]
             agents = self._get_complex_agents(id)
@@ -184,27 +186,18 @@ class SignorProcessor(object):
         else:
             gnd_type = _type_db_map[(ent_type, database)]
             if gnd_type == 'UP':
-                up_id = id
-                db_refs = {'UP': up_id}
-                hgnc_id = uniprot_client.get_hgnc_id(up_id)
-                if hgnc_id:
-                    db_refs['HGNC'] = hgnc_id
-                    name = hgnc_client.get_hgnc_name(hgnc_id)
-                else:
-                    name = uniprot_client.get_gene_name(up_id)
+                db_refs = process_uniprot_entry(id)
             # Map SIGNOR protein families to FamPlex families
             elif ent_type == 'proteinfamily':
-                db_refs = {database: id} # Keep the SIGNOR family ID in db_refs
+                db_refs = {database: id}  # Keep the SIGNOR family ID in db_refs
                 key = (database, id)
                 # Use SIGNOR name unless we have a mapping in FamPlex
-                name = ent_name
                 famplex_id = famplex_map.get(key)
                 if famplex_id is None:
                     logger.info('Could not find %s in FamPlex map' %
                                 str(key))
                 else:
                     db_refs['FPLX'] = famplex_id
-                    name = famplex_id
             # Other possible groundings are PUBCHEM, SIGNOR, etc.
             elif gnd_type is not None:
                 if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI', 'miRBase',
@@ -215,12 +208,17 @@ class SignorProcessor(object):
                     # SIGNOR's format in which it leaves extra spaces around
                     # the ID, as in 'CID: 923'
                     id = id[4:].strip()
+                elif database == 'ChEBI' and id.startswith('SID:'):
+                    gnd_type = 'PUBCHEM.SUBSTANCE'
+                    id = id[4:].strip()
                 db_refs = {gnd_type: id}
-                name = ent_name
             # If no grounding, include as an untyped/ungrounded node
             else:
                 name = ent_name
                 db_refs = {}
+            standard_name, db_refs = standardize_name_db_refs(db_refs)
+            if standard_name:
+                name = standard_name
             return Agent(name, db_refs=db_refs)
 
     def _recursively_lookup_complex(self, complex_id):
@@ -491,3 +489,15 @@ def _parse_residue_positions(residue_field):
     res_strs = [rs.strip() for rs in residue_field.split(';')]
     return [parse_amino_acid_string(rp) for rp in res_strs]
 
+
+def process_uniprot_entry(up_id):
+    parts = up_id.split('_', maxsplit=1)
+    if len(parts) == 1:
+        if '-' in up_id:
+            return {'UP': up_id.split('-')[0], 'UPISO': up_id}
+        return {'UP': up_id}
+    else:
+        if parts[1].startswith('PRO'):
+            return {'UP': parts[0], 'UPPRO': parts[1]}
+        else:
+            return {'UP': parts[0]}
