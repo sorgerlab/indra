@@ -18,6 +18,7 @@ from os.path import join, dirname
 from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.databases import hgnc_client, uniprot_client
+from indra.sources.reach.processor import parse_amino_acid_string
 
 logger = logging.getLogger(__name__)
 
@@ -441,10 +442,11 @@ class SignorProcessor(object):
                                             evidence=evidence))
             else:
                 # Modification
-                residues = _parse_residue_positions(row.RESIDUE)
-                mod_stmts = [mech_stmt_type(agent_a, agent_b, res[0], res[1],
+                sites = _parse_residue_positions(row.RESIDUE)
+                mod_stmts = [mech_stmt_type(agent_a, agent_b, site.residue,
+                                            site.position,
                                             evidence=evidence)
-                             for res in residues]
+                             for site in sites]
                 stmts.extend(mod_stmts)
                 # Active Form
                 if effect_stmt_type:
@@ -481,6 +483,7 @@ class SignorProcessor(object):
 def _parse_residue_positions(residue_field):
     # First see if this string contains two positions
     res_strs = [rs.strip() for rs in residue_field.split(';')]
+
     def _parse_respos(respos):
         # Split off the amino acid
         res = respos[0:3]
@@ -502,5 +505,5 @@ def _parse_residue_positions(residue_field):
                            "%s" % respos)
             return (None, None)
         return (res, pos)
-    return [_parse_respos(rp) for rp in res_strs]
+    return [parse_amino_acid_string(rp) for rp in res_strs]
 
