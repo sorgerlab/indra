@@ -7,9 +7,7 @@ if sys.version_info[0] == 3:
 else:
     from ConfigParser import RawConfigParser
 
-
 logger = logging.getLogger(__name__)
-
 
 # If the configuration file does not exist, try to create it from the default
 home_dir = os.path.expanduser('~')
@@ -124,8 +122,8 @@ def get_config(key, failure_ok=True):
 def has_config(key):
     """Returns whether the configuration value for the given kehy is present.
 
-    Parmeters
-    ---------
+    Parameters
+    ----------
     key : str
         The key for the configuration value to fetch
 
@@ -136,3 +134,162 @@ def has_config(key):
     """
     return get_config(key, failure_ok=True) is not None
 
+
+KNOWLEDGE_SOURCE_INFO = {
+    'eidos': {
+        'name': 'Eidos',
+        'link': 'https://github.com/clulab/eidos',
+        'type': 'reader',
+        'domain': 'general'
+    },
+    'cwms': {
+        'name': 'TRIPS/CWMS',
+        'link': 'http://trips.ihmc.us/parser/cgi/cwmsreader',
+        'type': 'reader',
+        'domain': 'general'
+    },
+    'hume': {
+        'name': 'Hume',
+        'link': 'https://github.com/BBN-E/Hume',
+        'type': 'reader',
+        'domain': 'general'
+    },
+    'sofia': {
+        'name': 'Sofia',
+        'link': 'https://sofia.worldmodelers.com/ui/',
+        'type': 'reader',
+        'domain': 'general'
+    },
+    'drum': {
+        'name': 'TRIPS/DRUM',
+        'link': 'http://trips.ihmc.us/parser/cgi/drum',
+        'type': 'reader',
+        'domain': 'biology'
+    },
+    'reach': {
+        'name': 'REACH',
+        'link': 'https://github.com/clulab/reach',
+        'type': 'reader',
+        'domain': 'biology'
+    },
+    'sparser': {
+        'name': 'Sparser',
+        'link': 'https://github.com/ddmcdonald/sparser',
+        'type': 'reader',
+        'domain': 'biology'
+    },
+    'tees': {
+        'name': 'TEES',
+        'link': 'https://github.com/jbjorne/TEES',
+        'type': 'reader',
+        'domain': 'biology'
+    },
+    'medscan': {
+        'name': 'MedScan',
+        'link': 'https://doi.org/10.1093/bioinformatics/btg207',
+        'type': 'reader',
+        'domain': 'biology'
+    },
+    'rlimsp': {
+        'name': 'RLIMS-P',
+        'link': 'https://research.bioinformatics.udel.edu/rlimsp',
+        'type': 'reader',
+        'domain': 'biology'
+    },
+    'isi': {
+        'name': 'ISI/AMR',
+        'link': 'https://github.com/sgarg87/big_mech_isi_gg',
+        'type': 'reader',
+        'domain': 'biology'
+    },
+    'geneways': {
+        'name': 'Geneways',
+        'link': 'https://www.ncbi.nlm.nih.gov/pubmed/15016385',
+        'type': 'reader',
+        'domain': 'biology'
+    },
+    'biopax': {
+        'name': 'BioPax',
+        'link': 'http://www.biopax.org/',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'pc': {
+        'name': 'PathwayCommons',
+        'link': 'http://pathwaycommons.org/',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'bel': {
+        'name': 'BEL',
+        'link': 'https://github.com/pybel/pybel',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'signor': {
+        'name': 'Signor',
+        'link': 'https://signor.uniroma2.it/',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'biogrid': {
+        'name': 'BioGRID',
+        'link': 'https://thebiogrid.org/',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'tas': {
+        'name': 'Target Affinity Spectrum',
+        'link': 'https://doi.org/10.1101/358978',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'lincs_drug': {
+        'name': 'LINCS small molecules',
+        'link': 'http://lincs.hms.harvard.edu/db/sm/',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'hprd': {
+        'name': 'HPRD',
+        'link': 'http://www.hprd.org',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'trrust': {
+        'name': 'TRRUST',
+        'link': 'https://www.grnpedia.org/trrust/',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'phosphoelm': {
+        'name': 'Phospho.ELM',
+        'link': 'http://phospho.elm.eu.org/',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'virhostnet': {
+        'name': 'VirHostNet',
+        'link': 'http://virhostnet.prabi.fr/',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'ctd': {
+        'name': 'CTD',
+        'link': 'http://ctdbase.org',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'drugbank': {
+        'name': 'DrugBank',
+        'link': 'https://www.drugbank.ca/',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'omnipath': {
+        'name': 'OmniPath',
+        'link': 'https://omnipathdb.org/',
+        'type': 'database',
+        'domain': 'biology'
+    }
+}
