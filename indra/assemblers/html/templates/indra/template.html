@@ -203,16 +203,23 @@
   </div>
   {% for category, data in source_colors %}
     <div class="side-info-block">
-      <h4>{{ category }}</h4>
+      <h4>{{ category|capitalize }}</h4>
       {%  for source in data['sources'].keys() %}
         <button class="source-desc source-{{ source }} btn"
                 type="button"
-                data-toggle="collapse" data-target="#source-info-{{ source }}">
-          {{ source }}
+                data-toggle="collapse" data-target="#source-info-{{ source }}"
+                {% if source_info %}href="{{ source_info[source]['link'] }}"{% endif %}>
+          {% if source_info %}
+            {{ source_info[source]['name'] }}
+          {% else %}
+            {{ source }}
+          {% endif %}
         </button>
+        {% if source_info and 'desc' in source_info[source] and source_info[source]['desc'] %}
         <div id="source-info-{{ source }}" class="source-desc collapse">
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+          {{ source_info[source]['desc'] }}
         </div>
+        {% endif %}
       {% endfor %}
     </div>
   {% endfor %}

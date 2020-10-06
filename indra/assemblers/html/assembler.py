@@ -12,6 +12,7 @@ from os.path import abspath, dirname, join
 
 from jinja2 import Environment, FileSystemLoader
 
+from indra.config import KNOWLEDGE_SOURCE_INFO
 from indra.statements import *
 from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.databases import get_identifiers_url
@@ -43,6 +44,23 @@ def color_gen(scheme):
     while True:
         for color in color_schemes[scheme]:
             yield color
+
+
+db_sources = ['phosphosite', 'cbn', 'pc', 'biopax', 'bel',
+              'signor', 'biogrid', 'lincs_drug', 'tas', 'hprd', 'trrust',
+              'ctd', 'virhostnet', 'phosphoelm', 'drugbank', 'omnipath']
+
+reader_sources = ['geneways', 'tees', 'isi', 'trips', 'rlimsp', 'medscan',
+                  'sparser', 'eidos', 'reach']
+
+all_sources = db_sources + reader_sources
+
+# These are mappings where the actual INDRA source, as it appears
+# in the evidence source_api is inconsistent with the colors here and
+# with what comes out of the INDRA DB
+internal_source_mappings = {
+    'bel': 'bel_lc'
+}
 
 
 SOURCE_COLORS = [
@@ -397,6 +415,7 @@ class HtmlAssembler(object):
         self.model = template.render(stmt_data=tl_stmts,
                                      metadata=metadata, title=self.title,
                                      db_rest_url=db_rest_url,
+                                     source_info=KNOWLEDGE_SOURCE_INFO,
                                      add_full_text_search_link=add_full_text_search_link,  # noqa
                                      **template_kwargs)
         return self.model
