@@ -139,8 +139,7 @@ class HtmlAssembler(object):
 
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
                  ev_counts=None, source_counts=None, curation_dict=None,
-                 title='INDRA Results',
-                 db_rest_url=None):
+                 title='INDRA Results', db_rest_url=None):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
@@ -415,11 +414,12 @@ class HtmlAssembler(object):
                 {src: src for src in all_sources}
         if 'source_colors' not in template_kwargs:
             template_kwargs['source_colors'] = DEFAULT_SOURCE_COLORS
+        if 'source_info' not in template_kwargs:
+            template_kwargs['source_info'] = KNOWLEDGE_SOURCE_INFO
 
         self.model = template.render(stmt_data=tl_stmts,
                                      metadata=metadata, title=self.title,
                                      db_rest_url=db_rest_url,
-                                     source_info=KNOWLEDGE_SOURCE_INFO,
                                      add_full_text_search_link=add_full_text_search_link,  # noqa
                                      **template_kwargs)
         return self.model
