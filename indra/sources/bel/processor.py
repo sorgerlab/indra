@@ -503,6 +503,8 @@ def get_db_refs_by_name(ns, name, node_data):
     elif ns == 'FPLX':
         db_refs = {'FPLX': name}
     elif ns in ('GO', 'GOBP', 'GOCC'):
+        if name == 'cell proliferation':
+            name = 'cell population proliferation'
         go_id = go_client.get_go_id_from_label(name)
         if not go_id:
             logger.info('Could not find GO ID for %s' % name)
@@ -520,14 +522,29 @@ def get_db_refs_by_name(ns, name, node_data):
     # it's clear what namespace the name belongs to
     # FIXME: Full implementation would look up MGI/RGD identifiers from
     # the names, and obtain corresponding Uniprot IDs
-    elif ns in ('MGI', 'RGD'):
-        db_refs = {ns: name}
-    # Map Selventa families to FamPlexes
+    elif ns == 'MGI':
+        up_id = mouse_lookup.get(name)
+        if up_id:
+            db_refs = {'UP': up_id}
+    elif ns == 'RGD':
+        up_id = rat_lookup.get(name)
+        if up_id:
+            db_refs = {'UP': up_id}
+    # Map Selventa families and complexes to FamPlex
     elif ns == 'SFAM':
         db_refs = {'SFAM': name}
         indra_name = bel_to_indra.get(name)
         if indra_name is None:
             logger.info('Could not find mapping for BEL/SFAM family: '
+                        '%s (%s)' % (name, node_data))
+        else:
+            db_refs['FPLX'] = indra_name
+            name = indra_name
+    elif ns == 'SCOMP':
+        db_refs = {'SCOMP': name}
+        indra_name = bel_to_indra.get(name)
+        if indra_name is None:
+            logger.info('Could not find mapping for BEL/SCOMP complex: '
                         '%s (%s)' % (name, node_data))
         else:
             db_refs['FPLX'] = indra_name
@@ -550,7 +567,7 @@ def get_db_refs_by_name(ns, name, node_data):
             if mirbase_id:
                 db_refs['MIRBASE'] = mirbase_id
         else:
-            logger.info('Could not map EGID%s to HGNC.' % name)
+            logger.debug('Could not map EGID%s to HGNC.' % name)
             name = 'E%s' % name
     elif ns == 'MIRBASE':
         mirbase_id = mirbase_client.get_mirbase_id_from_mirbase_name(name)
@@ -708,6 +725,9 @@ def _get_up_id(hgnc_id):
     up_id = hgnc_client.get_uniprot_id(hgnc_id)
     if not up_id:
         logger.info("No Uniprot ID for HGNC ID %s" % hgnc_id)
+        return None
+    if ',' in up_id:
+        return None
     return up_id
 
 
@@ -904,3 +924,12 @@ def _build_chebi_map():
 
 bel_to_indra = _build_famplex_map()
 chebi_name_id = _build_chebi_map()
+
+
+mouse_lookup = {gene_name: up_id for up_id, gene_name in
+                uniprot_client.um.uniprot_gene_name.items()
+                if uniprot_client.is_mouse(up_id)}
+
+rat_lookup = {gene_name: up_id for up_id, gene_name in
+              uniprot_client.um.uniprot_gene_name.items()
+              if uniprot_client.is_rat(up_id)}

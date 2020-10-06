@@ -31,8 +31,8 @@ identifiers_mappings = {
 }
 
 non_registry = {
-    'SDIS', 'SCHEM', 'SIGNOR', 'HMS-LINCS', 'NXPFA', 'GENBANK',
-    'OMIM', 'LSPCI', 'ECCODE'
+    'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'SIGNOR', 'HMS-LINCS', 'NXPFA',
+    'GENBANK', 'OMIM', 'LSPCI', 'ECCODE'
 }
 
 non_grounding = {
