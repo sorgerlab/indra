@@ -34,8 +34,8 @@ default_template = env.get_template('indra/statements_view.html')
 color_schemes = {
     'dark': ['#b2df8a', '#000099', '#6a3d9a', '#1f78b4', '#fdbf6f', '#ff7f00',
              '#cab2d6', '#fb9a99', '#a6cee3', '#33a02c', '#b15928', '#e31a1c'],
-    'light': ['#bc80bd', '#fccde5', '#b3de69', '#80b1d3', '#fb8072', '#bebada',
-              '#fdb462', '#d9d9d9', '#8dd3c7', '#ffed6f', '#ccebc5', '#e0e03d',
+    'light': ['#bebada', '#fdb462', '#b3de69', '#80b1d3', '#bc80bd', '#fccde5',
+              '#fb8072', '#d9d9d9', '#8dd3c7', '#ffed6f', '#ccebc5', '#e0e03d',
               '#ffe8f4', '#acfcfc', '#dd99ff', '#00d4a6']
 }
 
@@ -64,14 +64,14 @@ internal_source_mappings = {
 
 
 def make_source_colors(databases, readers):
-    return [
-        ('databases', {'color': 'black',
-                       'sources': dict(zip(databases,
-                                           color_gen('light')))}),
-        ('reading', {'color': 'white',
-                     'sources': dict(zip(readers,
-                                         color_gen('light')))}),
-    ]
+    rdr_ord = ['reach', 'sparser', 'medscan', 'trips', 'eidos']
+    readers.sort(key=lambda r: rdr_ord.index(r) if r in rdr_ord else len(rdr_ord))
+    reader_colors_list = list(zip(readers, color_gen('light')))
+    reader_colors_list.reverse()
+    reader_colors = dict(reader_colors_list)
+    db_colors = dict(zip(databases, color_gen('light')))
+    return [('databases', {'color': 'black', 'sources': db_colors}),
+            ('reading', {'color': 'white', 'sources': reader_colors})]
 
 
 DEFAULT_SOURCE_COLORS = make_source_colors(db_sources, reader_sources)
