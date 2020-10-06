@@ -220,6 +220,18 @@ KNOWLEDGE_SOURCE_INFO = {
         'type': 'database',
         'domain': 'biology'
     },
+    'phosphosite': {
+        'name': 'Phosphosite Plus',
+        'link': 'https://www.phosphosite.org/homeAction.action',
+        'type': 'database',
+        'domain': 'biology'
+    },
+    'cbn': {
+        'name': 'Causal Bionet',
+        'link': 'http://causalbionet.com/',
+        'type': 'database',
+        'domain': 'biology'
+    },
     'bel': {
         'name': 'BEL',
         'link': 'https://github.com/pybel/pybel',
@@ -293,3 +305,8 @@ KNOWLEDGE_SOURCE_INFO = {
         'domain': 'biology'
     }
 }
+
+
+# This is a bit hack-y, but the names are so interchanged the alternative is
+# a LOT of work.
+KNOWLEDGE_SOURCE_INFO['trips'] = KNOWLEDGE_SOURCE_INFO['drum']
