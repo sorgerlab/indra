@@ -63,14 +63,18 @@ internal_source_mappings = {
 }
 
 
-SOURCE_COLORS = [
-    ('databases', {'color': 'black',
-                   'sources': dict(zip(db_sources,
-                                       color_gen('light')))}),
-    ('reading', {'color': 'white',
-                 'sources': dict(zip(reader_sources,
-                                     color_gen('light')))}),
-]
+def make_source_colors(databases, readers):
+    return [
+        ('databases', {'color': 'black',
+                       'sources': dict(zip(databases,
+                                           color_gen('light')))}),
+        ('reading', {'color': 'white',
+                     'sources': dict(zip(readers,
+                                         color_gen('light')))}),
+    ]
+
+
+DEFAULT_SOURCE_COLORS = make_source_colors(db_sources, reader_sources)
 
 
 class HtmlAssembler(object):
@@ -410,7 +414,7 @@ class HtmlAssembler(object):
             template_kwargs['source_key_dict'] = \
                 {src: src for src in all_sources}
         if 'source_colors' not in template_kwargs:
-            template_kwargs['source_colors'] = SOURCE_COLORS
+            template_kwargs['source_colors'] = DEFAULT_SOURCE_COLORS
 
         self.model = template.render(stmt_data=tl_stmts,
                                      metadata=metadata, title=self.title,
