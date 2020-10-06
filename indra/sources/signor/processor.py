@@ -483,27 +483,5 @@ class SignorProcessor(object):
 def _parse_residue_positions(residue_field):
     # First see if this string contains two positions
     res_strs = [rs.strip() for rs in residue_field.split(';')]
-
-    def _parse_respos(respos):
-        # Split off the amino acid
-        res = respos[0:3]
-        pos = respos[3:]
-        # Get the abbreviated amino acid
-        res = amino_acids_reverse.get(res.lower())
-        if not res:
-            logger.warning("Could not get amino acid residue for "
-                           "residue/position %s" % respos)
-            return (None, None)
-        # If there's no position, return residue only
-        if not pos:
-            return (res, None)
-        # Make sure the position is an integer
-        try:
-            int(pos)
-        except ValueError:
-            logger.warning("Could not get valid position for residue/position "
-                           "%s" % respos)
-            return (None, None)
-        return (res, pos)
     return [parse_amino_acid_string(rp) for rp in res_strs]
 
