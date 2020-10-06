@@ -49,8 +49,7 @@
         /* The sidebar menu */
         .side-info {
           height: 100%; /* Full-height: remove this if you want "auto" height */
-          width: 20em; /* Set the width of the sidebar */
-          z-index: 1; /* Stay on top */
+          z-index: -1; /* Stay on top */
           position: fixed; /* Fixed Sidebar (stay in place on scroll) */
           top: 0; /* Stay at the top */
           background-color: #000000; /* Black */
@@ -62,10 +61,12 @@
         }
 
         .left {
+          width: 20em;
           left: 0;
         }
 
         .right {
+          width: 20em;
           right: 0;
         }
 
@@ -112,9 +113,21 @@
           .left {
             display: none;
           }
+          .right {
+            width: 20%;
+          }
+          .container {
+            float: left;
+          }
         }
 
-        @media (max-width: 1250px) {
+        @media (max-width: 1500px) {
+          .right {
+            width: 15%;
+          }
+        }
+
+        @media (max-width: 1300px) {
           .right {
             display: none;
           }
