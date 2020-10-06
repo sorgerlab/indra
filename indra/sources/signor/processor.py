@@ -8,23 +8,21 @@ Perfetto et al., "SIGNOR: a database of causal relationships between
 biological entities," Nucleic Acids Research, Volume 44, Issue D1, 4
 January 2016, Pages D548-D554. https://doi.org/10.1093/nar/gkv1048
 """
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
 import logging
 from copy import deepcopy
 from collections import Counter
 from os.path import join, dirname
 from indra.statements import *
 from indra.util import read_unicode_csv
-from indra.databases import hgnc_client, uniprot_client
+from indra.resources import get_resource_path
 from indra.sources.reach.processor import parse_amino_acid_string
+from indra.databases import hgnc_client, uniprot_client, chebi_client
 
 logger = logging.getLogger(__name__)
 
 
 def _read_famplex_map():
-    fname = join(dirname(__file__), '../../resources/famplex_map.tsv')
+    fname = get_resource_path('famplex_map.tsv')
     raw_map = read_unicode_csv(fname, '\t')
 
     m = {}
@@ -95,7 +93,7 @@ _mechanism_map = {
     'palmitoylation': Palmitoylation,
     'phosphorylation': Phosphorylation,
     'stabilization': IncreaseAmount,
-    'sumoylation': Sumoylation
+    'sumoylation': Sumoylation,
 }
 
 
@@ -181,7 +179,7 @@ class SignorProcessor(object):
             # condition
             agent = agents[0]
             agent.bound_conditions = \
-                    [BoundCondition(a, True) for a in agents[1:]]
+                [BoundCondition(a, True) for a in agents[1:]]
             return agent
         else:
             gnd_type = _type_db_map[(ent_type, database)]
@@ -256,32 +254,36 @@ class SignorProcessor(object):
 
         for c in components:
             db_refs = {}
-            name = uniprot_client.get_gene_name(c)
-            if name is None:
-                db_refs['SIGNOR'] = c
+            if c.startswith('CHEBI'):
+                db_refs['CHEBI'] = c
+                name = chebi_client.get_chebi_name_from_id(c)
             else:
-                db_refs['UP'] = c
-                hgnc_id = uniprot_client.get_hgnc_id(c)
-                if hgnc_id:
-                    name = hgnc_client.get_hgnc_name(hgnc_id)
-                    db_refs['HGNC'] = hgnc_id
+                name = uniprot_client.get_gene_name(c)
+                if name is None:
+                    db_refs['SIGNOR'] = c
+                else:
+                    db_refs['UP'] = c
+                    hgnc_id = uniprot_client.get_hgnc_id(c)
+                    if hgnc_id:
+                        name = hgnc_client.get_hgnc_name(hgnc_id)
+                        db_refs['HGNC'] = hgnc_id
 
-            famplex_key = ('SIGNOR', c)
-            if famplex_key in famplex_map:
-                db_refs['FPLX'] = famplex_map[famplex_key]
-                if not name:
-                    name = db_refs['FPLX']  # Set agent name to Famplex name if
-                                            # the Uniprot name is not available
-            elif not name:
-                # We neither have a Uniprot nor Famplex grounding
-                logger.info('Have neither a Uniprot nor Famplex grounding ' + \
-                            'for ' + c)
-                if not name:
-                    name = db_refs['SIGNOR']  # Set the agent name to the
-                                              # Signor name if neither the
-                                              # Uniprot nor Famplex names are
-                                              # available
-            assert(name is not None)
+                famplex_key = ('SIGNOR', c)
+                if famplex_key in famplex_map:
+                    db_refs['FPLX'] = famplex_map[famplex_key]
+                    if not name:
+                        # Set agent name to Famplex name if
+                        # the Uniprot name is not available
+                        name = db_refs['FPLX']
+                elif not name:
+                    # We neither have a Uniprot nor Famplex grounding
+                    logger.info('Have neither a Uniprot nor Famplex grounding '
+                                'for "%s" in complex %s' % (c, complex_id))
+                    if not name:
+                        # Set the agent name to the Signor name if neither the
+                        # Uniprot nor Famplex names are available
+                        name = db_refs['SIGNOR']
+            assert name is not None
             agents.append(Agent(name, db_refs=db_refs))
         return agents
 
@@ -392,7 +394,11 @@ class SignorProcessor(object):
         effect_stmt_type = _effect_map[row.EFFECT]
         # Get the mechanism statement type.
         if row.MECHANISM:
-            mech_stmt_type = _mechanism_map[row.MECHANISM]
+            if row.MECHANISM not in _mechanism_map:
+                logger.warning('Unhandled mechanism type: %s' % row.MECHANISM)
+                mech_stmt_type = None
+            else:
+                mech_stmt_type = _mechanism_map[row.MECHANISM]
         else:
             mech_stmt_type = None
         # (Note that either or both effect/mech stmt types may be None at this

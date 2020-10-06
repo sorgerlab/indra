@@ -110,5 +110,6 @@ def _processor_from_data(data_iter, complexes_iter):
     complex_map = {}
     if complexes_iter:
         for crow in complexes_iter:
-            complex_map[crow[0]] = crow[2].split(',  ')
+            complex_map[crow[0]] = [c for c in crow[2].split(',  ')
+                                    if c]
     return SignorProcessor(data, complex_map)
