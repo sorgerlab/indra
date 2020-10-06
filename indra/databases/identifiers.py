@@ -1,6 +1,8 @@
-import logging
 import re
+import json
+import logging
 from urllib import parse
+from indra.resources import load_resource_json
 
 
 logger = logging.getLogger(__name__)
@@ -8,36 +10,39 @@ logger = logging.getLogger(__name__)
 
 identifiers_url = 'https://identifiers.org'
 
+identifiers_mappings = {
+    'REFSEQ_PROT': 'refseq',
+    'NCBI': 'ncibgene',
+    'UP': 'uniprot',
+    'NONCODE': 'noncodev4.rna',
+    'EGID': 'ncbigene',
+    'LINCS': 'lincs.smallmolecule',
+    'LNCRNADB': 'rnacentral',
+    'PUBCHEM': 'pubchem.compound',
+    'UPPRO': 'uniprot.chain',
+    'UPISO': 'uniprot.isoform',
+    'PF': 'pfam',
+    'CHEMBL': 'chembl.compound',
+    'MIRBASEM': 'mirbase.mature',
+    'HGNC_GROUP': 'hgnc.genefamily',
+    'CTD': 'ctd.chemical',
+    'IP': 'interpro',
+}
+
+non_registry = {
+    'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'SIGNOR', 'HMS-LINCS', 'NXPFA',
+    'GENBANK', 'OMIM', 'LSPCI', 'ECCODE'
+}
+
+non_grounding = {
+    'TEXT', 'TEXT_NORM'
+}
+
+
 # These are only the URLs that are strictly prefixes and not more complicated
 # patterns. This is because some downstream code uses these as prefixes
 # rather than arbitrary patterns.
 url_prefixes = {
-    'UP': '%s/uniprot:' % identifiers_url,
-    'HGNC': '%s/hgnc:' % identifiers_url,
-    'IP': '%s/interpro:' % identifiers_url,
-    'IPR': '%s/interpro:' % identifiers_url,
-    'CHEBI': '%s/' % identifiers_url,  # note that IDs start with CHEBI:
-    'NCIT': '%s/ncit:' % identifiers_url,
-    'GO': '%s/' % identifiers_url,   # note that IDs start with GO:
-    'PCID': '%s/pubchem.compound:' % identifiers_url,
-    'PUBCHEM': '%s/pubchem.compound:' % identifiers_url,
-    'PUBCHEM.SUBSTANCE': '%s/pubchem.substance:' % identifiers_url,
-    'PF': '%s/pfam:' % identifiers_url,
-    'MIRBASEM': '%s/mirbase.mature:' % identifiers_url,
-    'MIRBASE': '%s/mirbase:' % identifiers_url,
-    'MESH': '%s/mesh:' % identifiers_url,
-    'EGID': '%s/ncbigene:' % identifiers_url,
-    'HMDB': '%s/hmdb:' % identifiers_url,
-    'FPLX': '%s/fplx:' % identifiers_url,
-    'REFSEQ_PROT': '%s/refseq:' % identifiers_url,
-    'EFO': '%s/efo:' % identifiers_url,
-    'HP': '%s/' % identifiers_url,  # note that IDs start with HP:
-    'DOID': '%s/' % identifiers_url,  # note that IDs start with DOID:
-    'ECCODE': '%s/ec-code:' % identifiers_url,
-    'CAS': '%s/cas:' % identifiers_url,
-    'DRUGBANK': '%s/drugbank:' % identifiers_url,
-    'TAXONOMY': '%s/taxonomy:' % identifiers_url,
-    'BTO': '%s/BTO:' % identifiers_url,
     'NXPFA': 'https://www.nextprot.org/term/FA-',
     'SIGNOR': 'https://signor.uniroma2.it/relation_result.php?id=',
     'UN': 'https://github.com/clulab/eidos/wiki/JSON-LD#Grounding/',
@@ -49,8 +54,21 @@ url_prefixes = {
     'SOFIA': 'http://cs.cmu.edu/sofia/',
     'HGNC_GROUP': 'https://www.genenames.org/data/genegroup/#!/group/',
     'PR': 'https://proconsortium.org/app/entry/PR%3A',
-    'GENBANK': 'https://www.ncbi.nlm.nih.gov/protein/'
+    'GENBANK': 'https://www.ncbi.nlm.nih.gov/protein/',
 }
+
+
+def get_url_prefix(db_name):
+    identifiers_entry = identifiers_registry.get(db_name.lower())
+    if identifiers_entry:
+        if not identifiers_entry['prefix_embedded']:
+            return '%s/%s:' % (identifiers_url, db_name.lower())
+        else:
+            return '%s/' % identifiers_url
+    else:
+        if db_name in url_prefixes:
+            return url_prefixes[db_name]
+    return None
 
 
 def get_identifiers_url(db_name, db_id):
@@ -70,7 +88,7 @@ def get_identifiers_url(db_name, db_id):
     """
     # This is the case where we have a prefix that we can simply attach the
     # db_id to to get the desired URL.
-    prefix = url_prefixes.get(db_name)
+    prefix = get_url_prefix(db_name)
     if prefix:
         return '%s%s' % (prefix, db_id)
 
@@ -114,10 +132,6 @@ def get_identifiers_url(db_name, db_id):
             url = 'http://www.noncode.org/show_gene.php?id=%s' % db_id
     elif db_name == 'TEXT' or db_name == 'TEXT_NORM':
         return None
-    elif db_name == 'UPPRO':
-        from indra.databases.uniprot_client import get_feature_of
-        up_id = get_feature_of(db_id)
-        url = '%s%s#%s' % (url_prefixes['UP'], up_id, db_id)
     else:
         logger.warning('Unhandled name space %s' % db_name)
         url = None
@@ -246,3 +260,6 @@ def ensure_chembl_prefix(chembl_id):
     if not chembl_id.startswith('CHEMBL'):
         return f'CHEMBL{chembl_id}'
     return chembl_id
+
+
+identifiers_registry = load_resource_json('identifiers_patterns.json')

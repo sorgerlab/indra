@@ -1,6 +1,6 @@
 import re
-import json
-from indra.resources import get_resource_path
+from indra.databases.identifiers import identifiers_mappings, \
+    non_grounding, non_registry, identifiers_registry
 
 
 class UnknownNamespace(ValueError):
@@ -9,35 +9,6 @@ class UnknownNamespace(ValueError):
 
 class InvalidIdentifier(ValueError):
     pass
-
-
-identifiers_mappings = {
-    'REFSEQ_PROT': 'refseq',
-    'NCBI': 'ncibgene',
-    'UP': 'uniprot',
-    'NONCODE': 'noncodev4.rna',
-    'EGID': 'ncbigene',
-    'LINCS': 'lincs.smallmolecule',
-    'LNCRNADB': 'rnacentral',
-    'PUBCHEM': 'pubchem.compound',
-    'UPPRO': 'uniprot.chain',
-    'UPISO': 'uniprot.isoform',
-    'PF': 'pfam',
-    'CHEMBL': 'chembl.compound',
-    'MIRBASEM': 'mirbase.mature',
-    'HGNC_GROUP': 'hgnc.genefamily',
-    'CTD': 'ctd.chemical',
-    'IP': 'interpro',
-}
-
-non_registry = {
-    'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'SIGNOR', 'HMS-LINCS', 'NXPFA',
-    'GENBANK', 'OMIM', 'LSPCI', 'ECCODE'
-}
-
-non_grounding = {
-    'TEXT', 'TEXT_NORM'
-}
 
 
 def validate_ns(db_ns):
@@ -82,11 +53,6 @@ def validate_db_refs(db_refs):
                for db_ns, db_id in db_refs.items())
 
 
-def load_identifiers_registry():
-    with open(get_resource_path('identifiers_patterns.json'), 'r') as fh:
-        return json.load(fh)
-
-
 def validate_statement(stmt):
     return all(validate_db_refs(agent.db_refs)
                for agent in stmt.real_agent_list())
@@ -95,6 +61,3 @@ def validate_statement(stmt):
 def assert_valid_statement(stmt):
     for agent in stmt.real_agent_list():
         assert_valid_db_refs(agent.db_refs)
-
-
-identifiers_registry = load_identifiers_registry()
