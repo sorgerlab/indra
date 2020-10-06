@@ -6,7 +6,7 @@ from ..ontology_graph import IndraOntology
 from indra.util import read_unicode_csv
 from indra.statements import modtype_conditions
 from indra.resources import get_resource_path
-from indra.tools.stmt_validator import assert_valid_db_refs
+from indra.statements.validate import assert_valid_db_refs
 
 
 logger = logging.getLogger(__name__)
