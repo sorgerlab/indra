@@ -278,12 +278,12 @@ def test_shortest_simple_paths_strict_mesh_id_filtering():
     G = _setup_unsigned_graph()[0]
     G.add_edge('A2', 'B3', belief=0.7, weight=-np.log(0.7))
     G.add_edge('B3', 'B1', belief=0.7, weight=-np.log(0.7))
-    edge_hashes = G.graph['hashes']
-    edge_hashes[('A2', 'B3')] = [14]
-    edge_hashes[('B3', 'B1')] = [15]
 
     def count_paths(source, target, hashes):
-        def ref_counts_function(u, v):
+        def ref_counts_function(G, u, v):
+            edge_hashes = G.graph['hashes']
+            edge_hashes[('A2', 'B3')] = [14]
+            edge_hashes[('B3', 'B1')] = [15]
             try:
                 return len(set(hashes).intersection(
                     set(edge_hashes[(u, v)]))), None
@@ -325,10 +325,10 @@ def test_shortest_simple_paths_strict_mesh_id_filtering():
 def test_shortest_simple_paths_weighed_by_mesh_ids():
     G = _setup_unsigned_graph()[0]
     G.add_edge('A3', 'B1', belief=0.7, weight=-np.log(0.7))
-    edge_hashes = G.graph['hashes']
-    edge_hashes[('A3', 'B1')] = [14]
     def find_paths(hashes):
-        def ref_counts_function(u, v):
+        def ref_counts_function(G, u, v):
+            edge_hashes = G.graph['hashes']
+            edge_hashes[('A3', 'B1')] = [14]
             try:
                 return \
                     len(set(hashes).intersection(set(edge_hashes[(u, v)]))),\
@@ -397,11 +397,12 @@ def test_open_dijksta():
     dg, all_ns = _setup_unsigned_graph()
     dg.add_edge('A3', 'B1', belief=0.7, weight=-np.log(0.7))
     edge_hashes = dg.graph['hashes']
-    edge_hashes[('A3', 'B1')] = [14]
 
     def find_paths(source, reverse=False, hashes=None, depth_limit=6,
                    path_limit=9):
-        def ref_counts_function(u, v):
+        def ref_counts_function(G, u, v):
+            edge_hashes = G.graph['hashes']
+            edge_hashes[('A3', 'B1')] = [14]
             try:
                 return len(
                     set(hashes).intersection(set(edge_hashes[(u, v)]))),\
@@ -410,8 +411,7 @@ def test_open_dijksta():
                 return 0, len(hashes)
         return list(open_dijkstra_search(
             dg, source, reverse=reverse, hashes=hashes,
-            ref_counts_function=ref_counts_function,
-            depth_limit=depth_limit, path_limit=path_limit,
+            ref_counts_function=ref_counts_function, path_limit=path_limit,
             weight='context_weight' if hashes else 'weight'))
 
     def sort_by_weight(paths, reverse):
