@@ -46,23 +46,6 @@ def color_gen(scheme):
             yield color
 
 
-db_sources = ['phosphosite', 'cbn', 'pc', 'biopax', 'bel',
-              'signor', 'biogrid', 'lincs_drug', 'tas', 'hprd', 'trrust',
-              'ctd', 'virhostnet', 'phosphoelm', 'drugbank', 'omnipath']
-
-reader_sources = ['geneways', 'tees', 'isi', 'trips', 'rlimsp', 'medscan',
-                  'sparser', 'eidos', 'reach']
-
-all_sources = db_sources + reader_sources
-
-# These are mappings where the actual INDRA source, as it appears
-# in the evidence source_api is inconsistent with the colors here and
-# with what comes out of the INDRA DB
-internal_source_mappings = {
-    'bel': 'bel_lc'
-}
-
-
 def make_source_colors(databases, readers):
     rdr_ord = ['reach', 'sparser', 'medscan', 'trips', 'eidos']
     readers.sort(key=lambda r: rdr_ord.index(r) if r in rdr_ord else len(rdr_ord))
