@@ -12,7 +12,7 @@ from indra.util import read_unicode_csv
 from indra.preassembler.grounding_mapper.gilda import get_gilda_models
 from indra.ontology.standardize import standardize_db_refs, \
     standardize_agent_name
-from .disambiguate import adeft_disambiguators, DisambiguationHandler
+from .disambiguate import adeft_disambiguators, DisambManager
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class GroundingMapper(object):
         self.misgrounding_map = misgrounding_map if misgrounding_map \
             else default_misgrounding_map
         self.use_adeft = use_adeft
-        self.disamb_handler = DisambiguationHandler()
+        self.disamb_manager = DisambManager()
         self.gilda_mode = gilda_mode
         self._gilda_models = None
 
@@ -161,7 +161,7 @@ class GroundingMapper(object):
                     txt_for_adeft = sorted(agent_txts &
                                            set(adeft_disambiguators),
                                            key=lambda x: len(x))[-1]
-                    adeft_success = self.disamb_handler.\
+                    adeft_success = self.disamb_manager.\
                         run_adeft_disambiguation(mapped_stmt, agent, idx,
                                                  txt_for_adeft)
                 except Exception as e:
@@ -176,7 +176,7 @@ class GroundingMapper(object):
                     # Us the longest match for disambiguation
                     txt_for_gilda = sorted(agent_txts & set(self.gilda_models),
                                            key=lambda x: len(x))[-1]
-                    gilda_success = self.disamb_handler.\
+                    gilda_success = self.disamb_manager.\
                         run_gilda_disambiguation(mapped_stmt, agent, idx,
                                                  txt_for_gilda,
                                                  mode=self.gilda_mode)

@@ -19,7 +19,12 @@ except Exception:
     adeft_disambiguators = {}
 
 
-class DisambiguationHandler(object):
+class DisambManager(object):
+    """Manages running of disambiguation models
+
+    Has methods to run disambiguation with either adeft or gilda. Each instance
+    of this class uses a single database connection.
+    """
     def __init__(self):
         try:
             from indra_db.util.content_scripts import TextContentSessionHandler
