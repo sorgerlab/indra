@@ -12,10 +12,10 @@ from os.path import abspath, dirname, join
 
 from jinja2 import Environment, FileSystemLoader
 
-from indra.config import KNOWLEDGE_SOURCE_INFO
 from indra.statements import *
-from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
+from indra.sources import SOURCE_INFO
 from indra.databases import get_identifiers_url
+from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_sort_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
@@ -415,7 +415,7 @@ class HtmlAssembler(object):
         if 'source_colors' not in template_kwargs:
             template_kwargs['source_colors'] = DEFAULT_SOURCE_COLORS
         if 'source_info' not in template_kwargs:
-            template_kwargs['source_info'] = KNOWLEDGE_SOURCE_INFO
+            template_kwargs['source_info'] = SOURCE_INFO.copy()
         if 'simple' not in template_kwargs:
             template_kwargs['simple'] = True
 
