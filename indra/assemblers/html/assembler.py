@@ -416,6 +416,8 @@ class HtmlAssembler(object):
             template_kwargs['source_colors'] = DEFAULT_SOURCE_COLORS
         if 'source_info' not in template_kwargs:
             template_kwargs['source_info'] = KNOWLEDGE_SOURCE_INFO
+        if 'simple' not in template_kwargs:
+            template_kwargs['simple'] = True
 
         self.model = template.render(stmt_data=tl_stmts,
                                      metadata=metadata, title=self.title,

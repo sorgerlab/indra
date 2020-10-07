@@ -36,14 +36,15 @@
 
     <style>
         a, .parent-a {
-            color: #256DC5;
-            target-new: tab;
+          color: #256DC5;
+          target-new: tab;
         }
         h1 {
-            margin-bottom: 0;
+          margin-bottom: 0;
         }
         .page-header {
-            padding: 1em;
+          padding-top: 1em;
+          padding-bottom: 1em;
         }
 
         /* The sidebar menu */
@@ -93,10 +94,6 @@
           margin: 4px;
         }
 
-        .content {
-          padding-top:85px;
-        }
-
         {% for category, data in source_colors %}
           {% for source, font_color in data['sources'].items() %}
             .source-{{ source }} {
@@ -108,6 +105,11 @@
             }
           {% endfor %}
         {% endfor %}
+
+        {% if not simple %}
+        .content {
+          padding-top:85px;
+        }
 
         @media (max-width: 1800px) {
           .left {
@@ -135,6 +137,7 @@
             display: none;
           }
         }
+        {% endif %}
     </style>
 
     {% block scripts %}
@@ -143,10 +146,11 @@
 </head>
 
 <body>
+{% if not simple %}
 <!-- THE TOP NAVBAR -->
 <div class="navbar navbar-expand-md fixed-top bg-light shadow-sm border-bottom">
   <img src="https://bigmech.s3.amazonaws.com/indra-db/indralab_bare_logo.png"
-       width="30em">
+       style="width: 2em;">
   {% block title %}
   <a class="navbar-brand" href="#" style="padding-left: 0.5em;">{{ title }}</a>
   {% endblock %}
@@ -200,15 +204,27 @@
     </div>
   </div>
 </div>
+{% endif %}
 
 <!-- THE MAIN BODY -->
 <main role="main" class="container">
+
+  {% if simple %}
+    <!-- THE SIMPLE HEADING -->
+    <div class="page-header">
+      <h2>{{ title }}</h2>
+      <hr>
+    </div>
+  {% endif %}
+
+  <!-- THE MAIN CONTENT -->
   <div class="content">
     {% block body %}
     {% endblock %}
   </div>
 </main>
 
+{% if not simple %}
 <!-- THE RIGHT SIDEBAR -->
 <div class="side-info right bg-white" id="right-side-panel">
   <div class="side-info-block">
@@ -247,5 +263,6 @@
     </div>
   {% endfor %}
 </div>
+{% endif %}
 </body>
 </html>
