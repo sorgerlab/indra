@@ -277,8 +277,8 @@ class EidosProcessor(object):
                     if compositional_entry[1] and not compositional_entry[0]:
                         compositional_entry[0] = compositional_entry[1]
                         compositional_entry[1] = None
-
-                    entries.append(compositional_entry)
+                    if any(compositional_entry):
+                        entries.append(compositional_entry)
             return entries
 
         # Save raw text and Eidos scored groundings as db_refs
@@ -290,7 +290,8 @@ class EidosProcessor(object):
             key = g['name'].upper()
             if key == 'WM_COMPOSITIONAL':
                 entries = get_grounding_entries_comp(g)
-                db_refs['WM'] = entries
+                if entries:
+                    db_refs['WM'] = entries
             else:
                 continue
         return db_refs

@@ -296,10 +296,15 @@ class HumeJsonLdProcessor(object):
                                         process_grounding_wm, None]]
         # Second case: we don't have a theme so we take the process as the theme
         # and apply any property to it
-        else:
+        elif process_grounding_wm:
             compositional_grounding = [[process_grounding_wm,
                                         property_grounding_wm,
                                         None, None]]
+        elif property_grounding_wm:
+            compositional_grounding = [[property_grounding_wm,
+                                        None, None, None]]
+
+        assert compositional_grounding[0][0]
         concept.db_refs['WM'] = compositional_grounding
 
         # Migrations turned off for now
