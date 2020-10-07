@@ -12,7 +12,7 @@ from indra.util import read_unicode_csv
 from indra.preassembler.grounding_mapper.gilda import get_gilda_models
 from indra.ontology.standardize import standardize_db_refs, \
     standardize_agent_name
-from .adeft import adeft_disambiguators, DisambiguationHandler
+from .disambiguate import adeft_disambiguators, DisambiguationHandler
 
 logger = logging.getLogger(__name__)
 
