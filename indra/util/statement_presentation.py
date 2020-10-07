@@ -10,6 +10,25 @@ from indra.statements import Agent, Influence, Event, get_statement_by_name
 logger = logging.getLogger(__name__)
 
 
+db_sources = ['phosphosite', 'cbn', 'pc11', 'biopax', 'bel_lc',
+              'signor', 'biogrid', 'lincs_drug', 'tas', 'hprd', 'trrust',
+              'ctd', 'virhostnet', 'phosphoelm', 'drugbank', 'omnipath']
+
+reader_sources = ['geneways', 'tees', 'isi', 'trips', 'rlimsp', 'medscan',
+                  'sparser', 'eidos', 'reach']
+
+
+# These are mappings where the actual INDRA source, as it appears
+# in the evidence source_api is inconsistent with the colors here and
+# with what comes out of the INDRA DB
+internal_source_mappings = {
+    'bel': 'bel_lc'
+}
+
+
+all_sources = db_sources + reader_sources
+
+
 def _get_keyed_stmts(stmt_list):
     def name(agent):
         return 'None' if agent is None else agent.name
@@ -240,3 +259,39 @@ def make_top_level_label_from_names_key(names):
     except Exception as e:
         logger.error("Could not handle: %s" % str(names))
         raise e
+
+
+def standardize_counts(counts):
+    """Standardize hash-based counts dicts to be int-keyed."""
+    standardized_counts = {}
+    for k, v in counts.items():
+        try:
+            int_k = int(k)
+            standardized_counts[int_k] = v
+        except ValueError:
+            logger.warning('Could not convert statement hash %s to int' % k)
+    return standardized_counts
+
+
+def get_available_ev_counts(stmts):
+    return {stmt.get_hash(): len(stmt.evidence) for stmt in stmts}
+
+
+def get_available_source_counts(stmts):
+    return {stmt.get_hash(): _get_available_ev_source_counts(stmt.evidence)
+            for stmt in stmts}
+
+
+def _get_available_ev_source_counts(evidences):
+    counts = _get_initial_source_counts()
+    for ev in evidences:
+        sa = internal_source_mappings.get(ev.source_api, ev.source_api)
+        try:
+            counts[sa] += 1
+        except KeyError:
+            continue
+    return counts
+
+
+def _get_initial_source_counts():
+    return {s: 0 for s in all_sources}
