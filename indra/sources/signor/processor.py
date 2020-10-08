@@ -8,6 +8,7 @@ Perfetto et al., "SIGNOR: a database of causal relationships between
 biological entities," Nucleic Acids Research, Volume 44, Issue D1, 4
 January 2016, Pages D548-D554. https://doi.org/10.1093/nar/gkv1048
 """
+import re
 import logging
 from copy import deepcopy
 from collections import Counter
@@ -327,10 +328,28 @@ class SignorProcessor(object):
         if not context:
             context = None
 
+        # PMID is sometimes missing and sometimes other/Other, which we
+        # don't represent
+        if not row.PMID or row.PMID in {'other', 'Other'}:
+            pmid = None
+            text_refs = {}
+        # These are regular PMIDs
+        elif re.match(r'(\d+)', row.PMID):
+            pmid = row.PMID
+            text_refs = {'PMID': pmid}
+        # Sometimes we get PMC IDs
+        elif row.PMID.startswith('PMC'):
+            pmid = None
+            text_refs = {'PMCID': row.PMID}
+        # We log any other suspicious unhandled IDs
+        else:
+            logger.info('Invalid PMID: %s' % row.PMID)
+            pmid = None
+            text_refs = {}
         return Evidence(source_api='signor', source_id=row.SIGNOR_ID,
-                        pmid=row.PMID, text=row.SENTENCE,
-                        epistemics=epistemics, annotations=annotations,
-                        context=context)
+                        pmid=pmid, text=row.SENTENCE,
+                        text_refs=text_refs, epistemics=epistemics,
+                        annotations=annotations, context=context)
 
     def _process_row(self, row):
         agent_a = self._get_agent(row.ENTITYA, row.TYPEA, row.IDA,
