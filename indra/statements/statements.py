@@ -90,6 +90,8 @@ The *active* form of an agent (in terms of its post-translational modifications
 or bound state) is indicated by an instance of the class
 :py:class:`ActiveForm`.
 
+Grounding and DB references
+---------------------------
 Agents also carry grounding information which links them to database entries.
 These database references are represented as a dictionary in the `db_refs`
 attribute of each Agent. The dictionary can have multiple entries. For
@@ -98,6 +100,17 @@ UniProt and HGNC IDs in db_refs, whenever possible. FamPlex provides a name
 space for protein families that are typically used in the literature.  More
 information about FamPlex can be found here:
 https://github.com/sorgerlab/famplex
+
+In general, the capitalized version of any identifiers.org name space (see
+https://registry.identifiers.org/ for full list) can be used in db_refs with
+a few cases where INDRA's internal db_refs name space is different from the
+identifiers.org name space (e.g., UP vs uniprot). These special cases can
+be programmatically mapped between INDRA and identifiers.org using the
+`identifiers_mappings` and `identifiers_reverse` dictionaries in the
+`indra.databases.identifiers` module.
+
+Examples of the most commonly encountered db_refs name spaces and IDs are
+listed below.
 
 +------------------------+------------------+------------------------------+
 | Type                   | Database         | Example                      |
@@ -122,7 +135,7 @@ https://github.com/sorgerlab/famplex
 +------------------------+------------------+------------------------------+
 | Chemical               | PubChem          | {'PUBCHEM': '42611257'}      |
 +------------------------+------------------+------------------------------+
-| Chemical               | LINCS / HMS-LINCS| {'LINCS': '42611257'}        |
+| Chemical               | LINCS            | {'LINCS': '42611257'}        |
 +------------------------+------------------+------------------------------+
 | Metabolite             | HMDB             | {'HMDB': 'HMDB00122'}        |
 +------------------------+------------------+------------------------------+
@@ -134,7 +147,7 @@ https://github.com/sorgerlab/famplex
 +------------------------+------------------+------------------------------+
 | Phenotypic abnormality | Human Pheno. Ont.| {'HP': 'HP:0031296'}         |
 +------------------------+------------------+------------------------------+
-| Experimental variables | Exp. Factor Ont. | {'EFO': '0007820'}           |
+| Experimental factors   | Exp. Factor Ont. | {'EFO': '0007820'}           |
 +------------------------+------------------+------------------------------+
 | General terms          | NCIT             | {'NCIT': 'C28597'}           |
 +------------------------+------------------+------------------------------+
