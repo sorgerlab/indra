@@ -10,14 +10,14 @@ Grounding mapping
 .. automodule:: indra.preassembler.grounding_mapper.mapper
     :members:
 
-Adeft disambiguation functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Disambiguation with machine-learned models
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: indra.preassembler.grounding_mapper.adeft
+.. automodule:: indra.preassembler.grounding_mapper.disambiguate
     :members:
 
-Gilda grounding and  disambiguation functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Gilda grounding functions
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: indra.preassembler.grounding_mapper.gilda
     :members:
