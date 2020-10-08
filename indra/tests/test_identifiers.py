@@ -1,6 +1,5 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-from indra.databases import get_identifiers_url, parse_identifiers_url
+from indra.databases.identifiers import get_identifiers_url, \
+    parse_identifiers_url
 
 
 # For each pair of namespace and ID we get all possible URL forms.
@@ -85,8 +84,8 @@ ns_mapping = {
                               'http://identifiers.org/drugbank:DB00001'),
     ('TAXONOMY', '9606'): ('https://identifiers.org/taxonomy:9606',
                            'http://identifiers.org/taxonomy:9606'),
-    ('BTO', '0000146'): ('https://identifiers.org/BTO:0000146',
-                         'http://identifiers.org/BTO:0000146'),
+    ('BTO', 'BTO:0000146'): ('https://identifiers.org/BTO:0000146',
+                             'http://identifiers.org/BTO:0000146'),
     ('CHEMBL', 'CHEMBL1229517'): (
         'https://identifiers.org/chembl.compound:CHEMBL1229517',
         'http://identifiers.org/chembl.compound:CHEMBL1229517',
@@ -104,9 +103,9 @@ ns_mapping = {
     ('SIGNOR', 'SIGNOR-PF15'): (
         'https://signor.uniroma2.it/relation_result.php?id=SIGNOR-PF15', ),
     ('HGNC_GROUP', '643'): (
-        'https://www.genenames.org/data/genegroup/#!/group/643', ),
-    ('PR', '000000019'): (
-        'https://proconsortium.org/app/entry/PR%3A000000019', ),
+        'https://identifiers.org/hgnc.genefamily:643', ),
+    ('PR', 'PR:000000019'): (
+        'http://identifiers.org/PR:000000019', ),
     ('GENBANK', 'QHO60603'): (
         'https://www.ncbi.nlm.nih.gov/protein/QHO60603', ),
     ('NONCODE', 'NONHSAT028507.2'): (

@@ -11,27 +11,35 @@ logger = logging.getLogger(__name__)
 identifiers_url = 'https://identifiers.org'
 
 identifiers_mappings = {
-    'REFSEQ_PROT': 'refseq',
-    'NCBI': 'ncibgene',
     'UP': 'uniprot',
-    'NONCODE': 'noncodev4.rna',
-    'EGID': 'ncbigene',
-    'LINCS': 'lincs.smallmolecule',
-    'LNCRNADB': 'rnacentral',
-    'PUBCHEM': 'pubchem.compound',
     'UPPRO': 'uniprot.chain',
     'UPISO': 'uniprot.isoform',
+    'REFSEQ_PROT': 'refseq',
     'PF': 'pfam',
-    'CHEMBL': 'chembl.compound',
-    'MIRBASEM': 'mirbase.mature',
-    'HGNC_GROUP': 'hgnc.genefamily',
-    'CTD': 'ctd.chemical',
     'IP': 'interpro',
+    'ECCODE': 'ec-code',
+    'NONCODE': 'noncodev4.rna',
+    'LNCRNADB': 'rnacentral',
+    'MIRBASEM': 'mirbase.mature',
+    'EGID': 'ncbigene',
+    'NCBI': 'ncibgene',
+    'HGNC_GROUP': 'hgnc.genefamily',
+    'LINCS': 'lincs.smallmolecule',
+    'PUBCHEM': 'pubchem.compound',
+    'CHEMBL': 'chembl.compound',
+    'CTD': 'ctd.chemical',
 }
+
+# Get reverse mappings and patch one entry to make it unique
+identifiers_reverse = {
+    v: k for k, v in identifiers_mappings.items()
+}
+
+identifiers_reverse['ncbigene'] = 'EGID'
 
 non_registry = {
     'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'SIGNOR', 'HMS-LINCS', 'NXPFA',
-    'GENBANK', 'OMIM', 'LSPCI', 'ECCODE'
+    'GENBANK', 'OMIM', 'LSPCI'
 }
 
 non_grounding = {
@@ -43,8 +51,11 @@ non_grounding = {
 # patterns. This is because some downstream code uses these as prefixes
 # rather than arbitrary patterns.
 url_prefixes = {
+    # Biology namespaces
     'NXPFA': 'https://www.nextprot.org/term/FA-',
     'SIGNOR': 'https://signor.uniroma2.it/relation_result.php?id=',
+    'GENBANK': 'https://www.ncbi.nlm.nih.gov/protein/',
+    # WM namespaces
     'UN': 'https://github.com/clulab/eidos/wiki/JSON-LD#Grounding/',
     'WDI': 'https://github.com/clulab/eidos/wiki/JSON-LD#Grounding/',
     'FAO': 'https://github.com/clulab/eidos/wiki/JSON-LD#Grounding/',
@@ -52,10 +63,23 @@ url_prefixes = {
              '/hume_ontology/'),
     'CWMS': 'http://trips.ihmc.us/',
     'SOFIA': 'http://cs.cmu.edu/sofia/',
-    'HGNC_GROUP': 'https://www.genenames.org/data/genegroup/#!/group/',
-    'PR': 'https://proconsortium.org/app/entry/PR%3A',
-    'GENBANK': 'https://www.ncbi.nlm.nih.gov/protein/',
 }
+
+
+def get_ns_id_from_identifiers(identifiers_ns, identifiers_id):
+    reg_entry = identifiers_registry.get(identifiers_ns.lower())
+    if not reg_entry:
+        return None, None
+    mapping = identifiers_reverse.get(identifiers_ns.lower())
+    if mapping:
+        db_ns = mapping
+    else:
+        db_ns = identifiers_ns.upper()
+    db_id = identifiers_id
+    if reg_entry['namespace_embedded']:
+        if not identifiers_id.startswith(identifiers_ns.upper()):
+            db_id = '%s:%s' % (identifiers_ns.upper(), identifiers_id)
+    return db_ns, db_id
 
 
 def get_url_prefix(db_name):
@@ -154,63 +178,28 @@ def parse_identifiers_url(url):
     db_id : str
         An identifier in the database.
     """
-    prefixed_ids = ['CHEBI', 'DOID', 'GO', 'HP']
-    # Try reverse dictionary lookup first
-    ns_options = {}
-    for ns, prefix in url_prefixes.items():
-        if ns not in prefixed_ids and url.startswith(prefix):
-            db_id = url[len(prefix):]
-            # If we got UP and UPPRO, return UPPRO
-            if ns == 'UP' and '#PRO_' in db_id:
-                ns = 'UPPRO'
-                db_id = db_id[db_id.find('PRO_'):]
-            ns_options[ns] = db_id
-
-    # If we got the only possible option, return it
-    if len(ns_options) == 1:
-        return [(k, v) for (k, v) in ns_options.items()][0]
-    # Handle cases when 2 matches are possible
-    elif len(ns_options) == 2:
-        for ns in ['PUBCHEM', 'IP', 'MIRBASEM']:
-            if ns in ns_options:
-                return ns, ns_options[ns]
-    elif len(ns_options) > 2:
-        logger.warning('Got too many options: %s' % ns_options)
-
-    # Special handling for IDs including prefix
-    for ns in prefixed_ids:
-        if ns in url and url.startswith(url_prefixes[ns]):
-            return ns, url[url.find(ns):]
-
     # Try matching by string pattern
-    db_name, db_id = None, None
+    db_ns, db_id = None, None
     url_pattern = \
         r'(?:https?)://identifiers.org/([A-Za-z.-]+)(/|:)([A-Za-z0-9:_.-]+)'
     match = re.match(url_pattern, url)
     if match is not None:
         g = match.groups()
         if len(g) == 3:
-            ns, db_id = g[0], g[2]
-            ns_map = {'uniprot': 'UP', 'interpro': 'IP', 'pfam': 'PF',
-                      'pubchem.compound': 'PUBCHEM',
-                      'mirbase.mature': 'MIRBASEM', 'ncbigene': 'EGID',
-                      'refseq': 'REFSEQ_PROT', 'ec-code': 'ECCODE'}
-            if ns in ns_map.keys():
-                db_name = ns_map[ns]
-            elif ns.upper() in url_prefixes.keys():
-                db_name = ns.upper()
-            if db_name == 'HGNC':
+            pattern_ns, pattern_id = g[0], g[2]
+            db_ns, db_id = get_ns_id_from_identifiers(pattern_ns, pattern_id)
+            if db_ns == 'HGNC':
                 if db_id.startswith('HGNC:'):
                     db_id = db_id[5:]
             # If we got UP and UPPRO, return UPPRO
-            if db_name == 'UP' and '#PRO_' in url:
-                db_name = 'UPPRO'
+            if db_ns == 'UP' and '#PRO_' in url:
+                db_ns = 'UPPRO'
                 db_id = url[url.find('PRO_'):]
-            if db_name in prefixed_ids:
-                if not db_id.startswith(db_name):
-                    db_id = db_name + ':' + db_id
-            if db_name and db_id:
-                return db_name, db_id
+            if db_ns and db_id:
+                return db_ns, db_id
+    for ns, prefix in url_prefixes.items():
+        if url.startswith(prefix):
+            return ns, url[len(prefix):]
 
     # Handle other special cases
     for part in ['/lincs.smallmolecule', '/lincs.cell', '/lincs.protein']:
