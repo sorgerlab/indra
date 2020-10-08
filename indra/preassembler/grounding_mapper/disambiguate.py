@@ -30,7 +30,9 @@ class DisambManager(object):
             from indra_db.util.content_scripts import TextContentSessionHandler
             self.__tc = TextContentSessionHandler()
         except Exception as e:
-            logger.info('Could not connect to the DB: %s' % e)
+            logger.info('INDRA DB is not available for text content '
+                        'retrieval for grounding disambiguation.')
+            logger.debug('Could not connect to the DB: %s' % e)
             self.__tc = None
 
     def run_adeft_disambiguation(self, stmt, agent, idx, agent_txt):
