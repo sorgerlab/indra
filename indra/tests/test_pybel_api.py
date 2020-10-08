@@ -69,7 +69,7 @@ def test_process_jgif():
     # Clean up
     os.remove(test_file)
 
-    assert len(pbp.statements) == 20, len(pbp.statements)
+    assert len(pbp.statements) == 26, len(pbp.statements)
     assert isinstance(pbp.statements[0], Statement)
     assert all(s.evidence[0].source_api == 'bel' for s in pbp.statements)
 
@@ -84,7 +84,7 @@ def test_nodelink_json():
     # Clean up
     os.remove(test_file)
 
-    assert len(pbp.statements) == 20, len(pbp.statements)
+    assert len(pbp.statements) == 26, (len(pbp.statements), pbp.statements)
     assert isinstance(pbp.statements[0], Statement)
     assert all(s.evidence[0].source_api == 'bel' for s in pbp.statements)
 
@@ -132,7 +132,7 @@ def test_get_agent_mgi():
     assert isinstance(agent, Agent)
     assert agent.name == 'Nr1h3'
     assert len(agent.db_refs) == 1
-    assert agent.db_refs.get('MGI') == 'Nr1h3'
+    assert agent.db_refs.get('UP') == 'Q9Z0Y9', agent.db_refs
 
 
 def test_get_agent_rgd():
@@ -141,7 +141,7 @@ def test_get_agent_rgd():
     assert isinstance(agent, Agent)
     assert agent.name == 'Tp53'
     assert len(agent.db_refs) == 1
-    assert agent.db_refs.get('RGD') == 'Tp53'
+    assert agent.db_refs.get('UP') == 'P10361', agent.db_refs
 
 
 def test_get_agent_sfam():
