@@ -70,7 +70,7 @@ def get_text_content_for_pmids(pmids):
         if pmc_id is not None:
             pmc_xmls.append(pmc_client.get_xml(pmc_id))
         else:
-            failed.append(pmid)
+            failed.add(pmid)
         time.sleep(0.5)
 
     remaining_pmids = set(pmids) - pmc_pmids | failed
