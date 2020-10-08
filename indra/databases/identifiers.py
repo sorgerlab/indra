@@ -83,10 +83,11 @@ def get_ns_id_from_identifiers(identifiers_ns, identifiers_id):
 
 
 def get_url_prefix(db_name):
-    identifiers_entry = identifiers_registry.get(db_name.lower())
+    mapped_db_name = identifiers_mappings.get(db_name, db_name.lower())
+    identifiers_entry = identifiers_registry.get(mapped_db_name)
     if identifiers_entry:
-        if not identifiers_entry['prefix_embedded']:
-            return '%s/%s:' % (identifiers_url, db_name.lower())
+        if not identifiers_entry['namespace_embedded']:
+            return '%s/%s:' % (identifiers_url, mapped_db_name.lower())
         else:
             return '%s/' % identifiers_url
     else:
@@ -112,6 +113,11 @@ def get_identifiers_url(db_name, db_id):
     """
     # This is the case where we have a prefix that we can simply attach the
     # db_id to to get the desired URL.
+    if db_name == 'CHEMBL':
+        db_id = ensure_chembl_prefix(db_id)
+    elif db_name == 'CHEBI':
+        db_id = ensure_chebi_prefix(db_id)
+
     prefix = get_url_prefix(db_name)
     if prefix:
         return '%s%s' % (prefix, db_id)
@@ -141,19 +147,6 @@ def get_identifiers_url(db_name, db_id):
     elif db_name == 'SFAM':
         url = bel_scai_url + 'selventa-protein-families/' + \
             'selventa-protein-families-20150601.belns'
-    elif db_name == 'LNCRNADB':
-        # Note that this website is disabled
-        if db_id.startswith('ENSG'):
-            url = 'http://www.lncrnadb.org/search/?q=%s' % db_id
-        else:  # Assmuing HGNC symbol
-            url = 'http://www.lncrnadb.org/%s/' % db_id
-    elif db_name == 'NONCODE':
-        if '.' in db_id:
-            _id, version = db_id.split('.')
-            url = 'http://www.noncode.org/show_gene.php?id=%s&version=%s' \
-                % (_id, version)
-        else:
-            url = 'http://www.noncode.org/show_gene.php?id=%s' % db_id
     elif db_name == 'TEXT' or db_name == 'TEXT_NORM':
         return None
     else:
@@ -181,7 +174,7 @@ def parse_identifiers_url(url):
     # Try matching by string pattern
     db_ns, db_id = None, None
     url_pattern = \
-        r'(?:https?)://identifiers.org/([A-Za-z.-]+)(/|:)([A-Za-z0-9:_.-]+)'
+        r'(?:https?)://identifiers.org/([A-Za-z0-9.-]+)(/|:)([A-Za-z0-9:_.-]+)'
     match = re.match(url_pattern, url)
     if match is not None:
         g = match.groups()
@@ -216,20 +209,6 @@ def parse_identifiers_url(url):
         return 'SCOMP', None
     if 'selventa-protein-families/' in url:
         return 'SFAM', None
-    if 'lncrnadb' in url:
-        # Note that this website is disabled
-        if 'ENSG' in url:
-            return 'LNCRNADB', url[len('http://www.lncrnadb.org/search/?q='):]
-        else:
-            return 'LNCRNADB', url[len('http://www.lncrnadb.org/'):-1]
-    if 'noncode' in url:
-        q = parse.parse_qs(parse.urlparse(url).query)
-        _id, version = q.get('id'), q.get('version')
-        if version:
-            db_id = _id[0] + '.' + version[0]
-        else:
-            db_id = _id[0]
-        return 'NONCODE', db_id
     else:
         logger.warning('Could not parse URL %s' % url)
     return None, None
