@@ -88,7 +88,7 @@ class Concept(object):
         return ontology.is_opposite(self_ns, self_id,
                                     other_ns, other_id)
 
-    def refinement_of(self, other, ontology):
+    def refinement_of(self, other, ontology, entities_refined=False):
         # Make sure the Agent types match
         if type(self) != type(other):
             return False
@@ -96,7 +96,8 @@ class Concept(object):
         # Check that the basic entity of the agent either matches or is related
         # to the entity of the other agent. If not, no match.
         # If the entities, match, then we can continue
-        if not (self.entity_matches(other) or self.isa(other, ontology)):
+        if entities_refined or \
+                (not (self.entity_matches(other) or self.isa(other, ontology))):
             return False
         return True
 

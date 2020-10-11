@@ -2144,7 +2144,7 @@ class Association(Complex):
             sorted_agents(self.members)
         return [m.concept for m in members]
 
-    def refinement_of(self, other, ontology):
+    def refinement_of(self, other, ontology, entities_refined=False):
         members_refinement = super().refinement_of(other, ontology)
         op = other.overall_polarity()
         sp = self.overall_polarity()

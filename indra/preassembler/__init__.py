@@ -380,6 +380,8 @@ class Preassembler(object):
                 agents = {agents}
             keys = set()
             for agent in agents:
+                if isinstance(agent, Event):
+                    agent = agent.concept
                 if agent is None:
                     agent_key = None
                 else:
