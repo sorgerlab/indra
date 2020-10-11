@@ -373,19 +373,38 @@ class Preassembler(object):
         all_keys_by_role = {}
         for role in roles:
             role_key_to_hash[role] = collections.defaultdict(set)
-            hash_to_role_key[role] = {}
+            hash_to_role_key[role] = collections.defaultdict(set)
+
+        def get_agent_keys(agents):
+            if not isinstance(agents, list):
+                agents = {agents}
+            keys = set()
+            for agent in agents:
+                if agent is None:
+                    agent_key = None
+                else:
+                    agent_key = agent.get_grounding()
+                    if not agent_key[0]:
+                        agent_key = ('NAME', agent.name)
+                keys.add(agent_key)
+            return keys
+
+        def get_relevant_keys(agent_keys, all_keys_for_role):
+            relevant_keys = {None}
+            for agent_key in agent_keys:
+                relevant_keys |= {agent_key}
+                if agent_key is not None:
+                    relevant_keys |= set(self.ontology.get_parents(*agent_key))
+            relevant_keys &= all_keys_for_role
+            return relevant_keys
 
         for sh, stmt in stmts_by_hash.items():
             for role in roles:
-                ag = getattr(stmt, role)
-                if ag is None:
-                    role_key = None
-                else:
-                    role_key = ag.get_grounding()
-                    if not role_key[0]:
-                        role_key = ('NAME', ag.name)
-                role_key_to_hash[role][role_key].add(sh)
-                hash_to_role_key[role][sh] = role_key
+                agents = getattr(stmt, role)
+                agent_keys = get_agent_keys(agents)
+                for agent_key in agent_keys:
+                    role_key_to_hash[role][agent_key].add(sh)
+                hash_to_role_key[role][sh].add(agent_key)
 
         for role in roles:
             all_keys_by_role[role] = set(role_key_to_hash[role].keys())
@@ -393,14 +412,12 @@ class Preassembler(object):
         stmts_to_compare = {}
         for sh, stmt in stmts_by_hash.items():
             relevants = None
-            for role, hk in hash_to_role_key.items():
-                parents = set(self.ontology.get_parents(*hk[sh])) \
-                    if hk[sh] is not None else set()
-                role_relevant = (parents | {hk[sh]} | {None}) & \
-                    all_keys_by_role[role]
+            for role, hash_to_role_key_for_role in hash_to_role_key.items():
+                relevant_keys = get_relevant_keys(hash_to_role_key_for_role[sh],
+                                                  all_keys_by_role[role])
                 role_relevant_stmt_hashes = set.union(
                     *[role_key_to_hash[role][rel]
-                      for rel in role_relevant]) - {sh}
+                      for rel in relevant_keys]) - {sh}
                 if relevants is None:
                     relevants = role_relevant_stmt_hashes
                 else:

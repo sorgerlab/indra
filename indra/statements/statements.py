@@ -1663,7 +1663,7 @@ class Complex(Statement):
                         (', '.join([('%s' % m) for m in self.members])))
         return s
 
-    def refinement_of(self, other, ontology):
+    def refinement_of(self, other, ontology, entities_refined=False):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
@@ -2313,7 +2313,7 @@ class Conversion(Statement):
         stmt = cls(subj, obj_from, obj_to)
         return stmt
 
-    def refinement_of(self, other, ontology):
+    def refinement_of(self, other, ontology, entities_refined=False):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
