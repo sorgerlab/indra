@@ -412,7 +412,8 @@ class Preassembler(object):
             for possible_refined in possible_refineds:
                 # FIXME: custom functions?
                 if stmts_by_hash[refinement].refinement_of(
-                        stmts_by_hash[possible_refined], self.ontology):
+                        stmts_by_hash[possible_refined], self.ontology,
+                        entities_refined=True):
                     maps.append((refinement, possible_refined))
         return maps
 
