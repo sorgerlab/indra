@@ -349,113 +349,72 @@ class Preassembler(object):
 
     def _generate_id_maps(self, unique_stmts, poolsize=None,
                           size_cutoff=100, split_idx=None):
-        """Connect statements using their refinement relationships."""
-        if not self.ontology._initialized:
-            self.ontology.initialize()
-        if len(unique_stmts) > 10000:
-            self.ontology._build_transitive_closure()
-        # Check arguments relating to multiprocessing
-        if poolsize is None:
-            logger.debug('combine_related: poolsize not set, '
-                         'not using multiprocessing.')
-            use_mp = False
-        elif sys.version_info[0] >= 3 and sys.version_info[1] >= 4:
-            use_mp = True
-            logger.info('combine_related: Python >= 3.4 detected, '
-                        'using multiprocessing with poolsize %d, '
-                        'size_cutoff %d' % (poolsize, size_cutoff))
-        else:
-            use_mp = False
-            logger.info('combine_related: Python < 3.4 detected, '
-                        'not using multiprocessing.')
+        """Connect statements using their refinement relationship."""
+        # FIXME: we probably want to use the custom matches key function here
         # Make a list of Statement types
-        stmts_by_type = collections.defaultdict(lambda: [])
+        stmts_by_type = collections.defaultdict(list)
+        stmt_to_idx = {stmt.get_hash(): idx
+                       for idx, stmt in enumerate(unique_stmts)}
         for idx, stmt in enumerate(unique_stmts):
-            stmts_by_type[indra_stmt_type(stmt)].append((idx, stmt))
+            stmts_by_type[indra_stmt_type(stmt)].append(stmt)
 
-        child_proc_groups = []
-        parent_proc_groups = []
-        skipped_groups = 0
-        # Each Statement type can be preassembled independently
-        for stmt_type, stmts_this_type in stmts_by_type.items():
-            logger.info('Grouping %s (%s)' %
-                        (stmt_type.__name__, len(stmts_this_type)))
-            stmt_by_group = self._get_stmt_by_group(stmt_type, stmts_this_type,
-                                                    self.ontology)
+        maps = []
+        for stmts in stmts_by_type.values():
+            maps += self._generate_hash_maps_by_stmt_type(
+                stmts, stmts[0]._agent_order)
+        idx_maps = [(stmt_to_idx[refinement], stmt_to_idx[refined])
+                    for refinement, refined in maps]
+        return idx_maps
 
-            # Divide statements by group size
-            # If we're not using multiprocessing, then all groups are local
-            for g_name, g in stmt_by_group.items():
-                if len(g) < 2:
-                    skipped_groups += 1
-                    continue
-                if use_mp and len(g) >= size_cutoff:
-                    child_proc_groups.append(g)
+    def _generate_hash_maps_by_stmt_type(self, stmts, roles):
+        stmts_by_hash = {stmt.get_hash(): stmt for stmt in stmts}
+        role_key_to_hash = {}
+        hash_to_role_key = {}
+        all_keys_by_role = {}
+        for role in roles:
+            role_key_to_hash[role] = collections.defaultdict(set)
+            hash_to_role_key[role] = {}
+
+        for sh, stmt in stmts_by_hash.items():
+            for role in roles:
+                ag = getattr(stmt, role)
+                if ag is None:
+                    role_key = None
                 else:
-                    parent_proc_groups.append(g)
+                    role_key = ag.get_grounding()
+                    if not role_key[0]:
+                        role_key = ('NAME', ag.name)
+                role_key_to_hash[role][role_key].add(sh)
+                hash_to_role_key[role][sh] = role_key
 
-        # Now run preassembly!
-        logger.debug("Groups: %d parent, %d worker, %d skipped." %
-                     (len(parent_proc_groups), len(child_proc_groups),
-                      skipped_groups))
+        for role in roles:
+            all_keys_by_role[role] = set(role_key_to_hash[role].keys())
 
-        supports_func = functools.partial(_set_supports_stmt_pairs,
-                                          ontology=self.ontology,
-                                          split_idx=split_idx,
-                                          check_entities_match=False,
-                                          refinement_fun=self.refinement_fun)
-
-        # Check if we are running any groups in child processes; note that if
-        # use_mp is False, child_proc_groups will be empty
-        if child_proc_groups:
-            # Get a multiprocessing context
-            ctx = mp.get_context('spawn')
-            pool = ctx.Pool(poolsize)
-            # Run the large groups remotely
-            logger.debug("Running %d groups in child processes" %
-                         len(child_proc_groups))
-            res = pool.map_async(supports_func, child_proc_groups)
-            workers_ready = False
-        else:
-            workers_ready = True
-
-        # Run the small groups locally
-        logger.debug("Running %d groups in parent process" %
-                     len(parent_proc_groups))
-        stmt_ix_map = [supports_func(stmt_tuples)
-                       for stmt_tuples in parent_proc_groups]
-        logger.debug("Done running parent process groups")
-
-        while not workers_ready:
-            logger.debug("Checking child processes")
-            if res.ready():
-                workers_ready = True
-                logger.debug('Child process group comparisons successful? %s' %
-                             res.successful())
-                if not res.successful():
-                    # The get method re-raises the underlying error that we can
-                    # now catch and print.
-                    try:
-                        res.get()
-                    except Exception as e:
-                        raise Exception("Sorry, there was a problem with "
-                                        "preassembly in the child processes: %s"
-                                        % e)
+        stmts_to_compare = {}
+        for sh, stmt in stmts_by_hash.items():
+            relevants = None
+            for role, hk in hash_to_role_key.items():
+                parents = set(self.ontology.get_parents(*hk[sh])) \
+                    if hk[sh] is not None else set()
+                role_relevant = (parents | {hk[sh]} | {None}) & \
+                    all_keys_by_role[role]
+                role_relevant_stmt_hashes = set.union(
+                    *[role_key_to_hash[role][rel]
+                      for rel in role_relevant]) - {sh}
+                if relevants is None:
+                    relevants = role_relevant_stmt_hashes
                 else:
-                    stmt_ix_map += res.get()
-                logger.debug("Closing pool...")
-                pool.close()
-                logger.debug("Joining pool...")
-                pool.join()
-                logger.debug("Pool closed and joined.")
-            time.sleep(1)
-        logger.debug("Done.")
-        # Combine all redundant map edges
-        stmt_ix_map_set = set([])
-        for group_ix_map in stmt_ix_map:
-            for ix_pair in group_ix_map:
-                stmt_ix_map_set.add(ix_pair)
-        return stmt_ix_map_set
+                    relevants &= role_relevant_stmt_hashes
+            stmts_to_compare[sh] = relevants
+
+        maps = []
+        for refinement, possible_refineds in stmts_to_compare.items():
+            for possible_refined in possible_refineds:
+                # FIXME: custom functions?
+                if stmts_by_hash[refinement].refinement_of(
+                        stmts_by_hash[possible_refined], self.ontology):
+                    maps.append((refinement, possible_refined))
+        return maps
 
     def combine_related(self, return_toplevel=True, poolsize=None,
                         size_cutoff=100):
