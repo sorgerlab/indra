@@ -656,19 +656,20 @@ class Modification(Statement):
         if stmt_type(self) != stmt_type(other):
             return False
 
-        if not entities_refined:
-            # Check agent arguments
-            if self.enz is None and other.enz is None:
-                enz_refinement = True
-            elif self.enz is None and other.enz is not None:
-                enz_refinement = False
-            elif self.enz is not None and other.enz is None:
-                enz_refinement = True
-            else:
-                enz_refinement = self.enz.refinement_of(other.enz, ontology)
-            sub_refinement = self.sub.refinement_of(other.sub, ontology)
-            if not (enz_refinement and sub_refinement):
-                return False
+        # Check agent arguments
+        if self.enz is None and other.enz is None:
+            enz_refinement = True
+        elif self.enz is None and other.enz is not None:
+            enz_refinement = False
+        elif self.enz is not None and other.enz is None:
+            enz_refinement = True
+        else:
+            enz_refinement = self.enz.refinement_of(other.enz, ontology,
+                entities_refined=entities_refined)
+        sub_refinement = self.sub.refinement_of(other.sub, ontology,
+            entities_refined=entities_refined)
+        if not (enz_refinement and sub_refinement):
+            return False
         # For this to be a refinement of the other, the modifications either
         # have to match or have this one be a subtype of the other; in
         # addition, the sites have to match, or this one has to have site
@@ -821,10 +822,10 @@ class SelfModification(Statement):
         if stmt_type(self) != stmt_type(other):
             return False
 
-        if not entities_refined:
-            # Check agent arguments
-            if not self.enz.refinement_of(other.enz, ontology):
-                return False
+        # Check agent arguments
+        if not self.enz.refinement_of(other.enz, ontology,
+                                      entities_refined=entities_refined):
+            return False
         # For this to be a refinement of the other, the modifications either
         # have to match or have this one be a subtype of the other; in
         # addition, the sites have to match, or this one has to have site
@@ -1054,10 +1055,11 @@ class RegulateActivity(Statement):
             return False
         if self.is_activation != other.is_activation:
             return False
-        if not entities_refined:
-            if not (self.subj.refinement_of(other.subj, ontology) and
-                    self.obj.refinement_of(other.obj, ontology)):
-                return False
+        if not (self.subj.refinement_of(other.subj, ontology,
+                                        entities_refined=entities_refined) and
+                self.obj.refinement_of(other.obj, ontology,
+                                       entities_refined=entities_refined)):
+            return False
 
         return ((self.obj_activity == other.obj_activity) or
                  ontology.isa('INDRA_ACTIVITIES', self.obj_activity,
@@ -1272,10 +1274,10 @@ class ActiveForm(Statement):
         if stmt_type(self) != stmt_type(other):
             return False
 
-        if not entities_refined:
-            # Check agent arguments
-            if not self.agent.refinement_of(other.agent, ontology):
-                return False
+        # Check agent arguments
+        if not self.agent.refinement_of(other.agent, ontology,
+                                        entities_refined=entities_refined):
+            return False
 
         # Make sure that the relationships and activities match
         if (self.is_active == other.is_active) and \
@@ -1408,10 +1410,10 @@ class HasActivity(Statement):
         if stmt_type(self) != stmt_type(other):
             return False
 
-        if not entities_refined:
-            # Check agent arguments
-            if not self.agent.refinement_of(other.agent, ontology):
-                return False
+        # Check agent arguments
+        if not self.agent.refinement_of(other.agent, ontology,
+                                        entities_refined=entities_refined):
+            return False
 
         # Make sure that the relationships and activities match
         if (self.has_activity == other.has_activity) and \
@@ -1483,15 +1485,14 @@ class Gef(Statement):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
-        if not entities_refined:
-            # Check the GEF
-            if self.gef.refinement_of(other.gef, ontology) and \
-               self.ras.refinement_of(other.ras, ontology):
-                return True
-            else:
-                return False
-        else:
+        # Check the GEF
+        if self.gef.refinement_of(other.gef, ontology,
+                                  entities_refined=entities_refined) and \
+           self.ras.refinement_of(other.ras, ontology,
+                                  entities_refined=entities_refined):
             return True
+        else:
+            return False
 
     def equals(self, other):
         matches = super(Gef, self).equals(other)
@@ -1571,15 +1572,14 @@ class Gap(Statement):
         if stmt_type(self) != stmt_type(other):
             return False
 
-        if not entities_refined:
-            # Check the GAP
-            if self.gap.refinement_of(other.gap, ontology) and \
-               self.ras.refinement_of(other.ras, ontology):
-                return True
-            else:
-                return False
-        else:
+        # Check the GAP
+        if self.gap.refinement_of(other.gap, ontology,
+                                  entities_refined=entities_refined) and \
+           self.ras.refinement_of(other.ras, ontology,
+                                  entities_refined=entities_refined):
             return True
+        else:
+            return False
 
     def __str__(self):
         s = "Gap(%s, %s)" % (self.gap.name, self.ras.name)
@@ -1745,8 +1745,8 @@ class Translocation(Statement):
         if stmt_type(self) != stmt_type(other):
             return False
         # Check several conditions for refinement
-        ref1 = entities_refined or \
-            self.agent.refinement_of(other.agent, ontology)
+        ref1 = self.agent.refinement_of(other.agent, ontology,
+                                        entities_refined=entities_refined)
         ofl = go_client.get_go_id_from_label(other.from_location)
         sfl = go_client.get_go_id_from_label(self.from_location)
         otl = go_client.get_go_id_from_label(other.to_location)
@@ -1863,20 +1863,21 @@ class RegulateAmount(Statement):
         if stmt_type(self) != stmt_type(other):
             return False
 
-        if not entities_refined:
-            # Check agent arguments
-            if self.subj is None and other.subj is None:
-                subj_refinement = True
-            elif self.subj is None and other.subj is not None:
-                subj_refinement = False
-            elif self.subj is not None and other.subj is None:
-                subj_refinement = True
-            else:
-                subj_refinement = self.subj.refinement_of(other.subj, ontology)
-            obj_refinement = self.obj.refinement_of(other.obj, ontology)
-            return (subj_refinement and obj_refinement)
+        # Check agent arguments
+        if self.subj is None and other.subj is None:
+            subj_refinement = True
+        elif self.subj is None and other.subj is not None:
+            subj_refinement = False
+        elif self.subj is not None and other.subj is None:
+            subj_refinement = True
         else:
-            return True
+            subj_refinement = \
+                self.subj.refinement_of(other.subj, ontology,
+                                        entities_refined=entities_refined)
+        obj_refinement = \
+            self.obj.refinement_of(other.obj, ontology,
+                                   entities_refined=entities_refined)
+        return subj_refinement and obj_refinement
 
     def equals(self, other):
         matches = super(RegulateAmount, self).equals(other)
@@ -1885,7 +1886,7 @@ class RegulateAmount(Statement):
     def contradicts(self, other, ontology):
         # If they aren't opposite classes, it's not a contradiction
         if {self.__class__, other.__class__} != \
-            {IncreaseAmount, DecreaseAmount}:
+                {IncreaseAmount, DecreaseAmount}:
             return False
         # Skip all instances of not fully specified statements
         agents = (self.subj, self.obj, other.subj, other.obj)
@@ -1966,15 +1967,11 @@ class Influence(Statement):
         if stmt_type(self) != stmt_type(other):
             return False
 
-        if not entities_refined:
-            # Check agent arguments
-            subj_refinement = self.subj.concept.refinement_of(
-                other.subj.concept, ontology)
-            obj_refinement = self.obj.concept.refinement_of(
-                other.obj.concept, ontology)
-        else:
-            subj_refinement = True
-            obj_refinement = True
+        # Check agent arguments
+        subj_refinement = self.subj.concept.refinement_of(
+            other.subj.concept, ontology, entities_refined=entities_refined)
+        obj_refinement = self.obj.concept.refinement_of(
+            other.obj.concept, ontology, entities_refined=entities_refined)
         op = other.overall_polarity()
         sp = self.overall_polarity()
         # If we have "less" polarity here than in other then it's
@@ -2390,8 +2387,9 @@ class Event(Statement):
         return str(mk)
 
     def refinement_of(self, other, ontology, entities_refined=False):
-        concept_ref = entities_refined or \
-                      self.concept.refinement_of(other.concept, ontology)
+        concept_ref = \
+            self.concept.refinement_of(other.concept, ontology,
+                                       entities_refined=entities_refined)
         pol_ref = (self.delta.polarity and not other.delta.polarity) or \
             self.delta.polarity == other.delta.polarity
         return concept_ref and pol_ref
