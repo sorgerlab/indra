@@ -429,7 +429,7 @@ class Preassembler(object):
             # a well-defined direction so we don't need to test both ways.
             stmts_to_compare[sh] = relevants
 
-        total_comparisons = sum(len(v) for v in stmts_to_compare)
+        total_comparisons = sum(len(v) for v in stmts_to_compare.values())
         logger.info('Total comparisons: %d' % total_comparisons)
 
         # Step 4. We can now do the actual comparisons and save pairs of
