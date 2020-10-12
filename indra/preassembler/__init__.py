@@ -192,161 +192,6 @@ class Preassembler(object):
             unique_stmts.append(new_stmt)
         return unique_stmts
 
-    def _get_entities(self, stmt, stmt_type, ontology):
-        entities = []
-        for a in stmt.agent_list():
-            # Entity is None: add the None to the entities list
-            if a is None and stmt_type != Complex:
-                entities.append(a)
-            # Entity is not None, but could be ungrounded or not
-            # in a family
-            else:
-                a_ns, a_id = a.get_grounding()
-                # No grounding available--in this case, use the
-                # entity_matches_key
-                if a_ns is None or a_id is None:
-                    entities.append(a.entity_matches_key())
-                    continue
-                # If there are no components built in the ontology, we
-                # return a single shared dummy component so that things
-                # in the ontology are considered to be potentially
-                # related
-                if not ontology.has_component_labels:
-                    entities.append('component1')
-                    continue
-                if self.refinement_ns is not None \
-                        and a_ns not in self.refinement_ns:
-                    entities.append(a.entity_matches_key())
-                else:
-                    # This is the component ID corresponding to the agent
-                    # in the entity hierarchy
-                    component = ontology.get_component_label(a_ns, a_id)
-                    # If no component ID, use the entity_matches_key()
-                    if component is None:
-                        entities.append(a.entity_matches_key())
-                    # Component ID, so this is in a family
-                    else:
-                        # We turn the component ID into a string so that
-                        # we can sort it along with entity_matches_keys
-                        # for Complexes
-                        entities.append(str(component))
-        return entities
-
-    def _get_stmt_by_group(self, stmt_type, stmts_this_type, ontology):
-        """Group Statements of `stmt_type` by their hierarchical relations."""
-        # Dict of stmt group key tuples, indexed by their first Agent
-        stmt_by_first = collections.defaultdict(lambda: [])
-        # Dict of stmt group key tuples, indexed by their second Agent
-        stmt_by_second = collections.defaultdict(lambda: [])
-        # Dict of statements with None first, with second Agent as keys
-        none_first = collections.defaultdict(lambda: [])
-        # Dict of statements with None second, with first Agent as keys
-        none_second = collections.defaultdict(lambda: [])
-        # The dict of all statement groups, with tuples of components
-        # or entity_matches_keys as keys
-        stmt_by_group = collections.defaultdict(lambda: [])
-        # Here we group Statements according to the hierarchy graph
-        # components that their agents are part of
-        for stmt_tuple in stmts_this_type:
-            _, stmt = stmt_tuple
-            entities = self._get_entities(stmt, stmt_type, ontology)
-            # At this point we have an entity list
-            # If we're dealing with Complexes, sort the entities and use
-            # as dict key
-            if stmt_type == Complex:
-                # There shouldn't be any statements of the type
-                # e.g., Complex([Foo, None, Bar])
-                assert None not in entities
-                assert len(entities) > 0
-                entities.sort()
-                key = tuple(entities)
-                if stmt_tuple not in stmt_by_group[key]:
-                    stmt_by_group[key].append(stmt_tuple)
-            elif stmt_type == Conversion:
-                assert len(entities) > 0
-                key = (entities[0],
-                       tuple(sorted(entities[1:len(stmt.obj_from)+1])),
-                       tuple(sorted(entities[-len(stmt.obj_to):])))
-                if stmt_tuple not in stmt_by_group[key]:
-                    stmt_by_group[key].append(stmt_tuple)
-            # Now look at all other statement types
-            # All other statements will have one or two entities
-            elif len(entities) == 1:
-                # If only one entity, we only need the one key
-                # It should not be None!
-                assert None not in entities
-                key = tuple(entities)
-                if stmt_tuple not in stmt_by_group[key]:
-                    stmt_by_group[key].append(stmt_tuple)
-            else:
-                # Make sure we only have two entities, and they are not both
-                # None
-                key = tuple(entities)
-                assert len(key) == 2
-                assert key != (None, None)
-                # First agent is None; add in the statements, indexed by
-                # 2nd
-                if key[0] is None and stmt_tuple not in none_first[key[1]]:
-                    none_first[key[1]].append(stmt_tuple)
-                # Second agent is None; add in the statements, indexed by
-                # 1st
-                elif key[1] is None and stmt_tuple not in none_second[key[0]]:
-                    none_second[key[0]].append(stmt_tuple)
-                # Neither entity is None!
-                elif None not in key:
-                    if stmt_tuple not in stmt_by_group[key]:
-                        stmt_by_group[key].append(stmt_tuple)
-                    if key not in stmt_by_first[key[0]]:
-                        stmt_by_first[key[0]].append(key)
-                    if key not in stmt_by_second[key[1]]:
-                        stmt_by_second[key[1]].append(key)
-
-        # When we've gotten here, we should have stmt_by_group entries, and
-        # we may or may not have stmt_by_first/second dicts filled out
-        # (depending on the statement type).
-        if none_first:
-            # Get the keys associated with stmts having a None first
-            # argument
-            for second_arg, stmts in none_first.items():
-                # Look for any statements with this second arg
-                second_arg_keys = stmt_by_second[second_arg]
-                # If there are no more specific statements matching this
-                # set of statements with a None first arg, then the
-                # statements with the None first arg deserve to be in
-                # their own group.
-                if not second_arg_keys:
-                    stmt_by_group[(None, second_arg)] = stmts
-                # On the other hand, if there are statements with a matching
-                # second arg component, we need to add the None first
-                # statements to all groups with the matching second arg
-                for second_arg_key in second_arg_keys:
-                    stmt_by_group[second_arg_key] += stmts
-        # Now do the corresponding steps for the statements with None as the
-        # second argument:
-        if none_second:
-            for first_arg, stmts in none_second.items():
-                # Look for any statements with this first arg
-                first_arg_keys = stmt_by_first[first_arg]
-                # If there are no more specific statements matching this
-                # set of statements with a None second arg, then the
-                # statements with the None second arg deserve to be in
-                # their own group.
-                if not first_arg_keys:
-                    stmt_by_group[(first_arg, None)] = stmts
-                # On the other hand, if there are statements with a matching
-                # first arg component, we need to add the None second
-                # statements to all groups with the matching first arg
-                for first_arg_key in first_arg_keys:
-                    stmt_by_group[first_arg_key] += stmts
-        ncomp = 0
-        for k, v in stmt_by_group.items():
-            ncomp += len(v)*(len(v)-1)
-        logger.debug('Number of comparisons: %d' % ncomp)
-        if ncomp > 0:
-            logger.debug('Size of largest group: %d' %
-                         max([len(g) for g in stmt_by_group.values()]))
-        return dict(stmt_by_group)
-
     def _generate_id_maps(self, unique_stmts, poolsize=None,
                           size_cutoff=100, split_idx=None):
         """Connect statements using their refinement relationship."""
@@ -476,30 +321,16 @@ class Preassembler(object):
 
         1. The statements are grouped by type (e.g., Phosphorylation) and
            each type is iterated over independently.
-        2. Statements of the same type are then grouped according to their
-           Agents' entity hierarchy component identifiers. For instance,
-           ERK, MAPK1 and MAPK3 are all in the same connected component in the
-           entity hierarchy and therefore all Statements of the same type
-           referencing these entities will be grouped. This grouping assures
-           that relations are only possible within Statement groups and
-           not among groups. For two Statements to be in the same group at
-           this step, the Statements must be the same type and the Agents at
-           each position in the Agent lists must either be in the same
-           hierarchy component, or if they are not in the hierarchy, must have
-           identical entity_matches_keys. Statements with None in one of the
-           Agent list positions are collected separately at this stage.
-        3. Statements with None at either the first or second position are
-           iterated over. For a statement with a None as the first Agent,
-           the second Agent is examined; then the Statement with None is
-           added to all Statement groups with a corresponding component or
-           entity_matches_key in the second position. The same procedure is
-           performed for Statements with None at the second Agent position.
-        4. The statements within each group are then compared; if one
-           statement represents a refinement of the other (as defined by the
-           `refinement_of()` method implemented for the Statement), then the
-           more refined statement is added to the `supports` field of the more
-           general statement, and the more general statement is added to the
-           `supported_by` field of the more refined statement.
+        2. Each statement's agents are then aligned in a role-wise manner
+           with the ontology being used, and all other statements which
+           this statement can possibly refine are found.
+        4. Each statement is then compared with the set of other statements
+           identified earlier. If the statement represents a refinement of
+           the other (as defined by the `refinement_of()` method implemented
+           for the Statement), then the more refined statement is added
+           to the `supports` field of the more general statement, and the
+           more general statement is added to the `supported_by` field of
+           the more refined statement.
         5. A new flat list of statements is created that contains only those
            statements that have no `supports` entries (statements containing
            such entries are not eliminated, because they will be retrievable
@@ -728,43 +559,6 @@ class Preassembler(object):
         rel_fun = functools.partial(self.ontology.child_rel,
                                     rel_types={'is_opposite'})
         self._normalize_relations(ns, rank_key, rel_fun, True)
-
-
-def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, ontology=None,
-                             check_entities_match=False, refinement_fun=None):
-    # This is useful when deep-debugging, but even for normal debug is too much.
-    # logger.debug("Getting support pairs for %d tuples with idx %s and stmts "
-    #              "%s split at %s."
-    #              % (len(stmt_tuples), [idx for idx, _ in stmt_tuples],
-    #                 [(s.get_hash(shallow=True), s) for _, s in stmt_tuples],
-    #                 split_idx))
-    #  Make the iterator by one of two methods, depending on the case
-    if not refinement_fun:
-        refinement_fun = default_refinement_fun
-    if split_idx is None:
-        stmt_pair_iter = itertools.combinations(stmt_tuples, 2)
-    else:
-        stmt_group_a = []
-        stmt_group_b = []
-        for idx, stmt in stmt_tuples:
-            if idx <= split_idx:
-                stmt_group_a.append((idx, stmt))
-            else:
-                stmt_group_b.append((idx, stmt))
-        stmt_pair_iter = itertools.product(stmt_group_a, stmt_group_b)
-
-    # Actually create the index maps.
-    ix_map = []
-    for stmt_tuple1, stmt_tuple2 in stmt_pair_iter:
-        stmt_ix1, stmt1 = stmt_tuple1
-        stmt_ix2, stmt2 = stmt_tuple2
-        if check_entities_match and not stmt1.entities_match(stmt2):
-            continue
-        if refinement_fun(stmt1, stmt2, ontology):
-            ix_map.append((stmt_ix1, stmt_ix2))
-        elif refinement_fun(stmt2, stmt1, ontology):
-            ix_map.append((stmt_ix2, stmt_ix1))
-    return ix_map
 
 
 def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
