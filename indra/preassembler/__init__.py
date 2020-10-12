@@ -195,14 +195,12 @@ class Preassembler(object):
     # with old code that uses arguments related to multiprocessing.
     def _generate_id_maps(self, unique_stmts, *args, **kwargs):
         """Connect statements using their refinement relationship."""
-        # FIXME: we probably want to use the custom matches key function here
         # Make a list of Statement types
         stmts_by_type = collections.defaultdict(list)
         stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
                        for idx, stmt in enumerate(unique_stmts)}
-        for idx, stmt in enumerate(unique_stmts):
+        for stmt in unique_stmts:
             stmts_by_type[indra_stmt_type(stmt)].append(stmt)
-
         stmts_by_type = dict(stmts_by_type)
 
         maps = []
