@@ -2145,7 +2145,9 @@ class Association(Complex):
         return [m.concept for m in members]
 
     def refinement_of(self, other, ontology, entities_refined=False):
-        members_refinement = super().refinement_of(other, ontology)
+        members_refinement = \
+            super().refinement_of(other, ontology,
+                                  entities_refined=entities_refined)
         op = other.overall_polarity()
         sp = self.overall_polarity()
         if self.polarity_count() < other.polarity_count():

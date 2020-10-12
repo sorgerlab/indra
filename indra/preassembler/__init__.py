@@ -359,7 +359,8 @@ class Preassembler(object):
             stmts_by_type[indra_stmt_type(stmt)].append(stmt)
 
         maps = []
-        for stmts in stmts_by_type.values():
+        import tqdm
+        for stmts in tqdm.tqdm(stmts_by_type.values()):
             maps += self._generate_hash_maps_by_stmt_type(
                 stmts, stmts[0]._agent_order)
         idx_maps = [(stmt_to_idx[refinement], stmt_to_idx[refined])
@@ -367,73 +368,89 @@ class Preassembler(object):
         return idx_maps
 
     def _generate_hash_maps_by_stmt_type(self, stmts, roles):
+        # Step 1. initialize data structures
+        # Statements keyed by their hashes
         stmts_by_hash = {stmt.get_hash(): stmt for stmt in stmts}
-        role_key_to_hash = {}
-        hash_to_role_key = {}
+        # Mapping agent keys to statement hashes
+        agent_key_to_hash = {}
+        # Mapping statement hashes to agent keys
+        hash_to_agent_key = {}
+        # All agent keys for a given agent role
         all_keys_by_role = {}
         for role in roles:
-            role_key_to_hash[role] = collections.defaultdict(set)
-            hash_to_role_key[role] = collections.defaultdict(set)
+            agent_key_to_hash[role] = collections.defaultdict(set)
+            hash_to_agent_key[role] = collections.defaultdict(set)
 
-        def get_agent_keys(agents):
-            if not isinstance(agents, list):
-                agents = {agents}
-            keys = set()
-            for agent in agents:
-                if isinstance(agent, Event):
-                    agent = agent.concept
-                if agent is None:
-                    agent_key = None
-                else:
-                    agent_key = agent.get_grounding()
-                    if not agent_key[0]:
-                        agent_key = ('NAME', agent.name)
-                keys.add(agent_key)
-            return keys
-
-        def get_relevant_keys(agent_keys, all_keys_for_role):
-            relevant_keys = {None}
-            for agent_key in agent_keys:
-                relevant_keys |= {agent_key}
-                if agent_key is not None:
-                    relevant_keys |= set(self.ontology.get_parents(*agent_key))
-            relevant_keys &= all_keys_for_role
-            return relevant_keys
-
+        # Step 2. Fill up the initial data structures in preparation
+        # for ideentifying potential refinements
         for sh, stmt in stmts_by_hash.items():
             for role in roles:
                 agents = getattr(stmt, role)
                 agent_keys = get_agent_keys(agents)
                 for agent_key in agent_keys:
-                    role_key_to_hash[role][agent_key].add(sh)
-                hash_to_role_key[role][sh].add(agent_key)
+                    agent_key_to_hash[role][agent_key].add(sh)
+                hash_to_agent_key[role][sh].add(agent_key)
 
         for role in roles:
-            all_keys_by_role[role] = set(role_key_to_hash[role].keys())
+            all_keys_by_role[role] = set(agent_key_to_hash[role].keys())
 
+        # Step 3. Identify all the pairs of statements between which can be
+        # in a refinement relationship
         stmts_to_compare = {}
+        # We iterate over each statement and find all other statements that it
+        # can potentially refine
         for sh, stmt in stmts_by_hash.items():
             relevants = None
-            for role, hash_to_role_key_for_role in hash_to_role_key.items():
-                relevant_keys = get_relevant_keys(hash_to_role_key_for_role[sh],
-                                                  all_keys_by_role[role])
+            # We now iterate over all the agent roles in the given statement
+            # type
+            for role, hash_to_agent_key_for_role in hash_to_agent_key.items():
+                # We get all the agent keys in all other statements that the
+                # agent
+                # in this role in this statement can be a refinement.
+                relevant_keys = get_relevant_keys(
+                    hash_to_agent_key_for_role[sh],
+                    all_keys_by_role[role],
+                    self.ontology)
+                # We now get the actual statement hashes that these other
+                # potentially refined agent keys appear in in the given role
                 role_relevant_stmt_hashes = set.union(
-                    *[role_key_to_hash[role][rel]
+                    *[agent_key_to_hash[role][rel]
                       for rel in relevant_keys]) - {sh}
+                # In the first iteration, we initialize the set with the
+                # relevant statement hashes
                 if relevants is None:
                     relevants = role_relevant_stmt_hashes
+                # In subsequent iterations, we take the intersection of
+                # the relevant sets per role
                 else:
                     relevants &= role_relevant_stmt_hashes
+            # These hashes are now the ones that this statement needs
+            # to be compared against. Importantly, the relationship is in
+            # a well-defined direction so we don't need to test both ways.
             stmts_to_compare[sh] = relevants
 
+        total_comparisons = sum(len(v) for v in stmts_to_compare)
+        logger.info('Total comparisons: %d' % total_comparisons)
+
+        # Step 4. We can now do the actual comparisons and save pairs of
+        # confirmed refinements in a list.
         maps = []
-        for refinement, possible_refineds in stmts_to_compare.items():
+        # We again iterate over statements
+        for stmt_hash, possible_refineds in stmts_to_compare.items():
+            # We use the previously constructed set of statements that this one
+            # can possibly refine
             for possible_refined in possible_refineds:
                 # FIXME: custom functions?
-                if stmts_by_hash[refinement].refinement_of(
+                # And then do the actual comparison. Here we use
+                # entities_refined=True which means that we assert that
+                # the entities, in each role, are already confirmed to
+                # be "compatible" for refinement, and therefore, we don't need
+                # to again confirm this (i.e., call "isa") in the refinement_of
+                # function.
+                if stmts_by_hash[stmt_hash].refinement_of(
                         stmts_by_hash[possible_refined], self.ontology,
                         entities_refined=True):
-                    maps.append((refinement, possible_refined))
+                    maps.append((stmt_hash, possible_refined))
         return maps
 
     def combine_related(self, return_toplevel=True, poolsize=None,
@@ -996,3 +1013,32 @@ def default_refinement_fun(st1, st2, ontology):
 
 def default_matches_fun(st):
     return st.matches_key()
+
+
+def get_agent_keys(agents):
+    # To
+    if not isinstance(agents, list):
+        agents = {agents}
+    keys = set()
+    for agent in agents:
+        if isinstance(agent, Event):
+            agent = agent.concept
+        if agent is None:
+            agent_key = None
+        else:
+            agent_key = agent.get_grounding()
+            if not agent_key[0]:
+                agent_key = ('NAME', agent.name)
+        keys.add(agent_key)
+    return keys
+
+
+def get_relevant_keys(agent_keys, all_keys_for_role, ontology):
+    relevant_keys = {None}
+    for agent_key in agent_keys:
+        relevant_keys |= {agent_key}
+        if agent_key is not None:
+            relevant_keys |= set(ontology.get_parents(*agent_key))
+    relevant_keys &= all_keys_for_role
+    return relevant_keys
+

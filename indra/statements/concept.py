@@ -96,10 +96,13 @@ class Concept(object):
         # Check that the basic entity of the agent either matches or is related
         # to the entity of the other agent. If not, no match.
         # If the entities, match, then we can continue
-        if entities_refined or \
-                (not (self.entity_matches(other) or self.isa(other, ontology))):
-            return False
-        return True
+        if entities_refined:
+            return True
+        if self.entity_matches(other):
+            return True
+        if self.isa(other, ontology):
+            return True
+        return False
 
     def to_json(self):
         json_dict = _o({'name': self.name})
