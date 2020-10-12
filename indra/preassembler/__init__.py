@@ -198,7 +198,7 @@ class Preassembler(object):
         # FIXME: we probably want to use the custom matches key function here
         # Make a list of Statement types
         stmts_by_type = collections.defaultdict(list)
-        stmt_to_idx = {stmt.get_hash(): idx
+        stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
                        for idx, stmt in enumerate(unique_stmts)}
         for idx, stmt in enumerate(unique_stmts):
             stmts_by_type[indra_stmt_type(stmt)].append(stmt)
@@ -215,7 +215,8 @@ class Preassembler(object):
     def _generate_hash_maps_by_stmt_type(self, stmts, roles):
         # Step 1. initialize data structures
         # Statements keyed by their hashes
-        stmts_by_hash = {stmt.get_hash(): stmt for stmt in stmts}
+        stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun):
+                         stmt for stmt in stmts}
         # Mapping agent keys to statement hashes
         agent_key_to_hash = {}
         # Mapping statement hashes to agent keys
@@ -281,21 +282,22 @@ class Preassembler(object):
         # confirmed refinements in a list.
         maps = []
         # We again iterate over statements
-        for stmt_hash, possible_refineds in stmts_to_compare.items():
+        for stmt_hash, possible_refined_hashes in stmts_to_compare.items():
             # We use the previously constructed set of statements that this one
             # can possibly refine
-            for possible_refined in possible_refineds:
-                # FIXME: custom functions?
+            for possible_refined_hash in possible_refined_hashes:
                 # And then do the actual comparison. Here we use
                 # entities_refined=True which means that we assert that
                 # the entities, in each role, are already confirmed to
                 # be "compatible" for refinement, and therefore, we don't need
                 # to again confirm this (i.e., call "isa") in the refinement_of
                 # function.
-                if stmts_by_hash[stmt_hash].refinement_of(
-                        stmts_by_hash[possible_refined], self.ontology,
-                        entities_refined=True):
-                    maps.append((stmt_hash, possible_refined))
+                ref = self.refinement_fun(stmts_by_hash[stmt_hash],
+                                          stmts_by_hash[possible_refined_hash],
+                                          ontology=self.ontology,
+                                          entities_refined=True)
+                if ref:
+                    maps.append((stmt_hash, possible_refined_hash))
         return maps
 
     def combine_related(self, return_toplevel=True, poolsize=None,
