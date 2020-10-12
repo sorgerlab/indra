@@ -81,9 +81,6 @@ class BioOntology(IndraOntology):
         # Build name to ID lookup
         logger.info('Building name lookup...')
         self._build_name_lookup()
-        # Label components
-        logger.info('Labeling components...')
-        self._label_components()
         logger.info('Finished initializing bio ontology...')
 
     def add_hgnc_nodes(self):
