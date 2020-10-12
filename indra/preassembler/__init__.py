@@ -1,11 +1,9 @@
-import sys
 import time
 import logging
 import itertools
 import functools
 import collections
 import networkx as nx
-import multiprocessing as mp
 from indra.util import fast_deepcopy
 from indra.statements import *
 from indra.statements import stmt_type as indra_stmt_type
@@ -193,8 +191,9 @@ class Preassembler(object):
             unique_stmts.append(new_stmt)
         return unique_stmts
 
-    def _generate_id_maps(self, unique_stmts, poolsize=None,
-                          size_cutoff=100, split_idx=None):
+    # Note that the args, kwargs here are just there for backwards compatibility
+    # with old code that uses arguments related to multiprocessing.
+    def _generate_id_maps(self, unique_stmts, *args, **kwargs):
         """Connect statements using their refinement relationship."""
         # FIXME: we probably want to use the custom matches key function here
         # Make a list of Statement types
@@ -209,7 +208,7 @@ class Preassembler(object):
         maps = []
         for stmt_type, stmts in stmts_by_type.items():
             logger.info('Finding refinements for %d %s statements' %
-                        (len(stmts), stmt_type))
+                        (len(stmts), stmt_type.__name__))
             maps += self._generate_hash_maps_by_stmt_type(
                 stmts, stmts[0]._agent_order)
         idx_maps = [(stmt_to_idx[refinement], stmt_to_idx[refined])
@@ -300,8 +299,6 @@ class Preassembler(object):
         te = time.time()
         logger.debug('Identified potential refinements in %.2fs' % (te-ts))
 
-
-        #breakpoint()
         total_comparisons = sum(len(v) for v in stmts_to_compare.values())
         logger.info('Total comparisons: %d' % total_comparisons)
 
@@ -331,8 +328,9 @@ class Preassembler(object):
         logger.debug('Confirmed %d refinements in %.2fs' % (len(maps), te-ts))
         return maps
 
-    def combine_related(self, return_toplevel=True, poolsize=None,
-                        size_cutoff=100):
+    # Note that the args, kwargs here are just there for backwards compatibility
+    # with old code that uses arguments related to multiprocessing.
+    def combine_related(self, return_toplevel=True, *args, **kwargs):
         """Connect related statements based on their refinement relationships.
 
         This function takes as a starting point the unique statements (with
@@ -370,10 +368,6 @@ class Preassembler(object):
            from the `supported_by` fields of other statements). This list
            is returned to the caller.
 
-        On multi-core machines, the algorithm can be parallelized by setting
-        the poolsize argument to the desired number of worker processes.
-        This feature is only available in Python > 3.4.
-
         .. note:: Subfamily relationships must be consistent across arguments
 
             For now, we require that merges can only occur if the *isa*
@@ -388,16 +382,6 @@ class Preassembler(object):
         return_toplevel : Optional[bool]
             If True only the top level statements are returned.
             If False, all statements are returned. Default: True
-        poolsize : Optional[int]
-            The number of worker processes to use to parallelize the
-            comparisons performed by the function. If None (default), no
-            parallelization is performed. NOTE: Parallelization is only
-            available on Python 3.4 and above.
-        size_cutoff : Optional[int]
-            Groups with size_cutoff or more statements are sent to worker
-            processes, while smaller groups are compared in the parent process.
-            Default value is 100. Not relevant when parallelization is not
-            used.
 
         Returns
         -------
@@ -440,7 +424,7 @@ class Preassembler(object):
         unique_stmts = self.combine_duplicates()
 
         # Generate the index map, linking related statements.
-        idx_map = self._generate_id_maps(unique_stmts, poolsize, size_cutoff)
+        idx_map = self._generate_id_maps(unique_stmts)
 
         # Now iterate over all indices and set supports/supported by
         for ix1, ix2 in idx_map:
@@ -463,9 +447,10 @@ class Preassembler(object):
             A list of Statement pairs that are contradicting.
         """
         # Make a dict of Statement by type
-        stmts_by_type = collections.defaultdict(lambda: [])
-        for idx, stmt in enumerate(self.stmts):
-            stmts_by_type[indra_stmt_type(stmt)].append((idx, stmt))
+        stmts_by_type = collections.defaultdict(list)
+        for stmt in self.stmts:
+            stmts_by_type[indra_stmt_type(stmt)].append(stmt)
+        stmts_by_type = dict(stmts_by_type)
 
         # Handle Statements with polarity first
         pos_stmts = AddModification.__subclasses__()
@@ -475,25 +460,22 @@ class Preassembler(object):
         neg_stmts += [Inhibition, DecreaseAmount]
 
         contradicts = []
+        # Handle statements with polarity first
+        # TODO: we could probably do some optimization here
+        # to not have to check statements combinatorially
         for pst, nst in zip(pos_stmts, neg_stmts):
             poss = stmts_by_type.get(pst, [])
             negs = stmts_by_type.get(nst, [])
 
-            pos_stmt_by_group = self._get_stmt_by_group(pst, poss,
-                                                        self.ontology)
-            neg_stmt_by_group = self._get_stmt_by_group(nst, negs,
-                                                        self.ontology)
-            for key, pg in pos_stmt_by_group.items():
-                ng = neg_stmt_by_group.get(key, [])
-                for (_, st1), (_, st2) in itertools.product(pg, ng):
-                    if st1.contradicts(st2, self.ontology):
-                        contradicts.append((st1, st2))
+            for ps, ns in itertools.product(poss, negs):
+                if ps.contradicts(ns, self.ontology):
+                    contradicts.append((ps, ns))
 
         # Handle neutral Statements next
         neu_stmts = [Influence, ActiveForm]
         for stt in neu_stmts:
             stmts = stmts_by_type.get(stt, [])
-            for (_, st1), (_, st2) in itertools.combinations(stmts, 2):
+            for st1, st2 in itertools.combinations(stmts, 2):
                 if st1.contradicts(st2, self.ontology):
                     contradicts.append((st1, st2))
 
