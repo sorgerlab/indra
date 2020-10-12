@@ -968,7 +968,7 @@ def test_matches_key_fun():
             matches_key = stmt.matches_key()
         return matches_key
 
-    def event_location_refinement(st1, st2, bio_ontology):
+    def event_location_refinement(st1, st2, ontology):
         if isinstance(st1, Event) and isinstance(st2, Event):
             ref = st1.refinement_of(st2, bio_ontology)
             if not ref:

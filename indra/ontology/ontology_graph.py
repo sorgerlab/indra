@@ -35,6 +35,8 @@ class IndraOntology(networkx.DiGraph):
         self._initialized = False
         self.name_to_grounding = {}
         self.transitive_closure = set()
+        self._isa_counter = 0
+        self._isrel_counter = 0
 
     def initialize(self):
         """Initialize the ontology by adding nodes and edges.
@@ -137,6 +139,7 @@ class IndraOntology(networkx.DiGraph):
             a directed path containing edges with types in `rels` .
             Otherwise False.
         """
+        self._isrel_counter += 1
         return self._check_path(ns1, id1, ns2, id2, rels)
 
     @with_initialize
@@ -210,6 +213,7 @@ class IndraOntology(networkx.DiGraph):
             a directed path containing edges with type `isa` or `partof`.
             Otherwise False.
         """
+        self._isa_counter += 1
         if self.transitive_closure:
             return (self.label(ns1, id1),
                     self.label(ns2, id2)) in self.transitive_closure
