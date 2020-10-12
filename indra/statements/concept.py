@@ -51,10 +51,8 @@ class Concept(object):
             if not db_id:
                 continue
             if isinstance(db_id, (list, tuple)):
-                db_id = db_id[0]
-                if isinstance(db_id, (list, tuple)):
-                    db_id = sorted(db_id, key=lambda x: x[1],
-                                   reverse=True)[0][0]
+                db_id = sorted(db_id, key=lambda x: x[1],
+                               reverse=True)[0][0]
             return db_ns, db_id
         return None, None
 
