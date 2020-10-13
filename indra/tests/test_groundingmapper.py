@@ -152,8 +152,6 @@ def test_renaming():
     # Don't fall back on text if there's no grounding
     assert renamed_stmts[2].sub.name == 'pkbA'
     assert renamed_stmts[3].sub.name == 'tat'
-    assert unicode_strs((akt_indra, akt_hgnc_from_up, akt_other,
-                         tat_up_no_hgnc, stmts, gm, renamed_stmts))
 
 
 def test_save_sentences_unicode():
