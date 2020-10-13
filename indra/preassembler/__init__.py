@@ -196,24 +196,39 @@ class Preassembler(object):
     def _generate_id_maps(self, unique_stmts, *args, **kwargs):
         """Connect statements using their refinement relationship."""
         # Make a list of Statement types
-        stmts_by_type = collections.defaultdict(list)
         stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
                        for idx, stmt in enumerate(unique_stmts)}
+        stmts_by_type = collections.defaultdict(list)
         for stmt in unique_stmts:
             stmts_by_type[indra_stmt_type(stmt)].append(stmt)
         stmts_by_type = dict(stmts_by_type)
+
+        # Here we handle split_idx to allow finding refinements between
+        # to distinct groups of statements (identified by an index at which we
+        # split the unique_statements list) rather than globally across
+        # all unique statements.
+        split_idx = kwargs.pop('split_idx', None)
+        if split_idx:
+            # This dict maps statement hashes to a bool value based on which
+            # of the two groups the statement belongs to.
+            hash_to_split_group = {sh: (idx <= split_idx) for sh, idx
+                                   in stmt_to_idx.items()}
+        else:
+            hash_to_split_group = None
 
         maps = []
         for stmt_type, stmts in stmts_by_type.items():
             logger.info('Finding refinements for %d %s statements' %
                         (len(stmts), stmt_type.__name__))
             maps += self._generate_hash_maps_by_stmt_type(
-                stmts, stmts[0]._agent_order)
+                stmts, stmts[0]._agent_order,
+                split_groups=hash_to_split_group)
         idx_maps = [(stmt_to_idx[refinement], stmt_to_idx[refined])
                     for refinement, refined in maps]
         return idx_maps
 
-    def _generate_hash_maps_by_stmt_type(self, stmts, roles):
+    def _generate_hash_maps_by_stmt_type(self, stmts, roles,
+                                         split_groups=None):
         ts = time.time()
         # Step 1. initialize data structures
         # Statements keyed by their hashes
@@ -309,19 +324,23 @@ class Preassembler(object):
             # We use the previously constructed set of statements that this one
             # can possibly refine
             for possible_refined_hash in possible_refined_hashes:
-                # And then do the actual comparison. Here we use
-                # entities_refined=True which means that we assert that
-                # the entities, in each role, are already confirmed to
-                # be "compatible" for refinement, and therefore, we don't need
-                # to again confirm this (i.e., call "isa") in the refinement_of
-                # function.
-                self._comparison_counter += 1
-                ref = self.refinement_fun(stmts_by_hash[stmt_hash],
-                                          stmts_by_hash[possible_refined_hash],
-                                          ontology=self.ontology,
-                                          entities_refined=True)
-                if ref:
-                    maps.append((stmt_hash, possible_refined_hash))
+                # We handle split groups here to only check refinements between
+                # statements that are in different groups to compare
+                if not split_groups or split_groups[stmt_hash] != \
+                        split_groups[possible_refined_hash]:
+                    # And then do the actual comparison. Here we use
+                    # entities_refined=True which means that we assert that
+                    # the entities, in each role, are already confirmed to
+                    # be "compatible" for refinement, and therefore, we don't need
+                    # to again confirm this (i.e., call "isa") in the refinement_of
+                    # function.
+                    self._comparison_counter += 1
+                    ref = self.refinement_fun(stmts_by_hash[stmt_hash],
+                                              stmts_by_hash[possible_refined_hash],
+                                              ontology=self.ontology,
+                                              entities_refined=True)
+                    if ref:
+                        maps.append((stmt_hash, possible_refined_hash))
         te = time.time()
         logger.debug('Confirmed %d refinements in %.2fs' % (len(maps), te-ts))
         return maps
