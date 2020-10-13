@@ -464,8 +464,8 @@ def get_path_iter(graph, source, target, path_length, loop, dummy_target,
         Whether provided target is a dummy node and should be removed from path
     filter_func : function or None
         A function to constrain the search. A function should take a node as
-        a parameter and return True if the node should be filtered and False
-        otherwise. If None, then no filtering is done.
+        a parameter and return True if the node is allowed to be in a path and
+        False otherwise. If None, then no filtering is done.
 
     Returns
     -------
@@ -916,7 +916,7 @@ def filter_except(filter_func, nodes_to_keep):
     filter_func : function
         A function to constrain the intermediate nodes in the path. A
         function should take a node as a parameter and return True if the node
-        is allowed to be a path of a path and False otherwise.
+        is allowed to be in a path and False otherwise.
     nodes_to_keep : iterable
         A collection of nodes to keep regardless of filter function.
 

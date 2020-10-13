@@ -332,8 +332,8 @@ class ModelChecker(object):
             Whether the target is a dummy node.
         filter_func : function or None
             A function to constrain the search. A function should take a node
-            as a parameter and return True if the node should be filtered and
-            False otherwise. If None, then no filtering is done.
+            as a parameter and return True if the node is allowed to be in a
+            path and False otherwise. If None, then no filtering is done.
 
         Returns
         -------
