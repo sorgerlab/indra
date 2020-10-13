@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 
 from indra.explanation.pathfinding.pathfinding import bfs_search, \
-    shortest_simple_paths, bfs_search_multiple_nodes
+    shortest_simple_paths, bfs_search_multiple_nodes, open_dijkstra_search
 from indra.explanation.model_checker.model_checker import \
     signed_edges_to_signed_nodes
 
@@ -48,12 +48,21 @@ def _digraph_setup():
     for e in edges:
         all_ns.add(e[0][0].lower())
         all_ns.add(e[1][0].lower())
+    hashes = {
+        ('A1', 'B1') : [11],
+        ('B1', 'C1') : [12, 22],
+        ('B3', 'C1') : [13],
+        ('B2', 'C1') : [21],
+        ('A2', 'B1') : [23],
+        ('A3', 'B2') : [24],
+        ('A4', 'B2') : [25],
+    }
 
-    return edges, signed_edges, edge_beliefs, list(all_ns)
+    return edges, signed_edges, edge_beliefs, list(all_ns), hashes
 
 
 def _setup_unsigned_graph():
-    edges, signed_edges, edge_beliefs, all_ns = _digraph_setup()
+    edges, signed_edges, edge_beliefs, all_ns, hashes = _digraph_setup()
     dg = nx.DiGraph()
     dg.add_edges_from(edges)
 
@@ -61,6 +70,9 @@ def _setup_unsigned_graph():
     for e in dg.edges:
         dg.edges[e]['belief'] = edge_beliefs[e]
         dg.edges[e]['weight'] = -np.log(edge_beliefs[e], dtype=np.longfloat)
+    
+    # Add edge_by_hash
+    dg.graph['hashes'] = hashes
 
     # Add namespaces
     nodes1, nodes2 = list(zip(*edges))
@@ -74,7 +86,7 @@ def _setup_unsigned_graph():
 
 
 def _setup_signed_graph():
-    edges, signed_edges, edge_beliefs, all_ns = _digraph_setup()
+    edges, signed_edges, edge_beliefs, all_ns, hashes = _digraph_setup()
     seg = nx.MultiDiGraph()
 
     seg.add_edges_from(signed_edges)
@@ -91,6 +103,9 @@ def _setup_signed_graph():
                                        copy_edge_data=True)
     for u, v in sng.edges:
         sng.edges[(u, v)]['weight'] = -np.log(sng.edges[(u, v)]['belief'])
+    
+    seg.graph['hashes'] = hashes
+    sng.graph['hashes'] = hashes
 
     return seg, sng, all_ns
 
@@ -257,3 +272,237 @@ def test_bfs_multiple_nodes():
     paths = [p for p in bfs_search_multiple_nodes(
         dg, ['C1', 'D1'], depth_limit=2, reverse=True, path_limit=5)]
     assert len(paths) == 5, len(paths)
+
+
+def test_shortest_simple_paths_strict_mesh_id_filtering():
+    G = _setup_unsigned_graph()[0]
+    G.add_edge('A2', 'B3', belief=0.7, weight=-np.log(0.7))
+    G.add_edge('B3', 'B1', belief=0.7, weight=-np.log(0.7))
+
+    def count_paths(source, target, hashes):
+        def ref_counts_function(G, u, v):
+            edge_hashes = G.graph['hashes']
+            edge_hashes[('A2', 'B3')] = [14]
+            edge_hashes[('B3', 'B1')] = [15]
+            try:
+                return len(set(hashes).intersection(
+                    set(edge_hashes[(u, v)]))), None
+            except KeyError:
+                return 0, None
+        try:
+            paths = list(shortest_simple_paths(G, source, target,
+                hashes=hashes,
+                weight='weight',
+                strict_mesh_id_filtering=True,
+                ref_counts_function=ref_counts_function))
+            return len(paths)
+        except nx.NetworkXNoPath:
+            return 0
+
+    assert count_paths('Z1', 'C1', []) == 0
+    assert count_paths('A2', 'C1', []) == 0
+
+    assert count_paths('Z1', 'C1', [11, 12, 13, 14, 15]) == 0
+    assert count_paths('A1', 'C1', [11, 12, 13, 14, 15]) == 1
+    assert count_paths('A2', 'C1', [11, 12, 13, 14, 15]) == 2
+    assert count_paths('A2', 'D1', [11, 12, 13, 14, 15]) == 0
+    
+    assert count_paths('Z1', 'C1', [21, 22, 23, 24, 25]) == 0
+    assert count_paths('A1', 'C1', [21, 22, 23, 24, 25]) == 0
+    assert count_paths('A2', 'C1', [21, 22, 23, 24, 25]) == 1
+    assert count_paths('A2', 'D1', [21, 22, 23, 24, 25]) == 0
+
+    assert count_paths('Z1', 'C1',
+                       [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 0
+    assert count_paths('A1', 'C1',
+                       [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 1
+    assert count_paths('A2', 'C1',
+                       [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 3
+    assert count_paths('A2', 'D1',
+                       [11, 12, 13, 14, 15, 21, 22, 23, 24, 25]) == 0
+
+
+def test_shortest_simple_paths_weighed_by_mesh_ids():
+    G = _setup_unsigned_graph()[0]
+    G.add_edge('A3', 'B1', belief=0.7, weight=-np.log(0.7))
+    def find_paths(hashes):
+        def ref_counts_function(G, u, v):
+            edge_hashes = G.graph['hashes']
+            edge_hashes[('A3', 'B1')] = [14]
+            try:
+                return \
+                    len(set(hashes).intersection(set(edge_hashes[(u, v)]))),\
+                    sum(hashes)
+            except KeyError:
+                return 0, sum(hashes)
+        return list(shortest_simple_paths(
+            G, source, target, hashes=hashes,
+            ref_counts_function=ref_counts_function))
+    source = 'A3'
+    target = 'C1'
+    paths = find_paths(hashes=[11, 12, 13, 14])
+    assert paths == [['A3', 'B1', 'C1'], ['A3', 'B2', 'C1']]
+    paths = find_paths(hashes=[21, 22, 23, 24, 25])
+    assert paths == [['A3', 'B2', 'C1'], ['A3', 'B1', 'C1']]
+    paths = find_paths(hashes=[11, 12, 13, 14, 21, 22, 23, 24, 25])
+    assert paths == [['A3', 'B1', 'C1'], ['A3', 'B2', 'C1']]
+
+
+def test_bfs_strict_mesh_id_filtering():
+    dg = _setup_unsigned_graph()[0]
+
+    edge_hashes = dg.graph['hashes']
+    def find_paths(hashes):
+        def allow_edge(u, v):
+            try:
+                return len(set(hashes).intersection(edge_hashes[(u, v)]))
+            except KeyError:
+                return False
+        return list(bfs_search(dg, 'C1', depth_limit=6, reverse=True,
+                               strict_mesh_id_filtering=True, hashes=hashes,
+                               allow_edge=allow_edge))
+
+    paths = find_paths([])
+    assert len(paths) == 0
+
+    paths = find_paths([11, 12, 13])
+    expected = {('C1', 'B3'),
+                ('C1', 'B1'),
+                ('C1', 'B1', 'A1')}
+    assert len(paths) == 3
+    assert set(paths) == expected
+
+    paths = find_paths([21, 22, 23, 24, 25])
+    expected = {('C1', 'B2'),
+                ('C1', 'B2', 'A3'),
+                ('C1', 'B2', 'A4'),
+                ('C1', 'B1'),
+                ('C1', 'B1', 'A2')}
+    assert len(paths) == 5
+    assert set(paths) == expected
+
+    paths = find_paths([11, 12, 13, 21, 22, 23, 24, 25])
+    expected = {('C1', 'B3'),
+                ('C1', 'B2'),
+                ('C1', 'B2', 'A3'),
+                ('C1', 'B2', 'A4'),
+                ('C1', 'B1'),
+                ('C1', 'B1', 'A2'),
+                ('C1', 'B1', 'A1')}
+    assert len(paths) == 7
+    assert set(paths) == expected
+
+
+def test_open_dijksta():
+    dg, all_ns = _setup_unsigned_graph()
+    dg.add_edge('A3', 'B1', belief=0.7, weight=-np.log(0.7))
+    edge_hashes = dg.graph['hashes']
+
+    def find_paths(source, reverse=False, hashes=None, depth_limit=6,
+                   path_limit=9):
+        def ref_counts_function(G, u, v):
+            edge_hashes = G.graph['hashes']
+            edge_hashes[('A3', 'B1')] = [14]
+            try:
+                return len(
+                    set(hashes).intersection(set(edge_hashes[(u, v)]))),\
+                       len(hashes)
+            except KeyError:
+                return 0, len(hashes)
+        return list(open_dijkstra_search(
+            dg, source, reverse=reverse, hashes=hashes,
+            ref_counts_function=ref_counts_function, path_limit=path_limit,
+            weight='context_weight' if hashes else 'weight'))
+
+    def sort_by_weight(paths, reverse):
+        return sorted(
+            paths,
+            key=lambda path: sum(
+                (dg[v][u] if reverse else dg[u][v])['weight']
+                for u, v in zip(path[:-1], path[1:])))
+
+    paths = find_paths('C1', reverse=True, hashes=[], path_limit=9)
+    assert paths == sort_by_weight([
+        ['C1', 'B1'],
+        ['C1', 'B2'],
+        ['C1', 'B3'],
+        ['C1', 'B1', 'A1'],
+        ['C1', 'B1', 'A2'],
+        ['C1', 'B1', 'A3'],
+        ['C1', 'B2', 'A4'],
+        ['C1', 'B1', 'A1', 'Z1']
+    ], True)
+
+    paths = find_paths('C1', reverse=True, hashes=[11, 12, 13, 14],
+                       depth_limit=2, path_limit=9)
+    assert paths == [
+        ['C1', 'B1'],
+        ['C1', 'B3'],
+        ['C1', 'B1', 'A1'],
+        ['C1', 'B1', 'A3'],
+        ['C1', 'B2'],
+        ['C1', 'B1', 'A2'],
+        ['C1', 'B1', 'A1', 'Z1'],
+        ['C1', 'B2', 'A4']
+    ]
+
+    paths = find_paths('C1', reverse=True, hashes=[], depth_limit=6,
+                       path_limit=5)
+    assert paths == sort_by_weight([
+        ['C1', 'B1'],
+        ['C1', 'B2'],
+        ['C1', 'B1', 'A1'],
+        ['C1', 'B3'],
+        ['C1', 'B1', 'A2']
+    ], True)
+
+    paths = find_paths('C1', hashes=[], depth_limit=6, path_limit=5)
+    assert paths == [['C1', 'D1']]
+
+    paths = find_paths('A3', hashes=[], depth_limit=6, path_limit=5)
+    assert paths == sort_by_weight([
+        ['A3', 'B2'],
+        ['A3', 'B1'],
+        ['A3', 'B1', 'C1'],
+        ['A3', 'B1', 'C1', 'D1'],
+    ], False)
+
+    paths = find_paths('A3', hashes=[11, 12, 13, 14], depth_limit=6,
+                       path_limit=9)
+    assert paths == [
+        ['A3', 'B1'],
+        ['A3', 'B1', 'C1'],
+        ['A3', 'B2'],
+        ['A3', 'B1', 'C1', 'D1'],
+    ]
+
+    paths = find_paths('A3', hashes=[21, 22, 23, 24, 25], depth_limit=6,
+                       path_limit=9)
+    assert paths == [
+        ['A3', 'B2'],
+        ['A3', 'B2', 'C1'],
+        ['A3', 'B1'],
+        ['A3', 'B2', 'C1', 'D1'],
+    ]
+
+    paths = find_paths('A3', hashes=[11, 12, 13, 14, 21, 22, 23, 24, 25],
+                       depth_limit=6, path_limit=9)
+    assert paths == [
+        ['A3', 'B2'],
+        ['A3', 'B1'],
+        ['A3', 'B1', 'C1'],
+        ['A3', 'B1', 'C1', 'D1'],
+    ]
+
+    edge_hashes[('A3', 'B2')].append(15)
+    edge_hashes[('B2', 'C1')].append(16)
+    paths = find_paths('A3',
+                       hashes=[11, 12, 13, 14, 15, 16, 21, 22, 23, 24, 25],
+                       depth_limit=6, path_limit=9)
+    
+    assert paths == [
+        ['A3', 'B2'],
+        ['A3', 'B1'],
+        ['A3', 'B2', 'C1'],
+        ['A3', 'B2', 'C1', 'D1'],
+    ]
