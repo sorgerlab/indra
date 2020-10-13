@@ -71,9 +71,9 @@ def location_matches(stmt):
 
 
 @register_pipeline
-def event_location_refinement(st1, st2, ontology):
+def event_location_refinement(st1, st2, ontology, entities_refined):
     """Return True if there is a location-aware refinement between Events."""
-    ref = st1.refinement_of(st2, ontology)
+    ref = st1.refinement_of(st2, ontology, entities_refined)
     if not ref:
         return False
     if not has_location(st2):
@@ -92,21 +92,22 @@ def event_location_refinement(st1, st2, ontology):
 
 
 @register_pipeline
-def location_refinement(st1, st2, ontology):
+def location_refinement(st1, st2, ontology, entities_refined):
     """Return True if there is a location-aware refinement between stmts."""
     if type(st1) != type(st2):
         return False
     if isinstance(st1, Event):
-        event_ref = event_location_refinement(st1, st2, ontology)
+        event_ref = event_location_refinement(st1, st2, ontology,
+                                              entities_refined)
         return event_ref
     elif isinstance(st1, Influence):
         subj_ref = event_location_refinement(st1.subj, st2.subj,
-                                             ontology)
+                                             ontology, entities_refined)
         obj_ref = event_location_refinement(st1.obj, st2.obj,
-                                            ontology)
+                                            ontology, entities_refined)
         return subj_ref and obj_ref
     else:
-        return st1.refinement_of(st2, ontology)
+        return st1.refinement_of(st2, ontology, entities_refined)
 
 
 @register_pipeline
@@ -134,9 +135,9 @@ def location_time_matches(stmt):
 
 
 @register_pipeline
-def event_location_time_refinement(st1, st2, ontology):
+def event_location_time_refinement(st1, st2, ontology, entities_refined):
     """Return True if there is a location/time refinement between Events."""
-    ref = location_refinement(st1, st2, ontology)
+    ref = location_refinement(st1, st2, ontology, entities_refined)
     if not ref:
         return False
     if not has_time(st2):
@@ -148,20 +149,21 @@ def event_location_time_refinement(st1, st2, ontology):
 
 
 @register_pipeline
-def location_time_refinement(st1, st2, ontology):
+def location_time_refinement(st1, st2, ontology, entities_refined):
     """Return True if there is a location/time refinement between stmts."""
     if type(st1) != type(st2):
         return False
     if isinstance(st1, Event):
-        return event_location_time_refinement(st1, st2, ontology)
+        return event_location_time_refinement(st1, st2, ontology,
+                                              entities_refined)
     elif isinstance(st1, Influence):
         ref = st1.refinement_of(st2, ontology)
         if not ref:
             return False
         subj_ref = event_location_time_refinement(st1.subj, st2.subj,
-                                                  ontology)
+                                                  ontology, entities_refined)
         obj_ref = event_location_time_refinement(st1.obj, st2.obj,
-                                                 ontology)
+                                                 ontology, entities_refined)
         return subj_ref and obj_ref
 
 
@@ -235,8 +237,9 @@ def location_time_delta_matches(stmt):
 
 
 @register_pipeline
-def event_location_time_delta_refinement(st1, st2, ontology):
-    loc_time_ref = event_location_time_refinement(st1, st2, ontology)
+def event_location_time_delta_refinement(st1, st2, ontology, entities_refined):
+    loc_time_ref = event_location_time_refinement(st1, st2, ontology,
+                                                  entities_refined)
     if not loc_time_ref:
         return False
     if not st2.delta:
@@ -248,17 +251,20 @@ def event_location_time_delta_refinement(st1, st2, ontology):
 
 
 @register_pipeline
-def location_time_delta_refinement(st1, st2, ontology):
+def location_time_delta_refinement(st1, st2, ontology, entities_refined):
     if isinstance(st1, Event):
-        return event_location_time_delta_refinement(st1, st2, ontology)
+        return event_location_time_delta_refinement(st1, st2, ontology,
+                                                    entities_refined)
     elif isinstance(st1, Influence):
         ref = st1.refinement_of(st2, ontology)
         if not ref:
             return False
         subj_ref = event_location_time_delta_refinement(st1.subj, st2.subj,
-                                                        ontology)
+                                                        ontology,
+                                                        entities_refined)
         obj_ref = event_location_time_delta_refinement(st1.obj, st2.obj,
-                                                       ontology)
+                                                       ontology,
+                                                       entities_refined)
         return subj_ref and obj_ref
     else:
-        return st1.refinement_of(st2, ontology)
+        return st1.refinement_of(st2, ontology, entities_refined)

@@ -4,6 +4,8 @@ from collections import OrderedDict as _o
 
 logger = logging.getLogger(__name__)
 
+default_ns_order = ['WM', 'UN', 'HUME', 'SOFIA', 'CWMS']
+
 
 class Concept(object):
     """A concept/entity of interest that is the argument of a Statement
@@ -42,28 +44,17 @@ class Concept(object):
                   (self.db_refs == other.db_refs)
         return matches
 
-    def get_grounding(self):
-        # Prioritize anything that is other than TEXT
-        db_names = sorted(list(set(self.db_refs.keys()) - set(['TEXT'])))
-        db_ns = db_names[0] if db_names else None
-        # Prefer WM/UN if it's there
-        if 'WM' in db_names:
-            db_ns = 'WM'
-        elif 'UN' in db_names:
-            db_ns = 'UN'
-        db_id = self.db_refs[db_ns] if db_ns else None
-        # If the db_id is actually a list of scored groundings, we take the
-        # highest scoring one.
-        if isinstance(db_id, list):
+    def get_grounding(self, ns_order=None):
+        ns_order = ns_order if ns_order else default_ns_order
+        for db_ns in ns_order:
+            db_id = self.db_refs.get(db_ns)
             if not db_id:
-                db_id = None
-            else:
-                db_id = sorted(db_id, key=lambda x: x[1], reverse=True)[0][0]
-        # If there is no db_id then we actually reset the db_ns to None
-        # to make sure we don't consider this a potential isa
-        if db_id is None:
-            db_ns = None
-        return db_ns, db_id
+                continue
+            if isinstance(db_id, (list, tuple)):
+                db_id = sorted(db_id, key=lambda x: x[1],
+                               reverse=True)[0][0]
+            return db_ns, db_id
+        return None, None
 
     def isa(self, other, ontology):
         # Get the namespaces for the comparison
@@ -88,7 +79,7 @@ class Concept(object):
         return ontology.is_opposite(self_ns, self_id,
                                     other_ns, other_id)
 
-    def refinement_of(self, other, ontology):
+    def refinement_of(self, other, ontology, entities_refined=False):
         # Make sure the Agent types match
         if type(self) != type(other):
             return False
@@ -96,9 +87,13 @@ class Concept(object):
         # Check that the basic entity of the agent either matches or is related
         # to the entity of the other agent. If not, no match.
         # If the entities, match, then we can continue
-        if not (self.entity_matches(other) or self.isa(other, ontology)):
-            return False
-        return True
+        if entities_refined:
+            return True
+        if self.entity_matches(other):
+            return True
+        if self.isa(other, ontology):
+            return True
+        return False
 
     def to_json(self):
         json_dict = _o({'name': self.name})

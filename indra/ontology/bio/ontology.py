@@ -17,7 +17,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.2'
+    version = '1.3'
 
     def __init__(self):
         super().__init__()
@@ -81,9 +81,6 @@ class BioOntology(IndraOntology):
         # Build name to ID lookup
         logger.info('Building name lookup...')
         self._build_name_lookup()
-        # Label components
-        logger.info('Labeling components...')
-        self._label_components()
         logger.info('Finished initializing bio ontology...')
 
     def add_hgnc_nodes(self):

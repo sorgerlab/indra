@@ -132,7 +132,7 @@ class Agent(Concept):
         return ontology.isa_or_partof(self_ns, self_id, other_ns,
                                       other_id)
 
-    def refinement_of(self, other, ontology):
+    def refinement_of(self, other, ontology, entities_refined=False):
         from indra.databases import go_client
         # Make sure the Agent types match
         if type(self) != type(other):
@@ -143,7 +143,8 @@ class Agent(Concept):
         # to the entity of the other agent. If not, no match.
 
         # If the entities, match, then we can continue
-        if not (self.entity_matches(other) or self.isa(other, ontology)):
+        if not (entities_refined or
+                (self.entity_matches(other) or self.isa(other, ontology))):
             return False
 
         # BOUND CONDITIONS

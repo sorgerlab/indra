@@ -71,7 +71,6 @@ if __name__ == '__main__':
         if node not in keep_nodes:
             bio_ontology.remove_node(node)
     bio_ontology._build_name_lookup()
-    bio_ontology._label_components()
     bio_ontology._build_transitive_closure()
     fname = os.path.join(CACHE_DIR, 'mock_ontology.pkl')
     with open(fname, 'wb') as fh:

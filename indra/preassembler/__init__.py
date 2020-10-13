@@ -1,11 +1,9 @@
-import sys
 import time
 import logging
 import itertools
 import functools
 import collections
 import networkx as nx
-import multiprocessing as mp
 from indra.util import fast_deepcopy
 from indra.statements import *
 from indra.statements import stmt_type as indra_stmt_type
@@ -63,6 +61,7 @@ class Preassembler(object):
         self.refinement_fun = refinement_fun if refinement_fun else \
             default_refinement_fun
         self.refinement_ns = refinement_ns
+        self._comparison_counter = 0
 
     def add_statements(self, stmts):
         """Add to the current list of statements.
@@ -192,273 +191,144 @@ class Preassembler(object):
             unique_stmts.append(new_stmt)
         return unique_stmts
 
-    def _get_entities(self, stmt, stmt_type, ontology):
-        entities = []
-        for a in stmt.agent_list():
-            # Entity is None: add the None to the entities list
-            if a is None and stmt_type != Complex:
-                entities.append(a)
-            # Entity is not None, but could be ungrounded or not
-            # in a family
-            else:
-                a_ns, a_id = a.get_grounding()
-                # No grounding available--in this case, use the
-                # entity_matches_key
-                if a_ns is None or a_id is None:
-                    entities.append(a.entity_matches_key())
-                    continue
-                # If there are no components built in the ontology, we
-                # return a single shared dummy component so that things
-                # in the ontology are considered to be potentially
-                # related
-                if not ontology.has_component_labels:
-                    entities.append('component1')
-                    continue
-                if self.refinement_ns is not None \
-                        and a_ns not in self.refinement_ns:
-                    entities.append(a.entity_matches_key())
-                else:
-                    # This is the component ID corresponding to the agent
-                    # in the entity hierarchy
-                    component = ontology.get_component_label(a_ns, a_id)
-                    # If no component ID, use the entity_matches_key()
-                    if component is None:
-                        entities.append(a.entity_matches_key())
-                    # Component ID, so this is in a family
-                    else:
-                        # We turn the component ID into a string so that
-                        # we can sort it along with entity_matches_keys
-                        # for Complexes
-                        entities.append(str(component))
-        return entities
-
-    def _get_stmt_by_group(self, stmt_type, stmts_this_type, ontology):
-        """Group Statements of `stmt_type` by their hierarchical relations."""
-        # Dict of stmt group key tuples, indexed by their first Agent
-        stmt_by_first = collections.defaultdict(lambda: [])
-        # Dict of stmt group key tuples, indexed by their second Agent
-        stmt_by_second = collections.defaultdict(lambda: [])
-        # Dict of statements with None first, with second Agent as keys
-        none_first = collections.defaultdict(lambda: [])
-        # Dict of statements with None second, with first Agent as keys
-        none_second = collections.defaultdict(lambda: [])
-        # The dict of all statement groups, with tuples of components
-        # or entity_matches_keys as keys
-        stmt_by_group = collections.defaultdict(lambda: [])
-        # Here we group Statements according to the hierarchy graph
-        # components that their agents are part of
-        for stmt_tuple in stmts_this_type:
-            _, stmt = stmt_tuple
-            entities = self._get_entities(stmt, stmt_type, ontology)
-            # At this point we have an entity list
-            # If we're dealing with Complexes, sort the entities and use
-            # as dict key
-            if stmt_type == Complex:
-                # There shouldn't be any statements of the type
-                # e.g., Complex([Foo, None, Bar])
-                assert None not in entities
-                assert len(entities) > 0
-                entities.sort()
-                key = tuple(entities)
-                if stmt_tuple not in stmt_by_group[key]:
-                    stmt_by_group[key].append(stmt_tuple)
-            elif stmt_type == Conversion:
-                assert len(entities) > 0
-                key = (entities[0],
-                       tuple(sorted(entities[1:len(stmt.obj_from)+1])),
-                       tuple(sorted(entities[-len(stmt.obj_to):])))
-                if stmt_tuple not in stmt_by_group[key]:
-                    stmt_by_group[key].append(stmt_tuple)
-            # Now look at all other statement types
-            # All other statements will have one or two entities
-            elif len(entities) == 1:
-                # If only one entity, we only need the one key
-                # It should not be None!
-                assert None not in entities
-                key = tuple(entities)
-                if stmt_tuple not in stmt_by_group[key]:
-                    stmt_by_group[key].append(stmt_tuple)
-            else:
-                # Make sure we only have two entities, and they are not both
-                # None
-                key = tuple(entities)
-                assert len(key) == 2
-                assert key != (None, None)
-                # First agent is None; add in the statements, indexed by
-                # 2nd
-                if key[0] is None and stmt_tuple not in none_first[key[1]]:
-                    none_first[key[1]].append(stmt_tuple)
-                # Second agent is None; add in the statements, indexed by
-                # 1st
-                elif key[1] is None and stmt_tuple not in none_second[key[0]]:
-                    none_second[key[0]].append(stmt_tuple)
-                # Neither entity is None!
-                elif None not in key:
-                    if stmt_tuple not in stmt_by_group[key]:
-                        stmt_by_group[key].append(stmt_tuple)
-                    if key not in stmt_by_first[key[0]]:
-                        stmt_by_first[key[0]].append(key)
-                    if key not in stmt_by_second[key[1]]:
-                        stmt_by_second[key[1]].append(key)
-
-        # When we've gotten here, we should have stmt_by_group entries, and
-        # we may or may not have stmt_by_first/second dicts filled out
-        # (depending on the statement type).
-        if none_first:
-            # Get the keys associated with stmts having a None first
-            # argument
-            for second_arg, stmts in none_first.items():
-                # Look for any statements with this second arg
-                second_arg_keys = stmt_by_second[second_arg]
-                # If there are no more specific statements matching this
-                # set of statements with a None first arg, then the
-                # statements with the None first arg deserve to be in
-                # their own group.
-                if not second_arg_keys:
-                    stmt_by_group[(None, second_arg)] = stmts
-                # On the other hand, if there are statements with a matching
-                # second arg component, we need to add the None first
-                # statements to all groups with the matching second arg
-                for second_arg_key in second_arg_keys:
-                    stmt_by_group[second_arg_key] += stmts
-        # Now do the corresponding steps for the statements with None as the
-        # second argument:
-        if none_second:
-            for first_arg, stmts in none_second.items():
-                # Look for any statements with this first arg
-                first_arg_keys = stmt_by_first[first_arg]
-                # If there are no more specific statements matching this
-                # set of statements with a None second arg, then the
-                # statements with the None second arg deserve to be in
-                # their own group.
-                if not first_arg_keys:
-                    stmt_by_group[(first_arg, None)] = stmts
-                # On the other hand, if there are statements with a matching
-                # first arg component, we need to add the None second
-                # statements to all groups with the matching first arg
-                for first_arg_key in first_arg_keys:
-                    stmt_by_group[first_arg_key] += stmts
-        ncomp = 0
-        for k, v in stmt_by_group.items():
-            ncomp += len(v)*(len(v)-1)
-        logger.debug('Number of comparisons: %d' % ncomp)
-        if ncomp > 0:
-            logger.debug('Size of largest group: %d' %
-                         max([len(g) for g in stmt_by_group.values()]))
-        return dict(stmt_by_group)
-
-    def _generate_id_maps(self, unique_stmts, poolsize=None,
-                          size_cutoff=100, split_idx=None):
-        """Connect statements using their refinement relationships."""
-        if not self.ontology._initialized:
-            self.ontology.initialize()
-        if len(unique_stmts) > 10000:
-            self.ontology._build_transitive_closure()
-        # Check arguments relating to multiprocessing
-        if poolsize is None:
-            logger.debug('combine_related: poolsize not set, '
-                         'not using multiprocessing.')
-            use_mp = False
-        elif sys.version_info[0] >= 3 and sys.version_info[1] >= 4:
-            use_mp = True
-            logger.info('combine_related: Python >= 3.4 detected, '
-                        'using multiprocessing with poolsize %d, '
-                        'size_cutoff %d' % (poolsize, size_cutoff))
-        else:
-            use_mp = False
-            logger.info('combine_related: Python < 3.4 detected, '
-                        'not using multiprocessing.')
+    # Note that the args, kwargs here are just there for backwards compatibility
+    # with old code that uses arguments related to multiprocessing.
+    def _generate_id_maps(self, unique_stmts, *args, **kwargs):
+        """Connect statements using their refinement relationship."""
         # Make a list of Statement types
-        stmts_by_type = collections.defaultdict(lambda: [])
-        for idx, stmt in enumerate(unique_stmts):
-            stmts_by_type[indra_stmt_type(stmt)].append((idx, stmt))
+        stmts_by_type = collections.defaultdict(list)
+        stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
+                       for idx, stmt in enumerate(unique_stmts)}
+        for stmt in unique_stmts:
+            stmts_by_type[indra_stmt_type(stmt)].append(stmt)
+        stmts_by_type = dict(stmts_by_type)
 
-        child_proc_groups = []
-        parent_proc_groups = []
-        skipped_groups = 0
-        # Each Statement type can be preassembled independently
-        for stmt_type, stmts_this_type in stmts_by_type.items():
-            logger.info('Grouping %s (%s)' %
-                        (stmt_type.__name__, len(stmts_this_type)))
-            stmt_by_group = self._get_stmt_by_group(stmt_type, stmts_this_type,
-                                                    self.ontology)
+        maps = []
+        for stmt_type, stmts in stmts_by_type.items():
+            logger.info('Finding refinements for %d %s statements' %
+                        (len(stmts), stmt_type.__name__))
+            maps += self._generate_hash_maps_by_stmt_type(
+                stmts, stmts[0]._agent_order)
+        idx_maps = [(stmt_to_idx[refinement], stmt_to_idx[refined])
+                    for refinement, refined in maps]
+        return idx_maps
 
-            # Divide statements by group size
-            # If we're not using multiprocessing, then all groups are local
-            for g_name, g in stmt_by_group.items():
-                if len(g) < 2:
-                    skipped_groups += 1
-                    continue
-                if use_mp and len(g) >= size_cutoff:
-                    child_proc_groups.append(g)
+    def _generate_hash_maps_by_stmt_type(self, stmts, roles):
+        ts = time.time()
+        # Step 1. initialize data structures
+        # Statements keyed by their hashes
+        stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun):
+                         stmt for stmt in stmts}
+        # Mapping agent keys to statement hashes
+        agent_key_to_hash = {}
+        # Mapping statement hashes to agent keys
+        hash_to_agent_key = {}
+        # All agent keys for a given agent role
+        all_keys_by_role = {}
+        for role in roles:
+            agent_key_to_hash[role] = collections.defaultdict(set)
+            hash_to_agent_key[role] = collections.defaultdict(set)
+
+        # Step 2. Fill up the initial data structures in preparation
+        # for identifying potential refinements
+        for sh, stmt in stmts_by_hash.items():
+            for role in roles:
+                agents = getattr(stmt, role)
+                # Handle a special case here where a list=like agent
+                # role can be empty, here we will consider anything else
+                # to be a refinement, hence add a None key
+                if isinstance(agents, list) and not agents:
+                    agent_keys = {None}
+                # Generally, we take all the agent keys for a single or
+                # list-like agent role.
                 else:
-                    parent_proc_groups.append(g)
+                    agent_keys = {get_agent_key(agent) for agent in
+                                  (agents if isinstance(agents, list)
+                                   else [agents])}
+                for agent_key in agent_keys:
+                    agent_key_to_hash[role][agent_key].add(sh)
+                    hash_to_agent_key[role][sh].add(agent_key)
 
-        # Now run preassembly!
-        logger.debug("Groups: %d parent, %d worker, %d skipped." %
-                     (len(parent_proc_groups), len(child_proc_groups),
-                      skipped_groups))
+        agent_key_to_hash = dict(agent_key_to_hash)
+        hash_to_agent_key = dict(hash_to_agent_key)
 
-        supports_func = functools.partial(_set_supports_stmt_pairs,
+        for role in roles:
+            all_keys_by_role[role] = set(agent_key_to_hash[role].keys())
+
+        te = time.time()
+        logger.debug('Initialized data structures in %.2fs' % (te-ts))
+
+        # Step 3. Identify all the pairs of statements which can be in a
+        # refinement relationship
+        stmts_to_compare = {}
+        # We iterate over each statement and find all other statements that it
+        # can potentially refine
+        ts = time.time()
+        for sh, stmt in stmts_by_hash.items():
+            relevants = None
+            # We now iterate over all the agent roles in the given statement
+            # type
+            for role, hash_to_agent_key_for_role in hash_to_agent_key.items():
+                # We get all the agent keys in all other statements that the
+                # agent
+                # in this role in this statement can be a refinement.
+                for agent_key in hash_to_agent_key_for_role[sh]:
+                    relevant_keys = get_relevant_keys(
+                        agent_key,
+                        all_keys_by_role[role],
+                        self.ontology)
+                    # We now get the actual statement hashes that these other
+                    # potentially refined agent keys appear in in the given role
+                    role_relevant_stmt_hashes = set.union(
+                        *[agent_key_to_hash[role][rel]
+                          for rel in relevant_keys]) - {sh}
+                    # In the first iteration, we initialize the set with the
+                    # relevant statement hashes
+                    if relevants is None:
+                        relevants = role_relevant_stmt_hashes
+                    # In subsequent iterations, we take the intersection of
+                    # the relevant sets per role
+                    else:
+                        relevants &= role_relevant_stmt_hashes
+            # These hashes are now the ones that this statement needs
+            # to be compared against. Importantly, the relationship is in
+            # a well-defined direction so we don't need to test both ways.
+            stmts_to_compare[sh] = relevants
+        te = time.time()
+        logger.debug('Identified potential refinements in %.2fs' % (te-ts))
+
+        total_comparisons = sum(len(v) for v in stmts_to_compare.values())
+        logger.info('Total comparisons: %d' % total_comparisons)
+
+        # Step 4. We can now do the actual comparisons and save pairs of
+        # confirmed refinements in a list.
+        maps = []
+        # We again iterate over statements
+        ts = time.time()
+        for stmt_hash, possible_refined_hashes in stmts_to_compare.items():
+            # We use the previously constructed set of statements that this one
+            # can possibly refine
+            for possible_refined_hash in possible_refined_hashes:
+                # And then do the actual comparison. Here we use
+                # entities_refined=True which means that we assert that
+                # the entities, in each role, are already confirmed to
+                # be "compatible" for refinement, and therefore, we don't need
+                # to again confirm this (i.e., call "isa") in the refinement_of
+                # function.
+                self._comparison_counter += 1
+                ref = self.refinement_fun(stmts_by_hash[stmt_hash],
+                                          stmts_by_hash[possible_refined_hash],
                                           ontology=self.ontology,
-                                          split_idx=split_idx,
-                                          check_entities_match=False,
-                                          refinement_fun=self.refinement_fun)
+                                          entities_refined=True)
+                if ref:
+                    maps.append((stmt_hash, possible_refined_hash))
+        te = time.time()
+        logger.debug('Confirmed %d refinements in %.2fs' % (len(maps), te-ts))
+        return maps
 
-        # Check if we are running any groups in child processes; note that if
-        # use_mp is False, child_proc_groups will be empty
-        if child_proc_groups:
-            # Get a multiprocessing context
-            ctx = mp.get_context('spawn')
-            pool = ctx.Pool(poolsize)
-            # Run the large groups remotely
-            logger.debug("Running %d groups in child processes" %
-                         len(child_proc_groups))
-            res = pool.map_async(supports_func, child_proc_groups)
-            workers_ready = False
-        else:
-            workers_ready = True
-
-        # Run the small groups locally
-        logger.debug("Running %d groups in parent process" %
-                     len(parent_proc_groups))
-        stmt_ix_map = [supports_func(stmt_tuples)
-                       for stmt_tuples in parent_proc_groups]
-        logger.debug("Done running parent process groups")
-
-        while not workers_ready:
-            logger.debug("Checking child processes")
-            if res.ready():
-                workers_ready = True
-                logger.debug('Child process group comparisons successful? %s' %
-                             res.successful())
-                if not res.successful():
-                    # The get method re-raises the underlying error that we can
-                    # now catch and print.
-                    try:
-                        res.get()
-                    except Exception as e:
-                        raise Exception("Sorry, there was a problem with "
-                                        "preassembly in the child processes: %s"
-                                        % e)
-                else:
-                    stmt_ix_map += res.get()
-                logger.debug("Closing pool...")
-                pool.close()
-                logger.debug("Joining pool...")
-                pool.join()
-                logger.debug("Pool closed and joined.")
-            time.sleep(1)
-        logger.debug("Done.")
-        # Combine all redundant map edges
-        stmt_ix_map_set = set([])
-        for group_ix_map in stmt_ix_map:
-            for ix_pair in group_ix_map:
-                stmt_ix_map_set.add(ix_pair)
-        return stmt_ix_map_set
-
-    def combine_related(self, return_toplevel=True, poolsize=None,
-                        size_cutoff=100):
+    # Note that the args, kwargs here are just there for backwards compatibility
+    # with old code that uses arguments related to multiprocessing.
+    def combine_related(self, return_toplevel=True, *args, **kwargs):
         """Connect related statements based on their refinement relationships.
 
         This function takes as a starting point the unique statements (with
@@ -480,39 +350,21 @@ class Preassembler(object):
 
         1. The statements are grouped by type (e.g., Phosphorylation) and
            each type is iterated over independently.
-        2. Statements of the same type are then grouped according to their
-           Agents' entity hierarchy component identifiers. For instance,
-           ERK, MAPK1 and MAPK3 are all in the same connected component in the
-           entity hierarchy and therefore all Statements of the same type
-           referencing these entities will be grouped. This grouping assures
-           that relations are only possible within Statement groups and
-           not among groups. For two Statements to be in the same group at
-           this step, the Statements must be the same type and the Agents at
-           each position in the Agent lists must either be in the same
-           hierarchy component, or if they are not in the hierarchy, must have
-           identical entity_matches_keys. Statements with None in one of the
-           Agent list positions are collected separately at this stage.
-        3. Statements with None at either the first or second position are
-           iterated over. For a statement with a None as the first Agent,
-           the second Agent is examined; then the Statement with None is
-           added to all Statement groups with a corresponding component or
-           entity_matches_key in the second position. The same procedure is
-           performed for Statements with None at the second Agent position.
-        4. The statements within each group are then compared; if one
-           statement represents a refinement of the other (as defined by the
-           `refinement_of()` method implemented for the Statement), then the
-           more refined statement is added to the `supports` field of the more
-           general statement, and the more general statement is added to the
-           `supported_by` field of the more refined statement.
+        2. Each statement's agents are then aligned in a role-wise manner
+           with the ontology being used, and all other statements which
+           this statement can possibly refine are found.
+        4. Each statement is then compared with the set of other statements
+           identified earlier. If the statement represents a refinement of
+           the other (as defined by the `refinement_of()` method implemented
+           for the Statement), then the more refined statement is added
+           to the `supports` field of the more general statement, and the
+           more general statement is added to the `supported_by` field of
+           the more refined statement.
         5. A new flat list of statements is created that contains only those
            statements that have no `supports` entries (statements containing
            such entries are not eliminated, because they will be retrievable
            from the `supported_by` fields of other statements). This list
            is returned to the caller.
-
-        On multi-core machines, the algorithm can be parallelized by setting
-        the poolsize argument to the desired number of worker processes.
-        This feature is only available in Python > 3.4.
 
         .. note:: Subfamily relationships must be consistent across arguments
 
@@ -528,16 +380,6 @@ class Preassembler(object):
         return_toplevel : Optional[bool]
             If True only the top level statements are returned.
             If False, all statements are returned. Default: True
-        poolsize : Optional[int]
-            The number of worker processes to use to parallelize the
-            comparisons performed by the function. If None (default), no
-            parallelization is performed. NOTE: Parallelization is only
-            available on Python 3.4 and above.
-        size_cutoff : Optional[int]
-            Groups with size_cutoff or more statements are sent to worker
-            processes, while smaller groups are compared in the parent process.
-            Default value is 100. Not relevant when parallelization is not
-            used.
 
         Returns
         -------
@@ -580,7 +422,7 @@ class Preassembler(object):
         unique_stmts = self.combine_duplicates()
 
         # Generate the index map, linking related statements.
-        idx_map = self._generate_id_maps(unique_stmts, poolsize, size_cutoff)
+        idx_map = self._generate_id_maps(unique_stmts)
 
         # Now iterate over all indices and set supports/supported by
         for ix1, ix2 in idx_map:
@@ -603,9 +445,10 @@ class Preassembler(object):
             A list of Statement pairs that are contradicting.
         """
         # Make a dict of Statement by type
-        stmts_by_type = collections.defaultdict(lambda: [])
-        for idx, stmt in enumerate(self.stmts):
-            stmts_by_type[indra_stmt_type(stmt)].append((idx, stmt))
+        stmts_by_type = collections.defaultdict(list)
+        for stmt in self.stmts:
+            stmts_by_type[indra_stmt_type(stmt)].append(stmt)
+        stmts_by_type = dict(stmts_by_type)
 
         # Handle Statements with polarity first
         pos_stmts = AddModification.__subclasses__()
@@ -615,25 +458,22 @@ class Preassembler(object):
         neg_stmts += [Inhibition, DecreaseAmount]
 
         contradicts = []
+        # Handle statements with polarity first
+        # TODO: we could probably do some optimization here
+        # to not have to check statements combinatorially
         for pst, nst in zip(pos_stmts, neg_stmts):
             poss = stmts_by_type.get(pst, [])
             negs = stmts_by_type.get(nst, [])
 
-            pos_stmt_by_group = self._get_stmt_by_group(pst, poss,
-                                                        self.ontology)
-            neg_stmt_by_group = self._get_stmt_by_group(nst, negs,
-                                                        self.ontology)
-            for key, pg in pos_stmt_by_group.items():
-                ng = neg_stmt_by_group.get(key, [])
-                for (_, st1), (_, st2) in itertools.product(pg, ng):
-                    if st1.contradicts(st2, self.ontology):
-                        contradicts.append((st1, st2))
+            for ps, ns in itertools.product(poss, negs):
+                if ps.contradicts(ns, self.ontology):
+                    contradicts.append((ps, ns))
 
         # Handle neutral Statements next
         neu_stmts = [Influence, ActiveForm]
         for stt in neu_stmts:
             stmts = stmts_by_type.get(stt, [])
-            for (_, st1), (_, st2) in itertools.combinations(stmts, 2):
+            for st1, st2 in itertools.combinations(stmts, 2):
                 if st1.contradicts(st2, self.ontology):
                     contradicts.append((st1, st2))
 
@@ -732,43 +572,6 @@ class Preassembler(object):
         rel_fun = functools.partial(self.ontology.child_rel,
                                     rel_types={'is_opposite'})
         self._normalize_relations(ns, rank_key, rel_fun, True)
-
-
-def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, ontology=None,
-                             check_entities_match=False, refinement_fun=None):
-    # This is useful when deep-debugging, but even for normal debug is too much.
-    # logger.debug("Getting support pairs for %d tuples with idx %s and stmts "
-    #              "%s split at %s."
-    #              % (len(stmt_tuples), [idx for idx, _ in stmt_tuples],
-    #                 [(s.get_hash(shallow=True), s) for _, s in stmt_tuples],
-    #                 split_idx))
-    #  Make the iterator by one of two methods, depending on the case
-    if not refinement_fun:
-        refinement_fun = default_refinement_fun
-    if split_idx is None:
-        stmt_pair_iter = itertools.combinations(stmt_tuples, 2)
-    else:
-        stmt_group_a = []
-        stmt_group_b = []
-        for idx, stmt in stmt_tuples:
-            if idx <= split_idx:
-                stmt_group_a.append((idx, stmt))
-            else:
-                stmt_group_b.append((idx, stmt))
-        stmt_pair_iter = itertools.product(stmt_group_a, stmt_group_b)
-
-    # Actually create the index maps.
-    ix_map = []
-    for stmt_tuple1, stmt_tuple2 in stmt_pair_iter:
-        stmt_ix1, stmt1 = stmt_tuple1
-        stmt_ix2, stmt2 = stmt_tuple2
-        if check_entities_match and not stmt1.entities_match(stmt2):
-            continue
-        if refinement_fun(stmt1, stmt2, ontology):
-            ix_map.append((stmt_ix1, stmt_ix2))
-        elif refinement_fun(stmt2, stmt1, ontology):
-            ix_map.append((stmt_ix2, stmt_ix1))
-    return ix_map
 
 
 def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
@@ -1011,9 +814,64 @@ def _flatten_evidence_for_stmt(stmt, collect_from):
     return list(total_evidence)
 
 
-def default_refinement_fun(st1, st2, ontology):
-    return st1.refinement_of(st2, ontology)
+def default_refinement_fun(st1, st2, ontology, entities_refined):
+    return st1.refinement_of(st2, ontology, entities_refined)
 
 
 def default_matches_fun(st):
     return st.matches_key()
+
+
+# TODO: we could make the agent key function parameterizable with the
+# preassembler to allow custom agent mappings to the ontology.
+def get_agent_key(agent):
+    """Return a key for an Agent for use in refinement finding.
+
+    Parameters
+    ----------
+    agent : indra.statements.Agent or None
+         An INDRA Agent whose key should be returned.
+
+    Returns
+    -------
+    tuple or None
+        The key that maps the given agent to the ontology, with special
+        handling for ungrounded and None Agents.
+    """
+    if isinstance(agent, Event):
+        agent = agent.concept
+    if agent is None:
+        agent_key = None
+    else:
+        agent_key = agent.get_grounding()
+        if not agent_key[0]:
+            agent_key = ('NAME', agent.name)
+    return agent_key
+
+
+def get_relevant_keys(agent_key, all_keys_for_role, ontology):
+    """Return relevant agent keys for an agent key for refinement finding.
+
+    Parameters
+    ----------
+    agent_key : tuple or None
+        An agent key of interest.
+    all_keys_for_role : set
+        The set of all agent keys in a given statement corpus with a
+        role matching that of the given agent_key.
+    ontology : indra.ontology.IndraOntology
+        An IndraOntology instance with respect to which relevant other
+        agent keys are found for the purposes of refinement.
+
+    Returns
+    -------
+    set
+        The set of relevant agent keys which this given agent key can
+        possibly refine.
+    """
+    relevant_keys = {None, agent_key}
+    if agent_key is not None:
+        relevant_keys |= set(ontology.get_parents(*agent_key))
+    relevant_keys &= all_keys_for_role
+    return relevant_keys
+
