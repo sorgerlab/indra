@@ -822,7 +822,22 @@ def default_matches_fun(st):
     return st.matches_key()
 
 
+# TODO: we could make the agent key function parameterizable with the
+# preassembler to allow custom agent mappings to the ontology.
 def get_agent_key(agent):
+    """Return a key for an Agent for use in refinement finding.
+
+    Parameters
+    ----------
+    agent : indra.statements.Agent or None
+         An INDRA Agent whose key should be returned.
+
+    Returns
+    -------
+    tuple or None
+        The key that maps the given agent to the ontology, with special
+        handling for ungrounded and None Agents.
+    """
     if isinstance(agent, Event):
         agent = agent.concept
     if agent is None:
@@ -835,6 +850,25 @@ def get_agent_key(agent):
 
 
 def get_relevant_keys(agent_key, all_keys_for_role, ontology):
+    """Return relevant agent keys for an agent key for refinement finding.
+
+    Parameters
+    ----------
+    agent_key : tuple or None
+        An agent key of interest.
+    all_keys_for_role : set
+        The set of all agent keys in a given statement corpus with a
+        role matching that of the given agent_key.
+    ontology : indra.ontology.IndraOntology
+        An IndraOntology instance with respect to which relevant other
+        agent keys are found for the purposes of refinement.
+
+    Returns
+    -------
+    set
+        The set of relevant agent keys which this given agent key can
+        possibly refine.
+    """
     relevant_keys = {None, agent_key}
     if agent_key is not None:
         relevant_keys |= set(ontology.get_parents(*agent_key))
