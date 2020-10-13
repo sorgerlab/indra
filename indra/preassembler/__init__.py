@@ -326,7 +326,7 @@ class Preassembler(object):
             for possible_refined_hash in possible_refined_hashes:
                 # We handle split groups here to only check refinements between
                 # statements that are in different groups to compare
-                if split_groups and split_groups[stmt_hash] != \
+                if not split_groups or split_groups[stmt_hash] != \
                         split_groups[possible_refined_hash]:
                     # And then do the actual comparison. Here we use
                     # entities_refined=True which means that we assert that
