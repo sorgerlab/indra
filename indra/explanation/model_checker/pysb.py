@@ -230,13 +230,13 @@ class PysbModelChecker(ModelChecker):
         if self.graph:
             return self.graph
         im = self.get_im(force_update=True)
-        self.get_nodes_to_agents(self.model_stmts, add_namespaces)
         if prune_im:
             self.prune_influence_map()
         if prune_im_degrade:
             self.prune_influence_map_degrade_bind_positive(self.model_stmts)
         if prune_im_subj_obj:
             self.prune_influence_map_subj_obj()
+        self.get_nodes_to_agents(self.model_stmts, add_namespaces)
         self.graph = signed_edges_to_signed_nodes(
             im, prune_nodes=False, edge_signs={'pos': 1, 'neg': -1})
         return self.graph
