@@ -198,17 +198,19 @@ class ModelChecker(object):
             a PathResult object describing the results of model checking.
         """
         results = []
+        # Convert agent filter function to node filter function once here
+        node_filter_func = self.update_filter_func(agent_filter_func)
         for idx, stmt in enumerate(self.statements):
             logger.info('---')
             logger.info('Checking statement (%d/%d): %s' %
                         (idx + 1, len(self.statements), stmt))
             result = self.check_statement(stmt, max_paths, max_path_length,
-                                          agent_filter_func)
+                                          node_filter_func=node_filter_func)
             results.append((stmt, result))
         return results
 
     def check_statement(self, stmt, max_paths=1, max_path_length=5,
-                        agent_filter_func=None):
+                        agent_filter_func=None, node_filter_func=None):
         """Check a single Statement against the model.
 
         Parameters
@@ -224,6 +226,10 @@ class ModelChecker(object):
             A function to constrain the intermediate nodes in the path. A
             function should take an agent as a parameter and return True if the
             agent is allowed to be in a path and False otherwise.
+        node_filter_func : Optional[function]
+            Similar to agent_filter_func but it takes a node as a parameter
+            instead of agent. If not provided, node_filter_func will be
+            generated from agent_filter_func.
 
         Returns
         -------
@@ -241,7 +247,8 @@ class ModelChecker(object):
             loop = True
 
         # Convert agent filter function to node filter function
-        node_filter_func = self.update_filter_func(agent_filter_func)
+        if agent_filter_func and not node_filter_func:
+            node_filter_func = self.update_filter_func(agent_filter_func)
         # If we have several objects in obj_list or we have a loop, we add a
         # dummy target node as a child to all nodes in obj_list
         if len(obj_list) > 1 or loop:
