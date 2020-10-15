@@ -446,6 +446,8 @@ class ModelChecker(object):
             return None
 
         def node_filter_func(n):
+            # We're using n[0] here because n is a signed node while
+            # nodes_to_agents contains unsigned nodes (equivalent of n[0])
             ag = self.nodes_to_agents.get(n[0])
             if ag is None:
                 logger.warning('Could not get agent for node %s' % n[0])
