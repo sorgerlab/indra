@@ -515,22 +515,22 @@ def test_simple_paths_with_constraints():
     dg.add_edge('B2', 'B1')
     dg.add_edge('B1', 'D1')
 
-    # # Run without cutoff and constraints
-    # paths = tuple(
-    #     [tuple(p) for p in simple_paths_with_constraints(dg, 'A3', 'D1')])
-    # assert len(paths) == 3
-    # expected_paths = {('A3', 'B2', 'B1', 'D1'),
-    #                   ('A3', 'B2', 'C1', 'D1'),
-    #                   ('A3', 'B2', 'B1', 'C1', 'D1')}
-    # assert expected_paths == set(paths), set(paths)
+    # Run without cutoff and constraints
+    paths = tuple(
+        [tuple(p) for p in simple_paths_with_constraints(dg, 'A3', 'D1')])
+    assert len(paths) == 3
+    expected_paths = {('A3', 'B2', 'B1', 'D1'),
+                      ('A3', 'B2', 'C1', 'D1'),
+                      ('A3', 'B2', 'B1', 'C1', 'D1')}
+    assert expected_paths == set(paths), set(paths)
 
-    # # Test cutoff
-    # paths = tuple([tuple(p) for p in simple_paths_with_constraints(
-    #     dg, 'A3', 'D1', cutoff=3)])
-    # assert len(paths) == 2
-    # expected_paths = {('A3', 'B2', 'B1', 'D1'),
-    #                   ('A3', 'B2', 'C1', 'D1')}
-    # assert expected_paths == set(paths), set(paths)
+    # Test cutoff
+    paths = tuple([tuple(p) for p in simple_paths_with_constraints(
+        dg, 'A3', 'D1', cutoff=3)])
+    assert len(paths) == 2
+    expected_paths = {('A3', 'B2', 'B1', 'D1'),
+                      ('A3', 'B2', 'C1', 'D1')}
+    assert expected_paths == set(paths), set(paths)
 
     # Test constraints
     def _isC(n):
