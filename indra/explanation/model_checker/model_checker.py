@@ -453,6 +453,8 @@ class ModelChecker(object):
                 return True
             return agent_filter_func(ag)
 
+        logger.info('Converted %s to node filter function'
+                    % agent_filter_func.__name__)
         return node_filter_func
 
     def get_nodes_to_agents(self, *args, **kwargs):
