@@ -22,10 +22,18 @@ class PybelModelChecker(ModelChecker):
         generate paths. Default is False (breadth-first search).
     seed : int
         Random seed for sampling (optional, default is None).
+    nodes_to_agents : dict
+        A dictionary mapping nodes of intermediate signed edges graph to INDRA
+        agents.
+
+    Attributes
+    ----------
+    graph : nx.Digraph
+        A DiGraph with signed nodes to find paths in.
     """
-    def __init__(self, model, statements=None, do_sampling=False, seed=None):
-        super().__init__(model, statements, do_sampling, seed)
-        self.model_agents = self._get_model_agents()
+    def __init__(self, model, statements=None, do_sampling=False, seed=None,
+                 nodes_to_agents=None):
+        super().__init__(model, statements, do_sampling, seed, nodes_to_agents)
 
     def get_graph(self, include_variants=False, symmetric_variant_links=False,
                   include_components=True, symmetric_component_links=True):
@@ -44,6 +52,7 @@ class PybelModelChecker(ModelChecker):
             propagate_annotations=True)
         self.graph = signed_edges_to_signed_nodes(
             signed_edges, copy_edge_data={'belief'})
+        self.get_nodes_to_agents()
         return self.graph
 
     def process_statement(self, stmt):
@@ -104,17 +113,21 @@ class PybelModelChecker(ModelChecker):
             if node in graph.nodes:
                 nodes.add(node)
         # Try get refined versions
-        for ag in self.model_agents:
+        for n, ag in self.nodes_to_agents.items():
             if ag is not None and ag.refinement_of(agent, bio_ontology):
-                agent_node = _get_agent_node(ag)[0]
-                if agent_node:
-                    node = (agent_node, target_polarity)
-                    if node in graph.nodes:
-                        nodes.add(node)
+                node = (n, target_polarity)
+                if node in graph.nodes:
+                    nodes.add(node)
         return nodes
 
-    def _get_model_agents(self):
+    def get_nodes_to_agents(self):
+        """Return a dictionary mapping PyBEL nodes to INDRA agents."""
+        if self.nodes_to_agents:
+            return self.nodes_to_agents
+
         # This import is done here rather than at the top level to avoid
         # making pybel an implicit dependency of the model checker
         from indra.sources.bel.processor import get_agent
-        return [get_agent(node) for node in self.model.nodes]
+        self.nodes_to_agents = {
+            node: get_agent(node) for node in self.model.nodes}
+        return self.nodes_to_agents

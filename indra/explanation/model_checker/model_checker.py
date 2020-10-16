@@ -142,13 +142,17 @@ class ModelChecker(object):
         generate paths. Default is False (breadth-first search).
     seed : int
         Random seed for sampling (optional, default is None).
+    nodes_to_agents : dict
+        A dictionary mapping nodes of intermediate signed edges graph to INDRA
+        agents.
 
     Attributes
     ----------
     graph : nx.Digraph
         A DiGraph with signed nodes to find paths in.
     """
-    def __init__(self, model, statements=None, do_sampling=False, seed=None):
+    def __init__(self, model, statements=None, do_sampling=False, seed=None,
+                 nodes_to_agents=None):
         self.model = model
         if statements:
             self.statements = statements
@@ -156,6 +160,7 @@ class ModelChecker(object):
             self.statements = []
         if seed is not None:
             np.random.seed(seed)
+        self.nodes_to_agents = nodes_to_agents if nodes_to_agents else {}
         # Whether to do sampling
         self.do_sampling = do_sampling
         self.graph = None
@@ -170,7 +175,8 @@ class ModelChecker(object):
         """
         self.statements += stmts
 
-    def check_model(self, max_paths=1, max_path_length=5):
+    def check_model(self, max_paths=1, max_path_length=5,
+                    agent_filter_func=None):
         """Check all the statements added to the ModelChecker.
 
         Parameters
@@ -180,6 +186,10 @@ class ModelChecker(object):
             to be explained. Default: 1
         max_path_length : Optional[int]
             The maximum length of specific paths to return. Default: 5
+        agent_filter_func : Optional[function]
+            A function to constrain the intermediate nodes in the path. A
+            function should take an agent as a parameter and return True if the
+            agent is allowed to be in a path and False otherwise.
 
         Returns
         -------
@@ -188,15 +198,19 @@ class ModelChecker(object):
             a PathResult object describing the results of model checking.
         """
         results = []
+        # Convert agent filter function to node filter function once here
+        node_filter_func = self.update_filter_func(agent_filter_func)
         for idx, stmt in enumerate(self.statements):
             logger.info('---')
             logger.info('Checking statement (%d/%d): %s' %
                         (idx + 1, len(self.statements), stmt))
-            result = self.check_statement(stmt, max_paths, max_path_length)
+            result = self.check_statement(stmt, max_paths, max_path_length,
+                                          node_filter_func=node_filter_func)
             results.append((stmt, result))
         return results
 
-    def check_statement(self, stmt, max_paths=1, max_path_length=5):
+    def check_statement(self, stmt, max_paths=1, max_path_length=5,
+                        agent_filter_func=None, node_filter_func=None):
         """Check a single Statement against the model.
 
         Parameters
@@ -208,6 +222,14 @@ class ModelChecker(object):
             to be explained. Default: 1
         max_path_length : Optional[int]
             The maximum length of specific paths to return. Default: 5
+        agent_filter_func : Optional[function]
+            A function to constrain the intermediate nodes in the path. A
+            function should take an agent as a parameter and return True if the
+            agent is allowed to be in a path and False otherwise.
+        node_filter_func : Optional[function]
+            Similar to agent_filter_func but it takes a node as a parameter
+            instead of agent. If not provided, node_filter_func will be
+            generated from agent_filter_func.
 
         Returns
         -------
@@ -224,6 +246,9 @@ class ModelChecker(object):
                 (list(input_set)[0] == list(obj_list)[0])):
             loop = True
 
+        # Convert agent filter function to node filter function
+        if agent_filter_func and not node_filter_func:
+            node_filter_func = self.update_filter_func(agent_filter_func)
         # If we have several objects in obj_list or we have a loop, we add a
         # dummy target node as a child to all nodes in obj_list
         if len(obj_list) > 1 or loop:
@@ -239,12 +264,14 @@ class ModelChecker(object):
                 for obj in obj_list:
                     self.graph.add_edge(obj, common_target)
             result = self.find_paths(input_set, common_target, max_paths,
-                                     max_path_length, loop, dummy_target=True)
+                                     max_path_length, loop, dummy_target=True,
+                                     filter_func=node_filter_func)
 
             self.graph.remove_node(common_target)
         else:
             result = self.find_paths(input_set, list(obj_list)[0], max_paths,
-                                     max_path_length, loop, dummy_target=False)
+                                     max_path_length, loop, dummy_target=False,
+                                     filter_func=node_filter_func)
         if result.path_found:
             logger.info('Found paths for %s' % stmt)
             return result
@@ -292,7 +319,7 @@ class ModelChecker(object):
         return input_set, obj_list, None
 
     def find_paths(self, input_set, target, max_paths=1, max_path_length=5,
-                   loop=False, dummy_target=False):
+                   loop=False, dummy_target=False, filter_func=None):
         """Check for a source/target path in the model.
 
         Parameters
@@ -310,6 +337,10 @@ class ModelChecker(object):
             Whether we are looking for a loop path.
         dummy_target : False
             Whether the target is a dummy node.
+        filter_func : function or None
+            A function to constrain the search. A function should take a node
+            as a parameter and return True if the node is allowed to be in a
+            path and False otherwise. If None, then no filtering is done.
 
         Returns
         -------
@@ -331,7 +362,8 @@ class ModelChecker(object):
         path_lengths = []
         path_metrics = []
         sources = []
-        for source, path_length in find_sources(self.graph, target, input_set):
+        for source, path_length in find_sources(self.graph, target, input_set,
+                                                filter_func):
             # If a dummy target is used, we need to subtract one edge.
             # In case of loops, we are already missing one edge, there's no
             # need to subtract one more.
@@ -370,7 +402,7 @@ class ModelChecker(object):
                                 % (str(source), target))
                     path_iter = get_path_iter(
                         self.graph, source, target, search_path_length, loop,
-                        dummy_target)
+                        dummy_target, filter_func)
                     for path in path_iter:
                         pr.add_path(tuple(path))
                         # Do not get next path if reached max_paths
@@ -393,6 +425,45 @@ class ModelChecker(object):
 
     def make_false_result(self, result_code, max_paths, max_path_length):
         return PathResult(False, result_code, max_paths, max_path_length)
+
+    def update_filter_func(self, agent_filter_func):
+        """Converts a function filtering agents to a function filtering nodes
+
+        Parameters
+        ----------
+        agent_filter_func : function
+            A function to constrain the intermediate nodes in the path. A
+            function should take an agent as a parameter and return True if the
+            agent is allowed to be in a path and False otherwise.
+
+        Returns
+        -------
+        node_filter_func : function
+            A new filter function applying the logic from agent_filter_func to
+            nodes instead of agents.
+        """
+        if agent_filter_func is None:
+            return None
+
+        def node_filter_func(n):
+            # We're using n[0] here because n is a signed node while
+            # nodes_to_agents contains unsigned nodes (equivalent of n[0])
+            ag = self.nodes_to_agents.get(n[0])
+            if ag is None:
+                logger.warning('Could not get agent for node %s' % n[0])
+                # Do not filter the node if we can't map it to agent
+                return True
+            return agent_filter_func(ag)
+
+        logger.info('Converted %s to node filter function'
+                    % agent_filter_func.__name__)
+        return node_filter_func
+
+    def get_nodes_to_agents(self, *args, **kwargs):
+        """Return a dictionary mapping nodes of intermediate signed edges graph
+        to INDRA agents.
+        """
+        raise NotImplementedError("Method must be implemented in child class.")
 
     def get_graph(self, **kwargs):
         """Return a graph  with signed nodes to find the path."""
