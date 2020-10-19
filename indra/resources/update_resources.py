@@ -12,6 +12,7 @@ from indra.util import read_unicode_csv, write_unicode_csv
 from indra.databases.obo_client import OboClient
 from indra.databases import chebi_client, pubchem_client
 from indra.databases.lincs_client import load_lincs_csv
+from . import load_resource_json, get_resource_path
 
 path = os.path.dirname(__file__)
 logging.basicConfig(format='%(levelname)s: indra/%(name)s - %(message)s',
@@ -541,41 +542,6 @@ def update_mesh_supplementary_names():
     write_unicode_csv(fname, supp_rows, delimiter='\t')
 
 
-def update_mesh_mappings():
-    """Update MeSH mappings to other databases."""
-    from indra.databases import mesh_client
-    url = ('https://raw.githubusercontent.com/indralab/gilda/master/gilda/'
-           'resources/mesh_mappings.tsv')
-    df = pandas.read_csv(url, delimiter='\t', dtype=str, header=None)
-    namespaces = ['efo', 'hp', 'doid']
-    xref_mappings = []
-    for ns in namespaces:
-
-        filename = os.path.join(path, '%s.json' % ns)
-        with open(filename) as file:
-            entries = json.load(file)
-        for entry in entries:
-            db, db_id, name = ns.upper(), entry['id'], entry['name']
-            if not df[(df[3] == ns.upper()) & (df[4] == db_id)].empty:
-                continue
-            # We first need to decide if we prioritize another name space
-            xref_dict = {xr['namespace']: xr['id'] for xr in entry['xrefs']}
-            if 'MESH' in xref_dict or 'MSH' in xref_dict:
-                mesh_id = xref_dict.get('MESH') or xref_dict.get('MSH')
-                if not mesh_id.startswith('D'):
-                    continue
-                mesh_name = mesh_client.get_mesh_name(mesh_id)
-                if not mesh_name:
-                    continue
-                xref_mappings.append(('MESH', mesh_id, mesh_name, db,
-                                      db_id, name))
-    df_extend = pandas.DataFrame(xref_mappings, columns=None, dtype=str)
-    df = df.append(df_extend)
-    df.sort_values(1, inplace=True)  # sort by MeSH ID
-    fname = os.path.join(path, 'mesh_mappings.tsv')
-    df.to_csv(fname, sep='\t', index=None, header=None)
-
-
 def _get_term_name_str(record, name):
     # We then need to look for additional terms related to the
     # preferred concept to get additional names
@@ -703,6 +669,75 @@ def update_identifiers_registry():
                                     key=lambda x: x['prefix'])}
     with open(os.path.join(path, 'identifiers_patterns.json'), 'w') as fh:
         json.dump(patterns, fh, indent=1)
+
+
+def update_biomappings():
+    """Update mappings from the BioMappings project."""
+    from indra.databases import mesh_client
+    from indra.databases.identifiers import get_ns_id_from_identifiers
+    biomappings_branch = 'import_gilda_mappings'
+
+    # Predictions
+    url = (f'https://raw.githubusercontent.com/biomappings/biomappings/'
+           f'{biomappings_branch}/predictions.tsv')
+    df_pred = pandas.read_csv(url, delimiter='\t', dtype=str)
+    # Mappings
+    url = (f'https://raw.githubusercontent.com/biomappings/biomappings/'
+           f'{biomappings_branch}/mappings.tsv')
+    df_mappings = pandas.read_csv(url, delimiter='\t', dtype=str)
+
+    df = df_mappings.append(df_pred)
+
+    ### Apply any necessary filters here
+    # We take only exact matches
+    df = df[df['relation'] == 'skos:exactMatch']
+    # We only take real xrefs, not refs within a given ontology
+    df = df[df['source prefix'] != df['target prefix']]
+
+    # We now construct a mapping dict of these mappings
+    biomappings = {}
+    for _, row in df.iterrows():
+        source_ns, source_id = \
+            get_ns_id_from_identifiers(row['source prefix'],
+                                       row['source identifier'])
+        target_ns, target_id = \
+            get_ns_id_from_identifiers(row['target prefix'],
+                                       row['target identifier'])
+        biomappings[(source_ns, source_id, row['source name'])] = \
+            (target_ns, target_id, row['target name'])
+        biomappings[(target_ns, target_id, row['target name'])] = \
+            (source_ns, source_id, row['target name'])
+
+    mesh_mappings = {k: v for k, v in biomappings.items() if k[0] == 'MESH'}
+    non_mesh_mappings = {k: v for k, v in biomappings.items()
+                         if k[0] != 'MESH' and v[0] != 'MESH'}
+    rows = [list(k + v) for k, v in
+            sorted(non_mesh_mappings.items(), key=lambda x: x[0][1])]
+    write_unicode_csv(get_resource_path('biomappings.tsv'), rows,
+                      delimiter='\t')
+
+    # We next look at mappings to MeSH from EFO/HP/DOID
+    for ns in ['efo', 'hp', 'doid']:
+        for entry in load_resource_json('%s.json' % ns):
+            db, db_id, name = ns.upper(), entry['id'], entry['name']
+            if (db, db_id) in biomappings:
+                continue
+            # We first need to decide if we prioritize another name space
+            xref_dict = {xr['namespace']: xr['id']
+                         for xr in entry.get('xrefs', [])}
+            if 'MESH' in xref_dict or 'MSH' in xref_dict:
+                mesh_id = xref_dict.get('MESH') or xref_dict.get('MSH')
+                if not mesh_id.startswith('D'):
+                    continue
+                mesh_name = mesh_client.get_mesh_name(mesh_id)
+                if not mesh_name:
+                    continue
+                mesh_mappings[('MESH', mesh_id, name)] = \
+                    (db, db_id, entry['name'])
+    rows = [list(k + v) for k, v in
+            sorted(mesh_mappings.items(), key=lambda x: x[0][1])]
+    write_unicode_csv(get_resource_path('mesh_mappings.tsv'), rows,
+                      delimiter='\t')
 
 
 def main():
