@@ -1,8 +1,15 @@
 """This module implements a number of functions that can be used to
 validate INDRA Statements."""
 import re
+from indra.statements import BioContext, RefContext, WorldContext
 from indra.databases.identifiers import identifiers_mappings, \
     non_grounding, non_registry, identifiers_registry
+
+text_ref_patterns = {
+    'PMID': re.compile(r'(\d+)'),
+    'PMCID': re.compile(r'PMC(\d+)'),
+    'DOI':  re.compile(r'^10.\d{4,9}/[-._;()/:A-Z0-9]+$'),
+}
 
 
 class UnknownNamespace(ValueError):
@@ -10,6 +17,14 @@ class UnknownNamespace(ValueError):
 
 
 class InvalidIdentifier(ValueError):
+    pass
+
+
+class InvalidTextRefs(ValueError):
+    pass
+
+
+class InvalidContext(ValueError):
     pass
 
 
@@ -147,3 +162,61 @@ def assert_valid_statement(stmt):
     """
     for agent in stmt.real_agent_list():
         assert_valid_db_refs(agent.db_refs)
+
+
+def validate_text_refs(text_refs):
+    """Return True if the given text refs are valid"""
+    if not all(k.upper() == k for k in text_refs):
+        return False
+
+    for ns, pattern in text_ref_patterns.items():
+        if ns in text_refs:
+            if not re.match(pattern, text_refs[ns]):
+                return False
+
+    return True
+
+
+def validate_pmid_text_refs(evidence):
+    """Return True if the pmid attribute is consistent with text refs"""
+    tr_pmid = evidence.text_refs.get('PMID')
+    if tr_pmid is not None:
+        if evidence.pmid != tr_pmid:
+            return False
+    return True
+
+
+def validate_context(context):
+    if context is None:
+        return True
+    elif isinstance(context, BioContext):
+        # We shouldn't make a context if the attributes are all None
+        if all(getattr(context, attr) is None for attr in BioContext.attrs):
+            return False
+        # Here we check db_refs validity
+        for attr in BioContext.attrs:
+            val = getattr(context, attr)
+            if val is None:
+                continue
+            if val is not None and not isinstance(val, RefContext):
+                return False
+            if not validate_db_refs(val.db_refs):
+                return False
+    elif isinstance(context, WorldContext):
+        # TODO: implement this when necessary
+        return True
+    else:
+        return False
+
+
+def validate_evidence(evidence):
+    if not validate_text_refs(evidence.text_refs):
+        return False
+
+    if not validate_pmid_text_refs(evidence):
+        return False
+
+    if not validate_context(evidence.context):
+        return False
+
+    return True
