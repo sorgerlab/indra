@@ -13,8 +13,9 @@ from os.path import abspath, dirname, join
 from jinja2 import Environment, FileSystemLoader
 
 from indra.statements import *
-from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
+from indra.sources import SOURCE_INFO
 from indra.databases import get_identifiers_url
+from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_sort_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
@@ -33,8 +34,8 @@ default_template = env.get_template('indra/statements_view.html')
 color_schemes = {
     'dark': ['#b2df8a', '#000099', '#6a3d9a', '#1f78b4', '#fdbf6f', '#ff7f00',
              '#cab2d6', '#fb9a99', '#a6cee3', '#33a02c', '#b15928', '#e31a1c'],
-    'light': ['#bc80bd', '#fccde5', '#b3de69', '#80b1d3', '#fb8072', '#bebada',
-              '#fdb462', '#d9d9d9', '#8dd3c7', '#ffed6f', '#ccebc5', '#e0e03d',
+    'light': ['#bebada', '#fdb462', '#b3de69', '#80b1d3', '#bc80bd', '#fccde5',
+              '#fb8072', '#d9d9d9', '#8dd3c7', '#ffed6f', '#ccebc5', '#e0e03d',
               '#ffe8f4', '#acfcfc', '#dd99ff', '#00d4a6']
 }
 
@@ -45,14 +46,18 @@ def color_gen(scheme):
             yield color
 
 
-SOURCE_COLORS = [
-    ('databases', {'color': 'black',
-                   'sources': dict(zip(db_sources,
-                                       color_gen('light')))}),
-    ('reading', {'color': 'white',
-                 'sources': dict(zip(reader_sources,
-                                     color_gen('light')))}),
-]
+def make_source_colors(databases, readers):
+    rdr_ord = ['reach', 'sparser', 'medscan', 'trips', 'eidos']
+    readers.sort(key=lambda r: rdr_ord.index(r) if r in rdr_ord else len(rdr_ord))
+    reader_colors_list = list(zip(readers, color_gen('light')))
+    reader_colors_list.reverse()
+    reader_colors = dict(reader_colors_list)
+    db_colors = dict(zip(databases, color_gen('light')))
+    return [('databases', {'color': 'black', 'sources': db_colors}),
+            ('reading', {'color': 'white', 'sources': reader_colors})]
+
+
+DEFAULT_SOURCE_COLORS = make_source_colors(db_sources, reader_sources)
 
 
 class HtmlAssembler(object):
@@ -117,8 +122,7 @@ class HtmlAssembler(object):
 
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
                  ev_counts=None, source_counts=None, curation_dict=None,
-                 title='INDRA Results',
-                 db_rest_url=None):
+                 title='INDRA Results', db_rest_url=None):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
@@ -392,7 +396,11 @@ class HtmlAssembler(object):
             template_kwargs['source_key_dict'] = \
                 {src: src for src in all_sources}
         if 'source_colors' not in template_kwargs:
-            template_kwargs['source_colors'] = SOURCE_COLORS
+            template_kwargs['source_colors'] = DEFAULT_SOURCE_COLORS
+        if 'source_info' not in template_kwargs:
+            template_kwargs['source_info'] = SOURCE_INFO.copy()
+        if 'simple' not in template_kwargs:
+            template_kwargs['simple'] = True
 
         self.model = template.render(stmt_data=tl_stmts,
                                      metadata=metadata, title=self.title,

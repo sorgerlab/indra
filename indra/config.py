@@ -7,9 +7,7 @@ if sys.version_info[0] == 3:
 else:
     from ConfigParser import RawConfigParser
 
-
 logger = logging.getLogger(__name__)
-
 
 # If the configuration file does not exist, try to create it from the default
 home_dir = os.path.expanduser('~')
@@ -124,8 +122,8 @@ def get_config(key, failure_ok=True):
 def has_config(key):
     """Returns whether the configuration value for the given kehy is present.
 
-    Parmeters
-    ---------
+    Parameters
+    ----------
     key : str
         The key for the configuration value to fetch
 
@@ -135,4 +133,3 @@ def has_config(key):
         Whether the configuration value is present
     """
     return get_config(key, failure_ok=True) is not None
-
