@@ -239,7 +239,7 @@ def assert_valid_statement(stmt):
 
 
 def assert_valid_text_refs(text_refs):
-    """Return True if the given text refs are valid"""
+    """Raise an error if the given text refs are invalid."""
     for ns in text_refs:
         if ns != ns.upper():
             raise InvalidTextRefs(ns)
@@ -248,6 +248,15 @@ def assert_valid_text_refs(text_refs):
         if ns in text_refs:
             if not re.match(pattern, text_refs[ns]):
                 raise InvalidTextRefs(f'{ns}:{text_refs[ns]}')
+
+
+def validate_text_refs(text_refs):
+    """Return True if the given text refs are valid."""
+    try:
+        assert_valid_text_refs(text_refs)
+        return True
+    except ValueError:
+        return False
 
 
 def assert_valid_pmid_text_refs(evidence):
