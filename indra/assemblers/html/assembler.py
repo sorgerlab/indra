@@ -586,7 +586,7 @@ def tag_agents(english, agents):
 
 
 link_namespace_order = default_ns_order + \
-    ['CHEBML', 'DRUGBANK', 'PUBCHEM', 'HMDB', 'HMS-LINCS', 'CAS',
+    ['CHEMBL', 'DRUGBANK', 'PUBCHEM', 'HMDB', 'HMS-LINCS', 'CAS',
      'IP', 'PF', 'NXPFA', 'MIRBASEM', 'NCIT', 'WM']
 
 
