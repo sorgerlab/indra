@@ -2,6 +2,7 @@ import logging
 import requests
 
 from indra.databases import uniprot_client, hgnc_client
+from indra.statements.validate import validate_text_refs
 from indra.statements import Phosphorylation, Evidence, Agent
 
 from .phosphoelm_mapping import phosphoelm_mapping
@@ -63,10 +64,14 @@ class PhosphoElmProcessor(object):
             if skip_empty and enzyme is None:
                 continue
 
+            pmid = entry['pmids']
+            if not validate_text_refs({'PMID': pmid}):
+                pmid = None
+
             # Build evidence, add statement
             evidence = Evidence(
                 source_api='phosphoelm',
-                pmid=entry['pmids'],
+                pmid=pmid,
                 annotations={
                     'data_source': entry.get('source'),
                     'phosphoelm_substrate_id': entry['acc'],
@@ -95,7 +100,11 @@ def _agent_from_id(db_id):
         name = uniprot_client.get_gene_name(db_id)
         if not name:
             return None
-        db_refs = {'UP': db_id}
+        if '-' in db_id:
+            up_base = db_id.split('-')[0]
+            db_refs = {'UP': up_base, 'UPISO': db_id}
+        else:
+            db_refs = {'UP': db_id}
         hgnc_id = uniprot_client.get_hgnc_id(db_id)
         if hgnc_id:
             db_refs['HGNC'] = hgnc_id
