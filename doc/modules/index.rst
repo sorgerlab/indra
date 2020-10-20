@@ -18,4 +18,5 @@ INDRA modules reference
    explanation/index
    pipeline
    tools/index
+   resources
    util/index
