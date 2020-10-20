@@ -41,11 +41,11 @@ def validate_ns(db_ns):
     bool
         True if the given namepsace is known, otherwise False.
     """
-    identifiers_ns = identifiers_mappings.get(db_ns, db_ns.lower())
-    if identifiers_ns in identifiers_registry or db_ns in non_registry \
-            or db_ns in non_grounding:
+    try:
+        assert_valid_ns(db_ns)
         return True
-    return False
+    except ValueError:
+        return False
 
 
 def assert_valid_ns(db_ns):
@@ -56,8 +56,11 @@ def assert_valid_ns(db_ns):
     db_ns : str
         The namespace.
     """
-    if not validate_ns(db_ns):
-        raise UnknownNamespace(db_ns)
+    identifiers_ns = identifiers_mappings.get(db_ns, db_ns.lower())
+    if identifiers_ns in identifiers_registry or db_ns in non_registry \
+            or db_ns in non_grounding:
+        return
+    raise UnknownNamespace(db_ns)
 
 
 def validate_id(db_ns, db_id):
@@ -75,15 +78,10 @@ def validate_id(db_ns, db_id):
     bool
         True if the given ID is valid in the given namespace.
     """
-    identifiers_ns = identifiers_mappings.get(db_ns, db_ns.lower())
-    if identifiers_ns in identifiers_registry:
-        if re.match(identifiers_registry[identifiers_ns]['pattern'], db_id):
-            return True
-        else:
-            return False
-    elif db_ns in non_registry or db_ns in non_grounding:
+    try:
+        assert_valid_id(db_ns, db_id)
         return True
-    else:
+    except ValueError:
         return False
 
 
@@ -98,7 +96,15 @@ def assert_valid_id(db_ns, db_id):
     db_id : str
         The ID.
     """
-    if not validate_id(db_ns, db_id):
+    identifiers_ns = identifiers_mappings.get(db_ns, db_ns.lower())
+    if identifiers_ns in identifiers_registry:
+        if re.match(identifiers_registry[identifiers_ns]['pattern'], db_id):
+            return
+        else:
+            raise InvalidIdentifier(f'{db_ns}:{db_id}')
+    elif db_ns in non_registry or db_ns in non_grounding:
+        return
+    else:
         raise InvalidIdentifier(f'{db_ns}:{db_id}')
 
 
@@ -115,8 +121,11 @@ def validate_db_refs(db_refs):
     bool
         True if all the entries are valid, else False.
     """
-    return all(validate_ns(db_ns) and validate_id(db_ns, db_id)
-               for db_ns, db_id in db_refs.items())
+    try:
+        assert_valid_db_refs(db_refs)
+        return True
+    except ValueError:
+        return False
 
 
 def assert_valid_db_refs(db_refs):
@@ -147,8 +156,11 @@ def validate_statement(stmt):
         True if all the db_refs entries of the Agents in the given
         Statement are valid, else False.
     """
-    return all(validate_db_refs(agent.db_refs)
-               for agent in stmt.real_agent_list())
+    try:
+        assert_valid_statement(stmt)
+        return True
+    except ValueError:
+        return False
 
 
 def assert_valid_statement(stmt):
@@ -164,59 +176,59 @@ def assert_valid_statement(stmt):
         assert_valid_db_refs(agent.db_refs)
 
 
-def validate_text_refs(text_refs):
+def assert_valid_text_refs(text_refs):
     """Return True if the given text refs are valid"""
-    if not all(k.upper() == k for k in text_refs):
-        return False
+    for ns in text_refs:
+        if ns != ns.upper():
+            raise InvalidTextRefs(ns)
 
     for ns, pattern in text_ref_patterns.items():
         if ns in text_refs:
             if not re.match(pattern, text_refs[ns]):
-                return False
-
-    return True
+                raise InvalidTextRefs(f'{ns}:{text_refs[ns]}')
 
 
-def validate_pmid_text_refs(evidence):
+def assert_valid_pmid_text_refs(evidence):
     """Return True if the pmid attribute is consistent with text refs"""
     tr_pmid = evidence.text_refs.get('PMID')
     if tr_pmid is not None:
         if evidence.pmid != tr_pmid:
-            return False
-    return True
+            raise InvalidTextRefs(f'Evidence pmid {evidence.pmid} doesn\'t '
+                                  f'match text refs pmid {tr_pmid}')
 
 
-def validate_context(context):
+def assert_valid_bio_context(context):
+    # We shouldn't make a context if the attributes are all None
+    if all(getattr(context, attr) is None for attr in BioContext.attrs):
+        raise InvalidContext('All context attributes are None.')
+    # Here we check db_refs validity
+    for attr in BioContext.attrs:
+        val = getattr(context, attr)
+        if val is None:
+            continue
+        if val is not None and not isinstance(val, RefContext):
+            raise InvalidContext(f'Invalid context entry for {attr}')
+        assert_valid_db_refs(val.db_refs)
+
+
+def assert_valid_context(context):
     if context is None:
-        return True
+        return
     elif isinstance(context, BioContext):
-        # We shouldn't make a context if the attributes are all None
-        if all(getattr(context, attr) is None for attr in BioContext.attrs):
-            return False
-        # Here we check db_refs validity
-        for attr in BioContext.attrs:
-            val = getattr(context, attr)
-            if val is None:
-                continue
-            if val is not None and not isinstance(val, RefContext):
-                return False
-            if not validate_db_refs(val.db_refs):
-                return False
+        assert_valid_bio_context(context)
     elif isinstance(context, WorldContext):
-        # TODO: implement this when necessary
-        return True
-    else:
-        return False
+        return
+
+
+def assert_valid_evidence(evidence):
+    assert_valid_pmid_text_refs(evidence)
+    assert_valid_text_refs(evidence.text_refs)
+    assert_valid_context(evidence.context)
 
 
 def validate_evidence(evidence):
-    if not validate_text_refs(evidence.text_refs):
+    try:
+        assert_valid_evidence(evidence)
+        return True
+    except ValueError:
         return False
-
-    if not validate_pmid_text_refs(evidence):
-        return False
-
-    if not validate_context(evidence.context):
-        return False
-
-    return True
