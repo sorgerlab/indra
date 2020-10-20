@@ -7,7 +7,8 @@ from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.databases import go_client
 from indra.ontology.standardize import \
-    standardize_db_refs, standardize_agent_name
+    standardize_db_refs, standardize_agent_name, \
+    standardize_name_db_refs
 from indra.statements.validate import validate_text_refs
 from collections import namedtuple
 
@@ -591,7 +592,17 @@ class ReachProcessor(object):
             if not lst:
                 return None
             db_name, db_id = lst[0].split(':', 1)
-            return RefContext(db_refs={db_name.upper(): db_id})
+            db_name = db_name.upper()
+            # Here we are dealing with UniProt subcellular components
+            # so we use a different namespace for those
+            if db_name == 'UNIPROT':
+                db_name = 'UPLOC'
+            # These aren't real groundings
+            elif db_name == 'UAZ':
+                return None
+            standard_name, db_refs = \
+                standardize_name_db_refs({db_name: db_id})
+            return RefContext(standard_name, db_refs=db_refs)
 
         context = BioContext()
         # Example: ['taxonomy:9606']
