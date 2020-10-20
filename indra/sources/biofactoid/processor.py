@@ -149,7 +149,7 @@ def process_db_refs(db_ns, db_id):
     elif db_ns == 'ncbi':
         return 'EGID', db_id
     elif db_ns == 'MGI':
-        return 'MGI', db_id.replace('MGI:', '')
+        return 'MGI', db_id
     elif db_ns == 'RGD':
         return 'RGD', db_id
     elif db_ns == 'ChEBI':
