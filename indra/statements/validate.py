@@ -8,7 +8,10 @@ from indra.databases.identifiers import identifiers_mappings, \
 text_ref_patterns = {
     'PMID': re.compile(r'(\d+)'),
     'PMCID': re.compile(r'PMC(\d+)'),
-    'DOI':  re.compile(r'^10.\d{4,9}/[-._;()/:A-Z0-9]+$'),
+    # See https://www.crossref.org/blog/dois-and-matching-regular-expressions/
+    # here I added a-z to allow non-capitalized DOI text, we could
+    # change this is we want strict capital letters in the DOI
+    'DOI':  re.compile(r'^10.\d{4,9}/[-._;()/:A-Za-z0-9]+$'),
 }
 
 
