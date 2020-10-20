@@ -15,6 +15,8 @@ from jinja2 import Environment, FileSystemLoader
 from indra.statements import *
 from indra.sources import SOURCE_INFO
 from indra.databases import get_identifiers_url
+from indra.statements.agent import default_ns_order
+from indra.statements.validate import validate_id
 from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_sort_key, \
@@ -583,30 +585,29 @@ def tag_agents(english, agents):
     return tag_text(english, indices)
 
 
+link_namespace_order = default_ns_order + \
+    ['CHEBML', 'DRUGBANK', 'PUBCHEM', 'HMDB', 'HMS-LINCS', 'CAS',
+     'IP', 'PF', 'NXPFA', 'MIRBASEM', 'NCIT', 'WM']
+
+
 def id_url(ag):
     # Return identifier URLs in a prioritized order
     # TODO: we should add handling for UPPRO here, however, that would require
     # access to UniProt client resources in the context of the DB REST API
     # which could be problematic
-    for db_name in ('FPLX', 'HGNC', 'UP',
-                    'GO', 'MESH',
-                    'CHEBI', 'PUBCHEM', 'HMDB', 'DRUGBANK', 'CHEMBL',
-                    'HMS-LINCS', 'CAS',
-                    'IP', 'PF', 'NXPFA',
-                    'MIRBASEM', 'MIRBASE',
-                    'NCIT',
-                    'WM', 'UN', 'HUME', 'CWMS', 'SOFIA'):
+    for db_name in link_namespace_order:
         if db_name in ag.db_refs:
             # Handle a special case where a list of IDs is given
             if isinstance(ag.db_refs[db_name], list):
                 db_id = ag.db_refs[db_name][0]
-                if db_name == 'CHEBI':
-                    if not db_id.startswith('CHEBI'):
-                        db_id = 'CHEBI:%s' % db_id
-                elif db_name in ('UN', 'WM', 'HUME'):
+                if db_name in ('UN', 'WM', 'HUME'):
                     db_id = db_id[0]
             else:
                 db_id = ag.db_refs[db_name]
+            if not validate_id(db_name, db_id):
+                logger.debug('Invalid grounding encountered: %s:%s' %
+                             (db_name, db_id))
+                continue
             return get_identifiers_url(db_name, db_id)
 
 
