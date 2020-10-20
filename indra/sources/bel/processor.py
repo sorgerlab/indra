@@ -14,7 +14,8 @@ from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.databases import (
     chebi_client, go_client, hgnc_client, mesh_client,
-    mirbase_client, uniprot_client, taxonomy_client
+    mirbase_client, uniprot_client, taxonomy_client,
+    identifiers
 )
 from indra.ontology.standardize import standardize_name_db_refs
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
@@ -708,6 +709,10 @@ def extract_context(annotations, annot_manager):
                 db_ns, db_id = ref.split('_', 1)
             else:
                 db_ns, db_id = ns, ref
+            if db_ns == 'CLO':
+                db_ns = 'CL'
+            if db_ns in {'CL', 'UBERON', 'DOID'}:
+                db_id = identifiers.ensure_prefix(db_ns, db_id)
             setattr(bc, indra_name,
                     RefContext(name=ann, db_refs={db_ns: db_id}))
     # Overwrite blank BioContext
