@@ -39,7 +39,7 @@ identifiers_reverse['ncbigene'] = 'EGID'
 
 non_registry = {
     'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'SIGNOR', 'HMS-LINCS', 'NXPFA',
-    'GENBANK', 'OMIM', 'LSPCI'
+    'GENBANK', 'OMIM', 'LSPCI', 'UPLOC'
 }
 
 non_grounding = {
