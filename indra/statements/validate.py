@@ -1,7 +1,7 @@
 """This module implements a number of functions that can be used to
 validate INDRA Statements."""
 import re
-from indra.statements import BioContext, RefContext, WorldContext
+from indra.statements import *
 from indra.databases.identifiers import identifiers_mappings, \
     non_grounding, non_registry, identifiers_registry
 
@@ -28,6 +28,14 @@ class InvalidTextRefs(ValueError):
 
 
 class InvalidContext(ValueError):
+    pass
+
+
+class InvalidAgent(ValueError):
+    pass
+
+
+class InvalidStatement(ValueError):
     pass
 
 
@@ -145,6 +153,51 @@ def assert_valid_db_refs(db_refs):
         assert_valid_id(db_ns, db_id)
 
 
+def assert_valid_agent(agent):
+    if agent is None:
+        return
+    if agent.name is None:
+        raise InvalidAgent('Agent missing name')
+    assert_valid_db_refs(agent.db_refs)
+
+
+def validate_agent(agent):
+    try:
+        assert_valid_agent(agent)
+        return True
+    except ValueError:
+        return False
+
+
+def assert_valid_statement_semantics(stmt):
+    if all(a is None for a in stmt.agent_list()):
+        raise InvalidStatement('Statement with all None agents')
+
+    if isinstance(stmt, Complex):
+        if any(m is None for m in stmt.members):
+            raise InvalidStatement('Complex with None agent.')
+    elif isinstance(stmt, Conversion):
+        if any(o is None for o in stmt.obj_from):
+            raise InvalidStatement('Conversion with None reactant.')
+        if any(o is None for o in stmt.obj_to):
+            raise InvalidStatement('Conversion with None product.')
+    elif isinstance(stmt, RegulateActivity):
+        if stmt.subj is None:
+            raise InvalidStatement('Regulation missing subject.')
+        if stmt.obj is None:
+            raise InvalidStatement('Regulation missing object.')
+    elif isinstance(stmt, RegulateAmount):
+        if stmt.obj is None:
+            raise InvalidStatement('Regulation missing object.')
+    elif isinstance(stmt, Modification):
+        if stmt.sub is None:
+            raise InvalidStatement('Modification missing substrate.')
+    elif isinstance(stmt, Translocation):
+        if stmt.from_location is None and stmt.to_location is None:
+            raise InvalidStatement('Translocation with no locations.')
+
+
+
 def validate_statement(stmt):
     """Return True if all the groundings in the given statement are valid.
 
@@ -175,8 +228,9 @@ def assert_valid_statement(stmt):
     stmt : indra.statements.Statement
         An INDRA Statement to validate.
     """
+    assert_valid_statement_semantics(stmt)
     for agent in stmt.real_agent_list():
-        assert_valid_db_refs(agent.db_refs)
+        assert_valid_agent(agent)
     for ev in stmt.evidence:
         assert_valid_evidence(ev)
 
