@@ -14,9 +14,9 @@ from jinja2 import Environment, FileSystemLoader
 
 from indra.statements import *
 from indra.sources import SOURCE_INFO
-from indra.databases import get_identifiers_url
 from indra.statements.agent import default_ns_order
 from indra.statements.validate import validate_id
+from indra.databases.identifiers import get_identifiers_url, ensure_prefix
 from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_sort_key, \
@@ -604,10 +604,16 @@ def id_url(ag):
                     db_id = db_id[0]
             else:
                 db_id = ag.db_refs[db_name]
+            # We can add more name spaces here if there are issues
+            if db_name in {'CHEBI'}:
+                db_id = ensure_prefix('CHEBI', db_id)
+            # Here we validate IDs to make sure we don't surface invalid
+            # links.
             if not validate_id(db_name, db_id):
                 logger.debug('Invalid grounding encountered: %s:%s' %
                              (db_name, db_id))
                 continue
+            # Finally, we return a valid identifiers.org URL
             return get_identifiers_url(db_name, db_id)
 
 
