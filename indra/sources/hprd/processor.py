@@ -4,6 +4,7 @@ from collections import Counter
 from protmapper import uniprot_client, ProtMapper
 from indra.statements import *
 from indra.databases import hgnc_client
+from indra.statements.validate import validate_id
 
 
 logger = logging.getLogger(__name__)
@@ -122,10 +123,10 @@ class HprdProcessor(object):
         self.motif_window = motif_window
 
         # Keep track of the ID mapping issues encountered
-        self.no_hgnc_for_egid = []
-        self.no_up_for_hgnc = []
-        self.no_up_for_refseq = []
-        self.many_ups_for_refseq = []
+        self.no_hgnc_for_egid = Counter()
+        self.no_up_for_hgnc = Counter()
+        self.no_up_for_refseq = Counter()
+        self.many_ups_for_refseq = Counter()
         self.invalid_site_pos = []
         self.off_by_one = []
 
@@ -262,7 +263,7 @@ class HprdProcessor(object):
         # If we couldn't get an HGNC ID for the Entrez ID, this means that
         # the Entrez ID has been discontinued or replaced.
         if not hgnc_id:
-            self.no_hgnc_for_egid.append(egid)
+            self.no_hgnc_for_egid.update(egid)
             return None
         # Get the (possibly updated) HGNC Symbol
         hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
@@ -273,25 +274,35 @@ class HprdProcessor(object):
         # get one here, then we skip the Statement
         up_id_from_hgnc = hgnc_client.get_uniprot_id(hgnc_id)
         if not up_id_from_hgnc:
-            self.no_up_for_hgnc.append((egid, hgnc_name, hgnc_id))
+            self.no_up_for_hgnc.update((egid, hgnc_name, hgnc_id))
             return None
         # If we have provided the RefSeq ID, it's because we need to make
         # sure that we are getting the right isoform-specific ID (for sequence
         # positions of PTMs). Here we try to get the Uniprot ID from the
         # Refseq->UP mappings in the protmapper.uniprot_client.
         if refseq_id is not None:
-            # Get the Uniprot IDs from the uniprot client
-            up_ids = uniprot_client.get_ids_from_refseq(refseq_id,
-                                                        reviewed_only=True)
-            # Nothing for this RefSeq ID (quite likely because the RefSeq ID
-            # is obsolete; take the UP ID from HGNC
+            if not validate_id('REFSEQ_PROT', refseq_id):
+                if validate_id('NCBIPROTEIN', refseq_id):
+                    refseq_ns = 'NCBIPROTEIN'
+                else:
+                    refseq_ns = None
+            else:
+                refseq_ns = 'REFSEQ_PROT'
+            if refseq_ns == 'REFSEQ_PROT':
+                # Get the Uniprot IDs from the uniprot client
+                up_ids = uniprot_client.get_ids_from_refseq(refseq_id,
+                                                            reviewed_only=True)
+            else:
+                up_ids = []
+            # Nothing for this RefSeq ID (quite likely because the RefSeq
+            # ID is obsolete; take the UP ID from HGNC
             if len(up_ids) == 0:
-                self.no_up_for_refseq.append(refseq_id)
+                self.no_up_for_refseq.update(refseq_id)
                 up_id = up_id_from_hgnc
-            # More than one reviewed entry--no thanks, we'll take the one from
-            # HGNC instead
+            # More than one reviewed entry--no thanks, we'll take the one
+            # from HGNC instead
             elif len(up_ids) > 1:
-                self.many_ups_for_refseq.append(refseq_id)
+                self.many_ups_for_refseq.update(refseq_id)
                 up_id = up_id_from_hgnc
             # We got a unique, reviewed UP entry for the RefSeq ID
             else:
@@ -302,10 +313,31 @@ class HprdProcessor(object):
         # For completeness, get the Refseq ID from the HPRD ID table
         else:
             refseq_id = self.id_df.loc[hprd_id].REFSEQ_PROTEIN
+            if not validate_id('REFSEQ_PROT', refseq_id):
+                if validate_id('NCBIPROTEIN', refseq_id):
+                    refseq_ns = 'NCBIPROTEIN'
+                else:
+                    refseq_ns = None
+            else:
+                refseq_ns = 'REFSEQ_PROT'
             up_id = up_id_from_hgnc
         # Make db_refs, return Agent
-        db_refs = {'HGNC': hgnc_id, 'UP': up_id, 'EGID': egid,
-                   'REFSEQ_PROT': refseq_id}
+        db_refs = {}
+        if hgnc_id:
+            db_refs['HGNC'] = hgnc_id
+        if up_id:
+            if ',' in up_id:
+                pass
+            elif '-' in up_id:
+                up_base = up_id.split('-')[0]
+                db_refs['UP'] = up_base
+                db_refs['UPISO'] = up_id
+            else:
+                db_refs['UP'] = up_id
+        if egid:
+            db_refs['EGID'] = egid
+        if refseq_ns and refseq_id:
+            db_refs[refseq_ns] = refseq_id
         return Agent(hgnc_name, db_refs=db_refs)
 
     def _get_evidence(self, hprd_id, isoform_id, pmid_str, evidence_type,
