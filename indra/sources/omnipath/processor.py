@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 import logging
-from collections import Counter
+from indra.statements.validate import validate_text_refs
 from indra.ontology.standardize import standardize_agent_name
 from indra.statements import modtype_to_modclass, Agent, Evidence, Complex, \
     get_statement_by_name as stmt_by_name, BoundCondition
@@ -48,15 +48,20 @@ class OmniPathProcessor(object):
             pos = mod_entry['residue_offset']
             evidence = []
             for source_pmid in mod_entry['references']:
-                source_db, pmid = source_pmid.split(':', 1)
+                source_db, pmid_ref = source_pmid.split(':', 1)
                 # Skip evidence from already known sources
                 if source_db.lower() in ignore_srcs:
                     continue
-                if 'pmc' in pmid.lower():
-                    text_refs = {'PMCID': pmid.split('/')[-1]}
+                if 'pmc' in pmid_ref.lower():
+                    text_refs = {'PMCID': pmid_ref.split('/')[-1]}
                     pmid = None
-                else:
+                elif not validate_text_refs({'PMID': pmid_ref}):
+                    pmid = None
                     text_refs = None
+                else:
+                    pmid = pmid_ref
+                    text_refs = {'PMID': pmid}
+
                 evidence.append(Evidence(
                     source_api='omnipath',
                     source_id=source_db,
