@@ -2014,11 +2014,12 @@ HGNC,DMD,partof,FPLX,DGC
 HGNC,DTNA,partof,FPLX,DGC
 HGNC,DTNB,partof,FPLX,DGC
 HGNC,NOS1,partof,FPLX,DGC
-HGNC,SGCA,partof,FPLX,DGC
-HGNC,SGCB,partof,FPLX,DGC
-HGNC,SGCD,partof,FPLX,DGC
-HGNC,SGCE,partof,FPLX,DGC
-HGNC,SGCZ,partof,FPLX,DGC
+HGNC,SGCA,partof,FPLX,Sarcoglycan_complex
+HGNC,SGCB,partof,FPLX,Sarcoglycan_complex
+HGNC,SGCD,partof,FPLX,Sarcoglycan_complex
+HGNC,SGCE,partof,FPLX,Sarcoglycan_complex
+HGNC,SGCZ,partof,FPLX,Sarcoglycan_complex
+FPLX,Sarcoglycan_complex,partof,FPLX,DGC
 HGNC,SNTA1,partof,FPLX,DGC
 HGNC,SNTB1,partof,FPLX,DGC
 HGNC,SNTG1,partof,FPLX,DGC
