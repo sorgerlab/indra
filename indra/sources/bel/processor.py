@@ -630,7 +630,7 @@ def get_db_refs_by_ident(ns, ident, node_data):
                'MESHPP', 'MESHD', 'MESH', 'MGI', 'RGD', 'SFAM', 'EGID',
                'ENTREZ', 'NCBIGENE', 'MIRBASE', 'CHEBI', 'ECCODE' 'SDIS',
                'SCHEM', 'TEXT', 'DOID', 'EFO', 'HP', 'PFAM', 'ECCODE',
-               'HGNC.GENEFAMILY', 'HGNC_GROUP', 'NCBITAXON']
+               'HGNC.GENEFAMILY', 'HGNC_GROUP', 'NCBITAXON', 'PUBCHEM']
     ns_mappings = {'UNIPROT': 'UP',
                    'GOBP': 'GO',
                    'GOCC': 'GO',
