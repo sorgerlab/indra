@@ -189,13 +189,15 @@ def assert_valid_statement_semantics(stmt):
     elif isinstance(stmt, RegulateAmount):
         if stmt.obj is None:
             raise InvalidStatement('Regulation missing object.')
+    elif isinstance(stmt, (Gap, Gef)):
+        if any(a is None for a in stmt.agent_list()):
+            raise InvalidStatement('Gap/Gef missing agent.')
     elif isinstance(stmt, Modification):
         if stmt.sub is None:
             raise InvalidStatement('Modification missing substrate.')
     elif isinstance(stmt, Translocation):
         if stmt.from_location is None and stmt.to_location is None:
             raise InvalidStatement('Translocation with no locations.')
-
 
 
 def validate_statement(stmt):
@@ -215,7 +217,8 @@ def validate_statement(stmt):
     try:
         assert_valid_statement(stmt)
         return True
-    except ValueError:
+    # Some deeper validation checks in statements raise TypeErrors
+    except (ValueError, TypeError):
         return False
 
 

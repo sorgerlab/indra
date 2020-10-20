@@ -73,3 +73,11 @@ def test_statement_validate():
     stmt = Phosphorylation(None, Agent('ERK', db_refs={'XXX': 'ERK'}))
     assert_raises(UnknownNamespace, assert_valid_statement, stmt)
     assert not validate_statement(stmt)
+
+    assert not validate_statement(Phosphorylation(None, None))
+    assert not validate_statement(Phosphorylation(Agent('x'), None))
+    assert not validate_statement(Inhibition(None, None))
+    assert not validate_statement(Inhibition(None, Agent('x')))
+    assert not validate_statement(Gef(Agent('x'), None))
+    assert not validate_statement(Complex([None, Agent('x')]))
+    assert not validate_statement(Conversion(None, [None], [Agent('x')]))
