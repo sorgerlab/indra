@@ -177,6 +177,8 @@ def assert_valid_statement(stmt):
     """
     for agent in stmt.real_agent_list():
         assert_valid_db_refs(agent.db_refs)
+    for ev in stmt.evidence:
+        assert_valid_evidence(ev)
 
 
 def assert_valid_text_refs(text_refs):

@@ -1,5 +1,5 @@
 from nose.tools import assert_raises
-from indra.statements import Evidence
+from indra.statements import *
 from indra.statements.validate import *
 
 
@@ -42,3 +42,34 @@ def test_pmid_text_refs_validate():
                   Evidence(pmid='1234', text_refs={'PMID': '12345'}))
     assert_raises(InvalidTextRefs, assert_valid_pmid_text_refs,
                   Evidence(pmid=None, text_refs={'PMID': '123'}))
+
+
+def test_context_validate():
+    assert_valid_context(
+        BioContext(organ=RefContext('liver', {'MESH': 'D008099'})))
+    assert_raises(InvalidContext, assert_valid_context,
+                  BioContext())
+    assert_raises(InvalidContext, assert_valid_context,
+                  BioContext(organ='liver'))
+    assert_raises(UnknownNamespace, assert_valid_context,
+                  BioContext(organ=RefContext('liver', db_refs={'XXX': '1'})))
+
+    assert_valid_context(None)
+
+
+def test_evidence_validate():
+    assert_valid_evidence(Evidence(pmid='1234'))
+    assert_raises(InvalidTextRefs, assert_valid_evidence,
+                  Evidence(pmid=None, text_refs={'PMID': '1234'}))
+    assert_raises(UnknownNamespace, assert_valid_evidence,
+                  Evidence(context=BioContext(
+                      organ=RefContext('liver', db_refs={'XXX': '1'}))))
+
+
+def test_statement_validate():
+    stmt = Phosphorylation(None, Agent('ERK', db_refs={'FPLX': 'ERK'}))
+    assert validate_statement(stmt)
+    assert_valid_statement(stmt)
+    stmt = Phosphorylation(None, Agent('ERK', db_refs={'XXX': 'ERK'}))
+    assert_raises(UnknownNamespace, assert_valid_statement, stmt)
+    assert not validate_statement(stmt)
