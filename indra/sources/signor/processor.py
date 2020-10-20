@@ -19,6 +19,7 @@ from indra.resources import get_resource_path
 from indra.ontology.standardize import standardize_name_db_refs
 from indra.sources.reach.processor import parse_amino_acid_string
 from indra.databases import hgnc_client, uniprot_client, chebi_client
+from indra.databases.identifiers import ensure_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -306,8 +307,8 @@ class SignorProcessor(object):
                 'NOTES': _n(row.NOTES),
                 'ANNOTATOR': _n(row.ANNOTATOR)}
         context = BioContext()
-        if row.TAX_ID:
-            context.species = RefContext(db_refs={'TAXONOMY': row.TAX_ID})
+        if row.TAX_ID and row.TAX_ID != '-1':
+            context.species = get_ref_context('TAXONOMY', row.TAX_ID)
         # NOTE: do we know if this is always a cell type, or can it be
         # a cell line?
         if row.CELL_DATA:
@@ -315,14 +316,14 @@ class SignorProcessor(object):
             # the first
             entry = row.CELL_DATA.split(';')[0]
             db_name, db_id = entry.split(':')
-            context.cell_type = RefContext(db_refs={db_name: db_id})
+            context.cell_type = get_ref_context(db_name, db_id)
         # NOTE: is it okay to map this to organ?
         if row.TISSUE_DATA:
             # FIXME: we currently can't handle multiple pieces so we take
             # the first
             entry = row.TISSUE_DATA.split(';')[0]
             db_name, db_id = entry.split(':')
-            context.organ = RefContext(db_refs={db_name: db_id})
+            context.organ = get_ref_context(db_name, db_id)
         # This is so that we don't add a blank BioContext as context and rather
         # just add None
         if not context:
@@ -507,6 +508,14 @@ def _parse_residue_positions(residue_field):
     # First see if this string contains two positions
     res_strs = [rs.strip() for rs in residue_field.split(';')]
     return [parse_amino_acid_string(rp) for rp in res_strs]
+
+
+def get_ref_context(db_ns, db_id):
+    db_id = db_id.strip()
+    if db_ns in {'BTO'}:
+        db_id = ensure_prefix(db_ns, db_id)
+    standard_name, db_refs = standardize_name_db_refs({db_ns: db_id})
+    return RefContext(standard_name, db_refs)
 
 
 def process_uniprot_entry(up_id):
