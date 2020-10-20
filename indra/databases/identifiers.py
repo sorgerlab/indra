@@ -214,20 +214,21 @@ def parse_identifiers_url(url):
     return None, None
 
 
-def ensure_chebi_prefix(chebi_id):
-    if chebi_id is None:
+def ensure_prefix(db_ns, db_id, with_colon=True):
+    if db_id is None:
         return None
-    if not chebi_id.startswith('CHEBI:'):
-        return f'CHEBI:{chebi_id}'
-    return chebi_id
+    colon = ':' if with_colon else ''
+    if not db_id.startswith(f'{db_ns}{colon}'):
+        return f'{db_ns}{colon}{db_id}'
+    return db_id
+
+
+def ensure_chebi_prefix(chebi_id):
+    return ensure_prefix('CHEBI', chebi_id)
 
 
 def ensure_chembl_prefix(chembl_id):
-    if chembl_id is None:
-        return None
-    if not chembl_id.startswith('CHEMBL'):
-        return f'CHEMBL{chembl_id}'
-    return chembl_id
+    return ensure_prefix('CHEMBL', chembl_id, with_colon=False)
 
 
 identifiers_registry = load_resource_json('identifiers_patterns.json')
