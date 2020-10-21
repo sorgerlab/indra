@@ -1829,6 +1829,8 @@ def _get_db_refs(term):
                 # Skip etc UP entries
                 if ref_ns == 'UP' and ref_id == 'etc':
                     continue
+                elif ref_ns == 'UP' and ref_id.startswith('SL'):
+                    ref_ns = 'UPLOC'
                 try:
                     priority = min(priority, ns_priority[ref_ns])
                 except KeyError:
