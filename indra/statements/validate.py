@@ -1,5 +1,11 @@
 """This module implements a number of functions that can be used to
-validate INDRA Statements."""
+validate INDRA Statements. The available functions include ones that
+raise custom exceptions derived from ValueError if an invalidity is
+found. These come with a helpful error message that can be caught
+and printed to learn about the specific issue. Another set of functions
+do not raise exceptions, rather, return True or False depending on whether
+the given input is valid or invalid."""
+
 import re
 from indra.statements import *
 from indra.databases.identifiers import identifiers_mappings, \
@@ -154,6 +160,13 @@ def assert_valid_db_refs(db_refs):
 
 
 def assert_valid_agent(agent):
+    """Raise InvalidAgent is there is an invalidity in the Agent.
+
+    Parameters
+    ----------
+    agent : indra.statements.Agent
+        The agent to check.
+    """
     if agent is None:
         return
     if agent.name is None:
@@ -162,6 +175,18 @@ def assert_valid_agent(agent):
 
 
 def validate_agent(agent):
+    """Return False if is there is an invalidity in the Agent, otherwise True.
+
+    Parameters
+    ----------
+    agent : indra.statements.Agent
+        The agent to check.
+
+    Returns
+    -------
+    bool
+        True if the agent is valid, False otherwise.
+    """
     try:
         assert_valid_agent(agent)
         return True
@@ -170,6 +195,13 @@ def validate_agent(agent):
 
 
 def assert_valid_statement_semantics(stmt):
+    """Raise InvalidStatement error if the given statement is invalid.
+
+    Parameters
+    ----------
+    statement : indra.statements.Statement
+        The statement to check.
+    """
     if all(a is None for a in stmt.agent_list()):
         raise InvalidStatement('Statement with all None agents')
 
@@ -239,7 +271,7 @@ def assert_valid_statement(stmt):
 
 
 def assert_valid_text_refs(text_refs):
-    """Raise an error if the given text refs are invalid."""
+    """Raise an InvalidTextRefs error if the given text refs are invalid."""
     for ns in text_refs:
         if ns != ns.upper():
             raise InvalidTextRefs(ns)
@@ -269,6 +301,13 @@ def assert_valid_pmid_text_refs(evidence):
 
 
 def assert_valid_bio_context(context):
+    """Raise InvalidContext error if the given bio-context is invalid.
+
+    Parameters
+    ----------
+    context : indra.statements.BioContext
+        The context object to validate.
+    """
     # We shouldn't make a context if the attributes are all None
     if all(getattr(context, attr) is None for attr in BioContext.attrs):
         raise InvalidContext('All context attributes are None.')
@@ -283,6 +322,13 @@ def assert_valid_bio_context(context):
 
 
 def assert_valid_context(context):
+    """Raise InvalidContext error if the given context is invalid.
+
+    Parameters
+    ----------
+    context : indra.statements.Context
+        The context object to validate.
+    """
     if context is None:
         return
     elif isinstance(context, BioContext):
@@ -292,12 +338,31 @@ def assert_valid_context(context):
 
 
 def assert_valid_evidence(evidence):
+    """Raise an error if the given evidence is invalid.
+
+    Parameters
+    ----------
+    evidence : indra.statements.Evidence
+        The evidence object to validate.
+    """
     assert_valid_pmid_text_refs(evidence)
     assert_valid_text_refs(evidence.text_refs)
     assert_valid_context(evidence.context)
 
 
 def validate_evidence(evidence):
+    """Return False if the given evidence is invalid, otherwise True.
+
+    Parameters
+    ----------
+    evidence : indra.statements.Evidence
+        The evidence object to validate.
+
+    Returns
+    -------
+    bool
+        True if the evidence is valid, otherwise False.
+    """
     try:
         assert_valid_evidence(evidence)
         return True
