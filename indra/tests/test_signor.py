@@ -120,7 +120,8 @@ def test_get_evidence():
             'ANNOTATOR': 'gcesareni',
         }
     assert ev.context.species.db_refs['TAXONOMY'] == '10090'
-    assert ev.context.cell_type.db_refs['BTO'] == '0002895'
+    assert ev.context.cell_type.db_refs['BTO'] == 'BTO:0002895', \
+        ev.context.cell_type.db_refs
     assert ev.epistemics['direct']
     assert ev.source_api == 'signor'
     assert ev.source_id == 'SIGNOR-241929'

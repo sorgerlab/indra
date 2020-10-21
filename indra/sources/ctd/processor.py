@@ -1,6 +1,7 @@
 import tqdm
 from indra.statements import *
 from indra.databases import hgnc_client
+from indra.statements.validate import assert_valid_db_refs
 from indra.ontology.standardize import standardize_db_refs, \
     standardize_name_db_refs
 
@@ -122,8 +123,10 @@ def get_context(organism_name, organism_tax_id):
     if not organism_tax_id:
         return None
     tax_id = str(int(organism_tax_id))
+    db_refs = {'TAXONOMY': tax_id}
+    assert_valid_db_refs(db_refs)
     species = RefContext(organism_name,
-                         db_refs={'TAXONOMY': tax_id})
+                         db_refs=db_refs)
     bc = BioContext(species=species)
     return bc
 
@@ -140,6 +143,7 @@ def get_disease_agent(name, disease_id):
         db_ns, db_id = gr.split(':')
         db_refs[db_ns] = db_id
     standard_name, db_refs = standardize_name_db_refs(db_refs)
+    assert_valid_db_refs(db_refs)
     if standard_name:
         name = standard_name
     return Agent(name, db_refs=db_refs)
@@ -151,6 +155,7 @@ def get_gene_agent(name, gene_entrez_id):
     if hgnc_id:
         db_refs['HGNC'] = hgnc_id
     standard_name, db_refs = standardize_name_db_refs(db_refs)
+    assert_valid_db_refs(db_refs)
     if standard_name:
         name = standard_name
     return Agent(name, db_refs=db_refs)
@@ -161,4 +166,5 @@ def get_chemical_agent(name, mesh_id, cas_id):
     if cas_id:
         db_refs['CAS'] = cas_id
     db_refs = standardize_db_refs(db_refs)
+    assert_valid_db_refs(db_refs)
     return Agent(name, db_refs=db_refs)

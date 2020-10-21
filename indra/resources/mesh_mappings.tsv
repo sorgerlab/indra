@@ -46,7 +46,6 @@ MESH	D000067877	Autism Spectrum Disorder	DOID	DOID:0060041	autism spectrum disor
 MESH	D000067877	Autism Spectrum Disorder	HP	HP:0000729	Autistic behavior
 MESH	D000067956	Adenylyl Cyclase Inhibitors	CHEBI	CHEBI:90365	EC 4.6.1.1 (adenylate cyclase) inhibitor
 MESH	D000068180	Aripiprazole	CHEBI	CHEBI:31236	aripiprazole
-MESH	D000068256	Darbepoetin alfa	HGNC	4392	GNAS
 MESH	D000068296	Risedronic Acid	CHEBI	CHEBI:8869	Risedronic acid
 MESH	D000068298	Fluticasone	CHEBI	CHEBI:5134	fluticasone
 MESH	D000068299	Salmeterol Xinafoate	CHEBI	CHEBI:9012	Salmeterol xinafoate
@@ -217,7 +216,6 @@ MESH	D000071516	Alpha-Ketoglutarate-Dependent Dioxygenase FTO	HGNC	24678	FTO
 MESH	D000071560	beta-Arrestin 2	HGNC	710	ARR3
 MESH	D000071576	Crush Injuries	EFO	0009504	crush injury
 MESH	D000071617	Protein Deglycase DJ-1	HGNC	16369	PARK7
-MESH	D000071636	Protein Phosphatase 2C	HGNC	9279	PDP1
 MESH	D000071656	Receptor, Notch3	HGNC	7883	NOTCH3
 MESH	D000071657	Werner Syndrome Helicase	HGNC	12791	WRN
 MESH	D000071676	Zinc Finger Protein GLI1	HGNC	4317	GLI1
@@ -10868,7 +10866,6 @@ MESH	D022763	CCAAT-Enhancer-Binding Protein-alpha	HGNC	1833	CEBPA
 MESH	D022782	CCAAT-Enhancer-Binding Protein-beta	HGNC	1834	CEBPB
 MESH	D022861	Hermanski-Pudlak Syndrome	DOID	DOID:3753	Hermansky-Pudlak syndrome
 MESH	D023062	Receptors, Interleukin-8A	HGNC	6026	CXCR1
-MESH	D023081	CCAAT-Binding Factor	HGNC	24218	CEBPZ
 MESH	D023082	Defensins	CHEBI	CHEBI:82761	defensin
 MESH	D023102	Anoikis	GO	GO:0043276	anoikis
 MESH	D023201	CD40 Ligand	HGNC	11935	CD40LG
@@ -11129,7 +11126,6 @@ MESH	D038362	Glycogen Synthase Kinase 3	FPLX	GSK3	GSK3
 MESH	D038601	Ribosomal Protein S6	HGNC	10429	RPS6
 MESH	D038642	Shaken Baby Syndrome	EFO	1001423	Shaken Baby Syndrome
 MESH	D038681	Follistatin	HGNC	3971	FST
-MESH	D038744	Ribosomal Protein S6 Kinases, 90-kDa	HGNC	10430	RPS6KA1
 MESH	D038762	Ribosomal Protein S6 Kinases, 70-kDa	FPLX	P70S6K	P70S6K
 MESH	D038921	Coffin-Lowry Syndrome	DOID	DOID:3783	Coffin-Lowry syndrome
 MESH	D038941	Polypyrimidine Tract-Binding Protein	HGNC	9583	PTBP1
@@ -11140,8 +11136,6 @@ MESH	D039441	Integrin alpha4	HGNC	6140	ITGA4
 MESH	D039481	CD11b Antigen	HGNC	6149	ITGAM
 MESH	D039521	CD11c Antigen	HGNC	6152	ITGAX
 MESH	D039561	Eukaryotic Initiation Factor-4E	HGNC	3287	EIF4E
-MESH	D039601	Eukaryotic Initiation Factor-4A	HGNC	3282	EIF4A1
-MESH	D039603	Eukaryotic Initiation Factor-4G	HGNC	3296	EIF4G1
 MESH	D039621	Eukaryotic Initiation Factor-3	HGNC	3271	EIF3A
 MESH	D039661	Integrin beta3	HGNC	6156	ITGB3
 MESH	D039663	Integrin beta4	HGNC	6158	ITGB4
@@ -11236,7 +11230,6 @@ MESH	D044093	Receptor, Galanin, Type 3	HGNC	4134	GALR3
 MESH	D044102	Receptor, Melanocortin, Type 1	HGNC	6929	MC1R
 MESH	D044104	Receptor, Melanocortin, Type 3	HGNC	6931	MC3R
 MESH	D044105	Receptor, Melanocortin, Type 4	HGNC	6932	MC4R
-MESH	D044169	Receptors, Calcium-Sensing	HGNC	1514	CASR
 MESH	D044225	Piscirickettsiaceae Infections	EFO	1001397	Piscirickettsiaceae Infections
 MESH	D044243	Linoleic Acids, Conjugated	CHEBI	CHEBI:61159	conjugated linoleic acid
 MESH	D044262	Prostaglandin H2	CHEBI	CHEBI:15554	prostaglandin H2
@@ -11593,7 +11586,6 @@ MESH	D051040	Vesicle-Associated Membrane Protein 3	HGNC	12644	VAMP3
 MESH	D051046	Amino-Acid N-Acetyltransferase	HGNC	17996	NAGS
 MESH	D051047	Dihydrolipoyllysine-Residue Acetyltransferase	HGNC	2896	DLAT
 MESH	D051048	Diacylglycerol O-Acyltransferase	HGNC	2843	DGAT1
-MESH	D051057	Proto-Oncogene Proteins c-akt	HGNC	391	AKT1
 MESH	D051081	Glucosamine 6-Phosphate N-Acetyltransferase	HGNC	19980	GNPNAT1
 MESH	D051100	Glial Cell Line-Derived Neurotrophic Factor	HGNC	4232	GDNF
 MESH	D051101	Neurturin	HGNC	8007	NRTN
@@ -12097,7 +12089,6 @@ MESH	D054460	rho-Associated Kinases	FPLX	ROCK	ROCK
 MESH	D054463	Trichothiodystrophy Syndromes	DOID	DOID:2960	photosensitive trichothiodystrophy
 MESH	D054464	Peroxiredoxins	FPLX	PRDX	PRDX
 MESH	D054465	Peroxiredoxin VI	HGNC	16753	PRDX6
-MESH	D054467	Phospholipases A2	HGNC	9030	PLA2G1B
 MESH	D054468	Axoneme	GO	GO:0005930	axoneme
 MESH	D054477	Glutaredoxins	HGNC	4330	GLRX
 MESH	D054481	Thioredoxin Reductase 1	HGNC	12437	TXNRD1
@@ -12251,7 +12242,6 @@ MESH	D055531	Gemini of Coiled Bodies	GO	GO:0097504	Gemini of coiled bodies
 MESH	D055534	Bulbo-Spinal Atrophy, X-Linked	DOID	DOID:0060161	Kennedy's disease
 MESH	D055537	Light Signal Transduction	GO	GO:0007602	phototransduction
 MESH	D055541	DEAD Box Protein 20	HGNC	2743	DDX20
-MESH	D055542	alpha-Globins	HGNC	4824	HBA2
 MESH	D055543	zeta-Globins	HGNC	4835	HBZ
 MESH	D055546	delta-Globins	HGNC	4829	HBD
 MESH	D055547	epsilon-Globins	HGNC	4830	HBE1
@@ -12493,7 +12483,6 @@ MESH	D058536	Pyelectasis	HP	HP:0010945	Fetal pyelectasis
 MESH	D058540	Aicardi Syndrome	DOID	DOID:8461	Aicardi syndrome
 MESH	D058566	Sacroiliitis	HP	HP:0012317	Sacroiliac arthritis
 MESH	D058568	Necrolytic Migratory Erythema	HP	HP:0031181	Necrolytic migratory erythema
-MESH	D058570	TOR Serine-Threonine Kinases	HGNC	3942	MTOR
 MESH	D058574	Integrin-Binding Sialoprotein	HGNC	5341	IBSP
 MESH	D058575	Decorin	HGNC	2705	DCN
 MESH	D058578	Biglycan	HGNC	1044	BGN

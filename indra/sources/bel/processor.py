@@ -14,7 +14,8 @@ from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.databases import (
     chebi_client, go_client, hgnc_client, mesh_client,
-    mirbase_client, uniprot_client, taxonomy_client
+    mirbase_client, uniprot_client, taxonomy_client,
+    identifiers
 )
 from indra.ontology.standardize import standardize_name_db_refs
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
@@ -503,6 +504,8 @@ def get_db_refs_by_name(ns, name, node_data):
     elif ns == 'FPLX':
         db_refs = {'FPLX': name}
     elif ns in ('GO', 'GOBP', 'GOCC'):
+        if name == 'cell proliferation':
+            name = 'cell population proliferation'
         go_id = go_client.get_go_id_from_label(name)
         if not go_id:
             logger.info('Could not find GO ID for %s' % name)
@@ -520,14 +523,29 @@ def get_db_refs_by_name(ns, name, node_data):
     # it's clear what namespace the name belongs to
     # FIXME: Full implementation would look up MGI/RGD identifiers from
     # the names, and obtain corresponding Uniprot IDs
-    elif ns in ('MGI', 'RGD'):
-        db_refs = {ns: name}
-    # Map Selventa families to FamPlexes
+    elif ns == 'MGI':
+        up_id = mouse_lookup.get(name)
+        if up_id:
+            db_refs = {'UP': up_id}
+    elif ns == 'RGD':
+        up_id = rat_lookup.get(name)
+        if up_id:
+            db_refs = {'UP': up_id}
+    # Map Selventa families and complexes to FamPlex
     elif ns == 'SFAM':
         db_refs = {'SFAM': name}
         indra_name = bel_to_indra.get(name)
         if indra_name is None:
             logger.info('Could not find mapping for BEL/SFAM family: '
+                        '%s (%s)' % (name, node_data))
+        else:
+            db_refs['FPLX'] = indra_name
+            name = indra_name
+    elif ns == 'SCOMP':
+        db_refs = {'SCOMP': name}
+        indra_name = bel_to_indra.get(name)
+        if indra_name is None:
+            logger.info('Could not find mapping for BEL/SCOMP complex: '
                         '%s (%s)' % (name, node_data))
         else:
             db_refs['FPLX'] = indra_name
@@ -550,7 +568,7 @@ def get_db_refs_by_name(ns, name, node_data):
             if mirbase_id:
                 db_refs['MIRBASE'] = mirbase_id
         else:
-            logger.info('Could not map EGID%s to HGNC.' % name)
+            logger.debug('Could not map EGID%s to HGNC.' % name)
             name = 'E%s' % name
     elif ns == 'MIRBASE':
         mirbase_id = mirbase_client.get_mirbase_id_from_mirbase_name(name)
@@ -573,6 +591,11 @@ def get_db_refs_by_name(ns, name, node_data):
             db_refs = {'CHEBI': chebi_id}
         else:
             logger.info('CHEBI name %s not found in map.' % name)
+    # These appear in the name slot but are actually IDs
+    elif ns == 'CHEBIID':
+        chebi_id = identifiers.ensure_chebi_prefix(name)
+        db_refs = {'CHEBI': chebi_id}
+        name = chebi_client.get_chebi_name_from_id(chebi_id)
     # SDIS, SCHEM: Include the name as the ID for the namespace
     elif ns in ('SDIS', 'SCHEM', 'TEXT'):
         db_refs = {ns: name}
@@ -612,7 +635,7 @@ def get_db_refs_by_ident(ns, ident, node_data):
                'MESHPP', 'MESHD', 'MESH', 'MGI', 'RGD', 'SFAM', 'EGID',
                'ENTREZ', 'NCBIGENE', 'MIRBASE', 'CHEBI', 'ECCODE' 'SDIS',
                'SCHEM', 'TEXT', 'DOID', 'EFO', 'HP', 'PFAM', 'ECCODE',
-               'HGNC.GENEFAMILY', 'HGNC_GROUP', 'NCBITAXON']
+               'HGNC.GENEFAMILY', 'HGNC_GROUP', 'NCBITAXON', 'PUBCHEM']
     ns_mappings = {'UNIPROT': 'UP',
                    'GOBP': 'GO',
                    'GOCC': 'GO',
@@ -621,7 +644,8 @@ def get_db_refs_by_ident(ns, ident, node_data):
                    'ENTREZ': 'EGID',
                    'NCBIGENE': 'EGID',
                    'NCBITAXON': 'TAXONOMY',
-                   'HGNC.GENEFAMILY': 'HGNC_GROUP'}
+                   'HGNC.GENEFAMILY': 'HGNC_GROUP',
+                   'CHEBIID': 'CHEBI'}
     raw_name = node_data.name
     if ns in ns_list:
         mapped_ns = ns_mappings.get(ns, ns)
@@ -691,6 +715,10 @@ def extract_context(annotations, annot_manager):
                 db_ns, db_id = ref.split('_', 1)
             else:
                 db_ns, db_id = ns, ref
+            if db_ns == 'CLO':
+                db_ns = 'CL'
+            if db_ns in {'CL', 'UBERON', 'DOID'}:
+                db_id = identifiers.ensure_prefix(db_ns, db_id)
             setattr(bc, indra_name,
                     RefContext(name=ann, db_refs={db_ns: db_id}))
     # Overwrite blank BioContext
@@ -708,6 +736,9 @@ def _get_up_id(hgnc_id):
     up_id = hgnc_client.get_uniprot_id(hgnc_id)
     if not up_id:
         logger.info("No Uniprot ID for HGNC ID %s" % hgnc_id)
+        return None
+    if ',' in up_id:
+        return None
     return up_id
 
 
@@ -904,3 +935,12 @@ def _build_chebi_map():
 
 bel_to_indra = _build_famplex_map()
 chebi_name_id = _build_chebi_map()
+
+
+mouse_lookup = {gene_name: up_id for up_id, gene_name in
+                uniprot_client.um.uniprot_gene_name.items()
+                if uniprot_client.is_mouse(up_id)}
+
+rat_lookup = {gene_name: up_id for up_id, gene_name in
+              uniprot_client.um.uniprot_gene_name.items()
+              if uniprot_client.is_rat(up_id)}

@@ -132,6 +132,9 @@ def _load_mappings():
     db_to_ambigs = set()
     for drugbank_id, db_ns, db_id, source in \
             read_unicode_csv(mappings_file, delimiter='\t', skiprows=1):
+        # We skip DBSALTs for now, see https://github.com/pyobo/pyobo/issues/80
+        if drugbank_id.startswith('DBSALT'):
+            continue
         if db_ns == 'CHEBI':
             db_id = 'CHEBI:%s' % db_id
         if db_ns == 'NAME':

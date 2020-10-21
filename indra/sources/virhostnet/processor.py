@@ -93,7 +93,7 @@ def get_agent_from_grounding(grounding, up_web_fallback=False):
     elif db_ns == 'refseq':
         db_refs = {'REFSEQ_PROT': db_id}
     else:
-        db_refs = {'GENBANK': db_id}
+        db_refs = {'NCBIPROTEIN': db_id}
     agent = Agent(db_id, db_refs=db_refs)
     standardized = standardize_agent_name(agent)
     if up_web_fallback:

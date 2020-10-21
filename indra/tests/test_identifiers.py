@@ -1,6 +1,5 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-from indra.databases import get_identifiers_url, parse_identifiers_url
+from indra.databases.identifiers import get_identifiers_url, \
+    parse_identifiers_url
 
 
 # For each pair of namespace and ID we get all possible URL forms.
@@ -85,8 +84,8 @@ ns_mapping = {
                               'http://identifiers.org/drugbank:DB00001'),
     ('TAXONOMY', '9606'): ('https://identifiers.org/taxonomy:9606',
                            'http://identifiers.org/taxonomy:9606'),
-    ('BTO', '0000146'): ('https://identifiers.org/BTO:0000146',
-                         'http://identifiers.org/BTO:0000146'),
+    ('BTO', 'BTO:0000146'): ('https://identifiers.org/BTO:0000146',
+                             'http://identifiers.org/BTO:0000146'),
     ('CHEMBL', 'CHEMBL1229517'): (
         'https://identifiers.org/chembl.compound:CHEMBL1229517',
         'http://identifiers.org/chembl.compound:CHEMBL1229517',
@@ -98,21 +97,23 @@ ns_mapping = {
         'https://identifiers.org/lincs.smallmolecule/LSM-6357',
         'http://identifiers.org/lincs.smallmolecule/LSM-6357'),
     ('UPPRO', 'PRO_0000032458'): (
+        'https://identifiers.org/uniprot.chain:PRO_0000032458',
         'https://identifiers.org/uniprot:P01019#PRO_0000032458',
         'http://identifiers.org/uniprot:P01019#PRO_0000032458'),
     ('NXPFA', '00880'): ('https://www.nextprot.org/term/FA-00880', ),
     ('SIGNOR', 'SIGNOR-PF15'): (
         'https://signor.uniroma2.it/relation_result.php?id=SIGNOR-PF15', ),
     ('HGNC_GROUP', '643'): (
-        'https://www.genenames.org/data/genegroup/#!/group/643', ),
-    ('PR', '000000019'): (
-        'https://proconsortium.org/app/entry/PR%3A000000019', ),
-    ('GENBANK', 'QHO60603'): (
-        'https://www.ncbi.nlm.nih.gov/protein/QHO60603', ),
+        'https://identifiers.org/hgnc.genefamily:643', ),
+    ('PR', 'PR:000000019'): (
+        'https://identifiers.org/PR:000000019', ),
+    ('NCBIPROTEIN', 'QHO60603'): (
+        'https://identifiers.org/ncbiprotein:QHO60603', ),
     ('NONCODE', 'NONHSAT028507.2'): (
-        'http://www.noncode.org/show_gene.php?id=NONHSAT028507&version=2', ),
+        'https://identifiers.org/noncodev4.rna:NONHSAT028507.2', ),
     ('HMS-LINCS', '10220'): ('http://lincs.hms.harvard.edu/db/sm/10220-101', ),
-    ('LNCRNADB', 'HOTAIR'): ('http://www.lncrnadb.org/HOTAIR/', ),
+    ('LNCRNADB', 'URS000075C808_9606'): (
+        'https://identifiers.org/rnacentral:URS000075C808_9606', ),
     ('SCHEM', None): (
         'https://arty.scai.fraunhofer.de/artifactory/bel/namespace/'
         'selventa-legacy-chemicals/selventa-legacy-chemicals-20150601.belns',),
@@ -143,7 +144,7 @@ def test_get_identifiers_url():
     # Get latest standard URL for a given namespace and ID
     for ns_tuple, urls in ns_mapping.items():
         url = get_identifiers_url(*ns_tuple)
-        assert url == urls[0], (url, ns_tuple)
+        assert url == urls[0], (url, urls[0], ns_tuple)
 
 
 def test_parse_identifiers_url():

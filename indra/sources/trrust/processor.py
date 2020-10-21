@@ -52,7 +52,7 @@ def get_grounded_agent(gene_name):
     if hgnc_id:
         db_refs['HGNC'] = hgnc_id
         up_id = hgnc_client.get_uniprot_id(hgnc_id)
-        if up_id:
+        if up_id and ',' not in up_id:
             db_refs['UP'] = up_id
     agent = Agent(gene_name, db_refs=db_refs)
     return agent

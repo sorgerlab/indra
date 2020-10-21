@@ -11,7 +11,8 @@ from pysb.core import SelfExporter
 import pysb.export
 
 from indra import statements as ist
-from indra.databases import context_client, get_identifiers_url, \
+from indra.databases import context_client
+from indra.databases.identifiers import get_identifiers_url, \
     parse_identifiers_url as parse_url
 
 from .sites import *

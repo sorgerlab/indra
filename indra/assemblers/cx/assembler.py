@@ -6,8 +6,8 @@ import itertools
 from ndex2.nice_cx_network import NiceCXNetwork
 from collections import OrderedDict
 from indra.statements import *
-from indra.databases import context_client, ndex_client, get_identifiers_url, \
-    url_prefixes
+from indra.databases import context_client, ndex_client
+from indra.databases.identifiers import get_identifiers_url, url_prefixes
 
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,10 @@ class NiceCxAssembler(object):
                                            (network_name if network_name
                                             else 'indra_assembled'))
         self.node_keys = {}
+        self.context_prefixes = {
+            'pubmed': 'https://identifiers.org/pubmed:',
+            'hgnc.symbol': 'https://identifiers.org/hgnc.symbol:'
+        }
 
     def make_model(self, self_loops=False, network_attributes=None):
         """Return a Nice CX network object after running assembly.
@@ -64,9 +68,8 @@ class NiceCxAssembler(object):
                     continue
                 edge_id = self.add_edge(a1_id, a2_id, stmt)
 
-        prefixes = {k: v for k, v in url_prefixes.items()}
-        prefixes['pubmed'] = 'https://identifiers.org/pubmed:'
-        self.network.set_network_attribute('@context', json.dumps(prefixes))
+        self.network.set_network_attribute('@context',
+                                           json.dumps(self.context_prefixes))
         if network_attributes:
             for k, v in network_attributes.items():
                 self.network.set_network_attribute(k, v, 'string')

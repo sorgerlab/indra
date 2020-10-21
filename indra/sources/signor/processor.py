@@ -8,22 +8,24 @@ Perfetto et al., "SIGNOR: a database of causal relationships between
 biological entities," Nucleic Acids Research, Volume 44, Issue D1, 4
 January 2016, Pages D548-D554. https://doi.org/10.1093/nar/gkv1048
 """
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
+import re
 import logging
 from copy import deepcopy
 from collections import Counter
 from os.path import join, dirname
 from indra.statements import *
 from indra.util import read_unicode_csv
-from indra.databases import hgnc_client, uniprot_client
+from indra.resources import get_resource_path
+from indra.ontology.standardize import standardize_name_db_refs
+from indra.sources.reach.processor import parse_amino_acid_string
+from indra.databases import hgnc_client, uniprot_client, chebi_client
+from indra.databases.identifiers import ensure_prefix
 
 logger = logging.getLogger(__name__)
 
 
 def _read_famplex_map():
-    fname = join(dirname(__file__), '../../resources/famplex_map.tsv')
+    fname = get_resource_path('famplex_map.tsv')
     raw_map = read_unicode_csv(fname, '\t')
 
     m = {}
@@ -94,7 +96,7 @@ _mechanism_map = {
     'palmitoylation': Palmitoylation,
     'phosphorylation': Phosphorylation,
     'stabilization': IncreaseAmount,
-    'sumoylation': Sumoylation
+    'sumoylation': Sumoylation,
 }
 
 
@@ -173,6 +175,7 @@ class SignorProcessor(object):
         # Returns a list of agents corresponding to this id
         # (If it is a signor complex, returns an Agent object with complex
         # constituents as BoundConditions
+        name = ent_name
         if database == 'SIGNOR' and id in self.complex_map:
             components = self.complex_map[id]
             agents = self._get_complex_agents(id)
@@ -180,32 +183,23 @@ class SignorProcessor(object):
             # condition
             agent = agents[0]
             agent.bound_conditions = \
-                    [BoundCondition(a, True) for a in agents[1:]]
+                [BoundCondition(a, True) for a in agents[1:]]
             return agent
         else:
             gnd_type = _type_db_map[(ent_type, database)]
             if gnd_type == 'UP':
-                up_id = id
-                db_refs = {'UP': up_id}
-                hgnc_id = uniprot_client.get_hgnc_id(up_id)
-                if hgnc_id:
-                    db_refs['HGNC'] = hgnc_id
-                    name = hgnc_client.get_hgnc_name(hgnc_id)
-                else:
-                    name = uniprot_client.get_gene_name(up_id)
+                db_refs = process_uniprot_entry(id)
             # Map SIGNOR protein families to FamPlex families
             elif ent_type == 'proteinfamily':
-                db_refs = {database: id} # Keep the SIGNOR family ID in db_refs
+                db_refs = {database: id}  # Keep the SIGNOR family ID in db_refs
                 key = (database, id)
                 # Use SIGNOR name unless we have a mapping in FamPlex
-                name = ent_name
                 famplex_id = famplex_map.get(key)
                 if famplex_id is None:
                     logger.info('Could not find %s in FamPlex map' %
                                 str(key))
                 else:
                     db_refs['FPLX'] = famplex_id
-                    name = famplex_id
             # Other possible groundings are PUBCHEM, SIGNOR, etc.
             elif gnd_type is not None:
                 if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI', 'miRBase',
@@ -216,12 +210,17 @@ class SignorProcessor(object):
                     # SIGNOR's format in which it leaves extra spaces around
                     # the ID, as in 'CID: 923'
                     id = id[4:].strip()
+                elif database == 'ChEBI' and id.startswith('SID:'):
+                    gnd_type = 'PUBCHEM.SUBSTANCE'
+                    id = id[4:].strip()
                 db_refs = {gnd_type: id}
-                name = ent_name
             # If no grounding, include as an untyped/ungrounded node
             else:
                 name = ent_name
                 db_refs = {}
+            standard_name, db_refs = standardize_name_db_refs(db_refs)
+            if standard_name:
+                name = standard_name
             return Agent(name, db_refs=db_refs)
 
     def _recursively_lookup_complex(self, complex_id):
@@ -255,32 +254,36 @@ class SignorProcessor(object):
 
         for c in components:
             db_refs = {}
-            name = uniprot_client.get_gene_name(c)
-            if name is None:
-                db_refs['SIGNOR'] = c
+            if c.startswith('CHEBI'):
+                db_refs['CHEBI'] = c
+                name = chebi_client.get_chebi_name_from_id(c)
             else:
-                db_refs['UP'] = c
-                hgnc_id = uniprot_client.get_hgnc_id(c)
-                if hgnc_id:
-                    name = hgnc_client.get_hgnc_name(hgnc_id)
-                    db_refs['HGNC'] = hgnc_id
+                name = uniprot_client.get_gene_name(c)
+                if name is None:
+                    db_refs['SIGNOR'] = c
+                else:
+                    db_refs['UP'] = c
+                    hgnc_id = uniprot_client.get_hgnc_id(c)
+                    if hgnc_id:
+                        name = hgnc_client.get_hgnc_name(hgnc_id)
+                        db_refs['HGNC'] = hgnc_id
 
-            famplex_key = ('SIGNOR', c)
-            if famplex_key in famplex_map:
-                db_refs['FPLX'] = famplex_map[famplex_key]
-                if not name:
-                    name = db_refs['FPLX']  # Set agent name to Famplex name if
-                                            # the Uniprot name is not available
-            elif not name:
-                # We neither have a Uniprot nor Famplex grounding
-                logger.info('Have neither a Uniprot nor Famplex grounding ' + \
-                            'for ' + c)
-                if not name:
-                    name = db_refs['SIGNOR']  # Set the agent name to the
-                                              # Signor name if neither the
-                                              # Uniprot nor Famplex names are
-                                              # available
-            assert(name is not None)
+                famplex_key = ('SIGNOR', c)
+                if famplex_key in famplex_map:
+                    db_refs['FPLX'] = famplex_map[famplex_key]
+                    if not name:
+                        # Set agent name to Famplex name if
+                        # the Uniprot name is not available
+                        name = db_refs['FPLX']
+                elif not name:
+                    # We neither have a Uniprot nor Famplex grounding
+                    logger.info('Have neither a Uniprot nor Famplex grounding '
+                                'for "%s" in complex %s' % (c, complex_id))
+                    if not name:
+                        # Set the agent name to the Signor name if neither the
+                        # Uniprot nor Famplex names are available
+                        name = db_refs['SIGNOR']
+            assert name is not None
             agents.append(Agent(name, db_refs=db_refs))
         return agents
 
@@ -304,8 +307,8 @@ class SignorProcessor(object):
                 'NOTES': _n(row.NOTES),
                 'ANNOTATOR': _n(row.ANNOTATOR)}
         context = BioContext()
-        if row.TAX_ID:
-            context.species = RefContext(db_refs={'TAXONOMY': row.TAX_ID})
+        if row.TAX_ID and row.TAX_ID != '-1':
+            context.species = get_ref_context('TAXONOMY', row.TAX_ID)
         # NOTE: do we know if this is always a cell type, or can it be
         # a cell line?
         if row.CELL_DATA:
@@ -313,23 +316,41 @@ class SignorProcessor(object):
             # the first
             entry = row.CELL_DATA.split(';')[0]
             db_name, db_id = entry.split(':')
-            context.cell_type = RefContext(db_refs={db_name: db_id})
+            context.cell_type = get_ref_context(db_name, db_id)
         # NOTE: is it okay to map this to organ?
         if row.TISSUE_DATA:
             # FIXME: we currently can't handle multiple pieces so we take
             # the first
             entry = row.TISSUE_DATA.split(';')[0]
             db_name, db_id = entry.split(':')
-            context.organ = RefContext(db_refs={db_name: db_id})
+            context.organ = get_ref_context(db_name, db_id)
         # This is so that we don't add a blank BioContext as context and rather
         # just add None
         if not context:
             context = None
 
+        # PMID is sometimes missing and sometimes other/Other, which we
+        # don't represent
+        if not row.PMID or row.PMID in {'other', 'Other'}:
+            pmid = None
+            text_refs = {}
+        # These are regular PMIDs
+        elif re.match(r'(\d+)', row.PMID):
+            pmid = row.PMID
+            text_refs = {'PMID': pmid}
+        # Sometimes we get PMC IDs
+        elif row.PMID.startswith('PMC'):
+            pmid = None
+            text_refs = {'PMCID': row.PMID}
+        # We log any other suspicious unhandled IDs
+        else:
+            logger.info('Invalid PMID: %s' % row.PMID)
+            pmid = None
+            text_refs = {}
         return Evidence(source_api='signor', source_id=row.SIGNOR_ID,
-                        pmid=row.PMID, text=row.SENTENCE,
-                        epistemics=epistemics, annotations=annotations,
-                        context=context)
+                        pmid=pmid, text=row.SENTENCE,
+                        text_refs=text_refs, epistemics=epistemics,
+                        annotations=annotations, context=context)
 
     def _process_row(self, row):
         agent_a = self._get_agent(row.ENTITYA, row.TYPEA, row.IDA,
@@ -391,7 +412,11 @@ class SignorProcessor(object):
         effect_stmt_type = _effect_map[row.EFFECT]
         # Get the mechanism statement type.
         if row.MECHANISM:
-            mech_stmt_type = _mechanism_map[row.MECHANISM]
+            if row.MECHANISM not in _mechanism_map:
+                logger.warning('Unhandled mechanism type: %s' % row.MECHANISM)
+                mech_stmt_type = None
+            else:
+                mech_stmt_type = _mechanism_map[row.MECHANISM]
         else:
             mech_stmt_type = None
         # (Note that either or both effect/mech stmt types may be None at this
@@ -441,10 +466,11 @@ class SignorProcessor(object):
                                             evidence=evidence))
             else:
                 # Modification
-                residues = _parse_residue_positions(row.RESIDUE)
-                mod_stmts = [mech_stmt_type(agent_a, agent_b, res[0], res[1],
+                sites = _parse_residue_positions(row.RESIDUE)
+                mod_stmts = [mech_stmt_type(agent_a, agent_b, site.residue,
+                                            site.position,
                                             evidence=evidence)
-                             for res in residues]
+                             for site in sites]
                 stmts.extend(mod_stmts)
                 # Active Form
                 if effect_stmt_type:
@@ -481,26 +507,25 @@ class SignorProcessor(object):
 def _parse_residue_positions(residue_field):
     # First see if this string contains two positions
     res_strs = [rs.strip() for rs in residue_field.split(';')]
-    def _parse_respos(respos):
-        # Split off the amino acid
-        res = respos[0:3]
-        pos = respos[3:]
-        # Get the abbreviated amino acid
-        res = amino_acids_reverse.get(res.lower())
-        if not res:
-            logger.warning("Could not get amino acid residue for "
-                           "residue/position %s" % respos)
-            return (None, None)
-        # If there's no position, return residue only
-        if not pos:
-            return (res, None)
-        # Make sure the position is an integer
-        try:
-            int(pos)
-        except ValueError:
-            logger.warning("Could not get valid position for residue/position "
-                           "%s" % respos)
-            return (None, None)
-        return (res, pos)
-    return [_parse_respos(rp) for rp in res_strs]
+    return [parse_amino_acid_string(rp) for rp in res_strs]
 
+
+def get_ref_context(db_ns, db_id):
+    db_id = db_id.strip()
+    if db_ns in {'BTO'}:
+        db_id = ensure_prefix(db_ns, db_id)
+    standard_name, db_refs = standardize_name_db_refs({db_ns: db_id})
+    return RefContext(standard_name, db_refs)
+
+
+def process_uniprot_entry(up_id):
+    parts = up_id.split('_', maxsplit=1)
+    if len(parts) == 1:
+        if '-' in up_id:
+            return {'UP': up_id.split('-')[0], 'UPISO': up_id}
+        return {'UP': up_id}
+    else:
+        if parts[1].startswith('PRO'):
+            return {'UP': parts[0], 'UPPRO': parts[1]}
+        else:
+            return {'UP': parts[0]}

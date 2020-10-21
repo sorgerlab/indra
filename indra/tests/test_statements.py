@@ -2042,3 +2042,10 @@ def test_agent_get_grounding():
     assert gr == ('XYZ', '123'), gr
     gr = ag.get_grounding(ns_order=['ZYX', 'XYZ'])
     assert gr == ('ZYX', '321'), gr
+
+
+def test_real_agent_list():
+    x = Agent('x')
+    agents = Phosphorylation(None, x).real_agent_list()
+    assert len(agents) == 1
+    assert agents[0] == x

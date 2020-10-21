@@ -7,7 +7,9 @@ from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.databases import go_client
 from indra.ontology.standardize import \
-    standardize_db_refs, standardize_agent_name
+    standardize_db_refs, standardize_agent_name, \
+    standardize_name_db_refs
+from indra.statements.validate import validate_text_refs
 from collections import namedtuple
 
 logger = logging.getLogger(__name__)
@@ -45,6 +47,10 @@ class ReachProcessor(object):
             if self.tree is not None:
                 self.citation =\
                     self.tree.execute("$.events.object_meta.doc_id")
+                if not validate_text_refs({'PMID': self.citation}):
+                    logger.debug('The citation added is not a valid '
+                                 'PMID, removing.')
+                    self.citation = None
         self.get_all_events()
 
     def print_event_statistics(self):
@@ -586,7 +592,17 @@ class ReachProcessor(object):
             if not lst:
                 return None
             db_name, db_id = lst[0].split(':', 1)
-            return RefContext(db_refs={db_name.upper(): db_id})
+            db_name = db_name.upper()
+            # Here we are dealing with UniProt subcellular components
+            # so we use a different namespace for those
+            if db_name == 'UNIPROT':
+                db_name = 'UPLOC'
+            # These aren't real groundings
+            elif db_name == 'UAZ':
+                return None
+            standard_name, db_refs = \
+                standardize_name_db_refs({db_name: db_id})
+            return RefContext(standard_name, db_refs=db_refs)
 
         context = BioContext()
         # Example: ['taxonomy:9606']
@@ -732,7 +748,7 @@ class ReachProcessor(object):
         else:
             texts = s.split('/')
 
-        sites = [ReachProcessor._parse_site_text_single(t) for t in texts]
+        sites = [parse_amino_acid_string(t) for t in texts]
 
         # If the first site has a residue, and the remaining sites do not
         # explicitly give a residue (example: Tyr-577/576), then apply the
@@ -747,33 +763,33 @@ class ReachProcessor(object):
 
         return sites
 
-    @staticmethod
-    def _parse_site_text_single(s):
-        s = s.strip()
-        for p in (_site_pattern1, _site_pattern2, _site_pattern3):
-            m = re.match(p, s.upper())
-            if m is not None:
-                residue = get_valid_residue(m.groups()[0])
-                site = m.groups()[1]
-                return Site(residue, site)
-        m = re.match(_site_pattern4, s.upper())
+
+def parse_amino_acid_string(s):
+    s = s.strip()
+    for p in (_site_pattern1, _site_pattern2, _site_pattern3):
+        m = re.match(p, s.upper())
         if m is not None:
-            site = m.groups()[0]
-            residue = m.groups()[1]
+            residue = get_valid_residue(m.groups()[0])
+            site = m.groups()[1]
             return Site(residue, site)
-        for p in (_site_pattern5, _site_pattern6, _site_pattern7):
-            m = re.match(p, s.upper())
-            if m is not None:
-                residue = get_valid_residue(m.groups()[0])
-                site = None
-                return Site(residue, site)
-        m = re.match(_site_pattern8, s.upper())
+    m = re.match(_site_pattern4, s.upper())
+    if m is not None:
+        site = m.groups()[0]
+        residue = m.groups()[1]
+        return Site(residue, site)
+    for p in (_site_pattern5, _site_pattern6, _site_pattern7):
+        m = re.match(p, s.upper())
         if m is not None:
-            site = m.groups()[0]
-            residue = None
+            residue = get_valid_residue(m.groups()[0])
+            site = None
             return Site(residue, site)
-        logger.warning('Could not parse site text %s' % s)
-        return Site(None, None)
+    m = re.match(_site_pattern8, s.upper())
+    if m is not None:
+        site = m.groups()[0]
+        residue = None
+        return Site(residue, site)
+    logger.warning('Could not parse site text %s' % s)
+    return Site(None, None)
 
 
 _site_pattern1 = '([' + ''.join(list(amino_acids.keys())) + '])[-]?([0-9]+)$'

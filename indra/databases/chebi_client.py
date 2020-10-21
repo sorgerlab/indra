@@ -304,6 +304,7 @@ def get_chebi_id_from_hmdb(hmdb_id):
 
 def _read_chebi_to_pubchem():
     csv_reader = _read_resource_csv('chebi_to_pubchem.tsv')
+    next(csv_reader)
     chebi_pubchem = {}
     pubchem_chebi = {}
     ik_matches = {}
@@ -331,6 +332,7 @@ def _read_chebi_to_chembl():
     csv_reader = _read_resource_csv('chebi_to_chembl.tsv')
     chebi_chembl = {}
     chembl_chebi = {}
+    next(csv_reader)
     for row in csv_reader:
         chebi_id, chembl_id = row
         chebi_id = 'CHEBI:%s' % chebi_id

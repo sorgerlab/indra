@@ -82,7 +82,7 @@ def test_prioritize():
     assert all([rec['version'] != '20200821' for rec in prioritized_records])
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'notravis')
 def test_api():
     health_ep = dart_client.dart_base_url + '/health'
     dart_uname = get_config('DART_WM_USERNAME', failure_ok=False)
