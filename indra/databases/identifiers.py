@@ -66,6 +66,21 @@ url_prefixes = {
 
 
 def get_ns_id_from_identifiers(identifiers_ns, identifiers_id):
+    """Return a namespace/ID pair compatible with INDRA from identifiers.
+
+    Parameters
+    ----------
+    identifiers_ns : str
+        An identifiers.org standard namespace.
+    identifiers_id : str
+        An identifiers.org standard ID in the given namespace.
+
+
+    Returns
+    -------
+    (str, str)
+        A namespace and ID that are valid in INDRA db_refs.
+    """
     reg_entry = identifiers_registry.get(identifiers_ns.lower())
     if not reg_entry:
         return None, None
@@ -82,6 +97,7 @@ def get_ns_id_from_identifiers(identifiers_ns, identifiers_id):
 
 
 def get_url_prefix(db_name):
+    """Return the URL prefix for a given namespace."""
     mapped_db_name = identifiers_mappings.get(db_name, db_name.lower())
     identifiers_entry = identifiers_registry.get(mapped_db_name)
     if identifiers_entry:
@@ -214,6 +230,23 @@ def parse_identifiers_url(url):
 
 
 def ensure_prefix(db_ns, db_id, with_colon=True):
+    """Return a valid ID that has the appropriate prefix.
+
+    This is useful for namespaces such as CHEBI, GO or BTO that require
+    the namespace to be part of the ID.
+
+    Parameters
+    ----------
+    db_ns : str
+        A namespace.
+    db_id : str
+        An ID within that namespace which should have the namespace
+        as a prefix in it.
+    with_colon: Optional[bool]
+        If True, the namespace prefix is followed by a colon in the ID (e.g.,
+        CHEBI:12345). Otherwise, no colon is added (e.g., CHEMBL1234).
+        Default: True
+    """
     if db_id is None:
         return None
     colon = ':' if with_colon else ''
@@ -223,10 +256,12 @@ def ensure_prefix(db_ns, db_id, with_colon=True):
 
 
 def ensure_chebi_prefix(chebi_id):
+    """Return a valid CHEBI ID that has the appropriate CHEBI: prefix."""
     return ensure_prefix('CHEBI', chebi_id)
 
 
 def ensure_chembl_prefix(chembl_id):
+    """Return a valid CHEMBL ID that has the appropriate CHEMBL prefix."""
     return ensure_prefix('CHEMBL', chembl_id, with_colon=False)
 
 
