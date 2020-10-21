@@ -591,6 +591,11 @@ def get_db_refs_by_name(ns, name, node_data):
             db_refs = {'CHEBI': chebi_id}
         else:
             logger.info('CHEBI name %s not found in map.' % name)
+    # These appear in the name slot but are actually IDs
+    elif ns == 'CHEBIID':
+        chebi_id = identifiers.ensure_chebi_prefix(name)
+        db_refs = {'CHEBI': chebi_id}
+        name = chebi_client.get_chebi_name_from_id(chebi_id)
     # SDIS, SCHEM: Include the name as the ID for the namespace
     elif ns in ('SDIS', 'SCHEM', 'TEXT'):
         db_refs = {ns: name}
@@ -639,7 +644,8 @@ def get_db_refs_by_ident(ns, ident, node_data):
                    'ENTREZ': 'EGID',
                    'NCBIGENE': 'EGID',
                    'NCBITAXON': 'TAXONOMY',
-                   'HGNC.GENEFAMILY': 'HGNC_GROUP'}
+                   'HGNC.GENEFAMILY': 'HGNC_GROUP',
+                   'CHEBIID': 'CHEBI'}
     raw_name = node_data.name
     if ns in ns_list:
         mapped_ns = ns_mappings.get(ns, ns)

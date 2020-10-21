@@ -16,6 +16,7 @@ from indra.sources.bel import processor as pb
 from indra.sources.bel.api import process_cbn_jgif_file, process_pybel_graph, \
     small_corpus_url
 from indra.databases import hgnc_client
+from indra.statements.validate import assert_valid_statement
 
 mek_hgnc_id = hgnc_client.get_hgnc_id('MAP2K1')
 mek_up_id = hgnc_client.get_uniprot_id(mek_hgnc_id)
@@ -26,6 +27,8 @@ def test_pybel_neighborhood_query():
                                         network_type='graph_jsongz_url',
                                         network_file=small_corpus_url)
     assert bp.statements
+    for stmt in bp.statements:
+        assert_valid_statement(stmt)
     assert all([s.evidence[0].context.cell_line.name == 'MCF 10A'
                for s in bp.statements])
     # Locate statement about epidermis development
@@ -38,13 +41,14 @@ def test_pybel_neighborhood_query():
         cell_line=RefContext(name="MCF 10A",
                              db_refs={'EFO': '0001200'}),
         cell_type=RefContext(name="keratinocyte",
-                             db_refs={'CL': '0000312'}),
+                             db_refs={'CL': 'CL:0000312'}),
         organ=RefContext(name="colon",
-                         db_refs={'UBERON': '0001155'}),
+                         db_refs={'UBERON': 'UBERON:0001155'}),
         disease=RefContext(name="cancer",
-                           db_refs={'DOID': '162'}),
+                           db_refs={'DOID': 'DOID:162'}),
         species=RefContext(name="Rattus norvegicus",
-                           db_refs={'TAXONOMY': '10116'}))
+                           db_refs={'TAXONOMY': '10116'})), \
+        stmt.evidence[0].context
     # Test annotation manager
     assert bp.annot_manager.get_mapping('Species', '9606') == \
         'Homo sapiens'
