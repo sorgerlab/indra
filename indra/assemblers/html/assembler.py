@@ -600,7 +600,7 @@ def id_url(ag):
             # Handle a special case where a list of IDs is given
             if isinstance(ag.db_refs[db_name], list):
                 db_id = ag.db_refs[db_name][0]
-                if db_name in ('UN', 'WM', 'HUME'):
+                if db_name == 'WM':
                     db_id = db_id[0]
             else:
                 db_id = ag.db_refs[db_name]

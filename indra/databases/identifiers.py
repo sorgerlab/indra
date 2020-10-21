@@ -39,7 +39,7 @@ identifiers_reverse['ncbigene'] = 'EGID'
 
 non_registry = {
     'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'SIGNOR', 'HMS-LINCS', 'NXPFA',
-    'GENBANK', 'OMIM', 'LSPCI', 'UPLOC'
+    'OMIM', 'LSPCI', 'UPLOC'
 }
 
 non_grounding = {
@@ -54,7 +54,6 @@ url_prefixes = {
     # Biology namespaces
     'NXPFA': 'https://www.nextprot.org/term/FA-',
     'SIGNOR': 'https://signor.uniroma2.it/relation_result.php?id=',
-    'GENBANK': 'https://www.ncbi.nlm.nih.gov/protein/',
     # WM namespaces
     'UN': 'https://github.com/clulab/eidos/wiki/JSON-LD#Grounding/',
     'WDI': 'https://github.com/clulab/eidos/wiki/JSON-LD#Grounding/',

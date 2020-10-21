@@ -107,8 +107,8 @@ ns_mapping = {
         'https://identifiers.org/hgnc.genefamily:643', ),
     ('PR', 'PR:000000019'): (
         'https://identifiers.org/PR:000000019', ),
-    ('GENBANK', 'QHO60603'): (
-        'https://www.ncbi.nlm.nih.gov/protein/QHO60603', ),
+    ('NCBIPROTEIN', 'QHO60603'): (
+        'https://identifiers.org/ncbiprotein:QHO60603', ),
     ('NONCODE', 'NONHSAT028507.2'): (
         'https://identifiers.org/noncodev4.rna:NONHSAT028507.2', ),
     ('HMS-LINCS', '10220'): ('http://lincs.hms.harvard.edu/db/sm/10220-101', ),
