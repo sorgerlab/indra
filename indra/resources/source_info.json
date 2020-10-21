@@ -119,12 +119,6 @@
         "type": "database",
         "domain": "biology"
     },
-    "lincs_drug": {
-        "name": "LINCS small molecules",
-        "link": "http://lincs.hms.harvard.edu/db/sm/",
-        "type": "database",
-        "domain": "biology"
-    },
     "hprd": {
         "name": "HPRD",
         "link": "http://www.hprd.org",
