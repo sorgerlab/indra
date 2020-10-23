@@ -7,9 +7,14 @@ do not raise exceptions, rather, return True or False depending on whether
 the given input is valid or invalid."""
 
 import re
+import logging
 from indra.statements import *
 from indra.databases.identifiers import identifiers_mappings, \
     non_grounding, non_registry, identifiers_registry
+
+
+logger = logging.getLogger(__name__)
+
 
 text_ref_patterns = {
     'PMID': re.compile(r'(\d+)'),
@@ -255,8 +260,7 @@ def validate_statement(stmt):
 
 
 def assert_valid_statement(stmt):
-    """Raise InvalidIdentifier error if any of the groundings in the given
-    statement are invalid.
+    """Raise an error if there is anything invalid in the given statement.
 
     Parameters
     ----------
@@ -268,6 +272,33 @@ def assert_valid_statement(stmt):
         assert_valid_agent(agent)
     for ev in stmt.evidence:
         assert_valid_evidence(ev)
+
+
+def assert_valid_statements(stmts):
+    """Raise an error of any of the given statements is invalid.
+
+    Parameters
+    ----------
+    stmts : list[indra.statements.Statement]
+        A list of INDRA Statements to validate.
+    """
+    for stmt in stmts:
+        assert_valid_statement(stmt)
+
+
+def print_validation_report(stmts):
+    """Log the first validation error encountered for each given statement.
+
+    Parameters
+    ----------
+    stmts : list[indra.statements.Statement]
+        A list of INDRA Statements to validate.
+    """
+    for idx, stmt in enumerate(stmts):
+        try:
+            assert_valid_statement(stmt)
+        except Exception as e:
+            logger.info(f'{idx}: {type(e).__name__} - {e}')
 
 
 def assert_valid_text_refs(text_refs):
