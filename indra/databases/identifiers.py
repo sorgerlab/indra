@@ -65,6 +65,32 @@ url_prefixes = {
 }
 
 
+def get_ns_from_identifiers(identifiers_ns):
+    """"Return a namespace compatible with INDRA from an identifiers namespace.
+
+    For example, this function can be used to map 'uniprot' to 'UP'.
+
+    Parameters
+    ----------
+    identifiers_ns : str
+        An identifiers.org standard namespace.
+
+    Returns
+    -------
+    str or None
+        The namespace compatible with INDRA's internal representation or
+        None if the given namespace isn't an identifiers.org standard.
+    """
+    reg_entry = identifiers_registry.get(identifiers_ns.lower())
+    if not reg_entry:
+        return None
+    mapping = identifiers_reverse.get(identifiers_ns.lower())
+    if mapping:
+        return mapping
+    else:
+        return identifiers_ns.upper()
+
+
 def get_ns_id_from_identifiers(identifiers_ns, identifiers_id):
     """Return a namespace/ID pair compatible with INDRA from identifiers.
 
@@ -82,13 +108,9 @@ def get_ns_id_from_identifiers(identifiers_ns, identifiers_id):
         A namespace and ID that are valid in INDRA db_refs.
     """
     reg_entry = identifiers_registry.get(identifiers_ns.lower())
-    if not reg_entry:
+    db_ns = get_ns_from_identifiers(identifiers_ns)
+    if db_ns is None:
         return None, None
-    mapping = identifiers_reverse.get(identifiers_ns.lower())
-    if mapping:
-        db_ns = mapping
-    else:
-        db_ns = identifiers_ns.upper()
     db_id = identifiers_id
     if reg_entry['namespace_embedded']:
         if not identifiers_id.startswith(identifiers_ns.upper()):
