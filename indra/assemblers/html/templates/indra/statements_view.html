@@ -3,95 +3,66 @@
 {% block scripts %}
   <!-- Toggle a hidden element -->
   <script>
-    const pubmed_fetch = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
     let ALL_COLLAPSED = true;
 
     function toggler(short_name_key) {
+      /**
+       * Toggle the info list elements by changing their class.
+       */
+      // Find the group associated with this heading.
       let el = document.getElementById(short_name_key + "_group");
+
+      // Toggle the group class between the invisible one and the visible one.
       if ( el.classList.contains("group") )
         el.classList.replace("group", "group_shown");
       else
         el.classList.replace("group_shown", "group");
     }
 
-    function getPubMedMETAxmlByPMID(pmid) {
-      let params_dict = {
-        'db': 'pubmed',
-        'retmode': 'xml',
-        'rettype': 'docsum',
-        'id': pmid
-      };
-      return $.ajax({
-        url: pubmed_fetch,
-        type: "POST",
-        dataType: "xml",
-        data: params_dict,
-      });
-    }
+    async function getPubmedInfoByPMID(pmid) {
+      /**
+       * Get the Pubmed title and author from Entrez.
+       */
+      // Trim the PMID because it may have a lot of spaces in it.
+      let id = pmid.trim();
 
-    function pmidXML2dict(XML) {
-      let xml_dict = {};
-      for (let child of XML.children) {
-        let name = child.getAttribute("Name");
-        let type = child.getAttribute("Type");
-        if (child.hasChildNodes() && type === "List") {
-          let innerItems;
-          // Javascript can't really do nice recursive functions...
-          // special cases for "History" and "ArticleIds" which has unique inner Names
-          if (name === "ArticleIds" || name === "History") {
-            let innerDict = {};
-            for (c of child.children) {
-              innerDict[c.getAttribute("Name")] = c.textContent;
-            }
-            innerItems = innerDict;
-          } else {
-            let innerList = [];
-            for (c of child.children) {
-              innerList.push(c.textContent);
-            }
-            innerItems = innerList;
+      // Get the data from entrez in JSON format.
+      const entrez_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi';
+      let url = `${entrez_url}?id=${id}&retmode=json&db=pubmed`;
+      const resp = await fetch(url, {method: 'POST'});
+      if (resp.status !== 200)
+        return "Failed to load.";
+      const data = await resp.json();
+
+      // Extract and format the title from the result.
+      const pmd = data.result[id];
+      let auth_str = '';
+      let n = 0;
+      if (pmd.authors)
+        for (let author of pmd.authors) {
+          if (n > 2) {
+            auth_str += ', ...';
+            break;
           }
-          xml_dict[name] = innerItems
-        } else if (child.tagName === "Item") {
-          // Here just get the inner strings
-          xml_dict[name] = child.textContent;
-        } else if (child.tagName === "Id") {
-          // Special case
-          xml_dict["Id"] = child.textContent;
-        } else {
-          if (!xml_dict["no_key"]) {
-            xml_dict["no_key"] = [child.textContent]
-          } else {
-            xml_dict["no_key"].push(child.textContent)
+          auth_str += author.name;
+          if (n < pmd.authors.length) {
+            auth_str += ', ';
           }
+          n += 1;
         }
-      }
-      return xml_dict;
+      return `${auth_str}, "${pmd.title}", ${pmd.source}, ${pmd.pubdate}`;
     }
 
-    // Modify link hover text
     function setPMIDlinkTitle(pmid, link_tag) {
-      let pubmed_xml_promise = getPubMedMETAxmlByPMID(pmid);
-      pubmed_xml_promise.then(responseXML => {
-        const docsum_xml = responseXML.getElementsByTagName('DocSum')[0];
-        const pmd = pmidXML2dict(docsum_xml);
-        const nAuthors = pmd.AuthorList.length;
-        let authorsStr;
-        if (nAuthors > 3)
-          authorsStr = `${pmd.AuthorList[0]}, ... ${pmd.AuthorList[nAuthors - 1]}`;
-        else
-          authorsStr = pmd.AuthorList.join(", ");
-
-        // Shortened journal name is in .Source, while full name is in .FullJournalName
-        link_tag.title = `${authorsStr}, "${pmd.Title}", ${pmd.Source}, ${pmd.SO}`;
-      })
+      // Modify link hover text
+      getPubmedInfoByPMID(pmid).then(title => link_tag.title = title);
     }
 
-    // Loop all pmid link nodes and set title
     function populatePMIDlinkTitles() {
+      // Loop all pmid link nodes and set title
       let pmid_link_array = document.getElementsByClassName("pmid_link");
-      for (link_obj of pmid_link_array) {
-        pmid = link_obj.textContent;
+      for (let link_obj of pmid_link_array) {
+        let pmid = link_obj.textContent;
         setPMIDlinkTitle(pmid, link_obj)
       }
     }
