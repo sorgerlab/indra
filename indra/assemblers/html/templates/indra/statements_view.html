@@ -7,9 +7,11 @@
     let ALL_COLLAPSED = true;
 
     function toggler(short_name_key) {
-      $("#" + short_name_key + "_group").toggle();
-      let header = "#" + short_name_key + "_heading";
-      $(header).show();
+      let el = document.getElementById(short_name_key + "_group");
+      if ( el.classList.contains("group") )
+        el.classList.replace("group", "group_shown");
+      else
+        el.classList.replace("group_shown", "group");
     }
 
     function getPubMedMETAxmlByPMID(pmid) {
@@ -97,24 +99,25 @@
     // Expand/collapse all
     function expandCollapseAll() {
       let expColBtn = document.getElementById('expand-collapse-all');
-      let setCss = '';
 
       // Expand all; set ALL_COLLAPSED = false;
+      let show = ALL_COLLAPSED;
       if (ALL_COLLAPSED) {
-        setCss = 'display: block;';
         ALL_COLLAPSED = false;
         expColBtn.textContent = 'Collapse All';
         // Collapse all; set ALL_COLLAPSED = true;
       } else {
-        setCss = 'display: none;';
         ALL_COLLAPSED = true;
         expColBtn.textContent = 'Expand All';
       }
 
       // Loop all tags
-      for (tag of document.getElementsByClassName('group')) {
-        tag.style.cssText = setCss
-      }
+      if (show)
+        for (let invisible_el of document.getElementsByClassName('group'))
+          invisible_el.classList.replace("group", "group_shown");
+      else
+        for (let visible_el in document.getElementsByClassName('group_shown'))
+          visible_el.classList.replace("group_shown", "group");
     }
 
     {% if add_full_text_search_link %}
@@ -186,14 +189,14 @@
     }
 
     .group, .group-shown {
-        padding: 5px;
-        margin: 5px;
     }
 
     .group {
         display: none;
-        border-left: #0d5aa7 solid 1px;
-        border-right: #0d5aa7 solid 1px;
+    }
+
+    .bars {
+      border-right: #0d5aa7 solid 1px;
     }
 
     .super_group_heading, .group_heading, .statement, .evidence {
