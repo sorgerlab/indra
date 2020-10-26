@@ -180,8 +180,11 @@
     }
 
     .nvp {
-        padding-left: 0;
-        padding-right: 0;
+    }
+
+    .nvm {
+      padding-left: 0;
+      padding-right: 0;
     }
 
     .src-api {
@@ -200,11 +203,6 @@
     }
 
     .super_group_heading, .group_heading, .statement, .evidence {
-        padding: 2px;
-        padding-left: 5px;
-        margin: 2px;
-        position: sticky;
-        border-radius: 2px;
     }
 
     .evidence, .evidence-text {
@@ -212,7 +210,6 @@
     }
 
     .evidence-text {
-        border-top: #cfcfcf solid 1px;
         padding-top: 0.5em;
     }
 
@@ -281,13 +278,13 @@
 {% endblock %}
 
 {% block body %}
+
   <div class="statements-header">
     <div class="row">
       <div class="col">
         <h3 {% if metadata %}
-          title="{% for n, v in metadata.items() %}{{ n }}: {{ v }}
-{% endfor %}"
-        {% endif %}>
+            title="{% for n, v in metadata.items() %}{{ n }}: {{ v }}{% endfor %}"
+            {% endif %}>
           Statements
         </h3>
       </div>
@@ -299,165 +296,234 @@
         </button>
       </div>
     </div>
-    {% if source_key_dict and simple %}
-      <div class="row justify-content-md-center">
-        <div class="col-1 text-right">
-          {{ source_colors[0][0] }}
-        </div>
-        <div class="col col-auto text-center">
-          {{ badges(source_key_dict) }}
-        </div>
-        <div class="col-1 text-left">
-          {{ source_colors[1][0] }}
-        </div>
+
+  {% if source_key_dict and simple %}
+
+    <div class="row justify-content-md-center">
+      <div class="col-1 text-right">
+        {{ source_colors[0][0] }}
       </div>
-    {% endif %}
+      <div class="col col-auto text-center">
+        {{ badges(source_key_dict) }}
+      </div>
+      <div class="col-1 text-left">
+        {{ source_colors[1][0] }}
+      </div>
+    </div>
+
+  {% endif %}
+
     <hr>
   </div>
+
   {% for results in stmt_data.values() %}
     {% set i_pair = loop.index0 %}
+
+  <span class="agent-pair">
+
     {% if stmt_data.values()|length > 1 %}
-      <div class="row super_group_heading"
+
+    <div class="row super_group_heading"
          id="tl-{{ results['html_key'] }}"
          onclick="toggler('tl-{{ results['html_key'] }}')">
-        <div class="col nvp">
-          <h5 class="align-middle">
-            {{ results['label'] }}
-          </h5>
-        </div>
-        <div class="col text-right nvp">
-          {{ badges(results['source_counts']) }}
-        </div>
+      <div class="col nvp">
+        <h5 class="align-middle">{{ results['label'] }}</h5>
       </div>
-      <div class="group" id="tl-{{ results['html_key'] }}_group">
+      <div class="col text-right nvp">
+        {{ badges(results['source_counts']) }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <div class="group" id="tl-{{ results['html_key'] }}_group">
+
     {% else %}
-      <div class="group-shown" id="tl-{{ results['html_key'] }}_group">
+
+    <div class="row">
+      <div class="col">
+        <div class="group-shown" id="tl-{{ results['html_key'] }}_group">
+
     {% endif %}
-        <div class="container nvp">
-        {% for group_dict in results['stmts_formatted'] %}
-          {% set i_type = loop.index0 %}
-          {% if results['stmts_formatted']|length > 1 %}
-            <div class="row group_heading"
-               onclick="toggler('{{ group_dict['short_name_key'] }}');"
-               id="{{ group_dict['short_name_key'] }}_heading">
-              <div class="col nvp">
-                <h5 class="align-middle">{{ group_dict['short_name'] }}</h5>
-              </div>
-              <div class="col text-right nvp">
-                {{ badges(group_dict['src_counts']) }}
-              </div>
-            </div>
-            <div class="row group" id="{{ group_dict['short_name_key'] }}_group">
-          {% else %}
-            <div class="row group-shown" id="{{ group_dict['short_name_key'] }}_group">
-          {% endif %}
-              <div class="container nvp">
-              {% for stmt_info in group_dict['stmt_info_list'] %}
-                {% set i_stmt = loop.index0 %}
-                <a name="{{ stmt_info['hash'] }}"></a>
-                <div class="row statement">
-                  <div class="col text-left nvp">
-                    <h5 class="align-middle">
-                      {{ stmt_info['english'] }}
-                      <a href="{% if db_rest_url %}{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html{% else %}#{% endif %}"
-                         {% if db_rest_url %}target="_blank"{% endif %}>
-                        <small class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</small>
-                      </a>
-                    </h5>
-                  </div>
-                  <div class="col text-right nvp">
-                    {{ badges(stmt_info['source_count']) }}
-                  </div>
+
+          <div class="container bars nvp">
+
+    {% for group_dict in results['stmts_formatted'] %}
+      {% set i_type = loop.index0 %}
+
+            <span class="relation">
+
+      {% if results['stmts_formatted']|length > 1 %}
+
+              <div class="row group_heading"
+                   onclick="toggler('{{ group_dict['short_name_key'] }}');"
+                   id="{{ group_dict['short_name_key'] }}_heading">
+                <div class="col text-left nvp">
+                    <h5>{{ group_dict['short_name'] }}</h5>
                 </div>
-                <div class="row evidence">
-                  <div class="container" id="stmt-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}"
-                       data-stmt_hash="{{ stmt_info['hash'] }}">
-                    {% for ev in stmt_info['evidence'] %}
-                      <div class="row evidence-text" data-source_hash="{{ ev['source_hash'] }}"
-                           style="border-bottom: 1px solid #FFFFFF;"
-                           id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}">
+                <div class="col text-right nvp">
+                  {{ badges(group_dict['src_counts']) }}
+                </div>
+              </div>
+              <div class="row group" id="{{ group_dict['short_name_key'] }}_group">
 
-                        <div class="col-1">
-                            <div class="row">
-                                <div class="col-3 nvp curation_toggle"
-                                     id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}-click"
-                                     data-parent_id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}">
-                                    <a href="{% if db_rest_url %}{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html{% else %}#{% endif %}"
-                                       {% if db_rest_url %}target="_blank"{% endif %}>
-                                        &#10166;
-                                    </a>
-                                </div>
-                                <div class="col-9 nvp src-api"
-                                     title="{{ ev['source_api'] }}">
-                                    {{ ev['source_api'] }}
-                                </div>
-                            </div>
-                        </div>
-                        {% if add_full_text_search_link %}
-                          <div class="col-9">
-                        {% else %}
-                          <div class="col-10">
-                        {% endif %}
+      {% else %}
 
-                          {% if ev['text'] %}
-                            "{{ ev['text'] }}"
-                          {% else %}
-                            <i>No evidence text available</i>
-                          {% endif %}
-                        </div>
-                        
-                        {% if add_full_text_search_link %}
-                          <div class="col-2 text-right">
-                        {% else %}
-                          <div class="col-1 text-right">
-                        {% endif %}
-                        {% if ev['pmid'] %}
-                          <a class="pmid_link"
-                              title="Hover again to see info"
-                              onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
-                              href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}'
-                              target="_blank">
-                            {{ ev['pmid'] }}</a>
-                        {% elif 'PMID' in ev['text_refs'] and ev['text_refs']['PMID'] %}
-                          <a class="pmid_link"
-                              title="Hover again to see info"
-                              onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
-                              href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}'
-                              target="_blank">
-                            {{ ev['text_refs']['PMID'] }}</a>
-                        {% elif 'PMCID' in ev['text_refs'] and ev['text_refs']['PMCID'] %}
-                          {% if add_full_text_search_link and 'pmcid' in ev and ev['pmcid'] %}
-                            <a class="full_text_search"
-                              data-sentence= '{{ev["text"]|urlencode}}'
-                              href="https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["pmcid"] }}" target=_blank rel=noopener >Full-Text Search: {{ev['pmcid']}}</a>
-                            <span style="cursor:default" title="This link will search for and highlight the sentence in the full-text article. Works with Chrome 80+">  &#9432;</span>
-                          {% else %}
-                            | <a class="pmcid_link"
-                              href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'
-                              target="_blank">PMC</a>
-                          {% endif %}
-                        {% elif 'DOI' in ev['text_refs'] and ev['text_refs']['DOI'] %}
-                          | <a class="doi_link"
-                              href='https://dx.doi.org/{{ ev["text_refs"]["DOI"] }}'
-                              target="_blank">DOI</a>
-                        {% endif %}
+              <div class="row group-shown" id="{{ group_dict['short_name_key'] }}_group">
 
-                          {% if add_full_text_search_link and 'pmcid' in ev and ev['pmcid'] %}
-                            <a class="full_text_search"
-                              data-sentence= '{{ev["text"]|urlencode}}'
-                              href="https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["pmcid"] }}" target=_blank rel=noopener >Full-Text Search: {{ev['pmcid']}}</a>
-                            <span style="cursor:default" title="This link will search for and highlight the sentence in the full-text article. Works with Chrome 80+">  &#9432;</span>
-                          {% endif %}
-                        </div>
+      {% endif %}
+
+                <div class="col">
+                  <div class="container bars nvp">
+
+      {% for stmt_info in group_dict['stmt_info_list'] %}
+        {% set i_stmt = loop.index0 %}
+
+                    <a name="{{ stmt_info['hash'] }}"></a>
+                    <div class="row statement">
+                      <div class="col text-left nvp">
+                        <h5>
+                          {{ stmt_info['english'] }}
+                          <a href="{% if db_rest_url %}{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html{% else %}#{% endif %}"
+                             {% if db_rest_url %}target="_blank"{% endif %}>
+                            <small class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</small>
+                          </a>
+                        </h5>
                       </div>
-                    {% endfor %}
-                  </div> <!-- container -->
-                </div> <!-- row evidence -->
-              {% endfor %}
-             </div> <!-- PA Statement container -->
-           </div> <!-- PA Statement group -->
-         {% endfor %}
-       </div> <!-- container -->
-     </div> <!-- type groups -->
+                      <div class="col text-right nvp">
+                        {{ badges(stmt_info['source_count']) }}
+                      </div>
+                    </div>  <!-- end statement heading row -->
+                    <div class="row">
+                      <div class="col">
+                        <div class="container bars" id="stmt-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}"
+                             data-stmt_hash="{{ stmt_info['hash'] }}">
+
+        {% for ev in stmt_info['evidence'] %}
+
+                          <div class="evidence">
+                            <hr>
+                            <div class="row evidence-text" data-source_hash="{{ ev['source_hash'] }}"
+                                 id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}">
+                              <div class="col-1">
+                                <div class="row">
+                                  <div class="col-3 nvm curation_toggle"
+                                       id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}-click"
+                                       data-parent_id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}">
+                                      <a href="{% if db_rest_url %}{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html{% else %}#{% endif %}"
+                                         {% if db_rest_url %}target="_blank"{% endif %}>
+                                          &#10166;
+                                      </a>
+                                  </div>
+                                  <div class="col-9 nvm src-api"
+                                       title="{{ ev['source_api'] }}">
+                                      {{ ev['source_api'] }}
+                                  </div>
+                                </div>
+                              </div>
+
+          {% if add_full_text_search_link %}
+
+                              <div class="col-9">
+
+          {% else %}
+
+                              <div class="col-10">
+
+          {% endif %}
+          {% if ev['text'] %}
+
+                                  "{{ ev['text'] }}"
+
+          {% else %}
+
+                                  <i>No evidence text available</i>
+
+          {% endif %}
+
+                              </div>
+
+          {% if add_full_text_search_link %}
+
+                              <div class="col-2 text-right">
+
+          {% else %}
+
+                              <div class="col-1 text-right">
+
+          {% endif %}
+          {% if ev['pmid'] %}
+
+                                <a class="pmid_link"
+                                    title="Hover again to see info"
+                                    onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                                    href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}'
+                                    target="_blank">
+                                  {{ ev['pmid'] }}</a>
+
+          {% elif 'PMID' in ev['text_refs'] and ev['text_refs']['PMID'] %}
+
+                                <a class="pmid_link"
+                                   title="Hover again to see info"
+                                   onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                                   href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}'
+                                   target="_blank">
+                                 {{ ev['text_refs']['PMID'] }}</a>
+
+          {% elif 'PMCID' in ev['text_refs'] and ev['text_refs']['PMCID'] %}
+            {% if add_full_text_search_link and 'pmcid' in ev and ev['pmcid'] %}
+
+                                <a class="full_text_search"
+                                   data-sentence= '{{ev["text"]|urlencode}}'
+                                   href="https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["pmcid"] }}" target=_blank rel=noopener >Full-Text Search: {{ev['pmcid']}}</a>
+                                <span style="cursor:default" title="This link will search for and highlight the sentence in the full-text article. Works with Chrome 80+">  &#9432;</span>
+
+            {% else %}
+
+                                | <a class="pmcid_link"
+                                     href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'
+                                     target="_blank">PMC</a>
+
+            {% endif %}
+          {% elif 'DOI' in ev['text_refs'] and ev['text_refs']['DOI'] %}
+
+                                | <a class="doi_link"
+                                     href='https://dx.doi.org/{{ ev["text_refs"]["DOI"] }}'
+                                     target="_blank">DOI</a>
+
+          {% endif %}
+          {% if add_full_text_search_link and 'pmcid' in ev and ev['pmcid'] %}
+
+                                <a class="full_text_search"
+                                   data-sentence= '{{ev["text"]|urlencode}}'
+                                   href="https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["pmcid"] }}" target=_blank rel=noopener >Full-Text Search: {{ev['pmcid']}}</a>
+                                <span style="cursor:default" title="This link will search for and highlight the sentence in the full-text article. Works with Chrome 80+">  &#9432;</span>
+
+          {% endif %}
+
+                              </div> <!-- end ID col -->
+                            </div> <!-- end row -->
+                          </div> <!-- end evidence -->
+
+        {% endfor %}
+
+                        </div> <!-- end stmt container -->
+                      </div> <!-- end stmt col -->
+                    </div> <!-- end stmt row -->
+
+      {% endfor %}
+
+                  </div> <!-- end relation (stmt list) container -->
+                </div> <!-- end relation col -->
+              </div> <!-- end relation row -->
+            </span> <!-- end relation -->
+
+    {% endfor %}
+
+          </div> <!-- end agent pair (relation list) container -->
+        </div> <!-- end agent pair group -->
+      </div> <!-- end agent pair col -->
+    </div> <!-- end agent pair row -->
+  </span> <!-- end agent pair span -->
+
   {% endfor %}
 {% endblock %}
