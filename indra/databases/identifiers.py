@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 identifiers_url = 'https://identifiers.org'
 
+# These are just special cases of name spaces where the mapping from INDRA to
+# identifiers.org is not a question of simplecapitalization.
 identifiers_mappings = {
     'UP': 'uniprot',
     'UPPRO': 'uniprot.chain',
@@ -30,22 +32,26 @@ identifiers_mappings = {
     'CTD': 'ctd.chemical',
 }
 
-# Get reverse mappings and patch one entry to make it unique
-identifiers_reverse = {
-    v: k for k, v in identifiers_mappings.items()
-}
-
-identifiers_reverse['ncbigene'] = 'EGID'
-
+# These are namespaces used by INDRA that don't have corresponding
+# identifiers.org entries
 non_registry = {
     'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'SIGNOR', 'HMS-LINCS', 'NXPFA',
     'OMIM', 'LSPCI', 'UPLOC'
 }
 
+# These are namespaces that can appear in db_refs but are actually not
+# representing grounding.
 non_grounding = {
     'TEXT', 'TEXT_NORM'
 }
 
+# These are reverse mappings from identifiers.org namespaces to INDRA
+# namespaces
+identifiers_reverse = {
+    v: k for k, v in identifiers_mappings.items()
+}
+# We have to patch this one because it is ambiguous
+identifiers_reverse['ncbigene'] = 'EGID'
 
 # These are only the URLs that are strictly prefixes and not more complicated
 # patterns. This is because some downstream code uses these as prefixes
@@ -118,13 +124,35 @@ def get_ns_id_from_identifiers(identifiers_ns, identifiers_id):
     return db_ns, db_id
 
 
+def get_identifiers_ns(db_name):
+    """Map an INDRA namespace to an identifiers.org namespace when possible.
+
+    Example: this can be used to map 'UP' to 'uniprot'.
+
+    Parameters
+    ----------
+    db_name : str
+        An INDRA namespace to map to identifiers.org
+
+    Returns
+    -------
+    str or None
+        An identifiers.org namespace or None if not available.
+    """
+    mapped_db_name = identifiers_mappings.get(db_name, db_name.lower())
+    if mapped_db_name not in identifiers_registry:
+        return None
+    return mapped_db_name
+
+
 def get_url_prefix(db_name):
     """Return the URL prefix for a given namespace."""
-    mapped_db_name = identifiers_mappings.get(db_name, db_name.lower())
-    identifiers_entry = identifiers_registry.get(mapped_db_name)
-    if identifiers_entry:
+    identifiers_ns = get_identifiers_ns(db_name)
+
+    if identifiers_ns:
+        identifiers_entry = identifiers_registry.get(identifiers_ns)
         if not identifiers_entry['namespace_embedded']:
-            return '%s/%s:' % (identifiers_url, mapped_db_name.lower())
+            return '%s/%s:' % (identifiers_url, identifiers_ns.lower())
         else:
             return '%s/' % identifiers_url
     else:
