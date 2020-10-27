@@ -830,10 +830,13 @@ def expand_complex(pe: bp.PhysicalEntity):
 
 
 def expand_family(pe: bp.PhysicalEntity):
+    members = []
     if pe.member_physical_entity:
-        return pe.member_physical_entity
+        for member in pe.member_physical_entity:
+            members += expand_family(member)
     else:
-        return [pe]
+        members = [pe]
+    return members
 
 
 def infer_pe_type(pe: bp.PhysicalEntity):
