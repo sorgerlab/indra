@@ -612,7 +612,7 @@ def _get_evidence(evidence):
     if evidence.pmid:
         citation = citation_dict(
             db=pc.CITATION_TYPE_PUBMED,
-            db_id=evidence.pmid,
+            db_id=str(evidence.pmid),
         )
     # If no PMID, include the interface and source_api for now--
     # in general this should probably be in the annotations for all evidence
