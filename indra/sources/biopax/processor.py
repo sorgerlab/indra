@@ -10,10 +10,10 @@ from pybiopax import model_to_owl_file
 
 from indra.statements import *
 from indra.util import flatten
+from indra.statements.validate import print_validation_report
 from indra.ontology.standardize import standardize_name_db_refs
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
     parse_identifiers_url
-from indra.statements.validate import assert_valid_agent
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +65,8 @@ class BiopaxProcessor(object):
         self.get_conversions()
         self.get_gap_gef()
         self.eliminate_exact_duplicates()
+        print_validation_report(self.statements)
+
 
     def save_model(self, file_name):
         """Save the BioPAX model object in an OWL file.
