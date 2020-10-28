@@ -13,6 +13,7 @@ from indra.util import flatten
 from indra.ontology.standardize import standardize_name_db_refs
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
     parse_identifiers_url
+from indra.statements.validate import assert_valid_agent
 
 logger = logging.getLogger(__name__)
 
@@ -497,6 +498,15 @@ class BiopaxProcessor(object):
             if standard_name:
                 name = standard_name
             agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+        # Since there are so many cases above, we fix UP / UPISO issues
+        # in a single loop here
+        for agent in agents:
+            up_id = agent.db_refs.get('UP')
+            if up_id is not None and '-' in up_id:
+                base_id = up_id.split('-')[0]
+                agent.db_refs['UP'] = base_id
+                agent.db_refs['UPISO'] = up_id
+
         # There is a potential here that an Agent name was set to None
         # if both the display name and the standard name are missing.
         # We filter these out
