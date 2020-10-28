@@ -626,16 +626,16 @@ def _get_evidence(evidence):
         )
 
     annotations = {
-        'source_hash': evidence.get_source_hash(),
+        'source_hash': {evidence.get_source_hash(): True},
     }
     if evidence.source_api:
-        annotations['source_api'] = evidence.source_api
+        annotations['source_api'] = {evidence.source_api: True}
     if evidence.source_id:
-        annotations['source_id'] = evidence.source_id
+        annotations['source_id'] = {evidence.source_id: True}
     for key, value in evidence.epistemics.items():
         if key == 'direct':
             continue
-        annotations[key] = value
+        annotations[key] = {value: True}
 
     return citation, text, annotations
 
