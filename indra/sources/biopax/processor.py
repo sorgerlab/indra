@@ -10,6 +10,7 @@ from pybiopax import model_to_owl_file
 
 from indra.statements import *
 from indra.util import flatten
+from indra.statements.validate import print_validation_report
 from indra.ontology.standardize import standardize_name_db_refs
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
     parse_identifiers_url
@@ -64,6 +65,8 @@ class BiopaxProcessor(object):
         self.get_conversions()
         self.get_gap_gef()
         self.eliminate_exact_duplicates()
+        print_validation_report(self.statements)
+
 
     def save_model(self, file_name):
         """Save the BioPAX model object in an OWL file.
@@ -497,6 +500,15 @@ class BiopaxProcessor(object):
             if standard_name:
                 name = standard_name
             agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+        # Since there are so many cases above, we fix UP / UPISO issues
+        # in a single loop here
+        for agent in agents:
+            up_id = agent.db_refs.get('UP')
+            if up_id is not None and '-' in up_id:
+                base_id = up_id.split('-')[0]
+                agent.db_refs['UP'] = base_id
+                agent.db_refs['UPISO'] = up_id
+
         # There is a potential here that an Agent name was set to None
         # if both the display name and the standard name are missing.
         # We filter these out
@@ -830,10 +842,13 @@ def expand_complex(pe: bp.PhysicalEntity):
 
 
 def expand_family(pe: bp.PhysicalEntity):
+    members = []
     if pe.member_physical_entity:
-        return pe.member_physical_entity
+        for member in pe.member_physical_entity:
+            members += expand_family(member)
     else:
-        return [pe]
+        members = [pe]
+    return members
 
 
 def infer_pe_type(pe: bp.PhysicalEntity):
