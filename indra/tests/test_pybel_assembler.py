@@ -347,9 +347,9 @@ def test_gap():
         pc.SUBJECT: activity('gap'),
         pc.OBJECT: activity('gtp'),
         pc.ANNOTATIONS: {
-            'stmt_hash': stmt_hash,
-            'uuid': stmt.uuid,
-            'belief': stmt.belief,
+            'stmt_hash': {stmt_hash: True},
+            'uuid': {stmt.uuid: True},
+            'belief': {stmt.belief: True},
         },
     }
     assert edge_data == edge, edge_data
@@ -451,10 +451,11 @@ def test_autophosphorylation():
     edge_dicts = list(belgraph.get_edge_data(egfr_dsl,
                                              egfr_phos_node).values())
     assert {pc.RELATION: pc.DIRECTLY_INCREASES,
-            pc.ANNOTATIONS: {'stmt_hash': stmt_hash,
-                             'uuid': stmt.uuid,
-                             'belief': stmt.belief}} \
-        in edge_dicts
+            pc.ANNOTATIONS: {
+                'stmt_hash': {stmt_hash: True},
+                'uuid': {stmt.uuid: True},
+                'belief': {stmt.belief: True},
+            }} in edge_dicts
 
     # Test an autophosphorylation with a bound condition
     tab1 = Agent('TAB1', db_refs={'HGNC': id('TAB1')})
@@ -632,6 +633,15 @@ def test_belgraph_to_signed_graph():
 
     edge_dict = pb_seg.edges.get(edge)
     assert edge_dict
-    assert edge_dict.get('stmt_hash') == hsh
-    assert edge_dict.get('uuid') == stmt.uuid
-    assert edge_dict.get('belief') == stmt.belief
+
+    assert 'stmt_hash' in edge_dict
+    assert 1 == len(edge_dict['stmt_hash'])
+    assert hsh == list(edge_dict['stmt_hash'])[0]
+
+    assert 'uuid' in edge_dict
+    assert 1 == len(edge_dict['uuid'])
+    assert stmt.uuid == list(edge_dict['uuid'])[0]
+
+    assert 'belief' in edge_dict
+    assert 1 == len(edge_dict['belief'])
+    assert stmt.belief == list(edge_dict['belief'])[0]
