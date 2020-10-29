@@ -120,7 +120,7 @@ def test_modification_with_evidences():
         pc.CITATION_IDENTIFIER: '1234',
     }
     assert 'source_api' in edge_data[pc.ANNOTATIONS]
-    assert edge_data[pc.ANNOTATIONS]['source_api'] == 'test'
+    assert 'test' in edge_data[pc.ANNOTATIONS]['source_api']
     assert 'source_id' not in edge_data[pc.ANNOTATIONS]
     assert 'source_hash' in edge_data[pc.ANNOTATIONS]
 
@@ -151,9 +151,9 @@ def test_activation():
         pc.RELATION: pc.INCREASES,
         pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY},
         pc.ANNOTATIONS: {
-            'stmt_hash': hash1,
-            'uuid': stmt1.uuid,
-            'belief': stmt1.belief,
+            'stmt_hash': {hash1: True},
+            'uuid': {stmt1.uuid: True},
+            'belief': {stmt1.belief: True},
         },
     }
     edge2 = {
@@ -161,9 +161,9 @@ def test_activation():
         pc.SUBJECT: activity('kin'),
         pc.OBJECT: activity('kin'),
         pc.ANNOTATIONS: {
-            'stmt_hash': hash2,
-            'uuid': stmt2.uuid,
-            'belief': stmt2.belief,
+            'stmt_hash': {hash2: True},
+            'uuid': {stmt2.uuid: True},
+            'belief': {stmt2.belief: True},
         },
     }
     for stmt, edge in ((stmt1, edge1), (stmt2, edge2)):
@@ -199,10 +199,10 @@ def test_direct_activation():
             pc.CITATION_IDENTIFIER: '1234',
         },
         pc.ANNOTATIONS: {
-            'stmt_hash': hash1,
-            'source_hash': stmt1_ev.get_source_hash(),
-            'uuid': stmt1.uuid,
-            'belief': stmt1.belief,
+            'stmt_hash': {hash1: True},
+            'source_hash': {stmt1_ev.get_source_hash(): True},
+            'uuid': {stmt1.uuid: True},
+            'belief': {stmt1.belief: True},
         },
     }
     edge2 = {
@@ -215,10 +215,10 @@ def test_direct_activation():
             pc.CITATION_IDENTIFIER: '1234',
         },
         pc.ANNOTATIONS: {
-            'stmt_hash': hash2,
-            'source_hash': stmt1_ev.get_source_hash(),
-            'uuid': stmt2.uuid,
-            'belief': stmt2.belief,
+            'stmt_hash': {hash2: True},
+            'source_hash': {stmt1_ev.get_source_hash(): True},
+            'uuid': {stmt2.uuid: True},
+            'belief': {stmt2.belief: True},
         },
     }
     for stmt, expected_edge in ((stmt1, edge1), (stmt2, edge2)):
@@ -243,9 +243,9 @@ def test_inhibition():
         pc.SUBJECT: activity('kin'),
         pc.OBJECT: activity('kin'),
         pc.ANNOTATIONS: {
-            'stmt_hash': stmt_hash,
-            'uuid': stmt.uuid,
-            'belief': stmt.belief,
+            'stmt_hash': {stmt_hash: True},
+            'uuid': {stmt.uuid: True},
+            'belief': {stmt.belief: True},
         },
     }
     pba = pa.PybelAssembler([stmt])
@@ -314,9 +314,9 @@ def test_gef():
         pc.SUBJECT: activity('gef'),
         pc.OBJECT: activity('gtp'),
         pc.ANNOTATIONS: {
-            'stmt_hash': stmt_hash,
-            'uuid': stmt.uuid,
-            'belief': stmt.belief,
+            'stmt_hash': {stmt_hash: True},
+            'uuid': {stmt.uuid: True},
+            'belief': {stmt.belief: True},
         },
     }
     assert edge_data == edge, edge_data
@@ -496,9 +496,9 @@ def test_bound_condition():
              pc.RELATION: pc.DIRECTLY_INCREASES,
              pc.OBJECT: activity('gtp'),
              pc.ANNOTATIONS: {
-                 'stmt_hash': stmt_hash,
-                 'uuid': stmt.uuid,
-                 'belief': stmt.belief,
+                 'stmt_hash': {stmt_hash: True},
+                 'uuid': {stmt.uuid: True},
+                 'belief': {stmt.belief: True},
              },
         },
     )
@@ -523,9 +523,9 @@ def test_transphosphorylation():
     assert edge_data == {
         pc.RELATION: pc.DIRECTLY_INCREASES,
         pc.ANNOTATIONS: {
-            'stmt_hash': stmt_hash,
-            'uuid': stmt.uuid,
-            'belief': stmt.belief,
+            'stmt_hash': {stmt_hash: True},
+            'uuid': {stmt.uuid: True},
+            'belief': {stmt.belief: True},
         },
     }, edge_data
 
