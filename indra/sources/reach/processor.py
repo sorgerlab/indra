@@ -291,12 +291,25 @@ class ReachProcessor(object):
                 continue
             annotations['agents']['coords'] = [controller_coords,
                                                controlled_coords]
-            if r['subtype'] == 'positive-activation':
-                st = Activation(controller_agent, controlled_agent,
-                                evidence=ev)
-            else:
-                st = Inhibition(controller_agent, controlled_agent,
-                                evidence=ev)
+            positive = (r['subtype'] == 'positive-activation')
+            # By default, we choose Activation/Inhibition based on polarity
+            stmt_cls = Activation if positive else Inhibition
+            stmt_kwargs = {}
+            # Here we handle a special case where we have the activation of
+            # a phosphorylated form, which we transform into a Phosphorylation
+            # or a Dephosphorylation
+            if controlled_agent.mods:
+                # NOTE: can there be more than one mods here?
+                mod = controlled_agent.mods[0]
+                if mod.mod_type in modtype_to_modclass:
+                    stmt_cls = modtype_to_modclass[mod.mod_type]
+                    if mod.residue:
+                        stmt_kwargs['residue'] = mod.residue
+                    if mod.position:
+                        stmt_kwargs['position'] = mod.position
+                controlled_agent.mods = []
+            st = stmt_cls(controller_agent, controlled_agent, **stmt_kwargs,
+                          evidence=ev)
             self.statements.append(st)
 
     def get_translocation(self):

@@ -1,0 +1,424 @@
+{
+  "events" : {
+    "frames" : [ {
+      "frame-id" : "evem-api9-UAZ-r1-Reach-0-4",
+      "text" : "Akt induced by IGF-I",
+      "arguments" : [ {
+        "text" : "Akt",
+        "argument-type" : "entity",
+        "type" : "controlled",
+        "object-type" : "argument",
+        "index" : 0,
+        "arg" : "ment-api9-UAZ-r1-Reach-0-4"
+      }, {
+        "text" : "IGF-I",
+        "argument-type" : "entity",
+        "type" : "controller",
+        "object-type" : "argument",
+        "index" : 0,
+        "arg" : "ment-api9-UAZ-r1-Reach-0-5"
+      } ],
+      "type" : "activation",
+      "frame-type" : "event-mention",
+      "subtype" : "positive-activation",
+      "is-direct" : false,
+      "end-pos" : {
+        "reference" : "pass-api9-UAZ-r1-Reach",
+        "offset" : 48,
+        "object-type" : "relative-pos"
+      },
+      "trigger" : "induced",
+      "object-type" : "frame",
+      "start-pos" : {
+        "reference" : "pass-api9-UAZ-r1-Reach",
+        "offset" : 28,
+        "object-type" : "relative-pos"
+      },
+      "sentence" : "sent-api9-UAZ-r1-Reach-0",
+      "found-by" : "Positive_activation_syntax_2_verb",
+      "verbose-text" : "the level of phosphorylated Akt induced by IGF-I"
+    } ],
+    "object-type" : "frame-collection",
+    "object-meta" : {
+      "processing-end" : "2020-11-01T22:35:29Z",
+      "doc-id" : "api9",
+      "component-type" : "machine",
+      "component" : "Reach",
+      "processing-start" : "2020-11-01T22:35:29Z",
+      "object-type" : "meta-info",
+      "organization" : "UAZ"
+    }
+  },
+  "entities" : {
+    "frames" : [ {
+      "text" : "IGF-I",
+      "frame-id" : "ment-api9-UAZ-r1-Reach-0-5",
+      "type" : "protein",
+      "frame-type" : "entity-mention",
+      "end-pos" : {
+        "reference" : "pass-api9-UAZ-r1-Reach",
+        "offset" : 48,
+        "object-type" : "relative-pos"
+      },
+      "xrefs" : [ {
+        "namespace" : "uniprot",
+        "species" : "homo sapiens",
+        "object-type" : "db-reference",
+        "id" : "P05019"
+      } ],
+      "object-type" : "frame",
+      "start-pos" : {
+        "reference" : "pass-api9-UAZ-r1-Reach",
+        "offset" : 43,
+        "object-type" : "relative-pos"
+      },
+      "sentence" : "sent-api9-UAZ-r1-Reach-0",
+      "alt-xrefs" : [ {
+        "namespace" : "uniprot",
+        "species" : "homo sapiens",
+        "object-type" : "db-reference",
+        "id" : "P05019"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "human",
+        "object-type" : "db-reference",
+        "id" : "P05019"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "african clawed frog",
+        "object-type" : "db-reference",
+        "id" : "P16501"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "african clawed frog",
+        "object-type" : "db-reference",
+        "id" : "P84775"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "ailuropoda melanoleuca",
+        "object-type" : "db-reference",
+        "id" : "Q6JLX1"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "ailurus fulgens",
+        "object-type" : "db-reference",
+        "id" : "Q6IVA5"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "asian house shrew",
+        "object-type" : "db-reference",
+        "id" : "Q28933"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bos taurus",
+        "object-type" : "db-reference",
+        "id" : "P07455"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bovine",
+        "object-type" : "db-reference",
+        "id" : "P07455"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "canis familiaris",
+        "object-type" : "db-reference",
+        "id" : "P33712"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "canis lupus familiaris",
+        "object-type" : "db-reference",
+        "id" : "P33712"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "capra hircus",
+        "object-type" : "db-reference",
+        "id" : "P51457"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "cavia porcellus",
+        "object-type" : "db-reference",
+        "id" : "P17647"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "chicken",
+        "object-type" : "db-reference",
+        "id" : "P18254"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "coho salmon",
+        "object-type" : "db-reference",
+        "id" : "P17085"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "coturnix coturnix japonica",
+        "object-type" : "db-reference",
+        "id" : "P51462"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "coturnix japonica",
+        "object-type" : "db-reference",
+        "id" : "P51462"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "dog",
+        "object-type" : "db-reference",
+        "id" : "P33712"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "equus caballus",
+        "object-type" : "db-reference",
+        "id" : "P51458"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "gallus gallus",
+        "object-type" : "db-reference",
+        "id" : "P18254"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "giant panda",
+        "object-type" : "db-reference",
+        "id" : "Q6JLX1"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "goat",
+        "object-type" : "db-reference",
+        "id" : "P51457"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "golden snub-nosed monkey",
+        "object-type" : "db-reference",
+        "id" : "Q68LC0"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "guinea pig",
+        "object-type" : "db-reference",
+        "id" : "P17647"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "horse",
+        "object-type" : "db-reference",
+        "id" : "P51458"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "japanese quail",
+        "object-type" : "db-reference",
+        "id" : "P51462"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "lesser panda",
+        "object-type" : "db-reference",
+        "id" : "Q6IVA5"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "mouse",
+        "object-type" : "db-reference",
+        "id" : "P05017"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "mus musculus",
+        "object-type" : "db-reference",
+        "id" : "P05017"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "musk shrew",
+        "object-type" : "db-reference",
+        "id" : "Q28933"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "oncorhynchus kisutch",
+        "object-type" : "db-reference",
+        "id" : "P17085"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "oncorhynchus mykiss",
+        "object-type" : "db-reference",
+        "id" : "Q02815"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "oryctolagus cuniculus",
+        "object-type" : "db-reference",
+        "id" : "Q95222"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "ovis aries",
+        "object-type" : "db-reference",
+        "id" : "P10763"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "panthera tigris altaica",
+        "object-type" : "db-reference",
+        "id" : "Q6GUL6"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "pig",
+        "object-type" : "db-reference",
+        "id" : "P16545"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "pygathrix roxellana",
+        "object-type" : "db-reference",
+        "id" : "Q68LC0"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "rabbit",
+        "object-type" : "db-reference",
+        "id" : "Q95222"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "rainbow trout",
+        "object-type" : "db-reference",
+        "id" : "Q02815"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "rat",
+        "object-type" : "db-reference",
+        "id" : "P08025"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "rattus norvegicus",
+        "object-type" : "db-reference",
+        "id" : "P08025"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "red panda",
+        "object-type" : "db-reference",
+        "id" : "Q6IVA5"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "rhinopithecus roxellana",
+        "object-type" : "db-reference",
+        "id" : "Q68LC0"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "salmo gairdneri",
+        "object-type" : "db-reference",
+        "id" : "Q02815"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "salmo kisutch",
+        "object-type" : "db-reference",
+        "id" : "P17085"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "sheep",
+        "object-type" : "db-reference",
+        "id" : "P10763"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "siberian tiger",
+        "object-type" : "db-reference",
+        "id" : "Q6GUL6"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "suncus murinus",
+        "object-type" : "db-reference",
+        "id" : "Q28933"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "sus scrofa",
+        "object-type" : "db-reference",
+        "id" : "P16545"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "xenopus laevis",
+        "object-type" : "db-reference",
+        "id" : "P16501"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "xenopus laevis",
+        "object-type" : "db-reference",
+        "id" : "P84775"
+      } ]
+    }, {
+      "text" : "Akt",
+      "frame-id" : "ment-api9-UAZ-r1-Reach-0-4",
+      "modifications" : [ {
+        "type" : "Phosphorylation",
+        "object-type" : "modification",
+        "negated" : false
+      } ],
+      "type" : "family",
+      "frame-type" : "entity-mention",
+      "end-pos" : {
+        "reference" : "pass-api9-UAZ-r1-Reach",
+        "offset" : 31,
+        "object-type" : "relative-pos"
+      },
+      "xrefs" : [ {
+        "namespace" : "fplx",
+        "species" : "human",
+        "object-type" : "db-reference",
+        "id" : "AKT"
+      } ],
+      "object-type" : "frame",
+      "start-pos" : {
+        "reference" : "pass-api9-UAZ-r1-Reach",
+        "offset" : 28,
+        "object-type" : "relative-pos"
+      },
+      "sentence" : "sent-api9-UAZ-r1-Reach-0",
+      "alt-xrefs" : [ {
+        "namespace" : "fplx",
+        "species" : "human",
+        "object-type" : "db-reference",
+        "id" : "AKT"
+      } ]
+    } ],
+    "object-type" : "frame-collection",
+    "object-meta" : {
+      "processing-end" : "2020-11-01T22:35:29Z",
+      "doc-id" : "api9",
+      "component-type" : "machine",
+      "component" : "Reach",
+      "processing-start" : "2020-11-01T22:35:29Z",
+      "object-type" : "meta-info",
+      "organization" : "UAZ"
+    }
+  },
+  "sentences" : {
+    "frames" : [ {
+      "text" : "the level of phosphorylated Akt induced by IGF-I",
+      "frame-id" : "pass-api9-UAZ-r1-Reach",
+      "section-id" : "NoSection",
+      "frame-type" : "passage",
+      "is-title" : false,
+      "section-name" : "NoSection",
+      "object-type" : "frame",
+      "index" : "Reach",
+      "object-meta" : {
+        "component" : "nxml2fries",
+        "object-type" : "meta-info"
+      }
+    }, {
+      "text" : "the level of phosphorylated Akt induced by IGF-I",
+      "frame-id" : "sent-api9-UAZ-r1-Reach-0",
+      "passage" : "pass-api9-UAZ-r1-Reach",
+      "frame-type" : "sentence",
+      "end-pos" : {
+        "reference" : "pass-api9-UAZ-r1-Reach",
+        "offset" : 48,
+        "object-type" : "relative-pos"
+      },
+      "object-type" : "frame",
+      "start-pos" : {
+        "reference" : "pass-api9-UAZ-r1-Reach",
+        "offset" : 0,
+        "object-type" : "relative-pos"
+      },
+      "object-meta" : {
+        "component" : "BioNLPProcessor",
+        "object-type" : "meta-info"
+      }
+    } ],
+    "object-type" : "frame-collection",
+    "object-meta" : {
+      "processing-end" : "2020-11-01T22:35:29Z",
+      "doc-id" : "api9",
+      "component-type" : "machine",
+      "component" : "Reach",
+      "processing-start" : "2020-11-01T22:35:29Z",
+      "object-type" : "meta-info",
+      "organization" : "UAZ"
+    }
+  }
+}

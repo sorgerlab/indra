@@ -469,3 +469,14 @@ def test_amount_embedded_in_activation():
     assert isinstance(rp.statements[0], IncreaseAmount)
     assert rp.statements[0].subj is not None
     assert rp.statements[0].obj is not None
+
+
+def test_phosphorylation_regulation():
+    here = os.path.dirname(os.path.abspath(__file__))
+    test_file = os.path.join(here, 'reach_reg_phos.json')
+    rp = reach.process_json_file(test_file)
+    assert rp is not None
+    assert len(rp.statements) == 1
+    stmt = rp.statements[0]
+    assert isinstance(stmt, Phosphorylation), stmt
+    assert not stmt.sub.mods
