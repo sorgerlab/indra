@@ -296,13 +296,16 @@ class ReachProcessor(object):
             stmt_cls = Activation if positive else Inhibition
             stmt_kwargs = {}
             # Here we handle a special case where we have the activation of
-            # a phosphorylated form, which we transform into a Phosphorylation
-            # or a Dephosphorylation
+            # a modified form, which we transform into a modification
+            # statement, e.g., Phosphorylation
             if controlled_agent.mods:
                 # NOTE: can there be more than one mods here?
                 mod = controlled_agent.mods[0]
+                # We check all modification classes here
                 if mod.mod_type in modtype_to_modclass:
                     stmt_cls = modtype_to_modclass[mod.mod_type]
+                    # We take the residue/position information from
+                    # the modificatio, if available
                     if mod.residue:
                         stmt_kwargs['residue'] = mod.residue
                     if mod.position:
