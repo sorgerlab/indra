@@ -31,10 +31,6 @@ install:
   - pip install cython
   # Now install INDRA with all its extras
   - pip install .[all]
-  - aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request  --source-region us-east-1
-  - export REACHPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
-  - aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
-  - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos.jar
   - aws s3 cp s3://bigmech/travis/Phosphorylation_site_dataset.tsv indra/resources/ --no-sign-request  --source-region us-east-1
   # Run slow tests only if we're in the cron setting
   - |
@@ -101,12 +97,16 @@ script:
   # TEES tests
   - python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
     --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
-  # Eidos tests
-  - python -m nose_notify indra/tests/test_eidos.py --slack_hook $SLACK_NOTIFY_HOOK
-    --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
   # Reach tests
+  - aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request  --source-region us-east-1
+  - export REACHPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
   - python -m nose_notify indra/tests/test_reach.py
     --slack_hook $SLACK_NOTIFY_HOOK
+    --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
+  # Eidos tests
+  - aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
+  - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos.jar
+  - python -m nose_notify indra/tests/test_eidos.py --slack_hook $SLACK_NOTIFY_HOOK
     --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
