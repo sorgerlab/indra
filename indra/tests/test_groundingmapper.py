@@ -339,9 +339,10 @@ def test_adeft_mapping():
                                                                 pmid2})])
 
     mapped_stmts1 = gm.map_stmts([stmt1])
-    assert mapped_stmts1[0].sub.name == 'ESR1'
-    assert mapped_stmts1[0].sub.db_refs['HGNC'] == '3467'
-    assert mapped_stmts1[0].sub.db_refs['UP'] == 'P03372'
+    assert mapped_stmts1[0].sub.name == 'ESR', \
+        mapped_stmts1[0].sub.name
+    assert mapped_stmts1[0].sub.db_refs['FPLX'] == 'ESR', \
+        mapped_stmts1[0].sub.db_refs
 
     mapped_stmts2 = gm.map_stmts([stmt2])
     assert mapped_stmts2[0].obj.name == 'endoplasmic reticulum', \
