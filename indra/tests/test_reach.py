@@ -341,24 +341,24 @@ def assert_pmid(stmt):
 
 def test_process_mod_condition1():
     test_cases = [
-        ('MEK1 activates ERK1 that is phosphorylated.',
+        ('phosphorylated MEK1 activates ERK1.',
          'phosphorylation', None, None, True),
-        ('MEK1 activates ERK1 that is phosphorylated on tyrosine.',
-         'phosphorylation', 'Y', None, True),
-        ('MEK1 activates ERK1 that is phosphorylated on Y185.',
-         'phosphorylation', 'Y', '185', True),
+        ('MEK1 that is phosphorylated on serine activates ERK1.',
+         'phosphorylation', 'S', None, True),
+        ('MEK1 that is phosphorylated on S222 activates ERK1.',
+         'phosphorylation', 'S', '222', True),
         ]
     for offline in offline_modes:
         for sentence, mod_type, residue, position, is_modified in test_cases:
             rp = reach.process_text(sentence, offline=offline)
             assert rp is not None
             assert len(rp.statements) == 1
-            mcs = rp.statements[0].obj.mods
-            assert len(mcs) == 1
-            assert mcs[0].mod_type == mod_type
-            assert mcs[0].residue == residue
-            assert mcs[0].position == position
-            assert mcs[0].is_modified == is_modified
+            mcs = rp.statements[0].subj.mods
+            assert len(mcs) == 1, 'No mods for %s' % sentence
+            assert mcs[0].mod_type == mod_type, mcs
+            assert mcs[0].residue == residue, mcs
+            assert mcs[0].position == position, mcs
+            assert mcs[0].is_modified == is_modified, mcs
 
 
 def test_get_db_refs_up_human():
