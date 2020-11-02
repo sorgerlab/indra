@@ -108,7 +108,7 @@ class DisambManager(object):
             # original text value.
             if ns_and_id == 'ungrounded':
                 remove_grounding(agent, agent_txt)
-            # Otherwise we update the db_refs with what we got from DEFT
+            # Otherwise we update the db_refs with what we got from Adeft
             # and set the standard name
             elif ns_and_id in da.pos_labels:
                 apply_grounding(agent, agent_txt, ns_and_id)

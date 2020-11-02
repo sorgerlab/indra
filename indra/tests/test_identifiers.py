@@ -1,5 +1,25 @@
 from indra.databases.identifiers import get_identifiers_url, \
-    parse_identifiers_url
+    parse_identifiers_url, get_ns_from_identifiers,\
+    get_ns_id_from_identifiers, get_identifiers_ns
+
+
+def test_map_ns():
+    assert get_ns_from_identifiers('go') == 'GO'
+    assert get_ns_from_identifiers('uniprot') == 'UP'
+    assert get_ns_from_identifiers('XXX') is None
+
+
+def test_map_ns_id():
+    assert get_ns_id_from_identifiers('uniprot', 'P12345') == \
+        ('UP', 'P12345')
+    assert get_ns_id_from_identifiers('go', 'GO:0005856') == \
+        ('GO', 'GO:0005856')
+
+
+def test_identifiers_ns():
+    assert get_identifiers_ns('UP') == 'uniprot'
+    assert get_identifiers_ns('GO') == 'go'
+    assert get_identifiers_ns('XXX') is None
 
 
 # For each pair of namespace and ID we get all possible URL forms.

@@ -18,7 +18,6 @@ def test_simple_mapping():
     mapped_akt = mapped_stmts[0].sub
     assert mapped_akt.db_refs['TEXT'] == 'Akt'
     assert mapped_akt.db_refs['FPLX'] == 'AKT'
-    assert unicode_strs((akt, stmt, gm, mapped_akt))
 
 
 def test_map_standardize_up_hgnc():
@@ -177,7 +176,6 @@ def test_hgnc_sym_but_not_up():
     assert mapped_erk.db_refs['TEXT'] == 'ERK1'
     assert mapped_erk.db_refs['HGNC'] == '6871'
     assert mapped_erk.db_refs['UP'] == 'P28482'
-    assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
 
 
 def test_up_but_not_hgnc():
@@ -192,7 +190,6 @@ def test_up_but_not_hgnc():
     assert mapped_erk.db_refs['TEXT'] == 'ERK1'
     assert mapped_erk.db_refs['HGNC'] == '6871'
     assert mapped_erk.db_refs['UP'] == 'P28482'
-    assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
 
 
 def test_hgnc_but_not_up():
@@ -207,7 +204,6 @@ def test_hgnc_but_not_up():
     assert mapped_erk.db_refs['TEXT'] == 'ERK1'
     assert mapped_erk.db_refs['HGNC'] == '6871'
     assert mapped_erk.db_refs['UP'] == 'P28482'
-    assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
 
 
 @raises(ValueError)
@@ -272,7 +268,6 @@ def test_up_id_with_no_hgnc_id():
     assert mapped_gag.db_refs['TEXT'] == 'Gag'
     assert mapped_gag.db_refs.get('HGNC') is None
     assert mapped_gag.db_refs['UP'] == 'P04585'
-    assert unicode_strs((gag, stmt, gm, mapped_stmts, mapped_gag))
 
 
 def test_up_id_with_no_gene_name():
@@ -288,7 +283,6 @@ def test_up_id_with_no_gene_name():
     assert mapped_ag.db_refs['TEXT'] == 'NoGN'
     assert mapped_ag.db_refs.get('HGNC') is None
     assert mapped_ag.db_refs['UP'] == 'A0K5Q6'
-    assert unicode_strs((no_gn, stmt, gm, mapped_stmts, mapped_ag))
 
 
 def test_in_place_overwrite_of_gm():
@@ -369,12 +363,11 @@ def test_adeft_mapping_non_pos():
     assert 'MESH' in mapped_stmt.sub.db_refs, mapped_stmt.evidence
 
     pcs = Agent('PCS', db_refs={'TEXT': 'PCS', 'MESH': 'xxx'})
-    # There a non-positive entry is implied but not exactly, so
-    # the prior grounding will be removed.
-    ev = Evidence(text='post symptoms concussive concussion')
+    ev = Evidence(text='physical component summary')
     stmt = Phosphorylation(None, pcs, evidence=[ev])
     mapped_stmt = gm.map_stmts([stmt])[0]
-    assert 'MESH' not in mapped_stmt.sub.db_refs, mapped_stmt.evidence
+    assert 'MESH' not in mapped_stmt.sub.db_refs, \
+        (mapped_stmt.sub.db_refs, mapped_stmt.evidence)
 
 
 def test_misgrounding():
