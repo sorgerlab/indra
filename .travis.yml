@@ -88,11 +88,15 @@ script:
         --exclude='.*isi.*'
         --ignore-files='.*test_reach.py'
         --ignore-files='.*test_pysb_assembler.py'
+        --ignore-files='.*test_rest_api.py'
         --with-coverage --cover-inclusive --cover-package=indra
         --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10
         --processes=0
   # PySB assembler tests (separated due to memory issues)
   - python -m nose_notify indra/tests/test_pysb_assembler.py --slack_hook $SLACK_NOTIFY_HOOK
+    --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
+  # REST API tests (separated due to memory issues)
+  - python -m nose_notify indra/tests/test_rest_api.py --slack_hook $SLACK_NOTIFY_HOOK
     --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
   # TEES tests
   - python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
