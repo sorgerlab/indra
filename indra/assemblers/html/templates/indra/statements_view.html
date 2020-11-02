@@ -3,93 +3,66 @@
 {% block scripts %}
   <!-- Toggle a hidden element -->
   <script>
-    const pubmed_fetch = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
     let ALL_COLLAPSED = true;
 
     function toggler(short_name_key) {
-      $("#" + short_name_key + "_group").toggle();
-      let header = "#" + short_name_key + "_heading";
-      $(header).show();
+      /**
+       * Toggle the info list elements by changing their class.
+       */
+      // Find the group associated with this heading.
+      let el = document.getElementById(short_name_key + "_group");
+
+      // Toggle the group class between the invisible one and the visible one.
+      if ( el.classList.contains("group") )
+        el.classList.replace("group", "group_shown");
+      else
+        el.classList.replace("group_shown", "group");
     }
 
-    function getPubMedMETAxmlByPMID(pmid) {
-      let params_dict = {
-        'db': 'pubmed',
-        'retmode': 'xml',
-        'rettype': 'docsum',
-        'id': pmid
-      };
-      return $.ajax({
-        url: pubmed_fetch,
-        type: "POST",
-        dataType: "xml",
-        data: params_dict,
-      });
-    }
+    async function getPubmedInfoByPMID(pmid) {
+      /**
+       * Get the Pubmed title and author from Entrez.
+       */
+      // Trim the PMID because it may have a lot of spaces in it.
+      let id = pmid.trim();
 
-    function pmidXML2dict(XML) {
-      let xml_dict = {};
-      for (let child of XML.children) {
-        let name = child.getAttribute("Name");
-        let type = child.getAttribute("Type");
-        if (child.hasChildNodes() && type === "List") {
-          let innerItems;
-          // Javascript can't really do nice recursive functions...
-          // special cases for "History" and "ArticleIds" which has unique inner Names
-          if (name === "ArticleIds" || name === "History") {
-            let innerDict = {};
-            for (c of child.children) {
-              innerDict[c.getAttribute("Name")] = c.textContent;
-            }
-            innerItems = innerDict;
-          } else {
-            let innerList = [];
-            for (c of child.children) {
-              innerList.push(c.textContent);
-            }
-            innerItems = innerList;
+      // Get the data from entrez in JSON format.
+      const entrez_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi';
+      let url = `${entrez_url}?id=${id}&retmode=json&db=pubmed`;
+      const resp = await fetch(url, {method: 'POST'});
+      if (resp.status !== 200)
+        return "Failed to load.";
+      const data = await resp.json();
+
+      // Extract and format the title from the result.
+      const pmd = data.result[id];
+      let auth_str = '';
+      let n = 0;
+      if (pmd.authors)
+        for (let author of pmd.authors) {
+          if (n > 2) {
+            auth_str += ', ...';
+            break;
           }
-          xml_dict[name] = innerItems
-        } else if (child.tagName === "Item") {
-          // Here just get the inner strings
-          xml_dict[name] = child.textContent;
-        } else if (child.tagName === "Id") {
-          // Special case
-          xml_dict["Id"] = child.textContent;
-        } else {
-          if (!xml_dict["no_key"]) {
-            xml_dict["no_key"] = [child.textContent]
-          } else {
-            xml_dict["no_key"].push(child.textContent)
+          auth_str += author.name;
+          if (n < pmd.authors.length) {
+            auth_str += ', ';
           }
+          n += 1;
         }
-      }
-      return xml_dict;
+      return `${auth_str}, "${pmd.title}", ${pmd.source}, ${pmd.pubdate}`;
     }
 
-    // Modify link hover text
     function setPMIDlinkTitle(pmid, link_tag) {
-      let pubmed_xml_promise = getPubMedMETAxmlByPMID(pmid);
-      pubmed_xml_promise.then(responseXML => {
-        const docsum_xml = responseXML.getElementsByTagName('DocSum')[0];
-        const pmd = pmidXML2dict(docsum_xml);
-        const nAuthors = pmd.AuthorList.length;
-        let authorsStr;
-        if (nAuthors > 3)
-          authorsStr = `${pmd.AuthorList[0]}, ... ${pmd.AuthorList[nAuthors - 1]}`;
-        else
-          authorsStr = pmd.AuthorList.join(", ");
-
-        // Shortened journal name is in .Source, while full name is in .FullJournalName
-        link_tag.title = `${authorsStr}, "${pmd.Title}", ${pmd.Source}, ${pmd.SO}`;
-      })
+      // Modify link hover text
+      getPubmedInfoByPMID(pmid).then(title => link_tag.title = title);
     }
 
-    // Loop all pmid link nodes and set title
     function populatePMIDlinkTitles() {
+      // Loop all pmid link nodes and set title
       let pmid_link_array = document.getElementsByClassName("pmid_link");
-      for (link_obj of pmid_link_array) {
-        pmid = link_obj.textContent;
+      for (let link_obj of pmid_link_array) {
+        let pmid = link_obj.textContent;
         setPMIDlinkTitle(pmid, link_obj)
       }
     }
@@ -97,24 +70,25 @@
     // Expand/collapse all
     function expandCollapseAll() {
       let expColBtn = document.getElementById('expand-collapse-all');
-      let setCss = '';
 
       // Expand all; set ALL_COLLAPSED = false;
+      let show = ALL_COLLAPSED;
       if (ALL_COLLAPSED) {
-        setCss = 'display: block;';
         ALL_COLLAPSED = false;
         expColBtn.textContent = 'Collapse All';
         // Collapse all; set ALL_COLLAPSED = true;
       } else {
-        setCss = 'display: none;';
         ALL_COLLAPSED = true;
         expColBtn.textContent = 'Expand All';
       }
 
       // Loop all tags
-      for (tag of document.getElementsByClassName('group')) {
-        tag.style.cssText = setCss
-      }
+      if (show)
+        for (let invisible_el of document.getElementsByClassName('group'))
+          invisible_el.classList.replace("group", "group_shown");
+      else
+        for (let visible_el in document.getElementsByClassName('group_shown'))
+          visible_el.classList.replace("group_shown", "group");
     }
 
     {% if add_full_text_search_link %}
@@ -177,8 +151,11 @@
     }
 
     .nvp {
-        padding-left: 0;
-        padding-right: 0;
+    }
+
+    .nvm {
+      padding-left: 0;
+      padding-right: 0;
     }
 
     .src-api {
@@ -186,22 +163,17 @@
     }
 
     .group, .group-shown {
-        padding: 5px;
-        margin: 5px;
     }
 
     .group {
         display: none;
-        border-left: #0d5aa7 solid 1px;
-        border-right: #0d5aa7 solid 1px;
+    }
+
+    .bars {
+      border-right: #0d5aa7 solid 1px;
     }
 
     .super_group_heading, .group_heading, .statement, .evidence {
-        padding: 2px;
-        padding-left: 5px;
-        margin: 2px;
-        position: sticky;
-        border-radius: 2px;
     }
 
     .evidence, .evidence-text {
@@ -209,8 +181,8 @@
     }
 
     .evidence-text {
-        border-top: #cfcfcf solid 1px;
-        padding-top: 0.5em;
+      margin-right: 5px;
+      margin-left: 5px;
     }
 
     .super_group_heading, .group_heading {
@@ -278,13 +250,13 @@
 {% endblock %}
 
 {% block body %}
+
   <div class="statements-header">
     <div class="row">
       <div class="col">
         <h3 {% if metadata %}
-          title="{% for n, v in metadata.items() %}{{ n }}: {{ v }}
-{% endfor %}"
-        {% endif %}>
+            title="{% for n, v in metadata.items() %}{{ n }}: {{ v }}{% endfor %}"
+            {% endif %}>
           Statements
         </h3>
       </div>
@@ -296,165 +268,234 @@
         </button>
       </div>
     </div>
-    {% if source_key_dict and simple %}
-      <div class="row justify-content-md-center">
-        <div class="col-1 text-right">
-          {{ source_colors[0][0] }}
-        </div>
-        <div class="col col-auto text-center">
-          {{ badges(source_key_dict) }}
-        </div>
-        <div class="col-1 text-left">
-          {{ source_colors[1][0] }}
-        </div>
+
+  {% if source_key_dict and simple %}
+
+    <div class="row justify-content-md-center">
+      <div class="col-1 text-right">
+        {{ source_colors[0][0] }}
       </div>
-    {% endif %}
+      <div class="col col-auto text-center">
+        {{ badges(source_key_dict) }}
+      </div>
+      <div class="col-1 text-left">
+        {{ source_colors[1][0] }}
+      </div>
+    </div>
+
+  {% endif %}
+
     <hr>
   </div>
+
   {% for results in stmt_data.values() %}
     {% set i_pair = loop.index0 %}
+
+  <span class="agent-pair">
+
     {% if stmt_data.values()|length > 1 %}
-      <div class="row super_group_heading"
+
+    <div class="row super_group_heading"
          id="tl-{{ results['html_key'] }}"
          onclick="toggler('tl-{{ results['html_key'] }}')">
-        <div class="col nvp">
-          <h5 class="align-middle">
-            {{ results['label'] }}
-          </h5>
-        </div>
-        <div class="col text-right nvp">
-          {{ badges(results['source_counts']) }}
-        </div>
+      <div class="col nvp">
+        <h5 class="align-middle">{{ results['label'] }}</h5>
       </div>
-      <div class="group" id="tl-{{ results['html_key'] }}_group">
+      <div class="col text-right nvp">
+        {{ badges(results['source_counts']) }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <div class="group" id="tl-{{ results['html_key'] }}_group">
+
     {% else %}
-      <div class="group-shown" id="tl-{{ results['html_key'] }}_group">
+
+    <div class="row">
+      <div class="col">
+        <div class="group-shown" id="tl-{{ results['html_key'] }}_group">
+
     {% endif %}
-        <div class="container nvp">
-        {% for group_dict in results['stmts_formatted'] %}
-          {% set i_type = loop.index0 %}
-          {% if results['stmts_formatted']|length > 1 %}
-            <div class="row group_heading"
-               onclick="toggler('{{ group_dict['short_name_key'] }}');"
-               id="{{ group_dict['short_name_key'] }}_heading">
-              <div class="col nvp">
-                <h5 class="align-middle">{{ group_dict['short_name'] }}</h5>
-              </div>
-              <div class="col text-right nvp">
-                {{ badges(group_dict['src_counts']) }}
-              </div>
-            </div>
-            <div class="row group" id="{{ group_dict['short_name_key'] }}_group">
-          {% else %}
-            <div class="row group-shown" id="{{ group_dict['short_name_key'] }}_group">
-          {% endif %}
-              <div class="container nvp">
-              {% for stmt_info in group_dict['stmt_info_list'] %}
-                {% set i_stmt = loop.index0 %}
-                <a name="{{ stmt_info['hash'] }}"></a>
-                <div class="row statement">
-                  <div class="col text-left nvp">
-                    <h5 class="align-middle">
-                      {{ stmt_info['english'] }}
-                      <a href="{% if db_rest_url %}{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html{% else %}#{% endif %}"
-                         {% if db_rest_url %}target="_blank"{% endif %}>
-                        <small class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</small>
-                      </a>
-                    </h5>
-                  </div>
-                  <div class="col text-right nvp">
-                    {{ badges(stmt_info['source_count']) }}
-                  </div>
+
+          <div class="container bars nvp">
+
+    {% for group_dict in results['stmts_formatted'] %}
+      {% set i_type = loop.index0 %}
+
+            <span class="relation">
+
+      {% if results['stmts_formatted']|length > 1 %}
+
+              <div class="row group_heading"
+                   onclick="toggler('{{ group_dict['short_name_key'] }}');"
+                   id="{{ group_dict['short_name_key'] }}_heading">
+                <div class="col text-left nvp">
+                    <h5>{{ group_dict['short_name'] }}</h5>
                 </div>
-                <div class="row evidence">
-                  <div class="container" id="stmt-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}"
-                       data-stmt_hash="{{ stmt_info['hash'] }}">
-                    {% for ev in stmt_info['evidence'] %}
-                      <div class="row evidence-text" data-source_hash="{{ ev['source_hash'] }}"
-                           style="border-bottom: 1px solid #FFFFFF;"
-                           id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}">
+                <div class="col text-right nvp">
+                  {{ badges(group_dict['src_counts']) }}
+                </div>
+              </div>
+              <div class="row group" id="{{ group_dict['short_name_key'] }}_group">
 
-                        <div class="col-1">
-                            <div class="row">
-                                <div class="col-3 nvp curation_toggle"
-                                     id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}-click"
-                                     data-parent_id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}">
-                                    <a href="{% if db_rest_url %}{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html{% else %}#{% endif %}"
-                                       {% if db_rest_url %}target="_blank"{% endif %}>
-                                        &#10166;
-                                    </a>
-                                </div>
-                                <div class="col-9 nvp src-api"
-                                     title="{{ ev['source_api'] }}">
-                                    {{ ev['source_api'] }}
-                                </div>
-                            </div>
-                        </div>
-                        {% if add_full_text_search_link %}
-                          <div class="col-9">
-                        {% else %}
-                          <div class="col-10">
-                        {% endif %}
+      {% else %}
 
-                          {% if ev['text'] %}
-                            "{{ ev['text'] }}"
-                          {% else %}
-                            <i>No evidence text available</i>
-                          {% endif %}
-                        </div>
-                        
-                        {% if add_full_text_search_link %}
-                          <div class="col-2 text-right">
-                        {% else %}
-                          <div class="col-1 text-right">
-                        {% endif %}
-                        {% if ev['pmid'] %}
-                          <a class="pmid_link"
-                              title="Hover again to see info"
-                              onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
-                              href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}'
-                              target="_blank">
-                            {{ ev['pmid'] }}</a>
-                        {% elif 'PMID' in ev['text_refs'] and ev['text_refs']['PMID'] %}
-                          <a class="pmid_link"
-                              title="Hover again to see info"
-                              onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
-                              href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}'
-                              target="_blank">
-                            {{ ev['text_refs']['PMID'] }}</a>
-                        {% elif 'PMCID' in ev['text_refs'] and ev['text_refs']['PMCID'] %}
-                          {% if add_full_text_search_link and 'pmcid' in ev and ev['pmcid'] %}
-                            <a class="full_text_search"
-                              data-sentence= '{{ev["text"]|urlencode}}'
-                              href="https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["pmcid"] }}" target=_blank rel=noopener >Full-Text Search: {{ev['pmcid']}}</a>
-                            <span style="cursor:default" title="This link will search for and highlight the sentence in the full-text article. Works with Chrome 80+">  &#9432;</span>
-                          {% else %}
-                            | <a class="pmcid_link"
-                              href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'
-                              target="_blank">PMC</a>
-                          {% endif %}
-                        {% elif 'DOI' in ev['text_refs'] and ev['text_refs']['DOI'] %}
-                          | <a class="doi_link"
-                              href='https://dx.doi.org/{{ ev["text_refs"]["DOI"] }}'
-                              target="_blank">DOI</a>
-                        {% endif %}
+              <div class="row group-shown" id="{{ group_dict['short_name_key'] }}_group">
 
-                          {% if add_full_text_search_link and 'pmcid' in ev and ev['pmcid'] %}
-                            <a class="full_text_search"
-                              data-sentence= '{{ev["text"]|urlencode}}'
-                              href="https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["pmcid"] }}" target=_blank rel=noopener >Full-Text Search: {{ev['pmcid']}}</a>
-                            <span style="cursor:default" title="This link will search for and highlight the sentence in the full-text article. Works with Chrome 80+">  &#9432;</span>
-                          {% endif %}
-                        </div>
+      {% endif %}
+
+                <div class="col">
+                  <div class="container bars nvp">
+
+      {% for stmt_info in group_dict['stmt_info_list'] %}
+        {% set i_stmt = loop.index0 %}
+
+                    <a name="{{ stmt_info['hash'] }}"></a>
+                    <div class="row statement">
+                      <div class="col text-left nvp">
+                        <h5>
+                          {{ stmt_info['english'] }}
+                          <a href="{% if db_rest_url %}{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html{% else %}#{% endif %}"
+                             {% if db_rest_url %}target="_blank"{% endif %}>
+                            <small class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</small>
+                          </a>
+                        </h5>
                       </div>
-                    {% endfor %}
-                  </div> <!-- container -->
-                </div> <!-- row evidence -->
-              {% endfor %}
-             </div> <!-- PA Statement container -->
-           </div> <!-- PA Statement group -->
-         {% endfor %}
-       </div> <!-- container -->
-     </div> <!-- type groups -->
+                      <div class="col text-right nvp">
+                        {{ badges(stmt_info['source_count']) }}
+                      </div>
+                    </div>  <!-- end statement heading row -->
+                    <div class="row">
+                      <div class="col">
+                        <div class="container bars" id="stmt-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}"
+                             data-stmt_hash="{{ stmt_info['hash'] }}">
+
+        {% for ev in stmt_info['evidence'] %}
+
+                          <div class="evidence">
+                            <hr>
+                            <div class="row evidence-text" data-source_hash="{{ ev['source_hash'] }}"
+                                 id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}">
+                              <div class="col-1">
+                                <div class="row">
+                                  <div class="col-3 nvm curation_toggle"
+                                       id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}-click"
+                                       data-parent_id="ev-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}-{{ loop.index0 }}">
+                                      <a href="{% if db_rest_url %}{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html{% else %}#{% endif %}"
+                                         {% if db_rest_url %}target="_blank"{% endif %}>
+                                          &#10166;
+                                      </a>
+                                  </div>
+                                  <div class="col-9 nvm src-api"
+                                       title="{{ ev['source_api'] }}">
+                                      {{ ev['source_api'] }}
+                                  </div>
+                                </div>
+                              </div>
+
+          {% if add_full_text_search_link %}
+
+                              <div class="col-9">
+
+          {% else %}
+
+                              <div class="col-10">
+
+          {% endif %}
+          {% if ev['text'] %}
+
+                                  "{{ ev['text'] }}"
+
+          {% else %}
+
+                                  <i>No evidence text available</i>
+
+          {% endif %}
+
+                              </div>
+
+          {% if add_full_text_search_link %}
+
+                              <div class="col-2 text-right">
+
+          {% else %}
+
+                              <div class="col-1 text-right">
+
+          {% endif %}
+          {% if ev['pmid'] %}
+
+                                <a class="pmid_link"
+                                    title="Hover again to see info"
+                                    onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                                    href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}'
+                                    target="_blank">
+                                  {{ ev['pmid'] }}</a>
+
+          {% elif 'PMID' in ev['text_refs'] and ev['text_refs']['PMID'] %}
+
+                                <a class="pmid_link"
+                                   title="Hover again to see info"
+                                   onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                                   href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}'
+                                   target="_blank">
+                                 {{ ev['text_refs']['PMID'] }}</a>
+
+          {% elif 'PMCID' in ev['text_refs'] and ev['text_refs']['PMCID'] %}
+            {% if add_full_text_search_link and 'pmcid' in ev and ev['pmcid'] %}
+
+                                <a class="full_text_search"
+                                   data-sentence= '{{ev["text"]|urlencode}}'
+                                   href="https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["pmcid"] }}" target=_blank rel=noopener >Full-Text Search: {{ev['pmcid']}}</a>
+                                <span style="cursor:default" title="This link will search for and highlight the sentence in the full-text article. Works with Chrome 80+">  &#9432;</span>
+
+            {% else %}
+
+                                | <a class="pmcid_link"
+                                     href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'
+                                     target="_blank">PMC</a>
+
+            {% endif %}
+          {% elif 'DOI' in ev['text_refs'] and ev['text_refs']['DOI'] %}
+
+                                | <a class="doi_link"
+                                     href='https://dx.doi.org/{{ ev["text_refs"]["DOI"] }}'
+                                     target="_blank">DOI</a>
+
+          {% endif %}
+          {% if add_full_text_search_link and 'pmcid' in ev and ev['pmcid'] %}
+
+                                <a class="full_text_search"
+                                   data-sentence= '{{ev["text"]|urlencode}}'
+                                   href="https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["pmcid"] }}" target=_blank rel=noopener >Full-Text Search: {{ev['pmcid']}}</a>
+                                <span style="cursor:default" title="This link will search for and highlight the sentence in the full-text article. Works with Chrome 80+">  &#9432;</span>
+
+          {% endif %}
+
+                              </div> <!-- end ID col -->
+                            </div> <!-- end row -->
+                          </div> <!-- end evidence -->
+
+        {% endfor %}
+
+                        </div> <!-- end stmt container -->
+                      </div> <!-- end stmt col -->
+                    </div> <!-- end stmt row -->
+
+      {% endfor %}
+
+                  </div> <!-- end relation (stmt list) container -->
+                </div> <!-- end relation col -->
+              </div> <!-- end relation row -->
+            </span> <!-- end relation -->
+
+    {% endfor %}
+
+          </div> <!-- end agent pair (relation list) container -->
+        </div> <!-- end agent pair group -->
+      </div> <!-- end agent pair col -->
+    </div> <!-- end agent pair row -->
+  </span> <!-- end agent pair span -->
+
   {% endfor %}
 {% endblock %}
