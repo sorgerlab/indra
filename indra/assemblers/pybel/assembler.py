@@ -633,9 +633,9 @@ def _get_evidence(evidence):
     if evidence.source_id:
         annotations['source_id'] = {evidence.source_id: True}
     for key, value in evidence.epistemics.items():
-        if key == 'direct':
+        if key == 'direct' or value is None:
             continue
-        annotations[key] = {value: True}
+        annotations[key] = {v: True for v in value}
 
     return citation, text, annotations
 
