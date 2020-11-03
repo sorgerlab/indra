@@ -102,7 +102,11 @@ def test_modification_with_evidences():
     braf_kin = Agent('BRAF', activity=ActivityCondition('kinase', True),
                      db_refs={'HGNC': '1097', 'UP': 'P15056'})
     mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
-    evidence = Evidence(source_api='test', text='evidence text', pmid='1234')
+    evidence = Evidence(source_api='test', text='evidence text', pmid='1234', epistemics={
+        'dummy': ['a', 'b'],
+        'scalar': 'yes',
+        'missing': None,
+    })
     stmt = Phosphorylation(braf_kin, mek, 'S', '218', evidence=evidence)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
@@ -120,9 +124,15 @@ def test_modification_with_evidences():
         pc.CITATION_IDENTIFIER: '1234',
     }
     assert 'source_api' in edge_data[pc.ANNOTATIONS]
-    assert edge_data[pc.ANNOTATIONS]['source_api'] == 'test'
+    assert 'test' in edge_data[pc.ANNOTATIONS]['source_api']
     assert 'source_id' not in edge_data[pc.ANNOTATIONS]
     assert 'source_hash' in edge_data[pc.ANNOTATIONS]
+    assert 'dummy' in edge_data[pc.ANNOTATIONS]
+    assert 'a' in edge_data[pc.ANNOTATIONS]['dummy']
+    assert 'b' in edge_data[pc.ANNOTATIONS]['dummy']
+    assert 'scalar' in edge_data[pc.ANNOTATIONS]
+    assert 'yes' in edge_data[pc.ANNOTATIONS]['scalar']
+    assert 'missing' not in edge_data[pc.ANNOTATIONS]
 
 
 def test_modification_with_mutation():
@@ -151,9 +161,9 @@ def test_activation():
         pc.RELATION: pc.INCREASES,
         pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY},
         pc.ANNOTATIONS: {
-            'stmt_hash': hash1,
-            'uuid': stmt1.uuid,
-            'belief': stmt1.belief,
+            'stmt_hash': {hash1: True},
+            'uuid': {stmt1.uuid: True},
+            'belief': {stmt1.belief: True},
         },
     }
     edge2 = {
@@ -161,9 +171,9 @@ def test_activation():
         pc.SUBJECT: activity('kin'),
         pc.OBJECT: activity('kin'),
         pc.ANNOTATIONS: {
-            'stmt_hash': hash2,
-            'uuid': stmt2.uuid,
-            'belief': stmt2.belief,
+            'stmt_hash': {hash2: True},
+            'uuid': {stmt2.uuid: True},
+            'belief': {stmt2.belief: True},
         },
     }
     for stmt, edge in ((stmt1, edge1), (stmt2, edge2)):
@@ -199,10 +209,10 @@ def test_direct_activation():
             pc.CITATION_IDENTIFIER: '1234',
         },
         pc.ANNOTATIONS: {
-            'stmt_hash': hash1,
-            'source_hash': stmt1_ev.get_source_hash(),
-            'uuid': stmt1.uuid,
-            'belief': stmt1.belief,
+            'stmt_hash': {hash1: True},
+            'source_hash': {stmt1_ev.get_source_hash(): True},
+            'uuid': {stmt1.uuid: True},
+            'belief': {stmt1.belief: True},
         },
     }
     edge2 = {
@@ -215,10 +225,10 @@ def test_direct_activation():
             pc.CITATION_IDENTIFIER: '1234',
         },
         pc.ANNOTATIONS: {
-            'stmt_hash': hash2,
-            'source_hash': stmt1_ev.get_source_hash(),
-            'uuid': stmt2.uuid,
-            'belief': stmt2.belief,
+            'stmt_hash': {hash2: True},
+            'source_hash': {stmt1_ev.get_source_hash(): True},
+            'uuid': {stmt2.uuid: True},
+            'belief': {stmt2.belief: True},
         },
     }
     for stmt, expected_edge in ((stmt1, edge1), (stmt2, edge2)):
@@ -243,9 +253,9 @@ def test_inhibition():
         pc.SUBJECT: activity('kin'),
         pc.OBJECT: activity('kin'),
         pc.ANNOTATIONS: {
-            'stmt_hash': stmt_hash,
-            'uuid': stmt.uuid,
-            'belief': stmt.belief,
+            'stmt_hash': {stmt_hash: True},
+            'uuid': {stmt.uuid: True},
+            'belief': {stmt.belief: True},
         },
     }
     pba = pa.PybelAssembler([stmt])
@@ -314,9 +324,9 @@ def test_gef():
         pc.SUBJECT: activity('gef'),
         pc.OBJECT: activity('gtp'),
         pc.ANNOTATIONS: {
-            'stmt_hash': stmt_hash,
-            'uuid': stmt.uuid,
-            'belief': stmt.belief,
+            'stmt_hash': {stmt_hash: True},
+            'uuid': {stmt.uuid: True},
+            'belief': {stmt.belief: True},
         },
     }
     assert edge_data == edge, edge_data
@@ -347,9 +357,9 @@ def test_gap():
         pc.SUBJECT: activity('gap'),
         pc.OBJECT: activity('gtp'),
         pc.ANNOTATIONS: {
-            'stmt_hash': stmt_hash,
-            'uuid': stmt.uuid,
-            'belief': stmt.belief,
+            'stmt_hash': {stmt_hash: True},
+            'uuid': {stmt.uuid: True},
+            'belief': {stmt.belief: True},
         },
     }
     assert edge_data == edge, edge_data
@@ -451,10 +461,11 @@ def test_autophosphorylation():
     edge_dicts = list(belgraph.get_edge_data(egfr_dsl,
                                              egfr_phos_node).values())
     assert {pc.RELATION: pc.DIRECTLY_INCREASES,
-            pc.ANNOTATIONS: {'stmt_hash': stmt_hash,
-                             'uuid': stmt.uuid,
-                             'belief': stmt.belief}} \
-        in edge_dicts
+            pc.ANNOTATIONS: {
+                'stmt_hash': {stmt_hash: True},
+                'uuid': {stmt.uuid: True},
+                'belief': {stmt.belief: True},
+            }} in edge_dicts
 
     # Test an autophosphorylation with a bound condition
     tab1 = Agent('TAB1', db_refs={'HGNC': id('TAB1')})
@@ -496,9 +507,9 @@ def test_bound_condition():
              pc.RELATION: pc.DIRECTLY_INCREASES,
              pc.OBJECT: activity('gtp'),
              pc.ANNOTATIONS: {
-                 'stmt_hash': stmt_hash,
-                 'uuid': stmt.uuid,
-                 'belief': stmt.belief,
+                 'stmt_hash': {stmt_hash: True},
+                 'uuid': {stmt.uuid: True},
+                 'belief': {stmt.belief: True},
              },
         },
     )
@@ -523,9 +534,9 @@ def test_transphosphorylation():
     assert edge_data == {
         pc.RELATION: pc.DIRECTLY_INCREASES,
         pc.ANNOTATIONS: {
-            'stmt_hash': stmt_hash,
-            'uuid': stmt.uuid,
-            'belief': stmt.belief,
+            'stmt_hash': {stmt_hash: True},
+            'uuid': {stmt.uuid: True},
+            'belief': {stmt.belief: True},
         },
     }, edge_data
 
@@ -632,6 +643,15 @@ def test_belgraph_to_signed_graph():
 
     edge_dict = pb_seg.edges.get(edge)
     assert edge_dict
-    assert edge_dict.get('stmt_hash') == hsh
-    assert edge_dict.get('uuid') == stmt.uuid
-    assert edge_dict.get('belief') == stmt.belief
+
+    assert 'stmt_hash' in edge_dict
+    assert 1 == len(edge_dict['stmt_hash'])
+    assert hsh == list(edge_dict['stmt_hash'])[0]
+
+    assert 'uuid' in edge_dict
+    assert 1 == len(edge_dict['uuid'])
+    assert stmt.uuid == list(edge_dict['uuid'])[0]
+
+    assert 'belief' in edge_dict
+    assert 1 == len(edge_dict['belief'])
+    assert stmt.belief == list(edge_dict['belief'])[0]

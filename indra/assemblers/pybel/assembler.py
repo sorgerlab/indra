@@ -400,7 +400,7 @@ def belgraph_to_signed_graph(
         rel = edge_data.get('relation')
         pos_edge = \
             (u, v, ('sign', 0)) + \
-            tuple((k, (tuple(v) if isinstance(v, list) else v))
+            tuple((k, tuple(v))
                   for k, v in edge_data.get('annotations', {}).items()) \
             if propagate_annotations else (u, v, ('sign', 0))
         # Unpack tuple pairs at indices >1 or they'll be in nested tuples
@@ -457,9 +457,9 @@ def _update_edge_data_from_evidence(evidence, edge_data):
 
 def _get_annotations_from_stmt(stmt):
     return {
-        'stmt_hash': stmt.get_hash(refresh=True),
-        'uuid': stmt.uuid,
-        'belief': stmt.belief
+        'stmt_hash': {stmt.get_hash(refresh=True): True},
+        'uuid': {stmt.uuid: True},
+        'belief': {stmt.belief: True},
     }
 
 
@@ -626,17 +626,19 @@ def _get_evidence(evidence):
         )
 
     annotations = {
-        'source_hash': evidence.get_source_hash(),
+        'source_hash': {evidence.get_source_hash(): True},
     }
     if evidence.source_api:
-        annotations['source_api'] = evidence.source_api
+        annotations['source_api'] = {evidence.source_api: True}
     if evidence.source_id:
-        annotations['source_id'] = evidence.source_id
+        annotations['source_id'] = {evidence.source_id: True}
     for key, value in evidence.epistemics.items():
-        if key == 'direct':
+        if key == 'direct' or value is None:
             continue
-        annotations[key] = value
-
+        if isinstance(value, (list, set, tuple)):
+            annotations[key] = {v: True for v in value}
+        else:
+            annotations[key] = {value: True}
     return citation, text, annotations
 
 
