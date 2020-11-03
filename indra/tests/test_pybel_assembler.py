@@ -104,6 +104,7 @@ def test_modification_with_evidences():
     mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
     evidence = Evidence(source_api='test', text='evidence text', pmid='1234', epistemics={
         'dummy': ['a', 'b'],
+        'scalar': 'yes',
         'missing': None,
     })
     stmt = Phosphorylation(braf_kin, mek, 'S', '218', evidence=evidence)
@@ -129,6 +130,8 @@ def test_modification_with_evidences():
     assert 'dummy' in edge_data[pc.ANNOTATIONS]
     assert 'a' in edge_data[pc.ANNOTATIONS]['dummy']
     assert 'b' in edge_data[pc.ANNOTATIONS]['dummy']
+    assert 'scalar' in edge_data[pc.ANNOTATIONS]
+    assert 'yes' in edge_data[pc.ANNOTATIONS]['scalar']
     assert 'missing' not in edge_data[pc.ANNOTATIONS]
 
 

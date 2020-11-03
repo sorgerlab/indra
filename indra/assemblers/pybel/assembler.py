@@ -635,8 +635,10 @@ def _get_evidence(evidence):
     for key, value in evidence.epistemics.items():
         if key == 'direct' or value is None:
             continue
-        annotations[key] = {v: True for v in value}
-
+        if isinstance(value, (list, set, tuple)):
+            annotations[key] = {v: True for v in value}
+        else:
+            annotations[key] = {value: True}
     return citation, text, annotations
 
 
