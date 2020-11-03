@@ -102,7 +102,10 @@ def test_modification_with_evidences():
     braf_kin = Agent('BRAF', activity=ActivityCondition('kinase', True),
                      db_refs={'HGNC': '1097', 'UP': 'P15056'})
     mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
-    evidence = Evidence(source_api='test', text='evidence text', pmid='1234')
+    evidence = Evidence(source_api='test', text='evidence text', pmid='1234', epistemics={
+        'dummy': ['a', 'b'],
+        'missing': None,
+    })
     stmt = Phosphorylation(braf_kin, mek, 'S', '218', evidence=evidence)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
@@ -123,6 +126,10 @@ def test_modification_with_evidences():
     assert 'test' in edge_data[pc.ANNOTATIONS]['source_api']
     assert 'source_id' not in edge_data[pc.ANNOTATIONS]
     assert 'source_hash' in edge_data[pc.ANNOTATIONS]
+    assert 'dummy' in edge_data[pc.ANNOTATIONS]
+    assert 'a' in edge_data[pc.ANNOTATIONS]['dummy']
+    assert 'b' in edge_data[pc.ANNOTATIONS]['dummy']
+    assert 'missing' not in edge_data[pc.ANNOTATIONS]
 
 
 def test_modification_with_mutation():
