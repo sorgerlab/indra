@@ -730,15 +730,19 @@ def test_filter_by_curation():
     stmts_in = [new_st1, st2, st3]
     assert len(new_st1.evidence) == 2
     assert all(st.belief != 1 for st in stmts_in)
-    Curation = namedtuple('Curation', ['pa_hash', 'source_hash', 'tag'])
-    cur1 = Curation(new_st1.get_hash(), new_st1.evidence[0].get_source_hash(),
-                    'grounding')
-    cur2 = Curation(new_st1.get_hash(), new_st1.evidence[1].get_source_hash(),
-                    'wrong_relation')
-    cur3 = Curation(new_st1.get_hash(), new_st1.evidence[0].get_source_hash(),
-                    'correct')
-    cur4 = Curation(st2.get_hash(), st2.evidence[0].get_source_hash(),
-                    'correct')
+
+    cur1 = {'pa_hash': new_st1.get_hash(),
+            'source_hash': new_st1.evidence[0].get_source_hash(),
+            'tag': 'grounding'}
+    cur2 = {'pa_hash': new_st1.get_hash(),
+            'source_hash': new_st1.evidence[1].get_source_hash(),
+            'tag': 'wrong_relation'}
+    cur3 = {'pa_hash': new_st1.get_hash(),
+            'source_hash': new_st1.evidence[0].get_source_hash(),
+            'tag': 'correct'}
+    cur4 = {'pa_hash': st2.get_hash(),
+            'source_hash': st2.evidence[0].get_source_hash(),
+            'tag': 'correct'}
     # With 'any' policy it is enough to have one incorrect curation
     any_incorrect_one_cur = ac.filter_by_curation(stmts_in, [cur1], 'any')
     assert len(any_incorrect_one_cur) == 2
