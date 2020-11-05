@@ -5,7 +5,6 @@ import json
 import base64
 
 from docstring_parser import parse
-from collections import namedtuple
 from flask import Flask, request
 from flask_restx import Api, Resource, fields, abort
 from flask_cors import CORS
@@ -169,12 +168,6 @@ class PreassembleStatements(Resource):
                 args_json[arg] = get_statement_by_name(args_json[arg])
             elif arg in ['matches_fun', 'refinement_fun']:
                 args_json[arg] = pipeline_functions[args_json[arg]]
-            elif arg == 'curations':
-                Curation = namedtuple(
-                    'Curation', ['pa_hash', 'source_hash', 'tag'])
-                args_json[arg] = [
-                    Curation(cur['pa_hash'], cur['source_hash'], cur['tag'])
-                    for cur in args_json[arg]]
             elif arg == 'belief_scorer':
                 if args_json[arg] == 'wm':
                     args_json[arg] = get_eidos_scorer()
