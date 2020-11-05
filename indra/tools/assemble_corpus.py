@@ -1739,7 +1739,7 @@ def filter_by_curation(stmts_in, curations, incorrect_policy='any',
     ----------
     stmts_in : list[indra.statements.Statement]
         A list of statements to filter.
-    curations : list[Curation]
+    curations : list[dict]
         A list of curations for evidences. Curation object should have
         (at least) the following attributes:
         pa_hash (preassembled statement hash), source_hash (evidence hash) and
@@ -1764,18 +1764,19 @@ def filter_by_curation(stmts_in, curations, incorrect_policy='any',
     # curations). Incorrect is a set of hashes of statements that only have
     # incorrect curations (for all or some of the evidences). These sets do
     # not intersect.
-    correct = {c.pa_hash for c in curations if c.tag in correct_tags}
-    incorrect = {c.pa_hash for c in curations if c.pa_hash not in correct}
+    correct = {c['pa_hash'] for c in curations if c['tag'] in correct_tags}
+    incorrect = {c['pa_hash'] for c in curations if c['pa_hash'] not in correct}
     # Store evidence level curations for overall correct statements
     correct_stmt_evid = {}
     for c in curations:
-        if c.pa_hash in correct:
-            if c.pa_hash not in correct_stmt_evid:
-                correct_stmt_evid[c.pa_hash] = defaultdict(set)
-            if c.tag in correct_tags:
-                correct_stmt_evid[c.pa_hash]['correct'].add(c.source_hash)
+        pa_hash = c['pa_hash']
+        if pa_hash in correct:
+            if pa_hash not in correct_stmt_evid:
+                correct_stmt_evid[pa_hash] = defaultdict(set)
+            if c['tag'] in correct_tags:
+                correct_stmt_evid[pa_hash]['correct'].add(c['source_hash'])
             else:
-                correct_stmt_evid[c.pa_hash]['incorrect'].add(c.source_hash)
+                correct_stmt_evid[pa_hash]['incorrect'].add(c['source_hash'])
     stmts_out = []
     logger.info('Filtering %d statements with %s incorrect curations...' %
                 (len(stmts_in), incorrect_policy))
@@ -1816,8 +1817,8 @@ def filter_by_curation(stmts_in, curations, incorrect_policy='any',
         # First, map curated statements to curated evidences.
         incorrect_stmt_evid = defaultdict(set)
         for c in curations:
-            if c.pa_hash in incorrect:
-                incorrect_stmt_evid[c.pa_hash].add(c.source_hash)
+            if c['pa_hash'] in incorrect:
+                incorrect_stmt_evid[c['pa_hash']].add(c['source_hash'])
         for stmt in stmts_in:
             # Compare set of evidence hashes of given statements to set of
             # hashes of curated evidences.
