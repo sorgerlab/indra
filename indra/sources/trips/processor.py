@@ -1675,6 +1675,12 @@ class TripsProcessor(object):
         all_events = self.tree.findall('EVENT')
         active_event_args = set()
         for event in all_events:
+            ev_type = event.find('type').text
+            # This is a special case of an uninteresting event type
+            # that we don't want to consider as a connection for a TERM
+            # of interes.
+            if ev_type == 'ONT::HAVE-PROPERTY':
+                continue
             if event.attrib.get('id') in self._static_events:
                 continue
             args = event.findall('arg') + \
