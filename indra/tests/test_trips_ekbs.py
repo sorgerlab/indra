@@ -833,6 +833,17 @@ def test_60():
     assert mod.is_modified is False
 
 
+def test_61():
+    sentence = 'ELK1 translocates to the nucleus.'
+    tp = process_sentence_xml(sentence)
+    assert len(tp.statements) == 1
+    stmt = tp.statements[0]
+    assert isinstance(stmt, Translocation)
+    assert stmt.agent.name == 'ELK1'
+    assert stmt.from_location is None
+    assert stmt.to_location == 'nucleus'
+
+
 def test_assoc_with():
     fname = os.path.join(path_this, 'trips_ekbs', 'ekb_assoc.ekb')
     tp = trips.process_xml(open(fname, 'r').read())

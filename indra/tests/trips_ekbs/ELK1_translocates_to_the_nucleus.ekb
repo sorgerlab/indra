@@ -1,0 +1,94 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum-dev/etc/Data/WP/TEXT00006_IO-49306" id="paragraph5">ELK1 translocates to the nucleus.</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="6" pid="paragraph5">ELK1 translocates to the nucleus.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="32" id="V49336" lisp="(ONT::EVENT ONT::V49336 ONT::TRANSLOCATE :AGENT ONT::V49330 :TO ONT::V49392 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph5" rule="-RULE10_4_AGENT_AFFECTED-CELL_LOC3-GD-TO-AGENT,-ADD-SPEC" start="0" uttnum="6">
+		<type>ONT::TRANSLOCATE</type>
+		<text normalization="">ELK1 translocates to the nucleus</text>
+		<force>ONT::TRUE</force>
+		<tense>PRES</tense>
+		<predicate end="32" start="0">
+			<type>ONT::TRANSLOCATE</type>
+			<text normalization="TRANSLOCATE">ELK1 translocates to the nucleus</text>
+		</predicate>
+		<arg1 end="5" id="V49330" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">ELK1</text>
+		</arg1>
+		<to id="V49392"/>
+	</EVENT>
+	<TERM dbid="UP:P19419|HGNC:3321|XFAM:PF00520|NCIT:C52540|XFAM:PF00027|HGNC:6253|XFAM:PF13426|NCIT:C18288|UP:Q9UQ05|HGNC:18864|UP:Q96L42" end="5" id="V49330" lisp="(ONT::TERM ONT::V49330 ONT::GENE-PROTEIN :NAME W::ELK-1 :DRUM ((:DRUM (TERM :ID NCIT::C52540 :NAME &quot;ELK1&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :INPUT &quot;ELK1&quot; :MATCHED &quot;ELK1&quot; :STATUS &quot;name&quot; :EXACT 1) (MATCH :SCORE 0.85368 :INPUT &quot;ELK1&quot; :MATCHED &quot;ELK1&quot; :VIA &quot;elk1&quot; :STATUS &quot;name&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.35435992 :NO-CAPS-ALL-CAPS 1) (MATCH :SCORE 0.71082 :INPUT &quot;ELK1&quot; :MATCHED &quot;ELK-1&quot; :STATUS &quot;synonym&quot; :NO-DASH-DASH 1 :EXACT 1) (MATCH :SCORE 0.70908 :INPUT &quot;ELK1&quot; :MATCHED &quot;ELK-1&quot; :VIA &quot;elk1&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.35435992 :NO-DASH-DASH 1 :NO-CAPS-ALL-CAPS 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID HGNC::|3321| :NAME &quot;ETS transcription factor ELK1&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :INPUT &quot;ELK1&quot; :MATCHED &quot;ELK1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1) (MATCH :SCORE 0.85368 :INPUT &quot;ELK1&quot; :MATCHED &quot;ELK1&quot; :VIA &quot;elk1&quot; :STATUS &quot;Approved Symbol&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.35435992 :NO-CAPS-ALL-CAPS 1)) :DBXREFS (UP::P19419) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C18288 :NAME &quot;ETS domain-containing protein elk-1&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :INPUT &quot;ELK1&quot; :MATCHED &quot;ELK1&quot; :STATUS &quot;synonym&quot; :EXACT 1) (MATCH :SCORE 0.7091 :INPUT &quot;ELK1&quot; :MATCHED &quot;ELK1&quot; :VIA &quot;elk1&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.35435992 :NO-CAPS-ALL-CAPS 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::Q9UQ05 :NAME &quot;Potassium voltage-gated channel subfamily H member 4&quot; :SCORE 0.56627 :MATCHES ((MATCH :SCORE 0.56627 :INPUT &quot;ELK1&quot; :MATCHED &quot;ELK1&quot; :STATUS &quot;AltName: Short&quot; :EXACT 1) (MATCH :SCORE 0.56452 :INPUT &quot;ELK1&quot; :MATCHED &quot;ELK1&quot; :VIA &quot;elk1&quot; :STATUS &quot;AltName: Short&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.35435992 :NO-CAPS-ALL-CAPS 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|6253| XFAM::PF00520 XFAM::PF13426) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::Q96L42 :NAME &quot;Potassium voltage-gated channel subfamily H member 8&quot; :SCORE 0.56627 :MATCHES ((MATCH :SCORE 0.56627 :INPUT &quot;ELK1&quot; :MATCHED &quot;ELK1&quot; :STATUS &quot;AltName: Full&quot; :EXACT 1) (MATCH :SCORE 0.56452 :INPUT &quot;ELK1&quot; :MATCHED &quot;ELK1&quot; :VIA &quot;elk1&quot; :STATUS &quot;AltName: Full&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.35435992 :NO-CAPS-ALL-CAPS 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|18864| XFAM::PF00027 XFAM::PF00520 XFAM::PF13426) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID HGNC::|6253| :NAME &quot;potassium voltage-gated channel subfamily H member 4&quot; :SCORE 0.56627 :MATCHES ((MATCH :SCORE 0.56627 :INPUT &quot;ELK1&quot; :MATCHED &quot;elk1&quot; :VIA &quot;elk1&quot; :STATUS &quot;Synonym&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.35435992 :EXACT 1) (MATCH :SCORE 0.56452 :INPUT &quot;ELK1&quot; :MATCHED &quot;elk1&quot; :STATUS &quot;Synonym&quot; :ALL-CAPS-NO-CAPS 1)) :DBXREFS (UP::Q9UQ05) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph5" rule="-SIMPLE-REF,-ADD-SPEC" start="0" uttnum="6">
+		<type>ONT::GENE-PROTEIN</type>
+		<text normalization="">ELK1</text>
+		<name>ELK-1</name>
+		<drum-terms>
+			<drum-term dbid="NCIT:C52540" match-score="0.85542" matched-name="ELK1" name="ELK1" text-input="ELK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:3321" match-score="0.85542" matched-name="ELK1" name="ETS transcription factor ELK1" text-input="ELK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P19419"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C18288" match-score="0.71084" matched-name="ELK1" name="ETS domain-containing protein elk-1" text-input="ELK1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="UP:Q9UQ05" match-score="0.56627" matched-name="ELK1" name="Potassium voltage-gated channel subfamily H member 4" text-input="ELK1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:6253"/>
+					<xref dbid="XFAM:PF00520"/>
+					<xref dbid="XFAM:PF13426"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="UP:Q96L42" match-score="0.56627" matched-name="ELK1" name="Potassium voltage-gated channel subfamily H member 8" text-input="ELK1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:18864"/>
+					<xref dbid="XFAM:PF00027"/>
+					<xref dbid="XFAM:PF00520"/>
+					<xref dbid="XFAM:PF13426"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="HGNC:6253" match-score="0.56627" matched-name="elk1" name="potassium voltage-gated channel subfamily H member 4" text-input="ELK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:Q9UQ05"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+	<TERM dbid="UP:SL-0191" end="32" id="V49392" lisp="(ONT::TERM ONT::V49392 ONT::CELL-PART :NAME W::NUCLEUS :DRUM ((:DRUM (TERM :ID UP::SL-0191 :NAME &quot;Nucleus&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :INPUT &quot;nucleus&quot; :MATCHED &quot;nucleus&quot; :STATUS &quot;I*&quot; :EXACT 1)) :ONT-TYPES (ONT::CELL-PART)) (SPECIALIST :EUI E0222333 :CITATION-FORM &quot;nucleus&quot; :MATCHES ((MATCH :SCORE 1.0 :INPUT &quot;nucleus&quot; :MATCHED &quot;nucleus&quot; :EXACT 1)) :COMPLEMENTS (&quot;compl=pphr(of,np(thalamus))&quot; &quot;compl=pphr(of,np(vagus nerve))&quot; &quot;compl=pphr(of,np(pretectal area))&quot; &quot;compl=pphr(of,np(lateral geniculate body))&quot; &quot;compl=pphr(of,np(medial geniculate body))&quot; &quot;compl=pphr(of,np(lens))&quot; &quot;compl=pphr(of,np(solitary tract))&quot; &quot;compl=pphr(of,np(abducens nerve))&quot; &quot;compl=pphr(of,np(ansa lenticularis))&quot; &quot;compl=pphr(of,np(facial nerve))&quot; &quot;compl=pphr(of,np(hypoglossal nerve))&quot; &quot;compl=pphr(of,np(Luys))&quot; &quot;compl=pphr(of,np(oculomotor nerve))&quot; &quot;compl=pphr(of,np(trochlear nerve))&quot; &quot;compl=pphr(of,np(Darkschewitsch))&quot; &quot;compl=pphr(of,np(origin),pphr(of,np))&quot; &quot;compl=pphr(of,np(accessory nerve))&quot; &quot;compl=pphr(of,np)&quot; &quot;compl=pphr(of,np(optic tract))&quot; &quot;compl=pphr(of,np(lateral lemniscus))&quot;)))))" paragraph="paragraph5" rule="-SIMPLE-REF,-ADD-SPEC" start="21" uttnum="6">
+		<type>ONT::CELL-PART</type>
+		<text normalization="">the nucleus</text>
+		<name>NUCLEUS</name>
+		<drum-terms>
+			<drum-term dbid="UP:SL-0191" match-score="0.85542" matched-name="nucleus" name="Nucleus" text-input="nucleus">
+				<types>
+					<type>ONT::CELL-PART</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+</ekb>
