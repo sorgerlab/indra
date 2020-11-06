@@ -960,7 +960,7 @@ class TripsProcessor(object):
                 continue
             # Get from location
             froms = [event.find(from_tag)
-                     for from_tag in ('from', 'from_location')]
+                     for from_tag in ('from', 'from-location')]
             froms = [f for f in froms if f is not None]
             if not froms:
                 from_location = None
@@ -969,7 +969,7 @@ class TripsProcessor(object):
                 from_location = self._get_cell_loc_by_id(from_loc_id)
             # Get to location
             tos = [event.find(from_tag)
-                   for from_tag in ('to', 'to_location')]
+                   for from_tag in ('to', 'to-location')]
             tos = [t for t in tos if t is not None]
             if not tos:
                 to_location = None
