@@ -523,7 +523,12 @@ class ReachProcessor(object):
         for mod in mods:
             mod_res, mod_pos = mod
             mod_type_str = mod_term['type'].lower()
+            if mod_type_str == 'unknown':
+                continue
             mod_state = agent_mod_map.get(mod_type_str)
+            # We skip unknown modifications since they are very often
+            # unrelated to PTMs, representing things like "expression"
+            # These are real PTM states
             if mod_state is not None:
                 mc = ModCondition(mod_state[0], residue=mod_res,
                                   position=mod_pos, is_modified=mod_state[1])
@@ -844,7 +849,6 @@ agent_mod_map = {
     'deribosylation': ('ribosylation', False),
     'methylation': ('methylation', True),
     'demethylation': ('methylation', False),
-    'unknown': ('modification', True),
 }
 
 
