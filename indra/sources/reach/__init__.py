@@ -15,7 +15,7 @@ Setup and usage: Follow standard instructions to install
 
     git clone https://github.com/clulab/reach.git
     cd reach
-    sbt 'run-main org.clulab.reach.export.server.ApiServer'
+    sbt 'runMain org.clulab.reach.export.server.ApiServer'
 
 Then read text by specifying the url parameter when using
 `indra.sources.reach.process_text`.
