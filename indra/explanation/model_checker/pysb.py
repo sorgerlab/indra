@@ -163,8 +163,16 @@ class PysbModelChecker(ModelChecker):
         self.model.observables = ComponentSet([])
         for stmt in self.statements:
             # Generate observables for Modification statements
-            if isinstance(stmt, Modification):
-                if stmt.sub is None:
+            if isinstance(stmt, Modification) or \
+               isinstance(stmt, SelfModification):
+                # If the statement is a regular Mod, the target is stmt.sub
+                if isinstance(stmt, Modification):
+                    sub = stmt.sub
+                # If it's a SelfMod, the target is stmt.enz
+                elif isinstance(stmt, SelfModification):
+                    sub = stmt.enz
+                # Add the mod for the agent
+                if sub is None:
                     self.stmt_to_obs[stmt] = [None]
                 else:
                     mod_condition_name = modclass_to_modtype[stmt.__class__]
@@ -172,7 +180,7 @@ class PysbModelChecker(ModelChecker):
                         mod_condition_name = modtype_to_inverse[
                             mod_condition_name]
                     # Get all refinements of substrate agent
-                    all_subs = self.get_refinements(stmt.sub)
+                    all_subs = self.get_refinements(sub)
                     # Add modification to substrate agents
                     modified_subs = [
                         _add_modification_to_agent(

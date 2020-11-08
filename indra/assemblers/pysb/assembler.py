@@ -1445,8 +1445,7 @@ for mc, rate_law in itertools.product(ist.modclass_to_modtype.keys(),
 def autophosphorylation_monomers_one_step(stmt, agent_set):
     enz = agent_set.get_create_base_agent(stmt.enz)
     phos_site = get_mod_site_name(stmt._get_mod_condition())
-    enz.create_site(phos_site, ('u', 'p'))
-
+    enz.create_mod_site(stmt._get_mod_condition())
 
 def autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     param_name = 'kf_' + stmt.enz.name[0].lower() + '_autophos'
@@ -1454,19 +1453,21 @@ def autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     kfp = parameters.get('kf', Param(param_name, 1e-2, True))
     kf_autophospho = get_create_parameter(model, kfp)
 
-    # See NOTE in monomers_one_step
-    phos_site = get_mod_site_name(stmt._get_mod_condition())
-    pattern_unphos = get_monomer_pattern(model, stmt.enz,
-                                         extra_fields={phos_site: 'u'})
-    pattern_phos = get_monomer_pattern(model, stmt.enz,
-                                       extra_fields={phos_site: 'p'})
+    mc = stmt._get_mod_condition()
+    mod_site = get_mod_site_name(mc)
+    unmod_site_state, mod_site_state = states[mc.mod_type]
+
+    sub_unmod = get_monomer_pattern(model, stmt.enz,
+            extra_fields={mod_site: unmod_site_state})
+    sub_mod = get_monomer_pattern(model, stmt.enz,
+            extra_fields={mod_site: mod_site_state})
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_name = '%s_autophospho_%s_%s' % (rule_enz_str, rule_enz_str,
-                                          phos_site)
-    r = Rule(rule_name, pattern_unphos >> pattern_phos, kf_autophospho)
-    anns = [Annotation(rule_name, pattern_unphos.monomer.name,
+                                          mod_site)
+    r = Rule(rule_name, sub_unmod >> sub_mod, kf_autophospho)
+    anns = [Annotation(rule_name, sub_unmod.monomer.name,
                        'rule_has_subject'),
-            Annotation(rule_name, pattern_phos.monomer.name,
+            Annotation(rule_name, sub_unmod.monomer.name,
                        'rule_has_object')]
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
