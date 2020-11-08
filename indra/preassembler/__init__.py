@@ -314,9 +314,14 @@ class Preassembler(object):
 
         total_comparisons = sum(len(v) for v in stmts_to_compare.values())
         logger.info('Total comparisons: %d' % total_comparisons)
-
         # Step 4. We can now do the actual comparisons and save pairs of
         # confirmed refinements in a list.
+        maps = self.compare_stmts_by_hash(stmts_by_hash, stmts_to_compare,
+                                          split_groups=split_groups)
+        return maps
+
+    def compare_stmts_by_hash(self, stmts_by_hash, stmts_to_compare,
+                              split_groups=None):
         maps = []
         # We again iterate over statements
         ts = time.time()
@@ -331,14 +336,15 @@ class Preassembler(object):
                     # And then do the actual comparison. Here we use
                     # entities_refined=True which means that we assert that
                     # the entities, in each role, are already confirmed to
-                    # be "compatible" for refinement, and therefore, we don't need
-                    # to again confirm this (i.e., call "isa") in the refinement_of
-                    # function.
+                    # be "compatible" for refinement, and therefore, we
+                    # don't need to again confirm this (i.e., call "isa") in
+                    # the refinement_of function.
                     self._comparison_counter += 1
-                    ref = self.refinement_fun(stmts_by_hash[stmt_hash],
-                                              stmts_by_hash[possible_refined_hash],
-                                              ontology=self.ontology,
-                                              entities_refined=True)
+                    ref = self.refinement_fun(
+                        stmts_by_hash[stmt_hash],
+                        stmts_by_hash[possible_refined_hash],
+                        ontology=self.ontology,
+                        entities_refined=True)
                     if ref:
                         maps.append((stmt_hash, possible_refined_hash))
         te = time.time()
