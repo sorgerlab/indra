@@ -1046,3 +1046,29 @@ def test_split_idx():
     assert (2, 0) in maps, maps
     assert (1, 0) not in maps, maps
     assert pa._comparison_counter == 1
+
+
+def test_refinement_filters():
+    ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
+    kras = Agent('KRAS', db_refs={'HGNC': '6407'})
+    hras = Agent('HRAS', db_refs={'HGNC': '5173'})
+    st1 = Phosphorylation(Agent('x'), ras)
+    st2 = Phosphorylation(Agent('x'), kras)
+    st3 = Phosphorylation(Agent('x'), hras)
+
+    # This filters everything out so no comparisons will be done
+    def filter_empty(stmts_by_hash):
+        return {k: set() for k in stmts_by_hash}
+    # No comparisons here
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
+    pa.combine_related(filters=[filter_empty])
+    assert pa._comparison_counter == 0
+
+    # This is a superset of all comparisons constrained by the ontology
+    # so will not change what the preassembler does internally
+    def filter_all(stmts_by_hash):
+        return {k: set(stmts_by_hash.keys()) - {k} for k in stmts_by_hash}
+    # The same number of comparisons here as without the filter
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
+    pa.combine_related(filters=[filter_all])
+    assert pa._comparison_counter == 2

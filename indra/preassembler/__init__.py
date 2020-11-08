@@ -313,8 +313,24 @@ class Preassembler(object):
         # Here we apply any additional filters to cut down the number of
         # potential comparisons before actually making comparisons
         if filters:
+            # We apply filter functions sequentially
             for filter_fun in filters:
-                stmts_to_compare = filter_fun(stmts_to_compare, stmts_by_hash)
+                # We call the filter function to get a filter-specific set
+                # of statements to compare
+                filtered_stmts_to_compare = filter_fun(stmts_by_hash)
+                # We then take the intersection of the existing stmts_to_compare
+                # and the ones found by the filter.
+                stmts_to_compare = {
+                    # We do a set intersection between the sets of potentially
+                    # refined statements
+                    filtered_stmt_hash: (filtered_potential_refs &
+                                         stmts_to_compare[filtered_stmt_hash])
+                    for filtered_stmt_hash, filtered_potential_refs in
+                    filtered_stmts_to_compare.items()
+                    # And here we also apply an intersection over the keys
+                    # of the existing and the filtered dicts
+                    if filtered_stmt_hash in stmts_to_compare
+                }
 
         logger.debug('Identified potential refinements in %.2fs' % (te-ts))
 
