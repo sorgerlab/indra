@@ -391,7 +391,7 @@ class IndraDBRestSearchProcessor(IndraDBRestProcessor):
                            "statement load to complete." % dt.total_seconds())
             ret = False
         else:
-            logger.info("Waited %0.3f seconds for statements to finish"
+            logger.info("Waited %0.3f seconds for statements to finish "
                         "loading." % dt.total_seconds())
             ret = True
         return ret

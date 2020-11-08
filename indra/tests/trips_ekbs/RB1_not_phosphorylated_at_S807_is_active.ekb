@@ -1,0 +1,114 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum-dev/etc/Data/WP/TEXT00005_IO-47351" id="paragraph4">RB1 not phosphorylated at S807 is active.</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="5" pid="paragraph4">RB1 not phosphorylated at S807 is active.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="40" id="V47518" lisp="(ONT::EVENT ONT::V47518 (:* ONT::HAVE-PROPERTY W::BE) :NEUTRAL ONT::V47362 :FORMAL ONT::V47542 :TENSE W::PRES :FORCE ONT::TRUE)" paragraph="paragraph4" rule="-ADD-SPEC" start="0" uttnum="5">
+		<type>ONT::HAVE-PROPERTY</type>
+		<text normalization="BE">RB1 not phosphorylated at S807 is active</text>
+		<force>ONT::TRUE</force>
+		<tense>PRES</tense>
+		<predicate end="40" start="0">
+			<type>ONT::HAVE-PROPERTY</type>
+			<text normalization="BE">RB1 not phosphorylated at S807 is active</text>
+		</predicate>
+		<arg1 end="40" id="V47362" role=":NEUTRAL" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">RB1 not phosphorylated at S807 is active</text>
+		</arg1>
+		<arg2 end="40" id="V47542" role=":FORMAL" start="34">
+			<type>ONT::ACTIVE</type>
+			<text normalization="ACTIVE">active</text>
+		</arg2>
+	</EVENT>
+	<TERM dbid="NCIT:C52102|XFAM:PF00076|HGNC:9884|UP:Q9LKX9|NCIT:C17394|XFAM:PF01857|UP:P06400|XFAM:PF11934|UP:Q8IUH3|XFAM:PF01858|UP:Q8BHN5|HGNC:24468" end="40" id="V47362" lisp="(ONT::TERM ONT::V47362 ONT::GENE-PROTEIN :INEVENT ONT::V47404 :ACTIVE ONT::TRUE :NAME W::RB-1 :DRUM ((:DRUM (TERM :ID HGNC::|9884| :NAME &quot;RB transcriptional corepressor 1&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :INPUT &quot;RB1&quot; :MATCHED &quot;RB1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1) (MATCH :SCORE 0.85542 :INPUT &quot;RB1&quot; :MATCHED &quot;RB1&quot; :STATUS &quot;Approved Symbol&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 1) (MATCH :SCORE 0.85368 :INPUT &quot;RB1&quot; :MATCHED &quot;RB1&quot; :VIA &quot;Rb1&quot; :STATUS &quot;Approved Symbol&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.8831169 :SENTENCE-CAP-ALL-CAPS 1)) :DBXREFS (UP::P06400) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52102 :NAME &quot;RB1&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :INPUT &quot;RB1&quot; :MATCHED &quot;RB1&quot; :STATUS &quot;name&quot; :EXACT 1) (MATCH :SCORE 0.85542 :INPUT &quot;RB1&quot; :MATCHED &quot;RB1&quot; :STATUS &quot;name&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 1) (MATCH :SCORE 0.85368 :INPUT &quot;RB1&quot; :MATCHED &quot;RB1&quot; :VIA &quot;Rb1&quot; :STATUS &quot;name&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.8831169 :SENTENCE-CAP-ALL-CAPS 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::Q9LKX9 :NAME &quot;Retinoblastoma-related protein 1&quot; :SCORE 0.85401 :MATCHES ((MATCH :SCORE 0.85401 :INPUT &quot;RB1&quot; :MATCHED &quot;Rb1&quot; :STATUS &quot;RecName: Short&quot; :ALL-CAPS-INITIAL-CAP 1) (MATCH :SCORE 0.85401 :INPUT &quot;RB1&quot; :MATCHED &quot;Rb1&quot; :STATUS &quot;RecName: Short&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :ALL-CAPS-INITIAL-CAP 1) (MATCH :SCORE 0.85368 :INPUT &quot;RB1&quot; :MATCHED &quot;Rb1&quot; :VIA &quot;Rb1&quot; :STATUS &quot;RecName: Short&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.8831169 :SENTENCE-CAP-INITIAL-CAP 1)) :DBXREFS (XFAM::PF11934 XFAM::PF01858 XFAM::PF01857) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C17394 :NAME &quot;retinoblastoma-associated protein&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :INPUT &quot;RB1&quot; :MATCHED &quot;RB1&quot; :STATUS &quot;synonym&quot; :EXACT 1) (MATCH :SCORE 0.71084 :INPUT &quot;RB1&quot; :MATCHED &quot;RB1&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :EXACT 1) (MATCH :SCORE 0.7091 :INPUT &quot;RB1&quot; :MATCHED &quot;RB1&quot; :VIA &quot;Rb1&quot; :STATUS &quot;synonym&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.8831169 :SENTENCE-CAP-ALL-CAPS 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::Q8IUH3 :NAME &quot;RNA-binding protein 45&quot; :SCORE 0.56624 :MATCHES ((MATCH :SCORE 0.56624 :INPUT &quot;RB1&quot; :MATCHED &quot;RB-1&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1) (MATCH :SCORE 0.56624 :INPUT &quot;RB1&quot; :MATCHED &quot;RB-1&quot; :STATUS &quot;AltName: Short&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :NO-DASH-DASH 1 :EXACT 1) (MATCH :SCORE 0.5645 :INPUT &quot;RB1&quot; :MATCHED &quot;RB-1&quot; :VIA &quot;Rb1&quot; :STATUS &quot;AltName: Short&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.8831169 :NO-DASH-DASH 1 :SENTENCE-CAP-ALL-CAPS 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|24468| XFAM::PF00076) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::Q8BHN5 :NAME &quot;RNA-binding protein 45&quot; :SCORE 0.56624 :MATCHES ((MATCH :SCORE 0.56624 :INPUT &quot;RB1&quot; :MATCHED &quot;RB-1&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1) (MATCH :SCORE 0.56624 :INPUT &quot;RB1&quot; :MATCHED &quot;RB-1&quot; :STATUS &quot;AltName: Short&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 1 :NO-DASH-DASH 1 :EXACT 1) (MATCH :SCORE 0.5645 :INPUT &quot;RB1&quot; :MATCHED &quot;RB-1&quot; :VIA &quot;Rb1&quot; :STATUS &quot;AltName: Short&quot; :MAYBE-DEPLURALIZED 1 :SURELY-DEPLURALIZED 0 :DEPLURALIZATION-SCORE 0.8831169 :NO-DASH-DASH 1 :SENTENCE-CAP-ALL-CAPS 1)) :SPECIES &quot;Mus musculus (Mouse)&quot; :DBXREFS (XFAM::PF00076) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph4" rule="-INEVENT2B,-ACTIVE3,-SIMPLE-REF,-ADD-SPEC" start="0" uttnum="5">
+		<type>ONT::GENE-PROTEIN</type>
+		<text normalization="">RB1 not phosphorylated at S807 is active</text>
+		<name>RB-1</name>
+		<features>
+			<inevent id="V47404"/>
+			<active>TRUE</active>
+		</features>
+		<drum-terms>
+			<drum-term dbid="HGNC:9884" match-score="0.85542" matched-name="RB1" name="RB transcriptional corepressor 1" text-input="RB1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P06400"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C52102" match-score="0.85542" matched-name="RB1" name="RB1" text-input="RB1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="UP:Q9LKX9" match-score="0.85401" matched-name="Rb1" name="Retinoblastoma-related protein 1" text-input="RB1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF11934"/>
+					<xref dbid="XFAM:PF01858"/>
+					<xref dbid="XFAM:PF01857"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C17394" match-score="0.71084" matched-name="RB1" name="retinoblastoma-associated protein" text-input="RB1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="UP:Q8IUH3" match-score="0.56624" matched-name="RB-1" name="RNA-binding protein 45" text-input="RB1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:24468"/>
+					<xref dbid="XFAM:PF00076"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="UP:Q8BHN5" match-score="0.56624" matched-name="RB-1" name="RNA-binding protein 45" text-input="RB1">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00076"/>
+				</xrefs>
+				<species>Mus musculus (Mouse)</species>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+	<EVENT end="40" id="V47404" lisp="(ONT::EVENT ONT::V47404 ONT::PHOSPHORYLATION :AFFECTED ONT::V47362 :SITEMOD (:* ONT::AT-LOC W::AT) :SITE ONT::V47499 :FORCE ONT::FALSE :NEGATION +)" paragraph="paragraph4" rule="-RULE60_4_AGENT_AFFECTED-LOC4-GD-AFFECTED,-ADD-SPEC" start="0" uttnum="5">
+		<type>ONT::PHOSPHORYLATION</type>
+		<text normalization="">RB1 not phosphorylated at S807 is active</text>
+		<negation>+</negation>
+		<force>ONT::FALSE</force>
+		<predicate end="40" start="0">
+			<type>ONT::PHOSPHORYLATION</type>
+			<text normalization="PHOSPHORYLATE">RB1 not phosphorylated at S807 is active</text>
+		</predicate>
+		<arg2 end="40" id="V47362" role=":AFFECTED" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">RB1 not phosphorylated at S807 is active</text>
+		</arg2>
+		<site id="V47499"/>
+	</EVENT>
+	<TERM end="31" id="V47499" lisp="(ONT::TERM ONT::V47499 ONT::MOLECULAR-SITE :NAME W::S-807 :DRUM ((:DRUM (AA-SITE :NAME &quot;Serine&quot; :LETTER &quot;S&quot; :INDEX 807))))" paragraph="paragraph4" rule="-SIMPLE-REF,-ADD-SPEC" start="26" uttnum="5">
+		<type>ONT::MOLECULAR-SITE</type>
+		<text normalization="">S807</text>
+		<name>S-807</name>
+		<features>
+			<site>
+				<name>Serine</name>
+				<code>S</code>
+				<pos>807</pos>
+			</site>
+		</features>
+	</TERM>
+</ekb>

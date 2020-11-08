@@ -819,6 +819,31 @@ def test_59():
     assert {st.subj.name for st in tp.statements} == {'HRAS', 'KRAS'}
 
 
+def test_60():
+    sentence = 'RB1 not phosphorylated at S807 is active.'
+    tp = process_sentence_xml(sentence)
+    assert len(tp.statements) == 1
+    stmt = tp.statements[0]
+    assert isinstance(stmt, ActiveForm)
+    assert stmt.agent.name == 'RB1'
+    mod = stmt.agent.mods[0]
+    assert mod.mod_type == 'phosphorylation'
+    assert mod.residue == 'S'
+    assert mod.position == '807'
+    assert mod.is_modified is False
+
+
+def test_61():
+    sentence = 'ELK1 translocates to the nucleus.'
+    tp = process_sentence_xml(sentence)
+    assert len(tp.statements) == 1
+    stmt = tp.statements[0]
+    assert isinstance(stmt, Translocation)
+    assert stmt.agent.name == 'ELK1'
+    assert stmt.from_location is None
+    assert stmt.to_location == 'nucleus'
+
+
 def test_assoc_with():
     fname = os.path.join(path_this, 'trips_ekbs', 'ekb_assoc.ekb')
     tp = trips.process_xml(open(fname, 'r').read())

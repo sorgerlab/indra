@@ -959,18 +959,22 @@ class TripsProcessor(object):
             if agent is None:
                 continue
             # Get from location
-            from_loc_tag = event.find("from-location")
-            if from_loc_tag is None:
+            froms = [event.find(from_tag)
+                     for from_tag in ('from', 'from-location')]
+            froms = [f for f in froms if f is not None]
+            if not froms:
                 from_location = None
             else:
-                from_loc_id = from_loc_tag.attrib.get('id')
+                from_loc_id = froms[0].attrib.get('id')
                 from_location = self._get_cell_loc_by_id(from_loc_id)
             # Get to location
-            to_loc_tag = event.find("to-location")
-            if to_loc_tag is None:
+            tos = [event.find(from_tag)
+                   for from_tag in ('to', 'to-location')]
+            tos = [t for t in tos if t is not None]
+            if not tos:
                 to_location = None
             else:
-                to_loc_id = to_loc_tag.attrib.get('id')
+                to_loc_id = tos[0].attrib.get('id')
                 to_location = self._get_cell_loc_by_id(to_loc_id)
             if from_location is None and to_location is None:
                 continue
@@ -1675,6 +1679,12 @@ class TripsProcessor(object):
         all_events = self.tree.findall('EVENT')
         active_event_args = set()
         for event in all_events:
+            ev_type = event.find('type').text
+            # This is a special case of an uninteresting event type
+            # that we don't want to consider as a connection for a TERM
+            # of interes.
+            if ev_type == 'ONT::HAVE-PROPERTY':
+                continue
             if event.attrib.get('id') in self._static_events:
                 continue
             args = event.findall('arg') + \
