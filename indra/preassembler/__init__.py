@@ -191,8 +191,6 @@ class Preassembler(object):
             unique_stmts.append(new_stmt)
         return unique_stmts
 
-    # Note that the args, kwargs here are just there for backwards compatibility
-    # with old code that uses arguments related to multiprocessing.
     def _generate_id_maps(self, unique_stmts, *args, **kwargs):
         """Connect statements using their refinement relationship."""
         # Make a list of Statement types
@@ -222,13 +220,14 @@ class Preassembler(object):
                         (len(stmts), stmt_type.__name__))
             maps += self._generate_hash_maps_by_stmt_type(
                 stmts, stmts[0]._agent_order,
-                split_groups=hash_to_split_group)
+                split_groups=hash_to_split_group,
+                filters=kwargs.get('filters', None))
         idx_maps = [(stmt_to_idx[refinement], stmt_to_idx[refined])
                     for refinement, refined in maps]
         return idx_maps
 
     def _generate_hash_maps_by_stmt_type(self, stmts, roles,
-                                         split_groups=None):
+                                         split_groups=None, filters=None):
         ts = time.time()
         # Step 1. initialize data structures
         # Statements keyed by their hashes
@@ -310,6 +309,13 @@ class Preassembler(object):
             # a well-defined direction so we don't need to test both ways.
             stmts_to_compare[sh] = relevants
         te = time.time()
+
+        # Here we apply any additional filters to cut down the number of
+        # potential comparisons before actually making comparisons
+        if filters:
+            for filter_fun in filters:
+                stmts_to_compare = filter_fun(stmts_to_compare, stmts_by_hash)
+
         logger.debug('Identified potential refinements in %.2fs' % (te-ts))
 
         total_comparisons = sum(len(v) for v in stmts_to_compare.values())
@@ -447,7 +453,8 @@ class Preassembler(object):
         unique_stmts = self.combine_duplicates()
 
         # Generate the index map, linking related statements.
-        idx_map = self._generate_id_maps(unique_stmts)
+        idx_map = self._generate_id_maps(unique_stmts,
+                                         filters=kwargs.get('filters'))
 
         # Now iterate over all indices and set supports/supported by
         for ix1, ix2 in idx_map:
