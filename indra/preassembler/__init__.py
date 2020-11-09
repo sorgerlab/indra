@@ -191,110 +191,6 @@ class Preassembler(object):
             unique_stmts.append(new_stmt)
         return unique_stmts
 
-    def _generate_id_maps(self, unique_stmts, split_idx=None,
-                          filters=None, **kwargs):
-        """Connect statements using their refinement relationship."""
-        # Make a list of Statement types
-        stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
-                       for idx, stmt in enumerate(unique_stmts)}
-
-        # Statements keyed by their hashes
-        stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun):
-                             stmt for stmt in stmts}
-        ###
-        stmts_to_compare = ontology_refinement_filter(stmts_by_hash=stmts_by_hash,
-                                                      ontology=self.ontology)
-
-        # Here we apply any additional filters to cut down the number of
-        # potential comparisons before actually making comparisons
-        if filters:
-            # We apply filter functions sequentially
-            for filter_fun in filters:
-                stmts_to_compare = \
-                    apply_refinement_filter(stmts_by_hash, stmts_to_compare,
-                                            filter_fun)
-
-        total_comparisons = sum(len(v) for v in stmts_to_compare.values())
-        logger.info('Total comparisons: %d' % total_comparisons)
-
-        # Here we handle split_idx to allow finding refinements between
-        # to distinct groups of statements (identified by an index at which we
-        # split the unique_statements list) rather than globally across
-        # all unique statements.
-        if split_idx:
-            # This dict maps statement hashes to a bool value based on which
-            # of the two groups the statement belongs to.
-            hash_to_split_group = {sh: (idx <= split_idx) for sh, idx
-                                   in stmt_to_idx.items()}
-        else:
-            hash_to_split_group = None
-
-        # Step 4. We can now do the actual comparisons and save pairs of
-        # confirmed refinements in a list.
-        maps = self.compare_stmts_by_hash(stmts_by_hash, stmts_to_compare,
-                                          split_groups=hash_to_split_group)
-        return maps
-
-        idx_maps = [(stmt_to_idx[refinement], stmt_to_idx[refined])
-                    for refinement, refined in maps]
-        return idx_maps
-
-    def compare_stmts_by_hash(self, stmts_by_hash, stmts_to_compare,
-                              split_groups=None):
-        """Return confirmed pairs of statement refinement relationships.
-
-        Parameters
-        ----------
-        stmts_by_hash : dict
-            A dict whose keys are statement hashes that point to the
-            (deduplicated) statement with that hash as a value.
-        stmts_to_compare : dict
-            A dict whose keys are statement hashes and values are sets of
-            statement hashes that the statement with the given hash can
-            possibly refine.
-        split_groups : dict
-            A dict whose keys are statement hashes and values represent
-            one of two groups that the statement is in. Statement in the
-            same group aren't compared, only statements in different
-            groups are. This can be used to do "bipartite" refinement
-            checking across a set of statements.
-
-        Returns
-        -------
-        list of tuple
-            A list of tuple where the first element of each tuple is the
-            hash of a statement which refines that statement whose hash
-            is the second element of the tuple.
-        """
-        maps = []
-        # We again iterate over statements
-        ts = time.time()
-        for stmt_hash, possible_refined_hashes in stmts_to_compare.items():
-            # We use the previously constructed set of statements that this one
-            # can possibly refine
-            for possible_refined_hash in possible_refined_hashes:
-                # We handle split groups here to only check refinements between
-                # statements that are in different groups to compare
-                if not split_groups or split_groups[stmt_hash] != \
-                        split_groups[possible_refined_hash]:
-                    # And then do the actual comparison. Here we use
-                    # entities_refined=True which means that we assert that
-                    # the entities, in each role, are already confirmed to
-                    # be "compatible" for refinement, and therefore, we
-                    # don't need to again confirm this (i.e., call "isa") in
-                    # the refinement_of function.
-                    self._comparison_counter += 1
-                    ref = self.refinement_fun(
-                        stmts_by_hash[stmt_hash],
-                        stmts_by_hash[possible_refined_hash],
-                        ontology=self.ontology,
-                        entities_refined=True)
-                    if ref:
-                        maps.append((stmt_hash, possible_refined_hash))
-        te = time.time()
-        logger.debug('Confirmed %d refinements in %.2fs' % (len(maps), te-ts))
-        return maps
-
     # Note that the kwargs here are just there for backwards compatibility
     # with old code that uses arguments related to multiprocessing.
     def combine_related(self, return_toplevel=True, filters=None, **kwargs):
@@ -412,6 +308,110 @@ class Preassembler(object):
             return self.related_stmts
         else:
             return unique_stmts
+
+    def _generate_id_maps(self, unique_stmts, split_idx=None,
+                          filters=None, **kwargs):
+        """Connect statements using their refinement relationship."""
+        # Make a list of Statement types
+        stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
+                       for idx, stmt in enumerate(unique_stmts)}
+
+        # Statements keyed by their hashes
+        stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun):
+                         stmt for stmt in unique_stmts}
+        stmts_to_compare = \
+            ontology_refinement_filter(stmts_by_hash=stmts_by_hash,
+                                       ontology=self.ontology)
+
+        # Here we apply any additional filters to cut down the number of
+        # potential comparisons before actually making comparisons
+        if filters:
+            # We apply filter functions sequentially
+            for filter_fun in filters:
+                stmts_to_compare = \
+                    apply_refinement_filter(stmts_by_hash, stmts_to_compare,
+                                            filter_fun)
+
+        total_comparisons = sum(len(v) for v in stmts_to_compare.values())
+        logger.info('Total comparisons: %d' % total_comparisons)
+
+        # Here we handle split_idx to allow finding refinements between
+        # to distinct groups of statements (identified by an index at which we
+        # split the unique_statements list) rather than globally across
+        # all unique statements.
+        if split_idx:
+            # This dict maps statement hashes to a bool value based on which
+            # of the two groups the statement belongs to.
+            hash_to_split_group = {sh: (idx <= split_idx) for sh, idx
+                                   in stmt_to_idx.items()}
+        else:
+            hash_to_split_group = None
+
+        # Step 4. We can now do the actual comparisons and save pairs of
+        # confirmed refinements in a list.
+        maps = self.compare_stmts_by_hash(stmts_by_hash, stmts_to_compare,
+                                          split_groups=hash_to_split_group)
+
+        idx_maps = [(stmt_to_idx[refinement], stmt_to_idx[refined])
+                    for refinement, refined in maps]
+        return idx_maps
+
+    def compare_stmts_by_hash(self, stmts_by_hash, stmts_to_compare,
+                              split_groups=None):
+        """Return confirmed pairs of statement refinement relationships.
+
+        Parameters
+        ----------
+        stmts_by_hash : dict
+            A dict whose keys are statement hashes that point to the
+            (deduplicated) statement with that hash as a value.
+        stmts_to_compare : dict
+            A dict whose keys are statement hashes and values are sets of
+            statement hashes that the statement with the given hash can
+            possibly refine.
+        split_groups : dict
+            A dict whose keys are statement hashes and values represent
+            one of two groups that the statement is in. Statement in the
+            same group aren't compared, only statements in different
+            groups are. This can be used to do "bipartite" refinement
+            checking across a set of statements.
+
+        Returns
+        -------
+        list of tuple
+            A list of tuple where the first element of each tuple is the
+            hash of a statement which refines that statement whose hash
+            is the second element of the tuple.
+        """
+        maps = []
+        # We again iterate over statements
+        ts = time.time()
+        for stmt_hash, possible_refined_hashes in stmts_to_compare.items():
+            # We use the previously constructed set of statements that this one
+            # can possibly refine
+            for possible_refined_hash in possible_refined_hashes:
+                # We handle split groups here to only check refinements between
+                # statements that are in different groups to compare
+                if not split_groups or split_groups[stmt_hash] != \
+                        split_groups[possible_refined_hash]:
+                    # And then do the actual comparison. Here we use
+                    # entities_refined=True which means that we assert that
+                    # the entities, in each role, are already confirmed to
+                    # be "compatible" for refinement, and therefore, we
+                    # don't need to again confirm this (i.e., call "isa") in
+                    # the refinement_of function.
+                    self._comparison_counter += 1
+                    ref = self.refinement_fun(
+                        stmts_by_hash[stmt_hash],
+                        stmts_by_hash[possible_refined_hash],
+                        ontology=self.ontology,
+                        entities_refined=True)
+                    if ref:
+                        maps.append((stmt_hash, possible_refined_hash))
+        te = time.time()
+        logger.debug('Confirmed %d refinements in %.2fs' % (len(maps), te-ts))
+        return maps
+
 
     def find_contradicts(self):
         """Return pairs of contradicting Statements.
@@ -859,13 +859,15 @@ def ontology_refinement_filter(stmts_by_hash, ontology):
         stmts_by_type[indra_stmt_type(stmt)].append(stmt)
     stmts_by_type = dict(stmts_by_type)
 
-
-    maps = []
+    stmts_to_compare = {}
     for stmt_type, stmts in stmts_by_type.items():
         logger.info('Finding refinements for %d %s statements' %
                     (len(stmts), stmt_type.__name__))
-        maps += ontology_refinement_filter_by_stmt_type(ontology, stmts,
-                                                        stmts[0]._agent_order)
+        stmts_to_compare_by_type = \
+            ontology_refinement_filter_by_stmt_type(ontology, stmts,
+                                                    stmts[0]._agent_order)
+        stmts_to_compare.update(stmts_to_compare_by_type)
+    return stmts_to_compare
 
 
 def ontology_refinement_filter_by_stmt_type(ontology, stmts_by_hash, roles):
