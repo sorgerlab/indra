@@ -625,28 +625,6 @@ def test_return_toplevel():
     assert len(stmts[ix].supports[0].supported_by) == 1
 
 
-def test_multiprocessing():
-    braf = Agent('BRAF', db_refs={'HGNC': '1097'})
-    mek1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
-    mek = Agent('MEK', db_refs={'FPLX':'MEK'})
-    # Statements
-    p0 = Phosphorylation(braf, mek)
-    p1 = Phosphorylation(braf, mek1)
-    p2 = Phosphorylation(braf, mek1, position='218')
-    p3 = Phosphorylation(braf, mek1, position='222')
-    p4 = Phosphorylation(braf, mek1, 'serine')
-    p5 = Phosphorylation(braf, mek1, 'serine', '218')
-    p6 = Phosphorylation(braf, mek1, 'serine', '222')
-    p7 = Dephosphorylation(braf, mek1)
-    stmts = [p0, p1, p2, p3, p4, p5, p6, p7]
-    pa = Preassembler(bio_ontology, stmts=stmts)
-    # Size cutoff set to a low number so that one group will run remotely
-    # and one locally
-    toplevel = pa.combine_related(return_toplevel=True, poolsize=1,
-                                  size_cutoff=2)
-    assert len(toplevel) == 3, 'Got %d toplevel statements.' % len(toplevel)
-
-
 def test_conversion_refinement():
     ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
     hras = Agent('HRAS', db_refs={'HGNC': '5173'})
