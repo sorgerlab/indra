@@ -379,7 +379,8 @@ def run_preassembly(stmts_in, return_toplevel=True, poolsize=None,
                     matches_fun=None, refinement_fun=None, refinement_ns=None,
                     flatten_evidence=False, flatten_evidence_collect_from=None,
                     normalize_equivalences=False, normalize_opposites=False,
-                    normalize_ns='WM', run_refinement=True, **kwargs):
+                    normalize_ns='WM', run_refinement=True, filters=None,
+                    **kwargs):
     """Run preassembly on a list of statements.
 
     Parameters
@@ -431,6 +432,13 @@ def run_preassembly(stmts_in, return_toplevel=True, poolsize=None,
     normalize_ns : Optional[str]
         The name space with respect to which equivalences and opposites are
         normalized.
+    filters : Optional[list[function]]
+        A list of function handles that define filter functions on
+        possible statement refinements. Each function takes
+        a stmts_by_hash dict as its input and returns a dict
+        of possible refinements where the keys are statement hashes
+        and the values are sets of statement hashes that the
+        key statement possibly refines.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
     save_unique : Optional[str]
@@ -465,7 +473,8 @@ def run_preassembly(stmts_in, return_toplevel=True, poolsize=None,
     options = {'save': dump_pkl, 'return_toplevel': return_toplevel,
                'poolsize': poolsize, 'size_cutoff': size_cutoff,
                'flatten_evidence': flatten_evidence,
-               'flatten_evidence_collect_from': flatten_evidence_collect_from
+               'flatten_evidence_collect_from': flatten_evidence_collect_from,
+               'filters': filters
                }
     stmts_out = run_preassembly_related(pa, be, **options)
     return stmts_out
@@ -513,11 +522,6 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
         If True, only the top-level statements are returned. If False,
         all statements are returned irrespective of level of specificity.
         Default: True
-    poolsize : Optional[int]
-        The number of worker processes to use to parallelize the
-        comparisons performed by the function. If None (default), no
-        parallelization is performed. NOTE: Parallelization is only
-        available on Python 3.4 and above.
     size_cutoff : Optional[int]
         Groups with size_cutoff or more statements are sent to worker
         processes, while smaller groups are compared in the parent process.
@@ -542,11 +546,11 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
     logger.info('Combining related on %d statements...' %
                 len(preassembler.unique_stmts))
     return_toplevel = kwargs.get('return_toplevel', True)
-    poolsize = kwargs.get('poolsize', None)
     size_cutoff = kwargs.get('size_cutoff', 100)
+    filters = kwargs.get('filters', None)
     stmts_out = preassembler.combine_related(return_toplevel=False,
-                                             poolsize=poolsize,
-                                             size_cutoff=size_cutoff)
+                                             size_cutoff=size_cutoff,
+                                             filters=filters)
     # Calculate beliefs
     beliefengine.set_hierarchy_probs(stmts_out)
 
