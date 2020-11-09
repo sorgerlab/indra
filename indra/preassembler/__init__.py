@@ -863,10 +863,13 @@ def ontology_refinement_filter(stmts_by_hash, ontology):
     for stmt_type, stmt_hashes in stmts_by_type.items():
         logger.info('Finding refinements for %d %s statements' %
                     (len(stmts_by_hash), stmt_type.__name__))
-        stmts_by_hash = {stmt_hash: stmts_by_hash[stmt_hash]
-                         for stmt_hash in stmt_hashes}
+        stmts_by_hash_this_type = {
+            stmt_hash: stmts_by_hash[stmt_hash]
+            for stmt_hash in stmt_hashes
+        }
         stmts_to_compare_by_type = \
-            ontology_refinement_filter_by_stmt_type(stmts_by_hash, ontology)
+            ontology_refinement_filter_by_stmt_type(stmts_by_hash_this_type,
+                                                    ontology)
         stmts_to_compare.update(stmts_to_compare_by_type)
     return stmts_to_compare
 
