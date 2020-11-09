@@ -313,7 +313,32 @@ class Preassembler(object):
     # with old code that uses arguments related to multiprocessing.
     def _generate_id_maps(self, unique_stmts, split_idx=None,
                           filters=None, **kwargs):
-        """Connect statements using their refinement relationship."""
+        """Return pairs of statement indices representing refinement relations.
+
+        Parameters
+        ----------
+        unique_stmts : list[indra.statements.Statement]
+            A list of de-duplicated INDRA Statements.
+        split_idx : Optional[int]
+            An index at which the flat list of unique statements should be split
+            and compared for refinements only across the two groups, not
+            within each group.
+        filters : Optional[list[function]]
+            A list of function handles that define filter functions on
+            possible statement refinements. Each function takes
+            a stmts_by_hash dict as its input and returns a dict
+            of possible refinements where the keys are statement hashes
+            and the values are sets of statement hashes that the
+            key statement possibly refines.
+
+        Returns
+        -------
+        list[tuple]
+            A list of tuples where the first element of each tuple is
+            the linear index of a statement in the unique stmts list
+            which refines the statement whose index is the second
+            element of the tuple.
+        """
         # Make a list of Statement types
         stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
                        for idx, stmt in enumerate(unique_stmts)}
@@ -349,8 +374,8 @@ class Preassembler(object):
         else:
             hash_to_split_group = None
 
-        # Step 4. We can now do the actual comparisons and save pairs of
-        # confirmed refinements in a list.
+        # We can now do the actual comparisons and return pairs of confirmed
+        # refinements in a list.
         maps = \
             self.confirm_possible_refinements(stmts_by_hash,
                                               stmts_to_compare,
@@ -560,7 +585,7 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
 
     Parameters
     ----------
-    stmts : list of :py:class:`indra.statements.Statement`
+    statements : list of :py:class:`indra.statements.Statement`
         A list of top-level statements with associated supporting statements
         resulting from building a statement hierarchy with
         :py:meth:`combine_related`.
@@ -571,7 +596,7 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
         If True, the statements in the graph are represented by their
         English-assembled equivalent; otherwise they are represented as
         text-formatted Statements.
-    rank_dir : str or None
+    rankdir : str or None
         Argument to pass through to the  pygraphviz `AGraph` constructor
         specifying graph layout direction. In particular, a value of 'LR'
         specifies a left-to-right direction. If None, the pygraphviz default
@@ -857,6 +882,24 @@ def get_relevant_keys(agent_key, all_keys_for_role, ontology):
 
 
 def ontology_refinement_filter(stmts_by_hash, ontology):
+    """Return possible refinement relationships based on an ontology.
+
+    Parameters
+    ----------
+    stmts_by_hash : dict
+        A dict whose keys are statement hashes that point to the
+        (deduplicated) statement with that hash as a value.
+    ontology : indra.ontology.IndraOntology
+        An IndraOntology instance iwth respect to which this
+        filter is applied.
+
+    Returns
+    -------
+    list of tuple
+        A list of tuples where the first element of each tuple is the
+        hash of a statement which refines that statement whose hash
+        is the second element of the tuple.
+    """
     stmts_by_type = collections.defaultdict(set)
     for stmt_hash, stmt in stmts_by_hash.items():
         stmts_by_type[indra_stmt_type(stmt)].add(stmt_hash)
@@ -878,7 +921,10 @@ def ontology_refinement_filter(stmts_by_hash, ontology):
 
 
 def ontology_refinement_filter_by_stmt_type(stmts_by_hash, ontology):
-    """Return confirmed pairs of statement refinement relationships.
+    """Return possible refinement relationships based on an ontology.
+
+    Importantly, here we assume that all statements in stmts_by_hash
+    are of a single type.
 
     Parameters
     ----------
