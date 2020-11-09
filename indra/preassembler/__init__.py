@@ -339,6 +339,7 @@ class Preassembler(object):
             which refines the statement whose index is the second
             element of the tuple.
         """
+        ts = time.time()
         # Make a list of Statement types
         stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
                        for idx, stmt in enumerate(unique_stmts)}
@@ -349,17 +350,25 @@ class Preassembler(object):
         stmts_to_compare = \
             ontology_refinement_filter(stmts_by_hash=stmts_by_hash,
                                        ontology=self.ontology)
+        total_comparisons = sum(len(v) for v in stmts_to_compare.values())
+        logger.debug('Total comparisons after ontology filter: %d' %
+                     total_comparisons)
 
         # Here we apply any additional filters to cut down the number of
         # potential comparisons before actually making comparisons
         if filters:
             # We apply filter functions sequentially
             for filter_fun in filters:
+                logger.debug('Applying filter %s' % filter_fun.__name__)
                 stmts_to_compare = \
                     apply_refinement_filter(stmts_by_hash, stmts_to_compare,
                                             filter_fun)
-
-        total_comparisons = sum(len(v) for v in stmts_to_compare.values())
+                total_comparisons = sum(len(v)
+                                        for v in stmts_to_compare.values())
+                logger.debug('Total comparisons after filter %s: %d' %
+                             (filter_fun.__name__, total_comparisons))
+        te = time.time()
+        logger.info('Applied all refinement pre-filters in %.2fs' % (te-ts))
         logger.info('Total comparisons: %d' % total_comparisons)
 
         # Here we handle split_idx to allow finding refinements between
@@ -900,6 +909,7 @@ def ontology_refinement_filter(stmts_by_hash, ontology):
         hash of a statement which refines that statement whose hash
         is the second element of the tuple.
     """
+    ts = time.time()
     stmts_by_type = collections.defaultdict(set)
     for stmt_hash, stmt in stmts_by_hash.items():
         stmts_by_type[indra_stmt_type(stmt)].add(stmt_hash)
@@ -917,6 +927,9 @@ def ontology_refinement_filter(stmts_by_hash, ontology):
             ontology_refinement_filter_by_stmt_type(stmts_by_hash_this_type,
                                                     ontology)
         stmts_to_compare.update(stmts_to_compare_by_type)
+    te = time.time()
+    logger.debug('Identified ontology-based possible refinements in %.2fs'
+                 % (te-ts))
     return stmts_to_compare
 
 
@@ -942,7 +955,6 @@ def ontology_refinement_filter_by_stmt_type(stmts_by_hash, ontology):
         hash of a statement which refines that statement whose hash
         is the second element of the tuple.
     """
-    ts = time.time()
     # Step 1. initialize data structures
     roles = stmts_by_hash[next(iter(stmts_by_hash))]._agent_order
     # Mapping agent keys to statement hashes
@@ -981,9 +993,6 @@ def ontology_refinement_filter_by_stmt_type(stmts_by_hash, ontology):
     for role in roles:
         all_keys_by_role[role] = set(agent_key_to_hash[role].keys())
 
-    te = time.time()
-    logger.debug('Initialized data structures in %.2fs' % (te-ts))
-
     # Step 3. Identify all the pairs of statements which can be in a
     # refinement relationship
     stmts_to_compare = {}
@@ -1020,9 +1029,6 @@ def ontology_refinement_filter_by_stmt_type(stmts_by_hash, ontology):
         # to be compared against. Importantly, the relationship is in
         # a well-defined direction so we don't need to test both ways.
         stmts_to_compare[sh] = relevants
-    te = time.time()
-
-    logger.debug('Identified potential refinements in %.2fs' % (te-ts))
     return stmts_to_compare
 
 
@@ -1054,7 +1060,9 @@ def apply_refinement_filter(stmts_by_hash, stmts_to_compare, filter_fun):
     """
     # We call the filter function to get a filter-specific set
     # of statements to compare
+    logger.debug('Applying filter function')
     filtered_stmts_to_compare = filter_fun(stmts_by_hash)
+    logger.debug('Getting updated stmts to compare')
     # We then take the intersection of the existing stmts_to_compare
     # and the ones found by the filter.
     stmts_to_compare = {
@@ -1064,8 +1072,5 @@ def apply_refinement_filter(stmts_by_hash, stmts_to_compare, filter_fun):
                              stmts_to_compare[filtered_stmt_hash])
         for filtered_stmt_hash, filtered_potential_refs in
         filtered_stmts_to_compare.items()
-        # And here we also apply an intersection over the keys
-        # of the existing and the filtered dicts
-        if filtered_stmt_hash in stmts_to_compare
     }
     return stmts_to_compare
