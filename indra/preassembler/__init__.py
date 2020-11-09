@@ -854,23 +854,24 @@ def get_relevant_keys(agent_key, all_keys_for_role, ontology):
 
 
 def ontology_refinement_filter(stmts_by_hash, ontology):
-    stmts_by_type = collections.defaultdict(list)
-    for _, stmt in stmts_by_hash:
-        stmts_by_type[indra_stmt_type(stmt)].append(stmt)
+    stmts_by_type = collections.defaultdict(set)
+    for stmt_hash, stmt in stmts_by_hash.items():
+        stmts_by_type[indra_stmt_type(stmt)].add(stmt_hash)
     stmts_by_type = dict(stmts_by_type)
 
     stmts_to_compare = {}
-    for stmt_type, stmts in stmts_by_type.items():
+    for stmt_type, stmt_hashes in stmts_by_type.items():
         logger.info('Finding refinements for %d %s statements' %
-                    (len(stmts), stmt_type.__name__))
+                    (len(stmts_by_hash), stmt_type.__name__))
+        stmts_by_hash = {stmt_hash: stmts_by_hash[stmt_hash]
+                         for stmt_hash in stmt_hashes}
         stmts_to_compare_by_type = \
-            ontology_refinement_filter_by_stmt_type(ontology, stmts,
-                                                    stmts[0]._agent_order)
+            ontology_refinement_filter_by_stmt_type(stmts_by_hash, ontology)
         stmts_to_compare.update(stmts_to_compare_by_type)
     return stmts_to_compare
 
 
-def ontology_refinement_filter_by_stmt_type(ontology, stmts_by_hash, roles):
+def ontology_refinement_filter_by_stmt_type(stmts_by_hash, ontology):
     """Return confirmed pairs of statement refinement relationships.
 
     Parameters
@@ -905,6 +906,7 @@ def ontology_refinement_filter_by_stmt_type(ontology, stmts_by_hash, roles):
     """
     ts = time.time()
     # Step 1. initialize data structures
+    roles = stmts_by_hash[next(iter(stmts_by_hash))]._agent_order
     # Mapping agent keys to statement hashes
     agent_key_to_hash = {}
     # Mapping statement hashes to agent keys
