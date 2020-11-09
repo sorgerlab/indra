@@ -191,7 +191,8 @@ class Preassembler(object):
             unique_stmts.append(new_stmt)
         return unique_stmts
 
-    def _generate_id_maps(self, unique_stmts, *args, **kwargs):
+    def _generate_id_maps(self, unique_stmts, split_idx=None,
+                          filters=None, **kwargs):
         """Connect statements using their refinement relationship."""
         # Make a list of Statement types
         stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
@@ -205,7 +206,6 @@ class Preassembler(object):
         # to distinct groups of statements (identified by an index at which we
         # split the unique_statements list) rather than globally across
         # all unique statements.
-        split_idx = kwargs.pop('split_idx', None)
         if split_idx:
             # This dict maps statement hashes to a bool value based on which
             # of the two groups the statement belongs to.
@@ -221,13 +221,46 @@ class Preassembler(object):
             maps += self._generate_hash_maps_by_stmt_type(
                 stmts, stmts[0]._agent_order,
                 split_groups=hash_to_split_group,
-                filters=kwargs.get('filters', None))
+                filters=filters)
         idx_maps = [(stmt_to_idx[refinement], stmt_to_idx[refined])
                     for refinement, refined in maps]
         return idx_maps
 
     def _generate_hash_maps_by_stmt_type(self, stmts, roles,
                                          split_groups=None, filters=None):
+        """Return confirmed pairs of statement refinement relationships.
+
+        Parameters
+        ----------
+        stmts : list[indra.statements.Statement]
+            A list of INDRA Statements to find refinements in. Importantly,
+            the statements are assumed to be of a single INDRA Statement
+            type.
+        roles : list[str]
+            The list of agent roles for the given statement type, e.g.,
+            ['subj', 'obj'].
+        split_groups : Optional[dict]
+            A dict whose keys are statement hashes and values represent
+            one of two groups that the statement is in. Statement in the
+            same group aren't compared, only statements in different
+            groups are. This can be used to do "bipartite" refinement
+            checking across a set of statements.
+        filters : Optional[list[function]]
+            A list of function handles that define filter functions on
+            possible statement refinements. Each function takes
+            a stmts_by_hash dict as its input and returns a dict
+            of possible refinements where the keys are statement hashes
+            and the values are sets of statement hashes that the
+            key statement possibly refines.
+
+        Returns
+        -------
+        list of tuple
+            A list of tuple where the first element of each tuple is the
+            hash of a statement which refines that statement whose hash
+            is the second element of the tuple.
+        """
+
         ts = time.time()
         # Step 1. initialize data structures
         # Statements keyed by their hashes
@@ -331,6 +364,31 @@ class Preassembler(object):
 
     def compare_stmts_by_hash(self, stmts_by_hash, stmts_to_compare,
                               split_groups=None):
+        """Return confirmed pairs of statement refinement relationships.
+
+        Parameters
+        ----------
+        stmts_by_hash : dict
+            A dict whose keys are statement hashes that point to the
+            (deduplicated) statement with that hash as a value.
+        stmts_to_compare : dict
+            A dict whose keys are statement hashes and values are sets of
+            statement hashes that the statement with the given hash can
+            possibly refine.
+        split_groups : dict
+            A dict whose keys are statement hashes and values represent
+            one of two groups that the statement is in. Statement in the
+            same group aren't compared, only statements in different
+            groups are. This can be used to do "bipartite" refinement
+            checking across a set of statements.
+
+        Returns
+        -------
+        list of tuple
+            A list of tuple where the first element of each tuple is the
+            hash of a statement which refines that statement whose hash
+            is the second element of the tuple.
+        """
         maps = []
         # We again iterate over statements
         ts = time.time()
@@ -360,9 +418,9 @@ class Preassembler(object):
         logger.debug('Confirmed %d refinements in %.2fs' % (len(maps), te-ts))
         return maps
 
-    # Note that the args, kwargs here are just there for backwards compatibility
+    # Note that the kwargs here are just there for backwards compatibility
     # with old code that uses arguments related to multiprocessing.
-    def combine_related(self, return_toplevel=True, *args, **kwargs):
+    def combine_related(self, return_toplevel=True, filters=None, **kwargs):
         """Connect related statements based on their refinement relationships.
 
         This function takes as a starting point the unique statements (with
@@ -414,6 +472,13 @@ class Preassembler(object):
         return_toplevel : Optional[bool]
             If True only the top level statements are returned.
             If False, all statements are returned. Default: True
+        filters : Optional[list[function]]
+            A list of function handles that define filter functions on
+            possible statement refinements. Each function takes
+            a stmts_by_hash dict as its input and returns a dict
+            of possible refinements where the keys are statement hashes
+            and the values are sets of statement hashes that the
+            key statement possibly refines.
 
         Returns
         -------
@@ -457,7 +522,7 @@ class Preassembler(object):
 
         # Generate the index map, linking related statements.
         idx_map = self._generate_id_maps(unique_stmts,
-                                         filters=kwargs.get('filters'))
+                                         filters=filters)
 
         # Now iterate over all indices and set supports/supported by
         for ix1, ix2 in idx_map:
