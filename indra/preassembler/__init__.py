@@ -309,6 +309,8 @@ class Preassembler(object):
         else:
             return unique_stmts
 
+    # Note that the kwargs here are just there for backwards compatibility
+    # with old code that uses arguments related to multiprocessing.
     def _generate_id_maps(self, unique_stmts, split_idx=None,
                           filters=None, **kwargs):
         """Connect statements using their refinement relationship."""
@@ -349,15 +351,17 @@ class Preassembler(object):
 
         # Step 4. We can now do the actual comparisons and save pairs of
         # confirmed refinements in a list.
-        maps = self.compare_stmts_by_hash(stmts_by_hash, stmts_to_compare,
-                                          split_groups=hash_to_split_group)
+        maps = \
+            self.confirm_possible_refinements(stmts_by_hash,
+                                              stmts_to_compare,
+                                              split_groups=hash_to_split_group)
 
         idx_maps = [(stmt_to_idx[refinement], stmt_to_idx[refined])
                     for refinement, refined in maps]
         return idx_maps
 
-    def compare_stmts_by_hash(self, stmts_by_hash, stmts_to_compare,
-                              split_groups=None):
+    def confirm_possible_refinements(self, stmts_by_hash, stmts_to_compare,
+                                     split_groups=None):
         """Return confirmed pairs of statement refinement relationships.
 
         Parameters
@@ -411,7 +415,6 @@ class Preassembler(object):
         te = time.time()
         logger.debug('Confirmed %d refinements in %.2fs' % (len(maps), te-ts))
         return maps
-
 
     def find_contradicts(self):
         """Return pairs of contradicting Statements.
@@ -879,31 +882,17 @@ def ontology_refinement_filter_by_stmt_type(stmts_by_hash, ontology):
 
     Parameters
     ----------
-    stmts : list[indra.statements.Statement]
-        A list of INDRA Statements to find refinements in. Importantly,
-        the statements are assumed to be of a single INDRA Statement
-        type.
-    roles : list[str]
-        The list of agent roles for the given statement type, e.g.,
-        ['subj', 'obj'].
-    split_groups : Optional[dict]
-        A dict whose keys are statement hashes and values represent
-        one of two groups that the statement is in. Statement in the
-        same group aren't compared, only statements in different
-        groups are. This can be used to do "bipartite" refinement
-        checking across a set of statements.
-    filters : Optional[list[function]]
-        A list of function handles that define filter functions on
-        possible statement refinements. Each function takes
-        a stmts_by_hash dict as its input and returns a dict
-        of possible refinements where the keys are statement hashes
-        and the values are sets of statement hashes that the
-        key statement possibly refines.
+    stmts_by_hash : dict
+        A dict whose keys are statement hashes that point to the
+        (deduplicated) statement with that hash as a value.
+    ontology : indra.ontology.IndraOntology
+        An IndraOntology instance iwth respect to which this
+        filter is applied.
 
     Returns
     -------
     list of tuple
-        A list of tuple where the first element of each tuple is the
+        A list of tuples where the first element of each tuple is the
         hash of a statement which refines that statement whose hash
         is the second element of the tuple.
     """
@@ -992,6 +981,31 @@ def ontology_refinement_filter_by_stmt_type(stmts_by_hash, ontology):
 
 
 def apply_refinement_filter(stmts_by_hash, stmts_to_compare, filter_fun):
+    """Apply a filter to a set of possible statement refinements.
+
+    Parameters
+    ----------
+    stmts_by_hash : dict
+        A dict whose keys are statement hashes that point to the
+        (deduplicated) statement with that hash as a value.
+    stmts_to_compare : dict
+        A dict whose keys are statement hashes and values are sets of
+        statement hashes that the statement with the given hash can
+        possibly refine.
+    filter_fun : function
+        A function handle that defines a filter on possible statement
+        refinements. The function takes a stmts_by_hash dict as its input and
+        returns a dict of possible refinements where the keys are statement
+        hashes and the values are sets of statement hashes that the key
+        statement possibly refines.
+
+    Returns
+    -------
+    dict
+        A data structure just like stmts_to_compare but filtered according
+        to the given filtering function.
+
+    """
     # We call the filter function to get a filter-specific set
     # of statements to compare
     filtered_stmts_to_compare = filter_fun(stmts_by_hash)
