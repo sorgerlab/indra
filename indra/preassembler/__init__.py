@@ -315,22 +315,9 @@ class Preassembler(object):
         if filters:
             # We apply filter functions sequentially
             for filter_fun in filters:
-                # We call the filter function to get a filter-specific set
-                # of statements to compare
-                filtered_stmts_to_compare = filter_fun(stmts_by_hash)
-                # We then take the intersection of the existing stmts_to_compare
-                # and the ones found by the filter.
-                stmts_to_compare = {
-                    # We do a set intersection between the sets of potentially
-                    # refined statements
-                    filtered_stmt_hash: (filtered_potential_refs &
-                                         stmts_to_compare[filtered_stmt_hash])
-                    for filtered_stmt_hash, filtered_potential_refs in
-                    filtered_stmts_to_compare.items()
-                    # And here we also apply an intersection over the keys
-                    # of the existing and the filtered dicts
-                    if filtered_stmt_hash in stmts_to_compare
-                }
+                stmts_to_compare = \
+                    apply_refinement_filter(stmts_by_hash, stmts_to_compare,
+                                            filter_fun)
 
         logger.debug('Identified potential refinements in %.2fs' % (te-ts))
 
@@ -922,3 +909,23 @@ def get_relevant_keys(agent_key, all_keys_for_role, ontology):
         relevant_keys |= set(ontology.get_parents(*agent_key))
     relevant_keys &= all_keys_for_role
     return relevant_keys
+
+
+def apply_refinement_filter(stmts_by_hash, stmts_to_compare, filter_fun):
+    # We call the filter function to get a filter-specific set
+    # of statements to compare
+    filtered_stmts_to_compare = filter_fun(stmts_by_hash)
+    # We then take the intersection of the existing stmts_to_compare
+    # and the ones found by the filter.
+    stmts_to_compare = {
+        # We do a set intersection between the sets of potentially
+        # refined statements
+        filtered_stmt_hash: (filtered_potential_refs &
+                             stmts_to_compare[filtered_stmt_hash])
+        for filtered_stmt_hash, filtered_potential_refs in
+        filtered_stmts_to_compare.items()
+        # And here we also apply an intersection over the keys
+        # of the existing and the filtered dicts
+        if filtered_stmt_hash in stmts_to_compare
+    }
+    return stmts_to_compare
