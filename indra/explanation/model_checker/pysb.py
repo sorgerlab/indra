@@ -15,6 +15,7 @@ from indra.statements import *
 from indra.assemblers.pysb import assembler as pa
 from indra.assemblers.pysb.kappa_util import im_json_to_graph
 from indra.statements.agent import default_ns_order
+from indra.ontology.bio import bio_ontology
 
 from . import ModelChecker, PathResult
 from .model_checker import signed_edges_to_signed_nodes
@@ -136,23 +137,25 @@ class PysbModelChecker(ModelChecker):
             raise Exception("Cannot get influence map if there is no model.")
 
         def add_obs_for_agents(agents):
-            obj_mps = self.get_all_mps(agents)
-            if not obj_mps:
-                logger.debug('No monomer patterns found in model for agent %s,'
-                             ' skipping' % agent)
+            ag_to_obj_mps = self.get_all_mps(agents, mapping=True)
+            if not ag_to_obj_mps:
+                logger.debug('No monomer patterns found in model for agents %s'
+                             ', skipping' % agents)
                 return
             obs_list = []
-            for obj_mp in obj_mps:
-                obs_name = _monomer_pattern_label(obj_mp) + '_obs'
-                # Add the observable
-                obj_obs = Observable(obs_name, obj_mp, _export=False)
-                obs_list.append(obs_name)
-                try:
-                    self.model.add_component(obj_obs)
-                    self.model.add_annotation(
-                        Annotation(obs_name, agent.name, 'from_indra_agent'))
-                except ComponentDuplicateNameError as e:
-                    pass
+            for agent in ag_to_obj_mps:
+                for obj_mp in ag_to_obj_mps[agent]:
+                    obs_name = _monomer_pattern_label(obj_mp) + '_obs'
+                    # Add the observable
+                    obj_obs = Observable(obs_name, obj_mp, _export=False)
+                    obs_list.append(obs_name)
+                    try:
+                        self.model.add_component(obj_obs)
+                        self.model.add_annotation(
+                            Annotation(obs_name, agent.name,
+                                       'from_indra_agent'))
+                    except ComponentDuplicateNameError as e:
+                        pass
             return obs_list
 
         # Create observables for all statements to check, and add to model
@@ -206,13 +209,13 @@ class PysbModelChecker(ModelChecker):
                     self.stmt_to_obs[stmt] = [None]
                 else:
                     # Get all refinements of object agent
-                    all_objs = self.get_refinements(all_objs)
+                    all_objs = self.get_refinements(stmt.obj)
                     concepts = [obj.concept for obj in all_objs]
-                    obs_list = add_obs_for_agent(concepts)
+                    obs_list = add_obs_for_agents(concepts)
                     self.stmt_to_obs[stmt] = obs_list
         # Add observables for each agent
         for ag in self.agent_obs:
-            obs_list = add_obs_for_agent(ag)
+            obs_list = add_obs_for_agents([ag])
             self.agent_to_obs[ag] = obs_list
 
         logger.info("Generating influence map")
@@ -320,7 +323,7 @@ class PysbModelChecker(ModelChecker):
         # enzyme in a rule of the appropriate activity (e.g., a phosphorylation
         # rule) FIXME
         if subj is not None:
-            all_subj_agents = self.get_refinements(subj, self.graph)
+            all_subj_agents = self.get_refinements(subj)
             subj_mps = self.get_all_mps(all_subj_agents,
                                         ignore_activities=True)
             if not subj_mps:
@@ -356,22 +359,31 @@ class PysbModelChecker(ModelChecker):
             input_set_signed = {(rule, 0) for rule in input_rule_set}
         return input_set_signed, None
 
-    def get_refinements(self, agent, graph):
+    def get_refinements(self, agent):
         """Return a list of refinement agents that are part of the model."""
+        model_agents = set()
+        for stmt in self.model_stmts:
+            for ag in stmt.agent_list():
+                if ag is not None:
+                    model_agents.add(ag)
         agents = {agent}
-        for ag in self.nodes_to_agents.values():
+        for ag in model_agents:
             if ag.refinement_of(agent, bio_ontology):
                 agents.add(ag)
         return agents
 
-    def get_all_mps(self, agents, ignore_activities=False):
+    def get_all_mps(self, agents, ignore_activities=False, mapping=False):
         """Get a list of all monomer patterns for a list of agents."""
+        ag_to_mps = {}
         mps = []
         for ag in agents:
             ag_mps = list(pa.grounded_monomer_patterns(
                 self.model, ag, ignore_activities=ignore_activities))
             if ag_mps:
+                ag_to_mps[ag] = ag_mps
                 mps += ag_mps
+        if mapping:
+            return ag_to_mps
         return mps
 
     def _get_input_rules(self, subj_mp):

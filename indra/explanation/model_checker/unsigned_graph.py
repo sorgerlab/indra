@@ -85,7 +85,7 @@ class UnsignedGraphModelChecker(ModelChecker):
         if node in graph.nodes:
             nodes.add(node)
         for n, ag in self.nodes_to_agents.items():
-            if ag is not None and ag.reginement_of(agent, bio_ontology):
+            if ag is not None and ag.refinement_of(agent, bio_ontology):
                 node = (n, 0)
                 if node in graph.nodes:
                     nodes.add(node)
