@@ -612,8 +612,8 @@ def _get_evidence(evidence):
     # If there is a PMID, use it as the citation
     if evidence.pmid:
         citation = citation_dict(
-            db=pc.CITATION_TYPE_PUBMED,
-            db_id=evidence.pmid,
+            namespace=pc.CITATION_TYPE_PUBMED,
+            identifier=evidence.pmid,
         )
     # If no PMID, include the interface and source_api for now--
     # in general this should probably be in the annotations for all evidence
@@ -622,8 +622,8 @@ def _get_evidence(evidence):
         cit_id = evidence.source_id or 'Unknown'
         cit_ref_str = '%s:%s' % (cit_source, cit_id)
         citation = citation_dict(
-            db=pc.CITATION_TYPE_OTHER,
-            db_id=cit_ref_str,
+            namespace=pc.CITATION_TYPE_OTHER,
+            identifier=cit_ref_str,
         )
 
     annotations = {
