@@ -507,7 +507,13 @@ def _get_agent_node_no_bcs(agent):
             logger.info('Skipping modification of type %s on agent %s',
                         mod.mod_type, agent)
             continue
-        var = pmod(namespace=pc.BEL_DEFAULT_NAMESPACE, name=pybel_mod)
+        pmod_entity = pmod_mappings[pybel_mod]['xrefs'][0]
+
+        var = ProteinModification(
+            namespace=pmod_entity.namespace,
+            name=pmod_entity.name,
+            identifier=pmod_entity.identifier,
+        )
         if mod.residue is not None:
             res = amino_acids[mod.residue]['short_name'].capitalize()
             var[pc.PMOD_CODE] = res
