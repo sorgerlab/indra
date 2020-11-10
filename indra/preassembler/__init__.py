@@ -918,8 +918,8 @@ def ontology_refinement_filter(stmts_by_hash, stmts_to_compare, ontology):
     stmts_by_type = dict(stmts_by_type)
 
     for stmt_type, stmt_hashes in stmts_by_type.items():
-        logger.info('Finding refinements for %d %s statements' %
-                    (len(stmts_by_hash), stmt_type.__name__))
+        logger.info('Finding ontology-based refinements for %d %s statements'
+                    % (len(stmts_by_hash), stmt_type.__name__))
         stmts_by_hash_this_type = {
             stmt_hash: stmts_by_hash[stmt_hash]
             for stmt_hash in stmt_hashes
@@ -998,7 +998,8 @@ def ontology_refinement_filter_by_stmt_type(stmts_by_hash, stmts_to_compare,
     # Step 3. Identify all the pairs of statements which can be in a
     # refinement relationship
     first_filter = True if stmts_to_compare is None else False
-    stmts_to_compare = {}
+    if first_filter:
+        stmts_to_compare = {}
     # We iterate over each statement and find all other statements that it
     # can potentially refine
     ts = time.time()
