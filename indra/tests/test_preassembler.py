@@ -1035,7 +1035,7 @@ def test_refinement_filters():
     st3 = Phosphorylation(Agent('x'), hras)
 
     # This filters everything out so no comparisons will be done
-    def filter_empty(stmts_by_hash):
+    def filter_empty(stmts_by_hash, *args):
         return {k: set() for k in stmts_by_hash}
     # No comparisons here
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
@@ -1044,7 +1044,7 @@ def test_refinement_filters():
 
     # This is a superset of all comparisons constrained by the ontology
     # so will not change what the preassembler does internally
-    def filter_all(stmts_by_hash):
+    def filter_all(stmts_by_hash, *args):
         return {k: set(stmts_by_hash.keys()) - {k} for k in stmts_by_hash}
     # The same number of comparisons here as without the filter
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])

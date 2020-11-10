@@ -248,10 +248,10 @@ class Preassembler(object):
         filters : Optional[list[function]]
             A list of function handles that define filter functions on
             possible statement refinements. Each function takes
-            a stmts_by_hash dict as its input and returns a dict
-            of possible refinements where the keys are statement hashes
-            and the values are sets of statement hashes that the
-            key statement possibly refines.
+            a stmts_by_hash dict and a stmts_to_compare dict as its input and
+            returns a dict of possible refinements where the keys are
+            statement hashes and the values are sets of statement hashes that
+            the key statement possibly refines.
 
         Returns
         -------
@@ -1046,10 +1046,10 @@ def apply_refinement_filter(stmts_by_hash, stmts_to_compare, filter_fun):
         possibly refine.
     filter_fun : function
         A function handle that defines a filter on possible statement
-        refinements. The function takes a stmts_by_hash dict as its input and
-        returns a dict of possible refinements where the keys are statement
-        hashes and the values are sets of statement hashes that the key
-        statement possibly refines.
+        refinements. The function takes a stmts_by_hash dict and a
+        stmts_to_compare dict as its input and returns a dict of possible
+        refinements where the keys are statement hashes and the values are
+        sets of statement hashes that the key statement possibly refines.
 
     Returns
     -------
@@ -1061,7 +1061,7 @@ def apply_refinement_filter(stmts_by_hash, stmts_to_compare, filter_fun):
     # We call the filter function to get a filter-specific set
     # of statements to compare
     logger.debug('Applying filter function')
-    filtered_stmts_to_compare = filter_fun(stmts_by_hash)
+    filtered_stmts_to_compare = filter_fun(stmts_by_hash, stmts_to_compare)
     logger.debug('Getting updated stmts to compare')
     # We then take the intersection of the existing stmts_to_compare
     # and the ones found by the filter.
