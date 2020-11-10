@@ -1046,7 +1046,13 @@ def test_refinement_filters():
     # This is a superset of all comparisons constrained by the ontology
     # so will not change what the preassembler does internally
     def filter_all(stmts_by_hash, stmts_to_compare, *args):
-        return {k: set(stmts_by_hash.keys()) - {k} for k in stmts_by_hash}
+        filter_set = {k: (set(stmts_by_hash) - {k}) for k in stmts_by_hash}
+        if stmts_to_compare is None:
+            return filter_set
+        else:
+            for k in filter_set:
+                filter_set[k] &= stmts_to_compare.get(k, set())
+            return filter_set
     # The same number of comparisons here as without the filter
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
     pa.combine_related(filters=[bio_ontology_refinement_filter,

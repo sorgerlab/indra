@@ -355,8 +355,7 @@ class Preassembler(object):
             for filter_fun in filters:
                 logger.debug('Applying filter %s' % filter_fun.__name__)
                 stmts_to_compare = \
-                    apply_refinement_filter(stmts_by_hash, stmts_to_compare,
-                                            filter_fun)
+                    filter_fun(stmts_by_hash, stmts_to_compare)
                 total_comparisons = sum(len(v)
                                         for v in stmts_to_compare.values())
                 logger.debug('Total comparisons after filter %s: %d' %
@@ -1044,50 +1043,3 @@ def bio_ontology_refinement_filter(stmts_by_hash, stmts_to_compare):
     from indra.ontology.bio import bio_ontology
     return ontology_refinement_filter(stmts_by_hash, stmts_to_compare,
                                       ontology=bio_ontology)
-
-
-def apply_refinement_filter(stmts_by_hash, stmts_to_compare, filter_fun):
-    """Apply a filter to a set of possible statement refinements.
-
-    Parameters
-    ----------
-    stmts_by_hash : dict
-        A dict whose keys are statement hashes that point to the
-        (deduplicated) statement with that hash as a value.
-    stmts_to_compare : dict
-        A dict whose keys are statement hashes and values are sets of
-        statement hashes that the statement with the given hash can
-        possibly refine.
-    filter_fun : function
-        A function handle that defines a filter on possible statement
-        refinements. The function takes a stmts_by_hash dict and a
-        stmts_to_compare dict as its input and returns a dict of possible
-        refinements where the keys are statement hashes and the values are
-        sets of statement hashes that the key statement possibly refines.
-
-    Returns
-    -------
-    dict
-        A data structure just like stmts_to_compare but filtered according
-        to the given filtering function.
-
-    """
-    # We call the filter function to get a filter-specific set
-    # of statements to compare
-    logger.debug('Applying filter function')
-    filtered_stmts_to_compare = filter_fun(stmts_by_hash, stmts_to_compare)
-    logger.debug('Getting updated stmts to compare')
-    # We then take the intersection of the existing stmts_to_compare
-    # and the ones found by the filter.
-    stmts_to_compare = {
-        # We do a set intersection between the sets of potentially
-        # refined statements
-        filtered_stmt_hash:
-            (filtered_potential_refs &
-             (stmts_to_compare[filtered_stmt_hash]
-              if stmts_to_compare is not None
-              else filtered_potential_refs))
-        for filtered_stmt_hash, filtered_potential_refs in
-        filtered_stmts_to_compare.items()
-    }
-    return stmts_to_compare
