@@ -99,9 +99,9 @@ class PybelProcessor(object):
             for node_ix, node in enumerate((u_data, v_data)):
                 if isinstance(node, dsl.ComplexAbundance):
                     self._get_enum_complex(u_data, v_data, k, d, node_ix)
-            subj_activity = _get_activity_condition(d.get(pc.SOURCE))
-            obj_activity = _get_activity_condition(d.get(pc.TARGET))
-            obj_to_loc = _get_translocation_target(d.get(pc.TARGET))
+            subj_activity = _get_activity_condition(d.get(pc.SOURCE_MODIFIER))
+            obj_activity = _get_activity_condition(d.get(pc.TARGET_MODIFIER))
+            obj_to_loc = _get_translocation_target(d.get(pc.TARGET_MODIFIER))
             # If the object is a translocation, this represents a controlled
             # translocation, which we currently do not represent
             if obj_to_loc:
@@ -200,12 +200,12 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_regulate_amount(self, u_data, v_data, k, edge_data):
-        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE))
-        obj_agent = get_agent(v_data, edge_data.get(pc.TARGET))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE_MODIFIER))
+        obj_agent = get_agent(v_data, edge_data.get(pc.TARGET_MODIFIER))
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, edge_data))
             return
-        obj_mod = edge_data.get(pc.TARGET)
+        obj_mod = edge_data.get(pc.TARGET_MODIFIER)
         has_deg = (obj_mod and obj_mod.get(pc.MODIFIER) == pc.DEGRADATION)
         rel = edge_data[pc.RELATION]
         if rel == pc.REGULATES:
@@ -224,10 +224,10 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_modification(self, u_data, v_data, k, edge_data):
-        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE_MODIFIER))
         mods, muts = _get_mods_and_muts(v_data)
         v_data_no_mods = v_data.get_parent()
-        obj_agent = get_agent(v_data_no_mods, edge_data.get(pc.TARGET))
+        obj_agent = get_agent(v_data_no_mods, edge_data.get(pc.TARGET_MODIFIER))
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, k, edge_data))
             return
@@ -240,8 +240,8 @@ class PybelProcessor(object):
 
     def _get_regulate_activity(self, u_data, v_data, k, edge_data):
         # Subject info
-        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE))
-        subj_activity = _get_activity_condition(edge_data.get(pc.SOURCE))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE_MODIFIER))
+        subj_activity = _get_activity_condition(edge_data.get(pc.SOURCE_MODIFIER))
         # Object info
         # Note: Don't pass the object modifier data because we don't want to
         # put an activity on the agent
@@ -251,7 +251,7 @@ class PybelProcessor(object):
             activity_type = 'activity'
         else:
             obj_activity_condition = \
-                            _get_activity_condition(edge_data.get(pc.TARGET))
+                            _get_activity_condition(edge_data.get(pc.TARGET_MODIFIER))
             activity_type = obj_activity_condition.activity_type
             assert obj_activity_condition.is_active is True
         # Check for valid subject/object
@@ -278,7 +278,7 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_active_form(self, u_data, v_data, k, edge_data):
-        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE_MODIFIER))
         # Don't pass the object modifier info because we don't want an activity
         # condition applied to the agent
         obj_agent = get_agent(v_data)
@@ -286,7 +286,7 @@ class PybelProcessor(object):
             self.unhandled.append((u_data, v_data, edge_data))
             return
         obj_activity_condition = \
-                        _get_activity_condition(edge_data.get(pc.TARGET))
+                        _get_activity_condition(edge_data.get(pc.TARGET_MODIFIER))
         activity_type = obj_activity_condition.activity_type
         # If the relation is DECREASES, this means that this agent state
         # is inactivating
@@ -296,7 +296,7 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_gef_gap(self, u_data, v_data, k, edge_data):
-        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE_MODIFIER))
         obj_agent = get_agent(v_data)
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, k, edge_data))
@@ -310,7 +310,7 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_conversion(self, u_data, v_data, k, edge_data):
-        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE_MODIFIER))
         # Get the nodes for the reactants and products
         reactant_agents = [get_agent(r) for r in v_data[pc.REACTANTS]]
         product_agents = [get_agent(p) for p in v_data[pc.PRODUCTS]]
@@ -866,8 +866,8 @@ def _get_translocation_target(node_modifier_data):
     to_loc_info = transloc_data.get(pc.TO_LOC)
     if not to_loc_info:
         return None
-    to_loc_ns = to_loc_info.get('namespace')
-    to_loc_name = to_loc_info.get('name')
+    to_loc_ns = to_loc_info.get(pc.NAMESPACE)
+    to_loc_name = to_loc_info.get(pc.NAME)
     # Only use GO Cellular Component location names
     if to_loc_ns not in ('GO', 'GOCC', 'GOCCID') or not to_loc_name:
         return None

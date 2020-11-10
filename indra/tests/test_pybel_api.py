@@ -468,7 +468,7 @@ def test_regulate_amount4_subj_act():
     mek = Protein(name='MAP2K1', namespace='HGNC')
     erk = Protein(name='MAPK1', namespace='HGNC')
     g = BELGraph()
-    g.add_increases(mek, erk, subject_modifier=activity(name='tscript'),
+    g.add_increases(mek, erk, source_modifier=activity(name='tscript'),
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -483,7 +483,7 @@ def test_regulate_amount4_subj_act():
     assert len(pbp.statements[0].evidence) == 1
 
     g = BELGraph()
-    g.add_increases(mek, erk, subject_modifier=activity(),
+    g.add_increases(mek, erk, source_modifier=activity(),
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -501,8 +501,8 @@ def test_regulate_activity():
     mek = Protein(name='MAP2K1', namespace='HGNC')
     erk = Protein(name='MAPK1', namespace='HGNC')
     g = BELGraph()
-    g.add_increases(mek, erk, subject_modifier=activity(name='kin'),
-                    object_modifier=activity(name='kin'),
+    g.add_increases(mek, erk, source_modifier=activity(name='kin'),
+                    target_modifier=activity(name='kin'),
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -526,7 +526,7 @@ def test_active_form():
     p53_obj = Protein(name='TP53', namespace='HGNC')
     g = BELGraph()
     g.add_increases(p53_pmod, p53_obj,
-                    object_modifier=activity(name='tscript'),
+                    target_modifier=activity(name='tscript'),
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -550,8 +550,8 @@ def test_gef():
     kras = Protein(name='KRAS', namespace='HGNC')
     g = BELGraph()
     g.add_directly_increases(sos, kras,
-                             subject_modifier=activity(),
-                             object_modifier=activity(name='gtp'),
+                             source_modifier=activity(),
+                             target_modifier=activity(name='gtp'),
                              evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -570,8 +570,8 @@ def test_indirect_gef_is_activation():
     sos = Protein(name='SOS1', namespace='HGNC')
     kras = Protein(name='KRAS', namespace='HGNC')
     g = BELGraph()
-    g.add_increases(sos, kras, subject_modifier=activity(),
-                    object_modifier=activity(name='gtp'),
+    g.add_increases(sos, kras, source_modifier=activity(),
+                    target_modifier=activity(name='gtp'),
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -592,8 +592,8 @@ def test_gap():
     kras = Protein(name='KRAS', namespace='HGNC')
     g = BELGraph()
     g.add_directly_decreases(sos, kras,
-                             subject_modifier=activity(),
-                             object_modifier=activity(name='gtp'),
+                             source_modifier=activity(),
+                             target_modifier=activity(name='gtp'),
                              evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -630,8 +630,8 @@ def test_gtpactivation():
     braf = Protein(name='BRAF', namespace='HGNC')
     g = BELGraph()
     g.add_directly_increases(kras, braf,
-                             subject_modifier=activity(name='gtp'),
-                             object_modifier=activity(name='kin'),
+                             source_modifier=activity(name='gtp'),
+                             target_modifier=activity(name='kin'),
                              evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -660,7 +660,7 @@ def test_conversion():
     )
     g = BELGraph()
     g.add_directly_increases(enz, rxn,
-                             subject_modifier=activity(),
+                             source_modifier=activity(),
                              evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -694,7 +694,7 @@ def test_controlled_transloc_loc_cond():
         from_loc=Entity(namespace='GOCC', name='intracellular'),
         to_loc=Entity(namespace='GOCC', name='extracellular space'),
     )
-    g.add_increases(subj, obj, object_modifier=transloc,
+    g.add_increases(subj, obj, target_modifier=transloc,
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert not pbp.statements, pbp.statements
@@ -710,7 +710,7 @@ def test_subject_transloc_loc_cond():
         to_loc=Entity(namespace='GOCC', name='extracellular space'),
     )
     g = BELGraph()
-    g.add_increases(subj, obj, subject_modifier=transloc,
+    g.add_increases(subj, obj, source_modifier=transloc,
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -733,8 +733,8 @@ def test_subject_transloc_active_form():
         to_loc=Entity(namespace='GOCC', name='extracellular space'),
     )
     g = BELGraph()
-    g.add_increases(subj, obj, subject_modifier=transloc,
-                    object_modifier=activity(name='kin'),
+    g.add_increases(subj, obj, source_modifier=transloc,
+                    target_modifier=activity(name='kin'),
                     evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
@@ -755,7 +755,7 @@ def test_complex_stmt_with_activation():
     cplx = complex_abundance([raf, mek])
     g = BELGraph()
     g.add_directly_increases(cplx, erk,
-                             object_modifier=activity(name='kin'),
+                             target_modifier=activity(name='kin'),
                              evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
