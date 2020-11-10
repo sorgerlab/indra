@@ -343,6 +343,24 @@ class PysbModelChecker(ModelChecker):
             input_set_signed = {(rule, 0) for rule in input_rule_set}
         return input_set_signed, None
 
+    def get_refinements(self, agent, graph):
+        """Return a list of refinement agents that are part of the model."""
+        agents = {agent}
+        for ag in self.nodes_to_agents.values():
+            if ag.refinement_of(agent, bio_ontology):
+                agents.add(ag)
+        return agents
+
+    def get_all_mps(self, agents, ignore_activities=False):
+        """Get a list of all monomer patterns for a list of agents."""
+        mps = []
+        for ag in agents:
+            ag_mps = list(pa.grounded_monomer_patterns(
+                self.model, ag, ignore_activities=ignore_activities))
+            if ag_mps:
+                mps += ag_mps
+        return mps
+
     def _get_input_rules(self, subj_mp):
         if subj_mp is None:
             raise ValueError("Cannot take None as an argument for subj_mp.")
