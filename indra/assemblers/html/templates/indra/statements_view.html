@@ -462,6 +462,12 @@
                                      href='https://dx.doi.org/{{ ev["text_refs"]["DOI"] }}'
                                      target="_blank">DOI</a>
 
+          {% elif 'CLINICALTRIALS' in ev['text_refs'] and ev['text_refs']['CLINICALTRIALS'] %}
+
+                                | <a class="clinical_trials_link"
+                                     href='https://identifiers.org/clinicaltrials:{{ ev["text_refs"]["CLINICALTRIALS"] }}'
+                                     target="_blank">{{ ev["text_refs"]["CLINICALTRIALS"] }}</a>
+
           {% endif %}
           {% if add_full_text_search_link and 'pmcid' in ev and ev['pmcid'] %}
 
