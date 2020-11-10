@@ -353,13 +353,7 @@ class PybelProcessor(object):
 
         text_location = annotations.pop('TextLocation', None)
         if text_location:
-            # Handle dictionary text_location like {'Abstract': True}
-            if isinstance(text_location, dict):
-                # FIXME: INDRA's section_type entry is meant to contain
-                # a single section string like "abstract" but in principle
-                # pybel could have a list of entries in the TextLocation dict.
-                # Here we just take the first one.
-                text_location = list(text_location.keys())[0]
+            text_location = text_location[0].name
             epistemics['section_type'] = \
                 _pybel_text_location_map.get(text_location)
 
@@ -691,14 +685,13 @@ def extract_context(annotations, annot_manager):
     """
     def get_annot(annotations, key):
         """Return a specific annotation given a key."""
-        val = annotations.pop(key, None)
-        if val:
-            val_list = [v for v, tf in val.items() if tf]
+        val_list = annotations.pop(key, None)
+        if val_list:
             if len(val_list) > 1:
                 logger.warning('More than one "%s" in annotations' % key)
             elif not val_list:
                 return None
-            return val_list[0]
+            return val_list[0].name
         return None
 
     bc = BioContext()
