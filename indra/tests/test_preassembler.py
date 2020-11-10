@@ -1,7 +1,7 @@
 import os
 
 from indra.preassembler import Preassembler, render_stmt_graph, \
-                               flatten_evidence, flatten_stmts
+    flatten_evidence, flatten_stmts, bio_ontology_refinement_filter
 from indra.sources import reach
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
@@ -1035,23 +1035,26 @@ def test_refinement_filters():
     st3 = Phosphorylation(Agent('x'), hras)
 
     # This filters everything out so no comparisons will be done
-    def filter_empty(stmts_by_hash, *args):
+    def filter_empty(stmts_by_hash, stmts_to_compare, *args):
         return {k: set() for k in stmts_by_hash}
     # No comparisons here
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
-    pa.combine_related(filters=[filter_empty])
+    pa.combine_related(filters=[bio_ontology_refinement_filter,
+                                filter_empty])
     assert pa._comparison_counter == 0
 
     # This is a superset of all comparisons constrained by the ontology
     # so will not change what the preassembler does internally
-    def filter_all(stmts_by_hash, *args):
+    def filter_all(stmts_by_hash, stmts_to_compare, *args):
         return {k: set(stmts_by_hash.keys()) - {k} for k in stmts_by_hash}
     # The same number of comparisons here as without the filter
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
-    pa.combine_related(filters=[filter_all])
-    assert pa._comparison_counter == 2
+    pa.combine_related(filters=[bio_ontology_refinement_filter,
+                                filter_all])
+    assert pa._comparison_counter == 2, pa._comparison_counter
 
     # Just to make sure lists of more than one filter are correctly handled
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
-    pa.combine_related(filters=[filter_all, filter_empty])
-    assert pa._comparison_counter == 0
+    pa.combine_related(filters=[bio_ontology_refinement_filter,
+                                filter_all, filter_empty])
+    assert pa._comparison_counter == 0, pa._comparison_counter
