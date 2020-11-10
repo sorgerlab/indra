@@ -135,8 +135,8 @@ class PysbModelChecker(ModelChecker):
         if not self.model:
             raise Exception("Cannot get influence map if there is no model.")
 
-        def add_obs_for_agent(agent):
-            obj_mps = list(pa.grounded_monomer_patterns(self.model, agent))
+        def add_obs_for_agents(agents):
+            obj_mps = self.get_all_mps(agents)
             if not obj_mps:
                 logger.debug('No monomer patterns found in model for agent %s,'
                              ' skipping' % agent)
@@ -168,11 +168,14 @@ class PysbModelChecker(ModelChecker):
                     if isinstance(stmt, RemoveModification):
                         mod_condition_name = modtype_to_inverse[
                             mod_condition_name]
-                    # Add modification to substrate agent
-                    modified_sub = _add_modification_to_agent(
-                        stmt.sub, mod_condition_name, stmt.residue,
-                        stmt.position)
-                    obs_list = add_obs_for_agent(modified_sub)
+                    # Get all refinements of substrate agent
+                    all_subs = self.get_refinements(stmt.sub)
+                    # Add modification to substrate agents
+                    modified_subs = [
+                        _add_modification_to_agent(
+                            sub, mod_condition_name, stmt.residue,
+                            stmt.position) for sub in all_subs]
+                    obs_list = add_obs_for_agents(modified_subs)
                     # Associate this statement with this observable
                     self.stmt_to_obs[stmt] = obs_list
             # Generate observables for Activation/Inhibition statements
@@ -180,23 +183,32 @@ class PysbModelChecker(ModelChecker):
                 if stmt.obj is None:
                     self.stmt_to_obs[stmt] = [None]
                 else:
-                    regulated_obj, polarity = \
-                            _add_activity_to_agent(stmt.obj, stmt.obj_activity,
-                                                   stmt.is_activation)
-                    obs_list = add_obs_for_agent(regulated_obj)
+                    # Get all refinements of object agent
+                    all_objs = self.get_refinements(stmt.obj)
+                    # Add activity to object agents
+                    regulated_objs = [
+                        _add_activity_to_agent(
+                           obj, stmt.obj_activity, stmt.is_activation)
+                        for obj in all_objs]
+                    obs_list = add_obs_for_agents(regulated_objs)
                     # Associate this statement with this observable
                     self.stmt_to_obs[stmt] = obs_list
             elif isinstance(stmt, RegulateAmount):
                 if stmt.obj is None:
                     self.stmt_to_obs[stmt] = [None]
                 else:
-                    obs_list = add_obs_for_agent(stmt.obj)
+                    # Get all refinements of object agent
+                    all_objs = self.get_refinements(stmt.obj)
+                    obs_list = add_obs_for_agents(all_objs)
                     self.stmt_to_obs[stmt] = obs_list
             elif isinstance(stmt, Influence):
                 if stmt.obj is None:
                     self.stmt_to_obs[stmt] = [None]
                 else:
-                    obs_list = add_obs_for_agent(stmt.obj.concept)
+                    # Get all refinements of object agent
+                    all_objs = self.get_refinements(all_objs)
+                    concepts = [obj.concept for obj in all_objs]
+                    obs_list = add_obs_for_agent(concepts)
                     self.stmt_to_obs[stmt] = obs_list
         # Add observables for each agent
         for ag in self.agent_obs:
@@ -308,8 +320,9 @@ class PysbModelChecker(ModelChecker):
         # enzyme in a rule of the appropriate activity (e.g., a phosphorylation
         # rule) FIXME
         if subj is not None:
-            subj_mps = list(pa.grounded_monomer_patterns(
-                self.model, subj, ignore_activities=True))
+            all_subj_agents = self.get_refinements(subj, self.graph)
+            subj_mps = self.get_all_mps(all_subj_agents,
+                                        ignore_activities=True)
             if not subj_mps:
                 return (None, None, 'SUBJECT_MONOMERS_NOT_FOUND')
         else:
@@ -837,7 +850,7 @@ def _add_activity_to_agent(agent, act_type, is_active):
     new_agent = deepcopy(agent)
     new_agent.activity = new_act
     polarity = 1 if is_active else -1
-    return (new_agent, polarity)
+    return new_agent
 
 
 def _match_lhs(cp, rules):
