@@ -102,6 +102,7 @@ class PybelModelChecker(ModelChecker):
         return subj_nodes, None
 
     def get_nodes(self, agent, graph, target_polarity):
+        """Get all nodes corresponding to a given agent."""
         # This import is done here rather than at the top level to avoid
         # making pybel an implicit dependency of the model checker
         from indra.assemblers.pybel.assembler import _get_agent_node

@@ -2,6 +2,7 @@ import logging
 import networkx as nx
 from . import ModelChecker
 from indra.statements import *
+from indra.ontology.bio import bio_ontology
 
 
 logger = logging.getLogger(__name__)
@@ -78,10 +79,17 @@ class UnsignedGraphModelChecker(ModelChecker):
         pass
 
     def get_nodes(self, agent, graph):
+        """Get all nodes corresponding to a given agent."""
+        nodes = set()
         node = (agent.name, 0)
-        if node not in graph.nodes:
-            return None
-        return [node]
+        if node in graph.nodes:
+            nodes.add(node)
+        for n, ag in self.nodes_to_agents.items():
+            if ag is not None and ag.reginement_of(agent, bio_ontology):
+                node = (n, 0)
+                if node in graph.nodes:
+                    nodes.add(node)
+        return nodes
 
     def get_nodes_to_agents(self):
         """Return a dictionary mapping IndraNet nodes to INDRA agents."""
