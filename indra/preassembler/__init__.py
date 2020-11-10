@@ -1035,7 +1035,8 @@ def ontology_refinement_filter_by_stmt_type(stmts_by_hash, stmts_to_compare,
         if first_filter:
             stmts_to_compare[sh] = relevants
         else:
-            stmts_to_compare[sh] &= relevants
+            stmts_to_compare[sh] = \
+                stmts_to_compare.get(sh, set()) & relevants
     return stmts_to_compare
 
 

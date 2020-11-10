@@ -1055,6 +1055,6 @@ def test_refinement_filters():
 
     # Just to make sure lists of more than one filter are correctly handled
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
-    pa.combine_related(filters=[bio_ontology_refinement_filter,
-                                filter_all, filter_empty])
+    pa.combine_related(filters=[filter_all, filter_empty,
+                                bio_ontology_refinement_filter])
     assert pa._comparison_counter == 0, pa._comparison_counter
