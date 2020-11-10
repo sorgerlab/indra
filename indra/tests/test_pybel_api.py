@@ -67,7 +67,8 @@ def test_process_pybel():
 def test_process_jgif():
     test_file_url = 'https://s3.amazonaws.com/bigmech/travis/Hox-2.0-Hs.jgf'
     test_file = 'Hox-2.0-Hs.jgf'
-    request.urlretrieve(url=test_file_url, filename=test_file)
+    if not os.path.exists(test_file):
+        request.urlretrieve(url=test_file_url, filename=test_file)
     pbp = process_cbn_jgif_file(test_file)
 
     # Clean up
@@ -82,7 +83,8 @@ def test_nodelink_json():
     test_file_url = \
         'https://s3.amazonaws.com/bigmech/travis/Hox-2.0-Hs_nljson.json'
     test_file = 'Hox-2.0-Hs_nljson.json'
-    request.urlretrieve(url=test_file_url, filename=test_file)
+    if not os.path.exists(test_file):
+        request.urlretrieve(url=test_file_url, filename=test_file)
     pbp = process_pybel_graph(from_nodelink_file(test_file))
 
     # Clean up
