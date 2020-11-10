@@ -337,7 +337,7 @@ class PybelProcessor(object):
         if ev_citation:
             cit_type = ev_citation[pc.NAMESPACE]
             cit_ref = ev_citation[pc.IDENTIFIER]
-            if cit_type == pc.CITATION_TYPES[pc.CITATION_TYPE_PUBMED]:
+            if cit_type == pc.CITATION_TYPE_PUBMED:
                 ev_pmid = cit_ref
                 ev_ref = None
             else:
