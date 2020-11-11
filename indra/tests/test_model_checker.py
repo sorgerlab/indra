@@ -1661,7 +1661,7 @@ def test_pybel_active_form_path():
     assert stmts_from_path == [[stmt] for stmt in stmts]
 
 
-def test_pybel_refinements():
+def test_refinements():
     prkcb = Agent('PRKCB', db_refs={'TEXT': 'PRKCB', 'HGNC': '9395'})
     gsk3b = Agent('GSK3B', db_refs={'TEXT': 'GSK3B', 'HGNC': '4617'})
     map2k1 = Agent('MAP2K1', db_refs={'TEXT': 'MAP2K1', 'HGNC': '6840'})
@@ -1673,6 +1673,7 @@ def test_pybel_refinements():
                    Phosphorylation(map2k1, mapk1)]
     test_stmts = [Phosphorylation(prkcb, gsk3b, 'S'),
                   Phosphorylation(mek, erk)]
+    # Test PyBEL
     pba = PybelAssembler(model_stmts)
     pybel_model = pba.make_model()
     pbmc = PybelModelChecker(pybel_model, test_stmts)
@@ -1685,6 +1686,44 @@ def test_pybel_refinements():
         path0, pybel_model, False, model_stmts) == [[model_stmts[0]]]
     assert stmts_from_pybel_path(
         path1, pybel_model, False, model_stmts) == [[model_stmts[1]]]
+    # Test PySB
+    pa = PysbAssembler(model_stmts)
+    pysb_model = pa.make_model()
+    pmc = PysbModelChecker(pysb_model, test_stmts, model_stmts=model_stmts)
+    results = pmc.check_model()
+    assert results[0][1].path_found
+    assert results[1][1].path_found
+    path0 = results[0][1].paths[0]
+    path1 = results[1][1].paths[0]
+    assert stmts_from_pysb_path(
+        path0, pysb_model, model_stmts) == [model_stmts[0]]
+    assert stmts_from_pysb_path(
+        path1, pysb_model, model_stmts) == [model_stmts[1]]
+    # Test unsigned graph
+    ia = IndraNetAssembler(model_stmts)
+    unsigned_model = ia.make_model(graph_type='digraph')
+    umc = UnsignedGraphModelChecker(unsigned_model, test_stmts)
+    results = umc.check_model()
+    assert results[0][1].path_found
+    assert results[1][1].path_found
+    path0 = results[0][1].paths[0]
+    path1 = results[1][1].paths[0]
+    assert stmts_from_indranet_path(
+        path0, unsigned_model, False, False, model_stmts) == [[model_stmts[0]]]
+    assert stmts_from_indranet_path(
+        path1, unsigned_model, False, False, model_stmts) == [[model_stmts[1]]]
+    # Test signed graph
+    # Can't use phosphorylations for signed graph, using activations
+    model_stmts = [Activation(map2k1, mapk1)]
+    test_stmts = [Activation(mek, erk)]
+    ia = IndraNetAssembler(model_stmts)
+    signed_model = ia.make_model(graph_type='signed')
+    smc = SignedGraphModelChecker(signed_model, test_stmts)
+    results = smc.check_model()
+    assert results[0][1].path_found
+    path0 = results[0][1].paths[0]
+    assert stmts_from_indranet_path(
+        path0, signed_model, True, False, model_stmts) == [[model_stmts[0]]]
 
 
 def test_pybel_edge_types():
