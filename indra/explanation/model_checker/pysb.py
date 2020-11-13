@@ -142,13 +142,13 @@ class PysbModelChecker(ModelChecker):
                 logger.debug('No monomer patterns found in model for agents %s'
                              ', skipping' % agents)
                 return
-            obs_list = []
+            obs_set = set()
             for agent in ag_to_obj_mps:
                 for obj_mp in ag_to_obj_mps[agent]:
                     obs_name = _monomer_pattern_label(obj_mp) + '_obs'
                     # Add the observable
                     obj_obs = Observable(obs_name, obj_mp, _export=False)
-                    obs_list.append(obs_name)
+                    obs_set.add(obs_name)
                     try:
                         self.model.add_component(obj_obs)
                         self.model.add_annotation(
@@ -156,7 +156,7 @@ class PysbModelChecker(ModelChecker):
                                        'from_indra_agent'))
                     except ComponentDuplicateNameError as e:
                         pass
-            return obs_list
+            return obs_set
 
         # Create observables for all statements to check, and add to model
         # Remove any existing observables in the model
@@ -384,7 +384,7 @@ class PysbModelChecker(ModelChecker):
                 mps += ag_mps
         if mapping:
             return ag_to_mps
-        return mps
+        return set(mps)
 
     def _get_input_rules(self, subj_mp):
         if subj_mp is None:
