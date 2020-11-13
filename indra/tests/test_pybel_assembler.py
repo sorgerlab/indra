@@ -645,13 +645,13 @@ def test_belgraph_to_signed_graph():
     assert edge_dict
 
     assert 'stmt_hash' in edge_dict
-    assert 1 == len(edge_dict['stmt_hash'])
-    assert hsh == list(edge_dict['stmt_hash'])[0]
+    assert isinstance(edge_dict['stmt_hash'], int)
+    assert hsh == edge_dict['stmt_hash']
 
     assert 'uuid' in edge_dict
-    assert 1 == len(edge_dict['uuid'])
-    assert stmt.uuid == list(edge_dict['uuid'])[0]
+    assert isinstance(edge_dict['uuid'], str)
+    assert stmt.uuid == edge_dict['uuid']
 
     assert 'belief' in edge_dict
-    assert 1 == len(edge_dict['belief'])
-    assert stmt.belief == list(edge_dict['belief'])[0]
+    assert isinstance(edge_dict['belief'], (float, int))
+    assert stmt.belief == edge_dict['belief']
