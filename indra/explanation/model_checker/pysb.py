@@ -363,24 +363,27 @@ class PysbModelChecker(ModelChecker):
             subj_nodes = NodesContainer(subj, ref_agents, subj_mps,
                                         subj_ref_mps)
         else:
-            subj_nodes = NodesContainer(None, main_interm=[None])
+            subj_nodes = NodesContainer(None)
         # Observables may not be found for an activation since there may be no
         # rule in the model activating the object, and the object may not have
         # an "active" site of the appropriate type
-        obs_names = self.stmt_to_obs[stmt]
-        if not obs_names:
+        obs_nodes = self.stmt_to_obs[stmt]
+        if not obs_nodes:
             logger.info("No observables for stmt %s, returning False" % stmt)
             return (None, None, 'OBSERVABLES_NOT_FOUND')
         # Statement object is None
-        if all(obs is None for obs in obs_names):
+        if obs_nodes.main_agent is None:
             # Cannot check modifications in this case
             if isinstance(stmt, Modification):
                 return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
-            obs_signed = [None]
+            obs_nodes.main_nodes = [None]
         else:
-            obs_signed = [(obs, target_polarity) for obs in obs_names]
+            obs_nodes.main_nodes = [
+                (obs, target_polarity) for obs in obs_nodes.main_interm]
+            obs_nodes.ref_nodes = [
+                (obs, target_polarity) for obs in obs_nodes.ref_interm]
         result_code = None
-        return subj_nodes, obs_signed, result_code
+        return subj_nodes, obs_nodes, result_code
 
     def process_subject(self, subj_mp):
         if subj_mp is None:
@@ -399,7 +402,7 @@ class PysbModelChecker(ModelChecker):
             for ag in stmt.agent_list():
                 if ag is not None:
                     model_agents.add(ag)
-        return get_model_agents
+        return model_agents
 
     def get_refinements(self, agent):
         """Return a list of refinement agents that are part of the model."""
