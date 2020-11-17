@@ -335,8 +335,8 @@ class PybelProcessor(object):
         ev_citation = edge_data.get(pc.CITATION)
         ev_pmid = None
         if ev_citation:
-            cit_type = ev_citation[pc.NAMESPACE]
-            cit_ref = ev_citation[pc.IDENTIFIER]
+            cit_type = ev_citation.namespace
+            cit_ref = ev_citation.identifier
             if cit_type == pc.CITATION_TYPE_PUBMED:
                 ev_pmid = cit_ref
                 ev_ref = None
@@ -353,7 +353,7 @@ class PybelProcessor(object):
 
         text_location = annotations.pop('TextLocation', None)
         if text_location:
-            text_location = text_location[0].name
+            text_location = text_location[0].identifier
             epistemics['section_type'] = \
                 _pybel_text_location_map.get(text_location)
 
@@ -691,7 +691,7 @@ def extract_context(annotations, annot_manager):
                 logger.warning('More than one "%s" in annotations' % key)
             elif not val_list:
                 return None
-            return val_list[0].name
+            return val_list[0].identifier
         return None
 
     bc = BioContext()
@@ -765,12 +765,12 @@ class AnnotationManager(object):
         self.failures[key].add(value)
 
 
-def _get_mods_and_muts(node: dsl.CentralDogma):
+def _get_mods_and_muts(node_data: dsl.CentralDogma):
     """Get all modifications and mutations on the PyBEL node.
 
     Parameters
     ----------
-    node : pybel.dsl.CentralDogma
+    node_data : pybel.dsl.CentralDogma
         A PyBEL node
 
     Returns
@@ -782,14 +782,14 @@ def _get_mods_and_muts(node: dsl.CentralDogma):
     """
     mods = []
     muts = []
-    variants = node.get(pc.VARIANTS)
+    variants = node_data.get(pc.VARIANTS)
     if not variants:
         return mods, muts
 
     for var in variants:
         if isinstance(var, dsl.Hgvs):
-            if isinstance(node, dsl.Gene):
-                logger.debug('Unhandled genetic variant: %s', node)
+            if isinstance(node_data, dsl.Gene):
+                logger.debug('Unhandled genetic variant: %s', node_data)
                 continue
 
             hgvs_str = var.variant
@@ -806,7 +806,7 @@ def _get_mods_and_muts(node: dsl.CentralDogma):
                 mod_type = _pybel_indra_pmod_map.get(var.entity)
                 if mod_type is None:
                     logger.info("Unhandled modification type %s (%s)",
-                                var.entity.name, node)
+                                var.entity.name, node_data)
                     continue
                 mc = ModCondition(mod_type, var.get(pc.PMOD_CODE),
                                   var.get(pc.PMOD_POSITION))
@@ -814,11 +814,11 @@ def _get_mods_and_muts(node: dsl.CentralDogma):
         # FIXME These unhandled mod types should result in throwing out
         # the node (raise, or return None)
         elif isinstance(var, dsl.GeneModification):
-            logger.debug('Unhandled node variant GMOD: %s', node)
+            logger.debug('Unhandled node variant GMOD: %s', node_data)
         elif isinstance(var, dsl.Fragment):
-            logger.debug('Unhandled node variant FRAG: %s', node)
+            logger.debug('Unhandled node variant FRAG: %s', node_data)
         else:
-            logger.debug('Unknown node variant type: %s', node)
+            logger.debug('Unknown node variant type: %s', node_data)
     return mods, muts
 
 
@@ -833,7 +833,7 @@ def _get_activity_condition(node_modifier_data):
     if not effect:
         return ActivityCondition('activity', True)
 
-    activity_ns = effect[pc.NAMESPACE]
+    activity_ns = effect.namespace
     if activity_ns == 'go':
         activity_type = _pybel_indra_act_map.get(effect)
         # If an activity type in BEL/PyBEL that is not implemented in INDRA,
@@ -859,12 +859,13 @@ def _get_translocation_target(node_modifier_data):
     to_loc_info = transloc_data.get(pc.TO_LOC)
     if not to_loc_info:
         return None
-    to_loc_ns = to_loc_info.get(pc.NAMESPACE)
-    to_loc_name = to_loc_info.get(pc.NAME)
+    to_loc_ns = to_loc_info.namespace
+    to_loc_id = to_loc_info.identifier
+    to_loc_name = to_loc_info.name
     # Only use GO Cellular Component location names
-    if to_loc_ns not in ('GO', 'GOCC', 'GOCCID') or not to_loc_name:
+    if to_loc_ns not in ('GO', 'GOCC', 'GOCCID') or (not to_loc_name and not to_loc_id):
         return None
-    return go_client.get_valid_location(to_loc_name)
+    return go_client.get_valid_location(to_loc_id or to_loc_name)
 
 
 def _has_unhandled_modifiers(node_modifier_data):

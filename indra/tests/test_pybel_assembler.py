@@ -159,7 +159,7 @@ def test_activation():
     hash2 = stmt2.get_hash(refresh=True)
     edge1 = {
         pc.RELATION: pc.INCREASES,
-        pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY},
+        pc.OBJECT: activity(),
         pc.ANNOTATIONS: {
             'stmt_hash': {hash1: True},
             'uuid': {stmt1.uuid: True},
@@ -202,7 +202,7 @@ def test_direct_activation():
     hash2 = stmt2.get_hash(refresh=True)
     edge1 = {
         pc.RELATION: pc.DIRECTLY_INCREASES,
-        pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY},
+        pc.OBJECT: activity(),
         pc.EVIDENCE: 'No evidence text.',
         pc.CITATION: {
             pc.CITATION_DB: pc.CITATION_TYPE_PUBMED,
