@@ -17,7 +17,7 @@ from indra.assemblers.pysb.kappa_util import im_json_to_graph
 from indra.statements.agent import default_ns_order
 from indra.ontology.bio import bio_ontology
 
-from . import ModelChecker, PathResult
+from . import ModelChecker, PathResult, NodesContainer
 from .model_checker import signed_edges_to_signed_nodes
 
 logger = logging.getLogger(__name__)
@@ -136,19 +136,30 @@ class PysbModelChecker(ModelChecker):
         if not self.model:
             raise Exception("Cannot get influence map if there is no model.")
 
-        def add_obs_for_agents(agents):
-            ag_to_obj_mps = self.get_all_mps(agents, mapping=True)
-            if not ag_to_obj_mps:
+        self.model_agents = self.get_model_agents(self.model_stmts)
+
+        def add_obs_for_agents(main_agent, ref_agents=None):
+            if ref_agents:
+                all_agents = [main_agent] + ref_agents
+            else:
+                all_agents = [main_agent]
+            ag_to_obj_mps = self.get_all_mps(all_agents, mapping=True)
+            if all([not v for v in ag_to_obj_mps.values()]):
                 logger.debug('No monomer patterns found in model for agents %s'
-                             ', skipping' % agents)
+                             ', skipping' % all_agents)
                 return
-            obs_set = set()
+            obs_nodes = NodesContainer(main_agent, ref_agents)
+            main_obs_set = set()
+            ref_obs_set = set()
             for agent in ag_to_obj_mps:
                 for obj_mp in ag_to_obj_mps[agent]:
                     obs_name = _monomer_pattern_label(obj_mp) + '_obs'
                     # Add the observable
                     obj_obs = Observable(obs_name, obj_mp, _export=False)
-                    obs_set.add(obs_name)
+                    if agent == main_agent:
+                        main_obs_set.add(obs_name)
+                    else:
+                        ref_obs_set.add(obs_name)
                     try:
                         self.model.add_component(obj_obs)
                         self.model.add_annotation(
@@ -156,7 +167,9 @@ class PysbModelChecker(ModelChecker):
                                        'from_indra_agent'))
                     except ComponentDuplicateNameError as e:
                         pass
-            return obs_set
+            obs_nodes.main_interm = main_obs_set
+            obs_nodes.ref_interm = ref_obs_set
+            return obs_nodes
 
         # Create observables for all statements to check, and add to model
         # Remove any existing observables in the model
@@ -173,58 +186,69 @@ class PysbModelChecker(ModelChecker):
                     sub = stmt.enz
                 # Add the mod for the agent
                 if sub is None:
-                    self.stmt_to_obs[stmt] = [None]
+                    self.stmt_to_obs[stmt] = NodesContainer(
+                        None, main_interm=[None])
                 else:
                     mod_condition_name = modclass_to_modtype[stmt.__class__]
                     if isinstance(stmt, RemoveModification):
                         mod_condition_name = modtype_to_inverse[
                             mod_condition_name]
                     # Get all refinements of substrate agent
-                    all_subs = self.get_refinements(sub)
+                    ref_subs = self.get_refinements(sub)
                     # Add modification to substrate agents
-                    modified_subs = [
+                    modified_sub = _add_modification_to_agent(
+                            sub, mod_condition_name, stmt.residue,
+                            stmt.position)
+                    modified_ref_subs = [
                         _add_modification_to_agent(
                             sub, mod_condition_name, stmt.residue,
-                            stmt.position) for sub in all_subs]
-                    obs_list = add_obs_for_agents(modified_subs)
+                            stmt.position) for sub in ref_subs]
+                    obs_nodes = add_obs_for_agents(modified_sub,
+                                                   modified_ref_subs)
                     # Associate this statement with this observable
-                    self.stmt_to_obs[stmt] = obs_list
+                    self.stmt_to_obs[stmt] = obs_nodes
             # Generate observables for Activation/Inhibition statements
             elif isinstance(stmt, RegulateActivity):
                 if stmt.obj is None:
-                    self.stmt_to_obs[stmt] = [None]
+                    self.stmt_to_obs[stmt] = NodesContainer(
+                        None, main_interm=[None])
                 else:
                     # Get all refinements of object agent
-                    all_objs = self.get_refinements(stmt.obj)
+                    ref_objs = self.get_refinements(stmt.obj)
                     # Add activity to object agents
-                    regulated_objs = [
+                    regulated_obj = _add_activity_to_agent(
+                        stmt.obj, stmt.obj_activity, stmt.is_activation)
+                    regulated_ref_objs = [
                         _add_activity_to_agent(
                            obj, stmt.obj_activity, stmt.is_activation)
-                        for obj in all_objs]
-                    obs_list = add_obs_for_agents(regulated_objs)
+                        for obj in ref_objs]
+                    obs_nodes = add_obs_for_agents(regulated_obj,
+                                                   regulated_ref_objs)
                     # Associate this statement with this observable
-                    self.stmt_to_obs[stmt] = obs_list
+                    self.stmt_to_obs[stmt] = obs_nodes
             elif isinstance(stmt, RegulateAmount):
                 if stmt.obj is None:
-                    self.stmt_to_obs[stmt] = [None]
+                    self.stmt_to_obs[stmt] = NodesContainer(
+                        None, main_interm=[None])
                 else:
                     # Get all refinements of object agent
-                    all_objs = self.get_refinements(stmt.obj)
-                    obs_list = add_obs_for_agents(all_objs)
-                    self.stmt_to_obs[stmt] = obs_list
+                    ref_objs = self.get_refinements(stmt.obj)
+                    obs_nodes = add_obs_for_agents(stmt.obj, ref_objs)
+                    self.stmt_to_obs[stmt] = obs_nodes
             elif isinstance(stmt, Influence):
                 if stmt.obj is None:
-                    self.stmt_to_obs[stmt] = [None]
+                    self.stmt_to_obs[stmt] = NodesContainer(
+                        None, main_interm=[None])
                 else:
                     # Get all refinements of object agent
-                    all_objs = self.get_refinements(stmt.obj)
-                    concepts = [obj.concept for obj in all_objs]
-                    obs_list = add_obs_for_agents(concepts)
-                    self.stmt_to_obs[stmt] = obs_list
+                    ref_objs = self.get_refinements(stmt.obj)
+                    concepts = [obj.concept for obj in ref_objs]
+                    obs_nodes = add_obs_for_agents(stmt.obj.concept, concepts)
+                    self.stmt_to_obs[stmt] = obs_nodes
         # Add observables for each agent
         for ag in self.agent_obs:
-            obs_list = add_obs_for_agents([ag])
-            self.agent_to_obs[ag] = obs_list
+            obs_nodes = add_obs_for_agents(ag)
+            self.agent_to_obs[ag] = obs_nodes
 
         logger.info("Generating influence map")
         self._im = self.generate_im(self.model)
@@ -331,13 +355,15 @@ class PysbModelChecker(ModelChecker):
         # enzyme in a rule of the appropriate activity (e.g., a phosphorylation
         # rule) FIXME
         if subj is not None:
-            all_subj_agents = self.get_refinements(subj)
-            subj_mps = self.get_all_mps(all_subj_agents,
-                                        ignore_activities=True)
-            if not subj_mps:
+            ref_agents = self.get_refinements(subj)
+            subj_mps = self.get_all_mps([subj], ignore_activities=True)
+            subj_ref_mps = self.get_all_mps(ref_agents, ignore_activities=True)
+            if not subj_mps and not subj_ref_mps:
                 return (None, None, 'SUBJECT_MONOMERS_NOT_FOUND')
+            subj_nodes = NodesContainer(subj, ref_agents, subj_mps,
+                                        subj_ref_mps)
         else:
-            subj_mps = [None]
+            subj_nodes = NodesContainer(None, main_interm=[None])
         # Observables may not be found for an activation since there may be no
         # rule in the model activating the object, and the object may not have
         # an "active" site of the appropriate type
@@ -354,7 +380,7 @@ class PysbModelChecker(ModelChecker):
         else:
             obs_signed = [(obs, target_polarity) for obs in obs_names]
         result_code = None
-        return subj_mps, obs_signed, result_code
+        return subj_nodes, obs_signed, result_code
 
     def process_subject(self, subj_mp):
         if subj_mp is None:
@@ -367,15 +393,18 @@ class PysbModelChecker(ModelChecker):
             input_set_signed = {(rule, 0) for rule in input_rule_set}
         return input_set_signed, None
 
-    def get_refinements(self, agent):
-        """Return a list of refinement agents that are part of the model."""
+    def get_model_agents(self, model_stmts):
         model_agents = set()
-        for stmt in self.model_stmts:
+        for stmt in model_stmts:
             for ag in stmt.agent_list():
                 if ag is not None:
                     model_agents.add(ag)
-        agents = {agent}
-        for ag in model_agents:
+        return get_model_agents
+
+    def get_refinements(self, agent):
+        """Return a list of refinement agents that are part of the model."""
+        agents = set()
+        for ag in self.model_agents:
             if ag.refinement_of(agent, bio_ontology):
                 agents.add(ag)
         return agents
