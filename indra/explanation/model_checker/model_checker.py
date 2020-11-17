@@ -128,6 +128,18 @@ class PathResult(object):
         return str(self)
 
 
+class NodesContainer():
+    def __init__(self, main_agent, ref_agents=None,
+                 main_interm=None, ref_interm=None):
+        self.main_agent = main_agent
+        self.ref_agents = ref_agents if ref_agents else {}
+        self.main_interm = main_interm if main_interm else {}
+        self.ref_interm = ref_interm if ref_interm else {}
+        self.main_nodes = {}
+        self.refinement_nodes = {}
+        self.all_nodes = {}
+
+
 class ModelChecker(object):
     """The parent class of all ModelCheckers.
 
@@ -285,7 +297,7 @@ class ModelChecker(object):
         # Make sure graph is created
         self.get_graph()
         # Extract subject and object info from test statement
-        subj_list, obj_list, result_code = self.process_statement(stmt)
+        subj_nodes, obj_nodes, result_code = self.process_statement(stmt)
         if result_code:
             return None, None, result_code
         # This is the case if we are checking a Statement whose
