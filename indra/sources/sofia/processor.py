@@ -13,10 +13,12 @@ bad_grnd = {'event1'}
 
 
 class SofiaProcessor(object):
-    def __init__(self, score_cutoff=None):
+    def __init__(self, score_cutoff=None,
+                 grounding_mode='flat'):
         self._entities = {}
         self._events = {}
         self._score_cutoff = score_cutoff
+        self.grounding_mode = grounding_mode
 
     @staticmethod
     def process_event(event_dict):
@@ -100,6 +102,42 @@ class SofiaProcessor(object):
         return stmt_list
 
     def get_event(self, event_entry):
+        if self.grounding_mode == 'flat':
+            return self.get_event_flat(event_entry)
+        else:
+            return self.get_event_compositional(event_entry)
+
+    def get_event_flat(self, event_entry):
+        name = event_entry['Relation']
+        concept = Concept(name, db_refs={'TEXT': name})
+        grounding = event_entry['Event_Type']
+        if grounding:
+            concept.db_refs['SOFIA'] = grounding
+        context = WorldContext()
+        time = event_entry.get('Time')
+        if time:
+            context.time = TimeContext(text=time.strip())
+        loc = event_entry.get('Location')
+        if loc:
+            context.geo_location = RefContext(name=loc)
+
+        text = event_entry.get('Text')
+        ref = event_entry.get('Source')
+        agent = event_entry.get('Agent')
+        patient = event_entry.get('Patient')
+        anns = {}
+        if agent:
+            anns['agent'] = agent
+        if patient:
+            anns['patient'] = patient
+        ev = Evidence(source_api='sofia', pmid=ref, text=text,
+                      annotations=anns, source_id=event_entry['Event Index'])
+        pol = event_entry.get('Polarity')
+        event = Event(concept, context=context, evidence=[ev],
+                      delta=QualitativeDelta(polarity=pol, adjectives=None))
+        return event
+
+    def get_event_compositional(self, event_entry):
         # Get get compositional grounding
         comp_name, comp_grnd = self.get_compositional_grounding(event_entry)
         if comp_name is not None and \
