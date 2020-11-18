@@ -45,17 +45,40 @@ class Concept(object):
         return matches
 
     def get_grounding(self, ns_order=None):
+        # There are the following possibilities here:
+        # 1. a single unscored entry (str)
+        # 2. a list of scored entries with one element per entry
+        #    (list of tuple(str, float))
+        # 3. a list of entries with each entry cosisting of a tuple
+        #    of 4 scored groundings (list of tuple(tuple(str, float)))
         ns_order = ns_order if ns_order else default_ns_order
         for db_ns in ns_order:
+            # If there is no such entry, we continue
             db_id = self.db_refs.get(db_ns)
+            # Note, this includes an empty list in case that comes up
             if not db_id:
                 continue
-            if isinstance(db_id, (list, tuple)):
-                db_id = db_id[0]
-                if isinstance(db_id, (list, tuple)):
-                    db_id = sorted([i for i in db_id if i is not None],
-                                   key=lambda x: x[1], reverse=True)[0][0]
-            return db_ns, db_id
+            # Case 1, a simple string ID
+            if isinstance(db_id, str):
+                return db_ns, db_id
+            # Cases 2 and 3 where db_id here is a list
+            elif isinstance(db_id, (list, tuple)):
+                first_entry = db_id[0]
+                # Case 2: each entry is a grounding and a score
+                if len(first_entry) == 2:
+                    top_entry = \
+                        sorted(db_id, key=lambda x: x[1],
+                               reverse=True)[0][0]
+                    return db_ns, top_entry
+                # Case 3: each entry is a tuple with 4 elements
+                # each of which is a tuple consisting of a grounding
+                # and a score
+                else:
+                    top_entry = get_top_compositional_grounding(db_id)
+                    return tuple([gr[0] if gr is not None else None
+                                  for gr in top_entry])
+            else:
+                continue
         return None, None
 
     def isa(self, other, ontology):
@@ -124,3 +147,11 @@ class Concept(object):
     def __repr__(self):
         return str(self)
 
+
+def get_top_compositional_grounding(groundings):
+    def sort_key(entry):
+        scores = [grounding[1] for grounding in entry
+                  if grounding is not None]
+        return sum(scores)/len(scores)
+    top_grounding = max(groundings, key=sort_key)
+    return top_grounding
