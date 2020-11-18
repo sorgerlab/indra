@@ -6,8 +6,11 @@ from indra.sources.hume import processor
 
 logger = logging.getLogger(__name__)
 
+default_grounding_mode = 'flat'
 
-def process_jsonld_file(fname, extract_filter=None):
+
+def process_jsonld_file(fname, extract_filter=None,
+                        grounding_mode=default_grounding_mode):
     """Process a JSON-LD file in the new format to extract Statements.
 
     Parameters
@@ -19,6 +22,9 @@ def process_jsonld_file(fname, extract_filter=None):
         'influence' and 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
         only Influence statements are of interest. Default: None
+    grounding_mode : Optional[str]
+        Selects whether 'flat' or 'compositional' groundings should be
+        extracted. Default: 'flat'.
 
     Returns
     -------
@@ -31,7 +37,8 @@ def process_jsonld_file(fname, extract_filter=None):
     return process_jsonld(json_dict, extract_filter=extract_filter)
 
 
-def process_jsonld(jsonld, extract_filter=None):
+def process_jsonld(jsonld, extract_filter=None,
+                   grounding_mode=default_grounding_mode):
     """Process a JSON-LD string in the new format to extract Statements.
 
     Parameters
@@ -43,6 +50,9 @@ def process_jsonld(jsonld, extract_filter=None):
         'influence' and 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
         only Influence statements are of interest. Default: None
+    grounding_mode : Optional[str]
+        Selects whether 'flat' or 'compositional' groundings should be
+        extracted. Default: 'flat'.
 
     Returns
     -------
@@ -50,7 +60,13 @@ def process_jsonld(jsonld, extract_filter=None):
         A HumeProcessor instance, which contains a list of INDRA Statements
         as its statements attribute.
     """
-    hp = processor.HumeJsonLdProcessor(jsonld)
+    if grounding_mode == 'flat':
+        hp = processor.HumeJsonLdProcessor(jsonld)
+    elif grounding_mode == 'compositional':
+        hp = processor.HumeJsonLdProcessorCompositional(jsonld)
+    else:
+        raise ValueError('Invalid grounding mode: %s' % grounding_mode)
+
     if extract_filter is None or 'influence' in extract_filter:
         hp.extract_relations()
     if extract_filter is None or 'event' in extract_filter:
