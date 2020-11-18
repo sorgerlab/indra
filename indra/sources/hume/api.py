@@ -34,7 +34,8 @@ def process_jsonld_file(fname, extract_filter=None,
     """
     with open(fname, 'r', encoding='utf-8') as fh:
         json_dict = json.load(fh)
-    return process_jsonld(json_dict, extract_filter=extract_filter)
+    return process_jsonld(json_dict, extract_filter=extract_filter,
+                          grounding_mode=grounding_mode)
 
 
 def process_jsonld(jsonld, extract_filter=None,

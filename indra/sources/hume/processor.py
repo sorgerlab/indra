@@ -268,8 +268,11 @@ class HumeJsonLdProcessor(object):
         sent_id = provenance['sentence']
         text = self.document_dict[doc_id]['sentences'][sent_id]
         text = self._sanitize(text)
-        bounds = [provenance['sentenceCharPositions'][k]
-                  for k in ['start', 'end']]
+        if 'sentenceCharPositions' in provenance:
+            bounds = [provenance['sentenceCharPositions'][k]
+                      for k in ['start', 'end']]
+        else:
+            bounds = []
         return text, bounds
 
     def _get_evidence(self, event, adjectives):
@@ -333,7 +336,11 @@ class HumeJsonLdProcessorCompositional(HumeJsonLdProcessor):
         grounding_entries = sorted(list(set(groundings)),
                                    key=lambda x: (x[1], x[0].count('/'), x[0]),
                                    reverse=True)
-        _, bounds = self._get_text_and_bounds(entity['provenance'][0])
+        if 'mentions' in entity:
+            prov = entity['mentions'][0]['provenance'][0]
+        else:
+            prov = entity['provenance'][0]
+        _, bounds = self._get_text_and_bounds(prov)
         db_refs['BOUNDS'] = bounds
         # We could get an empty list here in which case we don't add the
         # grounding
@@ -367,9 +374,14 @@ class HumeJsonLdProcessorCompositional(HumeJsonLdProcessor):
         event_sentence, _ = self._get_text_and_bounds(event['provenance'][0])
         doc_id = event['provenance'][0]['document']['@id']
         sent_id = event['provenance'][0]['sentence']
-        entity_text = self.document_dict[doc_id]['sentences'][sent_id][minb:maxb+1]
-        concept.db_refs['TEXT'] = entity_text
-        concept.name = entity_text
+        # If we successfully got within-sentence coordinates, we can use the
+        # entity text from there and overwrite the concept name as well as
+        # the context grounding TEXT entry
+        if minb is not None and maxb is not None:
+            entity_text = \
+                self.document_dict[doc_id]['sentences'][sent_id][minb:maxb+1]
+            concept.name = entity_text
+            concept.db_refs['TEXT'] = entity_text
 
         process_grounding_wm = process_grounding.get('WM')
         theme_grounding_wm = theme_grounding.get('WM')
