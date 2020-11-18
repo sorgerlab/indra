@@ -43,7 +43,7 @@ def process_text(text, save_json='eidos_output.json',
         A list of relation types to extract. Valid values in the list are
         'influence', 'association', 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
-        only Influence statements are of interest. Default: none
+        only Influence statements are of interest. Default: None
 
     Returns
     -------
@@ -94,7 +94,7 @@ def process_json_file(file_name, grounding_ns=None, extract_filter=None):
         A list of relation types to extract. Valid values in the list are
         'influence', 'association', 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
-        only Influence statements are of interest. Default: none
+        only Influence statements are of interest. Default: None
 
     Returns
     -------
@@ -127,7 +127,7 @@ def process_json_str(json_str, grounding_ns=None, extract_filter=None):
         A list of relation types to extract. Valid values in the list are
         'influence', 'association', 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
-        only Influence statements are of interest. Default: none
+        only Influence statements are of interest. Default: None
 
     Returns
     -------
@@ -156,7 +156,7 @@ def process_json(json_dict, grounding_ns=None, extract_filter=None):
         A list of relation types to extract. Valid values in the list are
         'influence', 'association', 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
-        only Influence statements are of interest. Default: none
+        only Influence statements are of interest. Default: None
 
     Returns
     -------
