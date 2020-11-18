@@ -43,18 +43,20 @@ def test_process_json():
 
 def test_compositional_grounding():
     test_file = os.path.join(path_here, 'sofia_test_comp_no_causal.json')
-    sp = sofia.process_json_file(test_file)
+    sp = sofia.process_json_file(test_file, grounding_mode='compositional')
     assert len(sp.statements) == 2
     assert isinstance(sp.statements[0], Event)
     assert isinstance(sp.statements[1], Event)
 
-    assert sp.statements[0].concept.db_refs['TEXT'] == 'wheat'
-    assert isinstance(sp.statements[0].concept.db_refs['WM'], tuple)
-    assert isinstance(sp.statements[0].concept.db_refs['WM'], tuple)
+    assert sp.statements[0].concept.db_refs['TEXT'] == 'wheat', \
+        sp.statements[0].concept.db_refs
+    assert isinstance(sp.statements[0].concept.db_refs['WM'], list)
+    assert isinstance(sp.statements[0].concept.db_refs['WM'][0], tuple), \
+        sp.statements[0].concept.db_refs['WM']
 
     assert sp.statements[1].concept.db_refs['TEXT'] == 'cereal'
-    assert isinstance(sp.statements[1].concept.db_refs['WM'], tuple)
-    assert isinstance(sp.statements[1].concept.db_refs['WM'], tuple)
+    assert isinstance(sp.statements[1].concept.db_refs['WM'], list)
+    assert isinstance(sp.statements[1].concept.db_refs['WM'][0], tuple)
 
 
 def test_event_decrease():
