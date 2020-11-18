@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 import os
 import unittest
 from builtins import dict
@@ -18,16 +16,6 @@ standalone_events = os.path.join(
 
 migration_events = os.path.join(
     path_this, 'wm_migration_numeric_one_sentence.082019.json-ld')
-
-
-@unittest.skip('Need updated JSON-LD file')
-def test_bbn_on_ben_paragraph():
-    bp = process_jsonld_file(os.path.join(path_this,
-                                          'hackathon_test_paragraph.json-ld'))
-    assert bp is not None
-    print(bp.statements)
-    stmt_dict = {s.get_hash(shallow=False): s for s in bp.statements}
-    assert len(stmt_dict) == 3, len(stmt_dict)
 
 
 def test_large_bbn_corpus():
@@ -81,7 +69,7 @@ def test_standalone_events():
 
 
 def test_migration_events():
-    bp = process_jsonld_file(migration_events)
+    bp = process_jsonld_file(migration_events, extract_filter={'event'})
     assert bp, "Processor is none."
     assert len(bp.statements) == 1
     stmt = bp.statements[0]
@@ -100,3 +88,7 @@ def test_migration_events():
     assert stmt.delta.value == 10000
     assert stmt.delta.unit == "Monthly"
     assert stmt.delta.modifier == "Min"
+
+    # Test extraction filter
+    bp = process_jsonld_file(migration_events, extract_filter={'influence'})
+    assert len(bp.statements) == 0

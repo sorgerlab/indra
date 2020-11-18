@@ -50,6 +50,10 @@ def test_event_decrease():
     assert stmt.delta.polarity == -1, stmt.delta
     assert stmt.concept.name == 'rainfall', stmt.concept
 
+    # Test extraction filter
+    sp = sofia.process_json_file(test_file, extract_filter={'influence'})
+    assert len(sp.statements) == 0
+
 
 def test_influence_event_polarity():
     test_file = os.path.join(path_here, 'sofia_infl_polarities.json')
