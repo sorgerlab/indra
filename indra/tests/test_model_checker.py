@@ -1491,6 +1491,57 @@ def test_amount_vs_activation():
     assert results[0][1].result_code == 'NO_PATHS_FOUND', results
 
 
+def test_bound_polarity_error():
+    rheb = Agent('RHEB', db_refs={'HGNC': '10011'})
+    mtor = Agent('MTOR', db_refs={'HGNC': '3942'})
+    rheb_bc = BoundCondition(rheb, True) 
+    mtor_rheb = Agent('MTOR', bound_conditions=[rheb_bc],
+                      db_refs={'HGNC': '3942'})
+    rps6kb1 = Agent('RPS6KB1', db_refs={'HGNC': '10436'})
+    model_stmts = [Complex([rheb, mtor]),
+                   Activation(mtor_rheb, rps6kb1)]
+    # This test should have a path
+    corr_test = Activation(rheb, rps6kb1)
+    # This should not have a path
+    incorr_test = Inhibition(rheb, rps6kb1)
+    # Make model
+    pa = PysbAssembler()
+    pa.add_statements(model_stmts)
+    pa.make_model(policies='one_step')
+    # Check model
+    mc = PysbModelChecker(pa.model, [corr_test, incorr_test])
+    results = mc.check_model()
+    # The first one should pass
+    assert results[0][1].result_code == 'PATHS_FOUND', results[0]
+    # The second should fail with no path found
+    assert results[1][1].result_code == 'NO_PATHS_FOUND', results[1]
+    
+def test_not_bound_polarity_error():
+    pras40 = Agent('AKT1S1', db_refs={'HGNC': '28426'})
+    mtor = Agent('MTOR', db_refs={'HGNC': '3942'})
+    pras40_bc = BoundCondition(pras40, False) 
+    mtor_n_pras40 = Agent('MTOR', bound_conditions=[pras40_bc],
+                      db_refs={'HGNC': '3942'})
+    rps6kb1 = Agent('RPS6KB1', db_refs={'HGNC': '10436'})
+    model_stmts = [Complex([pras40, mtor]),
+                   Activation(mtor_n_pras40, rps6kb1)]
+    # This test should have a path
+    corr_test = Inhibition(pras40, rps6kb1)
+    # This should not have a path
+    incorr_test = Activation(pras40, rps6kb1)
+    # Make model
+    pa = PysbAssembler()
+    pa.add_statements(model_stmts)
+    pa.make_model(policies='one_step')
+    # Check model
+    mc = PysbModelChecker(pa.model, [corr_test, incorr_test])
+    results = mc.check_model()
+    # The first one should pass
+    assert results[0][1].result_code == 'PATHS_FOUND', results[0]
+    # The second should fail with no path found
+    assert results[1][1].result_code == 'NO_PATHS_FOUND', results[1]
+
+
 # Test other ModelChecker types
 st1 = Activation(Agent('A', db_refs={'HGNC': '1'}),
                  Agent('B', db_refs={'HGNC': '2'}))
@@ -1887,7 +1938,8 @@ def test_path_fixed_length():
 
 
 if __name__ == '__main__':
-    test_prune_influence_map_subj_obj()
+    test_not_bound_polarity_error()
+    #test_bound_polarity_error()
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
