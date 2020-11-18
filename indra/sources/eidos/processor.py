@@ -239,6 +239,103 @@ class EidosProcessor(object):
 
     def get_groundings(self, entity):
         """Return groundings as db_refs for an entity."""
+        def get_grounding_entries(grounding):
+            if not grounding:
+                return None
+
+            entries = []
+            values = grounding.get('values', [])
+            # Values could still have been a None entry here
+            if values:
+                for entry in values:
+                    ont_concept = entry.get('ontologyConcept')
+                    value = entry.get('value')
+                    if ont_concept is None or value is None:
+                        continue
+                    entries.append((ont_concept, value))
+            return entries
+
+        # Save raw text and Eidos scored groundings as db_refs
+        db_refs = {'TEXT': entity['text']}
+        groundings = entity.get('groundings')
+        if not groundings:
+            return db_refs
+        for g in groundings:
+            entries = get_grounding_entries(g)
+            # Only add these groundings if there are actual values listed
+            if entries:
+                key = g['name'].upper()
+                if self.grounding_ns is not None and \
+                        key not in self.grounding_ns:
+                    continue
+                if key == 'UN':
+                    db_refs[key] = [(s[0].replace(' ', '_'), s[1])
+                                    for s in entries]
+                elif key == 'WM_FLATTENED' or key == 'WM':
+                    db_refs['WM'] = [(s[0].strip('/'), s[1])
+                                     for s in entries]
+                else:
+                    db_refs[key] = entries
+        return db_refs
+
+    def get_concept(self, entity):
+        """Return Concept from an Eidos entity."""
+        # Use the canonical name as the name of the Concept
+        name = entity['canonicalName']
+        db_refs = self.get_groundings(entity)
+        concept = Concept(name, db_refs=db_refs)
+        return concept
+
+    def time_context_from_ref(self, timex):
+        """Return a time context object given a timex reference entry."""
+        # If the timex has a value set, it means that it refers to a DCT or
+        # a TimeExpression e.g. "value": {"@id": "_:DCT_1"} and the parameters
+        # need to be taken from there
+        value = timex.get('value')
+        if value:
+            # Here we get the TimeContext directly from the stashed DCT
+            # dictionary
+            tc = self.doc.timexes.get(value['@id'])
+            return tc
+        return None
+
+    def geo_context_from_ref(self, ref):
+        """Return a ref context object given a location reference entry."""
+        value = ref.get('value')
+        if value:
+            # Here we get the RefContext from the stashed geoloc dictionary
+            rc = self.doc.geolocs.get(value['@id'])
+            return rc
+        return None
+
+    def get_all_events(self):
+        """Return a list of all standalone events from a list
+        of statements."""
+        events = []
+        for stmt in self.statements:
+            stmt = copy.deepcopy(stmt)
+            if isinstance(stmt, Influence):
+                for member in [stmt.subj, stmt.obj]:
+                    member.evidence = stmt.evidence[:]
+                    # Remove the context since it may be for the other member
+                    for ev in member.evidence:
+                        ev.context = None
+                    events.append(member)
+            elif isinstance(stmt, Association):
+                for member in stmt.members:
+                    member.evidence = stmt.evidence[:]
+                    # Remove the context since it may be for the other member
+                    for ev in member.evidence:
+                        ev.context = None
+                    events.append(member)
+            elif isinstance(stmt, Event):
+                events.append(stmt)
+        return events
+
+
+class EidosProcessorCompositional(EidosProcessor):
+    def get_groundings(self, entity):
+        """Return groundings as db_refs for an entity."""
         def get_grounding_entries_comp(grounding):
             if not grounding:
                 return None
@@ -295,60 +392,6 @@ class EidosProcessor(object):
             else:
                 continue
         return db_refs
-
-    def get_concept(self, entity):
-        """Return Concept from an Eidos entity."""
-        # Use the canonical name as the name of the Concept
-        name = entity['canonicalName']
-        db_refs = self.get_groundings(entity)
-        concept = Concept(name, db_refs=db_refs)
-        return concept
-
-    def time_context_from_ref(self, timex):
-        """Return a time context object given a timex reference entry."""
-        # If the timex has a value set, it means that it refers to a DCT or
-        # a TimeExpression e.g. "value": {"@id": "_:DCT_1"} and the parameters
-        # need to be taken from there
-        value = timex.get('value')
-        if value:
-            # Here we get the TimeContext directly from the stashed DCT
-            # dictionary
-            tc = self.doc.timexes.get(value['@id'])
-            return tc
-        return None
-
-    def geo_context_from_ref(self, ref):
-        """Return a ref context object given a location reference entry."""
-        value = ref.get('value')
-        if value:
-            # Here we get the RefContext from the stashed geoloc dictionary
-            rc = self.doc.geolocs.get(value['@id'])
-            return rc
-        return None
-
-    def get_all_events(self):
-        """Return a list of all standalone events from a list
-        of statements."""
-        events = []
-        for stmt in self.statements:
-            stmt = copy.deepcopy(stmt)
-            if isinstance(stmt, Influence):
-                for member in [stmt.subj, stmt.obj]:
-                    member.evidence = stmt.evidence[:]
-                    # Remove the context since it may be for the other member
-                    for ev in member.evidence:
-                        ev.context = None
-                    events.append(member)
-            elif isinstance(stmt, Association):
-                for member in stmt.members:
-                    member.evidence = stmt.evidence[:]
-                    # Remove the context since it may be for the other member
-                    for ev in member.evidence:
-                        ev.context = None
-                    events.append(member)
-            elif isinstance(stmt, Event):
-                events.append(stmt)
-        return events
 
 
 class EidosDocument(object):
