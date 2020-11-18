@@ -1,7 +1,7 @@
 import json
 import logging
-from .processor import EidosProcessor
 from indra.sources.eidos import client as eidos_client
+from .processor import EidosProcessor, EidosProcessorCompositional
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,12 @@ except Exception as e:
     eidos_reader = None
 
 
+default_grounding_mode = 'flat'  # The alternative is 'compositional'
+
+
 def process_text(text, save_json='eidos_output.json',
-                 webservice=None, grounding_ns=None, extract_filter=None):
+                 webservice=None, grounding_ns=None, extract_filter=None,
+                 grounding_mode=default_grounding_mode):
     """Return an EidosProcessor by processing the given text.
 
     This constructs a reader object via Java and extracts mentions
@@ -44,6 +48,9 @@ def process_text(text, save_json='eidos_output.json',
         'influence', 'association', 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
         only Influence statements are of interest. Default: None
+    grounding_mode : Optional[str]
+        Selects whether 'flat' or 'compositional' groundings should be
+        extracted. Default: 'flat'.
 
     Returns
     -------
@@ -54,7 +61,8 @@ def process_text(text, save_json='eidos_output.json',
     json_dict = _run_eidos_on_text(text, save_json, webservice)
     if json_dict:
         return process_json(json_dict, grounding_ns=grounding_ns,
-                            extract_filter=extract_filter)
+                            extract_filter=extract_filter,
+                            grounding_mode=grounding_mode)
     return None
 
 
@@ -75,7 +83,8 @@ def _run_eidos_on_text(text, save_json='eidos_output.json',
     return json_dict
 
 
-def process_json_file(file_name, grounding_ns=None, extract_filter=None):
+def process_json_file(file_name, grounding_ns=None, extract_filter=None,
+                      grounding_mode=default_grounding_mode):
     """Return an EidosProcessor by processing the given Eidos JSON-LD file.
 
     This function is useful if the output from Eidos is saved as a file and
@@ -95,6 +104,9 @@ def process_json_file(file_name, grounding_ns=None, extract_filter=None):
         'influence', 'association', 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
         only Influence statements are of interest. Default: None
+    grounding_mode : Optional[str]
+        Selects whether 'flat' or 'compositional' groundings should be
+        extracted. Default: 'flat'.
 
     Returns
     -------
@@ -106,12 +118,14 @@ def process_json_file(file_name, grounding_ns=None, extract_filter=None):
         with open(file_name, 'rb') as fh:
             json_str = fh.read().decode('utf-8')
             return process_json_str(json_str, grounding_ns=grounding_ns,
-                                    extract_filter=extract_filter)
+                                    extract_filter=extract_filter,
+                                    grounding_mode=grounding_mode)
     except IOError:
         logger.exception('Could not read file %s.' % file_name)
 
 
-def process_json_str(json_str, grounding_ns=None, extract_filter=None):
+def process_json_str(json_str, grounding_ns=None, extract_filter=None,
+                     grounding_mode=default_grounding_mode):
     """Return an EidosProcessor by processing the Eidos JSON-LD string.
 
     Parameters
@@ -128,6 +142,9 @@ def process_json_str(json_str, grounding_ns=None, extract_filter=None):
         'influence', 'association', 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
         only Influence statements are of interest. Default: None
+    grounding_mode : Optional[str]
+        Selects whether 'flat' or 'compositional' groundings should be
+        extracted. Default: 'flat'.
 
     Returns
     -------
@@ -137,10 +154,12 @@ def process_json_str(json_str, grounding_ns=None, extract_filter=None):
     """
     json_dict = json.loads(json_str)
     return process_json(json_dict, grounding_ns=grounding_ns,
-                        extract_filter=extract_filter)
+                        extract_filter=extract_filter,
+                        grounding_mode=grounding_mode)
 
 
-def process_json(json_dict, grounding_ns=None, extract_filter=None):
+def process_json(json_dict, grounding_ns=None, extract_filter=None,
+                 grounding_mode=default_grounding_mode):
     """Return an EidosProcessor by processing a Eidos JSON-LD dict.
 
     Parameters
@@ -157,6 +176,9 @@ def process_json(json_dict, grounding_ns=None, extract_filter=None):
         'influence', 'association', 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
         only Influence statements are of interest. Default: None
+    grounding_mode : Optional[str]
+        Selects whether 'flat' or 'compositional' groundings should be
+        extracted. Default: 'flat'.
 
     Returns
     -------
@@ -164,7 +186,13 @@ def process_json(json_dict, grounding_ns=None, extract_filter=None):
         A EidosProcessor containing the extracted INDRA Statements
         in its statements attribute.
     """
-    ep = EidosProcessor(json_dict, grounding_ns=grounding_ns)
+    if grounding_mode == 'flat':
+        ep = EidosProcessor(json_dict, grounding_ns=grounding_ns)
+    elif grounding_mode == 'compositional':
+        ep = EidosProcessorCompositional(json_dict, grounding_ns=grounding_ns)
+    else:
+        raise ValueError('Invalid grounding mode: %s' % grounding_mode)
+
     if extract_filter is None or 'influence' in extract_filter:
         ep.extract_causal_relations()
     if extract_filter is None or 'association' in extract_filter:
