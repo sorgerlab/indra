@@ -140,7 +140,7 @@ class CWMSProcessor(object):
 
         self._remove_multi_extraction_artifacts()
 
-    def extract_migrations(self):
+    def extract_migrations(self, include_relation_arg=False):
         ev_types = ['ONT::MOVE', 'ONT::DEPART', 'ONT::ARRIVE']
         events = []
         for et in ev_types:
@@ -150,7 +150,8 @@ class CWMSProcessor(object):
         for event_term in events:
             event_id = event_term.attrib.get('id')
             if event_id in self.subsumed_events or \
-                    event_id in self.relation_events:
+                    (not include_relation_arg and
+                     event_id in self.relation_events):
                 continue
             event = self.migration_from_event(event_term)
             if event is not None:
@@ -465,8 +466,8 @@ class CWMSProcessor(object):
         element_text = element_text_element.text
         if element_text is None:
             return None
-        element_db_refs = {'TEXT': element_text}
-        element_name = sanitize_name(element_text)
+        element_db_refs = {'TEXT': element_text.rstrip()}
+        element_name = sanitize_name(element_text.rstrip())
 
         element_type_element = event_term.find('type')
         if element_type_element is not None:
