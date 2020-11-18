@@ -17,7 +17,7 @@ except Exception as e:
 
 
 def process_text(text, save_json='eidos_output.json',
-                 webservice=None, grounding_ns=None):
+                 webservice=None, grounding_ns=None, extract_filter=None):
     """Return an EidosProcessor by processing the given text.
 
     This constructs a reader object via Java and extracts mentions
@@ -39,6 +39,11 @@ def process_text(text, save_json='eidos_output.json',
         given. If not specified or None, all grounding name spaces are
         propagated. If an empty list, no groundings are propagated.
         Example: ['UN', 'WM'], Default: None
+    extract_filter : Optional[list]
+        A list of relation types to extract. Valid values in the list are
+        'influence', 'association', 'event'. If not given, all relation
+        types are extracted. This argument can be used if, for instance,
+        only Influence statements are of interest. Default: none
 
     Returns
     -------
@@ -48,7 +53,8 @@ def process_text(text, save_json='eidos_output.json',
     """
     json_dict = _run_eidos_on_text(text, save_json, webservice)
     if json_dict:
-        return process_json(json_dict, grounding_ns=grounding_ns)
+        return process_json(json_dict, grounding_ns=grounding_ns,
+                            extract_filter=extract_filter)
     return None
 
 
@@ -69,7 +75,7 @@ def _run_eidos_on_text(text, save_json='eidos_output.json',
     return json_dict
 
 
-def process_json_file(file_name, grounding_ns=None):
+def process_json_file(file_name, grounding_ns=None, extract_filter=None):
     """Return an EidosProcessor by processing the given Eidos JSON-LD file.
 
     This function is useful if the output from Eidos is saved as a file and
@@ -84,6 +90,11 @@ def process_json_file(file_name, grounding_ns=None):
         given. If not specified or None, all grounding name spaces are
         propagated. If an empty list, no groundings are propagated.
         Example: ['UN', 'WM'], Default: None
+    extract_filter : Optional[list]
+        A list of relation types to extract. Valid values in the list are
+        'influence', 'association', 'event'. If not given, all relation
+        types are extracted. This argument can be used if, for instance,
+        only Influence statements are of interest. Default: none
 
     Returns
     -------
@@ -94,12 +105,13 @@ def process_json_file(file_name, grounding_ns=None):
     try:
         with open(file_name, 'rb') as fh:
             json_str = fh.read().decode('utf-8')
-            return process_json_str(json_str, grounding_ns=grounding_ns)
+            return process_json_str(json_str, grounding_ns=grounding_ns,
+                                    extract_filter=extract_filter)
     except IOError:
         logger.exception('Could not read file %s.' % file_name)
 
 
-def process_json_str(json_str, grounding_ns=None):
+def process_json_str(json_str, grounding_ns=None, extract_filter=None):
     """Return an EidosProcessor by processing the Eidos JSON-LD string.
 
     Parameters
@@ -111,6 +123,11 @@ def process_json_str(json_str, grounding_ns=None):
         given. If not specified or None, all grounding name spaces are
         propagated. If an empty list, no groundings are propagated.
         Example: ['UN', 'WM'], Default: None
+    extract_filter : Optional[list]
+        A list of relation types to extract. Valid values in the list are
+        'influence', 'association', 'event'. If not given, all relation
+        types are extracted. This argument can be used if, for instance,
+        only Influence statements are of interest. Default: none
 
     Returns
     -------
@@ -119,10 +136,11 @@ def process_json_str(json_str, grounding_ns=None):
         in its statements attribute.
     """
     json_dict = json.loads(json_str)
-    return process_json(json_dict, grounding_ns=grounding_ns)
+    return process_json(json_dict, grounding_ns=grounding_ns,
+                        extract_filter=extract_filter)
 
 
-def process_json(json_dict, grounding_ns=None):
+def process_json(json_dict, grounding_ns=None, extract_filter=None):
     """Return an EidosProcessor by processing a Eidos JSON-LD dict.
 
     Parameters
@@ -134,6 +152,11 @@ def process_json(json_dict, grounding_ns=None):
         given. If not specified or None, all grounding name spaces are
         propagated. If an empty list, no groundings are propagated.
         Example: ['UN', 'WM'], Default: None
+    extract_filter : Optional[list]
+        A list of relation types to extract. Valid values in the list are
+        'influence', 'association', 'event'. If not given, all relation
+        types are extracted. This argument can be used if, for instance,
+        only Influence statements are of interest. Default: none
 
     Returns
     -------
@@ -142,9 +165,12 @@ def process_json(json_dict, grounding_ns=None):
         in its statements attribute.
     """
     ep = EidosProcessor(json_dict, grounding_ns=grounding_ns)
-    ep.extract_causal_relations()
-    ep.extract_correlations()
-    ep.extract_events()
+    if extract_filter is None or 'influence' in extract_filter:
+        ep.extract_causal_relations()
+    if extract_filter is None or 'association' in extract_filter:
+        ep.extract_correlations()
+    if extract_filter is None or 'event' in extract_filter:
+        ep.extract_events()
     return ep
 
 
@@ -341,4 +367,3 @@ def get_agent_bio(concept, context=None):
     agent = Agent(name, db_refs={'TEXT_NORM': norm_txt, 'TEXT': raw_txt, **gr})
     standardize_agent_name(agent, standardize_refs=True)
     return agent
-
