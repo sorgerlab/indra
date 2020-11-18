@@ -177,8 +177,7 @@ def test_ekb_process():
 
 def test_process_increase_event_ekb():
     fname = join(data_folder, 'cwms_increase.ekb')
-    cp = process_ekb_file(fname)
-    cp.extract_events()
+    cp = process_ekb_file(fname, extract_filter={'event'})
     assert len(cp.statements) == 1
     stmt = cp.statements[0]
     assert isinstance(stmt, Event)
@@ -212,8 +211,7 @@ def test_process_cause_increase_event_ekb():
 
 def test_process_correlation():
     fname = join(data_folder, 'association.ekb')
-    cp = process_ekb_file(fname)
-    cp.extract_correlations()
+    cp = process_ekb_file(fname, extract_filter={'association'})
     assert len(cp.statements) == 1, cp.statements
     stmt = cp.statements[0]
     assert isinstance(stmt, Association), stmt
@@ -224,8 +222,7 @@ def test_process_correlation():
 
 def test_process_migration1():
     fname = join(data_folder, 'migration_sentence1.ekb')
-    cp = process_ekb_file(fname)
-    cp.extract_migrations()
+    cp = process_ekb_file(fname, extract_filter={'migration'})
     assert len(cp.statements) == 1
     stmt = cp.statements[0]
     assert isinstance(stmt, Migration)
@@ -244,8 +241,7 @@ def test_process_migration1():
 
 def test_process_migration2():
     fname = join(data_folder, 'migration_sentence2.ekb')
-    cp = process_ekb_file(fname)
-    cp.extract_migrations()
+    cp = process_ekb_file(fname, extract_filter={'migration'})
     assert len(cp.statements) == 1
     stmt = cp.statements[0]
     assert isinstance(stmt, Migration)

@@ -135,6 +135,10 @@ def test_process_correlations():
     names = {m.concept.name for m in st.members}
     assert names == {'harvest', 'requirement'}, names
 
+    # This is to check the extraction filter
+    ep = eidos.process_json_file(correl_jsonld, extract_filter={'influence'})
+    assert len(ep.statements) == 0
+
 
 def test_process_negation_hedging():
     nh_jsonld = os.path.join(path_this, 'eidos_neg_hedge.json')

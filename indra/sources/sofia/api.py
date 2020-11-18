@@ -6,13 +6,18 @@ from indra.config import get_config
 from .processor import SofiaJsonProcessor, SofiaExcelProcessor
 
 
-def process_table(fname):
+def process_table(fname, extract_filter=None):
     """Return processor by processing a given sheet of a spreadsheet file.
 
     Parameters
     ----------
     fname : str
         The name of the Excel file (typically .xlsx extension) to process
+    extract_filter : Optional[list]
+        A list of relation types to extract. Valid values in the list are
+        'influence' and 'event'. If not given, all relation
+        types are extracted. This argument can be used if, for instance,
+        only Influence statements are of interest. Default: None
 
     Returns
     -------
@@ -30,12 +35,15 @@ def process_table(fname):
 
     sp = SofiaExcelProcessor(rel_sheet.rows, event_sheet.rows,
                              entities_sheet.rows)
-    sp.extract_relations(rel_sheet.rows)
-    sp.extract_events(event_sheet.rows, rel_sheet.rows)
+    if extract_filter is None or 'influence' in extract_filter:
+        sp.extract_relations(rel_sheet.rows)
+    if extract_filter is None or 'event' in extract_filter:
+        sp.extract_events(event_sheet.rows, rel_sheet.rows)
     return sp
 
 
-def process_text(text, out_file='sofia_output.json', auth=None):
+def process_text(text, out_file='sofia_output.json', auth=None,
+                 extract_filter=None):
     """Return processor by processing text given as a string.
 
     Parameters
@@ -49,6 +57,11 @@ def process_text(text, out_file='sofia_output.json', auth=None):
         A username/password pair for the Sofia web service. If not given,
         the SOFIA_USERNAME and SOFIA_PASSWORD values are loaded from either
         the INDRA config or the environment.
+    extract_filter : Optional[list]
+        A list of relation types to extract. Valid values in the list are
+        'influence' and 'event'. If not given, all relation
+        types are extracted. This argument can be used if, for instance,
+        only Influence statements are of interest. Default: None
 
     Returns
     -------
@@ -80,16 +93,21 @@ def process_text(text, out_file='sofia_output.json', auth=None):
         with open(out_file, 'w') as fh:
             json.dump(json_response, fh, indent=1)
 
-    return process_json(json_response)
+    return process_json(json_response, extract_filter=extract_filter)
 
 
-def process_json(json_obj):
+def process_json(json_obj, extract_filter=None):
     """Return processor by processing a JSON object returned by Sofia.
 
     Parameters
     ----------
     json_obj : json
         A JSON object containing extractions from Sofia.
+    extract_filter : Optional[list]
+        A list of relation types to extract. Valid values in the list are
+        'influence' and 'event'. If not given, all relation
+        types are extracted. This argument can be used if, for instance,
+        only Influence statements are of interest. Default: None
 
     Returns
     -------
@@ -98,18 +116,25 @@ def process_json(json_obj):
         Statements as its statements attribute.
     """
     sp = SofiaJsonProcessor(json_obj)
-    sp.extract_relations(json_obj)
-    sp.extract_events(json_obj)
+    if extract_filter is None or 'influence' in extract_filter:
+        sp.extract_relations(json_obj)
+    if extract_filter is None or 'event' in extract_filter:
+        sp.extract_events(json_obj)
     return sp
 
 
-def process_json_file(fname):
+def process_json_file(fname, extract_filter=None):
     """Return processor by processing a JSON file produced by Sofia.
 
     Parameters
     ----------
     fname : str
         The name of the JSON file to process
+    extract_filter : Optional[list]
+        A list of relation types to extract. Valid values in the list are
+        'influence' and 'event'. If not given, all relation
+        types are extracted. This argument can be used if, for instance,
+        only Influence statements are of interest. Default: None
 
     Returns
     -------
@@ -119,7 +144,7 @@ def process_json_file(fname):
     """
     with open(fname, 'r') as fh:
         jd = json.load(fh)
-    return process_json(jd)
+    return process_json(jd, extract_filter=extract_filter)
 
 
 def _get_sofia_auth():

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 import logging
 from indra.sources.cwms.processor import CWMSProcessor
 from indra.sources.trips import client
@@ -7,13 +5,21 @@ from indra.sources.trips import client
 logger = logging.getLogger(__name__)
 
 
-def process_text(text, save_xml='cwms_output.xml'):
+def process_text(text, save_xml='cwms_output.xml',
+                 extract_filter=None):
     """Processes text using the CWMS web service.
 
     Parameters
     ----------
     text : str
         Text to process
+    extract_filter : Optional[list]
+        A list of relation types to extract. Valid values in the list are
+        'influence', 'association', 'event' and 'migration'.
+        If not given, only Influences are extracted since processing other
+        relation types can be time consuming. This argument can be used if
+        the extraction of other relation types such as Events are also of
+        interest.
 
     Returns
     -------
@@ -31,16 +37,23 @@ def process_text(text, save_xml='cwms_output.xml'):
     if save_xml:
         with open(save_xml, 'wb') as fh:
             fh.write(second_ekb.encode('utf-8'))
-    return process_ekb(second_ekb)
+    return process_ekb(second_ekb, extract_filter=extract_filter)
 
 
-def process_ekb_file(fname):
+def process_ekb_file(fname, extract_filter=None):
     """Processes an EKB file produced by CWMS.
 
     Parameters
     ----------
     fname : str
         Path to the EKB file to process.
+    extract_filter : Optional[list]
+        A list of relation types to extract. Valid values in the list are
+        'influence', 'association', 'event' and 'migration'.
+        If not given, only Influences are extracted since processing other
+        relation types can be time consuming. This argument can be used if
+        the extraction of other relation types such as Events are also of
+        interest.
 
     Returns
     -------
@@ -51,16 +64,23 @@ def process_ekb_file(fname):
     # Process EKB XML file into statements
     with open(fname, 'rb') as fh:
         ekb_str = fh.read().decode('utf-8')
-    return process_ekb(ekb_str)
+    return process_ekb(ekb_str, extract_filter=extract_filter)
 
 
-def process_ekb(ekb_str):
+def process_ekb(ekb_str, extract_filter=None):
     """Processes an EKB string produced by CWMS.
 
     Parameters
     ----------
     ekb_str : str
         EKB string to process
+    extract_filter : Optional[list]
+        A list of relation types to extract. Valid values in the list are
+        'influence', 'association', 'event' and 'migration'.
+        If not given, only Influences are extracted since processing other
+        relation types can be time consuming. This argument can be used if
+        the extraction of other relation types such as Events are also of
+        interest.
 
     Returns
     -------
@@ -70,8 +90,12 @@ def process_ekb(ekb_str):
     """
     # Process EKB XML into statements
     cp = CWMSProcessor(ekb_str)
-    cp.extract_causal_relations()
-    #cp.extract_correlations()
-    #cp.extract_migrations()
-    #cp.extract_events()
+    if extract_filter is None or 'influence' in extract_filter:
+        cp.extract_causal_relations()
+    if extract_filter is not None and 'association' in extract_filter:
+        cp.extract_correlations()
+    if extract_filter is not None and 'migration' in extract_filter:
+        cp.extract_migrations()
+    if extract_filter is not None and 'event' in extract_filter:
+        cp.extract_events()
     return cp
