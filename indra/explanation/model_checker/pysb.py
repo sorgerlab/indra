@@ -408,7 +408,7 @@ class PysbModelChecker(ModelChecker):
         """Return a list of refinement agents that are part of the model."""
         agents = set()
         for ag in self.model_agents:
-            if ag.refinement_of(agent, bio_ontology):
+            if ag != agent and ag.refinement_of(agent, bio_ontology):
                 agents.add(ag)
         return agents
 
