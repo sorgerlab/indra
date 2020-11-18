@@ -432,6 +432,12 @@ class ModelChecker(object):
                         self.graph, source, target, search_path_length, loop,
                         dummy_target, filter_func)
                     for path in path_iter:
+                        if path[0] in subj.ref_nodes:
+                            path.insert(0, self.get_ref(subj.main_agent,
+                                                        path[0], 'has_ref'))
+                        if path[-1] in obj.ref_nodes:
+                            path.append(self.get_ref(obj.main_agent,
+                                                     path[-1], 'is_ref'))
                         pr.add_path(tuple(path))
                         # Do not get next path if reached max_paths
                         if len(pr.paths) >= max_paths:
@@ -450,6 +456,13 @@ class ModelChecker(object):
         else:
             return PathResult(False, 'NO_PATHS_FOUND',
                               max_paths, max_path_length)
+
+    def get_ref(self, ag, node, rel):
+        ref_ag = self.nodes_to_agents[node[0]]
+        if rel == 'is_ref':
+            return (ref_ag.to_json(), rel, ag.to_json())
+        elif rel == 'has_ref':
+            return (ag.to_json(), rel, ref_ag.to_json())
 
     def make_false_result(self, result_code, max_paths, max_path_length):
         return PathResult(False, result_code, max_paths, max_path_length)
