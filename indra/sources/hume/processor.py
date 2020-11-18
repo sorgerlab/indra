@@ -243,6 +243,112 @@ class HumeJsonLdProcessor(object):
         ev = self.concept_dict[eid]
         concept, metadata = self._make_concept(ev)
 
+        is_migration_event = False
+        hume_grounding = {x[0] for x in concept.db_refs['WM']}
+        for grounding_en in hume_grounding:
+            if "wm/concept/causal_factor/social_and_political/migration" in \
+                    grounding_en:
+                is_migration_event = True
+        if is_migration_event:
+            movement_context, quantitative_state = (
+                self._make_movement_context(ev))
+            event_obj = Migration(concept, delta=quantitative_state,
+                                  context=movement_context, evidence=evidence)
+        else:
+            ev_delta = QualitativeDelta(
+                polarity=get_polarity(ev), adjectives=None)
+            context = self._make_world_context(ev)
+            event_obj = Event(concept, delta=ev_delta, context=context,
+                              evidence=evidence)
+        return event_obj
+
+    def _get_text_and_bounds(self, provenance):
+        # First try looking up the full sentence through provenance
+        doc_id = provenance['document']['@id']
+        sent_id = provenance['sentence']
+        text = self.document_dict[doc_id]['sentences'][sent_id]
+        text = self._sanitize(text)
+        bounds = [provenance['sentenceCharPositions'][k]
+                  for k in ['start', 'end']]
+        return text, bounds
+
+    def _get_evidence(self, event, adjectives):
+        """Return the Evidence object for the INDRA Statement."""
+        provenance = event.get('provenance')
+
+        # First try looking up the full sentence through provenance
+        text, bounds = self._get_text_and_bounds(provenance[0])
+
+        annotations = {
+            'found_by': event.get('rule'),
+            'provenance': provenance,
+            'event_type': os.path.basename(event.get('type')),
+            'adjectives': adjectives,
+            'bounds': bounds
+            }
+        ev = Evidence(source_api='hume', text=text, annotations=annotations)
+        return [ev]
+
+    def _get_grounding(self, entity):
+        """Return Hume grounding."""
+        db_refs = {'TEXT': entity['text']}
+        groundings = entity.get('grounding')
+        if not groundings:
+            return db_refs
+        # Get rid of leading slash
+        groundings = [(x['ontologyConcept'][1:], x['value']) for x in
+                      groundings]
+        grounding_entries = sorted(list(set(groundings)),
+                                   key=lambda x: (x[1], x[0].count('/'), x[0]),
+                                   reverse=True)
+        # We could get an empty list here in which case we don't add the
+        # grounding
+        if grounding_entries:
+            db_refs['WM'] = grounding_entries
+        return db_refs
+
+    @staticmethod
+    def _sanitize(text):
+        """Return sanitized Hume text field for human readability."""
+        # TODO: any cleanup needed here?
+        if text is None:
+            return None
+        text = text.replace('\n', ' ')
+        return text
+
+
+class HumeJsonLdProcessorCompositional(HumeJsonLdProcessor):
+    def _get_grounding(self, entity):
+        """Return Hume grounding."""
+        db_refs = {}
+        txt = entity.get('text')
+        if txt:
+            db_refs['TEXT'] = txt
+        groundings = entity.get('grounding')
+        if not groundings:
+            return db_refs
+        # Get rid of leading slash
+        groundings = [(x['ontologyConcept'][1:], x['value']) for x in
+                      groundings]
+        grounding_entries = sorted(list(set(groundings)),
+                                   key=lambda x: (x[1], x[0].count('/'), x[0]),
+                                   reverse=True)
+        _, bounds = self._get_text_and_bounds(entity['provenance'][0])
+        db_refs['BOUNDS'] = bounds
+        # We could get an empty list here in which case we don't add the
+        # grounding
+        if grounding_entries:
+            db_refs['WM'] = grounding_entries
+        return db_refs
+
+    def _get_event_and_context(self, event, eid=None, arg_type=None,
+                               evidence=None):
+        """Return an INDRA Event based on an event entry."""
+        if not eid:
+            eid = _choose_id(event, arg_type)
+        ev = self.concept_dict[eid]
+        concept, metadata = self._make_concept(ev)
+
         # is_migration_event = False
 
         property_id = _choose_id(event, 'has_property')
@@ -324,65 +430,6 @@ class HumeJsonLdProcessor(object):
         event_obj = Event(concept, delta=ev_delta, context=context,
                           evidence=evidence)
         return event_obj
-
-    def _get_text_and_bounds(self, provenance):
-        # First try looking up the full sentence through provenance
-        doc_id = provenance['document']['@id']
-        sent_id = provenance['sentence']
-        text = self.document_dict[doc_id]['sentences'][sent_id]
-        text = self._sanitize(text)
-        bounds = [provenance['sentenceCharPositions'][k]
-                  for k in ['start', 'end']]
-        return text, bounds
-
-    def _get_evidence(self, event, adjectives):
-        """Return the Evidence object for the INDRA Statement."""
-        provenance = event.get('provenance')
-
-        # First try looking up the full sentence through provenance
-        text, bounds = self._get_text_and_bounds(provenance[0])
-
-        annotations = {
-            'found_by': event.get('rule'),
-            'provenance': provenance,
-            'event_type': os.path.basename(event.get('type')),
-            'adjectives': adjectives,
-            'bounds': bounds
-            }
-        ev = Evidence(source_api='hume', text=text, annotations=annotations)
-        return [ev]
-
-    def _get_grounding(self, entity):
-        """Return Hume grounding."""
-        db_refs = {}
-        txt = entity.get('text')
-        if txt:
-            db_refs['TEXT'] = txt
-        groundings = entity.get('grounding')
-        if not groundings:
-            return db_refs
-        # Get rid of leading slash
-        groundings = [(x['ontologyConcept'][1:], x['value']) for x in
-                      groundings]
-        grounding_entries = sorted(list(set(groundings)),
-                                   key=lambda x: (x[1], x[0].count('/'), x[0]),
-                                   reverse=True)
-        _, bounds = self._get_text_and_bounds(entity['provenance'][0])
-        db_refs['BOUNDS'] = bounds
-        # We could get an empty list here in which case we don't add the
-        # grounding
-        if grounding_entries:
-            db_refs['WM'] = grounding_entries
-        return db_refs
-
-    @staticmethod
-    def _sanitize(text):
-        """Return sanitized Hume text field for human readability."""
-        # TODO: any cleanup needed here?
-        if text is None:
-            return None
-        text = text.replace('\n', ' ')
-        return text
 
 
 def _choose_id(event, arg_type):
