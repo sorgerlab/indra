@@ -384,8 +384,8 @@ class SofiaProcessor(object):
 
 
 class SofiaJsonProcessor(SofiaProcessor):
-    def __init__(self, jd):
-        super().__init__()
+    def __init__(self, jd, **kwargs):
+        super().__init__(**kwargs)
         self._entities = self.process_entities(jd)
         self._events = self.process_events(jd)
         self.statements = []
@@ -439,8 +439,9 @@ class SofiaJsonProcessor(SofiaProcessor):
 
 
 class SofiaExcelProcessor(SofiaProcessor):
-    def __init__(self, relation_rows, event_rows, entity_rows):
-        super().__init__()
+    def __init__(self, relation_rows, event_rows, entity_rows,
+                 **kwargs):
+        super().__init__(**kwargs)
         self._events = self.process_events(event_rows)
         self.statements = []
         self.relation_subj_obj_ids = []
