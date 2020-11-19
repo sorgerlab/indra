@@ -16,9 +16,9 @@ jobs:
     - uses: actions/cache@v2
       with:
         path: ./indra/cache
-        key: ${{ runner.os }}-pip-eidos-geonames
+        key: ${{ runner.os }}-eidos-geonames-${{ hashFiles('**/test_eidos.py') }}
         restore-keys: |
-          ${{ runner.os }}-pip-
+          ${{ runner.os }}-eidos-geonames-
     - name: Set up Python 3.6
       uses: actions/setup-python@v2
       with:
