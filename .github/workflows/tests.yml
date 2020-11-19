@@ -29,8 +29,8 @@ jobs:
         java-version: 8
     - name: Install dependencies
       run: |
+        echo $GITHUB_EVENT_NAME
         sudo apt-get update
-        #sudo apt-get install openjdk-8-jdk
         sudo apt-get install libstdc++6 graphviz python3-dev libgraphviz-dev pkg-config
         # Install test/Travis-specific dependencies not covered elsewhere
         pip install pydot jsonschema coverage nose-timer doctest-ignore-unicode awscli pycodestyle
@@ -72,7 +72,10 @@ jobs:
         aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
     - name: Run unit tests
       run: |
-        #export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+        # Set nose attributes based on the context in which we are running
+        export NOSEATTR="!notravis,!slow,!cron";
+        export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR,!nonpublic; else echo $NOSEATTR; fi)
+        echo $NOSEATTR
         #echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
         #echo "$TRAVIS_EVENT_TYPE"
         #export TEES_PATH=~/TEES
@@ -83,8 +86,7 @@ jobs:
         export CLASSPATH=$REACHPATH
         # These are files that are ignored so that doctests don't fail
         export NOSE_IGNORE_FILES="find_full_text_sentence.py";
-        # Set nose attributes based on the context in which we are running
-        export NOSEATTR="!notravis,!slow,!cron,!nonpublic";
+
         echo $NOSEATTR
         #- cd $TRAVIS_BUILD_DIR
         # Now run all INDRA tests
