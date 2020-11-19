@@ -20,13 +20,17 @@ jobs:
           ${{ runner.os }}-pip-
     - uses: actions/checkout@v2
     - name: Set up Python 3.6
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: 3.6
+    - name: Setup java
+      uses: actions/setup-java@v1
+      with:
+        java-version: 8
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install openjdk-8-jdk
+        #sudo apt-get install openjdk-8-jdk
         sudo apt-get install libstdc++6 graphviz python3-dev libgraphviz-dev pkg-config
         # Install test/Travis-specific dependencies not covered elsewhere
         pip install pydot jsonschema coverage nose-timer doctest-ignore-unicode awscli pycodestyle
@@ -76,7 +80,7 @@ jobs:
         export _JAVA_OPTIONS="-Xmx4g -Xms1g"
         export BNGPATH=`pwd`/BioNetGen-2.4.0
         export REACHPATH=`pwd`/reach-82631d-biores-e9ee36.jar
-        export EIDOSPATH=`pwd`/eidos.jar
+        export CLASSPATH=$REACHPATH
         # These are files that are ignored so that doctests don't fail
         export NOSE_IGNORE_FILES="find_full_text_sentence.py";
         # Set nose attributes based on the context in which we are running
@@ -89,6 +93,8 @@ jobs:
         #- python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
         #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
         # Eidos tests
+        export EIDOSPATH=`pwd`/eidos.jar
+        export CLASSPATH=$EIDOSPATH
         nosetests -v -a $NOSEATTR indra/tests/test_eidos.py
         # Run NL model examples only when the environmental variable
         # RUN_NL_MODELS is set to true in the Travis build
