@@ -21,7 +21,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install openjdk-8-jdk
-        sudo apt-get install libstdc++6 graphviz
+        sudo apt-get install libstdc++6 graphviz python3-dev libgraphviz-dev pkg-config
         # Install test/Travis-specific dependencies not covered elsewhere
         pip install pydot jsonschema coverage nose-timer doctest-ignore-unicode awscli pycodestyle
         mkdir -p $HOME/.pybel/data
