@@ -138,9 +138,29 @@ class NodesContainer():
         self.main_nodes = []
         self.ref_nodes = []
         self.all_nodes = []
+        self.common_target = None
 
     def get_all_nodes(self):
         self.all_nodes = self.main_nodes + self.ref_nodes
+
+    def process_interm(self, process_func):
+        meaningful_res_code = None
+        # Each subject might produce a different input set and we need to
+        # combine them
+        for subj in self.main_interm:
+            inp, res_code = process_func(subj)
+            if res_code:
+                meaningful_res_code = res_code
+                continue
+            self.main_nodes += inp
+        for subj in self.ref_interm:
+            inp, res_code = process_func(subj)
+            if res_code:
+                meaningful_res_code = res_code
+                continue
+            self.ref_nodes += inp
+        self.get_all_nodes()
+        return meaningful_res_code
 
 
 class ModelChecker(object):
@@ -268,9 +288,11 @@ class ModelChecker(object):
             node_filter_func = self.update_filter_func(agent_filter_func)
         # If we have several objects in obj_list or we have a loop, we add a
         # dummy target node as a child to all nodes in obj_list
+        common_target = None
         if len(obj_nodes.all_nodes) > 1 or loop:
             common_target = ('common_target', 0)
             self.graph.add_node(common_target)
+            obj_nodes.common_target = common_target
             # This is the case when source and target are the same. NetworkX
             # does not allow loops in the paths, so we work around it by using
             # target predecessors as new targets
@@ -280,15 +302,13 @@ class ModelChecker(object):
             else:
                 for obj in obj_nodes.all_nodes:
                     self.graph.add_edge(obj, common_target)
-            result = self.find_paths(subj_nodes, obj_nodes, common_target, max_paths,
-                                     max_path_length, loop, dummy_target=True,
-                                     filter_func=node_filter_func)
 
+        result = self.find_paths(subj_nodes, obj_nodes, max_paths,
+                                 max_path_length, loop,
+                                 filter_func=node_filter_func)
+        if common_target:
             self.graph.remove_node(common_target)
-        else:
-            result = self.find_paths(subj_nodes, obj_nodes, None, max_paths,
-                                     max_path_length, loop, dummy_target=False,
-                                     filter_func=node_filter_func)
+
         if result.path_found:
             logger.info('Found paths for %s' % stmt)
             return result
@@ -308,33 +328,15 @@ class ModelChecker(object):
         # This is the case if we are checking a Statement whose
         # subject is genuinely None
         if subj_nodes.main_agent is None:
-            input_set = None
+            subj_nodes.all_nodes = None
         # This is the case where the Statement has an actual subject
         # but we may still run into issues with finding an input
         # set for it in which case a false result may be returned.
         else:
-            # logger.info('Subject list: %s' % str(subj_list))
-            input_set = []
-            meaningful_res_code = None
-            # Each subject might produce a different input set and we need to
-            # combine them
-            for subj in subj_nodes.main_interm:
-                inp, res_code = self.process_subject(subj)
-                if res_code:
-                    meaningful_res_code = res_code
-                    continue
-                subj_nodes.main_nodes += inp
-            for subj in subj_nodes.ref_interm:
-                inp, res_code = self.process_subject(subj)
-                if res_code:
-                    meaningful_res_code = res_code
-                    continue
-                subj_nodes.ref_nodes += inp
-            subj_nodes.get_all_nodes()
+            meaningful_res_code = subj_nodes.process_interm(
+                self.process_subject)
             if not subj_nodes.all_nodes and meaningful_res_code:
                 return None, None, meaningful_res_code
-
-        logger.info('Input set: %s' % str(input_set))
 
         # # Statement object is None
         # if all(o is None for o in obj_list):
@@ -342,8 +344,8 @@ class ModelChecker(object):
 
         return subj_nodes, obj_nodes, None
 
-    def find_paths(self, subj, obj, common_target, max_paths=1, max_path_length=5,
-                   loop=False, dummy_target=False, filter_func=None):
+    def find_paths(self, subj, obj, max_paths=1, max_path_length=5,
+                   loop=False, filter_func=None):
         """Check for a source/target path in the model.
 
         Parameters
@@ -386,12 +388,14 @@ class ModelChecker(object):
         path_lengths = []
         path_metrics = []
         sources = []
-        if common_target:
-            target = common_target
+        if obj.common_target:
+            target = obj.common_target
+            dummy_target = True
         else:
             target = obj.all_nodes[0]
-        for source, path_length in find_sources(self.graph, target, subj.all_nodes,
-                                                filter_func):
+            dummy_target = False
+        for source, path_length in find_sources(self.graph, target,
+                                                subj.all_nodes, filter_func):
             # If a dummy target is used, we need to subtract one edge.
             # In case of loops, we are already missing one edge, there's no
             # need to subtract one more.
