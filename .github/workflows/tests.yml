@@ -84,23 +84,12 @@ jobs:
         echo $NOSEATTR
         #- cd $TRAVIS_BUILD_DIR
         # Now run all INDRA tests
-        nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
-        # PySB assembler tests (separated due to memory issues)
-        #- python -m nose_notify indra/tests/test_pysb_assembler.py --slack_hook $SLACK_NOTIFY_HOOK
-        #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
-        # REST API tests (separated due to memory issues)
-        #- python -m nose_notify indra/tests/test_rest_api.py --slack_hook $SLACK_NOTIFY_HOOK
-        #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
+        nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --exclude='.*eidos.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
         # TEES tests
         #- python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
         #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
-        # Reach tests
-        #- python -m nose_notify indra/tests/test_reach.py
-        #  --slack_hook $SLACK_NOTIFY_HOOK
-        #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
         # Eidos tests
-        #- python -m nose_notify indra/tests/test_eidos.py --slack_hook $SLACK_NOTIFY_HOOK
-        #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
+        nosetests -v -a $NOSEATTR indra/tests/test_eidos.py
         # Run NL model examples only when the environmental variable
         # RUN_NL_MODELS is set to true in the Travis build
         # NOTE: if blocks in Travis DO NOT FAIL even if there is
