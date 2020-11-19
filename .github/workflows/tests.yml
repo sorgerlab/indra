@@ -60,9 +60,9 @@ jobs:
         #      export TEES_SETTINGS=~/TEES/tees_local_settings.py
         #  fi
         # Install nose notify
-        mkdir $HOME/.nose_notify;
-        git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
-        export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
+        #mkdir $HOME/.nose_notify;
+        #git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
+        #export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
         # Download adeft models
         python -m adeft.download
     - name: Run unit tests
@@ -80,8 +80,7 @@ jobs:
         echo $NOSEATTR
         #- cd $TRAVIS_BUILD_DIR
         # Now run all INDRA tests
-        python -u -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"
-          indra -v -a $NOSEATTR
+        nosetests -v -a $NOSEATTR
               --exclude='.*tees.*'
               --exclude='.*eidos.*'
               --exclude='.*isi.*'
