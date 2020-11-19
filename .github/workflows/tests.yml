@@ -1,0 +1,140 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - uses: actions/cache@v2
+      with:
+        path: ./indra/cache
+        key: ${{ runner.os }}-pip-eidos-geonames
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+    - name: Setup java
+      uses: actions/setup-java@v1
+      with:
+        java-version: 8
+    - name: Install dependencies
+      run: |
+        echo $GITHUB_EVENT_NAME
+        sudo apt-get update
+        sudo apt-get install libstdc++6 graphviz python3-dev libgraphviz-dev pkg-config
+        # Install test/Travis-specific dependencies not covered elsewhere
+        pip install pydot jsonschema coverage nose-timer doctest-ignore-unicode awscli pycodestyle
+        mkdir -p $HOME/.pybel/data
+        aws s3 cp s3://bigmech/travis/pybel_cache.db $HOME/.pybel/data/ --no-sign-request  --source-region us-east-1
+        mkdir -p $HOME/.indra/bio_ontology/1.4
+        aws s3 cp s3://bigmech/travis/bio_ontology/1.4/mock_ontology.pkl $HOME/.indra/bio_ontology/1.4/bio_ontology.pkl --no-sign-request  --source-region us-east-1
+        # PySB and dependencies
+        wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
+        tar xzf bionetgen.tar.gz
+        pip install git+https://github.com/pysb/pysb.git
+        # Temporary fix. Ensure cython is installed before pyjnius
+        pip install cython
+        # Now install INDRA with all its extras
+        pip install .[all]
+        aws s3 cp s3://bigmech/travis/Phosphorylation_site_dataset.tsv indra/resources/ --no-sign-request  --source-region us-east-1
+        # Run slow tests only if we're in the cron setting
+        #- |
+        #  if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then
+        #      export RUN_SLOW=true;
+        #  fi
+        # Install TEES only if slow tests are being run
+        #- |
+        #  if [[ $RUN_SLOW == "true" ]]; then
+        #      sudo pip2 install numpy
+        #      sudo apt-get --yes install ruby;
+        #      aws s3 cp s3://bigmech/travis/TEES.tar.bz2 . --no-sign-request --no-sign-request;
+        #      tar xjf TEES.tar.bz2;
+        #      mv TEES ~/TEES;
+        #      export TEES_SETTINGS=~/TEES/tees_local_settings.py
+        #  fi
+        # Install nose notify
+        #mkdir $HOME/.nose_notify;
+        #git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
+        #export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
+        # Download adeft models
+        python -m adeft.download
+        aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request  --source-region us-east-1
+        aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
+    - name: Run unit tests
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        INDRA_DB_REST_URL: ${{ secrets.INDRA_DB_REST_URL }}
+        INDRA_DB_REST_API_KEY: ${{ secrets.INDRA_DB_REST_API_KEY }}
+        ELSEVIER_API_KEY: ${{ secrets.ELSEVIER_API_KEY }}
+        ELSEVIER_INST_KEY: ${{ secrets.ELSEVIER_INST_KEY }}
+        BIOGRID_API_KEY: ${{ secrets.BIOGRID_API_KEY }}
+      run: |
+        # Set nose attributes based on the context in which we are running
+        export NOSEATTR="!notravis,!slow,!cron";
+        export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR,!nonpublic; else echo $NOSEATTR; fi)
+        echo $NOSEATTR
+        #echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
+        #echo "$TRAVIS_EVENT_TYPE"
+        #export TEES_PATH=~/TEES
+        #export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
+        export _JAVA_OPTIONS="-Xmx4g -Xms1g"
+        export BNGPATH=`pwd`/BioNetGen-2.4.0
+        export REACHPATH=`pwd`/reach-82631d-biores-e9ee36.jar
+        export CLASSPATH=$REACHPATH
+        # These are files that are ignored so that doctests don't fail
+        export NOSE_IGNORE_FILES="find_full_text_sentence.py";
+
+        echo $NOSEATTR
+        #- cd $TRAVIS_BUILD_DIR
+        # Now run all INDRA tests
+        nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --exclude='.*eidos.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
+        # TEES tests
+        #- python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
+        #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
+        # Eidos tests
+        export EIDOSPATH=`pwd`/eidos.jar
+        export CLASSPATH=$EIDOSPATH
+        nosetests -v -a $NOSEATTR indra/tests/test_eidos.py
+        # Run NL model examples only when the environmental variable
+        # RUN_NL_MODELS is set to true in the Travis build
+        # NOTE: if blocks in Travis DO NOT FAIL even if there is
+        # and error in one of the commands inside. Therefore passing
+        # alone does not mean that all the operations inside were
+        # successful. Rather, the log needs to be inspected and compared
+        # to desired behavior.
+        #- |
+        #  if [[ $RUN_NL_MODELS == "true" ]]; then
+        #      cd $TRAVIS_BUILD_DIR/models
+        #      python hello_indra.py
+        #      cd $TRAVIS_BUILD_DIR/models/p53_model
+        #      python run_p53_model.py noplot
+        #      cd $TRAVIS_BUILD_DIR/models/braf_model
+        #      python assemble_model.py
+        #      cd $TRAVIS_BUILD_DIR/models/ras_pathway
+        #      python run_ras_pathway.py trips
+        #   fi
+        # Run assembly benchmarks
+        #- cd $TRAVIS_BUILD_DIR/indra/benchmarks/assembly_eval/batch4
+        #- |
+        #  if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then
+        #    # Download a number of useful resource files for testing purposes
+        #    aws s3 cp s3://bigmech/travis/trips_reach_batch4.gz .  --no-sign-request  --source-region us-east-1
+        #    tar -xf trips_reach_batch4.gz
+        #    python run_combined.py
+        #  fi
+        #- cd $TRAVIS_BUILD_DIR
+        # Run code style report on diff
+        #- git remote set-branches --add origin master
+        #- git fetch
+        #- git diff origin/master | pycodestyle --diff > pep8.txt; cat pep8.txt;

@@ -120,10 +120,10 @@ included in `indra/tests`, and new tests should be placed in the appropriate
 existing file, if possible. Otherwise, a new file using the `test_a_module.py`
 naming convention. Where possible, tests should be short and focused. If the
 newly added test requires special dependencies or other preliminary setup, the
-`.travis.yml` configuration for Travis CI needs to be updated to make the test
-work. Generally, PRs will not be merged unless all Travis tests are passing. In
-some cases the PR will be merged if tests are failing, if the failures are
-confirmed to be unrelated to the PR.
+GitHub Actions configuration at `.github/workflows/tests.yml` needs to be
+updated to make the test work. Generally, PRs will not be merged unless all
+tests are passing. In some cases the PR will be merged if tests are failing,
+if the failures are confirmed to be unrelated to the PR.
 
 Logging
 -------
@@ -149,7 +149,8 @@ In case a new dependency needs to be used, that dependency needs to be
 instructions are needed for setup
 - either added to doc/conf.py as an installed dependency or mocked to make doc
 builds on readthedocs.io pass
-- added to .travis.yml unless installed on Travis via setup.py
+- added to `.github/workflows/tests.yml` unless installed via
+setup.py
 
 New modules
 -----------

@@ -893,4 +893,3 @@ def get_relevant_keys(agent_key, all_keys_for_role, ontology):
         relevant_keys |= set(ontology.get_parents(*agent_key))
     relevant_keys &= all_keys_for_role
     return relevant_keys
-

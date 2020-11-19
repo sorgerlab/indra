@@ -1,7 +1,7 @@
 # INDRA
 
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
-[![Build](https://travis-ci.com/sorgerlab/indra.svg)](https://travis-ci.com/sorgerlab/indra)
+[![Build](https://github.com/sorgerlab/indra/workflows/Tests/badge.svg)](https://github.com/sorgerlab/indra/actions)
 [![Documentation](https://readthedocs.org/projects/indra/badge/?version=latest)](https://indra.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/indra.svg)](https://badge.fury.io/py/indra)
 [![Python 3](https://img.shields.io/pypi/pyversions/indra.svg)](https://www.python.org/downloads/release/python-357/)
