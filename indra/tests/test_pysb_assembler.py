@@ -849,6 +849,23 @@ def test_phospho_assemble_grounding():
         check_policy(policy)
 
 
+def test_get_grounded_agents_from_model():
+    mek = Agent('MEK1', db_refs={'HGNC': '6840'})
+    erk = Agent('ERK2', db_refs={'HGNC': '6871'})
+    erk_active = Agent('ERK2', db_refs={'HGNC': '6871'},
+                       mods=[ModCondition('phosphorylation', 'Y', '187')])
+    af = ActiveForm(erk_active, 'kinase', True)
+    phos = Phosphorylation(mek, erk)
+    phos_y187 = Phosphorylation(mek, erk, 'Y', '187')
+    pysba = pa.PysbAssembler([phos, phos_y187, af])
+    pysb_model = pysba.make_model()
+    import ipdb; ipdb.set_trace()
+    model_agents = pa.get_grounded_agents(pysb_model)
+    model_keys = set([ag.matches_key() for ag in model_agents])
+    test_keys = set([mek.matches_key(), erk.matches_key()])
+    assert len(model_keys.intersection(test_keys)) == 2
+
+
 def test_phospho_mod_grounding():
     a = Agent('MEK1', mods=[ModCondition('phosphorylation', 'S', '218'),
                             ModCondition('phosphorylation', 'S', '222')],
@@ -1235,3 +1252,7 @@ def test_kappa_cm_export():
     graph = pa.export_model('kappa_cm', '/dev/null')
     assert len(graph.nodes()) == 2
     assert len(graph.edges()) == 1
+
+if __name__ == '__main__':
+    test_get_grounded_agents_from_model()
+

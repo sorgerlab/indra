@@ -144,6 +144,35 @@ def get_uncond_agent(agent):
     return agent_uncond
 
 
+def get_grounded_agents(model):
+    mps = []
+    for rule in model.rules:
+        for rp in (rule.reactant_pattern, rule.product_pattern):
+            for cp in rp.complex_patterns:
+                for mp in cp.monomer_patterns:
+                    mps.append(mp)
+    # a. For each monomer pattern, get its grounding from annotations
+    groundings_by_monomer = {}
+    for ann in model.annotations:
+        # Build up db_refs for each monomer object
+        # Canonicalize db_refs
+        pass
+    # b. Get its site/state conditions from MPs; match them back to
+    #    their semantics using annotations
+    for mp in mps:
+        site_anns = mp.monomer.site_annotations
+        # [Annotation(('phospho', 'p'), 'phosphorylation', 'is_modification'),
+        # Annotation(('Y187', 'p'), 'phosphorylation', 'is_modification'),
+        # Annotation(Y187, 'Y', 'is_residue'),
+        # Annotation(Y187, '187', 'is_position')]
+        # From the two monomer patterns for ERK:
+        # ERK2(Y187='p')
+        # ERK2(phospho='p')
+        # Create two agents:
+        # Agent(ERK2, mods=[ModCondition('p')]
+        # Agent(ERK2, mods=[ModCondition('p', 'Y', '187')]
+
+
 def grounded_monomer_patterns(model, agent, ignore_activities=False):
     """Get monomer patterns for the agent accounting for grounding information.
 
