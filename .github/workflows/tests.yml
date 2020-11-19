@@ -64,6 +64,8 @@ jobs:
         #export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
         # Download adeft models
         python -m adeft.download
+        aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request  --source-region us-east-1
+        aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
     - name: Run unit tests
       run: |
         #export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
@@ -73,6 +75,8 @@ jobs:
         #export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
         export _JAVA_OPTIONS="-Xmx4g -Xms1g"
         export BNGPATH=`pwd`/BioNetGen-2.4.0
+        export REACHPATH=`pwd`/reach-82631d-biores-e9ee36.jar
+        export EIDOSPATH=`pwd`/eidos.jar
         # These are files that are ignored so that doctests don't fail
         export NOSE_IGNORE_FILES="find_full_text_sentence.py";
         # Set nose attributes based on the context in which we are running
@@ -91,14 +95,10 @@ jobs:
         #- python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
         #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
         # Reach tests
-        #- aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request  --source-region us-east-1
-        #- export REACHPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
         #- python -m nose_notify indra/tests/test_reach.py
         #  --slack_hook $SLACK_NOTIFY_HOOK
         #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
         # Eidos tests
-        #- aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
-        #- export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos.jar
         #- python -m nose_notify indra/tests/test_eidos.py --slack_hook $SLACK_NOTIFY_HOOK
         #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
         # Run NL model examples only when the environmental variable
