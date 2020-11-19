@@ -333,6 +333,67 @@ class EidosProcessor(object):
         return events
 
 
+class EidosProcessorCompositional(EidosProcessor):
+    def get_groundings(self, entity):
+        """Return groundings as db_refs for an entity."""
+        def get_grounding_entries_comp(grounding):
+            if not grounding:
+                return None
+
+            entry_types = ['theme', 'themeProperties', 'themeProcess',
+                           'themeProcessProperties']
+            entries = []
+            values = grounding.get('values', [])
+            # Values could still have been a None entry here
+            if values:
+                for entry in values:
+                    compositional_entry = [None, None, None, None]
+                    for idx, entry_type in enumerate(entry_types):
+                        val = entry.get(entry_type)
+                        if val is None:
+                            continue
+                        # FIXME: can there be multiple entries here?
+                        val = val[0]
+                        ont_concept = val.get('ontologyConcept')
+                        score = val.get('value')
+                        if ont_concept is None or score is None:
+                            continue
+                        if ont_concept.endswith('/'):
+                            ont_concept = ont_concept[:-1]
+                        compositional_entry[idx] = \
+                            (ont_concept, score)
+                    # Some special cases
+                    # Promote process into theme
+                    if compositional_entry[2] and not compositional_entry[0]:
+                        compositional_entry[0] = compositional_entry[2]
+                        compositional_entry[2] = None
+                        if compositional_entry[3]:
+                            compositional_entry[1] = compositional_entry[3]
+                            compositional_entry[3] = None
+                    # Promote dangling property
+                    if compositional_entry[1] and not compositional_entry[0]:
+                        compositional_entry[0] = compositional_entry[1]
+                        compositional_entry[1] = None
+                    if any(compositional_entry):
+                        entries.append(compositional_entry)
+            return entries
+
+        # Save raw text and Eidos scored groundings as db_refs
+        db_refs = {'TEXT': entity['text']}
+        groundings = entity.get('groundings')
+        if not groundings:
+            return db_refs
+        for g in groundings:
+            key = g['name'].upper()
+            if key == 'WM_COMPOSITIONAL':
+                entries = get_grounding_entries_comp(g)
+                if entries:
+                    db_refs['WM'] = entries
+            else:
+                continue
+        return db_refs
+
+
 class EidosDocument(object):
     def __init__(self, json_dict):
         self.tree = objectpath.Tree(json_dict)

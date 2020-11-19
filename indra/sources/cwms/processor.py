@@ -140,7 +140,7 @@ class CWMSProcessor(object):
 
         self._remove_multi_extraction_artifacts()
 
-    def extract_migrations(self):
+    def extract_migrations(self, include_relation_arg=False):
         ev_types = ['ONT::MOVE', 'ONT::DEPART', 'ONT::ARRIVE']
         events = []
         for et in ev_types:
@@ -150,7 +150,8 @@ class CWMSProcessor(object):
         for event_term in events:
             event_id = event_term.attrib.get('id')
             if event_id in self.subsumed_events or \
-                    event_id in self.relation_events:
+                    (not include_relation_arg and
+                     event_id in self.relation_events):
                 continue
             event = self.migration_from_event(event_term)
             if event is not None:
@@ -359,6 +360,15 @@ class CWMSProcessor(object):
                                     return event_term
         return None
 
+    def _get_arg_event_term(self, term):
+        potential_args = term.findall('arg1') + term.findall('arg2')
+        for arg in potential_args:
+            if arg.attrib.get('id'):
+                new_term = self.tree.find("*[@id='%s']" % arg.attrib['id'])
+                if new_term is not None:
+                    self.subsumed_events.add(new_term.attrib['id'])
+                    return new_term
+
     def _get_migration_locations(self, event_term, existing_locs=None,
                                  default_role='unknown'):
         if existing_locs is None:
@@ -447,7 +457,7 @@ class CWMSProcessor(object):
         """Extract and Event from the given EKB element."""
         # Now see if there is a modifier like assoc-with connected
         # to the main concept
-        assoc_with = self._get_assoc_with(event_term)
+        assoc_with = self._get_assoc_with_text(event_term)
 
         # Get the element's text and use it to construct a Concept
         element_text_element = event_term.find('text')
@@ -456,8 +466,8 @@ class CWMSProcessor(object):
         element_text = element_text_element.text
         if element_text is None:
             return None
-        element_db_refs = {'TEXT': element_text}
-        element_name = sanitize_name(element_text)
+        element_db_refs = {'TEXT': element_text.rstrip()}
+        element_name = sanitize_name(element_text.rstrip())
 
         element_type_element = event_term.find('type')
         if element_type_element is not None:
@@ -475,6 +485,24 @@ class CWMSProcessor(object):
         event_obj = Event(concept, delta=delta, context=context,
                           evidence=evidence)
         return event_obj
+
+    def _get_wm_grounding(self, element):
+        wm_gr = None
+        wm_type_element = element.find('wm-type')
+        if wm_type_element is not None:
+            grounding_element = wm_type_element.find('grounding')
+            if grounding_element is not None:
+                wm_gr = (grounding_element.text, 0.7)
+        return wm_gr
+
+    def _add_start_end(self, term, starts, ends):
+        start = term.attrib.get('start')
+        end = term.attrib.get('end')
+        if start:
+            starts.append(int(start))
+        if end:
+            ends.append(int(end))
+        return starts, ends
 
     def get_event_or_migration(self, event_term):
         #if event_term.find('type').text in [
@@ -595,7 +623,7 @@ class CWMSProcessor(object):
         geoloc_context = RefContext(name=text, db_refs=db_refs)
         return geoloc_context
 
-    def _get_assoc_with(self, element_term):
+    def _get_assoc_with_text(self, element_term):
         # NOTE: there could be multiple assoc-withs here that we may
         # want to handle
         assoc_with = element_term.find('assoc-with')
@@ -615,6 +643,14 @@ class CWMSProcessor(object):
                 assoc_with_grounding = assoc_with_term.find('type').text
                 return assoc_with_grounding
         return None
+
+    def _get_assoc_with_term(self, element_term):
+        assoc_with = element_term.find('assoc-with')
+        if assoc_with is not None:
+            assoc_with_id = assoc_with.attrib.get('id')
+            if assoc_with_id is not None:
+                assoc_with_term = self.tree.find("*[@id='%s']" % assoc_with_id)
+                return assoc_with_term
 
     def _get_evidence(self, event_tag):
         text = self._get_evidence_text(event_tag)
@@ -656,7 +692,8 @@ class CWMSProcessor(object):
         logger.debug('Starting with %d Statements.' % len(self.statements))
         for stmt in self.statements:
             if isinstance(stmt, Event):
-                evmk = stmt.evidence[0].matches_key()
+                evmk = stmt.evidence[0].matches_key() + \
+                    stmt.concept.matches_key()
             elif isinstance(stmt, Influence):
                 evmk = (stmt.evidence[0].matches_key() +
                         stmt.subj.matches_key() + stmt.obj.matches_key())
@@ -697,6 +734,92 @@ class CWMSProcessor(object):
             logger.debug('Found %d Statements to remove' % len(to_remove))
         self.statements = [s for s in self.statements
                            if s.uuid not in to_remove]
+
+
+class CWMSProcessorCompositional(CWMSProcessor):
+    def _get_event(self, event_term, evidence=None):
+        """Extract and Event from the given EKB element."""
+        # Now see if there is a modifier like assoc-with connected
+        # to the main concept
+        assoc_with = self._get_assoc_with_text(event_term)
+
+        # We're using a union of texts from multiple terms instead
+        # Get the element's text and use it to construct a Concept
+
+        # element_text_element = event_term.find('text')
+        # if element_text_element is None:
+        #     return None
+        # element_text = element_text_element.text
+        # element_db_refs = {'TEXT': element_text}
+        # element_name = sanitize_name(element_text)
+
+        element_db_refs = {}
+        par = event_term.attrib['paragraph']
+        starts, ends = self._add_start_end(event_term, [], [])
+
+        element_type_element = event_term.find('type')
+        if element_type_element is not None:
+            element_db_refs['CWMS'] = element_type_element.text
+            # If there's an assoc-with, we tack it on as extra grounding
+            if assoc_with is not None:
+                element_db_refs['CWMS'] += ('|%s' % assoc_with)
+
+        theme_gr, theme_prop_gr, theme_proc_gr, theme_proc_prop_gr = \
+            None, None, None, None
+        # Grounding can be provided on multiple levels
+        theme_gr = self._get_wm_grounding(event_term)
+        if not theme_gr:
+            arg_term = self._get_arg_event_term(event_term)
+            if arg_term is not None:
+                starts, ends = self._add_start_end(arg_term, starts, ends)
+                assoc_term = self._get_assoc_with_term(arg_term)
+                if assoc_term is not None:
+                    starts, ends = self._add_start_end(
+                        assoc_term, starts, ends)
+                    new_arg_term = self._get_arg_event_term(assoc_term)
+                    # Theme grounding is usually at the "deepest" level
+                    if new_arg_term is not None:
+                        starts, ends = self._add_start_end(
+                            new_arg_term, starts, ends)
+                        theme_gr = self._get_wm_grounding(new_arg_term)
+                        theme_proc_gr = self._get_wm_grounding(assoc_term)
+                        theme_proc_prop_gr = self._get_wm_grounding(arg_term)
+                    else:
+                        theme_gr = self._get_wm_grounding(assoc_term)
+                        extra_gr = self._get_wm_grounding(arg_term)
+                        # This can be process or property, look at ontology
+                        if extra_gr:
+                            if 'process' in extra_gr[0]:
+                                theme_proc_gr = extra_gr
+                            else:
+                                theme_prop_gr = extra_gr
+
+        # Get a union of all texts
+        element_text = self.paragraphs[par][min(starts): max(ends)].rstrip()
+        element_db_refs['TEXT'] = element_text
+        element_name = sanitize_name(element_text)
+
+        # Promote process grounding to theme if theme is missing
+        if not theme_gr and theme_proc_gr:
+            theme_gr = theme_proc_gr
+            theme_proc_gr = None
+        # Drop process property grounding in process is missing
+        if not theme_proc_gr:
+            theme_proc_prop_gr = None
+
+        # Only add WM grounding if there's a theme grounding
+        if theme_gr:
+            element_db_refs['WM'] = [(theme_gr, theme_prop_gr, theme_proc_gr,
+                                      theme_proc_prop_gr)]
+        concept = Concept(element_name, db_refs=element_db_refs)
+
+        ev_type = event_term.find('type').text
+        polarity = POLARITY_DICT['EVENT'].get(ev_type)
+        delta = QualitativeDelta(polarity=polarity)
+        context = self.get_context(event_term)
+        event_obj = Event(concept, delta=delta, context=context,
+                          evidence=evidence)
+        return event_obj
 
 
 def sanitize_name(txt):

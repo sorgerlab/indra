@@ -1,0 +1,125 @@
+{
+  "entities": [
+    {
+      "Source_File": "user_input",
+      "Query": "None",
+      "Score": "0.0",
+      "Entity Index": "N1",
+      "Span": [0, 20],
+      "Entity": "cereal",
+      "Entity_Type": "concept/agriculture/crop/cereals",
+      "FrameNet_Frame": "",
+      "Indicator": "",
+      "Qualifier": "prices",
+      "Sentence": "The increasing trend in cereal prices may provide a source of food insecurity, particularly in the case for poor, urban households who rely on subsidized wheat as their primary sources of carbohydrates."
+    },
+    {
+      "Source_File": "user_input",
+      "Query": "None",
+      "Score": "0.0",
+      "Entity Index": "N2",
+      "Span": [
+        0,
+        20
+      ],
+      "Entity": "households",
+      "Entity_Type": "entity/household",
+      "FrameNet_Frame": "",
+      "Indicator": "",
+      "Qualifier": "poor, urban",
+      "Sentence": "The increasing trend in cereal prices may provide a source of food insecurity, particularly in the case for poor, urban households who rely on subsidized wheat as their primary sources of carbohydrates."
+    },
+    {
+      "Source_File": "user_input",
+      "Query": "None",
+      "Score": "0.0",
+      "Entity Index": "N3",
+      "Span": [
+        0,
+        20
+      ],
+      "Entity": "wheat",
+      "Entity_Type": "concept/agriculture/crop/cereals",
+      "FrameNet_Frame": "",
+      "Indicator": "",
+      "Qualifier": "subsidized",
+      "Sentence": "The increasing trend in cereal prices may provide a source of food insecurity, particularly in the case for poor, urban households who rely on subsidized wheat as their primary sources of carbohydrates."
+    },
+    {
+      "Source_File": "user_input",
+      "Query": "None",
+      "Score": "0.0",
+      "Entity Index": "N4",
+      "Span": [
+        0,
+        20
+      ],
+      "Entity": "food_insecurity",
+      "Entity_Type": "concept/food_security",
+      "FrameNet_Frame": "",
+      "Indicator": "",
+      "Qualifier": "",
+      "Sentence": "The increasing trend in cereal prices may provide a source of food insecurity, particularly in the case for poor, urban households who rely on subsidized wheat as their primary sources of carbohydrates."
+    }
+  ],
+  "events": [
+    {
+      "Source_File": "user_input",
+      "Query": "None",
+      "Score": "0.0",
+      "Event Index": "E1",
+      "Span": [
+        42,
+        49
+      ],
+      "Relation": "rely",
+      "Event_Type": "",
+      "FrameNet_Frame": "",
+      "Indicator": "",
+      "Location": "",
+      "Time": "",
+      "Agent Index": "N2",
+      "Agent": "households",
+      "Patient Index": "N3",
+      "Patient": "wheat",
+      "Sentence": "The increasing trend in cereal prices may provide a source of food insecurity, particularly in the case for poor, urban households who rely on subsidized wheat as their primary sources of carbohydrates."
+    },
+    {
+      "Source_File": "user_input",
+      "Query": "None",
+      "Score": "0.0",
+      "Event Index": "E2",
+      "Span": [
+        42,
+        49
+      ],
+      "Relation": "increasing",
+      "Event_Type": "",
+      "FrameNet_Frame": "",
+      "Indicator": "",
+      "Location": "",
+      "Time": "",
+      "Agent Index": "",
+      "Agent": "",
+      "Patient Index": "N1",
+      "Patient": "cereal prices",
+      "Sentence": "The increasing trend in cereal prices may provide a source of food insecurity, particularly in the case for poor, urban households who rely on subsidized wheat as their primary sources of carbohydrates."
+    }
+  ],
+  "causal": [
+    {
+      "Source_File": "user_input",
+      "Query": "None",
+      "Score": "0.0",
+      "Relation Index": "R1",
+      "Relation": "causes",
+      "Relation_Type": "CausalRelation",
+      "Indicator": "",
+      "Cause Index": "E2",
+      "Cause": "cereal prices",
+      "Effect Index": "N4",
+      "Effect": "food_insecurity",
+      "Sentence": "The increasing trend in cereal prices may provide a source of food insecurity, particularly in the case for poor, urban households who rely on subsidized wheat as their primary sources of carbohydrates."
+    }
+  ]
+}

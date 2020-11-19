@@ -144,10 +144,10 @@ def test_three_sentences():
 def test_context_influence_obj():
     text = 'Hunger causes displacement in 2018 in South Sudan.'
     cp = process_text(text)
-    cp.extract_migrations()
-    stmt = cp.statements[0]
-    assert isinstance(stmt.obj, Migration)
-    cont = stmt.obj.context
+    cp.extract_migrations(include_relation_arg=True)
+    stmt = cp.statements[-1]
+    assert isinstance(stmt, Migration), stmt
+    cont = stmt.context
     assert cont is not None
     assert cont.time and cont.locations
 

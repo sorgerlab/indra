@@ -92,3 +92,22 @@ def test_migration_events():
     # Test extraction filter
     bp = process_jsonld_file(migration_events, extract_filter={'influence'})
     assert len(bp.statements) == 0
+
+
+def test_compositional_grounding():
+    fname = os.path.join(path_this, 'hume.compositional.output.json-ld')
+    bp = process_jsonld_file(fname, grounding_mode='compositional')
+    assert bp
+    assert bp.statements
+    for stmt in bp.statements:
+        for concept in stmt.agent_list():
+            refs = concept.db_refs
+            assert 'WM' in refs
+            wm = refs['WM']
+            assert len(wm) == 1, refs
+            assert wm[0] is not None
+            wmg = wm[0]
+            assert all(len(entry) == 2 for entry in wmg
+                       if entry is not None), wmg
+            assert all(entry[0].startswith('wm_compositional') for entry
+                       in wmg if entry is not None)

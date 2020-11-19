@@ -41,8 +41,16 @@ class HumeJsonLdProcessor(object):
         self.concept_dict = {}
         self.relation_dict = {}
         self.eid_stmt_dict = {}
+        self.extractions_by_id = {}
         self._get_documents()
         self.relation_subj_obj_ids = []
+        self._get_extractions_by_id()
+
+    def _get_extractions_by_id(self):
+        self.extractions_by_id = {
+            extr['@id']: extr for extr in
+            self.tree.execute("$.extractions[(@.@type is 'Extraction')]")
+            if '@id' in extr}
 
     def extract_relations(self):
         relations = self._find_relations()
@@ -101,17 +109,13 @@ class HumeJsonLdProcessor(object):
 
     def _find_relations(self):
         """Find all relevant relation elements and return them in a list."""
-        # Get all extractions
-        extractions = \
-            list(self.tree.execute("$.extractions[(@.@type is 'Extraction')]"))
-
         # Get relations from extractions
         relations = []
-        for e in extractions:
+        for eid, e in self.extractions_by_id.items():
             label_set = set(e.get('labels', []))
             # If this is a DirectedRelation
             if 'DirectedRelation' in label_set:
-                self.relation_dict[e['@id']] = e
+                self.relation_dict[eid] = e
                 subtype = e.get('subtype')
                 if any(t in subtype for t in polarities.keys()):
                     relations.append((subtype, e))
@@ -214,12 +218,22 @@ class HumeJsonLdProcessor(object):
                 name = head_text
         """
         # Save raw text and Hume scored groundings as db_refs
-        db_refs = _get_grounding(entity)
+        db_refs = self._get_grounding(entity)
         concept = Concept(name, db_refs=db_refs)
         metadata = {arg['type']: arg['value']['@id']
                     for arg in entity['arguments']}
 
         return concept, metadata
+
+    def _get_bounds(self, ref_dicts):
+        minb = None
+        maxb = None
+        for ref_dict in ref_dicts:
+            bounds = ref_dict.pop('BOUNDS', None)
+            if bounds:
+                minb = min(bounds[0], minb if minb is not None else bounds[0])
+                maxb = max(bounds[1], maxb if maxb is not None else bounds[1])
+        return minb, maxb
 
     def _get_event_and_context(self, event, eid=None, arg_type=None,
                                evidence=None):
@@ -248,17 +262,25 @@ class HumeJsonLdProcessor(object):
                               evidence=evidence)
         return event_obj
 
+    def _get_text_and_bounds(self, provenance):
+        # First try looking up the full sentence through provenance
+        doc_id = provenance['document']['@id']
+        sent_id = provenance['sentence']
+        text = self.document_dict[doc_id]['sentences'][sent_id]
+        text = self._sanitize(text)
+        if 'sentenceCharPositions' in provenance:
+            bounds = [provenance['sentenceCharPositions'][k]
+                      for k in ['start', 'end']]
+        else:
+            bounds = []
+        return text, bounds
+
     def _get_evidence(self, event, adjectives):
         """Return the Evidence object for the INDRA Statement."""
         provenance = event.get('provenance')
 
         # First try looking up the full sentence through provenance
-        doc_id = provenance[0]['document']['@id']
-        sent_id = provenance[0]['sentence']
-        text = self.document_dict[doc_id]['sentences'][sent_id]
-        text = self._sanitize(text)
-        bounds = [provenance[0]['documentCharPositions'][k]
-                  for k in ['start', 'end']]
+        text, bounds = self._get_text_and_bounds(provenance[0])
 
         annotations = {
             'found_by': event.get('rule'),
@@ -267,10 +289,26 @@ class HumeJsonLdProcessor(object):
             'adjectives': adjectives,
             'bounds': bounds
             }
-        location = self.document_dict[doc_id]['location']
-        ev = Evidence(source_api='hume', text=text, annotations=annotations,
-                      pmid=location)
+        ev = Evidence(source_api='hume', text=text, annotations=annotations)
         return [ev]
+
+    def _get_grounding(self, entity):
+        """Return Hume grounding."""
+        db_refs = {'TEXT': entity['text']}
+        groundings = entity.get('grounding')
+        if not groundings:
+            return db_refs
+        # Get rid of leading slash
+        groundings = [(x['ontologyConcept'][1:], x['value']) for x in
+                      groundings]
+        grounding_entries = sorted(list(set(groundings)),
+                                   key=lambda x: (x[1], x[0].count('/'), x[0]),
+                                   reverse=True)
+        # We could get an empty list here in which case we don't add the
+        # grounding
+        if grounding_entries:
+            db_refs['WM'] = grounding_entries
+        return db_refs
 
     @staticmethod
     def _sanitize(text):
@@ -282,8 +320,132 @@ class HumeJsonLdProcessor(object):
         return text
 
 
+class HumeJsonLdProcessorCompositional(HumeJsonLdProcessor):
+    def _get_grounding(self, entity):
+        """Return Hume grounding."""
+        db_refs = {}
+        txt = entity.get('text')
+        if txt:
+            db_refs['TEXT'] = txt
+        groundings = entity.get('grounding')
+        if not groundings:
+            return db_refs
+        # Get rid of leading slash
+        groundings = [(x['ontologyConcept'][1:], x['value']) for x in
+                      groundings]
+        grounding_entries = sorted(list(set(groundings)),
+                                   key=lambda x: (x[1], x[0].count('/'), x[0]),
+                                   reverse=True)
+        if 'mentions' in entity:
+            prov = entity['mentions'][0]['provenance'][0]
+        else:
+            prov = entity['provenance'][0]
+        _, bounds = self._get_text_and_bounds(prov)
+        db_refs['BOUNDS'] = bounds
+        # We could get an empty list here in which case we don't add the
+        # grounding
+        if grounding_entries:
+            db_refs['WM'] = grounding_entries
+        return db_refs
+
+    def _get_event_and_context(self, event, eid=None, arg_type=None,
+                               evidence=None):
+        """Return an INDRA Event based on an event entry."""
+        if not eid:
+            eid = _choose_id(event, arg_type)
+        ev = self.concept_dict[eid]
+        concept, metadata = self._make_concept(ev)
+
+        # is_migration_event = False
+
+        property_id = _choose_id(event, 'has_property')
+        theme_id = _choose_id(event, 'has_theme')
+        property = self.extractions_by_id[property_id] \
+            if property_id else None
+        theme = self.extractions_by_id[theme_id] \
+            if theme_id else None
+
+        process_grounding = concept.db_refs
+        theme_grounding = self._get_grounding(theme) if theme else {}
+        property_grounding = self._get_grounding(property) if property else {}
+
+        minb, maxb = self._get_bounds([theme_grounding, process_grounding,
+                                       property_grounding])
+        event_sentence, _ = self._get_text_and_bounds(event['provenance'][0])
+        doc_id = event['provenance'][0]['document']['@id']
+        sent_id = event['provenance'][0]['sentence']
+        # If we successfully got within-sentence coordinates, we can use the
+        # entity text from there and overwrite the concept name as well as
+        # the context grounding TEXT entry
+        if minb is not None and maxb is not None:
+            entity_text = \
+                self.document_dict[doc_id]['sentences'][sent_id][minb:maxb+1]
+            concept.name = entity_text
+            concept.db_refs['TEXT'] = entity_text
+
+        process_grounding_wm = process_grounding.get('WM')
+        theme_grounding_wm = theme_grounding.get('WM')
+        property_grounding_wm = property_grounding.get('WM')
+
+        # FIXME: what do we do if there are multiple entries in
+        #  theme/property grounding?
+        #assert process_grounding_wm is None or len(process_grounding_wm) == 1
+        assert property_grounding_wm is None or len(property_grounding_wm) == 1
+        assert theme_grounding_wm is None or len(theme_grounding_wm) == 1
+        property_grounding_wm = property_grounding_wm[0] \
+            if property_grounding_wm else None
+        theme_grounding_wm = theme_grounding_wm[0] \
+            if theme_grounding_wm else None
+        process_grounding_wm = process_grounding_wm[0] \
+            if process_grounding_wm else None
+
+        # For some reason the event's grounding is sometimes duplicated as
+        # property grounding (e.g., price), in this case we treat the grounding
+        # as a property
+        if process_grounding_wm and property_grounding_wm and \
+                process_grounding_wm[0] == property_grounding_wm[0]:
+            process_grounding_wm = None
+
+        # First case: we have a theme so we apply the property and the process
+        # to it
+        if theme_grounding:
+            compositional_grounding = [[theme_grounding_wm,
+                                        property_grounding_wm,
+                                        process_grounding_wm, None]]
+        # Second case: we don't have a theme so we take the process as the theme
+        # and apply any property to it
+        elif process_grounding_wm:
+            compositional_grounding = [[process_grounding_wm,
+                                        property_grounding_wm,
+                                        None, None]]
+        elif property_grounding_wm:
+            compositional_grounding = [[property_grounding_wm,
+                                        None, None, None]]
+
+        assert compositional_grounding[0][0]
+        concept.db_refs['WM'] = compositional_grounding
+
+        # Migrations turned off for now
+        #for grounding_en in process_grounding:
+        #    if "wm/concept/causal_factor/social_and_political/migration" in \
+        #            grounding_en:
+        #        is_migration_event = True
+        #if is_migration_event:
+        #    movement_context, quantitative_state = (
+        #        self._make_movement_context(ev))
+        #    event_obj = Migration(concept, delta=quantitative_state,
+        #                          context=movement_context, evidence=evidence)
+        #else:
+        ev_delta = QualitativeDelta(
+            polarity=get_polarity(ev))
+        context = self._make_world_context(ev)
+        event_obj = Event(concept, delta=ev_delta, context=context,
+                          evidence=evidence)
+        return event_obj
+
+
 def _choose_id(event, arg_type):
-    args = event.get('arguments', {})
+    args = event.get('arguments', [])
     obj_tag = [arg for arg in args if arg['type'] == arg_type]
     if obj_tag:
         obj_id = obj_tag[0]['value']['@id']
@@ -299,24 +461,6 @@ def get_states(event):
             if state_property['type'] != 'polarity':
                 ret_list.append(state_property['text'])
     return ret_list
-
-
-def _get_grounding(entity):
-    """Return Hume grounding."""
-    db_refs = {'TEXT': entity['text']}
-    groundings = entity.get('grounding')
-    if not groundings:
-        return db_refs
-    # Get rid of leading slash
-    groundings = [(x['ontologyConcept'][1:], x['value']) for x in groundings]
-    grounding_entries = sorted(list(set(groundings)),
-                               key=lambda x: (x[1], x[0].count('/'), x[0]),
-                               reverse=True)
-    # We could get an empty list here in which case we don't add the
-    # grounding
-    if grounding_entries:
-        db_refs['WM'] = grounding_entries
-    return db_refs
 
 
 def get_polarity(event):
@@ -347,7 +491,10 @@ def _resolve_geo(hume_loc_entity):
 
 
 def _resolve_time(hume_temporal_entity):
-    text = hume_temporal_entity['mentions'][0]['text']
+    if 'mentions' in hume_temporal_entity:
+        text = hume_temporal_entity['mentions'][0]['text']
+    else:
+        text = hume_temporal_entity['text']
     if len(hume_temporal_entity.get("timeInterval", [])) < 1:
         return TimeContext(text=text)
     time = hume_temporal_entity["timeInterval"][0]

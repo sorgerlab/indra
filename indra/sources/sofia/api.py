@@ -5,8 +5,11 @@ import requests
 from indra.config import get_config
 from .processor import SofiaJsonProcessor, SofiaExcelProcessor
 
+default_grounding_mode = 'flat'
 
-def process_table(fname, extract_filter=None):
+
+def process_table(fname, extract_filter=None,
+                  grounding_mode=default_grounding_mode):
     """Return processor by processing a given sheet of a spreadsheet file.
 
     Parameters
@@ -18,6 +21,9 @@ def process_table(fname, extract_filter=None):
         'influence' and 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
         only Influence statements are of interest. Default: None
+    grounding_mode : Optional[str]
+        Selects whether 'flat' or 'compositional' groundings should be
+        extracted. Default: 'flat'.
 
     Returns
     -------
@@ -34,7 +40,8 @@ def process_table(fname, extract_filter=None):
     entities_sheet = book['Entities']
 
     sp = SofiaExcelProcessor(rel_sheet.rows, event_sheet.rows,
-                             entities_sheet.rows)
+                             entities_sheet.rows,
+                             grounding_mode=grounding_mode)
     if extract_filter is None or 'influence' in extract_filter:
         sp.extract_relations(rel_sheet.rows)
     if extract_filter is None or 'event' in extract_filter:
@@ -43,7 +50,7 @@ def process_table(fname, extract_filter=None):
 
 
 def process_text(text, out_file='sofia_output.json', auth=None,
-                 extract_filter=None):
+                 extract_filter=None, grounding_mode=default_grounding_mode):
     """Return processor by processing text given as a string.
 
     Parameters
@@ -62,6 +69,9 @@ def process_text(text, out_file='sofia_output.json', auth=None,
         'influence' and 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
         only Influence statements are of interest. Default: None
+    grounding_mode : Optional[str]
+        Selects whether 'flat' or 'compositional' groundings should be
+        extracted. Default: 'flat'.
 
     Returns
     -------
@@ -93,10 +103,12 @@ def process_text(text, out_file='sofia_output.json', auth=None,
         with open(out_file, 'w') as fh:
             json.dump(json_response, fh, indent=1)
 
-    return process_json(json_response, extract_filter=extract_filter)
+    return process_json(json_response, extract_filter=extract_filter,
+                        grounding_mode=grounding_mode)
 
 
-def process_json(json_obj, extract_filter=None):
+def process_json(json_obj, extract_filter=None,
+                 grounding_mode=default_grounding_mode):
     """Return processor by processing a JSON object returned by Sofia.
 
     Parameters
@@ -108,6 +120,9 @@ def process_json(json_obj, extract_filter=None):
         'influence' and 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
         only Influence statements are of interest. Default: None
+    grounding_mode : Optional[str]
+        Selects whether 'flat' or 'compositional' groundings should be
+        extracted. Default: 'flat'.
 
     Returns
     -------
@@ -115,7 +130,7 @@ def process_json(json_obj, extract_filter=None):
         A SofiaProcessor object which has a list of extracted INDRA
         Statements as its statements attribute.
     """
-    sp = SofiaJsonProcessor(json_obj)
+    sp = SofiaJsonProcessor(json_obj, grounding_mode=grounding_mode)
     if extract_filter is None or 'influence' in extract_filter:
         sp.extract_relations(json_obj)
     if extract_filter is None or 'event' in extract_filter:
@@ -123,7 +138,8 @@ def process_json(json_obj, extract_filter=None):
     return sp
 
 
-def process_json_file(fname, extract_filter=None):
+def process_json_file(fname, extract_filter=None,
+                      grounding_mode=default_grounding_mode):
     """Return processor by processing a JSON file produced by Sofia.
 
     Parameters
@@ -135,6 +151,9 @@ def process_json_file(fname, extract_filter=None):
         'influence' and 'event'. If not given, all relation
         types are extracted. This argument can be used if, for instance,
         only Influence statements are of interest. Default: None
+    grounding_mode : Optional[str]
+        Selects whether 'flat' or 'compositional' groundings should be
+        extracted. Default: 'flat'.
 
     Returns
     -------
@@ -144,7 +163,8 @@ def process_json_file(fname, extract_filter=None):
     """
     with open(fname, 'r') as fh:
         jd = json.load(fh)
-    return process_json(jd, extract_filter=extract_filter)
+    return process_json(jd, extract_filter=extract_filter,
+                        grounding_mode=grounding_mode)
 
 
 def _get_sofia_auth():

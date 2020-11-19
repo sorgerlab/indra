@@ -154,7 +154,7 @@ class Preassembler(object):
             duplicates = list(duplicates)
             start_ev_keys = _ev_keys(duplicates)
             for stmt_ix, stmt in enumerate(duplicates):
-                if stmt_ix is 0:
+                if stmt_ix == 0:
                     new_stmt = stmt.make_generic_copy()
                 if len(duplicates) == 1:
                     new_stmt.uuid = stmt.uuid

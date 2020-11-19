@@ -15,16 +15,16 @@ path_this = os.path.dirname(os.path.abspath(__file__))
 test_jsonld = os.path.join(path_this, 'eidos_test.jsonld')
 
 
-def __get_remote_jsonld():
+def _get_remote_jsonld():
     res = requests.get('https://raw.githubusercontent.com/clulab/eidos/master/'
                        'example_output/example-0.2.2.jsonld')
-    assert res.status_code is 200, "Could not get example json from remote."
+    assert res.status_code == 200, "Could not get example json from remote."
     example_json = json.loads(res.content.decode('utf-8'))
     return example_json
 
 
-def __get_stmts_from_remote_jsonld():
-    ex_json = __get_remote_jsonld()
+def _get_stmts_from_remote_jsonld():
+    ex_json = _get_remote_jsonld()
     ep = eidos.process_json(ex_json)
     assert ep is not None, 'Failed to handle json with eidos processor.'
     assert len(ep.statements), 'Did not get statements from json.'
@@ -170,7 +170,7 @@ def test_process_geoids():
 
 
 def test_eidos_to_cag():
-    stmts = __get_stmts_from_remote_jsonld()
+    stmts = _get_stmts_from_remote_jsonld()
     ca = CAGAssembler()
 
     # Make sure these don't error
@@ -181,7 +181,7 @@ def test_eidos_to_cag():
 
 
 def test_eidos_to_cx():
-    stmts = __get_stmts_from_remote_jsonld()
+    stmts = _get_stmts_from_remote_jsonld()
     cx = CxAssembler()
 
     # Make sure these don't error
@@ -200,7 +200,7 @@ def test_eidos_to_cx():
 # LibSBML used during model assembly causes out of memory error
 @attr('notravis')
 def test_eidos_to_pysb():
-    stmts = __get_stmts_from_remote_jsonld()
+    stmts = _get_stmts_from_remote_jsonld()
     pa = PysbAssembler()
 
     # Make sure these don't error
@@ -281,3 +281,9 @@ def test_get_agent_bio():
             assert agent.db_refs.get(ns) == id, agent.db_refs
         assert agent.db_refs['TEXT'] == raw_text
         assert agent.db_refs['TEXT_NORM'] == norm_text
+
+
+def test_compositional_grounding():
+    jsonld = os.path.join(path_this, 'eidos_compositional.jsonld')
+    ep = eidos.process_json_file(jsonld, grounding_mode='compositional')
+    assert ep.statements
