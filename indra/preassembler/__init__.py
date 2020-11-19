@@ -251,7 +251,12 @@ class Preassembler(object):
             a stmts_by_hash dict and a stmts_to_compare dict as its input and
             returns a dict of possible refinements where the keys are
             statement hashes and the values are sets of statement hashes that
-            the key statement possibly refines.
+            the key statement possibly refines. If not provided, a built-in
+            ontology-based pre-filter is applied. Note, that if a list of filter
+            functions is provided, the built-in ontology-based pre-filter is not
+            automatically appended to the list of filters. In this case,
+            consider adding the `ontology_refinement_filter` function from this
+            module to the filters list.
 
         Returns
         -------
@@ -426,6 +431,7 @@ class Preassembler(object):
         maps = []
         # We again iterate over statements
         ts = time.time()
+        # Given the possible refinements in stmts_to_compare, we confirm each
         for stmt_hash, possible_refined_hashes in stmts_to_compare.items():
             # We use the previously constructed set of statements that this one
             # can possibly refine
@@ -445,6 +451,12 @@ class Preassembler(object):
                         stmts_by_hash[stmt_hash],
                         stmts_by_hash[possible_refined_hash],
                         ontology=self.ontology,
+                        # NOTE: here we assume that the entities at this point
+                        # are definitely refined due to the use of an
+                        # ontology-based pre-filter. If this is not the case
+                        # for some reason then it is the responsibility of the
+                        # user-supplied self.refinement_fun to disregard the
+                        # entities_refined argument.
                         entities_refined=True)
                     if ref:
                         maps.append((stmt_hash, possible_refined_hash))
@@ -822,7 +834,7 @@ def flatten_evidence(stmts, collect_from=None):
 
 def _flatten_evidence_for_stmt(stmt, collect_from):
     supp_stmts = (stmt.supports if collect_from == 'supports'
-                                else stmt.supported_by)
+                  else stmt.supported_by)
     total_evidence = set(stmt.evidence)
     for supp_stmt in supp_stmts:
         child_evidence = _flatten_evidence_for_stmt(supp_stmt, collect_from)
@@ -952,6 +964,9 @@ def ontology_refinement_filter_by_stmt_type(stmts_by_hash, stmts_to_compare,
     stmts_by_hash : dict
         A dict whose keys are statement hashes that point to the
         (deduplicated) statement with that hash as a value.
+    stmts_to_compare : dict or None
+        A dict of existing statements to compare that will be further
+        filtered down in this function and then returned.
     ontology : indra.ontology.IndraOntology
         An IndraOntology instance iwth respect to which this
         filter is applied.
@@ -1047,6 +1062,7 @@ def ontology_refinement_filter_by_stmt_type(stmts_by_hash, stmts_to_compare,
 
 
 def bio_ontology_refinement_filter(stmts_by_hash, stmts_to_compare):
+    """An ontology refinement filter that works with the INDRA BioOntology."""
     from indra.ontology.bio import bio_ontology
     return ontology_refinement_filter(stmts_by_hash, stmts_to_compare,
                                       ontology=bio_ontology)
