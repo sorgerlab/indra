@@ -71,6 +71,14 @@ jobs:
         aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request  --source-region us-east-1
         aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
     - name: Run unit tests
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        INDRA_DB_REST_URL: ${{ secrets.INDRA_DB_REST_URL }}
+        INDRA_DB_REST_API_KEY: ${{ secrets.INDRA_DB_REST_API_KEY }}
+        ELSEVIER_API_KEY: ${{ secrets.ELSEVIER_API_KEY }}
+        ELSEVIER_INST_KEY: ${{ secrets.ELSEVIER_INST_KEY }}
+        BIOGRID_API_KEY: ${{ secrets.BIOGRID_API_KEY }}
       run: |
         # Set nose attributes based on the context in which we are running
         export NOSEATTR="!notravis,!slow,!cron";
