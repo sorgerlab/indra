@@ -37,7 +37,6 @@ jobs:
         # PySB and dependencies
         wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
         tar xzf bionetgen.tar.gz
-        export BNGPATH=`pwd`/BioNetGen-2.4.0
         pip install git+https://github.com/pysb/pysb.git
         # Temporary fix. Ensure cython is installed before pyjnius
         pip install cython
@@ -73,6 +72,7 @@ jobs:
         #export TEES_PATH=~/TEES
         #export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
         export _JAVA_OPTIONS="-Xmx4g -Xms1g"
+        export BNGPATH=`pwd`/BioNetGen-2.4.0
         # These are files that are ignored so that doctests don't fail
         export NOSE_IGNORE_FILES="find_full_text_sentence.py";
         # Set nose attributes based on the context in which we are running
@@ -80,7 +80,7 @@ jobs:
         echo $NOSEATTR
         #- cd $TRAVIS_BUILD_DIR
         # Now run all INDRA tests
-        nosetests -v -a $NOSEATTR --exclude='.*tees.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
+        nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
         # PySB assembler tests (separated due to memory issues)
         #- python -m nose_notify indra/tests/test_pysb_assembler.py --slack_hook $SLACK_NOTIFY_HOOK
         #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
