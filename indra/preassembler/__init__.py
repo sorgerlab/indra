@@ -900,16 +900,19 @@ def ontology_refinement_filter(stmts_by_hash, stmts_to_compare, ontology):
     stmts_by_hash : dict
         A dict whose keys are statement hashes that point to the
         (deduplicated) statement with that hash as a value.
+    stmts_to_compare : dict or None
+        A dict of existing statements to compare that will be further
+        filtered down in this function and then returned.
     ontology : indra.ontology.IndraOntology
         An IndraOntology instance iwth respect to which this
         filter is applied.
 
     Returns
     -------
-    list of tuple
-        A list of tuples where the first element of each tuple is the
-        hash of a statement which refines that statement whose hash
-        is the second element of the tuple.
+    dict
+        A dict whose keys are statement hashes and values are sets
+        of statement hashes that can potentially be refined by the
+        statement identified by the key.
     """
     ts = time.time()
     stmts_by_type = collections.defaultdict(set)
@@ -931,6 +934,9 @@ def ontology_refinement_filter(stmts_by_hash, stmts_to_compare, ontology):
     te = time.time()
     logger.debug('Identified ontology-based possible refinements in %.2fs'
                  % (te-ts))
+    # Make an empty dict to make sure we don't return a None
+    if stmts_to_compare is None:
+        stmts_to_compare = {}
     return stmts_to_compare
 
 
