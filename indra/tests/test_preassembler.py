@@ -1,7 +1,7 @@
 import os
 
 from indra.preassembler import Preassembler, render_stmt_graph, \
-                               flatten_evidence, flatten_stmts
+    flatten_evidence, flatten_stmts, bio_ontology_refinement_filter
 from indra.sources import reach
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
@@ -625,28 +625,6 @@ def test_return_toplevel():
     assert len(stmts[ix].supports[0].supported_by) == 1
 
 
-def test_multiprocessing():
-    braf = Agent('BRAF', db_refs={'HGNC': '1097'})
-    mek1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
-    mek = Agent('MEK', db_refs={'FPLX':'MEK'})
-    # Statements
-    p0 = Phosphorylation(braf, mek)
-    p1 = Phosphorylation(braf, mek1)
-    p2 = Phosphorylation(braf, mek1, position='218')
-    p3 = Phosphorylation(braf, mek1, position='222')
-    p4 = Phosphorylation(braf, mek1, 'serine')
-    p5 = Phosphorylation(braf, mek1, 'serine', '218')
-    p6 = Phosphorylation(braf, mek1, 'serine', '222')
-    p7 = Dephosphorylation(braf, mek1)
-    stmts = [p0, p1, p2, p3, p4, p5, p6, p7]
-    pa = Preassembler(bio_ontology, stmts=stmts)
-    # Size cutoff set to a low number so that one group will run remotely
-    # and one locally
-    toplevel = pa.combine_related(return_toplevel=True, poolsize=1,
-                                  size_cutoff=2)
-    assert len(toplevel) == 3, 'Got %d toplevel statements.' % len(toplevel)
-
-
 def test_conversion_refinement():
     ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
     hras = Agent('HRAS', db_refs={'HGNC': '5173'})
@@ -1046,3 +1024,43 @@ def test_split_idx():
     assert (2, 0) in maps, maps
     assert (1, 0) not in maps, maps
     assert pa._comparison_counter == 1
+
+
+def test_refinement_filters():
+    ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
+    kras = Agent('KRAS', db_refs={'HGNC': '6407'})
+    hras = Agent('HRAS', db_refs={'HGNC': '5173'})
+    st1 = Phosphorylation(Agent('x'), ras)
+    st2 = Phosphorylation(Agent('x'), kras)
+    st3 = Phosphorylation(Agent('x'), hras)
+
+    # This filters everything out so no comparisons will be done
+    def filter_empty(stmts_by_hash, stmts_to_compare, *args):
+        return {k: set() for k in stmts_by_hash}
+    # No comparisons here
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
+    pa.combine_related(filters=[bio_ontology_refinement_filter,
+                                filter_empty])
+    assert pa._comparison_counter == 0
+
+    # This is a superset of all comparisons constrained by the ontology
+    # so will not change what the preassembler does internally
+    def filter_all(stmts_by_hash, stmts_to_compare, *args):
+        filter_set = {k: (set(stmts_by_hash) - {k}) for k in stmts_by_hash}
+        if stmts_to_compare is None:
+            return filter_set
+        else:
+            for k in filter_set:
+                filter_set[k] &= stmts_to_compare.get(k, set())
+            return filter_set
+    # The same number of comparisons here as without the filter
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
+    pa.combine_related(filters=[bio_ontology_refinement_filter,
+                                filter_all])
+    assert pa._comparison_counter == 2, pa._comparison_counter
+
+    # Just to make sure lists of more than one filter are correctly handled
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
+    pa.combine_related(filters=[filter_all, filter_empty,
+                                bio_ontology_refinement_filter])
+    assert pa._comparison_counter == 0, pa._comparison_counter
