@@ -122,6 +122,7 @@ class WorldOntology(IndraOntology):
         self.add_nodes_from([(k, v) for k, v in dict(nodes).items()])
         self.add_edges_from(edges)
 
+    @with_initialize
     def add_entry(self, entry, examples=None):
         """Add a new ontology entry with examples.
 
@@ -140,7 +141,7 @@ class WorldOntology(IndraOntology):
         root = self.yml
         for idx, part in enumerate(parts):
             new_root = None
-            for element in self.yml:
+            for element in root:
                 # If this is an OntologyNode
                 if 'OntologyNode' in element:
                     if element['name'] == part:
