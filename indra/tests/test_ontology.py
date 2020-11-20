@@ -315,8 +315,8 @@ def test_world_ontology_add_entry():
     nat_dis = ('wm/concept/causal_factor/crisis_and_disaster/'
                'environmental_disasters/natural_disaster')
 
-    assert not ont.isa('WM', nat_dis + '/floods', 'WM', nat_dis)
-    ont.add_entry(nat_dis + '/floods',
-                  examples=['floods'])
-    assert ont.isa('WM', nat_dis + '/floods', 'WM', nat_dis)
+    new_node = nat_dis + '/floods'
+    assert not ont.isa('WM', new_node, 'WM', nat_dis)
+    ont.add_entry(new_node, examples=['floods'])
+    assert ont.isa('WM', new_node, 'WM', nat_dis)
     ont_yml = ont.dump_yml_str()
