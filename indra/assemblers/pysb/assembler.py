@@ -145,22 +145,58 @@ def get_uncond_agent(agent):
 
 
 def get_grounded_agents(model):
-    mps = []
+    cps = set()
+    mps = set()
     for rule in model.rules:
         for rp in (rule.reactant_pattern, rule.product_pattern):
-            for cp in rp.complex_patterns:
-                for mp in cp.monomer_patterns:
-                    mps.append(mp)
+            for cpatt in rp.complex_patterns:
+                # cpatt can be None
+                if cpatt is not None:
+                    # TODO check if it's unique?
+                    cps.add(cpatt)
+                    for mp in cpatt.monomer_patterns:
+                        mps.add(mp)
     # a. For each monomer pattern, get its grounding from annotations
     groundings_by_monomer = {}
+    # Build up db_refs for each monomer object
     for ann in model.annotations:
-        # Build up db_refs for each monomer object
+        if ann.predicate == 'is':
+            m = ann.subject
+            db_name, db_id = parse_identifiers_url(ann.object)
+            if m in groundings_by_monomer:
+                groundings_by_monomer[m][db_name] = db_id
+            else:
+                groundings_by_monomer[m] = {db_name: db_id}
         # Canonicalize db_refs
-        pass
     # b. Get its site/state conditions from MPs; match them back to
     #    their semantics using annotations
+    agents_by_mps = {}
     for mp in mps:
-        site_anns = mp.monomer.site_annotations
+        mods = []
+        for site, state in mp.site_conditions.items():
+            mod, mod_type, res, pos = None, None, None, None
+            for ann in mp.monomer.site_annotations:
+                if ann.subject == (site, state):
+                    mod_type = ann.object
+                elif ann.subject == site and ann.predicate == 'is_residue':
+                    res = ann.object
+                if ann.subject == site and ann.predicate == 'is_position':
+                    pos = ann.object
+                if mod_type == 'phosphorylation':
+                    if state == 'p':
+                        is_mod = True
+                    elif state == 'u':
+                        is_mod = False
+                    if mod_type:
+                        mod = ist.ModCondition(mod_type, res, pos, is_mod)
+            if mod:
+                mods.append(mod)
+        if not mods:
+            mods = None
+        ag = ist.Agent(mp.monomer.name, mods=mods,
+                       db_refs=groundings_by_monomer[mp.monomer])
+        agents_by_mps[mp] = ag
+    return agents_by_mps
         # [Annotation(('phospho', 'p'), 'phosphorylation', 'is_modification'),
         # Annotation(('Y187', 'p'), 'phosphorylation', 'is_modification'),
         # Annotation(Y187, 'Y', 'is_residue'),
