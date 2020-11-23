@@ -374,10 +374,6 @@ class Preassembler(object):
 
         te = time.time()
         logger.info('Applied all refinement pre-filters in %.2fs' % (te-ts))
-        import json
-        with open('stmts_to_compare.json', 'w') as fh:
-            json.dump({k: list(v) for k, v in stmts_to_compare.items()},
-                      fh, indent=1)
         logger.info('Total comparisons: %d' % total_comparisons)
 
         # Here we handle split_idx to allow finding refinements between
