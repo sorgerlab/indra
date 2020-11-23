@@ -346,8 +346,12 @@ class Preassembler(object):
         """
         ts = time.time()
         # Make a list of Statement types
-        stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
+        logger.info('Number of unique statements: %d' % len(unique_stmts))
+        stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun,
+                                     refresh=True): idx
                        for idx, stmt in enumerate(unique_stmts)}
+        logger.info('Number of unique statements with unique hashes: %d'
+                    % len(stmt_to_idx))
 
         # Statements keyed by their hashes
         stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun):
