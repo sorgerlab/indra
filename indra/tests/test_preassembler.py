@@ -1064,3 +1064,20 @@ def test_refinement_filters():
     pa.combine_related(filters=[filter_all, filter_empty,
                                 bio_ontology_refinement_filter])
     assert pa._comparison_counter == 0, pa._comparison_counter
+
+    # Now try adding more statement types
+    st4 = Activation(Agent('x'), ras)
+    st5 = Activation(Agent('x'), kras)
+    st6 = Activation(Agent('x'), hras)
+
+    # The same number of comparisons here as without the filter
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3, st4, st5, st6])
+    pa.combine_related(filters=[bio_ontology_refinement_filter,
+                                filter_all])
+    assert pa._comparison_counter == 4, pa._comparison_counter
+
+    # Just to make sure lists of more than one filter are correctly handled
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3, st4, st5, st6])
+    pa.combine_related(filters=[filter_all, filter_empty,
+                                bio_ontology_refinement_filter])
+    assert pa._comparison_counter == 0, pa._comparison_counter
