@@ -2,6 +2,7 @@
 and contains functions to help apply it during the course of INDRA assembly."""
 import logging
 import requests
+from copy import deepcopy
 from urllib.parse import urljoin
 from indra.ontology.standardize \
     import standardize_agent_name
@@ -163,8 +164,9 @@ def ground_statements(stmts, mode='web', sources=None, ungrounded_only=False):
         The list of Statements that were changed in place by reference.
     """
     source_filter = set(sources) if sources else set()
-    for stmt in stmts:
+    grounded_stmts = deepcopy(stmts)
+    for stmt in grounded_stmts:
         if not source_filter or (stmt.evidence and stmt.evidence[0].source_api
                                  in source_filter):
             ground_statement(stmt, mode=mode, ungrounded_only=ungrounded_only)
-    return stmts
+    return grounded_stmts

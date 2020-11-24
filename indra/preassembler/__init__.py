@@ -189,6 +189,12 @@ class Preassembler(object):
             # This should never be None or anything else
             assert isinstance(new_stmt, Statement)
             unique_stmts.append(new_stmt)
+        # At this point, we should do a hash refresh so that the statements
+        # returned don't have stale hashes.
+        for stmt in unique_stmts:
+            for shallow in (True, False):
+                stmt.get_hash(shallow=shallow, refresh=True,
+                              matches_fun=self.matches_fun)
         return unique_stmts
 
     # Note that the kwargs here are just there for backwards compatibility
@@ -348,7 +354,13 @@ class Preassembler(object):
         # Make a list of Statement types
         stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
                        for idx, stmt in enumerate(unique_stmts)}
-
+        if len(unique_stmts) != len(stmt_to_idx):
+            raise ValueError('The unique statements used as an input for '
+                             'finding refinements do not all have distinct '
+                             'matches key hashes. This could be due to cached '
+                             'hashes being outdated or hashes not having been '
+                             'calculated according to a custom matches key '
+                             'function used for refinement finding.')
         # Statements keyed by their hashes
         stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun):
                          stmt for stmt in unique_stmts}
@@ -370,9 +382,7 @@ class Preassembler(object):
                 ontology_refinement_filter(stmts_by_hash=stmts_by_hash,
                                            stmts_to_compare=stmts_to_compare,
                                            ontology=self.ontology)
-            total_comparisons = sum(len(v) for v in stmts_to_compare.values())
-            logger.debug('Total comparisons after ontology filter: %d' %
-                         total_comparisons)
+        total_comparisons = sum(len(v) for v in stmts_to_compare.values())
 
         te = time.time()
         logger.info('Applied all refinement pre-filters in %.2fs' % (te-ts))
@@ -932,17 +942,25 @@ def ontology_refinement_filter(stmts_by_hash, stmts_to_compare, ontology):
         stmts_by_type[indra_stmt_type(stmt)].add(stmt_hash)
     stmts_by_type = dict(stmts_by_type)
 
+    first_filter = stmts_to_compare is None
+    if first_filter:
+        stmts_to_compare = collections.defaultdict(set)
     for stmt_type, stmt_hashes in stmts_by_type.items():
         logger.info('Finding ontology-based refinements for %d %s statements'
-                    % (len(stmts_by_hash), stmt_type.__name__))
+                    % (len(stmts_by_type[stmt_type]), stmt_type.__name__))
         stmts_by_hash_this_type = {
             stmt_hash: stmts_by_hash[stmt_hash]
             for stmt_hash in stmt_hashes
         }
-        stmts_to_compare = \
+        stmts_to_compare_by_type = \
             ontology_refinement_filter_by_stmt_type(stmts_by_hash_this_type,
-                                                    stmts_to_compare,
                                                     ontology)
+        if first_filter:
+            stmts_to_compare.update(stmts_to_compare_by_type)
+        else:
+            for k, v in stmts_to_compare_by_type.items():
+                stmts_to_compare[k] = stmts_to_compare[k] & v
+
     te = time.time()
     logger.debug('Identified ontology-based possible refinements in %.2fs'
                  % (te-ts))
@@ -952,8 +970,7 @@ def ontology_refinement_filter(stmts_by_hash, stmts_to_compare, ontology):
     return stmts_to_compare
 
 
-def ontology_refinement_filter_by_stmt_type(stmts_by_hash, stmts_to_compare,
-                                            ontology):
+def ontology_refinement_filter_by_stmt_type(stmts_by_hash, ontology):
     """Return possible refinement relationships based on an ontology.
 
     Importantly, here we assume that all statements in stmts_by_hash
@@ -964,9 +981,6 @@ def ontology_refinement_filter_by_stmt_type(stmts_by_hash, stmts_to_compare,
     stmts_by_hash : dict
         A dict whose keys are statement hashes that point to the
         (deduplicated) statement with that hash as a value.
-    stmts_to_compare : dict or None
-        A dict of existing statements to compare that will be further
-        filtered down in this function and then returned.
     ontology : indra.ontology.IndraOntology
         An IndraOntology instance iwth respect to which this
         filter is applied.
@@ -1018,9 +1032,7 @@ def ontology_refinement_filter_by_stmt_type(stmts_by_hash, stmts_to_compare,
 
     # Step 3. Identify all the pairs of statements which can be in a
     # refinement relationship
-    first_filter = True if stmts_to_compare is None else False
-    if first_filter:
-        stmts_to_compare = {}
+    stmts_to_compare = {}
     # We iterate over each statement and find all other statements that it
     # can potentially refine
     ts = time.time()
@@ -1053,11 +1065,7 @@ def ontology_refinement_filter_by_stmt_type(stmts_by_hash, stmts_to_compare,
         # These hashes are now the ones that this statement needs
         # to be compared against. Importantly, the relationship is in
         # a well-defined direction so we don't need to test both ways.
-        if first_filter:
-            stmts_to_compare[sh] = relevants
-        else:
-            stmts_to_compare[sh] = \
-                stmts_to_compare.get(sh, set()) & relevants
+        stmts_to_compare[sh] = relevants
     return stmts_to_compare
 
 

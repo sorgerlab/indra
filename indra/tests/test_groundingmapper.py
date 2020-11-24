@@ -386,7 +386,8 @@ def test_ground_gilda():
         mek = Agent('Mek', db_refs={'TEXT': 'MEK'})
         erk = Agent('Erk1', db_refs={'TEXT': 'Erk1'})
         stmt = Phosphorylation(mek, erk)
-        ground_statements([stmt], mode=mode)
+        grounded_stmts = ground_statements([stmt], mode=mode)
+        stmt = grounded_stmts[0]
         assert stmt.enz.name == 'MEK', stmt.enz
         assert stmt.enz.db_refs['FPLX'] == 'MEK'
         assert stmt.sub.name == 'MAPK3'
@@ -401,12 +402,13 @@ def test_ground_gilda_source():
     stmts = [Phosphorylation(None, Agent('x', db_refs={'TEXT': 'kras'}),
                              evidence=ev)
              for ev in (ev1, ev2, ev3)]
-    ground_statements(stmts, sources=['trips'])
-    assert stmts[0].sub.name == 'x', stmts[0]
-    assert stmts[1].sub.name == 'x'
-    assert stmts[2].sub.name == 'KRAS'
-    ground_statements(stmts, sources=['reach', 'sparser'])
-    assert all(stmt.sub.name == 'KRAS' for stmt in stmts)
+    grounded_stmts = ground_statements(stmts, sources=['trips'])
+    assert grounded_stmts[0].sub.name == 'x', stmts[0]
+    assert grounded_stmts[1].sub.name == 'x'
+    assert grounded_stmts[2].sub.name == 'KRAS'
+    grounded_stmts = ground_statements(stmts, sources=['reach', 'sparser'])
+    assert all(stmt.sub.name == 'KRAS'
+               for stmt in grounded_stmts[:2])
 
 
 def test_gilda_ground_ungrounded():
@@ -420,8 +422,8 @@ def test_gilda_ground_ungrounded():
     assert ag1.name == 'RAS', ag1
     ground_statement(stmts[1], ungrounded_only=True)
     assert ag2.name == 'RAS'
-    ground_statements([stmts[2]], ungrounded_only=True)
-    assert ag3.name == 'RAS'
+    grounded_stmts = ground_statements([stmts[2]], ungrounded_only=True)
+    assert grounded_stmts[0].sub.name == 'RAS'
 
 
 def test_get_gilda_models():
