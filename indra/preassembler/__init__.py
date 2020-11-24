@@ -189,6 +189,12 @@ class Preassembler(object):
             # This should never be None or anything else
             assert isinstance(new_stmt, Statement)
             unique_stmts.append(new_stmt)
+        # At this point, we should do a hash refresh so that the statements
+        # returned don't have stale hashes.
+        for stmt in unique_stmts:
+            for shallow in (True, False):
+                stmt.get_hash(shallow=shallow, refresh=True,
+                              matches_fun=self.matches_fun)
         return unique_stmts
 
     # Note that the kwargs here are just there for backwards compatibility
@@ -347,8 +353,7 @@ class Preassembler(object):
         ts = time.time()
         # Make a list of Statement types
         logger.info('Number of unique statements: %d' % len(unique_stmts))
-        stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun,
-                                     refresh=True): idx
+        stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
                        for idx, stmt in enumerate(unique_stmts)}
         logger.info('Number of unique statements with unique hashes: %d'
                     % len(stmt_to_idx))
