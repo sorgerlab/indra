@@ -103,23 +103,31 @@ class DisambManager(object):
             da = adeft_disambiguators[agent_txt]
             res = da.disambiguate([grounding_text])
             ns_and_id, standard_name, disamb_scores = res[0]
-            # If the highest score is ungrounded we explicitly remove grounding
-            # and reset the (potentially incorrectly standardized) name to the
-            # original text value.
-            if ns_and_id == 'ungrounded':
-                remove_grounding(agent, agent_txt)
-            # Otherwise we update the db_refs with what we got from Adeft
-            # and set the standard name
-            elif ns_and_id in da.pos_labels:
-                apply_grounding(agent, agent_txt, ns_and_id)
-                annots['agents']['adeft'][idx] = disamb_scores
-            else:
-                if disamb_scores[ns_and_id] == 1 and ':' in ns_and_id:
+            # If grounding with highest score is not a positive label we
+            # explicitly remove grounding and reset the (potentially incorrectly
+            # standardized) name to the original text value.
+            # Otherwise if the Adeft model's precision for that particular
+            # grounding is greater than or equal to 0.5 or if there is a
+            # defining pattern for the ambiguous shortform in the text we
+            # update the db_refs with what we got from Adeft and set the
+            # standard name
+            # ungrounded labels will lack a ':', an ungrounded label should
+            # never be a pos_label but we still check both is the label is
+            # positive and if it contains ':' for the sake of caution since
+            # pos_labels are determined by manual review.
+            if ':' in ns_and_id and ns_and_id in da.pos_labels:
+                stats = da.classifier.stats
+                if stats and ns_and_id in stats:
+                    precision = stats[ns_and_id]['pr']['mean']
+                else:
+                    precision = .499
+                if precision >= 0.5 or disamb_scores[ns_and_id] == 1:
                     apply_grounding(agent, agent_txt, ns_and_id)
                     annots['agents']['adeft'][idx] = disamb_scores
                 else:
                     remove_grounding(agent, agent_txt)
-
+            else:
+                remove_grounding(agent, agent_txt)
             success = True
         return success
 
