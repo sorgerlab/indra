@@ -72,7 +72,6 @@ def get_binding_site_name(agent):
     # cases here such as CHEBI (e.g., GTP) which requires thousands
     # of lookups to resolve
     if grounding != (None, None) and grounding[0] in {'HGNC', 'FPLX'}:
-        print('Getting parents for %s' % str(grounding))
         top_parents = bio_ontology.get_top_level_parents(*grounding)
         if top_parents:
             parent_name = bio_ontology.get_name(*top_parents[0])
