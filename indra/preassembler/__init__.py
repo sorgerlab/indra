@@ -352,12 +352,15 @@ class Preassembler(object):
         """
         ts = time.time()
         # Make a list of Statement types
-        logger.info('Number of unique statements: %d' % len(unique_stmts))
         stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
                        for idx, stmt in enumerate(unique_stmts)}
-        logger.info('Number of unique statements with unique hashes: %d'
-                    % len(stmt_to_idx))
-
+        if len(unique_stmts) != len(stmt_to_idx):
+            raise ValueError('The unique statements used as an input for '
+                             'finding refinements do not all have distinct '
+                             'matches key hashes. This could be due to cached '
+                             'hashes being outdated or hashes not having been '
+                             'calculated according to a custom matches key '
+                             'function used for refinement finding.')
         # Statements keyed by their hashes
         stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun):
                          stmt for stmt in unique_stmts}
