@@ -1,3 +1,4 @@
+import copy
 from indra.statements import Agent
 from indra.ontology.bio import bio_ontology
 from indra.ontology.world import world_ontology
@@ -307,3 +308,15 @@ def test_standardize_chembl():
     db_refs = standardize_db_refs({'DRUGBANK': 'DB00305'})
     assert 'CHEMBL' in db_refs, db_refs
     assert db_refs['CHEMBL'] == 'CHEMBL105', db_refs
+
+
+def test_world_ontology_add_entry():
+    ont = copy.deepcopy(world_ontology)
+    nat_dis = ('wm/concept/causal_factor/crisis_and_disaster/'
+               'environmental_disasters/natural_disaster')
+
+    new_node = nat_dis + '/floods'
+    assert not ont.isa('WM', new_node, 'WM', nat_dis)
+    ont.add_entry(new_node, examples=['floods'])
+    assert ont.isa('WM', new_node, 'WM', nat_dis)
+    ont_yml = ont.dump_yml_str()

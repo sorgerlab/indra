@@ -122,6 +122,7 @@ class WorldOntology(IndraOntology):
         self.add_nodes_from([(k, v) for k, v in dict(nodes).items()])
         self.add_edges_from(edges)
 
+    @with_initialize
     def add_entry(self, entry, examples=None):
         """Add a new ontology entry with examples.
 
@@ -137,30 +138,47 @@ class WorldOntology(IndraOntology):
         """
         examples = examples if examples else []
         parts = entry.split('/')
+        # We start at the root of the YML tree and walk down from
+        # there
         root = self.yml
+        # We iterate over all the parts of the new grounding entry
         for idx, part in enumerate(parts):
-            new_root = None
-            for element in self.yml:
+            last_part = (idx == (len(parts) - 1))
+            matched_node = None
+            # We now look at all the elements of the existing ontology
+            # subtree to see if any of them match the new entry.
+            for element in root:
                 # If this is an OntologyNode
                 if 'OntologyNode' in element:
                     if element['name'] == part:
-                        new_root = element
+                        matched_node = element
                         break
+                # Otherwise, this is an intermediate node
                 else:
                     assert len(element) == 1
                     key = list(element.keys())[0]
                     if key == part:
-                        new_root = element[key]
+                        matched_node = element[key]
                         break
-            if new_root is None:
-                if idx == len(parts) - 1:
+            # If we matched an existing node and this is the last part
+            # then we just need to add the given example
+            if matched_node:
+                # NOTE: we have to check for 'OntologyNode' in matched_node here
+                # because intermediate nodes don't have properties so it's
+                # not possible to set examples for them.
+                if last_part and 'OntologyNode' in matched_node:
+                    matched_node['examples'] += examples
+            # If we didn't match an existing node, we have to build up
+            # a new subtree starting from the current part
+            else:
+                if last_part:
                     root.append({'OntologyNode': None, 'name': part,
                                  'examples': examples})
                     break
                 else:
                     root.append({part: []})
-                    new_root = root[-1][part]
-            root = new_root
+                    matched_node = root[-1][part]
+            root = matched_node
         self._load_yml(self.yml)
 
 
