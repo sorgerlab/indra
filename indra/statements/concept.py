@@ -75,8 +75,8 @@ class Concept(object):
                 # and a score
                 else:
                     top_entry = get_top_compositional_grounding(db_id)
-                    return tuple([gr[0] if gr is not None else None
-                                  for gr in top_entry])
+                    return db_ns, tuple([gr[0] if gr is not None else None
+                                        for gr in top_entry])
             else:
                 continue
         return None, None
