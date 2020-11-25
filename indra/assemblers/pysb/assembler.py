@@ -8,6 +8,7 @@ from pysb import Model, Monomer, Parameter, Expression, Observable, Rule, \
     Annotation, ComponentDuplicateNameError, ComplexPattern, \
     ReactionPattern, ANY, WILD, InvalidInitialConditionError
 from pysb.core import SelfExporter
+from pysb.pattern import match_complex_pattern
 import pysb.export
 
 from indra import statements as ist
@@ -149,13 +150,14 @@ def get_grounded_agents(model):
     mps = set()
     for rule in model.rules:
         for rp in (rule.reactant_pattern, rule.product_pattern):
-            for cpatt in rp.complex_patterns:
-                # cpatt can be None
-                if cpatt is not None:
-                    # TODO check if it's unique?
-                    cps.add(cpatt)
-                    for mp in cpatt.monomer_patterns:
-                        mps.add(mp)
+            for cp in rp.complex_patterns:
+                # cp can be None
+                if cp is not None:
+                    # do not store duplicates
+                    if not any([match_complex_pattern(cp, c) for c in cps]):
+                        cps.add(cp)
+                        for mp in cp.monomer_patterns:
+                            mps.add(mp)
     # a. For each monomer pattern, get its grounding from annotations
     groundings_by_monomer = {}
     # Build up db_refs for each monomer object
