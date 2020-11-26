@@ -10,6 +10,7 @@ import numpy as np
 import networkx as nx
 from pysb import WILD, export, Observable, ComponentSet, Annotation
 from pysb.core import as_complex_pattern, ComponentDuplicateNameError
+from pysb.pattern import RulePatternMatcher
 from indra.explanation.reporting import stmt_from_rule, agent_from_obs
 from indra.statements import *
 from indra.assemblers.pysb import assembler as pa
@@ -67,6 +68,8 @@ class PysbModelChecker(ModelChecker):
             self.agent_obs = agent_obs
         else:
             self.agent_obs = []
+        self.mps_to_agents = pa.get_grounded_agents(model)
+        self.model_agents = self.get_model_agents()
         self.model_stmts = model_stmts if model_stmts else []
         # Influence map
         self._im = None
@@ -135,8 +138,6 @@ class PysbModelChecker(ModelChecker):
             return self._im
         if not self.model:
             raise Exception("Cannot get influence map if there is no model.")
-
-        self.model_agents = self.get_model_agents(self.model_stmts)
 
         def add_obs_for_agents(main_agent, ref_agents=None):
             if ref_agents:
@@ -283,12 +284,12 @@ class PysbModelChecker(ModelChecker):
             self.prune_influence_map_degrade_bind_positive(self.model_stmts)
         if prune_im_subj_obj:
             self.prune_influence_map_subj_obj()
-        self.get_nodes_to_agents(self.model_stmts, add_namespaces)
+        self.get_nodes_to_agents()
         self.graph = signed_edges_to_signed_nodes(
             im, prune_nodes=False, edge_signs={'pos': 1, 'neg': -1})
         return self.graph
 
-    def get_nodes_to_agents(self, model_stmts, add_namespaces=False):
+    def get_nodes_to_agents(self):
         """Return a dictionary mapping influence map nodes to INDRA agents.
 
         Parameters
@@ -307,27 +308,33 @@ class PysbModelChecker(ModelChecker):
             return self.nodes_to_agents
 
         im = self.get_im()
-        for node, data in im.nodes(data=True):
-            ag = None
-            # Node is observable
-            if node.endswith('obs'):
-                ag = agent_from_obs(node, self.model)
-            # Node is rule
-            else:
-                stmt = stmt_from_rule(node, self.model, model_stmts)
-                if stmt:
-                    agents = [ag for ag in stmt.agent_list() if ag is not None]
-                    if agents:
-                        ag = agents[0]
-            if ag:
-                self.nodes_to_agents[node] = ag
-                if add_namespaces:
-                    ns_order = default_ns_order + ['PUBCHEM', 'TEXT']
-                    ns = ag.get_grounding(ns_order)[0]
-                    data['ns'] = ns
-            else:
-                logger.warning('Could not get agent for %s' % node)
-        return self.nodes_to_agents
+        nodes_to_agents = {}
+        rpm = RulePatternMatcher(self.model)
+        # Iterate through monomer patterns to agents to find matching rules
+        for mp, ag in self.mps_to_agents.items():
+            rules = rpm.match_rules(mp)
+            for rule in rules:
+                obs_rule = False
+                for ann in self.model.annotations:
+                    if ann.subject == rule.name and ann.object == ag.name:
+                        # node is a rule, match directly to agent
+                        if ann.predicate == 'rule_has_subject':
+                            nodes_to_agents[rule.name] = ag
+                        # to map observable to agent, need extra step
+                        elif ann.predicate == 'rule_has_object':
+                            obs_rule = True
+                if obs_rule:
+                    # only looking at product pattern for observable because
+                    # need final state
+                    for cp in rule.product_pattern.complex_patterns:
+                        for mpat in cp.monomer_patterns:
+                            if mp.monomer.name == mpat.monomer.name:
+                                for obs_signed in self.rule_obs_dict[rule.name]:
+                                    nodes_to_agents[obs_signed[0]] = \
+                                        self.mps_to_agents[mpat]
+        # Make sure we found agents for all nodes
+        assert all([n in nodes_to_agents for n in im.nodes])
+        self.nodes_to_agents = nodes_to_agents
 
     def process_statement(self, stmt):
         self.get_im()
@@ -396,13 +403,8 @@ class PysbModelChecker(ModelChecker):
             input_set_signed = {(rule, 0) for rule in input_rule_set}
         return input_set_signed, None
 
-    def get_model_agents(self, model_stmts):
-        model_agents = set()
-        for stmt in model_stmts:
-            for ag in stmt.agent_list():
-                if ag is not None:
-                    model_agents.add(ag)
-        return model_agents
+    def get_model_agents(self):
+        return set(self.mps_to_agents.values())
 
     def get_refinements(self, agent):
         """Return a list of refinement agents that are part of the model."""
