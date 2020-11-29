@@ -105,7 +105,7 @@ def standardize_name_db_refs(db_refs, ontology=None, ns_order=None):
     """
     db_refs = standardize_db_refs(db_refs, ontology=ontology,
                                   ns_order=ns_order)
-    name = get_standard_name(db_refs)
+    name = get_standard_name(db_refs, ns_order=ns_order)
     return name, db_refs
 
 
