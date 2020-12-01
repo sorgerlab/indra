@@ -22,7 +22,7 @@ from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_sort_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
-    get_available_ev_counts, standardize_counts
+    get_available_ev_counts, standardize_counts, get_available_beliefs
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
@@ -92,6 +92,13 @@ class HtmlAssembler(object):
         evidences these statements carry.
     ev_totals : Optional[dict]
         DEPRECATED. Same as ev_counts which should be used instead.
+    beliefs : Optional[dict]
+        A dictionary of the belief of each statement indexed by hash. If not
+        provided, the beliefs of the statements passed to the constructor are
+        used.
+    sort_by : str
+        Select which value to sort results by, either 'ev_count' or 'belief'.
+        The default is 'ev_count'.
     source_counts : Optional[dict]
         A dictionary of the itemized evidence counts, by source, available for
         each statement, indexed by hash. If not provided, the statements
@@ -119,13 +126,15 @@ class HtmlAssembler(object):
     ev_counts : dict
         A dictionary of the total evidence available for each
         statement indexed by hash.
+    beliefs : dict
+        A dictionary of the belief score of each statement, indexed by hash.
     db_rest_url : str
         The URL to a DB REST API.
     """
 
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
-                 ev_counts=None, source_counts=None, curation_dict=None,
-                 title='INDRA Results', db_rest_url=None):
+                 ev_counts=None, beliefs=None, source_counts=None, curation_dict=None,
+                 title='INDRA Results', db_rest_url=None, sort_by='ev_count'):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
@@ -135,8 +144,11 @@ class HtmlAssembler(object):
             ev_counts = ev_totals
         self.ev_counts = get_available_ev_counts(self.statements) \
             if ev_counts is None else standardize_counts(ev_counts)
+        self.beliefs = get_available_beliefs(self.statements) \
+            if beliefs is None else standardize_counts(beliefs)
         self.source_counts = get_available_source_counts(self.statements) \
             if source_counts is None else standardize_counts(source_counts)
+        self.sort_by = sort_by
         self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
         self.model = None
@@ -176,8 +188,10 @@ class HtmlAssembler(object):
         # Get an iterator over the statements, carefully grouped.
         stmt_rows = group_and_sort_statements(
             self.statements,
-            self.ev_counts if self.ev_counts else None,
-            self.source_counts if self.source_counts else None)
+            ev_counts=self.ev_counts if self.ev_counts else None,
+            source_counts=self.source_counts if self.source_counts else None,
+            beliefs=self.beliefs if self.beliefs else None,
+            sort_by=self.sort_by)
 
         # Do some extra formatting.
         stmts = OrderedDict()
