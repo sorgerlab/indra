@@ -259,4 +259,4 @@ def _get_source_counts(stmt):
     source_counts = defaultdict(int)
     for ev in stmt.evidence:
         source_counts[ev.source_api] += 1
-    return source_counts
+    return dict(source_counts)
