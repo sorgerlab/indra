@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 biogrid_file_url = 'https://downloads.thebiogrid.org/Download/BioGRID/' + \
-        'Release-Archive/BIOGRID-3.4.158/BIOGRID-ALL-3.4.158.tab2.zip'
+        'Release-Archive/BIOGRID-4.2.192/BIOGRID-ALL-4.2.192.tab2.zip'
 
 
 # The explanation for each column of the tsv file is here:
