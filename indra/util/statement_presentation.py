@@ -4,11 +4,10 @@ from itertools import permutations
 from numpy import array, concatenate, zeros
 
 from indra.assemblers.english import EnglishAssembler
-from indra.statements import Agent, Influence, Event, get_statement_by_name
-
+from indra.statements import Agent, Influence, Event, get_statement_by_name, \
+    Statement
 
 logger = logging.getLogger(__name__)
-
 
 db_sources = ['phosphosite', 'cbn', 'pc11', 'biopax', 'bel_lc',
               'signor', 'biogrid', 'lincs_drug', 'tas', 'hprd', 'trrust',
@@ -17,7 +16,6 @@ db_sources = ['phosphosite', 'cbn', 'pc11', 'biopax', 'bel_lc',
 reader_sources = ['geneways', 'tees', 'isi', 'trips', 'rlimsp', 'medscan',
                   'sparser', 'eidos', 'reach']
 
-
 # These are mappings where the actual INDRA source, as it appears
 # in the evidence source_api is inconsistent with the colors here and
 # with what comes out of the INDRA DB
@@ -25,11 +23,10 @@ internal_source_mappings = {
     'bel': 'bel_lc'
 }
 
-
 all_sources = db_sources + reader_sources
 
 
-def _get_keyed_stmts(stmt_list):
+def _get_relation_keyed_stmts(stmt_list):
     def name(agent):
         return 'None' if agent is None else agent.name
 
@@ -42,7 +39,7 @@ def _get_keyed_stmts(stmt_list):
             ag_ns = {name(ag) for ag in ags}
             if 1 < len(ag_ns) < 6:
                 for pair in permutations(ag_ns, 2):
-                    yield key + tuple(pair),  s
+                    yield key + tuple(pair), s
             if len(ag_ns) == 2:
                 continue
             key += tuple(sorted(ag_ns))
@@ -69,89 +66,123 @@ def _get_keyed_stmts(stmt_list):
         yield key, s
 
 
-class StmtMetricAgg:
-    """A class to aggregate statement metrics efficiently."""
-    def __init__(self, ev_counts=None, beliefs=None,
-                 source_count_arrays=None, source_count_cols=None):
-        self.__src_arrays = source_count_arrays
-        self.__source_cols = source_count_cols
-        n_sources = len(next(iter(self.__src_arrays.values())))
-        self.__ev_counts = ev_counts
-        self.__beliefs = beliefs
+def merge_to_metric_dict(**kwargs):
+    """ Merge metric dictionaries into one.
 
-        # Init the results.
-        self.src_count = zeros(n_sources)
-        self.ev_count = 0
-        self.belief = 0
+    Merge dictionaries keyed by hash, each of which measures one or more
+    metrics of a statement, into a single dict keyed by hash.
 
-    def add(self, stmt):
-        sh = stmt.get_hash()
+    The dictionaries MUST have the same keys (i.e. the same hashes). The values
+    of a metric may be itself a dict, in which case the key sets will be
+    merged to a flat dict (in this way you can extend a metric dict).
+    """
+    # If there are no kwargs, just return an empty dict.
+    if not kwargs:
+        return {}
 
-        # Update the evidence count.
-        if self.__ev_counts is None or sh not in self.__ev_counts:
-            n_ev = len(stmt.evidence)
+    # Compile the metric dict.
+    hash_set = None
+    metric_dict = {}
+    for metric_name, metrics in kwargs.items():
+        # If we don't have a hash set yet, make it. Otherwise assert it matches.
+        if hash_set is None:
+            hash_set = set(metrics.keys())
+            metric_dict = {h: {} for h in hash_set}
         else:
-            n_ev = self.__ev_counts[sh]
-        self.ev_count += n_ev
+            assert set(metrics.keys()) == hash_set, "Dictionaries do not match."
 
-        # Update the source counts.
-        if self.__src_arrays and sh in self.__src_arrays:
-            self.src_count += self.__src_arrays[sh]
+        # Fill up the metric dict.
+        values = None
+        for h, val in metrics.items():
+            # Check that if this is a dictionary, the values match up.
+            if isinstance(val, dict):
+                if values is None:
+                    values = tuple(val.keys())
+                else:
+                    assert tuple(val.keys()) == values, "Values to not equal."
 
-        # Update the belief.
-        if self.__beliefs is None or sh not in self.__beliefs:
-            belief = stmt.belief
-        else:
-            belief = self.__beliefs[sh]
-        self.belief = max(self.belief, belief)
-        return
+                metric_dict[h].update(val)
+            else:
+                metric_dict[h][metric_name] = val
+    return metric_dict
 
-    def get_source_counts(self):
-        if self.__source_cols is None:
-            assert not len(self.src_count)
-            return {}
-        return dict(zip(self.__source_cols, self.src_count.astype(int)))
+
+class Metriker:
+    def __init__(self, keys, stmt_metrics, original_types):
+        self.__metriks = {}
+        self.__keys = keys
+        self.__stmt_metrics = stmt_metrics
+        self.__original_types = original_types
+        self.__metrik_template = Metrik.make_template(keys, stmt_metrics,
+                                                      original_types)
+
+    def __getitem__(self, item):
+        if item not in self.__metriks:
+            self.__metriks[item] = self.__metrik_template()
+        return self.__metriks[item]
 
     @classmethod
-    def get_prepped_constructor(cls, ev_counts=None, beliefs=None,
-                                source_counts=None):
-        # Turn the source dicts into arrays.
-        if source_counts:
-            src_arrays = {}
-            for h, counts in source_counts.items():
-                src_arrays[h] = array(list(counts.values()))
-            source_cols = list(counts.keys())
-        else:
-            src_arrays = {}
-            source_cols = None
+    def from_stmt_list(cls, stmt_list, metric_dict=None):
+        keys = ('ev_count', 'belief', 'ag_count')
+        keys += tuple(next(iter(metric_dict.values())).keys())
+        return cls(keys, {}, tuple())
 
-        # Define the constructor function.
-        def constructor():
-            return cls(ev_counts, beliefs, src_arrays, source_cols)
-        return constructor
+    def make_derivative_metriker(self):
+        return self.__class__(self.__keys, self.__stmt_metrics,
+                              self.__original_types)
 
 
-def group_and_sort_statements(stmt_list, sort_by='ev_count', ev_counts=None,
-                              source_counts=None, beliefs=None):
+class Metrik:
+    def __init__(self, keys, stmt_metrics, original_types):
+        self.keys = keys
+        self.values = zeros(len(keys))
+        self.stmt_metrics = stmt_metrics
+        self.original_types = original_types
+
+    @classmethod
+    def make_template(cls, keys, stmt_metrics, original_types):
+        return lambda: cls(keys, stmt_metrics, original_types)
+
+    def include(self, stmt):
+        if not isinstance(stmt, Statement):
+            raise ValueError(f"Invalid type for addition to Metrik: "
+                             f"{type(stmt)}. Must be a Statement.")
+
+        h = stmt.get_hash()
+        assert h in self.stmt_metrics
+        self.values += self.stmt_metrics[h]
+
+    def get_dict(self):
+        return {key: value.astype(original_type)
+                for key, value, original_type
+                in zip(self.keys, self.values, self.original_types)}
+
+
+def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
+                              skip_grouping=False):
     """Group statements by type and arguments, and sort by prevalence.
 
     Parameters
     ----------
     stmt_list : list[Statement]
         A list of INDRA statements.
-    sort_by : str
-        Indicate which parameter to sort by, either 'belief' or 'ev_count'. The
-        default is 'ev_count'.
-    ev_counts : dict{int: int}
-        A dictionary, keyed by statement hash (shallow) with counts of total
-        evidence as the values. Including this will allow statements to be
-        sorted by evidence count..
-    beliefs : dict{int: float}
-        A dictionary, keyed by statement hash (shallow) with the belief of each
-        statement. Including this will allow statements to be sorted by belief.
-    source_counts : dict{int: OrderedDict}
-        A dictionary, keyed by statement hash, with an OrderedDict of
-        counts per source (ordered).
+    sort_by : str or function
+        If str, it indicates which parameter in metric_dict to sort by, or
+        either 'belief' or 'ev_count' which are calculated from the statement
+        objects themselves. The default, 'default', is mostly a sort by ev_count
+        but also favors statements with fewer agents. Alternatively, you may
+        give a function that takes a dict as its single argument, where that
+        dict is an value of the `metric_dict`. If no metric dict is given,
+        the argument to the function will recieve a dict with values for
+        `belief` and `ev_count`.
+    metric_dict : dict{int: dict}
+        A dictionary of metrics that apply to each statement, keyed by hash.
+        The value of `sort_by` should be a key into that dict, or should use the
+        values of that dict (themselves a dict) as an argument if it is a
+        function.
+    skip_grouping : bool
+        Optionally select to not group statements, and just sort them. Default
+        is False.
 
     Returns
     -------
@@ -162,73 +193,71 @@ def group_and_sort_statements(stmt_list, sort_by='ev_count', ev_counts=None,
         arguments (normalized strings), the count of statements with those
         arguments and type, and then the statement type.
     """
-    if sort_by not in ['belief', 'ev_count']:
-        raise ValueError(f"Parameter `sort_by` must be 'belief' or 'ev_count'!")
+    relation_stmts = defaultdict(list)
 
-    stmt_rows = defaultdict(list)
+    # Init the metrics.
+    stmt_metrics = Metriker.from_stmt_list(stmt_list, metric_dict=metric_dict)
+    relation_metrics = stmt_metrics.make_derivative_metriker()
+    agent_pair_metrics = stmt_metrics.make_derivative_metriker()
 
-    counter_maker = StmtMetricAgg\
-        .get_prepped_constructor(ev_counts, beliefs, source_counts)
-    stmt_counts = defaultdict(counter_maker)
-    arg_counts = defaultdict(counter_maker)
-    for key, s in _get_keyed_stmts(stmt_list):
+    # Add up the grouped statements from the metrics.
+    for rel_key, stmt in _get_relation_keyed_stmts(stmt_list):
         # Update the counts, and add key if needed.
-        stmt_rows[key].append(s)
+        relation_stmts[rel_key].append(stmt)
 
         # Keep track of the evidence counts, source counts, and max belief for
         # this statement and the arguments.
-        stmt_counts[key].add(s)
+        relation_metrics[rel_key].include(stmt)
 
         # Add up the counts for the arguments, pairwise for Complexes and
         # Conversions. This allows, for example, a complex between MEK, ERK,
         # and something else to lend weight to the interactions between MEK
         # and ERK.
-        if key[0] == 'Conversion':
-            subj = key[1]
-            for obj in key[2] + key[3]:
-                arg_counts[(subj, obj)].add(s)
+        if rel_key[0] == 'Conversion':
+            subj = rel_key[1]
+            for obj in rel_key[2] + rel_key[3]:
+                ag_pair_key = (subj, obj)
+                agent_pair_metrics[ag_pair_key].include(stmt)
         else:
-            arg_counts[key[1:]].add(s)
+            ag_pair_key = rel_key[1:]
+            agent_pair_metrics[ag_pair_key].include(stmt)
 
-    def _sort_key_func(stmt):
-        sh = stmt.get_hash()
-        n_agents = len(s.agent_list())
-        if sort_by == 'ev_count':
-            if ev_counts and sh in ev_counts:
-                cnt = ev_counts[sh]
-            else:
-                cnt = len(stmt.evidence)
-            return cnt + 1/(1 + n_agents)
-        elif sort_by == 'belief':
-            if beliefs and sh in beliefs:
-                b = beliefs[sh]
-            else:
-                b = stmt.belief
-            return b + 0.01/(1 + n_agents)
-        else:
-            assert False, "Invalid sort_by, should not be possible here."
+    # Define the sort function.
+    if isinstance(sort_by, str):
+        def _sort_func(metric):
+            assert isinstance(sort_by, str)
+            if sort_by == 'default':
+                return metric['ev_count'] + 1/(1 + metric['ag_count'])
+            return metric[sort_by]
+    else:
+        _sort_func = sort_by
 
     # Sort the rows by count and agent names.
     def processed_rows(stmt_rows):
         for key, stmts in stmt_rows.items():
             verb = key[0]
             inps = key[1:]
-            sub_count = stmt_counts[key].ev_count
-            arg_count = arg_counts[inps].ev_count
-            if verb == 'Complex' and sub_count == arg_count and len(inps) <= 2:
+            rel_m = relation_metrics[key]
+            agp_m = agent_pair_metrics[inps]
+            if verb == 'Complex' and rel_m['ev_count'] == agp_m['ev_count'] \
+                    and len(inps) <= 2:
                 if all([len(set(ag.name for ag in s.agent_list())) > 2
                         for s in stmts]):
                     continue
-            new_key = (arg_count, inps, sub_count, verb)
-            stmts = sorted(stmts, key=_sort_key_func, reverse=True)
-            if source_counts:
-                yield new_key, verb, stmts, \
-                      arg_counts[inps].get_source_counts(), \
-                      stmt_counts[key].get_source_counts()
-            else:
-                yield new_key, verb, stmts
+            agent_pair_sort_key = (_sort_func(agp_m.get_dict()), inps,
+                                   _sort_func(rel_m.get_dict()), verb)
 
-    sorted_groups = sorted(processed_rows(stmt_rows),
+            def stmt_sorter(s):
+                h = s.get_hash()
+                metrics = stmt_metrics[h].get_dict()
+                return _sort_func(metrics)
+
+            stmts = sorted(stmts, key=stmt_sorter, reverse=True)
+            yield agent_pair_sort_key, verb, stmts, \
+                agent_pair_metrics[inps].get_dict(), \
+                relation_metrics[key].get_dict()
+
+    sorted_groups = sorted(processed_rows(relation_stmts),
                            key=lambda tpl: tpl[0], reverse=True)
 
     return sorted_groups
@@ -239,6 +268,7 @@ def make_stmt_from_sort_key(key, verb, agents=None):
 
     Specifically, the sort key used by `group_and_sort_statements`.
     """
+
     def make_agent(name):
         if name == 'None' or name is None:
             return None
@@ -288,7 +318,7 @@ def make_string_from_sort_key(key, verb):
 
 def get_simplified_stmts(stmts):
     simple_stmts = []
-    for key, s in _get_keyed_stmts(stmts):
+    for key, s in _get_relation_keyed_stmts(stmts):
         simple_stmts.append(make_stmt_from_sort_key(key, s.__class__.__name__))
     return simple_stmts
 
