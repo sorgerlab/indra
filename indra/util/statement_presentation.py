@@ -113,12 +113,11 @@ class Metriker:
         self.__keys = keys
         self.__stmt_metrics = stmt_metrics
         self.__original_types = original_types
-        self.__metrik_template = Metrik.make_template(keys, stmt_metrics,
-                                                      original_types)
 
     def __getitem__(self, item):
         if item not in self.__metriks:
-            self.__metriks[item] = self.__metrik_template()
+            self.__metriks[item] = Metrik(self.__keys, self.__stmt_metrics,
+                                          self.__original_types)
         return self.__metriks[item]
 
     @classmethod
@@ -177,10 +176,6 @@ class Metrik:
         self.values = zeros(len(keys))
         self.stmt_metrics = stmt_metrics
         self.original_types = original_types
-
-    @classmethod
-    def make_template(cls, keys, stmt_metrics, original_types):
-        return lambda: cls(keys, stmt_metrics, original_types)
 
     def include(self, stmt):
         if not isinstance(stmt, Statement):
