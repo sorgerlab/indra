@@ -153,14 +153,14 @@ def get_grounded_agents(model):
     mps = set()
     for rule in model.rules:
         rule_mps = set()
-        for rp in (rule.reactant_pattern, rule.product_pattern):
-            for cp in rp.complex_patterns:
-                # cp can be None
-                if cp is not None:
-                    for mp in cp.monomer_patterns:
-                        mps.add(mp)
-                        rule_mps.add(mp)
-        mps_by_rule[rule.name] = rule_mps
+        for cp in rule.product_pattern.complex_patterns:
+            # cp can be None
+            if cp is not None:
+                for mp in cp.monomer_patterns:
+                    mps.add(mp)
+                    rule_mps.add(mp)
+        if rule_mps:
+            mps_by_rule[rule.name] = rule_mps
     # a. For each monomer pattern, get its grounding from annotations
     groundings_by_monomer = {}
     # Build up db_refs for each monomer object
