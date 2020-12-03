@@ -859,11 +859,16 @@ def test_get_grounded_agents_from_model():
     phos_y187 = Phosphorylation(mek, erk, 'Y', '187')
     pysba = pa.PysbAssembler([phos, phos_y187, af])
     pysb_model = pysba.make_model()
-    import ipdb; ipdb.set_trace()
-    model_agents = pa.get_grounded_agents(pysb_model)
+    agents_by_mp, mps_by_rule = pa.get_grounded_agents(pysb_model)
+    assert isinstance(agents_by_mp, dict)
+    assert isinstance(mps_by_rule, dict)
+    model_agents = agents_by_mp.values()
     model_keys = set([ag.matches_key() for ag in model_agents])
-    test_keys = set([mek.matches_key(), erk.matches_key()])
-    assert len(model_keys.intersection(test_keys)) == 2
+    # TODO add other types of agent conditions here
+    # TODO do we expect a different agent for af?
+    test_keys = set([mek.matches_key(), erk.matches_key(),
+                     erk_active.matches_key()])
+    assert len(model_keys.intersection(test_keys)) == 3
 
 
 def test_phospho_mod_grounding():
@@ -1252,7 +1257,3 @@ def test_kappa_cm_export():
     graph = pa.export_model('kappa_cm', '/dev/null')
     assert len(graph.nodes()) == 2
     assert len(graph.edges()) == 1
-
-if __name__ == '__main__':
-    test_get_grounded_agents_from_model()
-
