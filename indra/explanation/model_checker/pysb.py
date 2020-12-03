@@ -68,7 +68,9 @@ class PysbModelChecker(ModelChecker):
             self.agent_obs = agent_obs
         else:
             self.agent_obs = []
-        self.mps_to_agents = pa.get_grounded_agents(model)
+        mps_to_agents, rules_to_mps = pa.get_grounded_agents(model)
+        self.mps_to_agents = mps_to_agents
+        self.rules_to_mps = rules_to_mps
         self.model_agents = self.get_model_agents()
         self.model_stmts = model_stmts if model_stmts else []
         # Influence map
@@ -309,31 +311,24 @@ class PysbModelChecker(ModelChecker):
 
         im = self.get_im()
         nodes_to_agents = {}
-        rpm = RulePatternMatcher(self.model)
-        # Iterate through monomer patterns to agents to find matching rules
-        for mp, ag in self.mps_to_agents.items():
-            rules = rpm.match_rules(mp)
-            for rule in rules:
-                obs_rule = False
+        for rule, mps in self.rules_to_mps.items():
+            for mp in mps:
                 for ann in self.model.annotations:
-                    if ann.subject == rule.name and ann.object == ag.name:
-                        # node is a rule, match directly to agent
+                    if ann.subject == rule and ann.object == mp.monomer.name:
+                        # We usually want to map rule to subject agent
                         if ann.predicate == 'rule_has_subject':
-                            nodes_to_agents[rule.name] = ag
-                        # to map observable to agent, need extra step
-                        elif ann.predicate == 'rule_has_object':
-                            obs_rule = True
-                if obs_rule:
-                    # only looking at product pattern for observable because
-                    # need final state
-                    for cp in rule.product_pattern.complex_patterns:
-                        for mpat in cp.monomer_patterns:
-                            if mp.monomer.name == mpat.monomer.name:
-                                for obs_signed in self.rule_obs_dict[rule.name]:
-                                    nodes_to_agents[obs_signed[0]] = \
-                                        self.mps_to_agents[mpat]
-        # Make sure we found agents for all nodes
-        assert all([n in nodes_to_agents for n in im.nodes])
+                            nodes_to_agents[rule] = self.mps_to_agents[mp]
+                        # Object agent is mapped to observable
+                        if ann.predicate == 'rule_has_object':
+                            for obs_signed in self.rule_obs_dict[rule]:
+                                nodes_to_agents[obs_signed[0]] = \
+                                        self.mps_to_agents[mp]
+        # Some rules do not follow the same algorithm, it could be statements
+        # with None subject or Translocations
+        for rule, mps in self.rules_to_mps.items():
+            if rule not in nodes_to_agents:
+                nodes_to_agents[rule] = self.mps_to_agents[list(mps)[0]]
+
         self.nodes_to_agents = nodes_to_agents
 
     def process_statement(self, stmt):
@@ -410,9 +405,9 @@ class PysbModelChecker(ModelChecker):
         """Return a list of refinement agents that are part of the model."""
         agents = set()
         for ag in self.model_agents:
-            if ag != agent and ag.refinement_of(agent, bio_ontology):
+            if not ag.matches(agent) and ag.refinement_of(agent, bio_ontology):
                 agents.add(ag)
-        return agents
+        return list(agents)
 
     def get_all_mps(self, agents, ignore_activities=False, mapping=False):
         """Get a list of all monomer patterns for a list of agents."""
