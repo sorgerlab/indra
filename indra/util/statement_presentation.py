@@ -138,14 +138,18 @@ class Metriker:
         else:
             stmt_loop = True
 
+        # Populate the dict of arrays, stmt_metrics
         stmt_metrics = {}
         if stmt_loop:
+
+            # Iterate over statements, filling in values that may have been
+            # missing.
             for stmt in stmt_list:
                 sh = stmt.get_hash()
                 values = []
                 for k in keys:
                     if metric_dict and k in metric_dict:
-                        values.append(metric_dict[k])
+                        values.append(metric_dict[sh][k])
                     elif k == 'ev_count':
                         values.append(len(stmt.evidence))
                     elif k == 'belief':
@@ -154,10 +158,12 @@ class Metriker:
                         values.append(len(stmt.agent_list()))
                     else:
                         assert False, f"Value of k, {k}, should be impossible."
-                stmt_metrics[sh] = array(list(values))
+                stmt_metrics[sh] = array(values)
         else:
+            # Iterate over the metric dict, and convert each entry to an array.
             for sh, metrics in metric_dict.items():
                 stmt_metrics[sh] = array([metrics[k] for k in keys])
+
         return cls(keys, stmt_metrics, original_types)
 
     def make_derivative_metriker(self):
