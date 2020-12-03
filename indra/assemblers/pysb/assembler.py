@@ -146,18 +146,21 @@ def get_uncond_agent(agent):
 
 
 def get_grounded_agents(model):
-    cps = set()
+    """Given a PySB model, get mappings from rule to monomer patterns and
+    from monomer patterns to grounded agents."""
+    agents_by_mps = {}
+    mps_by_rule = {}
     mps = set()
     for rule in model.rules:
+        rule_mps = set()
         for rp in (rule.reactant_pattern, rule.product_pattern):
             for cp in rp.complex_patterns:
                 # cp can be None
                 if cp is not None:
-                    # do not store duplicates
-                    if not any([match_complex_pattern(cp, c) for c in cps]):
-                        cps.add(cp)
-                        for mp in cp.monomer_patterns:
-                            mps.add(mp)
+                    for mp in cp.monomer_patterns:
+                        mps.add(mp)
+                        rule_mps.add(mp)
+        mps_by_rule[rule.name] = rule_mps
     # a. For each monomer pattern, get its grounding from annotations
     groundings_by_monomer = {}
     # Build up db_refs for each monomer object
@@ -172,7 +175,7 @@ def get_grounded_agents(model):
         # Canonicalize db_refs
     # b. Get its site/state conditions from MPs; match them back to
     #    their semantics using annotations
-    agents_by_mps = {}
+    # TODO handle activities, bound conditions
     for mp in mps:
         mods = []
         for site, state in mp.site_conditions.items():
@@ -198,17 +201,7 @@ def get_grounded_agents(model):
         ag = ist.Agent(mp.monomer.name, mods=mods,
                        db_refs=groundings_by_monomer[mp.monomer])
         agents_by_mps[mp] = ag
-    return agents_by_mps
-        # [Annotation(('phospho', 'p'), 'phosphorylation', 'is_modification'),
-        # Annotation(('Y187', 'p'), 'phosphorylation', 'is_modification'),
-        # Annotation(Y187, 'Y', 'is_residue'),
-        # Annotation(Y187, '187', 'is_position')]
-        # From the two monomer patterns for ERK:
-        # ERK2(Y187='p')
-        # ERK2(phospho='p')
-        # Create two agents:
-        # Agent(ERK2, mods=[ModCondition('p')]
-        # Agent(ERK2, mods=[ModCondition('p', 'Y', '187')]
+    return agents_by_mps, mps_by_rule
 
 
 def grounded_monomer_patterns(model, agent, ignore_activities=False):
