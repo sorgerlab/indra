@@ -201,15 +201,14 @@ class HtmlAssembler(object):
         all_previous_stmts = set()
         source_count_keys = set() if not self.source_counts \
             else {k for k in next(iter(self.source_counts.values())).keys()}
-        for row in stmt_rows:
+        for key, inps, verb, stmts_group, agp_m, rel_m in stmt_rows:
             # Distinguish between the cases with source counts and without.
             if self.source_counts:
-                key, verb, stmts_group, tl_counts, metrics = row
-                src_counts = {k: metrics[k] for k in source_count_keys}
+                rel_src_counts = {k: rel_m[k] for k in source_count_keys}
+                agp_src_counts = {k: agp_m[k] for k in source_count_keys}
             else:
-                key, verb, stmts_group = row
-                src_counts = None
-                tl_counts = None
+                rel_src_counts = None
+                agp_src_counts = None
             curr_stmt_set = {s.get_hash() for s in stmts_group}
             if curr_stmt_set == previous_stmt_set:
                 continue
@@ -224,7 +223,7 @@ class HtmlAssembler(object):
             # objects in `meta_agents` are references to the Agent's in the
             # Statement object `meta_stmts`.
             meta_agents = []
-            meta_stmt = make_stmt_from_sort_key(key, verb, meta_agents)
+            meta_stmt = make_stmt_from_sort_key(inps, verb, meta_agents)
             meta_agent_dict = {ag.name: ag for ag in meta_agents
                                if ag is not None}
 
@@ -297,7 +296,7 @@ class HtmlAssembler(object):
             if tl_key not in stmts.keys():
                 agents[tl_key] = tl_agents
                 stmts[tl_key] = {'html_key': str(uuid.uuid4()),
-                                 'source_counts': tl_counts,
+                                 'source_counts': agp_src_counts,
                                  'stmts_formatted': [],
                                  'names': tl_names}
                 if tl_label:
@@ -323,12 +322,12 @@ class HtmlAssembler(object):
                 new_dict = {'short_name': short_name,
                             'short_name_key': short_name_key,
                             'stmt_info_list': stmt_info_list,
-                            'src_counts': src_counts}
+                            'src_counts': rel_src_counts}
                 existing_list.append(new_dict)
             else:
                 existing_list[0]['stmt_info_list'].extend(stmt_info_list)
-                if src_counts:
-                    existing_list[0]['src_counts'].update(src_counts)
+                if rel_src_counts:
+                    existing_list[0]['src_counts'].update(rel_src_counts)
 
         # Add labels for each top level group (tlg).
         if with_grouping:
