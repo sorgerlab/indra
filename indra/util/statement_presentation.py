@@ -84,12 +84,18 @@ def merge_to_metric_dict(**kwargs):
     hash_set = None
     metric_dict = {}
     for metric_name, metrics in kwargs.items():
+        # Check if metrics is None. If so, just skip. This happens if e.g. a
+        # default argument is passed along
+        if metrics is None:
+            continue
+
         # If we don't have a hash set yet, make it. Otherwise assert it matches.
         if hash_set is None:
             hash_set = set(metrics.keys())
             metric_dict = {h: {} for h in hash_set}
         else:
-            assert set(metrics.keys()) == hash_set, "Dictionaries do not match."
+            assert set(metrics.keys()) == hash_set,\
+                "Dictionary key sets do not match."
 
         # Fill up the metric dict.
         values = None
@@ -98,11 +104,20 @@ def merge_to_metric_dict(**kwargs):
             if isinstance(val, dict):
                 if values is None:
                     values = tuple(val.keys())
+                    for k in values:
+                        assert k not in metric_dict[h], \
+                            f"Metric label {k} from dictionary metric " \
+                            f"already in use."
                 else:
                     assert tuple(val.keys()) == values, "Values to not equal."
 
                 metric_dict[h].update(val)
             else:
+                if values is None:
+                    values = (metric_name,)
+                    assert metric_name not in metric_dict[h], \
+                        f"Metric label {metric_name} from keyword already " \
+                        f"in use."
                 metric_dict[h][metric_name] = val
     return metric_dict
 
@@ -116,6 +131,7 @@ class Metriker:
 
     def __getitem__(self, item):
         if item not in self.__metriks:
+            # Remember, this is passing REFERENCES to the stmt_metrics dict.
             self.__metriks[item] = Metrik(self.__keys, self.__stmt_metrics,
                                           self.__original_types)
         return self.__metriks[item]
