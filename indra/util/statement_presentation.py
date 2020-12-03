@@ -234,6 +234,12 @@ class Metrik:
         assert self.stmt_metrics and h in self.stmt_metrics
         self.values += self.stmt_metrics[h]
 
+    def __getitem__(self, item):
+        if item not in self.keys:
+            raise KeyError(f"Key '{item}' not found!")
+        idx = self.keys.index(item)
+        return self.values[idx].astype(self.original_types[idx])
+
     def get_dict(self):
         return {key: value.astype(original_type)
                 for key, value, original_type
