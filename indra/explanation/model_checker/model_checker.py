@@ -162,6 +162,9 @@ class NodesContainer():
         self.get_all_nodes()
         return meaningful_res_code
 
+    def is_ref(self, node):
+        return node in self.ref_nodes and node not in self.main_nodes
+
 
 class ModelChecker(object):
     """The parent class of all ModelCheckers.
@@ -436,10 +439,10 @@ class ModelChecker(object):
                         self.graph, source, target, search_path_length, loop,
                         dummy_target, filter_func)
                     for path in path_iter:
-                        if path[0] in subj.ref_nodes:
+                        if subj.is_ref(path[0]):
                             path.insert(0, self.get_ref(subj.main_agent,
                                                         path[0], 'has_ref'))
-                        if path[-1] in obj.ref_nodes:
+                        if obj.is_ref(path[-1]):
                             path.append(self.get_ref(obj.main_agent,
                                                      path[-1], 'is_ref'))
                         pr.add_path(tuple(path))
