@@ -45,9 +45,11 @@ def _get_relation_keyed_stmts(stmt_list):
             key += tuple(sorted(ag_ns))
         elif verb == 'Conversion':
             subj = name(s.subj)
-            objs_from = {name(ag) for ag in s.obj_from}
-            objs_to = {name(ag) for ag in s.obj_to}
-            key += (subj, tuple(sorted(objs_from)), tuple(sorted(objs_to)))
+            objs_from = tuple(sorted({name(ag) for ag in s.obj_from}))
+            objs_to = tuple(sorted({name(ag) for ag in s.obj_to}))
+            for obj_from, obj_to in product(objs_from, objs_to):
+                yield key + (subj, obj_from, obj_to), s
+            key += (subj, objs_from, objs_to)
         elif verb == 'ActiveForm':
             key += (name(ags[0]), s.activity, s.is_active)
         elif verb == 'HasActivity':
@@ -297,18 +299,9 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
         # this statement and the arguments.
         relation_metrics[rel_key].include(stmt)
 
-        # Add up the counts for the arguments, pairwise for Complexes and
-        # Conversions. This allows, for example, a complex between MEK, ERK,
-        # and something else to lend weight to the interactions between MEK
-        # and ERK.
-        if rel_key[0] == 'Conversion':
-            subj = rel_key[1]
-            for obj in rel_key[2] + rel_key[3]:
-                ag_pair_key = (subj, obj)
-                agent_pair_metrics[ag_pair_key].include(stmt)
-        else:
-            ag_pair_key = rel_key[1:]
-            agent_pair_metrics[ag_pair_key].include(stmt)
+        # Add up the counts for the agent pairs (and rarely some other args).
+        ag_pair_key = rel_key[1:]
+        agent_pair_metrics[ag_pair_key].include(stmt)
 
     # Stop filling these metrikers. No more "new" keys.
     relation_metrics.freeze()
@@ -331,12 +324,14 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
             inps = key[1:]
             rel_m = relation_metrics[key]
             agp_m = agent_pair_metrics[inps]
-            if verb == 'Complex' and rel_m['ev_count'] == agp_m['ev_count'] \
-                    and len(inps) <= 2:
+            if (verb == 'Complex' and len(inps) <= 2) \
+                    or (verb == 'Conversion'
+                        and all(isinstance(e, str) for e in inps))\
+                    and rel_m['ev_count'] == agp_m['ev_count']:
                 if all([len(set(ag.name for ag in s.agent_list())) > 2
                         for s in stmts]):
                     continue
-            agent_pair_sort_key = (_sort_func(agp_m.get_dict()), inps,
+            agent_pair_sort_key = (_sort_func(agp_m.get_dict()), str(inps),
                                    _sort_func(rel_m.get_dict()), verb)
 
             def stmt_sorter(s):
