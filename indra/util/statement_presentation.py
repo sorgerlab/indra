@@ -137,13 +137,21 @@ class Metriker:
                 self.__metriks[item] = Metrik(self.__keys, self.__stmt_metrics,
                                               self.__original_types)
             else:
-                raise KeyError(f"Key {item} not found! "
-                               f"{self.__class__.__name__} is no longer being "
-                               f"filled.")
+                raise KeyError(f"Key \"{item}\" not found! "
+                               f"{self.__class__.__name__} is frozen.")
         return self.__metriks[item]
 
-    def stop_filling(self):
+    def _set_metriks_to_stmt_metrics(self):
+        for key, arr in self.__stmt_metrics.items():
+            self.__metriks[key] = \
+                Metrik.from_array(self.__keys, arr, self.__original_types)
+        return
+
+    def freeze(self):
         self.__filling = False
+        for metrik in self.__metriks.values():
+            metrik.freeze()
+        return
 
     @classmethod
     def from_stmt_list(cls, stmt_list, metric_dict=None):
@@ -189,7 +197,8 @@ class Metriker:
                 stmt_metrics[sh] = array([metrics[k] for k in keys])
 
         new_cls = cls(keys, stmt_metrics, original_types)
-        new_cls.stop_filling()
+        new_cls._set_metriks_to_stmt_metrics()
+        new_cls.freeze()
         return new_cls
 
     def make_derivative_metriker(self):
@@ -203,14 +212,26 @@ class Metrik:
         self.values = zeros(len(keys))
         self.stmt_metrics = stmt_metrics
         self.original_types = original_types
+        self.__frozen = False
+
+    @classmethod
+    def from_array(cls, keys, arr, original_types, stmt_metrics=None):
+        new_cls = cls(keys, stmt_metrics, original_types)
+        new_cls.values = arr
+        return new_cls
+
+    def freeze(self):
+        self.__frozen = True
 
     def include(self, stmt):
+        if self.__frozen:
+            raise RuntimeError("No longer adding more stmt data to Metrik.")
         if not isinstance(stmt, Statement):
             raise ValueError(f"Invalid type for addition to Metrik: "
                              f"{type(stmt)}. Must be a Statement.")
 
         h = stmt.get_hash()
-        assert h in self.stmt_metrics
+        assert self.stmt_metrics and h in self.stmt_metrics
         self.values += self.stmt_metrics[h]
 
     def get_dict(self):
