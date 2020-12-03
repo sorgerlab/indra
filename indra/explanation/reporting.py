@@ -29,12 +29,20 @@ def stmts_from_pysb_path(path, model, stmts):
         The Statements from which the rules along the path were obtained.
     """
     path_stmts = []
-    for path_rule, sign in path:
-        for rule in model.rules:
-            if rule.name == path_rule:
-                stmt = stmt_from_rule(path_rule, model, stmts)
-                assert stmt is not None
-                path_stmts.append(stmt)
+    for step in path:
+        # Refinement edge
+        if len(step) == 3:
+            edge = RefEdge(Agent._from_json(step[0]),
+                           Agent._from_json(step[2]), step[1])
+            path_stmts.append(edge)
+        # Regular rule
+        elif len(step) == 2:
+            path_rule, sign = step
+            for rule in model.rules:
+                if rule.name == path_rule:
+                    stmt = stmt_from_rule(path_rule, model, stmts)
+                    assert stmt is not None
+                    path_stmts.append(stmt)
     return path_stmts
 
 
@@ -92,6 +100,8 @@ def stmts_from_indranet_path(path, model, signed, from_db=True, stmts=None):
 PybelEdge = namedtuple(
     'PybelEdge', ['source', 'target', 'relation', 'reverse'])
 
+RefEdge = namedtuple('RefEdge', ['source', 'target', 'relation'])
+
 
 def pybel_edge_to_english(pybel_edge):
     source_str = _assemble_agent_str(pybel_edge.source)
@@ -107,6 +117,19 @@ def pybel_edge_to_english(pybel_edge):
             rel_str = ' is a variant of '
         else:
             rel_str = ' has a variant '
+    sb.append_as_sentence([source_str, rel_str, target_str])
+    sb.make_sentence()
+    return sb.sentence
+
+
+def ref_edge_to_english(ref_edge):
+    source_str = _assemble_agent_str(ref_edge.source)
+    target_str = _assemble_agent_str(ref_edge.target)
+    sb = SentenceBuilder()
+    if ref_edge.relation == 'is_ref':
+        rel_str = ' is a refinement of '
+    elif ref_edge.relation == 'has_ref':
+        rel_str = ' has a refinement '
     sb.append_as_sentence([source_str, rel_str, target_str])
     sb.make_sentence()
     return sb.sentence
