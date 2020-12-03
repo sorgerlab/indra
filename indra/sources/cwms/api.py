@@ -78,7 +78,8 @@ def process_ekb_file(fname, extract_filter=None,
     # Process EKB XML file into statements
     with open(fname, 'rb') as fh:
         ekb_str = fh.read().decode('utf-8')
-    return process_ekb(ekb_str, extract_filter=extract_filter)
+    return process_ekb(ekb_str, extract_filter=extract_filter,
+                       grounding_mode=grounding_mode)
 
 
 def process_ekb(ekb_str, extract_filter=None,
