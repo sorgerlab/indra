@@ -305,8 +305,8 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
             agent_pair_metrics[ag_pair_key].include(stmt)
 
     # Stop filling these metrikers. No more "new" keys.
-    relation_metrics.stop_filling()
-    agent_pair_metrics.stop_filling()
+    relation_metrics.freeze()
+    agent_pair_metrics.freeze()
 
     # Define the sort function.
     if isinstance(sort_by, str):
