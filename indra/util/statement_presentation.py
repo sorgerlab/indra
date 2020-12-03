@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
-from itertools import permutations
-from numpy import array, concatenate, zeros
+from itertools import permutations, product
+from numpy import array, zeros
 
 from indra.assemblers.english import EnglishAssembler
 from indra.statements import Agent, Influence, Event, get_statement_by_name, \
@@ -340,7 +340,7 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
                 return _sort_func(metrics)
 
             stmts = sorted(stmts, key=stmt_sorter, reverse=True)
-            yield agent_pair_sort_key, verb, stmts, \
+            yield agent_pair_sort_key, inps, verb, stmts, \
                 agent_pair_metrics[inps].get_dict(), \
                 relation_metrics[key].get_dict()
 
@@ -350,7 +350,7 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
     return sorted_groups
 
 
-def make_stmt_from_sort_key(key, verb, agents=None):
+def make_stmt_from_sort_key(inps, verb, agents=None):
     """Make a Statement from the sort key.
 
     Specifically, the sort key used by `group_and_sort_statements`.
@@ -362,7 +362,6 @@ def make_stmt_from_sort_key(key, verb, agents=None):
         return Agent(name)
 
     StmtClass = get_statement_by_name(verb)
-    inps = list(key[1])
     if agents is None:
         agents = []
     if verb == 'Complex':
@@ -394,19 +393,20 @@ def stmt_to_english(stmt):
     return ea.make_model()[:-1]
 
 
-def make_string_from_sort_key(key, verb):
+def make_string_from_sort_key(inps, verb):
     """Make a Statement string via EnglishAssembler from the sort key.
 
     Specifically, the sort key used by `group_and_sort_statements`.
     """
-    stmt = make_stmt_from_sort_key(key, verb)
+    stmt = make_stmt_from_sort_key(inps, verb)
     return stmt_to_english(stmt)
 
 
 def get_simplified_stmts(stmts):
     simple_stmts = []
     for key, s in _get_relation_keyed_stmts(stmts):
-        simple_stmts.append(make_stmt_from_sort_key(key, s.__class__.__name__))
+        simple_stmts.append(make_stmt_from_sort_key(key[1:],
+                                                    s.__class__.__name__))
     return simple_stmts
 
 
