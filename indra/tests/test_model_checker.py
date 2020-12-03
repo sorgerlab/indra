@@ -1937,6 +1937,37 @@ def test_path_fixed_length():
     assert len(res.paths[0]) == len(res.paths[1]) == 3  # 3 nodes = 2 edges/steps
 
 
+def test_get_nodes_to_agents():
+    prkcb = Agent('PRKCB', db_refs={'TEXT': 'PRKCB', 'HGNC': '9395'})
+    gsk3b = Agent('GSK3B', db_refs={'TEXT': 'GSK3B', 'HGNC': '4617'})
+    map2k1 = Agent('MAP2K1', db_refs={'TEXT': 'MAP2K1', 'HGNC': '6840'})
+    mapk1 = Agent('MAPK1', db_refs={'TEXT': 'MAPK1', 'HGNC': '6871'})
+    mek = Agent('MEK', db_refs={'TEXT': 'MEK', 'FPLX': 'MEK'})
+    erk = Agent('ERK', db_refs={'TEXT': 'ERK', 'FPLX': 'ERK'})
+    # Model statements are refined versions of test statements
+    model_stmts = [Phosphorylation(prkcb, gsk3b, 'S', '9'),
+                   Phosphorylation(map2k1, mapk1)]
+    test_stmts = [Phosphorylation(prkcb, gsk3b, 'S'),
+                  Phosphorylation(mek, erk)]
+    pysba = PysbAssembler(model_stmts)
+    pysb_model = pysba.make_model()
+    pmc = PysbModelChecker(pysb_model, test_stmts)
+    pmc.get_im()
+    pmc.prune_influence_map()
+    pmc.get_nodes_to_agents()
+    assert len(pmc.nodes_to_agents) == 4
+    assert pmc.nodes_to_agents['PRKCB_phosphorylation_GSK3B_S9'].matches(prkcb)
+    assert pmc.nodes_to_agents['MAP2K1_phosphorylation_MAPK1_phospho'].matches(
+        map2k1)
+    assert pmc.nodes_to_agents['MAPK1_phospho_p_obs'].name == 'MAPK1'
+    assert pmc.nodes_to_agents['MAPK1_phospho_p_obs'].mods[0].mod_type == \
+        'phosphorylation'
+    assert pmc.nodes_to_agents['GSK3B_S9_p_obs'].mods[0].mod_type == \
+        'phosphorylation'
+    assert pmc.nodes_to_agents['GSK3B_S9_p_obs'].mods[0].residue == 'S'
+    assert pmc.nodes_to_agents['GSK3B_S9_p_obs'].mods[0].position == '9'
+
+
 if __name__ == '__main__':
     test_not_bound_polarity_error()
     #test_bound_polarity_error()
