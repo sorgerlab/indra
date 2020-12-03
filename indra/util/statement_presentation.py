@@ -86,15 +86,15 @@ def merge_to_metric_dict(**kwargs):
     for metric_name, metrics in kwargs.items():
         # Check if metrics is None. If so, just skip. This happens if e.g. a
         # default argument is passed along
-        if metrics is None:
+        if not metrics:
             continue
 
         # If we don't have a hash set yet, make it. Otherwise assert it matches.
         if hash_set is None:
-            hash_set = set(metrics.keys())
+            hash_set = {int(h) for h in metrics.keys()}
             metric_dict = {h: {} for h in hash_set}
         else:
-            assert set(metrics.keys()) == hash_set,\
+            assert {int(h) for h in metrics.keys()} == hash_set,\
                 "Dictionary key sets do not match."
 
         # Fill up the metric dict.
@@ -111,14 +111,14 @@ def merge_to_metric_dict(**kwargs):
                 else:
                     assert tuple(val.keys()) == values, "Values to not equal."
 
-                metric_dict[h].update(val)
+                metric_dict[int(h)].update(val)
             else:
                 if values is None:
                     values = (metric_name,)
                     assert metric_name not in metric_dict[h], \
                         f"Metric label {metric_name} from keyword already " \
                         f"in use."
-                metric_dict[h][metric_name] = val
+                metric_dict[int(h)][metric_name] = val
     return metric_dict
 
 
