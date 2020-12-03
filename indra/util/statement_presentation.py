@@ -67,7 +67,7 @@ def _get_relation_keyed_stmts(stmt_list):
 
 
 def merge_to_metric_dict(**kwargs):
-    """ Merge metric dictionaries into one.
+    """Merge metric dictionaries into one.
 
     Merge dictionaries keyed by hash, each of which measures one or more
     metrics of a statement, into a single dict keyed by hash.
@@ -128,13 +128,22 @@ class Metriker:
         self.__keys = keys
         self.__stmt_metrics = stmt_metrics
         self.__original_types = original_types
+        self.__filling = True
 
     def __getitem__(self, item):
         if item not in self.__metriks:
-            # Remember, this is passing REFERENCES to the stmt_metrics dict.
-            self.__metriks[item] = Metrik(self.__keys, self.__stmt_metrics,
-                                          self.__original_types)
+            if self.__filling:
+                # Remember, this is passing REFERENCES to the stmt_metrics dict.
+                self.__metriks[item] = Metrik(self.__keys, self.__stmt_metrics,
+                                              self.__original_types)
+            else:
+                raise KeyError(f"Key {item} not found! "
+                               f"{self.__class__.__name__} is no longer being "
+                               f"filled.")
         return self.__metriks[item]
+
+    def stop_filling(self):
+        self.__filling = False
 
     @classmethod
     def from_stmt_list(cls, stmt_list, metric_dict=None):
@@ -147,9 +156,9 @@ class Metriker:
             first_metric = next(iter(metric_dict.values()))
             metric_dict_keys = set(first_metric.keys())
             stmt_loop = any(k not in metric_dict_keys for k in keys)
-            keys += tuple(k for k in metric_dict_keys if k not in keys)
             original_types += tuple(type(first_metric[k])
                                     for k in metric_dict_keys if k not in keys)
+            keys += tuple(k for k in metric_dict_keys if k not in keys)
         else:
             stmt_loop = True
 
@@ -163,7 +172,7 @@ class Metriker:
                 sh = stmt.get_hash()
                 values = []
                 for k in keys:
-                    if metric_dict and k in metric_dict:
+                    if metric_dict and k in metric_dict[sh]:
                         values.append(metric_dict[sh][k])
                     elif k == 'ev_count':
                         values.append(len(stmt.evidence))
@@ -179,7 +188,9 @@ class Metriker:
             for sh, metrics in metric_dict.items():
                 stmt_metrics[sh] = array([metrics[k] for k in keys])
 
-        return cls(keys, stmt_metrics, original_types)
+        new_cls = cls(keys, stmt_metrics, original_types)
+        new_cls.stop_filling()
+        return new_cls
 
     def make_derivative_metriker(self):
         return self.__class__(self.__keys, self.__stmt_metrics,
@@ -271,6 +282,10 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
         else:
             ag_pair_key = rel_key[1:]
             agent_pair_metrics[ag_pair_key].include(stmt)
+
+    # Stop filling these metrikers. No more "new" keys.
+    relation_metrics.stop_filling()
+    agent_pair_metrics.stop_filling()
 
     # Define the sort function.
     if isinstance(sort_by, str):
