@@ -22,7 +22,8 @@ from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_sort_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
-    get_available_ev_counts, standardize_counts, get_available_beliefs
+    get_available_ev_counts, standardize_counts, get_available_beliefs, \
+    merge_to_metric_dict
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
@@ -186,12 +187,12 @@ class HtmlAssembler(object):
             various metadata.
         """
         # Get an iterator over the statements, carefully grouped.
-        stmt_rows = group_and_sort_statements(
-            self.statements,
-            ev_counts=self.ev_counts if self.ev_counts else None,
-            source_counts=self.source_counts if self.source_counts else None,
-            beliefs=self.beliefs if self.beliefs else None,
-            sort_by=self.sort_by)
+        metric_dict = merge_to_metric_dict(ev_count=self.ev_counts,
+                                           source_count=self.source_counts,
+                                           belief=self.beliefs)
+        stmt_rows = group_and_sort_statements(self.statements,
+                                              metric_dict=metric_dict,
+                                              sort_by=self.sort_by)
 
         # Do some extra formatting.
         stmts = OrderedDict()
