@@ -135,7 +135,7 @@ class HtmlAssembler(object):
 
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
                  ev_counts=None, beliefs=None, source_counts=None, curation_dict=None,
-                 title='INDRA Results', db_rest_url=None, sort_by='ev_count'):
+                 title='INDRA Results', db_rest_url=None, sort_by='default'):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
@@ -199,10 +199,13 @@ class HtmlAssembler(object):
         agents = {}
         previous_stmt_set = set()
         all_previous_stmts = set()
+        source_count_keys = set() if not self.source_counts \
+            else {k for k in next(iter(self.source_counts.values())).keys()}
         for row in stmt_rows:
             # Distinguish between the cases with source counts and without.
             if self.source_counts:
-                key, verb, stmts_group, tl_counts, src_counts = row
+                key, verb, stmts_group, tl_counts, metrics = row
+                src_counts = {k: metrics[k] for k in source_count_keys}
             else:
                 key, verb, stmts_group = row
                 src_counts = None
