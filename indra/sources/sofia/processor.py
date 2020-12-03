@@ -1,13 +1,15 @@
 import itertools
+from collections import defaultdict
 from indra.statements import Influence, Concept, Event, Evidence, \
     WorldContext, TimeContext, RefContext, QualitativeDelta
 
 
 pos_rels = ['provide', 'led', 'lead', 'driv', 'support', 'enabl', 'develop',
-            'increas', 'ris']
+            'increas', 'ris', 'result']
 neg_rels = ['restrict', 'worsen', 'declin', 'limit', 'constrain',
-            'decreas', 'hinder', 'deplet', 'reduce', 'hamper']
-neu_rels = ['affect', 'impact', 'due', 'caus', 'because']
+            'decreas', 'hinder', 'deplet', 'reduce', 'hamper', 'prevent',
+            'block']
+neu_rels = ['affect', 'impact', 'due', 'caus', 'because', 'influence']
 first_gen_ont_nodes = ['concept', 'process', 'property', 'entity', 'time']
 bad_grnd = {'event1'}
 
@@ -19,6 +21,7 @@ class SofiaProcessor(object):
         self._events = {}
         self._score_cutoff = score_cutoff
         self.grounding_mode = grounding_mode
+        self.unhandled_relations = defaultdict(int)
 
     @staticmethod
     def process_event(event_dict):
@@ -75,6 +78,7 @@ class SofiaProcessor(object):
         # If we don't recognize this relation, we don't get any
         # statements
         else:
+            self.unhandled_relations[rel] += 1
             return []
 
         text = rel_dict.get('Sentence')
