@@ -124,8 +124,41 @@ class Metriker:
     @classmethod
     def from_stmt_list(cls, stmt_list, metric_dict=None):
         keys = ('ev_count', 'belief', 'ag_count')
-        keys += tuple(next(iter(metric_dict.values())).keys())
-        return cls(keys, {}, tuple())
+        original_types = (int, float, int)
+        if metric_dict:
+            if len(stmt_list) != len(metric_dict):
+                raise ValueError("The `stmt_list` and `metric_dict` must be "
+                                 "the same length.")
+            first_metric = next(iter(metric_dict.values()))
+            metric_dict_keys = set(first_metric.keys())
+            stmt_loop = any(k not in metric_dict_keys for k in keys)
+            keys += tuple(k for k in metric_dict_keys if k not in keys)
+            original_types += tuple(type(first_metric[k])
+                                    for k in metric_dict_keys if k not in keys)
+        else:
+            stmt_loop = True
+
+        stmt_metrics = {}
+        if stmt_loop:
+            for stmt in stmt_list:
+                sh = stmt.get_hash()
+                values = []
+                for k in keys:
+                    if metric_dict and k in metric_dict:
+                        values.append(metric_dict[k])
+                    elif k == 'ev_count':
+                        values.append(len(stmt.evidence))
+                    elif k == 'belief':
+                        values.append(stmt.belief)
+                    elif k == 'ag_count':
+                        values.append(len(stmt.agent_list()))
+                    else:
+                        assert False, f"Value of k, {k}, should be impossible."
+                stmt_metrics[sh] = array(list(values))
+        else:
+            for sh, metrics in metric_dict.items():
+                stmt_metrics[sh] = array([metrics[k] for k in keys])
+        return cls(keys, stmt_metrics, original_types)
 
     def make_derivative_metriker(self):
         return self.__class__(self.__keys, self.__stmt_metrics,
