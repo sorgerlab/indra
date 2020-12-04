@@ -336,6 +336,7 @@ class ModelChecker(object):
         # but we may still run into issues with finding an input
         # set for it in which case a false result may be returned.
         else:
+            # TODO try to refactor this as this mostly makes sense for pysb
             meaningful_res_code = subj_nodes.process_interm(
                 self.process_subject)
             if not subj_nodes.all_nodes and meaningful_res_code:
@@ -533,10 +534,10 @@ class ModelChecker(object):
 
         Returns
         -------
-        subj_data : list or None
-            Data about statement subject to be used as source nodes.
-        obj_data : list or None
-            Data about statement object to be used as target nodes.
+        subj_data : NodesContainer
+            NodesContainer for statement subject.
+        obj_data : NodesContainer
+            NodesContainer for statement object.
         result_code : str or None
             Result code to construct PathResult.
         """
