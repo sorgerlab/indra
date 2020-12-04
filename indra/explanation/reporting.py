@@ -38,7 +38,7 @@ class RefEdge(object):
         return str(self)
 
     def __str__(self):
-        return self.to_english()
+        return 'RefEdge(%s %s %s)' % (self.source, self.relation, self.target)
 
 
 def stmts_from_pysb_path(path, model, stmts):
