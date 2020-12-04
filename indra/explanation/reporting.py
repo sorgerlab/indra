@@ -64,8 +64,7 @@ def stmts_from_pysb_path(path, model, stmts):
     for step in path:
         # Refinement edge
         if len(step) == 3:
-            edge = RefEdge(Agent._from_json(step[0]),
-                           Agent._from_json(step[2]), step[1])
+            edge = RefEdge._from_json(step)
             path_stmts.append(edge)
         # Regular rule
         elif len(step) == 2:
@@ -111,6 +110,14 @@ def stmts_from_indranet_path(path, model, signed, from_db=True, stmts=None):
     for i in range(len(path[:-1])):
         source = path[i]
         target = path[i+1]
+        if len(source) == 3:
+            edge = RefEdge._from_json(source)
+            steps.append([edge])
+            continue
+        elif len(target) == 3:
+            edge = RefEdge._from_json(target_)
+            steps.append(edge)
+            continue
         if signed:
             if source[1] == target[1]:
                 sign = 0
@@ -132,8 +139,6 @@ def stmts_from_indranet_path(path, model, signed, from_db=True, stmts=None):
 PybelEdge = namedtuple(
     'PybelEdge', ['source', 'target', 'relation', 'reverse'])
 
-RefEdge = namedtuple('RefEdge', ['source', 'target', 'relation'])
-
 
 def pybel_edge_to_english(pybel_edge):
     source_str = _assemble_agent_str(pybel_edge.source)
@@ -149,19 +154,6 @@ def pybel_edge_to_english(pybel_edge):
             rel_str = ' is a variant of '
         else:
             rel_str = ' has a variant '
-    sb.append_as_sentence([source_str, rel_str, target_str])
-    sb.make_sentence()
-    return sb.sentence
-
-
-def ref_edge_to_english(ref_edge):
-    source_str = _assemble_agent_str(ref_edge.source)
-    target_str = _assemble_agent_str(ref_edge.target)
-    sb = SentenceBuilder()
-    if ref_edge.relation == 'is_ref':
-        rel_str = ' is a refinement of '
-    elif ref_edge.relation == 'has_ref':
-        rel_str = ' has a refinement '
     sb.append_as_sentence([source_str, rel_str, target_str])
     sb.make_sentence()
     return sb.sentence
@@ -199,6 +191,14 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
     for i in range(len(path[:-1])):
         source = path[i]
         target = path[i+1]
+        if len(source) == 3:
+            edge = RefEdge._from_json(source)
+            steps.append([edge])
+            continue
+        elif len(target) == 3:
+            edge = RefEdge._from_json(target_)
+            steps.append(edge)
+            continue
         # Check if the signs of source and target nodes are the same
         positive = (source[1] == target[1])
         reverse = False
