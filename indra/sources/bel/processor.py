@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """Processor for PyBEL."""
+
 import os
 import re
 import logging
 import pybel.dsl as dsl
 import pybel.constants as pc
+import pybel.language
 from collections import defaultdict
 from pybel.struct import has_protein_modification
 from pybel.canonicalize import edge_to_bel
@@ -28,7 +30,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-_pybel_indra_pmod_map = {
+_pybel_indra_pmod_map_helper = {
     'Ph': 'phosphorylation',
     'Hy': 'hydroxylation',
     'Sumo': 'sumoylation',
@@ -41,6 +43,11 @@ _pybel_indra_pmod_map = {
     'Palm': 'palmitoylation',
     'Myr': 'myristoylation',
     'Me': 'methylation',
+}
+_pybel_indra_pmod_map = {
+    v['xrefs'][0]: _pybel_indra_pmod_map_helper[k]
+    for k, v in pybel.language.pmod_mappings.items()
+    if k in _pybel_indra_pmod_map_helper  # More indra statements could be proposed based on this
 }
 
 #: A mapping from the BEL text location annotation to the INDRA ones at
@@ -92,9 +99,9 @@ class PybelProcessor(object):
             for node_ix, node in enumerate((u_data, v_data)):
                 if isinstance(node, dsl.ComplexAbundance):
                     self._get_enum_complex(u_data, v_data, k, d, node_ix)
-            subj_activity = _get_activity_condition(d.get(pc.SUBJECT))
-            obj_activity = _get_activity_condition(d.get(pc.OBJECT))
-            obj_to_loc = _get_translocation_target(d.get(pc.OBJECT))
+            subj_activity = _get_activity_condition(d.get(pc.SOURCE_MODIFIER))
+            obj_activity = _get_activity_condition(d.get(pc.TARGET_MODIFIER))
+            obj_to_loc = _get_translocation_target(d.get(pc.TARGET_MODIFIER))
             # If the object is a translocation, this represents a controlled
             # translocation, which we currently do not represent
             if obj_to_loc:
@@ -193,12 +200,12 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_regulate_amount(self, u_data, v_data, k, edge_data):
-        subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
-        obj_agent = get_agent(v_data, edge_data.get(pc.OBJECT))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE_MODIFIER))
+        obj_agent = get_agent(v_data, edge_data.get(pc.TARGET_MODIFIER))
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, edge_data))
             return
-        obj_mod = edge_data.get(pc.OBJECT)
+        obj_mod = edge_data.get(pc.TARGET_MODIFIER)
         has_deg = (obj_mod and obj_mod.get(pc.MODIFIER) == pc.DEGRADATION)
         rel = edge_data[pc.RELATION]
         if rel == pc.REGULATES:
@@ -217,10 +224,10 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_modification(self, u_data, v_data, k, edge_data):
-        subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE_MODIFIER))
         mods, muts = _get_mods_and_muts(v_data)
         v_data_no_mods = v_data.get_parent()
-        obj_agent = get_agent(v_data_no_mods, edge_data.get(pc.OBJECT))
+        obj_agent = get_agent(v_data_no_mods, edge_data.get(pc.TARGET_MODIFIER))
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, k, edge_data))
             return
@@ -233,8 +240,8 @@ class PybelProcessor(object):
 
     def _get_regulate_activity(self, u_data, v_data, k, edge_data):
         # Subject info
-        subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
-        subj_activity = _get_activity_condition(edge_data.get(pc.SUBJECT))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE_MODIFIER))
+        subj_activity = _get_activity_condition(edge_data.get(pc.SOURCE_MODIFIER))
         # Object info
         # Note: Don't pass the object modifier data because we don't want to
         # put an activity on the agent
@@ -244,7 +251,7 @@ class PybelProcessor(object):
             activity_type = 'activity'
         else:
             obj_activity_condition = \
-                            _get_activity_condition(edge_data.get(pc.OBJECT))
+                            _get_activity_condition(edge_data.get(pc.TARGET_MODIFIER))
             activity_type = obj_activity_condition.activity_type
             assert obj_activity_condition.is_active is True
         # Check for valid subject/object
@@ -271,7 +278,7 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_active_form(self, u_data, v_data, k, edge_data):
-        subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE_MODIFIER))
         # Don't pass the object modifier info because we don't want an activity
         # condition applied to the agent
         obj_agent = get_agent(v_data)
@@ -279,7 +286,7 @@ class PybelProcessor(object):
             self.unhandled.append((u_data, v_data, edge_data))
             return
         obj_activity_condition = \
-                        _get_activity_condition(edge_data.get(pc.OBJECT))
+                        _get_activity_condition(edge_data.get(pc.TARGET_MODIFIER))
         activity_type = obj_activity_condition.activity_type
         # If the relation is DECREASES, this means that this agent state
         # is inactivating
@@ -289,7 +296,7 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_gef_gap(self, u_data, v_data, k, edge_data):
-        subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE_MODIFIER))
         obj_agent = get_agent(v_data)
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, k, edge_data))
@@ -303,7 +310,7 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_conversion(self, u_data, v_data, k, edge_data):
-        subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SOURCE_MODIFIER))
         # Get the nodes for the reactants and products
         reactant_agents = [get_agent(r) for r in v_data[pc.REACTANTS]]
         product_agents = [get_agent(p) for p in v_data[pc.PRODUCTS]]
@@ -328,9 +335,9 @@ class PybelProcessor(object):
         ev_citation = edge_data.get(pc.CITATION)
         ev_pmid = None
         if ev_citation:
-            cit_type = ev_citation[pc.CITATION_DB]
-            cit_ref = ev_citation[pc.CITATION_IDENTIFIER]
-            if cit_type == pc.CITATION_TYPES[pc.CITATION_TYPE_PUBMED]:
+            cit_type = ev_citation.namespace
+            cit_ref = ev_citation.identifier
+            if cit_type == pc.CITATION_TYPE_PUBMED:
                 ev_pmid = cit_ref
                 ev_ref = None
             else:
@@ -346,13 +353,7 @@ class PybelProcessor(object):
 
         text_location = annotations.pop('TextLocation', None)
         if text_location:
-            # Handle dictionary text_location like {'Abstract': True}
-            if isinstance(text_location, dict):
-                # FIXME: INDRA's section_type entry is meant to contain
-                # a single section string like "abstract" but in principle
-                # pybel could have a list of entries in the TextLocation dict.
-                # Here we just take the first one.
-                text_location = list(text_location.keys())[0]
+            text_location = text_location[0].identifier
             epistemics['section_type'] = \
                 _pybel_text_location_map.get(text_location)
 
@@ -684,14 +685,13 @@ def extract_context(annotations, annot_manager):
     """
     def get_annot(annotations, key):
         """Return a specific annotation given a key."""
-        val = annotations.pop(key, None)
-        if val:
-            val_list = [v for v, tf in val.items() if tf]
+        val_list = annotations.pop(key, None)
+        if val_list:
             if len(val_list) > 1:
                 logger.warning('More than one "%s" in annotations' % key)
             elif not val_list:
                 return None
-            return val_list[0]
+            return val_list[0].identifier
         return None
 
     bc = BioContext()
@@ -765,7 +765,7 @@ class AnnotationManager(object):
         self.failures[key].add(value)
 
 
-def _get_mods_and_muts(node_data):
+def _get_mods_and_muts(node_data: dsl.CentralDogma):
     """Get all modifications and mutations on the PyBEL node.
 
     Parameters
@@ -802,12 +802,11 @@ def _get_mods_and_muts(node_data):
 
         elif isinstance(var, dsl.ProteinModification):
             var_ns = var.entity.namespace
-            if var_ns == pc.BEL_DEFAULT_NAMESPACE:
-                var_id = var.entity.name
-                mod_type = _pybel_indra_pmod_map.get(var_id)
+            if var_ns == 'go':
+                mod_type = _pybel_indra_pmod_map.get(var.entity)
                 if mod_type is None:
                     logger.info("Unhandled modification type %s (%s)",
-                                var_id, node_data)
+                                var.entity.name, node_data)
                     continue
                 mc = ModCondition(mod_type, var.get(pc.PMOD_CODE),
                                   var.get(pc.PMOD_POSITION))
@@ -834,11 +833,10 @@ def _get_activity_condition(node_modifier_data):
     if not effect:
         return ActivityCondition('activity', True)
 
-    activity_ns = effect[pc.NAMESPACE]
-    if activity_ns == pc.BEL_DEFAULT_NAMESPACE:
-        activity_name = effect[pc.NAME]
-        activity_type = _pybel_indra_act_map.get(activity_name)
-        # If an activity type in Bel/PyBEL that is not implemented in INDRA,
+    activity_ns = effect.namespace
+    if activity_ns == 'go':
+        activity_type = _pybel_indra_act_map.get(effect)
+        # If an activity type in BEL/PyBEL that is not implemented in INDRA,
         # return generic activity
         if activity_type is None:
             return ActivityCondition('activity', True)
@@ -861,12 +859,13 @@ def _get_translocation_target(node_modifier_data):
     to_loc_info = transloc_data.get(pc.TO_LOC)
     if not to_loc_info:
         return None
-    to_loc_ns = to_loc_info.get('namespace')
-    to_loc_name = to_loc_info.get('name')
+    to_loc_ns = to_loc_info.namespace
+    to_loc_id = to_loc_info.identifier
+    to_loc_name = to_loc_info.name
     # Only use GO Cellular Component location names
-    if to_loc_ns not in ('GO', 'GOCC', 'GOCCID') or not to_loc_name:
+    if to_loc_ns not in ('GO', 'GOCC', 'GOCCID') or (not to_loc_name and not to_loc_id):
         return None
-    return go_client.get_valid_location(to_loc_name)
+    return go_client.get_valid_location(to_loc_id or to_loc_name)
 
 
 def _has_unhandled_modifiers(node_modifier_data):

@@ -24,7 +24,7 @@ def main():
                       'hypothesis': ['gilda'],
                       'geneways': ['stemming', 'nltk'],
                       'sofia': ['openpyxl'],
-                      'bel': ['pybel>=0.14.2,<0.15.0'],
+                      'bel': ['pybel>=0.15.0,<0.16.0'],
                       'sbml': ['python-libsbml'],
                       # Tools and analysis
                       'machine': ['pytz', 'tzlocal', 'tweepy', 'pyyaml>=5.1.0',

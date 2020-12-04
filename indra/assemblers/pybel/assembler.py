@@ -2,12 +2,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import uuid
 import logging
+from typing import Mapping
+
 import networkx as nx
 from copy import deepcopy, copy
 import pybel
 import pybel.constants as pc
 from pybel.dsl import *
-from pybel.language import pmod_namespace
+from pybel.language import pmod_mappings, pmod_namespace, activity_mapping
 try:  # this works after pybel pull request #453
     from pybel.language import citation_dict
 except ImportError: # this works before pybel pull request #453
@@ -18,17 +20,21 @@ from indra.databases import hgnc_client
 logger = logging.getLogger(__name__)
 
 
-_indra_pybel_act_map = {
-    'kinase': 'kin',
-    'phosphatase': 'phos',
-    'catalytic': 'cat',
-    'gtpbound': 'gtp',
-    'transcription': 'tscript',
-    'gef': 'gef',
-    'gap': 'gap'
+_indra_pybel_act_map: Mapping[str, Entity] = {
+    'activity': activity_mapping['act'],
+    'kinase': activity_mapping['kin'],
+    'phosphatase': activity_mapping['phos'],
+    'catalytic': activity_mapping['cat'],
+    'gtpbound': activity_mapping['gtp'],
+    'transcription': activity_mapping['tscript'],
+    'gef': activity_mapping['gef'],
+    'gap': activity_mapping['gap'],
 }
 
-_pybel_indra_act_map = {v: k for k, v in _indra_pybel_act_map.items()}
+_pybel_indra_act_map: Mapping[Entity, str] = {
+    pybel_activity: indra_key
+    for indra_key, pybel_activity in _indra_pybel_act_map.items()
+}
 
 
 class PybelAssembler(object):
@@ -67,7 +73,7 @@ class PybelAssembler(object):
     >>> pba = PybelAssembler([stmt])
     >>> belgraph = pba.make_model()
     >>> sorted(node.as_bel() for node in belgraph) # doctest:+IGNORE_UNICODE
-    ['p(HGNC:6840 ! MAP2K1)', 'p(HGNC:6871 ! MAPK1)', 'p(HGNC:6871 ! MAPK1, pmod(Ph, Thr, 185))']
+    ['p(HGNC:6840 ! MAP2K1)', 'p(HGNC:6871 ! MAPK1)', 'p(HGNC:6871 ! MAPK1, pmod(go:0006468 ! "protein phosphorylation", Thr, 185))']
     >>> len(belgraph)
     3
     >>> belgraph.number_of_edges()
@@ -507,7 +513,13 @@ def _get_agent_node_no_bcs(agent):
             logger.info('Skipping modification of type %s on agent %s',
                         mod.mod_type, agent)
             continue
-        var = pmod(namespace=pc.BEL_DEFAULT_NAMESPACE, name=pybel_mod)
+        pmod_entity = pmod_mappings[pybel_mod]['xrefs'][0]
+
+        var = ProteinModification(
+            namespace=pmod_entity.namespace,
+            name=pmod_entity.name,
+            identifier=pmod_entity.identifier,
+        )
         if mod.residue is not None:
             res = amino_acids[mod.residue]['short_name'].capitalize()
             var[pc.PMOD_CODE] = res
@@ -602,8 +614,7 @@ def _get_agent_activity(agent):
     if ac.activity_type == 'activity':
         return activity()
 
-    pybel_activity = _indra_pybel_act_map[ac.activity_type]
-    return activity(pybel_activity)
+    return activity(**_indra_pybel_act_map[ac.activity_type])
 
 
 def _get_evidence(evidence):
@@ -612,8 +623,8 @@ def _get_evidence(evidence):
     # If there is a PMID, use it as the citation
     if evidence.pmid:
         citation = citation_dict(
-            db=pc.CITATION_TYPE_PUBMED,
-            db_id=evidence.pmid,
+            namespace=pc.CITATION_TYPE_PUBMED,
+            identifier=evidence.pmid,
         )
     # If no PMID, include the interface and source_api for now--
     # in general this should probably be in the annotations for all evidence
@@ -622,8 +633,8 @@ def _get_evidence(evidence):
         cit_id = evidence.source_id or 'Unknown'
         cit_ref_str = '%s:%s' % (cit_source, cit_id)
         citation = citation_dict(
-            db=pc.CITATION_TYPE_OTHER,
-            db_id=cit_ref_str,
+            namespace=pc.CITATION_TYPE_OTHER,
+            identifier=cit_ref_str,
         )
 
     annotations = {
