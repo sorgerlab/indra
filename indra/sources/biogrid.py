@@ -135,7 +135,7 @@ class BiogridProcessor(object):
 
         if entrez_id:
             db_refs['EGID'] = entrez_id
-            if not swissprot_id:
+            if 'UP' not in db_refs:
                 hgnc_id = hgnc_client.get_hgnc_from_entrez(entrez_id)
                 if hgnc_id:
                     db_refs['HGNC'] = hgnc_id
