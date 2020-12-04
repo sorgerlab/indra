@@ -79,8 +79,10 @@ class BiogridProcessor(object):
             if self.physical_only and bg_row.exp_system_type != 'physical':
                 continue
             # Ground agents
-            agent_a = self._make_agent(bg_row.entrez_a, bg_row.hgnc_a)
-            agent_b = self._make_agent(bg_row.entrez_b, bg_row.hgnc_b)
+            agent_a = self._make_agent(bg_row.symbol_a, bg_row.entrez_a,
+                                       bg_row.swissprot_a, bg_row.trembl_a)
+            agent_b = self._make_agent(bg_row.symbol_b, bg_row.entrez_b,
+                                       bg_row.swissprot_b, bg_row.trembl_b)
             # Skip any agents with neither HGNC grounding or string name
             if agent_a is None or agent_b is None:
                 continue
@@ -93,15 +95,19 @@ class BiogridProcessor(object):
             s = Complex([agent_a, agent_b], evidence=ev)
             self.statements.append(s)
 
-    def _make_agent(self, entrez_id, text_id):
+    def _make_agent(self, symbol, entrez_id, swissprot_id, trembl_id):
         """Make an Agent object, appropriately grounded.
 
         Parameters
         ----------
         entrez_id : str
             Entrez id number
-        text_id : str
-            A plain text systematic name, or None if not listed.
+        swissprot_id : str
+            Swissprot (reviewed UniProt) ID.
+        trembl_id : str
+            Trembl (unreviewed UniProt) ID.
+        symbol : str
+            A plain text symbol, or None if not listed.
 
         Returns
         -------
@@ -109,15 +115,23 @@ class BiogridProcessor(object):
             A grounded agent object.
         """
         db_refs = {}
-        name = text_id
+        name = symbol
+        if swissprot_id:
+            if '|' not in swissprot_id:
+                db_refs['UP'] = swissprot_id
+        elif trembl_id:
+            if '|' not in trembl_id:
+                db_refs['UP'] = trembl_id
+
         if entrez_id:
             db_refs['EGID'] = entrez_id
-            hgnc_id = hgnc_client.get_hgnc_from_entrez(entrez_id)
-            if hgnc_id:
-                db_refs['HGNC'] = hgnc_id
-            standard_name, db_refs = standardize_name_db_refs(db_refs)
-            if standard_name:
-                name = standard_name
+            if not swissprot_id:
+                hgnc_id = hgnc_client.get_hgnc_from_entrez(entrez_id)
+                if hgnc_id:
+                    db_refs['HGNC'] = hgnc_id
+        standard_name, db_refs = standardize_name_db_refs(db_refs)
+        if standard_name:
+            name = standard_name
 
         # At the time of writing this, the name was never None but
         # just in case
