@@ -1,3 +1,4 @@
+import re
 import csv
 import tqdm
 import logging
@@ -26,7 +27,7 @@ columns = ['biogrid_int_id',
            'symbol_a', 'symbol_b',
            'syn_a', 'syn_b',
            'exp_system', 'exp_system_type',
-           'author', 'pmid',
+           'author', 'publication',
            'organism_a', 'organism_b',
            'throughput', 'score', 'modification',
            'qualifications', 'tags', 'source_db',
@@ -87,9 +88,18 @@ class BiogridProcessor(object):
             if agent_a is None or agent_b is None:
                 continue
             # Get evidence
+            pmid_match = re.match(r'(:?PMID:)?PUBMED:(\d+)',
+                                  bg_row.publication)
+            doi_match = re.match(r'DOI:.*', bg_row.publication)
+            text_refs = {}
+            if pmid_match:
+                text_refs['PMID'] = pmid_match.groups()[0]
+            elif doi_match:
+                text_refs['DOI'] = bg_row.publication
             ev = Evidence(source_api='biogrid',
                           source_id=bg_row.biogrid_int_id,
-                          pmid=bg_row.pmid,
+                          pmid=text_refs.get('PMID'),
+                          text_refs=text_refs,
                           annotations=dict(bg_row._asdict()))
             # Make statement
             s = Complex([agent_a, agent_b], evidence=ev)
