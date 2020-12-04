@@ -1,10 +1,6 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-import os
-import re
 import csv
+import tqdm
 import logging
-import itertools
 import requests
 from io import BytesIO, StringIO
 from zipfile import ZipFile
@@ -12,7 +8,7 @@ from collections import namedtuple
 from indra.util import read_unicode_csv
 from indra.statements import *
 import indra.databases.hgnc_client as hgnc_client
-import indra.databases.uniprot_client as up_client
+from indra.ontology.standardize import standardize_name_db_refs
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +68,7 @@ class BiogridProcessor(object):
             rows = _download_biogrid_data(biogrid_file_url)
 
         # Process the rows into Statements
-        for row in rows:
+        for row in tqdm.tqdm(rows):
             filt_row = [None if item == '-' else item for item in row]
             bg_row = _BiogridRow(*filt_row)
             # Filter out non-physical interactions if desired
@@ -109,13 +105,8 @@ class BiogridProcessor(object):
         agent : indra.statements.Agent
             A grounded agent object.
         """
-        hgnc_name, db_refs = self._make_db_refs(entrez_id, text_id)
-        if hgnc_name is not None:
-            name = hgnc_name
-        elif text_id is not None:
-            name = text_id
-        # Handle case where the name is None
-        else:
+        name, db_refs = self._make_db_refs(entrez_id, text_id)
+        if name is None:
             return None
 
         return Agent(name, db_refs=db_refs)
@@ -140,17 +131,19 @@ class BiogridProcessor(object):
             object.
         """
         db_refs = {}
-        if text_id != '-' and text_id is not None:
+        name = None
+        if text_id:
             db_refs['TEXT'] = text_id
+            name = text_id
 
+        db_refs['EGID'] = entrez_id
         hgnc_id = hgnc_client.get_hgnc_from_entrez(entrez_id)
-        hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
-        if hgnc_id is not None:
+        if hgnc_id:
             db_refs['HGNC'] = hgnc_id
-            up_id = hgnc_client.get_uniprot_id(hgnc_id)
-            if up_id is not None:
-                db_refs['UP'] = up_id
-        return (hgnc_name, db_refs)
+        standard_name, db_refs = standardize_name_db_refs(db_refs)
+        if standard_name:
+            name = standard_name
+        return name, db_refs
 
 
 def _download_biogrid_data(url):
@@ -183,5 +176,3 @@ def _download_biogrid_data(url):
     csv_reader = csv.reader(biogrid_str, delimiter='\t') # Get csv reader
     next(csv_reader) # Skip the header
     return csv_reader
-
-
