@@ -273,43 +273,44 @@ class HtmlAssembler(object):
 
             # Update the top level grouping.
             if isinstance(stmt, (ActiveForm, HasActivity)):
-                tl_names = [key[1][0]]
-            elif isinstance(stmt, Conversion):
-                tl_names = [key[1][0]] + [*key[1][1]] + [*key[1][2]]
+                agent_pair_names = [inps[0]]
+            elif isinstance(stmt, Conversion) and isinstance(inps[1], tuple):
+                agent_pair_names = [inps[0]] + [*inps[1]] + [*inps[2]]
             else:
-                tl_names = key[1]
+                agent_pair_names = inps[:]
             if with_grouping:
-                tl_key = '-'.join([str(name) for name in tl_names])
-                tl_agents = {name: Agent(name) for name in tl_names
-                             if name is not None}
-                for ag in tl_agents.values():
+                agp_key = '-'.join([str(name) for name in agent_pair_names])
+                agent_pair_agents = {name: Agent(name)
+                                     for name in agent_pair_names
+                                     if name is not None}
+                for ag in agent_pair_agents.values():
                     meta_ag = meta_agent_dict.get(ag.name)
                     if meta_ag is None:
                         continue
                     ag.db_refs.update(meta_ag.db_refs)
-                tl_label = None
+                agp_label = None
             else:
-                tl_key = 'all-statements'
-                tl_label = 'All Statements'
-                tl_agents = None
+                agp_key = 'all-statements'
+                agp_label = 'All Statements'
+                agent_pair_agents = None
 
-            if tl_key not in stmts.keys():
-                agents[tl_key] = tl_agents
-                stmts[tl_key] = {'html_key': str(uuid.uuid4()),
-                                 'source_counts': agp_src_counts,
-                                 'stmts_formatted': [],
-                                 'names': tl_names}
-                if tl_label:
-                    stmts[tl_key]['label'] = tl_label
+            if agp_key not in stmts.keys():
+                agents[agp_key] = agent_pair_agents
+                stmts[agp_key] = {'html_key': str(uuid.uuid4()),
+                                  'source_counts': agp_src_counts,
+                                  'stmts_formatted': [],
+                                  'names': agent_pair_names}
+                if agp_label:
+                    stmts[agp_key]['label'] = agp_label
             elif with_grouping:
-                for name, existing_ag in agents[tl_key].items():
-                    new_ag = tl_agents.get(name)
+                for name, existing_ag in agents[agp_key].items():
+                    new_ag = agent_pair_agents.get(name)
                     if new_ag is None:
                         continue
                     _cautiously_merge_refs(new_ag, existing_ag)
 
             # Generate the short name for the statement and a unique key.
-            existing_list = stmts[tl_key]['stmts_formatted']
+            existing_list = stmts[agp_key]['stmts_formatted']
             if with_grouping or not existing_list:
                 if with_grouping:
                     # See note above: this is where the work on meta_agents is
@@ -331,19 +332,19 @@ class HtmlAssembler(object):
 
         # Add labels for each top level group (tlg).
         if with_grouping:
-            for tl_key, tlg in stmts.items():
-                tl_agents = list(agents[tl_key].values())
-                for ag in tl_agents:
+            for agp_key, tlg in stmts.items():
+                agent_pair_agents = list(agents[agp_key].values())
+                for ag in agent_pair_agents:
                     for dbn, dbid in list(ag.db_refs.items()):
                         if isinstance(dbid, set):
                             logger.info("Removing %s from top level refs "
                                         "due to multiple matches: %s"
                                         % (dbn, dbid))
                             del ag.db_refs[dbn]
-                tl_label = make_top_level_label_from_names_key(tlg['names'])
-                tl_label = re.sub("<b>(.*?)</b>", r"\1", tl_label)
-                tl_label = tag_agents(tl_label, tl_agents)
-                tlg['label'] = tl_label
+                agp_label = make_top_level_label_from_names_key(tlg['names'])
+                agp_label = re.sub("<b>(.*?)</b>", r"\1", agp_label)
+                agp_label = tag_agents(agp_label, agent_pair_agents)
+                tlg['label'] = agp_label
 
         return stmts
 
