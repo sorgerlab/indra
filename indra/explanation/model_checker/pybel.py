@@ -1,6 +1,6 @@
 import logging
 from copy import deepcopy
-from . import ModelChecker
+from . import ModelChecker, NodesContainer
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
 from .model_checker import signed_edges_to_signed_nodes
@@ -87,39 +87,45 @@ class PybelModelChecker(ModelChecker):
             elif isinstance(stmt, Influence):
                 target_polarity = 1 if stmt.overall_polarity() == -1 else 0
 
+            subj_nodes = self.get_nodes(subj, self.graph, 0)
             obj_nodes = self.get_nodes(obj, self.graph, target_polarity)
             # Statement has object but it's not in the graph
-            if not obj_nodes:
+            if not obj_nodes.all_nodes:
                 return (None, None, 'OBJECT_NOT_FOUND')
-        return ([subj], obj_nodes, None)
+            if not subj_nodes.all_nodes:
+                return (None, None, 'SUBJECT_NOT_FOUND')
+        return (subj_nodes, obj_nodes, None)
 
     def process_subject(self, subj):
-        # We will not get here if subject is None
-        subj_nodes = self.get_nodes(subj, self.graph, 0)
-        # Statement has subject but it's not in the graph
-        if not subj_nodes:
-            return (None, 'SUBJECT_NOT_FOUND')
-        return subj_nodes, None
+        # # We will not get here if subject is None
+        # subj_nodes = self.get_nodes(subj, self.graph, 0)
+        # # Statement has subject but it's not in the graph
+        # if not subj_nodes.all_nodes:
+        #     return (None, 'SUBJECT_NOT_FOUND')
+        # return subj_nodes, None
+        return subj, None
 
     def get_nodes(self, agent, graph, target_polarity):
         """Get all nodes corresponding to a given agent."""
         # This import is done here rather than at the top level to avoid
         # making pybel an implicit dependency of the model checker
         from indra.assemblers.pybel.assembler import _get_agent_node
-        nodes = set()
+        nc = NodesContainer(agent)
         # First get exact match
         agent_node = _get_agent_node(agent)[0]
         if agent_node:
             node = (agent_node, target_polarity)
             if node in graph.nodes:
-                nodes.add(node)
+                nc.main_nodes.append(node)
         # Try get refined versions
         for n, ag in self.nodes_to_agents.items():
-            if ag is not None and ag.refinement_of(agent, bio_ontology):
+            if ag is not None and not ag.matches(agent) and ag.refinement_of(
+                    agent, bio_ontology):
                 node = (n, target_polarity)
                 if node in graph.nodes:
-                    nodes.add(node)
-        return nodes
+                    nc.ref_nodes.append(node)
+        nc.get_all_nodes()
+        return nc
 
     def get_nodes_to_agents(self):
         """Return a dictionary mapping PyBEL nodes to INDRA agents."""

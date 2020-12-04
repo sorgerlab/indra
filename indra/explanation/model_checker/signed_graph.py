@@ -2,7 +2,7 @@ import logging
 from . import ModelChecker
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
-from .model_checker import signed_edges_to_signed_nodes
+from .model_checker import signed_edges_to_signed_nodes, NodesContainer
 
 logger = logging.getLogger(__name__)
 
@@ -57,35 +57,41 @@ class SignedGraphModelChecker(ModelChecker):
         elif isinstance(stmt, Influence):
             target_polarity = 1 if stmt.overall_polarity() == -1 else 0
         subj, obj = stmt.agent_list()
-        if obj is None:
-            obj_nodes = [None]
-        else:
-            obj_nodes = self.get_nodes(obj, self.graph, target_polarity)
-            # Statement has object but it's not in the graph
-            if not obj_nodes:
-                return (None, None, 'OBJECT_NOT_FOUND')
-        return ([subj], obj_nodes, None)
+        # if obj is None:
+        #     obj_nodes = [None]
+        # else:
+        subj_nodes = self.get_nodes(subj, self.graph, 0)
+        obj_nodes = self.get_nodes(obj, self.graph, target_polarity)
+        # Statement has object but it's not in the graph
+        if not obj_nodes.all_nodes:
+            return (None, None, 'OBJECT_NOT_FOUND')
+        if not subj_nodes.all_nodes:
+            return (None, None, 'SUBJECT_NOT_FOUND')
+        return (subj_nodes, obj_nodes, None)
 
     def process_subject(self, subj):
-        # We will not get here if subject is None
-        subj_nodes = self.get_nodes(subj, self.graph, 0)
-        # Statement has subject but it's not in the graph
-        if not subj_nodes:
-            return (None, 'SUBJECT_NOT_FOUND')
-        return subj_nodes, None
+        # # We will not get here if subject is None
+        # subj_nodes = self.get_nodes(subj, self.graph, 0)
+        # # Statement has subject but it's not in the graph
+        # if not subj_nodes:
+        #     return (None, 'SUBJECT_NOT_FOUND')
+        # return subj_nodes, None
+        return subj, None
 
     def get_nodes(self, agent, graph, target_polarity):
         """Get all nodes corresponding to a given agent."""
-        nodes = set()
+        ns = NodesContainer(agent)
         node = (agent.name, target_polarity)
         if node in graph.nodes:
-            nodes.add(node)
+            ns.main_nodes.append(node)
         for n, ag in self.nodes_to_agents.items():
-            if ag is not None and ag.refinement_of(agent, bio_ontology):
+            if ag is not None and not ag.matches(agent) and ag.refinement_of(
+                    agent, bio_ontology):
                 node = (n, target_polarity)
                 if node in graph.nodes:
-                    nodes.add(node)
-        return nodes
+                    ns.ref_nodes.append(node)
+        ns.get_all_nodes()
+        return ns
 
     def get_nodes_to_agents(self):
         """Return a dictionary mapping IndraNet nodes to INDRA agents."""
