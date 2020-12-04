@@ -242,3 +242,33 @@ def test_migration():
     stmt = Migration(Concept('migration'))
     ha = HtmlAssembler([stmt])
     ha.make_model()
+
+
+def test_sort_default():
+    stmts = [
+        Inhibition(
+            Agent('DUSP4'), Agent('MAPK1'),
+            evidence=[Evidence("DUSP4-|MAPK1"), Evidence("MAPK1|-DUSP4")]
+        ),
+        DecreaseAmount(
+            Agent('DUSP4'), Agent('MAPK1'),
+            evidence=[Evidence("DUSP4->MAPK1")]
+        ),
+        Complex(
+            [Agent('DUSP4'), Agent('MAPK1'), Agent('MAP2K1')],
+            evidence=[Evidence("DUSP4-MAPK1-MAP2K1 complex"),
+                      Evidence("Complex of DUSP4, MAPK1, & MAP2K1")]
+        ),
+        Phosphorylation(
+            Agent('MAP2K1'), Agent('MAPK1'), 'T', '185',
+            evidence=[Evidence("MAP2K1 phosphorylates MAPK1 on T 185"),
+                      Evidence("MAP2K1 phosphorylate MAPK1 on Tyrosine 185")]
+        ),
+        Phosphorylation(
+            Agent('MAP2K1'), Agent('MAPK1'),
+            evidence=[Evidence("MAP2K1 phosphorylates MAPK1")]
+        )
+    ]
+    ha = HtmlAssembler(stmts)
+    json_model = ha.make_json_model()
+    ha.make_model()
