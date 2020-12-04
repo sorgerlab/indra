@@ -358,8 +358,9 @@ def _read_hgnc_maps():
             uniprot_ids[hgnc_id] = uniprot_id
         # Entrez
         entrez_id = row[5]
-        entrez_ids[hgnc_id] = entrez_id
-        entrez_ids_reverse[entrez_id] = hgnc_id
+        if entrez_id:
+            entrez_ids[hgnc_id] = entrez_id
+            entrez_ids_reverse[entrez_id] = hgnc_id
         # Mouse
         mgi_id = row[7]
         if mgi_id:
