@@ -7,8 +7,7 @@ from io import BytesIO, StringIO
 from zipfile import ZipFile
 from collections import namedtuple
 from indra.util import read_unicode_csv
-from indra.statements import *
-import indra.databases.hgnc_client as hgnc_client
+from indra.statements import Agent, Complex, Evidence
 from indra.ontology.standardize import standardize_name_db_refs
 
 logger = logging.getLogger(__name__)
@@ -132,13 +131,8 @@ class BiogridProcessor(object):
         elif trembl_id:
             if '|' not in trembl_id:
                 db_refs['UP'] = trembl_id
-
         if entrez_id:
             db_refs['EGID'] = entrez_id
-            if 'UP' not in db_refs:
-                hgnc_id = hgnc_client.get_hgnc_from_entrez(entrez_id)
-                if hgnc_id:
-                    db_refs['HGNC'] = hgnc_id
         standard_name, db_refs = standardize_name_db_refs(db_refs)
         if standard_name:
             name = standard_name
