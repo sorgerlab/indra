@@ -3,6 +3,12 @@ from collections import Counter
 import numpy as np
 from . import BeliefScorer
 
+class SklearnWrapper(object):
+    def __init__(self, model):
+        pass
+
+
+
 class SklearnScorer(BeliefScorer):
     """Uses a pre-trained Sklearn classifier to predict belief scores.
 
@@ -42,3 +48,17 @@ class SklearnScorer(BeliefScorer):
         belief = self.model.predict_proba(counts)[0][self.correct_ix]
         return belief
 
+    def score_statements(self, statements):
+        """Run predictions."""
+        # Build training data matrix
+        num_cols = len(self.source_list)
+        num_rows = len(statements)
+        arr = np.zeros((num_rows, num_cols))
+        for stmt_ix, stmt in enumerate(statements):
+            sources = [ev.source_api for ev in stmt.evidence]
+            src_ctr = Counter(sources)
+            for src_ix, src in enumerate(self.source_list):
+                arr[stmt_ix, src_ix] = src_ctr.get(src, 0)
+        scores = self.model.predict_proba(arr)
+        for stmt_ix, stmt in enumerate(statements):
+            stmt.belief = scores[stmt_ix, self.correct_ix]
