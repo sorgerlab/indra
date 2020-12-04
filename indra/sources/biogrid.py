@@ -13,8 +13,8 @@ from indra.ontology.standardize import standardize_name_db_refs
 logger = logging.getLogger(__name__)
 
 
-biogrid_file_url = 'https://downloads.thebiogrid.org/Download/BioGRID/' + \
-        'Release-Archive/BIOGRID-4.2.192/BIOGRID-ALL-4.2.192.tab2.zip'
+biogrid_file_url = ('https://downloads.thebiogrid.org/File/BioGRID/'
+                    'Latest-Release/BIOGRID-ALL-LATEST.tab2.zip')
 
 
 # The explanation for each column of the tsv file is here:
@@ -48,7 +48,7 @@ class BiogridProcessor(object):
 
     Attributes
     ----------
-    statements: list[indra.statements.Statements]
+    statements : list[indra.statements.Statements]
         Extracted INDRA Complex statements.
     physical_only : boolean
         Indicates whether only physical interactions were included during
@@ -68,15 +68,15 @@ class BiogridProcessor(object):
             rows = _download_biogrid_data(biogrid_file_url)
 
         # Process the rows into Statements
-        for row in tqdm.tqdm(rows):
+        for row in tqdm.tqdm(rows, desc='Processing BioGRID rows'):
             filt_row = [None if item == '-' else item for item in row]
             bg_row = _BiogridRow(*filt_row)
             # Filter out non-physical interactions if desired
             if self.physical_only and bg_row.exp_system_type != 'physical':
                 continue
             # Ground agents
-            agent_a = self._make_agent(bg_row.entrez_a, bg_row.syst_name_a)
-            agent_b = self._make_agent(bg_row.entrez_b, bg_row.syst_name_b)
+            agent_a = self._make_agent(bg_row.entrez_a, bg_row.hgnc_a)
+            agent_b = self._make_agent(bg_row.entrez_b, bg_row.hgnc_b)
             # Skip any agents with neither HGNC grounding or string name
             if agent_a is None or agent_b is None:
                 continue
@@ -84,7 +84,6 @@ class BiogridProcessor(object):
             ev = Evidence(source_api='biogrid',
                           source_id=bg_row.biogrid_int_id,
                           pmid=bg_row.pmid,
-                          text=None,
                           annotations=dict(bg_row._asdict()))
             # Make statement
             s = Complex([agent_a, agent_b], evidence=ev)
@@ -105,45 +104,23 @@ class BiogridProcessor(object):
         agent : indra.statements.Agent
             A grounded agent object.
         """
-        name, db_refs = self._make_db_refs(entrez_id, text_id)
+        db_refs = {}
+        name = text_id
+        if entrez_id:
+            db_refs['EGID'] = entrez_id
+            hgnc_id = hgnc_client.get_hgnc_from_entrez(entrez_id)
+            if hgnc_id:
+                db_refs['HGNC'] = hgnc_id
+            standard_name, db_refs = standardize_name_db_refs(db_refs)
+            if standard_name:
+                name = standard_name
+
+        # At the time of writing this, the name was never None but
+        # just in case
         if name is None:
             return None
 
         return Agent(name, db_refs=db_refs)
-
-    def _make_db_refs(self, entrez_id, text_id):
-        """Looks up the HGNC ID  and name, as well as the Uniprot ID.
-
-        Parameters
-        ----------
-        entrez_id : str
-            Entrez gene ID.
-        text_id : str or None
-            A plain text systematic name, or None if not listed in the
-            Biogrid data.
-
-        Returns
-        -------
-        hgnc_name : str
-            Official HGNC symbol for the gene.
-        db_refs : dict
-            db_refs grounding dictionary, used when constructing the Agent
-            object.
-        """
-        db_refs = {}
-        name = None
-        if text_id:
-            db_refs['TEXT'] = text_id
-            name = text_id
-
-        db_refs['EGID'] = entrez_id
-        hgnc_id = hgnc_client.get_hgnc_from_entrez(entrez_id)
-        if hgnc_id:
-            db_refs['HGNC'] = hgnc_id
-        standard_name, db_refs = standardize_name_db_refs(db_refs)
-        if standard_name:
-            name = standard_name
-        return name, db_refs
 
 
 def _download_biogrid_data(url):
