@@ -2,6 +2,7 @@
 which can be put in the appropriate cache location in place of the
 real bio ontology for testing purposes"""
 import os
+import boto3
 import pickle
 from indra.ontology.bio.ontology import BioOntology, CACHE_DIR
 
@@ -39,7 +40,7 @@ always_include = {
     'HGNC:31476', 'DRUGBANK:DB00001', 'MESH:D013812', 'CHEBI:CHEBI:26523',
     'UP:Q99490', 'MESH:D008099', 'MESH:D057189',
     'UP:P15056', 'UP:O60674', 'UP:P0DP23', 'UP:Q13507', 'UP:P36507',
-    'DRUGBANK:DB00305', 'HGNC:23077', 'HGNC:17347'
+    'DRUGBANK:DB00305', 'HGNC:23077', 'HGNC:17347', 'EGID:27113'
 }
 
 always_include_ns = {'FPLX', 'INDRA_ACTIVITIES', 'INDRA_MODS'}
@@ -76,3 +77,10 @@ if __name__ == '__main__':
     fname = os.path.join(CACHE_DIR, 'mock_ontology.pkl')
     with open(fname, 'wb') as fh:
         pickle.dump(bio_ontology, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    # Uploading to S3
+    s3 = boto3.client('s3')
+    s3.put_object(Body=pickle.dumps(bio_ontology), Bucket='bigmech',
+                  Key=(f'travis/bio_ontology/{bio_ontology.version}/'
+                       f'mock_ontology.pkl'),
+                  ACL='public-read')
+
