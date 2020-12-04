@@ -362,10 +362,28 @@ class PysbModelChecker(ModelChecker):
             subj_ref_mps = self.get_all_mps(ref_agents, ignore_activities=True)
             if not subj_mps and not subj_ref_mps:
                 return (None, None, 'SUBJECT_MONOMERS_NOT_FOUND')
-            subj_nodes = NodesContainer(subj, ref_agents, subj_mps,
-                                        subj_ref_mps)
+            subj_nodes = NodesContainer(subj, ref_agents)
+            meaningful_res_code = None
+            # Each subject might produce a different input set and we need to
+            # combine them
+            for subj_mp in subj_mps:
+                inp, res_code = self.process_subject(subj_mp)
+                if res_code:
+                    meaningful_res_code = res_code
+                    continue
+                subj_nodes.main_nodes += inp
+            for subj_mp in subj_ref_mps:
+                inp, res_code = self.process_subject(subj_mp)
+                if res_code:
+                    meaningful_res_code = res_code
+                    continue
+                subj_nodes.ref_nodes += inp
+            subj_nodes.get_all_nodes()
+            if not subj_nodes.all_nodes and meaningful_res_code:
+                return (None, None, meaningful_res_code)
         else:
             subj_nodes = NodesContainer(None)
+            subj_nodes.all_nodes = None
         # Observables may not be found for an activation since there may be no
         # rule in the model activating the object, and the object may not have
         # an "active" site of the appropriate type
@@ -378,12 +396,13 @@ class PysbModelChecker(ModelChecker):
             # Cannot check modifications in this case
             if isinstance(stmt, Modification):
                 return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
-            obs_nodes.main_nodes = [None]
+            obs_nodes.all_nodes = None
         else:
             obs_nodes.main_nodes = [
                 (obs, target_polarity) for obs in obs_nodes.main_interm]
             obs_nodes.ref_nodes = [
                 (obs, target_polarity) for obs in obs_nodes.ref_interm]
+            obs_nodes.get_all_nodes()
         result_code = None
         return subj_nodes, obs_nodes, result_code
 

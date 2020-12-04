@@ -96,21 +96,15 @@ class PybelModelChecker(ModelChecker):
                 return (None, None, 'SUBJECT_NOT_FOUND')
         return (subj_nodes, obj_nodes, None)
 
-    def process_subject(self, subj):
-        # # We will not get here if subject is None
-        # subj_nodes = self.get_nodes(subj, self.graph, 0)
-        # # Statement has subject but it's not in the graph
-        # if not subj_nodes.all_nodes:
-        #     return (None, 'SUBJECT_NOT_FOUND')
-        # return subj_nodes, None
-        return subj, None
-
     def get_nodes(self, agent, graph, target_polarity):
         """Get all nodes corresponding to a given agent."""
         # This import is done here rather than at the top level to avoid
         # making pybel an implicit dependency of the model checker
         from indra.assemblers.pybel.assembler import _get_agent_node
         nc = NodesContainer(agent)
+        if agent is None:
+            nc.main_nodes = None
+            return nc
         # First get exact match
         agent_node = _get_agent_node(agent)[0]
         if agent_node:

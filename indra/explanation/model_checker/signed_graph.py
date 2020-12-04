@@ -57,9 +57,6 @@ class SignedGraphModelChecker(ModelChecker):
         elif isinstance(stmt, Influence):
             target_polarity = 1 if stmt.overall_polarity() == -1 else 0
         subj, obj = stmt.agent_list()
-        # if obj is None:
-        #     obj_nodes = [None]
-        # else:
         subj_nodes = self.get_nodes(subj, self.graph, 0)
         obj_nodes = self.get_nodes(obj, self.graph, target_polarity)
         # Statement has object but it's not in the graph
@@ -69,18 +66,12 @@ class SignedGraphModelChecker(ModelChecker):
             return (None, None, 'SUBJECT_NOT_FOUND')
         return (subj_nodes, obj_nodes, None)
 
-    def process_subject(self, subj):
-        # # We will not get here if subject is None
-        # subj_nodes = self.get_nodes(subj, self.graph, 0)
-        # # Statement has subject but it's not in the graph
-        # if not subj_nodes:
-        #     return (None, 'SUBJECT_NOT_FOUND')
-        # return subj_nodes, None
-        return subj, None
-
     def get_nodes(self, agent, graph, target_polarity):
         """Get all nodes corresponding to a given agent."""
         ns = NodesContainer(agent)
+        if agent is None:
+            nc.main_nodes = None
+            return nc
         node = (agent.name, target_polarity)
         if node in graph.nodes:
             ns.main_nodes.append(node)
