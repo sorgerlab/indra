@@ -88,14 +88,14 @@ class BiogridProcessor(object):
             if agent_a is None or agent_b is None:
                 continue
             # Get evidence
-            pmid_match = re.match(r'(:?PMID:)?PUBMED:(\d+)',
+            pmid_match = re.match(r'PUBMED:(\d+)',
                                   bg_row.publication)
-            doi_match = re.match(r'DOI:.*', bg_row.publication)
+            doi_match = re.match(r'DOI:(.*)', bg_row.publication)
             text_refs = {}
             if pmid_match:
                 text_refs['PMID'] = pmid_match.groups()[0]
             elif doi_match:
-                text_refs['DOI'] = bg_row.publication
+                text_refs['DOI'] = doi_match.groups()[0]
             ev = Evidence(source_api='biogrid',
                           source_id=bg_row.biogrid_int_id,
                           pmid=text_refs.get('PMID'),
