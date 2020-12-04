@@ -13,25 +13,26 @@ from indra.ontology.standardize import standardize_name_db_refs
 logger = logging.getLogger(__name__)
 
 
-biogrid_file_url = ('https://downloads.thebiogrid.org/File/BioGRID/'
-                    'Latest-Release/BIOGRID-ALL-LATEST.tab2.zip')
+biogrid_file_url = ('https://downloads.thebiogrid.org/Download/BioGRID/'
+                    'Latest-Release/BIOGRID-ALL-LATEST.tab3.zip')
 
 
 # The explanation for each column of the tsv file is here:
-# https://wiki.thebiogrid.org/doku.php/biogrid_tab_version_2.0
-_BiogridRow = namedtuple('BiogridRow',
-                        ['biogrid_int_id',
-                         'entrez_a', 'entrez_b',
-                         'biogrid_a', 'biogrid_b',
-                         'syst_name_a', 'syst_name_b',
-                         'hgnc_a', 'hgnc_b',
-                         'syn_a', 'syn_b',
-                         'exp_system', 'exp_system_type',
-                         'author', 'pmid',
-                         'organism_a', 'organism_b',
-                         'throughput', 'score', 'modification',
-                         'phenotypes', 'qualifications', 'tags',
-                         'source_db'])
+# https://wiki.thebiogrid.org/doku.php/biogrid_tab_version_3.0
+columns = ['biogrid_int_id',
+           'entrez_a', 'entrez_b',
+           'biogrid_a', 'biogrid_b',
+           'syst_name_a', 'syst_name_b',
+           'symbol_a', 'symbol_b',
+           'syn_a', 'syn_b',
+           'exp_system', 'exp_system_type',
+           'author', 'pmid',
+           'organism_a', 'organism_b',
+           'throughput', 'score', 'modification',
+           'qualifications', 'tags', 'source_db',
+           'swissprot_a', 'trembl_a', 'refseq_a',
+           'swissprot_b', 'trembl_b', 'refseq_b']
+_BiogridRow = namedtuple('BiogridRow', columns)
 
 
 class BiogridProcessor(object):
@@ -69,7 +70,10 @@ class BiogridProcessor(object):
 
         # Process the rows into Statements
         for row in tqdm.tqdm(rows, desc='Processing BioGRID rows'):
-            filt_row = [None if item == '-' else item for item in row]
+            # There are some extra columns that we don't need to take and
+            # thereby save space in annotations
+            filt_row = [None if item == '-' else item
+                        for item in row][:len(columns)]
             bg_row = _BiogridRow(*filt_row)
             # Filter out non-physical interactions if desired
             if self.physical_only and bg_row.exp_system_type != 'physical':
