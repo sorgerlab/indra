@@ -9,6 +9,38 @@ from indra.assemblers.pysb.assembler import parse_identifiers_url
 from indra.assemblers.pysb.common import _n
 
 
+class RefEdge(object):
+    def __init__(self, source, relation, target):
+        self.source = source
+        self.relation = relation
+        self.target = target
+
+    @classmethod
+    def _from_json(cls, json_tuple):
+        source = Agent._from_json(json_tuple[0])
+        relation = json_tuple[1]
+        target = Agent._from_json(json_tuple[2])
+        return RefEdge(source, relation, target)
+
+    def to_english(self):
+        source_str = _assemble_agent_str(self.source)
+        target_str = _assemble_agent_str(self.target)
+        sb = SentenceBuilder()
+        if self.relation == 'is_ref':
+            rel_str = ' is a refinement of '
+        elif self.relation == 'has_ref':
+            rel_str = ' has a refinement '
+        sb.append_as_sentence([source_str, rel_str, target_str])
+        sb.make_sentence()
+        return sb.sentence
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return self.to_english()
+
+
 def stmts_from_pysb_path(path, model, stmts):
     """Return source Statements corresponding to a path in a model.
 
