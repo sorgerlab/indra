@@ -76,11 +76,10 @@ if __name__ == '__main__':
     bio_ontology._build_transitive_closure()
     fname = os.path.join(CACHE_DIR, 'mock_ontology.pkl')
     with open(fname, 'wb') as fh:
-        pickle.dump(bio_ontology, fh, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(bio_ontology, fh, protocol=4)
     # Uploading to S3
     s3 = boto3.client('s3')
     s3.put_object(Body=pickle.dumps(bio_ontology), Bucket='bigmech',
                   Key=(f'travis/bio_ontology/{bio_ontology.version}/'
                        f'mock_ontology.pkl'),
                   ACL='public-read')
-
