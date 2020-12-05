@@ -118,6 +118,8 @@ def assert_valid_id(db_ns, db_id):
     db_id : str
         The ID.
     """
+    if db_id is None:
+        raise InvalidIdentifier(f'{db_ns}:None')
     identifiers_ns = identifiers_mappings.get(db_ns, db_ns.lower())
     if identifiers_ns in identifiers_registry:
         if re.match(identifiers_registry[identifiers_ns]['pattern'], db_id):

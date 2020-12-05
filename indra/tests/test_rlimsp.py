@@ -1,7 +1,8 @@
 import os
+import unittest
 from indra.sources import rlimsp
 
-
+@unittest.skip('RLIMS-P webservice is down')
 def test_simple_usage():
     rp = rlimsp.process_from_webservice('PMC3717945')
     stmts = rp.statements
@@ -14,6 +15,7 @@ def test_simple_usage():
         assert 'trigger' in ev.annotations.keys()
 
 
+@unittest.skip('RLIMS-P webservice is down')
 def test_ungrounded_endpoint_with_pmids():
     pmid_list = ['16403219', '22258404', '16961925', '22096607']
     stmts = []
