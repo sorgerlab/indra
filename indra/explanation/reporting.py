@@ -40,6 +40,11 @@ class RefEdge(object):
     def __str__(self):
         return 'RefEdge(%s %s %s)' % (self.source, self.relation, self.target)
 
+    def __eq__(self, other):
+        return (self.source.matches(other.source) and
+                self.target.matches(other.target) and
+                self.relation == other.relation)
+
 
 def stmts_from_pysb_path(path, model, stmts):
     """Return source Statements corresponding to a path in a model.
@@ -196,8 +201,8 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
             steps.append([edge])
             continue
         elif len(target) == 3:
-            edge = RefEdge._from_json(target_)
-            steps.append(edge)
+            edge = RefEdge._from_json(target)
+            steps.append([edge])
             continue
         # Check if the signs of source and target nodes are the same
         positive = (source[1] == target[1])
