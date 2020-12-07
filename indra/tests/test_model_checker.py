@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import unittest
 from collections import Counter
+from copy import deepcopy
 
 import numpy as np
 import networkx as nx
@@ -18,7 +19,7 @@ from indra.explanation.model_checker.pysb import _mp_embeds_into, \
     _cp_embeds_into, _match_lhs, remove_im_params
 from indra.explanation.reporting import stmt_from_rule, stmts_from_pysb_path, \
     stmts_from_pybel_path, stmts_from_indranet_path, PybelEdge, \
-    pybel_edge_to_english
+    pybel_edge_to_english, RefEdge
 from indra.assemblers.pysb.assembler import PysbAssembler, \
     set_base_initial_condition
 from indra.assemblers.indranet import IndraNetAssembler
@@ -1724,6 +1725,17 @@ def test_refinements():
                    Phosphorylation(map2k1, mapk1)]
     test_stmts = [Phosphorylation(prkcb, gsk3b, 'S'),
                   Phosphorylation(mek, erk)]
+    gsk3b_s_phos = deepcopy(gsk3b)
+    gsk3b_s_phos.mods = [ModCondition('phosphorylation', 'S')]
+    gsk3b_s9_phos = deepcopy(gsk3b)
+    gsk3b_s9_phos.mods = [ModCondition('phosphorylation', 'S', '9')]
+    gsk3b_ref = RefEdge(gsk3b_s9_phos, 'is_ref', gsk3b_s_phos)
+    mek_ref = RefEdge(mek, 'has_ref', map2k1)
+    mapk1_phos = deepcopy(mapk1)
+    mapk1_phos.mods = [ModCondition('phosphorylation')]
+    erk_phos = deepcopy(erk)
+    erk_phos.mods = [ModCondition('phosphorylation')]
+    erk_ref = RefEdge(mapk1_phos, 'is_ref', erk_phos)
     # Test PyBEL
     pba = PybelAssembler(model_stmts)
     pybel_model = pba.make_model()
@@ -1733,10 +1745,12 @@ def test_refinements():
     assert results[1][1].path_found
     path0 = results[0][1].paths[0]
     path1 = results[1][1].paths[0]
-    assert stmts_from_pybel_path(
-        path0, pybel_model, False, model_stmts) == [[model_stmts[0]]]
-    assert stmts_from_pybel_path(
-        path1, pybel_model, False, model_stmts) == [[model_stmts[1]]]
+    path_stmts = stmts_from_pybel_path(
+        path0, pybel_model, False, model_stmts)
+    assert path_stmts == [[model_stmts[0]], [gsk3b_ref]], path_stmts
+    path_stmts = stmts_from_pybel_path(
+        path1, pybel_model, False, model_stmts)
+    assert path_stmts == [[mek_ref], [model_stmts[1]], [erk_ref]], path_stmts
     # Test PySB
     pa = PysbAssembler(model_stmts)
     pysb_model = pa.make_model()
@@ -1746,10 +1760,12 @@ def test_refinements():
     assert results[1][1].path_found
     path0 = results[0][1].paths[0]
     path1 = results[1][1].paths[0]
-    assert stmts_from_pysb_path(
-        path0, pysb_model, model_stmts) == [model_stmts[0]]
-    assert stmts_from_pysb_path(
-        path1, pysb_model, model_stmts) == [model_stmts[1]]
+    path_stmts = stmts_from_pysb_path(
+        path0, pysb_model, model_stmts)
+    assert path_stmts == [model_stmts[0], gsk3b_ref], path_stmts
+    path_stmts = stmts_from_pysb_path(
+        path1, pysb_model, model_stmts)
+    assert path_stmts == [mek_ref, model_stmts[1], erk_ref], path_stmts
     # Test unsigned graph
     ia = IndraNetAssembler(model_stmts)
     unsigned_model = ia.make_model(graph_type='digraph')
@@ -1967,10 +1983,6 @@ def test_get_nodes_to_agents():
     assert pmc.nodes_to_agents['GSK3B_S9_p_obs'].mods[0].residue == 'S'
     assert pmc.nodes_to_agents['GSK3B_S9_p_obs'].mods[0].position == '9'
 
-
-if __name__ == '__main__':
-    test_not_bound_polarity_error()
-    #test_bound_polarity_error()
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
