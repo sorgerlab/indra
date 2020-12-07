@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.4'
+    version = '1.5'
 
     def __init__(self):
         super().__init__()
@@ -65,6 +65,7 @@ class BioOntology(IndraOntology):
         # Add xrefs
         logger.info('Adding xrefs...')
         self.add_hgnc_uniprot_xrefs()
+        self.add_hgnc_entrez_xrefs()
         self.add_famplex_xrefs()
         self.add_chemical_xrefs()
         self.add_ncit_xrefs()
@@ -124,6 +125,16 @@ class BioOntology(IndraOntology):
         edges = [(self.label('UP', uid), self.label('HGNC', hid),
                   {'type': 'xref', 'source': 'hgnc'})
                  for uid, hid in uniprot_client.um.uniprot_hgnc.items()]
+        self.add_edges_from(edges)
+
+    def add_hgnc_entrez_xrefs(self):
+        from indra.databases import hgnc_client
+        edges = []
+        for hid, eid in hgnc_client.entrez_ids.items():
+            edges.append((self.label('HGNC', hid), self.label('EGID', eid),
+                          {'type': 'xref', 'source': 'hgnc'}))
+            edges.append((self.label('EGID', eid), self.label('HGNC', hid),
+                          {'type': 'xref', 'source': 'hgnc'}))
         self.add_edges_from(edges)
 
     def add_famplex_nodes(self):
