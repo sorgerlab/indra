@@ -498,6 +498,7 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
                     ag_text = ag.db_refs.get('TEXT')
                 if ag_text is None:
                     continue
+                ag_text = escape(ag_text)
                 role = get_role(ix)
                 # Get the tag with the correct badge
                 tag_start = '<span class="badge badge-%s">' % role
