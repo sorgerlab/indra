@@ -147,6 +147,8 @@ class NodesContainer():
         return node in self.ref_nodes and node not in self.main_nodes
 
     def get_total_nodes(self):
+        if self.all_nodes is None:
+            return 0
         return len(self.all_nodes)
 
 

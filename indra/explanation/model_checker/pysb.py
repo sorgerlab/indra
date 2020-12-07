@@ -189,8 +189,7 @@ class PysbModelChecker(ModelChecker):
                     sub = stmt.enz
                 # Add the mod for the agent
                 if sub is None:
-                    self.stmt_to_obs[stmt] = NodesContainer(
-                        None, main_interm=[None])
+                    self.stmt_to_obs[stmt] = NodesContainer(None)
                 else:
                     mod_condition_name = modclass_to_modtype[stmt.__class__]
                     if isinstance(stmt, RemoveModification):
@@ -213,8 +212,7 @@ class PysbModelChecker(ModelChecker):
             # Generate observables for Activation/Inhibition statements
             elif isinstance(stmt, RegulateActivity):
                 if stmt.obj is None:
-                    self.stmt_to_obs[stmt] = NodesContainer(
-                        None, main_interm=[None])
+                    self.stmt_to_obs[stmt] = NodesContainer(None)
                 else:
                     # Get all refinements of object agent
                     ref_objs = self.get_refinements(stmt.obj)
@@ -231,8 +229,7 @@ class PysbModelChecker(ModelChecker):
                     self.stmt_to_obs[stmt] = obs_nodes
             elif isinstance(stmt, RegulateAmount):
                 if stmt.obj is None:
-                    self.stmt_to_obs[stmt] = NodesContainer(
-                        None, main_interm=[None])
+                    self.stmt_to_obs[stmt] = NodesContainer(None)
                 else:
                     # Get all refinements of object agent
                     ref_objs = self.get_refinements(stmt.obj)
