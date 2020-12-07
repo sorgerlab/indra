@@ -7,6 +7,7 @@ import re
 import uuid
 import logging
 import itertools
+from html import escape
 from collections import OrderedDict
 from os.path import abspath, dirname, join
 
@@ -481,6 +482,7 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
         if ev.text is None:
             format_text = None
         else:
+            ev_text = escape(ev.text)
             indices = []
             for ix, ag in enumerate(stmt.agent_list()):
                 if ag is None:
@@ -496,6 +498,7 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
                     ag_text = ag.db_refs.get('TEXT')
                 if ag_text is None:
                     continue
+                ag_text = escape(ag_text)
                 role = get_role(ix)
                 # Get the tag with the correct badge
                 tag_start = '<span class="badge badge-%s">' % role
@@ -503,8 +506,8 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
                 # Build up a set of indices
                 indices += [(m.start(), m.start() + len(ag_text),
                              ag_text, tag_start, tag_close)
-                            for m in re.finditer(re.escape(ag_text), ev.text)]
-            format_text = tag_text(ev.text, indices)
+                            for m in re.finditer(re.escape(ag_text), ev_text)]
+            format_text = tag_text(ev_text, indices)
 
         curation_key = (stmt.get_hash(), ev.source_hash)
         curations = curation_dict.get(curation_key, [])
@@ -637,7 +640,6 @@ def tag_text(text, tag_info_list):
         String where the specified substrings have been surrounded by the
         given start and close tags.
     """
-
     # Check to tags for overlap and if there is any, return the subsumed
     # range. Return None if no overlap.
     def overlap(t1, t2):

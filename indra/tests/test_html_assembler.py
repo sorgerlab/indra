@@ -107,6 +107,17 @@ def test_tag_text():
                           '<Foo>Foo</Foo>.'
 
 
+def test_tag_bad_text():
+    ev = Evidence("bogus", text="<Foo> binds Bar& (<10 & >20)",
+                  annotations={"agents": {"raw_text": ["<Foo>", "Bar&"]}})
+    stmt = Complex([Agent("Foo"), Agent("Bar")], evidence=[ev])
+    ev_list = _format_evidence_text(stmt)
+    fmt_ev = ev_list[0]
+    assert fmt_ev['text'] == ("<span class=\"badge badge-other\">&lt;Foo&gt;"
+                              "</span> binds <span class=\"badge badge-other\">"
+                              "Bar&amp;</span> (&lt;10 &amp; &gt;20)")
+
+
 def test_influence():
     c2 = Concept('food insecurity',
                  db_refs={'WM': [('wm/food_insecurity', 1.0)]})
