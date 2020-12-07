@@ -164,6 +164,8 @@ def get_grounded_agents(model):
     # a. For each monomer pattern, get its grounding from annotations
     groundings_by_monomer = {}
     # Build up db_refs for each monomer object
+    # TODO agents from Translocation and Conversion statemets do not have
+    # regular annotations, need to be handled
     for ann in model.annotations:
         if ann.predicate == 'is':
             m = ann.subject
@@ -178,28 +180,34 @@ def get_grounded_agents(model):
     # TODO handle activities, bound conditions
     for mp in mps:
         mods = []
-        for site, state in mp.site_conditions.items():
-            mod, mod_type, res, pos = None, None, None, None
-            for ann in mp.monomer.site_annotations:
-                if ann.subject == (site, state):
-                    mod_type = ann.object
-                elif ann.subject == site and ann.predicate == 'is_residue':
-                    res = ann.object
-                if ann.subject == site and ann.predicate == 'is_position':
-                    pos = ann.object
-                if mod_type == 'phosphorylation':
-                    if state == 'p':
-                        is_mod = True
-                    elif state == 'u':
-                        is_mod = False
+        if hasattr(mp.monomer, 'site_annotations'):
+            for site, state in mp.site_conditions.items():
+                mod, mod_type, res, pos = None, None, None, None
+                for ann in mp.monomer.site_annotations:
+                    if ann.subject == (site, state):
+                        mod_type = ann.object
+                    elif ann.subject == site and ann.predicate == 'is_residue':
+                        res = ann.object
+                    if ann.subject == site and ann.predicate == 'is_position':
+                        pos = ann.object
                     if mod_type:
+                        mod, not_mod = states[mod_type]
+                        if state == mod:
+                            is_mod = True
+                        elif state == not_mod:
+                            is_mod = False
+                        else:
+                            logger.warning('Unknown state %s for %s, '
+                                           'setting as not modified' % (
+                                                state, mod_type))
+                            is_mod = False
                         mod = ist.ModCondition(mod_type, res, pos, is_mod)
-            if mod:
-                mods.append(mod)
+                if mod:
+                    mods.append(mod)
         if not mods:
             mods = None
         ag = ist.Agent(mp.monomer.name, mods=mods,
-                       db_refs=groundings_by_monomer[mp.monomer])
+                       db_refs=groundings_by_monomer.get(mp.monomer))
         agents_by_mps[mp] = ag
     return agents_by_mps, mps_by_rule
 
