@@ -120,8 +120,8 @@ def stmts_from_indranet_path(path, model, signed, from_db=True, stmts=None):
             steps.append([edge])
             continue
         elif len(target) == 3:
-            edge = RefEdge._from_json(target_)
-            steps.append(edge)
+            edge = RefEdge._from_json(target)
+            steps.append([edge])
             continue
         if signed:
             if source[1] == target[1]:
