@@ -195,18 +195,13 @@ class PysbModelChecker(ModelChecker):
                     if isinstance(stmt, RemoveModification):
                         mod_condition_name = modtype_to_inverse[
                             mod_condition_name]
-                    # Get all refinements of substrate agent
-                    ref_subs = self.get_refinements(sub)
-                    # Add modification to substrate agents
+                    # Add modification to substrate agent
                     modified_sub = _add_modification_to_agent(
                             sub, mod_condition_name, stmt.residue,
                             stmt.position)
-                    modified_ref_subs = [
-                        _add_modification_to_agent(
-                            sub, mod_condition_name, stmt.residue,
-                            stmt.position) for sub in ref_subs]
-                    obs_nodes = add_obs_for_agents(modified_sub,
-                                                   modified_ref_subs)
+                    # Get all refinements of substrate agent
+                    ref_subs = self.get_refinements(modified_sub)
+                    obs_nodes = add_obs_for_agents(modified_sub, ref_subs)
                     # Associate this statement with this observable
                     self.stmt_to_obs[stmt] = obs_nodes
             # Generate observables for Activation/Inhibition statements
@@ -214,17 +209,12 @@ class PysbModelChecker(ModelChecker):
                 if stmt.obj is None:
                     self.stmt_to_obs[stmt] = NodesContainer(None)
                 else:
-                    # Get all refinements of object agent
-                    ref_objs = self.get_refinements(stmt.obj)
-                    # Add activity to object agents
+                    # Add activity to object agent
                     regulated_obj = _add_activity_to_agent(
                         stmt.obj, stmt.obj_activity, stmt.is_activation)
-                    regulated_ref_objs = [
-                        _add_activity_to_agent(
-                           obj, stmt.obj_activity, stmt.is_activation)
-                        for obj in ref_objs]
-                    obs_nodes = add_obs_for_agents(regulated_obj,
-                                                   regulated_ref_objs)
+                    # Get all refinements of object agent
+                    ref_objs = self.get_refinements(stmt.obj)
+                    obs_nodes = add_obs_for_agents(regulated_obj, ref_objs)
                     # Associate this statement with this observable
                     self.stmt_to_obs[stmt] = obs_nodes
             elif isinstance(stmt, RegulateAmount):
@@ -331,7 +321,6 @@ class PysbModelChecker(ModelChecker):
                 ag = nodes_to_agents.get(n)
                 if ag:
                     ns, gr = ag.get_grounding()
-                    print(ag, ns, gr)
                     data['ns'] = ns
 
         self.nodes_to_agents = nodes_to_agents
