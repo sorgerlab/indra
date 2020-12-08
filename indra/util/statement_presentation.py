@@ -33,27 +33,30 @@ def _get_relation_keyed_stmts(stmt_list):
     for s in stmt_list:
         # Create a key.
         verb = s.__class__.__name__
-        key = (verb,)
         ags = s.agent_list()
+        rel_key = None
         if verb == 'Complex':
             ag_ns = {name(ag) for ag in ags}
             if 1 < len(ag_ns) < 6:
                 for pair in permutations(ag_ns, 2):
-                    yield key + tuple(pair), s
+                    yield (verb,) + tuple(pair), tuple(pair), s
             if len(ag_ns) == 2:
                 continue
-            key += tuple(sorted(ag_ns))
+            ag_key = tuple(sorted(ag_ns))
         elif verb == 'Conversion':
             subj = name(s.subj)
             objs_from = tuple(sorted({name(ag) for ag in s.obj_from}))
             objs_to = tuple(sorted({name(ag) for ag in s.obj_to}))
-            for obj_from, obj_to in product(objs_from, objs_to):
-                yield key + (subj, obj_from, obj_to), s
-            key += (subj, objs_from, objs_to)
-        elif verb == 'ActiveForm':
-            key += (name(ags[0]), s.activity, s.is_active)
-        elif verb == 'HasActivity':
-            key += (name(ags[0]), s.activity, s.has_activity)
+            for obj in objs_from:
+                yield (verb, subj, objs_from, objs_to), (subj, obj), s
+            for obj in objs_to:
+                yield (verb, subj, objs_from, objs_to), (subj, obj), s
+            ag_key = (subj, objs_from, objs_to)
+        elif verb in ['ActiveForm', 'HasActivity']:
+            ag_name = name(ags[0])
+            ag_key = (ag_name,)
+            rel_key = (verb, ag_name, s.activity,
+                       s.is_active if verb == 'ActiveForm' else s.has_activity)
         elif verb == 'Influence':
             sns, sid = s.subj.concept.get_grounding()
             ons, oid = s.obj.concept.get_grounding()
@@ -61,11 +64,16 @@ def _get_relation_keyed_stmts(stmt_list):
                 else sid.split('/')[-1].replace('_', ' ')
             okey = s.obj.concept.name if not oid \
                 else oid.split('/')[-1].replace('_', ' ')
-            key += (skey, okey)
+            ag_key = (skey, okey)
         else:
-            key += tuple([name(ag) for ag in ags])
+            ag_key = tuple([name(ag) for ag in ags])
 
-        yield key, s
+        # Set the default relation key.
+        if rel_key is None:
+            rel_key = (verb,) + ag_key
+
+        # Yield the next (default) element.
+        yield rel_key, ag_key, s
 
 
 def merge_to_metric_dict(**kwargs):
