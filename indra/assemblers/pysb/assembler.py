@@ -191,7 +191,7 @@ def get_grounded_agents(model):
                     if ann.subject == site and ann.predicate == 'is_position':
                         pos = ann.object
                     if mod_type:
-                        mod, not_mod = states[mod_type]
+                        not_mod, mod = states[mod_type]
                         if state == mod:
                             is_mod = True
                         elif state == not_mod:
