@@ -159,7 +159,7 @@ class PysbModelChecker(ModelChecker):
                     obs_name = _monomer_pattern_label(obj_mp) + '_obs'
                     # Add the observable
                     obj_obs = Observable(obs_name, obj_mp, _export=False)
-                    if agent == main_agent:
+                    if agent.matches(main_agent):
                         main_obs_set.add(obs_name)
                     else:
                         ref_obs_set.add(obs_name)
@@ -283,18 +283,16 @@ class PysbModelChecker(ModelChecker):
             self.prune_influence_map_degrade_bind_positive(self.model_stmts)
         if prune_im_subj_obj:
             self.prune_influence_map_subj_obj()
-        self.get_nodes_to_agents()
+        self.get_nodes_to_agents(add_namespaces=add_namespaces)
         self.graph = signed_edges_to_signed_nodes(
             im, prune_nodes=False, edge_signs={'pos': 1, 'neg': -1})
         return self.graph
 
-    def get_nodes_to_agents(self):
+    def get_nodes_to_agents(self, add_namespaces=False):
         """Return a dictionary mapping influence map nodes to INDRA agents.
 
         Parameters
         ----------
-        model_stmts : list[indra.statements.Statement]
-            A list of INDRA statements used to assemble PySB model.
         add_namespaces : bool
             Whether to propagate namespaces to node data. Default: False.
 
@@ -306,6 +304,7 @@ class PysbModelChecker(ModelChecker):
         if self.nodes_to_agents:
             return self.nodes_to_agents
 
+        logger.info('Mapping nodes to agents')
         im = self.get_im()
         nodes_to_agents = {}
         for rule, mps in self.rules_to_mps.items():
@@ -325,6 +324,15 @@ class PysbModelChecker(ModelChecker):
         for rule, mps in self.rules_to_mps.items():
             if rule not in nodes_to_agents:
                 nodes_to_agents[rule] = self.mps_to_agents[list(mps)[0]]
+
+        if add_namespaces:
+            logger.info('Adding namespaces to influence map nodes')
+            for n, data in im.nodes(data=True):
+                ag = nodes_to_agents.get(n)
+                if ag:
+                    ns, gr = ag.get_grounding()
+                    print(ag, ns, gr)
+                    data['ns'] = ns
 
         self.nodes_to_agents = nodes_to_agents
 
