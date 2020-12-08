@@ -247,27 +247,30 @@ def test_migration():
 def test_sort_default():
     stmts = [
         Inhibition(
-            Agent('DUSP4'), Agent('MAPK1'),
-            evidence=[Evidence("DUSP4-|MAPK1"), Evidence("MAPK1|-DUSP4")]
+            Agent('Fez'), Agent('Baz'),
+            evidence=[Evidence(text="Fez-|Baz"), Evidence(text="Baz|-Fez")]
         ),
         DecreaseAmount(
-            Agent('DUSP4'), Agent('MAPK1'),
-            evidence=[Evidence("DUSP4->MAPK1")]
+            Agent('Fez'), Agent('Baz'),
+            evidence=[Evidence(text="Fez->Baz")]
         ),
         Complex(
-            [Agent('DUSP4'), Agent('MAPK1'), Agent('MAP2K1')],
-            evidence=[Evidence("DUSP4-MAPK1-MAP2K1 complex"),
-                      Evidence("Complex of DUSP4, MAPK1, & MAP2K1")]
+            [Agent('Fez'), Agent('Baz'), Agent('Bar')],
+            evidence=[Evidence(text="Fez-Baz-Bar complex"),
+                      Evidence(text="Complex of Fez, Baz, & Bar")]
         ),
         Phosphorylation(
-            Agent('MAP2K1'), Agent('MAPK1'), 'T', '185',
-            evidence=[Evidence("MAP2K1 phosphorylates MAPK1 on T 185"),
-                      Evidence("MAP2K1 phosphorylate MAPK1 on Tyrosine 185")]
+            Agent('Bar'), Agent('Baz'), 'T', '185',
+            evidence=[Evidence(text="Bar phosphorylates Baz on T 46"),
+                      Evidence(text="Bar phosphorylate Baz on Tyrosine "
+                                    "forty-six")]
         ),
         Phosphorylation(
-            Agent('MAP2K1'), Agent('MAPK1'),
-            evidence=[Evidence("MAP2K1 phosphorylates MAPK1")]
-        )
+            Agent('Bar'), Agent('Baz'),
+            evidence=[Evidence(text="Bar phosphorylates Baz")]
+        ),
+        Conversion(Agent('Fez'), [Agent('Far'), Agent('Faz')],
+                   [Agent('Bar'), Agent('Baz')])
     ]
     ha = HtmlAssembler(stmts)
     json_model = ha.make_json_model()
