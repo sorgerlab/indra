@@ -1735,7 +1735,8 @@ def test_refinements():
     mapk1_phos.mods = [ModCondition('phosphorylation')]
     erk_phos = deepcopy(erk)
     erk_phos.mods = [ModCondition('phosphorylation')]
-    erk_ref = RefEdge(mapk1_phos, 'is_ref', erk_phos)
+    erk_phos_ref = RefEdge(mapk1_phos, 'is_ref', erk_phos)
+    erk_ref = RefEdge(mapk1, 'is_ref', erk)
     # Test PyBEL
     pba = PybelAssembler(model_stmts)
     pybel_model = pba.make_model()
@@ -1750,7 +1751,8 @@ def test_refinements():
     assert path_stmts == [[model_stmts[0]], [gsk3b_ref]], path_stmts
     path_stmts = stmts_from_pybel_path(
         path1, pybel_model, False, model_stmts)
-    assert path_stmts == [[mek_ref], [model_stmts[1]], [erk_ref]], path_stmts
+    assert path_stmts == [[mek_ref], [model_stmts[1]], [erk_phos_ref]], \
+        path_stmts
     # Test PySB
     pa = PysbAssembler(model_stmts)
     pysb_model = pa.make_model()
@@ -1762,10 +1764,12 @@ def test_refinements():
     path1 = results[1][1].paths[0]
     path_stmts = stmts_from_pysb_path(
         path0, pysb_model, model_stmts)
+    # TODO this is failing because we get GSK3B phos on "S", "9" as a main node,
+    # it should be considered a refinement node
     assert path_stmts == [model_stmts[0], gsk3b_ref], path_stmts
     path_stmts = stmts_from_pysb_path(
         path1, pysb_model, model_stmts)
-    assert path_stmts == [mek_ref, model_stmts[1], erk_ref], path_stmts
+    assert path_stmts == [mek_ref, model_stmts[1], erk_phos_ref], path_stmts
     # Test unsigned graph
     ia = IndraNetAssembler(model_stmts)
     unsigned_model = ia.make_model(graph_type='digraph')
@@ -1775,10 +1779,13 @@ def test_refinements():
     assert results[1][1].path_found
     path0 = results[0][1].paths[0]
     path1 = results[1][1].paths[0]
-    assert stmts_from_indranet_path(
-        path0, unsigned_model, False, False, model_stmts) == [[model_stmts[0]]]
-    assert stmts_from_indranet_path(
-        path1, unsigned_model, False, False, model_stmts) == [[model_stmts[1]]]
+    path_stmts = stmts_from_indranet_path(
+        path0, unsigned_model, False, False, model_stmts)
+    # Agent sites will not show as refinement in unsigend graph
+    assert path_stmts == [[model_stmts[0]]], path_stmts
+    path_stmts = stmts_from_indranet_path(
+        path1, unsigned_model, False, False, model_stmts)
+    assert path_stmts == [[mek_ref], [model_stmts[1]], [erk_ref]], path_stmts
     # Test signed graph
     # Can't use phosphorylations for signed graph, using activations
     model_stmts = [Activation(map2k1, mapk1)]
@@ -1789,8 +1796,9 @@ def test_refinements():
     results = smc.check_model()
     assert results[0][1].path_found
     path0 = results[0][1].paths[0]
-    assert stmts_from_indranet_path(
-        path0, signed_model, True, False, model_stmts) == [[model_stmts[0]]]
+    path_stmts = stmts_from_indranet_path(
+        path0, signed_model, True, False, model_stmts)
+    assert path_stmts == [[mek_ref], [model_stmts[0]], [erk_ref]], path_stmts
 
 
 def test_pybel_edge_types():
