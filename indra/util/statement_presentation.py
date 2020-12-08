@@ -256,6 +256,10 @@ class Metrik:
                 in zip(self.keys, self.values, self.original_types)}
 
 
+def _get_ag_name_set_len(stmt):
+    return len(set(a.name if a else 'None' for a in stmt.agent_list()))
+
+
 def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
                               skip_grouping=False):
     """Group statements by type and arguments, and sort by prevalence.
@@ -299,17 +303,10 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
     agent_pair_metrics = stmt_metrics.make_derivative_metriker()
 
     # Add up the grouped statements from the metrics.
-    for rel_key, stmt in _get_relation_keyed_stmts(stmt_list):
-        # Update the counts, and add key if needed.
-        relation_stmts[rel_key].append(stmt)
-
-        # Keep track of the evidence counts, source counts, and max belief for
-        # this statement and the arguments.
+    for rel_key, ag_key, stmt in _get_relation_keyed_stmts(stmt_list):
+        relation_stmts[(ag_key, rel_key)].append(stmt)
         relation_metrics[rel_key].include(stmt)
-
-        # Add up the counts for the agent pairs (and rarely some other args).
-        ag_pair_key = rel_key[1:]
-        agent_pair_metrics[ag_pair_key].include(stmt)
+        agent_pair_metrics[ag_key].include(stmt)
 
     # Stop filling these metrikers. No more "new" keys.
     relation_metrics.freeze()
@@ -327,20 +324,22 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
 
     # Sort the rows by count and agent names.
     def processed_rows(stmt_rows):
-        for key, stmts in stmt_rows.items():
-            verb = key[0]
-            inps = key[1:]
-            rel_m = relation_metrics[key]
-            agp_m = agent_pair_metrics[inps]
-            if (verb == 'Complex' and len(inps) <= 2) \
-                    or (verb == 'Conversion'
-                        and all(isinstance(e, str) for e in inps))\
-                    and rel_m['ev_count'] == agp_m['ev_count']:
-                if all([len(set(ag.name for ag in s.agent_list())) > 2
-                        for s in stmts]):
-                    continue
-            agent_pair_sort_key = (_sort_func(agp_m.get_dict()), str(inps),
-                                   _sort_func(rel_m.get_dict()), verb)
+        for (ag_key, rel_key), stmts in stmt_rows.items():
+            verb = rel_key[0]
+            rel_m = relation_metrics[rel_key]
+            agp_m = agent_pair_metrics[ag_key]
+
+            # Check if this statement is a type we ought to skip.
+            is_abbrev_complex = verb == 'Complex' and len(ag_key) <= 2
+            is_abbrev_conv = (verb == 'Conversion'
+                              and all(isinstance(e, str) for e in ag_key))
+            is_abbrev_stmt = is_abbrev_conv or is_abbrev_complex
+            all_ev_in_rel = rel_m['ev_count'] == agp_m['ev_count']
+            all_have_many_ags = all(_get_ag_name_set_len(s) > 2 for s in stmts)
+            if is_abbrev_stmt and all_ev_in_rel and all_have_many_ags:
+                continue
+            sort_key = (_sort_func(agp_m.get_dict()), str(ag_key),
+                        _sort_func(rel_m.get_dict()), str(rel_key))
 
             def stmt_sorter(s):
                 h = s.get_hash()
@@ -348,9 +347,9 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
                 return _sort_func(metrics)
 
             stmts = sorted(stmts, key=stmt_sorter, reverse=True)
-            yield agent_pair_sort_key, inps, verb, stmts, \
-                agent_pair_metrics[inps].get_dict(), \
-                relation_metrics[key].get_dict()
+            yield sort_key, ag_key, rel_key, stmts, \
+                agent_pair_metrics[ag_key].get_dict(), \
+                relation_metrics[rel_key].get_dict()
 
     sorted_groups = sorted(processed_rows(relation_stmts),
                            key=lambda tpl: tpl[0], reverse=True)

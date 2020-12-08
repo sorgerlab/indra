@@ -194,14 +194,17 @@ class HtmlAssembler(object):
                                               metric_dict=metric_dict,
                                               sort_by=self.sort_by)
 
-        # Do some extra formatting.
+        # Set up some data structures to gather results.
         stmts = OrderedDict()
         agents = {}
         previous_stmt_set = set()
         all_previous_stmts = set()
         source_count_keys = set() if not self.source_counts \
             else {k for k in next(iter(self.source_counts.values())).keys()}
-        for key, inps, verb, stmts_group, agp_m, rel_m in stmt_rows:
+
+        # Loop through all the rows, gathering as we go.
+        for _, agp_key, rel_key, stmts_group, agp_m, rel_m in stmt_rows:
+
             # Distinguish between the cases with source counts and without.
             if self.source_counts:
                 rel_src_counts = {k: rel_m[k] for k in source_count_keys}
@@ -272,12 +275,12 @@ class HtmlAssembler(object):
                         del ag.db_refs[dbn]
 
             # Update the top level grouping.
-            if isinstance(stmt, (ActiveForm, HasActivity)):
-                agent_pair_names = [inps[0]]
-            elif isinstance(stmt, Conversion) and isinstance(inps[1], tuple):
-                agent_pair_names = [inps[0]] + [*inps[1]] + [*inps[2]]
+            if rel_key[0] == 'Conversion' and isinstance(agp_key[1], tuple):
+                agent_pair_names = [agp_key[0]] + [*agp_key[1]] + [*agp_key[2]]
             else:
-                agent_pair_names = inps[:]
+                agent_pair_names = agp_key[:]
+
+            # Form group key label
             if with_grouping:
                 agp_key = '-'.join([str(name) for name in agent_pair_names])
                 agent_pair_agents = {name: Agent(name)
@@ -294,6 +297,7 @@ class HtmlAssembler(object):
                 agp_label = 'All Statements'
                 agent_pair_agents = None
 
+            # Select where to put these statements.
             if agp_key not in stmts.keys():
                 agents[agp_key] = agent_pair_agents
                 stmts[agp_key] = {'html_key': str(uuid.uuid4()),
