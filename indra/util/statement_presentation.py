@@ -357,8 +357,8 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
     return sorted_groups
 
 
-def make_stmt_from_sort_key(inps, verb, agents=None):
-    """Make a Statement from the sort key.
+def make_stmt_from_relation_key(relation_key, agents=None):
+    """Make a Statement from the relation key.
 
     Specifically, the sort key used by `group_and_sort_statements`.
     """
@@ -368,6 +368,8 @@ def make_stmt_from_sort_key(inps, verb, agents=None):
             return None
         return Agent(name)
 
+    verb = relation_key[0]
+    inps = relation_key[1:]
     StmtClass = get_statement_by_name(verb)
     if agents is None:
         agents = []
@@ -375,6 +377,8 @@ def make_stmt_from_sort_key(inps, verb, agents=None):
         agents.extend([make_agent(name) for name in inps])
         stmt = StmtClass(agents[:])
     elif verb == 'Conversion':
+        if isinstance(inps[1], str):
+            pass
         names_from = [make_agent(name) for name in inps[1]]
         names_to = [make_agent(name) for name in inps[2]]
         agents.extend(names_from + names_to)
@@ -400,20 +404,19 @@ def stmt_to_english(stmt):
     return ea.make_model()[:-1]
 
 
-def make_string_from_sort_key(inps, verb):
+def make_string_from_sort_key(rel_key):
     """Make a Statement string via EnglishAssembler from the sort key.
 
     Specifically, the sort key used by `group_and_sort_statements`.
     """
-    stmt = make_stmt_from_sort_key(inps, verb)
+    stmt = make_stmt_from_relation_key(rel_key)
     return stmt_to_english(stmt)
 
 
 def get_simplified_stmts(stmts):
     simple_stmts = []
-    for key, s in _get_relation_keyed_stmts(stmts):
-        simple_stmts.append(make_stmt_from_sort_key(key[1:],
-                                                    s.__class__.__name__))
+    for rel_key, _, _ in _get_relation_keyed_stmts(stmts):
+        simple_stmts.append(make_stmt_from_relation_key(rel_key))
     return simple_stmts
 
 

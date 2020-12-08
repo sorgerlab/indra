@@ -20,7 +20,7 @@ from indra.statements.validate import validate_id
 from indra.databases.identifiers import get_identifiers_url, ensure_prefix
 from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.util.statement_presentation import group_and_sort_statements, \
-    make_top_level_label_from_names_key, make_stmt_from_sort_key, \
+    make_top_level_label_from_names_key, make_stmt_from_relation_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
     get_available_ev_counts, standardize_counts, get_available_beliefs, \
     merge_to_metric_dict
@@ -226,7 +226,7 @@ class HtmlAssembler(object):
             # objects in `meta_agents` are references to the Agent's in the
             # Statement object `meta_stmts`.
             meta_agents = []
-            meta_stmt = make_stmt_from_sort_key(inps, verb, meta_agents)
+            meta_stmt = make_stmt_from_relation_key(rel_key, meta_agents)
             meta_agent_dict = {ag.name: ag for ag in meta_agents
                                if ag is not None}
 
