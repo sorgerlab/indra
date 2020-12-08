@@ -646,7 +646,7 @@ def test_phosphorylation_annotations():
     assert results[1][1].paths == [(('A_phos_B', 0),
                                     ('B_monomer_Thr185_phos_obs', 0))]
     assert results[2][0] == st3
-    assert results[2][1].paths == []
+    assert results[2][1].paths == [], results[2][1].paths
 
 
 @with_model
@@ -1273,23 +1273,25 @@ def test_prune_influence_map_degrade_bind():
 def test_add_namespaces():
     a = Agent('a', db_refs={'HGNC': '1'})
     b = Agent('b', db_refs={'CHEBI': '2'})
-    c = Agent('c', db_refs={'GO': '3'})
+    c = Agent('c', db_refs={'GO': 'GO:3'})
     d = Agent('d', db_refs={'HGNC': '4'})
     stmts = [Activation(a, b), Inhibition(b, c), IncreaseAmount(a, c),
              DecreaseAmount(c, d)]
     pa = PysbAssembler(stmts)
     model = pa.make_model()
     mc = PysbModelChecker(
-        model, statements=[IncreaseAmount(a, d)], model_stmts=stmts)
+        model, statements=[IncreaseAmount(a, d)])
     mc.get_graph(add_namespaces=True)
     im = mc.get_im()
     # All nodes have ns
     assert {'a_activates_b_activity', 'a_produces_c', 'd__obs',
             'b_deactivates_c_activity', 'c_degrades_d'} == set(im.nodes)
+    # TODO d__obs is not in mc.nodes_to_agents
+    assert all([n in mc.nodes_to_agents for n in im.nodes]), mc.nodes_to_agents
     for n, data in im.nodes(data=True):
         assert data.get('ns')
         if n in ['a_activates_b_activity', 'a_produces_c', 'd__obs']:
-            assert data['ns'] =='HGNC'
+            assert data['ns'] == 'HGNC'
         elif n == 'b_deactivates_c_activity':
             assert data['ns'] == 'CHEBI'
         elif n == 'c_degrades_d':
@@ -1495,7 +1497,7 @@ def test_amount_vs_activation():
 def test_bound_polarity_error():
     rheb = Agent('RHEB', db_refs={'HGNC': '10011'})
     mtor = Agent('MTOR', db_refs={'HGNC': '3942'})
-    rheb_bc = BoundCondition(rheb, True) 
+    rheb_bc = BoundCondition(rheb, True)
     mtor_rheb = Agent('MTOR', bound_conditions=[rheb_bc],
                       db_refs={'HGNC': '3942'})
     rps6kb1 = Agent('RPS6KB1', db_refs={'HGNC': '10436'})
@@ -1516,7 +1518,8 @@ def test_bound_polarity_error():
     assert results[0][1].result_code == 'PATHS_FOUND', results[0]
     # The second should fail with no path found
     assert results[1][1].result_code == 'NO_PATHS_FOUND', results[1]
-    
+
+
 def test_not_bound_polarity_error():
     pras40 = Agent('AKT1S1', db_refs={'HGNC': '28426'})
     mtor = Agent('MTOR', db_refs={'HGNC': '3942'})
