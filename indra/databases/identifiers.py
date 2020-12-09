@@ -28,6 +28,7 @@ identifiers_mappings = {
     'PUBCHEM': 'pubchem.compound',
     'CHEMBL': 'chembl.compound',
     'CTD': 'ctd.chemical',
+    'CVCL': 'cellosaurus',
 }
 
 # These are namespaces used by INDRA that don't have corresponding
