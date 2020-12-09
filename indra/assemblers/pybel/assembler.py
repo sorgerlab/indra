@@ -9,6 +9,8 @@ from copy import deepcopy, copy
 import pybel
 import pybel.constants as pc
 from pybel.dsl import *
+# This is redundant but needed for documentation build
+from pybel.dsl import Entity
 from pybel.language import pmod_mappings, pmod_namespace, activity_mapping
 try:  # this works after pybel pull request #453
     from pybel.language import citation_dict
