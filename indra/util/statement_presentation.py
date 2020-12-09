@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
-from itertools import permutations, product
-from numpy import array, zeros
+from itertools import permutations
+from numpy import array, zeros, maximum
 
 from indra.assemblers.english import EnglishAssembler
 from indra.statements import Agent, Influence, Event, get_statement_by_name, \
@@ -216,44 +216,85 @@ class Metriker:
                               self.__original_types)
 
 
-class Metrik:
+class _BasicStats:
+    """Gathers measurements for a statement or similar entity.
+
+    Parameters
+    ----------
+    keys : list[str]
+        A dict keyed by aggregation method of lists of the names for the
+        elements of data.
+    stmt_metrics : dict{int: np.ndarray}
+        A dictionary keyed by hash with each element a dict of arrays keyed
+        by aggregation type.
+    original_types : tuple(type)
+        The type classes of each numerical value stored in the stmt_metrics
+        dict, e.g. `(int, float, int)`.
+    """
+
     def __init__(self, keys, stmt_metrics, original_types):
-        self.keys = keys
-        self.values = zeros(len(keys))
-        self.stmt_metrics = stmt_metrics
-        self.original_types = original_types
+        self._keys = keys
+        self._stmt_metrics = stmt_metrics
+        self._original_types = original_types
+        self._values = zeros(len(keys))
+        self._count = 0
         self.__frozen = False
 
     @classmethod
     def from_array(cls, keys, arr, original_types, stmt_metrics=None):
         new_cls = cls(keys, stmt_metrics, original_types)
-        new_cls.values = arr
+        new_cls._values = arr
         return new_cls
 
-    def freeze(self):
+    def _finalize(self):
+        return
+
+    def finish(self):
+        self._finalize()
         self.__frozen = True
 
     def include(self, stmt):
         if self.__frozen:
-            raise RuntimeError("No longer adding more stmt data to Metrik.")
+            raise RuntimeError("No longer adding more stmt data to BasicStats.")
         if not isinstance(stmt, Statement):
-            raise ValueError(f"Invalid type for addition to Metrik: "
+            raise ValueError(f"Invalid type for addition to BasicStats: "
                              f"{type(stmt)}. Must be a Statement.")
 
         h = stmt.get_hash()
-        assert self.stmt_metrics and h in self.stmt_metrics
-        self.values += self.stmt_metrics[h]
+        assert self._stmt_metrics and h in self._stmt_metrics
+        self._merge(self._stmt_metrics[h])
+
+    def _merge(self, metric_array):
+        raise NotImplemented
 
     def __getitem__(self, item):
-        if item not in self.keys:
+        if item not in self._keys:
             raise KeyError(f"Key '{item}' not found!")
-        idx = self.keys.index(item)
-        return self.values[idx].astype(self.original_types[idx])
+        idx = self._keys.index(item)
+        return self._values[idx].astype(self._original_types[idx])
 
     def get_dict(self):
         return {key: value.astype(original_type)
                 for key, value, original_type
-                in zip(self.keys, self.values, self.original_types)}
+                in zip(self._keys, self._values, self._original_types)}
+
+
+class SumStats(_BasicStats):
+    def _merge(self, metric_array):
+        self._values += metric_array
+
+
+class AveStats(_BasicStats):
+    def _merge(self, metric_array):
+        self._values += metric_array
+
+    def _finalize(self):
+        self._values = self._values / self._count
+
+
+class MaxStats(_BasicStats):
+    def _merge(self, metric_array):
+        self._values = maximum(self._values, metric_array)
 
 
 def _get_ag_name_set_len(stmt):
