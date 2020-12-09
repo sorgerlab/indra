@@ -212,6 +212,8 @@ class Evidence(object):
             _format_dict(self.context.to_json(), 'context')
         if self.epistemics:
             _format_dict(self.epistemics, 'epistemics')
+        if self.text_refs:
+            _format_dict(self.text_refs, 'text_refs')
 
         div = ',\n' + ' '*9
         ev_str += div.join(lines)
