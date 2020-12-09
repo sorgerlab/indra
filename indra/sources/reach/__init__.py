@@ -36,7 +36,7 @@ reach clone folder and add
       server {
       // ...
       parsing {
-        max-uri-length = 16k
+        max-uri-length = 256k
       }
       // ...
       }
