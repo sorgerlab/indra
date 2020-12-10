@@ -218,7 +218,8 @@ class StmtStatGather:
     def __init__(self, stat_groups):
 
         self.__stats = {}
-        self.__filling = True
+        self.__started = False
+        self.__finished = False
 
         # Check the groups and solidify them in more immutable types.
         hash_set = None
@@ -240,20 +241,33 @@ class StmtStatGather:
 
         self.__rows = tuple(rows)
 
-    def row_set(self):
-        return set(self.__rows)
-
     def add_stats(self, *stmt_stats):
         """Add more stats to the object."""
+        if self.__started or self.__finished:
+            raise RuntimeError("Cannot add stats after accumulation has "
+                               "started or after it has finished.")
+
         for stat in stmt_stats:
             if not isinstance(stat, StmtStat):
                 raise ValueError("All arguments must be StmtStat objects.")
             if stat.agg_class in self.__stmt_stats:
-                self.__stmt_stats[stat.agg_class]['key'] += (stat.name,)
+                self.__stmt_stats[stat.agg_class]['keys'] += (stat.name,)
                 self.__stmt_stats[stat.agg_class]['types'] += (stat.data_type,)
                 for h, v in stat.data.items():
-                    append(self.__stmt_stats[stat.agg_class]['stats'][h], v)
+                    old_arr = self.__stmt_stats[stat.agg_class]['stats'][h]
+                    self.__stmt_stats[stat.agg_class]['stats'][h] = \
+                        append(old_arr, v)
+            else:
+                self.__stmt_stats[stat.agg_class] = {
+                    'stats': {h: array([v]) for h, v in stat.data.items()},
+                    'keys': (stat.name,),
+                    'types': (stat.data_type,)
+                }
+            self.__rows += (stat.name,)
         return
+
+    def row_set(self):
+        return set(self.__rows)
 
     @classmethod
     def from_stmt_stats(cls, *stmt_stats):
@@ -274,7 +288,10 @@ class StmtStatGather:
 
     def __getitem__(self, key):
         if key not in self.__stats:
-            if self.__filling:
+            if not self.__started:
+                raise KeyError(f"Could not add key {key} before "
+                               "accumulation started.")
+            if not self.__finished:
                 # Remember, this is passing REFERENCES to the stats dict.
                 self.__stats[key] = StmtStatGroup(
                     agg_class(d['keys'], d['stats'], d['types'])
@@ -285,9 +302,12 @@ class StmtStatGather:
                                f"{self.__class__.__name__} is finished.")
         return self.__stats[key]
 
+    def start(self):
+        self.__started = True
+
     def finish(self):
         """Finish adding entries, new keys will be rejected."""
-        self.__filling = False
+        self.__finished = True
         for stat_grp in self.__stats.values():
             stat_grp.finish()
         return
@@ -297,7 +317,14 @@ class StmtStatGather:
         return self.__class__(self.__stmt_stats)
 
     def fill_from_stmt_stats(self):
-        """"""
+        """Use the statements stats as stats and hashes as keys.
+
+        This is used if you decide you just want to represent statements.
+        """
+        if self.__started or self.__finished:
+            raise RuntimeError("Cannot fill from stats if accumulation has"
+                               "already started or after it has finished.")
+
         # Gather stat rows from the stmt_stats.
         stat_rows = defaultdict(lambda: {'keys': tuple(), 'arr': array([]),
                                          'types': tuple()})
@@ -312,6 +339,9 @@ class StmtStatGather:
         for h, data in stat_rows.items():
             self.__stats[h] = BasicStats.from_array(data['keys'], data['arr'],
                                                     data['types'])
+
+        # Mark as finished.
+        self.finish()
         return
 
 
@@ -489,11 +519,12 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
         stmt_stats = StmtStat.from_stmts(stmt_list, missing_rows)
         stmt_data.add_stats(*stmt_stats)
     stmt_data.fill_from_stmt_stats()
-    stmt_data.finish()
 
     # Create gathering metrics from the statement data.
     relation_metrics = stmt_data.get_new_instance()
+    relation_metrics.start()
     agent_pair_metrics = stmt_data.get_new_instance()
+    agent_pair_metrics.start()
 
     # Add up the grouped statements from the metrics.
     for rel_key, ag_key, stmt in _get_relation_keyed_stmts(stmt_list):
@@ -514,7 +545,7 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
             return metric[sort_by]
     else:
         # Check that the sort function is a valid function.
-        sample_dict = dict.fromkeys(stmt_data.list_rows(), 0)
+        sample_dict = dict.fromkeys(stmt_data.row_set(), 0)
         try:
             n = sort_by(sample_dict)
             n < n
