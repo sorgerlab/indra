@@ -554,9 +554,13 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
 
     # Return the sorted statements, if that's all you want.
     if grouping_level == 'statement':
-        return sorted(stmt_list,
-                      key=lambda s: _sort_func(stmt_data[s.get_hash()]
-                                               .get_dict()))
+        sorted_stmts = sorted(
+            ((_sort_func(stmt_data[s.get_hash()].get_dict()), s,
+              stmt_data[s.get_hash()].get_dict())
+             for s in stmt_list),
+            key=lambda t: t[0]
+        )
+        return sorted_stmts
 
     # Create gathering metrics from the statement data.
     relation_metrics = stmt_data.get_new_instance()
