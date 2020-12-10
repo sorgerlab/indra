@@ -23,7 +23,7 @@ from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_relation_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
     get_available_ev_counts, standardize_counts, get_available_beliefs, \
-    StmtStatGather, EvCount, source_count_list, Belief
+    StmtStatGather
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
