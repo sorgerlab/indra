@@ -60,7 +60,7 @@ def test_assembler():
     ha = HtmlAssembler(
         source_counts={stmt.get_hash(): {'test': 1},
                        stmt2.get_hash(): {'test': 1}},
-        ev_totals={stmt.get_hash(): 1, stmt2.get_hash(): 1},
+        ev_counts={stmt.get_hash(): 1, stmt2.get_hash(): 1},
         db_rest_url='test.db.url')
     ha.add_statements([stmt, stmt2])
     result = ha.make_model(with_grouping=True)
