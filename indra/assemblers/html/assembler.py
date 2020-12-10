@@ -146,7 +146,7 @@ class HtmlAssembler(object):
         self.ev_counts = get_available_ev_counts(self.statements) \
             if ev_counts is None else standardize_counts(ev_counts)
         self.beliefs = get_available_beliefs(self.statements) \
-            if beliefs is None else standardize_counts(beliefs)
+            if not beliefs else standardize_counts(beliefs)
         self.source_counts = get_available_source_counts(self.statements) \
             if source_counts is None else standardize_counts(source_counts)
         self.sort_by = sort_by
@@ -187,9 +187,9 @@ class HtmlAssembler(object):
             various metadata.
         """
         # Get an iterator over the statements, carefully grouped.
-        stmt_stats = [EvCount(self.ev_counts), Belief(self.beliefs),
-                      *source_count_list(self.source_counts)]
-        stmt_data = StmtStatGather.from_stmt_stats(*stmt_stats)
+        stmt_data = StmtStatGather.from_dicts(ev_counts=self.ev_counts,
+                                              beliefs=self.beliefs,
+                                              source_counts=self.source_counts)
         stmt_rows = group_and_sort_statements(self.statements,
                                               stmt_data=stmt_data,
                                               sort_by=self.sort_by)

@@ -286,6 +286,18 @@ class StmtStatGather:
                 stat_groups[stat.agg_class]['stats'][h].append(v)
         return cls(stat_groups)
 
+    @classmethod
+    def from_dicts(cls, ev_counts=None, beliefs=None, source_counts=None):
+        """Init a stat gatherer from dicts keyed by hash."""
+        stats = []
+        if ev_counts:
+            stats.append(EvCount(ev_counts))
+        if beliefs:
+            stats.append(Belief(beliefs))
+        if source_counts:
+            stats.extend(source_count_list(source_counts))
+        return cls.from_stmt_stats(*stats)
+
     def __getitem__(self, key):
         if key not in self.__stats:
             if not self.__started:
