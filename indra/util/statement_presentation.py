@@ -172,6 +172,20 @@ class StmtStat:
                 for k, d in data.items()]
 
 
+class EvCount(StmtStat):
+    def __init__(self, ev_counts):
+        super(EvCount, self).__init__('ev_count', ev_counts, int, SumStats)
+
+
+class Belief(StmtStat):
+    def __init__(self, beliefs):
+        super(Belief, self).__init__('belief', beliefs, float, MaxStats)
+
+
+def source_count_list(source_counts):
+    return StmtStat.from_dicts(source_counts, int, SumStats)
+
+
 class StmtStatGather:
     """Gather metrics for items that are derived from statements.
 

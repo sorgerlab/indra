@@ -23,7 +23,7 @@ from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_relation_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
     get_available_ev_counts, standardize_counts, get_available_beliefs, \
-    StmtStat, SumStats, MaxStats, StmtStatGather
+    StmtStatGather, EvCount, source_count_list, Belief
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
@@ -187,11 +187,8 @@ class HtmlAssembler(object):
             various metadata.
         """
         # Get an iterator over the statements, carefully grouped.
-        stmt_stats = [
-            StmtStat('ev_count', self.ev_counts, int, SumStats),
-            *StmtStat.from_dicts(self.source_counts, int, SumStats),
-            StmtStat('belief', self.beliefs, float, MaxStats)
-        ]
+        stmt_stats = [EvCount(self.ev_counts), Belief(self.beliefs),
+                      *source_count_list(self.source_counts)]
         stmt_data = StmtStatGather.from_stmt_stats(*stmt_stats)
         stmt_rows = group_and_sort_statements(self.statements,
                                               stmt_data=stmt_data,
