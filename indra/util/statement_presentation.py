@@ -201,7 +201,7 @@ class StmtStatGather:
     a Statement you might wish to use in sorting them.
     """
 
-    def __init__(self, stat_groups, fill_stats=False):
+    def __init__(self, stat_groups):
 
         self.__stats = {}
         self.__filling = True
