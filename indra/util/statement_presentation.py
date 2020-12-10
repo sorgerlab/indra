@@ -506,10 +506,9 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
         statements. If None, a new one will be formed with basic statics
         derived from the list of Statements itself.
     grouping_level : str
-        (NOT IMPLEMENTED) The options are 'agent-pair', 'relation', and
-        'statement'. These correspond to grouping by agent pairs, agent and type
-        relationships, and a flat list of statements. The default is
-        'agent-pair'.
+        The options are 'agent-pair', 'relation', and 'statement'. These
+        correspond to grouping by agent pairs, agent and type relationships, and
+        a flat list of statements. The default is 'agent-pair'.
 
     Returns
     -------
@@ -520,7 +519,9 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
         arguments (normalized strings), the count of statements with those
         arguments and type, and then the statement type.
     """
-    relation_stmts = defaultdict(list)
+    # Validate the grouping level paramater.
+    if grouping_level not in ['agent-pair', 'relation', 'statement']:
+        raise ValueError(f"Invalid grouping level: \"{grouping_level}\".")
 
     # Init the stmt_data data gatherer.
     if stmt_data is None:
@@ -531,22 +532,6 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
         stmt_stats = StmtStat.from_stmts(stmt_list, missing_rows)
         stmt_data.add_stats(*stmt_stats)
     stmt_data.fill_from_stmt_stats()
-
-    # Create gathering metrics from the statement data.
-    relation_metrics = stmt_data.get_new_instance()
-    relation_metrics.start()
-    agent_pair_metrics = stmt_data.get_new_instance()
-    agent_pair_metrics.start()
-
-    # Add up the grouped statements from the metrics.
-    for rel_key, ag_key, stmt in _get_relation_keyed_stmts(stmt_list):
-        relation_stmts[(ag_key, rel_key)].append(stmt)
-        relation_metrics[rel_key].include(stmt)
-        agent_pair_metrics[ag_key].include(stmt)
-
-    # Stop filling these stat gatherers. No more "new" keys.
-    relation_metrics.finish()
-    agent_pair_metrics.finish()
 
     # Define the sort function.
     if isinstance(sort_by, str):
@@ -567,24 +552,59 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
         # Assign the function.
         _sort_func = sort_by
 
+    # Return the sorted statements, if that's all you want.
+    if grouping_level == 'statement':
+        return sorted(stmt_list,
+                      key=lambda s: _sort_func(stmt_data[s.get_hash()]
+                                               .get_dict()))
+
+    # Create gathering metrics from the statement data.
+    relation_metrics = stmt_data.get_new_instance()
+    relation_metrics.start()
+    if grouping_level == 'agent-pair':
+        agent_pair_metrics = stmt_data.get_new_instance()
+        agent_pair_metrics.start()
+
+    # Add up the grouped statements from the metrics.
+    relation_stmts = defaultdict(list)
+    for rel_key, ag_key, stmt in _get_relation_keyed_stmts(stmt_list):
+        relation_metrics[rel_key].include(stmt)
+        if grouping_level == 'agent-pair':
+            relation_stmts[(ag_key, rel_key)].append(stmt)
+            agent_pair_metrics[ag_key].include(stmt)
+        else:
+            relation_stmts[rel_key].append(stmt)
+
+    # Stop filling these stat gatherers. No more "new" keys.
+    relation_metrics.finish()
+    if grouping_level == 'agent-pair':
+        agent_pair_metrics.finish()
+
     # Sort the rows by count and agent names.
     def processed_rows(stmt_rows):
-        for (ag_key, rel_key), stmts in stmt_rows.items():
-            verb = rel_key[0]
-            rel_m = relation_metrics[rel_key]
-            agp_m = agent_pair_metrics[ag_key]
+        for group_key, stmts in stmt_rows.items():
+            if grouping_level == 'agent-pair':
+                ag_key, rel_key = group_key
+                verb = rel_key[0]
+                rel_m = relation_metrics[rel_key]
+                agp_m = agent_pair_metrics[ag_key]
 
-            # Check if this statement is a type we ought to skip.
-            is_abbrev_complex = verb == 'Complex' and len(ag_key) <= 2
-            is_abbrev_conv = (verb == 'Conversion'
-                              and all(isinstance(e, str) for e in ag_key))
-            is_abbrev_stmt = is_abbrev_conv or is_abbrev_complex
-            all_ev_in_rel = rel_m['ev_count'] == agp_m['ev_count']
-            all_have_many_ags = all(_get_ag_name_set_len(s) > 2 for s in stmts)
-            if is_abbrev_stmt and all_ev_in_rel and all_have_many_ags:
-                continue
-            sort_key = (_sort_func(agp_m.get_dict()), str(ag_key),
-                        _sort_func(rel_m.get_dict()), str(rel_key))
+                # Check if this statement is a type we ought to skip.
+                is_abbrev_complex = verb == 'Complex' and len(ag_key) <= 2
+                is_abbrev_conv = (verb == 'Conversion'
+                                  and all(isinstance(e, str) for e in ag_key))
+                is_abbrev_stmt = is_abbrev_conv or is_abbrev_complex
+                all_ev_in_rel = rel_m['ev_count'] == agp_m['ev_count']
+                all_have_many_ags = all(_get_ag_name_set_len(s) > 2
+                                        for s in stmts)
+                if is_abbrev_stmt and all_ev_in_rel and all_have_many_ags:
+                    continue
+
+                sort_key = (_sort_func(agp_m.get_dict()), str(ag_key),
+                            _sort_func(rel_m.get_dict()), str(rel_key))
+            else:  # If grouped by relation.
+                rel_m = relation_metrics[group_key]
+                sort_key = (_sort_func(rel_m.get_dict()), str(rel_key))
 
             def stmt_sorter(s):
                 h = s.get_hash()
@@ -592,13 +612,12 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
                 return _sort_func(metrics)
 
             stmts = sorted(stmts, key=stmt_sorter, reverse=True)
-            yield sort_key, ag_key, rel_key, stmts, \
-                agent_pair_metrics[ag_key].get_dict(), \
+            yield sort_key, ag_key if grouping_level == 'agent-pair' else None,\
+                rel_key, stmts, agent_pair_metrics[ag_key].get_dict(), \
                 relation_metrics[rel_key].get_dict()
 
     sorted_groups = sorted(processed_rows(relation_stmts),
                            key=lambda tpl: tpl[0], reverse=True)
-
     return sorted_groups
 
 
