@@ -384,11 +384,13 @@ class BasicStats(StmtStatRow):
 
 
 class SumStats(BasicStats):
+    """A stats aggregator that executes a sum."""
     def _merge(self, metric_array):
         self._values += metric_array
 
 
 class AveStats(BasicStats):
+    """A stats aggregator averages the included statement metrics."""
     def _merge(self, metric_array):
         self._values += metric_array
 
@@ -397,6 +399,7 @@ class AveStats(BasicStats):
 
 
 class MaxStats(BasicStats):
+    """A stats aggregator that takes the max of statement metrics."""
     def _merge(self, metric_array):
         self._values = maximum(self._values, metric_array)
 
