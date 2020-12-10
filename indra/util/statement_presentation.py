@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from itertools import permutations
-from numpy import array, zeros, maximum, concatenate
+from numpy import array, zeros, maximum, concatenate, append
 
 from indra.assemblers.english import EnglishAssembler
 from indra.statements import Agent, Influence, Event, get_statement_by_name, \
@@ -121,7 +121,7 @@ class StmtStat:
         """
         data_groups = defaultdict(dict)
         for h, data_dict in dict_data.items():
-            for name, value in data_dict.values():
+            for name, value in data_dict.items():
                 data_groups[name][h] = value
             data_groups = dict(data_groups)
 
@@ -231,7 +231,6 @@ class StmtStatGather:
                 if hash_set != set(info_dict['stats'].keys()):
                     raise ValueError(f"Stats from {info_dict['keys']} do "
                                      f"not cover the same corpora of hashes.")
-            assert isinstance(info_dict['stats'], defaultdict)
             self.__stmt_stats[agg_class] = {
                 'stats': {h: array(l) for h, l in info_dict['stats'].items()},
                 'keys': tuple(info_dict['keys']),
@@ -241,8 +240,20 @@ class StmtStatGather:
 
         self.__rows = tuple(rows)
 
-    def list_rows(self):
-        return list(self.__rows)
+    def row_set(self):
+        return set(self.__rows)
+
+    def add_stats(self, *stmt_stats):
+        """Add more stats to the object."""
+        for stat in stmt_stats:
+            if not isinstance(stat, StmtStat):
+                raise ValueError("All arguments must be StmtStat objects.")
+            if stat.agg_class in self.__stmt_stats:
+                self.__stmt_stats[stat.agg_class]['key'] += (stat.name,)
+                self.__stmt_stats[stat.agg_class]['types'] += (stat.data_type,)
+                for h, v in stat.data.items():
+                    append(self.__stmt_stats[stat.agg_class]['stats'][h], v)
+        return
 
     @classmethod
     def from_stmt_stats(cls, *stmt_stats):
@@ -267,7 +278,7 @@ class StmtStatGather:
                 # Remember, this is passing REFERENCES to the stats dict.
                 self.__stats[key] = StmtStatGroup(
                     agg_class(d['keys'], d['stats'], d['types'])
-                    for agg_class, d in self.__stmt_stats.keys()
+                    for agg_class, d in self.__stmt_stats.items()
                 )
             else:
                 raise KeyError(f"Key \"{key}\" not found! "
@@ -293,7 +304,7 @@ class StmtStatGather:
         for info_dict in self.__stmt_stats.values():
             for h, arr in info_dict['stats'].items():
                 stat_rows[h]['keys'] += info_dict['keys']
-                stat_rows[h]['arr'] = concatenate(stat_rows[h]['arr'], arr)
+                stat_rows[h]['arr'] = concatenate([stat_rows[h]['arr'], arr])
                 stat_rows[h]['types'] += info_dict['types']
             stat_rows = dict(stat_rows)
 
@@ -321,17 +332,23 @@ class StmtStatGroup(StmtStatRow):
     """Implement the StmtStatRow API for a group of BasicStats children."""
     def __init__(self, stats):
         self.__stats = tuple(stats)
+        self.__keymap = {k: stat for stat in self.__stats for k in stat.keys()}
+        return
 
     def include(self, stmt):
         for stat in self.__stats:
             stat.include(stmt)
 
     def get_dict(self):
-        return {k: v for stat in self.__stats for k, v in stat.get_dict()}
+        return {k: v for stat in self.__stats
+                for k, v in stat.get_dict().items()}
 
     def finish(self):
         for stat in self.__stats:
             stat.finish()
+
+    def __getitem__(self, key):
+        return self.__keymap[key][key]
 
 
 class BasicStats(StmtStatRow):
@@ -390,6 +407,9 @@ class BasicStats(StmtStatRow):
             raise KeyError(f"Key '{item}' not found!")
         idx = self._keys.index(item)
         return self._values[idx].astype(self._original_types[idx])
+
+    def keys(self):
+        return self._keys[:]
 
     def get_dict(self):
         return {key: value.astype(original_type)
@@ -464,6 +484,10 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
     if stmt_data is None:
         stmt_stats = StmtStat.from_stmts(stmt_list)
         stmt_data = StmtStatGather.from_stmt_stats(*stmt_stats)
+    missing_rows = {'ev_count', 'ag_count', 'belief'} - stmt_data.row_set()
+    if missing_rows:
+        stmt_stats = StmtStat.from_stmts(stmt_list, missing_rows)
+        stmt_data.add_stats(*stmt_stats)
     stmt_data.fill_from_stmt_stats()
     stmt_data.finish()
 
