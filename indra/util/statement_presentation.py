@@ -475,6 +475,15 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
                 return metric['ev_count'] + 1/(1 + metric['ag_count'])
             return metric[sort_by]
     else:
+        # Check that the sort function is a valid function.
+        sample_dict = dict.fromkeys(stmt_data.list_rows(), 0)
+        try:
+            n = sort_by(sample_dict)
+            n < n
+        except Exception as e:
+            raise ValueError(f"Invalid sort function: {e}")
+
+        # Assign the function.
         _sort_func = sort_by
 
     # Sort the rows by count and agent names.
