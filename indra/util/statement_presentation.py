@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from itertools import permutations
-from numpy import array, zeros, maximum
+from numpy import array, zeros, maximum, concatenate
 
 from indra.assemblers.english import EnglishAssembler
 from indra.statements import Agent, Influence, Event, get_statement_by_name, \
@@ -76,147 +76,251 @@ def _get_relation_keyed_stmts(stmt_list):
         yield rel_key, ag_key, s
 
 
-def merge_to_metric_dict(**kwargs):
-    """Merge metric dictionaries into one.
+class StmtStat:
+    """Abstraction of a metric applied to a set of statements.
 
-    Merge dictionaries keyed by hash, each of which measures one or more
-    metrics of a statement, into a single dict keyed by hash.
-
-    The dictionaries MUST have the same keys (i.e. the same hashes). The values
-    of a metric may be itself a dict, in which case the key sets will be
-    merged to a flat dict (in this way you can extend a metric dict).
+    Parameters
+    ----------
+    name : str
+        The label for this data (e.g. "ev_count" or "belief")
+    data : dict{int: Number}
+        The relevant statistics as a dict keyed by hash.
+    data_type : type
+        The type of the data (e.g. `int` or `float`).
+    agg_class : type
+        A subclass of BasicStats which defines how these statistics will be
+        merged.
     """
-    # If there are no kwargs, just return an empty dict.
-    if not kwargs:
-        return {}
 
-    # Compile the metric dict.
-    hash_set = None
-    metric_dict = {}
-    for metric_name, metrics in kwargs.items():
-        # Check if metrics is None. If so, just skip. This happens if e.g. a
-        # default argument is passed along
-        if not metrics:
-            continue
-
-        # If we don't have a hash set yet, make it. Otherwise assert it matches.
-        if hash_set is None:
-            hash_set = {int(h) for h in metrics.keys()}
-            metric_dict = {h: {} for h in hash_set}
-        else:
-            assert {int(h) for h in metrics.keys()} == hash_set,\
-                "Dictionary key sets do not match."
-
-        # Fill up the metric dict.
-        values = None
-        for h, val in metrics.items():
-            # Check that if this is a dictionary, the values match up.
-            if isinstance(val, dict):
-                if values is None:
-                    values = tuple(val.keys())
-                    for k in values:
-                        assert k not in metric_dict[h], \
-                            f"Metric label {k} from dictionary metric " \
-                            f"already in use."
-                else:
-                    assert tuple(val.keys()) == values, "Values to not equal."
-
-                metric_dict[int(h)].update(val)
-            else:
-                if values is None:
-                    values = (metric_name,)
-                    assert metric_name not in metric_dict[h], \
-                        f"Metric label {metric_name} from keyword already " \
-                        f"in use."
-                metric_dict[int(h)][metric_name] = val
-    return metric_dict
-
-
-class Metriker:
-    def __init__(self, keys, stmt_metrics, original_types):
-        self.__metriks = {}
-        self.__keys = keys
-        self.__stmt_metrics = stmt_metrics
-        self.__original_types = original_types
-        self.__filling = True
-
-    def __getitem__(self, item):
-        if item not in self.__metriks:
-            if self.__filling:
-                # Remember, this is passing REFERENCES to the stmt_metrics dict.
-                self.__metriks[item] = Metrik(self.__keys, self.__stmt_metrics,
-                                              self.__original_types)
-            else:
-                raise KeyError(f"Key \"{item}\" not found! "
-                               f"{self.__class__.__name__} is frozen.")
-        return self.__metriks[item]
-
-    def _set_metriks_to_stmt_metrics(self):
-        for key, arr in self.__stmt_metrics.items():
-            self.__metriks[key] = \
-                Metrik.from_array(self.__keys, arr, self.__original_types)
-        return
-
-    def freeze(self):
-        self.__filling = False
-        for metrik in self.__metriks.values():
-            metrik.freeze()
-        return
+    def __init__(self, name, data, data_type, agg_class):
+        self.name = name
+        self.data = data
+        self.data_type = data_type
+        self.agg_class = agg_class
 
     @classmethod
-    def from_stmt_list(cls, stmt_list, metric_dict=None):
-        keys = ('ev_count', 'belief', 'ag_count')
-        original_types = (int, float, int)
-        if metric_dict:
-            if len(stmt_list) != len(metric_dict):
-                raise ValueError("The `stmt_list` and `metric_dict` must be "
-                                 "the same length.")
-            first_metric = next(iter(metric_dict.values()))
-            metric_dict_keys = set(first_metric.keys())
-            stmt_loop = any(k not in metric_dict_keys for k in keys)
-            original_types += tuple(type(first_metric[k])
-                                    for k in metric_dict_keys if k not in keys)
-            keys += tuple(k for k in metric_dict_keys if k not in keys)
-        else:
-            stmt_loop = True
+    def from_dicts(cls, dict_data, data_type, agg_class):
+        """Generate a list of StmtStat's from a dict of dicts.
 
-        # Populate the dict of arrays, stmt_metrics
-        stmt_metrics = {}
-        if stmt_loop:
+        Example Usage:
+        >>> source_counts = {9623812756876: {'reach': 1, 'sparser': 2},
+        >>>                  -39877587165298: {'reach': 3, 'sparser': 0}}
+        >>> stmt_stats = StmtStat.from_dicts(source_counts, int, SumStats)
 
-            # Iterate over statements, filling in values that may have been
-            # missing.
-            for stmt in stmt_list:
-                sh = stmt.get_hash()
-                values = []
-                for k in keys:
-                    if metric_dict and k in metric_dict[sh]:
-                        values.append(metric_dict[sh][k])
-                    elif k == 'ev_count':
-                        values.append(len(stmt.evidence))
-                    elif k == 'belief':
-                        values.append(stmt.belief)
-                    elif k == 'ag_count':
-                        values.append(len(stmt.agent_list()))
-                    else:
-                        assert False, f"Value of k, {k}, should be impossible."
-                stmt_metrics[sh] = array(values)
-        else:
-            # Iterate over the metric dict, and convert each entry to an array.
-            for sh, metrics in metric_dict.items():
-                stmt_metrics[sh] = array([metrics[k] for k in keys])
+        Parameters
+        ----------
+        dict_data : dict{int: dict{str: Number}}
+            A dictionary keyed by hash with dictionary elements, where each
+            element gives a set of measurements for the statement labels as
+            keys. A common example is `source_counts`.
+        data_type : type
+            The type of the data being given (e.g. `int` or `float`).
+        agg_class : type
+            A subclass of BasicStats which defines how these statistics will
+            be merged (e.g. `SumStats`).
+        """
+        data_groups = defaultdict(dict)
+        for h, data_dict in dict_data.items():
+            for name, value in data_dict.values():
+                data_groups[name][h] = value
+            data_groups = dict(data_groups)
 
-        new_cls = cls(keys, stmt_metrics, original_types)
-        new_cls._set_metriks_to_stmt_metrics()
-        new_cls.freeze()
-        return new_cls
+        classes = []
+        for class_name, class_data in data_groups.items():
+            classes.append(cls(class_name, class_data, data_type, agg_class))
+        return classes
 
-    def make_derivative_metriker(self):
-        return self.__class__(self.__keys, self.__stmt_metrics,
-                              self.__original_types)
+    @classmethod
+    def from_stmts(cls, stmt_list, values=None):
+        """Generate a list of StmtStat's from a list of stmts.
+
+        The stats will include "ev_count", "belief", and "ag_count" by default,
+        but a more limited selection may be specified using `values`.
+
+        Example usage:
+        >>> stmt_stats = StmtStat.from_stmts(stmt_list, ('ag_count', 'belief'))
+
+        Parameters
+        ----------
+        stmt_list : list[Statement]
+            A list of INDRA statements, from which basic stats will be derived.
+        values : Optional[tuple(str)]
+            A tuple of the names of the values to gather from the list of
+            statements. For example, if you already have evidence counts, you
+            might only want to gather belief and agent counts.
+        """
+        type_dict = {'ev_count': {'type': int, 'agg': SumStats},
+                     'belief': {'type': float, 'agg': MaxStats},
+                     'ag_count': {'type': int, 'agg': SumStats}}
+        if values is None:
+            values = tuple(type_dict.keys())
+
+        # Iterate over statements, filling in values that may have been
+        # missing.
+        data = {k: {} for k in values}
+        for stmt in stmt_list:
+            sh = stmt.get_hash()
+            if 'ev_count' in values:
+                data['ev_count'][sh] = len(stmt.evidence)
+            if 'belief' in values:
+                data['belief'][sh] = stmt.belief
+            if 'ag_count' in values:
+                data['ag_count'][sh] = len(stmt.agent_list())
+
+        # Create the objects.
+        return [cls(k, d, type_dict[k]['type'], type_dict[k]['agg'])
+                for k, d in data.items()]
 
 
-class _BasicStats:
+class StmtStatGather:
+    """Gather metrics for items that are derived from statements.
+
+    Example usage:
+    >>> # Get ev_count, belief, and ag_count from a list of statements.
+    >>> stmt_stats = StmtStat.from_stmts(stmt_list)
+    >>>
+    >>> # Add add another stat for a measure of relevance
+    >>> stmt_stats.append(
+    >>>     StmtStat('relevance', relevance_dict, float, AveStats)
+    >>> )
+    >>>
+    >>> # Create the gatherer
+    >>> StmtStatGather.from_stmt_stats(*stmt_stats)
+
+    This class helps manage the accumulation of statistics for statements and
+    statement-like objects, such as agent pairs. Working with StmtStatGroup and
+    children of the BasicStats class, these tools make it easy to aggregate
+    numerical measurements of statements with a great deal of flexibility.
+
+    For example, you can sum up the evidence counts for statements that are part
+    of an agent pair at the same time that you are remembering the maximum and
+    average beliefs for that same corpus of statements. By defining your own
+    child of BasicStats, specifically defining the operations that gather new
+    data and finalize that data once all the statements are collected, you can
+    utilize virtually any statistical methods for aggregating any metric for
+    a Statement you might wish to use in sorting them.
+    """
+
+    def __init__(self, stat_groups, fill_stats=False):
+
+        self.__stats = {}
+        self.__filling = True
+
+        # Check the groups and solidify them in more immutable types.
+        hash_set = None
+        self.__stmt_stats = {}
+        rows = []
+        for agg_class, info_dict in stat_groups.items():
+            if hash_set is None:
+                hash_set = set(info_dict['stats'].keys())
+            else:
+                if hash_set != set(info_dict['stats'].keys()):
+                    raise ValueError(f"Stats from {info_dict['keys']} do "
+                                     f"not cover the same corpora of hashes.")
+            assert isinstance(info_dict['stats'], defaultdict)
+            self.__stmt_stats[agg_class] = {
+                'stats': {h: array(l) for h, l in info_dict['stats'].items()},
+                'keys': tuple(info_dict['keys']),
+                'types': tuple(info_dict['types'])
+            }
+            rows.extend(info_dict['keys'])
+
+        self.__rows = tuple(rows)
+
+    def list_rows(self):
+        return list(self.__rows)
+
+    @classmethod
+    def from_stmt_stats(cls, *stmt_stats):
+        """Create a stat gatherer from StmtStat objects."""
+
+        # Organize the data into groups by aggregation class.
+        stat_groups = defaultdict(lambda: {'stats': defaultdict(list),
+                                           'keys': [], 'types': []})
+        for stat in stmt_stats:
+            if not isinstance(stat, StmtStat):
+                raise ValueError("All arguments must be `StmtStat` object.")
+
+            stat_groups[stat.agg_class]['keys'].append(stat.name)
+            stat_groups[stat.agg_class]['types'].append(stat.data_type)
+            for h, v in stat.data.items():
+                stat_groups[stat.agg_class]['stats'][h].append(v)
+        return cls(stat_groups)
+
+    def __getitem__(self, key):
+        if key not in self.__stats:
+            if self.__filling:
+                # Remember, this is passing REFERENCES to the stats dict.
+                self.__stats[key] = StmtStatGroup(
+                    agg_class(d['keys'], d['stats'], d['types'])
+                    for agg_class, d in self.__stmt_stats.keys()
+                )
+            else:
+                raise KeyError(f"Key \"{key}\" not found! "
+                               f"{self.__class__.__name__} is finished.")
+        return self.__stats[key]
+
+    def finish(self):
+        """Finish adding entries, new keys will be rejected."""
+        self.__filling = False
+        for stat_grp in self.__stats.values():
+            stat_grp.finish()
+        return
+
+    def get_new_instance(self):
+        """Create an instance to gather another level of data."""
+        return self.__class__(self.__stmt_stats)
+
+    def fill_from_stmt_stats(self):
+        """"""
+        # Gather stat rows from the stmt_stats.
+        stat_rows = defaultdict(lambda: {'keys': tuple(), 'arr': array([]),
+                                         'types': tuple()})
+        for info_dict in self.__stmt_stats.values():
+            for h, arr in info_dict['stats'].items():
+                stat_rows[h]['keys'] += info_dict['keys']
+                stat_rows[h]['arr'] = concatenate(stat_rows[h]['arr'], arr)
+                stat_rows[h]['types'] += info_dict['types']
+            stat_rows = dict(stat_rows)
+
+        # Fill up the stats.
+        for h, data in stat_rows.items():
+            self.__stats[h] = BasicStats.from_array(data['keys'], data['arr'],
+                                                    data['types'])
+        return
+
+
+class StmtStatRow:
+    """Define the API for elements of the stat"""
+
+    def include(self, stmt):
+        raise NotImplementedError()
+
+    def get_dict(self):
+        raise NotImplementedError()
+
+    def finish(self):
+        raise NotImplementedError()
+
+
+class StmtStatGroup(StmtStatRow):
+    """Implement the StmtStatRow API for a group of BasicStats children."""
+    def __init__(self, stats):
+        self.__stats = tuple(stats)
+
+    def include(self, stmt):
+        for stat in self.__stats:
+            stat.include(stmt)
+
+    def get_dict(self):
+        return {k: v for stat in self.__stats for k, v in stat.get_dict()}
+
+    def finish(self):
+        for stat in self.__stats:
+            stat.finish()
+
+
+class BasicStats(StmtStatRow):
     """Gathers measurements for a statement or similar entity.
 
     Parameters
@@ -279,12 +383,12 @@ class _BasicStats:
                 in zip(self._keys, self._values, self._original_types)}
 
 
-class SumStats(_BasicStats):
+class SumStats(BasicStats):
     def _merge(self, metric_array):
         self._values += metric_array
 
 
-class AveStats(_BasicStats):
+class AveStats(BasicStats):
     def _merge(self, metric_array):
         self._values += metric_array
 
@@ -292,7 +396,7 @@ class AveStats(_BasicStats):
         self._values = self._values / self._count
 
 
-class MaxStats(_BasicStats):
+class MaxStats(BasicStats):
     def _merge(self, metric_array):
         self._values = maximum(self._values, metric_array)
 
@@ -301,8 +405,8 @@ def _get_ag_name_set_len(stmt):
     return len(set(a.name if a else 'None' for a in stmt.agent_list()))
 
 
-def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
-                              skip_grouping=False):
+def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
+                              grouping_level='agent-pair'):
     """Group statements by type and arguments, and sort by prevalence.
 
     Parameters
@@ -318,14 +422,15 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
         dict is an value of the `metric_dict`. If no metric dict is given,
         the argument to the function will recieve a dict with values for
         `belief` and `ev_count`.
-    metric_dict : dict{int: dict}
-        A dictionary of metrics that apply to each statement, keyed by hash.
-        The value of `sort_by` should be a key into that dict, or should use the
-        values of that dict (themselves a dict) as an argument if it is a
-        function.
-    skip_grouping : bool
-        Optionally select to not group statements, and just sort them. Default
-        is False.
+    stmt_data : StmtStatGather
+        A statement statistics gatherer loaded with data from the corpus of
+        statements. If None, a new one will be formed with basic statics
+        derived from the list of Statements itself.
+    grouping_level : str
+        (NOT IMPLEMENTED) The options are 'agent-pair', 'relation', and
+        'statement'. These correspond to grouping by agent pairs, agent and type
+        relationships, and a flat list of statements. The default is
+        'agent-pair'.
 
     Returns
     -------
@@ -338,10 +443,16 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
     """
     relation_stmts = defaultdict(list)
 
-    # Init the metrics.
-    stmt_metrics = Metriker.from_stmt_list(stmt_list, metric_dict=metric_dict)
-    relation_metrics = stmt_metrics.make_derivative_metriker()
-    agent_pair_metrics = stmt_metrics.make_derivative_metriker()
+    # Init the stmt_data data gatherer.
+    if stmt_data is None:
+        stmt_stats = StmtStat.from_stmts(stmt_list)
+        stmt_data = StmtStatGather.from_stmt_stats(*stmt_stats)
+    stmt_data.fill_from_stmt_stats()
+    stmt_data.finish()
+
+    # Create gathering metrics from the statement data.
+    relation_metrics = stmt_data.get_new_instance()
+    agent_pair_metrics = stmt_data.get_new_instance()
 
     # Add up the grouped statements from the metrics.
     for rel_key, ag_key, stmt in _get_relation_keyed_stmts(stmt_list):
@@ -349,9 +460,9 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
         relation_metrics[rel_key].include(stmt)
         agent_pair_metrics[ag_key].include(stmt)
 
-    # Stop filling these metrikers. No more "new" keys.
-    relation_metrics.freeze()
-    agent_pair_metrics.freeze()
+    # Stop filling these stat gatherers. No more "new" keys.
+    relation_metrics.finish()
+    agent_pair_metrics.finish()
 
     # Define the sort function.
     if isinstance(sort_by, str):
@@ -384,7 +495,7 @@ def group_and_sort_statements(stmt_list, sort_by='default', metric_dict=None,
 
             def stmt_sorter(s):
                 h = s.get_hash()
-                metrics = stmt_metrics[h].get_dict()
+                metrics = stmt_data[h].get_dict()
                 return _sort_func(metrics)
 
             stmts = sorted(stmts, key=stmt_sorter, reverse=True)
