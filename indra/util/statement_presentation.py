@@ -415,6 +415,7 @@ class BasicStats(StmtStatRow):
         self._original_types = original_types
         self._values = zeros(len(keys))
         self._count = 0
+        self.__stmt_hashes = set()
         self.__frozen = False
 
     @classmethod
@@ -438,8 +439,11 @@ class BasicStats(StmtStatRow):
                              f"{type(stmt)}. Must be a Statement.")
 
         h = stmt.get_hash()
+        if h in self.__stmt_hashes:
+            return
         assert self._stmt_metrics and h in self._stmt_metrics
         self._merge(self._stmt_metrics[h])
+        self.__stmt_hashes.add(h)
 
     def _merge(self, metric_array):
         raise NotImplemented
@@ -484,7 +488,7 @@ def _get_ag_name_set_len(stmt):
     return len(set(a.name if a else 'None' for a in stmt.agent_list()))
 
 
-def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
+def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
                               grouping_level='agent-pair'):
     """Group statements by type and arguments, and sort by prevalence.
 
@@ -501,7 +505,7 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
         dict is an value of the `metric_dict`. If no metric dict is given,
         the argument to the function will recieve a dict with values for
         `belief` and `ev_count`.
-    stmt_data : StmtStatGather
+    stmt_metrics : StmtStatGather
         A statement statistics gatherer loaded with data from the corpus of
         statements. If None, a new one will be formed with basic statics
         derived from the list of Statements itself.
@@ -523,15 +527,15 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
     if grouping_level not in ['agent-pair', 'relation', 'statement']:
         raise ValueError(f"Invalid grouping level: \"{grouping_level}\".")
 
-    # Init the stmt_data data gatherer.
-    if stmt_data is None:
+    # Init the stmt_metrics data gatherer.
+    if stmt_metrics is None:
         stmt_stats = StmtStat.from_stmts(stmt_list)
-        stmt_data = StmtStatGather.from_stmt_stats(*stmt_stats)
-    missing_rows = {'ev_count', 'ag_count', 'belief'} - stmt_data.row_set()
+        stmt_metrics = StmtStatGather.from_stmt_stats(*stmt_stats)
+    missing_rows = {'ev_count', 'ag_count', 'belief'} - stmt_metrics.row_set()
     if missing_rows:
         stmt_stats = StmtStat.from_stmts(stmt_list, missing_rows)
-        stmt_data.add_stats(*stmt_stats)
-    stmt_data.fill_from_stmt_stats()
+        stmt_metrics.add_stats(*stmt_stats)
+    stmt_metrics.fill_from_stmt_stats()
 
     # Define the sort function.
     if isinstance(sort_by, str):
@@ -542,7 +546,7 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
             return metric[sort_by]
     else:
         # Check that the sort function is a valid function.
-        sample_dict = dict.fromkeys(stmt_data.row_set(), 0)
+        sample_dict = dict.fromkeys(stmt_metrics.row_set(), 0)
         try:
             n = sort_by(sample_dict)
             n < n
@@ -553,30 +557,43 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
         _sort_func = sort_by
 
     # Return the sorted statements, if that's all you want.
+    def iter_rows(rows, *metric_dicts):
+        assert metric_dicts
+        for key, contents in rows:
+            metrics = metric_dicts[0][key].get_dict()
+            if len(metric_dicts) > 1:
+                if isinstance(contents, dict):
+                    contents = contents.items()
+                contents = sorted_rows(contents, *metric_dicts[1:])
+            yield (_sort_func(metrics), str(key)), key, contents, metrics
+
+    def sorted_rows(rows, *metric_dicts):
+        return sorted(iter_rows(rows, *metric_dicts), key=lambda t: t[0],
+                      reverse=True)
+
     if grouping_level == 'statement':
-        def stmt_rows(stmts):
-            for s in stmts:
-                h = s.get_hash()
-                metrics = stmt_data[h].get_dict()
-                yield _sort_func(metrics), h, s, metrics
-        return sorted(stmt_rows(stmt_list), key=lambda t: t[0], reverse=True)
+        stmt_rows = ((s.get_hash(), s) for s in stmt_list)
+        return sorted_rows(stmt_rows, stmt_metrics)
 
     # Create gathering metrics from the statement data.
-    relation_metrics = stmt_data.get_new_instance()
+    relation_metrics = stmt_metrics.get_new_instance()
     relation_metrics.start()
     if grouping_level == 'agent-pair':
-        agent_pair_metrics = stmt_data.get_new_instance()
+        agent_pair_metrics = stmt_metrics.get_new_instance()
         agent_pair_metrics.start()
 
     # Add up the grouped statements from the metrics.
-    relation_stmts = defaultdict(list)
+    if grouping_level == 'relation':
+        grouped_stmts = defaultdict(list)
+    else:
+        grouped_stmts = defaultdict(lambda: defaultdict(list))
     for rel_key, ag_key, stmt in _get_relation_keyed_stmts(stmt_list):
         relation_metrics[rel_key].include(stmt)
         if grouping_level == 'agent-pair':
-            relation_stmts[(ag_key, rel_key)].append(stmt)
+            grouped_stmts[ag_key][rel_key].append((stmt.get_hash(), stmt))
             agent_pair_metrics[ag_key].include(stmt)
         else:
-            relation_stmts[rel_key].append(stmt)
+            grouped_stmts[rel_key].append((stmt.get_hash(), stmt))
 
     # Stop filling these stat gatherers. No more "new" keys.
     relation_metrics.finish()
@@ -584,46 +601,12 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
         agent_pair_metrics.finish()
 
     # Sort the rows by count and agent names.
-    def stmt_sorter(s):
-        h = s.get_hash()
-        metrics = stmt_data[h].get_dict()
-        return _sort_func(metrics)
+    if grouping_level == 'relation':
+        return sorted_rows(grouped_stmts.items(), relation_metrics,
+                           stmt_metrics)
 
-    if grouping_level == 'agent-pair':
-        def processed_rows(stmt_rows):
-            for (ag_key, rel_key), stmts in stmt_rows.items():
-                verb = rel_key[0]
-                rel_m = relation_metrics[rel_key]
-                agp_m = agent_pair_metrics[ag_key]
-
-                # Check if this statement is a type we ought to skip.
-                is_abbrev_complex = verb == 'Complex' and len(ag_key) <= 2
-                is_abbrev_conv = (verb == 'Conversion'
-                                  and all(isinstance(e, str) for e in ag_key))
-                is_abbrev_stmt = is_abbrev_conv or is_abbrev_complex
-                all_ev_in_rel = rel_m['ev_count'] == agp_m['ev_count']
-                all_have_many_ags = all(_get_ag_name_set_len(s) > 2
-                                        for s in stmts)
-                if is_abbrev_stmt and all_ev_in_rel and all_have_many_ags:
-                    continue
-
-                sort_key = (_sort_func(agp_m.get_dict()), str(ag_key),
-                            _sort_func(rel_m.get_dict()), str(rel_key))
-
-                stmts = sorted(stmts, key=stmt_sorter, reverse=True)
-
-                yield sort_key, ag_key, rel_key, stmts, agp_m.get_dict(), \
-                    rel_m.get_dict()
-    else:  # If grouped by relation.
-        def processed_rows(stmt_rows):
-            for rel_key, stmts in stmt_rows.items():
-                rel_m = relation_metrics[rel_key]
-                sort_key = (_sort_func(rel_m.get_dict()), str(rel_key))
-
-                yield sort_key, rel_key, stmts, rel_m.get_dict()
-
-    return sorted(processed_rows(relation_stmts), key=lambda tpl: tpl[0],
-                  reverse=True)
+    return sorted_rows(grouped_stmts.items(), agent_pair_metrics,
+                       relation_metrics, stmt_metrics)
 
 
 def make_stmt_from_relation_key(relation_key, agents=None):
@@ -646,8 +629,6 @@ def make_stmt_from_relation_key(relation_key, agents=None):
         agents.extend([make_agent(name) for name in inps])
         stmt = StmtClass(agents[:])
     elif verb == 'Conversion':
-        if isinstance(inps[1], str):
-            pass
         names_from = [make_agent(name) for name in inps[1]]
         names_to = [make_agent(name) for name in inps[2]]
         agents.extend(names_from + names_to)
