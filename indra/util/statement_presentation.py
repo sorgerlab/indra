@@ -622,9 +622,8 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
 
                 yield sort_key, rel_key, stmts, rel_m.get_dict()
 
-    sorted_groups = sorted(processed_rows(relation_stmts),
-                           key=lambda tpl: tpl[0], reverse=True)
-    return sorted_groups
+    return sorted(processed_rows(relation_stmts), key=lambda tpl: tpl[0],
+                  reverse=True)
 
 
 def make_stmt_from_relation_key(relation_key, agents=None):
