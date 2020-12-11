@@ -554,13 +554,12 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
 
     # Return the sorted statements, if that's all you want.
     if grouping_level == 'statement':
-        sorted_stmts = sorted(
-            ((_sort_func(stmt_data[s.get_hash()].get_dict()), s,
-              stmt_data[s.get_hash()].get_dict())
-             for s in stmt_list),
-            key=lambda t: t[0]
-        )
-        return sorted_stmts
+        def stmt_rows(stmts):
+            for s in stmts:
+                h = s.get_hash()
+                metrics = stmt_data[h].get_dict()
+                yield _sort_func(metrics), h, s, metrics
+        return sorted(stmt_rows(stmt_list), key=lambda t: t[0], reverse=True)
 
     # Create gathering metrics from the statement data.
     relation_metrics = stmt_data.get_new_instance()
@@ -585,10 +584,14 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
         agent_pair_metrics.finish()
 
     # Sort the rows by count and agent names.
-    def processed_rows(stmt_rows):
-        for group_key, stmts in stmt_rows.items():
-            if grouping_level == 'agent-pair':
-                ag_key, rel_key = group_key
+    def stmt_sorter(s):
+        h = s.get_hash()
+        metrics = stmt_data[h].get_dict()
+        return _sort_func(metrics)
+
+    if grouping_level == 'agent-pair':
+        def processed_rows(stmt_rows):
+            for ag_key, rel_key, stmts in stmt_rows.items():
                 verb = rel_key[0]
                 rel_m = relation_metrics[rel_key]
                 agp_m = agent_pair_metrics[ag_key]
@@ -606,19 +609,18 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
 
                 sort_key = (_sort_func(agp_m.get_dict()), str(ag_key),
                             _sort_func(rel_m.get_dict()), str(rel_key))
-            else:  # If grouped by relation.
-                rel_m = relation_metrics[group_key]
+
+                stmts = sorted(stmts, key=stmt_sorter, reverse=True)
+
+                yield sort_key, ag_key, rel_key, stmts, agp_m.get_dict(), \
+                    rel_m.get_dict()
+    else:  # If grouped by relation.
+        def processed_rows(stmt_rows):
+            for rel_key, stmts in stmt_rows.items():
+                rel_m = relation_metrics[rel_key]
                 sort_key = (_sort_func(rel_m.get_dict()), str(rel_key))
 
-            def stmt_sorter(s):
-                h = s.get_hash()
-                metrics = stmt_data[h].get_dict()
-                return _sort_func(metrics)
-
-            stmts = sorted(stmts, key=stmt_sorter, reverse=True)
-            yield sort_key, ag_key if grouping_level == 'agent-pair' else None,\
-                rel_key, stmts, agent_pair_metrics[ag_key].get_dict(), \
-                relation_metrics[rel_key].get_dict()
+                yield sort_key, rel_key, stmts, rel_m.get_dict()
 
     sorted_groups = sorted(processed_rows(relation_stmts),
                            key=lambda tpl: tpl[0], reverse=True)
