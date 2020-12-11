@@ -591,7 +591,7 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_data=None,
 
     if grouping_level == 'agent-pair':
         def processed_rows(stmt_rows):
-            for ag_key, rel_key, stmts in stmt_rows.items():
+            for (ag_key, rel_key), stmts in stmt_rows.items():
                 verb = rel_key[0]
                 rel_m = relation_metrics[rel_key]
                 agp_m = agent_pair_metrics[ag_key]
