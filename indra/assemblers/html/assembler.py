@@ -196,19 +196,16 @@ class HtmlAssembler(object):
                                               grouping_level=grouping_level)
 
         # Set up some data structures to gather results.
-        stmts = OrderedDict()
         agents = {}
-        previous_stmt_set = set()
-        all_previous_stmts = set()
         source_count_keys = set() if not self.source_counts \
             else {k for k in next(iter(self.source_counts.values())).keys()}
 
         # Loop through the sorted and grouped statements.
         all_hashes = set()
 
-        def handle_rows(rows, level):
+        def handle_rows(rows, level, **kwargs):
             if level == 'agent-pair':
-                ret = {}
+                ret = OrderedDict()
             else:
                 ret = []
             prev_hashes = set()
@@ -224,47 +221,34 @@ class HtmlAssembler(object):
                 if level == 'agent-pair':
                     # AGENT PAIR LEVEL
 
+                    # Create the agent key.
+                    if isinstance(key[1], tuple):
+                        agp_names = [key[0]] + [*key[1]] + [*key[2]]
+                    else:
+                        agp_names = key[:]
+
+                    # Make string key
+                    agp_key_str = '-'.join([str(name) for name in agp_names])
+                    agp_agents = {name: Agent(name) for name in agp_names
+                                  if name is not None}
+                    agents[agp_key_str] = agp_agents
+
                     # Determine if we are including this row or not.
-                    relations, stmt_hashes = handle_rows(contents, 'relation')
-                    if stmt_hashes == prev_hashes or not relations:
+                    relations, stmt_hashes = handle_rows(contents, 'relation',
+                                                         agent_key=agp_key_str,
+                                                         agp_agents=agp_agents)
+                    if stmt_hashes <= prev_hashes or not relations:
                         continue
                     prev_hashes = stmt_hashes
 
-                    # Create the agent key.
-                    if isinstance(agp_key[1], tuple):
-                        agent_pair_names = [agp_key[0]] + [*agp_key[1]] \
-                                           + [*agp_key[2]]
-                    else:
-                        agent_pair_names = agp_key[:]
-
-                    # Make string key
-                    agp_key_str = '-'.join([str(name) for name in agent_pair_names])
-                    agent_pair_agents = {name: Agent(name)
-                                         for name in agent_pair_names
-                                         if name is not None}
-                    for ag in agent_pair_agents.values():
-                        meta_ag = meta_agent_dict.get(ag.name)
-                        if meta_ag is None:
-                            continue
-                        ag.db_refs.update(meta_ag.db_refs)
-                    agp_label = None
-
                     # Update the top level grouping.
-                    agents[agp_key_str] = agent_pair_agents
-                    stmts[agp_key_str] = {'html_key': str(uuid.uuid4()),
-                                          'source_counts': src_counts,
-                                          'stmts_formatted': [],
-                                          'names': agent_pair_names}
-                    if agp_label:
-                        stmts[agp_key]['label'] = agp_label
-
+                    ret[agp_key_str] = {'html_key': str(uuid.uuid4()),
+                                        'source_counts': src_counts,
+                                        'stmts_formatted': [],
+                                        'names': agp_names,
+                                        'label': None}
                 elif level == 'relation':
                     # RELATION LEVEL
-
-                    # Generate the statement data.
-                    stmt_list, stmt_hashes = handle_rows(contents, 'statement')
-                    if not stmt_list:
-                        continue
 
                     # We will keep track the meta data for this stmt group.
                     # NOTE: Much of the code relies heavily on the fact that the
@@ -272,8 +256,15 @@ class HtmlAssembler(object):
                     # Agent's in the Statement object `meta_stmts`.
                     meta_agents = []
                     meta_stmt = make_stmt_from_relation_key(key, meta_agents)
-                    meta_agent_dict = {ag.name: ag for ag in meta_agents
-                                       if ag is not None}
+                    meta_ag_dict = {ag.name: ag for ag in meta_agents
+                                    if ag is not None}
+
+                    # Generate the statement data.
+                    stmt_list, stmt_hashes = \
+                        handle_rows(contents, 'statement',
+                                    meta_ag_dict=meta_ag_dict)
+                    if not stmt_list:
+                        continue
 
                     # Clean out invalid fields from the meta agents.
                     for ag in meta_agents:
@@ -287,11 +278,21 @@ class HtmlAssembler(object):
                                 del ag.db_refs[dbn]
 
                     # Merge agent refs.
-                    for name, existing_ag in agents[agp_key_str].items():
-                        new_ag = agent_pair_agents.get(name)
-                        if new_ag is None:
-                            continue
-                        _cautiously_merge_refs(new_ag, existing_ag)
+                    if 'agent_key' in kwargs:
+                        assert 'agp_agents' in kwargs,\
+                            "agp_agents must be included along with agent_key."
+
+                        for ag in kwargs['agp_agents'].values():
+                            meta_ag = meta_ag_dict.get(ag.name)
+                            if meta_ag is None:
+                                continue
+                            ag.db_refs.update(meta_ag.db_refs)
+
+                        for name, ag in agents[kwargs['agent_key']].items():
+                            new_ag = kwargs['agp_agents'].get(name)
+                            if new_ag is None:
+                                continue
+                            _cautiously_merge_refs(new_ag, ag)
 
                     # See note above: this is where the work on meta_agents is
                     # applied because the agents are references.
@@ -314,14 +315,15 @@ class HtmlAssembler(object):
                     all_level_hashes.add(key)
 
                     # Try to accumulate db refs in the meta agents.
-                    for ag in stmt.agent_list():
-                        if ag is None:
-                            continue
-                        # Get the corresponding meta-agent
-                        meta_ag = meta_agent_dict.get(ag.name)
-                        if not meta_ag:
-                            continue
-                        _cautiously_merge_refs(ag, meta_ag)
+                    if 'meta_ag_dict' in kwargs:
+                        for ag in stmt.agent_list():
+                            if ag is None:
+                                continue
+                            # Get the corresponding meta-agent
+                            meta_ag = kwargs['meta_ag_dict'].get(ag.name)
+                            if not meta_ag:
+                                continue
+                            _cautiously_merge_refs(ag, meta_ag)
 
                     # Format some strings nicely.
                     ev_list = _format_evidence_text(stmt, self.curation_dict)
@@ -335,16 +337,40 @@ class HtmlAssembler(object):
                     else:
                         evidence_count_str = str(len(ev_list))
 
-                    ret.append({
-                        'hash': str(key),
-                        'english': english,
-                        'evidence': ev_list,
-                        'evidence_count': evidence_count_str,
-                        'source_count': src_counts})
+                    ret.append({'hash': str(key), 'english': english,
+                                'evidence': ev_list,
+                                'evidence_count': evidence_count_str,
+                                'source_count': src_counts})
 
             return ret, all_level_hashes
 
-        handle_rows(stmt_rows, grouping_level)
+        output, _ = handle_rows(stmt_rows, grouping_level)
+
+        # Massage the output into the expected format.
+        stmts = {}
+        if grouping_level == 'statement':
+            stmts['all-statements'] = {
+                'html_key': str(uuid.uuid4()),
+                'source_counts': output['source_count'].copy(),
+                'stmts_formatted': [
+                    {'short_name': 'All Statements Sub Group',
+                     'short_name_key': 'all-statements-sub-group',
+                     'stmt_info_list': output,
+                     'src_counts': output['source_count'].copy()}
+                ],
+                'names': 'All Statements',
+                'label': 'All Statements'
+            }
+        elif grouping_level == 'relation':
+            stmts['all-relations'] = {
+                'html_key': str(uuid.uuid4()),
+                'source_counts': output['src_counts'].copy(),
+                'stmts_formatted': output,
+                'names': 'All Relations',
+                'label': 'All Relations'
+            }
+        else:
+            stmts = output
 
         # Add labels for each top level group (tlg).
         if grouping_level == 'agent-pair':
