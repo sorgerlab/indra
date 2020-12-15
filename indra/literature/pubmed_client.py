@@ -510,7 +510,8 @@ def _get_annotations(medline_citation):
                       for qual in qualifier_elems]
         qual = qualifiers[0] if qualifiers else None
 
-        info.append({'mesh': mid, 'text': dname.text, 'major_topic': major,
+        info.append({'type': 'main', 'mesh': mid, 'text': dname.text,
+                     'major_topic': major,
                      # This is only here for backwards compatibility with
                      # INDRA DB which expects a single qualifier or None and
                      # turns the single qualifier into an int internally, so
@@ -520,7 +521,7 @@ def _get_annotations(medline_citation):
                      # This is the proper full list of qualifiers
                      'qualifiers': qualifiers})
     for elem in medline_citation.findall('.//SupplMeshList/SupplMeshName'):
-        info.append({'mesh': elem.attrib['UI'], 'text': elem.text,
+        info.append({'type': 'supplementary', 'mesh': elem.attrib['UI'], 'text': elem.text,
                      'qualifier': None, 'qualifiers': [],
                      'major_topic': False})
     return {'mesh_annotations': info}
