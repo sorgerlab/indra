@@ -8,7 +8,7 @@ import uuid
 import logging
 import itertools
 from html import escape
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from os.path import abspath, dirname, join
 
 from jinja2 import Environment, FileSystemLoader
@@ -164,7 +164,7 @@ class HtmlAssembler(object):
         """
         self.statements += statements
 
-    def make_json_model(self, grouping_level='statement', no_redundancy=False):
+    def make_json_model(self, grouping_level='agent-pair', no_redundancy=False):
         """Return the JSON used to create the HTML display.
 
         Parameters
@@ -172,7 +172,7 @@ class HtmlAssembler(object):
         grouping_level : Optional[str]
             Statements can be grouped at three levels, 'statement' (ungrouped),
             'relation' (grouped by agents and type), and 'agent-pair' (grouped
-            by ordered pairs of agents). Default: 'statement'.
+            by ordered pairs of agents). Default: 'agent-pair'.
         no_redundancy : Optional[bool]
             If True, any group of statements that was already presented under
             a previous heading will be skipped. This is typically the case
@@ -244,7 +244,7 @@ class HtmlAssembler(object):
                     # Update the top level grouping.
                     ret[agp_key_str] = {'html_key': str(uuid.uuid4()),
                                         'source_counts': src_counts,
-                                        'stmts_formatted': [],
+                                        'stmts_formatted': relations,
                                         'names': agp_names,
                                         'label': None}
                 elif level == 'relation':
@@ -263,6 +263,7 @@ class HtmlAssembler(object):
                     stmt_list, stmt_hashes = \
                         handle_rows(contents, 'statement',
                                     meta_ag_dict=meta_ag_dict)
+                    all_level_hashes |= stmt_hashes
                     if not stmt_list:
                         continue
 
@@ -349,22 +350,33 @@ class HtmlAssembler(object):
         # Massage the output into the expected format.
         stmts = {}
         if grouping_level == 'statement':
+            summed_sources = defaultdict(lambda: 0)
+            for d in output:
+                for k, v in d['source_count'].items():
+                    summed_sources[k] += v
+                summed_sources = dict(summed_sources)
             stmts['all-statements'] = {
                 'html_key': str(uuid.uuid4()),
-                'source_counts': output['source_count'].copy(),
+                'source_counts': summed_sources,
                 'stmts_formatted': [
                     {'short_name': 'All Statements Sub Group',
                      'short_name_key': 'all-statements-sub-group',
                      'stmt_info_list': output,
-                     'src_counts': output['source_count'].copy()}
+                     'src_counts': summed_sources}
                 ],
                 'names': 'All Statements',
                 'label': 'All Statements'
             }
         elif grouping_level == 'relation':
+            summed_sources = defaultdict(lambda: 0)
+            for o in output:
+                for d in o['stmt_info_list']:
+                    for k, v in d['src_counts'].items():
+                        summed_sources[k] += v
+                    summed_sources = dict(summed_sources)
             stmts['all-relations'] = {
                 'html_key': str(uuid.uuid4()),
-                'source_counts': output['src_counts'].copy(),
+                'source_counts': summed_sources,
                 'stmts_formatted': output,
                 'names': 'All Relations',
                 'label': 'All Relations'
@@ -390,7 +402,7 @@ class HtmlAssembler(object):
 
         return stmts
 
-    def make_model(self, template=None, with_grouping=True,
+    def make_model(self, template=None, grouping_level='agent-pair',
                    add_full_text_search_link=False, no_redundancy=False,
                    **template_kwargs):
         """Return the assembled HTML content as a string.
@@ -424,7 +436,7 @@ class HtmlAssembler(object):
         str
             The assembled HTML as a string.
         """
-        tl_stmts = self.make_json_model(with_grouping,
+        tl_stmts = self.make_json_model(grouping_level=grouping_level,
                                         no_redundancy=no_redundancy)
 
         if add_full_text_search_link:
