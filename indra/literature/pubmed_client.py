@@ -204,9 +204,42 @@ def get_ids_for_mesh(mesh_id, major_topic=False, **kwargs):
     return ids
 
 
-@lru_cache(maxsize=100)
 def get_article_xml(pubmed_id):
-    """Get the XML metadata for a single article from the Pubmed database.
+    """Get the Article subtree a single article from the Pubmed database.
+
+    Parameters
+    ----------
+    pubmed_id : str
+        A PubMed ID.
+
+    Returns
+    -------
+    xml.etree.ElementTree.Element
+        The XML ElementTree Element that represents the Article portion of the
+        PubMed entry.
+    """
+    full_xml_tree = get_full_xml(pubmed_id)
+    if full_xml_tree is None:
+        return None
+    article = full_xml_tree.find('PubmedArticle/MedlineCitation/Article')
+    return article  # May be none
+
+
+@lru_cache(maxsize=100)
+def get_full_xml(pubmed_id):
+    """Get the full XML tree of a single article from the Pubmed database.
+
+    Parameters
+    ----------
+    pubmed_id : str
+        A PubMed ID.
+
+    Returns
+    -------
+    xml.etree.ElementTree.Element
+        The root element of the XML tree representing the PubMed entry.
+        The root is a PubmedArticleSet with a single PubmedArticle element
+        that contains the article metadata.
     """
     if pubmed_id.upper().startswith('PMID'):
         pubmed_id = pubmed_id[4:]
@@ -214,10 +247,7 @@ def get_article_xml(pubmed_id):
               'retmode': 'xml',
               'id': pubmed_id}
     tree = send_request(pubmed_fetch, params)
-    if tree is None:
-        return None
-    article = tree.find('PubmedArticle/MedlineCitation/Article')
-    return article # May be none
+    return tree
 
 
 def get_title(pubmed_id):
@@ -429,6 +459,34 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         results[article_info['pmid']] = result
 
     return results
+
+
+def get_mesh_annotations(pmid):
+    """Return a list of MeSH annotations for a given PubMed ID.
+
+    Parameters
+    ----------
+    pmid : str
+        A PubMed ID.
+
+    Returns
+    -------
+    list of dict
+        A list of dicts that represent MeSH annotations with the following keys:
+        "mesh" representing the MeSH ID, "text" the standrd name associated with
+        the MeSH ID, "major_topic" a boolean flag set depending on whether
+        the given MeSH ID is assigned as a major topic to the article, and
+        "qualifier" which is a MeSH qualifier ID associated with the annotation,
+        if available, otherwise None.
+    """
+    full_xml_tree = get_full_xml(pmid)
+    if not full_xml_tree:
+        return None
+    medline_citation = full_xml_tree.find('PubmedArticle/MedlineCitation')
+    if not medline_citation:
+        return None
+    annotations = _get_annotations(medline_citation)
+    return annotations.get('mesh_annotations')
 
 
 def _get_annotations(medline_citation):
