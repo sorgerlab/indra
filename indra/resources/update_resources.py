@@ -495,7 +495,7 @@ def update_mesh_names():
     """Update Mesh ID to name and tree number mappings."""
     url = ('ftp://nlmpubs.nlm.nih.gov/online/mesh/MESH_FILES/'
            'xmlmesh/desc2021.gz')
-    desc_path = os.path.join(path, 'mesh_desc2020.gz')
+    desc_path = os.path.join(path, 'mesh_desc2021.gz')
     if not os.path.exists(desc_path):
         logging.info('Download MeSH descriptors from %s', url)
         urlretrieve(url, desc_path)
@@ -522,7 +522,7 @@ def update_mesh_supplementary_names():
     """Update MeSH ID to name mappings for supplementary terms."""
     supp_url = ('ftp://nlmpubs.nlm.nih.gov/online/mesh/MESH_FILES/'
                 'xmlmesh/supp2021.gz')
-    supp_path = os.path.join(path, 'mesh_supp2020.gz')
+    supp_path = os.path.join(path, 'mesh_supp2021.gz')
     if not os.path.exists(supp_path):
         logging.info('Download MeSH supplement from %s', supp_url)
         urlretrieve(supp_url, supp_path)
