@@ -37,6 +37,8 @@ def send_request(url, data):
                      % res.status_code)
         return None
     tree = ET.XML(res.content, parser=UTB())
+    with open('x.xml', 'w') as fh:
+        fh.write(res.text)
     return tree
 
 
@@ -499,17 +501,24 @@ def _get_annotations(medline_citation):
     info = []
     for elem in medline_citation.findall('.//MeshHeading'):
         dname = elem.find('DescriptorName')
-        qname = elem.find('QualifierName')
+        qualifier_elems = elem.findall('QualifierName')
 
         mid = dname.attrib['UI']
-        major = _major_topic(dname) or _major_topic(qname)
-        if qname is not None:
-            qual = {'text': qname.text, 'mesh': qname.attrib['UI']}
-        else:
-            qual = None
+        major = _major_topic(dname) or any(_major_topic(qual) for qual
+                                           in qualifier_elems)
+        qualifiers = [{'text': qual.text, 'mesh': qual.attrib['UI']}
+                      for qual in qualifier_elems]
+        qual = qualifiers[0] if qualifiers else None
 
         info.append({'mesh': mid, 'text': dname.text, 'major_topic': major,
-                     'qualifier': qual})
+                     # This is only here for backwards compatibility with
+                     # INDRA DB which expects a single qualifier or None and
+                     # turns the single qualifier into an int internally, so
+                     # we can't easily put a joined string of multiple
+                     # qualifiers here.
+                     'qualifier': qual,
+                     # This is the proper full list of qualifiers
+                     'qualifiers': qualifiers})
     return {'mesh_annotations': info}
 
 
