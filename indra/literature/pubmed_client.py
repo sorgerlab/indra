@@ -366,7 +366,7 @@ def _get_article_info(medline_citation, pubmed_data):
 
 def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
                                get_abstracts=False, prepend_title=False,
-                               mesh_annotations=False):
+                               mesh_annotations=True):
     """Get metadata for an XML tree containing PubmedArticle elements.
 
     Documentation on the XML structure can be found at:
@@ -377,18 +377,19 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     ----------
     tree : xml.etree.ElementTree
         ElementTree containing one or more PubmedArticle elements.
-    get_issns_from_nlm : bool
+    get_issns_from_nlm : Optional[bool]
         Look up the full list of ISSN number for the journal associated with
         the article, which helps to match articles to CrossRef search results.
         Defaults to False, since it slows down performance.
-    get_abstracts : bool
+    get_abstracts : Optional[bool]
         Indicates whether to include the Pubmed abstract in the results.
-    prepend_title : bool
+        Default: False
+    prepend_title : Optional[bool]
         If get_abstracts is True, specifies whether the article title should
-        be prepended to the abstract text.
-    mesh_annotations : bool
+        be prepended to the abstract text. Default: False
+    mesh_annotations : Optional[bool]
         If True, extract mesh annotations from the pubmed entries and include
-        in the returned data. If false, don't.
+        in the returned data. If false, don't. Default: True
 
     Returns
     -------
@@ -404,16 +405,16 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         medline_citation = pm_article.find('./MedlineCitation')
         pubmed_data = pm_article.find('PubmedData')
 
-        article_info = _get_article_info(medline_citation, pubmed_data)
-        journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
-        context_info = _get_annotations(medline_citation)
-        publication_date = _get_pubmed_publication_date(pubmed_data)
-
         # Build the result
         result = {}
+        article_info = _get_article_info(medline_citation, pubmed_data)
         result.update(article_info)
+        journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
         result.update(journal_info)
-        result.update(context_info)
+        if mesh_annotations:
+            context_info = _get_annotations(medline_citation)
+            result.update(context_info)
+        publication_date = _get_pubmed_publication_date(pubmed_data)
         result['publication_date'] = publication_date
 
         # Get the abstracts if requested
