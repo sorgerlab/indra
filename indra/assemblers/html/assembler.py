@@ -232,7 +232,7 @@ class HtmlAssembler(object):
                     # AGENT PAIR LEVEL
 
                     # Create the agent key.
-                    if isinstance(key[1], tuple):
+                    if len(key) > 1 and isinstance(key[1], tuple):
                         agp_names = [key[0]] + [*key[1]] + [*key[2]]
                     else:
                         agp_names = key[:]
