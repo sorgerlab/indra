@@ -270,8 +270,18 @@ def test_sort_default():
             evidence=[Evidence(text="Bar phosphorylates Baz")]
         ),
         Conversion(Agent('Fez'), [Agent('Far'), Agent('Faz')],
-                   [Agent('Bar'), Agent('Baz')])
+                   [Agent('Bar'), Agent('Baz')],
+                   evidence=[Evidence(text='Fez converts Far and Faz into Bar '
+                                           'and Baz.')])
     ]
     ha = HtmlAssembler(stmts)
     json_model = ha.make_json_model()
+    assert list(json_model.keys()) == ['Fez-Baz', 'Bar-Baz', 'Fez-Bar']
+    exp_stmt_counts = {'Fez-Baz': 4, 'Bar-Baz': 2, 'Fez-Bar': 2}
+    assert all(len(json_model[k]['stmts_formatted']) == n
+               for k, n in exp_stmt_counts.items())
+    ev_counts = {k: sum(len(s['evidence']) for r in m['stmts_formatted']
+                        for s in r['stmt_info_list'])
+                 for k, m in json_model.items()}
+    assert ev_counts == {'Fez-Baz': 6, 'Bar-Baz': 5, 'Fez-Bar': 3}, ev_counts
     ha.make_model()
