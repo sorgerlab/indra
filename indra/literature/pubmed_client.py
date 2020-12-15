@@ -94,7 +94,7 @@ def get_ids(search_term, **kwargs):
         logger.error(tree.find('ERROR').text)
         return []
     if tree.find('ErrorList') is not None:
-        for err in tree.find('ErrorList').getchildren():
+        for err in tree.find('ErrorList'):
             logger.error('Error - %s: %s' % (err.tag, err.text))
         return []
     count = int(tree.find('Count').text)
@@ -128,7 +128,7 @@ def get_id_count(search_term):
     if tree is None:
         return None
     else:
-        count = tree.getchildren()[0].text
+        count = list(tree)[0].text
         return int(count)
 
 
