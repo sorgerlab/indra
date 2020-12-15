@@ -63,9 +63,9 @@ def test_assembler():
         ev_counts={stmt.get_hash(): 1, stmt2.get_hash(): 1},
         db_rest_url='test.db.url')
     ha.add_statements([stmt, stmt2])
-    result = ha.make_model(with_grouping=True)
+    result = ha.make_model(grouping_level='agent-pair')
     assert isinstance(result, str)
-    result = ha.make_model(with_grouping=False)
+    result = ha.make_model(grouping_level='statement')
     assert isinstance(result, str)
     # Make sure warning can be appended
     ha.append_warning('warning')
