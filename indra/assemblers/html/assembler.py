@@ -164,7 +164,8 @@ class HtmlAssembler(object):
         """
         self.statements += statements
 
-    def make_json_model(self, grouping_level='agent-pair', no_redundancy=False):
+    def make_json_model(self, grouping_level='agent-pair', no_redundancy=False,
+                        **kwargs):
         """Return the JSON used to create the HTML display.
 
         Parameters
@@ -186,6 +187,15 @@ class HtmlAssembler(object):
             A complexly structured JSON dict containing grouped statements and
             various metadata.
         """
+        # Handle deprecated case.
+        if "with_grouping" in kwargs:
+            logger.warning("DEPRECATED: The `with_grouping` option has been "
+                           "replaced with `grouping_level`. See doc string for "
+                           "further details.")
+            if grouping_level == 'agent-pair' \
+                    and not kwargs["with_grouping"]:
+                grouping_level = 'statement'
+
         # Get an iterator over the statements, carefully grouped.
         stmt_data = StmtStatGather.from_dicts(ev_counts=self.ev_counts,
                                               beliefs=self.beliefs,
@@ -351,8 +361,8 @@ class HtmlAssembler(object):
         stmts = {}
         if grouping_level == 'statement':
             summed_sources = defaultdict(lambda: 0)
-            for d in output:
-                for k, v in d['source_count'].items():
+            for stmt_info in output:
+                for k, v in stmt_info['source_count'].items():
                     summed_sources[k] += v
                 summed_sources = dict(summed_sources)
             stmts['all-statements'] = {
@@ -369,11 +379,10 @@ class HtmlAssembler(object):
             }
         elif grouping_level == 'relation':
             summed_sources = defaultdict(lambda: 0)
-            for o in output:
-                for d in o['stmt_info_list']:
-                    for k, v in d['src_counts'].items():
-                        summed_sources[k] += v
-                    summed_sources = dict(summed_sources)
+            for rel in output:
+                for k, v in rel['src_counts'].items():
+                    summed_sources[k] += v
+                summed_sources = dict(summed_sources)
             stmts['all-relations'] = {
                 'html_key': str(uuid.uuid4()),
                 'source_counts': summed_sources,
@@ -413,10 +422,11 @@ class HtmlAssembler(object):
             Manually pass a Jinja template to be used in generating the HTML.
             The template is responsible for rendering essentially the output of
             `make_json_model`.
-        with_grouping : bool
-            If True, statements will be grouped under multiple sub-headings. If
-            False, all headings will be collapsed into one on every level, with
-            all statements placed under a single heading.
+        grouping_level : Optional[str]
+            Statements can be grouped under sub-headings at three levels,
+            'statement' (ungrouped), 'relation' (grouped by agents and type),
+            and 'agent-pair' (grouped by ordered pairs of agents).
+            Default: 'agent-pair'.
         add_full_text_search_link : bool
             If True, link with Text fragment search in PMC journal will be
             added for the statements.  
@@ -436,6 +446,16 @@ class HtmlAssembler(object):
         str
             The assembled HTML as a string.
         """
+        # Handle deprecated case.
+        if "with_grouping" in template_kwargs:
+            logger.warning("DEPRECATED: The `with_grouping` option has been "
+                           "replaced with `grouping_level`. See doc string for "
+                           "further details.")
+            if grouping_level == 'agent-pair' \
+               and not template_kwargs.pop("with_grouping"):
+                grouping_level = 'statement'
+
+        # Make the JSON model.
         tl_stmts = self.make_json_model(grouping_level=grouping_level,
                                         no_redundancy=no_redundancy)
 
