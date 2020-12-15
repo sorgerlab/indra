@@ -519,6 +519,10 @@ def _get_annotations(medline_citation):
                      'qualifier': qual,
                      # This is the proper full list of qualifiers
                      'qualifiers': qualifiers})
+    for elem in medline_citation.findall('.//SupplMeshList/SupplMeshName'):
+        info.append({'mesh': elem.attrib['UI'], 'text': elem.text,
+                     'qualifier': None, 'qualifiers': [],
+                     'major_topic': False})
     return {'mesh_annotations': info}
 
 
