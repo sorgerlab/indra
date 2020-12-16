@@ -37,8 +37,6 @@ def send_request(url, data):
                      % res.status_code)
         return None
     tree = ET.XML(res.content, parser=UTB())
-    with open('x.xml', 'w') as fh:
-        fh.write(res.text)
     return tree
 
 

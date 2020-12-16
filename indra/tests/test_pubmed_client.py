@@ -46,8 +46,8 @@ def test_get_id_mesh():
 @attr('webservice')
 def test_get_id_mesh_supc():
     time.sleep(0.5)
-    ids = pubmed_client.get_ids_for_mesh('C000657245')
-    assert len(ids) > 15000
+    ids = pubmed_client.get_ids_for_mesh('D000086382')
+    assert len(ids) > 15000, len(ids)
 
 
 @attr('webservice')
