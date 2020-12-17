@@ -46,8 +46,8 @@ def test_get_id_mesh():
 @attr('webservice')
 def test_get_id_mesh_supc():
     time.sleep(0.5)
-    ids = pubmed_client.get_ids_for_mesh('C000657245')
-    assert len(ids) > 15000
+    ids = pubmed_client.get_ids_for_mesh('D000086382')
+    assert len(ids) > 15000, len(ids)
 
 
 @attr('webservice')
@@ -171,15 +171,28 @@ def test_pmid_27821631():
 def test_get_annotations():
     time.sleep(0.5)
     pmid = '30971'
-    tree = pubmed_client.send_request(pubmed_client.pubmed_fetch,
-                                      dict(db='pubmed', retmode='xml',
-                                           id=pmid))
+    tree = pubmed_client.get_full_xml(pmid)
     results = pubmed_client.get_metadata_from_xml_tree(tree,
                                                        mesh_annotations=True)
     assert len(results) == 1, len(results)
-    assert 'mesh_annotations' in results[pmid].keys(), results[pmid].keys()
+    assert 'mesh_annotations' in results[pmid], results[pmid]
     me_ans = results[pmid]['mesh_annotations']
     assert len(me_ans) == 9, len(me_ans)
     assert all(d['mesh'].startswith('D') for d in me_ans)
     assert any(d['major_topic'] for d in me_ans)
 
+
+@attr('webservice')
+def test_get_supplementary_annotations():
+    time.sleep(0.5)
+    pmid = '30105248'
+    anns = pubmed_client.get_mesh_annotations(pmid)
+    assert len(anns) == 7, anns
+    assert anns[0]['type'] == 'main'
+    assert anns[0]['mesh'] == 'D053839'
+    assert len(anns[0]['qualifiers']) == 1
+    assert anns[0]['qualifiers'][0] == anns[0]['qualifier']
+    supp_ann = anns[-1]
+    assert supp_ann['type'] == 'supplementary'
+    assert supp_ann['mesh'] == 'C000623891'
+    assert supp_ann['text'] == 'Tomato yellow leaf curl virus'

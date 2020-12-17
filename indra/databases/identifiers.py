@@ -1,7 +1,5 @@
 import re
-import json
 import logging
-from urllib import parse
 from indra.resources import load_resource_json
 
 

@@ -92,7 +92,7 @@ def get_ids(search_term, **kwargs):
         logger.error(tree.find('ERROR').text)
         return []
     if tree.find('ErrorList') is not None:
-        for err in tree.find('ErrorList').getchildren():
+        for err in tree.find('ErrorList'):
             logger.error('Error - %s: %s' % (err.tag, err.text))
         return []
     count = int(tree.find('Count').text)
@@ -126,7 +126,7 @@ def get_id_count(search_term):
     if tree is None:
         return None
     else:
-        count = tree.getchildren()[0].text
+        count = list(tree)[0].text
         return int(count)
 
 
@@ -204,9 +204,42 @@ def get_ids_for_mesh(mesh_id, major_topic=False, **kwargs):
     return ids
 
 
-@lru_cache(maxsize=100)
 def get_article_xml(pubmed_id):
-    """Get the XML metadata for a single article from the Pubmed database.
+    """Get the Article subtree a single article from the Pubmed database.
+
+    Parameters
+    ----------
+    pubmed_id : str
+        A PubMed ID.
+
+    Returns
+    -------
+    xml.etree.ElementTree.Element
+        The XML ElementTree Element that represents the Article portion of the
+        PubMed entry.
+    """
+    full_xml_tree = get_full_xml(pubmed_id)
+    if full_xml_tree is None:
+        return None
+    article = full_xml_tree.find('PubmedArticle/MedlineCitation/Article')
+    return article  # May be none
+
+
+@lru_cache(maxsize=100)
+def get_full_xml(pubmed_id):
+    """Get the full XML tree of a single article from the Pubmed database.
+
+    Parameters
+    ----------
+    pubmed_id : str
+        A PubMed ID.
+
+    Returns
+    -------
+    xml.etree.ElementTree.Element
+        The root element of the XML tree representing the PubMed entry.
+        The root is a PubmedArticleSet with a single PubmedArticle element
+        that contains the article metadata.
     """
     if pubmed_id.upper().startswith('PMID'):
         pubmed_id = pubmed_id[4:]
@@ -214,10 +247,7 @@ def get_article_xml(pubmed_id):
               'retmode': 'xml',
               'id': pubmed_id}
     tree = send_request(pubmed_fetch, params)
-    if tree is None:
-        return None
-    article = tree.find('PubmedArticle/MedlineCitation/Article')
-    return article # May be none
+    return tree
 
 
 def get_title(pubmed_id):
@@ -366,7 +396,7 @@ def _get_article_info(medline_citation, pubmed_data):
 
 def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
                                get_abstracts=False, prepend_title=False,
-                               mesh_annotations=False):
+                               mesh_annotations=True):
     """Get metadata for an XML tree containing PubmedArticle elements.
 
     Documentation on the XML structure can be found at:
@@ -377,18 +407,19 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     ----------
     tree : xml.etree.ElementTree
         ElementTree containing one or more PubmedArticle elements.
-    get_issns_from_nlm : bool
+    get_issns_from_nlm : Optional[bool]
         Look up the full list of ISSN number for the journal associated with
         the article, which helps to match articles to CrossRef search results.
         Defaults to False, since it slows down performance.
-    get_abstracts : bool
+    get_abstracts : Optional[bool]
         Indicates whether to include the Pubmed abstract in the results.
-    prepend_title : bool
+        Default: False
+    prepend_title : Optional[bool]
         If get_abstracts is True, specifies whether the article title should
-        be prepended to the abstract text.
-    mesh_annotations : bool
+        be prepended to the abstract text. Default: False
+    mesh_annotations : Optional[bool]
         If True, extract mesh annotations from the pubmed entries and include
-        in the returned data. If false, don't.
+        in the returned data. If false, don't. Default: True
 
     Returns
     -------
@@ -404,16 +435,16 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         medline_citation = pm_article.find('./MedlineCitation')
         pubmed_data = pm_article.find('PubmedData')
 
-        article_info = _get_article_info(medline_citation, pubmed_data)
-        journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
-        context_info = _get_annotations(medline_citation)
-        publication_date = _get_pubmed_publication_date(pubmed_data)
-
         # Build the result
         result = {}
+        article_info = _get_article_info(medline_citation, pubmed_data)
         result.update(article_info)
+        journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
         result.update(journal_info)
-        result.update(context_info)
+        if mesh_annotations:
+            context_info = _get_annotations(medline_citation)
+            result.update(context_info)
+        publication_date = _get_pubmed_publication_date(pubmed_data)
         result['publication_date'] = publication_date
 
         # Get the abstracts if requested
@@ -430,6 +461,34 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     return results
 
 
+def get_mesh_annotations(pmid):
+    """Return a list of MeSH annotations for a given PubMed ID.
+
+    Parameters
+    ----------
+    pmid : str
+        A PubMed ID.
+
+    Returns
+    -------
+    list of dict
+        A list of dicts that represent MeSH annotations with the following keys:
+        "mesh" representing the MeSH ID, "text" the standrd name associated with
+        the MeSH ID, "major_topic" a boolean flag set depending on whether
+        the given MeSH ID is assigned as a major topic to the article, and
+        "qualifier" which is a MeSH qualifier ID associated with the annotation,
+        if available, otherwise None.
+    """
+    full_xml_tree = get_full_xml(pmid)
+    if not full_xml_tree:
+        return None
+    medline_citation = full_xml_tree.find('PubmedArticle/MedlineCitation')
+    if not medline_citation:
+        return None
+    annotations = _get_annotations(medline_citation)
+    return annotations.get('mesh_annotations')
+
+
 def _get_annotations(medline_citation):
 
     def _major_topic(e):
@@ -440,17 +499,29 @@ def _get_annotations(medline_citation):
     info = []
     for elem in medline_citation.findall('.//MeshHeading'):
         dname = elem.find('DescriptorName')
-        qname = elem.find('QualifierName')
+        qualifier_elems = elem.findall('QualifierName')
 
         mid = dname.attrib['UI']
-        major = _major_topic(dname) or _major_topic(qname)
-        if qname is not None:
-            qual = {'text': qname.text, 'mesh': qname.attrib['UI']}
-        else:
-            qual = None
+        major = _major_topic(dname) or any(_major_topic(qual) for qual
+                                           in qualifier_elems)
+        qualifiers = [{'text': qual.text, 'mesh': qual.attrib['UI']}
+                      for qual in qualifier_elems]
+        qual = qualifiers[0] if qualifiers else None
 
-        info.append({'mesh': mid, 'text': dname.text, 'major_topic': major,
-                     'qualifier': qual})
+        info.append({'type': 'main', 'mesh': mid, 'text': dname.text,
+                     'major_topic': major,
+                     # This is only here for backwards compatibility with
+                     # INDRA DB which expects a single qualifier or None and
+                     # turns the single qualifier into an int internally, so
+                     # we can't easily put a joined string of multiple
+                     # qualifiers here.
+                     'qualifier': qual,
+                     # This is the proper full list of qualifiers
+                     'qualifiers': qualifiers})
+    for elem in medline_citation.findall('.//SupplMeshList/SupplMeshName'):
+        info.append({'type': 'supplementary', 'mesh': elem.attrib['UI'], 'text': elem.text,
+                     'qualifier': None, 'qualifiers': [],
+                     'major_topic': False})
     return {'mesh_annotations': info}
 
 
