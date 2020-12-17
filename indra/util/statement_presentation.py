@@ -26,7 +26,7 @@ internal_source_mappings = {
 all_sources = db_sources + reader_sources
 
 
-def _get_relation_keyed_stmts(stmt_list):
+def _get_relation_keyed_stmts(stmt_list, grouping_level='agent-pair'):
     def name(agent):
         return 'None' if agent is None else agent.name
 
@@ -37,20 +37,22 @@ def _get_relation_keyed_stmts(stmt_list):
         rel_key = None
         if verb == 'Complex':
             ag_ns = {name(ag) for ag in ags}
-            if 1 < len(ag_ns) < 6:
-                for pair in permutations(ag_ns, 2):
-                    yield (verb,) + tuple(pair), tuple(pair), s
-            if len(ag_ns) == 2:
-                continue
+            if grouping_level == 'agent-pair':
+                if 1 < len(ag_ns) < 6:
+                    for pair in permutations(ag_ns, 2):
+                        yield (verb,) + tuple(pair), tuple(pair), s
+                if len(ag_ns) == 2:
+                    continue
             ag_key = tuple(sorted(ag_ns))
         elif verb == 'Conversion':
             subj = name(s.subj)
             objs_from = tuple(sorted({name(ag) for ag in s.obj_from}))
             objs_to = tuple(sorted({name(ag) for ag in s.obj_to}))
-            for obj in objs_from:
-                yield (verb, subj, objs_from, objs_to), (subj, obj), s
-            for obj in objs_to:
-                yield (verb, subj, objs_from, objs_to), (subj, obj), s
+            if grouping_level == 'agent-pair':
+                for obj in objs_from:
+                    yield (verb, subj, objs_from, objs_to), (subj, obj), s
+                for obj in objs_to:
+                    yield (verb, subj, objs_from, objs_to), (subj, obj), s
             ag_key = (subj, objs_from, objs_to)
         elif verb in ['ActiveForm', 'HasActivity']:
             ag_name = name(ags[0])
@@ -587,7 +589,8 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
         grouped_stmts = defaultdict(list)
     else:
         grouped_stmts = defaultdict(lambda: defaultdict(list))
-    for rel_key, ag_key, stmt in _get_relation_keyed_stmts(stmt_list):
+    for rel_key, ag_key, stmt in _get_relation_keyed_stmts(stmt_list,
+                                                           grouping_level):
         relation_metrics[rel_key].include(stmt)
         if grouping_level == 'agent-pair':
             grouped_stmts[ag_key][rel_key].append((stmt.get_hash(), stmt))
