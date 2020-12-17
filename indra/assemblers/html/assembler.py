@@ -23,7 +23,7 @@ from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_relation_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
     get_available_ev_counts, standardize_counts, get_available_beliefs, \
-    StmtStatGather
+    StmtStatGather, make_standard_stats
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
@@ -125,6 +125,13 @@ class HtmlAssembler(object):
         strange effects when statements are grouped (i.e. when `grouping_level`
         is not 'statement'); such functionality is untested and we make no
         guarantee that it will work.
+    stmt_stat_gather : Optional[StmtStatGather]
+        A custom statement statistics gatherer loaded with data from the corpus
+        of statements. If None, a new one will be formed with basic statics
+        derived from the list of Statements itself and from beliefs, ev_counts,
+        and source_counts passed as arguments. Values for belief, ev_counts, and
+        source counts will be worked in automatically. For details on how
+        to create a `StmtStatGather` instance, see the documentation.
 
     Attributes
     ----------
@@ -145,8 +152,9 @@ class HtmlAssembler(object):
     """
 
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
-                 ev_counts=None, beliefs=None, source_counts=None, curation_dict=None,
-                 title='INDRA Results', db_rest_url=None, sort_by='default'):
+                 ev_counts=None, beliefs=None, source_counts=None,
+                 curation_dict=None, title='INDRA Results', db_rest_url=None,
+                 sort_by='default', stmt_stat_gather=None):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
@@ -164,6 +172,7 @@ class HtmlAssembler(object):
         self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
         self.model = None
+        self.stmt_stat_gather = stmt_stat_gather
 
     def add_statements(self, statements):
         """Add a list of Statements to the assembler.
@@ -208,9 +217,19 @@ class HtmlAssembler(object):
                 grouping_level = 'statement'
 
         # Get an iterator over the statements, carefully grouped.
-        stmt_data = StmtStatGather.from_dicts(ev_counts=self.ev_counts,
-                                              beliefs=self.beliefs,
-                                              source_counts=self.source_counts)
+        if not self.stmt_stat_gather:
+            stmt_data = StmtStatGather.from_dicts(
+                ev_counts=self.ev_counts,
+                beliefs=self.beliefs,
+                source_counts=self.source_counts
+            )
+        else:
+            stmt_data = self.stmt_stat_gather
+            normal_stats = make_standard_stats(ev_counts=self.ev_counts,
+                                               beliefs=self.beliefs,
+                                               source_counts=self.source_counts)
+            stmt_data.add_stats(*normal_stats)
+
         stmt_rows = group_and_sort_statements(self.statements,
                                               stmt_metrics=stmt_data,
                                               sort_by=self.sort_by,

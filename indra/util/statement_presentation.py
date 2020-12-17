@@ -188,6 +188,17 @@ def source_count_list(source_counts):
     return StmtStat.from_dicts(source_counts, int, SumStats)
 
 
+def make_standard_stats(ev_counts=None, beliefs=None, source_counts=None):
+    stats = []
+    if ev_counts:
+        stats.append(EvCount(ev_counts))
+    if beliefs:
+        stats.append(Belief(beliefs))
+    if source_counts:
+        stats.extend(source_count_list(source_counts))
+    return stats
+
+
 class StmtStatGather:
     """Gather metrics for items that are derived from statements.
 
@@ -245,11 +256,15 @@ class StmtStatGather:
 
     def add_stats(self, *stmt_stats):
         """Add more stats to the object."""
+        new_stats = [s for s in stmt_stats if s.name not in self.row_set()]
+        if not new_stats:
+            return
+
         if self.__started or self.__finished:
             raise RuntimeError("Cannot add stats after accumulation has "
                                "started or after it has finished.")
 
-        for stat in stmt_stats:
+        for stat in new_stats:
             if not isinstance(stat, StmtStat):
                 raise ValueError("All arguments must be StmtStat objects.")
             if stat.agg_class in self.__stmt_stats:
@@ -289,15 +304,9 @@ class StmtStatGather:
         return cls(stat_groups)
 
     @classmethod
-    def from_dicts(cls, ev_counts=None, beliefs=None, source_counts=None):
+    def from_dicts(cls, **kwargs):
         """Init a stat gatherer from dicts keyed by hash."""
-        stats = []
-        if ev_counts:
-            stats.append(EvCount(ev_counts))
-        if beliefs:
-            stats.append(Belief(beliefs))
-        if source_counts:
-            stats.extend(source_count_list(source_counts))
+        stats = make_standard_stats(**kwargs)
         return cls.from_stmt_stats(*stats)
 
     def __getitem__(self, key):
@@ -325,6 +334,12 @@ class StmtStatGather:
         for stat_grp in self.__stats.values():
             stat_grp.finish()
         return
+
+    def is_finished(self):
+        return self.__finished
+
+    def is_started(self):
+        return self.__started
 
     def get_new_instance(self):
         """Create an instance to gather another level of data."""
@@ -548,7 +563,8 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
     if missing_rows:
         stmt_stats = StmtStat.from_stmts(stmt_list, missing_rows)
         stmt_metrics.add_stats(*stmt_stats)
-    stmt_metrics.fill_from_stmt_stats()
+    if not stmt_metrics.is_finished():
+        stmt_metrics.fill_from_stmt_stats()
 
     # Define the sort function.
     if isinstance(sort_by, str):
