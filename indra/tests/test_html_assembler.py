@@ -339,3 +339,16 @@ def test_sort_group_by_statement():
 
     # Make sure the html assembly works.
     ha.make_model(grouping_level='statement')
+
+
+def test_sort_group_by_statement_sort_by_none():
+    stmts = _get_sort_corpus()
+    ha = HtmlAssembler(stmts, sort_by=None)
+
+    json_model = ha.make_json_model(grouping_level='statement')
+    statements = \
+        json_model['all-statements']['stmts_formatted'][0]['stmt_info_list']
+    got_h_list = [int(s['hash']) for s in statements]
+    inp_h_list = [s.get_hash() for s in stmts]
+    assert got_h_list == inp_h_list
+

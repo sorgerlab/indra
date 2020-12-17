@@ -97,9 +97,6 @@ class HtmlAssembler(object):
         A dictionary of the belief of each statement indexed by hash. If not
         provided, the beliefs of the statements passed to the constructor are
         used.
-    sort_by : str
-        Select which value to sort results by, either 'ev_count' or 'belief'.
-        The default is 'ev_count'.
     source_counts : Optional[dict]
         A dictionary of the itemized evidence counts, by source, available for
         each statement, indexed by hash. If not provided, the statements
@@ -114,6 +111,20 @@ class HtmlAssembler(object):
         the configuration entry indra.config.get_config('INDRA_DB_REST_URL').
         If None, the URLs are constructed as relative links.
         Default: None
+    sort_by : str or function or None
+        If str, it indicates which parameter in metric_dict to sort by, or
+        either 'belief' or 'ev_count' which are calculated from the statement
+        objects themselves. The default, 'default', is mostly a sort by ev_count
+        but also favors statements with fewer agents. Alternatively, you may
+        give a function that takes a dict as its single argument, where that
+        dict is an value of the `metric_dict`. If no metric dict is given,
+        the argument to the function will receive a dict with values for
+        `belief` and `ev_count`. The value may also be None, in which case the
+        sort function will return the same value for all elements, and thus
+        the original order of elements will be preserved. This could have
+        strange effects when statements are grouped (i.e. when `grouping_level`
+        is not 'statement'); such functionality is untested and we make no
+        guarantee that it will work.
 
     Attributes
     ----------

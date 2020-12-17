@@ -505,15 +505,19 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
     ----------
     stmt_list : list[Statement]
         A list of INDRA statements.
-    sort_by : str or function
+    sort_by : str or function or None
         If str, it indicates which parameter in metric_dict to sort by, or
         either 'belief' or 'ev_count' which are calculated from the statement
         objects themselves. The default, 'default', is mostly a sort by ev_count
         but also favors statements with fewer agents. Alternatively, you may
         give a function that takes a dict as its single argument, where that
         dict is an value of the `metric_dict`. If no metric dict is given,
-        the argument to the function will recieve a dict with values for
-        `belief` and `ev_count`.
+        the argument to the function will receive a dict with values for
+        `belief` and `ev_count`. The value may also be None, in which case the
+        sort function will return the same value for all elements, and thus
+        the original order of elements will be preserved. This could have
+        strange effects when statements are grouped (i.e. when `grouping_level`
+        is not 'statement').
     stmt_metrics : StmtStatGather
         A statement statistics gatherer loaded with data from the corpus of
         statements. If None, a new one will be formed with basic statics
@@ -553,6 +557,9 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
             if sort_by == 'default':
                 return metric['ev_count'] + 1/(1 + metric['ag_count'])
             return metric[sort_by]
+    elif sort_by is None:
+        def _sort_func(metric):
+            return 0
     else:
         # Check that the sort function is a valid function.
         sample_dict = dict.fromkeys(stmt_metrics.row_set(), 0)
@@ -574,7 +581,8 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
                 if isinstance(contents, dict):
                     contents = contents.items()
                 contents = sorted_rows(contents, *metric_dicts[1:])
-            yield (_sort_func(metrics), str(key)), key, contents, metrics
+            yield (_sort_func(metrics), str(key)) if sort_by else 0, \
+                  key, contents, metrics
 
     def sorted_rows(rows, *metric_dicts):
         return sorted(iter_rows(rows, *metric_dicts), key=lambda t: t[0],
