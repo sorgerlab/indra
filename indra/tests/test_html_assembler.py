@@ -244,7 +244,8 @@ def test_migration():
     ha.make_model()
 
 
-def test_sort_default():
+def _get_sort_corpus():
+    # Create a list of statements with bogus agents.
     stmts = [
         Inhibition(
             Agent('Fez'), Agent('Baz'),
@@ -267,14 +268,26 @@ def test_sort_default():
         ),
         Phosphorylation(
             Agent('Bar'), Agent('Baz'),
-            evidence=[Evidence(text="Bar phosphorylates Baz")]
+            evidence=[Evidence('', text="Bar phosphorylates Baz")]
         ),
         Conversion(Agent('Fez'), [Agent('Far'), Agent('Faz')],
                    [Agent('Bar'), Agent('Baz')],
-                   evidence=[Evidence(text='Fez converts Far and Faz into Bar '
+                   evidence=[Evidence('ok',
+                                      text='Fez converts Far and Faz into Bar '
                                            'and Baz.')])
     ]
-    ha = HtmlAssembler(stmts)
+
+    # Set belief values.
+    beliefs = [0.9, 0.8, 0.6, 0.99, 1, 0.75]
+    for stmt, belief in zip(stmts, beliefs):
+        stmt.belief = belief
+    return stmts
+
+
+def test_sort_default():
+    ha = HtmlAssembler(_get_sort_corpus())
+
+    # Test the ordering of the statements in the default mode of make_json_model
     json_model = ha.make_json_model()
     assert list(json_model.keys()) == ['Fez-Baz', 'Bar-Baz', 'Fez-Bar']
     exp_stmt_counts = {'Fez-Baz': 4, 'Bar-Baz': 2, 'Fez-Bar': 2}
@@ -284,4 +297,17 @@ def test_sort_default():
                         for s in r['stmt_info_list'])
                  for k, m in json_model.items()}
     assert ev_counts == {'Fez-Baz': 6, 'Bar-Baz': 5, 'Fez-Bar': 3}, ev_counts
+
+    # Check to make sure the HTML assembler runs.
     ha.make_model()
+
+
+def test_sort_group_by_relation():
+    ha = HtmlAssembler(_get_sort_corpus())
+
+    # Test ordering, grouping by relation.
+    json_model = ha.make_json_model(grouping_level='relation')
+    assert list(json_model.keys()) == ['all-relations']
+    relations = json_model['all-relations']['stmts_formatted']
+    assert len(relations) == 5, len(relations)
+
