@@ -1759,7 +1759,7 @@ def test_refinements():
     # Test PySB
     pa = PysbAssembler(model_stmts)
     pysb_model = pa.make_model()
-    pmc = PysbModelChecker(pysb_model, test_stmts, model_stmts=model_stmts)
+    pmc = PysbModelChecker(pysb_model, test_stmts)
     results = pmc.check_model()
     assert results[0][1].path_found
     assert results[1][1].path_found
@@ -1767,9 +1767,8 @@ def test_refinements():
     path1 = results[1][1].paths[0]
     path_stmts = stmts_from_pysb_path(
         path0, pysb_model, model_stmts)
-    # TODO this is failing because we get GSK3B phos on "S", "9" as a main node,
-    # it should be considered a refinement node
-    assert path_stmts == [model_stmts[0], gsk3b_ref], path_stmts
+    # NOTE we do not report more specific sites as refinements in PySB
+    assert path_stmts == [model_stmts[0]], path_stmts
     path_stmts = stmts_from_pysb_path(
         path1, pysb_model, model_stmts)
     assert path_stmts == [mek_ref, model_stmts[1], erk_phos_ref], path_stmts
