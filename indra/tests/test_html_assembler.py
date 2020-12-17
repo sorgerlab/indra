@@ -322,7 +322,7 @@ def test_sort_group_by_relation():
     assert len(relations) == 5, len(relations)
 
     # Make sure the HTML assembles.
-    ha.make_model()
+    ha.make_model(grouping_level='relation')
 
 
 def test_sort_group_by_statement():
@@ -338,5 +338,4 @@ def test_sort_group_by_statement():
     assert [len(s['evidence']) for s in statements] == [4, 3, 2, 2, 1, 1]
 
     # Make sure the html assembly works.
-    ha.make_model()
-
+    ha.make_model(grouping_level='statement')
