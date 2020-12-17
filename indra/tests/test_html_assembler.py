@@ -249,30 +249,40 @@ def _get_sort_corpus():
     stmts = [
         Inhibition(
             Agent('Fez'), Agent('Baz'),
-            evidence=[Evidence(text="Fez-|Baz"), Evidence(text="Baz|-Fez")]
+            evidence=[Evidence('medscan', text="Fez-|Baz"),
+                      Evidence('medscan', text="Baz|-Fez"),
+                      Evidence('reach', text="Fez inhibits Baz."),
+                      Evidence('isi', text="Baz is inhibited by Fez.")]
         ),
         DecreaseAmount(
             Agent('Fez'), Agent('Baz'),
-            evidence=[Evidence(text="Fez->Baz")]
+            evidence=[Evidence('reach', text="Fez->Baz")]
         ),
         Complex(
             [Agent('Fez'), Agent('Baz'), Agent('Bar')],
-            evidence=[Evidence(text="Fez-Baz-Bar complex"),
-                      Evidence(text="Complex of Fez, Baz, & Bar")]
+            evidence=[Evidence('terrible', text="Fez-Baz-Bar complex"),
+                      Evidence('reach', text="Complex of Fez, Baz, & Bar")]
         ),
         Phosphorylation(
             Agent('Bar'), Agent('Baz'), 'T', '185',
-            evidence=[Evidence(text="Bar phosphorylates Baz on T 46"),
-                      Evidence(text="Bar phosphorylate Baz on Tyrosine "
+            evidence=[Evidence('reach',
+                               text="Bar phosphorylates Baz on T 46"),
+                      Evidence('trips',
+                               text="Bar phosphorylate Baz on Tyrosine "
                                     "forty-six")]
         ),
         Phosphorylation(
             Agent('Bar'), Agent('Baz'),
-            evidence=[Evidence('', text="Bar phosphorylates Baz")]
+            evidence=[Evidence('sparser',
+                               text="Bar phosphorylates Baz"),
+                      Evidence('isi',
+                               text="Bar phosphorylates Baz."),
+                      Evidence('sparser',
+                               text="Baz is phosphorylated by Bar.")]
         ),
         Conversion(Agent('Fez'), [Agent('Far'), Agent('Faz')],
                    [Agent('Bar'), Agent('Baz')],
-                   evidence=[Evidence('ok',
+                   evidence=[Evidence('reach',
                                       text='Fez converts Far and Faz into Bar '
                                            'and Baz.')])
     ]
@@ -296,7 +306,7 @@ def test_sort_default():
     ev_counts = {k: sum(len(s['evidence']) for r in m['stmts_formatted']
                         for s in r['stmt_info_list'])
                  for k, m in json_model.items()}
-    assert ev_counts == {'Fez-Baz': 6, 'Bar-Baz': 5, 'Fez-Bar': 3}, ev_counts
+    assert ev_counts == {'Fez-Baz': 8, 'Bar-Baz': 7, 'Fez-Bar': 3}, ev_counts
 
     # Check to make sure the HTML assembler runs.
     ha.make_model()
@@ -310,4 +320,23 @@ def test_sort_group_by_relation():
     assert list(json_model.keys()) == ['all-relations']
     relations = json_model['all-relations']['stmts_formatted']
     assert len(relations) == 5, len(relations)
+
+    # Make sure the HTML assembles.
+    ha.make_model()
+
+
+def test_sort_group_by_statement():
+    ha = HtmlAssembler(_get_sort_corpus())
+
+    # Test ordering and grouping by statement.
+    json_model = ha.make_json_model(grouping_level='statement')
+    assert list(json_model.keys()) == ['all-statements']
+    assert len(json_model['all-statements']['stmts_formatted']) == 1
+    statements = \
+        json_model['all-statements']['stmts_formatted'][0]['stmt_info_list']
+    assert len(statements) == 6
+    assert [len(s['evidence']) for s in statements] == [4, 3, 2, 2, 1, 1]
+
+    # Make sure the html assembly works.
+    ha.make_model()
 
