@@ -419,6 +419,7 @@ class BasicStats(StmtStatRow):
         self._count = 0
         self.__stmt_hashes = set()
         self.__frozen = False
+        self.__dict = None
 
     @classmethod
     def from_array(cls, keys, arr, original_types, stmt_metrics=None):
@@ -460,9 +461,15 @@ class BasicStats(StmtStatRow):
         return self._keys[:]
 
     def get_dict(self):
-        return {key: value.astype(original_type)
-                for key, value, original_type
-                in zip(self._keys, self._values, self._original_types)}
+        if not self.__frozen:
+            raise RuntimeError("Cannot load source dict until frozen.")
+
+        if self.__dict is None:
+            self.__dict = {key: value.astype(original_type)
+                           for key, value, original_type
+                           in zip(self._keys, self._values,
+                                  self._original_types)}
+        return self.__dict
 
 
 class SumStats(BasicStats):
