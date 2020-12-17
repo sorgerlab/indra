@@ -67,7 +67,8 @@ class PybelModelChecker(ModelChecker):
             # Cannot check modifications for statements without object
             if isinstance(stmt, Modification):
                 return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
-            obj_nodes = [None]
+            subj_nodes = self.get_nodes(subj, self.graph, 0)
+            obj_nodes = self.get_nodes(obj, self.graph, 0)
         else:
             # Get the polarity for the statement
             if isinstance(stmt, Modification):

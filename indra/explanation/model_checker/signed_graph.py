@@ -68,21 +68,21 @@ class SignedGraphModelChecker(ModelChecker):
 
     def get_nodes(self, agent, graph, target_polarity):
         """Get all nodes corresponding to a given agent."""
-        ns = NodesContainer(agent)
+        nc = NodesContainer(agent)
         if agent is None:
             nc.main_nodes = None
             return nc
         node = (agent.name, target_polarity)
         if node in graph.nodes:
-            ns.main_nodes.append(node)
+            nc.main_nodes.append(node)
         for n, ag in self.nodes_to_agents.items():
             if ag is not None and not ag.matches(agent) and ag.refinement_of(
                     agent, bio_ontology):
                 node = (n, target_polarity)
                 if node in graph.nodes:
-                    ns.ref_nodes.append(node)
-        ns.get_all_nodes()
-        return ns
+                    nc.ref_nodes.append(node)
+        nc.get_all_nodes()
+        return nc
 
     def get_nodes_to_agents(self):
         """Return a dictionary mapping IndraNet nodes to INDRA agents."""
