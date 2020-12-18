@@ -33,7 +33,8 @@ default_output_fname = 'reach_output.json'
 
 
 def process_pmc(pmc_id, offline=False, url=None,
-                output_fname=default_output_fname):
+                output_fname=default_output_fname,
+                organism_priority=None):
     """Return a ReachProcessor by processing a paper with a given PMC id.
 
     Uses the PMC client to obtain the full text. If it's not available,
@@ -82,7 +83,8 @@ def process_pmc(pmc_id, offline=False, url=None,
     # Now process the NXML file with the provided arguments
     logger.info('Processing %s with REACH' % pmc_id)
     rp = process_nxml_file(fname, citation=pmid, offline=offline, url=url,
-                           output_fname=output_fname)
+                           output_fname=output_fname,
+                           organism_priority=organism_priority)
     return rp
 
 
@@ -138,7 +140,8 @@ def process_pubmed_abstract(pubmed_id, offline=False, url=None,
 
 
 def process_text(text, citation=None, offline=False, url=None,
-                 output_fname=default_output_fname, timeout=None):
+                 output_fname=default_output_fname, timeout=None,
+                 organism_priority=None):
     """Return a ReachProcessor by processing the given text.
 
     Parameters
@@ -183,11 +186,13 @@ def process_text(text, citation=None, offline=False, url=None,
     if json_str:
         with open(output_fname, 'wb') as fh:
             fh.write(json_str)
-        return process_json_str(json_str.decode('utf-8'), citation)
+        return process_json_str(json_str.decode('utf-8'), citation=citation,
+                                organism_priority=organism_priority)
 
 
 def process_nxml_str(nxml_str, citation=None, offline=False,
-                     url=None, output_fname=default_output_fname):
+                     url=None, output_fname=default_output_fname,
+                     organism_priority=None):
     """Return a ReachProcessor by processing the given NXML string.
 
     NXML is the format used by PubmedCentral for papers in the open
@@ -241,11 +246,13 @@ def process_nxml_str(nxml_str, citation=None, offline=False,
     if json_str:
         with open(output_fname, 'wb') as fh:
             fh.write(json_str)
-        return process_json_str(json_str.decode('utf-8'), citation)
+        return process_json_str(json_str.decode('utf-8'), citation=citation,
+                                organism_priority=organism_priority)
 
 
 def process_nxml_file(file_name, citation=None, offline=False,
-                      url=None, output_fname=default_output_fname):
+                      url=None, output_fname=default_output_fname,
+                      organism_priority=None):
     """Return a ReachProcessor by processing the given NXML file.
 
     NXML is the format used by PubmedCentral for papers in the open
@@ -292,10 +299,11 @@ def process_nxml_file(file_name, citation=None, offline=False,
     if json_str:
         with open(output_fname, 'wb') as fh:
             fh.write(json_str)
-        return process_json_str(json_str.decode('utf-8'), citation)
+        return process_json_str(json_str.decode('utf-8'), citation=citation,
+                                organism_priority=organism_priority)
 
 
-def process_json_file(file_name, citation=None):
+def process_json_file(file_name, citation=None, organism_priority=None):
     """Return a ReachProcessor by processing the given REACH json file.
 
     The output from the REACH parser is in this json format. This function is
@@ -319,12 +327,13 @@ def process_json_file(file_name, citation=None):
     try:
         with open(file_name, 'rb') as fh:
             json_str = fh.read().decode('utf-8')
-            return process_json_str(json_str, citation)
+            return process_json_str(json_str, citation=citation,
+                                    organism_priority=organism_priority)
     except IOError:
         logger.error('Could not read file %s.' % file_name)
 
 
-def process_json_str(json_str, citation=None):
+def process_json_str(json_str, citation=None, organism_priority=None):
     """Return a ReachProcessor by processing the given REACH json string.
 
     The output from the REACH parser is in this json format.
@@ -355,7 +364,8 @@ def process_json_str(json_str, citation=None):
         logger.error('Could not decode JSON string.')
         logger.exception(e)
         return None
-    rp = ReachProcessor(json_dict, citation)
+    rp = ReachProcessor(json_dict, pmid=citation,
+                        organism_priority=organism_priority)
     rp.get_modifications()
     rp.get_complexes()
     rp.get_activation()

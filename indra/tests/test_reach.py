@@ -481,3 +481,14 @@ def test_phosphorylation_regulation():
     stmt = rp.statements[0]
     assert isinstance(stmt, Phosphorylation), stmt
     assert not stmt.sub.mods
+
+
+def test_organism_prioritization():
+    here = os.path.dirname(os.path.abspath(__file__))
+    test_file = os.path.join(here, 'reach_reg_phos.json')
+    rp = reach.process_json_file(test_file)
+    assert rp is not None
+    assert len(rp.statements) == 1
+    stmt = rp.statements[0]
+    assert isinstance(stmt, Phosphorylation), stmt
+    assert not stmt.sub.mods
