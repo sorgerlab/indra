@@ -351,8 +351,10 @@
         {% set i_stmt = loop.index0 %}
 
                     <a name="{{ stmt_info['hash'] }}"></a>
-                    <div class="row statement">
-                      <div class="col text-left nvp">
+                    <div class="row statement group_heading"
+                         onclick="toggler( '{{ group_dict['short_name_key'] }}-{{ stmt_info['hash'] }}' )"
+                         id="{{ group_dict['short_name_key'] }}-{{ stmt_info['hash'] }}_heading">
+                      <div class="col-auto text-left nvp">
                         <h5>
                           {{ stmt_info['english'] }}
                           <a href="{% if db_rest_url %}{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html{% else %}#{% endif %}"
@@ -365,7 +367,8 @@
                         {{ badges(stmt_info['source_count']) }}
                       </div>
                     </div>  <!-- end statement heading row -->
-                    <div class="row">
+                    <div class="row group"
+                         id="{{ group_dict['short_name_key'] }}-{{ stmt_info['hash'] }}_group">
                       <div class="col">
                         <div class="container bars" id="stmt-{{ i_pair }}-{{ i_type }}-{{ i_stmt }}"
                              data-stmt_hash="{{ stmt_info['hash'] }}">
