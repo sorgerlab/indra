@@ -446,7 +446,12 @@ class ReachProcessor(object):
         for xr in entity_term['xrefs']:
             ns = xr['namespace']
             if ns == 'uniprot':
-                db_refs['UP'] = xr['id']
+                up_id = xr['id']
+                if '#' in up_id:
+                    parts = up_id.split('#')
+                    db_refs['UPPRO'] = parts[1]
+                else:
+                    db_refs['UP'] = up_id
             elif ns == 'hgnc':
                 db_refs['HGNC'] = xr['id']
             elif ns == 'pfam':
@@ -480,6 +485,8 @@ class ReachProcessor(object):
             # We handle "be" here for compatibility with older versions
             elif ns in ('fplx', 'be'):
                 db_refs['FPLX'] = xr['id']
+            elif ns == 'proonto':
+                db_refs['PR'] = xr['id']
             # These name spaces are ignored
             elif ns in ['uaz']:
                 pass

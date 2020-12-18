@@ -25,6 +25,25 @@ Then read text by specifying the url parameter when using
    from indra.sources import reach
    rp = reach.process_text('MEK binds ERK', url=reach.local_text_url)
 
+One limitation here is that the REACH sever is configured by default to
+limit the input to 2048 characters. To change this, edit the
+file `export/src/main/resources/reference.conf` in your local
+reach clone folder and add
+
+.. code-block:: json
+
+    http {
+      server {
+      // ...
+      parsing {
+        max-uri-length = 256k
+      }
+      // ...
+      }
+    }
+
+to increase the character limit.
+
 It is also possible to read NXML (string or file) and process the text of a
 paper given its PMC ID or PubMed ID using other API methods in
 :py:mod:`indra.sources.reach.api`. Note that `reach.local_nxml_url` needs
