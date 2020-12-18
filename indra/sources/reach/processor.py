@@ -449,7 +449,6 @@ class ReachProcessor(object):
                 up_id = xr['id']
                 if '#' in up_id:
                     parts = up_id.split('#')
-                    db_refs['UP'] = parts[0]
                     db_refs['UPPRO'] = parts[1]
                 else:
                     db_refs['UP'] = up_id
