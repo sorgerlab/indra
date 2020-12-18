@@ -759,6 +759,7 @@ def main():
     update_lincs_proteins()
     update_mesh_names()
     update_mesh_supplementary_names()
+    update_biomappings()
     update_mirbase()
     update_doid()
     update_efo()
