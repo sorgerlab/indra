@@ -2,10 +2,11 @@ import os
 import re
 import logging
 import objectpath
+from collections import defaultdict
 
 from indra.statements import *
 from indra.util import read_unicode_csv
-from indra.databases import go_client
+from indra.databases import go_client, uniprot_client
 from indra.ontology.standardize import \
     standardize_db_refs, standardize_agent_name, \
     standardize_name_db_refs
@@ -39,8 +40,9 @@ class ReachProcessor(object):
     all_events : dict[str, str]
         The frame IDs of all events by type in the REACH extraction.
     """
-    def __init__(self, json_dict, pmid=None):
+    def __init__(self, json_dict, pmid=None, organism_priority=None):
         self.tree = objectpath.Tree(json_dict)
+        self.organism_priority = organism_priority
         self.statements = []
         self.citation = pmid
         if pmid is None:
@@ -428,7 +430,7 @@ class ReachProcessor(object):
         # This is the default name, which can be overwritten
         # below for specific database entries
         agent_name = entity_term['text']
-        db_refs = self._get_db_refs(entity_term)
+        db_refs = self._get_db_refs(entity_term, self.organism_priority)
 
         mod_terms = entity_term.get('modifications')
         mods, muts = self._get_mods_and_muts_from_mod_terms(mod_terms)
@@ -441,7 +443,7 @@ class ReachProcessor(object):
         return agent, coords
 
     @staticmethod
-    def _get_db_refs(entity_term):
+    def _get_db_refs(entity_term, organism_priority):
         db_refs = {}
         for xr in entity_term['xrefs']:
             ns = xr['namespace']
@@ -493,6 +495,15 @@ class ReachProcessor(object):
             else:
                 logger.warning('Unhandled xref namespace: %s' % ns)
         db_refs['TEXT'] = entity_term['text']
+
+        if organism_priority:
+            unique_altxrefs = \
+                set((axr['namespace'], axr['id'])
+                    for axr in entity_term.get('alt-xrefs', []))
+            prioritized_id = prioritize_organism_grounding(unique_altxrefs)
+            if prioritized_id:
+                db_refs['UP'] = prioritized_id
+
         db_refs = standardize_db_refs(db_refs)
         return db_refs
 
@@ -926,3 +937,15 @@ def determine_reach_subtype(event_name):
                 best_match_length = len(ss)
 
     return best_match
+
+
+def prioritize_organism_grounding(xrefs, organism_priority):
+    uniprot_ids = [xr[1] for xr in xrefs if xr[0] == 'uniprot']
+    groundings_by_organism = defaultdict(list)
+    for up_id in uniprot_ids:
+        organism_id = uniprot_client.get_organism_id(up_id)
+        groundings_by_organism[organism_id].append(up_id)
+    for organism in organism_priority:
+        if organism in groundings_by_organism:
+            return groundings_by_organism[organism][0]
+    return None
