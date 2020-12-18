@@ -170,8 +170,10 @@ class GroundingMapper(object):
                     logger.error(e)
 
             gilda_success = False
+            # Gilda is not used if agent text is in the grounding map
             if not adeft_success and self.gilda_mode and \
-                    agent_txts & set(self.gilda_models):
+               not agent_txts & set(self.grounding_map) and \
+               agent_txts & set(self.gilda_models):
                 try:
                     # Us the longest match for disambiguation
                     txt_for_gilda = sorted(agent_txts & set(self.gilda_models),
