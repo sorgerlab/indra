@@ -737,7 +737,7 @@ def update_biomappings():
     for k, v in mesh_mappings.items():
         for vv in v:
             rows.append(list(k + vv))
-    rows = sorted(rows, key=lambda x: x[1])
+    rows = sorted(rows, key=lambda x: (x[1], x[2], x[3]))
     write_unicode_csv(get_resource_path('mesh_mappings.tsv'), rows,
                       delimiter='\t')
 
