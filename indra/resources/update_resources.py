@@ -675,44 +675,39 @@ def update_biomappings():
     """Update mappings from the BioMappings project."""
     from indra.databases import mesh_client
     from indra.databases.identifiers import get_ns_id_from_identifiers
-    biomappings_branch = 'import_gilda_mappings'
-
-    # Predictions
-    url = (f'https://raw.githubusercontent.com/biomappings/biomappings/'
-           f'{biomappings_branch}/predictions.tsv')
-    df_pred = pandas.read_csv(url, delimiter='\t', dtype=str)
-    # Mappings
-    url = (f'https://raw.githubusercontent.com/biomappings/biomappings/'
-           f'{biomappings_branch}/mappings.tsv')
-    df_mappings = pandas.read_csv(url, delimiter='\t', dtype=str)
-
-    df = df_mappings.append(df_pred)
-
-    ### Apply any necessary filters here
-    # We take only exact matches
-    df = df[df['relation'] == 'skos:exactMatch']
-    # We only take real xrefs, not refs within a given ontology
-    df = df[df['source prefix'] != df['target prefix']]
+    from biomappings.resources import load_mappings, load_predictions
 
     # We now construct a mapping dict of these mappings
-    biomappings = {}
-    for _, row in df.iterrows():
+    biomappings = defaultdict(list)
+    mappings = load_mappings()
+    predictions = load_predictions()
+    for mapping in mappings + predictions:
+        if mapping['relation'] != 'skos:exactMatch':
+            continue
         source_ns, source_id = \
-            get_ns_id_from_identifiers(row['source prefix'],
-                                       row['source identifier'])
+            get_ns_id_from_identifiers(mapping['source prefix'],
+                                       mapping['source identifier'])
         target_ns, target_id = \
-            get_ns_id_from_identifiers(row['target prefix'],
-                                       row['target identifier'])
-        biomappings[(source_ns, source_id, row['source name'])] = \
-            (target_ns, target_id, row['target name'])
-        biomappings[(target_ns, target_id, row['target name'])] = \
-            (source_ns, source_id, row['target name'])
+            get_ns_id_from_identifiers(mapping['target prefix'],
+                                       mapping['target identifier'])
+        # We only take real xrefs, not refs within a given ontology
+        if source_ns == target_ns:
+            continue
+        biomappings[(source_ns, source_id, mapping['source name'])].append(
+            (target_ns, target_id, mapping['target name']))
+        biomappings[(target_ns, target_id, mapping['target name'])].append(
+            (source_ns, source_id, mapping['target name']))
 
-    mesh_mappings = {k: v for k, v in biomappings.items() if k[0] == 'MESH'}
-    non_mesh_mappings = {k: v for k, v in biomappings.items()
-                         if k[0] != 'MESH' and v[0] != 'MESH'}
-    rows = [list(k + v) for k, v in
-            sorted(non_mesh_mappings.items(), key=lambda x: x[0][1])]
+    mesh_mappings = {k: v for k, v in biomappings.items()
+                     if k[0] == 'MESH'}
+    non_mesh_mappings = {k: [vv for vv in v if vv[0] != 'MESH']
+                         for k, v in biomappings.items()
+                         if k[0] != 'MESH' and k[1] != 'MESH'}
+    rows = []
+    for k, v in non_mesh_mappings.items():
+        for vv in v:
+            rows.append(list(k + vv))
+    rows = sorted(rows, key=lambda x: x[1])
     write_unicode_csv(get_resource_path('biomappings.tsv'), rows,
                       delimiter='\t')
 
@@ -732,10 +727,17 @@ def update_biomappings():
                 mesh_name = mesh_client.get_mesh_name(mesh_id)
                 if not mesh_name:
                     continue
-                mesh_mappings[('MESH', mesh_id, name)] = \
-                    (db, db_id, entry['name'])
-    rows = [list(k + v) for k, v in
-            sorted(mesh_mappings.items(), key=lambda x: x[0][1])]
+                key = ('MESH', mesh_id, mesh_name)
+                if key not in mesh_mappings:
+                    mesh_mappings[key] = [(db, db_id, entry['name'])]
+                else:
+                    mesh_mappings[key].append((db, db_id, entry['name']))
+
+    rows = []
+    for k, v in mesh_mappings.items():
+        for vv in v:
+            rows.append(list(k + vv))
+    rows = sorted(rows, key=lambda x: x[1])
     write_unicode_csv(get_resource_path('mesh_mappings.tsv'), rows,
                       delimiter='\t')
 
