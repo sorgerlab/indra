@@ -681,22 +681,30 @@ def update_biomappings():
     biomappings = defaultdict(list)
     mappings = load_mappings()
     predictions = load_predictions()
-    for mapping in mappings + predictions:
-        if mapping['relation'] != 'skos:exactMatch':
-            continue
-        source_ns, source_id = \
-            get_ns_id_from_identifiers(mapping['source prefix'],
-                                       mapping['source identifier'])
-        target_ns, target_id = \
-            get_ns_id_from_identifiers(mapping['target prefix'],
-                                       mapping['target identifier'])
-        # We only take real xrefs, not refs within a given ontology
-        if source_ns == target_ns:
-            continue
-        biomappings[(source_ns, source_id, mapping['source name'])].append(
-            (target_ns, target_id, mapping['target name']))
-        biomappings[(target_ns, target_id, mapping['target name'])].append(
-            (source_ns, source_id, mapping['target name']))
+    for mappings, mapping_type in ((mappings, 'curated'),
+                                  (predictions, 'predicted')):
+        for mapping in mappings:
+            # We skip anything that isn't an exact match
+            if mapping['relation'] != 'skos:exactMatch':
+                continue
+            # We only accept curated mappings for NCIT
+            if mapping_type == 'predicted' and \
+                    (mapping['source prefix'] == 'ncit' or
+                     mapping['target prefix'] == 'ncit'):
+                continue
+            source_ns, source_id = \
+                get_ns_id_from_identifiers(mapping['source prefix'],
+                                           mapping['source identifier'])
+            target_ns, target_id = \
+                get_ns_id_from_identifiers(mapping['target prefix'],
+                                           mapping['target identifier'])
+            # We only take real xrefs, not refs within a given ontology
+            if source_ns == target_ns:
+                continue
+            biomappings[(source_ns, source_id, mapping['source name'])].append(
+                (target_ns, target_id, mapping['target name']))
+            biomappings[(target_ns, target_id, mapping['target name'])].append(
+                (source_ns, source_id, mapping['target name']))
 
     mesh_mappings = {k: v for k, v in biomappings.items()
                      if k[0] == 'MESH'}
