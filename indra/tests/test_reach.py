@@ -369,7 +369,8 @@ def test_get_db_refs_up_human():
         }
     db_refs = ReachProcessor._get_db_refs(entity_term)
     assert db_refs == {'UP': 'Q13422', 'HGNC': '13176',
-                       'TEXT': 'Ikaros'}, db_refs
+                       'TEXT': 'Ikaros', 'MESH': 'C497239',
+                       'EGID': '10320'}, db_refs
 
 
 def test_get_db_refs_up_non_human():
