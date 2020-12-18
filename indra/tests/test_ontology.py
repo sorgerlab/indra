@@ -303,12 +303,12 @@ def test_drugbank_mappings():
 
 
 def test_standardize_up_isoform():
-    assert standardize_db_refs({'UP': 'Q99490'}) == \
-           {'UP': 'Q99490', 'HGNC': '16921',
-            'EGID': '116986', 'MESH': 'C485997'}
-    assert standardize_db_refs({'UP': 'Q99490-123'}) == \
-           {'UP': 'Q99490-123', 'HGNC': '16921',
-            'EGID': '116986', 'MESH': 'C485997'}
+    refs = standardize_db_refs({'UP': 'Q99490'})
+    assert refs == {'UP': 'Q99490', 'HGNC': '16921',
+                    'EGID': '116986', 'MESH': 'C485997'}, refs
+    refs = standardize_db_refs({'UP': 'Q99490-123'})
+    assert refs == {'UP': 'Q99490-123', 'HGNC': '16921',
+                    'EGID': '116986', 'MESH': 'C485997'}, refs
 
 
 def test_standardize_chembl():
