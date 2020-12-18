@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.5'
+    version = '1.6'
 
     def __init__(self):
         super().__init__()
@@ -72,6 +72,7 @@ class BioOntology(IndraOntology):
         self.add_mesh_xrefs()
         self.add_mirbase_xrefs()
         self.add_hms_lincs_xrefs()
+        self.add_biomappings()
         # Add hierarchies
         logger.info('Adding hierarchy...')
         self.add_famplex_hierarchy()
@@ -298,6 +299,19 @@ class BioOntology(IndraOntology):
                 edges.append((self.label('MESH', mesh_id),
                               self.label('MESH', parent_id),
                               {'type': 'isa'}))
+        self.add_edges_from(edges)
+
+    def add_biomappings(self):
+        biomappings_tsv = get_resource_path('biomappings.tsv')
+        edges = []
+        for source_ns, source_id, _, target_ns, target_id, _ in \
+                read_unicode_csv(biomappings_tsv, delimiter='\t'):
+            edges.append((self.label(source_ns, source_id),
+                          self.label(target_ns, target_id),
+                          {'type': 'xref', 'source': 'biomappings'}))
+            edges.append((self.label(target_ns, target_id),
+                          self.label(source_ns, source_id),
+                          {'type': 'xref', 'source': 'biomappings'}))
         self.add_edges_from(edges)
 
     def add_ncit_nodes(self):
