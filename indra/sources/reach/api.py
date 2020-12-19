@@ -59,6 +59,11 @@ def process_pmc(pmc_id, offline=False, url=None,
     output_fname : Optional[str]
         The file to output the REACH JSON output to.
         Defaults to reach_output.json in current working directory.
+    organism_priority : Optional[list of str]
+        A list of Taxonomy IDs providing prioritization among organisms
+        when choosing protein grounding. If not given, the default behavior
+        takes the first match produced by Reach, which is prioritized to be
+        a human protein if such a match exists.
 
     Returns
     -------
@@ -114,6 +119,11 @@ def process_pubmed_abstract(pubmed_id, offline=False, url=None,
     output_fname : Optional[str]
         The file to output the REACH JSON output to.
         Defaults to reach_output.json in current working directory.
+    organism_priority : Optional[list of str]
+        A list of Taxonomy IDs providing prioritization among organisms
+        when choosing protein grounding. If not given, the default behavior
+        takes the first match produced by Reach, which is prioritized to be
+        a human protein if such a match exists.
     **kwargs : keyword arguments
         All other keyword arguments are passed directly to `process_text`.
 
@@ -167,6 +177,11 @@ def process_text(text, citation=None, offline=False, url=None,
     timeout : Optional[float]
         This only applies when reading online (`offline=False`). Only wait for
         `timeout` seconds for the api to respond.
+    organism_priority : Optional[list of str]
+        A list of Taxonomy IDs providing prioritization among organisms
+        when choosing protein grounding. If not given, the default behavior
+        takes the first match produced by Reach, which is prioritized to be
+        a human protein if such a match exists.
 
     Returns
     -------
@@ -217,6 +232,11 @@ def process_nxml_str(nxml_str, citation=None, offline=False,
     output_fname : Optional[str]
         The file to output the REACH JSON output to.
         Defaults to reach_output.json in current working directory.
+    organism_priority : Optional[list of str]
+        A list of Taxonomy IDs providing prioritization among organisms
+        when choosing protein grounding. If not given, the default behavior
+        takes the first match produced by Reach, which is prioritized to be
+        a human protein if such a match exists.
 
     Returns
     -------
@@ -277,6 +297,11 @@ def process_nxml_file(file_name, citation=None, offline=False,
     output_fname : Optional[str]
         The file to output the REACH JSON output to.
         Defaults to reach_output.json in current working directory.
+    organism_priority : Optional[list of str]
+        A list of Taxonomy IDs providing prioritization among organisms
+        when choosing protein grounding. If not given, the default behavior
+        takes the first match produced by Reach, which is prioritized to be
+        a human protein if such a match exists.
 
     Returns
     -------
@@ -317,6 +342,11 @@ def process_json_file(file_name, citation=None, organism_priority=None):
     citation : Optional[str]
         A PubMed ID passed to be used in the evidence for the extracted INDRA
         Statements. Default: None
+    organism_priority : Optional[list of str]
+        A list of Taxonomy IDs providing prioritization among organisms
+        when choosing protein grounding. If not given, the default behavior
+        takes the first match produced by Reach, which is prioritized to be
+        a human protein if such a match exists.
 
     Returns
     -------
@@ -346,6 +376,11 @@ def process_json_str(json_str, citation=None, organism_priority=None):
     citation : Optional[str]
         A PubMed ID passed to be used in the evidence for the extracted INDRA
         Statements. Default: None
+    organism_priority : Optional[list of str]
+        A list of Taxonomy IDs providing prioritization among organisms
+        when choosing protein grounding. If not given, the default behavior
+        takes the first match produced by Reach, which is prioritized to be
+        a human protein if such a match exists.
 
     Returns
     -------

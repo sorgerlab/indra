@@ -39,6 +39,11 @@ class ReachProcessor(object):
         The PubMed ID associated with the extractions.
     all_events : dict[str, str]
         The frame IDs of all events by type in the REACH extraction.
+    organism_priority : list[str]
+        A list of Taxonomy IDs providing prioritization among organisms
+        when choosing protein grounding. If not given, the default behavior
+        takes the first match produced by Reach, which is prioritized to be
+        a human protein if such a match exists.
     """
     def __init__(self, json_dict, pmid=None, organism_priority=None):
         self.tree = objectpath.Tree(json_dict)
@@ -496,13 +501,21 @@ class ReachProcessor(object):
                 logger.warning('Unhandled xref namespace: %s' % ns)
         db_refs['TEXT'] = entity_term['text']
 
+        # If we have a UniProt grounding and we have a non-default
+        # organism priority list, we call the prioritization function
         if db_refs.get('UP') and organism_priority:
+            # These are all the unique groundings in the alt-xrefs list,
+            # which redundantly lists the same match multiple times because
+            # it enumerates multiple synonyms for organisms redundantly
             unique_altxrefs = \
                 set((axr['namespace'], axr['id'])
                     for axr in entity_term.get('alt-xrefs', []))
+            # This returns a single prioritized UniProt ID or None
             prioritized_id = prioritize_organism_grounding(db_refs['UP'],
                                                            unique_altxrefs,
                                                            organism_priority)
+            # If we got an ID, we set the UP grounding to that, otherwise
+            # we keep what we already got from the primary xref
             if prioritized_id:
                 db_refs['UP'] = prioritized_id
 
@@ -942,17 +955,28 @@ def determine_reach_subtype(event_name):
 
 
 def prioritize_organism_grounding(first_id, xrefs, organism_priority):
+    """Pick a prioritized organism-specific UniProt ID for a protein."""
+    # We find the organism for the first ID picked by Reach
     first_organism = uniprot_client.get_organism_id(first_id)
+    # We take only UniProt groundings from the xrefs list
     uniprot_ids = [xr[1] for xr in xrefs if xr[0] == 'uniprot']
+    # We group UniProt IDs by their organism ID
     groundings_by_organism = defaultdict(list)
     for up_id in uniprot_ids:
         organism_id = uniprot_client.get_organism_id(up_id)
         groundings_by_organism[organism_id].append(up_id)
+    # We then go down the list of prioritized organisms and if we find a match
+    # we return immediately
     for organism in organism_priority:
+        # If the organism matches the organism of the first xref match given by
+        # Reach then we return that ID
         if organism == first_organism:
             return first_id
+        # Otherwiser, if we have a group of matches for the current organism,
+        # we sort the list of matches and return the first one (so that the
+        # result is deterministic, though arbitrary).
         if organism in groundings_by_organism:
-            # To make the results here deterministic, though
-            # arbitrary in terms of the specific choice, we put a sort here
             return sorted(groundings_by_organism[organism])[0]
+    # If there is no prioritized organism-specific match, we return None
+    # and let the upstream code handle what to do.
     return None
