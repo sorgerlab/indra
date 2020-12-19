@@ -448,7 +448,7 @@ class ReachProcessor(object):
         return agent, coords
 
     @staticmethod
-    def _get_db_refs(entity_term, organism_priority):
+    def _get_db_refs(entity_term, organism_priority=None):
         db_refs = {}
         for xr in entity_term['xrefs']:
             ns = xr['namespace']
