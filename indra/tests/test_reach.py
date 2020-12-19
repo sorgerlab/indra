@@ -486,9 +486,23 @@ def test_phosphorylation_regulation():
 def test_organism_prioritization():
     here = os.path.dirname(os.path.abspath(__file__))
     test_file = os.path.join(here, 'reach_reg_phos.json')
-    rp = reach.process_json_file(test_file)
-    assert rp is not None
-    assert len(rp.statements) == 1
-    stmt = rp.statements[0]
-    assert isinstance(stmt, Phosphorylation), stmt
-    assert not stmt.sub.mods
+
+    def process(organism_priority, expected_up_id):
+        rp = reach.process_json_file(test_file,
+                                     organism_priority=organism_priority)
+        assert rp.statements[0].enz.db_refs['UP'] == expected_up_id, \
+            rp.statements[0].enz.db_refs['UP']
+
+    # These should all default to the Human protein being prioritized
+    process(None, 'P05019')
+    process(['9606'], 'P05019')
+    # Here we prioritize xenopus
+    process(['8355'], 'P16501')
+    # We now use a list of priorities
+    process(['8355', '9606'], 'P16501')
+    process(['9606', '8355'], 'P05019')
+    # Here 1513314 is not an available organism in the list of groundings
+    process(['1513314'], 'P05019')
+    process(['1513314', '9606'], 'P05019')
+    process(['1513314', '8355'], 'P16501')
+

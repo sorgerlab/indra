@@ -496,11 +496,13 @@ class ReachProcessor(object):
                 logger.warning('Unhandled xref namespace: %s' % ns)
         db_refs['TEXT'] = entity_term['text']
 
-        if organism_priority:
+        if db_refs.get('UP') and organism_priority:
             unique_altxrefs = \
                 set((axr['namespace'], axr['id'])
                     for axr in entity_term.get('alt-xrefs', []))
-            prioritized_id = prioritize_organism_grounding(unique_altxrefs)
+            prioritized_id = prioritize_organism_grounding(db_refs['UP'],
+                                                           unique_altxrefs,
+                                                           organism_priority)
             if prioritized_id:
                 db_refs['UP'] = prioritized_id
 
@@ -939,13 +941,18 @@ def determine_reach_subtype(event_name):
     return best_match
 
 
-def prioritize_organism_grounding(xrefs, organism_priority):
+def prioritize_organism_grounding(first_id, xrefs, organism_priority):
+    first_organism = uniprot_client.get_organism_id(first_id)
     uniprot_ids = [xr[1] for xr in xrefs if xr[0] == 'uniprot']
     groundings_by_organism = defaultdict(list)
     for up_id in uniprot_ids:
         organism_id = uniprot_client.get_organism_id(up_id)
         groundings_by_organism[organism_id].append(up_id)
     for organism in organism_priority:
+        if organism == first_organism:
+            return first_id
         if organism in groundings_by_organism:
-            return groundings_by_organism[organism][0]
+            # To make the results here deterministic, though
+            # arbitrary in terms of the specific choice, we put a sort here
+            return sorted(groundings_by_organism[organism])[0]
     return None
