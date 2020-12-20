@@ -481,3 +481,53 @@ def test_phosphorylation_regulation():
     stmt = rp.statements[0]
     assert isinstance(stmt, Phosphorylation), stmt
     assert not stmt.sub.mods
+
+
+def test_organism_prioritization():
+    here = os.path.dirname(os.path.abspath(__file__))
+    test_file = os.path.join(here, 'reach_reg_phos.json')
+
+    def process(organism_priority, expected_up_id):
+        rp = reach.process_json_file(test_file,
+                                     organism_priority=organism_priority)
+        assert rp.statements[0].enz.db_refs['UP'] == expected_up_id, \
+            rp.statements[0].enz.db_refs['UP']
+
+    # These should all default to the Human protein being prioritized
+    process(None, 'P05019')
+    process(['9606'], 'P05019')
+    # Here we prioritize xenopus
+    process(['8355'], 'P16501')
+    # We now use a list of priorities
+    process(['8355', '9606'], 'P16501')
+    process(['9606', '8355'], 'P05019')
+    # Here Arctic fox amdovirus (1513314) is not an available organism
+    # in the list of groundings so we expect prioritization to fall back
+    # correctly to the first match or another organism in the list
+    process(['1513314'], 'P05019')
+    process(['1513314', '9606'], 'P05019')
+    process(['1513314', '8355'], 'P16501')
+
+
+def test_organism_prioritization_uppro():
+    here = os.path.dirname(os.path.abspath(__file__))
+    test_file = os.path.join(here, 'reach_uppro_organisms.json')
+
+    def process(organism_priority, expected_up_id):
+        rp = reach.process_json_file(test_file,
+                                     organism_priority=organism_priority)
+        assert rp.statements[0].subj.db_refs['UPPRO'] == expected_up_id, \
+            rp.statements[0].subj.db_refs['UPPRO']
+
+    # This is the human protein chain
+    process(None, 'PRO_0000006688')
+    process(['9606'], 'PRO_0000006688')
+    process(['9606', '161274'], 'PRO_0000006688')
+    # Let's try the giant fire-bellied toad next
+    process(['161274'], 'PRO_0000003427')
+    process(['161274', '9606'], 'PRO_0000003427')
+    # Now someting non-existent in the groundings to test correct
+    # fallback behavior
+    process(['1513314'], 'PRO_0000006688')
+    process(['1513314', '9606'], 'PRO_0000006688')
+    process(['1513314', '161274'], 'PRO_0000003427')
