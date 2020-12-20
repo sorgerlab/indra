@@ -453,12 +453,11 @@ class ReachProcessor(object):
         for xr in entity_term['xrefs']:
             ns = xr['namespace']
             if ns == 'uniprot':
+                # Note: we add both full protein and protein chain
+                # IDs here so that we can appli organism prioritization in
+                # a uniform way. Later these will be separated out.
                 up_id = xr['id']
-                if '#' in up_id:
-                    parts = up_id.split('#')
-                    db_refs['UPPRO'] = parts[1]
-                else:
-                    db_refs['UP'] = up_id
+                db_refs['UP'] = up_id
             elif ns == 'hgnc':
                 db_refs['HGNC'] = xr['id']
             elif ns == 'pfam':
@@ -503,21 +502,30 @@ class ReachProcessor(object):
 
         # If we have a UniProt grounding and we have a non-default
         # organism priority list, we call the prioritization function
-        if db_refs.get('UP') and organism_priority:
-            # These are all the unique groundings in the alt-xrefs list,
-            # which redundantly lists the same match multiple times because
-            # it enumerates multiple synonyms for organisms redundantly
-            unique_altxrefs = \
-                set((axr['namespace'], axr['id'])
-                    for axr in entity_term.get('alt-xrefs', []))
-            # This returns a single prioritized UniProt ID or None
-            prioritized_id = prioritize_organism_grounding(db_refs['UP'],
-                                                           unique_altxrefs,
-                                                           organism_priority)
-            # If we got an ID, we set the UP grounding to that, otherwise
-            # we keep what we already got from the primary xref
-            if prioritized_id:
-                db_refs['UP'] = prioritized_id
+        if db_refs.get('UP'):
+            if organism_priority:
+                # These are all the unique groundings in the alt-xrefs list,
+                # which redundantly lists the same match multiple times because
+                # it enumerates multiple synonyms for organisms redundantly
+                unique_altxrefs = \
+                    set((axr['namespace'], axr['id'])
+                        for axr in entity_term.get('alt-xrefs', []))
+                # This returns a single prioritized UniProt ID or None
+                prioritized_id = \
+                    prioritize_organism_grounding(db_refs['UP'],
+                                                  unique_altxrefs,
+                                                  organism_priority)
+                # If we got an ID, we set the UP grounding to that, otherwise
+                # we keep what we already got from the primary xref
+                if prioritized_id:
+                    db_refs['UP'] = prioritized_id
+            # After all this, we need to separate protein chain grounding
+            # and so if we are dealing with one of those, we pop out the UP
+            # key, split the ID to get the chain ID and add that in the UPPRO
+            # namespace.
+            if '#' in db_refs['UP']:
+                up_id = db_refs.pop('UP', None)
+                db_refs['UPPRO'] = up_id.split('#')[1]
 
         db_refs = standardize_db_refs(db_refs)
         return db_refs
