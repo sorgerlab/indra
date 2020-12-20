@@ -524,9 +524,10 @@ def test_organism_prioritization_uppro():
     process(['9606'], 'PRO_0000006688')
     process(['9606', '161274'], 'PRO_0000006688')
     # Let's try the giant fire-bellied toad next
-    process(['161274'], 'PRO_0000003387')
+    process(['161274'], 'PRO_0000003427')
     process(['161274', '9606'], 'PRO_0000003427')
-    # Now someting non-existent
+    # Now someting non-existent in the groundings to test correct
+    # fallback behavior
     process(['1513314'], 'PRO_0000006688')
     process(['1513314', '9606'], 'PRO_0000006688')
     process(['1513314', '161274'], 'PRO_0000003427')

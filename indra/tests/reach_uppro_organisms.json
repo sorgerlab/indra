@@ -1,0 +1,379 @@
+{
+  "events" : {
+    "frames" : [ {
+      "frame-id" : "evem-api14-UAZ-r1-Reach-0-673",
+      "text" : "bradykinin leads to inflammation",
+      "arguments" : [ {
+        "text" : "inflammation",
+        "argument-type" : "entity",
+        "type" : "controlled",
+        "object-type" : "argument",
+        "index" : 0,
+        "arg" : "ment-api14-UAZ-r1-Reach-0-7834"
+      }, {
+        "text" : "bradykinin",
+        "argument-type" : "entity",
+        "type" : "controller",
+        "object-type" : "argument",
+        "index" : 0,
+        "arg" : "ment-api14-UAZ-r1-Reach-0-7833"
+      } ],
+      "type" : "activation",
+      "frame-type" : "event-mention",
+      "subtype" : "positive-activation",
+      "is-direct" : false,
+      "end-pos" : {
+        "reference" : "pass-api14-UAZ-r1-Reach",
+        "offset" : 32,
+        "object-type" : "relative-pos"
+      },
+      "trigger" : "leads",
+      "object-type" : "frame",
+      "start-pos" : {
+        "reference" : "pass-api14-UAZ-r1-Reach",
+        "offset" : 0,
+        "object-type" : "relative-pos"
+      },
+      "sentence" : "sent-api14-UAZ-r1-Reach-0",
+      "found-by" : "Positive_activation_syntax_7_verb",
+      "verbose-text" : "bradykinin leads to inflammation"
+    } ],
+    "object-type" : "frame-collection",
+    "object-meta" : {
+      "processing-end" : "2020-12-20T03:20:47Z",
+      "doc-id" : "api14",
+      "component-type" : "machine",
+      "component" : "Reach",
+      "processing-start" : "2020-12-20T03:20:47Z",
+      "object-type" : "meta-info",
+      "organization" : "UAZ"
+    }
+  },
+  "entities" : {
+    "frames" : [ {
+      "text" : "bradykinin",
+      "frame-id" : "ment-api14-UAZ-r1-Reach-0-7833",
+      "type" : "protein",
+      "frame-type" : "entity-mention",
+      "end-pos" : {
+        "reference" : "pass-api14-UAZ-r1-Reach",
+        "offset" : 10,
+        "object-type" : "relative-pos"
+      },
+      "xrefs" : [ {
+        "namespace" : "uniprot",
+        "species" : "homo sapiens",
+        "object-type" : "db-reference",
+        "id" : "P01042#PRO_0000006688"
+      } ],
+      "object-type" : "frame",
+      "start-pos" : {
+        "reference" : "pass-api14-UAZ-r1-Reach",
+        "offset" : 0,
+        "object-type" : "relative-pos"
+      },
+      "sentence" : "sent-api14-UAZ-r1-Reach-0",
+      "alt-xrefs" : [ {
+        "namespace" : "uniprot",
+        "species" : "human",
+        "object-type" : "db-reference",
+        "id" : "P01042#PRO_0000006688"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "anarhichas minor",
+        "object-type" : "db-reference",
+        "id" : "P83857#PRO_0000006707"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "arctic spotted wolffish",
+        "object-type" : "db-reference",
+        "id" : "P83857#PRO_0000006707"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "ascaphus truei",
+        "object-type" : "db-reference",
+        "id" : "P84825"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "atlantic cod",
+        "object-type" : "db-reference",
+        "id" : "P83856#PRO_0000006708"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bombina maxima",
+        "object-type" : "db-reference",
+        "id" : "P83055#PRO_0000003427"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bombina maxima",
+        "object-type" : "db-reference",
+        "id" : "Q7T3L1#PRO_0000003387"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bombina maxima",
+        "object-type" : "db-reference",
+        "id" : "Q90W88#PRO_0000003418"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bombina maxima",
+        "object-type" : "db-reference",
+        "id" : "Q90WZ1#PRO_0000003405"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bombina orientalis",
+        "object-type" : "db-reference",
+        "id" : "P83060#PRO_0000003430"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bos taurus",
+        "object-type" : "db-reference",
+        "id" : "P01044#PRO_0000006678"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bos taurus",
+        "object-type" : "db-reference",
+        "id" : "P01045#PRO_0000006683"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bovine",
+        "object-type" : "db-reference",
+        "id" : "P01044#PRO_0000006678"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "bovine",
+        "object-type" : "db-reference",
+        "id" : "P01045#PRO_0000006683"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "chinese red belly toad",
+        "object-type" : "db-reference",
+        "id" : "P83055#PRO_0000003427"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "chinese red belly toad",
+        "object-type" : "db-reference",
+        "id" : "Q7T3L1#PRO_0000003387"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "chinese red belly toad",
+        "object-type" : "db-reference",
+        "id" : "Q90W88#PRO_0000003418"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "chinese red belly toad",
+        "object-type" : "db-reference",
+        "id" : "Q90WZ1#PRO_0000003405"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "coastal tailed frog",
+        "object-type" : "db-reference",
+        "id" : "P84825"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "cuyaba dwarf frog",
+        "object-type" : "db-reference",
+        "id" : "A0A088MIT0#PRO_0000438954"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "eupemphix nattereri",
+        "object-type" : "db-reference",
+        "id" : "A0A088MIT0#PRO_0000438954"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "gadus morhua",
+        "object-type" : "db-reference",
+        "id" : "P83856#PRO_0000006708"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "giant fire-bellied toad",
+        "object-type" : "db-reference",
+        "id" : "P83055#PRO_0000003427"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "giant fire-bellied toad",
+        "object-type" : "db-reference",
+        "id" : "Q7T3L1#PRO_0000003387"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "giant fire-bellied toad",
+        "object-type" : "db-reference",
+        "id" : "Q90W88#PRO_0000003418"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "giant fire-bellied toad",
+        "object-type" : "db-reference",
+        "id" : "Q90WZ1#PRO_0000003405"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "golden silk orbweaver",
+        "object-type" : "db-reference",
+        "id" : "P0DM76"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "jandaia leaf frog",
+        "object-type" : "db-reference",
+        "id" : "P86627"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "marsh frog",
+        "object-type" : "db-reference",
+        "id" : "P86156#PRO_0000361082"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "mouse",
+        "object-type" : "db-reference",
+        "id" : "O08677#PRO_0000006693"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "mus musculus",
+        "object-type" : "db-reference",
+        "id" : "O08677#PRO_0000006693"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "nephila clavipes",
+        "object-type" : "db-reference",
+        "id" : "P0DM76"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "orange-legged leaf frog",
+        "object-type" : "db-reference",
+        "id" : "P84895"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "oriental fire-bellied toad",
+        "object-type" : "db-reference",
+        "id" : "P83060#PRO_0000003430"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "pelophylax ridibundus",
+        "object-type" : "db-reference",
+        "id" : "P86156#PRO_0000361082"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "phasmahyla jandaia",
+        "object-type" : "db-reference",
+        "id" : "P86627"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "phyllomedusa hypochondrialis",
+        "object-type" : "db-reference",
+        "id" : "P84895"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "phyllomedusa sauvagei",
+        "object-type" : "db-reference",
+        "id" : "P84697#PRO_0000043220"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "physalaemus nattereri",
+        "object-type" : "db-reference",
+        "id" : "A0A088MIT0#PRO_0000438954"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "rana ridibunda",
+        "object-type" : "db-reference",
+        "id" : "P86156#PRO_0000361082"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "rat",
+        "object-type" : "db-reference",
+        "id" : "P08934#PRO_0000006697"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "rattus norvegicus",
+        "object-type" : "db-reference",
+        "id" : "P08934#PRO_0000006697"
+      }, {
+        "namespace" : "uniprot",
+        "species" : "sauvage's leaf frog",
+        "object-type" : "db-reference",
+        "id" : "P84697#PRO_0000043220"
+      } ]
+    }, {
+      "text" : "inflammation",
+      "frame-id" : "ment-api14-UAZ-r1-Reach-0-7834",
+      "type" : "bioprocess",
+      "frame-type" : "entity-mention",
+      "end-pos" : {
+        "reference" : "pass-api14-UAZ-r1-Reach",
+        "offset" : 32,
+        "object-type" : "relative-pos"
+      },
+      "xrefs" : [ {
+        "namespace" : "go",
+        "species" : "human",
+        "object-type" : "db-reference",
+        "id" : "GO:0006954"
+      } ],
+      "object-type" : "frame",
+      "start-pos" : {
+        "reference" : "pass-api14-UAZ-r1-Reach",
+        "offset" : 20,
+        "object-type" : "relative-pos"
+      },
+      "sentence" : "sent-api14-UAZ-r1-Reach-0",
+      "alt-xrefs" : [ {
+        "namespace" : "go",
+        "species" : "human",
+        "object-type" : "db-reference",
+        "id" : "GO:0006954"
+      } ]
+    } ],
+    "object-type" : "frame-collection",
+    "object-meta" : {
+      "processing-end" : "2020-12-20T03:20:47Z",
+      "doc-id" : "api14",
+      "component-type" : "machine",
+      "component" : "Reach",
+      "processing-start" : "2020-12-20T03:20:47Z",
+      "object-type" : "meta-info",
+      "organization" : "UAZ"
+    }
+  },
+  "sentences" : {
+    "frames" : [ {
+      "text" : "bradykinin leads to inflammation",
+      "frame-id" : "pass-api14-UAZ-r1-Reach",
+      "section-id" : "NoSection",
+      "frame-type" : "passage",
+      "is-title" : false,
+      "section-name" : "NoSection",
+      "object-type" : "frame",
+      "index" : "Reach",
+      "object-meta" : {
+        "component" : "nxml2fries",
+        "object-type" : "meta-info"
+      }
+    }, {
+      "text" : "bradykinin leads to inflammation",
+      "frame-id" : "sent-api14-UAZ-r1-Reach-0",
+      "passage" : "pass-api14-UAZ-r1-Reach",
+      "frame-type" : "sentence",
+      "end-pos" : {
+        "reference" : "pass-api14-UAZ-r1-Reach",
+        "offset" : 32,
+        "object-type" : "relative-pos"
+      },
+      "object-type" : "frame",
+      "start-pos" : {
+        "reference" : "pass-api14-UAZ-r1-Reach",
+        "offset" : 0,
+        "object-type" : "relative-pos"
+      },
+      "object-meta" : {
+        "component" : "BioNLPProcessor",
+        "object-type" : "meta-info"
+      }
+    } ],
+    "object-type" : "frame-collection",
+    "object-meta" : {
+      "processing-end" : "2020-12-20T03:20:47Z",
+      "doc-id" : "api14",
+      "component-type" : "machine",
+      "component" : "Reach",
+      "processing-start" : "2020-12-20T03:20:47Z",
+      "object-type" : "meta-info",
+      "organization" : "UAZ"
+    }
+  }
+}

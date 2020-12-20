@@ -965,13 +965,13 @@ def determine_reach_subtype(event_name):
 def prioritize_organism_grounding(first_id, xrefs, organism_priority):
     """Pick a prioritized organism-specific UniProt ID for a protein."""
     # We find the organism for the first ID picked by Reach
-    first_organism = uniprot_client.get_organism_id(first_id)
+    first_organism = uniprot_client.get_organism_id(first_id.split('#')[0])
     # We take only UniProt groundings from the xrefs list
     uniprot_ids = [xr[1] for xr in xrefs if xr[0] == 'uniprot']
     # We group UniProt IDs by their organism ID
     groundings_by_organism = defaultdict(list)
     for up_id in uniprot_ids:
-        organism_id = uniprot_client.get_organism_id(up_id)
+        organism_id = uniprot_client.get_organism_id(up_id.split('#')[0])
         groundings_by_organism[organism_id].append(up_id)
     # We then go down the list of prioritized organisms and if we find a match
     # we return immediately
