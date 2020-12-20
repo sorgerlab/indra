@@ -19,6 +19,9 @@ st5 = Complex([Agent('c'), Agent('f'), Agent('g')])
 st6 = Complex([Agent('h'), Agent('i'), Agent('j'), Agent('b')])
 st7 = Phosphorylation(None, Agent('x'))
 st8 = Conversion(Agent('PI3K'), [Agent('PIP2')], [Agent('PIP3')])
+st9 = Phosphorylation(Agent('MEK'), Agent('MAPK'),
+                      residue=get_valid_residue('Thr'),
+                      position='183')
 
 
 # Test assembly from assembler side
@@ -62,23 +65,25 @@ def test_complex_members():
 
 
 def test_make_df():
-    ia = IndraNetAssembler([st1, st2, st3, st4, st5, st6])
+    ia = IndraNetAssembler([st1, st2, st3, st4, st5, st6, st9])
     df = ia.make_df()
     assert isinstance(df, pd.DataFrame)
-    assert len(df) == 9
+    assert len(df) == 10
     assert set(df.columns) == {
         'agA_name', 'agB_name', 'agA_ns', 'agA_id', 'agB_ns', 'agB_id',
         'stmt_type', 'evidence_count', 'stmt_hash', 'belief', 'source_counts',
-        'initial_sign'}
+        'initial_sign', 'residue', 'position'}
+    assert df.residue.isna().sum() == 9  # Check that all but one row is NaN
+    assert df.position.isna().sum() == 9  # Check that all but one row is NaN
 
 
 # Test assembly from IndraNet directly
 def test_from_df():
-    ia = IndraNetAssembler([st1, st2, st3, st4, st5, st6, st7])
+    ia = IndraNetAssembler([st1, st2, st3, st4, st5, st6, st7, st9])
     df = ia.make_df()
     net = IndraNet.from_df(df)
-    assert len(net.nodes) == 6
-    assert len(net.edges) == 9
+    assert len(net.nodes) == 8
+    assert len(net.edges) == 10
     # Stmt with 1 agent should not be added
     assert 'e' not in net.nodes
     # Complex with more than 3 agents should not be added
@@ -93,6 +98,8 @@ def test_from_df():
     assert e['belief'] == 0.76
     assert e['evidence_count'] == 3
     assert net['b']['d'][0]['evidence_count'] == 0
+    assert net['MEK']['MAPK'][0]['residue'] == get_valid_residue('Thr')
+    assert net['MEK']['MAPK'][0]['position'] == '183'
 
 
 ab1 = Activation(Agent('a'), Agent('b'), evidence=[
