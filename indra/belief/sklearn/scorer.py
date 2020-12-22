@@ -3,11 +3,6 @@ from collections import Counter
 import numpy as np
 from . import BeliefScorer
 
-class SklearnWrapper(object):
-    def __init__(self, model):
-        pass
-
-
 
 class SklearnScorer(BeliefScorer):
     """Uses a pre-trained Sklearn classifier to predict belief scores.
