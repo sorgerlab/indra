@@ -83,12 +83,23 @@
       }
 
       // Loop all tags
-      if (show)
-        for (let invisible_el of document.getElementsByClassName('group'))
-          invisible_el.classList.replace("group", "group_shown");
-      else
-        for (let visible_el in document.getElementsByClassName('group_shown'))
-          visible_el.classList.replace("group_shown", "group");
+      let old_c, new_c;
+      if (show) {
+        old_c = "group";
+        new_c = "group_shown";
+      } else {
+        old_c = "group_shown";
+        new_c = "group";
+      }
+
+      let elements = document.getElementsByClassName(old_c);
+      let elem_arr = Array();
+      for (let el of elements) {
+        elem_arr.push(el);
+      }
+      elem_arr.forEach(el => {
+        el.classList.replace(old_c, new_c);
+      });
     }
 
     {% if add_full_text_search_link %}
