@@ -461,6 +461,7 @@ class BasicStats(StmtStatRow):
             return
         assert self._stmt_metrics and h in self._stmt_metrics
         self._merge(self._stmt_metrics[h])
+        self._count += 1
         self.__stmt_hashes.add(h)
 
     def _merge(self, metric_array):
