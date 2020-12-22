@@ -310,7 +310,9 @@ def test_sort_default():
     assert ev_counts == {'Fez-Baz': 8, 'Bar-Baz': 7, 'Fez-Bar': 3}, ev_counts
 
     # Check to make sure the HTML assembler runs.
-    ha.make_model()
+    model = ha.make_model()
+    with open('test_agent_pair.html', 'w') as f:
+        f.write(model)
 
 
 def test_sort_group_by_relation():
@@ -323,7 +325,9 @@ def test_sort_group_by_relation():
     assert len(relations) == 5, len(relations)
 
     # Make sure the HTML assembles.
-    ha.make_model(grouping_level='relation')
+    model = ha.make_model(grouping_level='relation')
+    with open('test_relation.html', 'w') as f:
+        f.write(model)
 
 
 def test_sort_group_by_statement():
@@ -374,3 +378,49 @@ def test_sort_group_by_statement_custom_ordering():
     assert got_h_list == exp_h_list
 
     ha.make_model(grouping_level='statement')
+
+
+def test_sort_group_by_relation_custom_ordering():
+    stmts = _get_sort_corpus()
+
+    custom_values = [0.1, 0.2, 0.15, 0.6, 0.3, 0.8]
+    val_dict = {s.get_hash(): v for v, s in zip(custom_values, stmts)}
+
+    custom_stat = StmtStat('value', val_dict, float, AveStats)
+    stmt_gather = StmtStatGather.from_stmt_stats(custom_stat)
+
+    ha = HtmlAssembler(stmts, sort_by='value', stmt_stat_gather=stmt_gather)
+    json_model = ha.make_json_model(grouping_level='relation')
+    assert list(json_model.keys()) == ['all-relations']
+    relations = json_model['all-relations']['stmts_formatted']
+    assert len(relations) == 5, len(relations)
+    relation_names = [rel['short_name'] for rel in relations]
+    exp_relation_names = [
+        '<b>Fez</b> catalyzes the conversion of <b>Far</b> and <b>Faz</b> into '
+        '<b>Bar</b> and <b>Baz</b>.',
+        '<b>Bar</b> phosphorylates <b>Baz</b>.',
+        '<b>Fez</b> decreases the amount of <b>Baz</b>.',
+        '<b>Bar</b> binds <b>Baz</b> and <b>Fez</b>.',
+        '<b>Fez</b> inhibits <b>Baz</b>.'
+    ]
+    assert relation_names == exp_relation_names
+
+    ha.make_model(grouping_level='relation')
+
+
+def test_sort_group_by_agent_custom_ordering():
+    stmts = _get_sort_corpus()
+
+    custom_values = [0.1, 0.2, 0.15, 0.6, 0.3, 0.8]
+    val_dict = {s.get_hash(): v for v, s in zip(custom_values, stmts)}
+
+    custom_stat = StmtStat('value', val_dict, float, AveStats)
+    stmt_gather = StmtStatGather.from_stmt_stats(custom_stat)
+
+    ha = HtmlAssembler(stmts, sort_by='value', stmt_stat_gather=stmt_gather)
+    json_model = ha.make_json_model(grouping_level='agent-pair')
+    assert len(json_model.keys()) == 4
+    assert list(json_model.keys()) == ['Fez-Far-Faz-Bar-Baz', 'Fez-Bar',
+                                       'Bar-Baz', 'Fez-Baz']
+
+    ha.make_model(grouping_level='agent-pair')
