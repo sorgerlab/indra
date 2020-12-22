@@ -103,7 +103,6 @@ def test_tag_text():
                      tag_start, tag_close)
                     for m in re.finditer(re.escape(span), text)]
     tagged_text = tag_text(text, indices)
-    print(tagged_text)
     assert tagged_text == '<FooBarBaz>FooBarBaz</FooBarBaz> binds ' \
                           '<Foo>Foo</Foo>.'
 
@@ -420,7 +419,66 @@ def test_sort_group_by_agent_custom_ordering():
     ha = HtmlAssembler(stmts, sort_by='value', stmt_stat_gather=stmt_gather)
     json_model = ha.make_json_model(grouping_level='agent-pair')
     assert len(json_model.keys()) == 4
+
+    # This result was slightly counter-intuitive, but recall that averages will
+    # mean a grouping with the conversion will always have a lower value than
+    # the conversion itself, so it makes sense for it to come out on top.
     assert list(json_model.keys()) == ['Fez-Far-Faz-Bar-Baz', 'Fez-Bar',
                                        'Bar-Baz', 'Fez-Baz']
+
+    ha.make_model(grouping_level='agent-pair')
+
+
+def test_sort_group_by_statement_custom_function():
+    stmts = _get_sort_corpus()
+
+    ha = HtmlAssembler(stmts,
+                       sort_by=lambda d: 4*d['trips'] + 2*d['reach']
+                                         + 2*d['medscan'] + d['sparser']
+                                         - d['isi'])
+    json_model = ha.make_json_model(grouping_level='statement')
+    statements = \
+        json_model['all-statements']['stmts_formatted'][0]['stmt_info_list']
+    assert len(statements) == len(stmts)
+    exp_order = ['6106301533612997', '-17995265549545446', '34182032179844940',
+                 '32266861591785935', '-30059881887512900', '-5998595995539618']
+    assert [s['hash'] for s in statements] == exp_order
+
+    ha.make_model(grouping_level='statement')
+
+
+def test_sort_group_by_relation_custom_function():
+    stmts = _get_sort_corpus()
+
+    ha = HtmlAssembler(stmts,
+                       sort_by=lambda d: 4*d['trips'] + 2*d['reach']
+                                         + 2*d['medscan'] + d['sparser']
+                                         - d['isi'])
+    json_model = ha.make_json_model(grouping_level='relation')
+    relations = json_model['all-relations']['stmts_formatted']
+    assert len(relations) == 5, len(relations)
+    relation_names = [rel['short_name'] for rel in relations]
+    exp_rel_names = [
+        '<b>Bar</b> phosphorylates <b>Baz</b>.',
+        '<b>Fez</b> inhibits <b>Baz</b>.',
+        '<b>Bar</b> binds <b>Baz</b> and <b>Fez</b>.',
+        '<b>Fez</b> decreases the amount of <b>Baz</b>.',
+        '<b>Fez</b> catalyzes the conversion of <b>Far</b> and <b>Faz</b> into '
+        '<b>Bar</b> and <b>Baz</b>.'
+    ]
+    assert relation_names == exp_rel_names, relation_names
+
+    ha.make_model(grouping_level='relation')
+
+
+def test_sort_group_by_agent_pair_custom_function():
+    stmts = _get_sort_corpus()
+
+    ha = HtmlAssembler(stmts,
+                       sort_by=lambda d: 4*d['trips'] + 2*d['reach']
+                                         + 2*d['medscan'] + d['sparser']
+                                         - d['isi'])
+    json_model = ha.make_json_model(grouping_level='agent-pair')
+    assert list(json_model.keys()) == ['Fez-Baz', 'Bar-Baz', 'Fez-Bar']
 
     ha.make_model(grouping_level='agent-pair')
