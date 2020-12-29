@@ -2536,11 +2536,11 @@ HGNC,ATP5F1B,partof,FPLX,ATP_synthase
 HGNC,ATP5F1C,partof,FPLX,ATP_synthase
 HGNC,ATP5F1D,partof,FPLX,ATP_synthase
 HGNC,ATP5F1E,partof,FPLX,ATP_synthase
-HGNC,ATP5MD,partof,FPLX,ATP_synthase
+HGNC,ATP5MK,partof,FPLX,ATP_synthase
 HGNC,ATP5ME,partof,FPLX,ATP_synthase
 HGNC,ATP5MF,partof,FPLX,ATP_synthase
 HGNC,ATP5MG,partof,FPLX,ATP_synthase
-HGNC,ATP5MPL,partof,FPLX,ATP_synthase
+HGNC,ATP5MJ,partof,FPLX,ATP_synthase
 HGNC,MT-ATP6,partof,FPLX,ATP_synthase
 HGNC,MT-ATP8,partof,FPLX,ATP_synthase
 HGNC,ATP5PB,partof,FPLX,ATP_synthase
@@ -3443,7 +3443,6 @@ HGNC,OR2V1,isa,FPLX,OR2
 HGNC,OR2V2,isa,FPLX,OR2
 HGNC,OR2W1,isa,FPLX,OR2
 HGNC,OR2W3,isa,FPLX,OR2
-HGNC,OR2W5,isa,FPLX,OR2
 HGNC,OR2Y1,isa,FPLX,OR2
 HGNC,OR2Z1,isa,FPLX,OR2
 HGNC,OR3A1,isa,FPLX,OR3
@@ -3549,7 +3548,6 @@ HGNC,OR5M8,isa,FPLX,OR5
 HGNC,OR5M9,isa,FPLX,OR5
 HGNC,OR5P2,isa,FPLX,OR5
 HGNC,OR5P3,isa,FPLX,OR5
-HGNC,OR5R1,isa,FPLX,OR5
 HGNC,OR5T1,isa,FPLX,OR5
 HGNC,OR5T2,isa,FPLX,OR5
 HGNC,OR5T3,isa,FPLX,OR5
@@ -3676,6 +3674,7 @@ HGNC,OR8K3,isa,FPLX,OR8
 HGNC,OR8K5,isa,FPLX,OR8
 HGNC,OR8S1,isa,FPLX,OR8
 HGNC,OR8U1,isa,FPLX,OR8
+HGNC,OR8U3,isa,FPLX,OR8
 HGNC,OR8U8,isa,FPLX,OR8
 HGNC,OR8U9,isa,FPLX,OR8
 HGNC,OR9A2,isa,FPLX,OR9
@@ -4161,12 +4160,12 @@ HGNC,DYNLRB1,partof,FPLX,DYNC2
 HGNC,DYNLRB2,partof,FPLX,DYNC2
 HGNC,DYNLT1,partof,FPLX,DYNC2
 HGNC,DYNLT3,partof,FPLX,DYNC2
-HGNC,TCTEX1D2,partof,FPLX,DYNC2
-HGNC,WDR34,partof,FPLX,DYNC2
-HGNC,WDR60,partof,FPLX,DYNC2
+HGNC,DYNLT2B,partof,FPLX,DYNC2
+HGNC,DYNC2I1,partof,FPLX,DYNC2
+HGNC,DYNC2I2,partof,FPLX,DYNC2
 FPLX,Axonemal_dynein,isa,FPLX,Dynein
 FPLX,Cytoplasmic_dynein,isa,FPLX,Dynein
-HGNC,CASC1,partof,FPLX,Axonemal_dynein_IDA
+HGNC,CFAP94,partof,FPLX,Axonemal_dynein_IDA
 HGNC,DNAH1,partof,FPLX,Axonemal_dynein_IDA
 HGNC,DNAH10,partof,FPLX,Axonemal_dynein_IDA
 HGNC,DNAH12,partof,FPLX,Axonemal_dynein_IDA
@@ -4180,9 +4179,9 @@ HGNC,DYNLL2,partof,FPLX,Axonemal_dynein_IDA
 HGNC,DYNLRB1,partof,FPLX,Axonemal_dynein_IDA
 HGNC,DYNLRB2,partof,FPLX,Axonemal_dynein_IDA
 HGNC,DYNLT3,partof,FPLX,Axonemal_dynein_IDA
-HGNC,TCTEX1D2,partof,FPLX,Axonemal_dynein_IDA
-HGNC,WDR63,partof,FPLX,Axonemal_dynein_IDA
-HGNC,WDR78,partof,FPLX,Axonemal_dynein_IDA
+HGNC,DYNLT2B,partof,FPLX,Axonemal_dynein_IDA
+HGNC,DNAI3,partof,FPLX,Axonemal_dynein_IDA
+HGNC,DNAI4,partof,FPLX,Axonemal_dynein_IDA
 HGNC,DNAH11,partof,FPLX,Axonemal_dynein_ODA
 HGNC,DNAH17,partof,FPLX,Axonemal_dynein_ODA
 HGNC,DNAH5,partof,FPLX,Axonemal_dynein_ODA
@@ -4196,7 +4195,7 @@ HGNC,DYNLL1,partof,FPLX,Axonemal_dynein_ODA
 HGNC,DYNLRB1,partof,FPLX,Axonemal_dynein_ODA
 HGNC,DYNLRB2,partof,FPLX,Axonemal_dynein_ODA
 HGNC,DYNLT1,partof,FPLX,Axonemal_dynein_ODA
-HGNC,TCTE3,partof,FPLX,Axonemal_dynein_ODA
+HGNC,DYNLT2,partof,FPLX,Axonemal_dynein_ODA
 FPLX,ASIC,isa,FPLX,Mechanosensitive_ion_channels
 FPLX,KCNK,isa,FPLX,Mechanosensitive_ion_channels
 FPLX,TRP,isa,FPLX,Mechanosensitive_ion_channels
@@ -4343,3 +4342,6 @@ HGNC,IFITM2,isa,FPLX,IFITM
 HGNC,IFITM3,isa,FPLX,IFITM
 HGNC,IFITM5,isa,FPLX,IFITM
 HGNC,IFITM10,isa,FPLX,IFITM
+HGNC,EZR,isa,FPLX,ERM
+HGNC,RDX,isa,FPLX,ERM
+HGNC,MSN,isa,FPLX,ERM
