@@ -168,6 +168,12 @@ class IndraNetAssembler():
                 The belief score associated with the statement.
             *source_counts*
                 The number of evidences per input source for the statement.
+            *residue*
+                If applicable, the amino acid residue being modified. NaN if
+                if it is unknown or unspecified/not applicable.
+            *position*
+                If applicable, the position of the modified amino acid. NaN
+                if it is unknown or unspecified/not applicable.
             *initial_sign*
                 The default sign (polarity) associated with the given
                 statement if the statement type has implied polarity.
@@ -236,6 +242,14 @@ class IndraNetAssembler():
                 agA_ns, agA_id = get_ag_ns_id(agA)
                 agB_ns, agB_id = get_ag_ns_id(agB)
                 stmt_type = type(stmt).__name__
+                try:
+                    res = stmt.residue
+                except AttributeError:
+                    res = None
+                try:
+                    pos = stmt.position
+                except AttributeError:
+                    pos = None
                 row = OrderedDict([
                     ('agA_name', agA.name),
                     ('agB_name', agB.name),
@@ -243,6 +257,8 @@ class IndraNetAssembler():
                     ('agA_id', agA_id),
                     ('agB_ns', agB_ns),
                     ('agB_id', agB_id),
+                    ('residue', res),
+                    ('position', pos),
                     ('stmt_type', stmt_type),
                     ('evidence_count', len(stmt.evidence)),
                     ('stmt_hash', stmt.get_hash(refresh=True)),
