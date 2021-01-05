@@ -300,6 +300,8 @@ class PysbModelChecker(ModelChecker):
         logger.info('Mapping nodes to agents')
         im = self.get_im()
         nodes_to_agents = {}
+
+        # First map rules to their subject agents
         for rule, mps in self.rules_to_mps.items():
             for mp in mps:
                 for ann in self.model.annotations:
@@ -307,19 +309,11 @@ class PysbModelChecker(ModelChecker):
                         # We usually want to map rule to subject agent
                         if ann.predicate == 'rule_has_subject':
                             nodes_to_agents[rule] = self.mps_to_agents[mp]
-        #                 # Object agent is mapped to observable
-        #                 if ann.predicate == 'rule_has_object':
-        #                     for obs_signed in self.rule_obs_dict[rule]:
-        #                         nodes_to_agents[obs_signed[0]] = \
-        #                                 self.mps_to_agents[mp]
-        # # Some rules do not follow the same algorithm, it could be statements
-        # # with None subject or Translocations
-        # for rule, mps in self.rules_to_mps.items():
-        #     if rule not in nodes_to_agents:
-        #         nodes_to_agents[rule] = self.mps_to_agents[list(mps)[0]]
 
+        # Add observables to agents stored earlier
         nodes_to_agents.update(self.obs_to_agents)
 
+        # Optionally propagate namespaces to node data
         if add_namespaces:
             logger.info('Adding namespaces to influence map nodes')
             for n, data in im.nodes(data=True):
@@ -327,7 +321,6 @@ class PysbModelChecker(ModelChecker):
                 if ag:
                     ns, gr = ag.get_grounding()
                     data['ns'] = ns
-        # assert all([n in nodes_to_agents for n in im.nodes]), [n for n in im.nodes if n not in nodes_to_agents]
         self.nodes_to_agents = nodes_to_agents
 
     def process_statement(self, stmt):
