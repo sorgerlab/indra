@@ -153,19 +153,18 @@ def get_grounded_agents(model):
     mps = set()
     for rule in model.rules:
         rule_mps = set()
-        for cp in rule.product_pattern.complex_patterns:
-            # cp can be None
-            if cp is not None:
-                for mp in cp.monomer_patterns:
-                    mps.add(mp)
-                    rule_mps.add(mp)
+        for rp in (rule.reactant_pattern, rule.product_pattern):
+            for cp in rp.complex_patterns:
+                # cp can be None
+                if cp is not None:
+                    for mp in cp.monomer_patterns:
+                        mps.add(mp)
+                        rule_mps.add(mp)
         if rule_mps:
             mps_by_rule[rule.name] = rule_mps
     # a. For each monomer pattern, get its grounding from annotations
     groundings_by_monomer = {}
     # Build up db_refs for each monomer object
-    # TODO agents from Translocation and Conversion statemets do not have
-    # regular annotations, need to be handled
     for ann in model.annotations:
         if ann.predicate == 'is':
             m = ann.subject
@@ -177,11 +176,13 @@ def get_grounded_agents(model):
         # Canonicalize db_refs
     # b. Get its site/state conditions from MPs; match them back to
     #    their semantics using annotations
-    # TODO handle activities, bound conditions
+    # TODO handle bound conditions
     for mp in mps:
         mods = []
         if hasattr(mp.monomer, 'site_annotations'):
             for site, state in mp.site_conditions.items():
+                if isinstance(state, tuple) and state[1] == WILD:
+                    state = state[0]
                 mod, mod_type, res, pos = None, None, None, None
                 for ann in mp.monomer.site_annotations:
                     if ann.subject == (site, state):
