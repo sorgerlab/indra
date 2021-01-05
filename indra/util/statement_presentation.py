@@ -522,22 +522,27 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
     stmt_list : list[Statement]
         A list of INDRA statements.
     sort_by : str or function or None
-        If str, it indicates which parameter in metric_dict to sort by, or
-        either 'belief' or 'ev_count' which are calculated from the statement
-        objects themselves. The default, 'default', is mostly a sort by ev_count
-        but also favors statements with fewer agents. Alternatively, you may
-        give a function that takes a dict as its single argument, where that
-        dict is an value of the `metric_dict`. If no metric dict is given,
-        the argument to the function will receive a dict with values for
-        `belief` and `ev_count`. The value may also be None, in which case the
-        sort function will return the same value for all elements, and thus
-        the original order of elements will be preserved. This could have
-        strange effects when statements are grouped (i.e. when `grouping_level`
-        is not 'statement').
+        If str, it indicates which parameter to sort by, such as 'belief' or
+        'ev_count', or 'ag_count'. Those are the default options because they
+        can be derived from a list of statements, however if you give a custom
+        `stmt_metrics`, you may use any of the parameters used to build it.
+        The default, 'default', is mostly a sort by ev_count but also favors
+        statements with fewer agents. Alternatively, you may give a function
+        that takes a dict as its single argument, a dictionary of metrics. These
+        metrics are determined by the contents of the `stmt_metrics` passed
+        as an argument (see StmtStatGather for details), or else will contain
+        the default metrics that can be derived from the statements themselves,
+        namely `ev_count`, `belief`, and `ag_count`. The value may also
+        be None, in which case the sort function will return the
+        same value for all elements, and thus the original order of elements
+        will be preserved. This could have strange effects when statements are
+        grouped (i.e. when `grouping_level` is not 'statement'); such
+        functionality is untested and we make no guarantee that it will work.
     stmt_metrics : StmtStatGather
         A statement statistics gatherer loaded with data from the corpus of
         statements. If None, a new one will be formed with basic statics
-        derived from the list of Statements itself.
+        derived from the list of Statements itself. See the docs for
+        StmtStatGather for details on how to create one.
     grouping_level : str
         The options are 'agent-pair', 'relation', and 'statement'. These
         correspond to grouping by agent pairs, agent and type relationships, and
@@ -546,13 +551,16 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
     Returns
     -------
     sorted_groups : list[tuple]
-        A list of tuples containing a sort key, the statement type, and a list
-        of statements, also sorted by evidence count, for that key and type.
-        The sort key contains a count of statements with those argument, the
-        arguments (normalized strings), the count of statements with those
-        arguments and type, and then the statement type.
+        A list of tuples of the form (sort_param, key, contents, metrics), where
+        the sort param is whatever value was calculated to sort the results,
+        the key is the unique key for the agent pair, relation, or statements,
+        and the contents are either relations, statements, or statement JSON,
+        depending on the level. This structure is recursive, so the each list
+        of relations will also follow this structure, all the way down to
+        the lowest level (statement JSON). The metrics a dict of the aggregated
+        metrics for the entry (e.g. source counts, evidence counts, etc).
     """
-    # Validate the grouping level paramater.
+    # Validate the grouping level parameter.
     if grouping_level not in ['agent-pair', 'relation', 'statement']:
         raise ValueError(f"Invalid grouping level: \"{grouping_level}\".")
 
