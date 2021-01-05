@@ -2206,6 +2206,12 @@ def conversion_assemble_one_step(stmt, model, agent_set, parameters):
         r = Rule(rule_name, lhs_pattern >> rhs_pattern,
                  kf_one_step_convert)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    if stmt.subj is not None:
+        anns += [Annotation(rule_name, stmt.subj.name, 'rule_has_subject')]
+    for obj in stmt.obj_from:
+        anns += [Annotation(rule_name, obj.name, 'rule_has_object')]
+    for obj in stmt.obj_to:
+        anns += [Annotation(rule_name, obj.name, 'rule_has_object')]
     add_rule_to_model(model, r, anns)
 
 
