@@ -59,9 +59,9 @@ class UnsignedGraphModelChecker(ModelChecker):
         subj_nodes = self.get_nodes(subj, self.graph)
         obj_nodes = self.get_nodes(obj, self.graph)
         # Statement has object but it's not in the graph
-        if not obj_nodes.all_nodes:
+        if obj and not obj_nodes.all_nodes:
             return (None, None, 'OBJECT_NOT_FOUND')
-        if not subj_nodes.all_nodes:
+        if subj and not subj_nodes.all_nodes:
             return (None, None, 'SUBJECT_NOT_FOUND')
         return (subj_nodes, obj_nodes, None)
 
@@ -74,7 +74,7 @@ class UnsignedGraphModelChecker(ModelChecker):
         """Get all nodes corresponding to a given agent."""
         nc = NodesContainer(agent)
         if agent is None:
-            nc.main_nodes = None
+            nc.all_nodes = None
             return nc
         node = (agent.name, 0)
         if node in graph.nodes:

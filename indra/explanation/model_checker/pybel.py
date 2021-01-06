@@ -104,7 +104,7 @@ class PybelModelChecker(ModelChecker):
         from indra.assemblers.pybel.assembler import _get_agent_node
         nc = NodesContainer(agent)
         if agent is None:
-            nc.main_nodes = None
+            nc.all_nodes = None
             return nc
         # First get exact match
         agent_node = _get_agent_node(agent)[0]

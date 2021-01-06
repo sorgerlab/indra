@@ -60,9 +60,9 @@ class SignedGraphModelChecker(ModelChecker):
         subj_nodes = self.get_nodes(subj, self.graph, 0)
         obj_nodes = self.get_nodes(obj, self.graph, target_polarity)
         # Statement has object but it's not in the graph
-        if not obj_nodes.all_nodes:
+        if obj and not obj_nodes.all_nodes:
             return (None, None, 'OBJECT_NOT_FOUND')
-        if not subj_nodes.all_nodes:
+        if subj and not subj_nodes.all_nodes:
             return (None, None, 'SUBJECT_NOT_FOUND')
         return (subj_nodes, obj_nodes, None)
 
@@ -70,7 +70,7 @@ class SignedGraphModelChecker(ModelChecker):
         """Get all nodes corresponding to a given agent."""
         nc = NodesContainer(agent)
         if agent is None:
-            nc.main_nodes = None
+            nc.all_nodes = None
             return nc
         node = (agent.name, target_polarity)
         if node in graph.nodes:
