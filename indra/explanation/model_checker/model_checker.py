@@ -129,24 +129,54 @@ class PathResult(object):
 
 
 class NodesContainer():
-    def __init__(self, main_agent, ref_agents=None,
-                 main_interm=None, ref_interm=None):
+    """Contains the information about nodes corresponding to a given agent of
+    the test statement.
+
+    Parameters
+    ----------
+    main_agent : indra.statements.Agent
+        An INDRA agent representing a subject or object of test statement.
+    ref_agents : list[indra.statements.Agent]
+        A list of agents that are refinements of main agent.
+
+    Attributes
+    ----------
+    main_nodes : list[tuple]
+        A list of nodes corresponding to main agent.
+    ref_nodes : list[tuple]
+        A list of nodes corresponding to refinement agents.
+    all_nodes : list[tuple]
+        A list of all nodes corresponding to main agent or its refinements.
+    common_target : tuple or None
+        Common target node connected to all nodes. If there's only one node in
+        all_nodes, then common_target is not used.
+    main_interm : list[MonomerPattern]
+        A list of intermediate representation between main agent and main nodes
+        (only used in PySB currently - MonomerPatterns).
+    ref_interm : list[MonomerPattern]
+        A list of intermediate representation between ref_agents and ref_nodes
+        (only used in PySB currently - MonomerPatterns).
+    """
+    def __init__(self, main_agent, ref_agents=None):
         self.main_agent = main_agent
-        self.ref_agents = ref_agents if ref_agents else {}
-        self.main_interm = main_interm if main_interm else {}
-        self.ref_interm = ref_interm if ref_interm else {}
+        self.ref_agents = ref_agents if ref_agents else []
         self.main_nodes = []
         self.ref_nodes = []
         self.all_nodes = []
         self.common_target = None
+        self.main_interm = []
+        self.ref_interm = []
 
     def get_all_nodes(self):
+        """Combine main and refinement nodes for pathfinding."""
         self.all_nodes = self.main_nodes + self.ref_nodes
 
     def is_ref(self, node):
+        """Whether a given node is a refinement node."""
         return node in self.ref_nodes and node not in self.main_nodes
 
     def get_total_nodes(self):
+        """Get total number of nodes in this container."""
         if self.all_nodes is None:
             return 0
         return len(self.all_nodes)
@@ -312,19 +342,16 @@ class ModelChecker(object):
 
         Parameters
         ----------
-        input_set : list or None
-            A list of potenital sources or None if the test statement subject
-            is None.
-        target : tuple
-            Tuple representing the target node (usually common target node).
+        subj : indra.explanation.model_checker.NodesContainer
+            NodesContainer representing test statement subject.
+        obj : indra.explanation.model_checker.NodesContainer
+            NodesContainer representing test statement object.
         max_paths : int
             The maximum number of specific paths to return.
         max_path_length : int
             The maximum length of specific paths to return.
         loop : bool
             Whether we are looking for a loop path.
-        dummy_target : False
-            Whether the target is a dummy node.
         filter_func : function or None
             A function to constrain the search. A function should take a node
             as a parameter and return True if the node is allowed to be in a
@@ -398,9 +425,11 @@ class ModelChecker(object):
                         self.graph, source, target, search_path_length, loop,
                         dummy_target, filter_func)
                     for path in path_iter:
+                        # Check if the path starts with a refinement
                         if subj.is_ref(path[0]):
                             path.insert(0, self.get_ref(subj.main_agent,
                                                         path[0], 'has_ref'))
+                        # Check if the path ends with a refinement
                         if obj.is_ref(path[-1]):
                             path.append(self.get_ref(obj.main_agent,
                                                      path[-1], 'is_ref'))
@@ -424,6 +453,7 @@ class ModelChecker(object):
                               max_paths, max_path_length)
 
     def get_ref(self, ag, node, rel):
+        """Create a refinement edge."""
         ref_ag = self.nodes_to_agents[node[0]]
         if rel == 'is_ref':
             return (ref_ag.to_json(), rel, ag.to_json())

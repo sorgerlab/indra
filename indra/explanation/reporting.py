@@ -10,6 +10,17 @@ from indra.assemblers.pysb.common import _n
 
 
 class RefEdge(object):
+    """Refinement edge representing ontological relationship between nodes.
+
+    Parameters
+    ----------
+    source : indra.statements.Agent
+        Source agent of the edge.
+    target : indra.statements.Agent
+        Target agent of the edge.
+    relation : str
+        'is_ref' or 'has_ref' depending on the direction.
+    """
     def __init__(self, source, relation, target):
         self.source = source
         self.relation = relation
