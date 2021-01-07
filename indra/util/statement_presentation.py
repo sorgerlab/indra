@@ -697,10 +697,11 @@ def stmt_to_english(stmt):
     return ea.make_model()[:-1]
 
 
-def make_string_from_sort_key(rel_key):
-    """Make a Statement string via EnglishAssembler from the sort key.
+def make_string_from_relation_key(rel_key):
+    """Make a Statement string via EnglishAssembler from the relation key.
 
-    Specifically, the sort key used by `group_and_sort_statements`.
+    Specifically, the key used by `group_and_sort_statements` for contents
+    grouped at the relation level.
     """
     stmt = make_stmt_from_relation_key(rel_key)
     return stmt_to_english(stmt)
