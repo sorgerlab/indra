@@ -230,8 +230,7 @@ class PysbModelChecker(ModelChecker):
                     self.stmt_to_obs[stmt] = obs_nodes
             elif isinstance(stmt, Influence):
                 if stmt.obj is None:
-                    self.stmt_to_obs[stmt] = NodesContainer(
-                        None, main_interm=[None])
+                    self.stmt_to_obs[stmt] = NodesContainer(None)
                 else:
                     # Get all refinements of object agent
                     ref_objs = self.get_refinements(stmt.obj)
@@ -380,9 +379,6 @@ class PysbModelChecker(ModelChecker):
         # rule in the model activating the object, and the object may not have
         # an "active" site of the appropriate type
         obs_nodes = self.stmt_to_obs[stmt]
-        if not obs_nodes:
-            logger.info("No observables for stmt %s, returning False" % stmt)
-            return (None, None, 'OBSERVABLES_NOT_FOUND')
         # Statement object is None
         if obs_nodes.main_agent is None:
             # Cannot check modifications in this case
@@ -390,6 +386,9 @@ class PysbModelChecker(ModelChecker):
                 return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
             obs_nodes.all_nodes = None
         else:
+            if not obs_nodes.main_interm and not obs_nodes.ref_interm:
+                logger.info("No observables for stmt %s, returning False" % stmt)
+                return (None, None, 'OBSERVABLES_NOT_FOUND')
             obs_nodes.main_nodes = [
                 (obs, target_polarity) for obs in obs_nodes.main_interm]
             obs_nodes.ref_nodes = [
