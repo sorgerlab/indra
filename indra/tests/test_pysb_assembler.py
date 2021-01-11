@@ -849,6 +849,29 @@ def test_phospho_assemble_grounding():
         check_policy(policy)
 
 
+def test_get_grounded_agents_from_model():
+    mek = Agent('MEK1', db_refs={'HGNC': '6840'})
+    erk = Agent('ERK2', db_refs={'HGNC': '6871'})
+    erk_phos = Agent('ERK2', db_refs={'HGNC': '6871'},
+                     mods=[ModCondition('phosphorylation')])
+    erk_phos_y187 = Agent('ERK2', db_refs={'HGNC': '6871'},
+                       mods=[ModCondition('phosphorylation', 'Y', '187')])
+    phos_stmt = Phosphorylation(mek, erk)
+    phos_y187_stmt = Phosphorylation(mek, erk, 'Y', '187')
+    pysba = pa.PysbAssembler([phos_stmt, phos_y187_stmt])
+    pysb_model = pysba.make_model()
+    agents_by_mp, mps_by_rule = pa.get_grounded_agents(pysb_model)
+    assert isinstance(agents_by_mp, dict)
+    assert isinstance(mps_by_rule, dict)
+    model_agents = agents_by_mp.values()
+    model_keys = set([ag.matches_key() for ag in model_agents])
+    # TODO add other types of agent conditions here
+    # TODO do we expect a different agent for af?
+    test_keys = set([mek.matches_key(), erk_phos.matches_key(),
+                     erk_phos_y187.matches_key()])
+    assert len(model_keys.intersection(test_keys)) == 3
+
+
 def test_phospho_mod_grounding():
     a = Agent('MEK1', mods=[ModCondition('phosphorylation', 'S', '218'),
                             ModCondition('phosphorylation', 'S', '222')],

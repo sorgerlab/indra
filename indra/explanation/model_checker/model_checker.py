@@ -128,6 +128,60 @@ class PathResult(object):
         return str(self)
 
 
+class NodesContainer():
+    """Contains the information about nodes corresponding to a given agent of
+    the test statement.
+
+    Parameters
+    ----------
+    main_agent : indra.statements.Agent
+        An INDRA agent representing a subject or object of test statement.
+    ref_agents : list[indra.statements.Agent]
+        A list of agents that are refinements of main agent.
+
+    Attributes
+    ----------
+    main_nodes : list[tuple]
+        A list of nodes corresponding to main agent.
+    ref_nodes : list[tuple]
+        A list of nodes corresponding to refinement agents.
+    all_nodes : list[tuple]
+        A list of all nodes corresponding to main agent or its refinements.
+    common_target : tuple or None
+        Common target node connected to all nodes. If there's only one node in
+        all_nodes, then common_target is not used.
+    main_interm : list[MonomerPattern]
+        A list of intermediate representation between main agent and main nodes
+        (only used in PySB currently - MonomerPatterns).
+    ref_interm : list[MonomerPattern]
+        A list of intermediate representation between ref_agents and ref_nodes
+        (only used in PySB currently - MonomerPatterns).
+    """
+    def __init__(self, main_agent, ref_agents=None):
+        self.main_agent = main_agent
+        self.ref_agents = ref_agents if ref_agents else []
+        self.main_nodes = []
+        self.ref_nodes = []
+        self.all_nodes = []
+        self.common_target = None
+        self.main_interm = []
+        self.ref_interm = []
+
+    def get_all_nodes(self):
+        """Combine main and refinement nodes for pathfinding."""
+        self.all_nodes = self.main_nodes + self.ref_nodes
+
+    def is_ref(self, node):
+        """Whether a given node is a refinement node."""
+        return node in self.ref_nodes and node not in self.main_nodes
+
+    def get_total_nodes(self):
+        """Get total number of nodes in this container."""
+        if self.all_nodes is None:
+            return 0
+        return len(self.all_nodes)
+
+
 class ModelChecker(object):
     """The parent class of all ModelCheckers.
 
@@ -236,14 +290,15 @@ class ModelChecker(object):
         result : indra.explanation.modelchecker.PathResult
             A PathResult object containing the result of a test.
         """
-        input_set, obj_list, result_code = self.get_all_subjects_objects(stmt)
+        self.get_graph()
+        subj_nodes, obj_nodes, result_code = self.process_statement(stmt)
         if result_code:
             return self.make_false_result(result_code, max_paths,
                                           max_path_length)
         # If source and target are the same, we need to handle a loop
         loop = False
-        if (input_set and (len(input_set) == len(obj_list) == 1) and
-                (list(input_set)[0] == list(obj_list)[0])):
+        if ((subj_nodes.get_total_nodes() == obj_nodes.get_total_nodes() == 1)
+                and (subj_nodes.all_nodes[0] == obj_nodes.all_nodes[0])):
             loop = True
 
         # Convert agent filter function to node filter function
@@ -251,27 +306,27 @@ class ModelChecker(object):
             node_filter_func = self.update_filter_func(agent_filter_func)
         # If we have several objects in obj_list or we have a loop, we add a
         # dummy target node as a child to all nodes in obj_list
-        if len(obj_list) > 1 or loop:
+        common_target = None
+        if obj_nodes.get_total_nodes() > 1 or loop:
             common_target = ('common_target', 0)
             self.graph.add_node(common_target)
+            obj_nodes.common_target = common_target
             # This is the case when source and target are the same. NetworkX
             # does not allow loops in the paths, so we work around it by using
             # target predecessors as new targets
             if loop:
-                for obj in self.graph.predecessors(list(obj_list)[0]):
+                for obj in self.graph.predecessors(obj_nodes.all_nodes[0]):
                     self.graph.add_edge(obj, common_target)
             else:
-                for obj in obj_list:
+                for obj in obj_nodes.all_nodes:
                     self.graph.add_edge(obj, common_target)
-            result = self.find_paths(input_set, common_target, max_paths,
-                                     max_path_length, loop, dummy_target=True,
-                                     filter_func=node_filter_func)
 
+        result = self.find_paths(subj_nodes, obj_nodes, max_paths,
+                                 max_path_length, loop,
+                                 filter_func=node_filter_func)
+        if common_target:
             self.graph.remove_node(common_target)
-        else:
-            result = self.find_paths(input_set, list(obj_list)[0], max_paths,
-                                     max_path_length, loop, dummy_target=False,
-                                     filter_func=node_filter_func)
+
         if result.path_found:
             logger.info('Found paths for %s' % stmt)
             return result
@@ -281,62 +336,22 @@ class ModelChecker(object):
         return self.make_false_result('NO_PATHS_FOUND',
                                       max_paths, max_path_length)
 
-    def get_all_subjects_objects(self, stmt):
-        # Make sure graph is created
-        self.get_graph()
-        # Extract subject and object info from test statement
-        subj_list, obj_list, result_code = self.process_statement(stmt)
-        if result_code:
-            return None, None, result_code
-        # This is the case if we are checking a Statement whose
-        # subject is genuinely None
-        if all(s is None for s in subj_list):
-            input_set = None
-        # This is the case where the Statement has an actual subject
-        # but we may still run into issues with finding an input
-        # set for it in which case a false result may be returned.
-        else:
-            logger.info('Subject list: %s' % str(subj_list))
-            input_set = []
-            meaningful_res_code = None
-            # Each subject might produce a different input set and we need to
-            # combine them
-            for subj in subj_list:
-                inp, res_code = self.process_subject(subj)
-                if res_code:
-                    meaningful_res_code = res_code
-                    continue
-                input_set += inp
-            if not input_set and meaningful_res_code:
-                return None, None, meaningful_res_code
-
-        logger.info('Input set: %s' % str(input_set))
-
-        # Statement object is None
-        if all(o is None for o in obj_list):
-            obj_list = None
-
-        return input_set, obj_list, None
-
-    def find_paths(self, input_set, target, max_paths=1, max_path_length=5,
-                   loop=False, dummy_target=False, filter_func=None):
+    def find_paths(self, subj, obj, max_paths=1, max_path_length=5,
+                   loop=False, filter_func=None):
         """Check for a source/target path in the model.
 
         Parameters
         ----------
-        input_set : list or None
-            A list of potenital sources or None if the test statement subject
-            is None.
-        target : tuple
-            Tuple representing the target node (usually common target node).
+        subj : indra.explanation.model_checker.NodesContainer
+            NodesContainer representing test statement subject.
+        obj : indra.explanation.model_checker.NodesContainer
+            NodesContainer representing test statement object.
         max_paths : int
             The maximum number of specific paths to return.
         max_path_length : int
             The maximum length of specific paths to return.
         loop : bool
             Whether we are looking for a loop path.
-        dummy_target : False
-            Whether the target is a dummy node.
         filter_func : function or None
             A function to constrain the search. A function should take a node
             as a parameter and return True if the node is allowed to be in a
@@ -362,8 +377,14 @@ class ModelChecker(object):
         path_lengths = []
         path_metrics = []
         sources = []
-        for source, path_length in find_sources(self.graph, target, input_set,
-                                                filter_func):
+        if obj.common_target:
+            target = obj.common_target
+            dummy_target = True
+        else:
+            target = obj.all_nodes[0]
+            dummy_target = False
+        for source, path_length in find_sources(self.graph, target,
+                                                subj.all_nodes, filter_func):
             # If a dummy target is used, we need to subtract one edge.
             # In case of loops, we are already missing one edge, there's no
             # need to subtract one more.
@@ -404,6 +425,14 @@ class ModelChecker(object):
                         self.graph, source, target, search_path_length, loop,
                         dummy_target, filter_func)
                     for path in path_iter:
+                        # Check if the path starts with a refinement
+                        if subj.is_ref(path[0]):
+                            path.insert(0, self.get_ref(subj.main_agent,
+                                                        path[0], 'has_ref'))
+                        # Check if the path ends with a refinement
+                        if obj.is_ref(path[-1]):
+                            path.append(self.get_ref(obj.main_agent,
+                                                     path[-1], 'is_ref'))
                         pr.add_path(tuple(path))
                         # Do not get next path if reached max_paths
                         if len(pr.paths) >= max_paths:
@@ -422,6 +451,14 @@ class ModelChecker(object):
         else:
             return PathResult(False, 'NO_PATHS_FOUND',
                               max_paths, max_path_length)
+
+    def get_ref(self, ag, node, rel):
+        """Create a refinement edge."""
+        ref_ag = self.nodes_to_agents[node[0]]
+        if rel == 'is_ref':
+            return (ref_ag.to_json(), rel, ag.to_json())
+        elif rel == 'has_ref':
+            return (ag.to_json(), rel, ref_ag.to_json())
 
     def make_false_result(self, result_code, max_paths, max_path_length):
         return PathResult(False, result_code, max_paths, max_path_length)
@@ -485,10 +522,10 @@ class ModelChecker(object):
 
         Returns
         -------
-        subj_data : list or None
-            Data about statement subject to be used as source nodes.
-        obj_data : list or None
-            Data about statement object to be used as target nodes.
+        subj_data : NodesContainer
+            NodesContainer for statement subject.
+        obj_data : NodesContainer
+            NodesContainer for statement object.
         result_code : str or None
             Result code to construct PathResult.
         """

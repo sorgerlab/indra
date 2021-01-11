@@ -1,7 +1,8 @@
 import logging
 import networkx as nx
-from . import ModelChecker
+from . import ModelChecker, NodesContainer
 from indra.statements import *
+from indra.ontology.bio import bio_ontology
 
 
 logger = logging.getLogger(__name__)
@@ -55,22 +56,14 @@ class UnsignedGraphModelChecker(ModelChecker):
                         stmt.__class__.__name__)
             return (None, None, 'STATEMENT_TYPE_NOT_HANDLED')
         subj, obj = stmt.agent_list()
-        if obj is None:
-            obj_nodes = [None]
-        else:
-            obj_nodes = self.get_nodes(obj, self.graph)
-            # Statement has object but it's not in the graph
-            if not obj_nodes:
-                return (None, None, 'OBJECT_NOT_FOUND')
-        return ([subj], obj_nodes, None)
-
-    def process_subject(self, subj):
-        # We will not get here if subject is None
         subj_nodes = self.get_nodes(subj, self.graph)
-        # Statement has subject but it's not in the graph
-        if not subj_nodes:
-            return (None, 'SUBJECT_NOT_FOUND')
-        return subj_nodes, None
+        obj_nodes = self.get_nodes(obj, self.graph)
+        # Statement has object but it's not in the graph
+        if obj and not obj_nodes.all_nodes:
+            return (None, None, 'OBJECT_NOT_FOUND')
+        if subj and not subj_nodes.all_nodes:
+            return (None, None, 'SUBJECT_NOT_FOUND')
+        return (subj_nodes, obj_nodes, None)
 
     def _sample_paths(self, input_set, obj_name, target_polarity,
                       max_paths=1, max_path_length=5):
@@ -78,10 +71,22 @@ class UnsignedGraphModelChecker(ModelChecker):
         pass
 
     def get_nodes(self, agent, graph):
+        """Get all nodes corresponding to a given agent."""
+        nc = NodesContainer(agent)
+        if agent is None:
+            nc.all_nodes = None
+            return nc
         node = (agent.name, 0)
-        if node not in graph.nodes:
-            return None
-        return [node]
+        if node in graph.nodes:
+            nc.main_nodes.append(node)
+        for n, ag in self.nodes_to_agents.items():
+            if ag is not None and not ag.matches(agent) and ag.refinement_of(
+                    agent, bio_ontology):
+                node = (n, 0)
+                if node in graph.nodes:
+                    nc.ref_nodes.append(node)
+        nc.get_all_nodes()
+        return nc
 
     def get_nodes_to_agents(self):
         """Return a dictionary mapping IndraNet nodes to INDRA agents."""

@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import unittest
 from collections import Counter
+from copy import deepcopy
 
 import numpy as np
 import networkx as nx
@@ -18,7 +19,7 @@ from indra.explanation.model_checker.pysb import _mp_embeds_into, \
     _cp_embeds_into, _match_lhs, remove_im_params
 from indra.explanation.reporting import stmt_from_rule, stmts_from_pysb_path, \
     stmts_from_pybel_path, stmts_from_indranet_path, PybelEdge, \
-    pybel_edge_to_english
+    pybel_edge_to_english, RefEdge
 from indra.assemblers.pysb.assembler import PysbAssembler, \
     set_base_initial_condition
 from indra.assemblers.indranet import IndraNetAssembler
@@ -645,7 +646,7 @@ def test_phosphorylation_annotations():
     assert results[1][1].paths == [(('A_phos_B', 0),
                                     ('B_monomer_Thr185_phos_obs', 0))]
     assert results[2][0] == st3
-    assert results[2][1].paths == []
+    assert results[2][1].paths == [], results[2][1].paths
 
 
 @with_model
@@ -1272,23 +1273,25 @@ def test_prune_influence_map_degrade_bind():
 def test_add_namespaces():
     a = Agent('a', db_refs={'HGNC': '1'})
     b = Agent('b', db_refs={'CHEBI': '2'})
-    c = Agent('c', db_refs={'GO': '3'})
+    c = Agent('c', db_refs={'GO': 'GO:3'})
     d = Agent('d', db_refs={'HGNC': '4'})
     stmts = [Activation(a, b), Inhibition(b, c), IncreaseAmount(a, c),
              DecreaseAmount(c, d)]
     pa = PysbAssembler(stmts)
     model = pa.make_model()
     mc = PysbModelChecker(
-        model, statements=[IncreaseAmount(a, d)], model_stmts=stmts)
+        model, statements=[IncreaseAmount(a, d)])
     mc.get_graph(add_namespaces=True)
     im = mc.get_im()
     # All nodes have ns
     assert {'a_activates_b_activity', 'a_produces_c', 'd__obs',
             'b_deactivates_c_activity', 'c_degrades_d'} == set(im.nodes)
+    # TODO d__obs is not in mc.nodes_to_agents
+    assert all([n in mc.nodes_to_agents for n in im.nodes]), mc.nodes_to_agents
     for n, data in im.nodes(data=True):
         assert data.get('ns')
         if n in ['a_activates_b_activity', 'a_produces_c', 'd__obs']:
-            assert data['ns'] =='HGNC'
+            assert data['ns'] == 'HGNC'
         elif n == 'b_deactivates_c_activity':
             assert data['ns'] == 'CHEBI'
         elif n == 'c_degrades_d':
@@ -1491,6 +1494,60 @@ def test_amount_vs_activation():
     assert results[0][1].result_code == 'NO_PATHS_FOUND', results
 
 
+@unittest.skip('Skip bound polarity tests for now')
+def test_bound_polarity_error():
+    rheb = Agent('RHEB', db_refs={'HGNC': '10011'})
+    mtor = Agent('MTOR', db_refs={'HGNC': '3942'})
+    rheb_bc = BoundCondition(rheb, True)
+    mtor_rheb = Agent('MTOR', bound_conditions=[rheb_bc],
+                      db_refs={'HGNC': '3942'})
+    rps6kb1 = Agent('RPS6KB1', db_refs={'HGNC': '10436'})
+    model_stmts = [Complex([rheb, mtor]),
+                   Activation(mtor_rheb, rps6kb1)]
+    # This test should have a path
+    corr_test = Activation(rheb, rps6kb1)
+    # This should not have a path
+    incorr_test = Inhibition(rheb, rps6kb1)
+    # Make model
+    pa = PysbAssembler()
+    pa.add_statements(model_stmts)
+    pa.make_model(policies='one_step')
+    # Check model
+    mc = PysbModelChecker(pa.model, [corr_test, incorr_test])
+    results = mc.check_model()
+    # The first one should pass
+    assert results[0][1].result_code == 'PATHS_FOUND', results[0]
+    # The second should fail with no path found
+    assert results[1][1].result_code == 'NO_PATHS_FOUND', results[1]
+
+
+@unittest.skip('Skip bound polarity tests for now')
+def test_not_bound_polarity_error():
+    pras40 = Agent('AKT1S1', db_refs={'HGNC': '28426'})
+    mtor = Agent('MTOR', db_refs={'HGNC': '3942'})
+    pras40_bc = BoundCondition(pras40, False) 
+    mtor_n_pras40 = Agent('MTOR', bound_conditions=[pras40_bc],
+                      db_refs={'HGNC': '3942'})
+    rps6kb1 = Agent('RPS6KB1', db_refs={'HGNC': '10436'})
+    model_stmts = [Complex([pras40, mtor]),
+                   Activation(mtor_n_pras40, rps6kb1)]
+    # This test should have a path
+    corr_test = Inhibition(pras40, rps6kb1)
+    # This should not have a path
+    incorr_test = Activation(pras40, rps6kb1)
+    # Make model
+    pa = PysbAssembler()
+    pa.add_statements(model_stmts)
+    pa.make_model(policies='one_step')
+    # Check model
+    mc = PysbModelChecker(pa.model, [corr_test, incorr_test])
+    results = mc.check_model()
+    # The first one should pass
+    assert results[0][1].result_code == 'PATHS_FOUND', results[0]
+    # The second should fail with no path found
+    assert results[1][1].result_code == 'NO_PATHS_FOUND', results[1]
+
+
 # Test other ModelChecker types
 st1 = Activation(Agent('A', db_refs={'HGNC': '1'}),
                  Agent('B', db_refs={'HGNC': '2'}))
@@ -1661,7 +1718,7 @@ def test_pybel_active_form_path():
     assert stmts_from_path == [[stmt] for stmt in stmts]
 
 
-def test_pybel_refinements():
+def test_refinements():
     prkcb = Agent('PRKCB', db_refs={'TEXT': 'PRKCB', 'HGNC': '9395'})
     gsk3b = Agent('GSK3B', db_refs={'TEXT': 'GSK3B', 'HGNC': '4617'})
     map2k1 = Agent('MAP2K1', db_refs={'TEXT': 'MAP2K1', 'HGNC': '6840'})
@@ -1673,6 +1730,19 @@ def test_pybel_refinements():
                    Phosphorylation(map2k1, mapk1)]
     test_stmts = [Phosphorylation(prkcb, gsk3b, 'S'),
                   Phosphorylation(mek, erk)]
+    gsk3b_s_phos = deepcopy(gsk3b)
+    gsk3b_s_phos.mods = [ModCondition('phosphorylation', 'S')]
+    gsk3b_s9_phos = deepcopy(gsk3b)
+    gsk3b_s9_phos.mods = [ModCondition('phosphorylation', 'S', '9')]
+    gsk3b_ref = RefEdge(gsk3b_s9_phos, 'is_ref', gsk3b_s_phos)
+    mek_ref = RefEdge(mek, 'has_ref', map2k1)
+    mapk1_phos = deepcopy(mapk1)
+    mapk1_phos.mods = [ModCondition('phosphorylation')]
+    erk_phos = deepcopy(erk)
+    erk_phos.mods = [ModCondition('phosphorylation')]
+    erk_phos_ref = RefEdge(mapk1_phos, 'is_ref', erk_phos)
+    erk_ref = RefEdge(mapk1, 'is_ref', erk)
+    # Test PyBEL
     pba = PybelAssembler(model_stmts)
     pybel_model = pba.make_model()
     pbmc = PybelModelChecker(pybel_model, test_stmts)
@@ -1681,10 +1751,58 @@ def test_pybel_refinements():
     assert results[1][1].path_found
     path0 = results[0][1].paths[0]
     path1 = results[1][1].paths[0]
-    assert stmts_from_pybel_path(
-        path0, pybel_model, False, model_stmts) == [[model_stmts[0]]]
-    assert stmts_from_pybel_path(
-        path1, pybel_model, False, model_stmts) == [[model_stmts[1]]]
+    path_stmts = stmts_from_pybel_path(
+        path0, pybel_model, False, model_stmts)
+    assert path_stmts == [[model_stmts[0]], [gsk3b_ref]], path_stmts
+    path_stmts = stmts_from_pybel_path(
+        path1, pybel_model, False, model_stmts)
+    assert path_stmts == [[mek_ref], [model_stmts[1]], [erk_phos_ref]], \
+        path_stmts
+    # Test PySB
+    pa = PysbAssembler(model_stmts)
+    pysb_model = pa.make_model()
+    pmc = PysbModelChecker(pysb_model, test_stmts)
+    results = pmc.check_model()
+    assert results[0][1].path_found
+    assert results[1][1].path_found
+    path0 = results[0][1].paths[0]
+    path1 = results[1][1].paths[0]
+    path_stmts = stmts_from_pysb_path(
+        path0, pysb_model, model_stmts)
+    # NOTE we do not report more specific sites as refinements in PySB
+    assert path_stmts == [model_stmts[0]], path_stmts
+    path_stmts = stmts_from_pysb_path(
+        path1, pysb_model, model_stmts)
+    assert path_stmts == [mek_ref, model_stmts[1], erk_phos_ref], path_stmts
+    # Test unsigned graph
+    ia = IndraNetAssembler(model_stmts)
+    unsigned_model = ia.make_model(graph_type='digraph')
+    umc = UnsignedGraphModelChecker(unsigned_model, test_stmts)
+    results = umc.check_model()
+    assert results[0][1].path_found
+    assert results[1][1].path_found
+    path0 = results[0][1].paths[0]
+    path1 = results[1][1].paths[0]
+    path_stmts = stmts_from_indranet_path(
+        path0, unsigned_model, False, False, model_stmts)
+    # Agent sites will not show as refinement in unsigend graph
+    assert path_stmts == [[model_stmts[0]]], path_stmts
+    path_stmts = stmts_from_indranet_path(
+        path1, unsigned_model, False, False, model_stmts)
+    assert path_stmts == [[mek_ref], [model_stmts[1]], [erk_ref]], path_stmts
+    # Test signed graph
+    # Can't use phosphorylations for signed graph, using activations
+    model_stmts = [Activation(map2k1, mapk1)]
+    test_stmts = [Activation(mek, erk)]
+    ia = IndraNetAssembler(model_stmts)
+    signed_model = ia.make_model(graph_type='signed')
+    smc = SignedGraphModelChecker(signed_model, test_stmts)
+    results = smc.check_model()
+    assert results[0][1].path_found
+    path0 = results[0][1].paths[0]
+    path_stmts = stmts_from_indranet_path(
+        path0, signed_model, True, False, model_stmts)
+    assert path_stmts == [[mek_ref], [model_stmts[0]], [erk_ref]], path_stmts
 
 
 def test_pybel_edge_types():
@@ -1847,8 +1965,36 @@ def test_path_fixed_length():
     assert len(res.paths[0]) == len(res.paths[1]) == 3  # 3 nodes = 2 edges/steps
 
 
-if __name__ == '__main__':
-    test_prune_influence_map_subj_obj()
+def test_get_nodes_to_agents():
+    prkcb = Agent('PRKCB', db_refs={'TEXT': 'PRKCB', 'HGNC': '9395'})
+    gsk3b = Agent('GSK3B', db_refs={'TEXT': 'GSK3B', 'HGNC': '4617'})
+    map2k1 = Agent('MAP2K1', db_refs={'TEXT': 'MAP2K1', 'HGNC': '6840'})
+    mapk1 = Agent('MAPK1', db_refs={'TEXT': 'MAPK1', 'HGNC': '6871'})
+    mek = Agent('MEK', db_refs={'TEXT': 'MEK', 'FPLX': 'MEK'})
+    erk = Agent('ERK', db_refs={'TEXT': 'ERK', 'FPLX': 'ERK'})
+    # Model statements are refined versions of test statements
+    model_stmts = [Phosphorylation(prkcb, gsk3b, 'S', '9'),
+                   Phosphorylation(map2k1, mapk1)]
+    test_stmts = [Phosphorylation(prkcb, gsk3b, 'S'),
+                  Phosphorylation(mek, erk)]
+    pysba = PysbAssembler(model_stmts)
+    pysb_model = pysba.make_model()
+    pmc = PysbModelChecker(pysb_model, test_stmts)
+    pmc.get_im()
+    pmc.prune_influence_map()
+    pmc.get_nodes_to_agents()
+    assert len(pmc.nodes_to_agents) == 4
+    assert pmc.nodes_to_agents['PRKCB_phosphorylation_GSK3B_S9'].matches(prkcb)
+    assert pmc.nodes_to_agents['MAP2K1_phosphorylation_MAPK1_phospho'].matches(
+        map2k1)
+    assert pmc.nodes_to_agents['MAPK1_phospho_p_obs'].name == 'MAPK1'
+    assert pmc.nodes_to_agents['MAPK1_phospho_p_obs'].mods[0].mod_type == \
+        'phosphorylation'
+    assert pmc.nodes_to_agents['GSK3B_S9_p_obs'].mods[0].mod_type == \
+        'phosphorylation'
+    assert pmc.nodes_to_agents['GSK3B_S9_p_obs'].mods[0].residue == 'S'
+    assert pmc.nodes_to_agents['GSK3B_S9_p_obs'].mods[0].position == '9'
+
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation

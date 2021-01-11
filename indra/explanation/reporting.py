@@ -9,6 +9,54 @@ from indra.assemblers.pysb.assembler import parse_identifiers_url
 from indra.assemblers.pysb.common import _n
 
 
+class RefEdge(object):
+    """Refinement edge representing ontological relationship between nodes.
+
+    Parameters
+    ----------
+    source : indra.statements.Agent
+        Source agent of the edge.
+    target : indra.statements.Agent
+        Target agent of the edge.
+    relation : str
+        'is_ref' or 'has_ref' depending on the direction.
+    """
+    def __init__(self, source, relation, target):
+        self.source = source
+        self.relation = relation
+        self.target = target
+
+    @classmethod
+    def _from_json(cls, json_tuple):
+        source = Agent._from_json(json_tuple[0])
+        relation = json_tuple[1]
+        target = Agent._from_json(json_tuple[2])
+        return RefEdge(source, relation, target)
+
+    def to_english(self):
+        source_str = _assemble_agent_str(self.source)
+        target_str = _assemble_agent_str(self.target)
+        sb = SentenceBuilder()
+        if self.relation == 'is_ref':
+            rel_str = ' is a refinement of '
+        elif self.relation == 'has_ref':
+            rel_str = ' has a refinement '
+        sb.append_as_sentence([source_str, rel_str, target_str])
+        sb.make_sentence()
+        return sb.sentence
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return 'RefEdge(%s %s %s)' % (self.source, self.relation, self.target)
+
+    def __eq__(self, other):
+        return (self.source.matches(other.source) and
+                self.target.matches(other.target) and
+                self.relation == other.relation)
+
+
 def stmts_from_pysb_path(path, model, stmts):
     """Return source Statements corresponding to a path in a model.
 
@@ -29,12 +77,19 @@ def stmts_from_pysb_path(path, model, stmts):
         The Statements from which the rules along the path were obtained.
     """
     path_stmts = []
-    for path_rule, sign in path:
-        for rule in model.rules:
-            if rule.name == path_rule:
-                stmt = stmt_from_rule(path_rule, model, stmts)
-                assert stmt is not None
-                path_stmts.append(stmt)
+    for step in path:
+        # Refinement edge
+        if len(step) == 3:
+            edge = RefEdge._from_json(step)
+            path_stmts.append(edge)
+        # Regular rule
+        elif len(step) == 2:
+            path_rule, sign = step
+            for rule in model.rules:
+                if rule.name == path_rule:
+                    stmt = stmt_from_rule(path_rule, model, stmts)
+                    assert stmt is not None
+                    path_stmts.append(stmt)
     return path_stmts
 
 
@@ -71,6 +126,14 @@ def stmts_from_indranet_path(path, model, signed, from_db=True, stmts=None):
     for i in range(len(path[:-1])):
         source = path[i]
         target = path[i+1]
+        if len(source) == 3:
+            edge = RefEdge._from_json(source)
+            steps.append([edge])
+            continue
+        elif len(target) == 3:
+            edge = RefEdge._from_json(target)
+            steps.append([edge])
+            continue
         if signed:
             if source[1] == target[1]:
                 sign = 0
@@ -144,6 +207,14 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
     for i in range(len(path[:-1])):
         source = path[i]
         target = path[i+1]
+        if len(source) == 3:
+            edge = RefEdge._from_json(source)
+            steps.append([edge])
+            continue
+        elif len(target) == 3:
+            edge = RefEdge._from_json(target)
+            steps.append([edge])
+            continue
         # Check if the signs of source and target nodes are the same
         positive = (source[1] == target[1])
         reverse = False

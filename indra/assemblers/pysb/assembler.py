@@ -8,6 +8,7 @@ from pysb import Model, Monomer, Parameter, Expression, Observable, Rule, \
     Annotation, ComponentDuplicateNameError, ComplexPattern, \
     ReactionPattern, ANY, WILD, InvalidInitialConditionError
 from pysb.core import SelfExporter
+from pysb.pattern import match_complex_pattern
 import pysb.export
 
 from indra import statements as ist
@@ -142,6 +143,74 @@ def get_uncond_agent(agent):
     """
     agent_uncond = ist.Agent(_n(agent.name), mutations=agent.mutations)
     return agent_uncond
+
+
+def get_grounded_agents(model):
+    """Given a PySB model, get mappings from rule to monomer patterns and
+    from monomer patterns to grounded agents."""
+    agents_by_mps = {}
+    mps_by_rule = {}
+    mps = set()
+    for rule in model.rules:
+        rule_mps = set()
+        for rp in (rule.reactant_pattern, rule.product_pattern):
+            for cp in rp.complex_patterns:
+                # cp can be None
+                if cp is not None:
+                    for mp in cp.monomer_patterns:
+                        mps.add(mp)
+                        rule_mps.add(mp)
+        if rule_mps:
+            mps_by_rule[rule.name] = rule_mps
+    # a. For each monomer pattern, get its grounding from annotations
+    groundings_by_monomer = {}
+    # Build up db_refs for each monomer object
+    for ann in model.annotations:
+        if ann.predicate == 'is':
+            m = ann.subject
+            db_name, db_id = parse_identifiers_url(ann.object)
+            if m in groundings_by_monomer:
+                groundings_by_monomer[m][db_name] = db_id
+            else:
+                groundings_by_monomer[m] = {db_name: db_id}
+        # Canonicalize db_refs
+    # b. Get its site/state conditions from MPs; match them back to
+    #    their semantics using annotations
+    # TODO handle bound conditions
+    for mp in mps:
+        mods = []
+        if hasattr(mp.monomer, 'site_annotations'):
+            for site, state in mp.site_conditions.items():
+                if isinstance(state, tuple) and state[1] == WILD:
+                    state = state[0]
+                mod, mod_type, res, pos = None, None, None, None
+                for ann in mp.monomer.site_annotations:
+                    if ann.subject == (site, state):
+                        mod_type = ann.object
+                    elif ann.subject == site and ann.predicate == 'is_residue':
+                        res = ann.object
+                    if ann.subject == site and ann.predicate == 'is_position':
+                        pos = ann.object
+                    if mod_type:
+                        not_mod, mod = states[mod_type]
+                        if state == mod:
+                            is_mod = True
+                        elif state == not_mod:
+                            is_mod = False
+                        else:
+                            logger.warning('Unknown state %s for %s, '
+                                           'setting as not modified' % (
+                                                state, mod_type))
+                            is_mod = False
+                        mod = ist.ModCondition(mod_type, res, pos, is_mod)
+                if mod:
+                    mods.append(mod)
+        if not mods:
+            mods = None
+        ag = ist.Agent(mp.monomer.name, mods=mods,
+                       db_refs=groundings_by_monomer.get(mp.monomer))
+        agents_by_mps[mp] = ag
+    return agents_by_mps, mps_by_rule
 
 
 def grounded_monomer_patterns(model, agent, ignore_activities=False):
@@ -1445,8 +1514,7 @@ for mc, rate_law in itertools.product(ist.modclass_to_modtype.keys(),
 def autophosphorylation_monomers_one_step(stmt, agent_set):
     enz = agent_set.get_create_base_agent(stmt.enz)
     phos_site = get_mod_site_name(stmt._get_mod_condition())
-    enz.create_site(phos_site, ('u', 'p'))
-
+    enz.create_mod_site(stmt._get_mod_condition())
 
 def autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     param_name = 'kf_' + stmt.enz.name[0].lower() + '_autophos'
@@ -1454,19 +1522,21 @@ def autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     kfp = parameters.get('kf', Param(param_name, 1e-2, True))
     kf_autophospho = get_create_parameter(model, kfp)
 
-    # See NOTE in monomers_one_step
-    phos_site = get_mod_site_name(stmt._get_mod_condition())
-    pattern_unphos = get_monomer_pattern(model, stmt.enz,
-                                         extra_fields={phos_site: 'u'})
-    pattern_phos = get_monomer_pattern(model, stmt.enz,
-                                       extra_fields={phos_site: 'p'})
+    mc = stmt._get_mod_condition()
+    mod_site = get_mod_site_name(mc)
+    unmod_site_state, mod_site_state = states[mc.mod_type]
+
+    sub_unmod = get_monomer_pattern(model, stmt.enz,
+            extra_fields={mod_site: unmod_site_state})
+    sub_mod = get_monomer_pattern(model, stmt.enz,
+            extra_fields={mod_site: mod_site_state})
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_name = '%s_autophospho_%s_%s' % (rule_enz_str, rule_enz_str,
-                                          phos_site)
-    r = Rule(rule_name, pattern_unphos >> pattern_phos, kf_autophospho)
-    anns = [Annotation(rule_name, pattern_unphos.monomer.name,
+                                          mod_site)
+    r = Rule(rule_name, sub_unmod >> sub_mod, kf_autophospho)
+    anns = [Annotation(rule_name, sub_unmod.monomer.name,
                        'rule_has_subject'),
-            Annotation(rule_name, pattern_phos.monomer.name,
+            Annotation(rule_name, sub_unmod.monomer.name,
                        'rule_has_object')]
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
@@ -2136,6 +2206,12 @@ def conversion_assemble_one_step(stmt, model, agent_set, parameters):
         r = Rule(rule_name, lhs_pattern >> rhs_pattern,
                  kf_one_step_convert)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    if stmt.subj is not None:
+        anns += [Annotation(rule_name, stmt.subj.name, 'rule_has_subject')]
+    for obj in stmt.obj_from:
+        anns += [Annotation(rule_name, obj.name, 'rule_has_object')]
+    for obj in stmt.obj_to:
+        anns += [Annotation(rule_name, obj.name, 'rule_has_object')]
     add_rule_to_model(model, r, anns)
 
 
