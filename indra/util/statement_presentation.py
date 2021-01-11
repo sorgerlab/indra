@@ -352,8 +352,7 @@ class StmtStatGather:
                 # Remember, this is passing REFERENCES to the stats dict.
                 self.__stats[key] = StmtStatGroup(
                     agg_class(d['keys'], d['stats'], d['types'])
-                    for agg_class, d in self.__stmt_stats.items()
-                )
+                    for agg_class, d in self.__stmt_stats.items())
             else:
                 raise KeyError(f"Key \"{key}\" not found! "
                                f"{self.__class__.__name__} is finished.")
@@ -427,23 +426,27 @@ class StmtStatRow:
 
 
 class StmtStatGroup(StmtStatRow):
-    """Implement the StmtStatRow API for a group of BasicStats children."""
-    def __init__(self, stats):
-        self.__stats = tuple(stats)
-        self.__keymap = {k: stat for stat in self.__stats for k in stat.keys()}
+    """Implement the StmtStatRow API for a group of BasicStats children.
+
+    This takes an iterable of BasicStats children
+    """
+    def __init__(self, basic_stats):
+        self.__basic_stats = tuple(basic_stats)
+        self.__keymap = {k: stat for stat in self.__basic_stats
+                         for k in stat.keys()}
         return
 
     def include(self, stmt):
-        for stat in self.__stats:
-            stat.include(stmt)
+        for basic_stat in self.__basic_stats:
+            basic_stat.include(stmt)
 
     def get_dict(self):
-        return {k: v for stat in self.__stats
-                for k, v in stat.get_dict().items()}
+        return {k: v for basic_stat in self.__basic_stats
+                for k, v in basic_stat.get_dict().items()}
 
     def finish(self):
-        for stat in self.__stats:
-            stat.finish()
+        for basic_stat in self.__basic_stats:
+            basic_stat.finish()
 
     def __getitem__(self, key):
         return self.__keymap[key][key]
@@ -489,6 +492,7 @@ class BasicStats(StmtStatRow):
         self.__frozen = True
 
     def include(self, stmt):
+        """Include a statement and its statistics in the group."""
         if self.__frozen:
             raise RuntimeError("No longer adding more stmt data to BasicStats.")
         if not isinstance(stmt, Statement):
@@ -629,6 +633,8 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
         sample_dict = dict.fromkeys(stmt_metrics.row_set(), 0)
         try:
             n = sort_by(sample_dict)
+
+            # If the return value is not sortable, this will raise a TypeError.
             n < n
         except Exception as e:
             raise ValueError(f"Invalid sort function: {e}")
@@ -636,7 +642,7 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
         # Assign the function.
         _sort_func = sort_by
 
-    # Return the sorted statements, if that's all you want.
+    # Write a recursive method to group statement content.
     def iter_rows(rows, *metric_dicts):
         assert metric_dicts
         for key, contents in rows:
@@ -652,6 +658,7 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
         return sorted(iter_rows(rows, *metric_dicts), key=lambda t: t[0],
                       reverse=True)
 
+    # Return the sorted statements, if that's all you want.
     if grouping_level == 'statement':
         stmt_rows = ((s.get_hash(), s) for s in stmt_list)
         return sorted_rows(stmt_rows, stmt_metrics)
@@ -694,7 +701,8 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
 def make_stmt_from_relation_key(relation_key, agents=None):
     """Make a Statement from the relation key.
 
-    Specifically, the sort key used by `group_and_sort_statements`.
+    Specifically, make a Statement object from the sort key used by
+    `group_and_sort_statements`.
     """
 
     def make_agent(name):
@@ -739,8 +747,8 @@ def stmt_to_english(stmt):
 def make_string_from_relation_key(rel_key):
     """Make a Statement string via EnglishAssembler from the relation key.
 
-    Specifically, the key used by `group_and_sort_statements` for contents
-    grouped at the relation level.
+    Specifically, make a string from the key used by `group_and_sort_statements`
+    for contents grouped at the relation level.
     """
     stmt = make_stmt_from_relation_key(rel_key)
     return stmt_to_english(stmt)
@@ -759,6 +767,7 @@ def _str_conversion_bits(tpl):
 
 
 def make_top_level_label_from_names_key(names):
+    """Make an english string from the tuple names."""
     try:
         if len(names) == 3 and isinstance(names[1], tuple):  # Conversions
             el_from = _str_conversion_bits(names[1])
