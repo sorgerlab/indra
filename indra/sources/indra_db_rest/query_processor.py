@@ -43,5 +43,3 @@ class AgentProcessor(Processor):
     """A Processor to get Agent pairs from the server."""
     def _run(self):
         pass
-
-
