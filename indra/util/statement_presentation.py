@@ -26,7 +26,23 @@ internal_source_mappings = {
 all_sources = db_sources + reader_sources
 
 
-def _get_relation_keyed_stmts(stmt_list, grouping_level='agent-pair'):
+def _get_relation_keyed_stmts(stmt_list, expand_nary=True):
+    """Low level generator over a list of statements, intended for internal use.
+
+    Non-unique grouping keys are generated for each statement. Each row
+    generated will contain a tuple, beginning with a relation key,
+    generally of the from (verb, ...agents...), though sometimes different in
+    the case of some kinds of Statement, (e.g. ActiveForm), an agent key, which
+    is always (...agents...), and the Statement object itself.
+
+    If expand n-ary is set to True (the default), Complexes and
+    Conversions will have their many agents grouped into appropriate pairs,
+    with each pair yielded as a separate entry IN ADDITION to an entry for the
+    full set of agents. So Complex(A(), B(), C()) will yield entries for
+    Complex(A(), B()), Complex(B(), C()), Complex(A(), C()), and
+    Complex(A(), B(), C()). If False, only Complex(A(), B(), C()) will be
+    generated.
+    """
     def name(agent):
         return 'None' if agent is None else agent.name
 
@@ -37,7 +53,7 @@ def _get_relation_keyed_stmts(stmt_list, grouping_level='agent-pair'):
         rel_key = None
         if verb == 'Complex':
             ag_ns = {name(ag) for ag in ags}
-            if grouping_level == 'agent-pair':
+            if expand_nary:
                 if 1 < len(ag_ns) < 6:
                     for pair in permutations(ag_ns, 2):
                         yield (verb,) + tuple(pair), tuple(pair), s
@@ -48,7 +64,7 @@ def _get_relation_keyed_stmts(stmt_list, grouping_level='agent-pair'):
             subj = name(s.subj)
             objs_from = tuple(sorted({name(ag) for ag in s.obj_from}))
             objs_to = tuple(sorted({name(ag) for ag in s.obj_to}))
-            if grouping_level == 'agent-pair':
+            if expand_nary:
                 for obj in objs_from:
                     yield (verb, subj, objs_from, objs_to), (subj, obj), s
                 for obj in objs_to:
@@ -206,7 +222,7 @@ class StmtStatGather:
     >>> # Get ev_count, belief, and ag_count from a list of statements.
     >>> stmt_stats = StmtStat.from_stmts(stmt_list)
     >>>
-    >>> # Add add another stat for a measure of relevance
+    >>> # Add another stat for a measure of relevance
     >>> stmt_stats.append(
     >>>     StmtStat('relevance', relevance_dict, float, AveStats)
     >>> )
@@ -255,7 +271,12 @@ class StmtStatGather:
         self.__rows = tuple(rows)
 
     def add_stats(self, *stmt_stats):
-        """Add more stats to the object."""
+        """Add more stats to the object.
+
+        If you have started accumulating data from statements and doing
+        aggregation, (e.g. if you have "started"), or if you are "finished",
+        this request will lead to an error.
+        """
         new_stats = [s for s in stmt_stats if s.name not in self.row_set()]
         if not new_stats:
             return
@@ -284,11 +305,16 @@ class StmtStatGather:
         return
 
     def row_set(self):
+        """Get a set of the rows (data labels) of the stats in this instance."""
         return set(self.__rows)
 
     @classmethod
     def from_stmt_stats(cls, *stmt_stats):
-        """Create a stat gatherer from StmtStat objects."""
+        """Create a stat gatherer from StmtStat objects.
+
+        Return a StmtStatGather constructed existing StmtStat objects. This
+        method offers the user the most control and customizability.
+        """
 
         # Organize the data into groups by aggregation class.
         stat_groups = defaultdict(lambda: {'stats': defaultdict(list),
@@ -304,9 +330,17 @@ class StmtStatGather:
         return cls(stat_groups)
 
     @classmethod
-    def from_dicts(cls, **kwargs):
-        """Init a stat gatherer from dicts keyed by hash."""
-        stats = make_standard_stats(**kwargs)
+    def from_dicts(cls, ev_counts=None, beliefs=None, source_counts=None):
+        """Init a stat gatherer from dicts keyed by hash.
+
+        Return a StmtStatsGather constructed from the given keyword arguments.
+        The dict keys of `source_counts` will be broken out into their own
+        StmtStat objects, so that the resulting data model is in effect a flat
+        list of measurement parameters. There is some risk of name collision, so
+        take care not to name any sources "ev_counts" or "belief".
+        """
+        stats = make_standard_stats(ev_counts=ev_counts, beliefs=beliefs,
+                                    source_counts=source_counts)
         return cls.from_stmt_stats(*stats)
 
     def __getitem__(self, key):
@@ -326,6 +360,11 @@ class StmtStatGather:
         return self.__stats[key]
 
     def start(self):
+        """Mark the start of Statement aggregation.
+
+        This will freeze the addition of StmtStats and will enable new keyed
+        entries to be added and aggregated.
+        """
         self.__started = True
 
     def finish(self):
@@ -629,8 +668,8 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
         grouped_stmts = defaultdict(list)
     else:
         grouped_stmts = defaultdict(lambda: defaultdict(list))
-    for rel_key, ag_key, stmt in _get_relation_keyed_stmts(stmt_list,
-                                                           grouping_level):
+    expand = (grouping_level == 'agent-pair')
+    for rel_key, ag_key, stmt in _get_relation_keyed_stmts(stmt_list, expand):
         relation_metrics[rel_key].include(stmt)
         if grouping_level == 'agent-pair':
             grouped_stmts[ag_key][rel_key].append((stmt.get_hash(), stmt))
@@ -709,7 +748,7 @@ def make_string_from_relation_key(rel_key):
 
 def get_simplified_stmts(stmts):
     simple_stmts = []
-    for rel_key, _, _ in _get_relation_keyed_stmts(stmts):
+    for rel_key, _, _ in _get_relation_keyed_stmts(stmts, expand_nary=False):
         simple_stmts.append(make_stmt_from_relation_key(rel_key))
     return simple_stmts
 
