@@ -23,7 +23,7 @@ from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_relation_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
     get_available_ev_counts, standardize_counts, get_available_beliefs, \
-    StmtStatGather, make_standard_stats
+    StmtGroup, make_standard_stats
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
@@ -120,7 +120,7 @@ class HtmlAssembler(object):
         statements with fewer agents. Alternatively, you may give a function
         that takes a dict as its single argument, a dictionary of metrics. These
         metrics are determined by the contents of the `stmt_stat_gather` passed
-        as an argument (see StmtStatGather for details), or else will contain
+        as an argument (see StmtGroup for details), or else will contain
         the default metrics that can be derived from the statements themselves,
         namely `ev_count`, `belief`, and `ag_count`. The value may also
         be None, in which case the sort function will return the
@@ -128,13 +128,13 @@ class HtmlAssembler(object):
         will be preserved. This could have strange effects when statements are
         grouped (i.e. when `grouping_level` is not 'statement'); such
         functionality is untested and we make no guarantee that it will work.
-    stmt_stat_gather : Optional[StmtStatGather]
+    stmt_stat_gather : Optional[StmtGroup]
         A custom statement statistics gatherer loaded with data from the corpus
         of statements. If None, a new one will be formed with basic statics
         derived from the list of Statements itself and from beliefs, ev_counts,
         and source_counts passed as arguments. Values for belief, ev_counts, and
         source counts will be worked in automatically. For details on how
-        to create a `StmtStatGather` instance, see the documentation.
+        to create a `StmtGroup` instance, see the documentation.
 
     Attributes
     ----------
@@ -221,7 +221,7 @@ class HtmlAssembler(object):
 
         # Get an iterator over the statements, carefully grouped.
         if not self.stmt_stat_gather:
-            stmt_data = StmtStatGather.from_dicts(
+            stmt_data = StmtGroup.from_dicts(
                 ev_counts=self.ev_counts,
                 beliefs=self.beliefs,
                 source_counts=self.source_counts
@@ -234,7 +234,7 @@ class HtmlAssembler(object):
             stmt_data.add_stats(*normal_stats)
 
         stmt_rows = group_and_sort_statements(self.statements,
-                                              stmt_metrics=stmt_data,
+                                              base_group=stmt_data,
                                               sort_by=self.sort_by,
                                               grouping_level=grouping_level)
 
@@ -545,8 +545,10 @@ class HtmlAssembler(object):
         self.model = self.model.replace(self.title, self.title + addendum)
         return self.model
 
-    def save_model(self, fname):
+    def save_model(self, fname, **kwargs):
         """Save the assembled HTML into a file.
+
+        Other kwargs are passed directly to `make_model`.
 
         Parameters
         ----------
@@ -554,7 +556,7 @@ class HtmlAssembler(object):
             The path to the file to save the HTML into.
         """
         if self.model is None:
-            self.make_model()
+            self.make_model(**kwargs)
 
         with open(fname, 'wb') as fh:
             fh.write(self.model.encode('utf-8'))

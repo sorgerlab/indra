@@ -3,7 +3,7 @@ from indra.statements import *
 from indra.assemblers.english import AgentWithCoordinates
 from indra.assemblers.html.assembler import HtmlAssembler, tag_text, loader, \
     _format_evidence_text, tag_agents
-from indra.util.statement_presentation import AveStats, StmtStat, StmtStatGather
+from indra.util.statement_presentation import AveAggregator, StmtStat, StmtGroup
 
 
 def make_stmt():
@@ -363,8 +363,8 @@ def test_sort_group_by_statement_custom_ordering():
     custom_values = [0.1, 0.2, 0.15, 0.6, 0.3, 0.8]
     val_dict = {s.get_hash(): v for v, s in zip(custom_values, stmts)}
 
-    custom_stat = StmtStat('value', val_dict, float, AveStats)
-    stmt_gather = StmtStatGather.from_stmt_stats(custom_stat)
+    custom_stat = StmtStat('value', val_dict, float, AveAggregator)
+    stmt_gather = StmtGroup.from_stmt_stats(custom_stat)
 
     ha = HtmlAssembler(stmts, sort_by='value', stmt_stat_gather=stmt_gather)
     json_model = ha.make_json_model(grouping_level='statement')
@@ -385,8 +385,8 @@ def test_sort_group_by_relation_custom_ordering():
     custom_values = [0.1, 0.2, 0.15, 0.6, 0.3, 0.8]
     val_dict = {s.get_hash(): v for v, s in zip(custom_values, stmts)}
 
-    custom_stat = StmtStat('value', val_dict, float, AveStats)
-    stmt_gather = StmtStatGather.from_stmt_stats(custom_stat)
+    custom_stat = StmtStat('value', val_dict, float, AveAggregator)
+    stmt_gather = StmtGroup.from_stmt_stats(custom_stat)
 
     ha = HtmlAssembler(stmts, sort_by='value', stmt_stat_gather=stmt_gather)
     json_model = ha.make_json_model(grouping_level='relation')
@@ -413,8 +413,8 @@ def test_sort_group_by_agent_custom_ordering():
     custom_values = [0.1, 0.2, 0.15, 0.6, 0.3, 0.8]
     val_dict = {s.get_hash(): v for v, s in zip(custom_values, stmts)}
 
-    custom_stat = StmtStat('value', val_dict, float, AveStats)
-    stmt_gather = StmtStatGather.from_stmt_stats(custom_stat)
+    custom_stat = StmtStat('value', val_dict, float, AveAggregator)
+    stmt_gather = StmtGroup.from_stmt_stats(custom_stat)
 
     ha = HtmlAssembler(stmts, sort_by='value', stmt_stat_gather=stmt_gather)
     json_model = ha.make_json_model(grouping_level='agent-pair')

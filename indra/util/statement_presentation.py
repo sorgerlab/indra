@@ -1,3 +1,74 @@
+"""
+Statement Presentation
+======================
+
+This module implements the hard work of grouping and sorting Statements, while
+aggregating the statements' statistics/metrics into the groupings. This module
+offers a great deal of flexibility, but that comes with a lot of machinery and
+options to parse through.
+
+Vocabulary
+----------
+
+An "agent-pair" is, as the name suggests, a pair of agents from a statement,
+usually defined by their canonical name.
+
+A "relation" is the basic information of a statement, with all details (such
+as sites and residues) stripped away. Usually this means it is just the
+statement type (or verb), subject name, and object name, though in some corner
+cases it is different.
+
+Simple Example
+--------------
+
+The primary work horse of the module is `group_and_sort_statements`, and if you
+want statements grouped into agent-pairs, then by relations, sorted by evidence
+count, you can simply use this function with its defaults:
+
+>>> for _, ag_key, rels, ag_metrics in group_and_sort_statements(stmts):
+>>>     print(ag_key)
+>>>     for _, rel_key, stmt_group, rel_metrics in rels:
+>>>         print('\t', rel_key)
+>>>         for _, stmt_hash, stmt_obj, stmt_metrics in stmt_group:
+>>>             print('\t\t', stmt_obj)
+
+Advanced Example
+----------------
+
+However, say you have your own measurement of statements, want them grouped only
+to the level of relations, and want to sort the statements and relations
+separately, you can do that. Suppose also that your measurement is the same
+at the level of relations, and you don't want it aggregated.
+
+>>> # Define a new aggregator that takes the last metric (a noop given the
+>>> # nature of the data)
+>>> class NoopAggregator(BasicAggregator):
+>>>     def _merge(self, metric_array):
+>>>         self.values = metric_array
+>>>
+>>> # Create your StmtStat
+>>> my_stat = StmtStat('my_stat', my_data, int, NoopAggregator)
+>>>
+>>> # Define a custom sort function using my stat and the default available
+>>> # ev_count. In effect this will sort relations by the custom stat, and then
+>>> # sort the statements within that relation (for which my_stat is by design
+>>> # the same) using their evidence counts.
+>>> def my_sort(metrics):
+>>>     return metrics['my_stat'], metrics['ev_count']
+>>>
+>>> # Create the base statement group.
+>>> base_group = StmtGroup.from_stmt_stats(my_stat)
+>>>
+>>> # Iterate over the results.
+>>> groups = group_and_sort_statements(stmts, sort_by=my_sort,
+>>>                                    base_group=base_group,
+>>>                                    grouping_level='relation')
+>>> for _, rel_key, rel_stmts, rel_metrics in groups:
+>>>     print(rel_key, rel_metrics['my_stat'])
+>>>     for _, stmt_hash, stmt, metrics in rel_stmts:
+>>>         print('\t', stmt, metrics['ev_count'])
+"""
+
 import logging
 from collections import defaultdict
 from itertools import permutations
@@ -38,10 +109,12 @@ def _get_relation_keyed_stmts(stmt_list, expand_nary=True):
     If expand n-ary is set to True (the default), Complexes and
     Conversions will have their many agents grouped into appropriate pairs,
     with each pair yielded as a separate entry IN ADDITION to an entry for the
-    full set of agents. So Complex(A(), B(), C()) will yield entries for
-    Complex(A(), B()), Complex(B(), C()), Complex(A(), C()), and
-    Complex(A(), B(), C()). If False, only Complex(A(), B(), C()) will be
-    generated.
+    full set of agents. So Complex(A(), B(), C()) will yield entries for:
+    - Complex(A(), B()),
+    - Complex(B(), C()),
+    - Complex(A(), C()), and
+    - Complex(A(), B(), C()).
+    If False, only Complex(A(), B(), C()) will be generated.
     """
     def name(agent):
         return 'None' if agent is None else agent.name
@@ -97,6 +170,17 @@ def _get_relation_keyed_stmts(stmt_list, expand_nary=True):
 class StmtStat:
     """Abstraction of a metric applied to a set of statements.
 
+    Can be constructed using:
+    - s = StmtStat(name, {hash: value, ...}, data_type, AggClass)
+    - [s1, ...] = \
+      StmtStat.from_dicts({hash: {label: value, ...}, ...}, data_type, AggClass)
+    - [s_ev_count, s_belief] = \
+      StmtStat.from_stmts([Statement(), ...], ('ev_count', 'belief'))
+
+    Note that each stat will have only one metric associated with it, so dicts
+    ingested by `from_dicts` will have their values broken up into separate
+    StmtStat instances.
+
     Parameters
     ----------
     name : str
@@ -106,7 +190,7 @@ class StmtStat:
     data_type : type
         The type of the data (e.g. `int` or `float`).
     agg_class : type
-        A subclass of BasicStats which defines how these statistics will be
+        A subclass of BasicAggregator which defines how these statistics will be
         merged.
     """
 
@@ -123,7 +207,7 @@ class StmtStat:
         Example Usage:
         >>> source_counts = {9623812756876: {'reach': 1, 'sparser': 2},
         >>>                  -39877587165298: {'reach': 3, 'sparser': 0}}
-        >>> stmt_stats = StmtStat.from_dicts(source_counts, int, SumStats)
+        >>> stmt_stats = StmtStat.from_dicts(source_counts, int, SumAggregator)
 
         Parameters
         ----------
@@ -134,8 +218,8 @@ class StmtStat:
         data_type : type
             The type of the data being given (e.g. `int` or `float`).
         agg_class : type
-            A subclass of BasicStats which defines how these statistics will
-            be merged (e.g. `SumStats`).
+            A subclass of BasicAggregator which defines how these statistics will
+            be merged (e.g. `SumAggregator`).
         """
         data_groups = defaultdict(dict)
         for h, data_dict in dict_data.items():
@@ -167,9 +251,9 @@ class StmtStat:
             statements. For example, if you already have evidence counts, you
             might only want to gather belief and agent counts.
         """
-        type_dict = {'ev_count': {'type': int, 'agg': SumStats},
-                     'belief': {'type': float, 'agg': MaxStats},
-                     'ag_count': {'type': int, 'agg': SumStats}}
+        type_dict = {'ev_count': {'type': int, 'agg': SumAggregator},
+                     'belief': {'type': float, 'agg': MaxAggregator},
+                     'ag_count': {'type': int, 'agg': SumAggregator}}
         if values is None:
             values = tuple(type_dict.keys())
 
@@ -190,33 +274,26 @@ class StmtStat:
                 for k, d in data.items()]
 
 
-class EvCount(StmtStat):
-    def __init__(self, ev_counts):
-        super(EvCount, self).__init__('ev_count', ev_counts, int, SumStats)
-
-
-class Belief(StmtStat):
-    def __init__(self, beliefs):
-        super(Belief, self).__init__('belief', beliefs, float, MaxStats)
-
-
-def source_count_list(source_counts):
-    return StmtStat.from_dicts(source_counts, int, SumStats)
-
-
 def make_standard_stats(ev_counts=None, beliefs=None, source_counts=None):
+    """Generate the standard ev_counts, beliefs, and source count stats."""
     stats = []
     if ev_counts:
-        stats.append(EvCount(ev_counts))
+        stats.append(StmtStat('ev_count', ev_counts, int, SumAggregator))
     if beliefs:
-        stats.append(Belief(beliefs))
+        stats.append(StmtStat('belief', beliefs, float, MaxAggregator))
     if source_counts:
-        stats.extend(source_count_list(source_counts))
+        stats.extend(StmtStat.from_dicts(source_counts, int, SumAggregator))
     return stats
 
 
-class StmtStatGather:
+class StmtGroup:
     """Gather metrics for items that are derived from statements.
+
+    The primary methods for instantiating this class are the two constructor
+    class methods:
+    - from_stmt_stats
+    - from_dicts
+    See the methods for more details on their purpose and usage.
 
     Example usage:
     >>> # Get ev_count, belief, and ag_count from a list of statements.
@@ -224,27 +301,74 @@ class StmtStatGather:
     >>>
     >>> # Add another stat for a measure of relevance
     >>> stmt_stats.append(
-    >>>     StmtStat('relevance', relevance_dict, float, AveStats)
+    >>>     StmtStat('relevance', relevance_dict, float, AveAggregator)
     >>> )
     >>>
-    >>> # Create the gatherer
-    >>> StmtStatGather.from_stmt_stats(*stmt_stats)
+    >>> # Create the Group
+    >>> sg = StmtGroup.from_stmt_stats(*stmt_stats)
+    >>>
+    >>> # Load it full of Statements, grouped by agents.
+    >>> sg.fill_from_stmt_stats()
+    >>> sg.start()
+    >>> for s in stmt_list:
+    >>>    key = (ag.get_grounding() for ag in s.agent_list())
+    >>>    sg[key].include(s)
+    >>> sg.finish()
+    >>>
+    >>> # Now the stats for each group are aggregated and available for use.
+    >>> metrics = sg[(('FPLX', 'MEK'), ('FPLX', 'ERK'))].get_dict()
 
     This class helps manage the accumulation of statistics for statements and
-    statement-like objects, such as agent pairs. Working with StmtStatGroup and
-    children of the BasicStats class, these tools make it easy to aggregate
+    statement-like objects, such as agent pairs. Working with AggregatorGroup and
+    children of the BasicAggregator class, these tools make it easy to aggregate
     numerical measurements of statements with a great deal of flexibility.
 
     For example, you can sum up the evidence counts for statements that are part
     of an agent pair at the same time that you are remembering the maximum and
     average beliefs for that same corpus of statements. By defining your own
-    child of BasicStats, specifically defining the operations that gather new
+    child of BasicAggregator, specifically defining the operations that gather new
     data and finalize that data once all the statements are collected, you can
     utilize virtually any statistical methods for aggregating any metric for
     a Statement you might wish to use in sorting them.
     """
 
+    @classmethod
+    def from_stmt_stats(cls, *stmt_stats):
+        """Create a stat gatherer from StmtStat objects.
+
+        Return a StmtGroup constructed existing StmtStat objects. This
+        method offers the user the most control and customizability.
+        """
+
+        # Organize the data into groups by aggregation class.
+        stat_groups = defaultdict(lambda: {'stats': defaultdict(list),
+                                           'keys': [], 'types': []})
+        for stat in stmt_stats:
+            if not isinstance(stat, StmtStat):
+                raise ValueError("All arguments must be `StmtStat` object.")
+
+            stat_groups[stat.agg_class]['keys'].append(stat.name)
+            stat_groups[stat.agg_class]['types'].append(stat.data_type)
+            for h, v in stat.data.items():
+                stat_groups[stat.agg_class]['stats'][h].append(v)
+        return cls(stat_groups)
+
+    @classmethod
+    def from_dicts(cls, ev_counts=None, beliefs=None, source_counts=None):
+        """Init a stat gatherer from dicts keyed by hash.
+
+        Return a StmtStatsGather constructed from the given keyword arguments.
+        The dict keys of `source_counts` will be broken out into their own
+        StmtStat objects, so that the resulting data model is in effect a flat
+        list of measurement parameters. There is some risk of name collision, so
+        take care not to name any sources "ev_counts" or "belief".
+        """
+        stats = make_standard_stats(ev_counts=ev_counts, beliefs=beliefs,
+                                    source_counts=source_counts)
+        return cls.from_stmt_stats(*stats)
+
     def __init__(self, stat_groups):
+        """In this case, init is primarily intended for internal use."""
 
         self.__stats = {}
         self.__started = False
@@ -308,41 +432,6 @@ class StmtStatGather:
         """Get a set of the rows (data labels) of the stats in this instance."""
         return set(self.__rows)
 
-    @classmethod
-    def from_stmt_stats(cls, *stmt_stats):
-        """Create a stat gatherer from StmtStat objects.
-
-        Return a StmtStatGather constructed existing StmtStat objects. This
-        method offers the user the most control and customizability.
-        """
-
-        # Organize the data into groups by aggregation class.
-        stat_groups = defaultdict(lambda: {'stats': defaultdict(list),
-                                           'keys': [], 'types': []})
-        for stat in stmt_stats:
-            if not isinstance(stat, StmtStat):
-                raise ValueError("All arguments must be `StmtStat` object.")
-
-            stat_groups[stat.agg_class]['keys'].append(stat.name)
-            stat_groups[stat.agg_class]['types'].append(stat.data_type)
-            for h, v in stat.data.items():
-                stat_groups[stat.agg_class]['stats'][h].append(v)
-        return cls(stat_groups)
-
-    @classmethod
-    def from_dicts(cls, ev_counts=None, beliefs=None, source_counts=None):
-        """Init a stat gatherer from dicts keyed by hash.
-
-        Return a StmtStatsGather constructed from the given keyword arguments.
-        The dict keys of `source_counts` will be broken out into their own
-        StmtStat objects, so that the resulting data model is in effect a flat
-        list of measurement parameters. There is some risk of name collision, so
-        take care not to name any sources "ev_counts" or "belief".
-        """
-        stats = make_standard_stats(ev_counts=ev_counts, beliefs=beliefs,
-                                    source_counts=source_counts)
-        return cls.from_stmt_stats(*stats)
-
     def __getitem__(self, key):
         if key not in self.__stats:
             if not self.__started:
@@ -350,7 +439,7 @@ class StmtStatGather:
                                "accumulation started.")
             if not self.__finished:
                 # Remember, this is passing REFERENCES to the stats dict.
-                self.__stats[key] = StmtStatGroup(
+                self.__stats[key] = AggregatorGroup(
                     agg_class(d['keys'], d['stats'], d['types'])
                     for agg_class, d in self.__stmt_stats.items())
             else:
@@ -404,55 +493,68 @@ class StmtStatGather:
 
         # Fill up the stats.
         for h, data in stat_rows.items():
-            self.__stats[h] = BasicStats.from_array(data['keys'], data['arr'],
-                                                    data['types'])
+            self.__stats[h] = BasicAggregator.from_array(data['keys'],
+                                                         data['arr'],
+                                                         data['types'])
 
         # Mark as finished.
         self.finish()
         return
 
 
-class StmtStatRow:
-    """Define the API for elements of the stat"""
+class AggregatorMeta:
+    """Define the API an aggregator of statement metrics.
+
+    In general, an aggregator defines the ways that different kinds of statement
+    metrics are merged into groups. For example, evidence counts are aggregated
+    by summing, as are counts for various sources. Beliefs are aggregated over
+    a group of statements by maximum (usually).
+    """
 
     def include(self, stmt):
+        """Add the metrics from the given statement to this aggregate."""
         raise NotImplementedError()
 
     def get_dict(self):
+        """Get a dictionary representation of the data in this aggregate.
+
+        Keys are those originally given to the StmtStat instances used to
+        build this aggregator.
+        """
         raise NotImplementedError()
 
     def finish(self):
         raise NotImplementedError()
 
 
-class StmtStatGroup(StmtStatRow):
-    """Implement the StmtStatRow API for a group of BasicStats children.
+class AggregatorGroup(AggregatorMeta):
+    """Implement the AggregatorMeta API for a group of BasicAggregator children.
 
-    This takes an iterable of BasicStats children
+    This takes an iterable of BasicAggregator children
     """
-    def __init__(self, basic_stats):
-        self.__basic_stats = tuple(basic_stats)
-        self.__keymap = {k: stat for stat in self.__basic_stats
+    def __init__(self, basic_aggs):
+        self.__basic_aggs = tuple(basic_aggs)
+        self.__keymap = {k: stat for stat in self.__basic_aggs
                          for k in stat.keys()}
         return
 
     def include(self, stmt):
-        for basic_stat in self.__basic_stats:
-            basic_stat.include(stmt)
+        for basic_agg in self.__basic_aggs:
+            basic_agg.include(stmt)
 
     def get_dict(self):
-        return {k: v for basic_stat in self.__basic_stats
-                for k, v in basic_stat.get_dict().items()}
+        return {k: v for basic_agg in self.__basic_aggs
+                for k, v in basic_agg.get_dict().items()}
 
     def finish(self):
-        for basic_stat in self.__basic_stats:
-            basic_stat.finish()
+        for basic_agg in self.__basic_aggs:
+            basic_agg.finish()
 
     def __getitem__(self, key):
         return self.__keymap[key][key]
 
 
-class BasicStats(StmtStatRow):
+class BasicAggregator(AggregatorMeta):
     """Gathers measurements for a statement or similar entity.
 
     Parameters
@@ -464,7 +566,7 @@ class BasicStats(StmtStatRow):
         A dictionary keyed by hash with each element a dict of arrays keyed
         by aggregation type.
     original_types : tuple(type)
-        The type classes of each numerical value stored in the stmt_metrics
+        The type classes of each numerical value stored in the base_group
         dict, e.g. `(int, float, int)`.
     """
 
@@ -494,9 +596,10 @@ class BasicStats(StmtStatRow):
     def include(self, stmt):
         """Include a statement and its statistics in the group."""
         if self.__frozen:
-            raise RuntimeError("No longer adding more stmt data to BasicStats.")
+            raise RuntimeError(f"No longer adding more stmt data to "
+                               f"{self.__class__.__name__}.")
         if not isinstance(stmt, Statement):
-            raise ValueError(f"Invalid type for addition to BasicStats: "
+            raise ValueError(f"Invalid type for addition to BasicAggregator: "
                              f"{type(stmt)}. Must be a Statement.")
 
         h = stmt.get_hash()
@@ -531,13 +634,13 @@ class BasicStats(StmtStatRow):
         return self.__dict
 
 
-class SumStats(BasicStats):
+class SumAggregator(BasicAggregator):
     """A stats aggregator that executes a sum."""
     def _merge(self, metric_array):
         self._values += metric_array
 
 
-class AveStats(BasicStats):
+class AveAggregator(BasicAggregator):
     """A stats aggregator averages the included statement metrics."""
     def _merge(self, metric_array):
         self._values += metric_array
@@ -546,7 +649,7 @@ class AveStats(BasicStats):
         self._values = self._values / self._count
 
 
-class MaxStats(BasicStats):
+class MaxAggregator(BasicAggregator):
     """A stats aggregator that takes the max of statement metrics."""
     def _merge(self, metric_array):
         self._values = maximum(self._values, metric_array)
@@ -556,7 +659,7 @@ def _get_ag_name_set_len(stmt):
     return len(set(a.name if a else 'None' for a in stmt.agent_list()))
 
 
-def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
+def group_and_sort_statements(stmt_list, sort_by='default', base_group=None,
                               grouping_level='agent-pair'):
     """Group statements by type and arguments, and sort by prevalence.
 
@@ -573,7 +676,7 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
         statements with fewer agents. Alternatively, you may give a function
         that takes a dict as its single argument, a dictionary of metrics. These
         metrics are determined by the contents of the `stmt_metrics` passed
-        as an argument (see StmtStatGather for details), or else will contain
+        as an argument (see StmtGroup for details), or else will contain
         the default metrics that can be derived from the statements themselves,
         namely `ev_count`, `belief`, and `ag_count`. The value may also
         be None, in which case the sort function will return the
@@ -581,11 +684,11 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
         will be preserved. This could have strange effects when statements are
         grouped (i.e. when `grouping_level` is not 'statement'); such
         functionality is untested and we make no guarantee that it will work.
-    stmt_metrics : StmtStatGather
+    base_group : StmtGroup
         A statement statistics gatherer loaded with data from the corpus of
         statements. If None, a new one will be formed with basic statics
         derived from the list of Statements itself. See the docs for
-        StmtStatGather for details on how to create one.
+        StmtGroup for details on how to create one.
     grouping_level : str
         The options are 'agent-pair', 'relation', and 'statement'. These
         correspond to grouping by agent pairs, agent and type relationships, and
@@ -607,16 +710,16 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
     if grouping_level not in ['agent-pair', 'relation', 'statement']:
         raise ValueError(f"Invalid grouping level: \"{grouping_level}\".")
 
-    # Init the stmt_metrics data gatherer.
-    if stmt_metrics is None:
+    # Init the base_group data gatherer.
+    if base_group is None:
         stmt_stats = StmtStat.from_stmts(stmt_list)
-        stmt_metrics = StmtStatGather.from_stmt_stats(*stmt_stats)
-    missing_rows = {'ev_count', 'ag_count', 'belief'} - stmt_metrics.row_set()
+        base_group = StmtGroup.from_stmt_stats(*stmt_stats)
+    missing_rows = {'ev_count', 'ag_count', 'belief'} - base_group.row_set()
     if missing_rows:
         stmt_stats = StmtStat.from_stmts(stmt_list, missing_rows)
-        stmt_metrics.add_stats(*stmt_stats)
-    if not stmt_metrics.is_finished():
-        stmt_metrics.fill_from_stmt_stats()
+        base_group.add_stats(*stmt_stats)
+    if not base_group.is_finished():
+        base_group.fill_from_stmt_stats()
 
     # Define the sort function.
     if isinstance(sort_by, str):
@@ -630,7 +733,7 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
             return 0
     else:
         # Check that the sort function is a valid function.
-        sample_dict = dict.fromkeys(stmt_metrics.row_set(), 0)
+        sample_dict = dict.fromkeys(base_group.row_set(), 0)
         try:
             n = sort_by(sample_dict)
 
@@ -661,13 +764,13 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
     # Return the sorted statements, if that's all you want.
     if grouping_level == 'statement':
         stmt_rows = ((s.get_hash(), s) for s in stmt_list)
-        return sorted_rows(stmt_rows, stmt_metrics)
+        return sorted_rows(stmt_rows, base_group)
 
     # Create gathering metrics from the statement data.
-    relation_metrics = stmt_metrics.get_new_instance()
+    relation_metrics = base_group.get_new_instance()
     relation_metrics.start()
     if grouping_level == 'agent-pair':
-        agent_pair_metrics = stmt_metrics.get_new_instance()
+        agent_pair_metrics = base_group.get_new_instance()
         agent_pair_metrics.start()
 
     # Add up the grouped statements from the metrics.
@@ -692,10 +795,10 @@ def group_and_sort_statements(stmt_list, sort_by='default', stmt_metrics=None,
     # Sort the rows by count and agent names.
     if grouping_level == 'relation':
         return sorted_rows(grouped_stmts.items(), relation_metrics,
-                           stmt_metrics)
+                           base_group)
 
     return sorted_rows(grouped_stmts.items(), agent_pair_metrics,
-                       relation_metrics, stmt_metrics)
+                       relation_metrics, base_group)
 
 
 def make_stmt_from_relation_key(relation_key, agents=None):
