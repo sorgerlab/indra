@@ -62,7 +62,8 @@ class Query:
 
     def __repr__(self):
         inv = '~' if self._inverted else ''
-        args = ', '.join(f'{key}={value}'
+        args = ', '.join(f'{key}="{value}"' if isinstance(value, str)
+                         else f'{key}={value}'
                          for key, value in self.get_constraint_dict().items())
         return f"{inv}{self.__class__.__name__}({args})"
 
