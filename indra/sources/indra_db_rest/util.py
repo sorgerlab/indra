@@ -35,7 +35,7 @@ def submit_statement_request(meth, end_point, query_str='', data=None,
                                 params, tries, timeout)
 
 
-def make_db_rest_request(meth, end_point, query_str, data=None, params=None,
+def make_db_rest_request(meth, end_point, query_str='', data=None, params=None,
                          tries=2, timeout=None):
     if params is None:
         params = {}
@@ -58,9 +58,9 @@ def make_db_rest_request(meth, end_point, query_str, data=None, params=None,
     params['api_key'] = api_key
     logger.info('query: %s', url_path.replace(str(api_key), '[api-key]'))
     logger.info('params: %s', str(params).replace(str(api_key), '[api-key]'))
+    logger.info('data: %s', str(data).replace(str(api_key), '[api-key]'))
     logger.debug('headers: %s', str(headers).replace(str(api_key),
                                                      '[api-key]'))
-    logger.debug('data: %s', str(data).replace(str(api_key), '[api-key]'))
     method_func = getattr(requests, meth.lower())
     while tries > 0:
         tries -= 1
