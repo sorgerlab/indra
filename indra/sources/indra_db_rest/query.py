@@ -92,6 +92,13 @@ class And(Query):
             s = f'~({s})'
         return s
 
+    def __and__(self, other):
+        if isinstance(other, And):
+            other_queries = other.queries
+        else:
+            other_queries = [other]
+        return And([q.copy() for q in (self.queries + other_queries)])
+
 
 class Or(Query):
     """The union of two queries.
@@ -116,6 +123,13 @@ class Or(Query):
         if self._inverted:
             s = f'~({s})'
         return s
+
+    def __or__(self, other):
+        if isinstance(other, Or):
+            other_queries = other.queries
+        else:
+            other_queries = [other]
+        return Or([q.copy() for q in (self.queries + other_queries)])
 
 
 class EmptyQuery(Query):
