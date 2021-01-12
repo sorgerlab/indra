@@ -1,3 +1,6 @@
+from indra.sources.indra_db_rest.util import make_db_rest_request
+
+
 class Query:
     """The parent of all query objects."""
     def __init__(self):
@@ -10,13 +13,17 @@ class Query:
     def compile(self):
         """Generate a compiled JSON rep of the query on the server."""
         if not self.__compiled_json:
-            pass  # compile the JSON
+            resp = make_db_rest_request('post', 'compile/json',
+                                        data=self.to_json())
+            self.__compiled_json = resp.json()
         return self.__compiled_json
 
     def get_str(self):
         """Get the string representation of the query."""
         if not self.__compiled_str:
-            pass  # compile the string
+            resp = make_db_rest_request('post', 'compile/string',
+                                        data=self.to_json())
+            self.__compiled_str = resp.content.decode('utf-8')
         return self.__compiled_str
 
     # Local (and largely internal) tools:
@@ -32,7 +39,7 @@ class Query:
 
     def to_json(self) -> dict:
         """Generate the JSON from the object rep."""
-        return {'type': self.__class__.__name__,
+        return {'class': self.__class__.__name__,
                 'constraint': self.get_constraint_dict(),
                 'inverted': self._inverted}
 
