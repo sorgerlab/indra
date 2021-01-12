@@ -27,9 +27,9 @@ count, you can simply use this function with its defaults:
 
 >>> for _, ag_key, rels, ag_metrics in group_and_sort_statements(stmts):
 >>>     print(ag_key)
->>>     for _, rel_key, stmt_group, rel_metrics in rels:
+>>>     for _, rel_key, stmt_data, rel_metrics in rels:
 >>>         print('\t', rel_key)
->>>         for _, stmt_hash, stmt_obj, stmt_metrics in stmt_group:
+>>>         for _, stmt_hash, stmt_obj, stmt_metrics in stmt_data:
 >>>             print('\t\t', stmt_obj)
 
 Advanced Example
@@ -56,12 +56,9 @@ at the level of relations, and you don't want it aggregated.
 >>> def my_sort(metrics):
 >>>     return metrics['my_stat'], metrics['ev_count']
 >>>
->>> # Create the base statement group.
->>> base_group = StmtGroup.from_stmt_stats(my_stat)
->>>
 >>> # Iterate over the results.
 >>> groups = group_and_sort_statements(stmts, sort_by=my_sort,
->>>                                    base_group=base_group,
+>>>                                    custom_stats=[my_stat],
 >>>                                    grouping_level='relation')
 >>> for _, rel_key, rel_stmts, rel_metrics in groups:
 >>>     print(rel_key, rel_metrics['my_stat'])
@@ -659,7 +656,7 @@ def _get_ag_name_set_len(stmt):
     return len(set(a.name if a else 'None' for a in stmt.agent_list()))
 
 
-def group_and_sort_statements(stmt_list, sort_by='default', base_group=None,
+def group_and_sort_statements(stmt_list, sort_by='default', custom_stats=None,
                               grouping_level='agent-pair'):
     """Group statements by type and arguments, and sort by prevalence.
 
@@ -684,11 +681,10 @@ def group_and_sort_statements(stmt_list, sort_by='default', base_group=None,
         will be preserved. This could have strange effects when statements are
         grouped (i.e. when `grouping_level` is not 'statement'); such
         functionality is untested and we make no guarantee that it will work.
-    base_group : StmtGroup
-        A statement statistics gatherer loaded with data from the corpus of
-        statements. If None, a new one will be formed with basic statics
-        derived from the list of Statements itself. See the docs for
-        StmtGroup for details on how to create one.
+    custom_stats : list[StmtStat]
+        A list of custom statement statistics to be used in addition to, or upon
+        name conflict in place of, the default statement statistics derived from
+        the list of statements.
     grouping_level : str
         The options are 'agent-pair', 'relation', and 'statement'. These
         correspond to grouping by agent pairs, agent and type relationships, and
@@ -710,16 +706,21 @@ def group_and_sort_statements(stmt_list, sort_by='default', base_group=None,
     if grouping_level not in ['agent-pair', 'relation', 'statement']:
         raise ValueError(f"Invalid grouping level: \"{grouping_level}\".")
 
-    # Init the base_group data gatherer.
-    if base_group is None:
-        stmt_stats = StmtStat.from_stmts(stmt_list)
-        base_group = StmtGroup.from_stmt_stats(*stmt_stats)
-    missing_rows = {'ev_count', 'ag_count', 'belief'} - base_group.row_set()
+    # Get any missing default metrics.
+    if custom_stats is not None:
+        stats = custom_stats[:]
+        stat_rows = {stat.name for stat in custom_stats}
+    else:
+        stats = []
+        stat_rows = set()
+
+    missing_rows = {'ev_count', 'belief', 'ag_count'} - stat_rows
     if missing_rows:
-        stmt_stats = StmtStat.from_stmts(stmt_list, missing_rows)
-        base_group.add_stats(*stmt_stats)
-    if not base_group.is_finished():
-        base_group.fill_from_stmt_stats()
+        stats += StmtStat.from_stmts(stmt_list, missing_rows)
+
+    # Init the base group.
+    base_group = StmtGroup.from_stmt_stats(*stats)
+    base_group.fill_from_stmt_stats()
 
     # Define the sort function.
     if isinstance(sort_by, str):

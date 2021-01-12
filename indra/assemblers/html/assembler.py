@@ -118,23 +118,19 @@ class HtmlAssembler(object):
         stmt_sort_gather, you may use any of the parameters used to build it.
         The default, 'default', is mostly a sort by ev_count but also favors
         statements with fewer agents. Alternatively, you may give a function
-        that takes a dict as its single argument, a dictionary of metrics. These
-        metrics are determined by the contents of the `stmt_stat_gather` passed
-        as an argument (see StmtGroup for details), or else will contain
-        the default metrics that can be derived from the statements themselves,
-        namely `ev_count`, `belief`, and `ag_count`. The value may also
-        be None, in which case the sort function will return the
+        that takes a dict as its single argument, a dictionary of metrics. The
+        contents of this dictionary always include "belief", "ev_count", and
+        "ag_count". If source_counts are given, each source will also be
+        available as an entry (e.g. "reach" and "sparser"). You may also add
+        your own custom stats using the `custom_stats` argument. The value may
+        also be None, in which case the sort function will return the
         same value for all elements, and thus the original order of elements
         will be preserved. This could have strange effects when statements are
         grouped (i.e. when `grouping_level` is not 'statement'); such
         functionality is untested and we make no guarantee that it will work.
-    stmt_stat_gather : Optional[StmtGroup]
-        A custom statement statistics gatherer loaded with data from the corpus
-        of statements. If None, a new one will be formed with basic statics
-        derived from the list of Statements itself and from beliefs, ev_counts,
-        and source_counts passed as arguments. Values for belief, ev_counts, and
-        source counts will be worked in automatically. For details on how
-        to create a `StmtGroup` instance, see the documentation.
+    custom_stats : Optional[list]
+        A list of StmtStat objects containing custom statement statistics to be
+        used in sorting of statements and statement groups.
 
     Attributes
     ----------
@@ -157,7 +153,7 @@ class HtmlAssembler(object):
     def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
                  ev_counts=None, beliefs=None, source_counts=None,
                  curation_dict=None, title='INDRA Results', db_rest_url=None,
-                 sort_by='default', stmt_stat_gather=None):
+                 sort_by='default', custom_stats=None):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
@@ -175,7 +171,7 @@ class HtmlAssembler(object):
         self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
         self.model = None
-        self.stmt_stat_gather = stmt_stat_gather
+        self.custom_stats = [] if custom_stats is None else custom_stats
 
     def add_statements(self, statements):
         """Add a list of Statements to the assembler.
@@ -220,21 +216,12 @@ class HtmlAssembler(object):
                 grouping_level = 'statement'
 
         # Get an iterator over the statements, carefully grouped.
-        if not self.stmt_stat_gather:
-            stmt_data = StmtGroup.from_dicts(
-                ev_counts=self.ev_counts,
-                beliefs=self.beliefs,
-                source_counts=self.source_counts
-            )
-        else:
-            stmt_data = self.stmt_stat_gather
-            normal_stats = make_standard_stats(ev_counts=self.ev_counts,
-                                               beliefs=self.beliefs,
-                                               source_counts=self.source_counts)
-            stmt_data.add_stats(*normal_stats)
-
+        normal_stats = make_standard_stats(ev_counts=self.ev_counts,
+                                           beliefs=self.beliefs,
+                                           source_counts=self.source_counts)
+        stats = normal_stats + self.custom_stats
         stmt_rows = group_and_sort_statements(self.statements,
-                                              base_group=stmt_data,
+                                              custom_stats=stats,
                                               sort_by=self.sort_by,
                                               grouping_level=grouping_level)
 
