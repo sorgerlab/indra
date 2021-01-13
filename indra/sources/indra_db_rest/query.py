@@ -10,19 +10,45 @@ class Query:
 
     # Here are defined some other functions to get info from the server.
 
+    def get(self, result_type, limit=None, sort_by=None, offset=None,
+            ev_filter=True):
+        """Get results from the API of the given type."""
+        simple = self.__compiled_json is None
+        if simple:
+            query_json = self.to_json()
+        else:
+            query_json = self.__compiled_json
+        resp = make_db_rest_request('post', f'query/{result_type}',
+                                    data={'query': query_json},
+                                    params=dict(limit=limit, sort_by=sort_by,
+                                                offset=offset, simple=simple,
+                                                ev_filter=ev_filter))
+        resp_json = resp.json()
+        self.__compiled_json = resp_json['query_json']
+        self.__compiled_str = None
+        return resp_json
+
     def compile(self):
         """Generate a compiled JSON rep of the query on the server."""
         if not self.__compiled_json:
             resp = make_db_rest_request('post', 'compile/json',
                                         data=self.to_json())
             self.__compiled_json = resp.json()
+            self.__compiled_str = None
         return self.__compiled_json
 
     def get_str(self):
         """Get the string representation of the query."""
-        if not self.__compiled_str:
+        if self.__compiled_str is None:
+            if self.__compiled_json is None:
+                query_json = self.to_json()
+                simple = True
+            else:
+                query_json = self.__compiled_json
+                simple = False
             resp = make_db_rest_request('post', 'compile/string',
-                                        data=self.to_json())
+                                        data=query_json,
+                                        params=dict(simple=simple))
             self.__compiled_str = resp.content.decode('utf-8')
         return self.__compiled_str
 
