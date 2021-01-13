@@ -24,6 +24,8 @@ class Query:
                                                 offset=offset, simple=simple,
                                                 ev_filter=ev_filter))
         resp_json = resp.json()
+        resp_json['complexes_covered'] = \
+            {int(h) for h in resp_json['complexes_covered']}
         self.__compiled_json = resp_json['query_json']
         self.__compiled_str = None
         return resp_json
