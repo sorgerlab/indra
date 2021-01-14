@@ -3,6 +3,7 @@ __all__ = ['Query', 'And', 'Or', 'HasAgent', 'FromMeshIds', 'HasHash',
            'HasType', 'HasNumAgents', 'HasNumEvidence', 'FromPapers',
            'EmptyQuery']
 
+from indra.sources.indra_db_rest.query_results import QueryResult
 from indra.sources.indra_db_rest.util import make_db_rest_request
 
 
@@ -66,7 +67,7 @@ class Query:
         resp_json = resp.json()
         self.__compiled_json = resp_json['query_json']
         self.__compiled_str = None
-        return resp_json
+        return QueryResult.from_json(resp_json)
 
     def compile(self):
         """Generate a compiled JSON rep of the query on the server."""
