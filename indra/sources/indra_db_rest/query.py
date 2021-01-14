@@ -56,7 +56,7 @@ class Query:
         """
         simple = self.__compiled_json is None
         if simple:
-            query_json = self.to_json()
+            query_json = self.to_simple_json()
         else:
             query_json = self.__compiled_json
         resp = make_db_rest_request('post', f'query/{result_type}',
@@ -69,20 +69,20 @@ class Query:
         self.__compiled_str = None
         return QueryResult.from_json(resp_json)
 
-    def compile(self):
+    def get_query_json(self):
         """Generate a compiled JSON rep of the query on the server."""
         if not self.__compiled_json:
             resp = make_db_rest_request('post', 'compile/json',
-                                        data=self.to_json())
+                                        data=self.to_simple_json())
             self.__compiled_json = resp.json()
             self.__compiled_str = None
         return self.__compiled_json
 
-    def get_str(self):
+    def get_query_english(self):
         """Get the string representation of the query."""
         if self.__compiled_str is None:
             if self.__compiled_json is None:
-                query_json = self.to_json()
+                query_json = self.to_simple_json()
                 simple = True
             else:
                 query_json = self.__compiled_json
@@ -104,7 +104,7 @@ class Query:
     def _copy(self):
         raise NotImplementedError()
 
-    def to_json(self) -> dict:
+    def to_simple_json(self) -> dict:
         """Generate the JSON from the object rep."""
         return {'class': self.__class__.__name__,
                 'constraint': self.get_constraint_dict(),
