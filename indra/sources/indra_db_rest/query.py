@@ -12,8 +12,42 @@ class Query:
 
     def get(self, result_type, limit=None, sort_by=None, offset=None,
             **other_params):
-        """Get results from the API of the given type."""
+        """Get results from the API of the given type.
 
+        Parameters
+        ----------
+        result_type : str
+            The options are 'statements', 'interactions', 'relations', 'agents',
+            and 'hashes', indicating the type of result you want.
+        limit : Optional[int]
+            The maximum number of statements you want to try and retrieve. The
+            server will by default limit the results, and any value exceeding
+            that limit will be "overruled".
+        sort_by : Optional[str]
+            The value can be 'default', 'ev_count', or 'belief'.
+        offset : Optional[int]
+            The offset of the query to begin at.
+
+        Other Parameters
+        ----------------
+        'statements'
+        filter_ev : bool
+            Indicate whether evidence should have the same filters applied as
+            the statements themselves, where appropriate (e.g. in the case of a
+            filter by paper).
+        ev_limit : int
+            Limit the number of evidence returned per Statement.
+
+        'relations' and 'agents'
+        with_hashes : bool
+            Choose whether the hashes for each Statement be included along with
+            each grouped heading.
+
+        'agents'
+        complexes_covered : list[int]
+            A list (or set) of complexes that have already come up in the agent
+            groups returned. This prevents duplication.
+        """
         simple = self.__compiled_json is None
         if simple:
             query_json = self.to_json()
