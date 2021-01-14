@@ -17,7 +17,7 @@ class Query:
     # Here are defined some other functions to get info from the server.
 
     def get(self, result_type, limit=None, sort_by=None, offset=None,
-            **other_params):
+            timeout=None, n_tries=2, **other_params):
         """Get results from the API of the given type.
 
         Parameters
@@ -33,6 +33,12 @@ class Query:
             The value can be 'default', 'ev_count', or 'belief'.
         offset : Optional[int]
             The offset of the query to begin at.
+        timeout : Optional[int]
+            The number of seconds to wait for the request to return before
+            giving up. This timeout is applied to each try separately.
+        n_tries : Optional[int]
+            The number of times to retry the request before giving up. Each try
+            will have `timeout` seconds to complete before it gives up.
 
         Other Parameters
         ----------------
@@ -63,7 +69,8 @@ class Query:
                                     data={'query': query_json,
                                           'kwargs': other_params},
                                     params=dict(limit=limit, sort_by=sort_by,
-                                                offset=offset, simple=simple))
+                                                offset=offset, simple=simple),
+                                    timeout=timeout, tries=n_tries)
         resp_json = resp.json()
         self.__compiled_json = resp_json['query_json']
         self.__compiled_str = None
