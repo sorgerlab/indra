@@ -1,3 +1,8 @@
+__all__ = ['Query', 'And', 'Or', 'HasAgent', 'FromMeshIds', 'HasHash',
+           'HasSources', 'HasOnlySource', 'HasReadings', 'HasDatabases',
+           'HasType', 'HasNumAgents', 'HasNumEvidence', 'FromPapers',
+           'EmptyQuery']
+
 from indra.sources.indra_db_rest.util import make_db_rest_request
 
 
