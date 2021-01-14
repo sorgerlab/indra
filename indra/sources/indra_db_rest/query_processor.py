@@ -1,11 +1,12 @@
 import logging
+from copy import deepcopy
 
 from threading import Thread
 from datetime import datetime
 
 from indra.statements import stmts_from_json
 from indra.util.statement_presentation import get_available_source_counts, \
-    get_available_ev_counts, standardize_counts
+    get_available_ev_counts
 
 from .query import Query
 from .exceptions import IndraDBRestResponseError
@@ -24,10 +25,27 @@ class Processor:
         self.__offset = 0
         self.__quota = limit
 
+        self._evidence_counts = {}
+        self._belief_scores = {}
+        self._source_counts = {}
+
         self._run(persist=persist, strict_stop=strict_stop, timeout=timeout)
 
-    def _set_special_params(self, **params):
-        self.__special_params = params
+    # Metadata Retrieval methods.
+
+    def get_ev_counts(self):
+        """Get a dictionary of evidence counts."""
+        return self._evidence_counts.copy()
+
+    def get_belief_scores(self):
+        """Get a dictionary of belief scores."""
+        return self._belief_scores.copy()
+
+    def get_source_counts(self):
+        """Get the source counts as a dict per statement hash."""
+        return deepcopy(self._source_counts)
+
+    # Process control methods
 
     def is_working(self):
         """Check if the thread is running."""
@@ -53,11 +71,19 @@ class Processor:
             ret = True
         return ret
 
+    # Helper methods
+
+    def _set_special_params(self, **params):
+        self.__special_params = params
+
     def _run_query(self, timeout):
         result = self.query.get(self.result_type, offset=self.__offset,
                                 limit=self.__quota, sort_by=self.sort_by,
                                 timeout=timeout, **self.__special_params)
-        self._handle_new_result(result)
+
+        self._evidence_counts.update(result.evidence_counts)
+        self._belief_scores.update(result.belief_scores)
+        self._handle_new_result(result, self._source_counts)
         self.__done = result.next_offset is None
 
         # Update the quota
@@ -86,12 +112,6 @@ class Processor:
         self._compile_results()
         return
 
-    def _compile_results(self):
-        raise NotImplementedError()
-
-    def _handle_new_result(self, result):
-        raise NotImplementedError()
-
     def _run(self, persist=True, strict_stop=False, timeout=None):
         self.__started = False
         self.__th = None
@@ -110,6 +130,14 @@ class Processor:
             self.__th.join(timeout)
         return
 
+    # Child defined methods
+
+    def _compile_results(self):
+        raise NotImplementedError()
+
+    def _handle_new_result(self, result, source_counts):
+        raise NotImplementedError()
+
 
 class HashProcessor(Processor):
     """A processor to get hashes from the server."""
@@ -121,7 +149,7 @@ class HashProcessor(Processor):
     def _compile_results(self):
         pass
 
-    def _handle_new_result(self, result):
+    def _handle_new_result(self, result, source_counts):
         pass
 
 
@@ -135,8 +163,6 @@ class StatementProcessor(Processor):
         self.statements_sample = None
 
         self.__statement_jsons = {}
-        self.__evidence_counts = {}
-        self.__source_counts = {}
 
         self.use_obtained_counts = use_obtained_counts
         self._set_special_params(ev_limit=ev_limit, filter_ev=filter_ev)
@@ -144,11 +170,44 @@ class StatementProcessor(Processor):
             __init__(query, limit=limit, sort_by=sort_by, timeout=timeout,
                      strict_stop=strict_stop, persist=persist)
 
-    def _handle_new_result(self, result):
+    # Metadata Retrieval methods.
+
+    def get_ev_count_by_hash(self, stmt_hash):
+        """Get the total evidence count for a statement hash."""
+        return self._evidence_counts.get(stmt_hash, 0)
+
+    def get_ev_count(self, stmt):
+        """Get the total evidence count for a statement."""
+        return self.get_ev_count_by_hash(stmt.get_hash(shallow=True))
+
+    def get_belief_score_by_hash(self, stmt_hash):
+        """Get the belief score for a statement hash."""
+        return self._belief_scores.get(stmt_hash, 0)
+
+    def get_belief_score_by_stmt(self, stmt):
+        """Get the belief score for a statement."""
+        return self.get_belief_score_by_hash(stmt.get_hash(shallow=True))
+
+    def get_hash_statements_dict(self):
+        """Return a dict of Statements keyed by hashes."""
+        res = {stmt_hash: stmts_from_json([stmt])[0]
+               for stmt_hash, stmt in self.__statement_jsons.items()}
+        return res
+
+    def get_source_count_by_hash(self, stmt_hash):
+        """Get the source counts for a given statement."""
+        return self.__source_counts.get(stmt_hash, {})
+
+    def get_source_count(self, stmt):
+        """Get the source counts for a given statement."""
+        return self.get_source_count_by_hash(stmt.get_hash(shallow=True))
+
+    # Helper methods
+
+    def _handle_new_result(self, result, source_counts):
         """Merge these statement jsons with new jsons."""
         # Merge counts.
-        self.__evidence_counts.update(standardize_counts(result.evidence_counts))
-        self.__source_counts.update(standardize_counts(result.source_counts))
+        source_counts.update(result.source_counts)
 
         # Merge JSONs
         for k, sj in result.results.items():
@@ -178,6 +237,7 @@ class AgentProcessor(Processor):
     def __init__(self, query: Query, limit=None, sort_by='ev_count',
                  with_hashes=False, timeout=None, strict_stop=False,
                  persist=True):
+        self.agents_pairs = []
         self.complexes_covered = set()
         self._set_special_params(with_hashes=with_hashes,
                                  complexes_covered=self.complexes_covered)
@@ -185,8 +245,9 @@ class AgentProcessor(Processor):
             __init__(query, limit=limit, sort_by=sort_by, timeout=timeout,
                      strict_stop=strict_stop, persist=persist)
 
-    def _compile_results(self):
-        pass
+    def _handle_new_result(self, result, source_counts):
+        self.complexes_covered.update(result.complexes_covered)
+        self.agents_pairs.extend(result.results.values())
 
-    def _handle_new_result(self, result):
+    def _compile_results(self):
         pass

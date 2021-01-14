@@ -74,6 +74,14 @@ def make_db_rest_request(meth, end_point, query_str='', data=None, params=None,
             raise IndraDBRestAPIError(resp)
 
 
+def jsonify_args(d):
+    new_d = d.copy()
+    for key, val in d.items():
+        if isinstance(val, set):
+            new_d[key] = list(val)
+    return new_d
+
+
 def get_url_base(end_point):
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
     url_path = url.rstrip('/') + '/' + end_point.lstrip('/')

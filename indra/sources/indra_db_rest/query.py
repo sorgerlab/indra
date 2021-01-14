@@ -4,7 +4,7 @@ __all__ = ['Query', 'And', 'Or', 'HasAgent', 'FromMeshIds', 'HasHash',
            'EmptyQuery']
 
 from indra.sources.indra_db_rest.query_results import QueryResult
-from indra.sources.indra_db_rest.util import make_db_rest_request
+from indra.sources.indra_db_rest.util import make_db_rest_request, jsonify_args
 
 
 class Query:
@@ -67,7 +67,7 @@ class Query:
             query_json = self.__compiled_json
         resp = make_db_rest_request('post', f'query/{result_type}',
                                     data={'query': query_json,
-                                          'kwargs': other_params},
+                                          'kwargs': jsonify_args(other_params)},
                                     params=dict(limit=limit, sort_by=sort_by,
                                                 offset=offset, simple=simple),
                                     timeout=timeout, tries=n_tries)
