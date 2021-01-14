@@ -11,21 +11,20 @@ class Query:
     # Here are defined some other functions to get info from the server.
 
     def get(self, result_type, limit=None, sort_by=None, offset=None,
-            ev_filter=True):
+            **other_params):
         """Get results from the API of the given type."""
+
         simple = self.__compiled_json is None
         if simple:
             query_json = self.to_json()
         else:
             query_json = self.__compiled_json
         resp = make_db_rest_request('post', f'query/{result_type}',
-                                    data={'query': query_json},
+                                    data={'query': query_json,
+                                          'kwargs': other_params},
                                     params=dict(limit=limit, sort_by=sort_by,
-                                                offset=offset, simple=simple,
-                                                ev_filter=ev_filter))
+                                                offset=offset, simple=simple))
         resp_json = resp.json()
-        resp_json['complexes_covered'] = \
-            {int(h) for h in resp_json['complexes_covered']}
         self.__compiled_json = resp_json['query_json']
         self.__compiled_str = None
         return resp_json
