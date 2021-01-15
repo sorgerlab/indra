@@ -44,7 +44,7 @@ class QueryResult(object):
     """
     def __init__(self, results: TypeIterable, limit: int, offset: int,
                  offset_comp: int, evidence_counts: dict, belief_scores: dict,
-                 query_json: dict, result_type: str):
+                 source_counts: dict, query_json: dict, result_type: str):
         if not isinstance(results, Iterable) or isinstance(results, str):
             raise ValueError("Input `results` is expected to be an iterable, "
                              "and not a string.")
@@ -56,6 +56,7 @@ class QueryResult(object):
             self.max_belief = max(self.belief_scores.values())
         else:
             self.max_belief = None
+        self.source_counts = source_counts
         self.limit = limit
         self.offset = offset
         self.result_type = result_type
@@ -68,7 +69,8 @@ class QueryResult(object):
 
     @classmethod
     def empty(cls, empty_res, limit, offset, query_json, result_type):
-        return cls(empty_res, limit, offset, 0, {}, {}, query_json, result_type)
+        return cls(empty_res, limit, offset, 0, {}, {}, {}, query_json,
+                   result_type)
 
     @classmethod
     def from_json(cls, json_dict) \
@@ -91,13 +93,14 @@ class QueryResult(object):
         nc = cls(**json_dict)
 
         # Convert result keys into integers, if appropriate
-        if isinstance(nc.results, dict):
-            if nc.result_type in ['statements', 'interactions']:
-                nc.evidence_counts = {int(k): v
-                                      for k, v in nc.evidence_counts.items()}
-                nc.belief_scores = {int(k): v
-                                    for k, v in nc.belief_scores.items()}
-                nc.results = {int(k): v for k, v in nc.results.items()}
+        if nc.result_type in ['statements', 'interactions']:
+            nc.results = {int(k): v for k, v in nc.results.items()}
+
+        if nc.result_type in ['statements', 'interactions', 'hashes']:
+            nc.evidence_counts = {int(k): v
+                                  for k, v in nc.evidence_counts.items()}
+            nc.belief_scores = {int(k): v for k, v in nc.belief_scores.items()}
+            nc.source_counts = {int(k): v for k, v in nc.source_counts.items()}
 
         # Check calculated values.
         if nc.next_offset is None:
@@ -122,6 +125,7 @@ class QueryResult(object):
                 'query_json': self.query_json,
                 'evidence_counts': self.evidence_counts,
                 'belief_scores': self.belief_scores,
+                'source_counts': self.source_counts,
                 'total_evidence': self.total_evidence,
                 'result_type': self.result_type,
                 'offset_comp': self.offset_comp}
@@ -168,10 +172,9 @@ class StatementQueryResult(QueryResult):
         super(StatementQueryResult, self).__init__(results, limit,
                                                    offset, len(results),
                                                    evidence_counts,
-                                                   belief_scores, query_json,
-                                                   'statements')
+                                                   belief_scores, source_counts,
+                                                   query_json, 'statements')
         self.returned_evidence = returned_evidence
-        self.source_counts = source_counts
 
     @classmethod
     def empty(cls, limit: int, offset: int, query_json: dict):
@@ -180,8 +183,7 @@ class StatementQueryResult(QueryResult):
     def json(self) -> dict:
         """Get the JSON dump of the results."""
         json_dict = super(StatementQueryResult, self).json()
-        json_dict.update({'returned_evidence': self.returned_evidence,
-                          'source_counts': self.source_counts})
+        json_dict.update({'returned_evidence': self.returned_evidence})
         return json_dict
 
     @classmethod
@@ -193,7 +195,6 @@ class StatementQueryResult(QueryResult):
             raise ValueError(f'Invalid result type {result_type} for this '
                              f'result class {cls}')
         nc = super(StatementQueryResult, cls)._parse_json(json_dict)
-        nc.source_counts = {int(k): v for k, v in nc.source_counts.items()}
         return nc
 
     def statements(self) -> list:
@@ -206,15 +207,16 @@ class AgentQueryResult(QueryResult):
     """The result of a query for agent JSONs."""
     def __init__(self, results: dict, limit: int, offset: int, num_rows: int,
                  complexes_covered: set, evidence_counts: dict,
-                 belief_scores: dict, query_json: dict):
+                 belief_scores: dict, source_counts: dict, query_json: dict):
         super(AgentQueryResult, self).__init__(results, limit, offset, num_rows,
                                                evidence_counts, belief_scores,
-                                               query_json, 'agents')
+                                               source_counts, query_json,
+                                               'agents')
         self.complexes_covered = complexes_covered
 
     @classmethod
     def empty(cls, limit, offset, query_json):
-        return cls({}, limit, offset, 0, set(), {}, {}, query_json)
+        return cls({}, limit, offset, 0, set(), {}, {}, {}, query_json)
 
     def json(self) -> dict:
         json_dict = super(AgentQueryResult, self).json()
