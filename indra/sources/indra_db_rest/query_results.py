@@ -23,8 +23,12 @@ class QueryResult(object):
         The count of evidence for each element.
     belief_scores : dict
         The belief score of each element.
+    source_counts : dict
+        The source counts for each element.
     query_json : dict
         A description of the query that was used.
+    result_type : str
+        The type of the result, e.g. 'agent', 'relation', etc.
 
     Attributes
     ----------
@@ -39,6 +43,8 @@ class QueryResult(object):
         The count of evidence for each element.
     belief_scores : dict
         The belief score of each element.
+    source_counts : dict
+        The source counts for each element.
     query_json : dict
         A description of the query that was used.
     """
