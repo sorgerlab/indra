@@ -146,10 +146,11 @@ class HashProcessor(Processor):
         self.hashes = []
         super(HashProcessor, self).__init__(*args, **kwargs)
 
-    def _compile_results(self):
-        pass
-
     def _handle_new_result(self, result, source_counts):
+        source_counts.update(result.source_counts)
+        self.hashes.extend(result.results)
+
+    def _compile_results(self):
         pass
 
 
