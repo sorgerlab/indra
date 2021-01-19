@@ -364,9 +364,8 @@ def test_sort_group_by_statement_custom_ordering():
     val_dict = {s.get_hash(): v for v, s in zip(custom_values, stmts)}
 
     custom_stat = StmtStat('value', val_dict, float, AveAggregator)
-    stmt_gather = StmtGroup.from_stmt_stats(custom_stat)
 
-    ha = HtmlAssembler(stmts, sort_by='value', stmt_data=stmt_gather)
+    ha = HtmlAssembler(stmts, sort_by='value', custom_stats=[custom_stat])
     json_model = ha.make_json_model(grouping_level='statement')
 
     statements = \
@@ -386,9 +385,8 @@ def test_sort_group_by_relation_custom_ordering():
     val_dict = {s.get_hash(): v for v, s in zip(custom_values, stmts)}
 
     custom_stat = StmtStat('value', val_dict, float, AveAggregator)
-    stmt_gather = StmtGroup.from_stmt_stats(custom_stat)
 
-    ha = HtmlAssembler(stmts, sort_by='value', stmt_data=stmt_gather)
+    ha = HtmlAssembler(stmts, sort_by='value', custom_stats=[custom_stat])
     json_model = ha.make_json_model(grouping_level='relation')
     assert list(json_model.keys()) == ['all-relations']
     relations = json_model['all-relations']['stmts_formatted']
@@ -414,9 +412,8 @@ def test_sort_group_by_agent_custom_ordering():
     val_dict = {s.get_hash(): v for v, s in zip(custom_values, stmts)}
 
     custom_stat = StmtStat('value', val_dict, float, AveAggregator)
-    stmt_gather = StmtGroup.from_stmt_stats(custom_stat)
 
-    ha = HtmlAssembler(stmts, sort_by='value', stmt_data=stmt_gather)
+    ha = HtmlAssembler(stmts, sort_by='value', custom_stats=[custom_stat])
     json_model = ha.make_json_model(grouping_level='agent-pair')
     assert len(json_model.keys()) == 4
 
