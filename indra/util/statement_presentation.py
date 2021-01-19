@@ -25,12 +25,12 @@ The primary work horse of the module is `group_and_sort_statements`, and if you
 want statements grouped into agent-pairs, then by relations, sorted by evidence
 count, you can simply use this function with its defaults:
 
->>> for _, ag_key, rels, ag_metrics in group_and_sort_statements(stmts):
->>>     print(ag_key)
->>>     for _, rel_key, stmt_data, rel_metrics in rels:
->>>         print('\t', rel_key)
->>>         for _, stmt_hash, stmt_obj, stmt_metrics in stmt_data:
->>>             print('\t\t', stmt_obj)
+>> for _, ag_key, rels, ag_metrics in group_and_sort_statements(stmts):
+>>     print(ag_key)
+>>     for _, rel_key, stmt_data, rel_metrics in rels:
+>>         print('\t', rel_key)
+>>         for _, stmt_hash, stmt_obj, stmt_metrics in stmt_data:
+>>             print('\t\t', stmt_obj)
 
 Advanced Example
 ----------------
@@ -40,30 +40,30 @@ to the level of relations, and want to sort the statements and relations
 separately, you can do that. Suppose also that your measurement is the same
 at the level of relations, and you don't want it aggregated.
 
->>> # Define a new aggregator that takes the last metric (a noop given the
->>> # nature of the data)
->>> class NoopAggregator(BasicAggregator):
->>>     def _merge(self, metric_array):
->>>         self.values = metric_array
->>>
->>> # Create your StmtStat
->>> my_stat = StmtStat('my_stat', my_data, int, NoopAggregator)
->>>
->>> # Define a custom sort function using my stat and the default available
->>> # ev_count. In effect this will sort relations by the custom stat, and then
->>> # sort the statements within that relation (for which my_stat is by design
->>> # the same) using their evidence counts.
->>> def my_sort(metrics):
->>>     return metrics['my_stat'], metrics['ev_count']
->>>
->>> # Iterate over the results.
->>> groups = group_and_sort_statements(stmts, sort_by=my_sort,
->>>                                    custom_stats=[my_stat],
->>>                                    grouping_level='relation')
->>> for _, rel_key, rel_stmts, rel_metrics in groups:
->>>     print(rel_key, rel_metrics['my_stat'])
->>>     for _, stmt_hash, stmt, metrics in rel_stmts:
->>>         print('\t', stmt, metrics['ev_count'])
+>> # Define a new aggregator that takes the last metric (a noop given the
+>> # nature of the data)
+>> class NoopAggregator(BasicAggregator):
+>>     def _merge(self, metric_array):
+>>         self.values = metric_array
+>>
+>> # Create your StmtStat
+>> my_stat = StmtStat('my_stat', my_data, int, NoopAggregator)
+>>
+>> # Define a custom sort function using my stat and the default available
+>> # ev_count. In effect this will sort relations by the custom stat, and then
+>> # sort the statements within that relation (for which my_stat is by design
+>> # the same) using their evidence counts.
+>> def my_sort(metrics):
+>>     return metrics['my_stat'], metrics['ev_count']
+>>
+>> # Iterate over the results.
+>> groups = group_and_sort_statements(stmts, sort_by=my_sort,
+>>                                    custom_stats=[my_stat],
+>>                                    grouping_level='relation')
+>> for _, rel_key, rel_stmts, rel_metrics in groups:
+>>     print(rel_key, rel_metrics['my_stat'])
+>>     for _, stmt_hash, stmt, metrics in rel_stmts:
+>>         print('\t', stmt, metrics['ev_count'])
 """
 
 import logging
@@ -202,9 +202,9 @@ class StmtStat:
         """Generate a list of StmtStat's from a dict of dicts.
 
         Example Usage:
-        >>> source_counts = {9623812756876: {'reach': 1, 'sparser': 2},
-        >>>                  -39877587165298: {'reach': 3, 'sparser': 0}}
-        >>> stmt_stats = StmtStat.from_dicts(source_counts, int, SumAggregator)
+        >> source_counts = {9623812756876: {'reach': 1, 'sparser': 2},
+        >>                  -39877587165298: {'reach': 3, 'sparser': 0}}
+        >> stmt_stats = StmtStat.from_dicts(source_counts, int, SumAggregator)
 
         Parameters
         ----------
@@ -237,7 +237,7 @@ class StmtStat:
         but a more limited selection may be specified using `values`.
 
         Example usage:
-        >>> stmt_stats = StmtStat.from_stmts(stmt_list, ('ag_count', 'belief'))
+        >> stmt_stats = StmtStat.from_stmts(stmt_list, ('ag_count', 'belief'))
 
         Parameters
         ----------
@@ -293,27 +293,27 @@ class StmtGroup:
     See the methods for more details on their purpose and usage.
 
     Example usage:
-    >>> # Get ev_count, belief, and ag_count from a list of statements.
-    >>> stmt_stats = StmtStat.from_stmts(stmt_list)
-    >>>
-    >>> # Add another stat for a measure of relevance
-    >>> stmt_stats.append(
-    >>>     StmtStat('relevance', relevance_dict, float, AveAggregator)
-    >>> )
-    >>>
-    >>> # Create the Group
-    >>> sg = StmtGroup.from_stmt_stats(*stmt_stats)
-    >>>
-    >>> # Load it full of Statements, grouped by agents.
-    >>> sg.fill_from_stmt_stats()
-    >>> sg.start()
-    >>> for s in stmt_list:
-    >>>    key = (ag.get_grounding() for ag in s.agent_list())
-    >>>    sg[key].include(s)
-    >>> sg.finish()
-    >>>
-    >>> # Now the stats for each group are aggregated and available for use.
-    >>> metrics = sg[(('FPLX', 'MEK'), ('FPLX', 'ERK'))].get_dict()
+    >> # Get ev_count, belief, and ag_count from a list of statements.
+    >> stmt_stats = StmtStat.from_stmts(stmt_list)
+    >>
+    >> # Add another stat for a measure of relevance
+    >> stmt_stats.append(
+    >>     StmtStat('relevance', relevance_dict, float, AveAggregator)
+    >> )
+    >>
+    >> # Create the Group
+    >> sg = StmtGroup.from_stmt_stats(*stmt_stats)
+    >>
+    >> # Load it full of Statements, grouped by agents.
+    >> sg.fill_from_stmt_stats()
+    >> sg.start()
+    >> for s in stmt_list:
+    >>    key = (ag.get_grounding() for ag in s.agent_list())
+    >>    sg[key].include(s)
+    >> sg.finish()
+    >>
+    >> # Now the stats for each group are aggregated and available for use.
+    >> metrics = sg[(('FPLX', 'MEK'), ('FPLX', 'ERK'))].get_dict()
 
     This class helps manage the accumulation of statistics for statements and
     statement-like objects, such as agent pairs. Working with AggregatorGroup and
