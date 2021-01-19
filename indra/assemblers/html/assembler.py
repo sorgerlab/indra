@@ -91,8 +91,6 @@ class HtmlAssembler(object):
         statement indexed by hash. If not provided, the statements that are
         passed to the constructor are used to determine these, with whatever
         evidences these statements carry.
-    ev_totals : Optional[dict]
-        DEPRECATED. Same as ev_counts which should be used instead.
     beliefs : Optional[dict]
         A dictionary of the belief of each statement indexed by hash. If not
         provided, the beliefs of the statements passed to the constructor are
@@ -150,7 +148,7 @@ class HtmlAssembler(object):
         The URL to a DB REST API.
     """
 
-    def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
+    def __init__(self, statements=None, summary_metadata=None,
                  ev_counts=None, beliefs=None, source_counts=None,
                  curation_dict=None, title='INDRA Results', db_rest_url=None,
                  sort_by='default', custom_stats=None):
@@ -158,9 +156,6 @@ class HtmlAssembler(object):
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
             else summary_metadata
-        # If the deprecated parameter is used, we make sure we take it
-        if not ev_counts and ev_totals:
-            ev_counts = ev_totals
         self.ev_counts = get_available_ev_counts(self.statements) \
             if ev_counts is None else standardize_counts(ev_counts)
         self.beliefs = get_available_beliefs(self.statements) \
