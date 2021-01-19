@@ -201,15 +201,6 @@ class HtmlAssembler(object):
             A complexly structured JSON dict containing grouped statements and
             various metadata.
         """
-        # Handle deprecated case.
-        if "with_grouping" in kwargs:
-            logger.warning("DEPRECATED: The `with_grouping` option has been "
-                           "replaced with `grouping_level`. See doc string for "
-                           "further details.")
-            if grouping_level == 'agent-pair' \
-                    and not kwargs["with_grouping"]:
-                grouping_level = 'statement'
-
         # Get an iterator over the statements, carefully grouped.
         normal_stats = make_standard_stats(ev_counts=self.ev_counts,
                                            beliefs=self.beliefs,
@@ -461,15 +452,6 @@ class HtmlAssembler(object):
         str
             The assembled HTML as a string.
         """
-        # Handle deprecated case.
-        if "with_grouping" in template_kwargs:
-            logger.warning("DEPRECATED: The `with_grouping` option has been "
-                           "replaced with `grouping_level`. See doc string for "
-                           "further details.")
-            if grouping_level == 'agent-pair' \
-               and not template_kwargs.pop("with_grouping"):
-                grouping_level = 'statement'
-
         # Make the JSON model.
         tl_stmts = self.make_json_model(grouping_level=grouping_level,
                                         no_redundancy=no_redundancy)
