@@ -337,7 +337,7 @@ class StmtGroup:
 
     @classmethod
     def from_stmt_stats(cls, *stmt_stats):
-        """Create a stat gatherer from StmtStat objects.
+        """Create a stmt group from StmtStat objects.
 
         Return a StmtGroup constructed existing StmtStat objects. This
         method offers the user the most control and customizability.
@@ -358,7 +358,7 @@ class StmtGroup:
 
     @classmethod
     def from_dicts(cls, ev_counts=None, beliefs=None, source_counts=None):
-        """Init a stat gatherer from dicts keyed by hash.
+        """Init a stmt group from dicts keyed by hash.
 
         Return a StmtStatsGather constructed from the given keyword arguments.
         The dict keys of `source_counts` will be broken out into their own
@@ -794,7 +794,7 @@ def group_and_sort_statements(stmt_list, sort_by='default', custom_stats=None,
         else:
             grouped_stmts[rel_key].append((stmt.get_hash(), stmt))
 
-    # Stop filling these stat gatherers. No more "new" keys.
+    # Stop filling these stmt groups. No more "new" keys.
     relation_metrics.finish()
     if grouping_level == 'agent-pair':
         agent_pair_metrics.finish()
