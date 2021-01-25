@@ -115,16 +115,19 @@ class HtmlAssembler(object):
         If str, it indicates which parameter to sort by, such as 'belief' or
         'ev_count', or 'ag_count'. Those are the default options because they
         can be derived from a list of statements, however if you give a custom
-        stmt_sort_gather, you may use any of the parameters used to build it.
-        The default, 'default', is mostly a sort by ev_count but also favors
-        statements with fewer agents. Alternatively, you may give a function
-        that takes a dict as its single argument, a dictionary of metrics. The
-        contents of this dictionary always include "belief", "ev_count", and
-        "ag_count". If source_counts are given, each source will also be
-        available as an entry (e.g. "reach" and "sparser"). You may also add
-        your own custom stats using the `custom_stats` argument. The value may
-        also be None, in which case the sort function will return the
-        same value for all elements, and thus the original order of elements
+        list of stats with the `custom_stats` argument, you may use any of the
+        parameters used to build it. The default, 'default', is mostly a sort
+        by ev_count but also favors statements with fewer agents.
+
+        Alternatively, you may give a function that takes a dict as its single
+        argument, a dictionary of metrics. The contents of this dictionary
+        always include "belief", "ev_count", and "ag_count". If source_counts
+        are given, each source will also be available as an entry (e.g. "reach"
+        and "sparser"). As with string values, you may also add your own custom
+        stats using the `custom_stats` argument.
+
+        The value may also be None, in which case the sort function will return
+        the same value for all elements, and thus the original order of elements
         will be preserved. This could have strange effects when statements are
         grouped (i.e. when `grouping_level` is not 'statement'); such
         functionality is untested.
