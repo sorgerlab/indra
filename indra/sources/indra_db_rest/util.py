@@ -56,11 +56,15 @@ def make_db_rest_request(meth, end_point, query_str='', data=None, params=None,
     else:
         json_data = None
     params['api_key'] = api_key
-    logger.info('query: %s', url_path.replace(str(api_key), '[api-key]'))
-    logger.info('params: %s', str(params).replace(str(api_key), '[api-key]'))
-    logger.info('data: %s', str(data).replace(str(api_key), '[api-key]'))
-    logger.debug('headers: %s', str(headers).replace(str(api_key),
-                                                     '[api-key]'))
+
+    def remove_api_key(s):
+        if api_key:
+            return s.replace(str(api_key), '[api-key]')
+
+    logger.info(f'query: {remove_api_key(url_path)}')
+    logger.info(f'params: {remove_api_key(str(params))}')
+    logger.info(f'data: {remove_api_key(str(data))}')
+    logger.debug(f'headers: {remove_api_key(str(headers))}')
     method_func = getattr(requests, meth.lower())
     while tries > 0:
         tries -= 1
