@@ -86,6 +86,8 @@ class HtmlAssembler(object):
         INDRA REST API. Default is None. Each value should be a concise
         summary of O(1), not of order the length of the list, such as the
         evidence totals. The keys should be informative human-readable strings.
+        This information is displayed as a tooltip when hovering over the
+        page title.
     ev_counts : Optional[dict]
         A dictionary of the total evidence available for each
         statement indexed by hash. If not provided, the statements that are
@@ -125,7 +127,7 @@ class HtmlAssembler(object):
         same value for all elements, and thus the original order of elements
         will be preserved. This could have strange effects when statements are
         grouped (i.e. when `grouping_level` is not 'statement'); such
-        functionality is untested and we make no guarantee that it will work.
+        functionality is untested.
     custom_stats : Optional[list]
         A list of StmtStat objects containing custom statement statistics to be
         used in sorting of statements and statement groups.
@@ -219,7 +221,7 @@ class HtmlAssembler(object):
         # Loop through the sorted and grouped statements.
         all_hashes = set()
 
-        def handle_rows(rows, level, **kwargs):
+        def handle_rows(rows, level, agent_key=None, agp_agents=None):
             if level == 'agent-pair':
                 ret = OrderedDict()
             else:
@@ -495,10 +497,10 @@ class HtmlAssembler(object):
             template_kwargs['simple'] = True
 
         self.model = template.render(stmt_data=tl_stmts,
-                                     metadata=metadata, title=self.title,
-                                     db_rest_url=db_rest_url,
-                                     add_full_text_search_link=add_full_text_search_link,  # noqa
-                                     **template_kwargs)
+                  metadata=metadata, title=self.title,
+                  db_rest_url=db_rest_url,
+                  add_full_text_search_link=add_full_text_search_link,  # noqa
+                  **template_kwargs)
         return self.model
 
     def append_warning(self, msg):

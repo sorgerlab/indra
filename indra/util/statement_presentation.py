@@ -2,28 +2,28 @@
 Statement Presentation
 ======================
 
-This module implements the hard work of grouping and sorting Statements, while
-aggregating the statements' statistics/metrics into the groupings. This module
-offers a great deal of flexibility, but that comes with a lot of machinery and
-options to parse through.
+This module groups and sorts Statements for presentation in downstream tools
+while aggregating the statements' statistics/metrics into the groupings. This
+module offers a great deal of flexibility, but that comes with a lot of
+machinery and options to parse through.
 
 Vocabulary
 ----------
 
 An "agent-pair" is, as the name suggests, a pair of agents from a statement,
-usually defined by their canonical name.
+usually defined by their canonical names.
 
-A "relation" is the basic information of a statement, with all details (such
-as sites and residues) stripped away. Usually this means it is just the
-statement type (or verb), subject name, and object name, though in some corner
-cases it is different.
+A "relation" is the basic information of a statement, with all details (such as
+sites, residues, mutations, and bound conditions) stripped away. Usually this
+means it is just the statement type (or verb), subject name, and object name,
+though in some corner cases it is different.
 
 Simple Example
 --------------
 
-The primary work horse of the module is `group_and_sort_statements`, and if you
-want statements grouped into agent-pairs, then by relations, sorted by evidence
-count, you can simply use this function with its defaults:
+The key function in the module is `group_and_sort_statements`, and if you want
+statements grouped into agent-pairs, then by relations, sorted by evidence
+count, you can simply use the function with its defaults, e.g.:
 
 >> for _, ag_key, rels, ag_metrics in group_and_sort_statements(stmts):
 >>     print(ag_key)
@@ -35,24 +35,28 @@ count, you can simply use this function with its defaults:
 Advanced Example
 ----------------
 
-However, say you have your own measurement of statements, want them grouped only
-to the level of relations, and want to sort the statements and relations
-separately, you can do that. Suppose also that your measurement is the same
-at the level of relations, and you don't want it aggregated.
+Other scenarios are possible, for example, if you have custom statement metrics
+(e.g., a value obtained by experiment such as differential expression of
+subject or object genes), want them grouped only to the level of relations, and
+want to sort the statements and relations separately. Suppose also that your
+measurement applies equally at the statement and relation level and hence you
+don't want any changes applied during aggregation (e.g. averaging). This is
+illustrated in the example below:
 
->> # Define a new aggregator that takes the last metric (a noop given the
->> # nature of the data)
+>> # Define a new aggregator that doesn't apply any aggregation function to
+>> # the data, simply taking the last metric (effectively a noop):
 >> class NoopAggregator(BasicAggregator):
 >>     def _merge(self, metric_array):
 >>         self.values = metric_array
 >>
->> # Create your StmtStat
+>> # Create your StmtStat using custom data dict `my_data`, a dict of values
+>> # keyed by statement hash:
 >> my_stat = StmtStat('my_stat', my_data, int, NoopAggregator)
 >>
 >> # Define a custom sort function using my stat and the default available
 >> # ev_count. In effect this will sort relations by the custom stat, and then
->> # sort the statements within that relation (for which my_stat is by design
->> # the same) using their evidence counts.
+>> # secondarily sort the statements within that relation (for which my_stat
+>> # is by design the same) using their evidence counts.
 >> def my_sort(metrics):
 >>     return metrics['my_stat'], metrics['ev_count']
 >>
@@ -167,7 +171,7 @@ def _get_relation_keyed_stmts(stmt_list, expand_nary=True):
 class StmtStat:
     """Abstraction of a metric applied to a set of statements.
 
-    Can be constructed using:
+    Can be instantiated either via the constructor or two factory class methods:
     - s = StmtStat(name, {hash: value, ...}, data_type, AggClass)
     - [s1, ...] = \
       StmtStat.from_dicts({hash: {label: value, ...}, ...}, data_type, AggClass)
@@ -215,8 +219,8 @@ class StmtStat:
         data_type : type
             The type of the data being given (e.g. `int` or `float`).
         agg_class : type
-            A subclass of BasicAggregator which defines how these statistics will
-            be merged (e.g. `SumAggregator`).
+            A subclass of BasicAggregator which defines how these statistics
+            will be merged (e.g. `SumAggregator`).
         """
         data_groups = defaultdict(dict)
         for h, data_dict in dict_data.items():
@@ -292,6 +296,21 @@ class StmtGroup:
     - from_dicts
     See the methods for more details on their purpose and usage.
 
+    This class helps manage the accumulation of statistics for statements and
+    statement-like objects, such as agent pairs. Working with AggregatorGroup
+    and children of the BasicAggregator class, these tools make it easy to
+    aggregate numerical measurements of statements with a great deal of
+    flexibility.
+
+    For example, you can sum up the evidence counts for statements that are
+    part of an agent pair at the same time that you are remembering the maximum
+    and average beliefs for that same corpus of statements. By defining your
+    own child of BasicAggregator, specifically defining the operations that
+    gather new data and finalize that data once all the statements are
+    collected, you can utilize virtually any statistical methods for
+    aggregating any metric for a Statement you might wish to use in sorting
+    them.
+
     Example usage:
     >> # Get ev_count, belief, and ag_count from a list of statements.
     >> stmt_stats = StmtStat.from_stmts(stmt_list)
@@ -314,19 +333,6 @@ class StmtGroup:
     >>
     >> # Now the stats for each group are aggregated and available for use.
     >> metrics = sg[(('FPLX', 'MEK'), ('FPLX', 'ERK'))].get_dict()
-
-    This class helps manage the accumulation of statistics for statements and
-    statement-like objects, such as agent pairs. Working with AggregatorGroup and
-    children of the BasicAggregator class, these tools make it easy to aggregate
-    numerical measurements of statements with a great deal of flexibility.
-
-    For example, you can sum up the evidence counts for statements that are part
-    of an agent pair at the same time that you are remembering the maximum and
-    average beliefs for that same corpus of statements. By defining your own
-    child of BasicAggregator, specifically defining the operations that gather new
-    data and finalize that data once all the statements are collected, you can
-    utilize virtually any statistical methods for aggregating any metric for
-    a Statement you might wish to use in sorting them.
     """
 
     @classmethod
