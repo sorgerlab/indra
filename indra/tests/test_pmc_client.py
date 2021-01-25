@@ -117,3 +117,11 @@ def test_extract_text2():
     text = pmc_client.extract_text(xml_str)
     assert text == 'a\nsome text\n'
     assert unicode_strs(text)
+
+
+@attr('webservice')
+def test_get_title():
+    title = pmc_client.get_title('PMC4322985')
+    assert title == (
+        'BRAF vs RAS oncogenes: are mutations of the same pathway equal? '
+        'differential signalling and therapeutic implications'), title
