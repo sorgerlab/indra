@@ -68,6 +68,28 @@ illustrated in the example below:
 >>     print(rel_key, rel_metrics['my_stat'])
 >>     for _, stmt_hash, stmt, metrics in rel_stmts:
 >>         print('\t', stmt, metrics['ev_count'])
+
+Class Overview
+--------------
+
+Statements have many metrics associated with them,
+most commonly belief, evidence counts, and source counts, although other metrics
+may also be applied, sometimes on the fly. Such metrics imply an order on the
+body of Statements, and a user should be able to apply that order to them, to
+sort them. These types of metric, or "stat", are represented by `StmtStat`
+classes.
+
+Statements can be grouped based on the information they represent: by their
+agents (e.g. subject is MEK and object is ERK), and by their type
+(e.g. Phosphorylation). These groups are represented by `StmtGroup` objects,
+which on their surface behave much like `defaultdict(list)` would, though more
+is going on behind the scenes.
+
+A user should be able to sort these groups as well. That requires that the
+`StmtStat`s be aggregated over the statements in a group. The Aggregator classes
+serve this purpose, using numpy to do sums over arrays of metrics as Statements
+are "included" in the `StmtGroup`. Each `StmtStat` must declare how its data
+should be aggregated, as different kinds of data aggregate differently.
 """
 
 import logging
