@@ -264,7 +264,7 @@ def _get_title_from_article_element(article):
     if title_tag is not None:
         title = title_tag.text
         if hasattr(title_tag, 'itertext'):
-            title = ' '.join(list(title_tag.itertext()))
+            title = ''.join(list(title_tag.itertext()))
     return title
 
 
