@@ -228,7 +228,6 @@ class HtmlAssembler(object):
         # Loop through the sorted and grouped statements.
         all_hashes = set()
 
-
         # Used by the handle_* functions below to distinguish between cases
         # with source counts and without
         def _get_src_counts(metrics):
@@ -258,9 +257,9 @@ class HtmlAssembler(object):
                 agents[agp_key_str] = agp_agents
 
                 # Determine if we are including this row or not.
-                relations, stmt_hashes = handle_relations(contents,
-                                                     agent_key=agp_key_str,
-                                                     agp_agents=agp_agents)
+                relations, stmt_hashes = \
+                    handle_relations(contents, agent_key=agp_key_str,
+                                     agp_agents=agp_agents)
                 if stmt_hashes <= prev_hashes or not relations:
                     continue
                 prev_hashes = stmt_hashes
@@ -276,7 +275,6 @@ class HtmlAssembler(object):
         # RELATION LEVEL
         def handle_relations(rows, agent_key=None, agp_agents=None):
             ret = []
-            prev_hashes = set()
             all_level_hashes = set()
             for _, key, contents, metrics in rows:
                 src_counts = _get_src_counts(metrics)
@@ -338,7 +336,6 @@ class HtmlAssembler(object):
         # STATEMENT LEVEL
         def handle_statements(rows, meta_ag_dict=None):
             ret = []
-            prev_hashes = set()
             all_level_hashes = set()
             for _, key, contents, metrics in rows:
                 src_counts = _get_src_counts(metrics)
@@ -385,6 +382,8 @@ class HtmlAssembler(object):
             output, _ = handle_relations(stmt_rows)
         elif grouping_level == 'statement':
             output, _ = handle_statements(stmt_rows)
+        else:
+            assert False, f"Grouping level enforcement failed: {grouping_level}"
 
         # Massage the output into the expected format.
         stmts = {}
