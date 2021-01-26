@@ -271,10 +271,10 @@ class HtmlAssembler(object):
                 elif level == 'relation':
                     # RELATION LEVEL
 
-                    # We will keep track the meta data for this stmt group.
-                    # NOTE: Much of the code relies heavily on the fact that the
-                    # Agent objects in `meta_agents` are references to the
-                    # Agent's in the Statement object `meta_stmts`.
+                    # We will keep track of the meta data for this stmt group.
+                    # NOTE: The code relies on the fact that the Agent objects
+                    # in `meta_agents` are references to the Agents in the
+                    # Statement object `meta_stmts`.
                     meta_agents = []
                     meta_stmt = make_stmt_from_relation_key(key, meta_agents)
                     meta_ag_dict = {ag.name: ag for ag in meta_agents

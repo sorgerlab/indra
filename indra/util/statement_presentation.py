@@ -3,9 +3,12 @@ Statement Presentation
 ======================
 
 This module groups and sorts Statements for presentation in downstream tools
-while aggregating the statements' statistics/metrics into the groupings. This
-module offers a great deal of flexibility, but that comes with a lot of
-machinery and options to parse through.
+while aggregating the statements' statistics/metrics into the groupings.  While
+most usage of this module will be via the top-level function
+`group_and_sort_statements`, alternative usages (including custom statement
+data, multiple statement grouping levels, and multiple strategies for
+aggregating statement-level metrics for higher-level groupings) are supported
+through the various classes (see Class Overview below). 
 
 Vocabulary
 ----------
@@ -21,9 +24,9 @@ though in some corner cases it is different.
 Simple Example
 --------------
 
-The key function in the module is `group_and_sort_statements`, and if you want
-statements grouped into agent-pairs, then by relations, sorted by evidence
-count, you can simply use the function with its defaults, e.g.:
+The principal function in the module is `group_and_sort_statements`, and if you
+want statements grouped into agent-pairs, then by relations, sorted by evidence
+count, simply use the function with its defaults, e.g.:
 
 >> for _, ag_key, rels, ag_metrics in group_and_sort_statements(stmts):
 >>     print(ag_key)
@@ -35,13 +38,18 @@ count, you can simply use the function with its defaults, e.g.:
 Advanced Example
 ----------------
 
-Other scenarios are possible, for example, if you have custom statement metrics
-(e.g., a value obtained by experiment such as differential expression of
-subject or object genes), want them grouped only to the level of relations, and
-want to sort the statements and relations separately. Suppose also that your
-measurement applies equally at the statement and relation level and hence you
-don't want any changes applied during aggregation (e.g. averaging). This is
-illustrated in the example below:
+Custom data and aggregation methods are supported, respectively, by using
+instances of the `StmtStat` class and subclassing the BasicAggregator (or more
+generally, the AggregatorMeta) API. Custom sorting is implemented by defining
+and passing a `sort_by` function to `group_and_sort_statements`.
+
+For example, if you have custom statement metrics (e.g., a value obtained by
+experiment such as differential expression of subject or object genes), want
+the statements grouped only to the level of relations, and want to sort the
+statements and relations independently. Suppose also that your measurement
+applies equally at the statement and relation level and hence you don't want
+any changes applied during aggregation (e.g. averaging). This is illustrated in
+the example below:
 
 >> # Define a new aggregator that doesn't apply any aggregation function to
 >> # the data, simply taking the last metric (effectively a noop):
@@ -72,24 +80,29 @@ illustrated in the example below:
 Class Overview
 --------------
 
-Statements have many metrics associated with them,
-most commonly belief, evidence counts, and source counts, although other metrics
-may also be applied, sometimes on the fly. Such metrics imply an order on the
-body of Statements, and a user should be able to apply that order to them, to
-sort them. These types of metric, or "stat", are represented by `StmtStat`
-classes.
+Statements can have multiple metrics associated with them, most commonly
+belief, evidence counts, and source counts, although other metrics may also be
+applied. Such metrics imply an order on the set of Statements, and a user
+should be able to apply that order to them for sorting or filtering.  them.
+These types of metric, or "stat", are represented by `StmtStat` classes.
 
 Statements can be grouped based on the information they represent: by their
-agents (e.g. subject is MEK and object is ERK), and by their type
-(e.g. Phosphorylation). These groups are represented by `StmtGroup` objects,
-which on their surface behave much like `defaultdict(list)` would, though more
-is going on behind the scenes.
+agents (e.g. subject is MEK and object is ERK), and by their type (e.g.
+Phosphorylation). These groups are represented by `StmtGroup` objects, which on
+their surface behave much like `defaultdict(list)` would, though more is going
+on behind the scenes. The StmtGroup class is used internally by
+`group_and_sort_statements` and would only need to be used directly if defining
+an alternative statement-level grouping approach (e.g., grouping statements by
+subject).
 
-A user should be able to sort these groups as well. That requires that the
-`StmtStat`s be aggregated over the statements in a group. The Aggregator classes
-serve this purpose, using numpy to do sums over arrays of metrics as Statements
-are "included" in the `StmtGroup`. Each `StmtStat` must declare how its data
-should be aggregated, as different kinds of data aggregate differently.
+Like Statements, higher-level statement groups are subject to sorting and
+filtering. That requires that the `StmtStat`s be aggregated over the statements
+in a group. The Aggregator classes serve this purpose, using numpy to do sums
+over arrays of metrics as Statements are "included" in the `StmtGroup`. Each
+`StmtStat` must declare how its data should be aggregated, as different kinds
+of data aggregate differently. Custom aggregation methods can be implemented by
+subclassing the `BasicAggregator` class and using an instance of the custom
+class to define a `StmtStat`.
 """
 
 import logging
@@ -310,28 +323,31 @@ def make_standard_stats(ev_counts=None, beliefs=None, source_counts=None):
 
 
 class StmtGroup:
-    """Gather metrics for items that are derived from statements.
+    """Creates higher-level stmt groupings and aggregates metrics accordingly.
 
-    The primary methods for instantiating this class are the two constructor
+    Used internally by `group_and_sort_statements`.
+
+    This class manages the accumulation of statistics for statement groupings,
+    such as by relation or agent pair. It calculates metrics for these
+    higher-level groupings using metric-specific aggregators implementing the
+    AggregatorMeta API (e.g., MultiAggregator and any children of
+    BasicAggregator).
+
+    For example, evidence counts for a relation can be calculated as the sum of
+    the statement-level evidence counts, while the belief for the relation can
+    be calculated as the average or maximum of the statement-level beliefs.
+
+    The primary methods for instantiating this class are the two factory
     class methods:
     - from_stmt_stats
     - from_dicts
     See the methods for more details on their purpose and usage.
 
-    This class helps manage the accumulation of statistics for statements and
-    statement-like objects, such as agent pairs. Working with AggregatorGroup
-    and children of the BasicAggregator class, these tools make it easy to
-    aggregate numerical measurements of statements with a great deal of
-    flexibility.
-
-    For example, you can sum up the evidence counts for statements that are
-    part of an agent pair at the same time that you are remembering the maximum
-    and average beliefs for that same corpus of statements. By defining your
-    own child of BasicAggregator, specifically defining the operations that
-    gather new data and finalize that data once all the statements are
-    collected, you can utilize virtually any statistical methods for
-    aggregating any metric for a Statement you might wish to use in sorting
-    them.
+    Once instantiated, the StmtGroup behaves like a defaultdict of lists, where
+    the keys are group-level keys, and the lists contain statements.
+    Statements can be iteratively added to the group via the dict-like syntax
+    `stmt_group[group_key].include(stmt)`. This allows the caller to generate
+    keys and trigger metric aggregation in a single iteration over statements.
 
     Example usage:
     >> # Get ev_count, belief, and ag_count from a list of statements.
@@ -382,7 +398,7 @@ class StmtGroup:
     def from_dicts(cls, ev_counts=None, beliefs=None, source_counts=None):
         """Init a stmt group from dicts keyed by hash.
 
-        Return a StmtStatsGather constructed from the given keyword arguments.
+        Return a StmtGroup constructed from the given keyword arguments.
         The dict keys of `source_counts` will be broken out into their own
         StmtStat objects, so that the resulting data model is in effect a flat
         list of measurement parameters. There is some risk of name collision, so
@@ -464,7 +480,7 @@ class StmtGroup:
                                "accumulation started.")
             if not self.__finished:
                 # Remember, this is passing REFERENCES to the stats dict.
-                self.__stats[key] = AggregatorGroup(
+                self.__stats[key] = MultiAggregator(
                     agg_class(d['keys'], d['stats'], d['types'])
                     for agg_class, d in self.__stmt_stats.items())
             else:
@@ -528,14 +544,13 @@ class StmtGroup:
 
 
 class AggregatorMeta:
-    """Define the API an aggregator of statement metrics.
+    """Define the API for an aggregator of statement metrics.
 
-    In general, an aggregator defines the ways that different kinds of statement
-    metrics are merged into groups. For example, evidence counts are aggregated
-    by summing, as are counts for various sources. Beliefs are aggregated over
-    a group of statements by maximum (usually).
+    In general, an aggregator defines the ways that different kinds of
+    statement metrics are merged into groups. For example, evidence counts are
+    aggregated by summing, as are counts for various sources. Beliefs are
+    aggregated over a group of statements by maximum (usually).
     """
-
     def include(self, stmt):
         """Add the metrics from the given statement to this aggregate."""
         raise NotImplementedError()
@@ -552,10 +567,10 @@ class AggregatorMeta:
         raise NotImplementedError()
 
 
-class AggregatorGroup(AggregatorMeta):
-    """Implement the AggregatorMeta API for a group of BasicAggregator children.
+class MultiAggregator(AggregatorMeta):
+    """Implement the AggregatorMeta API for multiple BasicAggregator children.
 
-    This takes an iterable of BasicAggregator children
+    Takes an iterable of BasicAggregator children.
     """
     def __init__(self, basic_aggs):
         self.__basic_aggs = tuple(basic_aggs)
@@ -581,6 +596,12 @@ class AggregatorGroup(AggregatorMeta):
 
 class BasicAggregator(AggregatorMeta):
     """Gathers measurements for a statement or similar entity.
+
+    By defining a child of BasicAggregator, specifically defining the
+    operations that gather new data and finalize that data once all the
+    statements are collected, one can use arbitrary statistical methods to
+    aggregate metrics for high-level groupings of Statements for subsequent
+    sorting or filtering purposes.
 
     Parameters
     ----------
