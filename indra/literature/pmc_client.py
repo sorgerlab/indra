@@ -472,3 +472,32 @@ def _extract_paragraphs_from_tree(tree):
 def _xpath_union(*xpath_list):
     """Form union of xpath expressions"""
     return ' | '.join(xpath_list)
+
+
+def get_title(pmcid):
+    xml_string = get_xml(pmcid)
+    if not xml_string:
+        return
+    tree = etree.fromstring(xml_string.encode('utf-8'))
+    # Remove namespaces if any exist
+    if tree.tag.startswith('{'):
+        for element in tree.getiterator():
+            # The following code will throw a ValueError for some
+            # exceptional tags such as comments and processing instructions.
+            # It's safe to just leave these tag names unchanged.
+            try:
+                element.tag = etree.QName(element).localname
+            except ValueError:
+                continue
+        etree.cleanup_namespaces(tree)
+    # Strip out latex
+    _remove_elements_by_tag(tree, 'tex-math')
+    # Strip out all content in unwanted elements except the captions
+    _replace_unwanted_elements_with_their_captions(tree)
+    # First process front element. Titles alt-titles and abstracts
+    # are pulled from here.
+    front_elements = _select_from_top_level(tree, 'front')
+    title_xpath = './article-meta/title-group/article-title'
+    for front_element in front_elements:
+        for element in front_element.xpath(title_xpath):
+            return ' '.join(element.itertext())
