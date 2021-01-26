@@ -224,7 +224,7 @@ class HtmlAssembler(object):
         # Loop through the sorted and grouped statements.
         all_hashes = set()
 
-        def handle_rows(rows, level, agent_key=None, agp_agents=None):
+        def handle_rows(rows, level, **kwargs):
             if level == 'agent-pair':
                 ret = OrderedDict()
             else:
