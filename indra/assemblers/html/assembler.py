@@ -206,6 +206,10 @@ class HtmlAssembler(object):
             A complexly structured JSON dict containing grouped statements and
             various metadata.
         """
+        # Check args
+        if grouping_level not in ('agent-pair', 'relation', 'statement'):
+            raise ValueError("grouping_level must be one of 'agent-pair',"
+                             "'relation', or 'statement'.")
         # Get an iterator over the statements, carefully grouped.
         normal_stats = make_standard_stats(ev_counts=self.ev_counts,
                                            beliefs=self.beliefs,
@@ -224,149 +228,163 @@ class HtmlAssembler(object):
         # Loop through the sorted and grouped statements.
         all_hashes = set()
 
-        def handle_rows(rows, level, **kwargs):
-            if level == 'agent-pair':
-                ret = OrderedDict()
+
+        # Used by the handle_* functions below to distinguish between cases
+        # with source counts and without
+        def _get_src_counts(metrics):
+            if self.source_counts:
+                src_counts = {k: metrics[k] for k in source_count_keys}
             else:
-                ret = []
+                src_counts = None
+            return src_counts
+
+        # AGENT PAIR LEVEL
+        def handle_ag_pairs(rows):
+            ret = OrderedDict()
             prev_hashes = set()
             all_level_hashes = set()
             for _, key, contents, metrics in rows:
-                # Distinguish between the cases with source counts and without.
-                if self.source_counts:
-                    src_counts = {k: metrics[k] for k in source_count_keys}
+                src_counts = _get_src_counts(metrics)
+                # Create the agent key.
+                if len(key) > 1 and isinstance(key[1], tuple):
+                    agp_names = [key[0]] + [*key[1]] + [*key[2]]
                 else:
-                    src_counts = None
+                    agp_names = key[:]
 
-                # Perform level-based actions.
-                if level == 'agent-pair':
-                    # AGENT PAIR LEVEL
+                # Make string key
+                agp_key_str = '-'.join([str(name) for name in agp_names])
+                agp_agents = {name: Agent(name) for name in agp_names
+                              if name is not None}
+                agents[agp_key_str] = agp_agents
 
-                    # Create the agent key.
-                    if len(key) > 1 and isinstance(key[1], tuple):
-                        agp_names = [key[0]] + [*key[1]] + [*key[2]]
-                    else:
-                        agp_names = key[:]
+                # Determine if we are including this row or not.
+                relations, stmt_hashes = handle_relations(contents,
+                                                     agent_key=agp_key_str,
+                                                     agp_agents=agp_agents)
+                if stmt_hashes <= prev_hashes or not relations:
+                    continue
+                prev_hashes = stmt_hashes
 
-                    # Make string key
-                    agp_key_str = '-'.join([str(name) for name in agp_names])
-                    agp_agents = {name: Agent(name) for name in agp_names
-                                  if name is not None}
-                    agents[agp_key_str] = agp_agents
-
-                    # Determine if we are including this row or not.
-                    relations, stmt_hashes = handle_rows(contents, 'relation',
-                                                         agent_key=agp_key_str,
-                                                         agp_agents=agp_agents)
-                    if stmt_hashes <= prev_hashes or not relations:
-                        continue
-                    prev_hashes = stmt_hashes
-
-                    # Update the top level grouping.
-                    ret[agp_key_str] = {'html_key': str(uuid.uuid4()),
-                                        'source_counts': src_counts,
-                                        'stmts_formatted': relations,
-                                        'names': agp_names,
-                                        'label': None}
-                elif level == 'relation':
-                    # RELATION LEVEL
-
-                    # We will keep track of the meta data for this stmt group.
-                    # NOTE: The code relies on the fact that the Agent objects
-                    # in `meta_agents` are references to the Agents in the
-                    # Statement object `meta_stmts`.
-                    meta_agents = []
-                    meta_stmt = make_stmt_from_relation_key(key, meta_agents)
-                    meta_ag_dict = {ag.name: ag for ag in meta_agents
-                                    if ag is not None}
-
-                    # Generate the statement data.
-                    stmt_list, stmt_hashes = \
-                        handle_rows(contents, 'statement',
-                                    meta_ag_dict=meta_ag_dict)
-                    all_level_hashes |= stmt_hashes
-                    if not stmt_list:
-                        continue
-
-                    # Clean out invalid fields from the meta agents.
-                    for ag in meta_agents:
-                        if ag is None:
-                            continue
-                        for dbn, dbid in list(ag.db_refs.items()):
-                            if isinstance(dbid, set):
-                                logger.info(
-                                    "Removing %s from refs due to too many "
-                                    "matches: %s" % (dbn, dbid))
-                                del ag.db_refs[dbn]
-
-                    # Merge agent refs.
-                    if 'agent_key' in kwargs:
-                        assert 'agp_agents' in kwargs,\
-                            "agp_agents must be included along with agent_key."
-
-                        for ag in kwargs['agp_agents'].values():
-                            meta_ag = meta_ag_dict.get(ag.name)
-                            if meta_ag is None:
-                                continue
-                            ag.db_refs.update(meta_ag.db_refs)
-
-                        for name, ag in agents[kwargs['agent_key']].items():
-                            new_ag = kwargs['agp_agents'].get(name)
-                            if new_ag is None:
-                                continue
-                            _cautiously_merge_refs(new_ag, ag)
-
-                    # See note above: this is where the work on meta_agents is
-                    # applied because the agents are references.
-                    short_name = _format_stmt_text(meta_stmt)
-                    short_name_key = str(uuid.uuid4())
-
-                    ret.append({'short_name': short_name,
-                                'short_name_key': short_name_key,
-                                'stmt_info_list': stmt_list,
-                                'src_counts': src_counts})
-
-                else:
-                    # STATEMENT LEVEL
-                    stmt = contents
-
-                    # Check to see if we are doing this statement or not.
-                    if no_redundancy and key in all_hashes:
-                        continue
-                    all_hashes.add(key)
-                    all_level_hashes.add(key)
-
-                    # Try to accumulate db refs in the meta agents.
-                    if 'meta_ag_dict' in kwargs:
-                        for ag in stmt.agent_list():
-                            if ag is None:
-                                continue
-                            # Get the corresponding meta-agent
-                            meta_ag = kwargs['meta_ag_dict'].get(ag.name)
-                            if not meta_ag:
-                                continue
-                            _cautiously_merge_refs(ag, meta_ag)
-
-                    # Format some strings nicely.
-                    ev_list = _format_evidence_text(stmt, self.curation_dict)
-                    english = _format_stmt_text(stmt)
-                    if self.ev_counts:
-                        tot_ev = self.ev_counts.get(int(key), '?')
-                        if tot_ev == '?':
-                            logger.warning(f'The hash {key} was not found in '
-                                           f'the evidence totals dict.')
-                        evidence_count_str = f'{len(ev_list)} / {tot_ev}'
-                    else:
-                        evidence_count_str = str(len(ev_list))
-
-                    ret.append({'hash': str(key), 'english': english,
-                                'evidence': ev_list,
-                                'evidence_count': evidence_count_str,
-                                'source_count': src_counts})
-
+                # Update the top level grouping.
+                ret[agp_key_str] = {'html_key': str(uuid.uuid4()),
+                                    'source_counts': src_counts,
+                                    'stmts_formatted': relations,
+                                    'names': agp_names,
+                                    'label': None}
             return ret, all_level_hashes
 
-        output, _ = handle_rows(stmt_rows, grouping_level)
+        # RELATION LEVEL
+        def handle_relations(rows, agent_key=None, agp_agents=None):
+            ret = []
+            prev_hashes = set()
+            all_level_hashes = set()
+            for _, key, contents, metrics in rows:
+                src_counts = _get_src_counts(metrics)
+                # We will keep track of the meta data for this stmt group.
+                # NOTE: The code relies on the fact that the Agent objects
+                # in `meta_agents` are references to the Agents in the
+                # Statement object `meta_stmts`.
+                meta_agents = []
+                meta_stmt = make_stmt_from_relation_key(key, meta_agents)
+                meta_ag_dict = {ag.name: ag for ag in meta_agents
+                                if ag is not None}
+
+                # Generate the statement data.
+                stmt_list, stmt_hashes = \
+                    handle_statements(contents, meta_ag_dict=meta_ag_dict)
+                all_level_hashes |= stmt_hashes
+                if not stmt_list:
+                    continue
+
+                # Clean out invalid fields from the meta agents.
+                for ag in meta_agents:
+                    if ag is None:
+                        continue
+                    for dbn, dbid in list(ag.db_refs.items()):
+                        if isinstance(dbid, set):
+                            logger.info(
+                                "Removing %s from refs due to too many "
+                                "matches: %s" % (dbn, dbid))
+                            del ag.db_refs[dbn]
+
+                # Merge agent refs.
+                if agent_key is not None:
+                    assert agp_agents is not None, \
+                        "agp_agents must be included along with agent_key."
+
+                    for ag in agp_agents.values():
+                        meta_ag = meta_ag_dict.get(ag.name)
+                        if meta_ag is None:
+                            continue
+                        ag.db_refs.update(meta_ag.db_refs)
+
+                    for name, ag in agents[agent_key].items():
+                        new_ag = agp_agents.get(name)
+                        if new_ag is None:
+                            continue
+                        _cautiously_merge_refs(new_ag, ag)
+
+                # See note above: this is where the work on meta_agents is
+                # applied because the agents are references.
+                short_name = _format_stmt_text(meta_stmt)
+                short_name_key = str(uuid.uuid4())
+
+                ret.append({'short_name': short_name,
+                            'short_name_key': short_name_key,
+                            'stmt_info_list': stmt_list,
+                            'src_counts': src_counts})
+            return ret, all_level_hashes
+
+        # STATEMENT LEVEL
+        def handle_statements(rows, meta_ag_dict=None):
+            ret = []
+            prev_hashes = set()
+            all_level_hashes = set()
+            for _, key, contents, metrics in rows:
+                src_counts = _get_src_counts(metrics)
+                stmt = contents
+                # Check to see if we are doing this statement or not.
+                if no_redundancy and key in all_hashes:
+                    continue
+                all_hashes.add(key)
+                all_level_hashes.add(key)
+
+                # Try to accumulate db refs in the meta agents.
+                if meta_ag_dict is not None:
+                    for ag in stmt.agent_list():
+                        if ag is None:
+                            continue
+                        # Get the corresponding meta-agent
+                        meta_ag = meta_ag_dict.get(ag.name)
+                        if not meta_ag:
+                            continue
+                        _cautiously_merge_refs(ag, meta_ag)
+
+                # Format some strings nicely.
+                ev_list = _format_evidence_text(stmt, self.curation_dict)
+                english = _format_stmt_text(stmt)
+                if self.ev_counts:
+                    tot_ev = self.ev_counts.get(int(key), '?')
+                    if tot_ev == '?':
+                        logger.warning(f'The hash {key} was not found in '
+                                       f'the evidence totals dict.')
+                    evidence_count_str = f'{len(ev_list)} / {tot_ev}'
+                else:
+                    evidence_count_str = str(len(ev_list))
+
+                ret.append({'hash': str(key), 'english': english,
+                            'evidence': ev_list,
+                            'evidence_count': evidence_count_str,
+                            'source_count': src_counts})
+            return ret, all_level_hashes
+
+        # Call the appropriate method depending on our top grouping level.
+        if grouping_level == 'agent-pair':
+            output, _ = handle_ag_pairs(stmt_rows)
+        elif grouping_level == 'relation':
+            output, _ = handle_relations(stmt_rows)
+        elif grouping_level == 'statement':
+            output, _ = handle_statements(stmt_rows)
 
         # Massage the output into the expected format.
         stmts = {}
