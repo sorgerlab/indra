@@ -75,6 +75,14 @@ def test_get_title_prefix():
 
 
 @attr('webservice')
+def test_get_complex_title():
+    time.sleep(0.5)
+    title = pubmed_client.get_title('33463523')
+    assert title
+    assert title.lower().startswith('atomic structures')
+    assert title.lower().endswith('vascular plants.')
+
+@attr('webservice')
 def test_expand_pagination():
     time.sleep(0.5)
     pages = '456-7'
