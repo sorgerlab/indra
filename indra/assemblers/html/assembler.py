@@ -8,7 +8,7 @@ import uuid
 import logging
 import itertools
 from html import escape
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from os.path import abspath, dirname, join
 
 from jinja2 import Environment, FileSystemLoader
@@ -20,9 +20,10 @@ from indra.statements.validate import validate_id
 from indra.databases.identifiers import get_identifiers_url, ensure_prefix
 from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.util.statement_presentation import group_and_sort_statements, \
-    make_top_level_label_from_names_key, make_stmt_from_sort_key, \
+    make_top_level_label_from_names_key, make_stmt_from_relation_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
-    get_available_ev_counts, standardize_counts
+    get_available_ev_counts, standardize_counts, get_available_beliefs, \
+    StmtGroup, make_standard_stats
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
@@ -85,13 +86,17 @@ class HtmlAssembler(object):
         INDRA REST API. Default is None. Each value should be a concise
         summary of O(1), not of order the length of the list, such as the
         evidence totals. The keys should be informative human-readable strings.
+        This information is displayed as a tooltip when hovering over the
+        page title.
     ev_counts : Optional[dict]
         A dictionary of the total evidence available for each
         statement indexed by hash. If not provided, the statements that are
         passed to the constructor are used to determine these, with whatever
         evidences these statements carry.
-    ev_totals : Optional[dict]
-        DEPRECATED. Same as ev_counts which should be used instead.
+    beliefs : Optional[dict]
+        A dictionary of the belief of each statement indexed by hash. If not
+        provided, the beliefs of the statements passed to the constructor are
+        used.
     source_counts : Optional[dict]
         A dictionary of the itemized evidence counts, by source, available for
         each statement, indexed by hash. If not provided, the statements
@@ -106,6 +111,29 @@ class HtmlAssembler(object):
         the configuration entry indra.config.get_config('INDRA_DB_REST_URL').
         If None, the URLs are constructed as relative links.
         Default: None
+    sort_by : str or function or None
+        If str, it indicates which parameter to sort by, such as 'belief' or
+        'ev_count', or 'ag_count'. Those are the default options because they
+        can be derived from a list of statements, however if you give a custom
+        list of stats with the `custom_stats` argument, you may use any of the
+        parameters used to build it. The default, 'default', is mostly a sort
+        by ev_count but also favors statements with fewer agents.
+
+        Alternatively, you may give a function that takes a dict as its single
+        argument, a dictionary of metrics. The contents of this dictionary
+        always include "belief", "ev_count", and "ag_count". If source_counts
+        are given, each source will also be available as an entry (e.g. "reach"
+        and "sparser"). As with string values, you may also add your own custom
+        stats using the `custom_stats` argument.
+
+        The value may also be None, in which case the sort function will return
+        the same value for all elements, and thus the original order of elements
+        will be preserved. This could have strange effects when statements are
+        grouped (i.e. when `grouping_level` is not 'statement'); such
+        functionality is untested.
+    custom_stats : Optional[list]
+        A list of StmtStat objects containing custom statement statistics to be
+        used in sorting of statements and statement groups.
 
     Attributes
     ----------
@@ -119,27 +147,31 @@ class HtmlAssembler(object):
     ev_counts : dict
         A dictionary of the total evidence available for each
         statement indexed by hash.
+    beliefs : dict
+        A dictionary of the belief score of each statement, indexed by hash.
     db_rest_url : str
         The URL to a DB REST API.
     """
 
-    def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
-                 ev_counts=None, source_counts=None, curation_dict=None,
-                 title='INDRA Results', db_rest_url=None):
+    def __init__(self, statements=None, summary_metadata=None,
+                 ev_counts=None, beliefs=None, source_counts=None,
+                 curation_dict=None, title='INDRA Results', db_rest_url=None,
+                 sort_by='default', custom_stats=None):
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
             else summary_metadata
-        # If the deprecated parameter is used, we make sure we take it
-        if not ev_counts and ev_totals:
-            ev_counts = ev_totals
         self.ev_counts = get_available_ev_counts(self.statements) \
             if ev_counts is None else standardize_counts(ev_counts)
+        self.beliefs = get_available_beliefs(self.statements) \
+            if not beliefs else standardize_counts(beliefs)
         self.source_counts = get_available_source_counts(self.statements) \
             if source_counts is None else standardize_counts(source_counts)
+        self.sort_by = sort_by
         self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
         self.model = None
+        self.custom_stats = [] if custom_stats is None else custom_stats
 
     def add_statements(self, statements):
         """Add a list of Statements to the assembler.
@@ -151,15 +183,16 @@ class HtmlAssembler(object):
         """
         self.statements += statements
 
-    def make_json_model(self, with_grouping=True, no_redundancy=False):
+    def make_json_model(self, grouping_level='agent-pair', no_redundancy=False,
+                        **kwargs):
         """Return the JSON used to create the HTML display.
 
         Parameters
         ----------
-        with_grouping : Optional[bool]
-            If True, statements will be grouped under multiple sub-headings. If
-            False, all headings will be collapsed into one on every level, with
-            all statements placed under a single heading. Default: False
+        grouping_level : Optional[str]
+            Statements can be grouped at three levels, 'statement' (ungrouped),
+            'relation' (grouped by agents and type), and 'agent-pair' (grouped
+            by ordered pairs of agents). Default: 'agent-pair'.
         no_redundancy : Optional[bool]
             If True, any group of statements that was already presented under
             a previous heading will be skipped. This is typically the case
@@ -173,164 +206,240 @@ class HtmlAssembler(object):
             A complexly structured JSON dict containing grouped statements and
             various metadata.
         """
+        # Check args
+        if grouping_level not in ('agent-pair', 'relation', 'statement'):
+            raise ValueError("grouping_level must be one of 'agent-pair',"
+                             "'relation', or 'statement'.")
         # Get an iterator over the statements, carefully grouped.
-        stmt_rows = group_and_sort_statements(
-            self.statements,
-            self.ev_counts if self.ev_counts else None,
-            self.source_counts if self.source_counts else None)
+        normal_stats = make_standard_stats(ev_counts=self.ev_counts,
+                                           beliefs=self.beliefs,
+                                           source_counts=self.source_counts)
+        stats = normal_stats + self.custom_stats
+        stmt_rows = group_and_sort_statements(self.statements,
+                                              custom_stats=stats,
+                                              sort_by=self.sort_by,
+                                              grouping_level=grouping_level)
 
-        # Do some extra formatting.
-        stmts = OrderedDict()
+        # Set up some data structures to gather results.
         agents = {}
-        previous_stmt_set = set()
-        all_previous_stmts = set()
-        for row in stmt_rows:
-            # Distinguish between the cases with source counts and without.
+        source_count_keys = set() if not self.source_counts \
+            else {k for k in next(iter(self.source_counts.values())).keys()}
+
+        # Loop through the sorted and grouped statements.
+        all_hashes = set()
+
+        # Used by the handle_* functions below to distinguish between cases
+        # with source counts and without
+        def _get_src_counts(metrics):
             if self.source_counts:
-                key, verb, stmts_group, tl_counts, src_counts = row
+                src_counts = {k: metrics[k] for k in source_count_keys}
             else:
-                key, verb, stmts_group = row
                 src_counts = None
-                tl_counts = None
-            curr_stmt_set = {s.get_hash() for s in stmts_group}
-            if curr_stmt_set == previous_stmt_set:
-                continue
-            elif no_redundancy and curr_stmt_set <= all_previous_stmts:
-                continue
-            else:
-                previous_stmt_set = curr_stmt_set
-                all_previous_stmts |= curr_stmt_set
+            return src_counts
 
-            # We will keep track of some of the meta data for this stmt group.
-            # NOTE: Much of the code relies heavily on the fact that the Agent
-            # objects in `meta_agents` are references to the Agent's in the
-            # Statement object `meta_stmts`.
-            meta_agents = []
-            meta_stmt = make_stmt_from_sort_key(key, verb, meta_agents)
-            meta_agent_dict = {ag.name: ag for ag in meta_agents
-                               if ag is not None}
+        # AGENT PAIR LEVEL
+        def handle_ag_pairs(rows):
+            ret = OrderedDict()
+            prev_hashes = set()
+            all_level_hashes = set()
+            for _, key, contents, metrics in rows:
+                src_counts = _get_src_counts(metrics)
+                # Create the agent key.
+                if len(key) > 1 and isinstance(key[1], tuple):
+                    agp_names = [key[0]] + [*key[1]] + [*key[2]]
+                else:
+                    agp_names = key[:]
 
-            # This will now be ordered by prevalence and entity pairs.
-            stmt_info_list = []
-            for stmt in stmts_group:
-                stmt_hash = stmt.get_hash(shallow=True)
+                # Make string key
+                agp_key_str = '-'.join([str(name) for name in agp_names])
+                agp_agents = {name: Agent(name) for name in agp_names
+                              if name is not None}
+                agents[agp_key_str] = agp_agents
 
-                # Try to accumulate db refs in the meta agents.
-                for ag in stmt.agent_list():
+                # Determine if we are including this row or not.
+                relations, stmt_hashes = \
+                    handle_relations(contents, agent_key=agp_key_str,
+                                     agp_agents=agp_agents)
+                if stmt_hashes <= prev_hashes or not relations:
+                    continue
+                prev_hashes = stmt_hashes
+
+                # Update the top level grouping.
+                ret[agp_key_str] = {'html_key': str(uuid.uuid4()),
+                                    'source_counts': src_counts,
+                                    'stmts_formatted': relations,
+                                    'names': agp_names,
+                                    'label': None}
+            return ret, all_level_hashes
+
+        # RELATION LEVEL
+        def handle_relations(rows, agent_key=None, agp_agents=None):
+            ret = []
+            all_level_hashes = set()
+            for _, key, contents, metrics in rows:
+                src_counts = _get_src_counts(metrics)
+                # We will keep track of the meta data for this stmt group.
+                # NOTE: The code relies on the fact that the Agent objects
+                # in `meta_agents` are references to the Agents in the
+                # Statement object `meta_stmts`.
+                meta_agents = []
+                meta_stmt = make_stmt_from_relation_key(key, meta_agents)
+                meta_ag_dict = {ag.name: ag for ag in meta_agents
+                                if ag is not None}
+
+                # Generate the statement data.
+                stmt_list, stmt_hashes = \
+                    handle_statements(contents, meta_ag_dict=meta_ag_dict)
+                all_level_hashes |= stmt_hashes
+                if not stmt_list:
+                    continue
+
+                # Clean out invalid fields from the meta agents.
+                for ag in meta_agents:
                     if ag is None:
                         continue
-                    # Get the corresponding meta-agent
-                    meta_ag = meta_agent_dict.get(ag.name)
-                    if not meta_ag:
-                        continue
-                    _cautiously_merge_refs(ag, meta_ag)
+                    for dbn, dbid in list(ag.db_refs.items()):
+                        if isinstance(dbid, set):
+                            logger.info(
+                                "Removing %s from refs due to too many "
+                                "matches: %s" % (dbn, dbid))
+                            del ag.db_refs[dbn]
+
+                # Merge agent refs.
+                if agent_key is not None:
+                    assert agp_agents is not None, \
+                        "agp_agents must be included along with agent_key."
+
+                    for ag in agp_agents.values():
+                        meta_ag = meta_ag_dict.get(ag.name)
+                        if meta_ag is None:
+                            continue
+                        ag.db_refs.update(meta_ag.db_refs)
+
+                    for name, ag in agents[agent_key].items():
+                        new_ag = agp_agents.get(name)
+                        if new_ag is None:
+                            continue
+                        _cautiously_merge_refs(new_ag, ag)
+
+                # See note above: this is where the work on meta_agents is
+                # applied because the agents are references.
+                short_name = _format_stmt_text(meta_stmt)
+                short_name_key = str(uuid.uuid4())
+
+                ret.append({'short_name': short_name,
+                            'short_name_key': short_name_key,
+                            'stmt_info_list': stmt_list,
+                            'src_counts': src_counts})
+            return ret, all_level_hashes
+
+        # STATEMENT LEVEL
+        def handle_statements(rows, meta_ag_dict=None):
+            ret = []
+            all_level_hashes = set()
+            for _, key, contents, metrics in rows:
+                src_counts = _get_src_counts(metrics)
+                stmt = contents
+                # Check to see if we are doing this statement or not.
+                if no_redundancy and key in all_hashes:
+                    continue
+                all_hashes.add(key)
+                all_level_hashes.add(key)
+
+                # Try to accumulate db refs in the meta agents.
+                if meta_ag_dict is not None:
+                    for ag in stmt.agent_list():
+                        if ag is None:
+                            continue
+                        # Get the corresponding meta-agent
+                        meta_ag = meta_ag_dict.get(ag.name)
+                        if not meta_ag:
+                            continue
+                        _cautiously_merge_refs(ag, meta_ag)
 
                 # Format some strings nicely.
                 ev_list = _format_evidence_text(stmt, self.curation_dict)
                 english = _format_stmt_text(stmt)
                 if self.ev_counts:
-                    tot_ev = self.ev_counts.get(int(stmt_hash), '?')
+                    tot_ev = self.ev_counts.get(int(key), '?')
                     if tot_ev == '?':
-                        logger.warning('The hash %s was not found in the '
-                                       'evidence totals dict.' % stmt_hash)
-                    evidence_count_str = '%s / %s' % (len(ev_list), tot_ev)
+                        logger.warning(f'The hash {key} was not found in '
+                                       f'the evidence totals dict.')
+                    evidence_count_str = f'{len(ev_list)} / {tot_ev}'
                 else:
                     evidence_count_str = str(len(ev_list))
 
-                stmt_info_list.append({
-                    'hash': str(stmt_hash),
-                    'english': english,
-                    'evidence': ev_list,
-                    'evidence_count': evidence_count_str,
-                    'source_count': self.source_counts.get(stmt_hash)})
+                ret.append({'hash': str(key), 'english': english,
+                            'evidence': ev_list,
+                            'evidence_count': evidence_count_str,
+                            'source_count': src_counts})
+            return ret, all_level_hashes
 
-            # Clean out invalid fields from the meta agents.
-            for ag in meta_agents:
-                if ag is None:
-                    continue
-                for dbn, dbid in list(ag.db_refs.items()):
-                    if isinstance(dbid, set):
-                        logger.info("Removing %s from refs due to too many "
-                                    "matches: %s" % (dbn, dbid))
-                        del ag.db_refs[dbn]
+        # Call the appropriate method depending on our top grouping level.
+        if grouping_level == 'agent-pair':
+            output, _ = handle_ag_pairs(stmt_rows)
+        elif grouping_level == 'relation':
+            output, _ = handle_relations(stmt_rows)
+        elif grouping_level == 'statement':
+            output, _ = handle_statements(stmt_rows)
+        else:
+            assert False, f"Grouping level enforcement failed: {grouping_level}"
 
-            # Update the top level grouping.
-            if isinstance(stmt, (ActiveForm, HasActivity)):
-                tl_names = [key[1][0]]
-            elif isinstance(stmt, Conversion):
-                tl_names = [key[1][0]] + [*key[1][1]] + [*key[1][2]]
-            else:
-                tl_names = key[1]
-            if with_grouping:
-                tl_key = '-'.join([str(name) for name in tl_names])
-                tl_agents = {name: Agent(name) for name in tl_names
-                             if name is not None}
-                for ag in tl_agents.values():
-                    meta_ag = meta_agent_dict.get(ag.name)
-                    if meta_ag is None:
-                        continue
-                    ag.db_refs.update(meta_ag.db_refs)
-                tl_label = None
-            else:
-                tl_key = 'all-statements'
-                tl_label = 'All Statements'
-                tl_agents = None
-
-            if tl_key not in stmts.keys():
-                agents[tl_key] = tl_agents
-                stmts[tl_key] = {'html_key': str(uuid.uuid4()),
-                                 'source_counts': tl_counts,
-                                 'stmts_formatted': [],
-                                 'names': tl_names}
-                if tl_label:
-                    stmts[tl_key]['label'] = tl_label
-            elif with_grouping:
-                for name, existing_ag in agents[tl_key].items():
-                    new_ag = tl_agents.get(name)
-                    if new_ag is None:
-                        continue
-                    _cautiously_merge_refs(new_ag, existing_ag)
-
-            # Generate the short name for the statement and a unique key.
-            existing_list = stmts[tl_key]['stmts_formatted']
-            if with_grouping or not existing_list:
-                if with_grouping:
-                    # See note above: this is where the work on meta_agents is
-                    # applied because the agents are references.
-                    short_name = _format_stmt_text(meta_stmt)
-                    short_name_key = str(uuid.uuid4())
-                else:
-                    short_name = "All Statements Sub Group"
-                    short_name_key = "all-statements-sub-group"
-                new_dict = {'short_name': short_name,
-                            'short_name_key': short_name_key,
-                            'stmt_info_list': stmt_info_list,
-                            'src_counts': src_counts}
-                existing_list.append(new_dict)
-            else:
-                existing_list[0]['stmt_info_list'].extend(stmt_info_list)
-                if src_counts:
-                    existing_list[0]['src_counts'].update(src_counts)
+        # Massage the output into the expected format.
+        stmts = {}
+        if grouping_level == 'statement':
+            summed_sources = defaultdict(lambda: 0)
+            for stmt_info in output:
+                for k, v in stmt_info['source_count'].items():
+                    summed_sources[k] += v
+                summed_sources = dict(summed_sources)
+            stmts['all-statements'] = {
+                'html_key': str(uuid.uuid4()),
+                'source_counts': summed_sources,
+                'stmts_formatted': [
+                    {'short_name': 'All Statements Sub Group',
+                     'short_name_key': 'all-statements-sub-group',
+                     'stmt_info_list': output,
+                     'src_counts': summed_sources}
+                ],
+                'names': 'All Statements',
+                'label': 'All Statements'
+            }
+        elif grouping_level == 'relation':
+            summed_sources = defaultdict(lambda: 0)
+            for rel in output:
+                for k, v in rel['src_counts'].items():
+                    summed_sources[k] += v
+                summed_sources = dict(summed_sources)
+            stmts['all-relations'] = {
+                'html_key': str(uuid.uuid4()),
+                'source_counts': summed_sources,
+                'stmts_formatted': output,
+                'names': 'All Relations',
+                'label': 'All Relations'
+            }
+        else:
+            stmts = output
 
         # Add labels for each top level group (tlg).
-        if with_grouping:
-            for tl_key, tlg in stmts.items():
-                tl_agents = list(agents[tl_key].values())
-                for ag in tl_agents:
+        if grouping_level == 'agent-pair':
+            for agp_key, tlg in stmts.items():
+                agent_pair_agents = list(agents[agp_key].values())
+                for ag in agent_pair_agents:
                     for dbn, dbid in list(ag.db_refs.items()):
                         if isinstance(dbid, set):
                             logger.info("Removing %s from top level refs "
                                         "due to multiple matches: %s"
                                         % (dbn, dbid))
                             del ag.db_refs[dbn]
-                tl_label = make_top_level_label_from_names_key(tlg['names'])
-                tl_label = re.sub("<b>(.*?)</b>", r"\1", tl_label)
-                tl_label = tag_agents(tl_label, tl_agents)
-                tlg['label'] = tl_label
+                agp_label = make_top_level_label_from_names_key(tlg['names'])
+                agp_label = re.sub("<b>(.*?)</b>", r"\1", agp_label)
+                agp_label = tag_agents(agp_label, agent_pair_agents)
+                tlg['label'] = agp_label
 
         return stmts
 
-    def make_model(self, template=None, with_grouping=True,
+    def make_model(self, template=None, grouping_level='agent-pair',
                    add_full_text_search_link=False, no_redundancy=False,
                    **template_kwargs):
         """Return the assembled HTML content as a string.
@@ -341,10 +450,11 @@ class HtmlAssembler(object):
             Manually pass a Jinja template to be used in generating the HTML.
             The template is responsible for rendering essentially the output of
             `make_json_model`.
-        with_grouping : bool
-            If True, statements will be grouped under multiple sub-headings. If
-            False, all headings will be collapsed into one on every level, with
-            all statements placed under a single heading.
+        grouping_level : Optional[str]
+            Statements can be grouped under sub-headings at three levels,
+            'statement' (ungrouped), 'relation' (grouped by agents and type),
+            and 'agent-pair' (grouped by ordered pairs of agents).
+            Default: 'agent-pair'.
         add_full_text_search_link : bool
             If True, link with Text fragment search in PMC journal will be
             added for the statements.  
@@ -364,7 +474,8 @@ class HtmlAssembler(object):
         str
             The assembled HTML as a string.
         """
-        tl_stmts = self.make_json_model(with_grouping,
+        # Make the JSON model.
+        tl_stmts = self.make_json_model(grouping_level=grouping_level,
                                         no_redundancy=no_redundancy)
 
         if add_full_text_search_link:
@@ -406,10 +517,10 @@ class HtmlAssembler(object):
             template_kwargs['simple'] = True
 
         self.model = template.render(stmt_data=tl_stmts,
-                                     metadata=metadata, title=self.title,
-                                     db_rest_url=db_rest_url,
-                                     add_full_text_search_link=add_full_text_search_link,  # noqa
-                                     **template_kwargs)
+                  metadata=metadata, title=self.title,
+                  db_rest_url=db_rest_url,
+                  add_full_text_search_link=add_full_text_search_link,  # noqa
+                  **template_kwargs)
         return self.model
 
     def append_warning(self, msg):
@@ -420,8 +531,10 @@ class HtmlAssembler(object):
         self.model = self.model.replace(self.title, self.title + addendum)
         return self.model
 
-    def save_model(self, fname):
+    def save_model(self, fname, **kwargs):
         """Save the assembled HTML into a file.
+
+        Other kwargs are passed directly to `make_model`.
 
         Parameters
         ----------
@@ -429,7 +542,7 @@ class HtmlAssembler(object):
             The path to the file to save the HTML into.
         """
         if self.model is None:
-            self.make_model()
+            self.make_model(**kwargs)
 
         with open(fname, 'wb') as fh:
             fh.write(self.model.encode('utf-8'))

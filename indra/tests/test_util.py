@@ -5,7 +5,7 @@ from indra.statements import Statement
 
 from indra.util import unicode_strs
 from indra.util import UnicodeXMLTreeBuilder as UTB
-from indra.util.statement_presentation import _get_keyed_stmts
+from indra.util.statement_presentation import _get_relation_keyed_stmts
 
 
 def test_unicode_tree_builder():
@@ -26,6 +26,6 @@ def test_conversion_keying():
                  "id": "d2361669-dfe5-45e0-914a-c96a82ad25fb"}
     stmt_list = [Statement._from_json(stmt_json)]
     stmt_list[0].agent_list()
-    list(_get_keyed_stmts(stmt_list))
+    list(_get_relation_keyed_stmts(stmt_list))
     return
 

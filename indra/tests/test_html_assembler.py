@@ -3,6 +3,7 @@ from indra.statements import *
 from indra.assemblers.english import AgentWithCoordinates
 from indra.assemblers.html.assembler import HtmlAssembler, tag_text, loader, \
     _format_evidence_text, tag_agents
+from indra.util.statement_presentation import AveAggregator, StmtStat, StmtGroup
 
 
 def make_stmt():
@@ -60,12 +61,12 @@ def test_assembler():
     ha = HtmlAssembler(
         source_counts={stmt.get_hash(): {'test': 1},
                        stmt2.get_hash(): {'test': 1}},
-        ev_totals={stmt.get_hash(): 1, stmt2.get_hash(): 1},
+        ev_counts={stmt.get_hash(): 1, stmt2.get_hash(): 1},
         db_rest_url='test.db.url')
     ha.add_statements([stmt, stmt2])
-    result = ha.make_model(with_grouping=True)
+    result = ha.make_model(grouping_level='agent-pair')
     assert isinstance(result, str)
-    result = ha.make_model(with_grouping=False)
+    result = ha.make_model(grouping_level='statement')
     assert isinstance(result, str)
     # Make sure warning can be appended
     ha.append_warning('warning')
@@ -102,7 +103,6 @@ def test_tag_text():
                      tag_start, tag_close)
                     for m in re.finditer(re.escape(span), text)]
     tagged_text = tag_text(text, indices)
-    print(tagged_text)
     assert tagged_text == '<FooBarBaz>FooBarBaz</FooBarBaz> binds ' \
                           '<Foo>Foo</Foo>.'
 
@@ -242,3 +242,240 @@ def test_migration():
     stmt = Migration(Concept('migration'))
     ha = HtmlAssembler([stmt])
     ha.make_model()
+
+
+def _get_sort_corpus():
+    # Create a list of statements with bogus agents.
+    stmts = [
+        Inhibition(
+            Agent('Fez'), Agent('Baz'),
+            evidence=[Evidence('medscan', text="Fez-|Baz"),
+                      Evidence('medscan', text="Baz|-Fez"),
+                      Evidence('reach', text="Fez inhibits Baz."),
+                      Evidence('isi', text="Baz is inhibited by Fez.")]
+        ),
+        DecreaseAmount(
+            Agent('Fez'), Agent('Baz'),
+            evidence=[Evidence('reach', text="Fez->Baz")]
+        ),
+        Complex(
+            [Agent('Fez'), Agent('Baz'), Agent('Bar')],
+            evidence=[Evidence('sparser', text="Fez-Baz-Bar complex"),
+                      Evidence('reach', text="Complex of Fez, Baz, & Bar")]
+        ),
+        Phosphorylation(
+            Agent('Bar'), Agent('Baz'), 'T', '185',
+            evidence=[Evidence('reach',
+                               text="Bar phosphorylates Baz on T 46"),
+                      Evidence('trips',
+                               text="Bar phosphorylate Baz on Tyrosine "
+                                    "forty-six")]
+        ),
+        Phosphorylation(
+            Agent('Bar'), Agent('Baz'),
+            evidence=[Evidence('sparser',
+                               text="Bar phosphorylates Baz"),
+                      Evidence('isi',
+                               text="Bar phosphorylates Baz."),
+                      Evidence('sparser',
+                               text="Baz is phosphorylated by Bar.")]
+        ),
+        Conversion(Agent('Fez'), [Agent('Far'), Agent('Faz')],
+                   [Agent('Bar'), Agent('Baz')],
+                   evidence=[Evidence('reach',
+                                      text='Fez converts Far and Faz into Bar '
+                                           'and Baz.')])
+    ]
+
+    # Set belief values.
+    beliefs = [0.9, 0.8, 0.6, 0.99, 1, 0.75]
+    for stmt, belief in zip(stmts, beliefs):
+        stmt.belief = belief
+    return stmts
+
+
+def test_sort_default():
+    ha = HtmlAssembler(_get_sort_corpus())
+
+    # Test the ordering of the statements in the default mode of make_json_model
+    json_model = ha.make_json_model()
+    assert list(json_model.keys()) == ['Fez-Baz', 'Bar-Baz', 'Fez-Bar']
+    exp_stmt_counts = {'Fez-Baz': 4, 'Bar-Baz': 2, 'Fez-Bar': 2}
+    assert all(len(json_model[k]['stmts_formatted']) == n
+               for k, n in exp_stmt_counts.items())
+    ev_counts = {k: sum(len(s['evidence']) for r in m['stmts_formatted']
+                        for s in r['stmt_info_list'])
+                 for k, m in json_model.items()}
+    assert ev_counts == {'Fez-Baz': 8, 'Bar-Baz': 7, 'Fez-Bar': 3}, ev_counts
+
+    # Check to make sure the HTML assembler runs.
+    model = ha.make_model()
+    with open('test_agent_pair.html', 'w') as f:
+        f.write(model)
+
+
+def test_sort_group_by_relation():
+    ha = HtmlAssembler(_get_sort_corpus())
+
+    # Test ordering, grouping by relation.
+    json_model = ha.make_json_model(grouping_level='relation')
+    assert list(json_model.keys()) == ['all-relations']
+    relations = json_model['all-relations']['stmts_formatted']
+    assert len(relations) == 5, len(relations)
+
+    # Make sure the HTML assembles.
+    model = ha.make_model(grouping_level='relation')
+    with open('test_relation.html', 'w') as f:
+        f.write(model)
+
+
+def test_sort_group_by_statement():
+    ha = HtmlAssembler(_get_sort_corpus())
+
+    # Test ordering and grouping by statement.
+    json_model = ha.make_json_model(grouping_level='statement')
+    assert list(json_model.keys()) == ['all-statements']
+    assert len(json_model['all-statements']['stmts_formatted']) == 1
+    statements = \
+        json_model['all-statements']['stmts_formatted'][0]['stmt_info_list']
+    assert len(statements) == 6
+    assert [len(s['evidence']) for s in statements] == [4, 3, 2, 2, 1, 1]
+
+    # Make sure the html assembly works.
+    ha.make_model(grouping_level='statement')
+
+
+def test_sort_group_by_statement_sort_by_none():
+    stmts = _get_sort_corpus()
+    ha = HtmlAssembler(stmts, sort_by=None)
+
+    json_model = ha.make_json_model(grouping_level='statement')
+    statements = \
+        json_model['all-statements']['stmts_formatted'][0]['stmt_info_list']
+    got_h_list = [int(s['hash']) for s in statements]
+    inp_h_list = [s.get_hash() for s in stmts]
+    assert got_h_list == inp_h_list
+
+
+def test_sort_group_by_statement_custom_ordering():
+    stmts = _get_sort_corpus()
+
+    custom_values = [0.1, 0.2, 0.15, 0.6, 0.3, 0.8]
+    val_dict = {s.get_hash(): v for v, s in zip(custom_values, stmts)}
+
+    custom_stat = StmtStat('value', val_dict, float, AveAggregator)
+
+    ha = HtmlAssembler(stmts, sort_by='value', custom_stats=[custom_stat])
+    json_model = ha.make_json_model(grouping_level='statement')
+
+    statements = \
+        json_model['all-statements']['stmts_formatted'][0]['stmt_info_list']
+    got_h_list = [int(s['hash']) for s in statements]
+    exp_h_list = sorted((h for h in val_dict.keys()), key=lambda h: val_dict[h],
+                        reverse=True)
+    assert got_h_list == exp_h_list
+
+    ha.make_model(grouping_level='statement')
+
+
+def test_sort_group_by_relation_custom_ordering():
+    stmts = _get_sort_corpus()
+
+    custom_values = [0.1, 0.2, 0.15, 0.6, 0.3, 0.8]
+    val_dict = {s.get_hash(): v for v, s in zip(custom_values, stmts)}
+
+    custom_stat = StmtStat('value', val_dict, float, AveAggregator)
+
+    ha = HtmlAssembler(stmts, sort_by='value', custom_stats=[custom_stat])
+    json_model = ha.make_json_model(grouping_level='relation')
+    assert list(json_model.keys()) == ['all-relations']
+    relations = json_model['all-relations']['stmts_formatted']
+    assert len(relations) == 5, len(relations)
+    relation_names = [rel['short_name'] for rel in relations]
+    exp_relation_names = [
+        '<b>Fez</b> catalyzes the conversion of <b>Far</b> and <b>Faz</b> into '
+        '<b>Bar</b> and <b>Baz</b>.',
+        '<b>Bar</b> phosphorylates <b>Baz</b>.',
+        '<b>Fez</b> decreases the amount of <b>Baz</b>.',
+        '<b>Bar</b> binds <b>Baz</b> and <b>Fez</b>.',
+        '<b>Fez</b> inhibits <b>Baz</b>.'
+    ]
+    assert relation_names == exp_relation_names
+
+    ha.make_model(grouping_level='relation')
+
+
+def test_sort_group_by_agent_custom_ordering():
+    stmts = _get_sort_corpus()
+
+    custom_values = [0.1, 0.2, 0.15, 0.6, 0.3, 0.8]
+    val_dict = {s.get_hash(): v for v, s in zip(custom_values, stmts)}
+
+    custom_stat = StmtStat('value', val_dict, float, AveAggregator)
+
+    ha = HtmlAssembler(stmts, sort_by='value', custom_stats=[custom_stat])
+    json_model = ha.make_json_model(grouping_level='agent-pair')
+    assert len(json_model.keys()) == 4
+
+    # This result was slightly counter-intuitive, but recall that averages will
+    # mean a grouping with the conversion will always have a lower value than
+    # the conversion itself, so it makes sense for it to come out on top.
+    assert list(json_model.keys()) == ['Fez-Far-Faz-Bar-Baz', 'Fez-Bar',
+                                       'Bar-Baz', 'Fez-Baz']
+
+    ha.make_model(grouping_level='agent-pair')
+
+
+def test_sort_group_by_statement_custom_function():
+    stmts = _get_sort_corpus()
+
+    ha = HtmlAssembler(stmts,
+                       sort_by=lambda d: 4*d['trips'] + 2*d['reach']
+                                         + 2*d['medscan'] + d['sparser']
+                                         - d['isi'])
+    json_model = ha.make_json_model(grouping_level='statement')
+    statements = \
+        json_model['all-statements']['stmts_formatted'][0]['stmt_info_list']
+    assert len(statements) == len(stmts)
+    exp_order = ['6106301533612997', '-17995265549545446', '34182032179844940',
+                 '32266861591785935', '-30059881887512900', '-5998595995539618']
+    assert [s['hash'] for s in statements] == exp_order
+
+    ha.make_model(grouping_level='statement')
+
+
+def test_sort_group_by_relation_custom_function():
+    stmts = _get_sort_corpus()
+
+    ha = HtmlAssembler(stmts,
+                       sort_by=lambda d: 4*d['trips'] + 2*d['reach']
+                                         + 2*d['medscan'] + d['sparser']
+                                         - d['isi'])
+    json_model = ha.make_json_model(grouping_level='relation')
+    relations = json_model['all-relations']['stmts_formatted']
+    assert len(relations) == 5, len(relations)
+    relation_names = [rel['short_name'] for rel in relations]
+    exp_rel_names = [
+        '<b>Bar</b> phosphorylates <b>Baz</b>.',
+        '<b>Fez</b> inhibits <b>Baz</b>.',
+        '<b>Bar</b> binds <b>Baz</b> and <b>Fez</b>.',
+        '<b>Fez</b> decreases the amount of <b>Baz</b>.',
+        '<b>Fez</b> catalyzes the conversion of <b>Far</b> and <b>Faz</b> into '
+        '<b>Bar</b> and <b>Baz</b>.'
+    ]
+    assert relation_names == exp_rel_names, relation_names
+
+    ha.make_model(grouping_level='relation')
+
+
+def test_sort_group_by_agent_pair_custom_function():
+    stmts = _get_sort_corpus()
+
+    ha = HtmlAssembler(stmts,
+                       sort_by=lambda d: 4*d['trips'] + 2*d['reach']
+                                         + 2*d['medscan'] + d['sparser']
+                                         - d['isi'])
+    json_model = ha.make_json_model(grouping_level='agent-pair')
+    assert list(json_model.keys()) == ['Fez-Baz', 'Bar-Baz', 'Fez-Bar']
+
+    ha.make_model(grouping_level='agent-pair')
