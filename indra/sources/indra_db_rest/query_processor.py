@@ -14,7 +14,7 @@ from .exceptions import IndraDBRestResponseError
 logger = logging.getLogger('indra_db_rest.query_processor')
 
 
-class Processor:
+class IndraDBQueryProcessor:
     result_type = NotImplemented
 
     def __init__(self, query: Query, limit=None, sort_by='default',
@@ -139,12 +139,12 @@ class Processor:
         raise NotImplementedError()
 
 
-class HashProcessor(Processor):
+class DBQueryHashProcessor(IndraDBQueryProcessor):
     """A processor to get hashes from the server."""
 
     def __init__(self, *args, **kwargs):
         self.hashes = []
-        super(HashProcessor, self).__init__(*args, **kwargs)
+        super(DBQueryHashProcessor, self).__init__(*args, **kwargs)
 
     def _handle_new_result(self, result, source_counts):
         source_counts.update(result.source_counts)
@@ -154,7 +154,7 @@ class HashProcessor(Processor):
         pass
 
 
-class StatementProcessor(Processor):
+class DBQueryStatementProcessor(IndraDBQueryProcessor):
     """A Processor to get Statements from the server."""
     def __init__(self, query: Query, limit=None, sort_by='ev_count', ev_limit=10,
                  filter_ev=True, timeout=None, strict_stop=False, persist=True,
@@ -167,7 +167,7 @@ class StatementProcessor(Processor):
 
         self.use_obtained_counts = use_obtained_counts
         self._set_special_params(ev_limit=ev_limit, filter_ev=filter_ev)
-        super(StatementProcessor, self).\
+        super(DBQueryStatementProcessor, self).\
             __init__(query, limit=limit, sort_by=sort_by, timeout=timeout,
                      strict_stop=strict_stop, persist=persist)
 
@@ -231,24 +231,3 @@ class StatementProcessor(Processor):
         if self.use_obtained_counts:
             self.__source_counts = get_available_source_counts(self.statements)
             self.__evidence_counts = get_available_ev_counts(self.statements)
-
-
-class AgentProcessor(Processor):
-    """A Processor to get Agent pairs from the server."""
-    def __init__(self, query: Query, limit=None, sort_by='ev_count',
-                 with_hashes=False, timeout=None, strict_stop=False,
-                 persist=True):
-        self.agents_pairs = []
-        self.complexes_covered = set()
-        self._set_special_params(with_hashes=with_hashes,
-                                 complexes_covered=self.complexes_covered)
-        super(AgentProcessor, self).\
-            __init__(query, limit=limit, sort_by=sort_by, timeout=timeout,
-                     strict_stop=strict_stop, persist=persist)
-
-    def _handle_new_result(self, result, source_counts):
-        self.complexes_covered.update(result.complexes_covered)
-        self.agents_pairs.extend(result.results.values())
-
-    def _compile_results(self):
-        pass
