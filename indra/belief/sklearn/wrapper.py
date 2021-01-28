@@ -26,7 +26,7 @@ class SklearnBase(object):
         return self.model.predict_proba(stmts_arr)
 
 class CountsModel(SklearnBase):
-    """Predictor based on source evidence counts and other basic stmt properties.
+    """Predictor based on source evidence counts and other stmt properties.
 
     Parameters
     ----------
