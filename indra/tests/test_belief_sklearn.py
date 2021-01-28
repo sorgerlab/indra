@@ -1,13 +1,14 @@
 import random
+import pickle
 from collections import defaultdict
 from os.path import join, abspath, dirname
 from indra.sources import signor
-#from indra.belief.sklearn import SklearnBase
-from indra.tools import assemble_corpus as ac
+from indra.belief.sklearn.wrapper import CountsModel
 
 test_stmt_path = join(dirname(abspath(__file__)),
-                      'belief_sklearn_test_stmts.pkl')
-test_stmts = ac.load_statements(test_stmt_path)
+                      'belief_sklearn_test_data.pkl')
+#with open(test_stmt_path, 'rb') as f:
+#    test_stmts, y_arr = pickle.load(f)
 
 # A set of statements derived from Signor used for testing purposes.
 def _dump_test_data(filename, num_per_type=10):
@@ -24,8 +25,12 @@ def _dump_test_data(filename, num_per_type=10):
             stmt_sample.extend(stmt_list)
         else:
             stmt_sample.extend(random.sample(stmt_list, num_per_type))
-    ac.dump_statements(stmt_sample, filename)
+    # Make a random binary class vector for the stmt list
+    y_arr = [random.choice((0, 1)) for s in stmt_sample]
+    with open(test_stmt_path, 'wb') as f:
+        pickle.dump((stmt_sample, y_arr), f)
     return stmt_sample
 
-
-
+def test_counts_wrapper():
+    """Instantiate counts wrapper and make stmt matrix"""
+    cw = CountsModel()

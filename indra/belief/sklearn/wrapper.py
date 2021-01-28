@@ -1,4 +1,5 @@
 from collections import Counter
+import numpy as np
 from sklearn.preprocessing import OrdinalEncoder
 from indra.statements import get_all_descendants, Statement
 
@@ -18,10 +19,12 @@ class SklearnBase(object):
         return NotImplementedError('Need to implement the stmts_to_matrix '
                                    'method')
 
-    def fit(stmts, y_arr, *args, **kwargs):
+    def fit(self, stmts, y_arr, *args, **kwargs):
         # Preprocess the statements into features
+        # TODO
+        pass
 
-    def predict_proba(stmts):
+    def predict_proba(self, stmts):
         stmts_arr = self.stmts_to_matrix(stmts)
         return self.model.predict_proba(stmts_arr)
 
@@ -43,7 +46,7 @@ class CountsModel(SklearnBase):
     def __init__(self, model, source_list, use_stmt_type=False,
                  use_num_members=False):
         # Call superclass constructor to store the model
-        super(AsmbCountsModel, self).__init__(model)
+        super(CountsModel, self).__init__(model)
         self.use_stmt_type = use_stmt_type
         self.use_num_members = use_num_members
         self.source_list = source_list
@@ -56,7 +59,7 @@ class CountsModel(SklearnBase):
 
     def stmts_to_matrix(self, stmts, y_arr):
         # Check dimensions of stmts (x) and y_arr
-        lf len(stmts) != len(y_arr):
+        if len(stmts) != len(y_arr):
             raise ValueError("Number of stmts must match length of y_arr.")
         # Initialize a Numpy Array to store statement features and class
         # variable
@@ -69,7 +72,7 @@ class CountsModel(SklearnBase):
         for stmt in stmts:
             feature_row = []
             if self.use_stmt_type:
-                feature_row.append(self.stmt_type_map[type(stmt)]
+                feature_row.append(self.stmt_type_map[type(stmt)])
             # Only add a feature row if we're using some of the features.
             if feature_row:
                 cat_features.append(feature_row)
