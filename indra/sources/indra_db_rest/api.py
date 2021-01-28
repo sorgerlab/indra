@@ -2,29 +2,24 @@ __all__ = ['get_statements', 'get_statements_for_paper',
            'get_statements_by_hash', 'submit_curation']
 
 from indra.util import clockit
-from indra.statements import stmts_from_json, Complex, SelfModification, \
-    ActiveForm, Translocation, Conversion
+from indra.statements import Complex, SelfModification,  ActiveForm, \
+    Translocation, Conversion
 
-from indra.sources.indra_db_rest.processor import IndraDBRestSearchProcessor, \
-    IndraDBRestHashProcessor, IndraDBRestPaperProcessor
+from indra.sources.indra_db_rest.query import *
+from indra.sources.indra_db_rest.processor import DBQueryStatementProcessor
 from indra.sources.indra_db_rest.util import make_db_rest_request, get_url_base
 
 
 @clockit
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
-                   use_exact_type=False, persist=True, simple_response=False,
-                   *api_args, **api_kwargs):
+                   use_exact_type=False, persist=True, timeout=None,
+                   ev_limit=10, sort_by='ev_count', tries=3, limit=None):
     """Get a processor for the INDRA DB web API matching given agents and type.
 
-    There are two types of responses available. You can just get a list of
-    INDRA Statements, or you can get an IndraDBRestProcessor object, which allow
+    You get an IndraDBRestProcessor object, which allow
     Statements to be loaded in a background thread, providing a sample of the
     best* content available promptly in the sample_statements attribute, and
     populates the statements attribute when the paged load is complete.
-
-    The latter should be used in all new code, and where convenient the prior
-    should be converted to use the processor, as this option may be removed in
-    the future.
 
     * In the sense of having the most supporting evidence.
 
@@ -59,15 +54,6 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         results returned), just give up and pass along what was returned.
         Otherwise, make further queries to get the rest of the data (which may
         take some time).
-    simple_response : bool
-        If True, a simple list of statements is returned (thus block should also
-        be True). If block is False, only the original sample will be returned
-        (as though persist was False), until the statements are done loading, in
-        which case the rest should appear in the list. This behavior is not
-        encouraged. Default is False (which breaks backwards compatibility with
-        usage of INDRA versions from before 1/22/2019). WE ENCOURAGE ALL NEW
-        USE-CASES TO USE THE PROCESSOR, AS THIS FEATURE MAY BE REMOVED AT A
-        LATER DATE.
     timeout : positive int or None
         If an int, block until the work is done and statements are retrieved, or
         until the timeout has expired, in which case the results so far will be
@@ -77,92 +63,105 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         indefinitely until all statements are retrieved. Default is None.
     ev_limit : int or None
         Limit the amount of evidence returned per Statement. Default is 10.
-    best_first : bool
-        If True, the preassembled statements will be sorted by the amount of
-        evidence they have, and those with the most evidence will be
-        prioritized. When using `max_stmts`, this means you will get the "best"
-        statements. If False, statements will be queried in arbitrary order.
+    sort_by : str or None
+        Options are currently 'ev_count' or 'belief'. Results will return in
+        order of the given parameter. If None, results will be turned in an
+        arbitrary order.
     tries : int > 0
         Set the number of times to try the query. The database often caches
         results, so if a query times out the first time, trying again after a
         timeout will often succeed fast enough to avoid a timeout. This can also
         help gracefully handle an unreliable connection, if you're willing to
-        wait. Default is 2.
-    max_stmts : int or None
+        wait. Default is 3.
+    limit : int or None
         Select the maximum number of statements to return. When set less than
-        1000 the effect is much the same as setting persist to false, and will
+        500 the effect is much the same as setting persist to false, and will
         guarantee a faster response. Default is None.
 
     Returns
     -------
-    processor/stmt_list : :py:class:`IndraDBRestSearchProcessor` or list
-        See `simple_response` for details regarding the choice. If a processor:
+    processor : :py:class:`IndraDBRestSearchProcessor`
         An instance of the IndraDBRestProcessor, which has an attribute
         `statements` which will be populated when the query/queries are done.
-        This is the default behavior, and is encouraged in all future cases,
-        however a simple list of statements may be returned using the
-        `simple_response` option described above.
     """
-    return _wrap_processor(
-        IndraDBRestSearchProcessor(subject, object, agents, stmt_type,
-                                   use_exact_type, persist, *api_args,
-                                   **api_kwargs),
-        simple_response
-    )
+    query = EmptyQuery()
+
+    def add_agent(ag_str, role):
+        nonlocal query
+        if '@' in ag_str:
+            ag_id, ag_ns = ag_str.split('@')
+        else:
+            ag_id = ag_str
+            ag_ns = 'NAME'
+        query &= HasAgent(ag_id, ag_ns, role=role)
+
+    add_agent(subject, 'subject')
+    add_agent(object, 'object')
+    if agents is not None:
+        for ag in agents:
+            add_agent(ag, None)
+
+    if stmt_type is not None:
+        query &= HasType([stmt_type], include_subclasses=not use_exact_type)
+
+    if isinstance(query, EmptyQuery):
+        raise ValueError("No constraints provided.")
+
+    return DBQueryStatementProcessor(query, limit=limit, persist=persist,
+                                     ev_limit=ev_limit, timeout=timeout,
+                                     sort_by=sort_by, tries=tries)
 
 
 @clockit
-def get_statements_by_hash(hash_list, simple_response=False, *args, **kwargs):
+def get_statements_by_hash(hash_list, limit=None, ev_limit=10,
+                           sort_by='ev_count', persist=True, timeout=None,
+                           tries=3):
     """Get fully formed statements from a list of hashes.
 
     Parameters
     ----------
     hash_list : list[int or str]
         A list of statement hashes.
-    simple_response : bool
-        If True, a simple list of statements is returned (thus block should also
-        be True). If block is False, only the original sample will be returned
-        (as though persist was False), until the statements are done loading, in
-        which case the rest should appear in the list. This behavior is not
-        encouraged. Default is False (which breaks backwards compatibility with
-        usage of INDRA versions from before 9/19/2019). WE ENCOURAGE ALL NEW
-        USE-CASES TO USE THE PROCESSOR, AS THIS FEATURE MAY BE REMOVED AT A
-        LATER DATE.
+    limit : int or None
+        Select the maximum number of statements to return. When set less than
+        500 the effect is much the same as setting persist to false, and will
+        guarantee a faster response. Default is None.
+    ev_limit : int or None
+        Limit the amount of evidence returned per Statement. Default is 100.
+    sort_by : str or None
+        Options are currently 'ev_count' or 'belief'. Results will return in
+        order of the given parameter. If None, results will be turned in an
+        arbitrary order.
+    persist : bool
+        Default is True. When False, if a query comes back limited (not all
+        results returned), just give up and pass along what was returned.
+        Otherwise, make further queries to get the rest of the data (which may
+        take some time).
     timeout : positive int or None
         If an int, return after `timeout` seconds, even if query is not done.
         Default is None.
-    ev_limit : int or None
-        Limit the amount of evidence returned per Statement. Default is 100.
-    best_first : bool
-        If True, the preassembled statements will be sorted by the amount of
-        evidence they have, and those with the most evidence will be
-        prioritized. When using `max_stmts`, this means you will get the "best"
-        statements. If False, statements will be queried in arbitrary order.
     tries : int > 0
         Set the number of times to try the query. The database often caches
         results, so if a query times out the first time, trying again after a
         timeout will often succeed fast enough to avoid a timeout. This can
         also help gracefully handle an unreliable connection, if you're
-        willing to wait. Default is 2.
+        willing to wait. Default is 3.
 
     Returns
     -------
-    processor/stmt_list : :py:class:`IndraDBRestSearchProcessor` or list
-        See `simple_response` for details regarding the choice. If a processor:
+    processor : :py:class:`IndraDBRestSearchProcessor`
         An instance of the IndraDBRestProcessor, which has an attribute
         `statements` which will be populated when the query/queries are done.
-        This is the default behavior, and is encouraged in all future cases,
-        however a simple list of statements may be returned using the
-        `simple_response` option described above.
     """
-    return _wrap_processor(
-        IndraDBRestHashProcessor(hash_list, *args, **kwargs),
-        simple_response
-    )
+    return DBQueryStatementProcessor(HasHash(hash_list), limit=limit,
+                                     ev_limit=ev_limit, sort_by=sort_by,
+                                     persist=persist, timeout=timeout,
+                                     tries=tries)
 
 
 @clockit
-def get_statements_for_paper(ids, simple_response=False, *args, **kwargs):
+def get_statements_for_paper(ids, limit=None, ev_limit=10, sort_by='ev_count',
+                             persist=True, timeout=None, tries=3):
     """Get the set of raw Statements extracted from a paper given by the id.
 
     Parameters
@@ -171,54 +170,41 @@ def get_statements_for_paper(ids, simple_response=False, *args, **kwargs):
         A list of tuples with ids and their type. The type can be any one of
         'pmid', 'pmcid', 'doi', 'pii', 'manuscript id', or 'trid', which is the
         primary key id of the text references in the database.
-    simple_response : bool
-        If True, a simple list of statements is returned (thus block should also
-        be True). If block is False, only the original sample will be returned
-        (as though persist was False), until the statements are done loading, in
-        which case the rest should appear in the list. This behavior is not
-        encouraged. Default is False (which breaks backwards compatibility with
-        usage of INDRA versions from before 9/19/2019). WE ENCOURAGE ALL NEW
-        USE-CASES TO USE THE PROCESSOR, AS THIS FEATURE MAY BE REMOVED AT A
-        LATER DATE.
+    limit : int or None
+        Select the maximum number of statements to return. When set less than
+        500 the effect is much the same as setting persist to false, and will
+        guarantee a faster response. Default is None.
+    ev_limit : int or None
+        Limit the amount of evidence returned per Statement. Default is 10.
+    sort_by : str or None
+        Options are currently 'ev_count' or 'belief'. Results will return in
+        order of the given parameter. If None, results will be turned in an
+        arbitrary order.
+    persist : bool
+        Default is True. When False, if a query comes back limited (not all
+        results returned), just give up and pass along what was returned.
+        Otherwise, make further queries to get the rest of the data (which may
+        take some time).
     timeout : positive int or None
         If an int, return after `timeout` seconds, even if query is not done.
         Default is None.
-    ev_limit : int or None
-        Limit the amount of evidence returned per Statement. Default is 10.
-    best_first : bool
-        If True, the preassembled statements will be sorted by the amount of
-        evidence they have, and those with the most evidence will be
-        prioritized. When using `max_stmts`, this means you will get the "best"
-        statements. If False, statements will be queried in arbitrary order.
     tries : int > 0
         Set the number of times to try the query. The database often caches
         results, so if a query times out the first time, trying again after a
         timeout will often succeed fast enough to avoid a timeout. This can also
         help gracefully handle an unreliable connection, if you're willing to
-        wait. Default is 2.
-    max_stmts : int or None
-        Select a maximum number of statements to be returned. Default is None.
+        wait. Default is 3.
 
     Returns
     -------
-    processor/stmt_list : :py:class:`IndraDBRestSearchProcessor` or list
-        See `simple_response` for details regarding the choice. If a processor:
+    processor : :py:class:`IndraDBRestSearchProcessor`
         An instance of the IndraDBRestProcessor, which has an attribute
         `statements` which will be populated when the query/queries are done.
-        This is the default behavior, and is encouraged in all future cases,
-        however a simple list of statements may be returned using the
-        `simple_response` option described above.
     """
-    return _wrap_processor(IndraDBRestPaperProcessor(ids, *args, **kwargs),
-                           simple_response)
-
-
-def _wrap_processor(processor, simple_response):
-    if simple_response:
-        ret = processor.statements
-    else:
-        ret = processor
-    return ret
+    return DBQueryStatementProcessor(FromPapers(ids), limit=limit,
+                                     ev_limit=ev_limit, sort_by=sort_by,
+                                     persist=persist, timeout=timeout,
+                                     tries=tries)
 
 
 def submit_curation(hash_val, tag, curator, text=None,
