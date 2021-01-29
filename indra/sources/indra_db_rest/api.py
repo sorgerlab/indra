@@ -16,12 +16,11 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                    ev_limit=10, sort_by='ev_count', tries=3, limit=None):
     """Get a processor for the INDRA DB web API matching given agents and type.
 
-    You get an IndraDBRestProcessor object, which allow
-    Statements to be loaded in a background thread, providing a sample of the
-    best* content available promptly in the sample_statements attribute, and
-    populates the statements attribute when the paged load is complete.
-
-    * In the sense of having the most supporting evidence.
+    You get an IndraDBRestProcessor object, which allow Statements to be loaded
+    in a background thread, providing a sample of the "best" content available
+    promptly in the sample_statements attribute, and populates the statements
+    attribute when the paged load is complete. The "best" is determined by the
+    `sort_by` attribute, which may be either 'belief' or 'ev_count' or None.
 
     Parameters
     ----------
@@ -64,7 +63,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     ev_limit : int or None
         Limit the amount of evidence returned per Statement. Default is 10.
     sort_by : str or None
-        Options are currently 'ev_count' or 'belief'. Results will return in
+        Str options are currently 'ev_count' or 'belief'. Results will return in
         order of the given parameter. If None, results will be turned in an
         arbitrary order.
     tries : int > 0
