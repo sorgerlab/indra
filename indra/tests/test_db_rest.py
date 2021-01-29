@@ -129,7 +129,8 @@ def test_too_big_request_persist_no_block():
 
 @attr('nonpublic')
 def test_famplex_namespace():
-    stmts = dbr.get_statements('PDGF@FPLX', 'FOS', stmt_type='IncreaseAmount')
+    p = dbr.get_statements('PDGF@FPLX', 'FOS', stmt_type='IncreaseAmount')
+    stmts = p.statements
     print(len(stmts))
     print(stmts)
     assert all([s.agent_list()[0].db_refs.get('FPLX') == 'PDGF' for s in stmts]),\
