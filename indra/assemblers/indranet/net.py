@@ -319,7 +319,17 @@ def _simple_scorer_update(G, edge):
                 s = k
             for _ in range(v):
                 evidence_list.append(Evidence(source_api=s))
-    return simple_scorer.score_statement(st=Statement(evidence=evidence_list))
+
+    try:
+        ag_belief = simple_scorer.score_statement(st=Statement(evidence=evidence_list))
+    # Catch underflow
+    except FloatingPointError as err:
+        # Numpy precision
+        NP_PRECISION = 10 ** -np.finfo(np.longfloat).precision
+        logger.warning('%s: Resetting ag_belief to 10*np.longfloat precision '
+                       '(%.0e)' % (err, Decimal(NP_PRECISION * 10)))
+        ag_belief = NP_PRECISION * 10
+    return ag_belief
 
 
 def _complementary_belief(G, edge):
