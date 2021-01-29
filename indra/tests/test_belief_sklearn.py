@@ -1,5 +1,6 @@
 import random
 import pickle
+import numpy as np
 from collections import defaultdict
 from os.path import join, abspath, dirname
 from nose.tools import raises
@@ -38,7 +39,6 @@ def test_counts_wrapper():
     lr = LogisticRegression()
     source_list = ['reach', 'sparser']
     cw = CountsModel(lr, source_list)
-    #cw.fit(test_stmts, y_arr)
 
 @raises(ValueError)
 def test_missing_source():
@@ -49,4 +49,21 @@ def test_missing_source():
     # Should error because test stmts are from signor and signor
     # is not in list
     cw.stmts_to_matrix(test_stmts)
+
+def test_stmts_to_matrix():
+    """Check that all source_apis in training data are in source list."""
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list)
+    x_arr = cw.stmts_to_matrix(test_stmts)
+    assert isinstance(x_arr, np.ndarray), 'x_arr should be a numpy array'
+    assert x_arr.shape == (len(test_stmts), len(source_list)), \
+            'stmt matrix dimensions should match test stmts'
+    assert set(x_arr.sum(axis=0)) == set([0, 0, len(test_stmts)]), \
+           'Signor col should be 1 in every row, other cols 0.'
+    # Try again with statement type
+    cw = CountsModel(lr, source_list, use_stmt_type=True)
+    x_arr = cw.stmts_to_matrix(test_stmts)
+    assert x_arr.shape == (len(test_stmts), len(source_list)+1), \
+        'matrix should have a col for sources and stmt type'
 

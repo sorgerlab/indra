@@ -63,12 +63,6 @@ class CountsModel(SklearnBase):
 
 
     def stmts_to_matrix(self, stmts):
-        # Initialize a Numpy Array to store statement features and class
-        # variable
-        # Option 1: include stmt_type (encoded) and score
-        #df = kge_join.drop(columns=['stmt_hash', 'stmt_num', 'agA_name',
-        # 'agB_name'])
-
         # Add categorical features and collect source_apis
         cat_features = []
         stmt_sources = set()
@@ -98,6 +92,12 @@ class CountsModel(SklearnBase):
             sources = [ev.source_api for ev in stmt.evidence]
             src_ctr = Counter(sources)
             for src_ix, src in enumerate(self.source_list):
-                arr[stmt_ix, src_ix] = src_ctr.get(src, 0)
-        return arr
+                x_arr[stmt_ix, src_ix] = src_ctr.get(src, 0)
+
+        # If we have any categorical features, turn them into an array and
+        # add them to matrix
+        if cat_features:
+            cat_arr = np.array(cat_features)
+            x_arr = np.hstack((x_arr, cat_arr))
+        return x_arr
 
