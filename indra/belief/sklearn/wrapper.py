@@ -20,9 +20,14 @@ class SklearnBase(object):
                                    'method')
 
     def fit(self, stmts, y_arr, *args, **kwargs):
-        # Preprocess the statements into features
-        # TODO
-        pass
+        """Preprocess the stmt data and pass to sklearn model fit method.
+        """
+        # Check dimensions of stmts (x) and y_arr
+        if len(stmts) != len(y_arr):
+            raise ValueError("Number of stmts must match length of y_arr.")
+        # Convert stmts into matrix
+        x_arr = self.stmts_to_matrix(stmts, y_arr, *args, **kwargs)
+        return self.model.fill(x_arr, y_arr)
 
     def predict_proba(self, stmts):
         stmts_arr = self.stmts_to_matrix(stmts)
@@ -43,13 +48,13 @@ class CountsModel(SklearnBase):
         Primarily for stratifying belief predictions about Complex statements
         with more than two members.
     """
-    def __init__(self, model, use_stmt_type=False,
+    def __init__(self, model, source_list, use_stmt_type=False,
                  use_num_members=False):
         # Call superclass constructor to store the model
         super(CountsModel, self).__init__(model)
         self.use_stmt_type = use_stmt_type
         self.use_num_members = use_num_members
-        #self.source_list = source_list
+        self.source_list = source_list
 
         # Build dictionary mapping INDRA Statement types to integers
         if use_stmt_type:
@@ -57,25 +62,33 @@ class CountsModel(SklearnBase):
             self.stmt_type_map = {t: ix for ix, t in enumerate(all_stmt_types)}
 
 
-    def stmts_to_matrix(self, stmts, y_arr):
-        # Check dimensions of stmts (x) and y_arr
-        if len(stmts) != len(y_arr):
-            raise ValueError("Number of stmts must match length of y_arr.")
+    def stmts_to_matrix(self, stmts):
         # Initialize a Numpy Array to store statement features and class
         # variable
         # Option 1: include stmt_type (encoded) and score
         #df = kge_join.drop(columns=['stmt_hash', 'stmt_num', 'agA_name',
         # 'agB_name'])
 
-        # Add categorical features
+        # Add categorical features and collect source_apis
         cat_features = []
+        stmt_sources = set()
         for stmt in stmts:
+            # Collect all source_apis from stmt evidences
+            for ev in stmt.evidence:
+                stmt_sources.add(ev.source_api)
+            # Collect non-source count features (e.g. type) from stmts
             feature_row = []
             if self.use_stmt_type:
                 feature_row.append(self.stmt_type_map[type(stmt)])
             # Only add a feature row if we're using some of the features.
             if feature_row:
                 cat_features.append(feature_row)
+
+        # Before proceeding, make sure that all source_apis are in
+        # source_list
+        if stmt_sources.difference(set(self.source_list)):
+            raise ValueError("source_list must include all source_apis"
+                             "in the statement data.")
 
         # Get source count features
         num_cols = len(self.source_list)

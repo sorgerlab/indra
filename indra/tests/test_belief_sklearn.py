@@ -2,14 +2,15 @@ import random
 import pickle
 from collections import defaultdict
 from os.path import join, abspath, dirname
+from nose.tools import raises
 from sklearn.linear_model import LogisticRegression
 from indra.sources import signor
 from indra.belief.sklearn.wrapper import CountsModel
 
 test_stmt_path = join(dirname(abspath(__file__)),
                       'belief_sklearn_test_data.pkl')
-#with open(test_stmt_path, 'rb') as f:
-#    test_stmts, y_arr = pickle.load(f)
+with open(test_stmt_path, 'rb') as f:
+    test_stmts, y_arr = pickle.load(f)
 
 # A set of statements derived from Signor used for testing purposes.
 def _dump_test_data(filename, num_per_type=10):
@@ -35,4 +36,17 @@ def _dump_test_data(filename, num_per_type=10):
 def test_counts_wrapper():
     """Instantiate counts wrapper and make stmt matrix"""
     lr = LogisticRegression()
-    cw = CountsModel(lr)
+    source_list = ['reach', 'sparser']
+    cw = CountsModel(lr, source_list)
+    #cw.fit(test_stmts, y_arr)
+
+@raises(ValueError)
+def test_missing_source():
+    """Check that all source_apis in training data are in source list."""
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser']
+    cw = CountsModel(lr, source_list)
+    # Should error because test stmts are from signor and signor
+    # is not in list
+    cw.stmts_to_matrix(test_stmts)
+
