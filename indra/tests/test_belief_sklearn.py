@@ -67,3 +67,10 @@ def test_stmts_to_matrix():
     assert x_arr.shape == (len(test_stmts), len(source_list)+1), \
         'matrix should have a col for sources and stmt type'
 
+def test_fit():
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list)
+    cw.fit(test_stmts, y_arr)
+    # Once the model is fit, the coef_ attribute should be defined
+    assert 'coef_' in cw.model.__dict__

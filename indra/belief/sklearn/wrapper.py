@@ -26,8 +26,9 @@ class SklearnBase(object):
         if len(stmts) != len(y_arr):
             raise ValueError("Number of stmts must match length of y_arr.")
         # Convert stmts into matrix
-        x_arr = self.stmts_to_matrix(stmts, y_arr, *args, **kwargs)
-        return self.model.fill(x_arr, y_arr)
+        x_arr = self.stmts_to_matrix(stmts)
+        self.model.fit(x_arr, y_arr, *args, **kwargs)
+        return self
 
     def predict_proba(self, stmts):
         stmts_arr = self.stmts_to_matrix(stmts)
