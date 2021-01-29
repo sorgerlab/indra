@@ -1,7 +1,12 @@
+import logging
 from collections import Counter
 import numpy as np
-from sklearn.preprocessing import OrdinalEncoder
+from sklearn.linear_model import LogisticRegression
 from indra.statements import get_all_descendants, Statement
+
+
+logger = logging.getLogger(__name__)
+
 
 class SklearnBase(object):
     """Base class to wrap an Sklearn model with statement preprocessing.
@@ -20,8 +25,7 @@ class SklearnBase(object):
                                    'method')
 
     def fit(self, stmts, y_arr, *args, **kwargs):
-        """Preprocess the stmt data and pass to sklearn model fit method.
-        """
+        """Preprocess the stmt data and pass to sklearn model fit method."""
         # Check dimensions of stmts (x) and y_arr
         if len(stmts) != len(y_arr):
             raise ValueError("Number of stmts must match length of y_arr.")
@@ -41,7 +45,6 @@ class SklearnBase(object):
     def predict_log_proba(self, stmts):
         stmts_arr = self.stmts_to_matrix(stmts)
         return self.model.predict_log_proba(stmts_arr)
-
 
 
 class CountsModel(SklearnBase):
@@ -72,7 +75,6 @@ class CountsModel(SklearnBase):
             all_stmt_types = get_all_descendants(Statement)
             self.stmt_type_map = {t: ix for ix, t in enumerate(all_stmt_types)}
 
-
     def stmts_to_matrix(self, stmts):
         # Add categorical features and collect source_apis
         cat_features = []
@@ -92,7 +94,7 @@ class CountsModel(SklearnBase):
         # Before proceeding, make sure that all source_apis are in
         # source_list
         if stmt_sources.difference(set(self.source_list)):
-            raise ValueError("source_list must include all source_apis"
+            logger.warning("source_list does not nclude all source_apis "
                              "in the statement data.")
 
         # Get source count features
@@ -112,3 +114,13 @@ class CountsModel(SklearnBase):
             x_arr = np.hstack((x_arr, cat_arr))
         return x_arr
 
+
+class LogLogisticRegression(LogisticRegression):
+    def fit(self, x_train, y_train, *args, **kwargs):
+        return super().fit(np.log(x_train + 1), y_train, *args, **kwargs)
+
+    def predict(self, x_arr, *args, **kwargs):
+        return super().predict(np.log(x_arr + 1), *args, **kwargs)
+
+    def predict_proba(self, x_arr, *args, **kwargs):
+        return super().predict_proba(np.log(x_arr + 1), *args, **kwargs)
