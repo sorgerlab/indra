@@ -86,6 +86,9 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     query = EmptyQuery()
 
     def add_agent(ag_str, role):
+        if ag_str is None:
+            return
+
         nonlocal query
         if '@' in ag_str:
             ag_id, ag_ns = ag_str.split('@')

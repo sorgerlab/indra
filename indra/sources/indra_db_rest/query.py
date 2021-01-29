@@ -164,7 +164,7 @@ class And(Query):
         return And([q.copy() for q in self.queries])
 
     def get_constraint_dict(self) -> dict:
-        return {'queries': [q.to_json() for q in self.queries]}
+        return {'queries': [q.to_simple_json() for q in self.queries]}
 
     def __repr__(self):
         q_strings = [repr(q) for q in self.queries]
@@ -196,7 +196,7 @@ class Or(Query):
         return Or([q.copy() for q in self.queries])
 
     def get_constraint_dict(self) -> dict:
-        return {'queries': [q.to_json() for q in self.queries]}
+        return {'queries': [q.to_simple_json() for q in self.queries]}
 
     def __repr__(self):
         q_strings = [repr(q) for q in self.queries]
