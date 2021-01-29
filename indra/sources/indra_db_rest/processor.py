@@ -15,6 +15,41 @@ logger = logging.getLogger('indra_db_rest.query_processor')
 
 
 class IndraDBQueryProcessor:
+    """The parent of all db query processors.
+
+    Parameters
+    ----------
+    query : :py:class:`Query`
+        The query to be evaluated in return for statements.
+    limit : int or None
+        Select the maximum number of statements to return. When set less than
+        500 the effect is much the same as setting persist to false, and will
+        guarantee a faster response. Default is None.
+    sort_by : str or None
+        Options are currently 'ev_count' or 'belief'. Results will return in
+        order of the given parameter. If None, results will be turned in an
+        arbitrary order.
+    persist : bool
+        Default is True. When False, if a query comes back limited (not all
+        results returned), just give up and pass along what was returned.
+        Otherwise, make further queries to get the rest of the data (which may
+        take some time).
+    timeout : positive int or None
+        If an int, return after `timeout` seconds, even if query is not done.
+        Default is None.
+    strict_stop : bool
+        If True, the query will only be given timeout to complete before being
+        abandoned entirely. Otherwise the timeout will simply wait for the
+        thread to join for `timeout` seconds before returning, allowing other
+        work to continue while the query runs in the background. The default is
+        False.
+    tries : int > 0
+        Set the number of times to try the query. The database often caches
+        results, so if a query times out the first time, trying again after a
+        timeout will often succeed fast enough to avoid a timeout. This can
+        also help gracefully handle an unreliable connection, if you're
+        willing to wait. Default is 3
+    """
     result_type = NotImplemented
 
     def __init__(self, query: Query, limit=None, sort_by='ev_count',
@@ -142,7 +177,35 @@ class IndraDBQueryProcessor:
 
 
 class DBQueryHashProcessor(IndraDBQueryProcessor):
-    """A processor to get hashes from the server."""
+    """A processor to get hashes from the server.
+
+    Parameters
+    ----------
+    query : :py:class:`Query`
+        The query to be evaluated in return for statements.
+    limit : int or None
+        Select the maximum number of statements to return. When set less than
+        500 the effect is much the same as setting persist to false, and will
+        guarantee a faster response. Default is None.
+    sort_by : str or None
+        Options are currently 'ev_count' or 'belief'. Results will return in
+        order of the given parameter. If None, results will be turned in an
+        arbitrary order.
+    persist : bool
+        Default is True. When False, if a query comes back limited (not all
+        results returned), just give up and pass along what was returned.
+        Otherwise, make further queries to get the rest of the data (which may
+        take some time).
+    timeout : positive int or None
+        If an int, return after `timeout` seconds, even if query is not done.
+        Default is None.
+    tries : int > 0
+        Set the number of times to try the query. The database often caches
+        results, so if a query times out the first time, trying again after a
+        timeout will often succeed fast enough to avoid a timeout. This can
+        also help gracefully handle an unreliable connection, if you're
+        willing to wait. Default is 3.
+    """
     result_type = 'hashes'
 
     def __init__(self, *args, **kwargs):
@@ -158,7 +221,42 @@ class DBQueryHashProcessor(IndraDBQueryProcessor):
 
 
 class DBQueryStatementProcessor(IndraDBQueryProcessor):
-    """A Processor to get Statements from the server."""
+    """A Processor to get Statements from the server.
+
+    Parameters
+    ----------
+    query : :py:class:`Query`
+        The query to be evaluated in return for statements.
+    limit : int or None
+        Select the maximum number of statements to return. When set less than
+        500 the effect is much the same as setting persist to false, and will
+        guarantee a faster response. Default is None.
+    ev_limit : int or None
+        Limit the amount of evidence returned per Statement. Default is 100.
+    filter_ev : bool
+        Indicate whether evidence should have the same filters applied as
+        the statements themselves, where appropriate (e.g. in the case of a
+        filter by paper).
+    sort_by : str or None
+        Options are currently 'ev_count' or 'belief'. Results will return in
+        order of the given parameter. If None, results will be turned in an
+        arbitrary order.
+    persist : bool
+        Default is True. When False, if a query comes back limited (not all
+        results returned), just give up and pass along what was returned.
+        Otherwise, make further queries to get the rest of the data (which may
+        take some time).
+    timeout : positive int or None
+        If an int, return after `timeout` seconds, even if query is not done.
+        Default is None.
+    tries : int > 0
+        Set the number of times to try the query. The database often caches
+        results, so if a query times out the first time, trying again after a
+        timeout will often succeed fast enough to avoid a timeout. This can
+        also help gracefully handle an unreliable connection, if you're
+        willing to wait. Default is 3.
+
+    """
     result_type = 'statements'
 
     def __init__(self, query: Query, limit=None, sort_by='ev_count', ev_limit=10,

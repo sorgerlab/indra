@@ -13,7 +13,8 @@ from indra.sources.indra_db_rest.util import make_db_rest_request, get_url_base
 @clockit
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                    use_exact_type=False, persist=True, timeout=None,
-                   ev_limit=10, sort_by='ev_count', tries=3, limit=None):
+                   strict_stop=False, ev_limit=10, filter_ev=True,
+                   sort_by='ev_count', tries=3, limit=None):
     """Get a processor for the INDRA DB web API matching given agents and type.
 
     You get an IndraDBRestProcessor object, which allow Statements to be loaded
@@ -57,11 +58,20 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         If an int, block until the work is done and statements are retrieved, or
         until the timeout has expired, in which case the results so far will be
         returned in the response object, and further results will be added in
-        a separate thread as they become available. If simple_response is True,
-        all statements available will be returned. Otherwise (if None), block
-        indefinitely until all statements are retrieved. Default is None.
+        a separate thread as they become available. Block indefinitely until all
+        statements are retrieved. Default is None.
+    strict_stop : bool
+        If True, the query will only be given timeout to complete before being
+        abandoned entirely. Otherwise the timeout will simply wait for the
+        thread to join for `timeout` seconds before returning, allowing other
+        work to continue while the query runs in the background. The default is
+        False.
     ev_limit : int or None
         Limit the amount of evidence returned per Statement. Default is 10.
+    filter_ev : bool
+        Indicate whether evidence should have the same filters applied as
+        the statements themselves, where appropriate (e.g. in the case of a
+        filter by paper).
     sort_by : str or None
         Str options are currently 'ev_count' or 'belief'. Results will return in
         order of the given parameter. If None, results will be turned in an
@@ -111,11 +121,13 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
 
     return DBQueryStatementProcessor(query, limit=limit, persist=persist,
                                      ev_limit=ev_limit, timeout=timeout,
-                                     sort_by=sort_by, tries=tries)
+                                     sort_by=sort_by, tries=tries,
+                                     strict_stop=strict_stop,
+                                     filter_ev=filter_ev)
 
 
 @clockit
-def get_statements_by_hash(hash_list, limit=None, ev_limit=10,
+def get_statements_by_hash(hash_list, limit=None, ev_limit=10, filter_ev=True,
                            sort_by='ev_count', persist=True, timeout=None,
                            tries=3):
     """Get fully formed statements from a list of hashes.
@@ -130,6 +142,10 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10,
         guarantee a faster response. Default is None.
     ev_limit : int or None
         Limit the amount of evidence returned per Statement. Default is 100.
+    filter_ev : bool
+        Indicate whether evidence should have the same filters applied as
+        the statements themselves, where appropriate (e.g. in the case of a
+        filter by paper).
     sort_by : str or None
         Options are currently 'ev_count' or 'belief'. Results will return in
         order of the given parameter. If None, results will be turned in an
@@ -158,12 +174,13 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10,
     return DBQueryStatementProcessor(HasHash(hash_list), limit=limit,
                                      ev_limit=ev_limit, sort_by=sort_by,
                                      persist=persist, timeout=timeout,
-                                     tries=tries)
+                                     tries=tries, filter_ev=filter_ev)
 
 
 @clockit
 def get_statements_for_paper(ids, limit=None, ev_limit=10, sort_by='ev_count',
-                             persist=True, timeout=None, tries=3):
+                             persist=True, timeout=None, tries=3,
+                             filter_ev=True):
     """Get the set of raw Statements extracted from a paper given by the id.
 
     Parameters
@@ -178,6 +195,10 @@ def get_statements_for_paper(ids, limit=None, ev_limit=10, sort_by='ev_count',
         guarantee a faster response. Default is None.
     ev_limit : int or None
         Limit the amount of evidence returned per Statement. Default is 10.
+    filter_ev : bool
+        Indicate whether evidence should have the same filters applied as
+        the statements themselves, where appropriate (e.g. in the case of a
+        filter by paper).
     sort_by : str or None
         Options are currently 'ev_count' or 'belief'. Results will return in
         order of the given parameter. If None, results will be turned in an
@@ -206,7 +227,7 @@ def get_statements_for_paper(ids, limit=None, ev_limit=10, sort_by='ev_count',
     return DBQueryStatementProcessor(FromPapers(ids), limit=limit,
                                      ev_limit=ev_limit, sort_by=sort_by,
                                      persist=persist, timeout=timeout,
-                                     tries=tries)
+                                     tries=tries, filter_ev=filter_ev)
 
 
 def submit_curation(hash_val, tag, curator, text=None,
