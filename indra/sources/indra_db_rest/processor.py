@@ -249,6 +249,12 @@ class DBQueryStatementProcessor(IndraDBQueryProcessor):
     timeout : positive int or None
         If an int, return after `timeout` seconds, even if query is not done.
         Default is None.
+    strict_stop : bool
+        If True, the query will only be given timeout to complete before being
+        abandoned entirely. Otherwise the timeout will simply wait for the
+        thread to join for `timeout` seconds before returning, allowing other
+        work to continue while the query runs in the background. The default is
+        False.
     tries : int > 0
         Set the number of times to try the query. The database often caches
         results, so if a query times out the first time, trying again after a

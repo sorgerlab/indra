@@ -129,7 +129,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
 @clockit
 def get_statements_by_hash(hash_list, limit=None, ev_limit=10, filter_ev=True,
                            sort_by='ev_count', persist=True, timeout=None,
-                           tries=3):
+                           strict_stop=False, tries=3):
     """Get fully formed statements from a list of hashes.
 
     Parameters
@@ -158,6 +158,12 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10, filter_ev=True,
     timeout : positive int or None
         If an int, return after `timeout` seconds, even if query is not done.
         Default is None.
+    strict_stop : bool
+        If True, the query will only be given timeout to complete before being
+        abandoned entirely. Otherwise the timeout will simply wait for the
+        thread to join for `timeout` seconds before returning, allowing other
+        work to continue while the query runs in the background. The default is
+        False.
     tries : int > 0
         Set the number of times to try the query. The database often caches
         results, so if a query times out the first time, trying again after a
@@ -174,13 +180,14 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10, filter_ev=True,
     return DBQueryStatementProcessor(HasHash(hash_list), limit=limit,
                                      ev_limit=ev_limit, sort_by=sort_by,
                                      persist=persist, timeout=timeout,
-                                     tries=tries, filter_ev=filter_ev)
+                                     tries=tries, filter_ev=filter_ev,
+                                     strict_stop=strict_stop)
 
 
 @clockit
 def get_statements_for_paper(ids, limit=None, ev_limit=10, sort_by='ev_count',
-                             persist=True, timeout=None, tries=3,
-                             filter_ev=True):
+                             persist=True, timeout=None, strict_stop=False,
+                             tries=3, filter_ev=True):
     """Get the set of raw Statements extracted from a paper given by the id.
 
     Parameters
@@ -211,6 +218,12 @@ def get_statements_for_paper(ids, limit=None, ev_limit=10, sort_by='ev_count',
     timeout : positive int or None
         If an int, return after `timeout` seconds, even if query is not done.
         Default is None.
+    strict_stop : bool
+        If True, the query will only be given timeout to complete before being
+        abandoned entirely. Otherwise the timeout will simply wait for the
+        thread to join for `timeout` seconds before returning, allowing other
+        work to continue while the query runs in the background. The default is
+        False.
     tries : int > 0
         Set the number of times to try the query. The database often caches
         results, so if a query times out the first time, trying again after a
