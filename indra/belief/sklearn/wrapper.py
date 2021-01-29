@@ -43,13 +43,13 @@ class CountsModel(SklearnBase):
         Primarily for stratifying belief predictions about Complex statements
         with more than two members.
     """
-    def __init__(self, model, source_list, use_stmt_type=False,
+    def __init__(self, model, use_stmt_type=False,
                  use_num_members=False):
         # Call superclass constructor to store the model
         super(CountsModel, self).__init__(model)
         self.use_stmt_type = use_stmt_type
         self.use_num_members = use_num_members
-        self.source_list = source_list
+        #self.source_list = source_list
 
         # Build dictionary mapping INDRA Statement types to integers
         if use_stmt_type:

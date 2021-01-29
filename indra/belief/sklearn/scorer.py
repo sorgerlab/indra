@@ -1,7 +1,7 @@
 import pickle
 from collections import Counter
 import numpy as np
-from . import BeliefScorer
+from indra.belief import BeliefScorer
 
 
 class SklearnScorer(BeliefScorer):
@@ -18,13 +18,13 @@ class SklearnScorer(BeliefScorer):
         model was not trained on to error parameters for the source. These
         error parameters are treated as independent.
     """
-    def __init__(self, model_pkl, source_list, correct_ix=1):
-        self.model_pkl = model_pkl
-        self.source_list = source_list
-        self.correct_ix = correct_ix
+    def __init__(self, model):
+        self.model = model
+        #self.source_list = source_list
+        #self.correct_ix = correct_ix
         # Load the model from file
-        with open(self.model_pkl, 'rb') as f:
-            self.model = pickle.load(f)
+        #with open(self.model_pkl, 'rb') as f:
+        #    self.model = pickle.load(f)
 
     def score_statement(self, st, extra_evidence=None):
         # Combine the evidences

@@ -2,6 +2,7 @@ import random
 import pickle
 from collections import defaultdict
 from os.path import join, abspath, dirname
+from sklearn.linear_model import LogisticRegression
 from indra.sources import signor
 from indra.belief.sklearn.wrapper import CountsModel
 
@@ -33,4 +34,5 @@ def _dump_test_data(filename, num_per_type=10):
 
 def test_counts_wrapper():
     """Instantiate counts wrapper and make stmt matrix"""
-    cw = CountsModel()
+    lr = LogisticRegression()
+    cw = CountsModel(lr)
