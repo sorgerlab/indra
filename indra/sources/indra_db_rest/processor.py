@@ -143,6 +143,7 @@ class IndraDBQueryProcessor:
 
 class DBQueryHashProcessor(IndraDBQueryProcessor):
     """A processor to get hashes from the server."""
+    result_type = 'hashes'
 
     def __init__(self, *args, **kwargs):
         self.hashes = []
@@ -158,6 +159,8 @@ class DBQueryHashProcessor(IndraDBQueryProcessor):
 
 class DBQueryStatementProcessor(IndraDBQueryProcessor):
     """A Processor to get Statements from the server."""
+    result_type = 'statements'
+
     def __init__(self, query: Query, limit=None, sort_by='ev_count', ev_limit=10,
                  filter_ev=True, timeout=None, strict_stop=False, persist=True,
                  use_obtained_counts=False, tries=3):
@@ -166,6 +169,7 @@ class DBQueryStatementProcessor(IndraDBQueryProcessor):
         self.statements_sample = None
 
         self.__statement_jsons = {}
+        self.__started = False
 
         self.use_obtained_counts = use_obtained_counts
         self._set_special_params(ev_limit=ev_limit, filter_ev=filter_ev)
