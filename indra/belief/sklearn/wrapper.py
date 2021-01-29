@@ -34,6 +34,16 @@ class SklearnBase(object):
         stmts_arr = self.stmts_to_matrix(stmts)
         return self.model.predict_proba(stmts_arr)
 
+    def predict(self, stmts):
+        stmts_arr = self.stmts_to_matrix(stmts)
+        return self.model.predict(stmts_arr)
+
+    def predict_log_proba(self, stmts):
+        stmts_arr = self.stmts_to_matrix(stmts)
+        return self.model.predict_log_proba(stmts_arr)
+
+
+
 class CountsModel(SklearnBase):
     """Predictor based on source evidence counts and other stmt properties.
 

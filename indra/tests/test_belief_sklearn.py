@@ -74,3 +74,18 @@ def test_fit():
     cw.fit(test_stmts, y_arr)
     # Once the model is fit, the coef_ attribute should be defined
     assert 'coef_' in cw.model.__dict__
+
+def test_predict():
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list)
+    cw.fit(test_stmts, y_arr)
+    probs = cw.predict_proba(test_stmts)
+    assert probs.shape == (len(test_stmts), 2), \
+        'prediction results should have dimension (# stmts, # classes)'
+    log_probs = cw.predict_log_proba(test_stmts)
+    assert log_probs.shape == (len(test_stmts), 2), \
+        'prediction results should have dimension (# stmts, # classes)'
+    preds = cw.predict(test_stmts)
+    assert preds.shape == (len(test_stmts),), \
+        'prediction results should have dimension (# stmts)'
