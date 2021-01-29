@@ -14,17 +14,11 @@ EXPECTED_BATCH_SIZE = 500
 
 def __check_request(seconds, *args, **kwargs):
     check_stmts = kwargs.pop('check_stmts', True)
-    simple_response = kwargs.pop('simple_response', True)
-    kwargs['simple_response'] = simple_response
     now = datetime.now()
     resp = dbr.get_statements(*args, **kwargs)
     time_taken = datetime.now() - now
     if check_stmts:
-        if kwargs.get('simple_response', True):
-            stmts = resp
-        else:
-            stmts = resp.statements
-        assert stmts, "Got no statements."
+        assert resp.statements, "Got no statements."
     return resp
 
 
@@ -84,8 +78,7 @@ def test_timeout_no_persist_type_object():
 
 @attr('nonpublic', 'slow')
 def test_too_big_request_no_persist():
-    resp_some = __check_request(60, agents=['TP53'], persist=False,
-                                simple_response=False)
+    resp_some = __check_request(60, agents=['TP53'], persist=False)
     assert sum(resp_some.get_ev_count(s) is not None
                for s in resp_some.statements) == len(resp_some.statements), \
         "Counts dict was improperly handled."
@@ -95,8 +88,8 @@ def test_too_big_request_no_persist():
 @attr('nonpublic', 'slow', 'notravis')
 @unittest.skip('skippping')
 def test_too_big_request_persist_and_block():
-    resp_all1 = __check_request(200, agents=['TP53'], persist=True, timeout=None,
-                                simple_response=False)
+    resp_all1 = __check_request(200, agents=['TP53'], persist=True,
+                                timeout=None)
     assert sum(resp_all1.get_ev_count(s) is not None
                for s in resp_all1.statements) > 0.9*len(resp_all1.statements), \
         "Counts dict was improperly handled."
@@ -108,8 +101,7 @@ def test_too_big_request_persist_no_block():
     resp_some = test_too_big_request_no_persist()
     resp_all1 = test_too_big_request_persist_and_block()
     resp_all2 = __check_request(60, agents=['TP53'], persist=True,
-                                timeout=10, check_stmts=False,
-                                simple_response=False)
+                                timeout=10, check_stmts=False)
     num_counts = sum(resp_all2.get_ev_count(s) is not None
                      for s in resp_all2.statements)
     num_stmts = len(resp_all2.statements)
@@ -137,8 +129,7 @@ def test_too_big_request_persist_no_block():
 
 @attr('nonpublic')
 def test_famplex_namespace():
-    stmts = dbr.get_statements('PDGF@FPLX', 'FOS', stmt_type='IncreaseAmount',
-                               simple_response=True)
+    stmts = dbr.get_statements('PDGF@FPLX', 'FOS', stmt_type='IncreaseAmount')
     print(len(stmts))
     print(stmts)
     assert all([s.agent_list()[0].db_refs.get('FPLX') == 'PDGF' for s in stmts]),\
@@ -150,9 +141,9 @@ def test_famplex_namespace():
 
 @attr('nonpublic', 'notravis')
 def test_paper_query():
-    stmts_1 = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
-                                            ('pmid', '27014235')],
-                                           simple_response=True)
+    p = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
+                                      ('pmid', '27014235')])
+    stmts_1 = p.statements
     assert len(stmts_1)
 
     p = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
@@ -164,8 +155,7 @@ def test_paper_query():
 
 @attr('nonpublic')
 def test_regulate_amount():
-    idbp = dbr.get_statements('FOS', stmt_type='RegulateAmount',
-                              simple_response=False)
+    idbp = dbr.get_statements('FOS', stmt_type='RegulateAmount')
     stmts = idbp.statements
     stmt_types = {type(s).__name__ for s in stmts}
     counts = idbp.get_source_counts()
@@ -178,7 +168,8 @@ def test_regulate_amount():
 @attr('nonpublic')
 def test_get_statements_by_hash():
     hash_list = [30674674032092136, -22289282229858243, -25056605420392180]
-    stmts = dbr.get_statements_by_hash(hash_list, simple_response=True)
+    p = dbr.get_statements_by_hash(hash_list)
+    stmts = p.statements
     print({s.get_hash(shallow=True): s for s in stmts})
     assert len(stmts) >= 2, \
         "Wrong number of statements: %s vs. %s" % (len(stmts), len(hash_list))
@@ -192,8 +183,8 @@ def test_get_statements_by_hash():
 
 @attr('nonpublic')
 def test_get_statements_by_hash_no_hash():
-    stmts = dbr.get_statements_by_hash([], simple_response=True)
-    assert not stmts, "Got statements without giving a hash."
+    p = dbr.get_statements_by_hash([])
+    assert not p.statements, "Got statements without giving a hash."
 
 
 @attr('nonpublic')
