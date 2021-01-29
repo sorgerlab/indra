@@ -203,7 +203,7 @@ class DBQueryStatementProcessor(IndraDBQueryProcessor):
 
     def get_source_count_by_hash(self, stmt_hash):
         """Get the source counts for a given statement."""
-        return self.__source_counts.get(stmt_hash, {})
+        return self._source_counts.get(stmt_hash, {})
 
     def get_source_count(self, stmt):
         """Get the source counts for a given statement."""
