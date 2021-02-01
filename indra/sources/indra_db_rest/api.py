@@ -1,5 +1,6 @@
 __all__ = ['get_statements', 'get_statements_for_paper',
-           'get_statements_by_hash', 'submit_curation']
+           'get_statements_by_hash', 'get_statements_from_query',
+           'submit_curation']
 
 from indra.util import clockit
 from indra.statements import Complex, SelfModification,  ActiveForm, \
