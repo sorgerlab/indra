@@ -441,35 +441,14 @@ class Preassembler(object):
         maps = []
         # We again iterate over statements
         ts = time.time()
-        # Given the possible refinements in stmts_to_compare, we confirm each
+        confirmation_filter = \
+            RefinementConfirmationFilter(stmts_by_hash,
+                                         ontology=self.ontology,
+                                         refinement_fun=self.refinement_fun,
+                                         split_groups=split_groups)
         for stmt_hash, possible_refined_hashes in stmts_to_compare.items():
-            # We use the previously constructed set of statements that this one
-            # can possibly refine
-            for possible_refined_hash in possible_refined_hashes:
-                # We handle split groups here to only check refinements between
-                # statements that are in different groups to compare
-                if not split_groups or split_groups[stmt_hash] != \
-                        split_groups[possible_refined_hash]:
-                    # And then do the actual comparison. Here we use
-                    # entities_refined=True which means that we assert that
-                    # the entities, in each role, are already confirmed to
-                    # be "compatible" for refinement, and therefore, we
-                    # don't need to again confirm this (i.e., call "isa") in
-                    # the refinement_of function.
-                    self._comparison_counter += 1
-                    ref = self.refinement_fun(
-                        stmts_by_hash[stmt_hash],
-                        stmts_by_hash[possible_refined_hash],
-                        ontology=self.ontology,
-                        # NOTE: here we assume that the entities at this point
-                        # are definitely refined due to the use of an
-                        # ontology-based pre-filter. If this is not the case
-                        # for some reason then it is the responsibility of the
-                        # user-supplied self.refinement_fun to disregard the
-                        # entities_refined argument.
-                        entities_refined=True)
-                    if ref:
-                        maps.append((stmt_hash, possible_refined_hash))
+            refinements = confirmation_filter.apply(stmt_hash, possible_refined_hashes)
+            maps += [(stmt_hash, ref) for ref in refinements]
         te = time.time()
         logger.debug('Confirmed %d refinements in %.2fs' % (len(maps), te-ts))
         return maps
@@ -914,6 +893,168 @@ def get_relevant_keys(agent_key, all_keys_for_role, ontology):
     return relevant_keys
 
 
+class RefinementFilter:
+    def __init__(self, stmts_by_hash):
+        self.stmts_by_hash = stmts_by_hash
+
+    def initialize(self):
+        pass
+
+    def apply(self, stmt_hash, possible_refinements=None):
+        pass
+
+
+class OntologyRefinementFilter(RefinementFilter):
+    def __init__(self, stmts_by_hash, ontology):
+        self.stmts_by_hash = stmts_by_hash
+        self.ontology = ontology
+        self.shared_data = {}
+
+    def initialize(self):
+        # Statements by type
+        stmts_by_type = collections.defaultdict(set)
+        for stmt_hash, stmt in self.stmts_by_hash.items():
+            stmts_by_type[indra_stmt_type(stmt)].add(stmt_hash)
+        stmts_by_type = dict(stmts_by_type)
+
+        for stmt_type, stmts_by_hash in stmts_by_type:
+            self.shared_data[stmt_type] = {}
+
+            # Step 1. initialize data structures
+            roles = stmts_by_hash[next(iter(stmts_by_hash))]._agent_order
+            # Mapping agent keys to statement hashes
+            agent_key_to_hash = {}
+            # Mapping statement hashes to agent keys
+            hash_to_agent_key = {}
+            # All agent keys for a given agent role
+            all_keys_by_role = {}
+            for role in roles:
+                agent_key_to_hash[role] = collections.defaultdict(set)
+                hash_to_agent_key[role] = collections.defaultdict(set)
+
+            # Step 2. Fill up the initial data structures in preparation
+            # for identifying potential refinements
+            for sh, stmt in stmts_by_hash.items():
+                for role in roles:
+                    agents = getattr(stmt, role)
+                    # Handle a special case here where a list=like agent
+                    # role can be empty, here we will consider anything else
+                    # to be a refinement, hence add a None key
+                    if isinstance(agents, list) and not agents:
+                        agent_keys = {None}
+                    # Generally, we take all the agent keys for a single or
+                    # list-like agent role.
+                    else:
+                        agent_keys = {get_agent_key(agent) for agent in
+                                      (agents if isinstance(agents, list)
+                                       else [agents])}
+                    for agent_key in agent_keys:
+                        agent_key_to_hash[role][agent_key].add(sh)
+                        hash_to_agent_key[role][sh].add(agent_key)
+
+            agent_key_to_hash = dict(agent_key_to_hash)
+            hash_to_agent_key = dict(hash_to_agent_key)
+
+            for role in roles:
+                all_keys_by_role[role] = set(agent_key_to_hash[role].keys())
+
+            self.shared_data[stmt_type]['agent_key_to_hash'] = \
+                agent_key_to_hash
+            self.shared_data[stmt_type]['hash_to_agent_key'] = \
+                hash_to_agent_key
+            self.shared_data[stmt_type]['all_keys_by_role'] = \
+                all_keys_by_role
+
+    def apply(self, stmt_hash, possible_refinements=None):
+        # Step 1. Recover relevant parts ot the initialized data
+        try:
+            stmt = self.stmts_by_hash[stmt_hash]
+        except KeyError:
+            raise ValueError('The statement hash %s was not included in the '
+                             'initialization.' % stmt_hash)
+        stmt_type = indra_stmt_type(stmt)
+        hash_to_agent_key = self.shared_data[stmt_type]['hash_to_agent_key']
+        agent_key_to_hash = self.shared_data[stmt_type]['agent_key_to_hash']
+        all_keys_by_role = self.shared_data[stmt_type]['all_keys_by_role']
+
+        # Step 2. We iterate over all statements and find ones that this one
+        # can refine
+        relevants = possible_refinements
+        # We now iterate over all the agent roles in the given statement
+        # type
+        for role, hash_to_agent_key_for_role in hash_to_agent_key.items():
+            # We get all the agent keys in all other statements that the
+            # agent
+            # in this role in this statement can be a refinement.
+            for agent_key in hash_to_agent_key_for_role[stmt_hash]:
+                relevant_keys = get_relevant_keys(
+                    agent_key,
+                    all_keys_by_role[role],
+                    self.ontology)
+                # We now get the actual statement hashes that these other
+                # potentially refined agent keys appear in in the given role
+                role_relevant_stmt_hashes = set.union(
+                    *[agent_key_to_hash[role][rel]
+                      for rel in relevant_keys]) - {stmt_hash}
+                # In the first iteration, we initialize the set with the
+                # relevant statement hashes
+                if relevants is None:
+                    relevants = role_relevant_stmt_hashes
+                # In subsequent iterations, we take the intersection of
+                # the relevant sets per role
+                else:
+                    relevants &= role_relevant_stmt_hashes
+        # These hashes are now the ones that this statement needs
+        # to be compared against. Importantly, the relationship is in
+        # a well-defined direction so we don't need to test both ways.
+        return relevants
+
+
+class RefinementConfirmationFilter(RefinementFilter):
+    def __init__(self, stmts_by_hash, ontology, refinement_fun,
+                 split_groups=None):
+        self.stmts_by_hash = stmts_by_hash
+        self.ontology = ontology
+        self.refinement_fun = refinement_fun
+        self.split_groups = split_groups
+        self.shared_data = {}
+
+    def initialize(self):
+        pass
+
+    def apply(self, stmt_hash, possible_refined_hashes=None):
+        refinements = set()
+        # We again iterate over statements
+        ts = time.time()
+        # We use the previously constructed set of statements that this one
+        # can possibly refine
+        for possible_refined_hash in possible_refined_hashes:
+            # We handle split groups here to only check refinements between
+            # statements that are in different groups to compare
+            if not split_groups or split_groups[stmt_hash] != \
+                    split_groups[possible_refined_hash]:
+                # And then do the actual comparison. Here we use
+                # entities_refined=True which means that we assert that
+                # the entities, in each role, are already confirmed to
+                # be "compatible" for refinement, and therefore, we
+                # don't need to again confirm this (i.e., call "isa") in
+                # the refinement_of function.
+                ref = self.refinement_fun(
+                    self.stmts_by_hash[stmt_hash],
+                    self.stmts_by_hash[possible_refined_hash],
+                    ontology=self.ontology,
+                    # NOTE: here we assume that the entities at this point
+                    # are definitely refined due to the use of an
+                    # ontology-based pre-filter. If this is not the case
+                    # for some reason then it is the responsibility of the
+                    # user-supplied self.refinement_fun to disregard the
+                    # entities_refined argument.
+                    entities_refined=True)
+                if ref:
+                    refinements.add(possible_refined_hash)
+        return refinements
+
+
 def ontology_refinement_filter(stmts_by_hash, stmts_to_compare, ontology):
     """Return possible refinement relationships based on an ontology.
 
@@ -936,136 +1077,18 @@ def ontology_refinement_filter(stmts_by_hash, stmts_to_compare, ontology):
         of statement hashes that can potentially be refined by the
         statement identified by the key.
     """
+    logger.info('Finding ontology-based refinements for %d statements'
+                % len(stmts_by_type[stmt_type]))
     ts = time.time()
-    stmts_by_type = collections.defaultdict(set)
-    for stmt_hash, stmt in stmts_by_hash.items():
-        stmts_by_type[indra_stmt_type(stmt)].add(stmt_hash)
-    stmts_by_type = dict(stmts_by_type)
-
-    first_filter = stmts_to_compare is None
-    if first_filter:
-        stmts_to_compare = collections.defaultdict(set)
-    for stmt_type, stmt_hashes in stmts_by_type.items():
-        logger.info('Finding ontology-based refinements for %d %s statements'
-                    % (len(stmts_by_type[stmt_type]), stmt_type.__name__))
-        stmts_by_hash_this_type = {
-            stmt_hash: stmts_by_hash[stmt_hash]
-            for stmt_hash in stmt_hashes
-        }
-        stmts_to_compare_by_type = \
-            ontology_refinement_filter_by_stmt_type(stmts_by_hash_this_type,
-                                                    ontology)
-        if first_filter:
-            stmts_to_compare.update(stmts_to_compare_by_type)
-        else:
-            for k, v in stmts_to_compare_by_type.items():
-                stmts_to_compare[k] = stmts_to_compare[k] & v
-
+    ont_filter = OntologyRefinementFilter(stmts_by_hash, ontology)
+    ont_filter.initialize()
+    stmts_to_compare = {stmt_hash: ont_filter.apply(stmt_hash)}
     te = time.time()
     logger.debug('Identified ontology-based possible refinements in %.2fs'
                  % (te-ts))
     # Make an empty dict to make sure we don't return a None
     if stmts_to_compare is None:
         stmts_to_compare = {}
-    return stmts_to_compare
-
-
-def ontology_refinement_filter_by_stmt_type(stmts_by_hash, ontology):
-    """Return possible refinement relationships based on an ontology.
-
-    Importantly, here we assume that all statements in stmts_by_hash
-    are of a single type.
-
-    Parameters
-    ----------
-    stmts_by_hash : dict
-        A dict whose keys are statement hashes that point to the
-        (deduplicated) statement with that hash as a value.
-    ontology : indra.ontology.IndraOntology
-        An IndraOntology instance iwth respect to which this
-        filter is applied.
-
-    Returns
-    -------
-    list of tuple
-        A list of tuples where the first element of each tuple is the
-        hash of a statement which refines that statement whose hash
-        is the second element of the tuple.
-    """
-    # Step 1. initialize data structures
-    roles = stmts_by_hash[next(iter(stmts_by_hash))]._agent_order
-    # Mapping agent keys to statement hashes
-    agent_key_to_hash = {}
-    # Mapping statement hashes to agent keys
-    hash_to_agent_key = {}
-    # All agent keys for a given agent role
-    all_keys_by_role = {}
-    for role in roles:
-        agent_key_to_hash[role] = collections.defaultdict(set)
-        hash_to_agent_key[role] = collections.defaultdict(set)
-
-    # Step 2. Fill up the initial data structures in preparation
-    # for identifying potential refinements
-    for sh, stmt in stmts_by_hash.items():
-        for role in roles:
-            agents = getattr(stmt, role)
-            # Handle a special case here where a list=like agent
-            # role can be empty, here we will consider anything else
-            # to be a refinement, hence add a None key
-            if isinstance(agents, list) and not agents:
-                agent_keys = {None}
-            # Generally, we take all the agent keys for a single or
-            # list-like agent role.
-            else:
-                agent_keys = {get_agent_key(agent) for agent in
-                              (agents if isinstance(agents, list)
-                               else [agents])}
-            for agent_key in agent_keys:
-                agent_key_to_hash[role][agent_key].add(sh)
-                hash_to_agent_key[role][sh].add(agent_key)
-
-    agent_key_to_hash = dict(agent_key_to_hash)
-    hash_to_agent_key = dict(hash_to_agent_key)
-
-    for role in roles:
-        all_keys_by_role[role] = set(agent_key_to_hash[role].keys())
-
-    # Step 3. Identify all the pairs of statements which can be in a
-    # refinement relationship
-    stmts_to_compare = {}
-    # We iterate over each statement and find all other statements that it
-    # can potentially refine
-    ts = time.time()
-    for sh, stmt in stmts_by_hash.items():
-        relevants = None
-        # We now iterate over all the agent roles in the given statement
-        # type
-        for role, hash_to_agent_key_for_role in hash_to_agent_key.items():
-            # We get all the agent keys in all other statements that the
-            # agent
-            # in this role in this statement can be a refinement.
-            for agent_key in hash_to_agent_key_for_role[sh]:
-                relevant_keys = get_relevant_keys(
-                    agent_key,
-                    all_keys_by_role[role],
-                    ontology)
-                # We now get the actual statement hashes that these other
-                # potentially refined agent keys appear in in the given role
-                role_relevant_stmt_hashes = set.union(
-                    *[agent_key_to_hash[role][rel]
-                      for rel in relevant_keys]) - {sh}
-                # In the first iteration, we initialize the set with the
-                # relevant statement hashes
-                if relevants is None:
-                    relevants = role_relevant_stmt_hashes
-                # In subsequent iterations, we take the intersection of
-                # the relevant sets per role
-                else:
-                    relevants &= role_relevant_stmt_hashes
-        # These hashes are now the ones that this statement needs
-        # to be compared against. Importantly, the relationship is in
-        # a well-defined direction so we don't need to test both ways.
-        stmts_to_compare[sh] = relevants
     return stmts_to_compare
 
 
