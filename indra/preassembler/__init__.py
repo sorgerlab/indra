@@ -363,7 +363,19 @@ class Preassembler(object):
                              'function used for refinement finding.')
         # Statements keyed by their hashes
         stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun):
-                         stmt for stmt in unique_stmts}
+                             stmt for stmt in unique_stmts}
+        # Here we handle split_idx to allow finding refinements between
+        # to distinct groups of statements (identified by an index at which we
+        # split the unique_statements list) rather than globally across
+        # all unique statements.
+        if split_idx:
+            # This dict maps statement hashes to a bool value based on which
+            # of the two groups the statement belongs to.
+            hash_to_split_group = {sh: (idx <= split_idx) for sh, idx
+                                   in stmt_to_idx.items()}
+        else:
+            hash_to_split_group = None
+
         stmts_to_compare = None
         # Here we apply any additional filters to cut down the number of
         # potential comparisons before actually making comparisons
@@ -387,18 +399,6 @@ class Preassembler(object):
         te = time.time()
         logger.info('Applied all refinement pre-filters in %.2fs' % (te-ts))
         logger.info('Total comparisons: %d' % total_comparisons)
-
-        # Here we handle split_idx to allow finding refinements between
-        # to distinct groups of statements (identified by an index at which we
-        # split the unique_statements list) rather than globally across
-        # all unique statements.
-        if split_idx:
-            # This dict maps statement hashes to a bool value based on which
-            # of the two groups the statement belongs to.
-            hash_to_split_group = {sh: (idx <= split_idx) for sh, idx
-                                   in stmt_to_idx.items()}
-        else:
-            hash_to_split_group = None
 
         # We can now do the actual comparisons and return pairs of confirmed
         # refinements in a list.
@@ -894,13 +894,14 @@ def get_relevant_keys(agent_key, all_keys_for_role, ontology):
 
 
 class RefinementFilter:
-    def __init__(self, stmts_by_hash):
-        self.stmts_by_hash = stmts_by_hash
+    def __init__(self):
+        self.shared_data = {}
 
-    def initialize(self):
-        pass
+    def initialize(self, stmts_by_hash):
+        self.shared_data['stmts_by_hash'] = stmts_by_hash
 
-    def apply(self, stmt_hash, possible_refinements=None):
+    def apply(self, stmt_hash, possible_refinements=None,
+              split_groups=None):
         pass
 
 
@@ -1012,17 +1013,17 @@ class OntologyRefinementFilter(RefinementFilter):
 
 
 class RefinementConfirmationFilter(RefinementFilter):
-    def __init__(self, ontology, refinement_fun, split_groups=None):
+    def __init__(self, ontology, refinement_fun):
         self.ontology = ontology
         self.refinement_fun = refinement_fun
-        self.split_groups = split_groups
         self.shared_data = {}
 
     def initialize(self, stmts_by_hash):
         self.shared_data['stmts_by_hash'] = stmts_by_hash
         pass
 
-    def apply(self, stmt_hash, possible_refined_hashes=None):
+    def apply(self, stmt_hash, possible_refined_hashes=None,
+              split_groups=None):
         stmts_by_hash = self.shared_data['stmts_by_hash']
         refinements = set()
         # We again iterate over statements
