@@ -354,7 +354,8 @@ def dump_curations():
     Note that a valid API key with this special permission will be necessary to
     use this feature.
     """
-    return make_db_rest_request('get', 'curation/dump')
+    resp = make_db_rest_request('get', 'curation/dump')
+    return resp.json()
 
 
 def get_statement_queries(stmts, fallback_ns='NAME', pick_ns_fun=None,
