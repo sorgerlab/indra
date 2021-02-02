@@ -348,7 +348,7 @@ def get_curations(hash_val, source_hash):
     return resp.json()
 
 
-def dump_curations():
+def get_all_curations():
     """Dump all the curations available.
 
     Note that a valid API key with this special permission will be necessary to
