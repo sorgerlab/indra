@@ -315,8 +315,8 @@ def submit_curation(hash_val, tag, curator_email, text=None,
         A very short phrase categorizing the error or type of curation,
         e.g. "grounding" for a grounding error, or "correct" if you are
         marking a statement as correct.
-    curator : str
-        The name or identifier for the curator.
+    curator_email : str
+        The email of the curator.
     text : str
         A brief description of the problem.
     source : str
@@ -337,7 +337,15 @@ def submit_curation(hash_val, tag, curator_email, text=None,
         qstr = '?test'
     else:
         qstr = ''
-    return make_db_rest_request('post', url, qstr, data=data)
+    resp = make_db_rest_request('post', url, qstr, data=data)
+    return resp.json()
+
+
+def get_curations(hash_val, source_hash):
+    """Get the curations for a specific statement and evidence."""
+    url = f'curation/list/{hash_val}/{source_hash}'
+    resp = make_db_rest_request('get', url)
+    return resp.json()
 
 
 def dump_curations():
