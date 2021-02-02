@@ -340,6 +340,15 @@ def submit_curation(hash_val, tag, curator_email, text=None,
     return make_db_rest_request('post', url, qstr, data=data)
 
 
+def dump_curations():
+    """Dump all the curations available.
+
+    Note that a valid API key with this special permission will be necessary to
+    use this feature.
+    """
+    return make_db_rest_request('get', 'curation/dump')
+
+
 def get_statement_queries(stmts, fallback_ns='NAME', pick_ns_fun=None,
                           **params):
     """Get queries used to search based on a statement.
