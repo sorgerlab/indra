@@ -303,7 +303,7 @@ def get_statements_from_query(query, limit=None, ev_limit=10,
                                      strict_stop=strict_stop)
 
 
-def submit_curation(hash_val, tag, curator, text=None,
+def submit_curation(hash_val, tag, curator_email, text=None,
                     source='indra_rest_client', ev_hash=None, is_test=False):
     """Submit a curation for the given statement at the relevant level.
 
@@ -330,7 +330,7 @@ def submit_curation(hash_val, tag, curator, text=None,
         Used in testing. If True, no curation will actually be added to the
         database.
     """
-    data = {'tag': tag, 'text': text, 'curator': curator, 'source': source,
+    data = {'tag': tag, 'text': text, 'email': curator_email, 'source': source,
             'ev_hash': ev_hash}
     url = 'curation/submit/%s' % hash_val
     if is_test:
