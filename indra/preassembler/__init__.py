@@ -905,12 +905,12 @@ class RefinementFilter:
 
 
 class OntologyRefinementFilter(RefinementFilter):
-    def __init__(self, stmts_by_hash, ontology):
-        self.stmts_by_hash = stmts_by_hash
+    def __init__(self, ontology):
         self.ontology = ontology
         self.shared_data = {}
 
-    def initialize(self):
+    def initialize(self, stmts_by_hash):
+        self.shared_data['stmts_by_hash'] = stmts_by_hash
         # Statements by type
         stmts_by_type = collections.defaultdict(set)
         for stmt_hash, stmt in self.stmts_by_hash.items():
@@ -967,8 +967,9 @@ class OntologyRefinementFilter(RefinementFilter):
 
     def apply(self, stmt_hash, possible_refinements=None):
         # Step 1. Recover relevant parts ot the initialized data
+        stmts_by_hash = self.shared_data['stmts_by_hash']
         try:
-            stmt = self.stmts_by_hash[stmt_hash]
+            stmt = stmts_by_hash[stmt_hash]
         except KeyError:
             raise ValueError('The statement hash %s was not included in the '
                              'initialization.' % stmt_hash)
@@ -1011,18 +1012,18 @@ class OntologyRefinementFilter(RefinementFilter):
 
 
 class RefinementConfirmationFilter(RefinementFilter):
-    def __init__(self, stmts_by_hash, ontology, refinement_fun,
-                 split_groups=None):
-        self.stmts_by_hash = stmts_by_hash
+    def __init__(self, ontology, refinement_fun, split_groups=None):
         self.ontology = ontology
         self.refinement_fun = refinement_fun
         self.split_groups = split_groups
         self.shared_data = {}
 
-    def initialize(self):
+    def initialize(self, stmts_by_hash):
+        self.shared_data['stmts_by_hash'] = stmts_by_hash
         pass
 
     def apply(self, stmt_hash, possible_refined_hashes=None):
+        stmts_by_hash = self.shared_data['stmts_by_hash']
         refinements = set()
         # We again iterate over statements
         ts = time.time()
@@ -1040,8 +1041,8 @@ class RefinementConfirmationFilter(RefinementFilter):
                 # don't need to again confirm this (i.e., call "isa") in
                 # the refinement_of function.
                 ref = self.refinement_fun(
-                    self.stmts_by_hash[stmt_hash],
-                    self.stmts_by_hash[possible_refined_hash],
+                    stmts_by_hash[stmt_hash],
+                    stmts_by_hash[possible_refined_hash],
                     ontology=self.ontology,
                     # NOTE: here we assume that the entities at this point
                     # are definitely refined due to the use of an
@@ -1080,9 +1081,11 @@ def ontology_refinement_filter(stmts_by_hash, stmts_to_compare, ontology):
     logger.info('Finding ontology-based refinements for %d statements'
                 % len(stmts_by_type[stmt_type]))
     ts = time.time()
-    ont_filter = OntologyRefinementFilter(stmts_by_hash, ontology)
-    ont_filter.initialize()
-    stmts_to_compare = {stmt_hash: ont_filter.apply(stmt_hash)}
+    ont_filter = OntologyRefinementFilter(ontology)
+    ont_filter.initialize(stmts_by_hash)
+
+    stmts_to_compare = {stmt_hash: ont_filter.apply(
+        stmt_hash, possible_refinements=stmts_to_compare.get(stmt_hash))}
     te = time.time()
     logger.debug('Identified ontology-based possible refinements in %.2fs'
                  % (te-ts))
