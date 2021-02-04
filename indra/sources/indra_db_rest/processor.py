@@ -313,6 +313,32 @@ class DBQueryStatementProcessor(IndraDBQueryProcessor):
         """Get the source counts for a given statement."""
         return self.get_source_count_by_hash(stmt.get_hash(shallow=True))
 
+    # Result merging methods
+
+    def merge_results(self, other_processor):
+        """Merge the results of this processor with those of another."""
+        if not isinstance(other_processor, self.__class__):
+            raise ValueError(f"Can only extend with another "
+                             f"{self.__class__.__name__} instance.")
+
+        # Where there is overlap, there _should_ be agreement.
+        self._evidence_counts.update(other_processor._evidence_counts)
+        self._source_counts.update(other_processor._source_counts)
+        self._belief_scores.update(other_processor._belief_scores)
+
+        # Merge the statement JSONs.
+        for k, sj in other_processor.__statement_jsons.items():
+            if k not in self.__statement_jsons:
+                self.__statement_jsons[k] = sj  # This should be most of them
+            else:
+                # This should only happen rarely.
+                for evj in sj['evidence']:
+                    self.__statement_jsons[k]['evidence'].append(evj)
+
+        # Recompile the statements
+        self._compile_results()
+        return
+
     # Helper methods
 
     def _handle_new_result(self, result, source_counts):
