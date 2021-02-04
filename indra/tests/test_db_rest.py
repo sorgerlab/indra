@@ -194,8 +194,24 @@ def test_curation_submission():
     api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
     if not api_key:
         raise SkipTest("No API Key, this test will not work.")
-    dbr.submit_curation(32760831642168299, 'TEST', 'This is a test.',
-                        'tester', is_test=True)
+    res = dbr.submit_curation(32760831642168299, 'TEST', 'This is a test.',
+                              'tester', is_test=True)
+    assert res['result'] == 'test passed', res
+
+
+@attr('nonpublic')
+def test_get_curations():
+    from indra.config import get_config
+    api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
+    if not api_key:
+        raise SkipTest("No API Key, this test will not work.")
+    stmt_hash = -13159234982749425
+    src_hash = 3817298406742073624
+    res = dbr.get_curations(stmt_hash, src_hash)
+    assert isinstance(res, list)
+    assert len(res) > 0
+    assert all(c['pa_hash'] == stmt_hash and c['source_hash'] == src_hash
+               for c in res)
 
 
 @attr('nonpublic')
