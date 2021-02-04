@@ -1,6 +1,6 @@
 __all__ = ['get_statements', 'get_statements_for_paper',
            'get_statements_by_hash', 'get_statements_from_query',
-           'submit_curation']
+           'submit_curation', 'get_curations']
 
 from indra.util import clockit
 from indra.statements import Complex, SelfModification,  ActiveForm, \
@@ -341,20 +341,34 @@ def submit_curation(hash_val, tag, curator_email, text=None,
     return resp.json()
 
 
-def get_curations(hash_val, source_hash):
-    """Get the curations for a specific statement and evidence."""
-    url = f'curation/list/{hash_val}/{source_hash}'
-    resp = make_db_rest_request('get', url)
-    return resp.json()
+def get_curations(hash_val=None, source_hash=None):
+    """Get the curations for a specific statement and evidence.
 
+    If neither hash_val nor source_hash are given, all curations will be
+    retrieved. This will require the user to have extra permissions, as
+    determined by their API key.
 
-def get_all_curations():
-    """Dump all the curations available.
+    Parameters
+    ----------
+    hash_val : int or None
+        The hash of a statement whose curations you want to retrieve.
+    source_hash : int or None
+        The hash generated for a piece of evidence for which you want curations.
+        The `hash_val` must be provided to use the `source_hash`.
 
-    Note that a valid API key with this special permission will be necessary to
-    use this feature.
+    Returns
+    -------
+    curations : list
+        A list of dictionaries containing the curation data.
     """
-    resp = make_db_rest_request('get', 'curation/dump')
+    url = 'curation/list'
+    if hash_val is not None:
+        url += f'/{hash_val}'
+        if source_hash is not None:
+            url += f'/{source_hash}'
+    elif source_hash is not None:
+        raise ValueError("A hash_val must be given if a source_hash is given.")
+    resp = make_db_rest_request('get', url)
     return resp.json()
 
 
