@@ -304,7 +304,8 @@ def get_statements_from_query(query, limit=None, ev_limit=10,
 
 
 def submit_curation(hash_val, tag, curator_email, text=None,
-                    source='indra_rest_client', ev_hash=None, is_test=False):
+                    source='indra_rest_client', ev_hash=None, pa_json=None,
+                    ev_json=None, is_test=False):
     """Submit a curation for the given statement at the relevant level.
 
     Parameters
@@ -326,12 +327,18 @@ def submit_curation(hash_val, tag, curator_email, text=None,
     ev_hash : int
         A hash of the sentence and other evidence information. Elsewhere
         referred to as `source_hash`.
+    pa_json : None or dict
+        The JSON of a statement you wish to curate. If not given, it may be
+        inferred (best effort) from the given hash.
+    ev_json : None or dict
+        The JSON of an evidence you wish to curate. If not given, it cannot be
+        inferred.
     is_test : bool
         Used in testing. If True, no curation will actually be added to the
         database.
     """
     data = {'tag': tag, 'text': text, 'email': curator_email, 'source': source,
-            'ev_hash': ev_hash}
+            'ev_hash': ev_hash, 'pa_json': pa_json, 'ev_json': ev_json}
     url = 'curation/submit/%s' % hash_val
     if is_test:
         qstr = '?test'
