@@ -190,7 +190,10 @@ def test_get_statements_by_hash_no_hash():
 
 @attr('nonpublic')
 def test_curation_submission():
-    raise SkipTest("Curation currently not working.")
+    from indra.config import get_config
+    api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
+    if not api_key:
+        raise SkipTest("No API Key, this test will not work.")
     dbr.submit_curation(32760831642168299, 'TEST', 'This is a test.',
                         'tester', is_test=True)
 
