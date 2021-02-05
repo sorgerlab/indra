@@ -331,7 +331,7 @@ class BeliefEngine(object):
         for st in statements:
             st.belief = self.scorer.score_statement(st)
 
-    def set_hierarchy_probs(self, statements):
+    def set_hierarchy_probs(self, statements, refinements_graph=None):
         """Sets hierarchical belief probabilities for INDRA Statements.
 
         The Statements are assumed to be in a hierarchical relation graph with
@@ -347,20 +347,11 @@ class BeliefEngine(object):
             A list of INDRA Statements whose belief scores are to
             be calculated. Each Statement object's belief attribute is updated
             by this function.
+        refinements_graph : Optional[networkx.DiGraph]
+            A graph whose nodes are statement hashes, and edges point from
+            a more specific to a less specific statement representing
+            a refinement. If not given, a new graph is constructed here.
         """
-        def build_hierarchy_graph(stmts):
-            """Return a DiGraph based on matches keys and Statement supports"""
-            logger.debug('Building hierarchy graph')
-            g = networkx.DiGraph()
-            for st1 in stmts:
-                g.add_node(self.matches_fun(st1), stmt=st1)
-                for st2 in st1.supported_by:
-                    g.add_node(self.matches_fun(st2), stmt=st2)
-                    g.add_edge(self.matches_fun(st2),
-                               self.matches_fun(st1))
-            logger.debug('Finished building hierarchy graph')
-            return g
-
         def get_ranked_stmts(g):
             """Return a topological sort of statement matches keys from a graph.
             """
@@ -380,7 +371,8 @@ class BeliefEngine(object):
             msg = 'Cycle found in hierarchy graph: %s' % cyc
             assert False, msg
 
-        g = build_hierarchy_graph(statements)
+        g = build_refinements_graph(statements) if not refinements_graph \
+            else refinements_graph
         assert_no_cycle(g)
         ranked_stmts = get_ranked_stmts(g)
         logger.debug('Start belief propagation over ranked statements')
@@ -536,3 +528,17 @@ def tag_evidence_subtype(evidence):
         subtype = None
 
     return (source_api, subtype)
+
+
+def build_refinements_graph(stmts):
+    """Return a DiGraph based on matches keys and Statement refinements."""
+    logger.debug('Building refinements graph')
+    g = networkx.DiGraph()
+    for st1 in stmts:
+        g.add_node(self.matches_fun(st1), stmt=st1)
+        for st2 in st1.supported_by:
+            g.add_node(self.matches_fun(st2), stmt=st2)
+            g.add_edge(self.matches_fun(st2),
+                       self.matches_fun(st1))
+    logger.debug('Finished building refinements graph')
+    return g
