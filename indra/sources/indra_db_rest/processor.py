@@ -49,17 +49,21 @@ class IndraDBQueryProcessor:
         timeout will often succeed fast enough to avoid a timeout. This can
         also help gracefully handle an unreliable connection, if you're
         willing to wait. Default is 3
+    api_key : str or None
+        Override or use in place of the API key given in the INDRA config file.
     """
     result_type = NotImplemented
 
     def __init__(self, query: Query, limit=None, sort_by='ev_count',
-                 timeout=None, strict_stop=False, persist=True, tries=3):
+                 timeout=None, strict_stop=False, persist=True, tries=3,
+                 api_key=None):
         self.query = query
         self.limit = limit
         self.sort_by = sort_by
         self.tries = tries
         self.__offset = 0
         self.__quota = limit
+        self.__api_key = api_key
 
         self._evidence_counts = {}
         self._belief_scores = {}
@@ -116,7 +120,7 @@ class IndraDBQueryProcessor:
         result = self.query.get(self.result_type, offset=self.__offset,
                                 limit=self.__quota, sort_by=self.sort_by,
                                 timeout=timeout, n_tries=self.tries,
-                                **self.__special_params)
+                                api_key=self.__api_key, **self.__special_params)
 
         self._evidence_counts.update(result.evidence_counts)
         self._belief_scores.update(result.belief_scores)
@@ -261,13 +265,15 @@ class DBQueryStatementProcessor(IndraDBQueryProcessor):
         timeout will often succeed fast enough to avoid a timeout. This can
         also help gracefully handle an unreliable connection, if you're
         willing to wait. Default is 3.
+    api_key : str or None
+        Override or use in place of the API key given in the INDRA config file.
 
     """
     result_type = 'statements'
 
     def __init__(self, query: Query, limit=None, sort_by='ev_count', ev_limit=10,
                  filter_ev=True, timeout=None, strict_stop=False, persist=True,
-                 use_obtained_counts=False, tries=3):
+                 use_obtained_counts=False, tries=3, api_key=None):
 
         self.statements = []
         self.statements_sample = None
@@ -279,7 +285,8 @@ class DBQueryStatementProcessor(IndraDBQueryProcessor):
         self._set_special_params(ev_limit=ev_limit, filter_ev=filter_ev)
         super(DBQueryStatementProcessor, self).\
             __init__(query, limit=limit, sort_by=sort_by, timeout=timeout,
-                     strict_stop=strict_stop, persist=persist, tries=tries)
+                     strict_stop=strict_stop, persist=persist, tries=tries,
+                     api_key=api_key)
 
     # Metadata Retrieval methods.
 

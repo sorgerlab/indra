@@ -36,7 +36,7 @@ def submit_statement_request(meth, end_point, query_str='', data=None,
 
 
 def make_db_rest_request(meth, end_point, query_str='', data=None, params=None,
-                         tries=2, timeout=None):
+                         tries=2, timeout=None, api_key=None):
     if params is None:
         params = {}
 
@@ -45,7 +45,8 @@ def make_db_rest_request(meth, end_point, query_str='', data=None, params=None,
                      % str([meth, end_point, query_str, data, params, tries]))
         raise ValueError("end_point cannot be None.")
     url_path = get_url_base(end_point)
-    api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
+    if api_key is None:
+        api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
     url_path += query_str
     headers = {}
     if data:

@@ -13,9 +13,9 @@ from indra.sources.indra_db_rest.util import make_db_rest_request, get_url_base
 
 @clockit
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
-                   use_exact_type=False, persist=True, timeout=None,
+                   use_exact_type=False, limit=None, persist=True, timeout=None,
                    strict_stop=False, ev_limit=10, filter_ev=True,
-                   sort_by='ev_count', tries=3, limit=None):
+                   sort_by='ev_count', tries=3, api_key=None):
     """Get a processor for the INDRA DB web API matching given agents and type.
 
     You get an IndraDBRestProcessor object, which allow Statements to be loaded
@@ -50,6 +50,10 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     use_exact_type : bool
         If stmt_type is given, and you only want to search for that specific
         statement type, set this to True. Default is False.
+    limit : int or None
+        Select the maximum number of statements to return. When set less than
+        500 the effect is much the same as setting persist to false, and will
+        guarantee a faster response. Default is None.
     persist : bool
         Default is True. When False, if a query comes back limited (not all
         results returned), just give up and pass along what was returned.
@@ -83,10 +87,8 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         timeout will often succeed fast enough to avoid a timeout. This can also
         help gracefully handle an unreliable connection, if you're willing to
         wait. Default is 3.
-    limit : int or None
-        Select the maximum number of statements to return. When set less than
-        500 the effect is much the same as setting persist to false, and will
-        guarantee a faster response. Default is None.
+    api_key : str or None
+        Override or use in place of the API key given in the INDRA config file.
 
     Returns
     -------
@@ -124,13 +126,13 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                                      ev_limit=ev_limit, timeout=timeout,
                                      sort_by=sort_by, tries=tries,
                                      strict_stop=strict_stop,
-                                     filter_ev=filter_ev)
+                                     filter_ev=filter_ev, api_key=api_key)
 
 
 @clockit
 def get_statements_by_hash(hash_list, limit=None, ev_limit=10, filter_ev=True,
                            sort_by='ev_count', persist=True, timeout=None,
-                           strict_stop=False, tries=3):
+                           strict_stop=False, tries=3, api_key=None):
     """Get fully formed statements from a list of hashes.
 
     Parameters
@@ -171,6 +173,8 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10, filter_ev=True,
         timeout will often succeed fast enough to avoid a timeout. This can
         also help gracefully handle an unreliable connection, if you're
         willing to wait. Default is 3.
+    api_key : str or None
+        Override or use in place of the API key given in the INDRA config file.
 
     Returns
     -------
@@ -182,13 +186,13 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10, filter_ev=True,
                                      ev_limit=ev_limit, sort_by=sort_by,
                                      persist=persist, timeout=timeout,
                                      tries=tries, filter_ev=filter_ev,
-                                     strict_stop=strict_stop)
+                                     strict_stop=strict_stop, api_key=api_key)
 
 
 @clockit
 def get_statements_for_paper(ids, limit=None, ev_limit=10, sort_by='ev_count',
                              persist=True, timeout=None, strict_stop=False,
-                             tries=3, filter_ev=True):
+                             tries=3, filter_ev=True, api_key=None):
     """Get the set of raw Statements extracted from a paper given by the id.
 
     Parameters
@@ -231,6 +235,8 @@ def get_statements_for_paper(ids, limit=None, ev_limit=10, sort_by='ev_count',
         timeout will often succeed fast enough to avoid a timeout. This can also
         help gracefully handle an unreliable connection, if you're willing to
         wait. Default is 3.
+    api_key : str or None
+        Override or use in place of the API key given in the INDRA config file.
 
     Returns
     -------
@@ -242,13 +248,14 @@ def get_statements_for_paper(ids, limit=None, ev_limit=10, sort_by='ev_count',
                                      ev_limit=ev_limit, sort_by=sort_by,
                                      persist=persist, timeout=timeout,
                                      tries=tries, filter_ev=filter_ev,
-                                     strict_stop=strict_stop)
+                                     strict_stop=strict_stop, api_key=api_key)
 
 
 @clockit
 def get_statements_from_query(query, limit=None, ev_limit=10,
                               sort_by='ev_count', persist=True, timeout=None,
-                              strict_stop=False, tries=3, filter_ev=True):
+                              strict_stop=False, tries=3, filter_ev=True,
+                              api_key=None):
     """Get the set of raw Statements extracted from a paper given by the id.
 
     Parameters
@@ -289,6 +296,8 @@ def get_statements_from_query(query, limit=None, ev_limit=10,
         timeout will often succeed fast enough to avoid a timeout. This can also
         help gracefully handle an unreliable connection, if you're willing to
         wait. Default is 3.
+    api_key : str or None
+        Override or use in place of the API key given in the INDRA config file.
 
     Returns
     -------
@@ -300,12 +309,12 @@ def get_statements_from_query(query, limit=None, ev_limit=10,
                                      ev_limit=ev_limit, sort_by=sort_by,
                                      persist=persist, timeout=timeout,
                                      tries=tries, filter_ev=filter_ev,
-                                     strict_stop=strict_stop)
+                                     strict_stop=strict_stop, api_key=api_key)
 
 
 def submit_curation(hash_val, tag, curator_email, text=None,
                     source='indra_rest_client', ev_hash=None, pa_json=None,
-                    ev_json=None, is_test=False):
+                    ev_json=None, api_key=None, is_test=False):
     """Submit a curation for the given statement at the relevant level.
 
     Parameters
@@ -333,6 +342,8 @@ def submit_curation(hash_val, tag, curator_email, text=None,
     ev_json : None or dict
         The JSON of an evidence you wish to curate. If not given, it cannot be
         inferred.
+    api_key : str or None
+        Override or use in place of the API key given in the INDRA config file.
     is_test : bool
         Used in testing. If True, no curation will actually be added to the
         database.
@@ -344,11 +355,11 @@ def submit_curation(hash_val, tag, curator_email, text=None,
         qstr = '?test'
     else:
         qstr = ''
-    resp = make_db_rest_request('post', url, qstr, data=data)
+    resp = make_db_rest_request('post', url, qstr, data=data, api_key=api_key)
     return resp.json()
 
 
-def get_curations(hash_val=None, source_hash=None):
+def get_curations(hash_val=None, source_hash=None, api_key=None):
     """Get the curations for a specific statement and evidence.
 
     If neither hash_val nor source_hash are given, all curations will be
@@ -362,6 +373,8 @@ def get_curations(hash_val=None, source_hash=None):
     source_hash : int or None
         The hash generated for a piece of evidence for which you want curations.
         The `hash_val` must be provided to use the `source_hash`.
+    api_key : str or None
+        Override or use in place of the API key given in the INDRA config file.
 
     Returns
     -------
@@ -375,7 +388,7 @@ def get_curations(hash_val=None, source_hash=None):
             url += f'/{source_hash}'
     elif source_hash is not None:
         raise ValueError("A hash_val must be given if a source_hash is given.")
-    resp = make_db_rest_request('get', url)
+    resp = make_db_rest_request('get', url, api_key=api_key)
     return resp.json()
 
 
