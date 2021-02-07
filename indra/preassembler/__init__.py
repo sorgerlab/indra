@@ -912,17 +912,21 @@ class OntologyRefinementFilter(RefinementFilter):
 
     def initialize(self, stmts_by_hash):
         self.shared_data['stmts_by_hash'] = stmts_by_hash
-        # Statements by type
+
+        # Build up data structure of statement hashes by
+        # statement type
         stmts_by_type = collections.defaultdict(set)
-        for stmt_hash, stmt in self.stmts_by_hash.items():
+        for stmt_hash, stmt in stmts_by_hash.items():
             stmts_by_type[indra_stmt_type(stmt)].add(stmt_hash)
         stmts_by_type = dict(stmts_by_type)
 
-        for stmt_type, stmts_by_hash in stmts_by_type:
-            self.shared_data[stmt_type] = {}
+        # Now iterate over each statement type and build up
+        # data structures for quick filtering
+        for stmt_type, stmts_this_type in stmts_by_type.items():
 
             # Step 1. initialize data structures
-            roles = stmts_by_hash[next(iter(stmts_by_hash))]._agent_order
+            roles = stmts_by_hash[
+                next(iter(stmts_this_type))]._agent_order
             # Mapping agent keys to statement hashes
             agent_key_to_hash = {}
             # Mapping statement hashes to agent keys
@@ -935,20 +939,10 @@ class OntologyRefinementFilter(RefinementFilter):
 
             # Step 2. Fill up the initial data structures in preparation
             # for identifying potential refinements
-            for sh, stmt in stmts_by_hash.items():
+            for sh in stmts_this_type:
                 for role in roles:
-                    agents = getattr(stmt, role)
-                    # Handle a special case here where a list=like agent
-                    # role can be empty, here we will consider anything else
-                    # to be a refinement, hence add a None key
-                    if isinstance(agents, list) and not agents:
-                        agent_keys = {None}
-                    # Generally, we take all the agent keys for a single or
-                    # list-like agent role.
-                    else:
-                        agent_keys = {get_agent_key(agent) for agent in
-                                      (agents if isinstance(agents, list)
-                                       else [agents])}
+                    agent_keys = self._agent_keys_for_stmt_role(
+                        stmts_by_hash[sh], role)
                     for agent_key in agent_keys:
                         agent_key_to_hash[role][agent_key].add(sh)
                         hash_to_agent_key[role][sh].add(agent_key)
@@ -959,36 +953,68 @@ class OntologyRefinementFilter(RefinementFilter):
             for role in roles:
                 all_keys_by_role[role] = set(agent_key_to_hash[role].keys())
 
-            self.shared_data[stmt_type]['agent_key_to_hash'] = \
-                agent_key_to_hash
-            self.shared_data[stmt_type]['hash_to_agent_key'] = \
-                hash_to_agent_key
-            self.shared_data[stmt_type]['all_keys_by_role'] = \
-                all_keys_by_role
+            # Step 3. Make these available as shared data for the apply step
+            self.shared_data[stmt_type] = {
+                'agent_key_to_hash': agent_key_to_hash,
+                'hash_to_agent_key': hash_to_agent_key,
+                'all_keys_by_role': all_keys_by_role,
+            }
 
-    def apply(self, stmt_hash, possible_refinements=None):
+    @staticmethod
+    def _agent_keys_for_stmt_role(stmt, role):
+        """Return a set of agent keys for a statement's agent in a role.
+
+        The agent key is an "anchor" to the ontology being used and positons
+        a statement, via its agent in this role against other statements it
+        may be related to.
+        """
+        agents = getattr(stmt, role)
+        # Handle a special case here where a list=like agent
+        # role can be empty, here we will consider anything else
+        # to be a refinement, hence add a None key
+        if isinstance(agents, list) and not agents:
+            agent_keys = {None}
+        # Generally, we take all the agent keys for a single or
+        # list-like agent role.
+        else:
+            agent_keys = {get_agent_key(agent) for agent in
+                          (agents if isinstance(agents, list)
+                           else [agents])}
+        return agent_keys
+
+    def apply(self, stmt, possibly_refines=None):
+        # Corner case: if this is a new statement that wasn't part of the
+        # initialization, it is possible that it has a type that we've not
+        # seen during initialization at all. In this case, we can assume
+        # there are no refinements for it.
+        stmt_type = indra_stmt_type(stmt)
+        if stmt_type not in self.shared_data:
+            return {}
+
         # Step 1. Recover relevant parts ot the initialized data
         stmts_by_hash = self.shared_data['stmts_by_hash']
-        try:
-            stmt = stmts_by_hash[stmt_hash]
-        except KeyError:
-            raise ValueError('The statement hash %s was not included in the '
-                             'initialization.' % stmt_hash)
-        stmt_type = indra_stmt_type(stmt)
         hash_to_agent_key = self.shared_data[stmt_type]['hash_to_agent_key']
         agent_key_to_hash = self.shared_data[stmt_type]['agent_key_to_hash']
         all_keys_by_role = self.shared_data[stmt_type]['all_keys_by_role']
 
         # Step 2. We iterate over all statements and find ones that this one
         # can refine
-        relevants = possible_refinements
+        stmt_hash = stmt.get_hash()
+        relevants = possibly_refines
         # We now iterate over all the agent roles in the given statement
         # type
         for role, hash_to_agent_key_for_role in hash_to_agent_key.items():
+            # If we have seen this statement before during initialization then
+            # we can use its precalculated agent keys, otherwise we
+            # calculate new agent keys for it.
+            if stmt_hash in hash_to_agent_key_for_role:
+                agent_keys = hash_to_agent_key_for_role[stmt_hash]
+            else:
+                agent_keys = self._agent_keys_for_stmt_role(stmt, role)
+
             # We get all the agent keys in all other statements that the
-            # agent
-            # in this role in this statement can be a refinement.
-            for agent_key in hash_to_agent_key_for_role[stmt_hash]:
+            # agent in this given role in this statement can refine.
+            for agent_key in agent_keys:
                 relevant_keys = get_relevant_keys(
                     agent_key,
                     all_keys_by_role[role],
@@ -1006,6 +1032,7 @@ class OntologyRefinementFilter(RefinementFilter):
                 # the relevant sets per role
                 else:
                     relevants &= role_relevant_stmt_hashes
+
         # These hashes are now the ones that this statement needs
         # to be compared against. Importantly, the relationship is in
         # a well-defined direction so we don't need to test both ways.
@@ -1013,16 +1040,17 @@ class OntologyRefinementFilter(RefinementFilter):
 
 
 class RefinementConfirmationFilter(RefinementFilter):
-    def __init__(self, ontology, refinement_fun):
+    def __init__(self, ontology, refinement_fun=None):
         self.ontology = ontology
-        self.refinement_fun = refinement_fun
+        self.refinement_fun = refinement_fun if refinement_fun else \
+            default_refinement_fun
         self.shared_data = {}
 
     def initialize(self, stmts_by_hash):
         self.shared_data['stmts_by_hash'] = stmts_by_hash
         pass
 
-    def apply(self, stmt_hash, possible_refined_hashes=None,
+    def apply(self, stmt, possibly_refines=None,
               split_groups=None):
         stmts_by_hash = self.shared_data['stmts_by_hash']
         refinements = set()
@@ -1030,7 +1058,7 @@ class RefinementConfirmationFilter(RefinementFilter):
         ts = time.time()
         # We use the previously constructed set of statements that this one
         # can possibly refine
-        for possible_refined_hash in possible_refined_hashes:
+        for possible_refined_hash in possibly_refines:
             # We handle split groups here to only check refinements between
             # statements that are in different groups to compare
             if not split_groups or split_groups[stmt_hash] != \
