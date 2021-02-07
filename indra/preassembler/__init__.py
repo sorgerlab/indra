@@ -1053,6 +1053,7 @@ class RefinementConfirmationFilter(RefinementFilter):
     def apply(self, stmt, possibly_refines=None,
               split_groups=None):
         stmts_by_hash = self.shared_data['stmts_by_hash']
+        stmt_hash = stmt.get_hash()
         refinements = set()
         # We again iterate over statements
         ts = time.time()
@@ -1061,7 +1062,7 @@ class RefinementConfirmationFilter(RefinementFilter):
         for possible_refined_hash in possibly_refines:
             # We handle split groups here to only check refinements between
             # statements that are in different groups to compare
-            if not split_groups or split_groups[stmt_hash] != \
+            if not split_groups or split_groups.get(stmt_hash) != \
                     split_groups[possible_refined_hash]:
                 # And then do the actual comparison. Here we use
                 # entities_refined=True which means that we assert that
@@ -1070,7 +1071,7 @@ class RefinementConfirmationFilter(RefinementFilter):
                 # don't need to again confirm this (i.e., call "isa") in
                 # the refinement_of function.
                 ref = self.refinement_fun(
-                    stmts_by_hash[stmt_hash],
+                    stmt,
                     stmts_by_hash[possible_refined_hash],
                     ontology=self.ontology,
                     # NOTE: here we assume that the entities at this point
