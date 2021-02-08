@@ -1,5 +1,6 @@
 __all__ = ['get_agent_key', 'get_relevant_keys', 'RefinementFilter',
            'RefinementConfirmationFilter', 'OntologyRefinementFilter',
+           'SplitGroupFilter',
            'ontology_refinement_filter', 'bio_ontology_refinement_filter',
            'default_refinement_fun']
 
@@ -265,6 +266,26 @@ class RefinementConfirmationFilter(RefinementFilter):
             if ref:
                 relateds.add(possible_related_hash)
         return relateds
+
+
+class SplitGroupFilter(RefinementFilter):
+    def __init__(self, split_groups):
+        self.split_groups = split_groups
+
+    def get_related(self, stmt, possibly_related=None,
+                    direction='less_specific'):
+        sh = stmt.get_hash()
+        group = self.split_groups.get(sh)
+        # We take all the hashes that are in a different group, and
+        # return all of them of possibly_related is None (i.e., there
+        # was no previous filter), or if the given statement is
+        # also possibly related
+        related = {stmt_hash for stmt_hash
+                   in self.shared_data['statements_by_hash']
+                   if self.split_groups[stmt_hash] != group
+                   and (possibly_related is None
+                        or stmt_hash in possibly_related)}
+        return related
 
 
 def ontology_refinement_filter(stmts_by_hash, stmts_to_compare, ontology):

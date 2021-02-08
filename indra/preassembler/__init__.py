@@ -367,10 +367,22 @@ class Preassembler(object):
         if not filters:
             filters = [OntologyRefinementFilter(ontology=self.ontology)]
 
+        # Here we handle split_idx to allow finding refinements between
+        # two distinct groups of statements (identified by an index at which we
+        # split the unique_statements list) rather than globally across
+        # all unique statements.
+        if split_idx:
+            split_groups = {sh: (idx <= split_idx)
+                            for sh, idx in stmt_to_idx.items()}
+            sgf = SplitGroupFilter(split_groups=split_groups)
+            filters.append(sgf)
+
+        # We can now append the confirmation filter
         filters.append(
             RefinementConfirmationFilter(ontology=self.ontology,
                                          refinement_fun=self.refinement_fun))
 
+        # Initialize all filters
         for filt in filters:
             filt.initialize(stmts_by_hash=stmts_by_hash)
 
@@ -385,23 +397,6 @@ class Preassembler(object):
                     filt.get_less_specifics(stmt,
                                             possibly_related=possibly_related)
                 first_filter = False
-
-        # Here we handle split_idx to allow finding refinements between
-        # two distinct groups of statements (identified by an index at which we
-        # split the unique_statements list) rather than globally across
-        # all unique statements.
-        if split_idx:
-            # We iterate over statements by index and filter down its
-            # comparison list to statements that are in the other group.
-            for sh, idx in stmt_to_idx.items():
-                # The group of this tatement
-                group = (idx <= split_idx)
-                # We only include other statements that are in the
-                # other group
-                stmts_to_compare[sh] = {
-                    sh_other for sh_other in stmts_to_compare[sh]
-                    if group != (stmt_to_idx[sh_other] <= split_idx)
-                }
 
         te = time.time()
         logger.info('Found all refinements in %.2fs' % (te-ts))
