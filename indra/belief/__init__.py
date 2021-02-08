@@ -370,7 +370,9 @@ class BeliefEngine(object):
                 return
             msg = 'Cycle found in hierarchy graph: %s' % cyc
             assert False, msg
-        stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun): stmt}
+
+        stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun): stmt
+                         for stmt in statements}
         g = build_refinements_graph(stmts_by_hash=stmts_by_hash,
                                     matches_fun=self.matches_fun) \
             if not refinements_graph else refinements_graph
@@ -541,6 +543,6 @@ def build_refinements_graph(stmts_by_hash, matches_fun):
             sh2 = st2.get_hash(matches_fun=matches_fun)
             st2 = stmts_by_hash[sh2]
             g.add_node(sh2, stmt=st2)
-            g.add_edge(st2, st1)
+            g.add_edge(sh2, sh1)
     logger.debug('Finished building refinements graph')
     return g
