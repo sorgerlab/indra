@@ -370,9 +370,10 @@ class BeliefEngine(object):
                 return
             msg = 'Cycle found in hierarchy graph: %s' % cyc
             assert False, msg
-
-        g = build_refinements_graph(statements) if not refinements_graph \
-            else refinements_graph
+        stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun): stmt}
+        g = build_refinements_graph(stmts_by_hash=stmts_by_hash,
+                                    matches_fun=self.matches_fun) \
+            if not refinements_graph else refinements_graph
         assert_no_cycle(g)
         ranked_stmts = get_ranked_stmts(g)
         logger.debug('Start belief propagation over ranked statements')
@@ -530,15 +531,16 @@ def tag_evidence_subtype(evidence):
     return (source_api, subtype)
 
 
-def build_refinements_graph(stmts):
-    """Return a DiGraph based on matches keys and Statement refinements."""
+def build_refinements_graph(stmts_by_hash, matches_fun):
+    """Return a DiGraph based on matches hashes and Statement refinements."""
     logger.debug('Building refinements graph')
     g = networkx.DiGraph()
-    for st1 in stmts:
-        g.add_node(self.matches_fun(st1), stmt=st1)
+    for sh1, st1 in stmts_by_hash.items():
+        g.add_node(sh1, stmt=st1)
         for st2 in st1.supported_by:
-            g.add_node(self.matches_fun(st2), stmt=st2)
-            g.add_edge(self.matches_fun(st2),
-                       self.matches_fun(st1))
+            sh2 = st2.get_hash(matches_fun=matches_fun)
+            st2 = stmts_by_hash[sh2]
+            g.add_node(sh2, stmt=st2)
+            g.add_edge(st2, st1)
     logger.debug('Finished building refinements graph')
     return g
