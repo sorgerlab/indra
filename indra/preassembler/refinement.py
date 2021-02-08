@@ -247,7 +247,6 @@ class RefinementConfirmationFilter(RefinementFilter):
 
     def _get_related(self, stmt, possibly_related=None,
                      direction='less_specific'):
-
         stmts_by_hash = self.shared_data['stmts_by_hash']
         relateds = set()
         # We use the previously constructed set of statements that this one
@@ -308,10 +307,14 @@ def ontology_refinement_filter(stmts_by_hash, stmts_to_compare, ontology):
     ont_filter = OntologyRefinementFilter(ontology)
     ont_filter.initialize(stmts_by_hash)
 
-    stmts_to_compare = {stmt_hash: ont_filter.get_less_specifics(
-        # FIXME: the way we interpret stmts_to_compare here should be
-        # reviewed
-        stmt_hash, possibly_related=stmts_to_compare.get(stmt_hash))
+    stmts_to_compare = {
+        stmt_hash: ont_filter.get_less_specifics(
+            stmt_hash,
+            possibly_related=(
+                stmts_to_compare.get(stmt_hash)
+                if stmts_to_compare is not None else None
+                )
+            )
         for stmt_hash in stmts_by_hash}
     te = time.time()
     logger.debug('Identified ontology-based possible refinements in %.2fs'

@@ -335,13 +335,10 @@ class Preassembler(object):
             An index at which the flat list of unique statements should be split
             and compared for refinements only across the two groups, not
             within each group.
-        filters : Optional[list[function]]
-            A list of function handles that define filter functions on
-            possible statement refinements. Each function takes
-            a stmts_by_hash dict as its input and returns a dict
-            of possible refinements where the keys are statement hashes
-            and the values are sets of statement hashes that the
-            key statement possibly refines.
+        filters : Optional[list[indra.preassembler.refinement.RefinementFilter]]
+            A list of RefinementFilter objects that define filters on
+            possible statement refinements. By default, the built-in
+            ontology-based filter is used.
 
         Returns
         -------
@@ -364,56 +361,60 @@ class Preassembler(object):
                              'function used for refinement finding.')
         # Statements keyed by their hashes
         stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun):
-                             stmt for stmt in unique_stmts}
+                         stmt for stmt in unique_stmts}
+        # Here we apply any additional filters to cut down the number of
+        # potential comparisons before actually making comparisons
+        if not filters:
+            filters = [OntologyRefinementFilter(ontology=self.ontology)]
+
+        for filt in filters:
+            filt.initialize(stmts_by_hash=stmts_by_hash)
+
+        # We apply filter functions per statement, sequentially
+        stmts_to_compare = {}
+        for stmt_hash, stmt in stmts_by_hash.items():
+            first_filter = True
+            for filt in filters:
+                possibly_related = None if first_filter \
+                    else stmts_to_compare[stmt_hash]
+                stmts_to_compare[stmt_hash] = \
+                    filt.get_less_specifics(stmt,
+                                            possibly_related=possibly_related)
+                first_filter = False
+
         # Here we handle split_idx to allow finding refinements between
-        # to distinct groups of statements (identified by an index at which we
+        # two distinct groups of statements (identified by an index at which we
         # split the unique_statements list) rather than globally across
         # all unique statements.
         if split_idx:
-            # This dict maps statement hashes to a bool value based on which
-            # of the two groups the statement belongs to.
-            hash_to_split_group = {sh: (idx <= split_idx) for sh, idx
-                                   in stmt_to_idx.items()}
-        else:
-            hash_to_split_group = None
-
-        stmts_to_compare = None
-        # Here we apply any additional filters to cut down the number of
-        # potential comparisons before actually making comparisons
-        if filters:
-            # We apply filter functions sequentially
-            for filter_fun in filters:
-                logger.debug('Applying filter %s' % filter_fun.__name__)
-                stmts_to_compare = \
-                    filter_fun(stmts_by_hash, stmts_to_compare)
-                total_comparisons = sum(len(v)
-                                        for v in stmts_to_compare.values())
-                logger.debug('Total comparisons after filter %s: %d' %
-                             (filter_fun.__name__, total_comparisons))
-        else:
-            stmts_to_compare = \
-                ontology_refinement_filter(stmts_by_hash=stmts_by_hash,
-                                           stmts_to_compare=stmts_to_compare,
-                                           ontology=self.ontology)
-        total_comparisons = sum(len(v) for v in stmts_to_compare.values())
+            # We iterate over statements by index and filter down its
+            # comparison list to statements that are in the other group.
+            for sh, idx in stmt_to_idx.items():
+                # The group of this tatement
+                group = (idx <= split_idx)
+                # We only include other statements that are in the
+                # other group
+                stmts_to_compare[sh] = {
+                    sh_other for sh_other in stmts_to_compare[sh]
+                    if group != (stmt_to_idx[sh_other] <= split_idx)
+                }
 
         te = time.time()
         logger.info('Applied all refinement pre-filters in %.2fs' % (te-ts))
+        total_comparisons = sum(len(v) for v in stmts_to_compare.values())
         logger.info('Total comparisons: %d' % total_comparisons)
 
         # We can now do the actual comparisons and return pairs of confirmed
         # refinements in a list.
         maps = \
             self.confirm_possible_refinements(stmts_by_hash,
-                                              stmts_to_compare,
-                                              split_groups=hash_to_split_group)
+                                              stmts_to_compare)
 
         idx_maps = [(stmt_to_idx[refinement], stmt_to_idx[refined])
                     for refinement, refined in maps]
         return idx_maps
 
-    def confirm_possible_refinements(self, stmts_by_hash, stmts_to_compare,
-                                     split_groups=None):
+    def confirm_possible_refinements(self, stmts_by_hash, stmts_to_compare):
         """Return confirmed pairs of statement refinement relationships.
 
         Parameters
@@ -425,12 +426,6 @@ class Preassembler(object):
             A dict whose keys are statement hashes and values are sets of
             statement hashes that the statement with the given hash can
             possibly refine.
-        split_groups : dict
-            A dict whose keys are statement hashes and values represent
-            one of two groups that the statement is in. Statement in the
-            same group aren't compared, only statements in different
-            groups are. This can be used to do "bipartite" refinement
-            checking across a set of statements.
 
         Returns
         -------
@@ -445,8 +440,10 @@ class Preassembler(object):
         confirmation_filter = \
             RefinementConfirmationFilter(ontology=self.ontology,
                                          refinement_fun=self.refinement_fun)
+        confirmation_filter.initialize(stmts_by_hash=stmts_by_hash)
         for stmt_hash, possible_refined_hashes in stmts_to_compare.items():
-            refinements = confirmation_filter.apply(stmt_hash, possible_refined_hashes)
+            refinements = confirmation_filter.get_less_specifics(
+                stmts_by_hash[stmt_hash], possible_refined_hashes)
             maps += [(stmt_hash, ref) for ref in refinements]
         te = time.time()
         logger.debug('Confirmed %d refinements in %.2fs' % (len(maps), te-ts))
