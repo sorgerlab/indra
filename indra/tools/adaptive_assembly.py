@@ -1,4 +1,6 @@
 import copy
+from indra.statements import Event
+
 
 class AdaptiveAssembler:
     def __init__(self, unique_statements, filters, matches_fun=None):
@@ -15,17 +17,24 @@ class AdaptiveAssembler:
         all_refinements = []
         for sh, stmt in self.stmts_by_hash.items():
             all_refinements += [(sh, ref) for ref in
-                                self.get_refinements(stmt)]
+                                self.get_less_specifics(stmt)]
         return all_refinements
 
-    def get_refinements(self, stmt):
-        sh = stmt.get_hash(matches_fun=self.matches_fun)
-        possibly_refines = None
+    def get_more_specifics(self, stmt):
+        possibly_related = None
         for filter in self.filters:
-            possibly_refines = \
-                filter.apply(stmt,
-                             possibly_refines=possibly_refines)
-        return possibly_refines
+            possibly_related = \
+                filter.get_more_specifics(
+                    stmt, possibly_related=possibly_related)
+        return possibly_related
+
+    def get_less_specifics(self, stmt):
+        possibly_related = None
+        for filter in self.filters:
+            possibly_related = \
+                filter.get_less_specifics(
+                    stmt, possibly_related=possibly_related)
+        return possibly_related
 
 
 def get_more_generic_agent(agent, ontology):
@@ -44,4 +53,4 @@ def generate_generics(stmt):
 
 def generalize_concept_grounding(concept):
     if 'WM' in concept.db_refs:
-        wm_grounding = db_refs['WM']
+        wm_grounding = concept.db_refs['WM']

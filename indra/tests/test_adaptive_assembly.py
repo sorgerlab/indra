@@ -27,5 +27,16 @@ def test_adaptive_assembly():
                                     (hashes[2], hashes[1])}
 
     test_stmt = Phosphorylation(mek, mapk)
-    test_refinements = aa.get_refinements(test_stmt)
-    assert False, test_refinements
+    test_refinements = aa.get_more_specifics(test_stmt)
+    # All of these are refinements
+    assert test_refinements == set(hashes)
+
+    test_stmt = Phosphorylation(mek, erk, 'T', '185')
+    test_refinements = aa.get_less_specifics(test_stmt)
+    # All of these are refinements
+    assert test_refinements == set(hashes)
+
+    test_stmt = Phosphorylation(mek, erk, 'T', '185')
+    test_refinements = aa.get_more_specifics(test_stmt)
+    # All of these are refinements
+    assert test_refinements == set()
