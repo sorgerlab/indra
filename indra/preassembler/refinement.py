@@ -76,11 +76,17 @@ class RefinementFilter:
     def initialize(self, stmts_by_hash):
         self.shared_data['stmts_by_hash'] = stmts_by_hash
 
-    def get_more_specifics(self, stmt, possibly_related=None):
+    def get_related(self, stmt, possibly_related=None,
+                    direction='less_specific'):
         pass
 
+    def get_more_specifics(self, stmt, possibly_related=None):
+        return self.get_related(stmt, possibly_related=possibly_related,
+                                direction='more_specific')
+
     def get_less_specifics(self, stmt, possibly_related=None):
-        pass
+        return self.get_related(stmt, possibly_related=possibly_related,
+                                direction='less_specific')
 
 
 class OntologyRefinementFilter(RefinementFilter):
@@ -160,16 +166,8 @@ class OntologyRefinementFilter(RefinementFilter):
                            else [agents])}
         return agent_keys
 
-    def get_less_specifics(self, stmt, possibly_related=None):
-        return self._get_related(stmt, possibly_related=possibly_related,
-                                 direction='less_specific')
-
-    def get_more_specifics(self, stmt, possibly_related=None):
-        return self._get_related(stmt, possibly_related=possibly_related,
-                                 direction='more_specific')
-
-    def _get_related(self, stmt, possibly_related=None,
-                     direction='less_specific'):
+    def get_related(self, stmt, possibly_related=None,
+                    direction='less_specific'):
         # Corner case: if this is a new statement that wasn't part of the
         # initialization, it is possible that it has a type that we've not
         # seen during initialization at all. In this case, we can assume
@@ -234,16 +232,8 @@ class RefinementConfirmationFilter(RefinementFilter):
         self.shared_data = {}
         self.comparison_counter = 0
 
-    def get_less_specifics(self, stmt, possibly_related=None):
-        return self._get_related(stmt, possibly_related=possibly_related,
-                                 direction='less_specific')
-
-    def get_more_specifics(self, stmt, possibly_related=None):
-        return self._get_related(stmt, possibly_related=possibly_related,
-                                 direction='more_specific')
-
-    def _get_related(self, stmt, possibly_related=None,
-                     direction='less_specific'):
+    def get_related(self, stmt, possibly_related=None,
+                    direction='less_specific'):
         stmts_by_hash = self.shared_data['stmts_by_hash']
         relateds = set()
         # We use the previously constructed set of statements that this one
