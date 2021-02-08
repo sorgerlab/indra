@@ -6,6 +6,7 @@ from indra.sources import reach
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
 from indra.ontology.world import world_ontology
+from indra.preassembler import RefinementFilter, OntologyRefinementFilter
 
 
 def test_duplicates():
@@ -1035,34 +1036,41 @@ def test_refinement_filters():
     st3 = Phosphorylation(Agent('x'), hras)
 
     # This filters everything out so no comparisons will be done
-    def filter_empty(stmts_by_hash, stmts_to_compare, *args):
-        return {k: set() for k in stmts_by_hash}
-    # No comparisons here
-    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
-    pa.combine_related(filters=[bio_ontology_refinement_filter,
-                                filter_empty])
-    assert pa._comparison_counter == 0
+    class FilterEmpty(RefinementFilter):
+        def get_less_specifics(self, stmt, possibly_related):
+            return set()
 
     # This is a superset of all comparisons constrained by the ontology
     # so will not change what the preassembler does internally
-    def filter_all(stmts_by_hash, stmts_to_compare, *args):
-        filter_set = {k: (set(stmts_by_hash) - {k}) for k in stmts_by_hash}
-        if stmts_to_compare is None:
-            return filter_set
-        else:
-            for k in filter_set:
-                filter_set[k] &= stmts_to_compare.get(k, set())
-            return filter_set
+    class FilterAll(RefinementFilter):
+        def get_less_specifics(self, stmt, possibly_related):
+            shs = set(self.shared_data['stmts_by_hash']) - {stmt.get_hash()}
+            if possibly_related is not None:
+                shs &= possibly_related
+            return shs
+
+    # No comparisons here
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
+    pa.combine_related(
+        filters=[OntologyRefinementFilter(ontology=bio_ontology),
+                 FilterEmpty()])
+    assert pa._comparison_counter == 0
+
     # The same number of comparisons here as without the filter
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
-    pa.combine_related(filters=[bio_ontology_refinement_filter,
-                                filter_all])
+    pa.combine_related(
+        filters=[OntologyRefinementFilter(ontology=bio_ontology),
+                 FilterAll()])
     assert pa._comparison_counter == 2, pa._comparison_counter
 
     # Just to make sure lists of more than one filter are correctly handled
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
-    pa.combine_related(filters=[filter_all, filter_empty,
-                                bio_ontology_refinement_filter])
+    pa.combine_related(
+        filters=[
+            FilterAll(),
+            FilterEmpty(),
+            OntologyRefinementFilter(bio_ontology)
+        ])
     assert pa._comparison_counter == 0, pa._comparison_counter
 
     # Now try adding more statement types
@@ -1072,17 +1080,25 @@ def test_refinement_filters():
 
     # The same number of comparisons here as without the filter
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3, st4, st5, st6])
-    pa.combine_related(filters=[bio_ontology_refinement_filter,
-                                filter_all])
+    pa.combine_related(
+        filters=[OntologyRefinementFilter(bio_ontology),
+                 FilterAll()
+        ])
     assert pa._comparison_counter == 4, pa._comparison_counter
 
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3, st4, st5, st6])
-    pa.combine_related(filters=[filter_all,
-                                bio_ontology_refinement_filter])
+    pa.combine_related(
+        filters=[FilterAll(),
+                 OntologyRefinementFilter(bio_ontology)
+        ])
     assert pa._comparison_counter == 4, pa._comparison_counter
 
     # Just to make sure lists of more than one filter are correctly handled
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3, st4, st5, st6])
-    pa.combine_related(filters=[filter_all, filter_empty,
-                                bio_ontology_refinement_filter])
+    pa.combine_related(
+        filters=[
+            FilterAll(),
+            FilterEmpty(),
+            OntologyRefinementFilter(bio_ontology)
+        ])
     assert pa._comparison_counter == 0, pa._comparison_counter

@@ -232,10 +232,7 @@ class RefinementConfirmationFilter(RefinementFilter):
         self.refinement_fun = refinement_fun if refinement_fun else \
             default_refinement_fun
         self.shared_data = {}
-
-    def initialize(self, stmts_by_hash):
-        self.shared_data['stmts_by_hash'] = stmts_by_hash
-        pass
+        self.comparison_counter = 0
 
     def get_less_specifics(self, stmt, possibly_related=None):
         return self._get_related(stmt, possibly_related=possibly_related,
@@ -274,6 +271,7 @@ class RefinementConfirmationFilter(RefinementFilter):
                 # user-supplied self.refinement_fun to disregard the
                 # entities_refined argument.
                 entities_refined=True)
+            self.comparison_counter += 1
             if ref:
                 relateds.add(possible_related_hash)
         return relateds

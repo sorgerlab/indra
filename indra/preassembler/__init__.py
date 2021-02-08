@@ -445,6 +445,7 @@ class Preassembler(object):
             refinements = confirmation_filter.get_less_specifics(
                 stmts_by_hash[stmt_hash], possible_refined_hashes)
             maps += [(stmt_hash, ref) for ref in refinements]
+        self._comparison_counter = confirmation_filter.comparison_counter
         te = time.time()
         logger.debug('Confirmed %d refinements in %.2fs' % (len(maps), te-ts))
         return maps
