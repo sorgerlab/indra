@@ -367,6 +367,10 @@ class Preassembler(object):
         if not filters:
             filters = [OntologyRefinementFilter(ontology=self.ontology)]
 
+        filters.append(
+            RefinementConfirmationFilter(ontology=self.ontology,
+                                         refinement_fun=self.refinement_fun))
+
         for filt in filters:
             filt.initialize(stmts_by_hash=stmts_by_hash)
 
@@ -400,55 +404,15 @@ class Preassembler(object):
                 }
 
         te = time.time()
-        logger.info('Applied all refinement pre-filters in %.2fs' % (te-ts))
-        total_comparisons = sum(len(v) for v in stmts_to_compare.values())
-        logger.info('Total comparisons: %d' % total_comparisons)
+        logger.info('Found all refinements in %.2fs' % (te-ts))
+        self._comparison_counter = sum(len(v) for v in stmts_to_compare.values())
+        logger.info('Total comparisons: %d' % self._comparison_counter)
 
-        # We can now do the actual comparisons and return pairs of confirmed
-        # refinements in a list.
-        maps = \
-            self.confirm_possible_refinements(stmts_by_hash,
-                                              stmts_to_compare)
-
-        idx_maps = [(stmt_to_idx[refinement], stmt_to_idx[refined])
-                    for refinement, refined in maps]
+        idx_maps = []
+        for refiner, refineds in stmts_to_compare.items():
+            idx_maps += [(stmt_to_idx[refiner], stmt_to_idx[refined])
+                         for refined in refineds]
         return idx_maps
-
-    def confirm_possible_refinements(self, stmts_by_hash, stmts_to_compare):
-        """Return confirmed pairs of statement refinement relationships.
-
-        Parameters
-        ----------
-        stmts_by_hash : dict
-            A dict whose keys are statement hashes that point to the
-            (deduplicated) statement with that hash as a value.
-        stmts_to_compare : dict
-            A dict whose keys are statement hashes and values are sets of
-            statement hashes that the statement with the given hash can
-            possibly refine.
-
-        Returns
-        -------
-        list of tuple
-            A list of tuple where the first element of each tuple is the
-            hash of a statement which refines that statement whose hash
-            is the second element of the tuple.
-        """
-        maps = []
-        # We again iterate over statements
-        ts = time.time()
-        confirmation_filter = \
-            RefinementConfirmationFilter(ontology=self.ontology,
-                                         refinement_fun=self.refinement_fun)
-        confirmation_filter.initialize(stmts_by_hash=stmts_by_hash)
-        for stmt_hash, possible_refined_hashes in stmts_to_compare.items():
-            refinements = confirmation_filter.get_less_specifics(
-                stmts_by_hash[stmt_hash], possible_refined_hashes)
-            maps += [(stmt_hash, ref) for ref in refinements]
-        self._comparison_counter = confirmation_filter.comparison_counter
-        te = time.time()
-        logger.debug('Confirmed %d refinements in %.2fs' % (len(maps), te-ts))
-        return maps
 
     def find_contradicts(self):
         """Return pairs of contradicting Statements.
