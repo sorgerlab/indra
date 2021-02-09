@@ -1,5 +1,6 @@
 import copy
 from indra.statements import Event
+from indra.belief import build_refinements_graph, extend_refinements_graph
 
 
 class AdaptiveAssembler:
@@ -12,6 +13,7 @@ class AdaptiveAssembler:
         assert len(self.stmts_by_hash) == len(self.unique_statements)
         for filter in self.filters:
             filter.initialize(self.stmts_by_hash)
+
 
     def get_all_refinements(self):
         all_refinements = []
@@ -35,6 +37,8 @@ class AdaptiveAssembler:
                 filter.get_less_specifics(
                     stmt, possibly_related=possibly_related)
         return possibly_related
+
+    def get_belief(self):
 
 
 def get_more_generic_agent(agent, ontology):

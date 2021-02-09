@@ -331,6 +331,21 @@ class BeliefEngine(object):
         for st in statements:
             st.belief = self.scorer.score_statement(st)
 
+    def get_refinement_prob(self, g, stmt):
+        bps = _get_belief_package(stmt, self.matches_fun)
+        supporting_evidences = []
+        # NOTE: the last belief package in the list is this statement's own
+        for bp in bps[:-1]:
+            # Iterate over all the parent evidences and add only
+            # non-negated ones
+            for ev in bp.evidences:
+                if not ev.epistemics.get('negated'):
+                    supporting_evidences.append(ev)
+        # Now add the Statement's own evidence
+        # Now score all the evidences
+        belief = self.scorer.score_statement(stmt, supporting_evidences)
+        return belief
+
     def set_hierarchy_probs(self, statements, refinements_graph=None):
         """Sets hierarchical belief probabilities for INDRA Statements.
 
@@ -352,15 +367,6 @@ class BeliefEngine(object):
             a more specific to a less specific statement representing
             a refinement. If not given, a new graph is constructed here.
         """
-        def get_ranked_stmts(g):
-            """Return a topological sort of statement matches keys from a graph.
-            """
-            logger.debug('Getting ranked statements')
-            node_ranks = networkx.algorithms.dag.topological_sort(g)
-            node_ranks = reversed(list(node_ranks))
-            stmts = [g.nodes[n]['stmt'] for n in node_ranks]
-            return stmts
-
         def assert_no_cycle(g):
             """If the graph has cycles, throws AssertionError."""
             logger.debug('Looking for cycles in belief graph')
@@ -373,13 +379,15 @@ class BeliefEngine(object):
 
         stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun): stmt
                          for stmt in statements}
+        # We only re-build the refinements graph if one wasn't provided
+        # as an argument
         g = build_refinements_graph(stmts_by_hash=stmts_by_hash,
                                     matches_fun=self.matches_fun) \
             if not refinements_graph else refinements_graph
         assert_no_cycle(g)
-        ranked_stmts = get_ranked_stmts(g)
         logger.debug('Start belief propagation over ranked statements')
-        for st in ranked_stmts:
+        for node in g.nodes(data=True):
+            st = node['stmt']
             bps = _get_belief_package(st, self.matches_fun)
             supporting_evidences = []
             # NOTE: the last belief package in the list is this statement's own
@@ -425,7 +433,7 @@ def _get_belief_package(stmt, matches_fun):
     for st in stmt.supports:
         # Recursively get all the belief packages of the parent
         parent_packages = _get_belief_package(st, matches_fun)
-        package_stmt_keys = [pkg.statement_key for pkg in belief_packages]
+        package_stmt_keys = {pkg.statement_key for pkg in belief_packages}
         for package in parent_packages:
             # Only add this belief package if it hasn't already been added
             if package.statement_key not in package_stmt_keys:
@@ -533,7 +541,7 @@ def tag_evidence_subtype(evidence):
     return (source_api, subtype)
 
 
-def build_refinements_graph(stmts_by_hash, matches_fun):
+def build_refinements_graph(stmts_by_hash, matches_fun=None):
     """Return a DiGraph based on matches hashes and Statement refinements."""
     logger.debug('Building refinements graph')
     g = networkx.DiGraph()
@@ -546,3 +554,20 @@ def build_refinements_graph(stmts_by_hash, matches_fun):
             g.add_edge(sh2, sh1)
     logger.debug('Finished building refinements graph')
     return g
+
+
+def extend_refinements_graph(g, stmt, less_specifics, matches_fun=None):
+    sh = stmt.get_hash(matches_fun=matches_fun)
+    g.add_node(sh, stmt=stmt)
+    for less_spec in less_specifics:
+        g.add_edge(less_spec, sh)
+    return g
+
+
+def get_ranked_stmts(g):
+    """Return a topological sort of statement matches keys from a graph."""
+    logger.debug('Getting ranked statements')
+    node_ranks = networkx.algorithms.dag.topological_sort(g)
+    node_ranks = reversed(list(node_ranks))
+    stmts = [g.nodes[n]['stmt'] for n in node_ranks]
+    return stmts
