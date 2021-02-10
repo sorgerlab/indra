@@ -28,7 +28,7 @@ def test_prior_prob_two_same():
     be = BeliefEngine()
     prob = 1 - (default_probs['rand']['reach']**2 +
                 default_probs['syst']['reach'])
-    st = Phosphorylation(None, Agent('a'), evidence=[ev1, ev1])
+    st = Phosphorylation(None, Agent('a'), evidence=[ev1, deepcopy(ev1)])
     assert st.belief == 1
     be.set_prior_probs([st])
     assert st.belief == prob
@@ -52,7 +52,7 @@ def test_prior_prob_one_two():
                 default_probs['syst']['reach']) * \
                (default_probs['rand']['trips'] +
                 default_probs['syst']['trips'])
-    st = Phosphorylation(None, Agent('a'), evidence=[ev1, ev1, ev2])
+    st = Phosphorylation(None, Agent('a'), evidence=[ev1, deepcopy(ev1), ev2])
     assert st.belief == 1
     be.set_prior_probs([st])
     assert st.belief == prob
@@ -60,7 +60,8 @@ def test_prior_prob_one_two():
 
 def test_prior_prob_assertion():
     be = BeliefEngine()
-    st = Phosphorylation(None, Agent('a'), evidence=[ev1, ev1, ev2, ev3])
+    st = Phosphorylation(None, Agent('a'),
+                         evidence=[ev1, deepcopy(ev1), ev2, ev3])
     assert st.belief == 1
     be.set_prior_probs([st])
     assert st.belief == 1

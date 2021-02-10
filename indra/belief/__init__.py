@@ -491,7 +491,7 @@ def tag_evidence_subtype(evidence):
                 subtype = None
         else:
             logger.debug('Could not find found_by attribute in reach '
-                         'statement annoations')
+                         'statement annotations')
             subtype = None
     elif source_api == 'geneways':
         subtype = annotations['actiontype']
