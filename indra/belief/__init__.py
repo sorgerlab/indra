@@ -178,7 +178,8 @@ class SimpleScorer(BeliefScorer):
         """
         if extra_evidence is None:
             extra_evidence = []
-        all_evidence = st.evidence + extra_evidence
+        # We remove instance duplicates here
+        all_evidence = set(st.evidence) | set(extra_evidence)
         return self.score_evidence_list(all_evidence)
 
     def check_prior_probs(self, statements):
@@ -334,14 +335,14 @@ class BeliefEngine(object):
             st.belief = self.scorer.score_statement(st)
 
     def get_refinement_prob(self, stmt, refiners):
-        all_evidences = set(stmt.evidence)
+        all_evidences = set()
         for supp in refiners:
             all_evidences |= \
-                set(self.refinements_graph.node[supp]['stmt'].evidence)
+                set(self.refinements_graph.nodes[supp]['stmt'].evidence)
 
         all_evidences = {ev for ev in all_evidences if
                          not ev.epistemics.get('negated')}
-        belief = self.scorer.score_statement(stmt, all_evidences)
+        belief = self.scorer.score_statement(stmt, list(all_evidences))
         return belief
 
     def set_hierarchy_probs(self, statements):
@@ -377,8 +378,9 @@ class BeliefEngine(object):
 
         logger.debug('Start belief calculation over refinements graph')
         for node in self.refinements_graph.nodes():
-            stmt = self.refinements_graph[node]['stmt']
-            supporters = list(networkx.descendants(g, node))
+            stmt = self.refinements_graph.nodes[node]['stmt']
+            supporters = \
+                list(networkx.descendants(self.refinements_graph, node))
             belief = self.get_refinement_prob(stmt, supporters)
             stmt.belief = belief
         logger.debug('Finished belief calculation over refinements graph')
