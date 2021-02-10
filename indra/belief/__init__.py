@@ -302,7 +302,7 @@ class BeliefEngine(object):
         verifies that the scorer has all the information it needs to score
         every statement in the list, and raises an exception if not.
     """
-    def __init__(self, scorer=None, matches_fun=None):
+    def __init__(self, scorer=None, matches_fun=None, refinements_graph=None):
         if scorer is None:
             scorer = default_scorer
         assert(isinstance(scorer, BeliefScorer))
@@ -310,6 +310,8 @@ class BeliefEngine(object):
 
         self.matches_fun = matches_fun if matches_fun else \
             lambda stmt: stmt.matches_key()
+
+        self.refinements_graph = refinements_graph
 
     def set_prior_probs(self, statements):
         """Sets the prior belief probabilities for a list of INDRA Statements.
@@ -331,22 +333,18 @@ class BeliefEngine(object):
         for st in statements:
             st.belief = self.scorer.score_statement(st)
 
-    def get_refinement_prob(self, g, stmt):
-        bps = _get_belief_package(stmt, self.matches_fun)
-        supporting_evidences = []
-        # NOTE: the last belief package in the list is this statement's own
-        for bp in bps[:-1]:
-            # Iterate over all the parent evidences and add only
-            # non-negated ones
-            for ev in bp.evidences:
-                if not ev.epistemics.get('negated'):
-                    supporting_evidences.append(ev)
-        # Now add the Statement's own evidence
-        # Now score all the evidences
-        belief = self.scorer.score_statement(stmt, supporting_evidences)
+    def get_refinement_prob(self, stmt, refiners):
+        all_evidences = set(stmt.evidence)
+        for supp in refiners:
+            all_evidences |= \
+                set(self.refinements_graph.node[supp]['stmt'].evidence)
+
+        all_evidences = {ev for ev in all_evidences if
+                         not ev.epistemics.get('negated')}
+        belief = self.scorer.score_statement(stmt, all_evidences)
         return belief
 
-    def set_hierarchy_probs(self, statements, refinements_graph=None):
+    def set_hierarchy_probs(self, statements):
         """Sets hierarchical belief probabilities for INDRA Statements.
 
         The Statements are assumed to be in a hierarchical relation graph with
@@ -367,41 +365,23 @@ class BeliefEngine(object):
             a more specific to a less specific statement representing
             a refinement. If not given, a new graph is constructed here.
         """
-        def assert_no_cycle(g):
-            """If the graph has cycles, throws AssertionError."""
-            logger.debug('Looking for cycles in belief graph')
-            try:
-                cyc = networkx.algorithms.cycles.find_cycle(g)
-            except networkx.exception.NetworkXNoCycle:
-                return
-            msg = 'Cycle found in hierarchy graph: %s' % cyc
-            assert False, msg
-
         stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun): stmt
                          for stmt in statements}
         # We only re-build the refinements graph if one wasn't provided
         # as an argument
-        g = build_refinements_graph(stmts_by_hash=stmts_by_hash,
-                                    matches_fun=self.matches_fun) \
-            if not refinements_graph else refinements_graph
-        assert_no_cycle(g)
-        logger.debug('Start belief propagation over ranked statements')
-        for node in g.nodes(data=True):
-            st = node['stmt']
-            bps = _get_belief_package(st, self.matches_fun)
-            supporting_evidences = []
-            # NOTE: the last belief package in the list is this statement's own
-            for bp in bps[:-1]:
-                # Iterate over all the parent evidences and add only
-                # non-negated ones
-                for ev in bp.evidences:
-                    if not ev.epistemics.get('negated'):
-                        supporting_evidences.append(ev)
-            # Now add the Statement's own evidence
-            # Now score all the evidences
-            belief = self.scorer.score_statement(st, supporting_evidences)
-            st.belief = belief
-        logger.debug('Finished belief propagation over ranked statements')
+        if self.refinements_graph is None:
+            self.refinements_graph = \
+                build_refinements_graph(stmts_by_hash=stmts_by_hash,
+                                        matches_fun=self.matches_fun)
+            assert_no_cycle(self.refinements_graph)
+
+        logger.debug('Start belief calculation over refinements graph')
+        for node in self.refinements_graph.nodes():
+            stmt = self.refinements_graph[node]['stmt']
+            supporters = list(networkx.descendants(g, node))
+            belief = self.get_refinement_prob(stmt, supporters)
+            stmt.belief = belief
+        logger.debug('Finished belief calculation over refinements graph')
 
     def set_linked_probs(self, linked_statements):
         """Sets the belief probabilities for a list of linked INDRA Statements.
@@ -420,28 +400,6 @@ class BeliefEngine(object):
         for st in linked_statements:
             source_probs = [s.belief for s in st.source_stmts]
             st.inferred_stmt.belief = numpy.prod(source_probs)
-
-
-BeliefPackage = namedtuple('BeliefPackage', 'statement_key evidences')
-
-
-def _get_belief_package(stmt, matches_fun):
-    """Return the belief packages of a given statement recursively."""
-    # This list will contain the belief packages for the given statement
-    belief_packages = []
-    # Iterate over all the support parents
-    for st in stmt.supports:
-        # Recursively get all the belief packages of the parent
-        parent_packages = _get_belief_package(st, matches_fun)
-        package_stmt_keys = {pkg.statement_key for pkg in belief_packages}
-        for package in parent_packages:
-            # Only add this belief package if it hasn't already been added
-            if package.statement_key not in package_stmt_keys:
-                belief_packages.append(package)
-    # Now make the Statement's own belief package and append it to the list
-    belief_package = BeliefPackage(matches_fun(stmt), stmt.evidence)
-    belief_packages.append(belief_package)
-    return belief_packages
 
 
 def sample_statements(stmts, seed=None):
@@ -564,8 +522,19 @@ def extend_refinements_graph(g, stmt, less_specifics, matches_fun=None):
     return g
 
 
+def assert_no_cycle(g):
+    """If the graph has cycles, throws AssertionError."""
+    logger.debug('Looking for cycles in belief graph')
+    try:
+        cyc = networkx.algorithms.cycles.find_cycle(g)
+    except networkx.exception.NetworkXNoCycle:
+        return
+    msg = 'Cycle found in hierarchy graph: %s' % cyc
+    assert False, msg
+
+
 def get_ranked_stmts(g):
-    """Return a topological sort of statement matches keys from a graph."""
+    """Return a topological sort of statements from a graph."""
     logger.debug('Getting ranked statements')
     node_ranks = networkx.algorithms.dag.topological_sort(g)
     node_ranks = reversed(list(node_ranks))
