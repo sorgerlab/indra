@@ -14,7 +14,6 @@ class AdaptiveAssembler:
         for filter in self.filters:
             filter.initialize(self.stmts_by_hash)
 
-
     def get_all_refinements(self):
         all_refinements = []
         for sh, stmt in self.stmts_by_hash.items():
@@ -37,8 +36,6 @@ class AdaptiveAssembler:
                 filter.get_less_specifics(
                     stmt, possibly_related=possibly_related)
         return possibly_related
-
-    def get_belief(self):
 
 
 def get_more_generic_agent(agent, ontology):
