@@ -270,6 +270,7 @@ class RefinementConfirmationFilter(RefinementFilter):
 
 class SplitGroupFilter(RefinementFilter):
     def __init__(self, split_groups):
+        super().__init__()
         self.split_groups = split_groups
 
     def get_related(self, stmt, possibly_related=None,
@@ -281,7 +282,7 @@ class SplitGroupFilter(RefinementFilter):
         # was no previous filter), or if the given statement is
         # also possibly related
         related = {stmt_hash for stmt_hash
-                   in self.shared_data['statements_by_hash']
+                   in self.shared_data['stmts_by_hash']
                    if self.split_groups[stmt_hash] != group
                    and (possibly_related is None
                         or stmt_hash in possibly_related)}
