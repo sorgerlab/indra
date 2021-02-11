@@ -1,7 +1,7 @@
 import os
 
 from indra.preassembler import Preassembler, render_stmt_graph, \
-    flatten_evidence, flatten_stmts, bio_ontology_refinement_filter
+    flatten_evidence, flatten_stmts
 from indra.sources import reach
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
