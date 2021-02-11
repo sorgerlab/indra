@@ -1,3 +1,7 @@
+"""This module contains a library of functions that are
+useful for building custom preassembly logic for some applications.
+They are typically used as matches_fun or refinement_fun arguments
+to the Preassembler and other modules."""
 from indra.statements import *
 from indra.pipeline import register_pipeline
 

@@ -31,10 +31,6 @@ class Preassembler(object):
         A function which takes two Statement objects and an ontology
         as an argument and returns True or False. If supplied, it overrides
         the built-in refinement_of method of each Statement being assembled.
-    refinement_ns : Optional[set]
-        A set of name spaces that should be considered for constructing
-        refinements. If not provided, all name spaces are considered.
-        Default: None
 
     Attributes
     ----------
@@ -48,7 +44,7 @@ class Preassembler(object):
         An INDRA Ontology object.
     """
     def __init__(self, ontology, stmts=None, matches_fun=None,
-                 refinement_fun=None, refinement_ns=None):
+                 refinement_fun=None):
         self.ontology = ontology
         if stmts:
             logger.debug("Deepcopying stmts in __init__")
@@ -61,7 +57,6 @@ class Preassembler(object):
             default_matches_fun
         self.refinement_fun = refinement_fun if refinement_fun else \
             default_refinement_fun
-        self.refinement_ns = refinement_ns
         self._comparison_counter = 0
 
     def add_statements(self, stmts):
