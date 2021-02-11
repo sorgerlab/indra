@@ -397,20 +397,8 @@ class Preassembler(object):
         relations = {}
         for stmt_hash, stmt in tqdm.tqdm(stmts_by_hash.items(),
                                          desc='Finding refinement relations'):
-            first_filter = True
-            for filt in filters:
-                # The first filter outputs all the possible relations that it
-                # can find, while subsequent filters are taking the results of
-                # the previous filter as the basis of further filtering down
-                # on possible refinements.
-                possibly_related = None if first_filter \
-                    else relations[stmt_hash]
-                # We pass in the specific statement and any constraints on
-                # previously determined possible relations to the filter.
-                relations[stmt_hash] = \
-                    filt.get_less_specifics(stmt,
-                                            possibly_related=possibly_related)
-                first_filter = False
+            relations[stmt_hash] = \
+                find_refinements_for_statement(stmt, filters)
 
         te = time.time()
         logger.info('Found all refinements in %.2fs' % (te-ts))
@@ -559,6 +547,38 @@ class Preassembler(object):
         rel_fun = functools.partial(self.ontology.child_rel,
                                     rel_types={'is_opposite'})
         self._normalize_relations(ns, rank_key, rel_fun, True)
+
+
+def find_refinements_for_statement(stmt, filters):
+    """Return refinements for a single statement given initialized filters.
+
+    Parameters
+    ----------
+    stmt : indra.statements.Statement
+        The statement whose relations should be found.
+    filters : list[:py:class:`indra.preassembler.refinement.RefinementFilter`]
+        A list of refinement filter instances. The filters passed to this
+        function need to have been initialized with stmts_by_hash.
+
+    Returns
+    -------
+    set
+        A set of statement hashes that this statement refines.
+    """
+    first_filter = True
+    relations = {}
+    for filt in filters:
+        # The first filter outputs all the possible relations that it
+        # can find, while subsequent filters are taking the results of
+        # the previous filter as the basis of further filtering down
+        # on possible refinements.
+        possibly_related = None if first_filter else relations
+        # We pass in the specific statement and any constraints on
+        # previously determined possible relations to the filter.
+        relations = filt.get_less_specifics(stmt,
+                                            possibly_related=possibly_related)
+        first_filter = False
+    return relations
 
 
 def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
