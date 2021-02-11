@@ -220,19 +220,20 @@ class Preassembler(object):
         The procedure for combining statements in this way involves a series
         of steps:
 
-        1. The statements are grouped by type (e.g., Phosphorylation) and
-           each type is iterated over independently.
-        2. Each statement's agents are then aligned in a role-wise manner
-           with the ontology being used, and all other statements which
-           this statement can possibly refine are found.
-        4. Each statement is then compared with the set of other statements
-           identified earlier. If the statement represents a refinement of
+        1. The statements are subjected to (built-in or user-supplied) filters
+           that group them based on potential refinement relationships. For
+           instance, the ontology-based filter positions each statement,
+           based on its agent arguments, with the ontology, and determines
+           potential refinements based on paths in the ontology graph.
+        2. Each statement is then compared with the set of statements it
+           can potentially refine, as determined by the pre-filters.
+           If the statement represents a refinement of
            the other (as defined by the `refinement_of()` method implemented
            for the Statement), then the more refined statement is added
            to the `supports` field of the more general statement, and the
            more general statement is added to the `supported_by` field of
            the more refined statement.
-        5. A new flat list of statements is created that contains only those
+        3. A new flat list of statements is created that contains only those
            statements that have no `supports` entries (statements containing
            such entries are not eliminated, because they will be retrievable
            from the `supported_by` fields of other statements). This list
@@ -252,18 +253,16 @@ class Preassembler(object):
         return_toplevel : Optional[bool]
             If True only the top level statements are returned.
             If False, all statements are returned. Default: True
-        filters : Optional[list[function]]
-            A list of function handles that define filter functions on
-            possible statement refinements. Each function takes
-            a stmts_by_hash dict and a stmts_to_compare dict as its input and
-            returns a dict of possible refinements where the keys are
-            statement hashes and the values are sets of statement hashes that
-            the key statement possibly refines. If not provided, a built-in
-            ontology-based pre-filter is applied. Note, that if a list of filter
-            functions is provided, the built-in ontology-based pre-filter is not
-            automatically appended to the list of filters. In this case,
-            consider adding the `ontology_refinement_filter` function from this
-            module to the filters list.
+        filters : Optional[list[:py:class:`indra.preassembler.refinement.RefinementFilter`]]
+            A list of RefinementFilter classes that implement filters on
+            possible statement refinements. For details on how to
+            construct such a filter, see the documentation of
+            :py:class:`indra.preassembler.refinement.RefinementFilter`.
+            If no user-supplied filters are provided, the default ontology-based
+            filter is applied. If a list of filters is provided here, the
+            :py:class:`indra.preassembler.refinement.OntologyRefinementFilter`
+            isn't appended by default, and should be added by the user, if
+            necessary. Default: None
 
         Returns
         -------
@@ -334,11 +333,18 @@ class Preassembler(object):
         split_idx : Optional[int]
             An index at which the flat list of unique statements should be split
             and compared for refinements only across the two groups, not
-            within each group.
-        filters : Optional[list[indra.preassembler.refinement.RefinementFilter]]
-            A list of RefinementFilter objects that define filters on
-            possible statement refinements. By default, the built-in
-            ontology-based filter is used.
+            within each group. By default, no splitting is done and all statements
+            are compared for refinements.
+        filters : Optional[list[:py:class:`indra.preassembler.refinement.RefinementFilter`]]
+            A list of RefinementFilter classes that implement filters on
+            possible statement refinements. For details on how to
+            construct such a filter, see the documentation of
+            :py:class:`indra.preassembler.refinement.RefinementFilter`.
+            If no user-supplied filters are provided, the default ontology-based
+            filter is applied. If a list of filters is provided here, the
+            :py:class:`indra.preassembler.refinement.OntologyRefinementFilter`
+            isn't appended by default, and should be added by the user, if
+            necessary. Default: None
 
         Returns
         -------

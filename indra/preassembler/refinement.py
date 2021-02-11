@@ -1,8 +1,10 @@
+"""This module implements classes and functions that are used for
+finding refinements between INDRA Statements as part of the
+knowledge-assembly process. These are imported by the preassembler
+module."""
 __all__ = ['get_agent_key', 'get_relevant_keys', 'RefinementFilter',
            'RefinementConfirmationFilter', 'OntologyRefinementFilter',
-           'SplitGroupFilter',
-           'ontology_refinement_filter', 'bio_ontology_refinement_filter',
-           'default_refinement_fun']
+           'SplitGroupFilter', 'default_refinement_fun']
 
 import time
 import logging
@@ -54,6 +56,10 @@ def get_relevant_keys(agent_key, all_keys_for_role, ontology, direction):
     ontology : indra.ontology.IndraOntology
         An IndraOntology instance with respect to which relevant other
         agent keys are found for the purposes of refinement.
+    direction: str
+        The direction in which to find relevant agents. The two options
+        are 'less_specific' and 'more_specific' for agents that are less and
+        more specific, per the ontology, respectively.
 
     Returns
     -------
@@ -71,26 +77,104 @@ def get_relevant_keys(agent_key, all_keys_for_role, ontology, direction):
 
 
 class RefinementFilter:
+    """A filter which is applied to one or more statements to eliminate
+    candidate refinements that are not possible according to some
+    criteria. By applying a series of such filters, the preassembler can avoid
+    doing n-by-n comparisons to determine refinements among n statements.
+
+    The filter class can take any number of constructor arguments that it
+    needs to perform its task. The base class' constructor initializes
+    a shared_data attribute as an empty dict.
+
+    It also needs to implement an initialize function which is called
+    with a stmts_by_hash argument, containing a dict of statements keyed by
+    hash. This function can build any data structures that may be needed
+    to efficiently apply the filter later. It cab store any
+    such data structures in the shared_data dict to be accessed by
+    other functions later.
+
+    Finally, the class needs to implement a get_related function, which
+    takes a single INDRA Statement as input to return the hashes of
+    potentially related other statements that the filter was initialized
+    with. The function also needs to take a possibly_related argument
+    which is either None (no other filter was run before) or a set,
+    which is the superset of possible relations as determined by some
+    other previously applied filter.
+    """
     def __init__(self):
         self.shared_data = {}
 
     def initialize(self, stmts_by_hash):
+        """Initialize the filter class with a set of statements.
+
+        The filter can build up some useful data structures in this
+        function before being applied to any specific statements.
+
+        Parameters
+        ----------
+        stmts_by_hash : dict[int, indra.statements.Statement]
+            A dict of statements keyed by their hashes.
+        """
         self.shared_data['stmts_by_hash'] = stmts_by_hash
 
     def get_related(self, stmt, possibly_related=None,
                     direction='less_specific'):
-        pass
+        """Return a set of statement hashes that a given statement is
+        potentially related to.
+
+        Parameters
+        ----------
+        stmt : indra.statements.Statement
+            The INDRA statement whose potential relations we want to filter.
+        possibly_related : set or None
+            A set of statement hashes that this statement is potentially
+            related to, as determined by some other filter. If this parameter
+            is a set (including an empty set), this function should return
+            a subset of it (intuitively, this filter can only further eliminate
+            some of the potentially related hashes that were previously
+            determined to be potential relations). If this argument is
+            None, the function must assume that no previous filter
+            was run before, and should therefore return all the possible
+            relations that it determines.
+        direction : str
+            One of 'less_specific' or 'more_specific. Since refinements
+            are directed relations, this function can operate in two
+            different directions: it can either find less specific
+            potentially related stateemnts, or it can find more specific
+            potentially related statements, as determined by this argument.
+
+        Returns
+        -------
+        set of int
+            A set of INDRA Statement hashes that are potentially related
+            to the given statement.
+        """
+        raise NotImplementedError('The filter class has to implement a'
+                                  'get_related method.')
 
     def get_more_specifics(self, stmt, possibly_related=None):
+        """Return a set of hashes of statements that are potentially related
+        and more specific than the given statement."""
         return self.get_related(stmt, possibly_related=possibly_related,
                                 direction='more_specific')
 
     def get_less_specifics(self, stmt, possibly_related=None):
+        """Return a set of hashes of statements that are potentially related
+        and less specific than the given statement."""
         return self.get_related(stmt, possibly_related=possibly_related,
                                 direction='less_specific')
 
 
 class OntologyRefinementFilter(RefinementFilter):
+    """This filter uses an ontology to position statements and their agents
+    to filter down significantly on the set of possible relations for
+    a given statement.
+
+    Parameters
+    ----------
+    ontology : indra.ontology.OntologyGraph
+        An INDRA ontology graph.
+    """
     def __init__(self, ontology):
         self.ontology = ontology
         self.shared_data = {}
@@ -226,6 +310,14 @@ class OntologyRefinementFilter(RefinementFilter):
 
 
 class RefinementConfirmationFilter(RefinementFilter):
+    """This class runs the refinement function between potentially
+    related statements to confirm whether they are indeed, conclusively
+    in a refinement relationship with each other.
+
+    In this sense, this isn't a real filter, though implementing it
+    as one is convenient. This filter is meant to be used as the final
+    component in a series of pre-filters.
+    """
     def __init__(self, ontology, refinement_fun=None):
         self.ontology = ontology
         self.refinement_fun = refinement_fun if refinement_fun else \
@@ -269,6 +361,9 @@ class RefinementConfirmationFilter(RefinementFilter):
 
 
 class SplitGroupFilter(RefinementFilter):
+    """This filter implements splitting statements into two groups and
+    only considering refinement relationships between the groups but not
+    within them."""
     def __init__(self, split_groups):
         super().__init__()
         self.split_groups = split_groups
@@ -287,59 +382,6 @@ class SplitGroupFilter(RefinementFilter):
                    and (possibly_related is None
                         or stmt_hash in possibly_related)}
         return related
-
-
-def ontology_refinement_filter(stmts_by_hash, stmts_to_compare, ontology):
-    """Return possible refinement relationships based on an ontology.
-
-    Parameters
-    ----------
-    stmts_by_hash : dict
-        A dict whose keys are statement hashes that point to the
-        (deduplicated) statement with that hash as a value.
-    stmts_to_compare : dict or None
-        A dict of existing statements to compare that will be further
-        filtered down in this function and then returned.
-    ontology : indra.ontology.IndraOntology
-        An IndraOntology instance iwth respect to which this
-        filter is applied.
-
-    Returns
-    -------
-    dict
-        A dict whose keys are statement hashes and values are sets
-        of statement hashes that can potentially be refined by the
-        statement identified by the key.
-    """
-    logger.info('Finding ontology-based refinements for %d statements'
-                % len(stmts_by_hash))
-    ts = time.time()
-    ont_filter = OntologyRefinementFilter(ontology)
-    ont_filter.initialize(stmts_by_hash)
-
-    stmts_to_compare = {
-        stmt_hash: ont_filter.get_less_specifics(
-            stmt_hash,
-            possibly_related=(
-                stmts_to_compare.get(stmt_hash)
-                if stmts_to_compare is not None else None
-                )
-            )
-        for stmt_hash in stmts_by_hash}
-    te = time.time()
-    logger.debug('Identified ontology-based possible refinements in %.2fs'
-                 % (te-ts))
-    # Make an empty dict to make sure we don't return a None
-    if stmts_to_compare is None:
-        stmts_to_compare = {}
-    return stmts_to_compare
-
-
-def bio_ontology_refinement_filter(stmts_by_hash, stmts_to_compare):
-    """An ontology refinement filter that works with the INDRA BioOntology."""
-    from indra.ontology.bio import bio_ontology
-    return ontology_refinement_filter(stmts_by_hash, stmts_to_compare,
-                                      ontology=bio_ontology)
 
 
 def default_refinement_fun(st1, st2, ontology, entities_refined):
