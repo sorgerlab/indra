@@ -1,4 +1,5 @@
 import time
+import tqdm
 import logging
 import itertools
 import functools
@@ -379,33 +380,45 @@ class Preassembler(object):
             filters.append(sgf)
 
         # We can now append the confirmation filter
-        filters.append(
+        confirm_filter = \
             RefinementConfirmationFilter(ontology=self.ontology,
-                                         refinement_fun=self.refinement_fun))
+                                         refinement_fun=self.refinement_fun)
+        filters.append(confirm_filter)
 
         # Initialize all filters
         for filt in filters:
             filt.initialize(stmts_by_hash=stmts_by_hash)
 
-        # We apply filter functions per statement, sequentially
-        stmts_to_compare = {}
-        for stmt_hash, stmt in stmts_by_hash.items():
+        # This is the core of refinement finding. Here we apply filter functions
+        # per statement, sequentially.
+        # Since the actual comparison which evaluates the refinement_fun on
+        # potentially related statements is the last filter, we don't need to
+        # do any further operations after this loop.
+        relations = {}
+        for stmt_hash, stmt in tqdm.tqdm(stmts_by_hash.items(),
+                                         desc='Finding refinement relations'):
             first_filter = True
             for filt in filters:
+                # The first filter outputs all the possible relations that it
+                # can find, while subsequent filters are taking the results of
+                # the previous filter as the basis of further filtering down
+                # on possible refinements.
                 possibly_related = None if first_filter \
-                    else stmts_to_compare[stmt_hash]
-                stmts_to_compare[stmt_hash] = \
+                    else relations[stmt_hash]
+                # We pass in the specific statement and any constraints on
+                # previously determined possible relations to the filter.
+                relations[stmt_hash] = \
                     filt.get_less_specifics(stmt,
                                             possibly_related=possibly_related)
                 first_filter = False
 
         te = time.time()
         logger.info('Found all refinements in %.2fs' % (te-ts))
-        self._comparison_counter = sum(len(v) for v in stmts_to_compare.values())
+        self._comparison_counter = confirm_filter.comparison_counter
         logger.info('Total comparisons: %d' % self._comparison_counter)
 
         idx_maps = []
-        for refiner, refineds in stmts_to_compare.items():
+        for refiner, refineds in relations.items():
             idx_maps += [(stmt_to_idx[refiner], stmt_to_idx[refined])
                          for refined in refineds]
         return idx_maps
