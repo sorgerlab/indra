@@ -377,7 +377,7 @@ def map_sequence(stmts_in, do_methionine_offset=True,
 @register_pipeline
 def run_preassembly(stmts_in, return_toplevel=True, poolsize=None,
                     size_cutoff=None, belief_scorer=None, ontology=None,
-                    matches_fun=None, refinement_fun=None, refinement_ns=None,
+                    matches_fun=None, refinement_fun=None,
                     flatten_evidence=False, flatten_evidence_collect_from=None,
                     normalize_equivalences=False, normalize_opposites=False,
                     normalize_ns='WM', run_refinement=True, filters=None,
@@ -413,9 +413,6 @@ def run_preassembly(stmts_in, return_toplevel=True, poolsize=None,
     refinement_fun : Optional[function]
         A function to override the built-in refinement_of function of
         statements.
-    refinement_ns : Optional[set]
-        A set of name spaces over which refinements should be constructed.
-        If not provided, all name spaces are considered.
     flatten_evidence : Optional[bool]
         If True, evidences are collected and flattened via supports/supported_by
         links. Default: False
@@ -433,13 +430,16 @@ def run_preassembly(stmts_in, return_toplevel=True, poolsize=None,
     normalize_ns : Optional[str]
         The name space with respect to which equivalences and opposites are
         normalized.
-    filters : Optional[list[function]]
-        A list of function handles that define filter functions on
-        possible statement refinements. Each function takes
-        a stmts_by_hash dict as its input and returns a dict
-        of possible refinements where the keys are statement hashes
-        and the values are sets of statement hashes that the
-        key statement possibly refines.
+    filters : Optional[list[:py:class:indra.preassembler.refinement.RefinementFilter]]
+        A list of RefinementFilter classes that implement filters on
+        possible statement refinements. For details on how to
+        construct such a filter, see the documentation of
+        :py:class:`indra.preassembler.refinement.RefinementFilter`.
+        If no user-supplied filters are provided, the default ontology-based
+        filter is applied. If a list of filters is provided here, the
+        :py:class:`indra.preassembler.refinement.OntologyRefinementFilter`
+        isn't appended by default, and should be added by the user, if
+        necessary. Default: None
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
     save_unique : Optional[str]
@@ -454,8 +454,7 @@ def run_preassembly(stmts_in, return_toplevel=True, poolsize=None,
     use_ontology = ontology if ontology is not None else bio_ontology
     be = BeliefEngine(scorer=belief_scorer, matches_fun=matches_fun)
     pa = Preassembler(use_ontology, stmts_in, matches_fun=matches_fun,
-                      refinement_fun=refinement_fun,
-                      refinement_ns=refinement_ns)
+                      refinement_fun=refinement_fun)
     if normalize_equivalences:
         logger.info('Normalizing equals on %d statements' % len(pa.stmts))
         pa.normalize_equivalences(normalize_ns)
