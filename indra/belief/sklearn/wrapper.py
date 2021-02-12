@@ -73,11 +73,11 @@ class SklearnBase(object):
         return self.model.predict_proba(stmt_arr)
 
     def predict(self, stmt_data):
-        stmt_arr = self.stmts_to_matrix(stmt_data)
+        stmt_arr = self._to_matrix(stmt_data)
         return self.model.predict(stmt_arr)
 
     def predict_log_proba(self, stmt_data):
-        stmt_arr = self.stmts_to_matrix(stmt_data)
+        stmt_arr = self._to_matrix(stmt_data)
         return self.model.predict_log_proba(stmt_arr)
 
 
@@ -158,13 +158,14 @@ class CountsModel(SklearnBase):
         if not required_cols.issubset(set(df.columns)):
             raise ValueError
 
-        #import ipdb; ipdb.set_trace()
         # Add categorical features and collect source_apis
         cat_features = []
         stmt_sources = set()
         # For every statement entry in the dataframe...
         for rowtup in df.itertuples():
-             # Collect non-source count features (e.g. type) from stmts
+            # Collect statement sources
+            stmt_sources |= set(rowtup.source_counts.keys())
+            # Collect non-source count features (e.g. type) from stmts
             feature_row = []
             if self.use_stmt_type:
                 feature_row.append(self.stmt_type_map[rowtup.stmt_type])
@@ -174,9 +175,10 @@ class CountsModel(SklearnBase):
 
         # Before proceeding, check whether all source_apis are in
         # source_list
-        if stmt_sources.difference(set(self.source_list)):
+        source_diff = stmt_sources.difference(set(self.source_list))
+        if source_diff:
             logger.warning("source_list does not include all source_apis "
-                             "in the statement data.")
+                           f"in the statement data: {str(source_diff)}")
 
         # Get source count features
         num_cols = len(self.source_list)

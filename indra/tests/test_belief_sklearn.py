@@ -3,7 +3,6 @@ import pickle
 import numpy as np
 from collections import defaultdict
 from os.path import join, abspath, dirname
-import pandas as pd
 from nose.tools import raises
 from sklearn.linear_model import LogisticRegression
 from indra.sources import signor
@@ -150,16 +149,41 @@ def test_fit_df():
     assert 'coef_' in cw.model.__dict__
 
 
-"""
-def test_train_stmts_pred_df():
+def test_fit_stmts_pred_df():
     lr = LogisticRegression()
     source_list = ['reach', 'sparser', 'signor']
     cw = CountsModel(lr, source_list)
     # Train on statement data
     cw.fit(test_stmts, y_arr_stmts)
     # Predict on DF data
-    cw.predict_proba(test_df)
-"""
+    probs = cw.predict_proba(test_df)
+    assert probs.shape == (len(test_df), 2), \
+        'prediction results should have dimension (# stmts, # classes)'
+    log_probs = cw.predict_log_proba(test_df)
+    assert log_probs.shape == (len(test_df), 2), \
+        'prediction results should have dimension (# stmts, # classes)'
+    preds = cw.predict(test_df)
+    assert preds.shape == (len(test_df),), \
+        'prediction results should have dimension (# stmts)'
+
+
+def test_fit_df_pred_stmts():
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list)
+    # Train on statement data
+    cw.fit(test_df, y_arr_df)
+    # Predict on DF data
+    probs = cw.predict_proba(test_stmts)
+    assert probs.shape == (len(test_stmts), 2), \
+        'prediction results should have dimension (# stmts, # classes)'
+    log_probs = cw.predict_log_proba(test_stmts)
+    assert log_probs.shape == (len(test_stmts), 2), \
+        'prediction results should have dimension (# stmts, # classes)'
+    preds = cw.predict(test_stmts)
+    assert preds.shape == (len(test_stmts),), \
+        'prediction results should have dimension (# stmts)'
+
 
 if __name__ == '__main__':
-    test_fit_df()
+    test_fit_stmts_pred_df()
