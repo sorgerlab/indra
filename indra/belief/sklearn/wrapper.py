@@ -136,6 +136,14 @@ class CountsModel(SklearnBase):
         return x_arr
 
 
+    def df_to_matrix(self, df):
+        required_cols = {'agA_id', 'agA_name', 'agA_ns', 'agB_id', 'agB_name',
+                         'agB_ns', 'source_counts', 'stmt_hash', 'stmt_type'}
+        # Make sure that the dataframe contains at least all of the above
+        # columns
+        if not required_cols.issubset(set(df.columns)):
+            raise ValueError
+
 class LogLogisticRegression(LogisticRegression):
     def fit(self, x_train, y_train, *args, **kwargs):
         return super().fit(np.log(x_train + 1), y_train, *args, **kwargs)

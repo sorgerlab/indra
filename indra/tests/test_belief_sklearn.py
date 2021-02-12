@@ -106,8 +106,30 @@ def test_predict():
         'prediction results should have dimension (# stmts)'
 
 
+@raises(ValueError)
+def test_check_df_cols_err():
+    """Drop a required column and make sure we get a ValueError."""
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list)
+    cw.df_to_matrix(test_df.drop('agB_ns', axis=1))
+
+
+def test_check_df_cols_noerr():
+    """Test dataframe should not raise ValueError."""
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list)
+    cw.df_to_matrix(test_df)
+
+"""
 def test_df_to_matrix():
     lr = LogisticRegression()
     source_list = ['reach', 'sparser', 'signor']
     cw = CountsModel(lr, source_list)
     cw.df_to_matrix(test_df)
+"""
+
+if __name__ == '__main__':
+    test_check_df_cols_err()
+    test_check_df_cols_noerr()
