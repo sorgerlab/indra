@@ -492,7 +492,7 @@ def _read_text_service(text, url=reach_text_url, timeout=None):
 
 
 def _read_nxml_file_service_old(nxml_file, url=reach_nxml_url):
-    with open(nxml_file, 'r') as fh:
+    with open(nxml_file, 'r', encoding='utf8') as fh:
         nxml_str = fh.read()
     return _read_nxml_str_service_old(nxml_str, url=url)
 
