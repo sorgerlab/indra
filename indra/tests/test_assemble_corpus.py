@@ -796,3 +796,21 @@ def test_filter_large_complexes():
     stmts = ac.filter_complexes_by_size([stmt1, stmt2, stmt3],
                                         members_allowed=2)
     assert len(stmts) == 2
+
+
+def test_map_db_refs():
+    a = Agent('a', db_refs={'db1': 'a1', 'db2': 'a2'})
+    b = Agent('b', db_refs={'db1': 'b1', 'db2': 'b2'})
+    stmt = Activation(a, b)
+    assert stmt.subj.db_refs['db1'] == 'a1'
+    assert stmt.subj.db_refs['db2'] == 'a2'
+    assert stmt.obj.db_refs['db1'] == 'b1'
+    assert stmt.obj.db_refs['db2'] == 'b2'
+    # Only provided IDs change, keep the rest unchanged
+    db_refs_map = {('db1', 'a1'): 'A1',
+                   ('db2', 'b2'): 'B2'}
+    regr_stmt = ac.map_db_refs([stmt], db_refs_map=db_refs_map)[0]
+    assert regr_stmt.subj.db_refs['db1'] == 'A1'
+    assert regr_stmt.subj.db_refs['db2'] == 'a2'
+    assert regr_stmt.obj.db_refs['db1'] == 'b1'
+    assert regr_stmt.obj.db_refs['db2'] == 'B2'

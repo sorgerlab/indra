@@ -20,6 +20,7 @@ from indra.databases import hgnc_client
 from indra.ontology.bio import bio_ontology
 from indra.ontology.world import world_ontology
 from indra.preassembler import Preassembler, flatten_evidence
+from indra.resources import get_resource_path
 
 
 logger = logging.getLogger(__name__)
@@ -2082,4 +2083,46 @@ def filter_complexes_by_size(stmts_in, members_allowed=5):
         else:
             stmts_out.append(stmt)
     logger.info('%d statements after filter...' % len(stmts_out))
+    return stmts_out
+
+
+def _load_db_refs_map():
+    filepath = get_resource_path('db_refs_map.csv')
+    rows = read_unicode_csv(filepath)
+    db_refs_map = {}
+    for (db_ns, old_id, new_id) in rows:
+        db_refs_map[(db_ns, old_id)] = new_id
+    return db_refs_map
+
+
+@register_pipeline
+def map_db_refs(stmts_in, db_refs_map=None):
+    """Update entries in db_refs to those provided in db_refs_map.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of INDRA Statements to update db_refs in.
+    db_refs_map : Optional[dict]
+        A dictionary where each key is a tuple (db_ns, db_id) representing old
+        db_refs pair that has to be updated and each value is a new db_id to
+        replace the old value with. If not provided, the default db_refs_map
+        will be loaded.
+    """
+    if not db_refs_map:
+        db_refs_map = _load_db_refs_map()
+    stmts_out = []
+
+    def update_agent_db_refs(ag_db_refs, db_refs_map):
+        for (db_ns, old_db_id), new_id in db_refs_map.items():
+            if ag_db_refs.get(db_ns) == old_db_id:
+                ag_db_refs[db_ns] = new_id
+        return ag_db_refs
+
+    for stmt in stmts_in:
+        new_stmt = deepcopy(stmt)
+        for ag in new_stmt.agent_list():
+            if ag is not None:
+                ag.db_refs = update_agent_db_refs(ag.db_refs, db_refs_map)
+        stmts_out.append(new_stmt)
     return stmts_out
