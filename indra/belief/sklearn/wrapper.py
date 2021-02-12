@@ -1,6 +1,7 @@
 import logging
 from collections import Counter
 import numpy as np
+import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from indra.statements import get_all_descendants, Statement
 
@@ -45,27 +46,39 @@ class SklearnBase(object):
         raise NotImplementedError('Need to implement the df_to_matrix '
                                    'method')
 
-    def fit(self, stmts, y_arr, *args, **kwargs):
+    def _to_matrix(self, stmt_data, *args, **kwargs):
+        # Check if we have a dataframe or a list of statements
+        # and call the appropriate *_to_matrix method
+        if isinstance(stmt_data, pd.DataFrame):
+            stmt_arr = self.df_to_matrix(stmt_data)
+        # If not a DataFrame, assume have a list of stmts
+        else:
+            stmt_arr = self.stmts_to_matrix(stmt_data)
+        return stmt_arr
+
+    def fit(self, stmt_data, y_arr, *args, **kwargs):
         """Preprocess the stmt data and pass to sklearn model fit method."""
         # Check dimensions of stmts (x) and y_arr
-        if len(stmts) != len(y_arr):
-            raise ValueError("Number of stmts must match length of y_arr.")
-        # Convert stmts into matrix
-        x_arr = self.stmts_to_matrix(stmts)
-        self.model.fit(x_arr, y_arr, *args, **kwargs)
+        if len(stmt_data) != len(y_arr):
+            raise ValueError("Number of stmts/rows must match length of y_arr.")
+        # Get the data matrix based on the stmt list or stmt DataFrame
+        stmt_arr = self._to_matrix(stmt_data)
+        # Call the fit method of the internal sklearn model
+        self.model.fit(stmt_arr, y_arr, *args, **kwargs)
         return self
 
-    def predict_proba(self, stmts):
-        stmts_arr = self.stmts_to_matrix(stmts)
-        return self.model.predict_proba(stmts_arr)
+    def predict_proba(self, stmt_data):
+        # Call the prediction method of the internal sklearn model
+        stmt_arr = self._to_matrix(stmt_data)
+        return self.model.predict_proba(stmt_arr)
 
-    def predict(self, stmts):
-        stmts_arr = self.stmts_to_matrix(stmts)
-        return self.model.predict(stmts_arr)
+    def predict(self, stmt_data):
+        stmt_arr = self.stmts_to_matrix(stmt_data)
+        return self.model.predict(stmt_arr)
 
-    def predict_log_proba(self, stmts):
-        stmts_arr = self.stmts_to_matrix(stmts)
-        return self.model.predict_log_proba(stmts_arr)
+    def predict_log_proba(self, stmt_data):
+        stmt_arr = self.stmts_to_matrix(stmt_data)
+        return self.model.predict_log_proba(stmt_arr)
 
 
 class CountsModel(SklearnBase):

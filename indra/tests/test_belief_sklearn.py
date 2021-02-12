@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 from collections import defaultdict
 from os.path import join, abspath, dirname
+import pandas as pd
 from nose.tools import raises
 from sklearn.linear_model import LogisticRegression
 from indra.sources import signor
@@ -81,7 +82,7 @@ def test_stmts_to_matrix():
         'matrix should have a col for sources and stmt type'
 
 
-def test_fit():
+def test_fit_stmts():
     lr = LogisticRegression()
     source_list = ['reach', 'sparser', 'signor']
     cw = CountsModel(lr, source_list)
@@ -90,7 +91,7 @@ def test_fit():
     assert 'coef_' in cw.model.__dict__
 
 
-def test_predict():
+def test_fit_stmts_predict_stmts():
     lr = LogisticRegression()
     source_list = ['reach', 'sparser', 'signor']
     cw = CountsModel(lr, source_list)
@@ -140,5 +141,25 @@ def test_df_to_matrix():
         'matrix should have a col for sources and stmt type'
 
 
+def test_fit_df():
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'medscan', 'trips', 'rlimsp']
+    cw = CountsModel(lr, source_list)
+    cw.fit(test_df, y_arr_df)
+    # Once the model is fit, the coef_ attribute should be defined
+    assert 'coef_' in cw.model.__dict__
+
+
+"""
+def test_train_stmts_pred_df():
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list)
+    # Train on statement data
+    cw.fit(test_stmts, y_arr_stmts)
+    # Predict on DF data
+    cw.predict_proba(test_df)
+"""
+
 if __name__ == '__main__':
-    test_df_to_matrix()
+    test_fit_df()
