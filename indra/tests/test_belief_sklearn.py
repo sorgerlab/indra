@@ -8,10 +8,19 @@ from sklearn.linear_model import LogisticRegression
 from indra.sources import signor
 from indra.belief.sklearn.wrapper import CountsModel
 
+
 test_stmt_path = join(dirname(abspath(__file__)),
-                      'belief_sklearn_test_data.pkl')
+                      'belief_sklearn_test_stmts.pkl')
+
+test_df_path = join(dirname(abspath(__file__)),
+                    'belief_sklearn_test_df.pkl')
+
 with open(test_stmt_path, 'rb') as f:
     test_stmts, y_arr = pickle.load(f)
+
+with open(test_df_path, 'rb') as f:
+    test_df, y_arr = pickle.load(f)
+
 
 # A set of statements derived from Signor used for testing purposes.
 def _dump_test_data(filename, num_per_type=10):
@@ -34,11 +43,13 @@ def _dump_test_data(filename, num_per_type=10):
         pickle.dump((stmt_sample, y_arr), f)
     return stmt_sample
 
+
 def test_counts_wrapper():
     """Instantiate counts wrapper and make stmt matrix"""
     lr = LogisticRegression()
     source_list = ['reach', 'sparser']
     cw = CountsModel(lr, source_list)
+
 
 @raises(ValueError)
 def test_missing_source():
@@ -49,6 +60,7 @@ def test_missing_source():
     # Should error because test stmts are from signor and signor
     # is not in list
     cw.stmts_to_matrix(test_stmts)
+
 
 def test_stmts_to_matrix():
     """Check that all source_apis in training data are in source list."""
@@ -67,6 +79,7 @@ def test_stmts_to_matrix():
     assert x_arr.shape == (len(test_stmts), len(source_list)+1), \
         'matrix should have a col for sources and stmt type'
 
+
 def test_fit():
     lr = LogisticRegression()
     source_list = ['reach', 'sparser', 'signor']
@@ -74,6 +87,7 @@ def test_fit():
     cw.fit(test_stmts, y_arr)
     # Once the model is fit, the coef_ attribute should be defined
     assert 'coef_' in cw.model.__dict__
+
 
 def test_predict():
     lr = LogisticRegression()
@@ -89,3 +103,7 @@ def test_predict():
     preds = cw.predict(test_stmts)
     assert preds.shape == (len(test_stmts),), \
         'prediction results should have dimension (# stmts)'
+
+
+def test_df_to_matrix():
+    pass
