@@ -16,10 +16,10 @@ test_df_path = join(dirname(abspath(__file__)),
                     'belief_sklearn_test_df.pkl')
 
 with open(test_stmt_path, 'rb') as f:
-    test_stmts, y_arr = pickle.load(f)
+    test_stmts, y_arr_stmts = pickle.load(f)
 
 with open(test_df_path, 'rb') as f:
-    test_df, y_arr = pickle.load(f)
+    test_df, y_arr_df = pickle.load(f)
 
 
 # A set of statements derived from Signor used for testing purposes.
@@ -51,7 +51,8 @@ def test_counts_wrapper():
     cw = CountsModel(lr, source_list)
 
 
-@raises(ValueError)
+# TODO: Made this so it's not a ValueError, this may change back in the future
+#@raises(ValueError)
 def test_missing_source():
     """Check that all source_apis in training data are in source list."""
     lr = LogisticRegression()
@@ -84,7 +85,7 @@ def test_fit():
     lr = LogisticRegression()
     source_list = ['reach', 'sparser', 'signor']
     cw = CountsModel(lr, source_list)
-    cw.fit(test_stmts, y_arr)
+    cw.fit(test_stmts, y_arr_stmts)
     # Once the model is fit, the coef_ attribute should be defined
     assert 'coef_' in cw.model.__dict__
 
@@ -93,7 +94,7 @@ def test_predict():
     lr = LogisticRegression()
     source_list = ['reach', 'sparser', 'signor']
     cw = CountsModel(lr, source_list)
-    cw.fit(test_stmts, y_arr)
+    cw.fit(test_stmts, y_arr_stmts)
     probs = cw.predict_proba(test_stmts)
     assert probs.shape == (len(test_stmts), 2), \
         'prediction results should have dimension (# stmts, # classes)'
@@ -106,4 +107,7 @@ def test_predict():
 
 
 def test_df_to_matrix():
-    pass
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list)
+    cw.df_to_matrix(test_df)
