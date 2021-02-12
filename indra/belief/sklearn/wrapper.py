@@ -94,7 +94,8 @@ class CountsModel(SklearnBase):
         # Build dictionary mapping INDRA Statement types to integers
         if use_stmt_type:
             all_stmt_types = get_all_descendants(Statement)
-            self.stmt_type_map = {t: ix for ix, t in enumerate(all_stmt_types)}
+            self.stmt_type_map = {t.__name__: ix
+                                  for ix, t in enumerate(all_stmt_types)}
 
     def stmts_to_matrix(self, stmts):
         # Add categorical features and collect source_apis
@@ -107,15 +108,15 @@ class CountsModel(SklearnBase):
             # Collect non-source count features (e.g. type) from stmts
             feature_row = []
             if self.use_stmt_type:
-                feature_row.append(self.stmt_type_map[type(stmt)])
+                feature_row.append(self.stmt_type_map[type(stmt).__name__])
             # Only add a feature row if we're using some of the features.
             if feature_row:
                 cat_features.append(feature_row)
 
-        # Before proceeding, make sure that all source_apis are in
+        # Before proceeding, check whether all source_apis are in
         # source_list
         if stmt_sources.difference(set(self.source_list)):
-            logger.warning("source_list does not nclude all source_apis "
+            logger.warning("source_list does not include all source_apis "
                              "in the statement data.")
 
         # Get source count features
@@ -143,6 +144,42 @@ class CountsModel(SklearnBase):
         # columns
         if not required_cols.issubset(set(df.columns)):
             raise ValueError
+
+        #import ipdb; ipdb.set_trace()
+        # Add categorical features and collect source_apis
+        cat_features = []
+        stmt_sources = set()
+        # For every statement entry in the dataframe...
+        for rowtup in df.itertuples():
+             # Collect non-source count features (e.g. type) from stmts
+            feature_row = []
+            if self.use_stmt_type:
+                feature_row.append(self.stmt_type_map[rowtup.stmt_type])
+            # Only add a feature row if we're using some of the features.
+            if feature_row:
+                cat_features.append(feature_row)
+
+        # Before proceeding, check whether all source_apis are in
+        # source_list
+        if stmt_sources.difference(set(self.source_list)):
+            logger.warning("source_list does not include all source_apis "
+                             "in the statement data.")
+
+        # Get source count features
+        num_cols = len(self.source_list)
+        num_rows = len(df)
+        x_arr = np.zeros((num_rows, num_cols))
+        for stmt_ix, rowtup in enumerate(df.itertuples()):
+            for src_ix, src in enumerate(self.source_list):
+                x_arr[stmt_ix, src_ix] = rowtup.source_counts.get(src, 0)
+
+        # If we have any categorical features, turn them into an array and
+        # add them to matrix
+        if cat_features:
+            cat_arr = np.array(cat_features)
+            x_arr = np.hstack((x_arr, cat_arr))
+        return x_arr
+
 
 class LogLogisticRegression(LogisticRegression):
     def fit(self, x_train, y_train, *args, **kwargs):

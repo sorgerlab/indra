@@ -122,14 +122,23 @@ def test_check_df_cols_noerr():
     cw = CountsModel(lr, source_list)
     cw.df_to_matrix(test_df)
 
-"""
+
 def test_df_to_matrix():
     lr = LogisticRegression()
     source_list = ['reach', 'sparser', 'signor']
     cw = CountsModel(lr, source_list)
-    cw.df_to_matrix(test_df)
-"""
+    x_arr = cw.df_to_matrix(test_df)
+    #import ipdb; ipdb.set_trace()
+    assert isinstance(x_arr, np.ndarray), 'x_arr should be a numpy array'
+    assert x_arr.shape == (len(test_df), len(source_list)), \
+            'stmt matrix dimensions should match test stmts'
+    assert x_arr.shape == (len(test_df), len(source_list))
+    # Try again with statement type
+    cw = CountsModel(lr, source_list, use_stmt_type=True)
+    x_arr = cw.df_to_matrix(test_df)
+    assert x_arr.shape == (len(test_df), len(source_list)+1), \
+        'matrix should have a col for sources and stmt type'
+
 
 if __name__ == '__main__':
-    test_check_df_cols_err()
-    test_check_df_cols_noerr()
+    test_df_to_matrix()
