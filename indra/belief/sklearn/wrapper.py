@@ -30,7 +30,7 @@ class SklearnBase(object):
         raise NotImplementedError('Need to implement the df_to_matrix '
                                    'method')
 
-    def _to_matrix(self, stmt_data, *args, **kwargs):
+    def to_matrix(self, stmt_data, *args, **kwargs):
         # Check if we have a dataframe or a list of statements
         # and call the appropriate *_to_matrix method
         if isinstance(stmt_data, pd.DataFrame):
@@ -46,22 +46,22 @@ class SklearnBase(object):
         if len(stmt_data) != len(y_arr):
             raise ValueError("Number of stmts/rows must match length of y_arr.")
         # Get the data matrix based on the stmt list or stmt DataFrame
-        stmt_arr = self._to_matrix(stmt_data)
+        stmt_arr = self.to_matrix(stmt_data)
         # Call the fit method of the internal sklearn model
         self.model.fit(stmt_arr, y_arr, *args, **kwargs)
         return self
 
     def predict_proba(self, stmt_data):
         # Call the prediction method of the internal sklearn model
-        stmt_arr = self._to_matrix(stmt_data)
+        stmt_arr = self.to_matrix(stmt_data)
         return self.model.predict_proba(stmt_arr)
 
     def predict(self, stmt_data):
-        stmt_arr = self._to_matrix(stmt_data)
+        stmt_arr = self.to_matrix(stmt_data)
         return self.model.predict(stmt_arr)
 
     def predict_log_proba(self, stmt_data):
-        stmt_arr = self._to_matrix(stmt_data)
+        stmt_arr = self.to_matrix(stmt_data)
         return self.model.predict_log_proba(stmt_arr)
 
 
