@@ -185,5 +185,27 @@ def test_fit_df_pred_stmts():
         'prediction results should have dimension (# stmts)'
 
 
-if __name__ == '__main__':
-    test_fit_stmts_pred_df()
+@raises(ValueError)
+def test_check_missing_source_counts():
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser']
+    cw = CountsModel(lr, source_list)
+    # Drop the source_counts column
+    df_no_sc = test_df.drop('source_counts', axis=1)
+    # Should error
+    cw.fit(df_no_sc, y_arr_df)
+
+
+def test_check_source_columns():
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser']
+    cw = CountsModel(lr, source_list)
+    # Drop the source_counts column
+    df_sc = test_df.drop('source_counts', axis=1)
+    # Add reach and sparser columns
+    df_sc['reach'] = 0
+    df_sc['sparser'] = 0
+    # Should not error
+    cw.fit(df_sc, y_arr_df)
+
+
