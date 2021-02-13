@@ -67,7 +67,6 @@ class BiopaxProcessor(object):
         self.eliminate_exact_duplicates()
         print_validation_report(self.statements)
 
-
     def save_model(self, file_name):
         """Save the BioPAX model object in an OWL file.
 
@@ -201,6 +200,7 @@ class BiopaxProcessor(object):
                 continue
             ev = self._get_evidence(control)
             for controller_pe in control.controller:
+                print(control.controller, conversion.left, conversion.right)
                 # We skip e.g., Pathway controllers
                 if not isinstance(controller_pe, bp.PhysicalEntity):
                     continue
@@ -348,6 +348,44 @@ class BiopaxProcessor(object):
                         obj_list += agent
                     else:
                         obj_list.append(agent)
+
+            # Make statements
+            st = Conversion(subj, obj_from, obj_to, evidence=ev)
+            self.statements.append(st)
+
+    def get_protein_conversions(self):
+        """Extract Conversion INDRA Statements from the BioPAX model."""
+        for subj, ev, control, conversion in \
+                self._control_conversion_iter(bp.Conversion, 'primary'):
+            # Since we don't extract location, this produces conversions where
+            # the input and output is the same
+            if isinstance(conversion, bp.Transport):
+                continue
+
+            # Assemble from and to object lists
+            obj_from = []
+            obj_to = []
+            for participants, obj_list in ((conversion.left, obj_from),
+                                           (conversion.right, obj_to)):
+                for participant in participants:
+                    if isinstance(participant, bp.Complex):
+                        expanded_participant = expand_complex(participant)
+                        agent = self._get_agents_from_entity(
+                            expanded_participant[0])
+                        assert len(agent) == 1
+                        agent = agent[0]
+                        for p in expanded_participant[1:]:
+                            bagent = self._get_agents_from_entity(p)
+                            assert len(bagent) == 1
+                            bagent = bagent[0]
+                            agent.bound_conditions.append(
+                                BoundCondition(bagent, True))
+                        obj_list.append(agent)
+                    else:
+                        if isinstance(agent, list):
+                            obj_list += agent
+                        else:
+                            obj_list.append(agent)
 
             # Make statements
             st = Conversion(subj, obj_from, obj_to, evidence=ev)
