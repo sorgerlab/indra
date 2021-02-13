@@ -207,15 +207,36 @@ class BiopaxProcessor(object):
                 if controller_logic == 'primary':
                     primary_controller = \
                         self._get_primary_controller(controller_pe)
+                elif controller_logic == 'bound_arbitrary':
+                    primary_controller = \
+                        self._get_primary_controller(controller_pe)
                 else:
                     primary_controller = \
                         self._get_all_protein_controllers(controller_pe)
                 if not primary_controller:
                     continue
                 primary_controller_agents = []
-                for pc in _listify(primary_controller):
-                    primary_controller_agents += \
-                        _listify(self._get_agents_from_entity(pc))
+                if controller_logic == 'bound_arbitrary':
+                    primary_entity, other_entities = primary_controller
+                    primary_agents = \
+                        _listify(self._get_agents_from_entity(primary_entity))
+                    all_other_agents = []
+                    for other_entity in other_entities:
+                        all_other_agents.append(_listify(
+                            self._get_agents_from_entity(other_entity)))
+                    for primary_agent in primary_agents:
+                        for other_entity_agents in \
+                                itertools.product(all_other_agents):
+                            ag = copy.deepcopy(primary_agent)
+                            for other_entity_agent in other_entity_agents:
+                                ag.bound_conditions.append(
+                                    BoundCondition(other_entity_agent, True)
+                                )
+                            primary_controller_agents.append(ag)
+                else:
+                    for pc in _listify(primary_controller):
+                        primary_controller_agents += \
+                            _listify(self._get_agents_from_entity(pc))
                 for primary_controller_agent in primary_controller_agents:
                     yield primary_controller_agent, ev, control, conversion
 
@@ -356,7 +377,8 @@ class BiopaxProcessor(object):
     def get_protein_conversions(self):
         """Extract Conversion INDRA Statements from the BioPAX model."""
         for subj, ev, control, conversion in \
-                self._control_conversion_iter(bp.Conversion, 'primary'):
+                self._control_conversion_iter(bp.Conversion,
+                    controller_logic='arbitrary_controller'):
             # Since we don't extract location, this produces conversions where
             # the input and output is the same
             if isinstance(conversion, bp.Transport):
@@ -376,7 +398,7 @@ class BiopaxProcessor(object):
                         agent = agent[0]
                         for p in expanded_participant[1:]:
                             bagent = self._get_agents_from_entity(p)
-                            assert len(bagent) == 1
+                            #assert len(bagent) == 1
                             bagent = bagent[0]
                             agent.bound_conditions.append(
                                 BoundCondition(bagent, True))
@@ -389,6 +411,7 @@ class BiopaxProcessor(object):
 
             # Make statements
             st = Conversion(subj, obj_from, obj_to, evidence=ev)
+            print(st)
             self.statements.append(st)
 
     @staticmethod
@@ -475,6 +498,22 @@ class BiopaxProcessor(object):
         if len(protein_members) == 1:
             return protein_members[0]
         return None
+
+    def _get_arbitrary_controller(self, controller_pe):
+        # If it's not a real complex, just return the physical entity
+        # as is
+        if infer_pe_type(controller_pe) != 'complex':
+            return controller_pe
+        # Otherwise choose the arbitrary first member, though try to
+        # get a protein if one is available to be the primary agent
+        members = [p for p in expand_complex(controller_pe)]
+        protein_members = [p for p in members if _is_protein(p)]
+        if protein_members:
+            primary_agent = protein_members[0]
+        else:
+            primary_agent = members[0]
+        # Now return
+        return primary_agent, [p for p in members if p != primary_agent]
 
     def _get_all_protein_controllers(self, controller_pe):
         # If it's not a real complex, just return the physical entity
