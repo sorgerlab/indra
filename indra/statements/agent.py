@@ -330,8 +330,14 @@ class Agent(Concept):
             mut_str += ', '.join(['%s' % m for m in self.mutations])
             attr_strs.append(mut_str)
         if self.bound_conditions:
-            attr_strs += ['bound: [%s, %s]' % (b.agent.name, b.is_bound)
-                          for b in self.bound_conditions]
+            bounds = ['%s' % b.agent.name for b in self.bound_conditions
+                      if b.is_bound]
+            not_bounds = ['%s' % b.agent.name for b in self.bound_conditions
+                          if not b.is_bound]
+            if bounds:
+                attr_strs.append('bound: %s' % ', '.join(bounds))
+            if not_bounds:
+                attr_strs.append('not bound: %s' % ', '.join(not_bounds))
         if self.location:
             attr_strs += ['location: %s' % self.location]
         #if self.db_refs:
