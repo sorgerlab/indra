@@ -126,7 +126,7 @@ class BiopaxProcessor(object):
     def _extract_features(self):
         """Pre-extract features before processing statements."""
         for feature in self.model.get_objects_by_type(bp.EntityFeature):
-            # TODO: handle BindingFeatures and FragmentFeatures here
+            # TODO: handle BindingFeatures here
             if not isinstance(feature, bp.ModificationFeature):
                 continue
             mf_type = get_modification_type(feature)
@@ -200,7 +200,6 @@ class BiopaxProcessor(object):
                 continue
             ev = self._get_evidence(control)
             for controller_pe in control.controller:
-                print(control.controller, conversion.left, conversion.right)
                 # We skip e.g., Pathway controllers
                 if not isinstance(controller_pe, bp.PhysicalEntity):
                     continue
@@ -411,7 +410,6 @@ class BiopaxProcessor(object):
 
             # Make statements
             st = Conversion(subj, obj_from, obj_to, evidence=ev)
-            print(st)
             self.statements.append(st)
 
     @staticmethod
@@ -477,6 +475,35 @@ class BiopaxProcessor(object):
                 mods.append(mc)
         return mods
 
+    @staticmethod
+    def _get_fragment_feature(bpe):
+        """Return a fragment feature for a biophysical entity"""
+        if _is_entity(bpe):
+            features = bpe.feature
+        else:
+            features = bpe.entity_feature
+        ffs = [f for f in features if isinstance(f, bp.FragmentFeature)]
+        assert len(ffs) <= 1
+        if not ffs:
+            return None
+        feature = ffs[0]
+        begin = \
+            feature.feature_location.sequence_interval_begin.sequence_position
+        end = \
+            feature.feature_location.sequence_interval_end.sequence_position
+        try:
+            begin_int = int(begin)
+        except ValueError:
+            begin_int = None
+        try:
+            end_int = int(end)
+        except ValueError:
+            end_int = None
+        if begin_int is not None and end_int is not None and \
+                begin_int > 0 and end_int > 0 and end_int > begin_int:
+            return begin_int, end_int
+        return None
+
     def _get_primary_controller(self, controller_pe):
         # If it's not a real complex, just return the physical entity
         # as is
@@ -534,6 +561,8 @@ class BiopaxProcessor(object):
             pass
 
         mcs = BiopaxProcessor._get_entity_mods(bpe) if _is_protein(bpe) else []
+        ff = BiopaxProcessor._get_fragment_feature(bpe) if \
+            _is_protein(bpe) else None
         name = bpe.display_name
         agents = []
 
@@ -578,13 +607,31 @@ class BiopaxProcessor(object):
                 name = standard_name
             agents.append(Agent(name, db_refs=db_refs, mods=mcs))
         # Since there are so many cases above, we fix UP / UPISO issues
-        # in a single loop here
+        # and fragment groundings here
         for agent in agents:
             up_id = agent.db_refs.get('UP')
+            # If there is a dash in the UniProt ID then this is an
+            # isoform
             if up_id is not None and '-' in up_id:
                 base_id = up_id.split('-')[0]
                 agent.db_refs['UP'] = base_id
                 agent.db_refs['UPISO'] = up_id
+            # If we have a fragment feature, we check if we can find
+            # an appropriate protein feature to ground this to
+            if up_id is not None and ff is not None:
+                begin, end = ff
+                features = uniprot_client.get_features(agent.db_refs['UP'])
+                for feature in features:
+                    # If this feature aligns with the fragment feature
+                    # from BioPAX then we add the corresponding UPPRO
+                    # grounding and re-standardize
+                    if feature.begin == begin and feature.end == end:
+                        agent.db_refs['UPPRO'] = feature.id
+                        new_name, agent.db_refs = \
+                            standardize_name_db_refs(agent.db_refs)
+                        if new_name:
+                            agent.name = new_name
+                        break
 
         # There is a potential here that an Agent name was set to None
         # if both the display name and the standard name are missing.
