@@ -375,9 +375,8 @@ class BiopaxProcessor(object):
 
     def get_protein_conversions(self):
         """Extract Conversion INDRA Statements from the BioPAX model."""
-        for subj, ev, control, conversion in \
-                self._control_conversion_iter(bp.Conversion,
-                    controller_logic='arbitrary_controller'):
+        for subj, ev, control, conversion in self._control_conversion_iter(
+                bp.Conversion, controller_logic='arbitrary_controller'):
             # Since we don't extract location, this produces conversions where
             # the input and output is the same
             if isinstance(conversion, bp.Transport):
@@ -396,8 +395,10 @@ class BiopaxProcessor(object):
                         assert len(agent) == 1
                         agent = agent[0]
                         for p in expanded_participant[1:]:
+                            # TODO: here we would have to collect lists of
+                            # agents in a list and then take their combinations
+                            # to generate multiple conversions.
                             bagent = self._get_agents_from_entity(p)
-                            #assert len(bagent) == 1
                             bagent = bagent[0]
                             agent.bound_conditions.append(
                                 BoundCondition(bagent, True))
