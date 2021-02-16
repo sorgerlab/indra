@@ -395,7 +395,7 @@ class Preassembler(object):
         if split_idx:
             # This dict maps statement hashes to a bool value based on which
             # of the two groups the statement belongs to.
-            hash_to_split_group = {sh: (idx <= split_idx) for sh, idx
+            hash_to_split_group = {sh: (idx < split_idx) for sh, idx
                                    in stmt_to_idx.items()}
         else:
             hash_to_split_group = None
