@@ -1020,7 +1020,7 @@ def test_split_idx():
     assert (2, 0) in maps, maps
     assert pa._comparison_counter == 2
     pa = Preassembler(bio_ontology)
-    maps = pa._generate_id_maps([st1, st2, st3], split_idx=1)
+    maps = pa._generate_id_maps([st1, st2, st3], split_idx=2)
     assert (2, 0) in maps, maps
     assert (1, 0) not in maps, maps
     assert pa._comparison_counter == 1
