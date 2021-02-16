@@ -209,3 +209,13 @@ def test_check_source_columns():
     cw.fit(df_sc, y_arr_df)
 
 
+def test_matrix_to_matrix():
+    """Check that we get a matrix back when passed to to_matrix."""
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list)
+    # Train on statement data
+    stmt_arr = cw.to_matrix(test_df)
+    assert cw.to_matrix(stmt_arr) is stmt_arr, \
+            'If passed a numpy array to_matrix should return it back.'
+

@@ -31,9 +31,12 @@ class SklearnBase(object):
                                    'method')
 
     def to_matrix(self, stmt_data, *args, **kwargs):
-        # Check if we have a dataframe or a list of statements
+        # If we got a Numpy array, just use it!
+        if isinstance(stmt_data, np.ndarray):
+            stmt_arr = stmt_data
+        # Otherwise check if we have a dataframe or a list of statements
         # and call the appropriate *_to_matrix method
-        if isinstance(stmt_data, pd.DataFrame):
+        elif isinstance(stmt_data, pd.DataFrame):
             stmt_arr = self.df_to_matrix(stmt_data)
         # If not a DataFrame, assume have a list of stmts
         else:
