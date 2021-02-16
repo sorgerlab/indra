@@ -218,13 +218,3 @@ class CountsModel(SklearnBase):
             x_arr = np.hstack((x_arr, cat_arr))
         return x_arr
 
-
-class LogLogisticRegression(LogisticRegression):
-    def fit(self, x_train, y_train, *args, **kwargs):
-        return super().fit(np.log(x_train + 1), y_train, *args, **kwargs)
-
-    def predict(self, x_arr, *args, **kwargs):
-        return super().predict(np.log(x_arr + 1), *args, **kwargs)
-
-    def predict_proba(self, x_arr, *args, **kwargs):
-        return super().predict_proba(np.log(x_arr + 1), *args, **kwargs)
