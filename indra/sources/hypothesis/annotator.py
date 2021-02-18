@@ -31,6 +31,8 @@ def evidence_to_annotation(evidence):
             evidence.text_refs['PMCID']
     elif evidence.pmid:
         url = 'https://pubmed.ncbi.nlm.nih.gov/%s/' % evidence.pmid
+    elif 'URL' in evidence.text_refs:
+        url = evidence.text_refs['URL']
     else:
         return None
     return {
