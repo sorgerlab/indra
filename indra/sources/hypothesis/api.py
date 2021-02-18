@@ -3,6 +3,7 @@ __all__ = ['process_annotations', 'get_annotations']
 import requests
 from indra.config import get_config
 from .processor import HypothesisProcessor
+from .annotator import statement_to_annotations
 
 
 base_url = 'https://api.hypothes.is/api/'
@@ -85,23 +86,11 @@ def upload_annotation(url, annotation, target_text=None, tags=None,
 
 
 def upload_statement_annotation(stmt):
-    from indra.assemblers.english import EnglishAssembler
-    ea = EnglishAssembler(stmts=[stmt])
-    annotation = ea.make_model()
-    for ev in stmt.evidence:
-        if not ev.text:
-            continue
-        if 'PMCID' in ev.text_refs:
-            url = 'https://www.ncbi.nlm.nih.gov/pmc/articles/%s/' % \
-                  ev.text_refs['PMCID']
-        elif ev.pmid:
-            url = 'https://pubmed.ncbi.nlm.nih.gov/%s/' % ev.pmid
-        else:
-            continue
-        target_text = ev.text
-        tags = ['indra_upload']
-        upload_annotation(url, annotation, target_text, tags)
-
+    tags = ['indra_upload']
+    annotations = statement_to_annotations(stmt, annotate_agents=True)
+    for annotation in annotations:
+        annotation['tags'] = tags
+        upload_annotation(**annotation)
 
 
 def get_annotations(group=None):
