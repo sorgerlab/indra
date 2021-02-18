@@ -84,6 +84,26 @@ def upload_annotation(url, annotation, target_text=None, tags=None,
     return res
 
 
+def upload_statement_annotation(stmt):
+    from indra.assemblers.english import EnglishAssembler
+    ea = EnglishAssembler(stmts=[stmt])
+    annotation = ea.make_model()
+    for ev in stmt.evidence:
+        if not ev.text:
+            continue
+        if 'PMCID' in ev.text_refs:
+            url = 'https://www.ncbi.nlm.nih.gov/pmc/articles/%s/' % \
+                  ev.text_refs['PMCID']
+        elif ev.pmid:
+            url = 'https://pubmed.ncbi.nlm.nih.gov/%s/' % ev.pmid
+        else:
+            continue
+        target_text = ev.text
+        tags = ['indra_upload']
+        upload_annotation(url, annotation, target_text, tags)
+
+
+
 def get_annotations(group=None):
     """Return annotations in hypothes.is in a given group.
 
