@@ -46,12 +46,17 @@ def get_annotation_text(stmt, annotate_agents=True):
             for insert_begin, insert_len in inserts:
                 if insert_begin < agent_wc.coords[0]:
                     agent_wc.update_coords(insert_len)
-            db_ns, db_id = get_grounding(agent_wc.db_refs)
+            db_ns, db_id = get_grounding(agent_wc.db_refs,
+                                         grounding_ns)
             if not db_ns:
                 continue
-            grounding_text = '[%s:%s]' % (db_ns, db_id)
-            inserts.append((agent_wc.coords[1], len(grounding_text)))
-            before_part = annotation_text[:agent_wc.coords[1]]
+            identifiers_url = \
+                identifiers.get_identifiers_url(db_ns, db_id)
+            grounding_text = '[%s](%s)' % (agent_wc.name, identifiers_url)
+            insert_len = len(grounding_text) - agent_wc.coords[1] + \
+                agent_wc.coords[0]
+            inserts.append((agent_wc.coords[0], insert_len))
+            before_part = annotation_text[:agent_wc.coords[0]]
             after_part = annotation_text[agent_wc.coords[1]:]
             annotation_text = ''.join([before_part, grounding_text,
                                        after_part])
