@@ -1,3 +1,5 @@
+__all__ = ['statement_to_annotations']
+
 from indra.assemblers.english import EnglishAssembler
 from indra.databases import identifiers
 from indra.statements.agent import get_grounding, default_ns_order

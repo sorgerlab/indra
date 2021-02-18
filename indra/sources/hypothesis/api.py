@@ -1,4 +1,5 @@
-__all__ = ['process_annotations', 'get_annotations']
+__all__ = ['process_annotations', 'get_annotations', 'upload_annotation',
+           'upload_statement_annotation', 'statement_to_annotations']
 
 import requests
 from indra.config import get_config
