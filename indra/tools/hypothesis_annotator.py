@@ -43,7 +43,7 @@ def annotate_paper_from_db(text_refs, pipeline=None):
         upload_statement_annotation(stmt, annotate_agents=True)
 
 
-def annotate_paper_from_api(text_refs, pipeline=None):
+def annotate_paper_from_api(text_refs, text_extractor=None, pipeline=None):
     """Read a paper and upload annotations derived from it to hypothes.is.
 
     Parameters
@@ -51,7 +51,12 @@ def annotate_paper_from_api(text_refs, pipeline=None):
     text_refs : dict
         A dict of text references, following the same format as
         the INDRA Evidence text_refs attribute.
-
+    text_extractor : Optional[function]
+        A function which takes the raw content of a website (e.g., HTML)
+        and extracts clean text from it to prepare for machine reading.
+        This is only used if the text_refs is a URL (e.g., a Wikipedia page),
+        it is not used for PMID or PMCID text_refs where content can be
+        pre-processed and machine read directly. Default: None
     pipeline : Optional[json]
         A list of pipeline steps (typically filters) that are applied
         before uploading statements to hypothes.is as annotations.
@@ -80,10 +85,14 @@ def annotate_paper_from_api(text_refs, pipeline=None):
         logger.info('Got abstract')
         res = requests.post(api_url + 'process_text', json={'text': abstract})
     elif ref_ns == 'URL':
-        text = requests.get(ref_id).text
-        if not text:
-            logger.info('Could not get text from website')
+        site_content = requests.get(ref_id).text
+        if not site_content:
+            logger.info('Could not get content from website')
             return
+        if text_extractor:
+            text = text_extractor(site_content)
+        else:
+            text = site_content
         res = requests.post(api_url + 'process_text', json={'text': text})
     else:
         return
@@ -97,4 +106,8 @@ def annotate_paper_from_api(text_refs, pipeline=None):
 
     logger.info('Uploading %d statements to hypothes.is' % len(stmts))
     for stmt in stmts:
+        for ev in stmt.evidence:
+            if ref_ns == 'PMID':
+                ev.pmid = ref_id
+            ev.text_refs[ref_ns] = ref_id
         upload_statement_annotation(stmt, annotate_agents=True)
