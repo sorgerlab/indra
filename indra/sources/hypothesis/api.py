@@ -37,7 +37,8 @@ def send_get_request(endpoint, **params):
 
 
 def send_post_request(endpoint, **params):
-    """Send a request to the hypothes.is web service and return JSON response.
+    """Send a post request to the hypothes.is web service and return JSON
+    response.
 
     Note that it is assumed that `HYPOTHESIS_API_KEY` is set either as a
     configuration entry or as an environmental variable.
@@ -60,6 +61,28 @@ def send_post_request(endpoint, **params):
 
 def upload_annotation(url, annotation, target_text=None, tags=None,
                       group=None):
+    """Upload an annotation to hypothes.is.
+
+    Parameters
+    ----------
+    url : str
+        The URL of the resource being annotated.
+    annotation : str
+        The text content of the annotation itself.
+    target_text : Optional[str]
+        The specific span of text that the annotation applies to.
+    tags : list[str]
+        A list of tags to apply to the annotation.
+    group : Optional[str]
+        The hypothesi.is key of the group (not its name). If not given, the
+        HYPOTHESIS_GROUP configuration in the config file or an environmental
+        variable is used.
+
+    Returns
+    -------
+    json
+        The full response JSON from the web service.
+    """
     if group is None:
         if indra_group:
             group = indra_group
@@ -85,8 +108,19 @@ def upload_annotation(url, annotation, target_text=None, tags=None,
     return res
 
 
-def upload_statement_annotation(stmt):
-    annotations = statement_to_annotations(stmt, annotate_agents=True)
+def upload_statement_annotation(stmt, annotate_agents=True):
+    """Construct and upload all annotations for a given INDRA Statement.
+
+    Parameters
+    ----------
+    stmt : indra.statements.Statement
+        An INDRA Statement.
+    annotate_agents : Optional[bool]
+        If True, the agents in the annotation text are linked to outside
+        databases based on their grounding. Default: True
+    """
+    annotations = statement_to_annotations(stmt,
+                                           annotate_agents=annotate_agents)
     for annotation in annotations:
         annotation['tags'].append('indra_upload')
         upload_annotation(**annotation)
