@@ -86,10 +86,9 @@ def upload_annotation(url, annotation, target_text=None, tags=None,
 
 
 def upload_statement_annotation(stmt):
-    tags = ['indra_upload']
     annotations = statement_to_annotations(stmt, annotate_agents=True)
     for annotation in annotations:
-        annotation['tags'] = tags
+        annotation['tags'].append('indra_upload')
         upload_annotation(**annotation)
 
 

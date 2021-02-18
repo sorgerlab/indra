@@ -33,7 +33,8 @@ def evidence_to_annotation(evidence):
         return None
     return {
         'url': url,
-        'target_text': evidence.text
+        'target_text': evidence.text,
+        'tags': [evidence.source_api]
     }
 
 
