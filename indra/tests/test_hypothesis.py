@@ -2,8 +2,11 @@ from nose.plugins.attrib import attr
 from gilda import ground
 from indra.sources import hypothesis
 from indra.sources import trips
+from indra.statements import *
 from indra.sources.hypothesis.processor import HypothesisProcessor, \
     parse_context_entry, parse_grounding_entry, get_text_refs
+from indra.sources.hypothesis.annotator import statement_to_annotations, \
+    evidence_to_annotation, get_annotation_text
 
 
 @attr('nonpublic', 'slow', 'notravis')
@@ -117,3 +120,67 @@ statement_annot_example = {
  'text': 'AMPK activates STAT3\nOrgan: liver\nLocation: nucleus',
  'tags': [],
 }
+
+
+def test_get_annotation_text():
+    # Test statement with multiple grounded agents
+    stmt = Inhibition(
+        Agent('vemurafenib', db_refs={'CHEBI': 'CHEBI:63637'}),
+        Agent('BRAF', db_refs={'HGNC': '1097'})
+    )
+    annot_text = get_annotation_text(stmt, annotate_agents=True)
+    assert annot_text == \
+        '[vemurafenib](https://identifiers.org/CHEBI:63637) inhibits ' \
+        '[BRAF](https://identifiers.org/hgnc:1097).', annot_text
+    annot_text = get_annotation_text(stmt, annotate_agents=False)
+    assert annot_text == 'Vemurafenib inhibits BRAF.', annot_text
+
+    # Test statement with ungrounded and None agents
+    stmt = Phosphorylation(None, Agent('X'))
+    annot_text = get_annotation_text(stmt, annotate_agents=True)
+    assert annot_text == 'X is phosphorylated.', annot_text
+    annot_text = get_annotation_text(stmt, annotate_agents=False)
+    assert annot_text == 'X is phosphorylated.', annot_text
+
+
+def test_evidence_to_annot():
+    # No evidence text
+    ev = Evidence(source_api='reach')
+    assert evidence_to_annotation(ev) is None
+
+    # No text refs
+    ev = Evidence(source_api='reach', text='Some text')
+    assert evidence_to_annotation(ev) is None
+
+    # Various text refs
+    ev = Evidence(source_api='reach', text='Some text',
+                  pmid='12345')
+    annot = evidence_to_annotation(ev)
+    assert annot == {'url': 'https://pubmed.ncbi.nlm.nih.gov/12345/',
+                     'target_text': 'Some text',
+                     'tags': ['reach']}, annot
+
+    ev = Evidence(source_api='reach', text='Some text',
+                  pmid=None, text_refs={'PMCID': '12345'})
+    annot = evidence_to_annotation(ev)
+    assert annot['url'] == 'https://www.ncbi.nlm.nih.gov/pmc/articles/12345/'
+
+
+    ev = Evidence(source_api='reach', text='Some text',
+                  pmid=None, text_refs={'URL': 'https://wikipedia.org'})
+    annot = evidence_to_annotation(ev)
+    assert annot['url'] == 'https://wikipedia.org'
+
+
+def test_statement_to_annotations():
+    evs = [
+        # This will get filtered out
+        Evidence(source_api='reach'),
+        # This will get added as an annotation
+        Evidence(source_api='sparser', text='some text 1',
+                 pmid='12345'),
+    ]
+    stmt = Dephosphorylation(None, Agent('X'), evidence=evs)
+    annots = statement_to_annotations(stmt)
+    assert len(annots) == 1
+    assert annots[0]['target_text'] == 'some text 1'
