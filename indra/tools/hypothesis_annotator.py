@@ -1,21 +1,23 @@
 import logging
+import requests
 from indra.sources import indra_db_rest
+from indra.literature import pubmed_client
 from indra.pipeline import AssemblyPipeline
+from indra.statements import stmts_from_json
 from indra.sources.hypothesis import upload_statement_annotation
-
 
 logger = logging.getLogger(__name__)
 
 
 def annotate_paper_from_db(text_refs, pipeline=None):
-    """Upload INDRA Statements as annotations for a given paper.
+    """Upload INDRA Statements as annotations for a given paper based on content
+    for that paper in the INDRA DB.
 
     Parameters
     ----------
     text_refs : dict
         A dict of text references, following the same format as
         the INDRA Evidence text_refs attribute.
-
     pipeline : Optional[json]
         A list of pipeline steps (typically filters) that are applied
         before uploading statements to hypothes.is as annotations.
@@ -61,9 +63,6 @@ def annotate_paper_from_api(text_refs, text_extractor=None, pipeline=None):
         A list of pipeline steps (typically filters) that are applied
         before uploading statements to hypothes.is as annotations.
     """
-    import requests
-    from indra.literature import pubmed_client
-    from indra.statements import stmts_from_json
     api_url = 'http://api.indra.bio:8000/reach/'
     ref_priority = ['PMCID', 'PMID', 'URL']
     for ref_ns in ref_priority:
