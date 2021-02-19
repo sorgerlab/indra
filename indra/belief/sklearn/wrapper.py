@@ -123,8 +123,12 @@ class CountsModel(SklearnBase):
                 stmt_sources.add(ev.source_api)
             # Collect non-source count features (e.g. type) from stmts
             feature_row = []
+            # One-hot encoding of stmt type
             if self.use_stmt_type:
-                feature_row.append(self.stmt_type_map[type(stmt).__name__])
+                stmt_type_ix = self.stmt_type_map[type(stmt).__name__]
+                type_features = [1 if ix == stmt_type_ix else 0
+                                 for ix in range(len(self.stmt_type_map))]
+                feature_row.extend(type_features)
             # Only add a feature row if we're using some of the features.
             if feature_row:
                 cat_features.append(feature_row)
@@ -156,10 +160,17 @@ class CountsModel(SklearnBase):
     def df_to_matrix(self, df):
         required_cols = {'agA_id', 'agA_name', 'agA_ns', 'agB_id', 'agB_name',
                          'agB_ns', 'stmt_hash', 'stmt_type'}
+        # Currently, statement DataFrames are not expected to contain
+        # number of members as a data column, hence we raise a ValueError
+        # if use_num_members is set.
+        if self.use_num_members:
+            raise ValueError('use_num_members not supported for statement '
+                             'DataFrames.')
         # Make sure that the dataframe contains at least all of the above
         # columns
         if not required_cols.issubset(set(df.columns)):
-            raise ValueError
+            raise ValueError('Statement DataFrame is missing required '
+                             'columns.')
         # Check for the source_counts column. If it's there, we're good
         if 'source_counts' in df.columns:
             has_sc_col = True
@@ -169,7 +180,7 @@ class CountsModel(SklearnBase):
             has_sc_col = False
             for source in self.source_list:
                 if source not in df.columns:
-                    raise ValueError(f'Expected column "{source}" in the '
+                    raise ValueError(f'Expected column "{source}" not in the '
                                       'given statement DataFrame')
 
         # Add categorical features and collect source_apis
@@ -183,8 +194,12 @@ class CountsModel(SklearnBase):
                 stmt_sources |= set(rowtup.source_counts.keys())
             # Collect non-source count features (e.g. type) from stmts
             feature_row = []
+            # One-hot encoding of stmt type
             if self.use_stmt_type:
-                feature_row.append(self.stmt_type_map[rowtup.stmt_type])
+                stmt_type_ix = self.stmt_type_map[rowtup.stmt_type]
+                type_features = [1 if ix == stmt_type_ix else 0
+                                 for ix in range(len(self.stmt_type_map))]
+                feature_row.extend(type_features)
             # Only add a feature row if we're using some of the features.
             if feature_row:
                 cat_features.append(feature_row)

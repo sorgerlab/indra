@@ -76,9 +76,11 @@ def test_stmts_to_matrix():
            'Signor col should be 1 in every row, other cols 0.'
     # Try again with statement type
     cw = CountsModel(lr, source_list, use_stmt_type=True)
+    num_types = len(cw.stmt_type_map)
     x_arr = cw.stmts_to_matrix(test_stmts)
-    assert x_arr.shape == (len(test_stmts), len(source_list)+1), \
-        'matrix should have a col for sources and stmt type'
+    assert x_arr.shape == (len(test_stmts), len(source_list) + num_types), \
+        'matrix should have a col for sources and other cols for every ' \
+        'statement type.'
 
 
 def test_fit_stmts():
@@ -135,9 +137,11 @@ def test_df_to_matrix():
     assert x_arr.shape == (len(test_df), len(source_list))
     # Try again with statement type
     cw = CountsModel(lr, source_list, use_stmt_type=True)
+    num_types = len(cw.stmt_type_map)
     x_arr = cw.df_to_matrix(test_df)
-    assert x_arr.shape == (len(test_df), len(source_list)+1), \
-        'matrix should have a col for sources and stmt type'
+    assert x_arr.shape == (len(test_df), len(source_list) + num_types), \
+        'matrix should have a col for sources and other cols for every ' \
+        'statement type.'
 
 
 def test_fit_df():
@@ -218,4 +222,15 @@ def test_matrix_to_matrix():
     stmt_arr = cw.to_matrix(test_df)
     assert cw.to_matrix(stmt_arr) is stmt_arr, \
             'If passed a numpy array to_matrix should return it back.'
+
+
+@raises(ValueError)
+def test_use_members_with_df():
+    """Check that we can't set use_num_members when passing a DataFrame."""
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list, use_num_members=True)
+    # This should error because stmt DataFrame doesn't contain num_members
+    # info
+    stmt_arr = cw.to_matrix(test_df)
 
