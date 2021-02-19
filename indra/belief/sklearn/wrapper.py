@@ -100,13 +100,13 @@ class CountsModel(SklearnBase):
     it should have columns with names matching the sources in source list.
     """
     def __init__(self, model, source_list, use_stmt_type=False,
-                 use_num_members=False):
+                 use_num_members=False, use_num_pmids=False):
         # Call superclass constructor to store the model
         super(CountsModel, self).__init__(model)
         self.use_stmt_type = use_stmt_type
         self.use_num_members = use_num_members
         self.source_list = source_list
-
+        self.use_num_pmids = use_num_pmids
         # Build dictionary mapping INDRA Statement types to integers
         if use_stmt_type:
             all_stmt_types = get_all_descendants(Statement)
@@ -119,8 +119,10 @@ class CountsModel(SklearnBase):
         stmt_sources = set()
         for stmt in stmts:
             # Collect all source_apis from stmt evidences
+            pmids = set()
             for ev in stmt.evidence:
                 stmt_sources.add(ev.source_api)
+                pmids.add(ev.pmid)
             # Collect non-source count features (e.g. type) from stmts
             feature_row = []
             # One-hot encoding of stmt type
@@ -132,6 +134,9 @@ class CountsModel(SklearnBase):
             # Add field for number of members
             if self.use_num_members:
                 feature_row.append(len(stmt.agent_list()))
+            # Add field with number of unique PMIDs
+            if self.use_num_pmids:
+                feature_row.append(len(pmids))
             # Only add a feature row if we're using some of the features.
             if feature_row:
                 cat_features.append(feature_row)
@@ -164,10 +169,13 @@ class CountsModel(SklearnBase):
         required_cols = {'agA_id', 'agA_name', 'agA_ns', 'agB_id', 'agB_name',
                          'agB_ns', 'stmt_hash', 'stmt_type'}
         # Currently, statement DataFrames are not expected to contain
-        # number of members as a data column, hence we raise a ValueError
-        # if use_num_members is set.
+        # number of members or num_pmids as a data column, hence we raise a
+        # ValueError if either of these are set
         if self.use_num_members:
             raise ValueError('use_num_members not supported for statement '
+                             'DataFrames.')
+        if self.use_num_pmids:
+            raise ValueError('use_num_pmids not supported for statement '
                              'DataFrames.')
         # Make sure that the dataframe contains at least all of the above
         # columns
