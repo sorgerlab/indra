@@ -125,6 +125,8 @@ def upload_statement_annotation(stmt, annotate_agents=True):
     for annotation in annotations:
         annotation['tags'].append('indra_upload')
         upload_annotation(**annotation)
+    if annotations:
+        return annotations[0]['url']
 
 
 def get_annotations(group=None):
