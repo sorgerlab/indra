@@ -15,7 +15,7 @@ from indra.sources.hypothesis import upload_statement_annotation
 logger = logging.getLogger(__name__)
 
 
-def annotate_paper_from_db(text_refs, pipeline=None):
+def annotate_paper_from_db(text_refs, assembly_pipeline=None):
     """Upload INDRA Statements as annotations for a given paper based on content
     for that paper in the INDRA DB.
 
@@ -24,7 +24,7 @@ def annotate_paper_from_db(text_refs, pipeline=None):
     text_refs : dict
         A dict of text references, following the same format as
         the INDRA Evidence text_refs attribute.
-    pipeline : Optional[json]
+    assembly_pipeline : Optional[json]
         A list of pipeline steps (typically filters) that are applied
         before uploading statements to hypothes.is as annotations.
     """
@@ -42,8 +42,8 @@ def annotate_paper_from_db(text_refs, pipeline=None):
     for stmt in stmts:
         stmt.evidence = [ev for ev in stmt.evidence if
                          ev.text_refs.get(ref_ns) == ref_id]
-    if pipeline:
-        ap = AssemblyPipeline(pipeline)
+    if assembly_pipeline:
+        ap = AssemblyPipeline(assembly_pipeline)
         stmts = ap.run(stmts)
 
     logger.info('Uploading %d statements to hypothes.is' % len(stmts))
@@ -51,7 +51,8 @@ def annotate_paper_from_db(text_refs, pipeline=None):
         upload_statement_annotation(stmt, annotate_agents=True)
 
 
-def read_and_annotate(text_refs, text_extractor=None, pipeline=None):
+def read_and_annotate(text_refs, text_extractor=None,
+                      text_reader=None, assembly_pipeline=None):
     """Read a paper/website and upload annotations derived from it to
     hypothes.is.
 
@@ -66,12 +67,24 @@ def read_and_annotate(text_refs, text_extractor=None, pipeline=None):
         This is only used if the text_refs is a URL (e.g., a Wikipedia page),
         it is not used for PMID or PMCID text_refs where content can be
         pre-processed and machine read directly. Default: None
-    pipeline : Optional[json]
-        A list of pipeline steps (typically filters) that are applied
-        before uploading statements to hypothes.is as annotations.
+        Example: html2text.HTML2Text().handle
+    text_reader : Optional[function]
+        A function which takes a single text string argument (the
+        text extracted from a given resource), runs reading on it, and
+        returns a list of INDRA Statement objects. Due to complications with
+        the PMC NXML format, this option only supports URL or PMID resources
+        as input in text_refs. Default: None. In the
+        default case, the INDRA REST API is called with an appropriate
+        endpoint that runs Reach and processes its output into INDRA
+        Statements.
+    assembly_pipeline : Optional[json]
+        A list of assembly pipeline steps that are applied before uploading
+        statements to hypothes.is as annotations.
+        Example: [{'function': 'map_grounding'}]
     """
     api_url = 'http://api.indra.bio:8000/reach/'
-    ref_priority = ['PMCID', 'PMID', 'URL']
+    ref_priority = ['PMCID', 'PMID', 'URL'] if not text_reader \
+        else ['PMID', 'URL']
     for ref_ns in ref_priority:
         ref_id = text_refs.get(ref_ns)
         if ref_id:
@@ -83,13 +96,18 @@ def read_and_annotate(text_refs, text_extractor=None, pipeline=None):
     # Get text content and the read the text
     if ref_ns == 'PMCID':
         res = requests.post(api_url + 'process_pmc', json={'pmc_id': ref_id})
+        stmts = stmts_from_json(res.json().get('statements'))
     elif ref_ns == 'PMID':
         abstract = pubmed_client.get_abstract(ref_id)
         if not abstract:
             logger.info('Could not get abstract from PubMed')
             return
         logger.info('Got abstract')
-        res = requests.post(api_url + 'process_text', json={'text': abstract})
+        if text_reader:
+            stmts = text_reader(abstract)
+        else:
+            res = requests.post(api_url + 'process_text', json={'text': abstract})
+            stmts = stmts_from_json(res.json().get('statements'))
     elif ref_ns == 'URL':
         site_content = requests.get(ref_id).text
         if not site_content:
@@ -101,17 +119,20 @@ def read_and_annotate(text_refs, text_extractor=None, pipeline=None):
                         len(text))
         else:
             text = site_content
-        res = requests.post(api_url + 'process_text', json={'text': text})
+        if text_reader:
+            stmts = text_reader(text)
+        else:
+            res = requests.post(api_url + 'process_text', json={'text': text})
+            stmts = stmts_from_json(res.json().get('statements'))
     else:
         return
-    jstmts = res.json().get('statements')
-    logger.info('Got %d statements from reading' % len(jstmts))
-    if not jstmts:
-        return
-    stmts = stmts_from_json(res.json().get('statements'))
 
-    if pipeline:
-        ap = AssemblyPipeline(pipeline)
+    logger.info('Got %d statements from reading' % len(stmts))
+    if not stmts:
+        return
+
+    if assembly_pipeline:
+        ap = AssemblyPipeline(assembly_pipeline)
         stmts = ap.run(stmts)
 
     logger.info('Uploading %d statements to hypothes.is' % len(stmts))
