@@ -8,6 +8,12 @@ Run assembly components in a pipeline (:py:mod:`indra.tools.assemble_corpus`)
 .. automodule:: indra.tools.assemble_corpus
     :members:
 
+Annotate websites with INDRA through hypothes.is (:py:mod:`indra.tools.hypothesis_annotator`)
+---------------------------------------------------------------------------------------------
+
+.. automodule:: indra.tools.hypothesis_annotator
+    :members:
+
 Build a network from a gene list (:py:mod:`indra.tools.gene_network`)
 ---------------------------------------------------------------------
 

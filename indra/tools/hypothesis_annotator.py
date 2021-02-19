@@ -1,3 +1,9 @@
+"""This module exposes functions that annotate websites (including
+PubMed and PubMedCentral pages, or any other text-based website) with INDRA
+Statements through hypothes.is. Features include reading the content of the
+website 'de-novo', and generating new INDRA Statements for annotation, and
+fetching existing statements for a paper from the INDRA DB and using
+those for annotation."""
 import logging
 import requests
 from indra.sources import indra_db_rest
@@ -45,8 +51,9 @@ def annotate_paper_from_db(text_refs, pipeline=None):
         upload_statement_annotation(stmt, annotate_agents=True)
 
 
-def annotate_paper_from_api(text_refs, text_extractor=None, pipeline=None):
-    """Read a paper and upload annotations derived from it to hypothes.is.
+def read_and_annotate(text_refs, text_extractor=None, pipeline=None):
+    """Read a paper/website and upload annotations derived from it to
+    hypothes.is.
 
     Parameters
     ----------
@@ -90,6 +97,8 @@ def annotate_paper_from_api(text_refs, text_extractor=None, pipeline=None):
             return
         if text_extractor:
             text = text_extractor(site_content)
+            logger.info('Extracted text of length %d from site content' %
+                        len(text))
         else:
             text = site_content
         res = requests.post(api_url + 'process_text', json={'text': text})
@@ -97,6 +106,8 @@ def annotate_paper_from_api(text_refs, text_extractor=None, pipeline=None):
         return
     jstmts = res.json().get('statements')
     logger.info('Got %d statements from reading' % len(jstmts))
+    if not jstmts:
+        return
     stmts = stmts_from_json(res.json().get('statements'))
 
     if pipeline:
