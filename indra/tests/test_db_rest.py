@@ -148,7 +148,7 @@ def test_famplex_namespace():
         + ', '.join({s.agent_list()[1].name for s in stmts})
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'notravis')
 def test_paper_query():
     stmts_1 = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
                                             ('pmid', '27014235')],
