@@ -234,3 +234,13 @@ def test_use_members_with_df():
     # info
     stmt_arr = cw.to_matrix(test_df)
 
+
+def test_use_members_with_stmts():
+    """Check that we can set use_num_members when passing statements."""
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list, use_num_members=True)
+    x_arr = cw.to_matrix(test_stmts)
+    assert x_arr.shape == (len(test_stmts), len(source_list)+1), \
+            'stmt matrix dimensions should match test stmts plus num_members'
+

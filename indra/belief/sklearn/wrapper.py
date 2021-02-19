@@ -129,6 +129,9 @@ class CountsModel(SklearnBase):
                 type_features = [1 if ix == stmt_type_ix else 0
                                  for ix in range(len(self.stmt_type_map))]
                 feature_row.extend(type_features)
+            # Add field for number of members
+            if self.use_num_members:
+                feature_row.append(len(stmt.agent_list()))
             # Only add a feature row if we're using some of the features.
             if feature_row:
                 cat_features.append(feature_row)
