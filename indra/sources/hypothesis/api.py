@@ -105,6 +105,8 @@ def upload_annotation(url, annotation, target_text=None, tags=None,
         }]
     if tags:
         params['tags'] = tags
+    permissions = {'read': ['group:%s' % group]}
+    params['permissions'] = permissions
     res = send_post_request('annotations', **params)
     return res
 
