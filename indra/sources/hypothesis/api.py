@@ -119,14 +119,18 @@ def upload_statement_annotation(stmt, annotate_agents=True):
     annotate_agents : Optional[bool]
         If True, the agents in the annotation text are linked to outside
         databases based on their grounding. Default: True
+
+    Returns
+    -------
+    list of dict
+        A list of annotation structures that were uploaded to hypothes.is.
     """
     annotations = statement_to_annotations(stmt,
                                            annotate_agents=annotate_agents)
     for annotation in annotations:
         annotation['tags'].append('indra_upload')
         upload_annotation(**annotation)
-    if annotations:
-        return annotations[0]['url']
+    return annotations
 
 
 def get_annotations(group=None):
