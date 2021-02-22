@@ -26,12 +26,12 @@ def evidence_to_annotation(evidence):
     if not evidence.text:
         return None
 
-    if 'PMCID' in evidence.text_refs:
+    if evidence.text_refs.get('PMCID'):
         url = 'https://www.ncbi.nlm.nih.gov/pmc/articles/%s/' % \
             evidence.text_refs['PMCID']
     elif evidence.pmid:
         url = 'https://pubmed.ncbi.nlm.nih.gov/%s/' % evidence.pmid
-    elif 'URL' in evidence.text_refs:
+    elif evidence.text_refs.get('URL'):
         url = evidence.text_refs['URL']
     else:
         return None
