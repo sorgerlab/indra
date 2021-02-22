@@ -1,11 +1,13 @@
 __all__ = ['process_annotations', 'get_annotations', 'upload_annotation',
            'upload_statement_annotation', 'statement_to_annotations']
 
+import logging
 import requests
 from indra.config import get_config
 from .processor import HypothesisProcessor
 from .annotator import statement_to_annotations
 
+logger = logging.getLogger(__name__)
 
 base_url = 'https://api.hypothes.is/api/'
 api_key = get_config('HYPOTHESIS_API_KEY')
@@ -151,8 +153,21 @@ def get_annotations(group=None):
         else:
             raise ValueError('No group provided and HYPOTHESIS_GROUP '
                              'is not set.')
-    res = send_get_request('search', group=group, limit=200)
-    annotations = res.get('rows', [])
+    # Note that this batch size is the maximum that the API allows, therefore
+    # it makes sense to run queries with this fixed limit.
+    limit = 200
+    offset = 0
+    annotations = []
+    while True:
+        logger.info('Getting up top %d annotations from offset %d' %
+                    (limit, offset))
+        res = send_get_request('search', group=group, limit=limit, offset=offset)
+        rows = res.get('rows', [])
+        if not rows:
+            break
+        annotations += rows
+        offset += len(rows)
+    logger.info('Got a total of %d annotations' % len(annotations))
     return annotations
 
 
