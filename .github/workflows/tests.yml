@@ -36,8 +36,8 @@ jobs:
         pip install pydot jsonschema coverage nose-timer doctest-ignore-unicode awscli pycodestyle
         mkdir -p $HOME/.pybel/data
         aws s3 cp s3://bigmech/travis/pybel_cache.db $HOME/.pybel/data/ --no-sign-request  --source-region us-east-1
-        mkdir -p $HOME/.indra/bio_ontology/1.7
-        aws s3 cp s3://bigmech/travis/bio_ontology/1.7/mock_ontology.pkl $HOME/.indra/bio_ontology/1.7/bio_ontology.pkl --no-sign-request  --source-region us-east-1
+        mkdir -p $HOME/.indra/bio_ontology/1.8
+        aws s3 cp s3://bigmech/travis/bio_ontology/1.8/mock_ontology.pkl $HOME/.indra/bio_ontology/1.8/bio_ontology.pkl --no-sign-request  --source-region us-east-1
         # PySB and dependencies
         wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
         tar xzf bionetgen.tar.gz
