@@ -608,7 +608,8 @@ def update_doid():
 def update_efo():
     """Update experimental factor ontology."""
     url = 'https://www.ebi.ac.uk/efo/efo.obo'
-    OboClient.update_resource(path, url, 'efo', remove_prefix=True)
+    OboClient.update_resource(path, url, 'efo', remove_prefix=True,
+                              allowed_external_ns={'BFO'})
 
 
 def update_hpo():
