@@ -58,12 +58,15 @@ class SifProcessor():
 
 
 def get_agent(txt, names_to_refs):
+    txt.replace('_', ' ')
     refs = names_to_refs.get(txt)
     if not refs:
         refs = names_to_refs.get(txt.lower())
     if refs:
         db_refs = indra_db_refs_from_minerva_refs(refs)
         name = get_standard_name(db_refs)
+        if not name:
+            name = txt
     elif txt.endswith('complex'):
         ag_str = txt[:-8]
         if '/' in ag_str:
