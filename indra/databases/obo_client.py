@@ -188,6 +188,18 @@ class OboClient:
         entries = prune_empty_entries(entries,
                                       {'synonyms', 'xrefs',
                                        'alt_ids', 'relations'})
+
+        def sort_key(x):
+            val = x['id']
+            if not remove_prefix:
+                val = val.split(':')[1]
+            try:
+                val = int(val)
+            except ValueError:
+                pass
+            return val
+
+        entries = sorted(entries, key=sort_key)
         with open(resource_path, 'w') as file:
             json.dump(entries, file, indent=1, sort_keys=True)
 
