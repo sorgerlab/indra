@@ -79,6 +79,7 @@ class OboClient:
 
         prefix_upper = prefix.upper()
         entries = []
+
         for node, data in obo_graph.nodes(data=True):
             if 'name' not in data:
                 continue
@@ -129,8 +130,13 @@ class OboClient:
                 rels_dict[rel_type].append(target)
             for rel_type, rels in rels_dict.items():
                 rel_own = [entry for entry in
-                           sorted(set(rels)) if entry.startswith(prefix_upper)]
-                rel_own = [(entry if not remove_prefix
+                           sorted(set(rels)) if entry.startswith(prefix_upper)
+                           or (allowed_external_ns and
+                               entry.split(':')[0] in allowed_external_ns)]
+                rel_own = [(entry if ((not remove_prefix)
+                                      or (allowed_external_ns
+                                          and entry.split(':')[0] in
+                                          allowed_external_ns))
                             else entry.split(':', maxsplit=1)[1])
                            for entry in rel_own]
                 rels_dict[rel_type] = rel_own
