@@ -67,7 +67,8 @@ def test_specific_chebi_ids():
 
 
 def test_hmdb_to_chebi():
-    assert chebi_client.get_chebi_id_from_hmdb('HMDB0000122') == 'CHEBI:4167'
+    chebi_id = chebi_client.get_chebi_id_from_hmdb('HMDB0000122')
+    assert chebi_id == 'CHEBI:15903', chebi_id
 
 
 def test_chebi_to_primary():
