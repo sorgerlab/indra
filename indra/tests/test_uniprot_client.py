@@ -187,3 +187,7 @@ def test_length():
 def test_get_function():
     fun = uniprot_client.get_function('P15056')
     assert fun.startswith('Protein kinase involved in the transduction')
+
+
+def test_get_gene_name_only_protein_name():
+    assert uniprot_client.get_gene_name('P04377') == 'Pseudoazurin'
