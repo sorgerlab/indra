@@ -246,7 +246,11 @@ def update_hmdb_chebi_map():
                 elif event == 'end' and \
                         elem.tag == '{%s}metabolite' % ns['hmdb']:
                     if hmdb_id and chebi_id:
-                        print(hmdb_id, chebi_id)
+                        name = chebi_client.get_chebi_name_from_id(chebi_id)
+                        if not name:
+                            print('Likely invalid ChEBI mapping: ',
+                                  hmdb_id, chebi_id)
+                            continue
                         mappings.append([hmdb_id, chebi_id])
                 elem.clear()
     fname = os.path.join(path, 'hmdb_to_chebi.tsv')
