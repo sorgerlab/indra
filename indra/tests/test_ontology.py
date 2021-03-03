@@ -327,3 +327,8 @@ def test_world_ontology_add_entry():
     ont.add_entry(new_node, examples=['floods'])
     assert ont.isa('WM', new_node, 'WM', nat_dis)
     ont_yml = ont.dump_yml_str()
+
+
+def test_efo_bfo_relations():
+    assert set(bio_ontology.get_parents('EFO', '0004542')) == \
+        {('BFO', '0000015'), ('EFO', '0000001')}

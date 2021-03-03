@@ -28,6 +28,10 @@ def _load_mesh_file(path):
             mesh_id, mesh_label, mesh_terms_str = terms
         else:
             mesh_id, mesh_label, mesh_terms_str, tree_number_str = terms
+            # This is a rare corner case where an entry is outside the
+            # tree structure, e.g., D005260, D008297
+            if not tree_number_str:
+                continue
             mesh_id_to_tree_numbers[mesh_id] = tree_number_str.split('|')
         mesh_terms = mesh_terms_str.split('|') if mesh_terms_str else []
         mesh_id_to_name[mesh_id] = mesh_label

@@ -224,7 +224,7 @@ def update_hmdb_chebi_map():
     url = 'http://www.hmdb.ca/system/downloads/current/hmdb_metabolites.zip'
     fname = os.path.join(path, 'hmdb_metabolites.zip')
     logger.info('Downloading %s' % url)
-    #urlretrieve(url, fname)
+    urlretrieve(url, fname)
     mappings = []
     with ZipFile(fname) as input_zip:
         with input_zip.open('hmdb_metabolites.xml') as fh:
@@ -246,7 +246,11 @@ def update_hmdb_chebi_map():
                 elif event == 'end' and \
                         elem.tag == '{%s}metabolite' % ns['hmdb']:
                     if hmdb_id and chebi_id:
-                        print(hmdb_id, chebi_id)
+                        name = chebi_client.get_chebi_name_from_id(chebi_id)
+                        if not name:
+                            print('Likely invalid ChEBI mapping: ',
+                                  hmdb_id, chebi_id)
+                            continue
                         mappings.append([hmdb_id, chebi_id])
                 elem.clear()
     fname = os.path.join(path, 'hmdb_to_chebi.tsv')
@@ -608,7 +612,8 @@ def update_doid():
 def update_efo():
     """Update experimental factor ontology."""
     url = 'https://www.ebi.ac.uk/efo/efo.obo'
-    OboClient.update_resource(path, url, 'efo', remove_prefix=True)
+    OboClient.update_resource(path, url, 'efo', remove_prefix=True,
+                              allowed_external_ns={'BFO'})
 
 
 def update_hpo():

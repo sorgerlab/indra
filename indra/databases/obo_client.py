@@ -72,21 +72,30 @@ class OboClient:
 
     @staticmethod
     def entries_from_graph(obo_graph, prefix, remove_prefix=False,
-                           allowed_synonyms=None):
+                           allowed_synonyms=None, allowed_external_ns=None):
         """Return processed entries from an OBO graph."""
         allowed_synonyms = allowed_synonyms if allowed_synonyms is not None \
             else {'EXACT', 'RELATED'}
 
         prefix_upper = prefix.upper()
         entries = []
+
         for node, data in obo_graph.nodes(data=True):
             if 'name' not in data:
                 continue
             # There are entries in some OBOs that are actually from other
-            # ontologies
+            # ontologies. We either skip these entirely or if allowed
+            # external name spaces are provided, we allow nodes that are
+            # in one of those namespaces
+            external_node = False
             if not node.startswith(prefix_upper):
-                continue
-            if remove_prefix:
+                if allowed_external_ns and \
+                        node.split(':')[0] in allowed_external_ns:
+                    external_node = True
+                else:
+                    continue
+
+            if not external_node and remove_prefix:
                 node = node[len(prefix) + 1:]
 
             xrefs = []
@@ -121,8 +130,13 @@ class OboClient:
                 rels_dict[rel_type].append(target)
             for rel_type, rels in rels_dict.items():
                 rel_own = [entry for entry in
-                           sorted(set(rels)) if entry.startswith(prefix_upper)]
-                rel_own = [(entry if not remove_prefix
+                           sorted(set(rels)) if entry.startswith(prefix_upper)
+                           or (allowed_external_ns and
+                               entry.split(':')[0] in allowed_external_ns)]
+                rel_own = [(entry if ((not remove_prefix)
+                                      or (allowed_external_ns
+                                          and entry.split(':')[0] in
+                                          allowed_external_ns))
                             else entry.split(':', maxsplit=1)[1])
                            for entry in rel_own]
                 rels_dict[rel_type] = rel_own
@@ -153,7 +167,7 @@ class OboClient:
 
     @staticmethod
     def update_resource(directory, url, prefix, *args, remove_prefix=False,
-                        allowed_synonyms=None):
+                        allowed_synonyms=None, allowed_external_ns=None):
         """Write the OBO information to files in the given directory."""
         resource_path = _make_resource_path(directory, prefix)
         obo_path = os.path.join(directory, '%s.obo.pkl' % prefix)
@@ -166,12 +180,26 @@ class OboClient:
                 pickle.dump(g, file)
 
         entries = \
-            OboClient.entries_from_graph(g, prefix=prefix,
-                                         remove_prefix=remove_prefix,
-                                         allowed_synonyms=allowed_synonyms)
+            OboClient.entries_from_graph(
+                g, prefix=prefix,
+                remove_prefix=remove_prefix,
+                allowed_synonyms=allowed_synonyms,
+                allowed_external_ns=allowed_external_ns)
         entries = prune_empty_entries(entries,
                                       {'synonyms', 'xrefs',
                                        'alt_ids', 'relations'})
+
+        def sort_key(x):
+            val = x['id']
+            if not remove_prefix:
+                val = val.split(':')[1]
+            try:
+                val = int(val)
+            except ValueError:
+                pass
+            return val
+
+        entries = sorted(entries, key=sort_key)
         with open(resource_path, 'w') as file:
             json.dump(entries, file, indent=1, sort_keys=True)
 

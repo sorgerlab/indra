@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.7'
+    version = '1.8'
 
     def __init__(self):
         super().__init__()
@@ -184,7 +184,13 @@ class BioOntology(IndraOntology):
         for ns in namespaces:
             oc = obo_client.OboClient(prefix=ns)
             for db_id, entry in oc.entries.items():
-                nodes.append((self.label(ns.upper(), db_id),
+                label = self.label(ns.upper(), db_id)
+                # There may be more general ways of doing this but this
+                # handles the special case of BFO nodes in the EFO
+                # ontology.
+                if ns == 'efo' and db_id.startswith('BFO'):
+                    label = db_id
+                nodes.append((label,
                               {'name': entry['name']}))
         self.add_nodes_from(nodes)
 
@@ -213,9 +219,15 @@ class BioOntology(IndraOntology):
                     mapped_rel = rel_mappings.get(rel)
                     if not mapped_rel:
                         continue
+                    source_label = self.label(ns.upper(), db_id)
+                    if ns == 'efo' and db_id.startswith('BFO'):
+                        source_label = db_id
                     for target in targets:
-                        edges.append((self.label(ns.upper(), db_id),
-                                      self.label(ns.upper(), target),
+                        target_label = self.label(ns.upper(), target)
+                        if ns == 'efo' and target.startswith('BFO'):
+                            target_label = target
+                        edges.append((source_label,
+                                      target_label,
                                       {'type': mapped_rel}))
         self.add_edges_from(edges)
 
