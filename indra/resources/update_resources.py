@@ -224,7 +224,7 @@ def update_hmdb_chebi_map():
     url = 'http://www.hmdb.ca/system/downloads/current/hmdb_metabolites.zip'
     fname = os.path.join(path, 'hmdb_metabolites.zip')
     logger.info('Downloading %s' % url)
-    #urlretrieve(url, fname)
+    urlretrieve(url, fname)
     mappings = []
     with ZipFile(fname) as input_zip:
         with input_zip.open('hmdb_metabolites.xml') as fh:
