@@ -63,3 +63,15 @@ def get_all_valid_element_refs(map_name=default_map_name):
     return valid_element_refs
 
 
+def get_names_to_refs(map_name=default_map_name):
+    config = get_config(map_name)
+    project_id = get_project_id_from_config(config)
+    models = get_models(project_id, map_name)
+    all_model_elements = get_all_model_elements(models, project_id,
+                                                map_name)
+    names_to_refs = {}
+    for element in all_model_elements:
+        ref = get_element_references(element)
+        if ref and element.get('name'):
+            names_to_refs[element['name']] = ref
+    return names_to_refs
