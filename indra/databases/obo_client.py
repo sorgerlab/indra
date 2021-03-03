@@ -72,7 +72,7 @@ class OboClient:
 
     @staticmethod
     def entries_from_graph(obo_graph, prefix, remove_prefix=False,
-                           allowed_synonyms=None):
+                           allowed_synonyms=None, allowed_external_ns=None):
         """Return processed entries from an OBO graph."""
         allowed_synonyms = allowed_synonyms if allowed_synonyms is not None \
             else {'EXACT', 'RELATED'}
@@ -83,10 +83,18 @@ class OboClient:
             if 'name' not in data:
                 continue
             # There are entries in some OBOs that are actually from other
-            # ontologies
+            # ontologies. We either skip these entirely or if allowed
+            # external name spaces are provided, we allow nodes that are
+            # in one of those namespaces
+            external_node = False
             if not node.startswith(prefix_upper):
-                continue
-            if remove_prefix:
+                if allowed_external_ns and \
+                        node.split(':')[0] in allowed_external_ns:
+                    external_node = True
+                else:
+                    continue
+
+            if not external_node and remove_prefix:
                 node = node[len(prefix) + 1:]
 
             xrefs = []
@@ -153,7 +161,7 @@ class OboClient:
 
     @staticmethod
     def update_resource(directory, url, prefix, *args, remove_prefix=False,
-                        allowed_synonyms=None):
+                        allowed_synonyms=None, allowed_external_ns=None):
         """Write the OBO information to files in the given directory."""
         resource_path = _make_resource_path(directory, prefix)
         obo_path = os.path.join(directory, '%s.obo.pkl' % prefix)
@@ -166,9 +174,11 @@ class OboClient:
                 pickle.dump(g, file)
 
         entries = \
-            OboClient.entries_from_graph(g, prefix=prefix,
-                                         remove_prefix=remove_prefix,
-                                         allowed_synonyms=allowed_synonyms)
+            OboClient.entries_from_graph(
+                g, prefix=prefix,
+                remove_prefix=remove_prefix,
+                allowed_synonyms=allowed_synonyms,
+                allowed_external_ns=allowed_external_ns)
         entries = prune_empty_entries(entries,
                                       {'synonyms', 'xrefs',
                                        'alt_ids', 'relations'})
