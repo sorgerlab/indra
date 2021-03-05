@@ -44,7 +44,7 @@ class SifProcessor():
         return stmts
 
     def get_stmt(self, sif_str, ids_to_refs, complex_members):
-        if sif_str.startswith('#'):
+        if sif_str.startswith('#') or sif_str == '':
             return
         clean_str = sif_str.strip('\n')
         subj_id, rel_type, obj_id = clean_str.split(' ')
@@ -60,15 +60,9 @@ class SifProcessor():
 
 
 def get_agent(elementId, ids_to_refs, complex_members):
-    if elementId in ids_to_refs:
-        refs = ids_to_refs.get(elementId)
-        if refs:
-            db_refs = indra_db_refs_from_minerva_refs(refs)
-            name = get_standard_name(db_refs)
-            if name and db_refs:
-                return Agent(name, db_refs=db_refs)
-    elif elementId in complex_members:
-        member_ids = complex_members[elementId]
+    if elementId in complex_members:
+        # Sort to always have the same main agent
+        member_ids = sorted(complex_members[elementId])
         agents = [get_agent(member_id, ids_to_refs, complex_members)
                   for member_id in member_ids]
         main_agent = agents[0]
@@ -76,3 +70,14 @@ def get_agent(elementId, ids_to_refs, complex_members):
             for ag in agents[1:]:
                 main_agent.bound_conditions.append(BoundCondition(ag))
         return main_agent
+    elif elementId in ids_to_refs:
+        refs = ids_to_refs.get(elementId)
+        if refs:
+            accepted_ns = default_ns_order + ['TEXT']
+            indra_refs = indra_db_refs_from_minerva_refs(refs)
+            db_refs = {k: v for k, v in indra_refs.items() if k in accepted_ns}
+            name = get_standard_name(db_refs)
+            if not name:
+                name = db_refs.get('TEXT')
+            if name and db_refs:
+                return Agent(name, db_refs=db_refs)
