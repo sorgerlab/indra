@@ -49,7 +49,10 @@ def get_all_model_elements(models, project_id, map_name=default_map_name):
 
 def get_element_references(element):
     refs = element.get('references', [])
-    return [(ref.get('type'), ref.get('resource')) for ref in refs]
+    references = [(ref.get('type'), ref.get('resource')) for ref in refs]
+    if element.get('name'):
+        references.append(('TEXT', element['name']))
+    return references
 
 
 def get_all_valid_element_refs(map_name=default_map_name):
