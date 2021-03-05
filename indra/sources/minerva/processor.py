@@ -1,7 +1,7 @@
 import logging
 from indra.ontology.standardize import get_standard_name
 from indra.statements import *
-from .minerva_client import get_names_to_refs
+from .minerva_client import get_ids_to_refs
 from .id_mapping import indra_db_refs_from_minerva_refs
 
 
@@ -25,14 +25,19 @@ class SifProcessor():
         A dictionary mapping entity names as they are presented in SIF strings
         to their Minerva references.
     """
-    def __init__(self, sif_strs):
+    def __init__(self, sif_strs, model_id, ids_to_refs=None,
+                 complex_members=None):
         self.sif_strs = sif_strs
+        self.model_id = model_id
+        self.ids_to_refs = ids_to_refs if ids_to_refs else {}
+        self.complex_members = complex_members
         self.statements = []
-        self.names_to_refs = {}
 
     def extract_statements(self):
-        logger.info('Getting names to refs mapping')
-        self.names_to_refs = get_names_to_refs()
+        if not self.ids_to_refs or not self.complex_members:
+            logger.info('Getting element IDs to refs mapping')
+            self.ids_to_refs, self.complex_members = get_ids_to_refs(
+                self.model_id)
         logger.info('Getting statements for %d SIF strings'
                     % len(self.sif_strs))
         for sif_str in self.sif_strs:
@@ -45,9 +50,9 @@ class SifProcessor():
         if sif_str.startswith('#'):
             return
         clean_str = sif_str.strip('\n')
-        subj_txt, rel_type, obj_txt = clean_str.split(' ')
-        subj = get_agent(subj_txt, self.names_to_refs)
-        obj = get_agent(obj_txt, self.names_to_refs)
+        subj_id, rel_type, obj_id = clean_str.split(' ')
+        subj = get_agent(subj_id, self.ids_to_refs, self.complex_members)
+        obj = get_agent(obj_id, self.ids_to_refs, self.complex_members)
         if rel_type == 'POSITIVE':
             stmt = Activation(subj, obj)
         elif rel_type == 'NEGATIVE':
@@ -57,33 +62,20 @@ class SifProcessor():
         return stmt
 
 
-def get_agent(txt, names_to_refs):
-    txt.replace('_', ' ')
-    refs = names_to_refs.get(txt)
-    if not refs:
-        refs = names_to_refs.get(txt.lower())
-    if refs:
-        db_refs = indra_db_refs_from_minerva_refs(refs)
-        name = get_standard_name(db_refs)
-        if not name:
-            name = txt
-    elif txt.endswith('complex'):
-        ag_str = txt[:-8]
-        if '/' in ag_str:
-            ag_names = ag_str.split('/')
-        elif ':' in ag_str:
-            ag_names = ag_str.split(':')
-        else:
-            ag_names = [ag_str]
-        agents = [get_agent(ag_name, names_to_refs) for ag_name in ag_names]
+def get_agent(elementId, ids_to_refs, complex_members):
+    if elementId in ids_to_refs:
+        refs = ids_to_refs.get(elementId)
+        if refs:
+            db_refs = indra_db_refs_from_minerva_refs(refs)
+            name = get_standard_name(db_refs)
+            if name and db_refs:
+                return Agent(name, db_refs=db_refs)
+    elif elementId in complex_members:
+        member_ids = complex_members[elementId]
+        agents = [get_agent(member_id, ids_to_refs, complex_members)
+                  for member_id in member_ids]
         main_agent = agents[0]
         if len(agents) > 1:
             for ag in agents[1:]:
                 main_agent.bound_conditions.append(BoundCondition(ag))
         return main_agent
-    elif txt.endswith('phenotype'):
-        return get_agent(txt[:-10], names_to_refs)
-    else:
-        name = txt
-        db_refs = {'TEXT': txt}
-    return Agent(name, db_refs=db_refs)
