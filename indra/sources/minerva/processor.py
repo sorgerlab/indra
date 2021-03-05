@@ -13,46 +13,43 @@ class SifProcessor():
 
     Parameters
     ----------
-    sif_strs : list(str)
-        A list of strings representing the interactions.
-        Example: CASP9 POSITIVE CASP3.
+    model_id_to_sif_strs : dict
+        A dictionary mapping a model ID (int) to a list of strings in SIF
+        format. Example: {799: ['csa2 POSITIVE sa9', 'csa11 NEGATIVE sa30']}
 
     Attributes
     ----------
     statements : list[indra.statements.Statement]
         A list of INDRA Statements extracted from the SIF strings.
-    names_to_refs : dict
-        A dictionary mapping entity names as they are presented in SIF strings
-        to their Minerva references.
     """
-    def __init__(self, sif_strs, model_id, ids_to_refs=None,
-                 complex_members=None):
-        self.sif_strs = sif_strs
-        self.model_id = model_id
-        self.ids_to_refs = ids_to_refs if ids_to_refs else {}
-        self.complex_members = complex_members
+    def __init__(self, model_id_to_sif_strs):
+        self.model_id_to_sif_strs = model_id_to_sif_strs
         self.statements = []
 
     def extract_statements(self):
-        if not self.ids_to_refs or not self.complex_members:
-            logger.info('Getting element IDs to refs mapping')
-            self.ids_to_refs, self.complex_members = get_ids_to_refs(
-                self.model_id)
-        logger.info('Getting statements for %d SIF strings'
-                    % len(self.sif_strs))
-        for sif_str in self.sif_strs:
-            stmt = self.get_stmt(sif_str)
-            if stmt:
-                self.statements.append(stmt)
-        logger.info('Got %d statements' % len(self.statements))
+        for model_id, sif_strs in self.model_id_to_sif_strs.items():
+            self.statements += self.process_model(model_id, sif_strs)
+        logger.info('Got %d total statements from %d models'
+                    % (len(self.statements), len(self.model_id_to_sif_strs)))
 
-    def get_stmt(self, sif_str):
+    def process_model(self, model_id, sif_strs):
+        logger.info('Processing model %d' % model_id)
+        ids_to_refs, complex_members = get_ids_to_refs(model_id)
+        stmts = []
+        for sif_str in sif_strs:
+            stmt = self.get_stmt(sif_str, ids_to_refs, complex_members)
+            if stmt:
+                stmts.append(stmt)
+        logger.info('Got %d statements from model %d' % (len(stmts), model_id))
+        return stmts
+
+    def get_stmt(self, sif_str, ids_to_refs, complex_members):
         if sif_str.startswith('#'):
             return
         clean_str = sif_str.strip('\n')
         subj_id, rel_type, obj_id = clean_str.split(' ')
-        subj = get_agent(subj_id, self.ids_to_refs, self.complex_members)
-        obj = get_agent(obj_id, self.ids_to_refs, self.complex_members)
+        subj = get_agent(subj_id, ids_to_refs, complex_members)
+        obj = get_agent(obj_id, ids_to_refs, complex_members)
         if rel_type == 'POSITIVE':
             stmt = Activation(subj, obj)
         elif rel_type == 'NEGATIVE':
