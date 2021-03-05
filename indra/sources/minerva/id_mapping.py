@@ -7,6 +7,7 @@ minerva_to_indra_map = {
     'REFSEQ': 'REFSEQ_PROT',
     'ENTREZ': 'EGID',
     'INTERPRO': 'IP',
+    'MESH_2012': 'MESH',
 }
 
 
