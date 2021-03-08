@@ -60,7 +60,9 @@ class SifProcessor():
 
 
 def get_agent(elementId, ids_to_refs, complex_members):
-    if elementId in complex_members:
+    # If it's a complex and doesn't have complex level grounding
+    if elementId in complex_members and len(
+            ids_to_refs.get(elementId)) == 1:
         # Sort to always have the same main agent
         member_ids = sorted(complex_members[elementId])
         agents = [get_agent(member_id, ids_to_refs, complex_members)
@@ -70,14 +72,13 @@ def get_agent(elementId, ids_to_refs, complex_members):
             for ag in agents[1:]:
                 main_agent.bound_conditions.append(BoundCondition(ag))
         return main_agent
-    elif elementId in ids_to_refs:
+    else:
         refs = ids_to_refs.get(elementId)
-        if refs:
-            accepted_ns = default_ns_order + ['TEXT']
-            indra_refs = indra_db_refs_from_minerva_refs(refs)
-            db_refs = {k: v for k, v in indra_refs.items() if k in accepted_ns}
-            name = get_standard_name(db_refs)
-            if not name:
-                name = db_refs.get('TEXT')
-            if name and db_refs:
-                return Agent(name, db_refs=db_refs)
+        accepted_ns = default_ns_order + ['TEXT']
+        indra_refs = indra_db_refs_from_minerva_refs(refs)
+        db_refs = {k: v for k, v in indra_refs.items() if k in accepted_ns}
+        name = get_standard_name(db_refs)
+        if not name:
+            name = db_refs.get('TEXT')
+        if name and db_refs:
+            return Agent(name, db_refs=db_refs)
