@@ -340,20 +340,28 @@ class Statement(object):
             A long integer hash.
         """
         if shallow:
-            if not hasattr(self, '_shallow_hash') or self._shallow_hash is None\
-                    or refresh:
-                if not matches_fun:
-                    matches_key = self.matches_key()
-                else:
-                    matches_key = matches_fun(self)
+            # If the hash attribute is missing or we want to refresh it, or
+            # we are passing in a custom matches function (since we don't know
+            # if the cached value is consistent with it), then we
+            # recalculate the hash. Otherwise we just return the cached value.
+            if not hasattr(self, '_shallow_hash') or self._shallow_hash is None \
+                    or refresh or matches_fun:
+                matches_key = matches_fun(self) if matches_fun else \
+                    self.matches_key()
                 self._shallow_hash = make_hash(matches_key, 14)
             ret = self._shallow_hash
         else:
+            # If the hash attribute is missing or we want to refresh it, or
+            # we are passing in a custom matches function (since we don't know
+            # if the cached value is consistent with it), then we
+            # recalculate the hash. Otherwise we just return the cached value.
             if not hasattr(self, '_full_hash') or self._full_hash is None \
-                    or refresh:
+                    or refresh or matches_fun:
                 ev_mk_list = sorted([ev.matches_key() for ev in self.evidence])
+                matches_key = matches_fun(self) if matches_fun else \
+                    self.matches_key()
                 self._full_hash = \
-                    make_hash(self.matches_key() + str(ev_mk_list), 16)
+                    make_hash(matches_key + str(ev_mk_list), 16)
             ret = self._full_hash
         return ret
 

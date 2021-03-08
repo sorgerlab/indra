@@ -1,13 +1,9 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
 import copy
 import json
 import numpy
 import logging
 import networkx
 from os import path, pardir
-from collections import namedtuple
 
 
 logger = logging.getLogger(__name__)
@@ -178,7 +174,8 @@ class SimpleScorer(BeliefScorer):
         """
         if extra_evidence is None:
             extra_evidence = []
-        all_evidence = st.evidence + extra_evidence
+        # We remove instance duplicates here
+        all_evidence = set(st.evidence) | set(extra_evidence)
         return self.score_evidence_list(all_evidence)
 
     def check_prior_probs(self, statements):
@@ -293,7 +290,7 @@ class BeliefEngine(object):
 
     Attributes
     ----------
-    scorer : BeliefScorer
+    scorer : Optional[BeliefScorer]
         A BeliefScorer object that computes the prior probability of a
         statement given its its statment type and evidence.
         Must implement the `score_statement` method which takes
@@ -301,15 +298,24 @@ class BeliefEngine(object):
         `check_prior_probs` method which takes a list of INDRA Statements and
         verifies that the scorer has all the information it needs to score
         every statement in the list, and raises an exception if not.
+    matches_fun : Optional[function]
+        A function handle for a custom matches key if a non-deafult one is
+        used. Default: None
+    refinements_graph : Optional[networkx.DiGraph]
+        A graph whose nodes are statement hashes, and edges point from
+        a more specific to a less specific statement representing
+        a refinement. If not given, a new graph is constructed here.
     """
-    def __init__(self, scorer=None, matches_fun=None):
+    def __init__(self, scorer=None, matches_fun=None, refinements_graph=None):
         if scorer is None:
             scorer = default_scorer
-        assert(isinstance(scorer, BeliefScorer))
+        assert isinstance(scorer, BeliefScorer)
         self.scorer = scorer
 
         self.matches_fun = matches_fun if matches_fun else \
             lambda stmt: stmt.matches_key()
+
+        self.refinements_graph = refinements_graph
 
     def set_prior_probs(self, statements):
         """Sets the prior belief probabilities for a list of INDRA Statements.
@@ -331,6 +337,33 @@ class BeliefEngine(object):
         for st in statements:
             st.belief = self.scorer.score_statement(st)
 
+    def get_refinement_prob(self, stmt, refiners=None):
+        """Return the full belief of a statement given its refiners.
+
+        Parameters
+        ----------
+        stmt : indra.statements.Statement
+            The statement whose belief is calculated.
+        refiners: list[int]
+            A list of statement hashes for statements that are refinements
+            (i.e., more specific versions) of this statement.
+
+        Returns
+        -------
+        float
+            The belief scrore for this statement.
+        """
+        all_evidences = set()
+        refiners = [] if not refiners else refiners
+        for supp in refiners:
+            all_evidences |= \
+                set(self.refinements_graph.nodes[supp]['stmt'].evidence)
+
+        all_evidences = {ev for ev in all_evidences if
+                         not ev.epistemics.get('negated')}
+        belief = self.scorer.score_statement(stmt, list(all_evidences))
+        return belief
+
     def set_hierarchy_probs(self, statements):
         """Sets hierarchical belief probabilities for INDRA Statements.
 
@@ -339,7 +372,7 @@ class BeliefEngine(object):
         been set.
         The hierarchical belief probability of each Statement is calculated
         based on its prior probability and the probabilities propagated from
-        Statements supporting it in the hierarchy graph.
+        Statements refining it in the hierarchy graph.
 
         Parameters
         ----------
@@ -348,57 +381,24 @@ class BeliefEngine(object):
             be calculated. Each Statement object's belief attribute is updated
             by this function.
         """
-        def build_hierarchy_graph(stmts):
-            """Return a DiGraph based on matches keys and Statement supports"""
-            logger.debug('Building hierarchy graph')
-            g = networkx.DiGraph()
-            for st1 in stmts:
-                g.add_node(self.matches_fun(st1), stmt=st1)
-                for st2 in st1.supported_by:
-                    g.add_node(self.matches_fun(st2), stmt=st2)
-                    g.add_edge(self.matches_fun(st2),
-                               self.matches_fun(st1))
-            logger.debug('Finished building hierarchy graph')
-            return g
+        stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun): stmt
+                         for stmt in statements}
+        # We only re-build the refinements graph if one wasn't provided
+        # as an argument
+        if self.refinements_graph is None:
+            self.refinements_graph = \
+                build_refinements_graph(stmts_by_hash=stmts_by_hash,
+                                        matches_fun=self.matches_fun)
+            assert_no_cycle(self.refinements_graph)
 
-        def get_ranked_stmts(g):
-            """Return a topological sort of statement matches keys from a graph.
-            """
-            logger.debug('Getting ranked statements')
-            node_ranks = networkx.algorithms.dag.topological_sort(g)
-            node_ranks = reversed(list(node_ranks))
-            stmts = [g.nodes[n]['stmt'] for n in node_ranks]
-            return stmts
-
-        def assert_no_cycle(g):
-            """If the graph has cycles, throws AssertionError."""
-            logger.debug('Looking for cycles in belief graph')
-            try:
-                cyc = networkx.algorithms.cycles.find_cycle(g)
-            except networkx.exception.NetworkXNoCycle:
-                return
-            msg = 'Cycle found in hierarchy graph: %s' % cyc
-            assert False, msg
-
-        g = build_hierarchy_graph(statements)
-        assert_no_cycle(g)
-        ranked_stmts = get_ranked_stmts(g)
-        logger.debug('Start belief propagation over ranked statements')
-        for st in ranked_stmts:
-            bps = _get_belief_package(st, self.matches_fun)
-            supporting_evidences = []
-            # NOTE: the last belief package in the list is this statement's own
-            for bp in bps[:-1]:
-                # Iterate over all the parent evidences and add only
-                # non-negated ones
-                for ev in bp.evidences:
-                    if not ev.epistemics.get('negated'):
-                        supporting_evidences.append(ev)
-            # Now add the Statement's own evidence
-            # Now score all the evidences
-            belief = self.scorer.score_statement(st, supporting_evidences)
-            st.belief = belief
-        logger.debug('Finished belief propagation over ranked statements')
+        logger.debug('Start belief calculation over refinements graph')
+        for node in self.refinements_graph.nodes():
+            stmt = self.refinements_graph.nodes[node]['stmt']
+            supporters = \
+                list(networkx.descendants(self.refinements_graph, node))
+            belief = self.get_refinement_prob(stmt, supporters)
+            stmt.belief = belief
+        logger.debug('Finished belief calculation over refinements graph')
 
     def set_linked_probs(self, linked_statements):
         """Sets the belief probabilities for a list of linked INDRA Statements.
@@ -417,28 +417,6 @@ class BeliefEngine(object):
         for st in linked_statements:
             source_probs = [s.belief for s in st.source_stmts]
             st.inferred_stmt.belief = numpy.prod(source_probs)
-
-
-BeliefPackage = namedtuple('BeliefPackage', 'statement_key evidences')
-
-
-def _get_belief_package(stmt, matches_fun):
-    """Return the belief packages of a given statement recursively."""
-    # This list will contain the belief packages for the given statement
-    belief_packages = []
-    # Iterate over all the support parents
-    for st in stmt.supports:
-        # Recursively get all the belief packages of the parent
-        parent_packages = _get_belief_package(st, matches_fun)
-        package_stmt_keys = [pkg.statement_key for pkg in belief_packages]
-        for package in parent_packages:
-            # Only add this belief package if it hasn't already been added
-            if package.statement_key not in package_stmt_keys:
-                belief_packages.append(package)
-    # Now make the Statement's own belief package and append it to the list
-    belief_package = BeliefPackage(matches_fun(stmt), stmt.evidence)
-    belief_packages.append(belief_package)
-    return belief_packages
 
 
 def sample_statements(stmts, seed=None):
@@ -528,7 +506,7 @@ def tag_evidence_subtype(evidence):
                 subtype = None
         else:
             logger.debug('Could not find found_by attribute in reach '
-                         'statement annoations')
+                         'statement annotations')
             subtype = None
     elif source_api == 'geneways':
         subtype = annotations['actiontype']
@@ -536,3 +514,86 @@ def tag_evidence_subtype(evidence):
         subtype = None
 
     return (source_api, subtype)
+
+
+def build_refinements_graph(stmts_by_hash, matches_fun=None):
+    """Return a DiGraph based on matches hashes and Statement refinements.
+
+    Parameters
+    ----------
+    stmts_by_hash : dict[int, indra.statements.Statement]
+        A dict of statements keyed by their hashes.
+    matches_fun : Optional[function]
+        An optional function to calculate the matches key and hash of a
+        given statement. Default: None
+
+    Returns
+    -------
+    networkx.DiGraph
+        A networkx graph whose nodes are statement hashes carrying a stmt
+        attribute with the actual statement object. Edges point from
+        less detailed to more detailed statements (i.e., from a statement
+        to another statement that refines it).
+    """
+    logger.debug('Building refinements graph')
+    g = networkx.DiGraph()
+    for sh1, st1 in stmts_by_hash.items():
+        g.add_node(sh1, stmt=st1)
+        for st2 in st1.supported_by:
+            sh2 = st2.get_hash(matches_fun=matches_fun)
+            st2 = stmts_by_hash[sh2]
+            g.add_node(sh2, stmt=st2)
+            g.add_edge(sh2, sh1)
+    logger.debug('Finished building refinements graph')
+    return g
+
+
+def extend_refinements_graph(g, stmt, less_specifics, matches_fun=None):
+    """Extend refinements graph with a new statement and its refinements.
+
+    Parameters
+    ----------
+    g : networkx.DiGraph
+        A refinements graph to be extended.
+    stmt : indra.statements.Statement
+        The statement to be added to the refinements graph.
+    less_specifics : list[int]
+        A list of statement hashes of statements that are refined
+        by this statement (i.e., are less specific versions of it).
+    matches_fun : Optional[function]
+        An optional function to calculate the matches key and hash of a
+        given statement. Default: None
+    """
+    sh = stmt.get_hash(matches_fun=matches_fun)
+    g.add_node(sh, stmt=stmt)
+    for less_spec in less_specifics:
+        g.add_edge(less_spec, sh)
+    return g
+
+
+def assert_no_cycle(g):
+    """If the graph has cycles, throws AssertionError.
+
+    This can be used to make sure that a refinements graph is a DAG.
+
+    Parameters
+    ----------
+    g : networkx.DiGraph
+        A refinements graph.
+    """
+    logger.debug('Looking for cycles in belief graph')
+    try:
+        cyc = networkx.algorithms.cycles.find_cycle(g)
+    except networkx.exception.NetworkXNoCycle:
+        return
+    msg = 'Cycle found in hierarchy graph: %s' % cyc
+    assert False, msg
+
+
+def get_ranked_stmts(g):
+    """Return a topological sort of statements from a graph."""
+    logger.debug('Getting ranked statements')
+    node_ranks = networkx.algorithms.dag.topological_sort(g)
+    node_ranks = reversed(list(node_ranks))
+    stmts = [g.nodes[n]['stmt'] for n in node_ranks]
+    return stmts

@@ -1,16 +1,17 @@
 import os
 
 from indra.preassembler import Preassembler, render_stmt_graph, \
-    flatten_evidence, flatten_stmts, bio_ontology_refinement_filter
+    flatten_evidence, flatten_stmts
 from indra.sources import reach
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
 from indra.ontology.world import world_ontology
+from indra.preassembler import RefinementFilter, OntologyRefinementFilter
 
 
 def test_duplicates():
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    ras = Agent('RAS', db_refs = {'FA': '03663'})
+    src = Agent('SRC', db_refs={'HGNC': '11283'})
+    ras = Agent('RAS', db_refs={'FA': '03663'})
     st1 = Phosphorylation(src, ras)
     st2 = Phosphorylation(src, ras)
     pa = Preassembler(bio_ontology, stmts=[st1, st2])
@@ -19,8 +20,8 @@ def test_duplicates():
 
 
 def test_duplicates_copy():
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    ras = Agent('RAS', db_refs = {'FA': '03663'})
+    src = Agent('SRC', db_refs={'HGNC': '11283'})
+    ras = Agent('RAS', db_refs={'FA': '03663'})
     st1 = Phosphorylation(src, ras, evidence=[Evidence(text='Text 1')])
     st2 = Phosphorylation(src, ras, evidence=[Evidence(text='Text 2')])
     stmts = [st1, st2]
@@ -129,25 +130,25 @@ def test_combine_evidence_exact_duplicates_different_raw_text():
 def test_superfamily_refinement():
     """A gene-level statement should be supported by a family-level
     statement."""
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    ras = Agent('RAS', db_refs = {'FPLX': 'RAS'})
-    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    src = Agent('SRC', db_refs={'HGNC': '11283'})
+    ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
+    nras = Agent('NRAS', db_refs={'HGNC': '7989'})
     st1 = Phosphorylation(src, ras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nras, 'tyrosine', '32')
     pa = Preassembler(bio_ontology, stmts=[st1, st2])
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the gene-level
     # one, supported by the family one.
-    assert len(stmts) == 1
+    assert len(stmts) == 1, stmts
     assert (stmts[0].equals(st2))
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st1))
 
 
 def test_superfamily_refinement_isa_or_partof():
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    prkag1 = Agent('PRKAG1', db_refs = {'HGNC': '9385'})
-    ampk = Agent('AMPK', db_refs = {'FPLX': 'AMPK'})
+    src = Agent('SRC', db_refs={'HGNC': '11283'})
+    prkag1 = Agent('PRKAG1', db_refs={'HGNC': '9385'})
+    ampk = Agent('AMPK', db_refs={'FPLX': 'AMPK'})
     st1 = Phosphorylation(src, ampk, 'tyrosine', '32')
     st2 = Phosphorylation(src, prkag1, 'tyrosine', '32')
     pa = Preassembler(bio_ontology, stmts=[st1, st2])
@@ -163,8 +164,8 @@ def test_superfamily_refinement_isa_or_partof():
 def test_modification_refinement():
     """A more specific modification statement should be supported by a more
     generic modification statement."""
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    src = Agent('SRC', db_refs={'HGNC': '11283'})
+    nras = Agent('NRAS', db_refs={'HGNC': '7989'})
     st1 = Phosphorylation(src, nras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nras)
     pa = Preassembler(bio_ontology, stmts=[st1, st2])
@@ -189,8 +190,8 @@ def test_modification_refinement_residue_noenz():
 def test_modification_refinement_noenz():
     """A more specific modification statement should be supported by a more
     generic modification statement."""
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    src = Agent('SRC', db_refs={'HGNC': '11283'})
+    nras = Agent('NRAS', db_refs={'HGNC': '7989'})
     st1 = Phosphorylation(src, nras, 'tyrosine', '32')
     st2 = Phosphorylation(None, nras, 'tyrosine', '32')
     pa = Preassembler(bio_ontology, stmts=[st1, st2])
@@ -232,8 +233,8 @@ def test_modification_refinement_noenz2():
 def test_modification_norefinement_noenz():
     """A more specific modification statement should be supported by a more
     generic modification statement."""
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    src = Agent('SRC', db_refs={'HGNC': '11283'})
+    nras = Agent('NRAS', db_refs={'HGNC': '7989'})
     st1 = Phosphorylation(src, nras)
     st2 = Phosphorylation(None, nras, 'Y', '32',
                           evidence=[Evidence(text='foo')])
@@ -248,9 +249,9 @@ def test_modification_norefinement_noenz():
 def test_modification_norefinement_subsfamily():
     """A more specific modification statement should be supported by a more
     generic modification statement."""
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    ras = Agent('RAS', db_refs = {'FPLX': 'RAS'})
+    src = Agent('SRC', db_refs={'HGNC': '11283'})
+    nras = Agent('NRAS', db_refs={'HGNC': '7989'})
+    ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
     st1 = Phosphorylation(src, nras)
     st2 = Phosphorylation(src, ras, 'Y', '32',
                           evidence=[Evidence(text='foo')])
@@ -282,10 +283,10 @@ def test_modification_norefinement_enzfamily():
 def test_bound_condition_refinement():
     """A statement with more specific bound context should be supported by a
     less specific statement."""
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    gtp = Agent('GTP', db_refs = {'CHEBI': '15996'})
-    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    nrasgtp = Agent('NRAS', db_refs = {'HGNC': '7989'},
+    src = Agent('SRC', db_refs={'HGNC': '11283'})
+    gtp = Agent('GTP', db_refs={'CHEBI': '15996'})
+    nras = Agent('NRAS', db_refs={'HGNC': '7989'})
+    nrasgtp = Agent('NRAS', db_refs={'HGNC': '7989'},
         bound_conditions=[BoundCondition(gtp, True)])
     st1 = Phosphorylation(src, nras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nrasgtp, 'tyrosine', '32')
@@ -302,10 +303,10 @@ def test_bound_condition_refinement():
 def test_bound_condition_norefinement():
     """A statement with more specific bound context should be supported by a
     less specific statement."""
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    gtp = Agent('GTP', db_refs = {'CHEBI': '15996'})
-    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    nrasgtp = Agent('NRAS', db_refs = {'HGNC': '7989'},
+    src = Agent('SRC', db_refs={'HGNC': '11283'})
+    gtp = Agent('GTP', db_refs={'CHEBI': '15996'})
+    nras = Agent('NRAS', db_refs={'HGNC': '7989'})
+    nrasgtp = Agent('NRAS', db_refs={'HGNC': '7989'},
         bound_conditions=[BoundCondition(gtp, True)])
     st1 = Phosphorylation(src, nras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nrasgtp)
@@ -319,13 +320,13 @@ def test_bound_condition_norefinement():
 def test_bound_condition_deep_refinement():
     """A statement with more specific bound context should be supported by a
     less specific statement."""
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    gtp1 = Agent('GTP', db_refs = {'CHEBI': '15996'})
+    src = Agent('SRC', db_refs={'HGNC': '11283'})
+    gtp1 = Agent('GTP', db_refs={'CHEBI': '15996'})
     gtp2 = Agent('GTP', mods=[ModCondition('phosphorylation')],
                  db_refs = {'CHEBI': '15996'})
-    nrasgtp1 = Agent('NRAS', db_refs = {'HGNC': '7989'},
+    nrasgtp1 = Agent('NRAS', db_refs={'HGNC': '7989'},
         bound_conditions=[BoundCondition(gtp1, True)])
-    nrasgtp2 = Agent('NRAS', db_refs = {'HGNC': '7989'},
+    nrasgtp2 = Agent('NRAS', db_refs={'HGNC': '7989'},
         bound_conditions=[BoundCondition(gtp2, True)])
     st1 = Phosphorylation(src, nrasgtp1, 'tyrosine', '32')
     st2 = Phosphorylation(src, nrasgtp2, 'tyrosine', '32')
@@ -383,8 +384,8 @@ def test_activating_substitution_refinement():
     fields match."""
     mc1 = MutCondition('12', 'G', 'D')
     mc2 = MutCondition('61', 'Q', 'L')
-    nras1 = Agent('NRAS', mutations=[mc1], db_refs = {'HGNC': '7989'})
-    nras2 = Agent('NRAS', mutations=[mc2], db_refs = {'HGNC': '7989'})
+    nras1 = Agent('NRAS', mutations=[mc1], db_refs={'HGNC': '7989'})
+    nras2 = Agent('NRAS', mutations=[mc2], db_refs={'HGNC': '7989'})
     ras = Agent('RAS', mutations=[mc1], db_refs={'FPLX': 'RAS'})
     st1 = ActiveForm(ras, 'gtpbound', True,
                      evidence=Evidence(text='bar'))
@@ -607,8 +608,8 @@ def test_homodimer_refinement():
 
 
 def test_return_toplevel():
-    src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
+    src = Agent('SRC', db_refs={'HGNC': '11283'})
+    nras = Agent('NRAS', db_refs={'HGNC': '7989'})
     st1 = Phosphorylation(src, nras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nras)
     pa = Preassembler(bio_ontology, stmts=[st1, st2])
@@ -1035,34 +1036,41 @@ def test_refinement_filters():
     st3 = Phosphorylation(Agent('x'), hras)
 
     # This filters everything out so no comparisons will be done
-    def filter_empty(stmts_by_hash, stmts_to_compare, *args):
-        return {k: set() for k in stmts_by_hash}
-    # No comparisons here
-    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
-    pa.combine_related(filters=[bio_ontology_refinement_filter,
-                                filter_empty])
-    assert pa._comparison_counter == 0
+    class FilterEmpty(RefinementFilter):
+        def get_less_specifics(self, stmt, possibly_related):
+            return set()
 
     # This is a superset of all comparisons constrained by the ontology
     # so will not change what the preassembler does internally
-    def filter_all(stmts_by_hash, stmts_to_compare, *args):
-        filter_set = {k: (set(stmts_by_hash) - {k}) for k in stmts_by_hash}
-        if stmts_to_compare is None:
-            return filter_set
-        else:
-            for k in filter_set:
-                filter_set[k] &= stmts_to_compare.get(k, set())
-            return filter_set
+    class FilterAll(RefinementFilter):
+        def get_less_specifics(self, stmt, possibly_related):
+            shs = set(self.shared_data['stmts_by_hash']) - {stmt.get_hash()}
+            if possibly_related is not None:
+                shs &= possibly_related
+            return shs
+
+    # No comparisons here
+    pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
+    pa.combine_related(
+        filters=[OntologyRefinementFilter(ontology=bio_ontology),
+                 FilterEmpty()])
+    assert pa._comparison_counter == 0
+
     # The same number of comparisons here as without the filter
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
-    pa.combine_related(filters=[bio_ontology_refinement_filter,
-                                filter_all])
+    pa.combine_related(
+        filters=[OntologyRefinementFilter(ontology=bio_ontology),
+                 FilterAll()])
     assert pa._comparison_counter == 2, pa._comparison_counter
 
     # Just to make sure lists of more than one filter are correctly handled
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3])
-    pa.combine_related(filters=[filter_all, filter_empty,
-                                bio_ontology_refinement_filter])
+    pa.combine_related(
+        filters=[
+            FilterAll(),
+            FilterEmpty(),
+            OntologyRefinementFilter(bio_ontology)
+        ])
     assert pa._comparison_counter == 0, pa._comparison_counter
 
     # Now try adding more statement types
@@ -1072,17 +1080,25 @@ def test_refinement_filters():
 
     # The same number of comparisons here as without the filter
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3, st4, st5, st6])
-    pa.combine_related(filters=[bio_ontology_refinement_filter,
-                                filter_all])
+    pa.combine_related(
+        filters=[OntologyRefinementFilter(bio_ontology),
+                 FilterAll()
+        ])
     assert pa._comparison_counter == 4, pa._comparison_counter
 
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3, st4, st5, st6])
-    pa.combine_related(filters=[filter_all,
-                                bio_ontology_refinement_filter])
+    pa.combine_related(
+        filters=[FilterAll(),
+                 OntologyRefinementFilter(bio_ontology)
+        ])
     assert pa._comparison_counter == 4, pa._comparison_counter
 
     # Just to make sure lists of more than one filter are correctly handled
     pa = Preassembler(bio_ontology, stmts=[st1, st2, st3, st4, st5, st6])
-    pa.combine_related(filters=[filter_all, filter_empty,
-                                bio_ontology_refinement_filter])
+    pa.combine_related(
+        filters=[
+            FilterAll(),
+            FilterEmpty(),
+            OntologyRefinementFilter(bio_ontology)
+        ])
     assert pa._comparison_counter == 0, pa._comparison_counter
