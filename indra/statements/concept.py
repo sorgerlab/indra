@@ -148,10 +148,28 @@ class Concept(object):
         return str(self)
 
 
+def compositional_sort_key(entry):
+    """Return a sort key from a compositional grounding entry"""
+    concepts = [grounding[0] for grounding in entry
+                if grounding is not None]
+    scores = [grounding[1] for grounding in entry
+              if grounding is not None]
+    # First key is the theme grounding
+    key1 = scores[0]
+    # Second key is the number of groundings
+    key2 = len(scores)
+    # Third key is the average score
+    key3 = sum(scores) / len(scores)
+    # Fourth key is alphabetical to avoid non-determinism
+    key4 = '|'.join(concepts)
+    return key1, key2, key3, key4
+
+
 def get_top_compositional_grounding(groundings):
-    def sort_key(entry):
-        scores = [grounding[1] for grounding in entry
-                  if grounding is not None]
-        return sum(scores)/len(scores)
-    top_grounding = max(groundings, key=sort_key)
-    return top_grounding
+    """Return the highest ranking compositional grounding entry."""
+    return max(groundings, key=compositional_sort_key)
+
+
+def get_sorted_compositional_groundings(groundings):
+    """Return the compositional groundings sorted starting from the top."""
+    return sorted(groundings, key=compositional_sort_key, reverse=True)

@@ -1978,12 +1978,17 @@ class Influence(Statement):
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
-
+        delta_refinement = self.delta_refinement_of(other)
+        if not delta_refinement:
+            return False
         # Check agent arguments
         subj_refinement = self.subj.concept.refinement_of(
             other.subj.concept, ontology, entities_refined=entities_refined)
         obj_refinement = self.obj.concept.refinement_of(
             other.obj.concept, ontology, entities_refined=entities_refined)
+        return (subj_refinement and obj_refinement)
+
+    def delta_refinement_of(self, other):
         op = other.overall_polarity()
         sp = self.overall_polarity()
         # If we have "less" polarity here than in other then it's
@@ -1998,8 +2003,7 @@ class Influence(Statement):
         # does then this is a refinement. Otherwise it isn't.
         else:
             delta_refinement = (op == sp)
-        return (subj_refinement and obj_refinement and
-                delta_refinement)
+        return delta_refinement
 
     def equals(self, other):
         equals = super(Influence, self).equals(other) and \
@@ -2400,12 +2404,16 @@ class Event(Statement):
         mk = (self.concept.matches_key(),)
         return str(mk)
 
-    def refinement_of(self, other, ontology, entities_refined=False):
+    def refinement_of(self, other, ontology, entities_refined=False,
+                      ignore_polarity=False):
         concept_ref = \
             self.concept.refinement_of(other.concept, ontology,
                                        entities_refined=entities_refined)
-        pol_ref = (self.delta.polarity and not other.delta.polarity) or \
-            self.delta.polarity == other.delta.polarity
+        if ignore_polarity:
+            pol_ref = True
+        else:
+            pol_ref = (self.delta.polarity and not other.delta.polarity) or \
+                self.delta.polarity == other.delta.polarity
         return concept_ref and pol_ref
 
     def equals(self, other):
