@@ -1,7 +1,9 @@
 import requests
+import logging
 from .processor import SifProcessor
 
 
+logger = logging.getLogger()
 base_url = ('https://git-r3lab.uni.lu/covid/models/-/raw/master/'
             'Executable%20Modules/SBML_qual_build/sif/')
 model_ids_to_filenames = {
@@ -30,10 +32,38 @@ model_ids_to_filenames = {
 
 
 def process_file(filename, model_id):
+    """Get statements by processing a single local SIF file.
+
+    Parameters
+    ----------
+    filename : str
+        A name (or path) of a local SIF file to process.
+    model_id : int
+        ID of a model corresponding to file content. Model ID is needed to
+        find relevant references.
+
+    Returns
+    -------
+    sp : indra.source.minerva.SifProcessor
+        An instance of a SifProcessor with extracted INDRA statements.
+    """
     return process_files({model_id: filename})
 
 
 def process_files(ids_to_filenames):
+    """Get statements by processing one or more local SIF files.
+
+    Parameters
+    ----------
+    ids_to_file_names : dict
+        A dictionary mapping model IDs to files containing model content as
+        SIF. Model IDs are needed to find relevant references.
+
+    Returns
+    -------
+    sp : indra.source.minerva.SifProcessor
+        An instance of a SifProcessor with extracted INDRA statements.
+    """
     model_id_to_sif_strs = {}
     for model_id, filename in ids_to_filenames.items():
         with open(filename, 'r') as f:
@@ -43,6 +73,19 @@ def process_files(ids_to_filenames):
 
 
 def process_from_web(model_ids='all'):
+    """Get statements by processing remote SIF files.
+
+    Parameters
+    ----------
+    model_ids : list or str('all')
+        Model IDs for models that need to be processed. If set to 'all'
+        (default), then all available models will be processed.
+
+    Returns
+    -------
+    sp : indra.source.minerva.SifProcessor
+        An instance of a SifProcessor with extracted INDRA statements.
+    """
     if model_ids == 'all':
         model_ids = list(model_ids_to_filenames.keys())
     model_id_to_sif_strs = {}
@@ -53,6 +96,9 @@ def process_from_web(model_ids='all'):
         if res.status_code == 200:
             sif_strs = res.text.split('\n')
             model_id_to_sif_strs[model_id] = sif_strs
+        else:
+            logger.warning('Could not get content from file %s, skipping '
+                           'model %d' % (fname, model_id))
     return process_sif_strs(model_id_to_sif_strs)
 
 
