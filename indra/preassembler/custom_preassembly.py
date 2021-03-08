@@ -71,9 +71,11 @@ def location_matches(stmt):
 
 
 @register_pipeline
-def event_location_refinement(st1, st2, ontology, entities_refined):
+def event_location_refinement(st1, st2, ontology, entities_refined,
+                              ignore_polarity=False):
     """Return True if there is a location-aware refinement between Events."""
-    ref = st1.refinement_of(st2, ontology, entities_refined)
+    ref = st1.refinement_of(st2, ontology, entities_refined,
+                            ignore_polarity=ignore_polarity)
     if not ref:
         return False
     if not has_location(st2):
@@ -102,10 +104,13 @@ def location_refinement(st1, st2, ontology, entities_refined):
         return event_ref
     elif isinstance(st1, Influence):
         subj_ref = event_location_refinement(st1.subj, st2.subj,
-                                             ontology, entities_refined)
+                                             ontology, entities_refined,
+                                             ignore_polarity=True)
         obj_ref = event_location_refinement(st1.obj, st2.obj,
-                                            ontology, entities_refined)
-        return subj_ref and obj_ref
+                                            ontology, entities_refined,
+                                            ignore_polarity=True)
+        delta_refinement = st1.delta_refinement_of(st2)
+        return delta_refinement and subj_ref and obj_ref
     else:
         return st1.refinement_of(st2, ontology, entities_refined)
 
