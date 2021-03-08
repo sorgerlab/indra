@@ -1,5 +1,6 @@
 import logging
 from indra.ontology.standardize import get_standard_name
+from indra.ontology.bio import bio_ontology
 from indra.statements import *
 from .minerva_client import get_ids_to_refs
 from .id_mapping import indra_db_refs_from_minerva_refs
@@ -60,6 +61,25 @@ class SifProcessor():
 
 
 def get_agent(elementId, ids_to_refs, complex_members):
+    """Get an agent for a MINERVA element.
+
+    Parameters
+    ----------
+    elementId : str
+        ID of an element used in MINERVA API and raw SIF files.
+    ids_to_refs : dict
+        A dictionary mapping element IDs to MINERVA provided references. Note
+        that this mapping is unique per model (same IDs can be mapped to
+        different refs in different models).
+    complex_members : dict
+        A dictionary mapping element ID of a complex element to element IDs of
+        its members.
+
+    Returns
+    -------
+    agent : indra.statements.agent.Agent
+        INDRA agent created from given refs.
+    """
     # If it's a complex and doesn't have complex level grounding
     if elementId in complex_members and len(
             ids_to_refs.get(elementId)) == 1:
@@ -67,18 +87,53 @@ def get_agent(elementId, ids_to_refs, complex_members):
         member_ids = sorted(complex_members[elementId])
         agents = [get_agent(member_id, ids_to_refs, complex_members)
                   for member_id in member_ids]
-        main_agent = agents[0]
-        if len(agents) > 1:
-            for ag in agents[1:]:
-                main_agent.bound_conditions.append(BoundCondition(ag))
-        return main_agent
+        # Try to get a FamPlex family
+        fam = get_family(agents)
+        if fam:
+            # Combine TEXT from MINERVA and found FPLX ID
+            refs = ids_to_refs.get(elementId) + [fam]
+            return get_agent_from_refs(refs)
+        # Otherwise treat a list of agents as an agent with bound conditions
+        else:
+            main_agent = agents[0]
+            if len(agents) > 1:
+                for ag in agents[1:]:
+                    main_agent.bound_conditions.append(BoundCondition(ag))
+            return main_agent
+    # Now we have either individual agents or complexes with complex level
+    # grounding (e.g. from GO or MESH)
     else:
         refs = ids_to_refs.get(elementId)
-        accepted_ns = default_ns_order + ['TEXT']
-        indra_refs = indra_db_refs_from_minerva_refs(refs)
-        db_refs = {k: v for k, v in indra_refs.items() if k in accepted_ns}
-        name = get_standard_name(db_refs)
-        if not name:
-            name = db_refs.get('TEXT')
-        if name and db_refs:
-            return Agent(name, db_refs=db_refs)
+        return get_agent_from_refs(refs)
+
+
+def get_family(agents):
+    """Get a FamPlex family if all of its members are given."""
+    family_sets = []
+    ag_groundings = []
+    for ag in agents:
+        gr = ag.get_grounding()
+        ag_groundings.append(gr)
+        parents = bio_ontology.get_parents(*gr)
+        families = {p for p in parents if p[0] == 'FPLX'}
+        family_sets.append(families)
+    common_families = family_sets[0].intersection(*family_sets)
+    if not common_families:
+        return
+    for fam in common_families:
+        children = bio_ontology.get_children(*fam)
+        # Check if all family members are present
+        if set(children) == set(ag_groundings):
+            return fam
+
+
+def get_agent_from_refs(refs):
+    """Get an agent given MINERVA refs."""
+    accepted_ns = default_ns_order + ['TEXT']
+    indra_refs = indra_db_refs_from_minerva_refs(refs)
+    db_refs = {k: v for k, v in indra_refs.items() if k in accepted_ns}
+    name = get_standard_name(db_refs)
+    if not name:
+        name = db_refs.get('TEXT')
+    if name and db_refs:
+        return Agent(name, db_refs=db_refs)
