@@ -2095,6 +2095,7 @@ class Influence(Statement):
                        obj=self.obj.to_json(with_evidence=False,
                                             matches_fun=matches_fun))
         json_dict.update(generic)
+        json_dict['matches_hash'] = int(json_dict['matches_hash'])
         return json_dict
 
     @classmethod
@@ -2438,6 +2439,7 @@ class Event(Statement):
         if with_evidence and 'evidence' in generic:
             json_dict['evidence'] = generic['evidence']
         json_dict.update(generic)
+        json_dict['matches_hash'] = int(json_dict['matches_hash'])
         return json_dict
 
     @classmethod
