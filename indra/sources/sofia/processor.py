@@ -94,7 +94,8 @@ class SofiaProcessor(object):
             subj = self.get_event(cause)
             obj = self.get_event(effect)
 
-            ev = Evidence(source_api='sofia', pmid=ref,
+            text_refs = {'DART': ref}
+            ev = Evidence(source_api='sofia', text_refs=text_refs,
                           annotations=annots, text=text)
             stmt = Influence(subj, obj, evidence=[ev])
             # Use the polarity of the events, if object does not have a
@@ -134,7 +135,8 @@ class SofiaProcessor(object):
             anns['agent'] = agent
         if patient:
             anns['patient'] = patient
-        ev = Evidence(source_api='sofia', pmid=ref, text=text,
+        text_refs = {'DART': ref}
+        ev = Evidence(source_api='sofia', text_refs=text_refs, text=text,
                       annotations=anns, source_id=event_entry['Event Index'])
         pol = event_entry.get('Polarity')
         event = Event(concept, context=context, evidence=[ev],
@@ -175,7 +177,8 @@ class SofiaProcessor(object):
             anns['agent'] = agent
         if patient:
             anns['patient'] = patient
-        ev = Evidence(source_api='sofia', pmid=ref, text=text,
+        text_refs = {'DART': ref}
+        ev = Evidence(source_api='sofia', text_refs=text_refs, text=text,
                       annotations=anns, source_id=event_entry['Event Index'])
         pol = event_entry.get('Polarity')
         event = Event(concept, context=context, evidence=[ev],
