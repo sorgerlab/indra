@@ -1,3 +1,4 @@
+import os
 from indra.sources.minerva.api import *
 from indra.sources.minerva.processor import SifProcessor
 from indra.statements import Activation, Inhibition
@@ -40,20 +41,26 @@ def test_process_sif_strs():
 
 
 def test_process_file():
-    sp = process_file('minerva_test1.sif', 790)
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         'minerva_test1.sif')
+    sp = process_file(fname, 790)
     assert sp
     assert isinstance(sp, SifProcessor)
     assert len(sp.statements) == 2
 
 
 def test_process_files():
+    fname1 = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          'minerva_test1.sif')
+    fname2 = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          'minerva_test2.sif')
     # One file
-    sp = process_files({790: 'minerva_test1.sif'})
+    sp = process_files({790: fname1})
     assert sp
     assert isinstance(sp, SifProcessor)
     assert len(sp.statements) == 2
     # Multiple files
-    sp = process_files({790: 'minerva_test1.sif', 799: 'minerva_test2.sif'})
+    sp = process_files({790: fname1, 799: fname2})
     assert sp
     assert isinstance(sp, SifProcessor)
     assert len(sp.statements) == 4
