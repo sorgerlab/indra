@@ -95,30 +95,49 @@ class WorldOntology(IndraOntology):
             prefix = prefix.replace(' ', '_')
         this_prefix = prefix + '/' + node if prefix else node
         for entry in tree:
+            # This is typically a list of examples which we don't need to
+            # independently psocess
             if isinstance(entry, str):
                 continue
+            # This is the case of an entry with multiple attributes
             elif isinstance(entry, dict):
-                if 'OntologyNode' not in entry.keys():
-                    for child in entry.keys():
+                # This is the case of an intermediate node that doesn't have
+                # an "OntologyNode" attribute.
+                if 'OntologyNode' not in entry:
+                    # We take all its children and process them if they are
+                    # child ontology entries
+                    for child in entry:
                         if child[0] != '_' and child != 'examples' \
                                 and isinstance(entry[child], (list, dict)):
                             self.build_relations(child, entry[child],
                                                  this_prefix)
+                    # This contains information about a non-leaf node
+                    # like examples
+                    if 'InnerOntologyNode' in entry:
+                        pass
+                # Otherwise this is a leaf term
                 else:
                     child = entry['name']
 
+            # This is the case of a leaf term
             if child[0] != '_' and child != 'examples':
+                # Add parenthood relationship
                 child_term = get_term(child, this_prefix)
                 edges.append((child_term, this_term, {'type': 'isa'}))
+                # Handle opposite entries
                 opp = entry.get('opposite')
                 if opp:
                     parts = opp.split('/')
                     opp_term = get_term(parts[-1], '/'.join(parts[:-1]))
-                    edges.append((opp_term, child_term, {'type': 'is_opposite'}))
-                    edges.append((child_term, opp_term, {'type': 'is_opposite'}))
+                    edges.append((opp_term, child_term,
+                                  {'type': 'is_opposite'}))
+                    edges.append((child_term, opp_term,
+                                  {'type': 'is_opposite'}))
+                # Handle polarity
                 pol = entry.get('polarity')
                 if pol is not None:
                     nodes[child_term]['polarity'] = pol
+        # Now add all the nodes and edges
         self.add_nodes_from([(k, v) for k, v in dict(nodes).items()])
         self.add_edges_from(edges)
 
