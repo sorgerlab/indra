@@ -1,9 +1,12 @@
 import json
 import requests
+import csv
 from collections import defaultdict
 
 default_map_name = 'covid19map'
 base_url = 'https://%s.elixir-luxembourg.org/minerva/api/'
+resource_url = ('https://git-r3lab.uni.lu/covid/models/-/raw/master/'
+                'Integration/MINERVA_build/resources.csv')
 
 
 def get_config(map_name=default_map_name):
@@ -96,3 +99,16 @@ def get_model_ids(map_name=default_map_name):
     for model in models:
         model_names_to_ids[model['name']] = model['idObject']
     return model_names_to_ids
+
+
+def get_sif_filenames_to_ids(map_name=default_map_name):
+    model_names_to_ids = get_model_ids()
+    filenames_to_ids = {}
+    res = requests.get(resource_url)
+    csv_reader = csv.reader(res.text.splitlines())
+    for row in csv_reader:
+        model_name = row[3]
+        if model_name in model_names_to_ids:
+            fname = row[1].split('/')[-1][:-4] + '_raw.sif'
+            filenames_to_ids[fname] = model_names_to_ids[model_name]
+    return filenames_to_ids

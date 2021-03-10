@@ -67,7 +67,7 @@ def test_process_files():
 
 
 def test_process_from_web():
-    sp = process_from_web(model_ids=[790])
+    sp = process_from_web(filenames=['TGFB_pathway_stable_raw.sif'])
     assert sp
     assert isinstance(sp, SifProcessor)
     assert len(sp.statements) > 20
