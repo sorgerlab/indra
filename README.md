@@ -95,6 +95,7 @@ Custom knowledge bases:
 | INDRA DB / INDRA Statements| [`indra.sources.indra_db_rest`](https://indra.readthedocs.io/en/latest/modules/sources/indra_db_rest/index.html) | https://github.com/indralab/indra_db |
 | Hypothes.is                  | [`indra.sources.hypothesis`](https://indra.readthedocs.io/en/latest/modules/sources/hypothesis/index.html)       | https://hypothes.is                   |
 | Biofactoid                  | [`indra.sources.biofactoid`](https://indra.readthedocs.io/en/latest/modules/sources/biofactoid/index.html)       | https://biofactoid.org/                   |
+| MINERVA                    | [`indra.sources.minerva`](https://indra.readthedocs.io/en/latest/modules/sources/minerva/index.html)         | https://covid19map.elixir-luxembourg.org/minerva/ |
 
 
 ### Output model assemblers
