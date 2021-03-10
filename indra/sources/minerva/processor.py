@@ -6,7 +6,7 @@ from .minerva_client import get_ids_to_refs
 from .id_mapping import indra_db_refs_from_minerva_refs
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class SifProcessor():

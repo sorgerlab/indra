@@ -4,7 +4,7 @@ from .processor import SifProcessor
 from .minerva_client import get_sif_filenames_to_ids
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 base_url = ('https://git-r3lab.uni.lu/covid/models/-/raw/master/'
             'Executable%20Modules/SBML_qual_build/sif/')
 
