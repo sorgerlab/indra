@@ -29,7 +29,8 @@
     "ctd": 0.01,
     "drugbank": 0.01,
     "omnipath": 0.01,
-    "biofactoid": 0.01
+    "biofactoid": 0.01,
+    "minerva": 0.01
   },
   "rand": {
     "eidos": 0.3,
@@ -61,6 +62,7 @@
     "ctd": 0.1,
     "drugbank": 0.1,
     "omnipath": 0.1,
-    "biofactoid": 0.1
+    "biofactoid": 0.1,
+    "minerva": 0.1
   }
 }

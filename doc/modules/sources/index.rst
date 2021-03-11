@@ -57,3 +57,4 @@ Custom Knowledge Bases
    indra_db_rest/index
    hypothesis/index
    biofactoid/index
+   minerva/index
