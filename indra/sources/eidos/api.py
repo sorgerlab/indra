@@ -202,7 +202,8 @@ def process_json(json_dict, grounding_ns=None, extract_filter=None,
     return ep
 
 
-def process_text_bio(text, save_json='eidos_output.json', webservice=None):
+def process_text_bio(text, save_json='eidos_output.json', webservice=None,
+                     grounder=None):
     """Return an EidosProcessor by processing the given text.
 
     This constructs a reader object via Java and extracts mentions
@@ -228,11 +229,11 @@ def process_text_bio(text, save_json='eidos_output.json', webservice=None):
     """
     json_dict = _run_eidos_on_text(text, save_json, webservice)
     if json_dict:
-        return process_json_bio(json_dict)
+        return process_json_bio(json_dict, grounder=grounder)
     return None
 
 
-def process_json_bio(json_dict):
+def process_json_bio(json_dict, grounder=None):
     """Return EidosProcessor with grounded Activation/Inhibition statements.
 
     Parameters
@@ -246,28 +247,9 @@ def process_json_bio(json_dict):
         A EidosProcessor containing the extracted INDRA Statements
         in its statements attribute.
     """
-    from indra.statements import Activation, Inhibition
-
-    def get_regulate_activity(stmt):
-        context = stmt.evidence[0].text
-        subj = get_agent_bio(stmt.subj.concept, context=context)
-        obj = get_agent_bio(stmt.obj.concept, context=context)
-        if not subj or not obj:
-            return None
-        pol = stmt.overall_polarity()
-        stmt_type = Activation if pol == 1 or not pol else Inhibition
-        bio_stmt = stmt_type(subj, obj, evidence=stmt.evidence)
-        return bio_stmt
-
-    ep = EidosProcessor(json_dict)
-    ep.extract_causal_relations()
-
-    bio_stmts = []
-    for stmt in ep.statements:
-        bio_stmt = get_regulate_activity(stmt)
-        if bio_stmt:
-            bio_stmts.append(bio_stmt)
-    ep.statements = bio_stmts
+    from indra.sources.eidos.bio_processor import EidosBioProcessor
+    ep = EidosBioProcessor(json_dict, grounder=grounder)
+    ep.get_statements()
     return ep
 
 
@@ -368,30 +350,3 @@ def reground_texts(texts, ont_yml, webservice=None, topk=10, filter=True,
 def initialize_reader():
     """Instantiate an Eidos reader for fast subsequent reading."""
     eidos_reader.process_text('')
-
-
-def get_agent_bio(concept, context=None):
-    from indra.ontology.standardize import standardize_agent_name
-    from indra.preassembler.grounding_mapper.gilda import get_grounding
-    from indra.statements import Agent
-    # Note that currently concept.name is the canonicalized entity text
-    # whereas db_refs['TEXT'] is the unaltered original entity text
-    raw_txt = concept.db_refs['TEXT']
-    norm_txt = concept.name
-    # We ground first the raw entity text and if that cannot be grounded, the
-    # normalized entity text. The agent name is chosen based on the first text
-    # that was successfully grounded, or if no grounding was obtained, is chosen
-    # as the normalized text
-    for txt in (raw_txt, norm_txt):
-        gr, _ = get_grounding(txt, context=context, mode='local')
-        if gr:
-            name = txt
-            break
-    else:
-        gr = {}
-        name = norm_txt
-    # We take whatever grounding and name are available and then standardize
-    # the agent.
-    agent = Agent(name, db_refs={'TEXT_NORM': norm_txt, 'TEXT': raw_txt, **gr})
-    standardize_agent_name(agent, standardize_refs=True)
-    return agent
