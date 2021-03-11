@@ -6,7 +6,7 @@ from indra.ontology.standardize import standardize_agent_name
 from indra.preassembler.grounding_mapper.gilda import get_grounding
 from .processor import EidosProcessor
 
-GrounderResult = Mapping[str, Any]
+GrounderResult = Mapping[str, str]
 Grounder = Callable[[str, Optional[str]], GrounderResult]
 
 
