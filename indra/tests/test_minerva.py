@@ -38,6 +38,12 @@ def test_process_sif_strs():
     assert sp.statements[3].subj.get_grounding() == ('HGNC', '11920')
     assert sp.statements[3].subj.bound_conditions[0].agent.get_grounding() == (
         'HGNC', '11936')
+    # Statements have evidence
+    assert sp.statements[0].evidence
+    assert sp.statements[0].evidence[0].source_api == 'minerva'
+    assert sp.statements[0].evidence[0].annotations['sif_str'] == \
+        'sa44 POSITIVE csa5'
+    assert sp.statements[0].evidence[0].annotations['minerva_model_id'] == 790
 
 
 def test_process_file():

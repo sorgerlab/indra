@@ -38,13 +38,14 @@ class SifProcessor:
         ids_to_refs, complex_members = get_ids_to_refs(model_id)
         stmts = []
         for sif_str in sif_strs:
-            stmt = self.get_stmt(sif_str, ids_to_refs, complex_members)
+            stmt = self.get_stmt(sif_str, ids_to_refs, complex_members,
+                                 model_id)
             if stmt:
                 stmts.append(stmt)
         logger.info('Got %d statements from model %d' % (len(stmts), model_id))
         return stmts
 
-    def get_stmt(self, sif_str, ids_to_refs, complex_members):
+    def get_stmt(self, sif_str, ids_to_refs, complex_members, model_id):
         if sif_str.startswith('#') or sif_str == '':
             return
         clean_str = sif_str.strip('\n')
@@ -57,6 +58,10 @@ class SifProcessor:
             stmt = Inhibition(subj, obj)
         else:
             raise ValueError('Unknown relation type: %s' % rel_type)
+        evid = Evidence(source_api='minerva',
+                        annotations={'sif_str': sif_str,
+                                     'minerva_model_id': model_id})
+        stmt.evidence = [evid]
         return stmt
 
 
