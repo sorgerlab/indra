@@ -160,5 +160,11 @@
         "link": "https://omnipathdb.org/",
         "type": "database",
         "domain": "biology"
+    },
+    "minerva": {
+        "name": "MINERVA",
+        "link": "https://covid19map.elixir-luxembourg.org/minerva/",
+        "type": "database",
+        "domain": "biology"
     }
 }
