@@ -9,7 +9,7 @@ from .id_mapping import indra_db_refs_from_minerva_refs
 logger = logging.getLogger(__name__)
 
 
-class SifProcessor():
+class SifProcessor:
     """Processor that extracts INDRA Statements from SIF strings.
 
     Parameters
@@ -60,12 +60,12 @@ class SifProcessor():
         return stmt
 
 
-def get_agent(elementId, ids_to_refs, complex_members):
+def get_agent(element_id, ids_to_refs, complex_members):
     """Get an agent for a MINERVA element.
 
     Parameters
     ----------
-    elementId : str
+    element_id : str
         ID of an element used in MINERVA API and raw SIF files.
     ids_to_refs : dict
         A dictionary mapping element IDs to MINERVA provided references. Note
@@ -82,12 +82,12 @@ def get_agent(elementId, ids_to_refs, complex_members):
     """
     # Get references from MINERVA and filter to accepted namespaces
     accepted_ns = default_ns_order + ['TEXT']
-    refs = ids_to_refs.get(elementId)
+    refs = ids_to_refs.get(element_id)
     filtered_refs = [ref for ref in refs if ref[0] in accepted_ns]
     # If it's a complex and doesn't have complex level grounding
-    if elementId in complex_members and len(filtered_refs) == 1:
+    if element_id in complex_members and len(filtered_refs) == 1:
         # Sort to always have the same main agent
-        member_ids = sorted(complex_members[elementId])
+        member_ids = sorted(complex_members[element_id])
         agents = [get_agent(member_id, ids_to_refs, complex_members)
                   for member_id in member_ids]
         # Try to get a FamPlex family

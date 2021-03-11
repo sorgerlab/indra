@@ -1,3 +1,5 @@
+__all__ = ['process_file', 'process_files', 'process_from_web',
+           'process_sif_strs']
 import requests
 import logging
 from .processor import SifProcessor

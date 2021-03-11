@@ -1,4 +1,3 @@
-import json
 import requests
 import csv
 from collections import defaultdict
@@ -102,7 +101,7 @@ def get_model_ids(map_name=default_map_name):
 
 
 def get_sif_filenames_to_ids(map_name=default_map_name):
-    model_names_to_ids = get_model_ids()
+    model_names_to_ids = get_model_ids(map_name=map_name)
     filenames_to_ids = {}
     res = requests.get(resource_url)
     csv_reader = csv.reader(res.text.splitlines())
