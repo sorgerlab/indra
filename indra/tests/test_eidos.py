@@ -4,7 +4,7 @@ import requests
 import datetime
 from nose.plugins.attrib import attr
 from indra.sources import eidos
-from indra.sources.eidos.api import get_agent_bio
+from indra.sources.eidos.bio_processor import get_agent_bio
 from indra.statements import Influence, Association, Event, Concept
 from indra.assemblers.cag import CAGAssembler
 from indra.assemblers.cx import CxAssembler
@@ -281,6 +281,15 @@ def test_get_agent_bio():
             assert agent.db_refs.get(ns) == id, agent.db_refs
         assert agent.db_refs['TEXT'] == raw_text
         assert agent.db_refs['TEXT_NORM'] == norm_text
+
+
+def test_bio_custom_grounding():
+    def my_grounder(txt, context):
+        return {'MYDB': 'MYGROUNDING'}
+    agent = get_agent_bio(Concept('x',
+                                  {'TEXT': 'x'}),
+                          grounder=my_grounder)
+    assert agent.db_refs['MYDB'] == 'MYGROUNDING'
 
 
 def test_compositional_grounding():
