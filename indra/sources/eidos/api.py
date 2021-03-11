@@ -259,7 +259,7 @@ def process_json_bio(json_dict, grounder=None):
     return ep
 
 
-def process_json_bio_entities(json_dict):
+def process_json_bio_entities(json_dict, grounder=None):
     """Return INDRA Agents grounded to biological ontologies extracted
     from Eidos JSON-LD.
 
@@ -277,12 +277,14 @@ def process_json_bio_entities(json_dict):
         A list of INDRA Agents which are derived from concepts extracted
         by Eidos from text.
     """
+    from .bio_processor import get_agent_bio
     ep = process_json(json_dict)
     events = ep.get_all_events()
     agents = []
     for event in events:
         context = event.evidence[0].text
-        agent = get_agent_bio(event.concept, context=context)
+        agent = get_agent_bio(event.concept, context=context,
+                              grounder=grounder)
         agents.append(agent)
     return agents
 
@@ -309,12 +311,14 @@ def process_text_bio_entities(text, webservice=None, grounder=None):
         A list of INDRA Agents which are derived from concepts extracted
         by Eidos from text.
     """
+    from .bio_processor import get_agent_bio
     ep = process_text(text, webservice=webservice)
     events = ep.get_all_events()
     agents = []
     for event in events:
         context = event.evidence[0].text
-        agent = get_agent_bio(event.concept, context=context)
+        agent = get_agent_bio(event.concept, context=context,
+                              grounder=grounder)
         agents.append(agent)
     return agents
 
