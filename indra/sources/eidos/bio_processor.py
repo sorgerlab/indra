@@ -6,8 +6,10 @@ from .processor import EidosProcessor
 
 
 class EidosBioProcessor(EidosProcessor):
+    """Class to extract biology-oriented INDRA statements from Eidos output
+    in a way that agents are grounded to biomedical ontologies."""
     def __init__(self, json_dict, grounder=None):
-        self.json_dict = json_dict
+        super().__init__(json_dict)
         if grounder:
             self.grounder = grounder
         else:

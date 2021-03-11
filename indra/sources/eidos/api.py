@@ -220,6 +220,9 @@ def process_text_bio(text, save_json='eidos_output.json', webservice=None,
         An Eidos reader web service URL to send the request to.
         If None, the reading is assumed to be done with the Eidos JAR rather
         than via a web service. Default: None
+    grounder : Optional[function]
+        A function which takes a text and an optional context as argument
+        and returns a dict of groundings.
 
     Returns
     -------
@@ -240,6 +243,9 @@ def process_json_bio(json_dict, grounder=None):
     ----------
     json_dict : dict
         The JSON-LD dict to be processed.
+    grounder : Optional[function]
+        A function which takes a text and an optional context as argument
+        and returns a dict of groundings.
 
     Returns
     -------
@@ -249,7 +255,7 @@ def process_json_bio(json_dict, grounder=None):
     """
     from indra.sources.eidos.bio_processor import EidosBioProcessor
     ep = EidosBioProcessor(json_dict, grounder=grounder)
-    ep.get_statements()
+    ep.extract_statements()
     return ep
 
 
@@ -261,6 +267,9 @@ def process_json_bio_entities(json_dict):
     ----------
     json_dict : dict
         The JSON-LD dict to be processed.
+    grounder : Optional[function]
+        A function which takes a text and an optional context as argument
+        and returns a dict of groundings.
 
     Returns
     -------
@@ -278,7 +287,7 @@ def process_json_bio_entities(json_dict):
     return agents
 
 
-def process_text_bio_entities(text, webservice=None):
+def process_text_bio_entities(text, webservice=None, grounder=None):
     """Return INDRA Agents grounded to biological ontologies extracted
     from text.
 
@@ -290,6 +299,9 @@ def process_text_bio_entities(text, webservice=None):
         An Eidos reader web service URL to send the request to.
         If None, the reading is assumed to be done with the Eidos JAR rather
         than via a web service. Default: None
+    grounder : Optional[function]
+        A function which takes a text and an optional context as argument
+        and returns a dict of groundings.
 
     Returns
     -------
