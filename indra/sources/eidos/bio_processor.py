@@ -1,14 +1,20 @@
+from typing import Any, Callable, Mapping, Optional
+
 from indra.statements import Agent
 from indra.statements import Activation, Inhibition
 from indra.ontology.standardize import standardize_agent_name
 from indra.preassembler.grounding_mapper.gilda import get_grounding
 from .processor import EidosProcessor
 
+GrounderResult = Mapping[str, Any]
+Grounder = Callable[[str, Optional[str]], GrounderResult]
+
 
 class EidosBioProcessor(EidosProcessor):
     """Class to extract biology-oriented INDRA statements from Eidos output
     in a way that agents are grounded to biomedical ontologies."""
-    def __init__(self, json_dict, grounder=None):
+
+    def __init__(self, json_dict, grounder: Optional[Grounder] = None):
         super().__init__(json_dict)
         if grounder:
             self.grounder = grounder
@@ -39,7 +45,7 @@ class EidosBioProcessor(EidosProcessor):
         return get_agent_bio(concept, context=context, grounder=self.grounder)
 
 
-def get_agent_bio(concept, context=None, grounder=None):
+def get_agent_bio(concept, context=None, grounder: Optional[Grounder] = None):
     if not grounder:
         grounder = default_grounder_wrapper
     # Note that currently concept.name is the canonicalized entity text
@@ -66,6 +72,6 @@ def get_agent_bio(concept, context=None, grounder=None):
     return agent
 
 
-def default_grounder_wrapper(text, context):
+def default_grounder_wrapper(text: str, context: Optional[str]) -> GrounderResult:
     grounding, _ = get_grounding(text, context=context)
     return grounding

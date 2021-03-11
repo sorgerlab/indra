@@ -1,8 +1,10 @@
 """This module implements a client to the Gilda grounding web service,
 and contains functions to help apply it during the course of INDRA assembly."""
+
 import logging
 import requests
 from copy import deepcopy
+from typing import Any, Callable, List, Mapping, Optional, Tuple
 from urllib.parse import urljoin
 from indra.ontology.standardize \
     import standardize_agent_name
@@ -16,7 +18,11 @@ grounding_service_url = get_config('GILDA_URL', failure_ok=True) \
     if has_config('GILDA_URL') else 'http://grounding.indra.bio/'
 
 
-def get_grounding(txt, context=None, mode='web'):
+def get_grounding(
+    txt: str,
+    context: Optional[str] = None,
+    mode: Optional[str] = 'web',
+) -> Tuple[Mapping[str, Any], List[Any]]:
     """Return the top Gilda grounding for a given text.
 
     Parameters
