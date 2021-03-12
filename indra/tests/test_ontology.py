@@ -332,3 +332,10 @@ def test_world_ontology_add_entry():
 def test_efo_bfo_relations():
     assert set(bio_ontology.get_parents('EFO', '0004542')) == \
         {('BFO', '0000015'), ('EFO', '0000001')}
+
+
+def test_name_lookup_obsolete():
+    # This is a regression test to make sure we don't return another node
+    # with the same name but which is obsolete (HGNC:11093)
+    assert bio_ontology.get_id_from_name('HGNC', 'ALDH3A2') == \
+        ('HGNC', '403')
