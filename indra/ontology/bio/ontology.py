@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.8'
+    version = '1.9'
 
     def __init__(self):
         super().__init__()
@@ -89,7 +89,9 @@ class BioOntology(IndraOntology):
 
     def add_hgnc_nodes(self):
         from indra.databases import hgnc_client
-        nodes = [(self.label('HGNC', hid), {'name': hname})
+        withdrawns = set(hgnc_client.hgnc_withdrawn)
+        nodes = [(self.label('HGNC', hid),
+                  {'name': hname, 'obsolete': (hid in withdrawns)})
                  for (hid, hname) in hgnc_client.hgnc_names.items()]
         self.add_nodes_from(nodes)
 

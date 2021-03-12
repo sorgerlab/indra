@@ -553,6 +553,7 @@ class IndraOntology(networkx.DiGraph):
             (self.get_ns(node), data['name']): self.get_ns_id(node)
             for node, data in self.nodes(data=True)
             if 'name' in data
+            and not data.get('obsolete', False)
         }
 
     @with_initialize
