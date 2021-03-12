@@ -1,12 +1,16 @@
 import os
 from indra.sources.minerva.api import *
 from indra.sources.minerva.processor import SifProcessor
+from indra.sources.minerva.minerva_client import get_model_ids
 from indra.statements import Activation, Inhibition
 
 
+models_to_ids = get_model_ids()
+tgfb_id = models_to_ids['TGFbeta signalling']
+apopt_id = models_to_ids['Apoptosis pathway']
 model_id_to_sif_strs = {
-    790: ['sa44 POSITIVE csa5', 'sa18 NEGATIVE csa3'],  # TGFB pathway model
-    799: ['sa18 POSITIVE sa15', 'csa2 POSITIVE sa9']  # apoptosis pathway model
+    tgfb_id: ['sa44 POSITIVE csa5', 'sa18 NEGATIVE csa3'],
+    apopt_id: ['sa18 POSITIVE sa15', 'csa2 POSITIVE sa9']
 }
 
 
@@ -43,13 +47,14 @@ def test_process_sif_strs():
     assert sp.statements[0].evidence[0].source_api == 'minerva'
     assert sp.statements[0].evidence[0].annotations['sif_str'] == \
         'sa44 POSITIVE csa5'
-    assert sp.statements[0].evidence[0].annotations['minerva_model_id'] == 790
+    assert sp.statements[0].evidence[0].annotations['minerva_model_id'] == \
+        tgfb_id
 
 
 def test_process_file():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          'minerva_test1.sif')
-    sp = process_file(fname, 790)
+    sp = process_file(fname, tgfb_id)
     assert sp
     assert isinstance(sp, SifProcessor)
     assert len(sp.statements) == 2
@@ -61,12 +66,12 @@ def test_process_files():
     fname2 = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                           'minerva_test2.sif')
     # One file
-    sp = process_files({790: fname1})
+    sp = process_files({tgfb_id: fname1})
     assert sp
     assert isinstance(sp, SifProcessor)
     assert len(sp.statements) == 2
     # Multiple files
-    sp = process_files({790: fname1, 799: fname2})
+    sp = process_files({tgfb_id: fname1, apopt_id: fname2})
     assert sp
     assert isinstance(sp, SifProcessor)
     assert len(sp.statements) == 4
