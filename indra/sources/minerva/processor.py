@@ -2,7 +2,7 @@ import logging
 from indra.ontology.standardize import get_standard_name
 from indra.ontology.bio import bio_ontology
 from indra.statements import *
-from .minerva_client import get_ids_to_refs
+from .minerva_client import get_ids_to_refs, default_map_name
 from .id_mapping import indra_db_refs_from_minerva_refs
 
 
@@ -23,8 +23,9 @@ class SifProcessor:
     statements : list[indra.statements.Statement]
         A list of INDRA Statements extracted from the SIF strings.
     """
-    def __init__(self, model_id_to_sif_strs):
+    def __init__(self, model_id_to_sif_strs, map_name=default_map_name):
         self.model_id_to_sif_strs = model_id_to_sif_strs
+        self.map_name = map_name
         self.statements = []
 
     def extract_statements(self):
@@ -35,7 +36,7 @@ class SifProcessor:
 
     def process_model(self, model_id, sif_strs):
         logger.info('Processing model %d' % model_id)
-        ids_to_refs, complex_members = get_ids_to_refs(model_id)
+        ids_to_refs, complex_members = get_ids_to_refs(model_id, self.map_name)
         stmts = []
         for sif_str in sif_strs:
             stmt = self.get_stmt(sif_str, ids_to_refs, complex_members,
