@@ -381,24 +381,32 @@ class BeliefEngine(object):
             be calculated. Each Statement object's belief attribute is updated
             by this function.
         """
-        stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun): stmt
-                         for stmt in statements}
+        beliefs = self.get_hierarchy_probs(statements)
+        for stmt in statements:
+            sh = stmt.get_hash(self.matches_fun)
+            stmt.belief = beliefs[sh]
+
+    def get_hierarchy_probs(self, statements):
         # We only re-build the refinements graph if one wasn't provided
         # as an argument
         if self.refinements_graph is None:
+            stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun): stmt
+                             for stmt in statements}
             self.refinements_graph = \
                 build_refinements_graph(stmts_by_hash=stmts_by_hash,
                                         matches_fun=self.matches_fun)
             assert_no_cycle(self.refinements_graph)
 
         logger.debug('Start belief calculation over refinements graph')
+        beliefs = {}
         for node in self.refinements_graph.nodes():
             stmt = self.refinements_graph.nodes[node]['stmt']
             supporters = \
                 list(networkx.descendants(self.refinements_graph, node))
             belief = self.get_refinement_prob(stmt, supporters)
-            stmt.belief = belief
+            beliefs[node] = belief
         logger.debug('Finished belief calculation over refinements graph')
+        return beliefs
 
     def set_linked_probs(self, linked_statements):
         """Sets the belief probabilities for a list of linked INDRA Statements.
