@@ -93,9 +93,10 @@ def get_agent(element_id, ids_to_refs, complex_members):
     # If it's a complex and doesn't have complex level grounding
     if element_id in complex_members and len(filtered_refs) == 1:
         # Sort to always have the same main agent
-        member_ids = sorted(complex_members[element_id])
+        member_ids = complex_members[element_id]
         agents = [get_agent(member_id, ids_to_refs, complex_members)
                   for member_id in member_ids]
+        agents = sorted(agents, key=lambda ag: ag.name)
         # Try to get a FamPlex family
         fam = get_family(agents)
         if fam:
