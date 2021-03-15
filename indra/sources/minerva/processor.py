@@ -89,7 +89,9 @@ def get_agent(element_id, ids_to_refs, complex_members):
     # Get references from MINERVA and filter to accepted namespaces
     accepted_ns = default_ns_order + ['TEXT']
     refs = ids_to_refs.get(element_id)
-    filtered_refs = [ref for ref in refs if ref[0] in accepted_ns]
+    db_refs = indra_db_refs_from_minerva_refs(refs)
+    filtered_refs = {db_ns: db_id for (db_ns, db_id) in db_refs.items()
+                     if db_ns in accepted_ns}
     # If it's a complex and doesn't have complex level grounding
     if element_id in complex_members and len(filtered_refs) == 1:
         # Sort to always have the same main agent
@@ -101,8 +103,8 @@ def get_agent(element_id, ids_to_refs, complex_members):
         fam = get_family(agents)
         if fam:
             # Combine TEXT from MINERVA and found FPLX ID
-            agent_refs = filtered_refs + [fam]
-            return get_agent_from_refs(agent_refs)
+            filtered_refs['FPLX'] = fam
+            return get_agent_from_refs(filtered_refs)
         # Otherwise treat a list of agents as an agent with bound conditions
         else:
             main_agent = agents[0]
@@ -111,7 +113,7 @@ def get_agent(element_id, ids_to_refs, complex_members):
                     main_agent.bound_conditions.append(BoundCondition(ag))
             return main_agent
     # Now we have either individual agents or complexes with complex level
-    # grounding (e.g. from GO or MESH)
+    # grounding (e.g. from GO, MESH, UNIPROT)
     else:
         return get_agent_from_refs(filtered_refs)
 
@@ -136,9 +138,8 @@ def get_family(agents):
             return fam
 
 
-def get_agent_from_refs(refs):
-    """Get an agent given MINERVA refs."""
-    db_refs = indra_db_refs_from_minerva_refs(refs)
+def get_agent_from_refs(db_refs):
+    """Get an agent given its db_refs."""
     name = get_standard_name(db_refs)
     if not name:
         name = db_refs.get('TEXT')
