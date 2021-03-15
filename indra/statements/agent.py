@@ -153,18 +153,19 @@ class Agent(Concept):
         # bound conditions in the other agent, and add additional context.
         # TODO: For now, we do not check the bound conditions of the bound
         # conditions.
-        # FIXME: This matching procedure will get confused if the same
-        # entity is included more than once in one of the sets--this will
-        # be picked up as a match
         # Iterate over the bound conditions in the other agent, and make sure
         # they are all matched in self.
+        used_idx = set()
         for bc_other in other.bound_conditions:
             # Iterate over the bound conditions in self to find a match
             bc_found = False
-            for bc_self in self.bound_conditions:
-                if (bc_self.is_bound == bc_other.is_bound) and \
+            for idx, bc_self in enumerate(self.bound_conditions):
+                if (idx not in used_idx) and \
+                        (bc_self.is_bound == bc_other.is_bound) and \
                         bc_self.agent.refinement_of(bc_other.agent, ontology):
                     bc_found = True
+                    used_idx.add(idx)
+                    break
             # If we didn't find a match for this bound condition in self, then
             # no refinement
             if not bc_found:
