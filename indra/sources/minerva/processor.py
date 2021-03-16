@@ -137,7 +137,7 @@ def get_family(agents):
         children = bio_ontology.get_children(*fam)
         # Check if all family members are present
         if set(children) == set(ag_groundings):
-            return fam
+            return fam[1]
 
 
 def get_agent_from_refs(db_refs):
