@@ -1457,7 +1457,7 @@ class TripsProcessor(object):
         if components is None:
             components = site_term.find('components')
         if components is not None:
-            for member in components.getchildren():
+            for member in components:
                 residue, pos = self._get_site_by_id(member.attrib['id'])
                 if residue is None:
                     residue = [None]
