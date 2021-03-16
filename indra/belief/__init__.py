@@ -351,7 +351,7 @@ class BeliefEngine(object):
         Returns
         -------
         float
-            The belief scrore for this statement.
+            The belief score for this statement.
         """
         all_evidences = set()
         refiners = [] if not refiners else refiners
