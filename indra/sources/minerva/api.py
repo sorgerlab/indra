@@ -21,6 +21,8 @@ def process_file(filename, model_id, map_name=default_map_name):
     model_id : int
         ID of a model corresponding to file content. Model ID is needed to
         find relevant references.
+    map_name : str
+        A name of a disease map to process.
 
     Returns
     -------
@@ -38,6 +40,8 @@ def process_files(ids_to_filenames, map_name=default_map_name):
     ids_to_file_names : dict
         A dictionary mapping model IDs to files containing model content as
         SIF. Model IDs are needed to find relevant references.
+    map_name : str
+        A name of a disease map to process.
 
     Returns
     -------
@@ -63,6 +67,8 @@ def process_from_web(filenames='all', map_name=default_map_name):
         https://git-r3lab.uni.lu/covid/models/-/tree/master/
         Executable%20Modules/SBML_qual_build/sif). If set to 'all'
         (default), then all available models will be processed.
+    map_name : str
+        A name of a disease map to process.
 
     Returns
     -------

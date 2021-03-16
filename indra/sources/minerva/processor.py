@@ -17,6 +17,8 @@ class SifProcessor:
     model_id_to_sif_strs : dict
         A dictionary mapping a model ID (int) to a list of strings in SIF
         format. Example: {799: ['csa2 POSITIVE sa9', 'csa11 NEGATIVE sa30']}
+    map_name : str
+        A name of a disease map to process.
 
     Attributes
     ----------
