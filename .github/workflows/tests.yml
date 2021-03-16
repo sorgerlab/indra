@@ -35,9 +35,9 @@ jobs:
         # Install test/Travis-specific dependencies not covered elsewhere
         pip install pydot jsonschema coverage nose-timer doctest-ignore-unicode awscli pycodestyle
         mkdir -p $HOME/.pybel/data
-        aws s3 cp s3://bigmech/travis/pybel_cache.db $HOME/.pybel/data/ --no-sign-request  --source-region us-east-1
+        wget -nv https://bigmech.s3.amazonaws.com/travis/pybel_cache.db -O $HOME/.pybel/data/pybel_cache.db
         mkdir -p $HOME/.indra/bio_ontology/1.9
-        aws s3 cp s3://bigmech/travis/bio_ontology/1.9/mock_ontology.pkl $HOME/.indra/bio_ontology/1.9/bio_ontology.pkl --no-sign-request  --source-region us-east-1
+        wget -nv https://bigmech.s3.amazonaws.com/travis/mock_ontology.pkl -O $HOME/.indra/bio_ontology/1.9/bio_ontology.pkl
         # PySB and dependencies
         wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
         tar xzf bionetgen.tar.gz
@@ -46,7 +46,7 @@ jobs:
         pip install cython
         # Now install INDRA with all its extras
         pip install .[all]
-        aws s3 cp s3://bigmech/travis/Phosphorylation_site_dataset.tsv indra/resources/ --no-sign-request  --source-region us-east-1
+        wget -nv https://bigmech.s3.amazonaws.com/travis/Phosphorylation_site_dataset.tsv -O indra/resources/Phosphorylation_site_dataset.tsv
         # Run slow tests only if we're in the cron setting
         #- |
         #  if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then
@@ -68,8 +68,8 @@ jobs:
         #export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
         # Download adeft models
         python -m adeft.download
-        aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request  --source-region us-east-1
-        aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
+        wget -nv https://bigmech.s3.amazonaws.com/travis/reach-82631d-biores-e9ee36.jar
+        wget -nv https://bigmech.s3.amazonaws.com/travis/eidos.jar
     - name: Run unit tests
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
