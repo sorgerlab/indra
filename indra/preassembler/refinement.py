@@ -164,6 +164,17 @@ class RefinementFilter:
         return self.get_related(stmt, possibly_related=possibly_related,
                                 direction='less_specific')
 
+    def extend(self, stmts_by_hash):
+        """Extend the initial data structures with a set of new statements.
+
+        Parameters
+        ----------
+        stmts_by_hash : dict[int, indra.statements.Statement]
+            A dict of statements keyed by their hashes.
+        """
+        # We can assume that these stmts_by_hash are unique
+        self.shared_data['stmts_by_hash'].update(stmts_by_hash)
+
 
 class OntologyRefinementFilter(RefinementFilter):
     """This filter uses an ontology to position statements and their agents
@@ -176,12 +187,15 @@ class OntologyRefinementFilter(RefinementFilter):
         An INDRA ontology graph.
     """
     def __init__(self, ontology):
+        super().__init__()
         self.ontology = ontology
-        self.shared_data = {}
 
     def initialize(self, stmts_by_hash):
-        self.shared_data['stmts_by_hash'] = stmts_by_hash
+        self.shared_data['stmts_by_hash'] = {}
+        self.extend(stmts_by_hash)
 
+    def extend(self, stmts_by_hash):
+        self.shared_data['stmts_by_hash'].update(stmts_by_hash)
         # Build up data structure of statement hashes by
         # statement type
         stmts_by_type = collections.defaultdict(set)
@@ -192,19 +206,19 @@ class OntologyRefinementFilter(RefinementFilter):
         # Now iterate over each statement type and build up
         # data structures for quick filtering
         for stmt_type, stmts_this_type in stmts_by_type.items():
-
             # Step 1. initialize data structures
-            roles = stmts_by_hash[
-                next(iter(stmts_this_type))]._agent_order
-            # Mapping agent keys to statement hashes
-            agent_key_to_hash = {}
-            # Mapping statement hashes to agent keys
-            hash_to_agent_key = {}
-            # All agent keys for a given agent role
-            all_keys_by_role = {}
-            for role in roles:
-                agent_key_to_hash[role] = collections.defaultdict(set)
-                hash_to_agent_key[role] = collections.defaultdict(set)
+            # noinspection PyProtectedMember
+            roles = stmts_by_hash[next(iter(stmts_this_type))]._agent_order
+            if stmt_type not in self.shared_data:
+                self.shared_data[stmt_type] = {}
+                # Mapping agent keys to statement hashes
+                self.shared_data[stmt_type]['agent_key_to_hash'] = \
+                    {role: collections.defaultdict(set) for role in roles}
+                # Mapping statement hashes to agent keys
+                self.shared_data[stmt_type]['hash_to_agent_key'] = \
+                    {role: collections.defaultdict(set) for role in roles}
+                # All agent keys for a given agent role
+                self.shared_data[stmt_type]['all_keys_by_role'] = {}
 
             # Step 2. Fill up the initial data structures in preparation
             # for identifying potential refinements
@@ -213,21 +227,14 @@ class OntologyRefinementFilter(RefinementFilter):
                     agent_keys = self._agent_keys_for_stmt_role(
                         stmts_by_hash[sh], role)
                     for agent_key in agent_keys:
-                        agent_key_to_hash[role][agent_key].add(sh)
-                        hash_to_agent_key[role][sh].add(agent_key)
-
-            agent_key_to_hash = dict(agent_key_to_hash)
-            hash_to_agent_key = dict(hash_to_agent_key)
+                        self.shared_data[stmt_type]['agent_key_to_hash'][
+                            role][agent_key].add(sh)
+                        self.shared_data[stmt_type]['hash_to_agent_key'][
+                            role][sh].add(agent_key)
 
             for role in roles:
-                all_keys_by_role[role] = set(agent_key_to_hash[role].keys())
-
-            # Step 3. Make these available as shared data for the apply step
-            self.shared_data[stmt_type] = {
-                'agent_key_to_hash': agent_key_to_hash,
-                'hash_to_agent_key': hash_to_agent_key,
-                'all_keys_by_role': all_keys_by_role,
-            }
+                self.shared_data[stmt_type]['all_keys_by_role'][role] = \
+                    set(self.shared_data[stmt_type]['agent_key_to_hash'][role])
 
     @staticmethod
     def _agent_keys_for_stmt_role(stmt, role):
