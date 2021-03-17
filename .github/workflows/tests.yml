@@ -16,12 +16,6 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
         restore-keys: |
           ${{ runner.os }}-pip-
-    - uses: actions/cache@v2
-      with:
-        path: ./indra/cache
-        key: ${{ runner.os }}-eidos-geonames-${{ hashFiles('**/test_eidos.py') }}
-        restore-keys: |
-          ${{ runner.os }}-eidos-geonames-
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -73,6 +67,11 @@ jobs:
         python -m adeft.download
         wget -nv https://bigmech.s3.amazonaws.com/travis/reach-82631d-biores-e9ee36.jar
         wget -nv https://bigmech.s3.amazonaws.com/travis/eidos.jar
+        wget -nv https://bigmech.s3.amazonaws.com/travis/geonames%2Bworedas.zip
+        mkdir -p /home/runner/work/indra/indra/cache/geonames/index
+        mv geonames%2Bworedas.zip /home/runner/work/indra/indra/cache/geonames/index
+        cd /home/runner/work/indra/indra/cache/geonames/index
+        unzip geonames%2Bworedas.zip
     - name: Run unit tests
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
