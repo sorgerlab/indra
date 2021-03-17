@@ -2,7 +2,7 @@ import logging
 from indra.ontology.standardize import get_standard_name
 from indra.ontology.bio import bio_ontology
 from indra.statements import *
-from .minerva_client import get_ids_to_refs
+from .minerva_client import get_ids_to_refs, default_map_name
 from .id_mapping import indra_db_refs_from_minerva_refs
 
 
@@ -17,14 +17,17 @@ class SifProcessor:
     model_id_to_sif_strs : dict
         A dictionary mapping a model ID (int) to a list of strings in SIF
         format. Example: {799: ['csa2 POSITIVE sa9', 'csa11 NEGATIVE sa30']}
+    map_name : str
+        A name of a disease map to process.
 
     Attributes
     ----------
     statements : list[indra.statements.Statement]
         A list of INDRA Statements extracted from the SIF strings.
     """
-    def __init__(self, model_id_to_sif_strs):
+    def __init__(self, model_id_to_sif_strs, map_name=default_map_name):
         self.model_id_to_sif_strs = model_id_to_sif_strs
+        self.map_name = map_name
         self.statements = []
 
     def extract_statements(self):
@@ -35,7 +38,7 @@ class SifProcessor:
 
     def process_model(self, model_id, sif_strs):
         logger.info('Processing model %d' % model_id)
-        ids_to_refs, complex_members = get_ids_to_refs(model_id)
+        ids_to_refs, complex_members = get_ids_to_refs(model_id, self.map_name)
         stmts = []
         for sif_str in sif_strs:
             stmt = self.get_stmt(sif_str, ids_to_refs, complex_members,
@@ -88,19 +91,22 @@ def get_agent(element_id, ids_to_refs, complex_members):
     # Get references from MINERVA and filter to accepted namespaces
     accepted_ns = default_ns_order + ['TEXT']
     refs = ids_to_refs.get(element_id)
-    filtered_refs = [ref for ref in refs if ref[0] in accepted_ns]
+    db_refs = indra_db_refs_from_minerva_refs(refs)
+    filtered_refs = {db_ns: db_id for (db_ns, db_id) in db_refs.items()
+                     if db_ns in accepted_ns}
     # If it's a complex and doesn't have complex level grounding
     if element_id in complex_members and len(filtered_refs) == 1:
         # Sort to always have the same main agent
-        member_ids = sorted(complex_members[element_id])
+        member_ids = complex_members[element_id]
         agents = [get_agent(member_id, ids_to_refs, complex_members)
                   for member_id in member_ids]
+        agents = sorted(agents, key=lambda ag: ag.name)
         # Try to get a FamPlex family
         fam = get_family(agents)
         if fam:
             # Combine TEXT from MINERVA and found FPLX ID
-            agent_refs = filtered_refs + [fam]
-            return get_agent_from_refs(agent_refs)
+            filtered_refs['FPLX'] = fam
+            return get_agent_from_refs(filtered_refs)
         # Otherwise treat a list of agents as an agent with bound conditions
         else:
             main_agent = agents[0]
@@ -109,7 +115,7 @@ def get_agent(element_id, ids_to_refs, complex_members):
                     main_agent.bound_conditions.append(BoundCondition(ag))
             return main_agent
     # Now we have either individual agents or complexes with complex level
-    # grounding (e.g. from GO or MESH)
+    # grounding (e.g. from GO, MESH, UNIPROT)
     else:
         return get_agent_from_refs(filtered_refs)
 
@@ -131,12 +137,11 @@ def get_family(agents):
         children = bio_ontology.get_children(*fam)
         # Check if all family members are present
         if set(children) == set(ag_groundings):
-            return fam
+            return fam[1]
 
 
-def get_agent_from_refs(refs):
-    """Get an agent given MINERVA refs."""
-    db_refs = indra_db_refs_from_minerva_refs(refs)
+def get_agent_from_refs(db_refs):
+    """Get an agent given its db_refs."""
     name = get_standard_name(db_refs)
     if not name:
         name = db_refs.get('TEXT')
