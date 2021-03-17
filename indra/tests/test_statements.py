@@ -666,6 +666,11 @@ def test_agent_boundcondition_refinement():
     assert not nras3.refinement_of(nras5, bio_ontology)
     assert not nras4.refinement_of(nras5, bio_ontology)
 
+    nras6 = Agent('NRAS', db_refs={'HGNC': '7989'},
+                  bound_conditions=[bc1, bc1])
+    assert nras6.refinement_of(nras1, bio_ontology)
+    assert not nras1.refinement_of(nras6, bio_ontology)
+
 
 def test_agent_modification_refinement():
     """A gene-level statement should be supported by a family-level
