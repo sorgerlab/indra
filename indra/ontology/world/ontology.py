@@ -22,12 +22,17 @@ def get_term(node, prefix):
     return WorldOntology.label('WM', path)
 
 
-def load_yaml_from_url(ont_url):
+def load_yaml_from_path(path):
     """Return a YAML object loaded from a YAML file URL."""
     import yaml
-    res = requests.get(ont_url)
-    res.raise_for_status()
-    root = yaml.load(res.content, Loader=yaml.FullLoader)
+    if path.startswith('http'):
+        res = requests.get(path)
+        res.raise_for_status()
+        yml_str = res.content
+    else:
+        with open(path, 'r') as fh:
+            yml_str = fh.read()
+    root = yaml.load(yml_str, Loader=yaml.FullLoader)
     return root
 
 
@@ -65,7 +70,7 @@ class WorldOntology(IndraOntology):
         logger.info('Ontology has %d nodes' % len(self))
 
     def add_wm_ontology(self, url):
-        self.yml = load_yaml_from_url(url)
+        self.yml = load_yaml_from_path(url)
         self._load_yml(self.yml)
 
     @with_initialize
@@ -114,13 +119,27 @@ class WorldOntology(IndraOntology):
                     # This contains information about a non-leaf node
                     # like examples
                     if 'InnerOntologyNode' in entry:
-                        pass
+                        child = None
                 # Otherwise this is a leaf term
                 else:
                     child = entry['name']
-
+            # This is the case of an intermediate ontology node
+            if child is None:
+                # Handle opposite entries
+                opp = entry.get('opposite')
+                if opp:
+                    parts = opp.split('/')
+                    opp_term = get_term(parts[-1], '/'.join(parts[:-1]))
+                    edges.append((opp_term, this_term,
+                                  {'type': 'is_opposite'}))
+                    edges.append((this_term, opp_term,
+                                  {'type': 'is_opposite'}))
+                # Handle polarity
+                pol = entry.get('polarity')
+                if pol is not None:
+                    nodes[this_term]['polarity'] = pol
             # This is the case of a leaf term
-            if child[0] != '_' and child != 'examples':
+            elif child[0] != '_' and child != 'examples':
                 # Add parenthood relationship
                 child_term = get_term(child, this_prefix)
                 edges.append((child_term, this_term, {'type': 'isa'}))
