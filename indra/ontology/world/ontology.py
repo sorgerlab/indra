@@ -161,7 +161,7 @@ class WorldOntology(IndraOntology):
         self.add_edges_from(edges)
 
     @with_initialize
-    def add_entry(self, entry, examples=None):
+    def add_entry(self, entry, examples=None, neg_examples=None):
         """Add a new ontology entry with examples.
 
         This works by adding the entry to the yml attribute first
@@ -171,10 +171,13 @@ class WorldOntology(IndraOntology):
         ----------
         entry : str
             The new entry.
-        examples : list of str
+        examples : Optional[list of str]
             Examples for the new entry.
+        neg_examples : Optional[list of str]
+            Negative examples for the new entry.
         """
         examples = examples if examples else []
+        neg_examples = neg_examples if neg_examples else []
         parts = entry.split('/')
         # We start at the root of the YML tree and walk down from
         # there
@@ -206,12 +209,28 @@ class WorldOntology(IndraOntology):
                 # not possible to set examples for them.
                 if last_part and 'OntologyNode' in matched_node:
                     matched_node['examples'] += examples
+                    if neg_examples:
+                        if 'neg_examples' in matched_node:
+                            matched_node['neg_examples'] += neg_examples
+                        else:
+                            matched_node['neg_examples'] = neg_examples
+                elif last_part and isinstance(matched_node, list) and \
+                        'InnerOntologyNode' in matched_node[0]:
+                    matched_node = matched_node[0]
+                    matched_node['examples'] += examples
+                    if 'neg_examples' in matched_node:
+                        matched_node['neg_examples'] += neg_examples
+                    else:
+                        matched_node['neg_examples'] = neg_examples
             # If we didn't match an existing node, we have to build up
             # a new subtree starting from the current part
             else:
                 if last_part:
-                    root.append({'OntologyNode': None, 'name': part,
-                                 'examples': examples})
+                    new_entry = {'OntologyNode': None, 'name': part,
+                                 'examples': examples}
+                    if neg_examples:
+                        new_entry['neg_examples'] = neg_examples
+                    root.append(new_entry)
                     break
                 else:
                     root.append({part: []})

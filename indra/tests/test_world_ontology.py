@@ -34,3 +34,14 @@ def test_load_intermediate_nodes():
            'wm_posneg_metadata.yml')
     wo = WorldOntology(url)
     wo.initialize()
+    assert wo.is_opposite('WM', 'wm/concept/causal_factor/food_insecurity',
+                          'WM', 'wm/concept/causal_factor/food_security')
+    assert wo.is_opposite('WM', 'wm/concept/causal_factor/food_security',
+                          'WM', 'wm/concept/causal_factor/food_insecurity')
+
+    assert wo.get_polarity('WM',
+                           'wm/concept/causal_factor/food_insecurity') == -1
+    wo.add_entry('wm/concept', examples=['xxx'], neg_examples=['yyy'])
+    entry = wo.yml[0]['wm'][0]['concept'][0]
+    assert 'xxx' in entry['examples']
+    assert 'yyy' in entry['neg_examples']
