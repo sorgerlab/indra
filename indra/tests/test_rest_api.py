@@ -914,6 +914,7 @@ def test_reach_process_json():
     assert stmts[0].obj is not None
 
 
+@attr('notravis')
 def test_reach_process_pmc():
     res = _call_api('post', 'reach/process_pmc', json={'pmcid': 'PMC4338247'})
     res_json = json.loads(res.get_data())
