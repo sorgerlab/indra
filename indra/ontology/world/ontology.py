@@ -42,12 +42,12 @@ class WorldOntology(IndraOntology):
     Parameters
     ----------
     url : str
-        The URL pointing to a World Modelers ontology YAML.
+        The URL or file path pointing to a World Modelers ontology YAML.
 
     Attributes
     ----------
     url : str
-        The URL pointing to a World Modelers ontology YAML.
+        The URL or file path pointing to a World Modelers ontology YAML.
     yml : list
         The ontology YAML as loaded by the yaml package from the
         URL.
@@ -101,7 +101,7 @@ class WorldOntology(IndraOntology):
         this_prefix = prefix + '/' + node if prefix else node
         for entry in tree:
             # This is typically a list of examples which we don't need to
-            # independently psocess
+            # independently process
             if isinstance(entry, str):
                 continue
             # This is the case of an entry with multiple attributes
@@ -241,6 +241,7 @@ class WorldOntology(IndraOntology):
 
 @register_pipeline
 def load_world_ontology(url=wm_ont_url):
+    """Load the world ontology from a given URL or file path."""
     return WorldOntology(url)
 
 
