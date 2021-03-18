@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import json
 from networkx import MultiDiGraph, Graph, cycle_basis
 from pygraphviz import AGraph
 
@@ -17,6 +18,10 @@ def im_json_to_graph(im_json):
     graph : networkx.MultiDiGraph
         A graph representing the influence map.
     """
+    # This is for kappy compatibility: as of 4.1.2, im_json is a string,
+    # whereas before it was a json object
+    if isinstance(im_json, str):
+        im_json = json.loads(im_json)
     imap_data = im_json['influence map']['map']
 
     # Initialize the graph
