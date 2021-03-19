@@ -4,6 +4,7 @@ from indra.ontology.standardize import standardize_db_refs
 
 minerva_to_indra_map = {
     'UNIPROT': 'UP',
+    'NCBI_PROTEIN': 'REFSEQ_PROT',
     'REFSEQ': 'REFSEQ_PROT',
     'ENTREZ': 'EGID',
     'INTERPRO': 'IP',

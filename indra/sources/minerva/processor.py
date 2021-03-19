@@ -89,7 +89,7 @@ def get_agent(element_id, ids_to_refs, complex_members):
         INDRA agent created from given refs.
     """
     # Get references from MINERVA and filter to accepted namespaces
-    accepted_ns = default_ns_order + ['TEXT']
+    accepted_ns = default_ns_order + ['REFSEQ_PROT', 'EGID', 'IP', 'TEXT']
     refs = ids_to_refs.get(element_id)
     db_refs = indra_db_refs_from_minerva_refs(refs)
     filtered_refs = {db_ns: db_id for (db_ns, db_id) in db_refs.items()
