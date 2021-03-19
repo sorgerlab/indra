@@ -159,7 +159,15 @@ def cm_json_to_graph(cm_json):
     graph : pygraphviz.Agraph
         A graph representing the contact map.
     """
+    # This is for kappy compatibility: as of 4.1.2, im_json is a string,
+    # whereas before it was a json object
+    if isinstance(cm_json, str):
+        cm_json = json.loads(cm_json)
     cmap_data = cm_json['contact map']['map']
+    # There also seems to be an additional level of nesting in a one-element
+    # list that we can unpack here
+    if len(cmap_data) == 1 and isinstance(cmap_data[0], list):
+        cmap_data = cmap_data[0]
 
     # Initialize the graph
     graph = AGraph()
