@@ -67,7 +67,9 @@ if __name__ == '__main__':
                                          'misgrounding_map.csv')
     gm_location = os.path.join(here, 'grounding',
                                args.grounding_map_output_file)
-    df = pd.read_csv(args.input_file, sep=',', keep_default_na=False)
+    df = pd.read_csv(args.input_file, sep=',', keep_default_na=False,
+                     usecols=['text', 'db_name', 'db_id', 'decision'],
+                     dtype=str)
     # strip extra whitespace from decision column to account for
     # common curation error
     df.loc[:, 'decision'] = df.decision.apply(lambda x: x.strip())
@@ -83,8 +85,8 @@ if __name__ == '__main__':
         for ignore in new_ignores:
             if ignore not in old_ignores:
                 writer.writerow([ignore])
-        else:
-            logger.info('%s already exists in ignore.csv' % ignore)
+            else:
+                logger.info('%s already exists in ignore.csv' % ignore)
     
     new_misgroundings = df[df.decision == 'misgrounding']
     # Filter duplicates to avoid adding same entry multiple times
@@ -133,17 +135,18 @@ if __name__ == '__main__':
             reader = csv.reader(f, delimiter=',')
             for row in reader:
                 old_rows.append(tuple(row))
-            else:
-                logger.info('%s already exists in grounding map'
-                            % (','.join(row)))
+
     # Add new entries
     with open(gm_location, 'a', newline='') as f:
         writer = csv.writer(f, delimiter=',')
         for text, (db_ns, db_id), validity in zip(new_gm_texts,
                                                   new_gm_groundings,
                                                   grounding_validity):
-            if validity and (text, db_ns, db_id) not in old_rows:
+            if (text, db_ns, db_id) not in old_rows:
                 writer.writerow([text, db_ns, db_id])
+            elif validity:
+                logger.info('%s,%s,%s already exists in grounding map'
+                            % (text, db_ns, db_id))
     # Gather invalid rows and emit warnings for them
     invalid_rows = df[~((df.decision == 'other') |
                         (df.decision == 'correct') |
