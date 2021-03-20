@@ -10,6 +10,7 @@ the help text for this script for info on the proper format for input csv files.
 
 import os
 import csv
+import json
 import logging
 import argparse
 import pandas as pd
@@ -124,6 +125,11 @@ if __name__ == '__main__':
 
     # Gather old entries to avoid adding again
     old_rows = []
+    # Flag will become true if a new grounding map file is needed.
+    # This will occur when the specified input grounding map file
+    # doesn't exist yet and the curation spreadsheet contains at
+    # least one new and valid grounding map entry.
+    new_gm_flag = False
     if os.path.exists(gm_location):
         with open(gm_location, newline='') as f:
             reader = csv.reader(f, delimiter=',')
@@ -140,12 +146,32 @@ if __name__ == '__main__':
             if (text, db_ns, db_id) not in old_rows:
                 if validity:
                     writer.writerow([text, db_ns, db_id])
+                    # It's simpler just to set the flag every time
+                    # a new and valid row is added even though it's redundant.
+                    new_gm_flag = True
                 else:
                     logger.warning('Invalid mapping %s,%s for text %s'
                                    % (db_ns, db_id, text))
             else:
                 logger.info('%s,%s,%s already exists in grounding map'
                             % (text, db_ns, db_id))
+
+    # If a new grounding map file has been created. Add new grounding map filename
+    # to json live in indra/resources/grounding.
+    if new_gm_flag:
+        new_gmap_fname = args.grounding_map_output_file
+        extra_gmap_path = os.path.join(here, 'grounding',
+                                       'extra_gmap_files.json')
+        with open(extra_gmap_path) as f:
+            gmap_files = json.load(f)
+        if fname not in gmap_files:
+            gmap_files.append(new_gmap_fname)
+        else:
+            logger.error('Filename %s already exists in extra_gmap_files.json.'
+                         ' This should not have happened.')
+        with open(extra_gmap_path) as f:
+            json.dump(gmap_files, f, indent=True)
+
     # Gather invalid rows and emit warnings for them
     invalid_rows = df[~((df.decision == 'other') |
                         (df.decision == 'correct') |
