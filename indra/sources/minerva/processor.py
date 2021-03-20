@@ -89,11 +89,12 @@ def get_agent(element_id, ids_to_refs, complex_members):
         INDRA agent created from given refs.
     """
     # Get references from MINERVA and filter to accepted namespaces
-    accepted_ns = default_ns_order + ['REFSEQ_PROT', 'EGID', 'IP', 'TEXT']
+    exclude_ns = {'WIKIPATHWAYS', 'PUBMED', 'HGNC_SYMBOL', 'INTACT', 'PDB',
+                  'DOI'}
     refs = ids_to_refs.get(element_id)
     db_refs = indra_db_refs_from_minerva_refs(refs)
     filtered_refs = {db_ns: db_id for (db_ns, db_id) in db_refs.items()
-                     if db_ns in accepted_ns}
+                     if db_ns not in exclude_ns}
     # If it's a complex and doesn't have complex level grounding
     if element_id in complex_members and len(filtered_refs) == 1:
         # Sort to always have the same main agent
