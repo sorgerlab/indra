@@ -453,13 +453,21 @@ def update_famplex():
 
 def update_grounding_map():
     famplex_gmap = os.path.join(path, 'famplex', 'grounding_map.csv')
-    covid_gmap = os.path.join(path, 'grounding', 'covid_grounding.csv')
     famplex_rows = list(read_unicode_csv(famplex_gmap))
     row_len = len(famplex_rows[0])
-    covid_rows = list(read_unicode_csv(covid_gmap))
-    covid_rows = [r + [''] * (row_len - len(r))
-                  for r in covid_rows]
-    all_rows = famplex_rows + covid_rows
+    extra_rows = []
+    # read in json file containing filenames for non-famplex grounding maps
+    with open(os.path.join(path, 'grounding', 'extra_gmap_files.json')) as f:
+        extra_gm_files = json.load(f)
+    # Add non-famplex grounding map rows, adding blank values to synchronize
+    # the number of columns with the number in the famplex grounding map
+    for gm_filename in extra_gm_files:
+        gmap = os.path.join(path, 'grounding', gm_filename)
+        new_rows = list(read_unicode_csv(gmap))
+        new_rows = [r + [''] * (row_len - len(r))
+                    for r in new_rows]
+        extra_rows.extend(new_rows)
+    all_rows = famplex_rows + extra_rows
     grounding_map = os.path.join(path, 'grounding', 'grounding_map.csv')
     write_unicode_csv(grounding_map, all_rows)
 
