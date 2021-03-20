@@ -122,12 +122,6 @@ if __name__ == '__main__':
     grounding_validity = [validate_id(db_ns, db_id)
                           for db_ns, db_id in new_gm_groundings]
 
-    for text, (db_ns, db_id), validity in zip(new_gm_texts,
-                                              new_gm_groundings,
-                                              grounding_validity):
-        if not validity:
-            logger.warning('Invalid mapping %s,%s for text %s'
-                           % (db_ns, db_id, text))
     # Gather old entries to avoid adding again
     old_rows = []
     if os.path.exists(gm_location):
@@ -136,15 +130,20 @@ if __name__ == '__main__':
             for row in reader:
                 old_rows.append(tuple(row))
 
-    # Add new entries
+    # Add new entries. Conditionals are unfortunately nested in an
+    # unfriendly way to simplify logging.
     with open(gm_location, 'a', newline='') as f:
         writer = csv.writer(f, delimiter=',')
         for text, (db_ns, db_id), validity in zip(new_gm_texts,
                                                   new_gm_groundings,
                                                   grounding_validity):
             if (text, db_ns, db_id) not in old_rows:
-                writer.writerow([text, db_ns, db_id])
-            elif validity:
+                if validity:
+                    writer.writerow([text, db_ns, db_id])
+                else:
+                    logger.warning('Invalid mapping %s,%s for text %s'
+                                   % (db_ns, db_id, text))
+            else:
                 logger.info('%s,%s,%s already exists in grounding map'
                             % (text, db_ns, db_id))
     # Gather invalid rows and emit warnings for them
