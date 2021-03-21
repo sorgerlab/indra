@@ -312,3 +312,10 @@ def test_name_lookup_obsolete():
     # with the same name but which is obsolete (HGNC:11093)
     assert bio_ontology.get_id_from_name('HGNC', 'ALDH3A2') == \
         ('HGNC', '403')
+
+
+def test_chebi_refinements():
+    assert bio_ontology.partof('CHEBI', 'CHEBI:136692',
+                               'CHEBI', 'CHEBI:365')
+    assert not bio_ontology.partof('CHEBI', 'CHEBI:365',
+                                   'CHEBI', 'CHEBI:136692')

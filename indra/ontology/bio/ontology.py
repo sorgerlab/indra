@@ -200,6 +200,8 @@ class BioOntology(IndraOntology):
         from indra.databases import obo_client
         namespaces = ['go', 'efo', 'hp', 'doid', 'chebi']
         edges = []
+        # Mapping various source relation types to standardized ones
+        # in this ontology graph
         rel_mappings = {
             'xref': 'xref',
             'isa': 'isa',
@@ -207,14 +209,15 @@ class BioOntology(IndraOntology):
             'is_a': 'isa',
             'part_of': 'partof',
             'has_part': 'partof',
-            # These are for ChEBI: identical to the old behavior but it might
-            # make sense to add other relations here too
+            # These are specifically to map ChEBI relations
             'is_conjugate_acid_of': 'isa',
             'is_conjugate_base_of': 'isa',
             'has_functional_parent': 'isa',
             'has_parent_hydride': 'isa',
             'has_role': 'isa'
         }
+        # The source and target for these relations need to be reversed
+        # when adding to the graph
         reverse_rel = {
             'has_part',
         }
