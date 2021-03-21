@@ -209,6 +209,7 @@ class BioOntology(IndraOntology):
             # These are for ChEBI: identical to the old behavior but it might
             # make sense to add other relations here too
             'is_conjugate_acid_of': 'isa',
+            'is_conjugate_base_of': 'isa',
             'has_functional_parent': 'isa',
             'has_parent_hydride': 'isa',
             'has_role': 'isa'
