@@ -206,6 +206,7 @@ class BioOntology(IndraOntology):
             'partof': 'partof',
             'is_a': 'isa',
             'part_of': 'partof',
+            'has_part': 'partof',
             # These are for ChEBI: identical to the old behavior but it might
             # make sense to add other relations here too
             'is_conjugate_acid_of': 'isa',
@@ -213,6 +214,9 @@ class BioOntology(IndraOntology):
             'has_functional_parent': 'isa',
             'has_parent_hydride': 'isa',
             'has_role': 'isa'
+        }
+        reverse_rel = {
+            'has_part',
         }
         for ns in namespaces:
             oc = obo_client.OboClient(prefix=ns)
@@ -229,9 +233,15 @@ class BioOntology(IndraOntology):
                         target_label = self.label(ns.upper(), target)
                         if ns == 'efo' and target.startswith('BFO'):
                             target_label = target
-                        edges.append((source_label,
-                                      target_label,
-                                      {'type': mapped_rel}))
+                        if rel in reverse_rel:
+                            av = (target_label,
+                                  source_label,
+                                  {'type': mapped_rel})
+                        else:
+                            av = (source_label,
+                                  target_label,
+                                  {'type': mapped_rel})
+                        edges.append(av)
         self.add_edges_from(edges)
 
     def add_chemical_xrefs(self):
