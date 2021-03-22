@@ -15,10 +15,22 @@ import logging
 import argparse
 import pandas as pd
 from indra.statements.validate import validate_id
+from indra.databases.hgnc_client import get_hgnc_name, get_hgnc_id
 
 logger = logging.getLogger(__name__)
 
 
+def validate(db_ns, db_id):
+    """Validate identifier, accepting HGNC name or ID"""
+    if db_ns == 'HGNC':
+        if db_id.isdigit():
+            return validate_id(db_ns, db_id)
+        else:
+            return get_hgnc_id(db_id) is not None
+    else:
+        return validate_id(db_ns, db_id)
+
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Add grounding resources from'
                                      ' csv file of curations. Can add entries'
@@ -120,7 +132,7 @@ if __name__ == '__main__':
                          for grounding in new_gm_groundings]
     # Check validity of new grounding map entries
     logger.info('Validating new grounding map entries by pattern')
-    grounding_validity = [validate_id(db_ns, db_id)
+    grounding_validity = [validate(db_ns, db_id)
                           for db_ns, db_id in new_gm_groundings]
 
     # Gather old entries to avoid adding again
@@ -145,6 +157,10 @@ if __name__ == '__main__':
                                                   grounding_validity):
             if (text, db_ns, db_id) not in old_rows:
                 if validity:
+                    if db_ns == 'HGNC' and db_id.isdigit():
+                        # We've already guaranteed that we can find an
+                        # HGNC name for this ID when validating.
+                        db_id = get_hgnc_name(db_id)
                     writer.writerow([text, db_ns, db_id])
                     # It's simpler just to set the flag every time
                     # a new and valid row is added even though it's redundant.
@@ -164,12 +180,12 @@ if __name__ == '__main__':
                                        'extra_gmap_files.json')
         with open(extra_gmap_path) as f:
             gmap_files = json.load(f)
-        if fname not in gmap_files:
+        if new_gmap_fname not in gmap_files:
             gmap_files.append(new_gmap_fname)
         else:
             logger.error('Filename %s already exists in extra_gmap_files.json.'
                          ' This should not have happened.')
-        with open(extra_gmap_path) as f:
+        with open(extra_gmap_path, 'w') as f:
             json.dump(gmap_files, f, indent=True)
 
     # Gather invalid rows and emit warnings for them
