@@ -239,7 +239,7 @@ def test_translocation():
 
 
 def test_gef():
-    s = {'type': 'Gef', 'id': '40', 'agent': valid_agent1, 'ras': valid_agent2}
+    s = {'type': 'Gef', 'id': '40', 'gef': valid_agent1, 'ras': valid_agent2}
     jsonschema.validate([s], schema)
 
 

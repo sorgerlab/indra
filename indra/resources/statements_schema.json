@@ -433,7 +433,7 @@
                             "pattern": "^Gef$",
                             "description": "The type of the statement"
                         },
-                        "agent": {
+                        "gef": {
                             "$ref": "#/definitions/Agent",
                             "description": "The guanosine exchange factor."
                         },
