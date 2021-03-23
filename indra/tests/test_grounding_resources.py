@@ -16,7 +16,6 @@ def test_misgrounding_map_entries():
 def test_grounding_map_entries():
     bad_entries = []
     for text, db_refs in default_grounding_map.items():
-        if (not validate_db_refs(db_refs) and
-            not (set(exceptions) & db_refs.keys())):
+        if not validate_db_refs(db_refs):
             bad_entries.append([text, db_refs])
     assert not bad_entries, bad_entries
