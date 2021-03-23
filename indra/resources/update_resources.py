@@ -686,11 +686,16 @@ def update_biomappings():
     biomappings = defaultdict(list)
     mappings = load_mappings()
     predictions = load_predictions()
+    exclude_ns = {'kegg.pathway'}
     for mappings, mapping_type in ((mappings, 'curated'),
-                                  (predictions, 'predicted')):
+                                   (predictions, 'predicted')):
         for mapping in mappings:
             # We skip anything that isn't an exact match
             if mapping['relation'] != 'skos:exactMatch':
+                continue
+            # Skip excluded name spaces that aren't relevant here
+            if mapping['source prefix'] in exclude_ns or \
+                    mapping['target prefix'] in exclude_ns:
                 continue
             # We only accept curated mappings for NCIT
             if mapping_type == 'predicted' and \
@@ -709,7 +714,7 @@ def update_biomappings():
             biomappings[(source_ns, source_id, mapping['source name'])].append(
                 (target_ns, target_id, mapping['target name']))
             biomappings[(target_ns, target_id, mapping['target name'])].append(
-                (source_ns, source_id, mapping['target name']))
+                (source_ns, source_id, mapping['source name']))
 
     mesh_mappings = {k: v for k, v in biomappings.items()
                      if k[0] == 'MESH'}
