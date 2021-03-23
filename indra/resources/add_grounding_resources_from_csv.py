@@ -5,7 +5,8 @@ map entries either to an existing grounding map file in
 indra/resources/grounding/ or to a new grounding map file. The script will not
 add entries that already exist in a resource file. New grounding map entries
 are checked to ensure they have a valid namespace prefix and identifier. See
-the help text for this script for info on the proper format for input csv files.
+the help text for this script for info on the proper format for input csv
+files.
 """
 
 import os
@@ -30,7 +31,7 @@ def validate(db_ns, db_id):
     else:
         return validate_id(db_ns, db_id)
 
-    
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Add grounding resources from'
                                      ' csv file of curations. Can add entries'
@@ -100,7 +101,7 @@ if __name__ == '__main__':
                 writer.writerow([ignore])
             else:
                 logger.info('%s already exists in ignore.csv' % ignore)
-    
+
     new_misgroundings = df[df.decision == 'misgrounding']
     # Filter duplicates to avoid adding same entry multiple times
     new_misgroundings = new_misgroundings[['text', 'db_name', 'db_id']].\
