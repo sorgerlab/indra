@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.10'
+    version = '1.11'
 
     def __init__(self):
         super().__init__()
@@ -200,18 +200,24 @@ class BioOntology(IndraOntology):
         from indra.databases import obo_client
         namespaces = ['go', 'efo', 'hp', 'doid', 'chebi']
         edges = []
+        # Mapping various source relation types to standardized ones
+        # in this ontology graph
         rel_mappings = {
             'xref': 'xref',
             'isa': 'isa',
             'partof': 'partof',
             'is_a': 'isa',
             'part_of': 'partof',
-            # These are for ChEBI: identical to the old behavior but it might
-            # make sense to add other relations here too
-            'is_conjugate_acid_of': 'isa',
+            'has_part': 'partof',
+            # These are specifically to map ChEBI relations
             'has_functional_parent': 'isa',
             'has_parent_hydride': 'isa',
             'has_role': 'isa'
+        }
+        # The source and target for these relations need to be reversed
+        # when adding to the graph
+        reverse_rel = {
+            'has_part',
         }
         for ns in namespaces:
             oc = obo_client.OboClient(prefix=ns)
@@ -228,9 +234,15 @@ class BioOntology(IndraOntology):
                         target_label = self.label(ns.upper(), target)
                         if ns == 'efo' and target.startswith('BFO'):
                             target_label = target
-                        edges.append((source_label,
-                                      target_label,
-                                      {'type': mapped_rel}))
+                        if rel in reverse_rel:
+                            av = (target_label,
+                                  source_label,
+                                  {'type': mapped_rel})
+                        else:
+                            av = (source_label,
+                                  target_label,
+                                  {'type': mapped_rel})
+                        edges.append(av)
         self.add_edges_from(edges)
 
     def add_chemical_xrefs(self):
