@@ -630,7 +630,7 @@ class BiopaxProcessor(object):
             # This is the "see also" relation which points to related but
             # not exact xrefs that we can skip here
             if isinstance(xref, bp.RelationshipXref) and \
-                xref.relationship_type == \
+                xref.relationship_type and xref.relationship_type.uid == \
                     'http://identifiers.org/psimi/MI:0361':
                 continue
             xrefs[xref_db_ns].add(xref.id)
@@ -965,8 +965,7 @@ def sanitize_chebi_ids(chebi_ids, name):
         return []
     elif len(chebi_ids) == 1:
         return list(chebi_ids)
-    specific_chebi_id = get_specific_chebi_id(frozenset(chebi_ids),
-                                              name)
+    specific_chebi_id = get_specific_chebi_id(frozenset(chebi_ids), name)
     return specific_chebi_id
 
 
