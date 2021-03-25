@@ -210,8 +210,6 @@ class BioOntology(IndraOntology):
             'part_of': 'partof',
             'has_part': 'partof',
             # These are specifically to map ChEBI relations
-            'is_conjugate_acid_of': 'isa',
-            'is_conjugate_base_of': 'isa',
             'has_functional_parent': 'isa',
             'has_parent_hydride': 'isa',
             'has_role': 'isa'
