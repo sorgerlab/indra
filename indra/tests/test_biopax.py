@@ -77,6 +77,15 @@ def test_activity_regulation_extraction():
     assert all(s.obj.name == 'BRAF' for s in stmts)
 
 
+def test_chebi_grounding_extraction():
+    bpe = 'SmallMolecule_49d78305d95647ad81961ec7f6189821'
+    sm = bp.model.objects[bpe]
+    agents = bp._get_agents_from_singular_entity(sm)
+    assert len(agents) == 1
+    assert agents[0].name == 'GTP'
+    assert agents[0].db_refs['CHEBI'] == 'CHEBI:15996'
+
+
 @attr('webservice', 'slow')
 def test_pathsfromto():
     bp = biopax.process_pc_pathsfromto(['MAP2K1'], ['MAPK1'])

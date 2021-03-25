@@ -60,12 +60,6 @@ def test_inchi_key():
     assert ik == 'NVKAWKQGWWIWPM-MISPCMORSA-N'
 
 
-def test_specific_chebi_ids():
-    ids = ['76971', '37045', '15996', '75771', '37121', '57600']
-    spec_id = chebi_client.get_specific_id(ids)
-    assert spec_id == 'CHEBI:15996', spec_id
-
-
 def test_hmdb_to_chebi():
     chebi_id = chebi_client.get_chebi_id_from_hmdb('HMDB0000122')
     assert chebi_id == 'CHEBI:15903', chebi_id
