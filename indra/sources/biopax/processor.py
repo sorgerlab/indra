@@ -630,8 +630,7 @@ class BiopaxProcessor(object):
             # This is the "see also" relation which points to related but
             # not exact xrefs that we can skip here
             if isinstance(xref, bp.RelationshipXref) and \
-                xref.relationship_type and xref.relationship_type.uid == \
-                    'http://identifiers.org/psimi/MI:0361':
+                    xref.relationship_type in psi_mi_see_also:
                 continue
             xrefs[xref_db_ns].add(xref.id)
 
@@ -1039,4 +1038,14 @@ xref_ns_map = {
     'hugo gene nomenclature committee (hgnc)': 'HGNC',
     'ensembl': 'ENSEMBL',
     'taxonomy': 'TAXONOMY',
+}
+
+
+psi_mi_see_also = {
+    # This is an invalid URL but used in practice
+    'http://identifiers.org/psimi/MI:0361',
+    # This is a valid old style URL
+    'http://identifiers.org/mi/MI:0361',
+    # This is a valid new style URL
+    'http://identifiers.org/MI:0361',
 }
