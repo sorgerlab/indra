@@ -615,12 +615,23 @@ class BiopaxProcessor(object):
         xrefs = defaultdict(set)
         if primary_ns and primary_id:
             xrefs[primary_ns].add(primary_id)
+            # In the case of CHEBI, we return directly, no further processing
+            # of xrefs since xrefs tend to contain other related CHEBI IDs
+            # representing other chemicals
+            if primary_ns == 'CHEBI':
+                return xrefs
 
         for xref in entref.xref:
             if not xref.db:
                 continue
             xref_db_ns = xref_ns_map.get(xref.db.lower())
             if not xref_db_ns:
+                continue
+            # This is the "see also" relation which points to related but
+            # not exact xrefs that we can skip here
+            if isinstance(xref, bp.RelationshipXref) and \
+                xref.relationship_type == \
+                    'http://identifiers.org/psimi/MI:0361':
                 continue
             xrefs[xref_db_ns].add(xref.id)
 
