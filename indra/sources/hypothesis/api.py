@@ -159,7 +159,7 @@ def get_annotations(group=None):
     offset = 0
     annotations = []
     while True:
-        logger.info('Getting up top %d annotations from offset %d' %
+        logger.info('Getting up to %d annotations from offset %d' %
                     (limit, offset))
         res = send_get_request('search', group=group, limit=limit, offset=offset)
         rows = res.get('rows', [])
