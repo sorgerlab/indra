@@ -19,5 +19,5 @@ def get_version_df(version: Optional[str] = None) -> Tuple[str, pd.DataFrame]:
         # import bioregistry
         # version = bioregistry.get_version('dgi')
     url = f'https://www.dgidb.org/data/monthly_tsvs/{version}/interactions.tsv'
-    df = pd.read_csv(url, usecols=USECOLS, dtype=str)
+    df = pd.read_csv(url, usecols=USECOLS, sep='\t', dtype=str)
     return version, df
