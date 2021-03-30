@@ -44,8 +44,15 @@ Standard Molecular Pathway Databases
    phosphoelm/index
    virhostnet/index
    ctd/index
-   drugbank/index
    omnipath/index
+
+Chemical Information Databases
+------------------------------
+.. toctree::
+   :maxdepth: 3
+
+    drugbank/index
+    dgi/index
 
 Custom Knowledge Bases
 ----------------------
