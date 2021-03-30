@@ -88,7 +88,6 @@ def get_df(version: Optional[str] = None) -> pd.DataFrame:
     )
     # remove rows with missing information
     df = df[df['entrez_id'].notna()]
-    df = df[df['interaction_types'].notna()]
     df = df[df['drug_concept_id'].notna()]
     df['PMIDs'] = df['PMIDs'].apply(_safe_split)
     return df
