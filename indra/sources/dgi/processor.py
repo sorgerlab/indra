@@ -29,8 +29,8 @@ class DGIProcessor:
     #: A list of INDRA Statements that were extracted from DGI content.
     statements: List[Statement]
 
-    def __init__(self, version: Optional[str] = None):
-        self.df = get_df(version=version)
+    def __init__(self, df: Optional[pd.DataFrame] = None, version: Optional[str] = None):
+        self.df = df or get_df(version=version)
         self.statements = []
 
     def extract_statements(self) -> List[Statement]:
@@ -74,6 +74,12 @@ class DGIProcessor:
             yield statement_cls(drug_agent, gene_agent, evidence=evidence)
 
 
+USECOLS = [
+    'gene_name', 'entrez_id', 'interaction_claim_source',
+    'interaction_types', 'drug_name', 'drug_concept_id', 'PMIDs',
+]
+
+
 def get_df(version: Optional[str] = None) -> pd.DataFrame:
     """Get the DGI interaction dataframe."""
     if version is None:
@@ -84,14 +90,13 @@ def get_df(version: Optional[str] = None) -> pd.DataFrame:
     df = pystow.ensure_csv(
         'indra', 'sources', 'dgi', version,
         url=url,
-        read_csv_kwargs=dict(
-            usecols=[
-                'gene_name', 'entrez_id', 'interaction_claim_source',
-                'interaction_types', 'drug_name', 'drug_concept_id', 'PMIDs',
-            ],
-            dtype=str,
-        ),
+        read_csv_kwargs=dict(usecols=USECOLS, dtype=str),
     )
+    return process_df(df)
+
+
+def process_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Process the DGI interactions dataframe."""
     # remove rows with missing information
     df = df[df['entrez_id'].notna()]
     df = df[df['drug_concept_id'].notna()]
