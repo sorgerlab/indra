@@ -7,8 +7,8 @@ from typing import Iterable, List, Optional, Type
 
 import pandas as pd
 
-import pystow
-from indra.statements import Activation, Agent, DecreaseAmount, Evidence, IncreaseAmount, Inhibition, Statement
+from .api import get_version_df
+from ...statements import Activation, Agent, DecreaseAmount, Evidence, IncreaseAmount, Inhibition, Statement
 
 __all__ = [
     'DGIProcessor',
@@ -30,7 +30,11 @@ class DGIProcessor:
     statements: List[Statement]
 
     def __init__(self, df: Optional[pd.DataFrame] = None, version: Optional[str] = None):
-        self.df = get_df(version=version) if df is None else df
+        if df is None:
+            self.version, self.df = get_version_df(version=version)
+        else:
+            self.df = df
+            self.version = version
         self.statements = []
 
     def extract_statements(self) -> List[Statement]:
@@ -40,9 +44,8 @@ class DGIProcessor:
             ))
         return self.statements
 
-    @classmethod
     def row_to_statements(
-        cls,
+        self,
         gene_name,
         ncbigene_id,
         source,
@@ -62,37 +65,20 @@ class DGIProcessor:
 
         drug_agent = Agent.from_refs(drug_name, {drug_namespace: drug_identifier})
 
+        annotations = {
+            'interactions': interactions,
+            'source': source,
+        }
+        if self.version:
+            annotations['version'] = self.version
+
         evidence = [
-            Evidence(source_api='dgi', pmid=pmid, annotations={
-                'interactions': interactions,
-                'source': source,
-            })
+            Evidence(source_api='dgi', pmid=pmid, annotations=annotations)
             for pmid in pmids or [None]
         ]
         statement_cls = _get_statement_type(interactions)
         if statement_cls is not None:
             yield statement_cls(drug_agent, gene_agent, evidence=evidence)
-
-
-USECOLS = [
-    'gene_name', 'entrez_id', 'interaction_claim_source',
-    'interaction_types', 'drug_name', 'drug_concept_id', 'PMIDs',
-]
-
-
-def get_df(version: Optional[str] = None) -> pd.DataFrame:
-    """Get the DGI interaction dataframe."""
-    if version is None:
-        version = '2021-Jan'  # TODO use bioversions to look up with following two lines
-        # import bioregistry
-        # version = bioregistry.get_version('dgi')
-    url = f'https://www.dgidb.org/data/monthly_tsvs/{version}/interactions.tsv'
-    df = pystow.ensure_csv(
-        'indra', 'sources', 'dgi', version,
-        url=url,
-        read_csv_kwargs=dict(usecols=USECOLS, dtype=str),
-    )
-    return process_df(df)
 
 
 def process_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -237,14 +223,3 @@ def _get_statement_type(s: str) -> Optional[Type[Statement]]:
     if s not in _UNHANDLED:
         _UNHANDLED.add(s)
         logger.warning('unhandled interaction type: %s', s)
-
-
-def main():
-    processor = DGIProcessor()
-    statements = processor.extract_statements()
-    print(f'got {len(statements)} statements. Example:')
-    print(statements[0])
-
-
-if __name__ == '__main__':
-    main()

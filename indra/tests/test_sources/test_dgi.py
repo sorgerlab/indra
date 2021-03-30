@@ -6,7 +6,8 @@ import os
 
 import pandas as pd
 
-from indra.sources.dgi.processor import DGIProcessor, USECOLS, process_df
+from indra.sources.dgi.api import USECOLS, process_df
+from indra.sources.dgi.processor import DGIProcessor
 from indra.statements import Inhibition
 
 HERE = os.path.abspath(os.path.dirname(__file__))
