@@ -30,7 +30,7 @@ class DGIProcessor:
     statements: List[Statement]
 
     def __init__(self, df: Optional[pd.DataFrame] = None, version: Optional[str] = None):
-        self.df = df or get_df(version=version)
+        self.df = get_df(version=version) if df is None else df
         self.statements = []
 
     def extract_statements(self) -> List[Statement]:
@@ -65,7 +65,7 @@ class DGIProcessor:
         evidence = [
             Evidence(source_api='dgi', pmid=pmid, annotations={
                 'interactions': interactions,
-                'claim_source': source,
+                'source': source,
             })
             for pmid in pmids or [None]
         ]
