@@ -34,9 +34,10 @@ class DGIProcessor:
         self.statements = []
 
     def extract_statements(self) -> List[Statement]:
-        for gene_name, ncbigene_id, interaction, drug_name, drug_curie, pmids in self.df.values:
-            statements = self.row_to_statements(gene_name, ncbigene_id, interaction, drug_name, drug_curie, pmids)
-            self.statements.extend(statements)
+        for gene_name, ncbigene_id, source, interaction, drug_name, drug_curie, pmids in self.df.values:
+            self.statements.extend(self.row_to_statements(
+                gene_name, ncbigene_id, source, interaction, drug_name, drug_curie, pmids,
+            ))
         return self.statements
 
     @classmethod
@@ -44,6 +45,7 @@ class DGIProcessor:
         cls,
         gene_name,
         ncbigene_id,
+        source,
         interactions,
         drug_name,
         drug_curie,
@@ -62,7 +64,8 @@ class DGIProcessor:
 
         evidence = [
             Evidence(source_api='dgi', pmid=pmid, annotations={
-                'interaction': interactions,
+                'interactions': interactions,
+                'claim_source': source,
             })
             for pmid in pmids or [None]
         ]
@@ -82,7 +85,10 @@ def get_df(version: Optional[str] = None) -> pd.DataFrame:
         'indra', 'sources', 'dgi', version,
         url=url,
         read_csv_kwargs=dict(
-            usecols=['gene_name', 'entrez_id', 'interaction_types', 'drug_name', 'drug_concept_id', 'PMIDs'],
+            usecols=[
+                'gene_name', 'entrez_id', 'interaction_claim_source',
+                'interaction_types', 'drug_name', 'drug_concept_id', 'PMIDs',
+            ],
             dtype=str,
         ),
     )
