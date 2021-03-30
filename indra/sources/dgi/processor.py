@@ -74,7 +74,9 @@ class DGIProcessor:
 def get_df(version: Optional[str] = None) -> pd.DataFrame:
     """Get the DGI interaction dataframe."""
     if version is None:
-        version = '2021-Jan'  # TODO use bioversions to look up
+        version = '2021-Jan'  # TODO use bioversions to look up with following two lines
+        # import bioregistry
+        # version = bioregistry.get_version('dgi')
     url = f'https://www.dgidb.org/data/monthly_tsvs/{version}/interactions.tsv'
     df = pystow.ensure_csv(
         'indra', 'sources', 'dgi', version,
