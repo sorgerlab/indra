@@ -1,5 +1,6 @@
 import os
 import pickle
+import pystow
 import logging
 from indra.config import get_config
 from ..ontology_graph import IndraOntology
@@ -493,8 +494,8 @@ class BioOntology(IndraOntology):
             logger.warning('Invalid node: %s' % e)
 
 
-CACHE_DIR = os.path.join((get_config('INDRA_RESOURCES') or
-                          os.path.join(os.path.expanduser('~'), '.indra')),
+INDRA_HOME = get_config('INDRA_RESOURCES') or pystow.join('indra')
+CACHE_DIR = os.path.join(INDRA_HOME,
                          '%s_ontology' % BioOntology.name,
                          BioOntology.version)
 CACHE_FILE = os.path.join(CACHE_DIR, 'bio_ontology.pkl')
