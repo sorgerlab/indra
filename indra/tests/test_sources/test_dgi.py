@@ -6,7 +6,7 @@ import os
 
 import pandas as pd
 
-from indra.sources.dgi.api import USECOLS, process_df
+from indra.sources.dgi.api import USECOLS
 from indra.sources.dgi.processor import DGIProcessor
 from indra.statements import Inhibition
 
@@ -17,7 +17,6 @@ TEST_FILE = os.path.join(HERE, 'resources', 'dgi_sample_interactions.tsv')
 def test_dgi_processor():
     """Test the DGI processor."""
     df = pd.read_csv(TEST_FILE, sep='\t', usecols=USECOLS, dtype=str)
-    df = process_df(df)
     processor = DGIProcessor(df)
     statements = processor.extract_statements()
     statement = statements[0]

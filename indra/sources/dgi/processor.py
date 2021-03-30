@@ -3,7 +3,7 @@
 """Process statements from the `Drug Gene Interaction Database (DGI-DB) <http://www.dgidb.org>`_."""
 
 import logging
-from typing import Iterable, List, Optional, Type
+from typing import Iterable, List, Optional, Set, Type
 
 import pandas as pd
 
@@ -29,16 +29,25 @@ class DGIProcessor:
     #: A list of INDRA Statements that were extracted from DGI content.
     statements: List[Statement]
 
-    def __init__(self, df: Optional[pd.DataFrame] = None, version: Optional[str] = None):
+    def __init__(
+        self,
+        df: Optional[pd.DataFrame] = None,
+        version: Optional[str] = None,
+        skip_databases: Optional[Set[str]] = None,
+    ):
         if df is None:
-            self.version, self.df = get_version_df(version=version)
+            self.version, df = get_version_df(version=version)
         else:
-            self.df = df
             self.version = version
+        self.df = process_df(df)
         self.statements = []
+        self.skip_databases = set(['DrugBank'] if skip_databases is None else skip_databases)
+        self.skipped = 0
 
     def extract_statements(self) -> List[Statement]:
         for gene_name, ncbigene_id, source, interaction, drug_name, drug_curie, pmids in self.df.values:
+            if source in self.skip_databases:
+                continue
             self.statements.extend(self.row_to_statements(
                 gene_name, ncbigene_id, source, interaction, drug_name, drug_curie, pmids,
             ))
@@ -79,6 +88,8 @@ class DGIProcessor:
         statement_cls = _get_statement_type(interactions)
         if statement_cls is not None:
             yield statement_cls(drug_agent, gene_agent, evidence=evidence)
+        else:
+            self.skipped += 1
 
 
 def process_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -86,12 +97,12 @@ def process_df(df: pd.DataFrame) -> pd.DataFrame:
     # remove rows with missing information
     df = df[df['entrez_id'].notna()]
     df = df[df['drug_concept_id'].notna()]
-    df['PMIDs'] = df['PMIDs'].apply(_safe_split)
+    df['PMIDs'] = df['PMIDs'].map(_safe_split)
     return df
 
 
 def _safe_split(s: str) -> List[str]:
-    if pd.isna(s):
+    if not s or pd.isna(s):
         return []
     return [x.strip() for x in s.split(',')]
 
@@ -106,6 +117,7 @@ ACTIVATES_TYPES = {
     'antagonist,inducer',
     'agonist,stimulator',
     'agonist,activator',
+    'potentiator',
     'potentiator,activator',
     'activator,inducer',
     'blocker,activator',
