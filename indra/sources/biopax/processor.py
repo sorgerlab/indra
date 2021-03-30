@@ -470,36 +470,24 @@ class BiopaxProcessor(object):
         # One protein coded by many genes
         if nhgnc_ids > 1 and nup_ids == 1:
             for hgnc_id in xrefs['HGNC']:
-                standard_name, db_refs = \
-                    standardize_name_db_refs({'HGNC': hgnc_id})
-                if standard_name:
-                    name = standard_name
-                agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+                agent = Agent.from_refs(name, {'HGNC': hgnc_id}, mods=mcs)
+                agents.append(agent)
         # One gene coding for many proteins
         elif nhgnc_ids == 1 and nup_ids > 1:
             for up_id in xrefs['UP']:
-                standard_name, db_refs = \
-                    standardize_name_db_refs({'UP': up_id})
-                if standard_name:
-                    name = standard_name
-                agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+                agent = Agent.from_refs(name, {'UP': up_id}, mods=mcs)
+                agents.append(agent)
         # This is secretly a family, i.e., we have more than one
         # gene/protein IDs and so we can go by one of the ID sets and
         # standardize from there
         elif nhgnc_ids > 1 and nhgnc_ids == nup_ids:
             for up_id in xrefs['UP']:
-                standard_name, db_refs = \
-                    standardize_name_db_refs({'UP': up_id})
-                if standard_name:
-                    name = standard_name
-                agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+                agent = Agent.from_refs(name, {'UP': up_id}, mods=mcs)
+                agents.append(agent)
         # Otherwise it's just a regular Agent
         else:
-            standard_name, db_refs = \
-                standardize_name_db_refs(clean_up_xrefs(xrefs))
-            if standard_name:
-                name = standard_name
-            agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+            agent = Agent.from_refs(name, clean_up_xrefs(xrefs), mods=mcs)
+            agents.append(agent)
         # Since there are so many cases above, we fix UP / UPISO issues
         # in a single loop here
         for agent in agents:

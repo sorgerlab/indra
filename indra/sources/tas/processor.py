@@ -91,15 +91,11 @@ class TasProcessor(object):
         return drugs
 
     def _extract_protein(self, name, gene_id):
-        refs = {'EGID': gene_id}
+        db_refs = {'EGID': gene_id}
         hgnc_id = hgnc_client.get_hgnc_from_entrez(gene_id)
         if hgnc_id is not None:
-            refs['HGNC'] = hgnc_id
-        standard_name, db_refs = standardize_name_db_refs(refs)
-        if standard_name:
-            name = standard_name
-        assert_valid_db_refs(db_refs)
-        return Agent(name, db_refs=db_refs)
+            db_refs['HGNC'] = hgnc_id
+        return Agent.from_refs(name, db_refs=db_refs)
 
     def _make_evidences(self, class_min, references):
         evidences = []

@@ -218,10 +218,7 @@ class SignorProcessor(object):
             else:
                 name = ent_name
                 db_refs = {}
-            standard_name, db_refs = standardize_name_db_refs(db_refs)
-            if standard_name:
-                name = standard_name
-            return Agent(name, db_refs=db_refs)
+            return Agent.from_refs(name, db_refs=db_refs)
 
     def _recursively_lookup_complex(self, complex_id):
         """Looks up the constitutents of a complex. If any constituent is

@@ -94,11 +94,7 @@ class DrugbankProcessor:
                 db_refs['HGNC'] = identifier[5:]
             elif resource == 'UniProtKB':
                 db_refs['UP'] = identifier
-        standard_name, db_refs = standardize_name_db_refs(db_refs)
-        if standard_name:
-            name = standard_name
-        agent = Agent(name, db_refs=db_refs)
-        return agent
+        return Agent.from_refs(name, db_refs=db_refs)
 
     @staticmethod
     def _get_drug_agent(drug_element):
@@ -132,12 +128,7 @@ class DrugbankProcessor:
             elif resource == 'ChEBI':
                 db_refs['CHEBI'] = ensure_chebi_prefix(identifier)
         assert_valid_db_refs(db_refs)
-        standard_name, db_refs = standardize_name_db_refs(db_refs)
-        assert_valid_db_refs(db_refs)
-        if standard_name:
-            name = standard_name
-        agent = Agent(name, db_refs=db_refs)
-        return agent
+        return Agent.from_refs(name, db_refs)
 
     @staticmethod
     def _get_evidences(target_element):

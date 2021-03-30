@@ -142,11 +142,7 @@ def get_disease_agent(name, disease_id):
     for gr in groundings:
         db_ns, db_id = gr.split(':')
         db_refs[db_ns] = db_id
-    standard_name, db_refs = standardize_name_db_refs(db_refs)
-    assert_valid_db_refs(db_refs)
-    if standard_name:
-        name = standard_name
-    return Agent(name, db_refs=db_refs)
+    return Agent.from_refs(name, db_refs)
 
 
 def get_gene_agent(name, gene_entrez_id):
@@ -154,11 +150,7 @@ def get_gene_agent(name, gene_entrez_id):
     hgnc_id = hgnc_client.get_hgnc_id(name)
     if hgnc_id:
         db_refs['HGNC'] = hgnc_id
-    standard_name, db_refs = standardize_name_db_refs(db_refs)
-    assert_valid_db_refs(db_refs)
-    if standard_name:
-        name = standard_name
-    return Agent(name, db_refs=db_refs)
+    return Agent.from_refs(name, db_refs)
 
 
 def get_chemical_agent(name, mesh_id, cas_id):
