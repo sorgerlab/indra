@@ -8,7 +8,7 @@ from typing import Iterable, List, Optional, Set, Type
 import pandas as pd
 
 from .api import get_version_df
-from ...statements import Activation, Agent, DecreaseAmount, Evidence, IncreaseAmount, Inhibition, Statement
+from ...statements import Activation, Agent, Complex, DecreaseAmount, Evidence, IncreaseAmount, Inhibition, Statement
 
 __all__ = [
     'DGIProcessor',
@@ -218,7 +218,13 @@ SKIP_TYPES = {
 _UNHANDLED = set()
 
 
+def _complex(a, b, evidence):
+    return Complex([a, b], evidence=evidence)
+
+
 def _get_statement_type(s: str) -> Optional[Type[Statement]]:
+    if s in SKIP_TYPES:
+        return
     if s in ACTIVATES_TYPES:
         return Activation
     if s in INCREASE_AMOUNT_TYPES:
@@ -228,9 +234,9 @@ def _get_statement_type(s: str) -> Optional[Type[Statement]]:
     if s in DECREASE_AMOUNT_TYPES:
         return DecreaseAmount
     if s in REGULATES_TYPES:
-        return
-    if s in BINDS_TYPES or s in SKIP_TYPES:
-        return
+        return _complex
+    if s in BINDS_TYPES:
+        return _complex
     if s not in _UNHANDLED:
         _UNHANDLED.add(s)
         logger.warning('unhandled interaction type: %s', s)
