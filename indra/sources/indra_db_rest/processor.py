@@ -87,14 +87,17 @@ class IndraDBQueryProcessor:
         return deepcopy(self._source_counts)
 
     def _get_next_offset(self):
+        """Get the offset of the next web request that will be made."""
         return self.__offset
 
     def _get_next_limit(self):
+        """Get the limit of the next web request that will be made."""
         return self.__quota
 
     # Process control methods
 
     def cancel(self):
+        """Cancel the job, stopping the thread running in the background."""
         self.__done = True
 
     def is_working(self):
