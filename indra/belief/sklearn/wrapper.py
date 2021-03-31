@@ -144,7 +144,7 @@ class CountsModel(SklearnBase):
         # Before proceeding, check whether all source_apis are in
         # source_list
         if stmt_sources.difference(set(self.source_list)):
-            logger.warning("source_list does not include all source_apis "
+            logger.info("source_list does not include all source_apis "
                              "in the statement data.")
 
         # Get source count features
@@ -243,4 +243,41 @@ class CountsModel(SklearnBase):
             cat_arr = np.array(cat_features)
             x_arr = np.hstack((x_arr, cat_arr))
         return x_arr
+
+
+class EvidenceModel(SklearnBase):
+    def __init__(self, model):
+        # Call superclass constructor to store the model
+        super(EvidenceModel, self).__init__(model)
+        # Build dictionary mapping INDRA Statement types to integers
+        all_stmt_types = get_all_descendants(Statement)
+        self.stmt_type_map = {t.__name__: ix
+                              for ix, t in enumerate(all_stmt_types)}
+
+    def stmts_to_matrix(self, stmts):
+        # Categorical features to be one-hot encoded
+        cat_features = []
+        # Numerical features
+        char_distance = []
+        sentence_length = []
+        for stmt in stmts:
+            feature_row = []
+            if len(stmt.evidence) != 1:
+                raise ValueError('EvidenceModel requires a list of '
+                                 'statements with only a single evidence as '
+                                 'input')
+            # Collect all source_apis from stmt evidences
+            ev = stmt.evidence[0]
+            stmt_type_ix = self.stmt_type_map[type(stmt).__name__]
+            type_features = [1 if ix == stmt_type_ix else 0
+                             for ix in range(len(self.stmt_type_map))]
+            feature_row.extend(type_features)
+            sentence_length.append(len(ev.text))
+            cat_features.append(feature_row)
+
+        # If we have any categorical features, turn them into an array and
+        # add them to matrix
+        cat_arr = np.array(cat_features)
+        return cat_arr
+
 
