@@ -4,7 +4,8 @@ from indra.statements import *
 from indra.databases.identifiers import ensure_chebi_prefix, \
     ensure_chembl_prefix
 from indra.statements.validate import assert_valid_db_refs
-from indra.ontology.standardize import standardize_name_db_refs
+from indra.ontology.standardize import standardize_name_db_refs, \
+    get_standard_agent
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,7 @@ class DrugbankProcessor:
                 db_refs['HGNC'] = identifier[5:]
             elif resource == 'UniProtKB':
                 db_refs['UP'] = identifier
-        return Agent.from_refs(name, db_refs=db_refs)
+        return get_standard_agent(name, db_refs=db_refs)
 
     @staticmethod
     def _get_drug_agent(drug_element):
@@ -128,7 +129,7 @@ class DrugbankProcessor:
             elif resource == 'ChEBI':
                 db_refs['CHEBI'] = ensure_chebi_prefix(identifier)
         assert_valid_db_refs(db_refs)
-        return Agent.from_refs(name, db_refs)
+        return get_standard_agent(name, db_refs)
 
     @staticmethod
     def _get_evidences(target_element):

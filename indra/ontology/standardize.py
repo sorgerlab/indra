@@ -4,7 +4,7 @@ __all__ = ['standardize_agent_name', 'standardize_db_refs', 'get_standard_name',
 import logging
 from copy import deepcopy
 from collections import defaultdict
-from indra.statements.agent import default_ns_order, get_grounding
+from indra.statements.agent import default_ns_order, get_grounding, Agent
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,36 @@ def _get_mappings_dict(mappings):
     for db_ns, db_id in mappings:
         md[db_ns].append(db_id)
     return md
+
+
+def get_standard_agent(name, db_refs, ontology=None, ns_order=None, **kwargs):
+    """Get a standard agent based on the name, db_refs, and a any other kwargs.
+
+    name : str
+        The name of the agent that may not be standardized.
+    db_refs : dict
+        A dict of db refs that may not be standardized, i.e., may be
+        missing an available UP ID corresponding to an existing HGNC ID.
+    ontology : Optional[indra.ontology.IndraOntology]
+        An IndraOntology object, if not provided, the default BioOntology
+        is used.
+    ns_order : Optional[list]
+        A list of namespaces which are in order of priority with higher
+        priority namespaces appearing earlier in the list.
+    kwargs :
+        Keyword arguments to pass to :func:`Agent.__init__`.
+
+    Returns
+    -------
+    Agent
+        A standard agent
+    """
+    ontology = bio_ontology if not ontology else ontology
+    standard_name, db_refs = standardize_name_db_refs(db_refs, ontology=ontology, ns_order=ns_order)
+    if standard_name:
+        name = standard_name
+    assert_valid_db_refs(db_refs)
+    return Agent(name, db_refs=db_refs, **kwargs)
 
 
 def standardize_db_refs(db_refs, ontology=None, ns_order=None):

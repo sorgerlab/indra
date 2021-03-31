@@ -5,7 +5,6 @@ __all__ = ['Agent', 'BoundCondition', 'MutCondition', 'ModCondition',
 import logging
 from collections import OrderedDict as _o
 from indra.statements.statements import modtype_conditions, modtype_to_modclass
-from indra.statements.validate import assert_valid_db_refs
 from .concept import Concept
 from .resources import get_valid_residue, activity_types, amino_acids
 
@@ -69,16 +68,6 @@ class Agent(Concept):
 
         self.activity = activity
         self.location = location
-
-    @classmethod
-    def from_refs(cls, name, db_refs, **kwargs) -> 'Agent':
-        """Create an agent from db_refs."""
-        from ..ontology.standardize import standardize_name_db_refs
-        standard_name, db_refs = standardize_name_db_refs(db_refs)
-        if standard_name:
-            name = standard_name
-        assert_valid_db_refs(db_refs)
-        return cls(name, db_refs=db_refs, **kwargs)
 
     def matches_key(self):
         """Return a key to identify the identity and state of the Agent."""

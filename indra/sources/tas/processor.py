@@ -3,7 +3,8 @@ __all__ = ['TasProcessor']
 import logging
 from indra.statements import Inhibition, Agent, Evidence
 from indra.statements.validate import assert_valid_db_refs
-from indra.ontology.standardize import standardize_name_db_refs
+from indra.ontology.standardize import standardize_name_db_refs, \
+    get_standard_agent
 from indra.databases import hgnc_client, chembl_client, lincs_client
 
 
@@ -95,7 +96,7 @@ class TasProcessor(object):
         hgnc_id = hgnc_client.get_hgnc_from_entrez(gene_id)
         if hgnc_id is not None:
             db_refs['HGNC'] = hgnc_id
-        return Agent.from_refs(name, db_refs=db_refs)
+        return get_standard_agent(name, db_refs=db_refs)
 
     def _make_evidences(self, class_min, references):
         evidences = []
