@@ -285,8 +285,8 @@ def get_statements_from_query(query, limit=None, ev_limit=10,
         If an int, return after `timeout` seconds, even if query is not done.
         Default is None.
     strict_stop : bool
-        If True, the query will only be given timeout to complete before being
-        abandoned entirely. Otherwise the timeout will simply wait for the
+        If True, the query will only be given `timeout` time to complete before
+        being abandoned entirely. Otherwise the timeout will simply wait for the
         thread to join for `timeout` seconds before returning, allowing other
         work to continue while the query runs in the background. The default is
         False.
