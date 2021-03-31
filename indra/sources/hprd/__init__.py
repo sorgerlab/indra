@@ -1,5 +1,5 @@
 """
-This module implements geting content from the Human Protein Reference
+This module implements getting content from the Human Protein Reference
 Database (HPRD), a curated protein data resource, as INDRA Statements.
 In particular, the module supports extracting post-translational
 modifications, protein complexes, and (binary) protein-protein interactions
