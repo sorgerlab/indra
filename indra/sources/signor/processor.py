@@ -16,7 +16,8 @@ from os.path import join, dirname
 from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.resources import get_resource_path
-from indra.ontology.standardize import standardize_name_db_refs
+from indra.ontology.standardize import standardize_name_db_refs, \
+    get_standard_agent
 from indra.sources.reach.processor import parse_amino_acid_string
 from indra.databases import hgnc_client, uniprot_client, chebi_client
 from indra.databases.identifiers import ensure_prefix
@@ -218,10 +219,7 @@ class SignorProcessor(object):
             else:
                 name = ent_name
                 db_refs = {}
-            standard_name, db_refs = standardize_name_db_refs(db_refs)
-            if standard_name:
-                name = standard_name
-            return Agent(name, db_refs=db_refs)
+            return get_standard_agent(name, db_refs=db_refs)
 
     def _recursively_lookup_complex(self, complex_id):
         """Looks up the constitutents of a complex. If any constituent is

@@ -11,7 +11,7 @@ from pybiopax import model_to_owl_file
 from indra.statements import *
 from indra.util import flatten
 from indra.statements.validate import print_validation_report
-from indra.ontology.standardize import standardize_name_db_refs
+from indra.ontology.standardize import get_standard_agent
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
     parse_identifiers_url
 
@@ -470,36 +470,24 @@ class BiopaxProcessor(object):
         # One protein coded by many genes
         if nhgnc_ids > 1 and nup_ids == 1:
             for hgnc_id in xrefs['HGNC']:
-                standard_name, db_refs = \
-                    standardize_name_db_refs({'HGNC': hgnc_id})
-                if standard_name:
-                    name = standard_name
-                agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+                agent = get_standard_agent(name, {'HGNC': hgnc_id}, mods=mcs)
+                agents.append(agent)
         # One gene coding for many proteins
         elif nhgnc_ids == 1 and nup_ids > 1:
             for up_id in xrefs['UP']:
-                standard_name, db_refs = \
-                    standardize_name_db_refs({'UP': up_id})
-                if standard_name:
-                    name = standard_name
-                agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+                agent = get_standard_agent(name, {'UP': up_id}, mods=mcs)
+                agents.append(agent)
         # This is secretly a family, i.e., we have more than one
         # gene/protein IDs and so we can go by one of the ID sets and
         # standardize from there
         elif nhgnc_ids > 1 and nhgnc_ids == nup_ids:
             for up_id in xrefs['UP']:
-                standard_name, db_refs = \
-                    standardize_name_db_refs({'UP': up_id})
-                if standard_name:
-                    name = standard_name
-                agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+                agent = get_standard_agent(name, {'UP': up_id}, mods=mcs)
+                agents.append(agent)
         # Otherwise it's just a regular Agent
         else:
-            standard_name, db_refs = \
-                standardize_name_db_refs(clean_up_xrefs(xrefs))
-            if standard_name:
-                name = standard_name
-            agents.append(Agent(name, db_refs=db_refs, mods=mcs))
+            agent = get_standard_agent(name, clean_up_xrefs(xrefs), mods=mcs)
+            agents.append(agent)
         # Since there are so many cases above, we fix UP / UPISO issues
         # in a single loop here
         for agent in agents:

@@ -2,8 +2,7 @@ import tqdm
 from indra.statements import *
 from indra.databases import hgnc_client
 from indra.statements.validate import assert_valid_db_refs
-from indra.ontology.standardize import standardize_db_refs, \
-    standardize_name_db_refs
+from indra.ontology.standardize import standardize_db_refs, get_standard_agent
 
 
 rel_mapping = {
@@ -142,11 +141,7 @@ def get_disease_agent(name, disease_id):
     for gr in groundings:
         db_ns, db_id = gr.split(':')
         db_refs[db_ns] = db_id
-    standard_name, db_refs = standardize_name_db_refs(db_refs)
-    assert_valid_db_refs(db_refs)
-    if standard_name:
-        name = standard_name
-    return Agent(name, db_refs=db_refs)
+    return get_standard_agent(name, db_refs)
 
 
 def get_gene_agent(name, gene_entrez_id):
@@ -154,11 +149,7 @@ def get_gene_agent(name, gene_entrez_id):
     hgnc_id = hgnc_client.get_hgnc_id(name)
     if hgnc_id:
         db_refs['HGNC'] = hgnc_id
-    standard_name, db_refs = standardize_name_db_refs(db_refs)
-    assert_valid_db_refs(db_refs)
-    if standard_name:
-        name = standard_name
-    return Agent(name, db_refs=db_refs)
+    return get_standard_agent(name, db_refs)
 
 
 def get_chemical_agent(name, mesh_id, cas_id):
