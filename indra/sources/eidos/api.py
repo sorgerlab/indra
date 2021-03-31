@@ -159,7 +159,7 @@ def process_json_str(json_str, grounding_ns=None, extract_filter=None,
 
 
 def process_json(json_dict, grounding_ns=None, extract_filter=None,
-                 grounding_mode=default_grounding_mode):
+                 grounding_mode=None):
     """Return an EidosProcessor by processing a Eidos JSON-LD dict.
 
     Parameters
@@ -186,6 +186,8 @@ def process_json(json_dict, grounding_ns=None, extract_filter=None,
         A EidosProcessor containing the extracted INDRA Statements
         in its statements attribute.
     """
+    grounding_mode = default_grounding_mode if not grounding_mode \
+        else grounding_mode
     if grounding_mode == 'flat':
         ep = EidosProcessor(json_dict, grounding_ns=grounding_ns)
     elif grounding_mode == 'compositional':
