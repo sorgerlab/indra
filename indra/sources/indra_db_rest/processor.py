@@ -64,6 +64,7 @@ class IndraDBQueryProcessor:
         self.__offset = 0
         self.__quota = limit
         self.__api_key = api_key
+        self.__done = False
 
         self._evidence_counts = {}
         self._belief_scores = {}
@@ -85,7 +86,16 @@ class IndraDBQueryProcessor:
         """Get the source counts as a dict per statement hash."""
         return deepcopy(self._source_counts)
 
+    def _get_next_offset(self):
+        return self.__offset
+
+    def _get_next_limit(self):
+        return self.__quota
+
     # Process control methods
+
+    def cancel(self):
+        self.__done = True
 
     def is_working(self):
         """Check if the thread is running."""
@@ -125,7 +135,7 @@ class IndraDBQueryProcessor:
         self._evidence_counts.update(result.evidence_counts)
         self._belief_scores.update(result.belief_scores)
         self._handle_new_result(result, self._source_counts)
-        self.__done = result.next_offset is None
+        self.__done |= result.next_offset is None
 
         # Update the quota
         if self.__quota is not None:
