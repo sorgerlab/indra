@@ -4,4 +4,4 @@ the XML file to be available locally. The full DrugBank download
 can be obtained at: https://www.drugbank.ca/releases/latest. Once the
 XML file is decompressed, it can be processed using the process_xml
 function."""
-from .api import process_xml
+from .api import get_drugbank_processor, process_xml
