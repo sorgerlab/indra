@@ -11,7 +11,7 @@ from pybiopax import model_to_owl_file
 from indra.statements import *
 from indra.util import flatten
 from indra.statements.validate import print_validation_report
-from indra.ontology.standardize import standardize_name_db_refs, get_standard_agent
+from indra.ontology.standardize import get_standard_agent
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
     parse_identifiers_url
 

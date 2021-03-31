@@ -2,8 +2,7 @@ import tqdm
 from indra.statements import *
 from indra.databases import hgnc_client
 from indra.statements.validate import assert_valid_db_refs
-from indra.ontology.standardize import standardize_db_refs, \
-    standardize_name_db_refs, get_standard_agent
+from indra.ontology.standardize import standardize_db_refs, get_standard_agent
 
 
 rel_mapping = {
