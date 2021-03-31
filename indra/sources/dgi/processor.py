@@ -8,7 +8,8 @@ from typing import Iterable, List, Optional, Set, Type
 import pandas as pd
 
 from .api import get_version_df
-from ...statements import Activation, Agent, Complex, DecreaseAmount, Evidence, IncreaseAmount, Inhibition, Statement
+from ...ontology.standardize import get_standard_agent
+from ...statements import Activation, Complex, DecreaseAmount, Evidence, IncreaseAmount, Inhibition, Statement
 
 __all__ = [
     'DGIProcessor',
@@ -63,7 +64,7 @@ class DGIProcessor:
         drug_curie,
         pmids,
     ) -> Iterable[Statement]:
-        gene_agent = Agent.from_refs(gene_name, {'EGID': ncbigene_id})
+        gene_agent = get_standard_agent(gene_name, {'EGID': ncbigene_id})
 
         try:
             drug_namespace, drug_identifier = drug_curie.split(':', 1)
@@ -72,7 +73,7 @@ class DGIProcessor:
             logger.warning('could not parse drug CURIE: %s', drug_curie)
             return
 
-        drug_agent = Agent.from_refs(drug_name, {drug_namespace: drug_identifier})
+        drug_agent = get_standard_agent(drug_name, {drug_namespace: drug_identifier})
 
         annotations = {
             'interactions': interactions,
