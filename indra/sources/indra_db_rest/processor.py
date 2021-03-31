@@ -140,6 +140,7 @@ class IndraDBQueryProcessor:
         # Update the quota
         if self.__quota is not None:
             self.__quota -= len(result.results)
+        self.__done |= self.__quota == 0
 
         # Increment the page
         self.__offset = result.next_offset
