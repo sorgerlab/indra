@@ -5,6 +5,8 @@ import logging
 from copy import deepcopy
 from collections import defaultdict
 from indra.statements.agent import default_ns_order, get_grounding, Agent
+from indra.statements.validate import assert_valid_db_refs
+from .bio import bio_ontology
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +53,8 @@ def get_standard_agent(name, db_refs, ontology=None, ns_order=None, **kwargs):
     Agent
         A standard agent
     """
-    ontology = bio_ontology if not ontology else ontology
+    if ontology is None:
+        ontology = bio_ontology
     standard_name, db_refs = standardize_name_db_refs(db_refs, ontology=ontology, ns_order=ns_order)
     if standard_name:
         name = standard_name
