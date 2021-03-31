@@ -66,8 +66,8 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         a separate thread as they become available. Block indefinitely until all
         statements are retrieved. Default is None.
     strict_stop : bool
-        If True, the query will only be given timeout to complete before being
-        abandoned entirely. Otherwise the timeout will simply wait for the
+        If True, the query will only be given `timeout` time to complete before
+        being abandoned entirely. Otherwise the timeout will simply wait for the
         thread to join for `timeout` seconds before returning, allowing other
         work to continue while the query runs in the background. The default is
         False.
@@ -162,8 +162,8 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10, filter_ev=True,
         If an int, return after `timeout` seconds, even if query is not done.
         Default is None.
     strict_stop : bool
-        If True, the query will only be given timeout to complete before being
-        abandoned entirely. Otherwise the timeout will simply wait for the
+        If True, the query will only be given `timeout` time to complete before
+        being abandoned entirely. Otherwise the timeout will simply wait for the
         thread to join for `timeout` seconds before returning, allowing other
         work to continue while the query runs in the background. The default is
         False.
@@ -224,8 +224,8 @@ def get_statements_for_paper(ids, limit=None, ev_limit=10, sort_by='ev_count',
         If an int, return after `timeout` seconds, even if query is not done.
         Default is None.
     strict_stop : bool
-        If True, the query will only be given timeout to complete before being
-        abandoned entirely. Otherwise the timeout will simply wait for the
+        If True, the query will only be given `timeout` time to complete before
+        being abandoned entirely. Otherwise the timeout will simply wait for the
         thread to join for `timeout` seconds before returning, allowing other
         work to continue while the query runs in the background. The default is
         False.
