@@ -190,7 +190,6 @@ REGULATES_TYPES = {
     'antagonist,binder',
     'allosteric modulator',
     'agonist,antagonist',
-    'ligand',
     'antagonist,ligand',
     'modulator,antagonist',
     'antagonist,inverse agonist',
@@ -204,10 +203,10 @@ REGULATES_TYPES = {
     'inhibitor,inducer',
 }
 BINDS_TYPES = {
+    'ligand',
     'binder',
     'adduct',
     'substrate',
-
 }
 SKIP_TYPES = {
     'product of',
