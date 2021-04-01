@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 drugbank_ns = {'db': 'http://www.drugbank.ca'}
 
+_UNHANDLED = set()
+
 
 class DrugbankProcessor:
     """Processor to extract INDRA Statements from DrugBank content.
@@ -59,9 +61,7 @@ class DrugbankProcessor:
 
     @staticmethod
     def _get_statement_type(action):
-        if action in neutral_actions:
-            return _complex
-        elif action in activation_actions:
+        if action in activation_actions:
             return Activation
         elif action in inhibition_actions:
             return Inhibition
@@ -69,11 +69,13 @@ class DrugbankProcessor:
             return DecreaseAmount
         elif action in increase_amount_actions:
             return IncreaseAmount
-        elif action == 'N/A':
+        elif action in neutral_actions or action == 'N/A':
             return _complex
-        else:
+        elif action in skip_actions:
+            return None
+        elif action not in _UNHANDLED:
+            _UNHANDLED.add(action)
             logger.warning('unhandled DrugBank action: %s', action)
-            return _complex
 
     @staticmethod
     def _get_target_agent(target_element):
@@ -176,12 +178,40 @@ inhibition_actions = {'inhibitor', 'binder', 'antibody',
                       'suppressor', 'disruptor', 'chelator',
                       'inhibitory allosteric modulator'}
 
-decrease_amount_actions = {'downregulator', 'metabolizer',
-                           'degradation',
-                           'incorporation into and destabilization'}
+decrease_amount_actions = {
+    'downregulator',
+    'metabolizer',
+    'degradation',
+    'incorporation into and destabilization',
+    'cleavage',
+    'inhibition of synthesis',
+}
 
 increase_amount_actions = {'stabilization', 'chaperone'}
 
-neutral_actions = {'modulator', 'other/unknown', 'unknown', 'other',
-                   'regulator', 'antagonist', 'substrate', 'agonist',
-                   'ligand', 'inverse agonist', 'partial agonist'}
+neutral_actions = {
+    'modulator',
+    'regulator',
+    'antagonist',
+    'substrate',
+    'agonist',
+    'ligand',
+    'intercalation',  # e.g., Doxorubicin intercalates DNA to prevent transcription
+    'inverse agonist',
+    'aggregation inhibitor',  # e.g., inhibits process on a protein's aggregation (like APP or LRRK)
+    'partial agonist',
+    'partial antagonist',
+    'antisense oligonucleotide',
+    'adduct',
+    'component of',
+    'product of',
+    'reducer',
+    'oxidizer',
+    'acetylation',  # map to Ac INDRA statement?, but I'm not convinced by the idea of splitting up actions
+}
+
+skip_actions = {
+    'other/unknown',
+    'unknown',
+    'other',
+}
