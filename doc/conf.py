@@ -36,6 +36,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinx.ext.intersphinx',
     'sphinxarg.ext',
     'sphinx.ext.autosummary',
     'IPython.sphinxext.ipython_directive',
@@ -321,3 +322,10 @@ for mod_name in MOCK_MODULES:
 # from our code that uses it.
 jnius_config = sys.modules['jnius_config']
 jnius_config.vm_running = False
+
+# Example configuration for intersphinx: refer to the Python standard library.
+intersphinx_mapping = {
+    'https://docs.python.org/3/': None,
+    'pybel': ('https://pybel.readthedocs.io/en/latest/', None),
+    'boto3': ('https://boto3.amazonaws.com/v1/documentation/api/latest/', None),
+}
