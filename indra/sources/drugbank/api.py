@@ -1,6 +1,7 @@
 import logging
 from typing import Optional, Sequence, Union
 from xml.etree import ElementTree
+
 from .processor import DrugbankProcessor
 
 logger = logging.getLogger(__name__)
