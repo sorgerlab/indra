@@ -176,7 +176,7 @@ inhibition_actions = {'inhibitor', 'binder', 'antibody',
                       'inactivator', 'binding', 'blocker', 'negative modulator',
                       'neutralizer', 'weak inhibitor',
                       'suppressor', 'disruptor', 'chelator',
-                      'inhibitory allosteric modulator'}
+                      'inhibitory allosteric modulator', 'translocation inhibitor'}
 
 decrease_amount_actions = {
     'downregulator',
