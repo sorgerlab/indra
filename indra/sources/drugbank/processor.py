@@ -1,6 +1,5 @@
-from xml.etree import ElementTree
-
 import logging
+from xml.etree import ElementTree
 
 from indra.databases.identifiers import ensure_chebi_prefix, ensure_chembl_prefix
 from indra.ontology.standardize import get_standard_agent
