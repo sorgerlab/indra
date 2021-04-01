@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Code for downloading `Drug Gene Interaction Database (DGI-DB) <http://www.dgidb.org>`_."""
+"""API for `Drug Gene Interaction DB <http://www.dgidb.org>`_."""
 
 import logging
 from typing import Optional, Tuple
@@ -28,8 +28,8 @@ def process_version(version: Optional[str] = None) -> DGIProcessor:
     Parameters
     ----------
     version :
-        The optional version of DGI to use. If no ``df`` is given, this is also
-        automatically looked up.
+        The optional version of DGI to use. If no ``df`` is given, this is
+        also automatically looked up.
 
     Returns
     -------
@@ -40,16 +40,20 @@ def process_version(version: Optional[str] = None) -> DGIProcessor:
     return process_df(df=df, version=version)
 
 
-def process_df(df: pd.DataFrame, version: Optional[str] = None) -> DGIProcessor:
-    """Get a processor that extracted INDRA Statements from DGI content based on the given dataframe.
+def process_df(
+    df: pd.DataFrame,
+    version: Optional[str] = None,
+) -> DGIProcessor:
+    """Get a processor that extracted INDRA Statements from DGI content based
+    on the given dataframe.
 
     Parameters
     ----------
     df :
         A pandas DataFrame for the DGI interactions file.
     version :
-        The optional version of DGI to use. If not given, statements will not be
-        annotated with a version number.
+        The optional version of DGI to use. If not given, statements will
+        not be annotated with a version number.
 
     Returns
     -------
@@ -66,10 +70,10 @@ def get_version_df(version: Optional[str] = None) -> Tuple[str, pd.DataFrame]:
     if version is None:
         try:
             import bioversions
-
-            version = bioversions.get_version("Drug Gene Interaction Database")
         except ImportError:
             version = None
+        else:
+            version = bioversions.get_version("Drug Gene Interaction Database")
     if version is None:
         logger.warning("could not find version with bioregistry")
         version = "2021-Jan"

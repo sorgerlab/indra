@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Process statements from the `Drug Gene Interaction Database (DGI-DB) <http://www.dgidb.org>`_."""
+"""Processor for the `Drug Gene Interaction DB<http://www.dgidb.org>`_."""
 
 import logging
 from typing import Iterable, List, Optional, Set, Type
@@ -31,8 +31,8 @@ class DGIProcessor:
     Parameters
     ----------
     df :
-        A pandas DataFrame for the DGI interactions file. If none given, the most
-        recent version will be automatically looked up.
+        A pandas DataFrame for the DGI interactions file. If none given, the
+        most recent version will be automatically looked up.
     version :
         The optional version of DGI to use. If no ``df`` is given, this is also
         automatically looked up.
@@ -49,18 +49,20 @@ class DGIProcessor:
     ):
         if df is None:
             from .api import get_version_df
-
             self.version, df = get_version_df(version=version)
         else:
             self.version = version
         self.df = process_df(df)
         self.statements = []
-        self.skip_databases = set(
-            ["DrugBank"] if skip_databases is None else skip_databases
+        self.skip_databases = (
+            {'DrugBank'}
+            if skip_databases is None else
+            set(skip_databases)
         )
         self.skipped = 0
 
     def extract_statements(self) -> List[Statement]:
+        """Extract statements from DGI."""
         for (
             gene_name,
             ncbigene_id,
@@ -72,17 +74,15 @@ class DGIProcessor:
         ) in self.df.values:
             if source in self.skip_databases:
                 continue
-            self.statements.extend(
-                self.row_to_statements(
-                    gene_name,
-                    ncbigene_id,
-                    source,
-                    interaction,
-                    drug_name,
-                    drug_curie,
-                    pmids,
-                )
-            )
+            self.statements.extend(self.row_to_statements(
+                gene_name,
+                ncbigene_id,
+                source,
+                interaction,
+                drug_name,
+                drug_curie,
+                pmids,
+            ))
         return self.statements
 
     def row_to_statements(
@@ -95,6 +95,7 @@ class DGIProcessor:
         drug_curie,
         pmids,
     ) -> Iterable[Statement]:
+        """Convert a row in the DGI dataframe to a statement."""
         gene_agent = get_standard_agent(gene_name, {"EGID": ncbigene_id})
 
         try:
@@ -104,7 +105,9 @@ class DGIProcessor:
             logger.warning("could not parse drug CURIE: %s", drug_curie)
             return
 
-        drug_agent = get_standard_agent(drug_name, {drug_namespace: drug_identifier})
+        drug_agent = get_standard_agent(
+            drug_name, {drug_namespace: drug_identifier},
+        )
 
         annotations = {
             "interactions": interactions,
@@ -207,10 +210,14 @@ DECREASE_AMOUNT_TYPES = {
     "cleavage",
 }
 REGULATES_TYPES = {
-    "agonist",  # while an agonist does the same as the native ligand, it is not inherently activate or inhibit
+    # while an agonist does the same as the native ligand,
+    # it is not inherently activate or inhibit
+    "agonist",
     "partial agonist",
     "agonist,partial agonist",
-    "antagonist",  # while an agonist does the opposite as the native ligand, it is not inherently activate or inhibit
+    # while an agonist does the opposite as the native ligand,
+    # it is not inherently activate or inhibit
+    "antagonist",
     "antagonist,partial agonist",
     "partial antagonist",
     "agonist,modulator",
