@@ -11,5 +11,5 @@ following URLs:
 * https://www.dgidb.org/data/monthly_tsvs/2021-Jan/interactions.tsv
 """
 
-from .api import get_version_df
+from .api import get_version_df, process_df, process_version
 from .processor import DGIProcessor

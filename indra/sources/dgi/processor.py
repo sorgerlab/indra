@@ -7,7 +7,6 @@ from typing import Iterable, List, Optional, Set, Type
 
 import pandas as pd
 
-from .api import get_version_df
 from ...ontology.standardize import get_standard_agent
 from ...statements import Activation, Complex, DecreaseAmount, Evidence, IncreaseAmount, Inhibition, Statement
 
@@ -23,8 +22,12 @@ class DGIProcessor:
 
     Parameters
     ----------
-    version : str
-        The version of DGI to use
+    df :
+        A pandas DataFrame for the DGI interactions file. If none given, the most
+        recent version will be automatically looked up.
+    version :
+        The optional version of DGI to use. If no ``df`` is given, this is also
+        automatically looked up.
     """
 
     #: A list of INDRA Statements that were extracted from DGI content.
@@ -37,6 +40,7 @@ class DGIProcessor:
         skip_databases: Optional[Set[str]] = None,
     ):
         if df is None:
+            from .api import get_version_df
             self.version, df = get_version_df(version=version)
         else:
             self.version = version
