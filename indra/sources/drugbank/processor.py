@@ -69,7 +69,9 @@ class DrugbankProcessor:
             return DecreaseAmount
         elif action in increase_amount_actions:
             return IncreaseAmount
-        elif action in neutral_actions or action == 'N/A':
+        elif action == 'N/A':
+            return Inhibition
+        elif action in neutral_actions:
             return _complex
         elif action in skip_actions:
             return None
@@ -176,7 +178,9 @@ inhibition_actions = {'inhibitor', 'binder', 'antibody',
                       'inactivator', 'binding', 'blocker', 'negative modulator',
                       'neutralizer', 'weak inhibitor',
                       'suppressor', 'disruptor', 'chelator',
-                      'inhibitory allosteric modulator', 'translocation inhibitor'}
+                      'inhibitory allosteric modulator', 'translocation inhibitor',
+                      'nucleotide exchange blocker',
+                      }
 
 decrease_amount_actions = {
     'downregulator',
@@ -208,6 +212,9 @@ neutral_actions = {
     'reducer',
     'oxidizer',
     'acetylation',  # map to Ac INDRA statement?, but I'm not convinced by the idea of splitting up actions
+    'allosteric modulator',
+    'deoxidizer',
+    'cross-linking/alkylation', # e.g. Busulfan (DB01008) alkalytes DNA
 }
 
 skip_actions = {
