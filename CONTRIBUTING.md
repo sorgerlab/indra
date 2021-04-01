@@ -158,6 +158,19 @@ If a new submodule is added, that submodule needs to be
 - listed in setup.py under packages to make sure it is included in installs
 - referred to in the documentation explicitly to be included
 
+New knowledge sources
+---------------------
+If a new knowledge source is added in the `indra.sources` module, an additional
+set of steps need to be taken in addition to the general instructions for
+adding a new module (see above):
+- Structured information about the new source should be added to the
+`indra/resources/source_info.json` file.
+- The new source's name, link to the documentation, and link to an outside
+reference should be added to the README.md in the appropriate table in
+the Knowledge sources section.
+- A prior estimate of random and systematic belief scores for the new source
+should be added to the `indra/resources/default_belief_probs.json` file.
+
 New non-python resource files
 -----------------------------
 If a new non-python file is added to the repository, it needs to be listed
