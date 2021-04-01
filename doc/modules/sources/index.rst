@@ -43,7 +43,6 @@ Standard Molecular Pathway Databases
    trrust
    phosphoelm/index
    virhostnet/index
-   ctd/index
    omnipath/index
 
 Chemical Information Databases
@@ -51,15 +50,16 @@ Chemical Information Databases
 .. toctree::
    :maxdepth: 3
 
+    ctd/index
     drugbank/index
     dgi/index
+    tas/index
 
 Custom Knowledge Bases
 ----------------------
 .. toctree::
    :maxdepth: 3
 
-   tas/index
    ndex_cx/index
    indra_db_rest/index
    hypothesis/index
