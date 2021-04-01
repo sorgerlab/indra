@@ -39,6 +39,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinxarg.ext',
     'sphinx.ext.autosummary',
+    'sphinx_autodoc_typehints',
     'IPython.sphinxext.ipython_directive',
     'IPython.sphinxext.ipython_console_highlighting',
     'citations'
