@@ -1,0 +1,3 @@
+gene_name	gene_claim_name	entrez_id	interaction_claim_source	interaction_types	drug_claim_name	drug_claim_primary_name	drug_name	drug_concept_id	interaction_group_score	PMIDs
+CDK7	CDK7	1022	CancerCommons	inhibitor	SNS-032	SNS-032	BMS-387032	chembl:CHEMBL296468	0.82	
+VDR	VDR	7421	DTC		NIFEKALANT	NIFEKALANT	NIFEKALANT	chembl:CHEMBL360861	0.12	
