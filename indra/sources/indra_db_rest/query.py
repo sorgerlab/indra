@@ -3,8 +3,12 @@ __all__ = ['Query', 'And', 'Or', 'HasAgent', 'FromMeshIds', 'HasHash',
            'HasType', 'HasNumAgents', 'HasNumEvidence', 'FromPapers',
            'EmptyQuery']
 
+import logging
+from io import StringIO
+
 from indra.sources.indra_db_rest.query_results import QueryResult
 from indra.sources.indra_db_rest.util import make_db_rest_request, jsonify_args
+from indra.sources.indra_db_rest.util import logger as request_logger
 
 
 class Query:
@@ -13,6 +17,39 @@ class Query:
         self._inverted = False
         self.__compiled_json = None
         self.__compiled_str = None
+
+        # Set up redirection of the logs surrounding requests.
+        self.__request_logstream = StringIO()
+        self.__request_logstream_handler = \
+            logging.StreamHandler(self.__request_logstream)
+        fmt = "%(levelname)s: [%(asctime)s] %(name)s - %(message)s"
+        self.__request_logstream_handler.setFormatter(logging.Formatter(fmt))
+        self.__logs_quieted = False
+
+    def get_quiet_request_logs(self):
+        """Get the logstream string for the quieted request logs."""
+        return self.__request_logstream.getvalue()
+
+    def quiet_request_logs(self):
+        """Stop printing logging messages to stdout/stderr.
+
+        The log messages are preserved, and can still be accessed using the
+        `get_quiet_logs` method.
+        """
+        if not self.__logs_quieted:
+            request_logger.addHandler(self.__request_logstream_handler)
+            request_logger.propagate = False
+            self.__logs_quieted = True
+
+    def unquiet_request_logs(self):
+        """Allow the logs to print to stdout/stderr.
+
+        Log messages will no longer be stored in the StringIO buffer.
+        """
+        if self.__logs_quieted:
+            request_logger.removeHandler(self.__request_logstream_handler)
+            request_logger.propagate = True
+            self.__logs_quieted = False
 
     # Here are defined some other functions to get info from the server.
 

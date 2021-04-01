@@ -124,6 +124,10 @@ class IndraDBQueryProcessor:
             ret = True
         return ret
 
+    def print_background_logs(self):
+        """Print any logs that may have been stashed in the background."""
+        print(self.query.get_quiet_request_logs())
+
     # Helper methods
 
     def _set_special_params(self, **params):
@@ -165,6 +169,10 @@ class IndraDBQueryProcessor:
 
         # Create the actual statements.
         self._compile_results()
+
+        # This is end of the loop, one way or another. Restore logging if it
+        # was redirected.
+        self.query.unquiet_request_logs()
         return
 
     def _run(self, persist=True, strict_stop=False, timeout=None):
@@ -183,6 +191,9 @@ class IndraDBQueryProcessor:
             logger.debug("Waiting at most %d seconds for thread to complete..."
                          % timeout)
             self.__th.join(timeout)
+            self.query.quiet_request_logs()
+            logger.info("Leaving request to background thread. Logs may be "
+                        "viewed using the `print_background_logs` method.")
         return
 
     # Child defined methods
