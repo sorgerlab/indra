@@ -1,11 +1,11 @@
-import logging
 from xml.etree import ElementTree
-from indra.statements import *
-from indra.databases.identifiers import ensure_chebi_prefix, \
-    ensure_chembl_prefix
+
+import logging
+
+from indra.databases.identifiers import ensure_chebi_prefix, ensure_chembl_prefix
+from indra.ontology.standardize import get_standard_agent
+from indra.statements import Activation, Complex, DecreaseAmount, Evidence, IncreaseAmount, Inhibition
 from indra.statements.validate import assert_valid_db_refs
-from indra.ontology.standardize import standardize_name_db_refs, \
-    get_standard_agent
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ class DrugbankProcessor:
     statements : list of indra.statements.Statement
         A list of INDRA Statements that were extracted from DrugBank content.
     """
+
     def __init__(self, xml_tree: ElementTree.ElementTree):
         self.xml_tree = xml_tree
         self.statements = []
@@ -60,7 +61,7 @@ class DrugbankProcessor:
     @staticmethod
     def _get_statement_type(action):
         if action in neutral_actions:
-            return None
+            return _complex
         elif action in activation_actions:
             return Activation
         elif action in inhibition_actions:
@@ -70,9 +71,10 @@ class DrugbankProcessor:
         elif action in increase_amount_actions:
             return IncreaseAmount
         elif action == 'N/A':
-            return Inhibition
+            return _complex
         else:
-            return None
+            logger.warning('unhandled DrugBank action: %s', action)
+            return _complex
 
     @staticmethod
     def _get_target_agent(target_element):
@@ -160,22 +162,27 @@ def db_findall(element, path):
     return element.findall(path, namespaces=drugbank_ns)
 
 
-activation_actions = {'substrate', 'agonist', 'inducer', 'potentiator',
-                      'stimulator', 'cofactor', 'activator', 'ligand',
-                      'chaperone', 'partial agonist', 'protector',
+def _complex(a, b, evidence):
+    return Complex([a, b], evidence=evidence)
+
+
+activation_actions = {'inducer', 'potentiator',
+                      'stimulator', 'cofactor', 'activator',
+                      'protector',
                       'positive allosteric modulator', 'positive modulator'}
 
-inhibition_actions = {'antagonist', 'inhibitor', 'binder', 'antibody',
+inhibition_actions = {'inhibitor', 'binder', 'antibody',
                       'inactivator', 'binding', 'blocker', 'negative modulator',
-                      'inverse agonist', 'neutralizer', 'weak inhibitor',
-                      'suppressor', 'disruptor',
+                      'neutralizer', 'weak inhibitor',
+                      'suppressor', 'disruptor', 'chelator',
                       'inhibitory allosteric modulator'}
 
-decrease_amount_actions = {'downregulator', 'metabolizer', 'chelator',
+decrease_amount_actions = {'downregulator', 'metabolizer',
                            'degradation',
                            'incorporation into and destabilization'}
 
-increase_amount_actions = {'stabilization'}
+increase_amount_actions = {'stabilization', 'chaperone'}
 
 neutral_actions = {'modulator', 'other/unknown', 'unknown', 'other',
-                   'regulator'}
+                   'regulator', 'antagonist', 'substrate', 'agonist',
+                   'ligand', 'inverse agonist', 'partial agonist'}
