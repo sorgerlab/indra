@@ -6,7 +6,7 @@ from .processor import DrugbankProcessor
 logger = logging.getLogger(__name__)
 
 
-def get_drugbank_processor(
+def process_from_web(
     username: Optional[str] = None,
     password: Optional[str] = None,
     version: Optional[str] = None,
@@ -43,11 +43,11 @@ def get_drugbank_processor(
         version=version,
         prefix=prefix,
     )
-    return _help_extract(et)
+    return process_element_tree(et)
 
 
 def process_xml(fname):
-    """Return a processor by extracting Statement from DrugBank XML.
+    """Return a processor by extracting Statements from DrugBank XML.
 
     Parameters
     ----------
@@ -63,10 +63,24 @@ def process_xml(fname):
     """
     logger.info('Loading %s...' % fname)
     et = ElementTree.parse(fname)
-    return _help_extract(et)
+    return process_element_tree(et)
 
 
-def _help_extract(et):
+def process_element_tree(et):
+    """Return a processor by extracting Statement from DrugBank XML.
+
+    Parameters
+    ----------
+    et : xml.etree.ElementTree
+        An ElementTree loaded from the DrugBank XML file to process.
+
+    Returns
+    -------
+    DrugbankProcessor
+        A DrugbankProcessor instance which contains a list of INDRA
+        Statements in its statements attribute that were extracted
+        from the given ElementTree.
+    """
     logger.info('Extracting DrugBank statements...')
     dp = DrugbankProcessor(et)
     dp.extract_statements()

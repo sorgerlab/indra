@@ -17,4 +17,4 @@ Alternatively, the latest DrugBank data can be automatically loaded via
     with open('drugbank_indra_statements.pkl', 'wb') as file:
         pickle.dump(processor.statements, file, protocol=pickle.HIGHEST_PROTOCOL)
 """
-from .api import get_drugbank_processor, process_xml
+from .api import process_from_web, process_xml, process_element_tree
