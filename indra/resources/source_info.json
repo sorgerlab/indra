@@ -166,5 +166,11 @@
         "link": "https://covid19map.elixir-luxembourg.org/minerva/",
         "type": "database",
         "domain": "biology"
+    },
+    "dgi": {
+        "name": "DGI",
+        "link": "https://www.dgidb.org/",
+        "type": "database",
+        "domain": "biology"
     }
 }
