@@ -45,7 +45,7 @@ class RemoteProcessor:
         return self._statements
 
     def print_summary(self) -> None:
-        """print a summary of the statements."""
+        """Print a summary of the statements."""
         from tabulate import tabulate
         print(tabulate(
             Counter(
