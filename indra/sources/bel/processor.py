@@ -346,7 +346,7 @@ class PybelProcessor(object):
         epistemics = {'direct': _rel_is_direct(edge_data)}
         annotations = edge_data.get(pc.ANNOTATIONS, {})
         annotations['bel'] = edge_to_bel(u_data, v_data, edge_data)
-        if ev_ref:  # FIXME what if ev_citation is Falsy?
+        if ev_ref:
             annotations['citation_ref'] = ev_ref
 
         context = extract_context(annotations, self.annot_manager)
