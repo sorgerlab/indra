@@ -72,7 +72,7 @@ class DrugbankProcessor:
         elif action in increase_amount_actions:
             return IncreaseAmount
         elif action == 'N/A':
-            return Inhibition
+            return _complex
         elif action in neutral_actions:
             return _complex
         elif action in skip_actions:
