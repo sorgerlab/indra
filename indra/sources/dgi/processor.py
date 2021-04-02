@@ -240,6 +240,7 @@ REGULATES_TYPES = {
     "inhibitor,activator",
     "potentiator,inhibitor",
     "inhibitor,inducer",
+    "antagonist,agonist",
 }
 BINDS_TYPES = {
     "ligand",
@@ -252,6 +253,7 @@ SKIP_TYPES = {
     "product of,substrate",
     "multitarget",
     "vaccine",
+    "nan",
 }
 
 _UNHANDLED = set()
