@@ -136,8 +136,9 @@ def process_pybel_neighborhood(entity_names, network_type='graph_jsongz_url',
     return bp
 
 
-def process_bel_statement(bel: str, squeeze: bool = True):
-    """Process a single BEL statement and return INDRA statement(s).
+def process_text(bel: str, squeeze: False = True):
+    """Process a single BEL statement and return the PybelProcessor
+    or a single statement if ``squeeze`` is True.
 
     Parameters
     ----------
@@ -145,21 +146,21 @@ def process_bel_statement(bel: str, squeeze: bool = True):
         A BEL statement. See example below.
 
     squeeze: bool
-        If squeeze and there's only one statement to return, it will be
-        unpacked.
+        If squeeze and there's only one statement in the processor,
+        it will be unpacked.
 
     Returns
     -------
-    statements : Union[Statementm, List[Statement]]
+    statements : Union[Statement, PybelProcessor]
         A list of INDRA statments derived from the BEL statement.
         If squeeze is true and there was only one statement, the
         unpacked INDRA statement will be returned.
 
     Examples
     --------
-    >>> from indra.sources.bel import process_bel_statement
+    >>> from indra.sources.bel import process_text
     >>> bel_s = 'kin(p(FPLX:MEK)) -> kin(p(FPLX:ERK))'
-    >>> indra_s = process_bel_statement(bel_s)
+    >>> indra_s = process_text(bel_s, squeeze=True)
     IncreaseAmount(MEK(), ERK())
     """
     r = pybel.parse(bel)
@@ -168,7 +169,7 @@ def process_bel_statement(bel: str, squeeze: bool = True):
     bp = process_pybel_graph(graph)
     if squeeze and len(bp.statements) == 1:
         return bp.statements[0]
-    return bp.statements
+    return bp
 
 
 @lru_cache(maxsize=100)
