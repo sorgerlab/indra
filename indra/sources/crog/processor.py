@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-"""Processor for the `Chemical Roles Graph (CRoG) <https://github.com/chemical-roles/chemical-roles>`_."""
+"""Processor for the `Chemical Roles Graph (CRoG)
+<https://github.com/chemical-roles/chemical-roles>`_.
+"""
 
 from ..utils import RemoteProcessor
 

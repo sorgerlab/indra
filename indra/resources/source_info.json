@@ -172,5 +172,11 @@
         "link": "https://www.dgidb.org/",
         "type": "database",
         "domain": "biology"
+    },
+    "crog": {
+        "name": "Chemical Relations Graph",
+        "link": "https://github.com/chemical-roles/chemical-roles",
+        "type": "database",
+        "domain": "biology"
     }
 }

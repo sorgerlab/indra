@@ -54,6 +54,7 @@ Chemical Information Databases
    drugbank/index
    dgi/index
    tas/index
+   crog/index
 
 Custom Knowledge Bases
 ----------------------

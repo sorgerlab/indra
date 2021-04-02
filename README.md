@@ -86,6 +86,7 @@ Biological pathway databases:
 | DrugBank                  | [`indra.sources.drugbank`](https://indra.readthedocs.io/en/latest/modules/sources/drugbank/index.html) | https://www.drugbank.ca/ |
 | OmniPath                  | [`indra.sources.omnipath`](https://indra.readthedocs.io/en/latest/modules/sources/omnipath/index.html) | https://omnipathdb.org/ |
 | DGI                  | [`indra.sources.dgi`](https://indra.readthedocs.io/en/latest/modules/sources/dgi/index.html) | https://www.dgidb.org/ |
+| CRoG                  | [`indra.sources.crog`](https://indra.readthedocs.io/en/latest/modules/sources/crog/index.html) | https://github.com/chemical-roles/chemical-roles |
 
 
 Custom knowledge bases:
