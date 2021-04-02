@@ -49,7 +49,14 @@ class DrugbankProcessor:
             actions = {a.text for a in db_findall(target_element,
                                                   'db:actions/db:action')}
             if not actions:
-                actions = {'N/A'}
+                # See https://dev.drugbank.com/guides/terms/pharmacological-action
+                pharm_action = db_find(target_element, 'db:known-action')
+                # Skip if it's not known that it's a direct interaction
+                if pharm_action.text in {'no', 'unknown'}:
+                    actions = set()
+                # Otherwise use the N/A action which ultimately maps to Complex
+                else:
+                    actions = {'N/A'}
             for action in actions:
                 stmt_type = DrugbankProcessor._get_statement_type(action)
                 if not stmt_type:
