@@ -53,4 +53,5 @@ class RemoteProcessor:
                 for statement in self.statements
             ).most_common(),
             headers=["Statement Type", "Count"],
+            tablefmt='github',
         ))
