@@ -11,5 +11,4 @@ relationship polarity.
    Hoyt, C. T., *et al.* (2020). *ChemRxiv*, 12591221.
 """
 
-
-from .api import get_version_df, process_df, process_version  # noqa:F401
+from .processor import CrogProcessor
