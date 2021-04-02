@@ -187,10 +187,11 @@ class IndraDBQueryProcessor:
         if timeout is None:
             logger.debug("Waiting for thread to complete...")
             self.__th.join()
-        elif timeout:  # is not 0
-            logger.debug("Waiting at most %d seconds for thread to complete..."
-                         % timeout)
-            self.__th.join(timeout)
+        else:
+            if timeout:  # is not 0
+                logger.debug("Waiting at most %d seconds for thread to"
+                             "complete..." % timeout)
+                self.__th.join(timeout)
             self.query.quiet_request_logs()
             logger.info("Leaving request to background thread. Logs may be "
                         "viewed using the `print_background_logs` method.")
