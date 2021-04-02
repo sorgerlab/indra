@@ -176,8 +176,8 @@ activation_actions = {'inducer', 'potentiator',
                       'protector',
                       'positive allosteric modulator', 'positive modulator'}
 
-inhibition_actions = {'inhibitor', 'binder', 'antibody',
-                      'inactivator', 'binding', 'blocker', 'negative modulator',
+inhibition_actions = {'inhibitor', 'antibody',
+                      'inactivator', 'blocker', 'negative modulator',
                       'neutralizer', 'weak inhibitor',
                       'suppressor', 'disruptor', 'chelator',
                       'inhibitory allosteric modulator',
@@ -196,6 +196,8 @@ decrease_amount_actions = {
 increase_amount_actions = {'stabilization', 'chaperone'}
 
 neutral_actions = {
+    'binder',
+    'binding',
     'modulator',
     'regulator',
     'antagonist',
