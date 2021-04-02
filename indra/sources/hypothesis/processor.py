@@ -16,7 +16,7 @@ class HypothesisProcessor:
     annotations : list[dict]
         A list of annotations fetched from hypothes.is in JSON-deserialized
         form represented as a list of dicts.
-    reader : Optiona[function]
+    reader : Union[None, str, Callable[[str],Processor]]
         A handle for a function which takes a single str argument
         (text to process) and returns a processor object with a statements
         attribute containing INDRA Statements. By default, the REACH reader's
@@ -41,9 +41,12 @@ class HypothesisProcessor:
         self.annotations = annotations
         self.statements = []
         self.groundings = {}
-        if reader is None:
+        if reader is None or reader == 'reach':
             from indra.sources import reach
             self.reader = reach.process_text
+        elif reader == 'bel':
+            from indra.sources import bel
+            self.reader = bel.process_text
         else:
             self.reader = reader
         if grounder is None:

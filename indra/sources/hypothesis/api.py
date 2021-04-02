@@ -180,13 +180,15 @@ def process_annotations(group=None, reader=None, grounder=None):
         The hypothesi.is key of the group (not its name). If not given, the
         HYPOTHESIS_GROUP configuration in the config file or an environmental
         variable is used.
-    reader : Optiona[function]
+    reader : Optional[None, str, Callable[[str], Processor]]
         A handle for a function which takes a single str argument
         (text to process) and returns a processor object with a statements
         attribute containing INDRA Statements. By default, the REACH reader's
         process_text function is used with default parameters. Note that
         if the function requires extra parameters other than the input text,
-        functools.partial can be used to set those.
+        functools.partial can be used to set those. Can be alternatively
+        set to :func:`indra.sources.bel.process_text` by using the string
+        "bel".
     grounder : Optional[function]
         A handle for a function which takes a positional str argument (entity
         text to ground) and an optional context key word argument and returns
