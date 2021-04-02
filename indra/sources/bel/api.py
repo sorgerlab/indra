@@ -136,7 +136,7 @@ def process_pybel_neighborhood(entity_names, network_type='graph_jsongz_url',
     return bp
 
 
-def process_text(bel: str, squeeze: False = True):
+def process_text(bel: str, squeeze: bool = False):
     """Process a single BEL statement and return the PybelProcessor
     or a single statement if ``squeeze`` is True.
 
