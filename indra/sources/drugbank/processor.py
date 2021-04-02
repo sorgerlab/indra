@@ -1,9 +1,11 @@
 import logging
 from xml.etree import ElementTree
 
-from indra.databases.identifiers import ensure_chebi_prefix, ensure_chembl_prefix
+from indra.databases.identifiers import ensure_chebi_prefix,\
+    ensure_chembl_prefix
 from indra.ontology.standardize import get_standard_agent
-from indra.statements import Activation, Complex, DecreaseAmount, Evidence, IncreaseAmount, Inhibition
+from indra.statements import Activation, Complex, DecreaseAmount, Evidence,\
+    IncreaseAmount, Inhibition
 from indra.statements.validate import assert_valid_db_refs
 
 logger = logging.getLogger(__name__)
@@ -178,8 +180,8 @@ inhibition_actions = {'inhibitor', 'binder', 'antibody',
                       'inactivator', 'binding', 'blocker', 'negative modulator',
                       'neutralizer', 'weak inhibitor',
                       'suppressor', 'disruptor', 'chelator',
-                      'inhibitory allosteric modulator', 'translocation inhibitor',
-                      'nucleotide exchange blocker',
+                      'inhibitory allosteric modulator',
+                      'translocation inhibitor', 'nucleotide exchange blocker',
                       }
 
 decrease_amount_actions = {
@@ -200,9 +202,11 @@ neutral_actions = {
     'substrate',
     'agonist',
     'ligand',
-    'intercalation',  # e.g., Doxorubicin intercalates DNA to prevent transcription
+    # e.g., Doxorubicin intercalates DNA to prevent transcription
+    'intercalation',
     'inverse agonist',
-    'aggregation inhibitor',  # e.g., inhibits process on a protein's aggregation (like APP or LRRK)
+    # e.g., inhibits process on a protein's aggregation (like APP or LRRK)
+    'aggregation inhibitor',
     'partial agonist',
     'partial antagonist',
     'antisense oligonucleotide',
@@ -211,7 +215,9 @@ neutral_actions = {
     'product of',
     'reducer',
     'oxidizer',
-    'acetylation',  # map to Ac INDRA statement?, but I'm not convinced by the idea of splitting up actions
+    # map to Ac INDRA statement?, but I'm not convinced by the idea of
+    # splitting up actions
+    'acetylation',
     'allosteric modulator',
     'deoxidizer',
     'cross-linking/alkylation', # e.g. Busulfan (DB01008) alkalytes DNA
