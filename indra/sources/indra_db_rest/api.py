@@ -1,3 +1,120 @@
+"""
+API to the INDRA Database REST Service
+======================================
+
+INDRA has been used to generate and maintain a massive database of causal
+relations as INDRA Statements. The contents of this database can be most easily
+accessed programmatically through this API.
+
+    The API includes 3 helpful "starter" functions, useful for quickly making a
+few simple kinds of query:
+
+  `get_statements`:
+      Get statements by agent information and Statement type,  e.g. "Statements
+      with object MEK and type Inhibition" (The generic name is as it is for
+      historical reasons).
+
+  `get_statements_for_paper`:
+      Get Statements based on what papers support those statements, for instance
+      "Statements from the paper with PMID 12345".
+
+  `get_statements_by_hash`:
+      INDRA Statements have a (effectively) unique hash that identifies each
+      Statement based on its meaning. You can use this endpoint to query more
+      details for some specific Statements.
+
+and it includes the more general and powerful tool function with which you can
+make any query that is possible:
+
+  `get_statements_from_query`:
+      This function works alongside the Query "language" to execute arbitrary
+      requests for Statements based on nearly any piece of metadata indexed on
+      the Database.
+
+There are also two functions relating to the submission and retrieval of
+curations. It is possible to enter feedback on the quality and particular errors
+found in our Statements, which we call "curations". `submit_curations` allows
+you to submit your curations, and `get_curations` allows you to retrieve
+existing curations (there are access limitations that will require an API key in
+these functions).
+
+
+Timing Control Examples
+-----------------------
+
+Consider the case in which you want to get Statements whose subject is TNF,
+you could simply enter:
+
+>>> from indra.sources.indra_db_rest.api import get_statements
+>>> p = get_statements("TNF")
+>>> stmts = p.statements
+
+However there are a LOT of Statements for TNF, and the query will need to page
+over many separate requests to get all the results. To mitigate this you could
+limit the number of results you request:
+
+>>> p = get_statements("TNF", limit=1000)
+>>> stmts = p.statements
+
+Alternatively, if you want all the statements eventually but perhaps don't need
+them all right this moment, you could set a timeout:
+
+>>> p = get_statements("TNF", timeout=5)
+>>> some_stmts = p.statements_sample
+>>>
+>>> # ...Do some other work...
+>>>
+>>> # Wait for the requests to finish before getting the final result.
+>>> p.wait_until_done()
+>>> stmts = p.statements
+
+It is important to note that the timeout applies to how long block for the
+result, but that the result will continue to be retrieved until it is completed
+on a background thread. For that matter, you can supply a timeout of 0 and get
+the processor immediately, leaving the entire query to happen in the background.
+
+You can check if the process is still running using the `is_working` method:
+
+>>> p = get_statements("TNF", timeout=0)
+>>> p.is_working()
+>>> True
+
+If you don't want to make multiple requests, and just want to get whatever the
+server returns on the first request, you can set "persist" to False. The job
+will still go into a background thread so you can run these requests
+asynchronously.
+
+>>> p = get_statements("TNF", persist=False)
+>>> p.wait_until_done()
+>>> stmts = p.statements
+
+There are several other options that let you control both the search parameters
+and the way the query is executed. The function documentation is recommended for
+further details.
+
+
+Query Language Examples
+-----------------------
+
+There are several metadata and data values indexed in the INDRA Database
+allowing for efficient searches, and those metadata values can be combined in
+arbitrary ways. For example, you may want to find Statements where MEK is
+inhibited that were found in papers related to breast cancer and also showed up in a
+human-curated database. You can do that!
+
+>>> from indra.sources.indra_db_rest.api import get_statements_from_query
+>>> from indra.sources.indra_db_rest.query import HasAgent, HasType, \
+>>>     FromMeshIds, HasDatabases
+>>>
+>>> query = (HasAgent("MEK", namespace="FPLX") & HasType(["Inhibition"])
+>>>          & FromMeshIds(["D001943"]) & HasDatabases())
+>>>
+>>> p = get_statements_from_query(query)
+>>>
+
+"""
+
+
 __all__ = ['get_statements', 'get_statements_for_paper',
            'get_statements_by_hash', 'get_statements_from_query',
            'submit_curation', 'get_curations']
