@@ -201,6 +201,13 @@ def process_annotations(group=None, reader=None, grounder=None):
         A HypothesisProcessor object which contains a list of extracted
         INDRA Statements in its statements attribute, and a list of extracted
         grounding curations in its groundings attribute.
+
+    Example
+    -------
+    Process all annotations that have been written in BEL with:
+
+    >>> from indra.sources import hypothesis
+    >>> processor = hypothesis.process_annotations(group='bel', reader='bel')
     """
     annotations = get_annotations(group=group)
     hp = HypothesisProcessor(annotations, reader=reader, grounder=grounder)
