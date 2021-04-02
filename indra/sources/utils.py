@@ -5,13 +5,27 @@
 from collections import Counter
 
 import requests
-from typing import List
+from typing import Collection, List
 
 from ..statements import Statement, stmts_from_json
 
 __all__ = [
+    'print_statement_summary',
     'RemoteProcessor',
 ]
+
+
+def print_statement_summary(statements: Collection[Statement]):
+    """Print a summary of the statements."""
+    from tabulate import tabulate
+    print(tabulate(
+        Counter(
+            statement.__class__.__name__
+            for statement in statements
+        ).most_common(),
+        headers=["Statement Type", "Count"],
+        tablefmt='github',
+    ))
 
 
 class RemoteProcessor:
@@ -46,12 +60,4 @@ class RemoteProcessor:
 
     def print_summary(self) -> None:
         """Print a summary of the statements."""
-        from tabulate import tabulate
-        print(tabulate(
-            Counter(
-                statement.__class__.__name__
-                for statement in self.statements
-            ).most_common(),
-            headers=["Statement Type", "Count"],
-            tablefmt='github',
-        ))
+        print_statement_summary(self.statements)
