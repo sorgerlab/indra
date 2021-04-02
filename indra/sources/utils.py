@@ -13,7 +13,13 @@ __all__ = [
 
 
 class RemoteProcessor:
-    """A processor for INDRA JSON file to be retrieved by URL."""
+    """A processor for INDRA JSON file to be retrieved by URL.
+
+    Parameters
+    ----------
+    url :
+        The URL of the INDRA JSON file to load
+    """
 
     #: The URL of the data
     url: str

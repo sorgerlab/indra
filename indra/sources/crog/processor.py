@@ -15,7 +15,7 @@ CROG_URL = 'https://raw.githubusercontent.com/chemical-roles/' \
 
 
 class CrogProcessor(RemoteProcessor):
-    """A processor for INDRA JSON file to be retrieved by URL."""
+    """A processor for the Chemical Roles Graph."""
 
     def __init__(self):
         super().__init__(url=CROG_URL)
