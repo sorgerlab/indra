@@ -50,10 +50,10 @@ Chemical Information Databases
 .. toctree::
    :maxdepth: 3
 
-    ctd/index
-    drugbank/index
-    dgi/index
-    tas/index
+   ctd/index
+   drugbank/index
+   dgi/index
+   tas/index
 
 Custom Knowledge Bases
 ----------------------
