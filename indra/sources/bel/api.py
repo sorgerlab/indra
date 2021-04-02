@@ -8,6 +8,9 @@ import pybel
 import logging
 import requests
 from functools import lru_cache
+
+from pybel.io.sbel import add_sbel_row
+
 from .processor import PybelProcessor
 
 
@@ -131,6 +134,41 @@ def process_pybel_neighborhood(entity_names, network_type='graph_jsongz_url',
     bp.statements = filtered_stmts
 
     return bp
+
+
+def process_bel_statement(bel: str, squeeze: bool = True):
+    """Process a single BEL statement and return INDRA statement(s).
+
+    Parameters
+    ----------
+    bel : str
+        A BEL statement. See example below.
+
+    squeeze: bool
+        If squeeze and there's only one statement to return, it will be
+        unpacked.
+
+    Returns
+    -------
+    statements : Union[Statementm, List[Statement]]
+        A list of INDRA statments derived from the BEL statement.
+        If squeeze is true and there was only one statement, the
+        unpacked INDRA statement will be returned.
+
+    Examples
+    --------
+    >>> from indra.sources.bel import process_bel_statement
+    >>> bel_s = 'kin(p(FPLX:MEK)) -> kin(p(FPLX:ERK))'
+    >>> indra_s = process_bel_statement(bel_s)
+    IncreaseAmount(MEK(), ERK())
+    """
+    r = pybel.parse(bel)
+    graph = pybel.BELGraph()
+    add_sbel_row(graph, r)
+    bp = process_pybel_graph(graph)
+    if squeeze and len(bp.statements) == 1:
+        return bp.statements[0]
+    return bp.statements
 
 
 @lru_cache(maxsize=100)
