@@ -30,10 +30,10 @@ class DGIProcessor:
 
     Parameters
     ----------
-    df :
+    df : pd.DataFrame
         A pandas DataFrame for the DGI interactions file. If none given, the
         most recent version will be automatically looked up.
-    version :
+    version : str
         The optional version of DGI to use. If no ``df`` is given, this is also
         automatically looked up.
     """

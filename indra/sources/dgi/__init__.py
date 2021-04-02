@@ -13,4 +13,3 @@ following URLs:
 """
 
 from .api import get_version_df, process_df, process_version  # noqa:F401
-from .processor import DGIProcessor  # noqa:F401
