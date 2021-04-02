@@ -228,7 +228,7 @@ __all__ = [
     'modtype_to_modclass',
     'modclass_to_modtype', 'modtype_conditions', 'modtype_to_inverse',
     'modclass_to_inverse', 'get_statement_by_name', 'make_hash', 'stmt_type',
-    'default_ns_order', 'mk_str', 'pretty_print_stmts',
+    'default_ns_order', 'mk_str', 'pretty_print_stmts', 'print_statement_summary',
     'set_pretty_print_max_width'
     ]
 
@@ -239,7 +239,8 @@ import logging
 import networkx
 import itertools
 from copy import deepcopy
-from collections import OrderedDict as _o
+from collections import Counter, OrderedDict as _o
+from typing import Collection
 from .util import *
 from .concept import *
 from .context import *
@@ -2678,3 +2679,16 @@ def stmt_type(obj, mk=True):
 def mk_str(mk):
     """Replace class path for backwards compatibility of matches keys."""
     return str(mk).replace('indra.statements.statements', 'indra.statements')
+
+
+def print_statement_summary(statements: Collection[Statement]):
+    """Print a summary of the statements."""
+    from tabulate import tabulate
+    print(tabulate(
+        Counter(
+            statement.__class__.__name__
+            for statement in statements
+        ).most_common(),
+        headers=["Statement Type", "Count"],
+        tablefmt='github',
+    ))
