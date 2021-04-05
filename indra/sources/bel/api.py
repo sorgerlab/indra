@@ -9,6 +9,7 @@ import logging
 import requests
 from functools import lru_cache
 
+import pybel.constants as pc
 from pybel.io.sbel import add_sbel_row
 
 from .processor import PybelProcessor
@@ -164,6 +165,12 @@ def process_text(bel: str, squeeze: bool = False):
     Activation(MEK(kinase), ERK(), kinase)
     """
     r = pybel.parse(bel)
+    # make sure activations in the right place
+    for a, b in [(pc.SOURCE, pc.SOURCE_MODIFIER), (pc.TARGET, pc.TARGET_MODIFIER)]:
+        side = r[a]
+        for c in [pc.MODIFIER, pc.EFFECT, pc.FROM_LOC, pc.TO_LOC, pc.LOCATION]:
+            if c in side:
+                r.setdefault(b, {})[c] = side.pop(c)
     graph = pybel.BELGraph()
     add_sbel_row(graph, r)
     bp = process_pybel_graph(graph)
