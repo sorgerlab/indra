@@ -426,8 +426,8 @@ def test_doi_evidence():
     assert len(pbp.statements[0].evidence) == 1
     ev = pbp.statements[0].evidence[0]
     assert ev.pmid is None
-    assert 'doi' in ev.text_refs
-    assert ev.text_refs['doi'] == ev_doi
+    assert 'DOI' in ev.text_refs
+    assert ev.text_refs['DOI'] == ev_doi
 
 
 def test_phosphorylation_two_sites():
