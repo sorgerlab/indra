@@ -335,11 +335,15 @@ class PybelProcessor(object):
         ev_citation = edge_data.get(pc.CITATION)
         ev_pmid = None
         ev_ref = None
+        text_refs = {}
         if ev_citation:
             cit_type = ev_citation.namespace
             cit_ref = ev_citation.identifier
             if cit_type == pc.CITATION_TYPE_PUBMED:
                 ev_pmid = cit_ref
+                ev_ref = None
+            elif cit_type.upper() in EXT_CITATION_PREFIXES:
+                text_refs[cit_type.upper()] = cit_ref
             else:
                 ev_pmid = None
                 ev_ref = '%s: %s' % (cit_type, cit_ref)
@@ -359,7 +363,8 @@ class PybelProcessor(object):
 
         ev = Evidence(text=ev_text, pmid=ev_pmid, source_api='bel',
                       source_id=k, epistemics=epistemics,
-                      annotations=annotations, context=context)
+                      annotations=annotations, context=context,
+                      text_refs=text_refs)
         return ev
 
 
