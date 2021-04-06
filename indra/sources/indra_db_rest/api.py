@@ -108,7 +108,44 @@ than 10 evidence. You can do that!
 >>>          & FromMeshIds(["D001943"]) & HasEvidenceBound(["> 10"]))
 >>>
 >>> p = get_statements_from_query(query)
+>>> stmts = p.statements
+
+In addition to joining constraints with "&" (an intersection, an "and") as shown
+above, you can also form unions (a.k.a. "or"s) using "|":
+
+>>> query = (
+>>>     (
+>>>         HasAgent("MEK", namespace="FPLX")
+>>>         | HasAgent("MAP2K1", namespace="HGNC-SYMBOL")
+>>>     )
+>>>     & HasType(['Inhibition'])
+>>> )
 >>>
+>>> p = get_statements_from_query(query, limit=10)
+
+If your query constrains results based on a property of the original evidence
+text, so anything from the text references (like pmid) to the readers included
+and whether the evidence is from a reading or a database, can all have an effect
+on the evidences included in the result. By default, the queries you make also
+filter the evidence so that, for example, if you query for Statements from a
+given paper, all the evidences returned with the Statements you queried are also
+from that paper.
+
+>>> p = get_statements_for_papers([('pmid', '20471474'),
+>>>                                ('pmcid', 'PMC3640704')])
+>>> all(ev.text_refs['PMID'] == '2047147'
+>>>     or ev.text_refs['PMCID'] == 'PMC3640704'
+>>>     for s in p.statements for ev in s.evidence)
+>>> True
+
+You can deactivate this feature by setting `filter_ev` to False:
+
+>>> p = get_statements_for_papers([('pmid', '20471474'),
+>>>                                ('pmcid', 'PMC3640704')], filter_ev=False)
+>>> all(ev.text_refs['PMID'] == '2047147'
+>>>     or ev.text_refs['PMCID'] == 'PMC3640704'
+>>>     for s in p.statements for ev in s.evidence)
+>>> False
 
 """
 
