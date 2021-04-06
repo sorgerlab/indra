@@ -150,7 +150,7 @@ You can deactivate this feature by setting `filter_ev` to False:
 """
 
 
-__all__ = ['get_statements', 'get_statements_for_paper',
+__all__ = ['get_statements', 'get_statements_for_papers',
            'get_statements_by_hash', 'get_statements_from_query',
            'submit_curation', 'get_curations']
 
@@ -341,10 +341,14 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10, filter_ev=True,
                                      strict_stop=strict_stop, api_key=api_key)
 
 
+def get_statements_for_paper(*args, **kwargs):
+    return get_statements_for_papers(*args, **kwargs)
+
+
 @clockit
-def get_statements_for_paper(ids, limit=None, ev_limit=10, sort_by='ev_count',
-                             persist=True, timeout=None, strict_stop=False,
-                             tries=3, filter_ev=True, api_key=None):
+def get_statements_for_papers(ids, limit=None, ev_limit=10, sort_by='ev_count',
+                              persist=True, timeout=None, strict_stop=False,
+                              tries=3, filter_ev=True, api_key=None):
     """Get the set of raw Statements extracted from a paper given by the id.
 
     Parameters
