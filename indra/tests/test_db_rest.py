@@ -7,6 +7,7 @@ from unittest import SkipTest
 from nose.plugins.attrib import attr
 from indra.sources import indra_db_rest as dbr
 from indra.sources.indra_db_rest.api import get_statement_queries
+from indra.sources.indra_db_rest.query import HasAgent, HasEvidenceBound
 from indra.statements import Agent, Phosphorylation
 
 
@@ -252,3 +253,12 @@ def test_get_statements_end_on_limit():
     finally:
         p.cancel()
         p.wait_until_done()
+
+
+@attr('nonpublic')
+def test_get_statements_evidence_bounded():
+    query = HasAgent('MEK') & HasEvidenceBound(["< 10"])
+    p = dbr.get_statements_from_query(query, limit=10)
+    stmts = p.statements
+    assert len(stmts) == 10
+    assert all(c < 10 for c in p.get_ev_counts().values())
