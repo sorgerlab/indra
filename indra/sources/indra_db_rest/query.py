@@ -1,10 +1,11 @@
 __all__ = ['Query', 'And', 'Or', 'HasAgent', 'FromMeshIds', 'HasHash',
            'HasSources', 'HasOnlySource', 'HasReadings', 'HasDatabases',
-           'HasType', 'HasNumAgents', 'HasNumEvidence', 'FromPapers',
-           'EmptyQuery']
+           'HasType', 'HasNumAgents', 'HasNumEvidence', 'HasEvidenceBound',
+           'FromPapers', 'EmptyQuery']
 
 import logging
 from io import StringIO
+from typing import Iterable, Tuple, Union
 
 from indra.sources.indra_db_rest.query_results import QueryResult
 from indra.sources.indra_db_rest.util import make_db_rest_request, jsonify_args
@@ -465,11 +466,11 @@ class HasNumEvidence(Query):
 
     Parameters
     ----------
-    evidence_nums : tuple
+    evidence_nums :
         A list of numbers greater than 0, each indicating a number of evidence.
     """
 
-    def __init__(self, evidence_nums):
+    def __init__(self, evidence_nums: Tuple[Union[int, str]]):
         self.evidence_nums = evidence_nums
         super(HasNumEvidence, self).__init__()
 
@@ -478,6 +479,31 @@ class HasNumEvidence(Query):
 
     def get_constraint_dict(self) -> dict:
         return {'evidence_nums': self.evidence_nums}
+
+
+class HasEvidenceBound(Query):
+    """Get Statements with given bounds on their evidence count.
+
+    For example, HasEvidenceBound(["< 10", ">= 5"]) will return Statements with
+    less than 10 and as many or more than 5 evidence.
+
+    Parameters
+    ----------
+    evidence_bounds :
+        An iterable (e.g. list) of strings such as "< 2" or ">= 4". The argument
+        of the inequality must be a natural number (0, 1, 2, ...) and the
+        inequality operation must be one of: <, >, <=, >=, ==, !=.
+    """
+
+    def __init__(self, evidence_bounds: Iterable[str]):
+        self.evidence_bounds = list(evidence_bounds)
+        super(HasEvidenceBound, self).__init__()
+
+    def _copy(self):
+        return HasEvidenceBound(self.evidence_bounds)
+
+    def get_constraint_dict(self) -> dict:
+        return {'evidence_bounds': self.evidence_bounds}
 
 
 class HasType(Query):
