@@ -80,12 +80,10 @@ You can check if the process is still running using the `is_working` method:
 >>> True
 
 If you don't want to make multiple requests, and just want to get whatever the
-server returns on the first request, you can set "persist" to False. The job
-will still go into a background thread so you can run these requests
-asynchronously.
+server returns on the first request, you can set "persist" to False (The job can
+still be put in the background with `timeout=0`).
 
 >>> p = get_statements("TNF", persist=False)
->>> p.wait_until_done()
 >>> stmts = p.statements
 
 There are several other options that let you control both the search parameters
@@ -99,15 +97,15 @@ Query Language Examples
 There are several metadata and data values indexed in the INDRA Database
 allowing for efficient searches, and those metadata values can be combined in
 arbitrary ways. For example, you may want to find Statements where MEK is
-inhibited that were found in papers related to breast cancer and also showed up in a
-human-curated database. You can do that!
+inhibited that were found in papers related to breast cancer and also have more
+than 10 evidence. You can do that!
 
 >>> from indra.sources.indra_db_rest.api import get_statements_from_query
 >>> from indra.sources.indra_db_rest.query import HasAgent, HasType, \
->>>     FromMeshIds, HasDatabases
+>>>     FromMeshIds, HasEvidenceBound
 >>>
 >>> query = (HasAgent("MEK", namespace="FPLX") & HasType(["Inhibition"])
->>>          & FromMeshIds(["D001943"]) & HasDatabases())
+>>>          & FromMeshIds(["D001943"]) & HasEvidenceBound(["> 10"]))
 >>>
 >>> p = get_statements_from_query(query)
 >>>
