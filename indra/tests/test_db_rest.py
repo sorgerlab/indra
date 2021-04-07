@@ -144,13 +144,13 @@ def test_famplex_namespace():
 
 @attr('nonpublic', 'notravis')
 def test_paper_query():
-    p = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
-                                      ('pmid', '27014235')])
+    p = dbr.get_statements_for_papers([('pmcid', 'PMC5770457'),
+                                       ('pmid', '27014235')])
     stmts_1 = p.statements
     assert len(stmts_1)
 
-    p = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
-                                      ('pmid', '27014235')])
+    p = dbr.get_statements_for_papers([('pmcid', 'PMC5770457'),
+                                       ('pmid', '27014235')])
     assert len(p.statements)
     assert len(p.get_source_counts())
     assert len(p.get_ev_counts())
