@@ -170,7 +170,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                    sort_by='ev_count', tries=3, api_key=None):
     """Get a processor for the INDRA DB web API matching given agents and type.
 
-    You get an IndraDBRestProcessor object, which allow Statements to be loaded
+    You get an DBQueryStatementProcessor object, which allow Statements to be loaded
     in a background thread, providing a sample of the "best" content available
     promptly in the sample_statements attribute, and populates the statements
     attribute when the paged load is complete. The "best" is determined by the
@@ -244,8 +244,8 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
 
     Returns
     -------
-    processor : :py:class:`IndraDBRestSearchProcessor`
-        An instance of the IndraDBRestProcessor, which has an attribute
+    processor : :py:class:`DBQueryStatementProcessor`
+        An instance of the DBQueryStatementProcessor, which has an attribute
         `statements` which will be populated when the query/queries are done.
     """
     query = EmptyQuery()
@@ -330,8 +330,8 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10, filter_ev=True,
 
     Returns
     -------
-    processor : :py:class:`IndraDBRestSearchProcessor`
-        An instance of the IndraDBRestProcessor, which has an attribute
+    processor : :py:class:`DBQueryStatementProcessor`
+        An instance of the DBQueryStatementProcessor, which has an attribute
         `statements` which will be populated when the query/queries are done.
     """
     return DBQueryStatementProcessor(HasHash(hash_list), limit=limit,
@@ -396,8 +396,8 @@ def get_statements_for_papers(ids, limit=None, ev_limit=10, sort_by='ev_count',
 
     Returns
     -------
-    processor : :py:class:`IndraDBRestSearchProcessor`
-        An instance of the IndraDBRestProcessor, which has an attribute
+    processor : :py:class:`DBQueryStatementProcessor`
+        An instance of the DBQueryStatementProcessor, which has an attribute
         `statements` which will be populated when the query/queries are done.
     """
     return DBQueryStatementProcessor(FromPapers(ids), limit=limit,
@@ -457,8 +457,8 @@ def get_statements_from_query(query, limit=None, ev_limit=10,
 
     Returns
     -------
-    processor : :py:class:`IndraDBRestSearchProcessor`
-        An instance of the IndraDBRestProcessor, which has an attribute
+    processor : :py:class:`DBQueryStatementProcessor`
+        An instance of the DBQueryStatementProcessor, which has an attribute
         `statements` which will be populated when the query/queries are done.
     """
     return DBQueryStatementProcessor(query, limit=limit,
