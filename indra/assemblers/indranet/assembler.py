@@ -125,7 +125,8 @@ class IndraNetAssembler():
                             'type.')
         return model
 
-    def make_df(self, exclude_stmts=None, complex_members=3):
+    def make_df(self, exclude_stmts=None, complex_members=3,
+                extra_columns=None):
         """Create a dataframe containing information extracted from assembler's
         list of statements necessary to build an IndraNet.
 
@@ -138,13 +139,17 @@ class IndraNetAssembler():
             data frame. All complexes larger than complex_members will be
             rejected. For accepted complexes, all permutations of their
             members will be added as dataframe records. Default is `3`.
+        extra_columns : list[tuple(str, function)]
+            A list of tuples defining columns to add to the dataframe in
+            addition to the required columns. Each tuple contains the column
+            name and a function to generate a value from a statement.
 
         Returns
         -------
         df : pd.DataFrame
             Pandas DataFrame object containing information extracted from
             statements. It contains the following columns:
-            
+
             *agA_name*
                 The first Agent's name.
             *agA_ns*
@@ -179,6 +184,8 @@ class IndraNetAssembler():
                 statement if the statement type has implied polarity.
                 To facilitate weighted path finding, the sign is represented
                 as 0 for positive polarity and 1 for negative polarity.
+
+            More columns can be added by providing the extra_columns parameter.
         """
         rows = []
         if exclude_stmts:
@@ -265,6 +272,9 @@ class IndraNetAssembler():
                     ('belief', stmt.belief),
                     ('source_counts', _get_source_counts(stmt)),
                     ('initial_sign', sign)])
+                if extra_columns:
+                    for col_name, func in extra_columns:
+                        row[col_name] = func(stmt)
                 rows.append(row)
         df = pd.DataFrame.from_dict(rows)
         df = df.where((pd.notnull(df)), None)
