@@ -1,4 +1,6 @@
 import logging
+import networkx as nx
+
 from . import ModelChecker
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
@@ -37,8 +39,13 @@ class SignedGraphModelChecker(ModelChecker):
     def get_graph(self, edge_filter_func=None):
         if self.graph:
             return self.graph
+        if edge_filter_func:
+            filtered_model = nx.subgraph_view(
+                self.model, filter_edge=edge_filter_func)
+        else:
+            filtered_model = self.model
         self.graph = signed_edges_to_signed_nodes(
-            self.model, copy_edge_data={'belief'})
+            filtered_model, copy_edge_data={'belief'})
         self.get_nodes_to_agents()
         return self.graph
 

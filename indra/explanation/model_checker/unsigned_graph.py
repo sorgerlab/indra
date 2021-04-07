@@ -38,12 +38,17 @@ class UnsignedGraphModelChecker(ModelChecker):
     def get_graph(self, edge_filter_func=None):
         if self.graph:
             return self.graph
+        if edge_filter_func:
+            filtered_model = nx.subgraph_view(
+                self.model, filter_edge=edge_filter_func)
+        else:
+            filtered_model = self.model
         self.graph = nx.DiGraph()
         nodes = []
-        for node, node_data in self.model.nodes(data=True):
+        for node, node_data in filtered_model.nodes(data=True):
             nodes.append(((node, 0), node_data))
         self.graph.add_nodes_from(nodes)
-        for (u, v, data) in self.model.edges(data=True):
+        for (u, v, data) in filtered_model.edges(data=True):
             self.graph.add_edge((u, 0), (v, 0), belief=data['belief'])
         self.get_nodes_to_agents()
         return self.graph
