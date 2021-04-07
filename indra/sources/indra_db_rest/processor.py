@@ -50,7 +50,8 @@ class IndraDBQueryProcessor:
         abandoned entirely. Otherwise the timeout will simply wait for the
         thread to join for `timeout` seconds before returning, allowing other
         work to continue while the query runs in the background. The default is
-        False.
+        False. NOTE: in practice, due to overhead, the precision of the timeout
+        is only around +/-0.1 seconds.
     tries : int > 0
         Set the number of times to try the query. The database often caches
         results, so if a query times out the first time, trying again after a
