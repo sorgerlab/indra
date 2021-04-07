@@ -35,7 +35,7 @@ class UnsignedGraphModelChecker(ModelChecker):
                  nodes_to_agents=None):
         super().__init__(model, statements, do_sampling, seed, nodes_to_agents)
 
-    def get_graph(self):
+    def get_graph(self, edge_filter_func=None):
         if self.graph:
             return self.graph
         self.graph = nx.DiGraph()

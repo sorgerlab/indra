@@ -264,7 +264,8 @@ class PysbModelChecker(ModelChecker):
         return self._im
 
     def get_graph(self, prune_im=True, prune_im_degrade=True,
-                  prune_im_subj_obj=False, add_namespaces=False):
+                  prune_im_subj_obj=False, add_namespaces=False,
+                  edge_filter_func=None):
         """Get influence map and convert it to a graph with signed nodes."""
         if self.graph:
             return self.graph

@@ -264,7 +264,8 @@ class ModelChecker(object):
         return results
 
     def check_statement(self, stmt, max_paths=1, max_path_length=5,
-                        agent_filter_func=None, node_filter_func=None):
+                        agent_filter_func=None, node_filter_func=None,
+                        edge_filter_func=None):
         """Check a single Statement against the model.
 
         Parameters
@@ -290,7 +291,7 @@ class ModelChecker(object):
         result : indra.explanation.modelchecker.PathResult
             A PathResult object containing the result of a test.
         """
-        self.get_graph()
+        self.get_graph(edge_filter_func=edge_filter_func)
         subj_nodes, obj_nodes, result_code = self.process_statement(stmt)
         if result_code:
             return self.make_false_result(result_code, max_paths,
