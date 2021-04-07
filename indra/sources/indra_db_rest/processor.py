@@ -17,9 +17,12 @@ from indra.util.statement_presentation import get_available_source_counts, \
     get_available_ev_counts
 
 from .query import Query
+from .util import RecordableLogger
+from .util import logger as util_logger
 from .exceptions import IndraDBRestResponseError
 
 logger = logging.getLogger('indra_db_rest.query_processor')
+request_logger = RecordableLogger('indra_db_rest.request_logs')
 
 
 class IndraDBQueryProcessor:
@@ -78,6 +81,7 @@ class IndraDBQueryProcessor:
         self.__canceled = False
         self.__start_time = None
         self.__th = None
+        self.requests_completed = 0
 
         self._evidence_counts = {}
         self._belief_scores = {}
@@ -179,6 +183,14 @@ class IndraDBQueryProcessor:
 
         # Run the query.
         try:
+            r = self.requests_completed
+            nth = f"{r}{['st', 'nd', 'rd'][r-1] if 0 < r < 4 else 'th'}"
+            request_logger.info(f"Running {nth} request for {self.result_type}")
+            request_logger.info(f"  LIMIT: {self.__quota}")
+            request_logger.info(f"  OFFSET: {self.__offset}")
+            if query_timeout:
+                request_logger.info(f"  TIMEOUT: {query_timeout}")
+
             result = self.query.get(self.result_type, offset=self.__offset,
                                     limit=self.__quota, sort_by=self.sort_by,
                                     timeout=query_timeout, n_tries=self.tries,
@@ -202,6 +214,9 @@ class IndraDBQueryProcessor:
         # Increment the page
         self.__offset = result.next_offset
 
+        # Increment the number of queries run.
+        self.requests_completed += 1
+
         return
 
     def _run_queries(self, persist):
@@ -223,10 +238,14 @@ class IndraDBQueryProcessor:
 
         # This is end of the loop, one way or another. Restore logging if it
         # was redirected.
-        self.query.unquiet_request_logs()
+        request_logger.unquiet()
+        util_logger.unquiet()
         return
 
     def _run(self, persist=True):
+        util_logger.quiet()
+        query_english = self.query.get_query_english()
+        logger.info(f"Retrieving {self.result_type} that {query_english}.")
 
         # Handle the content if we were limited.
         self.__th = Thread(target=self._run_queries,
@@ -242,10 +261,15 @@ class IndraDBQueryProcessor:
                              "complete..." % self.__timeout)
                 self.__th.join(self.__timeout)
             if not self._done():
-                self.query.quiet_request_logs()
-                logger.info("Leaving request to background thread. Logs may be "
-                            "viewed using the `print_background_logs` method.")
+                request_logger.quiet()
+                logger.info("Leaving request to background thread. Logs "
+                            "may be viewed using the `print_quiet_logs()` "
+                            "method.")
         return
+
+    @staticmethod
+    def print_quiet_logs():
+        print(request_logger.get_quiet_logs())
 
     # Child defined methods
 

@@ -1,11 +1,65 @@
 import json
 import logging
+from io import StringIO
+from contextlib import contextmanager
+
 import requests
 
 from indra import get_config
 from indra.sources.indra_db_rest.exceptions import IndraDBRestAPIError
 
-logger = logging.getLogger(__name__)
+
+class RecordableLogger:
+    def __init__(self, name):
+        self.__logger = logging.getLogger(name)
+
+        # Set up redirection of the logs surrounding requests.
+        self.__logstream = StringIO()
+        self.__logstream_handler = logging.StreamHandler(self.__logstream)
+        fmt = "%(levelname)s: [%(asctime)s] %(name)s - %(message)s"
+        self.__logstream_handler.setFormatter(logging.Formatter(fmt))
+        self.__quieted = False
+
+    def __getattr__(self, item):
+        # If the attribute could not be retrieved by standard means, try passing
+        # the method on to the backend logger.
+        return getattr(self.__logger, item)
+
+    def get_quiet_logs(self):
+        """Get the logstream string for the quieted request logs."""
+        return self.__logstream.getvalue()
+
+    def quiet(self):
+        """Stop printing logging messages to stdout/stderr.
+
+        The log messages are preserved, and can still be accessed using the
+        `get_quiet_logs` method.
+        """
+        if not self.__quieted:
+            self.__logger.addHandler(self.__logstream_handler)
+            self.__logger.propagate = False
+            self.__quieted = True
+
+    def unquiet(self):
+        """Allow the logs to print to stdout/stderr.
+
+        Log messages will no longer be stored in the StringIO buffer.
+        """
+        if self.__quieted:
+            self.__logger.removeHandler(self.__logstream_handler)
+            self.__logger.propagate = True
+            self.__quieted = False
+
+    @contextmanager
+    def quieted(self):
+        self.quiet()
+        try:
+            yield
+        finally:
+            self.unquiet()
+
+
+logger = RecordableLogger(__name__)
 
 
 def submit_query_request(end_point, *args, **kwargs):
