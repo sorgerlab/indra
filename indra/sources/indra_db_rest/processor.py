@@ -10,6 +10,8 @@ from copy import deepcopy
 from threading import Thread
 from datetime import datetime
 
+from requests import Timeout
+
 from indra.statements import stmts_from_json
 from indra.util.statement_presentation import get_available_source_counts, \
     get_available_ev_counts
@@ -67,16 +69,21 @@ class IndraDBQueryProcessor:
         self.limit = limit
         self.sort_by = sort_by
         self.tries = tries
+        self.__strict_stop = strict_stop
+        self.__timeout = timeout
         self.__offset = 0
         self.__quota = limit
         self.__api_key = api_key
-        self.__done = False
+        self.__canceled = False
+        self.__start_time = None
+        self.__th = None
 
         self._evidence_counts = {}
         self._belief_scores = {}
         self._source_counts = {}
 
-        self._run(persist=persist, strict_stop=strict_stop, timeout=timeout)
+        if limit != 0:
+            self._run(persist=persist)
 
     # Metadata Retrieval methods.
 
@@ -100,11 +107,30 @@ class IndraDBQueryProcessor:
         """Get the limit of the next web request that will be made."""
         return self.__quota
 
+    def _mark_start(self):
+        self.__start_time = datetime.now()
+
+    def _time_since_start(self):
+        dt = datetime.now() - self.__start_time
+        return dt.total_seconds()
+
+    def _strict_time_is_up(self):
+        if self.__start_time is not None and self.__strict_stop:
+            if self._time_since_start() > self.__timeout:
+                return True
+        return False
+
+    def _done(self):
+        return (self.__canceled
+                or self.__offset is None
+                or self.__offset > 0 and self.__quota == 0
+                or self._strict_time_is_up())
+
     # Process control methods
 
     def cancel(self):
         """Cancel the job, stopping the thread running in the background."""
-        self.__done = True
+        self.__canceled = True
 
     def is_working(self):
         """Check if the thread is running."""
@@ -139,30 +165,48 @@ class IndraDBQueryProcessor:
     def _set_special_params(self, **params):
         self.__special_params = params
 
-    def _run_query(self, timeout):
-        result = self.query.get(self.result_type, offset=self.__offset,
-                                limit=self.__quota, sort_by=self.sort_by,
-                                timeout=timeout, n_tries=self.tries,
-                                api_key=self.__api_key, **self.__special_params)
+    def _run_query(self):
+        # If we are in strict stop mode, we want to be sure we give up after
+        # the given overall timeout, so we need to account for time spend on
+        # other queries.
+        if self.__strict_stop:
+            query_timeout = self.__timeout - self._time_since_start()
+            if query_timeout <= 0:
+                return
+        else:
+            query_timeout = None
 
+        # Run the query.
+        try:
+            result = self.query.get(self.result_type, offset=self.__offset,
+                                    limit=self.__quota, sort_by=self.sort_by,
+                                    timeout=query_timeout, n_tries=self.tries,
+                                    api_key=self.__api_key,
+                                    **self.__special_params)
+        except Timeout:
+            # Make sure this is the timeout we think it is.
+            if not self.__strict_stop or not self._strict_time_is_up():
+                raise
+            return
+
+        # Update results
         self._evidence_counts.update(result.evidence_counts)
         self._belief_scores.update(result.belief_scores)
         self._handle_new_result(result, self._source_counts)
-        self.__done |= result.next_offset is None
 
         # Update the quota
         if self.__quota is not None:
             self.__quota -= len(result.results)
-        self.__done |= self.__quota == 0
 
         # Increment the page
         self.__offset = result.next_offset
 
         return
 
-    def _run_queries(self, persist, timeout):
+    def _run_queries(self, persist):
         """Use paging to get all statements requested."""
-        self._run_query(timeout)
+        self._mark_start()
+        self._run_query()
 
         # Check if we want to keep going.
         if not persist:
@@ -170,8 +214,8 @@ class IndraDBQueryProcessor:
             return
 
         # Get the rest of the content.
-        while not self.__done:
-            self._run_query(timeout)
+        while not self._done():
+            self._run_query()
 
         # Create the actual statements.
         self._compile_results()
@@ -181,26 +225,25 @@ class IndraDBQueryProcessor:
         self.query.unquiet_request_logs()
         return
 
-    def _run(self, persist=True, strict_stop=False, timeout=None):
-        self.__started = False
-        self.__th = None
+    def _run(self, persist=True):
 
         # Handle the content if we were limited.
         self.__th = Thread(target=self._run_queries,
-                           args=[persist, timeout if strict_stop else None])
+                           args=[persist])
         self.__th.start()
 
-        if timeout is None:
+        if self.__timeout is None:
             logger.debug("Waiting for thread to complete...")
             self.__th.join()
         else:
-            if timeout:  # is not 0
+            if self.__timeout:  # is not 0
                 logger.debug("Waiting at most %d seconds for thread to"
-                             "complete..." % timeout)
-                self.__th.join(timeout)
-            self.query.quiet_request_logs()
-            logger.info("Leaving request to background thread. Logs may be "
-                        "viewed using the `print_background_logs` method.")
+                             "complete..." % self.__timeout)
+                self.__th.join(self.__timeout)
+            if not self._done():
+                self.query.quiet_request_logs()
+                logger.info("Leaving request to background thread. Logs may be "
+                            "viewed using the `print_background_logs` method.")
         return
 
     # Child defined methods
