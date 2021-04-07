@@ -151,8 +151,8 @@ You can deactivate this feature by setting `filter_ev` to False:
 
 
 __all__ = ['get_statements', 'get_statements_for_papers',
-           'get_statements_by_hash', 'get_statements_from_query',
-           'submit_curation', 'get_curations']
+           'get_statements_for_paper', 'get_statements_by_hash',
+           'get_statements_from_query', 'submit_curation', 'get_curations']
 
 from indra.util import clockit
 from indra.statements import Complex, SelfModification,  ActiveForm, \
@@ -334,6 +334,9 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10,
 
 
 def get_statements_for_paper(*args, **kwargs):
+    from warnings import warn
+    warn("`get_statements_for_paper` has been replaced with "
+         "`get_statements_for_papers`.", DeprecationWarning)
     return get_statements_for_papers(*args, **kwargs)
 
 
