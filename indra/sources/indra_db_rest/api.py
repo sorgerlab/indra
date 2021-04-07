@@ -166,15 +166,16 @@ from indra.sources.indra_db_rest.util import make_db_rest_request, get_url_base
 @clockit
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                    use_exact_type=False, limit=None, persist=True, timeout=None,
-                   strict_stop=False, ev_limit=10, filter_ev=True,
-                   sort_by='ev_count', tries=3, api_key=None):
+                   strict_stop=False, ev_limit=10, sort_by='ev_count', tries=3,
+                   api_key=None):
     """Get a processor for the INDRA DB web API matching given agents and type.
 
-    You get an DBQueryStatementProcessor object, which allow Statements to be loaded
-    in a background thread, providing a sample of the "best" content available
-    promptly in the sample_statements attribute, and populates the statements
-    attribute when the paged load is complete. The "best" is determined by the
-    `sort_by` attribute, which may be either 'belief' or 'ev_count' or None.
+    You get an DBQueryStatementProcessor object, which allow Statements to be
+    loaded in a background thread, providing a sample of the "best" content
+    available promptly in the sample_statements attribute, and populates the
+    statements attribute when the paged load is complete. The "best" is
+    determined by the `sort_by` attribute, which may be either 'belief' or
+    'ev_count' or None.
 
     Parameters
     ----------
@@ -225,10 +226,6 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         False.
     ev_limit : int or None
         Limit the amount of evidence returned per Statement. Default is 10.
-    filter_ev : bool
-        Indicate whether evidence should have the same filters applied as
-        the statements themselves, where appropriate (e.g. in the case of a
-        filter by paper).
     sort_by : str or None
         Str options are currently 'ev_count' or 'belief'. Results will return in
         order of the given parameter. If None, results will be turned in an
@@ -277,12 +274,11 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     return DBQueryStatementProcessor(query, limit=limit, persist=persist,
                                      ev_limit=ev_limit, timeout=timeout,
                                      sort_by=sort_by, tries=tries,
-                                     strict_stop=strict_stop,
-                                     filter_ev=filter_ev, api_key=api_key)
+                                     strict_stop=strict_stop, api_key=api_key)
 
 
 @clockit
-def get_statements_by_hash(hash_list, limit=None, ev_limit=10, filter_ev=True,
+def get_statements_by_hash(hash_list, limit=None, ev_limit=10,
                            sort_by='ev_count', persist=True, timeout=None,
                            strict_stop=False, tries=3, api_key=None):
     """Get fully formed statements from a list of hashes.
@@ -297,10 +293,6 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10, filter_ev=True,
         guarantee a faster response. Default is None.
     ev_limit : int or None
         Limit the amount of evidence returned per Statement. Default is 100.
-    filter_ev : bool
-        Indicate whether evidence should have the same filters applied as
-        the statements themselves, where appropriate (e.g. in the case of a
-        filter by paper).
     sort_by : str or None
         Options are currently 'ev_count' or 'belief'. Results will return in
         order of the given parameter. If None, results will be turned in an
@@ -337,8 +329,8 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10, filter_ev=True,
     return DBQueryStatementProcessor(HasHash(hash_list), limit=limit,
                                      ev_limit=ev_limit, sort_by=sort_by,
                                      persist=persist, timeout=timeout,
-                                     tries=tries, filter_ev=filter_ev,
-                                     strict_stop=strict_stop, api_key=api_key)
+                                     tries=tries, strict_stop=strict_stop,
+                                     api_key=api_key)
 
 
 def get_statements_for_paper(*args, **kwargs):
