@@ -262,3 +262,28 @@ def test_get_statements_evidence_bounded():
     stmts = p.statements
     assert len(stmts) == 10
     assert all(c < 10 for c in p.get_ev_counts().values())
+
+
+@attr('nonpublic')
+def test_get_statements_strict_stop_short():
+    start = datetime.now()
+    p = dbr.get_statements("TNF", timeout=1, strict_stop=True)
+    end = datetime.now()
+    sleep(0.1)
+    assert not p.is_working()
+    dt = (end - start).total_seconds()
+    assert 1 <= dt < 1.5, dt
+    assert not p.statements
+    assert not p.statements_sample
+
+
+@attr('nonpublic')
+def test_get_statements_strict_stop_long():
+    start = datetime.now()
+    p = dbr.get_statements("TNF", timeout=10, strict_stop=True)
+    end = datetime.now()
+    sleep(1)
+    assert not p.is_working()
+    dt = (end - start).total_seconds()
+    assert 10 <= dt < 10.5, dt
+    assert p.statements
