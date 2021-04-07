@@ -12937,7 +12937,6 @@ MESH	D000071516	Alpha-Ketoglutarate-Dependent Dioxygenase FTO	HGNC	24678	FTO
 MESH	D000071560	beta-Arrestin 2	HGNC	710	ARR3
 MESH	D000071576	Crush Injuries	EFO	0009504	crush injury
 MESH	D000071617	Protein Deglycase DJ-1	HGNC	16369	PARK7
-MESH	D000071636	Protein Phosphatase 2C	HGNC	9279	PDP1
 MESH	D000071656	Receptor, Notch3	HGNC	7883	NOTCH3
 MESH	D000071657	Werner Syndrome Helicase	HGNC	12791	WRN
 MESH	D000071676	Zinc Finger Protein GLI1	HGNC	4317	GLI1
@@ -23821,7 +23820,6 @@ MESH	D022763	CCAAT-Enhancer-Binding Protein-alpha	HGNC	1833	CEBPA
 MESH	D022782	CCAAT-Enhancer-Binding Protein-beta	HGNC	1834	CEBPB
 MESH	D022861	Hermanski-Pudlak Syndrome	DOID	DOID:3753	Hermansky-Pudlak syndrome
 MESH	D023062	Receptors, Interleukin-8A	HGNC	6026	CXCR1
-MESH	D023081	CCAAT-Binding Factor	HGNC	24218	CEBPZ
 MESH	D023082	Defensins	CHEBI	CHEBI:82761	defensin
 MESH	D023102	Anoikis	GO	GO:0043276	anoikis
 MESH	D023201	CD40 Ligand	HGNC	11935	CD40LG
@@ -24077,21 +24075,16 @@ MESH	D038261	Alexander Disease	DOID	DOID:4252	Alexander disease
 MESH	D038601	Ribosomal Protein S6	HGNC	10429	RPS6
 MESH	D038642	Shaken Baby Syndrome	EFO	1001423	Shaken Baby Syndrome
 MESH	D038681	Follistatin	HGNC	3971	FST
-MESH	D038744	Ribosomal Protein S6 Kinases, 90-kDa	HGNC	10430	RPS6KA1
 MESH	D038921	Coffin-Lowry Syndrome	DOID	DOID:3783	Coffin-Lowry syndrome
 MESH	D038941	Polypyrimidine Tract-Binding Protein	HGNC	9583	PTBP1
 MESH	D038961	O-Acetyl-ADP-Ribose	CHEBI	CHEBI:76279	2''-O-acetyl-ADP-D-ribose
-MESH	D039081	Integrin alpha5beta1	HGNC	6141	ITGA5
 MESH	D039103	Poly(A)-Binding Protein II	HGNC	8565	PABPN1
 MESH	D039121	Integrin alpha6beta1	HGNC	6142	ITGA6
 MESH	D039141	Muscular Dystrophy, Oculopharyngeal	DOID	DOID:11719	oculopharyngeal muscular dystrophy
-MESH	D039302	Integrin alphaVbeta3	HGNC	6150	ITGAV
 MESH	D039441	Integrin alpha4	HGNC	6140	ITGA4
 MESH	D039481	CD11b Antigen	HGNC	6149	ITGAM
 MESH	D039521	CD11c Antigen	HGNC	6152	ITGAX
 MESH	D039561	Eukaryotic Initiation Factor-4E	HGNC	3287	EIF4E
-MESH	D039601	Eukaryotic Initiation Factor-4A	HGNC	3282	EIF4A1
-MESH	D039603	Eukaryotic Initiation Factor-4G	HGNC	3296	EIF4G1
 MESH	D039621	Eukaryotic Initiation Factor-3	HGNC	3271	EIF3A
 MESH	D039661	Integrin beta3	HGNC	6156	ITGB3
 MESH	D039663	Integrin beta4	HGNC	6158	ITGB4
@@ -24184,7 +24177,6 @@ MESH	D044093	Receptor, Galanin, Type 3	HGNC	4134	GALR3
 MESH	D044102	Receptor, Melanocortin, Type 1	HGNC	6929	MC1R
 MESH	D044104	Receptor, Melanocortin, Type 3	HGNC	6931	MC3R
 MESH	D044105	Receptor, Melanocortin, Type 4	HGNC	6932	MC4R
-MESH	D044169	Receptors, Calcium-Sensing	HGNC	1514	CASR
 MESH	D044225	Piscirickettsiaceae Infections	EFO	1001397	Piscirickettsiaceae Infections
 MESH	D044243	Linoleic Acids, Conjugated	CHEBI	CHEBI:61159	conjugated linoleic acid
 MESH	D044262	Prostaglandin H2	CHEBI	CHEBI:15554	prostaglandin H2
@@ -25029,7 +25021,6 @@ MESH	D054440	Receptors, Ghrelin	HGNC	4267	GHSR
 MESH	D054447	Receptors, CCR10	HGNC	4474	CCR10
 MESH	D054463	Trichothiodystrophy Syndromes	DOID	DOID:2960	photosensitive trichothiodystrophy
 MESH	D054465	Peroxiredoxin VI	HGNC	16753	PRDX6
-MESH	D054467	Phospholipases A2	HGNC	9030	PLA2G1B
 MESH	D054468	Axoneme	GO	GO:0005930	axoneme
 MESH	D054477	Glutaredoxins	HGNC	4330	GLRX
 MESH	D054481	Thioredoxin Reductase 1	HGNC	12437	TXNRD1
