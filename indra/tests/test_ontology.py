@@ -319,3 +319,15 @@ def test_chebi_refinements():
                                'CHEBI', 'CHEBI:365')
     assert not bio_ontology.partof('CHEBI', 'CHEBI:365',
                                    'CHEBI', 'CHEBI:136692')
+
+
+def test_standardize_hgnc_fplx_mesh_bug():
+    refs = standardize_db_refs({'HGNC': '1514'})
+    assert refs['UP'] == 'P41180'
+    assert refs['MESH'] == 'C095550'
+    assert 'FPLX' not in refs
+
+    refs = standardize_db_refs({'FPLX': 'Calcium_sensing_receptors'})
+    assert refs['MESH'] == 'D044169'
+    assert refs['HGNC_GROUP'] == '279'
+    assert 'HGNC' not in refs
