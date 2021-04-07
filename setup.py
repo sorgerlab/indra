@@ -22,7 +22,7 @@ def main():
                       'eidos_offline': ['pyyaml>=5.1.0', 'cython',
                                         'pyjnius==1.1.4'],
                       'hypothesis': ['gilda'],
-                      'geneways': ['stemming', 'nltk'],
+                      'geneways': ['stemming', 'nltk<3.6'],
                       'sofia': ['openpyxl'],
                       'bel': ['pybel>=0.15.0,<0.16.0'],
                       'sbml': ['python-libsbml'],
@@ -36,7 +36,7 @@ def main():
                       # Utilities
                       'graph': ['pygraphviz'],
                       'plot': ['matplotlib'],
-                      'isi': ['nltk', 'unidecode'],
+                      'isi': ['nltk<3.6', 'unidecode'],
                       'api': ['flask', 'flask_restx', 'flask_cors',
                               'docstring-parser']
                       }
