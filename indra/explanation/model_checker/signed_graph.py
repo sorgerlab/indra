@@ -1,10 +1,10 @@
 import logging
-import networkx as nx
 
 from . import ModelChecker
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
 from .model_checker import signed_edges_to_signed_nodes, NodesContainer
+from indra.explanation.pathfinding.util import get_subgraph
 
 logger = logging.getLogger(__name__)
 
@@ -36,16 +36,27 @@ class SignedGraphModelChecker(ModelChecker):
                  nodes_to_agents=None):
         super().__init__(model, statements, do_sampling, seed, nodes_to_agents)
 
-    def get_graph(self, edge_filter_func=None):
+    def get_graph(self, edge_filter_func_name=None, copy_edge_data=None):
+        """Get a signed nodes graph to search for paths in.
+
+        Parameters
+        ----------
+        edge_filter_func_name : str
+            A name of a edge filter function to filter the original model.
+        copy_edge_data : set(str)
+            A set of keys to copy from original model edge data to the graph
+            edge data. If None, only belief data is copied by default.
+        """
         if self.graph:
             return self.graph
-        if edge_filter_func:
-            filtered_model = nx.subgraph_view(
-                self.model, filter_edge=edge_filter_func)
+        if edge_filter_func_name:
+            filtered_model = get_subgraph(self.model, edge_filter_func_name)
         else:
             filtered_model = self.model
+        if not copy_edge_data:
+            copy_edge_data = {'belief'}
         self.graph = signed_edges_to_signed_nodes(
-            filtered_model, copy_edge_data={'belief'})
+            filtered_model, copy_edge_data=copy_edge_data)
         self.get_nodes_to_agents()
         return self.graph
 
