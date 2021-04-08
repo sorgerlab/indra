@@ -287,3 +287,22 @@ def test_get_statements_strict_stop_long():
     dt = (end - start).total_seconds()
     assert 10 <= dt < 10.5, dt
     assert p.statements
+
+
+@attr('nonpublic')
+def test_filter_ev():
+    ids = [('pmcid', 'PMC5770457'), ('pmid', '27014235')]
+    p = dbr.get_statements_for_papers(ids)
+    assert p.statements
+
+    correct_source = 0
+    incorrect_source = 0
+    for s in p.statements:
+        for ev in s.evidence:
+            if any(ev.text_refs.get(t.upper()) == v for t, v in ids):
+                correct_source += 1
+            else:
+                incorrect_source += 1
+
+    assert incorrect_source == 0,\
+        f"{incorrect_source} unfiltered sources vs. {correct_source} filtered."
