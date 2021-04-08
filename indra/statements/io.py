@@ -1,12 +1,11 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-
 __all__ = ['stmts_from_json', 'stmts_from_json_file', 'stmts_to_json',
-           'stmts_to_json_file', 'draw_stmt_graph',
+           'stmts_to_json_file', 'draw_stmt_graph', 'pretty_print_stmts',
            'UnresolvedUuidError', 'InputError']
 
 import json
 import logging
+from typing import List
+
 from indra.statements.statements import Statement, Unresolved
 
 
@@ -220,6 +219,70 @@ def draw_stmt_graph(stmts):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
     plt.show()
+
+
+def pretty_print_stmts(stmt_list: List[Statement], stmt_limit: int = None,
+                       ev_limit: int = 5) -> None:
+    """Print a list of statements to the commandline in a neatly formatted way.
+
+    Parameters
+    ----------
+    stmt_list :
+        The list of INDRA Statements to be printed.
+    stmt_limit :
+        The maximum number of INDRA Statements to be printed. (Default is None)
+    ev_limit :
+        The maximum number of Evidence to print for each Statement.
+    """
+    # Import some modules helpful for ext formatting.
+    from textwrap import TextWrapper
+    from tabulate import tabulate
+    from os import get_terminal_size
+
+    # Try to get the actual number of columns in the terminal.
+    columns = 70
+    try:
+        columns = get_terminal_size().columns
+    except Exception as e:
+        logger.debug(f"Failed to get terminal size (using default {columns}): "
+                     f"{e}.")
+
+    # Parameterize the text wrappers that format the ev text and the metadata.
+    stmt_tr = TextWrapper(width=columns)
+    metadata_tr = TextWrapper(width=16)
+    evidence_tr = TextWrapper(width=columns - metadata_tr.width - 2)
+
+    # Print the table.
+    for i, s in enumerate(stmt_list[:stmt_limit]):
+
+        # Print the Statement heading.
+        stmt_str = f"[LIST INDEX: {i}] " + str(s)
+        print(stmt_tr.fill(stmt_str))
+        print("="*columns)
+
+        # Print the evidence
+        for j, ev in enumerate(s.evidence[:ev_limit]):
+
+            # Gather the metadata we want to display.
+            metadata = [("EV INDEX", j), ("SOURCE", ev.source_api)]
+            for id_type in ['PMID', 'PMCID', 'DOI']:
+                if id_type in ev.text_refs:
+                    metadata.append((id_type, ev.text_refs[id_type]))
+                    break
+
+            # Form the metadata string to fill out its allocated space.
+            metadata_str = '\n'.join(line + ' '*(metadata_tr.width - len(line))
+                                     for k, v in metadata
+                                     for line in metadata_tr.wrap(f"{k}: {v}"))
+
+            # Form the evidence string.
+            text_str = evidence_tr.fill(ev.text)
+
+            # Print the entire thing
+            full_str = tabulate([[metadata_str, text_str]], tablefmt='plain')
+            print(full_str)
+            print('-'*columns)
+        print()
 
 
 class UnresolvedUuidError(Exception):
