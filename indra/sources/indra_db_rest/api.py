@@ -39,8 +39,8 @@ existing curations (there are access limitations that will require an API key in
 these functions).
 
 
-Timing Control Examples
------------------------
+Timing Control
+--------------
 
 Consider the case in which you want to get Statements whose subject is TNF,
 you could simply enter:
@@ -91,8 +91,8 @@ and the way the query is executed. The function documentation is recommended for
 further details.
 
 
-Query Language Examples
------------------------
+Query Language
+--------------
 
 There are several metadata and data values indexed in the INDRA Database
 allowing for efficient searches, and those metadata values can be combined in
@@ -123,6 +123,10 @@ above, you can also form unions (a.k.a. "or"s) using "|":
 >>>
 >>> p = get_statements_from_query(query, limit=10)
 
+
+Evidence Filtering
+------------------
+
 If your query constrains results based on a property of the original evidence
 text, so anything from the text references (like pmid) to the readers included
 and whether the evidence is from a reading or a database, can all have an effect
@@ -146,6 +150,18 @@ You can deactivate this feature by setting `filter_ev` to False:
 >>>     or ev.text_refs['PMCID'] == 'PMC3640704'
 >>>     for s in p.statements for ev in s.evidence)
 >>> False
+
+
+Curation Submission
+-------------------
+
+Suppose you run a query and get some Statements with some evidence; you look
+through the results and find an evidence that does not really support the
+Statement. This happens with our machine reading systems, and you can give
+feedback by submitting a curation.
+
+>>> p = get_statements(agents=["TNF"], ev_limit=5, limit=50)
+>>>
 
 """
 
