@@ -133,7 +133,7 @@ from that paper.
 
 >>> p = get_statements_for_papers([('pmid', '20471474'),
 >>>                                ('pmcid', 'PMC3640704')])
->>> all(ev.text_refs['PMID'] == '2047147'
+>>> all(ev.text_refs['PMID'] == '20471474'
 >>>     or ev.text_refs['PMCID'] == 'PMC3640704'
 >>>     for s in p.statements for ev in s.evidence)
 >>> True
@@ -142,7 +142,7 @@ You can deactivate this feature by setting `filter_ev` to False:
 
 >>> p = get_statements_for_papers([('pmid', '20471474'),
 >>>                                ('pmcid', 'PMC3640704')], filter_ev=False)
->>> all(ev.text_refs['PMID'] == '2047147'
+>>> all(ev.text_refs['PMID'] == '20471474'
 >>>     or ev.text_refs['PMCID'] == 'PMC3640704'
 >>>     for s in p.statements for ev in s.evidence)
 >>> False
