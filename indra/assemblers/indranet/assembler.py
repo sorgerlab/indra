@@ -50,7 +50,8 @@ class IndraNetAssembler():
 
     def make_model(self, exclude_stmts=None, complex_members=3,
                    graph_type='multi_graph', sign_dict=None,
-                   belief_flattening=None, weight_flattening=None):
+                   belief_flattening=None, weight_flattening=None,
+                   extra_columns=None):
         """Assemble an IndraNet graph object.
 
         Parameters
@@ -106,7 +107,7 @@ class IndraNetAssembler():
         model : IndraNet
             IndraNet graph object.
         """
-        df = self.make_df(exclude_stmts, complex_members)
+        df = self.make_df(exclude_stmts, complex_members, extra_columns)
         if graph_type == 'multi_graph':
             model = IndraNet.from_df(df)
         elif graph_type == 'digraph':
