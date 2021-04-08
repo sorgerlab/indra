@@ -1,6 +1,7 @@
 __all__ = ['path_sign_to_signed_nodes', 'signed_nodes_to_signed_edge',
            'get_sorted_neighbors']
 import logging
+import networkx as nx
 
 logger = logging.getLogger(__name__)
 
@@ -113,3 +114,44 @@ def get_sorted_neighbors(G, node, reverse, force_edges=None):
             key=lambda n:
                 G.edges[(node, n)].get('belief', 0),
             reverse=True)
+
+
+edge_filter_functions = {}
+# Need to set a global G variable for filter edge function to work
+G = None
+
+
+def register_edge_filter(function):
+    """
+    Decorator to register a function as an edge filter for getting subgraphs.
+    Edge filter function should take two (u, v - for DiGraph) or three
+    (u, v, k -  for MultiDiGraph) parameters and return True if the edge
+    should be in the graph and False otherwise.
+    """
+    edge_filter_functions[function.__name__] = function
+    return function
+
+
+def get_subgraph(g, filter_func_name):
+    """Get a subgraph of original graph filtered by a provided function."""
+    # Updating global variable here to handle NetworkX implementation of
+    # closures used in subgraph_view
+    global G
+    G = g
+    filter_edge = edge_filter_functions.get(filter_func_name)
+    view = nx.subgraph_view(g, filter_edge=filter_edge)
+    # Copying to get a graph object instead of view
+    new_g = view.copy()
+    return new_g
+
+
+@register_edge_filter
+def filter_edge_by_source_tag(u, v, *args):
+    if args:
+        edge = G[u][v][args[0]]
+    else:
+        edge = G[u][v]
+    source_tags = set()
+    for stmts_dict in edge['statements']:
+        source_tags = source_tags.union(stmts_dict['source_tags'])
+    return 'internal' in source_tags
