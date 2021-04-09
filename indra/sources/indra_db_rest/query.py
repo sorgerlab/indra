@@ -1,3 +1,155 @@
+"""
+The Query architecture allows the construction of arbitrary queries for content
+from the INDRA Database.
+
+Specifically, the query constructed using this language of classes is converted
+into sophisticated and optimized SQL. Different classes represent different
+types of constraint and are named as much as possible to fit together when
+spoken aloud in English. For example:
+
+>>> HasAgent("MEK") & HasAgent("ERK") & HasType(["Phosphorylation"])
+
+Will find any Statement that has an agent MEK and an agent ERK and has the type
+phosphorylation. Broadly, querie classes can be broken into 3 types: queries on
+the meaning of a Statement, queries on the provenance of a Statement, and
+queries that combine groups of queries.
+
+Meaning of a Statement:
+
+- :py:class:`HasAgent`
+- :py:class:`HasType`
+- :py:class:`HasNumAgents`
+
+Provenence of a Statement:
+
+- :py:class:`HasReadings`
+- :py:class:`HasDatabases`
+- :py:class:`HasSources`
+- :py:class:`HasOnlySource`
+- :py:class:`FromPapers`
+- :py:class:`FromMeshIds`
+- :py:class:`HasNumEvidence`
+- :py:class:`HasEvidenceBound`
+
+Combine Queriers:
+
+- :py:class:`And`
+- :py:class:`Or`
+
+There is also the special class, the :py:class:`EmptyQuery` which is useful when
+programmatically building a query.
+
+In practice you will likely not use :py:class:`And` or :py:class:`Or` very often
+but will instead make use of the overloaded `&` and `|` operators. In addition
+you can invert a query -- essentially ask for Statements that do _not_ meet
+certain criteria, e.g. "not has readings". This can be accomplished with the
+overloaded `~` operator, e.g. `~HasReadings()`.
+
+The query class works by representing a and producing a particular JSON
+structure which is recognized by the INDRA Database REST service, where it is
+translated into a similar but more sophisticated Query language used by the
+Readonly Database client. The Query class implements the basic methods used to
+communicate with the REST Service in this way.
+
+Examples
+--------
+
+First an example of the typical usage of a query object:
+
+>>> from indra.sources.indra_db_rest.api import get_statements_from_query
+>>> from indra.sources.indra_db_rest.query import *
+>>>
+>>> q = HasAgent('MEK') | HasAgent('MAP2K1') & HasDatabases()
+>>> p = get_statements_from_query(q)
+>>> p.statements
+[Activation(MEK(), ERK()),
+ Phosphorylation(MEK(), ERK()),
+ Activation(MAP2K1(), ERK()),
+ Activation(RAF1(), MEK()),
+ Phosphorylation(RAF1(), MEK()),
+ Phosphorylation(MAP2K1(), ERK()),
+ Activation(BRAF(), MEK()),
+ Inhibition(2-(2-amino-3-methoxyphenyl)chromen-4-one(), MEK()),
+ Activation(MAP2K1(), MAPK1()),
+ Activation(MAP2K1(), MAPK3()),
+ Phosphorylation(MAP2K1(), MAPK1()),
+ Phosphorylation(BRAF(), MEK()),
+ Activation(MEK(), MAPK1()),
+ Complex(BRAF(), MAP2K1()),
+ Phosphorylation(MAP2K1(), MAPK3()),
+ Activation(MEK(), MAPK3()),
+ Complex(MAP2K1(), RAF1()),
+ Activation(RAF1(), MAP2K1()),
+ Inhibition(trametinib(), MEK()),
+ Phosphorylation(MEK(), MAPK3()),
+ Complex(MAP2K1(), MAPK1()),
+ Phosphorylation(MEK(), MAPK1()),
+ Inhibition(selumetinib(), MEK()),
+ Phosphorylation(PAK1(), MAP2K1(), S, 298)]
+>>>
+>>> q = HasAgent('MEK') & HasAgent('ERK') & HasEvidenceBound(["> 10"])
+>>> p = get_statements_from_query(q)
+>>> p.statements
+[Activation(MEK(), ERK()),
+ Phosphorylation(MEK(), ERK()),
+ Complex(ERK(), MEK()),
+ Inhibition(MEK(), ERK()),
+ Dephosphorylation(MEK(), ERK()),
+ Complex(ERK(), MEK(), RAF()),
+ Phosphorylation(MEK(), ERK(), T),
+ Phosphorylation(MEK(), ERK(), Y),
+ Activation(MEK(), ERK(mods: (phosphorylation))),
+ IncreaseAmount(MEK(), ERK())]
+
+For more details on the usage of :py:function:`get_statments_form_query` see the
+:py:module:`indra.sources.indra_db_rest.api` documentation.
+
+Lastly, a tour demonstrating the different utilities of a query object:
+
+>>> from indra.sources.indra_db_rest.query import *
+>>> q = HasAgent('MEK', namespace='FPLX') & ~HasAgent('ERK', namespace='FPLX')
+>>>
+>>> # This is the JSON sent to the server.
+>>> q.to_simple_json()
+{'class': 'And',
+ 'constraint': {'queries': [{'class': 'HasAgent',
+    'constraint': {'agent_id': 'MEK',
+     'namespace': 'FPLX',
+     'role': None,
+     'agent_num': None},
+    'inverted': False},
+   {'class': 'HasAgent',
+    'constraint': {'agent_id': 'ERK',
+     'namespace': 'FPLX',
+     'role': None,
+     'agent_num': None},
+    'inverted': True}]},
+ 'inverted': False}
+>>>
+>>> # The more "true" representation of the JSON in this case looks very similar
+>>> q.get_query_json()
+{'class': 'Intersection',
+ 'constraint': {'query_list': [{'class': 'HasAgent',
+    'constraint': {'_regularized_id': 'MEK',
+     'agent_id': 'MEK',
+     'agent_num': None,
+     'namespace': 'FPLX',
+     'role': None},
+    'inverted': False},
+   {'class': 'HasAgent',
+    'constraint': {'_regularized_id': 'ERK',
+     'agent_id': 'ERK',
+     'agent_num': None,
+     'namespace': 'FPLX',
+     'role': None},
+    'inverted': True}]},
+ 'inverted': False}
+>>>
+>>> print("I am finding statements that", q.get_query_english())
+I am finding statements that do not have an agent where FPLX=ERK and have an
+agent where FPLX=MEK
+"""
+
 __all__ = ['Query', 'And', 'Or', 'HasAgent', 'FromMeshIds', 'HasHash',
            'HasSources', 'HasOnlySource', 'HasReadings', 'HasDatabases',
            'HasType', 'HasNumAgents', 'HasNumEvidence', 'HasEvidenceBound',
@@ -342,7 +494,7 @@ class HasAgent(Query):
         Statement's list of agents.
     """
 
-    def __init__(self, agent_id, namespace='AUTO', role=None, agent_num=None):
+    def __init__(self, agent_id, namespace='NAME', role=None, agent_num=None):
         self.agent_id = agent_id
         self.namespace = namespace
         self.role = role
@@ -459,7 +611,9 @@ class HasEvidenceBound(Query):
         inequality operation must be one of: <, >, <=, >=, ==, !=.
     """
 
-    def __init__(self, evidence_bounds: Iterable[str]):
+    def __init__(self, evidence_bounds: Union[Iterable[str], str]):
+        if isinstance(evidence_bounds, str):
+            evidence_bounds = [evidence_bounds]
         self.evidence_bounds = list(evidence_bounds)
         super(HasEvidenceBound, self).__init__()
 
@@ -488,6 +642,8 @@ class HasType(Query):
     """
 
     def __init__(self, stmt_types, include_subclasses=False):
+        if isinstance(stmt_types, str):
+            stmt_types = [stmt_types]
         self.stmt_types = stmt_types
         self.include_subclasses = include_subclasses
         super(HasType, self).__init__()
