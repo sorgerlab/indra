@@ -4,7 +4,7 @@ __all__ = ['stmts_from_json', 'stmts_from_json_file', 'stmts_to_json',
 
 import json
 import logging
-from typing import List
+from typing import List, Optional
 
 from indra.statements.statements import Statement, Unresolved
 
@@ -221,8 +221,9 @@ def draw_stmt_graph(stmts):
     plt.show()
 
 
-def pretty_print_stmts(stmt_list: List[Statement], stmt_limit: int = None,
-                       ev_limit: int = 5) -> None:
+def pretty_print_stmts(stmt_list: List[Statement],
+                       stmt_limit: Optional[int] = None,
+                       ev_limit: Optional[int] = 5) -> None:
     """Print a list of statements to the commandline in a neatly formatted way.
 
     Parameters
@@ -233,6 +234,7 @@ def pretty_print_stmts(stmt_list: List[Statement], stmt_limit: int = None,
         The maximum number of INDRA Statements to be printed. (Default is None)
     ev_limit :
         The maximum number of Evidence to print for each Statement.
+        (Default is 5)
     """
     # Import some modules helpful for ext formatting.
     from textwrap import TextWrapper
