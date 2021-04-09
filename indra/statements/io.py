@@ -278,7 +278,10 @@ def pretty_print_stmts(stmt_list: List[Statement],
                                      for line in metadata_tr.wrap(f"{k}: {v}"))
 
             # Form the evidence string.
-            text_str = evidence_tr.fill(ev.text)
+            if ev.text:
+                text_str = evidence_tr.fill(ev.text)
+            else:
+                text_str = evidence_tr.fill("(No evidence text)")
 
             # Print the entire thing
             full_str = tabulate([[metadata_str, text_str]], tablefmt='plain')
