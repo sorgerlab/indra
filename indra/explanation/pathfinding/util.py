@@ -146,12 +146,12 @@ def get_subgraph(g, filter_func_name):
 
 
 @register_edge_filter
-def filter_edge_by_source_tag(u, v, *args):
+def filter_to_internal_edges(u, v, *args):
     if args:
         edge = G[u][v][args[0]]
     else:
         edge = G[u][v]
-    source_tags = set()
     for stmts_dict in edge['statements']:
-        source_tags = source_tags.union(stmts_dict['source_tags'])
-    return 'internal' in source_tags
+        if stmts_dict['internal']:
+            return True
+    return False
