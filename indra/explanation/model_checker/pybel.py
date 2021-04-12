@@ -37,13 +37,14 @@ class PybelModelChecker(ModelChecker):
 
     def get_graph(self, include_variants=False, symmetric_variant_links=False,
                   include_components=True, symmetric_component_links=True,
-                  edge_filter_func=None):
+                  edge_filter_func_name=None):
         """Convert a PyBELGraph to a graph with signed nodes."""
         # This import is done here rather than at the top level to avoid
         # making pybel an implicit dependency of the model checker
         from indra.assemblers.pybel.assembler import belgraph_to_signed_graph
         if self.graph:
             return self.graph
+        # NOTE edge_filter_func_name is not currently used in PyBEL
         signed_edges = belgraph_to_signed_graph(
             self.model,
             include_variants=include_variants,

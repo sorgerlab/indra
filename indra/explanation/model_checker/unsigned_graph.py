@@ -1,4 +1,5 @@
 import logging
+import networkx as nx
 from . import ModelChecker, NodesContainer
 from indra.statements import *
 from indra.ontology.bio import bio_ontology

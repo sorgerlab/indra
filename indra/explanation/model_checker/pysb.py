@@ -265,10 +265,11 @@ class PysbModelChecker(ModelChecker):
 
     def get_graph(self, prune_im=True, prune_im_degrade=True,
                   prune_im_subj_obj=False, add_namespaces=False,
-                  edge_filter_func=None):
+                  edge_filter_func_name=None):
         """Get influence map and convert it to a graph with signed nodes."""
         if self.graph:
             return self.graph
+        # NOTE edge_filter_func_name is not currently used in PySB
         im = self.get_im(force_update=True)
         if prune_im:
             self.prune_influence_map()
