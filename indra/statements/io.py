@@ -1,7 +1,7 @@
 __all__ = ['stmts_from_json', 'stmts_from_json_file', 'stmts_to_json',
            'stmts_to_json_file', 'draw_stmt_graph', 'pretty_print_stmts',
            'UnresolvedUuidError', 'InputError',
-           'set_pretty_print_default_width']
+           'set_pretty_print_max_width']
 
 import json
 import logging
@@ -222,13 +222,13 @@ def draw_stmt_graph(stmts):
     plt.show()
 
 
-pretty_print_default_width = 66
+pretty_print_max_width = 80
 
 
-def set_pretty_print_default_width(new_default):
-    """Set the default display width for pretty prints, in characters."""
-    global pretty_print_default_width
-    pretty_print_default_width = new_default
+def set_pretty_print_max_width(new_max):
+    """Set the max display width for pretty prints, in characters."""
+    global pretty_print_max_width
+    pretty_print_max_width = new_max
 
 
 def pretty_print_stmts(stmt_list: List[Statement],
@@ -260,9 +260,9 @@ def pretty_print_stmts(stmt_list: List[Statement],
 
     # Try to get the actual number of columns in the terminal.
     if width is None:
-        width = pretty_print_default_width
+        width = 66
         try:
-            width = get_terminal_size().columns
+            width = min(get_terminal_size().columns, pretty_print_max_width)
         except Exception as e:
             logger.debug(f"Failed to get terminal size (using default "
                          f"{width}): {e}.")
