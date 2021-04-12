@@ -237,7 +237,9 @@ def pretty_print_stmts(stmt_list: List[Statement],
                        stmt_limit: Optional[int] = None,
                        ev_limit: Optional[int] = 5,
                        width: Optional[int] = None) -> None:
-    """Print a list of statements to the commandline in a neatly formatted way.
+    """Print a formatted list of statements along with evidence text.
+
+    Requires the tabulate package (https://pypi.org/project/tabulate).
 
     Parameters
     ----------
@@ -251,18 +253,22 @@ def pretty_print_stmts(stmt_list: List[Statement],
         evidence will be printed for each Statement. (Default is 5)
     width : Optional[int]
         Manually set the width of the table. If `None` the function will try to
-        match the current terminal width, and if that is not possible it will
-        use :data:`pretty_print_default_width`, which can be adjusted using the
-        :func:`set_pretty_print_default_width` function. (Default is None)
-        """
-    # Import some modules helpful for ext formatting.
+        match the current terminal width using `os.get_terminal_size()`.  If
+        this fails the width defaults to 80 characters. The maximum width can
+        be controlled by setting :data:`pretty_print_max_width` using the
+        :func:`set_pretty_print_max_width` function. This is useful in 
+        Jupyter notebooks where the environment returns a terminal size
+        of 80 characters regardless of the width of the window. (Default
+        is None).
+    """
+    # Import some modules helpful for text formatting.
     from textwrap import TextWrapper
     from tabulate import tabulate
     from os import get_terminal_size
 
     # Try to get the actual number of columns in the terminal.
     if width is None:
-        width = 66
+        width = 80
         try:
             width = get_terminal_size().columns
         except Exception as e:
