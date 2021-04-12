@@ -1,5 +1,6 @@
 __all__ = ['path_sign_to_signed_nodes', 'signed_nodes_to_signed_edge',
-           'get_sorted_neighbors']
+           'get_sorted_neighbors', 'get_subgraph', 'register_edge_filter',
+           'filter_to_internal_edges']
 import logging
 import networkx as nx
 
@@ -147,6 +148,9 @@ def get_subgraph(g, filter_func_name):
 
 @register_edge_filter
 def filter_to_internal_edges(u, v, *args):
+    """Return True if an edge is internal. NOTE it returns True if any of the
+    statements associated with an edge is internal.
+    """
     if args:
         edge = G[u][v][args[0]]
     else:
