@@ -222,12 +222,14 @@ def draw_stmt_graph(stmts):
     plt.show()
 
 
-pretty_print_max_width = 80
+pretty_print_max_width = None
 
 
 def set_pretty_print_max_width(new_max):
     """Set the max display width for pretty prints, in characters."""
     global pretty_print_max_width
+    if new_max is not None and not isinstance(new_max, int):
+        raise ValueError("Max width must be an integer or None.")
     pretty_print_max_width = new_max
 
 
@@ -262,10 +264,15 @@ def pretty_print_stmts(stmt_list: List[Statement],
     if width is None:
         width = 66
         try:
-            width = min(get_terminal_size().columns, pretty_print_max_width)
+            width = get_terminal_size().columns
         except Exception as e:
             logger.debug(f"Failed to get terminal size (using default "
                          f"{width}): {e}.")
+
+        # Apply the maximum.
+        if pretty_print_max_width is not None:
+            assert isinstance(pretty_print_max_width, int)
+            width = min(width, pretty_print_max_width)
 
     # Parameterize the text wrappers that format the ev text and the metadata.
     stmt_tr = TextWrapper(width=width)
