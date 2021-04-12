@@ -239,18 +239,20 @@ def pretty_print_stmts(stmt_list: List[Statement],
 
     Parameters
     ----------
-    stmt_list :
+    stmt_list : List[Statement]
         The list of INDRA Statements to be printed.
-    stmt_limit :
-        The maximum number of INDRA Statements to be printed. (Default is None)
-    ev_limit :
-        The maximum number of Evidence to print for each Statement.
-        (Default is 5)
-    width :
+    stmt_limit : Optional[int]
+        The maximum number of INDRA Statements to be printed. If None, all
+        Statements are printed. (Default is None)
+    ev_limit : Optional[int]
+        The maximum number of Evidence to print for each Statement. If None, all
+        evidence will be printed for each Statement. (Default is 5).
+    width : Optional[int]
         Manually set the width of the table. Default is None, in which case
         the function will try to match the current terminal width, and if that
-        is not possible it will use `pretty_print_default_width`, which can be
-        adjusted using the `set_pretty_print_default_width` function.
+        is not possible it will use :data:`pretty_print_default_width`, which
+        can be adjusted using the :func:`set_pretty_print_default_width`
+        function.
     """
     # Import some modules helpful for ext formatting.
     from textwrap import TextWrapper
