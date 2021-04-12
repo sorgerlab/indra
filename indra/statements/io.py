@@ -246,14 +246,13 @@ def pretty_print_stmts(stmt_list: List[Statement],
         Statements are printed. (Default is None)
     ev_limit : Optional[int]
         The maximum number of Evidence to print for each Statement. If None, all
-        evidence will be printed for each Statement. (Default is 5).
+        evidence will be printed for each Statement. (Default is 5)
     width : Optional[int]
-        Manually set the width of the table. Default is None, in which case
-        the function will try to match the current terminal width, and if that
-        is not possible it will use :data:`pretty_print_default_width`, which
-        can be adjusted using the :func:`set_pretty_print_default_width`
-        function.
-    """
+        Manually set the width of the table. If `None` the function will try to
+        match the current terminal width, and if that is not possible it will
+        use :data:`pretty_print_default_width`, which can be adjusted using the
+        :func:`set_pretty_print_default_width` function. (Default is None)
+        """
     # Import some modules helpful for ext formatting.
     from textwrap import TextWrapper
     from tabulate import tabulate
