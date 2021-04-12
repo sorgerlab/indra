@@ -75,6 +75,14 @@ def test_make_df():
         'initial_sign', 'residue', 'position'}
     assert df.residue.isna().sum() == 9  # Check that all but one row is NaN
     assert df.position.isna().sum() == 9  # Check that all but one row is NaN
+    # Extra column
+    df2 = ia.make_df(extra_columns=[
+        ('stmt_type_upper',
+         lambda stmt: type(stmt).__name__.upper())])
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == 10
+    assert set(df2.columns) - set(df.columns) == {'stmt_type_upper'}
+    assert df2.stmt_type_upper[0] == 'ACTIVATION'
 
 
 # Test assembly from IndraNet directly
