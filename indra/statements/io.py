@@ -1,6 +1,7 @@
 __all__ = ['stmts_from_json', 'stmts_from_json_file', 'stmts_to_json',
            'stmts_to_json_file', 'draw_stmt_graph', 'pretty_print_stmts',
-           'UnresolvedUuidError', 'InputError']
+           'UnresolvedUuidError', 'InputError',
+           'set_pretty_print_default_width']
 
 import json
 import logging
@@ -221,9 +222,19 @@ def draw_stmt_graph(stmts):
     plt.show()
 
 
+pretty_print_default_width = 66
+
+
+def set_pretty_print_default_width(new_default):
+    """Set the default column width for pretty prints."""
+    global pretty_print_default_width
+    pretty_print_default_width = new_default
+
+
 def pretty_print_stmts(stmt_list: List[Statement],
                        stmt_limit: Optional[int] = None,
-                       ev_limit: Optional[int] = 5) -> None:
+                       ev_limit: Optional[int] = 5,
+                       width: Optional[int] = None) -> None:
     """Print a list of statements to the commandline in a neatly formatted way.
 
     Parameters
@@ -235,6 +246,11 @@ def pretty_print_stmts(stmt_list: List[Statement],
     ev_limit :
         The maximum number of Evidence to print for each Statement.
         (Default is 5)
+    width :
+        Manually set the width of the table. Default is None, in which case
+        the function will try to match the current terminal width, and if that
+        is not possible it will use `pretty_print_default_width`, which can be
+        adjusted using the `set_pretty_print_default_width` function.
     """
     # Import some modules helpful for ext formatting.
     from textwrap import TextWrapper
@@ -242,17 +258,18 @@ def pretty_print_stmts(stmt_list: List[Statement],
     from os import get_terminal_size
 
     # Try to get the actual number of columns in the terminal.
-    columns = 70
-    try:
-        columns = get_terminal_size().columns
-    except Exception as e:
-        logger.debug(f"Failed to get terminal size (using default {columns}): "
-                     f"{e}.")
+    if width is None:
+        width = pretty_print_default_width
+        try:
+            width = get_terminal_size().columns
+        except Exception as e:
+            logger.debug(f"Failed to get terminal size (using default "
+                         f"{width}): {e}.")
 
     # Parameterize the text wrappers that format the ev text and the metadata.
-    stmt_tr = TextWrapper(width=columns)
+    stmt_tr = TextWrapper(width=width)
     metadata_tr = TextWrapper(width=16)
-    evidence_tr = TextWrapper(width=columns - metadata_tr.width - 2)
+    evidence_tr = TextWrapper(width=width - metadata_tr.width - 2)
 
     # Print the table.
     for i, s in enumerate(stmt_list[:stmt_limit]):
@@ -260,7 +277,7 @@ def pretty_print_stmts(stmt_list: List[Statement],
         # Print the Statement heading.
         stmt_str = f"[LIST INDEX: {i}] " + str(s)
         print(stmt_tr.fill(stmt_str))
-        print("="*columns)
+        print("="*width)
 
         # Print the evidence
         for j, ev in enumerate(s.evidence[:ev_limit]):
@@ -286,7 +303,7 @@ def pretty_print_stmts(stmt_list: List[Statement],
             # Print the entire thing
             full_str = tabulate([[metadata_str, text_str]], tablefmt='plain')
             print(full_str)
-            print('-'*columns)
+            print('-'*width)
         print()
 
 
