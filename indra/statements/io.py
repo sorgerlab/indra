@@ -226,7 +226,7 @@ pretty_print_default_width = 66
 
 
 def set_pretty_print_default_width(new_default):
-    """Set the default column width for pretty prints."""
+    """Set the default display width for pretty prints, in characters."""
     global pretty_print_default_width
     pretty_print_default_width = new_default
 
