@@ -228,7 +228,7 @@ __all__ = [
     'modtype_to_modclass',
     'modclass_to_modtype', 'modtype_conditions', 'modtype_to_inverse',
     'modclass_to_inverse', 'get_statement_by_name', 'make_hash', 'stmt_type',
-    'default_ns_order', 'mk_str'
+    'default_ns_order', 'mk_str', 'pretty_print_stmts',
     ]
 
 import abc
