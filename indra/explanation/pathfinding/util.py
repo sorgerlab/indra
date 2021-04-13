@@ -1,6 +1,5 @@
 __all__ = ['path_sign_to_signed_nodes', 'signed_nodes_to_signed_edge',
-           'get_sorted_neighbors', 'get_subgraph', 'register_edge_filter',
-           'filter_to_internal_edges', 'edge_filter_functions']
+           'get_sorted_neighbors', 'get_subgraph']
 import logging
 import networkx as nx
 import functools
@@ -118,20 +117,6 @@ def get_sorted_neighbors(G, node, reverse, force_edges=None):
             reverse=True)
 
 
-edge_filter_functions = {}
-
-
-def register_edge_filter(function):
-    """
-    Decorator to register a function as an edge filter for getting subgraphs.
-    Edge filter function should take two (u, v - for DiGraph) or three
-    (u, v, k -  for MultiDiGraph) parameters and return True if the edge
-    should be in the graph and False otherwise.
-    """
-    edge_filter_functions[function.__name__] = function
-    return function
-
-
 def get_subgraph(g, edge_filter_func):
     """Get a subgraph of original graph filtered by a provided function."""
     logger.info('Getting subgraph with %s function' % edge_filter_func)
@@ -140,18 +125,3 @@ def get_subgraph(g, edge_filter_func):
     # Copying to get a graph object instead of view
     new_g = view.copy()
     return new_g
-
-
-@register_edge_filter
-def filter_to_internal_edges(g, u, v, *args):
-    """Return True if an edge is internal. NOTE it returns True if any of the
-    statements associated with an edge is internal.
-    """
-    if args:
-        edge = g[u][v][args[0]]
-    else:
-        edge = g[u][v]
-    for stmts_dict in edge['statements']:
-        if stmts_dict['internal']:
-            return True
-    return False
