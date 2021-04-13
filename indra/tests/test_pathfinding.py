@@ -1,11 +1,10 @@
-from copy import deepcopy
 import numpy as np
 import networkx as nx
 
 from indra.explanation.pathfinding.pathfinding import bfs_search, \
     shortest_simple_paths, bfs_search_multiple_nodes, open_dijkstra_search, \
     simple_paths_with_constraints
-from indra.explanation.pathfinding import util
+from indra.explanation.pathfinding.util import get_subgraph
 from indra.explanation.model_checker.model_checker import \
     signed_edges_to_signed_nodes
 
@@ -560,19 +559,18 @@ def test_simple_paths_with_constraints():
 
 def test_get_subgraph_custom_filter():
 
-    @util.register_edge_filter
-    def filter_to_high_belief(u, v, *args):
+    def filter_to_high_belief(g, u, v, *args):
         if args:
-            edge = util.G[u][v][args[0]]
+            edge = g[u][v][args[0]]
         else:
-            edge = util.G[u][v]
+            edge = g[u][v]
         return edge['belief'] > 0.5
 
     # Signed graph
     sg, _, _ = _setup_signed_graph()
     assert len(sg.edges) == 12
     assert ('A4', 'B2', 1) in sg.edges
-    filtered_sg = util.get_subgraph(sg, 'filter_to_high_belief')
+    filtered_sg = get_subgraph(sg, filter_to_high_belief)
     assert len(filtered_sg.edges) == 10
     assert ('A4', 'B2', 1) not in filtered_sg.edges
 
@@ -580,40 +578,6 @@ def test_get_subgraph_custom_filter():
     ug, _ = _setup_unsigned_graph()
     assert len(ug.edges) == 9
     assert ('A4', 'B2') in ug.edges
-    filtered_ug = util.get_subgraph(ug, 'filter_to_high_belief')
+    filtered_ug = get_subgraph(ug, filter_to_high_belief)
     assert len(filtered_ug.edges) == 7
     assert ('A4', 'B2') not in filtered_ug.edges
-
-
-def test_subgraph_internal():
-    # Signed graph
-    sg, _, _ = _setup_signed_graph()
-    new_sg = deepcopy(sg)
-    # Add either internal or external or mixed edge data, should filter
-    # strictly external only
-    for i, (u, v, data) in enumerate(new_sg.edges(data=True)):
-        if i % 3 == 0:
-            data['statements'] = [{'internal': True}]
-        elif i % 3 == 1:
-            data['statements'] = [{'internal': False}]
-        else:
-            data['statements'] = [{'internal': True}, {'internal': False}]
-    assert len(new_sg.edges) == 12
-    filtered_sg = util.get_subgraph(new_sg, 'filter_to_internal_edges')
-    assert len(filtered_sg.edges) == 8
-
-    # Unsigned graph
-    ug, _ = _setup_unsigned_graph()
-    new_ug = deepcopy(ug)
-    # Add either internal or external or mixed edge data, should filter
-    # strictly external only
-    for i, (u, v, data) in enumerate(new_ug.edges(data=True)):
-        if i % 3 == 0:
-            data['statements'] = [{'internal': True}]
-        elif i % 3 == 1:
-            data['statements'] = [{'internal': False}]
-        else:
-            data['statements'] = [{'internal': True}, {'internal': False}]    
-    assert len(new_ug.edges) == 9
-    filtered_ug = util.get_subgraph(new_ug, 'filter_to_internal_edges')
-    assert len(filtered_ug.edges) == 6
