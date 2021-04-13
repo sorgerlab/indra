@@ -1,6 +1,6 @@
 __all__ = ['path_sign_to_signed_nodes', 'signed_nodes_to_signed_edge',
            'get_sorted_neighbors', 'get_subgraph', 'register_edge_filter',
-           'filter_to_internal_edges']
+           'filter_to_internal_edges', 'edge_filter_functions']
 import logging
 import networkx as nx
 
@@ -133,14 +133,14 @@ def register_edge_filter(function):
     return function
 
 
-def get_subgraph(g, filter_func_name):
+def get_subgraph(g, edge_filter_func):
     """Get a subgraph of original graph filtered by a provided function."""
     # Updating global variable here to handle NetworkX implementation of
     # closures used in subgraph_view
     global G
     G = g
-    filter_edge = edge_filter_functions.get(filter_func_name)
-    view = nx.subgraph_view(g, filter_edge=filter_edge)
+    logger.info('Getting subgraph with %s function' % edge_filter_func)
+    view = nx.subgraph_view(g, filter_edge=edge_filter_func)
     # Copying to get a graph object instead of view
     new_g = view.copy()
     return new_g

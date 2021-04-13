@@ -36,21 +36,24 @@ class SignedGraphModelChecker(ModelChecker):
                  nodes_to_agents=None):
         super().__init__(model, statements, do_sampling, seed, nodes_to_agents)
 
-    def get_graph(self, edge_filter_func_name=None, copy_edge_data=None):
+    def get_graph(self, edge_filter_func=None, copy_edge_data=None):
         """Get a signed nodes graph to search for paths in.
 
         Parameters
         ----------
-        edge_filter_func_name : str
-            A name of a edge filter function to filter the original model.
+        edge_filter_func : Optional[function]
+            A function to filter out edges from the graph. A function should
+            take nodes (and key in case of MultiGraph) as parameters and
+            return True if an edge can be in the graph and False if it should
+            be filtered out.
         copy_edge_data : set(str)
             A set of keys to copy from original model edge data to the graph
             edge data. If None, only belief data is copied by default.
         """
         if self.graph:
             return self.graph
-        if edge_filter_func_name:
-            filtered_model = get_subgraph(self.model, edge_filter_func_name)
+        if edge_filter_func:
+            filtered_model = get_subgraph(self.model, edge_filter_func)
         else:
             filtered_model = self.model
         if not copy_edge_data:
