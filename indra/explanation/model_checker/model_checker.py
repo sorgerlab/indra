@@ -230,7 +230,7 @@ class ModelChecker(object):
         self.statements += stmts
 
     def check_model(self, max_paths=1, max_path_length=5,
-                    agent_filter_func=None):
+                    agent_filter_func=None, edge_filter_func=None):
         """Check all the statements added to the ModelChecker.
 
         Parameters
@@ -244,6 +244,11 @@ class ModelChecker(object):
             A function to constrain the intermediate nodes in the path. A
             function should take an agent as a parameter and return True if the
             agent is allowed to be in a path and False otherwise.
+        edge_filter_func : Optional[function]
+            A function to filter out edges from the graph. A function should
+            take nodes (and key in case of MultiGraph) as parameters and
+            return True if an edge can be in the graph and False if it should
+            be filtered out.
 
         Returns
         -------
@@ -258,13 +263,16 @@ class ModelChecker(object):
             logger.info('---')
             logger.info('Checking statement (%d/%d): %s' %
                         (idx + 1, len(self.statements), stmt))
-            result = self.check_statement(stmt, max_paths, max_path_length,
-                                          node_filter_func=node_filter_func)
+            result = self.check_statement(
+                stmt, max_paths, max_path_length,
+                node_filter_func=node_filter_func,
+                edge_filter_func=edge_filter_func)
             results.append((stmt, result))
         return results
 
     def check_statement(self, stmt, max_paths=1, max_path_length=5,
-                        agent_filter_func=None, node_filter_func=None):
+                        agent_filter_func=None, node_filter_func=None,
+                        edge_filter_func=None):
         """Check a single Statement against the model.
 
         Parameters
@@ -284,13 +292,18 @@ class ModelChecker(object):
             Similar to agent_filter_func but it takes a node as a parameter
             instead of agent. If not provided, node_filter_func will be
             generated from agent_filter_func.
+        edge_filter_func : Optional[function]
+            A function to filter out edges from the graph. A function should
+            take nodes (and key in case of MultiGraph) as parameters and
+            return True if an edge can be in the graph and False if it should
+            be filtered out.
 
         Returns
         -------
         result : indra.explanation.modelchecker.PathResult
             A PathResult object containing the result of a test.
         """
-        self.get_graph()
+        self.get_graph(edge_filter_func=edge_filter_func)
         subj_nodes, obj_nodes, result_code = self.process_statement(stmt)
         if result_code:
             return self.make_false_result(result_code, max_paths,

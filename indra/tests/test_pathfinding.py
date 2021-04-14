@@ -4,6 +4,7 @@ import networkx as nx
 from indra.explanation.pathfinding.pathfinding import bfs_search, \
     shortest_simple_paths, bfs_search_multiple_nodes, open_dijkstra_search, \
     simple_paths_with_constraints
+from indra.explanation.pathfinding.util import get_subgraph
 from indra.explanation.model_checker.model_checker import \
     signed_edges_to_signed_nodes
 
@@ -554,3 +555,29 @@ def test_simple_paths_with_constraints():
     paths = tuple([tuple(p) for p in simple_paths_with_constraints(
         dg, 'A3', 'D1', filter_func=_isB)])
     assert len(paths) == 0
+
+
+def test_get_subgraph_custom_filter():
+
+    def filter_to_high_belief(g, u, v, *args):
+        if args:
+            edge = g[u][v][args[0]]
+        else:
+            edge = g[u][v]
+        return edge['belief'] > 0.5
+
+    # Signed graph
+    sg, _, _ = _setup_signed_graph()
+    assert len(sg.edges) == 12
+    assert ('A4', 'B2', 1) in sg.edges
+    filtered_sg = get_subgraph(sg, filter_to_high_belief)
+    assert len(filtered_sg.edges) == 10
+    assert ('A4', 'B2', 1) not in filtered_sg.edges
+
+    # Unsigned graph
+    ug, _ = _setup_unsigned_graph()
+    assert len(ug.edges) == 9
+    assert ('A4', 'B2') in ug.edges
+    filtered_ug = get_subgraph(ug, filter_to_high_belief)
+    assert len(filtered_ug.edges) == 7
+    assert ('A4', 'B2') not in filtered_ug.edges

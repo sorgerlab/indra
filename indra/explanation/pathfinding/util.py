@@ -1,6 +1,8 @@
 __all__ = ['path_sign_to_signed_nodes', 'signed_nodes_to_signed_edge',
-           'get_sorted_neighbors']
+           'get_sorted_neighbors', 'get_subgraph']
 import logging
+import networkx as nx
+import functools
 
 logger = logging.getLogger(__name__)
 
@@ -113,3 +115,13 @@ def get_sorted_neighbors(G, node, reverse, force_edges=None):
             key=lambda n:
                 G.edges[(node, n)].get('belief', 0),
             reverse=True)
+
+
+def get_subgraph(g, edge_filter_func):
+    """Get a subgraph of original graph filtered by a provided function."""
+    logger.info('Getting subgraph with %s function' % edge_filter_func)
+    view = nx.subgraph_view(
+        g, filter_edge=functools.partial(edge_filter_func, g))
+    # Copying to get a graph object instead of view
+    new_g = view.copy()
+    return new_g

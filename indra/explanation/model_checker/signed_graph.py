@@ -1,8 +1,10 @@
 import logging
+
 from . import ModelChecker
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
 from .model_checker import signed_edges_to_signed_nodes, NodesContainer
+from indra.explanation.pathfinding.util import get_subgraph
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +36,30 @@ class SignedGraphModelChecker(ModelChecker):
                  nodes_to_agents=None):
         super().__init__(model, statements, do_sampling, seed, nodes_to_agents)
 
-    def get_graph(self):
+    def get_graph(self, edge_filter_func=None, copy_edge_data=None):
+        """Get a signed nodes graph to search for paths in.
+
+        Parameters
+        ----------
+        edge_filter_func : Optional[function]
+            A function to filter out edges from the graph. A function should
+            take nodes (and key in case of MultiGraph) as parameters and
+            return True if an edge can be in the graph and False if it should
+            be filtered out.
+        copy_edge_data : set(str)
+            A set of keys to copy from original model edge data to the graph
+            edge data. If None, only belief data is copied by default.
+        """
         if self.graph:
             return self.graph
+        if edge_filter_func:
+            filtered_model = get_subgraph(self.model, edge_filter_func)
+        else:
+            filtered_model = self.model
+        if not copy_edge_data:
+            copy_edge_data = {'belief'}
         self.graph = signed_edges_to_signed_nodes(
-            self.model, copy_edge_data={'belief'})
+            filtered_model, copy_edge_data=copy_edge_data)
         self.get_nodes_to_agents()
         return self.graph
 

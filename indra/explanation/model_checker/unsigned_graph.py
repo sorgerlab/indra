@@ -3,6 +3,7 @@ import networkx as nx
 from . import ModelChecker, NodesContainer
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
+from indra.explanation.pathfinding.util import get_subgraph
 
 
 logger = logging.getLogger(__name__)
@@ -35,16 +36,36 @@ class UnsignedGraphModelChecker(ModelChecker):
                  nodes_to_agents=None):
         super().__init__(model, statements, do_sampling, seed, nodes_to_agents)
 
-    def get_graph(self):
+    def get_graph(self, edge_filter_func=None, copy_edge_data=None):
+        """Get a signed nodes graph to search for paths in.
+
+        Parameters
+        ----------
+        edge_filter_func : Optional[function]
+            A function to filter out edges from the graph. A function should
+            take nodes (and key in case of MultiGraph) as parameters and
+            return True if an edge can be in the graph and False if it should
+            be filtered out.
+        copy_edge_data : set(str)
+            A set of keys to copy from original model edge data to the graph
+            edge data. If None, only belief data is copied by default.
+        """
         if self.graph:
             return self.graph
+        if edge_filter_func:
+            filtered_model = get_subgraph(self.model, edge_filter_func)
+        else:
+            filtered_model = self.model
         self.graph = nx.DiGraph()
         nodes = []
-        for node, node_data in self.model.nodes(data=True):
+        for node, node_data in filtered_model.nodes(data=True):
             nodes.append(((node, 0), node_data))
         self.graph.add_nodes_from(nodes)
-        for (u, v, data) in self.model.edges(data=True):
-            self.graph.add_edge((u, 0), (v, 0), belief=data['belief'])
+        if not copy_edge_data:
+            copy_edge_data = {'belief'}
+        for (u, v, data) in filtered_model.edges(data=True):
+            edge_data = {k: data[k] for k in copy_edge_data}
+            self.graph.add_edge((u, 0), (v, 0), **edge_data)
         self.get_nodes_to_agents()
         return self.graph
 
