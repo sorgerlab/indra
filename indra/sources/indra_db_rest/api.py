@@ -1,12 +1,9 @@
 """
-API to the INDRA Database REST Service
-======================================
-
 INDRA has been used to generate and maintain a massive database of causal
 relations as INDRA Statements. The contents of this database can be most easily
 accessed programmatically through this API.
 
-    The API includes 3 helpful "starter" functions, useful for quickly making a
+The API includes 3 helpful "starter" functions, useful for quickly making a
 few simple kinds of query:
 
   `get_statements`:
@@ -77,7 +74,7 @@ You can check if the process is still running using the `is_working` method:
 
 >>> p = get_statements("TNF", timeout=0)
 >>> p.is_working()
->>> True
+True
 
 If you don't want to make multiple requests, and just want to get whatever the
 server returns on the first request, you can set "persist" to False (The job can
@@ -91,8 +88,8 @@ and the way the query is executed. The function documentation is recommended for
 further details.
 
 
-Query Language
---------------
+Using the Query Language
+------------------------
 
 There are several metadata and data values indexed in the INDRA Database
 allowing for efficient searches, and those metadata values can be combined in
@@ -123,6 +120,9 @@ above, you can also form unions (a.k.a. "or"s) using "|":
 >>>
 >>> p = get_statements_from_query(query, limit=10)
 
+For more details and examples of the Query architecture, see
+:py:mod:`query <indra.sources.indra_db_rest.query>`.
+
 
 Evidence Filtering
 ------------------
@@ -140,7 +140,7 @@ from that paper.
 >>> all(ev.text_refs['PMID'] == '20471474'
 >>>     or ev.text_refs['PMCID'] == 'PMC3640704'
 >>>     for s in p.statements for ev in s.evidence)
->>> True
+True
 
 You can deactivate this feature by setting `filter_ev` to False:
 
@@ -149,7 +149,7 @@ You can deactivate this feature by setting `filter_ev` to False:
 >>> all(ev.text_refs['PMID'] == '20471474'
 >>>     or ev.text_refs['PMCID'] == 'PMC3640704'
 >>>     for s in p.statements for ev in s.evidence)
->>> False
+False
 
 
 Curation Submission
@@ -160,6 +160,7 @@ through the results and find an evidence that does not really support the
 Statement. This happens with our machine reading systems, and you can give
 feedback by submitting a curation.
 
+>>> from indra.statements import pretty_print_stmts
 >>> p = get_statements(agents=["TNF"], ev_limit=3, limit=1)
 >>> pretty_print_stmts(p.statements)
 [LIST INDEX: 0] Activation(TNF(), apoptotic process())

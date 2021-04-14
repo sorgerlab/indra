@@ -1,6 +1,6 @@
 """
 Here is defined the Processor for the INDRA Database REST service. For common
-usage, please see the `api` in `indra.sources.indra_db_rest.api`.
+usage, please see the API in :py:mod:`indra.sources.indra_db_rest.api`.
 """
 
 
