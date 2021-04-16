@@ -414,6 +414,7 @@ def test_doi_evidence():
     mek = Protein(name='MAP2K1', namespace='HGNC')
     erk = Protein(name='MAPK1', namespace='HGNC')
     g = BELGraph()
+    g.annotation_list['TextLocation'] = {'Abstract'}
     ev_doi = '123456'
     g.add_directly_increases(
         mek, erk, evidence='Some evidence.',
