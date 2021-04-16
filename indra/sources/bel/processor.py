@@ -64,6 +64,13 @@ _pybel_text_location_map = {
     'Conclusion': 'conclusion'
 }
 
+EXT_CITATION_PREFIXES = {
+    'DOI',
+    'BIORXIV',
+    'CHEMRXIV',
+    'AGRICOLA',
+}
+
 
 class PybelProcessor(object):
     """Extract INDRA Statements from a PyBEL Graph.
