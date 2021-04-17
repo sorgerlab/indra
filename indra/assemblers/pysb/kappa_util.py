@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from networkx import MultiDiGraph, Graph
+from networkx import MultiDiGraph, Graph, cycle_basis
 from pygraphviz import AGraph
 
 
@@ -79,6 +79,23 @@ def cm_json_to_networkx(cm_json):
     graph.add_nodes_from(nodes)
     graph.add_edges_from(edges)
     return graph
+
+
+def get_cm_cycles(cm_graph):
+    cycles = cycle_basis(cm_graph)
+    processed_cycles = []
+    for cycle in cycles:
+        processed_cycle = []
+        for n1, n2 in zip(cycle, cycle[1:] + [cycle[0]]):
+            edge = cm_graph.edges[(n1, n2)]
+            if edge['type'] == 'link':
+                agent1 = cm_graph.nodes[n1[0]]['label']
+                agent2 = cm_graph.nodes[n2[0]]['label']
+                label1 = '%s(%s)' % (agent1, cm_graph.nodes[n1]['label'])
+                label2 = '%s(%s)' % (agent2, cm_graph.nodes[n2]['label'])
+                processed_cycle.append((label1, label2))
+        processed_cycles.append(processed_cycle)
+    return processed_cycles
 
 
 def cm_json_to_graph(cm_json):

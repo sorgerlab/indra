@@ -3,6 +3,8 @@ from indra.assemblers.pysb import PysbAssembler
 import indra.assemblers.pysb.assembler as pa
 from indra.assemblers.pysb.assembler import Policy, Param
 from indra.assemblers.pysb.preassembler import PysbPreassembler
+from indra.assemblers.pysb.export import export_cm_network
+from indra.assemblers.pysb.kappa_util import get_cm_cycles
 from indra.statements import *
 from pysb import bng, WILD, Monomer, Annotation
 from pysb.testing import with_model
@@ -1261,7 +1263,6 @@ def test_kappa_cm_export():
 
 
 def test_contact_map_analysis():
-    from indra.assemblers.pysb.export import export_cm_network
     stmts = [Complex([Agent('a'), Agent('b')]),
              Complex([Agent('a'), Agent('c')]),
              Complex([Agent('b'), Agent('c')])]
@@ -1270,6 +1271,7 @@ def test_contact_map_analysis():
     graph = export_cm_network(pa.model)
     assert len(graph.nodes()) == 9, len(graph.nodes)
     assert len(graph.edges()) == 9, len(graph.edges)
-    import networkx
-    cycles = networkx.cycle_basis(graph)
-    assert len(cycles) == 2, cycles
+
+    cycles = get_cm_cycles(graph)
+    assert len(cycles) == 1, cycles
+    assert False, cycles
