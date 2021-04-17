@@ -778,3 +778,19 @@ def test_complex_stmt_with_activation():
     assert stmt2.obj.name == 'MAPK1'
     assert stmt2.obj.activity is None
     assert stmt2.obj_activity == 'kinase'
+
+
+def test_process_bel_stmts():
+    bp = bel.process_bel_stmt('p(HGNC:MDM2) directlyDecreases '
+                              'tscript(p(HGNC:TP53))')
+    assert len(bp.statements) == 1
+    assert isinstance(bp.statements[0], Inhibition), bp.statements
+    assert bp.statements[0].subj.name == 'MDM2', bp.statements
+    assert bp.statements[0].obj.name == 'TP53', bp.statements
+
+    bp = bel.process_bel_stmt('a(CHEBI:lipoprotein) increases '
+                              'bp(GOBP:"inflammatory response")')
+    assert len(bp.statements) == 1
+    assert isinstance(bp.statements[0], Activation), bp.statements
+    assert bp.statements[0].subj.name == 'lipoprotein', bp.statements
+    assert bp.statements[0].obj.name == 'inflammatory response', bp.statements

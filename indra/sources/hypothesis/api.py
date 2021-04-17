@@ -180,13 +180,15 @@ def process_annotations(group=None, reader=None, grounder=None):
         The hypothesi.is key of the group (not its name). If not given, the
         HYPOTHESIS_GROUP configuration in the config file or an environmental
         variable is used.
-    reader : Optiona[function]
+    reader : Optional[None, str, Callable[[str], Processor]]
         A handle for a function which takes a single str argument
         (text to process) and returns a processor object with a statements
         attribute containing INDRA Statements. By default, the REACH reader's
         process_text function is used with default parameters. Note that
         if the function requires extra parameters other than the input text,
-        functools.partial can be used to set those.
+        functools.partial can be used to set those. Can be alternatively
+        set to :func:`indra.sources.bel.process_text` by using the string
+        "bel".
     grounder : Optional[function]
         A handle for a function which takes a positional str argument (entity
         text to ground) and an optional context key word argument and returns
@@ -199,6 +201,20 @@ def process_annotations(group=None, reader=None, grounder=None):
         A HypothesisProcessor object which contains a list of extracted
         INDRA Statements in its statements attribute, and a list of extracted
         grounding curations in its groundings attribute.
+
+    Example
+    -------
+    Process all annotations that have been written in BEL with:
+
+    .. code-block:: python
+
+        from indra.sources import hypothesis
+        processor = hypothesis.process_annotations(group='Z8RNqokY', reader='bel')
+        processor.statements
+        # returns: [Phosphorylation(AKT(), PCGF2(), T, 334)]
+
+    If this example doesn't work, try joining the group with this link:
+    https://hypothes.is/groups/Z8RNqokY/cthoyt-bel.
     """
     annotations = get_annotations(group=group)
     hp = HypothesisProcessor(annotations, reader=reader, grounder=grounder)

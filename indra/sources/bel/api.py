@@ -8,6 +8,10 @@ import pybel
 import logging
 import requests
 from functools import lru_cache
+
+import pybel.constants as pc
+from pybel.io.sbel import add_sbel_row
+
 from .processor import PybelProcessor
 
 
@@ -130,6 +134,47 @@ def process_pybel_neighborhood(entity_names, network_type='graph_jsongz_url',
 
     bp.statements = filtered_stmts
 
+    return bp
+
+
+def process_bel_stmt(bel: str, squeeze: bool = False):
+    """Process a single BEL statement and return the PybelProcessor
+    or a single statement if ``squeeze`` is True.
+
+    Parameters
+    ----------
+    bel : str
+        A BEL statement. See example below.
+    squeeze : Optional[bool]
+        If squeeze and there's only one statement in the processor,
+        it will be unpacked.
+
+    Returns
+    -------
+    statements : Union[Statement, PybelProcessor]
+        A list of INDRA statments derived from the BEL statement.
+        If squeeze is true and there was only one statement, the
+        unpacked INDRA statement will be returned.
+
+    Examples
+    --------
+    >>> from indra.sources.bel import process_bel_stmt
+    >>> bel_s = 'kin(p(FPLX:MEK)) -> kin(p(FPLX:ERK))'
+    >>> process_bel_stmt(bel_s, squeeze=True)
+    Activation(MEK(kinase), ERK(), kinase)
+    """
+    r = pybel.parse(bel)
+    # make sure activations in the right place
+    for a, b in [(pc.SOURCE, pc.SOURCE_MODIFIER), (pc.TARGET, pc.TARGET_MODIFIER)]:
+        side = r[a]
+        for c in [pc.MODIFIER, pc.EFFECT, pc.FROM_LOC, pc.TO_LOC, pc.LOCATION]:
+            if c in side:
+                r.setdefault(b, {})[c] = side.pop(c)
+    graph = pybel.BELGraph()
+    add_sbel_row(graph, r)
+    bp = process_pybel_graph(graph)
+    if squeeze and len(bp.statements) == 1:
+        return bp.statements[0]
     return bp
 
 
