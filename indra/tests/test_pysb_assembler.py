@@ -1258,3 +1258,18 @@ def test_kappa_cm_export():
     graph = pa.export_model('kappa_cm', '/dev/null')
     assert len(graph.nodes()) == 2
     assert len(graph.edges()) == 1
+
+
+def test_contact_map_analysis():
+    from indra.assemblers.pysb.export import export_cm_network
+    stmts = [Complex([Agent('a'), Agent('b')]),
+             Complex([Agent('a'), Agent('c')]),
+             Complex([Agent('b'), Agent('c')])]
+    pa = PysbAssembler(stmts)
+    pa.make_model()
+    graph = export_cm_network(pa.model)
+    assert len(graph.nodes()) == 9, len(graph.nodes)
+    assert len(graph.edges()) == 9, len(graph.edges)
+    import networkx
+    cycles = networkx.cycle_basis(graph)
+    assert len(cycles) == 2, cycles
