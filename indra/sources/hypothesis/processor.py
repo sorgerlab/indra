@@ -46,7 +46,7 @@ class HypothesisProcessor:
             self.reader = reach.process_text
         elif reader == 'bel':
             from indra.sources import bel
-            self.reader = bel.process_text
+            self.reader = bel.process_bel_stmt
         else:
             self.reader = reader
         if grounder is None:

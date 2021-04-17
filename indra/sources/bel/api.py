@@ -137,7 +137,7 @@ def process_pybel_neighborhood(entity_names, network_type='graph_jsongz_url',
     return bp
 
 
-def process_text(bel: str, squeeze: bool = False):
+def process_bel_stmt(bel: str, squeeze: bool = False):
     """Process a single BEL statement and return the PybelProcessor
     or a single statement if ``squeeze`` is True.
 
@@ -145,8 +145,7 @@ def process_text(bel: str, squeeze: bool = False):
     ----------
     bel : str
         A BEL statement. See example below.
-
-    squeeze: bool
+    squeeze : Optional[bool]
         If squeeze and there's only one statement in the processor,
         it will be unpacked.
 
@@ -159,9 +158,9 @@ def process_text(bel: str, squeeze: bool = False):
 
     Examples
     --------
-    >>> from indra.sources.bel import process_text
+    >>> from indra.sources.bel import process_bel_stmt
     >>> bel_s = 'kin(p(FPLX:MEK)) -> kin(p(FPLX:ERK))'
-    >>> process_text(bel_s, squeeze=True)
+    >>> process_bel_stmt(bel_s, squeeze=True)
     Activation(MEK(kinase), ERK(), kinase)
     """
     r = pybel.parse(bel)
