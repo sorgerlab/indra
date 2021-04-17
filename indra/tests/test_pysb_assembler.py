@@ -1262,7 +1262,7 @@ def test_kappa_cm_export():
     assert len(graph.edges()) == 1
 
 
-def test_contact_map_analysis():
+def test_contact_map_cycles_1():
     stmts = [Complex([Agent('a'), Agent('b')]),
              Complex([Agent('a'), Agent('c')]),
              Complex([Agent('b'), Agent('c')])]
@@ -1274,4 +1274,19 @@ def test_contact_map_analysis():
 
     cycles = get_cm_cycles(graph)
     assert len(cycles) == 1, cycles
-    assert False, cycles
+
+
+def test_contact_map_cycles_2():
+    erk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
+    erk2 = Agent('MAPK3', db_refs={'HGNC': '6877'})
+    stmts = [Complex([Agent('x'), erk1]),
+             Complex([Agent('x'), erk2]),
+             Complex([erk1, erk2])]
+    pa = PysbAssembler(stmts)
+    pa.make_model()
+    graph = export_cm_network(pa.model)
+    assert len(graph.nodes()) == 8, len(graph.nodes)
+    assert len(graph.edges()) == 8, len(graph.edges)
+
+    cycles = get_cm_cycles(graph)
+    assert not cycles, cycles

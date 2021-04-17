@@ -86,7 +86,19 @@ def get_cm_cycles(cm_graph):
     processed_cycles = []
     for cycle in cycles:
         processed_cycle = []
-        for n1, n2 in zip(cycle, cycle[1:] + [cycle[0]]):
+        edges = list(zip(cycle, cycle[1:] + [cycle[0]]))
+        # Filter out cycles where the same site on an agent is used
+        # since that represents competitive binding
+        edge_types = [cm_graph.edges[e]['type'] for e in edges]
+        edge_type_pairs = list(zip(edge_types,
+                                   edge_types[1:] + [edge_types[0]]))
+        if any([etp == ('link', 'link') for etp in edge_type_pairs]):
+            continue
+        # Now just keep link edges
+        link_edges = [e for e in edges if cm_graph.edges[e]['type'] == 'link']
+        for n1, n2 in link_edges:
+            if n1 == n2:
+                break
             edge = cm_graph.edges[(n1, n2)]
             if edge['type'] == 'link':
                 agent1 = cm_graph.nodes[n1[0]]['label']
@@ -94,7 +106,8 @@ def get_cm_cycles(cm_graph):
                 label1 = '%s(%s)' % (agent1, cm_graph.nodes[n1]['label'])
                 label2 = '%s(%s)' % (agent2, cm_graph.nodes[n2]['label'])
                 processed_cycle.append((label1, label2))
-        processed_cycles.append(processed_cycle)
+        else:
+            processed_cycles.append(processed_cycle)
     return processed_cycles
 
 
