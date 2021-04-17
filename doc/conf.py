@@ -329,4 +329,5 @@ intersphinx_mapping = {
     'https://docs.python.org/3/': None,
     'pybel': ('https://pybel.readthedocs.io/en/latest/', None),
     'boto3': ('https://boto3.amazonaws.com/v1/documentation/api/latest/', None),
+    'pysb': ('https://docs.pysb.org/en/latest/', None),
 }
