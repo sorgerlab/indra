@@ -161,7 +161,7 @@ def process_text(bel: str, squeeze: bool = False):
     --------
     >>> from indra.sources.bel import process_text
     >>> bel_s = 'kin(p(FPLX:MEK)) -> kin(p(FPLX:ERK))'
-    >>> indra_s = process_text(bel_s, squeeze=True)
+    >>> process_text(bel_s, squeeze=True)
     Activation(MEK(kinase), ERK(), kinase)
     """
     r = pybel.parse(bel)

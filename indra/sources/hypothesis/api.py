@@ -206,10 +206,12 @@ def process_annotations(group=None, reader=None, grounder=None):
     -------
     Process all annotations that have been written in BEL with:
 
-    >>> from indra.sources import hypothesis
-    >>> processor = hypothesis.process_annotations(group='Z8RNqokY', reader='bel')
-    >>> processor.statements
-    [Phosphorylation(AKT(), PCGF2(), T, 334)]
+    .. code-block:: python
+
+        from indra.sources import hypothesis
+        processor = hypothesis.process_annotations(group='Z8RNqokY', reader='bel')
+        processor.statements
+        # returns: [Phosphorylation(AKT(), PCGF2(), T, 334)]
 
     If this example doesn't work, try joining the group with this link:
     https://hypothes.is/groups/Z8RNqokY/cthoyt-bel.
