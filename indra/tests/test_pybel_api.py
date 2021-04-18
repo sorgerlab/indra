@@ -409,6 +409,28 @@ def test_phosphorylation_one_site_with_evidence():
     assert ev.epistemics == {'direct': True, 'section_type': 'abstract'}
 
 
+def test_doi_evidence():
+    """Test processing edges with DOI citations."""
+    mek = Protein(name='MAP2K1', namespace='HGNC')
+    erk = Protein(name='MAPK1', namespace='HGNC')
+    g = BELGraph()
+    g.annotation_list['TextLocation'] = {'Abstract'}
+    ev_doi = '123456'
+    g.add_directly_increases(
+        mek, erk, evidence='Some evidence.',
+        citation=('doi', ev_doi),
+        annotations={"TextLocation": 'Abstract'},
+    )
+    pbp = bel.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    assert len(pbp.statements[0].evidence) == 1
+    ev = pbp.statements[0].evidence[0]
+    assert ev.pmid is None
+    assert 'DOI' in ev.text_refs
+    assert ev.text_refs['DOI'] == ev_doi
+
+
 def test_phosphorylation_two_sites():
     mek = Protein(name='MAP2K1', namespace='HGNC')
     erk = Protein(name='MAPK1', namespace='HGNC',

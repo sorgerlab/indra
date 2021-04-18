@@ -228,7 +228,7 @@ __all__ = [
     'modtype_to_modclass',
     'modclass_to_modtype', 'modtype_conditions', 'modtype_to_inverse',
     'modclass_to_inverse', 'get_statement_by_name', 'make_hash', 'stmt_type',
-    'default_ns_order', 'mk_str', 'pretty_print_stmts',
+    'default_ns_order', 'mk_str', 'pretty_print_stmts', 'print_stmt_summary',
     'set_pretty_print_max_width'
     ]
 
@@ -239,7 +239,7 @@ import logging
 import networkx
 import itertools
 from copy import deepcopy
-from collections import OrderedDict as _o
+from collections import Counter, OrderedDict as _o
 from .util import *
 from .concept import *
 from .context import *
