@@ -43,7 +43,6 @@ jobs:
         pip install cython
         # Now install INDRA with all its extras
         pip install .[all]
-        pip install tox
         wget -nv https://bigmech.s3.amazonaws.com/travis/Phosphorylation_site_dataset.tsv -O indra/resources/Phosphorylation_site_dataset.tsv
         # Run slow tests only if we're in the cron setting
         #- |
@@ -73,8 +72,6 @@ jobs:
         mv geonames+woredas.zip /home/runner/work/indra/indra/cache/geonames/index
         cd /home/runner/work/indra/indra/cache/geonames/index
         unzip geonames+woredas.zip
-    - name: Linting
-      run: tox -e mypy
     - name: Run unit tests
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
