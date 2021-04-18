@@ -3,6 +3,8 @@ from indra.assemblers.pysb import PysbAssembler
 import indra.assemblers.pysb.assembler as pa
 from indra.assemblers.pysb.assembler import Policy, Param
 from indra.assemblers.pysb.preassembler import PysbPreassembler
+from indra.assemblers.pysb.export import export_cm_network
+from indra.assemblers.pysb.kappa_util import get_cm_cycles
 from indra.statements import *
 from pysb import bng, WILD, Monomer, Annotation
 from pysb.testing import with_model
@@ -1258,3 +1260,36 @@ def test_kappa_cm_export():
     graph = pa.export_model('kappa_cm', '/dev/null')
     assert len(graph.nodes()) == 2
     assert len(graph.edges()) == 1
+
+
+def test_contact_map_cycles_1():
+    stmts = [Complex([Agent('a'), Agent('b')]),
+             Complex([Agent('a'), Agent('c')]),
+             Complex([Agent('b'), Agent('c')])]
+    pa = PysbAssembler(stmts)
+    pa.make_model()
+    graph = export_cm_network(pa.model)
+    assert len(graph.nodes()) == 9, len(graph.nodes)
+    assert len(graph.edges()) == 9, len(graph.edges)
+
+    cycles = get_cm_cycles(graph)
+    assert len(cycles) == 1, cycles
+    assert cycles[0] == ['a(b)', 'b(a)', 'b(c)', 'c(b)', 'c(a)', 'a(c)']
+
+
+def test_contact_map_cycles_2():
+    erk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
+    erk2 = Agent('MAPK3', db_refs={'HGNC': '6877'})
+    # In this case there will be no cycles because the binding site on x
+    # for ERK1 and ERK2 is generated to be competitive.
+    stmts = [Complex([Agent('x'), erk1]),
+             Complex([Agent('x'), erk2]),
+             Complex([erk1, erk2])]
+    pa = PysbAssembler(stmts)
+    pa.make_model()
+    graph = export_cm_network(pa.model)
+    assert len(graph.nodes()) == 8, len(graph.nodes)
+    assert len(graph.edges()) == 8, len(graph.edges)
+
+    cycles = get_cm_cycles(graph)
+    assert not cycles, cycles
