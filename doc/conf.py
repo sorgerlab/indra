@@ -306,6 +306,7 @@ MOCK_MODULES = [
     'pybel.language', 'pybel.dsl', 'pybel.resources',
     'pybel.resources.definitions',
     'pybel.resources.definitions.definitions', 'pybel.utils',
+    'pybel.io', 'pybel.io.sbel',
     'pygraphviz', 'jnius', 'jnius_config', 'flask',
     'objectpath', 'lxml', 'lxml.etree', 'lxml.builder',
     'functools32', 'ndex2', 'ndex2.client', 'ndex2.nice_cx_network',
