@@ -1274,11 +1274,14 @@ def test_contact_map_cycles_1():
 
     cycles = get_cm_cycles(graph)
     assert len(cycles) == 1, cycles
+    assert cycles[0] == ['a(b)', 'b(a)', 'b(c)', 'c(b)', 'c(a)', 'a(c)']
 
 
 def test_contact_map_cycles_2():
     erk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
     erk2 = Agent('MAPK3', db_refs={'HGNC': '6877'})
+    # In this case there will be no cycles because the binding site on x
+    # for ERK1 and ERK2 is generated to be competitive.
     stmts = [Complex([Agent('x'), erk1]),
              Complex([Agent('x'), erk2]),
              Complex([erk1, erk2])]
