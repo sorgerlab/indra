@@ -1,11 +1,12 @@
 __all__ = ['stmts_from_json', 'stmts_from_json_file', 'stmts_to_json',
            'stmts_to_json_file', 'draw_stmt_graph', 'pretty_print_stmts',
            'UnresolvedUuidError', 'InputError',
-           'set_pretty_print_max_width']
+           'set_pretty_print_max_width', 'print_stmt_summary']
 
 import json
 import logging
-from typing import List, Optional
+from collections import Counter
+from typing import Collection, List, Optional
 
 from indra.statements.statements import Statement, Unresolved
 
@@ -319,6 +320,27 @@ def pretty_print_stmts(stmt_list: List[Statement],
             print(full_str)
             print('-'*width)
         print()
+
+
+def print_stmt_summary(statements: Collection[Statement]):
+    """Print a summary of a list of statements by statement type
+
+    Requires the tabulate package (https://pypi.org/project/tabulate).
+
+    Parameters
+    ----------
+    statements : List[Statement]
+        The list of INDRA Statements to be printed.
+    """
+    from tabulate import tabulate
+    print(tabulate(
+        Counter(
+            statement.__class__.__name__
+            for statement in statements
+        ).most_common(),
+        headers=["Statement Type", "Count"],
+        tablefmt='github',
+    ))
 
 
 class UnresolvedUuidError(Exception):

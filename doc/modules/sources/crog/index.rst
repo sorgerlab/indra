@@ -3,8 +3,8 @@ CRoG (:py:mod:`indra.sources.crog`)
 .. automodule:: indra.sources.crog
     :members:
 
-CRoG API (:py:mod:`indra.sources.dgi.api`)
------------------------------------------
+CRoG API (:py:mod:`indra.sources.crog.api`)
+-------------------------------------------
 .. automodule:: indra.sources.crog.api
     :members:
 

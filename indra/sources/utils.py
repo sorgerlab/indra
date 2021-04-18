@@ -5,7 +5,7 @@
 import requests
 from typing import List
 
-from ..statements import Statement, print_statement_summary, stmts_from_json
+from ..statements import Statement, print_stmt_summary, stmts_from_json
 
 __all__ = [
     'RemoteProcessor',
@@ -44,4 +44,4 @@ class RemoteProcessor:
 
     def print_summary(self) -> None:
         """Print a summary of the statements."""
-        print_statement_summary(self.statements)
+        print_stmt_summary(self.statements)
