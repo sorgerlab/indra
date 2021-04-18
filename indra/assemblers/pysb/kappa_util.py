@@ -188,6 +188,8 @@ def cm_json_to_graph(cm_json):
             # As of kappy 4.1.2, the format of port links have changed
             # Old format: [[1, 0]], New format: [[[0, 1], 0]]
             for port_link in site['site_type'][1]['port_links']:
+                port_link = tuple([link[1] if isinstance(link, list) else link
+                                   for link in port_link])
                 if isinstance(port_link, list):
                     port_link = port_link[1]
                 edge = (site_key, tuple(port_link))
