@@ -80,7 +80,7 @@ def cm_json_to_networkx(cm_json):
     graph : networkx.Graph
         An undirected graph representing the contact map.
     """
-    cmap_data = cm_json['contact map']['map']
+    cmap_data = get_cmap_data_from_json(cm_json)
     graph = Graph()
     nodes = []
     edges = []
@@ -95,7 +95,13 @@ def cm_json_to_networkx(cm_json):
             # specified site
             if not site['site_type'] or not site['site_type'][0] == 'port':
                 continue
+            # As of kappy 4.1.2, the format of port links have changed
+            # Old format: [[1, 0]], New format: [[[0, 1], 0]]
             for port_link in site['site_type'][1]['port_links']:
+                port_link = tuple([link[1] if isinstance(link, list) else link
+                                   for link in port_link])
+                if isinstance(port_link, list):
+                    port_link = port_link[1]
                 edges.append((site_key, tuple(port_link), {'type': 'link'}))
             edges.append((node_idx, site_key, {'type': 'part'}))
     graph.add_nodes_from(nodes)
@@ -159,15 +165,7 @@ def cm_json_to_graph(cm_json):
     graph : pygraphviz.Agraph
         A graph representing the contact map.
     """
-    # This is for kappy compatibility: as of 4.1.2, im_json is a string,
-    # whereas before it was a json object
-    if isinstance(cm_json, str):
-        cm_json = json.loads(cm_json)
-    cmap_data = cm_json['contact map']['map']
-    # There also seems to be an additional level of nesting in a one-element
-    # list that we can unpack here
-    if len(cmap_data) == 1 and isinstance(cmap_data[0], list):
-        cmap_data = cmap_data[0]
+    cmap_data = get_cmap_data_from_json(cm_json)
 
     # Initialize the graph
     graph = AGraph()
@@ -187,7 +185,11 @@ def cm_json_to_graph(cm_json):
             # specified site
             if not site['site_type'] or not site['site_type'][0] == 'port':
                 continue
+            # As of kappy 4.1.2, the format of port links have changed
+            # Old format: [[1, 0]], New format: [[[0, 1], 0]]
             for port_link in site['site_type'][1]['port_links']:
+                if isinstance(port_link, list):
+                    port_link = port_link[1]
                 edge = (site_key, tuple(port_link))
                 edges.append(edge)
         graph.add_subgraph(sites_in_node,
@@ -199,3 +201,16 @@ def cm_json_to_graph(cm_json):
         graph.add_edge(source, target)
 
     return graph
+
+
+def get_cmap_data_from_json(cm_json):
+    # This is for kappy compatibility: as of 4.1.2, im_json is a string,
+    # whereas before it was a json object
+    if isinstance(cm_json, str):
+        cm_json = json.loads(cm_json)
+    cmap_data = cm_json['contact map']['map']
+    # As of 4.1.2 there is also an additional level of nesting in a one-element
+    # list that we can unpack here
+    if len(cmap_data) == 1 and isinstance(cmap_data[0], list):
+        cmap_data = cmap_data[0]
+    return cmap_data
