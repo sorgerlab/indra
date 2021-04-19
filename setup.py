@@ -65,7 +65,7 @@ def main():
                     'indra.explanation.pathfinding',
                     'indra.literature', 'indra.mechlinker',
                     'indra.ontology', 'indra.ontology.bio',
-                    'indra.ontology.world', 'indra.ontology.virtual',
+                    'indra.ontology.virtual',
                     'indra.ontology.app', 'indra.pipeline',
                     'indra.preassembler',
                     'indra.preassembler.grounding_mapper', 'indra.sources',
