@@ -18,7 +18,6 @@ from indra.pipeline import register_pipeline
 from indra.mechlinker import MechLinker
 from indra.databases import hgnc_client
 from indra.ontology.bio import bio_ontology
-from indra.ontology.world import world_ontology
 from indra.preassembler import Preassembler, flatten_evidence
 from indra.resources import get_resource_path
 
@@ -237,78 +236,6 @@ def merge_groundings(stmts_in):
     for stmt in stmts_in:
         if not isinstance(stmt, (Complex, Conversion)):
             surface_grounding(stmt)
-        stmts_out.append(stmt)
-    return stmts_out
-
-
-@register_pipeline
-def merge_deltas(stmts_in):
-    """Gather and merge original Influence delta information from evidence.
-
-
-    This function is only applicable to Influence Statements that have
-    subj and obj deltas. All other statement types are passed through unchanged.
-    Polarities and adjectives for subjects and objects respectivey are
-    collected and merged by travesrsing all evidences of a Statement.
-
-    Parameters
-    ----------
-    stmts_in : list[indra.statements.Statement]
-        A list of INDRA Statements whose influence deltas should be merged.
-        These Statements are meant to have been preassembled and potentially
-        have multiple pieces of evidence.
-
-    Returns
-    -------
-    stmts_out : list[indra.statements.Statement]
-        The list of Statements now with deltas merged at the Statement
-        level.
-    """
-    stmts_out = []
-    for stmt in stmts_in:
-        # This operation is only applicable to Influences
-        if not isinstance(stmt, Influence):
-            stmts_out.append(stmt)
-            continue
-        # At this point this is guaranteed to be an Influence
-        deltas = {}
-        for role in ('subj', 'obj'):
-            for info in ('polarity', 'adjectives'):
-                key = (role, info)
-                deltas[key] = []
-                for ev in stmt.evidence:
-                    entry = ev.annotations.get('%s_%s' % key)
-                    deltas[key].append(entry if entry else None)
-        # POLARITY
-        # For polarity we need to work in pairs
-        polarity_pairs = list(zip(deltas[('subj', 'polarity')],
-                                  deltas[('obj', 'polarity')]))
-        # If we have some fully defined pairs, we take the most common one
-        both_pols = [pair for pair in polarity_pairs if pair[0] is not None and
-                     pair[1] is not None]
-        if both_pols:
-            subj_pol, obj_pol = max(set(both_pols), key=both_pols.count)
-            stmt.subj.delta.polarity = subj_pol
-            stmt.obj.delta.polarity = obj_pol
-        # Otherwise we prefer the case when at least one entry of the
-        # pair is given
-        else:
-            one_pol = [pair for pair in polarity_pairs if pair[0] is not None or
-                       pair[1] is not None]
-            if one_pol:
-                subj_pol, obj_pol = max(set(one_pol), key=one_pol.count)
-                stmt.subj.delta.polarity = subj_pol
-                stmt.obj.delta.polarity = obj_pol
-
-        # ADJECTIVES
-        for attr, role in ((stmt.subj.delta, 'subj'), (stmt.obj.delta, 'obj')):
-            all_adjectives = []
-            for adj in deltas[(role, 'adjectives')]:
-                if isinstance(adj, list):
-                    all_adjectives += adj
-                elif adj is not None:
-                    all_adjectives.append(adj)
-            attr.adjectives = all_adjectives
         stmts_out.append(stmt)
     return stmts_out
 
