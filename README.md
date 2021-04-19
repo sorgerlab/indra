@@ -47,22 +47,14 @@ INDRA is currently integrated with the following natural language processing
 systems and structured databases. These input modules (available in
 `indra.sources`) all produce INDRA Statements.
 
-General purpose causal relation reading systems:
+Reading systems:
 
 | Reader     | Module                | Reference                                 |
 |------------|-----------------------|-------------------------------------------|
-| Eidos      | [`indra.sources.eidos`](https://indra.readthedocs.io/en/latest/modules/sources/eidos/index.html#) | https://github.com/clulab/eidos           |
-| TRIPS/CWMS | [`indra.sources.cwms`](https://indra.readthedocs.io/en/latest/modules/sources/cwms/index.html#)  | http://trips.ihmc.us/parser/cgi/cwmsreader|
-| Hume       | [`indra.sources.hume`](https://indra.readthedocs.io/en/latest/modules/sources/hume/index.html)  | https://github.com/BBN-E/Hume             |
-| Sofia      | [`indra.sources.sofia`](https://indra.readthedocs.io/en/latest/modules/sources/sofia/index.html) | https://sofia.worldmodelers.com/ui/       |
-
-Biology-oriented reading systems:
-
-| Reader     | Module                  | Reference                                       |
-|------------|-------------------------|-------------------------------------------------|
 | TRIPS/DRUM | [`indra.sources.trips`](https://indra.readthedocs.io/en/latest/modules/sources/trips/index.html)   | http://trips.ihmc.us/parser/cgi/drum            |
 | REACH      | [`indra.sources.reach`](https://indra.readthedocs.io/en/latest/modules/sources/reach/index.html)   | https://github.com/clulab/reach                 |
 | Sparser    | [`indra.sources.sparser`](https://indra.readthedocs.io/en/latest/modules/sources/sparser/index.html#) | https://github.com/ddmcdonald/sparser           |
+| Eidos      | [`indra.sources.eidos`](https://indra.readthedocs.io/en/latest/modules/sources/eidos/index.html#) | https://github.com/clulab/eidos           |
 | TEES       | [`indra.sources.tees`](https://indra.readthedocs.io/en/latest/modules/sources/tees/index.html)   | https://github.com/jbjorne/TEES                 |
 | MedScan    | [`indra.sources.medscan`](https://indra.readthedocs.io/en/latest/modules/sources/medscan/index.html) | https://doi.org/10.1093/bioinformatics/btg207   |
 | RLIMS-P    | [`indra.sources.rlimsp`](https://indra.readthedocs.io/en/latest/modules/sources/rlimsp/index.html)  | https://research.bioinformatics.udel.edu/rlimsp |

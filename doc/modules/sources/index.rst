@@ -6,8 +6,8 @@ reading systems (some that extract biological mechanisms, and some that extract
 general causal interactions from text) and also from structured databases,
 which are typically human-curated or derived from experimental data.
 
-Biology-oriented Reading Systems
---------------------------------
+Reading Systems
+---------------
 .. toctree::
    :maxdepth: 3
 
@@ -19,16 +19,7 @@ Biology-oriented Reading Systems
    isi/index
    geneways/index
    rlimsp/index
-
-General Purpose Reading Systems
--------------------------------
-.. toctree::
-   :maxdepth: 3
-
    eidos/index
-   cwms/index
-   sofia/index
-   hume/index
 
 Molecular Pathway Databases
 ---------------------------
