@@ -86,11 +86,9 @@ class AssemblyPipeline():
         # This import is here to avoid circular imports
         # It is enough to import one function to get all registered functions
         from indra.tools.assemble_corpus import filter_grounded_only
-        from indra.ontology.world import load_world_ontology
         from indra.ontology.bio import bio_ontology
         from indra.preassembler.grounding_mapper.gilda import ground_statements
-        from indra.belief.wm_scorer import get_eidos_scorer
-        from indra.preassembler.custom_preassembly import location_matches
+        from indra.preassembler.custom_preassembly import agent_grounding_matches
         self.steps = steps if steps else []
 
     @classmethod
