@@ -10,10 +10,11 @@
 
 INDRA (Integrated Network and Dynamical Reasoning Assembler) is an automated
 model assembly system, originally developed for molecular systems biology and
-currently being generalized to other domains. INDRA draws on natural language
-processing systems and structured databases to collect mechanistic and causal
-assertions, represents them in a standardized form (INDRA Statements), and
-assembles them into various modeling formalisms including causal graphs and
+currently being generalized to other domains (see [INDRA
+World](https://github.com/indralab/indra_world)).  INDRA draws on natural
+language processing systems and structured databases to collect mechanistic and
+causal assertions, represents them in a standardized form (INDRA Statements),
+and assembles them into various modeling formalisms including causal graphs and
 dynamical models.
 
 At the core of INDRA are its knowledge-level assembly procedures, allowing
@@ -200,14 +201,15 @@ stmts = ac.filter_belief(stmts, 0.8)    # Apply belief cutoff of 0.8
 An example of an assembly pipeline for statements in the world modeling domain
 is as follows (note how biology-specific functions are not used, and a custom
 belief_scorer and ontology is passed to `run_preassembly` here, while the
-biology pipeline used default values):
+biology pipeline used default values). Note that this example requires
+the `indra_world` package to be installed.
 
 [//]: # (If code is changed here, also update it in tests/test_docs_code.py)
 
 ```python
 from indra.tools import assemble_corpus as ac
-from indra.belief.wm_scorer import get_eidos_scorer
-from indra.ontology.world import world_ontology
+from indra_world.belief.wm_scorer import get_eidos_scorer
+from indra_world.ontology.world import world_ontology
 stmts = <the collection of all raw statements to use>
 stmts = ac.filter_grounded_only(stmts)  # Filter out ungrounded agents
 belief_scorer = get_eidos_scorer()
