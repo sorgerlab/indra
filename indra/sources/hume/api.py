@@ -39,7 +39,7 @@ def process_jsonld_file(fname, extract_filter=None,
 
 
 def process_jsonld(jsonld, extract_filter=None,
-                   grounding_mode=default_grounding_mode):
+                   grounding_mode=None):
     """Process a JSON-LD string in the new format to extract Statements.
 
     Parameters
@@ -61,6 +61,8 @@ def process_jsonld(jsonld, extract_filter=None,
         A HumeProcessor instance, which contains a list of INDRA Statements
         as its statements attribute.
     """
+    grounding_mode = default_grounding_mode if not grounding_mode \
+        else grounding_mode
     if grounding_mode == 'flat':
         hp = processor.HumeJsonLdProcessor(jsonld)
     elif grounding_mode == 'compositional':

@@ -108,7 +108,7 @@ def process_text(text, out_file='sofia_output.json', auth=None,
 
 
 def process_json(json_obj, extract_filter=None,
-                 grounding_mode=default_grounding_mode):
+                 grounding_mode=None):
     """Return processor by processing a JSON object returned by Sofia.
 
     Parameters
@@ -130,6 +130,8 @@ def process_json(json_obj, extract_filter=None,
         A SofiaProcessor object which has a list of extracted INDRA
         Statements as its statements attribute.
     """
+    grounding_mode = default_grounding_mode if not grounding_mode \
+        else grounding_mode
     sp = SofiaJsonProcessor(json_obj, grounding_mode=grounding_mode)
     if extract_filter is None or 'influence' in extract_filter:
         sp.extract_relations(json_obj)
