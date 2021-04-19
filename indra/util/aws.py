@@ -584,8 +584,8 @@ if __name__ == '__main__':
     if args.task == 'run_in_batch':
         ret_code = run_in_batch(args.command.split(), args.project,
                                 args.purpose)
-        if ret_code is 0:
-            logger.info('Job endend well.')
+        if ret_code == 0:
+            logger.info('Job ended well.')
         else:
             logger.error('Job failed!')
             import sys

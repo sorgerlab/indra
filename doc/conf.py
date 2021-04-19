@@ -36,8 +36,10 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinx.ext.intersphinx',
     'sphinxarg.ext',
     'sphinx.ext.autosummary',
+    'sphinx_autodoc_typehints',
     'IPython.sphinxext.ipython_directive',
     'IPython.sphinxext.ipython_console_highlighting',
     'citations'
@@ -58,9 +60,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'INDRA'
-copyright = u'2020, B. M. Gyori, J. A. Bachman'
-author = u'B. M. Gyori, J. A. Bachman'
+project = 'INDRA'
+copyright = '2020, B. M. Gyori, J. A. Bachman'
+author = 'B. M. Gyori, J. A. Bachman'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -149,7 +151,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -234,8 +236,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'indra.tex', u'INDRA Documentation',
-   u'B. M. Gyori, J. A. Bachman', 'manual'),
+  (master_doc, 'indra.tex', 'INDRA Documentation',
+   'B. M. Gyori, J. A. Bachman', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -264,7 +266,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'INDRA', u'INDRA Documentation',
+    (master_doc, 'INDRA', 'INDRA Documentation',
      [author], 1)
 ]
 
@@ -281,7 +283,7 @@ numpydoc_show_class_members = False
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'INDRA', u'INDRA Documentation',
+  (master_doc, 'INDRA', 'INDRA Documentation',
    author, 'INDRA', 'Integrated Network and Dynamical Reasoning Assembler.',
    'Miscellaneous'),
 ]
@@ -321,3 +323,11 @@ for mod_name in MOCK_MODULES:
 # from our code that uses it.
 jnius_config = sys.modules['jnius_config']
 jnius_config.vm_running = False
+
+# Example configuration for intersphinx: refer to the Python standard library.
+intersphinx_mapping = {
+    'https://docs.python.org/3/': None,
+    'pybel': ('https://pybel.readthedocs.io/en/latest/', None),
+    'boto3': ('https://boto3.amazonaws.com/v1/documentation/api/latest/', None),
+    'pysb': ('https://docs.pysb.org/en/latest/', None),
+}
