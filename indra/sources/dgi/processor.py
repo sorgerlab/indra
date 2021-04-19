@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Processor for the `Drug Gene Interaction DB<http://www.dgidb.org>`_."""
+"""Processor for the `Drug Gene Interaction DB <http://www.dgidb.org>`_."""
 
 import logging
 from typing import Iterable, List, Optional, Set, Type
