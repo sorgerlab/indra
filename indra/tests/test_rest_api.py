@@ -924,27 +924,6 @@ def test_reach_process_pmc():
     assert stmts[0].evidence[0].pmid is not None
 
 
-def test_cwms_process_text():
-    res = _call_api('post', '/cwms/process_text',
-                    json={'text': 'Hunger causes displacement.'})
-    res_json = json.loads(res.get_data())
-    stmts_json = res_json.get('statements')
-    stmts = stmts_from_json(stmts_json)
-    assert len(stmts) == 1
-
-
-def test_hume_process_jsonld():
-    from indra.tests.test_hume import test_file_new_simple
-    with open(test_file_new_simple, 'r') as fh:
-        test_jsonld = fh.read()
-    res = _call_api('post', '/hume/process_jsonld',
-                    json={'jsonld': test_jsonld})
-    res_json = json.loads(res.get_data())
-    stmts_json = res_json.get('statements')
-    stmts = stmts_from_json(stmts_json)
-    assert len(stmts) == 1
-
-
 def test_eidos_json():
     from indra.tests.test_eidos import test_jsonld
     with open(test_jsonld, 'r') as fh:
