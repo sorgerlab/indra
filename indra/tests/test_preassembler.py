@@ -5,7 +5,7 @@ from indra.preassembler import Preassembler, render_stmt_graph, \
 from indra.sources import reach
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
-from indra.ontology.world import world_ontology
+from indra_world.ontology import world_ontology
 from indra.preassembler import RefinementFilter, OntologyRefinementFilter
 
 
