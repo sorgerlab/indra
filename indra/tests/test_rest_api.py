@@ -693,58 +693,6 @@ def test_merge_groundings():
     assert stmts[0].obj.concept.db_refs == stmts[0].subj.concept.db_refs
 
 
-def test_merge_deltas():
-    def add_annots(stmt):
-        for ev in stmt.evidence:
-            ev.annotations['subj_adjectives'] = stmt.subj.delta.adjectives
-            ev.annotations['obj_adjectives'] = stmt.obj.delta.adjectives
-            ev.annotations['subj_polarity'] = stmt.subj.delta.polarity
-            ev.annotations['obj_polarity'] = stmt.obj.delta.polarity
-        return stmt
-
-    d1 = QualitativeDelta(polarity=1, adjectives=['a', 'b', 'c'])
-    d2 = QualitativeDelta(polarity=-1, adjectives=None)
-    d3 = QualitativeDelta(polarity=1, adjectives=['g'])
-    d4 = QualitativeDelta(polarity=-1, adjectives=['d', 'e', 'f'])
-    d5 = QualitativeDelta(polarity=None, adjectives=['d'])
-    d6 = QualitativeDelta(polarity=None, adjectives=None)
-    d7 = QualitativeDelta(polarity=1, adjectives=None)
-
-    def make_ev(name, delta):
-        return Event(Concept(name), delta=delta)
-
-    route_preassembly = 'preassembly/run_preassembly'
-    route_deltas = 'preassembly/merge_deltas'
-
-    stmts = [add_annots(Influence(make_ev('a', sd), make_ev('b', od),
-                                  evidence=[Evidence(source_api='eidos',
-                                                     text='%d' % idx)]))
-             for idx, (sd, od) in enumerate([(d1, d2), (d3, d4)])]
-    stmts = _post_stmts_preassembly(
-        stmts, route_preassembly, return_toplevel=True)
-    stmts = _post_stmts_preassembly(stmts, route_deltas)
-    assert stmts[0].subj.delta.polarity == 1, stmts[0].subj.delta
-    assert stmts[0].obj.delta.polarity == -1, stmts[0].obj.delta
-    assert set(stmts[0].subj.delta.adjectives) == {'a', 'b', 'c', 'g'}, \
-        stmts[0].subj.delta
-    assert set(stmts[0].obj.delta.adjectives) == {'d', 'e', 'f'}, \
-        stmts[0].obj.delta
-
-    stmts = [add_annots(Influence(make_ev('a', sd), make_ev('b', od),
-                                  evidence=[Evidence(source_api='eidos',
-                                                     text='%d' % idx)]))
-             for idx, (sd, od) in enumerate([(d1, d5), (d6, d7), (d6, d7)])]
-    stmts = _post_stmts_preassembly(
-        stmts, route_preassembly, return_toplevel=True)
-    stmts = _post_stmts_preassembly(stmts, route_deltas)
-    assert stmts[0].subj.delta.polarity is None, stmts[0].subj.delta
-    assert stmts[0].obj.delta.polarity == 1, stmts[0].obj.delta
-    assert set(stmts[0].subj.delta.adjectives) == {'a', 'b', 'c'}, \
-        stmts[0].subj.delta
-    assert set(stmts[0].obj.delta.adjectives) == {'d'}, \
-        stmts[0].obj.delta
-
-
 def test_preassemble_flatten():
     route = 'preassembly/run_preassembly'
     st_out = _post_stmts_preassembly(

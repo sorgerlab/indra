@@ -65,6 +65,8 @@ jobs:
         #export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
         # Download adeft models
         python -m adeft.download
+        # Get INDRA World
+        git clone --branch refactor https://github.com/indralab/indra_world.git
         wget -nv https://bigmech.s3.amazonaws.com/travis/reach-82631d-biores-e9ee36.jar
         wget -nv https://bigmech.s3.amazonaws.com/travis/eidos.jar
         wget -nv https://bigmech.s3.amazonaws.com/travis/geonames%2Bworedas.zip
@@ -89,14 +91,13 @@ jobs:
         #echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
         #echo "$TRAVIS_EVENT_TYPE"
         #export TEES_PATH=~/TEES
-        #export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
+        export PYTHONPATH=$PYTHONPATH:`pwd`/indra_world
         export _JAVA_OPTIONS="-Xmx4g -Xms1g"
         export BNGPATH=`pwd`/BioNetGen-2.4.0
         export REACHPATH=`pwd`/reach-82631d-biores-e9ee36.jar
         export CLASSPATH=$REACHPATH
         # These are files that are ignored so that doctests don't fail
         export NOSE_IGNORE_FILES="find_full_text_sentence.py";
-
         echo $NOSEATTR
         #- cd $TRAVIS_BUILD_DIR
         # Now run all INDRA tests

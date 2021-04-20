@@ -2,12 +2,12 @@ from indra.pipeline import AssemblyPipeline, RunnableArgument
 from indra.pipeline.pipeline import jsonify_arg_input
 from indra.tests.test_assemble_corpus import st1, st2, st3, st4
 from indra.tools.assemble_corpus import *
-from indra.preassembler.custom_preassembly import location_matches, \
-    location_refinement
-from indra.belief.wm_scorer import *
 from indra.belief import BeliefScorer
-from indra.ontology.world import world_ontology
 from indra.statements import Activation
+from indra_world.assembly.matches import location_matches
+from indra_world.assembly.refinement import location_refinement
+from indra_world.belief import get_eidos_scorer, get_eidos_bayesian_scorer
+from indra_world.ontology import world_ontology
 
 
 stmts = [st1, st2, st3, st4]
