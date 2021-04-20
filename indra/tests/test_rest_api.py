@@ -312,17 +312,6 @@ def test_run_preassembly_concepts():
     assert len(st_out) == 2, st_out
 
 
-def test_preassembly_wm_scorer():
-    route = 'preassembly/run_preassembly'
-    ev = Evidence(source_api='eidos',
-                  annotations={'found_by': 'dueToSyntax2-Causal'})
-    st = Influence(Event(Concept('x')), Event(Concept('y')), evidence=[ev])
-    stmts_json = stmts_to_json([st])
-    st_out = _post_stmts_preassembly([st], route, belief_scorer='wm')
-    stmt = st_out[0]
-    assert stmt.belief == 0.8142, stmt.belief
-
-
 def test_expand_families():
     route = 'preassembly/expand_families'
     st_out = _post_stmts_preassembly([st10], route)

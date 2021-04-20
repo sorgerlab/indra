@@ -1,9 +1,8 @@
 import pickle
 from copy import deepcopy
-from collections import namedtuple
 from indra.statements import *
 from indra.tools import assemble_corpus as ac
-from indra.ontology.world import world_ontology
+
 
 a = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'})
 b = Agent('b', db_refs={'UP': 'P15056', 'TEXT': 'b'})
@@ -234,38 +233,6 @@ def test_run_preassembly():
 def test_run_preassembly_all_stmts():
     st_out = ac.run_preassembly([st1, st3, st5, st6], return_toplevel=False)
     assert len(st_out) == 4
-
-
-def _get_extended_wm_hierarchy():
-    wo = deepcopy(world_ontology)
-    wo.initialize()
-    wo.add_edge(
-        'WM:wm/x/y/z/flooding',
-        'WM:wm/a/b/c/flooding',
-        **{'type': 'is_equal'}
-    )
-    wo.add_edge(
-        'WM:wm/a/b/c/flooding',
-        'WM:wm/x/y/z/flooding',
-        **{'type': 'is_equal'}
-    )
-    return wo
-
-
-def test_run_preassembly_concepts():
-    ont = _get_extended_wm_hierarchy()
-    rainfall = Event(Concept('rain', db_refs={
-        'WM': ('wm/concept/causal_factor/environmental/meteorologic/'
-               'precipitation/rainfall')}))
-    flooding_1 = Event(Concept('flood', db_refs={
-        'WM': 'wm/x/y/z/flooding'}))
-    flooding_2 = Event(Concept('flooding', db_refs={
-        'WM': 'wm/a/b/c/flooding'}))
-    st_out = ac.run_preassembly([
-        Influence(rainfall, flooding_1), Influence(rainfall, flooding_2)],
-        normalize_ns='WM', normalize_equivalences=True,
-        ontology=ont)
-    assert len(st_out) == 1, st_out
 
 
 def test_expand_families():
@@ -606,60 +573,6 @@ def test_merge_groundings():
     assert stmts[0].obj.concept.db_refs == stmts[0].subj.concept.db_refs
 
 
-def test_merge_deltas():
-    def add_annots(stmt):
-        for ev in stmt.evidence:
-            ev.annotations['subj_adjectives'] = stmt.subj.delta.adjectives
-            ev.annotations['obj_adjectives'] = stmt.obj.delta.adjectives
-            ev.annotations['subj_polarity'] = stmt.subj.delta.polarity
-            ev.annotations['obj_polarity'] = stmt.obj.delta.polarity
-        return stmt
-    # d1 = {'adjectives': ['a', 'b', 'c'], 'polarity': 1}
-    # d2 = {'adjectives': [], 'polarity': -1}
-    # d3 = {'adjectives': ['g'], 'polarity': 1}
-    # d4 = {'adjectives': ['d', 'e', 'f'], 'polarity': -1}
-    # d5 = {'adjectives': ['d'], 'polarity': None}
-    # d6 = {'adjectives': [], 'polarity': None}
-    # d7 = {'adjectives': [], 'polarity': 1}
-
-    d1 = QualitativeDelta(polarity=1, adjectives=['a', 'b', 'c'])
-    d2 = QualitativeDelta(polarity=-1, adjectives=None)
-    d3 = QualitativeDelta(polarity=1, adjectives=['g'])
-    d4 = QualitativeDelta(polarity=-1, adjectives=['d', 'e', 'f'])
-    d5 = QualitativeDelta(polarity=None, adjectives=['d'])
-    d6 = QualitativeDelta(polarity=None, adjectives=None)
-    d7 = QualitativeDelta(polarity=1, adjectives=None)
-
-    def make_ev(name, delta):
-        return Event(Concept(name), delta=delta)
-
-    stmts = [add_annots(Influence(make_ev('a', sd), make_ev('b', od),
-                                  evidence=[Evidence(source_api='eidos',
-                                                     text='%d' % idx)]))
-             for idx, (sd, od) in enumerate([(d1, d2), (d3, d4)])]
-    stmts = ac.run_preassembly(stmts, return_toplevel=True)
-    stmts = ac.merge_deltas(stmts)
-    assert stmts[0].subj.delta.polarity == 1, stmts[0].subj.delta
-    assert stmts[0].obj.delta.polarity == -1, stmts[0].obj.delta
-    assert set(stmts[0].subj.delta.adjectives) == {'a', 'b', 'c', 'g'}, \
-        stmts[0].subj.delta
-    assert set(stmts[0].obj.delta.adjectives) == {'d', 'e', 'f'}, \
-        stmts[0].obj.delta
-
-    stmts = [add_annots(Influence(make_ev('a', sd), make_ev('b', od),
-                                  evidence=[Evidence(source_api='eidos',
-                                                     text='%d' % idx)]))
-             for idx, (sd, od) in enumerate([(d1, d5), (d6, d7), (d6, d7)])]
-    stmts = ac.run_preassembly(stmts, return_toplevel=True)
-    stmts = ac.merge_deltas(stmts)
-    assert stmts[0].subj.delta.polarity is None, stmts[0].subj.delta
-    assert stmts[0].obj.delta.polarity == 1, stmts[0].obj.delta
-    assert set(stmts[0].subj.delta.adjectives) == {'a', 'b', 'c'}, \
-        stmts[0].subj.delta
-    assert set(stmts[0].obj.delta.adjectives) == {'d'}, \
-        stmts[0].obj.delta
-
-
 def test_preassemble_flatten():
     st_out = ac.run_preassembly([st1, st3, st5, st6], flatten_evidence=False)
     assert len(st_out[0].evidence) == 1
@@ -672,55 +585,6 @@ def test_preassemble_flatten():
                                 flatten_evidence_collect_from='supports')
     assert len(st_out[0].evidence) == 1
     assert len(st_out[1].evidence) == 1
-
-
-def test_normalize_equals_opposites():
-    ont = _get_extended_wm_hierarchy()
-    flooding1 = 'wm/a/b/c/flooding'
-    flooding2 = 'wm/x/y/z/flooding'
-    # Note that as of 5/15/2020 food_insecurity and food_security aren't
-    # explicitly opposites in the ontology
-    food_insec = 'wm/concept/causal_factor/food_insecurity/food_nonaccess'
-    food_sec = 'wm/concept/causal_factor/food_security/food_access'
-
-    # Top grounding: flooding1
-    dbr = {'WM': [(flooding1, 1.0), (flooding2, 0.5), (food_insec, 0.1)]}
-    ev1 = Event(Concept('x', db_refs=dbr))
-
-    # Top grounding: food security
-    dbr = {'WM': [(food_sec, 1.0), (flooding2, 0.5)]}
-    ev2 = Event(Concept('x', db_refs=dbr),
-                delta=QualitativeDelta(polarity=1))
-
-    # Make sure that by default, things don't get normalized out
-    stmts = ac.run_preassembly([ev1, ev2], ontology=ont)
-    assert stmts[0].concept.db_refs['WM'][0][0] != \
-        stmts[0].concept.db_refs['WM'][1][0]
-
-    # Now we turn on equivalence normalization and expect
-    # that flooding1 and flooding2 have been normalized out
-    # in ev1's db_refs
-    stmts = ac.run_preassembly([ev1, ev2], normalize_equivalences=True,
-                               normalize_ns='WM',
-                               ontology=ont)
-    assert stmts[0].concept.db_refs['WM'][0][0] == \
-        stmts[0].concept.db_refs['WM'][1][0], \
-        stmts[0].concept.db_refs['WM']
-
-    # Now we turn on opposite normalization and expect that food
-    # security and insecurity will get normalized out
-    stmts = ac.run_preassembly([ev1, ev2], normalize_equivalences=True,
-                               normalize_opposites=True, normalize_ns='WM',
-                               ontology=ont)
-    assert len(stmts) == 2
-    stmts = sorted(stmts, key=lambda x: len(x.concept.db_refs['WM']),
-                   reverse=True)
-    assert len(stmts[0].concept.db_refs['WM']) == 3, stmts[0].concept.db_refs
-    # This is to check that food_insecurity was normalized to food_security
-    assert stmts[0].concept.db_refs['WM'][2][0] == \
-           stmts[1].concept.db_refs['WM'][0][0], \
-        (stmts[0].concept.db_refs['WM'],
-         stmts[1].concept.db_refs['WM'])
 
 
 def test_filter_by_curation():

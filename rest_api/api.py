@@ -25,9 +25,7 @@ from indra.databases import cbio_client
 from indra.sources.indra_db_rest import get_statements
 from indra.sources.ndex_cx.api import process_ndex_network
 from indra.sources.reach.api import reach_nxml_url, reach_text_url
-from indra.belief.wm_scorer import get_eidos_scorer
 from indra.ontology.bio import bio_ontology
-from indra.ontology.world import world_ontology
 from indra.pipeline import AssemblyPipeline, pipeline_functions
 from indra.preassembler.custom_preassembly import *
 
@@ -169,15 +167,13 @@ class PreassembleStatements(Resource):
             elif arg in ['matches_fun', 'refinement_fun']:
                 args_json[arg] = pipeline_functions[args_json[arg]]
             elif arg == 'belief_scorer':
-                if args_json[arg] == 'wm':
-                    args_json[arg] = get_eidos_scorer()
-                else:
-                    args_json[arg] = None
+                # Here we could handle various string values of args_json[arg]
+                # but there currently aren't any specific options
+                args_json[arg] = None
             elif arg == 'ontology':
-                if args_json[arg] == 'wm':
-                    args_json[arg] = world_ontology
-                else:
-                    args_json[arg] = bio_ontology
+                # Here we could handle various string values of args_json[arg]
+                # but there currently aren't any specific options
+                args_json[arg] = bio_ontology
             elif arg == 'whitelist' or arg == 'mutations':
                 args_json[arg] = {
                     gene: [tuple(mod) for mod in mods]
