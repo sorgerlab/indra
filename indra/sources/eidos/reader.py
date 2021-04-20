@@ -54,7 +54,7 @@ class EidosReader(object):
 
     def get_default_ontology(self):
         if self.default_ontology is None:
-            from indra.ontology.world import world_ontology
+            from indra_world.ontology import world_ontology
             self.default_ontology = world_ontology.dump_yml_str()
         return self.default_ontology
 
