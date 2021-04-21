@@ -267,6 +267,12 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
     ------
     path : tuple(node)
         Paths in the bfs search starting from `source`.
+
+    Raises
+    ------
+    StopIteration
+        Raises StopIteration when no more paths are available or when the
+        memory limit is reached
     """
     int_plus = 0
     int_minus = 1
