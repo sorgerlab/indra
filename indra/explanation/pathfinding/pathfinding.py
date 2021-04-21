@@ -6,6 +6,7 @@ import sys
 import logging
 from collections import deque, OrderedDict
 from copy import deepcopy
+from typing import Union, Callable, List, Tuple, Set, Optional, Generator
 
 import networkx as nx
 import networkx.algorithms.simple_paths as simple_paths
@@ -13,6 +14,12 @@ import networkx.algorithms.simple_paths as simple_paths
 from numpy import log as ln
 
 from .util import get_sorted_neighbors
+
+
+# Derived type hints
+Node = Union[str, Tuple[str, int]]
+Edge = Tuple[Node, Node]
+SendType = Tuple[Optional[Set[Node]], Optional[Set[Edge]]]
 
 
 logger = logging.getLogger(__name__)
@@ -212,11 +219,23 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 
 # Implementation inspired by networkx's
 # networkx.algorithms.traversal.breadth_first_search::generic_bfs_edges
-def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
-               max_per_node=5, node_filter=None, node_blacklist=None,
-               terminal_ns=None, sign=None, max_memory=int(2**29), hashes=None,
-               allow_edge=None, strict_mesh_id_filtering=False,
-               edge_filter=None, **kwargs):
+def bfs_search(g: nx.DiGraph,
+               source_node: Node,
+               reverse: bool = False,
+               depth_limit: int = 2,
+               path_limit: Optional[int] = None,
+               max_per_node: int = 5,
+               node_filter: Optional[List[str]] = None,
+               node_blacklist: Optional[Set[Node]] = None,
+               terminal_ns: Optional[List[str]] = None,
+               sign: Optional[int] = None,
+               max_memory: int = int(2**29),
+               hashes: Optional[List[int]] = None,
+               allow_edge: Optional[Callable[[Node, Node], bool]] = None,
+               strict_mesh_id_filtering: bool = False,
+               edge_filter: Optional[Callable[[nx.DiGraph, Node, Node],
+                                              bool]] = None,
+               **kwargs) -> Generator[Tuple[Node], SendType, None]:
     """Do breadth first search from a given node and yield paths
 
     Parameters
@@ -225,40 +244,40 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
         An nx.DiGraph to search in. Can also be a signed node graph. It is
         required that node data contains 'ns' (namespace) and edge data
         contains 'belief'.
-    source_node : node
+    source_node : Node
         Node in the graph to start from.
     reverse : bool
         If True go upstream from source, otherwise go downstream. Default:
         False.
     depth_limit : int
         Stop when all paths with this many edges have been found. Default: 2.
-    path_limit : int
+    path_limit : Optional[int]
         The maximum number of paths to return. Default: no limit.
     max_per_node : int
         The maximum number of paths to yield per parent node. If 1 is
         chosen, the search only goes down to the leaf node of its first
         encountered branch. Default: 5
-    node_filter : list[str]
+    node_filter : Optional[List[str]]
         The allowed namespaces (node attribute 'ns') for the nodes in the
         path
-    node_blacklist : set[node]
+    node_blacklist : Optional[Set[Node]]
         A set of nodes to ignore. Default: None.
-    terminal_ns : list[str]
+    terminal_ns : Optional[List[str]]
         Force a path to terminate when any of the namespaces in this list
         are encountered and only yield paths that terminate at these
         namespaces
-    sign : int
+    sign : Optional[int]
         If set, defines the search to be a signed search. Default: None.
     max_memory : int
         The maximum memory usage in bytes allowed for the variables queue
         and visited. Default: 1073741824 bytes (== 1 GiB).
-    hashes : list
+    hashes : Optional[List[int]]
         List of hashes used (if not empty) to select edges for path finding
-    allow_edge : function(str, str): bool
+    allow_edge : Optional[Callable[[Node, Node], bool]]
         Function telling the edge must be omitted
     strict_mesh_id_filtering : bool
         If true, exclude all edges not relevant to provided hashes
-    edge_filter : Optional[Callable]
+    edge_filter : Optional[Callable[[nx.DiGraph, Node, Node], bool]]
         If provided, must be a function that takes three arguments: a graph
         g, and the nodes u, v of the edge between u and v. The function must
         return a boolean. Example:
@@ -269,7 +288,7 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
 
     Yields
     ------
-    path : tuple(node)
+    Tuple[Node, ...]
         Paths in the bfs search starting from `source`.
 
     Raises
