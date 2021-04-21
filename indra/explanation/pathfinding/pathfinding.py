@@ -258,6 +258,10 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
         Function telling the edge must be omitted
     strict_mesh_id_filtering : bool
         If true, exclude all edges not relevant to provided hashes
+    edge_filter : Optional[Callable]
+        If provided, must be a function that takes three arguments: a graph
+        g, and the nodes u, v of the edge between u and v. The function must
+        return a boolean.
 
     Yields
     ------
