@@ -215,7 +215,8 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
                max_per_node=5, node_filter=None, node_blacklist=None,
                terminal_ns=None, sign=None, max_memory=int(2**29), hashes=None,
-               allow_edge=None, strict_mesh_id_filtering=False, **kwargs):
+               allow_edge=None, strict_mesh_id_filtering=False,
+               edge_filter=None, **kwargs):
     """Do breadth first search from a given node and yield paths
 
     Parameters
@@ -312,6 +313,12 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
             # Check namespace
             if node_filter and len(node_filter) > 0:
                 if g.nodes[neighb]['ns'].lower() not in node_filter:
+                    continue
+
+            if edge_filter:
+                # Reverse the edge if upstream search
+                u, v = (neighb, last_node) if reverse else (last_node, neighb)
+                if not edge_filter(g, u, v):
                     continue
 
             # Add to visited nodes and create new path
