@@ -76,7 +76,7 @@ def signed_nodes_to_signed_edge(source, target):
         return None, None, None
 
 
-def get_sorted_neighbors(G, node, reverse, force_edges=None):
+def get_sorted_neighbors(G, node, reverse, force_edges=None, edge_filter=None):
     """Sort the returned neighbors in descending order by belief
 
     Parameters
@@ -91,6 +91,15 @@ def get_sorted_neighbors(G, node, reverse, force_edges=None):
     force_edges : list
         A list of allowed edges. If provided, only allow neighbors that
         can be reached by the allowed edges.
+    edge_filter : Optional[Callable[..., bool]]
+        If provided, must be a function that takes three arguments: a graph
+        g, and the nodes u, v of the edge between u and v. The function must
+        return a boolean.
+
+    Returns
+    -------
+    List[node]
+        A list of nodes representing the filtered and sorted neighbors
     """
     if reverse:
         if force_edges:
@@ -98,6 +107,11 @@ def get_sorted_neighbors(G, node, reverse, force_edges=None):
                 node)).intersection(set(force_edges)))
         else:
             neighbors = G.predecessors(node)
+
+        if edge_filter:
+            neighbors = (e[0] for e in G.in_edges(node) if
+                         edge_filter(G, *e))
+
         return sorted(
             neighbors,
             key=lambda n:
@@ -110,6 +124,11 @@ def get_sorted_neighbors(G, node, reverse, force_edges=None):
                 node)).intersection(set(force_edges)))
         else:
             neighbors = G.successors(node)
+
+        if edge_filter:
+            neighbors = (e[1] for e in G.out_edges(node) if
+                         edge_filter(G, *e))
+
         return sorted(
             neighbors,
             key=lambda n:
