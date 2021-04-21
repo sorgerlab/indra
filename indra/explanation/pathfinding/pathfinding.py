@@ -261,7 +261,11 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
     edge_filter : Optional[Callable]
         If provided, must be a function that takes three arguments: a graph
         g, and the nodes u, v of the edge between u and v. The function must
-        return a boolean.
+        return a boolean. Example:
+
+        >>> def filter_example(g, u, v):
+        ...    return g.edges[(u, v)].get('belief', 0) > 0.75
+        >>> path_generator = bfs_search(edge_filter=filter_example, ...)
 
     Yields
     ------
