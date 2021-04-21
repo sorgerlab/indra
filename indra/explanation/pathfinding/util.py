@@ -4,7 +4,14 @@ import logging
 import networkx as nx
 import functools
 
+from typing import List, Tuple, Union, Optional, Callable
+
 logger = logging.getLogger(__name__)
+
+
+# Derived type hints
+Node = Union[str, Tuple[str, int]]
+Edge = Tuple[Node, Node]
 
 
 def path_sign_to_signed_nodes(source, target, edge_sign):
@@ -76,29 +83,35 @@ def signed_nodes_to_signed_edge(source, target):
         return None, None, None
 
 
-def get_sorted_neighbors(G, node, reverse, force_edges=None, edge_filter=None):
-    """Sort the returned neighbors in descending order by belief
+def get_sorted_neighbors(
+        G: nx.DiGraph,
+        node: Node,
+        reverse: bool,
+        force_edges: Optional[List[Edge]] = None,
+        edge_filter: Optional[Callable[[nx.DiGraph, Node, Node], bool]] = None
+) -> List[Node]:
+    """Filter and sort neighbors of a node in descending order by belief
 
     Parameters
     ----------
     G : nx.DiGraph
         A networkx DiGraph
-    node : str|int
-        A valid networkx node name
+    node : Node
+        A valid node name or signed node name
     reverse : bool
         Indicates direction of search. Neighbors are either successors
         (downstream search) or predecessors (reverse search).
-    force_edges : list
+    force_edges : Optional[List[Tuple[Node, Node]]]
         A list of allowed edges. If provided, only allow neighbors that
         can be reached by the allowed edges.
-    edge_filter : Optional[Callable[..., bool]]
+    edge_filter : Optional[Callable[[nx.DiGraph, Node, Node], bool]]
         If provided, must be a function that takes three arguments: a graph
         g, and the nodes u, v of the edge between u and v. The function must
         return a boolean.
 
     Returns
     -------
-    List[node]
+    List[Node]
         A list of nodes representing the filtered and sorted neighbors
     """
     if force_edges:
