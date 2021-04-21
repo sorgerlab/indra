@@ -101,39 +101,22 @@ def get_sorted_neighbors(G, node, reverse, force_edges=None, edge_filter=None):
     List[node]
         A list of nodes representing the filtered and sorted neighbors
     """
-    if reverse:
-        if force_edges:
-            neighbors = (e[0] for e in set(G.in_edges(
-                node)).intersection(set(force_edges)))
-        else:
-            neighbors = G.predecessors(node)
-
-        if edge_filter:
-            neighbors = (e[0] for e in G.in_edges(node) if
-                         edge_filter(G, *e))
-
-        return sorted(
-            neighbors,
-            key=lambda n:
-                G.edges[(n, node)].get('belief', 0),
-            reverse=True
-        )
+    if force_edges:
+        neigh_edges = G.in_edges if reverse else G.out_edges
+        ix = 0 if reverse else 1
+        neighbors = (e[ix] for e in
+                     set(neigh_edges(node)).intersection(set(force_edges)))
     else:
-        if force_edges:
-            neighbors = (e[1] for e in set(G.out_edges(
-                node)).intersection(set(force_edges)))
-        else:
-            neighbors = G.successors(node)
+        neighbors = G.predecessors(node) if reverse else G.successors(node)
 
-        if edge_filter:
-            neighbors = (e[1] for e in G.out_edges(node) if
-                         edge_filter(G, *e))
+    if edge_filter:
+        neigh_edges = G.in_edges if reverse else G.out_edges
+        ix = 0 if reverse else 1
+        neighbors = (e[ix] for e in neigh_edges(node) if edge_filter(G, *e))
 
-        return sorted(
-            neighbors,
-            key=lambda n:
-                G.edges[(node, n)].get('belief', 0),
-            reverse=True)
+    sort_key = lambda n: G.edges[(n, node)].get('belief', 0) if reverse \
+        else lambda n: G.edges[(node, n)].get('belief', 0)
+    return sorted(neighbors, key=sort_key, reverse=True)
 
 
 def get_subgraph(g, edge_filter_func):
