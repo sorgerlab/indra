@@ -298,7 +298,8 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
 
         sorted_neighbors = get_sorted_neighbors(G=g, node=last_node,
                                                 reverse=reverse, 
-                                                force_edges=allowed_edges)
+                                                force_edges=allowed_edges,
+                                                edge_filter=edge_filter)
         yielded_neighbors = 0
         # for neighb in neighbors:
         for neighb in sorted_neighbors:
@@ -317,12 +318,6 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
             # Check namespace
             if node_filter and len(node_filter) > 0:
                 if g.nodes[neighb]['ns'].lower() not in node_filter:
-                    continue
-
-            if edge_filter:
-                # Reverse the edge if upstream search
-                u, v = (neighb, last_node) if reverse else (last_node, neighb)
-                if not edge_filter(g, u, v):
                     continue
 
             # Add to visited nodes and create new path
