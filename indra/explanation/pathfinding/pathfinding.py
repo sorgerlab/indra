@@ -246,7 +246,7 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
     terminal_ns : list[str]
         Force a path to terminate when any of the namespaces in this list
         are encountered and only yield paths that terminate at these
-        namepsaces
+        namespaces
     sign : int
         If set, defines the search to be a signed search. Default: None.
     max_memory : int
