@@ -107,7 +107,8 @@ def get_sorted_neighbors(
     edge_filter : Optional[Callable[[nx.DiGraph, Node, Node], bool]]
         If provided, must be a function that takes three arguments: a graph
         g, and the nodes u, v of the edge between u and v. The function must
-        return a boolean.
+        return a boolean. The function must return True if the edge is
+        allowed, otherwise False.
 
     Returns
     -------

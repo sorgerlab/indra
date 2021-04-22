@@ -280,7 +280,9 @@ def bfs_search(g: nx.DiGraph,
     edge_filter : Optional[Callable[[nx.DiGraph, Node, Node], bool]]
         If provided, must be a function that takes three arguments: a graph
         g, and the nodes u, v of the edge between u and v. The function must
-        return a boolean. Example:
+        return a boolean. The function must return True if the edge is
+        allowed, otherwise False. Example of function that only allows edges
+        that have an edge belief above 0.75:
 
         >>> def filter_example(g, u, v):
         ...    return g.edges[(u, v)].get('belief', 0) > 0.75
