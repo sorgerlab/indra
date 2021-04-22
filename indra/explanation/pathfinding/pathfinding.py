@@ -240,44 +240,44 @@ def bfs_search(g: nx.DiGraph,
 
     Parameters
     ----------
-    g : nx.Digraph
+    g
         An nx.DiGraph to search in. Can also be a signed node graph. It is
         required that node data contains 'ns' (namespace) and edge data
         contains 'belief'.
-    source_node : Node
+    source_node
         Node in the graph to start from.
-    reverse : bool
+    reverse
         If True go upstream from source, otherwise go downstream. Default:
         False.
-    depth_limit : int
+    depth_limit
         Stop when all paths with this many edges have been found. Default: 2.
-    path_limit : Optional[int]
+    path_limit
         The maximum number of paths to return. Default: no limit.
-    max_per_node : int
+    max_per_node
         The maximum number of paths to yield per parent node. If 1 is
         chosen, the search only goes down to the leaf node of its first
         encountered branch. Default: 5
-    node_filter : Optional[List[str]]
+    node_filter
         The allowed namespaces (node attribute 'ns') for the nodes in the
         path
-    node_blacklist : Optional[Set[Node]]
+    node_blacklist
         A set of nodes to ignore. Default: None.
-    terminal_ns : Optional[List[str]]
+    terminal_ns
         Force a path to terminate when any of the namespaces in this list
         are encountered and only yield paths that terminate at these
         namespaces
-    sign : Optional[int]
+    sign
         If set, defines the search to be a signed search. Default: None.
-    max_memory : int
+    max_memory
         The maximum memory usage in bytes allowed for the variables queue
         and visited. Default: 1073741824 bytes (== 1 GiB).
-    hashes : Optional[List[int]]
+    hashes
         List of hashes used (if not empty) to select edges for path finding
-    allow_edge : Optional[Callable[[Node, Node], bool]]
+    allow_edge
         Function telling the edge must be omitted
-    strict_mesh_id_filtering : bool
+    strict_mesh_id_filtering
         If true, exclude all edges not relevant to provided hashes
-    edge_filter : Optional[Callable[[nx.DiGraph, Node, Node], bool]]
+    edge_filter
         If provided, must be a function that takes three arguments: a graph
         g, and the nodes u, v of the edge between u and v. The function must
         return a boolean. The function must return True if the edge is
@@ -328,7 +328,7 @@ def bfs_search(g: nx.DiGraph,
             continue
 
         sorted_neighbors = get_sorted_neighbors(G=g, node=last_node,
-                                                reverse=reverse, 
+                                                reverse=reverse,
                                                 force_edges=allowed_edges,
                                                 edge_filter=edge_filter)
         yielded_neighbors = 0

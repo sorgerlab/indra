@@ -94,17 +94,17 @@ def get_sorted_neighbors(
 
     Parameters
     ----------
-    G : nx.DiGraph
+    G
         A networkx DiGraph
-    node : Node
+    node
         A valid node name or signed node name
-    reverse : bool
+    reverse
         Indicates direction of search. Neighbors are either successors
         (downstream search) or predecessors (reverse search).
-    force_edges : Optional[List[Tuple[Node, Node]]]
+    force_edges
         A list of allowed edges. If provided, only allow neighbors that
         can be reached by the allowed edges.
-    edge_filter : Optional[Callable[[nx.DiGraph, Node, Node], bool]]
+    edge_filter
         If provided, must be a function that takes three arguments: a graph
         g, and the nodes u, v of the edge between u and v. The function must
         return a boolean. The function must return True if the edge is
