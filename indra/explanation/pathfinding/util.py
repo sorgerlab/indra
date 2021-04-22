@@ -127,9 +127,14 @@ def get_sorted_neighbors(
         ix = 0 if reverse else 1
         neighbors = (e[ix] for e in neigh_edges(node) if edge_filter(G, *e))
 
-    sort_key = lambda n: G.edges[(n, node)].get('belief', 0) if reverse \
-        else lambda n: G.edges[(node, n)].get('belief', 0)
-    return sorted(neighbors, key=sort_key, reverse=True)
+    if reverse:
+        return sorted(neighbors,
+                      key=lambda n: G.edges[(n, node)].get('belief', 0),
+                      reverse=True)
+    else:
+        return sorted(neighbors,
+                      key=lambda n: G.edges[(node, n)].get('belief', 0),
+                      reverse=True)
 
 
 def get_subgraph(g, edge_filter_func):
