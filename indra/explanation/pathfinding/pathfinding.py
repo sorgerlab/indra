@@ -285,7 +285,7 @@ def bfs_search(g: nx.DiGraph,
         that have an edge belief above 0.75:
 
         >>> def filter_example(g, u, v):
-        ...    return g.edges[(u, v)].get('belief', 0) > 0.75
+        ...    return g.edges[u, v].get('belief', 0) > 0.75
         >>> path_generator = bfs_search(edge_filter=filter_example, ...)
 
     Yields

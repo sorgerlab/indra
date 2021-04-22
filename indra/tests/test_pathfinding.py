@@ -185,7 +185,7 @@ def test_bfs():
     # With belief cutoff at 0.75, we should remove:
     # ('A2', 'B1'), ('A3', 'B2'), ('A4', 'B2'), ('B2', 'C1'), ('B3', 'C1')
     def _filter_func(g, u, v):
-        return g.edges[(u, v)]['belief'] > 0.75
+        return g.edges[u, v]['belief'] > 0.75
 
     expected_paths = {('D1', 'C1'), ('D1', 'C1', 'B1'),
                       ('D1', 'C1', 'B1', 'A1'),

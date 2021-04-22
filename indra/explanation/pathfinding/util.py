@@ -130,11 +130,11 @@ def get_sorted_neighbors(
 
     if reverse:
         return sorted(neighbors,
-                      key=lambda n: G.edges[(n, node)].get('belief', 0),
+                      key=lambda n: G.edges[n, node].get('belief', 0),
                       reverse=True)
     else:
         return sorted(neighbors,
-                      key=lambda n: G.edges[(node, n)].get('belief', 0),
+                      key=lambda n: G.edges[node, n].get('belief', 0),
                       reverse=True)
 
 
