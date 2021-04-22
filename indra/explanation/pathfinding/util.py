@@ -1,10 +1,11 @@
 __all__ = ['path_sign_to_signed_nodes', 'signed_nodes_to_signed_edge',
-           'get_sorted_neighbors', 'get_subgraph']
+           'get_sorted_neighbors', 'get_subgraph', 'Node', 'Edge',
+           'EdgeFilter', 'SendType']
 import logging
 import networkx as nx
 import functools
 
-from typing import List, Tuple, Union, Optional, Callable
+from typing import List, Tuple, Union, Optional, Callable, Set
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,8 @@ logger = logging.getLogger(__name__)
 # Derived type hints
 Node = Union[str, Tuple[str, int]]
 Edge = Tuple[Node, Node]
+EdgeFilter = Callable[[nx.DiGraph, Node, Node], bool]
+SendType = Tuple[Optional[Set[Node]], Optional[Set[Edge]]]
 
 
 def path_sign_to_signed_nodes(source, target, edge_sign):
@@ -88,7 +91,7 @@ def get_sorted_neighbors(
         node: Node,
         reverse: bool,
         force_edges: Optional[List[Edge]] = None,
-        edge_filter: Optional[Callable[[nx.DiGraph, Node, Node], bool]] = None
+        edge_filter: Optional[EdgeFilter] = None
 ) -> List[Node]:
     """Filter and sort neighbors of a node in descending order by belief
 

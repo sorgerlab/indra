@@ -6,20 +6,14 @@ import sys
 import logging
 from collections import deque, OrderedDict
 from copy import deepcopy
-from typing import Union, Callable, List, Tuple, Set, Optional, Generator
+from typing import Callable, List, Tuple, Set, Optional, Generator
 
 import networkx as nx
 import networkx.algorithms.simple_paths as simple_paths
 
 from numpy import log as ln
 
-from .util import get_sorted_neighbors
-
-
-# Derived type hints
-Node = Union[str, Tuple[str, int]]
-Edge = Tuple[Node, Node]
-SendType = Tuple[Optional[Set[Node]], Optional[Set[Edge]]]
+from .util import get_sorted_neighbors, Node, Edge, EdgeFilter, SendType
 
 
 logger = logging.getLogger(__name__)
@@ -233,8 +227,7 @@ def bfs_search(g: nx.DiGraph,
                hashes: Optional[List[int]] = None,
                allow_edge: Optional[Callable[[Node, Node], bool]] = None,
                strict_mesh_id_filtering: bool = False,
-               edge_filter: Optional[Callable[[nx.DiGraph, Node, Node],
-                                              bool]] = None,
+               edge_filter: Optional[EdgeFilter] = None,
                **kwargs) -> Generator[Tuple[Node], SendType, None]:
     """Do breadth first search from a given node and yield paths
 
