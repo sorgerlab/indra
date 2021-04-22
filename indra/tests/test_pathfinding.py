@@ -192,7 +192,7 @@ def test_bfs():
                       ('D1', 'C1', 'B1', 'A1', 'Z1')}
     gen = bfs_search(g=dg, source_node='D1', depth_limit=5, reverse=True,
                      edge_filter=_filter_func)
-    paths = [p for p in gen]
+    paths = list(gen)
     assert len(paths) == len(expected_paths), f'Expected ' \
                                               f'{len(expected_paths)}, ' \
                                               f'got {len(paths)} paths'
