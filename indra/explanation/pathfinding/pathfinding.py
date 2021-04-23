@@ -277,9 +277,11 @@ def bfs_search(g: nx.DiGraph,
         allowed, otherwise False. Example of function that only allows edges
         that have an edge belief above 0.75:
 
+        >>> g = nx.DiGraph({'CHEK1': {'FANC': {'belief': 1}}})
         >>> def filter_example(g, u, v):
         ...    return g.edges[u, v].get('belief', 0) > 0.75
-        >>> path_generator = bfs_search(edge_filter=filter_example, ...)
+        >>> path_generator = bfs_search(g, source_node='CHEK1',
+        ...                             edge_filter=filter_example)
 
     Yields
     ------
