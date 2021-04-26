@@ -198,6 +198,22 @@ def test_bfs():
                                               f'got {len(paths)} paths'
     assert set(paths) == expected_paths
 
+    # Test edge_filter and allowed_edges
+    def _alwd_edges(u, v):
+        # Edges should not be reversed!
+        return (u, v) in {('C1', 'D1'), ('B1', 'C1'), ('A1', 'B1')}
+    expected_paths = {('D1', 'C1'), ('D1', 'C1', 'B1'),
+                      ('D1', 'C1', 'B1', 'A1')}
+    some_new_gen = bfs_search(g=dg, source_node='D1', depth_limit=5,
+                              reverse=True, edge_filter=_filter_func,
+                              allow_edge=_alwd_edges, hashes=[123456897],
+                              strict_mesh_id_filtering=True)
+    paths = list(some_new_gen)
+    assert len(paths) == len(expected_paths), f'Expected ' \
+                                              f'{len(expected_paths)}, ' \
+                                              f'got {len(paths)} paths'
+    assert set(paths) == expected_paths
+
 
 def test_signed_bfs():
     seg, sng, all_ns = _setup_signed_graph()
