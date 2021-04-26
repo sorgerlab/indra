@@ -116,9 +116,9 @@ from indra.statements import Agent, Influence, Event, get_statement_by_name, \
 
 logger = logging.getLogger(__name__)
 
-db_sources = ['phosphosite', 'cbn', 'pc11', 'biopax', 'bel_lc',
-              'signor', 'biogrid', 'lincs_drug', 'tas', 'hprd', 'trrust',
-              'ctd', 'virhostnet', 'phosphoelm', 'drugbank', 'omnipath']
+db_sources = ['psp', 'cbn', 'pc', 'bel_lc', 'signor', 'biogrid', 'lincs_drug',
+              'tas', 'hprd', 'trrust', 'ctd', 'virhostnet', 'pe', 'drugbank',
+              'omnipath']
 
 reader_sources = ['geneways', 'tees', 'isi', 'trips', 'rlimsp', 'medscan',
                   'sparser', 'eidos', 'reach']
@@ -127,7 +127,11 @@ reader_sources = ['geneways', 'tees', 'isi', 'trips', 'rlimsp', 'medscan',
 # in the evidence source_api is inconsistent with the colors here and
 # with what comes out of the INDRA DB
 internal_source_mappings = {
-    'bel': 'bel_lc'
+    'bel': 'bel_lc',
+    'phosphoelm': 'pe',
+    'biopax': 'pc',
+    'virhostnet': 'vhn',
+    'phosphosite': 'psp',
 }
 
 all_sources = db_sources + reader_sources
