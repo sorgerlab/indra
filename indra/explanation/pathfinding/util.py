@@ -122,10 +122,9 @@ def get_sorted_neighbors(
     if force_edges or edge_filter:
         neigh_edges = G.in_edges if reverse else G.out_edges
         ix = 0 if reverse else 1
+        edges = set(neigh_edges(node))
         if force_edges:
-            edges = set(neigh_edges(node)).intersection(set(force_edges))
-        else:
-            edges = set(neigh_edges(node))
+            edges = edges.intersection(set(force_edges))
 
         if edge_filter:
             neighbors = (e[ix] for e in edges if edge_filter(G, *e))
