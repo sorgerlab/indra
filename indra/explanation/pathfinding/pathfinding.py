@@ -315,6 +315,7 @@ def bfs_search(g: nx.DiGraph,
                                'filtering')
                 return []
         else:
+            logger.warning('No hashes provided for context search')
             return []
     else:
         allowed_edges = []
