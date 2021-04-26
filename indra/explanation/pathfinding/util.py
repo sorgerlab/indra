@@ -118,19 +118,25 @@ def get_sorted_neighbors(
     List[Node]
         A list of nodes representing the filtered and sorted neighbors
     """
-    if force_edges:
+    # Check for edge filtering
+    if force_edges or edge_filter:
         neigh_edges = G.in_edges if reverse else G.out_edges
         ix = 0 if reverse else 1
-        neighbors = (e[ix] for e in
-                     set(neigh_edges(node)).intersection(set(force_edges)))
+        if force_edges:
+            edges = set(neigh_edges(node)).intersection(set(force_edges))
+        else:
+            edges = set(neigh_edges(node))
+
+        if edge_filter:
+            neighbors = (e[ix] for e in edges if edge_filter(G, *e))
+        else:
+            neighbors = (e[ix] for e in edges)
+
+    # No edge filtering applied
     else:
         neighbors = G.predecessors(node) if reverse else G.successors(node)
 
-    if edge_filter:
-        neigh_edges = G.in_edges if reverse else G.out_edges
-        ix = 0 if reverse else 1
-        neighbors = (e[ix] for e in neigh_edges(node) if edge_filter(G, *e))
-
+    # Return neighbors sorted by the edge belief
     if reverse:
         return sorted(neighbors,
                       key=lambda n: G.edges[n, node].get('belief', 0),
