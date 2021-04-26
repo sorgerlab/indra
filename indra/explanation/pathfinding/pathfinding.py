@@ -6,13 +6,14 @@ import sys
 import logging
 from collections import deque, OrderedDict
 from copy import deepcopy
+from typing import Callable, List, Tuple, Set, Optional, Generator
 
 import networkx as nx
 import networkx.algorithms.simple_paths as simple_paths
 
 from numpy import log as ln
 
-from .util import get_sorted_neighbors
+from .util import get_sorted_neighbors, Node, Edge, EdgeFilter, SendType
 
 
 logger = logging.getLogger(__name__)
@@ -212,56 +213,86 @@ def shortest_simple_paths(G, source, target, weight=None, ignore_nodes=None,
 
 # Implementation inspired by networkx's
 # networkx.algorithms.traversal.breadth_first_search::generic_bfs_edges
-def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
-               max_per_node=5, node_filter=None, node_blacklist=None,
-               terminal_ns=None, sign=None, max_memory=int(2**29), hashes=None,
-               allow_edge=None, strict_mesh_id_filtering=False, **kwargs):
+def bfs_search(g: nx.DiGraph,
+               source_node: Node,
+               reverse: Optional[bool] = False,
+               depth_limit: Optional[int] = 2,
+               path_limit: Optional[int] = None,
+               max_per_node: Optional[int] = 5,
+               node_filter: Optional[List[str]] = None,
+               node_blacklist: Optional[Set[Node]] = None,
+               terminal_ns: Optional[List[str]] = None,
+               sign: Optional[int] = None,
+               max_memory: Optional[int] = int(2**29),
+               hashes: Optional[List[int]] = None,
+               allow_edge: Optional[Callable[[Node, Node], bool]] = None,
+               strict_mesh_id_filtering: Optional[bool] = False,
+               edge_filter: Optional[EdgeFilter] = None,
+               **kwargs) -> Generator[Tuple[Node], SendType, None]:
     """Do breadth first search from a given node and yield paths
 
     Parameters
     ----------
-    g : nx.Digraph
+    g
         An nx.DiGraph to search in. Can also be a signed node graph. It is
         required that node data contains 'ns' (namespace) and edge data
         contains 'belief'.
-    source_node : node
+    source_node
         Node in the graph to start from.
-    reverse : bool
+    reverse
         If True go upstream from source, otherwise go downstream. Default:
         False.
-    depth_limit : int
+    depth_limit
         Stop when all paths with this many edges have been found. Default: 2.
-    path_limit : int
+    path_limit
         The maximum number of paths to return. Default: no limit.
-    max_per_node : int
+    max_per_node
         The maximum number of paths to yield per parent node. If 1 is
         chosen, the search only goes down to the leaf node of its first
         encountered branch. Default: 5
-    node_filter : list[str]
+    node_filter
         The allowed namespaces (node attribute 'ns') for the nodes in the
         path
-    node_blacklist : set[node]
+    node_blacklist
         A set of nodes to ignore. Default: None.
-    terminal_ns : list[str]
+    terminal_ns
         Force a path to terminate when any of the namespaces in this list
         are encountered and only yield paths that terminate at these
-        namepsaces
-    sign : int
+        namespaces
+    sign
         If set, defines the search to be a signed search. Default: None.
-    max_memory : int
+    max_memory
         The maximum memory usage in bytes allowed for the variables queue
         and visited. Default: 1073741824 bytes (== 1 GiB).
-    hashes : list
+    hashes
         List of hashes used (if not empty) to select edges for path finding
-    allow_edge : function(str, str): bool
+    allow_edge
         Function telling the edge must be omitted
-    strict_mesh_id_filtering : bool
+    strict_mesh_id_filtering
         If true, exclude all edges not relevant to provided hashes
+    edge_filter
+        If provided, must be a function that takes three arguments: a graph
+        g, and the nodes u, v of the edge between u and v. The function must
+        return a boolean. The function must return True if the edge is
+        allowed, otherwise False. Example of function that only allows edges
+        that have an edge belief above 0.75:
+
+        >>> g = nx.DiGraph({'CHEK1': {'FANC': {'belief': 1}}})
+        >>> def filter_example(g, u, v):
+        ...    return g.edges[u, v].get('belief', 0) > 0.75
+        >>> path_generator = bfs_search(g, source_node='CHEK1',
+        ...                             edge_filter=filter_example)
 
     Yields
     ------
-    path : tuple(node)
+    Tuple[Node, ...]
         Paths in the bfs search starting from `source`.
+
+    Raises
+    ------
+    StopIteration
+        Raises StopIteration when no more paths are available or when the
+        memory limit is reached
     """
     int_plus = 0
     int_minus = 1
@@ -269,11 +300,22 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
     if strict_mesh_id_filtering:
         if hashes:
             allowed_edges = [(u, v) for u, v in g.edges() if allow_edge(u, v)]
-            logger.warning('No edges were allowed in strict mesh id '
-                           'filtering')
+
+            if edge_filter:
+                logger.info('Applying edge filter on list of allowed edges')
+                allowed_edges = [e for e in allowed_edges
+                                 if edge_filter(g, *e)]
+
+                # We can now set edge_filter to None, as we already have
+                # filtered all edges
+                edge_filter = None
+
             if not allowed_edges:
+                logger.warning('No edges were allowed in strict mesh id '
+                               'filtering')
                 return []
         else:
+            logger.warning('No hashes provided for context search')
             return []
     else:
         allowed_edges = []
@@ -292,8 +334,9 @@ def bfs_search(g, source_node, reverse=False, depth_limit=2, path_limit=None,
             continue
 
         sorted_neighbors = get_sorted_neighbors(G=g, node=last_node,
-                                                reverse=reverse, 
-                                                force_edges=allowed_edges)
+                                                reverse=reverse,
+                                                force_edges=allowed_edges,
+                                                edge_filter=edge_filter)
         yielded_neighbors = 0
         # for neighb in neighbors:
         for neighb in sorted_neighbors:
