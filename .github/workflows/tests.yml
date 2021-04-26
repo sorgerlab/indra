@@ -126,15 +126,6 @@ jobs:
         #      cd $TRAVIS_BUILD_DIR/models/ras_pathway
         #      python run_ras_pathway.py trips
         #   fi
-        # Run assembly benchmarks
-        #- cd $TRAVIS_BUILD_DIR/indra/benchmarks/assembly_eval/batch4
-        #- |
-        #  if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then
-        #    # Download a number of useful resource files for testing purposes
-        #    aws s3 cp s3://bigmech/travis/trips_reach_batch4.gz .  --no-sign-request  --source-region us-east-1
-        #    tar -xf trips_reach_batch4.gz
-        #    python run_combined.py
-        #  fi
         #- cd $TRAVIS_BUILD_DIR
         # Run code style report on diff
         #- git remote set-branches --add origin master
