@@ -301,6 +301,15 @@ def bfs_search(g: nx.DiGraph,
         if hashes:
             allowed_edges = [(u, v) for u, v in g.edges() if allow_edge(u, v)]
 
+            if edge_filter:
+                logger.info('Applying edge filter on list of allowed edges')
+                allowed_edges = [e for e in allowed_edges
+                                 if edge_filter(g, *e)]
+
+                # We can now set edge_filter to None, as we already have
+                # filtered all edges
+                edge_filter = None
+
             if not allowed_edges:
                 logger.warning('No edges were allowed in strict mesh id '
                                'filtering')
