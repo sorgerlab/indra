@@ -39,7 +39,7 @@ def test_bio_entity_extract():
     with open(jsonld, 'r') as fh:
         js = json.load(fh)
     agents = eidos.process_json_bio_entities(js)
-    assert len(agents) == 11
+    assert len(agents) == 11, agents
     from indra.statements import Agent
     assert all(isinstance(a, Agent) for a in agents)
     ag = [a for a in agents if a.name == 'Therapeutics'][0]

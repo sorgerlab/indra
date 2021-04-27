@@ -117,6 +117,8 @@ def process_json_bio_entities(json_dict, grounder=None):
     if not json_dict:
         return []
     ep = EidosBioProcessor(json_dict, grounder=grounder)
+    ep.extract_causal_relations()
+    ep.extract_events()
     events = ep.get_all_events()
     agents = []
     for event in events:
