@@ -16,6 +16,12 @@ Eidos Processor (:py:mod:`indra.sources.eidos.processor`)
 .. automodule:: indra.sources.eidos.processor
     :members:
 
+Eidos Bio Processor (:py:mod:`indra.sources.eidos.bio_processor`)
+-----------------------------------------------------------------
+
+.. automodule:: indra.sources.eidos.bio_processor
+    :members:
+
 Eidos Client (:py:mod:`indra.sources.eidos.client`)
 ---------------------------------------------------
 
