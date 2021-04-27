@@ -30,8 +30,8 @@ General Purpose Reading Systems
    sofia/index
    hume/index
 
-Standard Molecular Pathway Databases
-------------------------------------
+Molecular Pathway Databases
+---------------------------
 .. toctree::
    :maxdepth: 3
 
@@ -66,3 +66,9 @@ Custom Knowledge Bases
    hypothesis/index
    biofactoid/index
    minerva/index
+
+Utilities
+---------
+
+.. automodule:: indra.sources.utils
+    :members:

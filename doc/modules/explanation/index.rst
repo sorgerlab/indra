@@ -5,3 +5,4 @@ Explanation (:py:mod:`indra.explanation`)
 
    model_checker
    pathfinding
+   reporting
