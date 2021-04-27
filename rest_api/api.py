@@ -511,12 +511,9 @@ class TripsProcessText(Resource):
 
 # Eidos
 eidos_text_model = api.inherit('EidosText', wm_text_model, {
-    'webservice': fields.String,
-    'grounding_ns': fields.String(example='WM')
+    'webservice': fields.String
 })
-eidos_jsonld_model = api.inherit('EidosJsonld', jsonld_model, {
-    'grounding_ns': fields.String(example='WM')
-})
+eidos_jsonld_model = api.inherit('EidosJsonld', jsonld_model, {})
 
 
 # Hide docs until webservice is available
@@ -528,7 +525,7 @@ class EidosProcessText(Resource):
         return {}
 
     def post(self):
-        """Process text with EIDOS and return INDRA Statements.
+        """Process text with EIDOS and return biology INDRA Statements.
 
         Parameters
         ----------
@@ -540,12 +537,6 @@ class EidosProcessText(Resource):
             If None, the reading is assumed to be done with the Eidos JAR
             rather than via a web service. Default: None
 
-        grounding_ns : Optional[list]
-            A list of name spaces for which INDRA should represent groundings,
-            when given. If not specified or None, all grounding name spaces are
-            propagated. If an empty list, no groundings are propagated.
-            Example: ['UN', 'WM'], Default: None
-
         Returns
         -------
         statements : list[indra.statements.Statement.to_json()]
@@ -554,11 +545,9 @@ class EidosProcessText(Resource):
         args = request.json
         text = args.get('text')
         webservice = args.get('webservice')
-        grounding_ns = args.get('grounding_ns')
         if not webservice:
             abort(400, 'No web service address provided.')
-        ep = eidos.process_text(text, webservice=webservice,
-                                grounding_ns=grounding_ns)
+        ep = eidos.process_text_bio(text, webservice=webservice)
         return _stmts_from_proc(ep)
 
 
@@ -570,18 +559,12 @@ class EidosProcessJsonld(Resource):
         return {}
 
     def post(self):
-        """Process an EIDOS JSON-LD and return INDRA Statements.
+        """Process an EIDOS JSON-LD and return biology INDRA Statements.
 
         Parameters
         ----------
         jsonld : str
             The JSON-LD string to be processed.
-
-        grounding_ns : Optional[list]
-            A list of name spaces for which INDRA should represent groundings,
-            when given. If not specified or None, all grounding name spaces are
-            propagated. If an empty list, no groundings are propagated.
-            Example: ['UN', 'WM'], Default: None
 
         Returns
         -------
@@ -590,8 +573,8 @@ class EidosProcessJsonld(Resource):
         """
         args = request.json
         eidos_json = args.get('jsonld')
-        grounding_ns = args.get('grounding_ns')
-        ep = eidos.process_json_str(eidos_json, grounding_ns=grounding_ns)
+        jj = json.loads(eidos_json)
+        ep = eidos.process_json_bio(jj)
         return _stmts_from_proc(ep)
 
 
