@@ -2052,3 +2052,75 @@ def map_db_refs(stmts_in, db_refs_map=None):
                 ag.db_refs = update_agent_db_refs(ag.db_refs, db_refs_map)
         stmts_out.append(new_stmt)
     return stmts_out
+
+
+@register_pipeline
+def strip_supports(stmts):
+    """Remove supports and supported by from statements."""
+    logger.info('Removing supports and supported by from statements')
+    for stmt in stmts:
+        stmt.supports = []
+        stmt.supported_by = []
+    return stmts
+
+
+@register_pipeline
+def normalize_active_forms(stmts_in):
+    """Run preassembly of ActiveForms only and keep other statements
+    unchanged.
+    """
+    logger.info('Normalizing ActiveForms')
+    af_stmts = filter_by_type(stmts_in, ActiveForm)
+    relevant_af_stmts = []
+    for stmt in af_stmts:
+        if (not stmt.agent.mods) and (not stmt.agent.mutations):
+            continue
+        relevant_af_stmts.append(stmt)
+    logger.info('%d relevant ActiveForms' % len(relevant_af_stmts))
+    non_af_stmts = filter_by_type(stmts_in, ActiveForm, invert=True)
+    af_stmts = run_preassembly(relevant_af_stmts)
+    stmts_out = af_stmts + non_af_stmts
+    return stmts_out
+
+
+@register_pipeline
+def run_mechlinker(
+        stmts_in, reduce_activities=False, reduce_modifications=False,
+        replace_activations=False, require_active_forms=False, implicit=False):
+    """Instantiate MechLinker and run its methods in defined order."""
+    ml = MechLinker(stmts_in)
+    if reduce_activities:
+        if implicit:
+            ml.gather_implicit_activities()
+        else:
+            ml.gather_explicit_activities()
+        ml.reduce_activities()
+    if reduce_modifications:
+        ml.gather_modifications()
+        ml.reduce_modifications()
+    if replace_activations:
+        if implicit:
+            ml.gather_implicit_activities()
+        else:
+            ml.gather_explicit_activities()
+        ml.replace_activations()
+    if require_active_forms:
+        ml.require_active_forms()
+    return ml.statements
+
+
+@register_pipeline
+def filter_inconsequential(
+        stmts, mods=True, mod_whitelist=None, acts=True, act_whitelist=None):
+    """Keep filtering inconsequential modifications and activities until there
+    is nothing else to filter."""
+    num_stmts = len(stmts)
+    while True:
+        if mods:
+            stmts = filter_inconsequential_mods(stmts, mod_whitelist)
+        if acts:
+            stmts = filter_inconsequential_acts(stmts, act_whitelist)
+        if num_stmts == len(stmts):
+            break
+        num_stmts = len(stmts)
+    return stmts
