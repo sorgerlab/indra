@@ -10,8 +10,8 @@
 
 INDRA (Integrated Network and Dynamical Reasoning Assembler) is an automated
 model assembly system, originally developed for molecular systems biology and
-currently being generalized to other domains (see [INDRA
-World](https://github.com/indralab/indra_world)).  INDRA draws on natural
+has also been generalized to other domains (see [INDRA
+World](https://github.com/indralab/indra_world)). INDRA draws on natural
 language processing systems and structured databases to collect mechanistic and
 causal assertions, represents them in a standardized form (INDRA Statements),
 and assembles them into various modeling formalisms including causal graphs and
