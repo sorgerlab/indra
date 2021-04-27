@@ -44,7 +44,7 @@ def main():
                                   for dep in deps})
 
     setup(name='indra',
-          version='1.19.0',
+          version='1.20.0',
           description='Integrated Network and Dynamical Reasoning Assembler',
           long_description=long_description,
           long_description_content_type='text/markdown',
