@@ -1,6 +1,8 @@
 import os
 import json
+from unittest.mock import patch
 from indra.sources import eidos
+from indra.sources.eidos.processor import _sanitize
 from indra.sources.eidos.bio_processor import get_agent_bio
 from indra.statements import Concept
 
@@ -8,7 +10,16 @@ from indra.statements import Concept
 path_this = os.path.dirname(os.path.abspath(__file__))
 
 
-def test_process_text_bio():
+def _read_eidos_sentence_json():
+    jsonld = os.path.join(path_this, 'eidos_bio_abstract.json')
+    with open(jsonld, 'r') as fh:
+        js = json.load(fh)
+    return js
+
+
+@patch('indra.sources.eidos.api._run_eidos_on_text')
+def test_process_text_bio(mock_read):
+    mock_read.return_value = _read_eidos_sentence_json()
     ep = eidos.process_text_bio('virus increases death')
     assert ep is not None
     assert len(ep.statements) == 1
@@ -19,7 +30,7 @@ def test_process_text_bio():
 
 def test_sanitize():
     # Make sure sanitization works
-    sanitized = eidos.processor._sanitize('-LRB-something-RRB-')
+    sanitized = _sanitize('-LRB-something-RRB-')
     assert sanitized == '(something)'
 
 
