@@ -69,7 +69,6 @@ Custom Knowledge Bases
 
 Utilities
 ---------
-.. toctree::
-   :maxdepth: 3
 
-   utils
+.. automodule:: indra.sources.utils
+    :members:
