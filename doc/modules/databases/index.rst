@@ -105,3 +105,8 @@ DrugBank client (:py:mod:`indra.databases.drugbank_client`)
 -----------------------------------------------------------
 .. automodule:: indra.databases.drugbank_client
     :members:
+
+OBO client (:py:mod:`indra.databases.obo_client`)
+-------------------------------------------------
+.. automodule:: indra.databases.obo_client
+    :members:
