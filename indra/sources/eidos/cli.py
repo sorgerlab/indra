@@ -9,7 +9,6 @@ import glob
 import logging
 import subprocess
 from indra import get_config
-from .api import process_json_file
 
 
 eip = get_config('EIDOSPATH')
@@ -58,7 +57,7 @@ def extract_from_directory(path_in, path_out):
     run_eidos('apps.ExtractFromDirectory', path_in, path_out)
 
 
-def extract_and_process(path_in, path_out):
+def extract_and_process(path_in, path_out, process_fun):
     """Run Eidos on a set of text files and process output with INDRA.
 
     The output is produced in the specified output folder but
@@ -71,6 +70,9 @@ def extract_and_process(path_in, path_out):
     path_out : str
         Path to an output folder in which Eidos places the output
         JSON-LD files
+    process_fun : function
+        A function that takes a JSON dict as argument and returns an
+        EidosProcessor.
 
     Returns
     -------
@@ -85,7 +87,7 @@ def extract_and_process(path_in, path_out):
                 (len(jsons), path_out))
     stmts = []
     for json in jsons:
-        ep = process_json_file(json)
+        ep = process_fun(json)
         if ep:
             stmts += ep.statements
     return stmts
