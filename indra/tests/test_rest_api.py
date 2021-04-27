@@ -862,9 +862,8 @@ def test_reach_process_pmc():
 
 
 def test_eidos_json():
-    from indra.tests.test_eidos import test_jsonld
-    with open(test_jsonld, 'r') as fh:
-        test_json = fh.read()
+    from indra.tests.test_eidos import _read_eidos_sentence_json
+    test_json = json.dumps(_read_eidos_sentence_json())
     res = _call_api('post', '/eidos/process_jsonld',
                     json={'jsonld': test_json})
     res_json = json.loads(res.get_data())
