@@ -66,3 +66,10 @@ Custom Knowledge Bases
    hypothesis/index
    biofactoid/index
    minerva/index
+
+Utilities
+---------
+.. toctree::
+   :maxdepth: 3
+
+   utils
