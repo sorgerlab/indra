@@ -4,7 +4,7 @@ from indra.statements import *
 from indra.belief import BeliefEngine, load_default_probs, \
     sample_statements, evidence_random_noise_prior, tag_evidence_subtype, \
     SimpleScorer
-from indra.belief import wm_scorer, BayesianScorer
+from indra.belief import BayesianScorer
 
 default_probs = load_default_probs()
 
@@ -298,17 +298,6 @@ def test_negative_evidence():
     assert_close_enough(stmts[0].belief, ((1-pr)-ps)*(1-((1-pr*pr)-ps)))
     assert_close_enough(stmts[1].belief, (1-pr*pr*pr)-ps)
     assert stmts[2].belief == 0
-
-
-def test_wm_scorer():
-    scorer = wm_scorer.get_eidos_scorer()
-    stmt = Influence(Concept('a'), Concept('b'),
-                     evidence=[Evidence(source_api='eidos')])
-    # Make sure other sources are still in the map
-    assert 'hume' in scorer.prior_probs['rand']
-    assert 'biopax' in scorer.prior_probs['syst']
-    engine = BeliefEngine(scorer)
-    engine.set_prior_probs([stmt])
 
 
 def test_bayesian_scorer():

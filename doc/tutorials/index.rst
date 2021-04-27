@@ -7,4 +7,3 @@ Tutorials
    nl_modeling
    html_curation
    gene_network
-   wm_service

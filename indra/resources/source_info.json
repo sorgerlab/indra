@@ -5,24 +5,6 @@
         "type": "reader",
         "domain": "general"
     },
-    "cwms": {
-        "name": "TRIPS/CWMS",
-        "link": "http://trips.ihmc.us/parser/cgi/cwmsreader",
-        "type": "reader",
-        "domain": "general"
-    },
-    "hume": {
-        "name": "Hume",
-        "link": "https://github.com/BBN-E/Hume",
-        "type": "reader",
-        "domain": "general"
-    },
-    "sofia": {
-        "name": "Sofia",
-        "link": "https://sofia.worldmodelers.com/ui/",
-        "type": "reader",
-        "domain": "general"
-    },
     "drum": {
         "name": "TRIPS/DRUM",
         "link": "http://trips.ihmc.us/parser/cgi/drum",

@@ -1,11 +1,16 @@
 import os
+import unittest
 
 from indra.preassembler import Preassembler, render_stmt_graph, \
     flatten_evidence, flatten_stmts
 from indra.sources import reach
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
-from indra.ontology.world import world_ontology
+try:
+    from indra_world.ontology import world_ontology
+    has_indra_world = True
+except ImportError:
+    has_indra_world = False
 from indra.preassembler import RefinementFilter, OntologyRefinementFilter
 
 
@@ -640,6 +645,7 @@ def test_conversion_refinement():
     assert len(toplevel_stmts) == 2
 
 
+@unittest.skipUnless(has_indra_world, 'indra_world not available')
 def test_influence_duplicate():
     gov = 'wm/concept/causal_factor/social_and_political/government'
     agr = 'wm/concept/causal_factor/agriculture/crop_production'
@@ -659,6 +665,7 @@ def test_influence_duplicate():
     assert set(sources) == {'eidos1', 'eidos3'}
 
 
+@unittest.skipUnless(has_indra_world, 'indra_world not available')
 def test_influence_refinement():
     tran = 'wm/concept/causal_factor/access/infrastructure_access/'\
            'transportation'
@@ -731,6 +738,7 @@ def test_preassemble_related_complex():
     assert len(top) == 1
 
 
+@unittest.skipUnless(has_indra_world, 'indra_world not available')
 def test_normalize_opposites():
     concept1 = 'wm/concept/causal_factor/food_security/food_stability'
     concept2 = 'wm/concept/causal_factor/food_insecurity/food_instability'
@@ -770,6 +778,7 @@ def test_normalize_opposites():
     assert pa.stmts[0].delta.polarity == -1
 
 
+@unittest.skipUnless(has_indra_world, 'indra_world not available')
 def test_normalize_opposites_influence():
     concept1 = 'wm/concept/causal_factor/food_security/food_stability'
     concept2 = 'wm/concept/causal_factor/food_insecurity/food_instability'
@@ -785,6 +794,7 @@ def test_normalize_opposites_influence():
     assert pa.stmts[0].obj.delta.polarity == 1
 
 
+@unittest.skipUnless(has_indra_world, 'indra_world not available')
 def test_normalize_opposites_association():
     concept1 = 'wm/concept/causal_factor/food_security/food_stability'
     concept2 = 'wm/concept/causal_factor/food_insecurity/food_instability'
@@ -872,6 +882,7 @@ def test_agent_coordinates():
                                                           ((0, 4), (15, 19))}
 
 
+@unittest.skipUnless(has_indra_world, 'indra_world not available')
 def test_association_duplicate():
     ev1 = Event(Concept('a'))
     ev2 = Event(Concept('b'))
@@ -894,6 +905,7 @@ def test_association_duplicate():
     assert set(sources) == {'eidos1', 'eidos3'}
 
 
+@unittest.skipUnless(has_indra_world, 'indra_world not available')
 def test_association_refinement():
     unrelated = 'wm/concept/causal_factor/wild_food_sources'
     parent = 'wm/concept/causal_factor/health_and_life'
@@ -926,6 +938,7 @@ def test_association_refinement():
            {'parent', 'unrelated'}
 
 
+@unittest.skipUnless(has_indra_world, 'indra_world not available')
 def test_matches_key_fun():
     from indra.statements import WorldContext, RefContext
 

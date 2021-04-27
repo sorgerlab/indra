@@ -1,13 +1,18 @@
+import unittest
 from indra.pipeline import AssemblyPipeline, RunnableArgument
 from indra.pipeline.pipeline import jsonify_arg_input
 from indra.tests.test_assemble_corpus import st1, st2, st3, st4
 from indra.tools.assemble_corpus import *
-from indra.preassembler.custom_preassembly import location_matches, \
-    location_refinement
-from indra.belief.wm_scorer import *
 from indra.belief import BeliefScorer
-from indra.ontology.world import world_ontology
 from indra.statements import Activation
+try:
+    from indra_world.assembly.matches import location_matches
+    from indra_world.assembly.refinement import location_refinement
+    from indra_world.belief import get_eidos_scorer, get_eidos_bayesian_scorer
+    from indra_world.ontology import world_ontology
+    has_indra_world = True
+except ImportError:
+    has_indra_world = False
 
 
 stmts = [st1, st2, st3, st4]
@@ -38,6 +43,7 @@ def test_running_pipeline():
     assert len(assembled_stmts2) == 2
 
 
+@unittest.skipUnless(has_indra_world, 'indra_world not available')
 def test_pipeline_methods():
     ap = AssemblyPipeline()
     assert len(ap) == 0
@@ -77,6 +83,7 @@ def test_pipeline_methods():
     assert ap.get_argument_value([1, 2, 3]) == [1, 2, 3]
 
 
+@unittest.skipUnless(has_indra_world, 'indra_world not available')
 def test_runnable_argument():
     # With args
     ra = RunnableArgument(
@@ -106,6 +113,7 @@ def test_runnable_argument():
     }
 
 
+@unittest.skipUnless(has_indra_world, 'indra_world not available')
 def test_jsonify_arg():
     assert jsonify_arg_input(4) == 4
     assert jsonify_arg_input('test') == 'test'

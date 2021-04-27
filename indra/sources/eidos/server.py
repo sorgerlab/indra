@@ -12,9 +12,6 @@ import sys
 import json
 from flask import Flask, request
 from indra.sources.eidos.reader import EidosReader
-from indra.ontology.world import world_ontology
-
-wm_yml = world_ontology.dump_yml_str()
 
 app = Flask(__name__)
 
@@ -31,7 +28,10 @@ def process_text():
 @app.route('/reground', methods=['POST'])
 def reground():
     text = request.json.get('text')
-    ont_yml = request.json.get('ont_yml', wm_yml)
+    ont_yml = request.json.get('ont_yml')
+    if not ont_yml:
+        from indra_world.ontology import world_ontology
+        ont_yml = world_ontology.dump_yml_str()
     topk = request.json.get('topk', 10)
     is_canonicalized = request.json.get('is_canonicalized', False)
     if not text:

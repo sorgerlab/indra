@@ -10,7 +10,7 @@ from flask_restx import Api, Resource, fields, abort
 from flask_cors import CORS
 
 from indra import get_config
-from indra.sources import trips, reach, bel, biopax, eidos, hume, cwms, sofia
+from indra.sources import trips, reach, bel, biopax, eidos
 from indra.databases import hgnc_client
 from indra.statements import stmts_from_json, get_statement_by_name
 from indra.assemblers.pysb import PysbAssembler
@@ -25,9 +25,7 @@ from indra.databases import cbio_client
 from indra.sources.indra_db_rest import get_statements
 from indra.sources.ndex_cx.api import process_ndex_network
 from indra.sources.reach.api import reach_nxml_url, reach_text_url
-from indra.belief.wm_scorer import get_eidos_scorer
 from indra.ontology.bio import bio_ontology
-from indra.ontology.world import world_ontology
 from indra.pipeline import AssemblyPipeline, pipeline_functions
 from indra.preassembler.custom_preassembly import *
 
@@ -169,15 +167,13 @@ class PreassembleStatements(Resource):
             elif arg in ['matches_fun', 'refinement_fun']:
                 args_json[arg] = pipeline_functions[args_json[arg]]
             elif arg == 'belief_scorer':
-                if args_json[arg] == 'wm':
-                    args_json[arg] = get_eidos_scorer()
-                else:
-                    args_json[arg] = None
+                # Here we could handle various string values of args_json[arg]
+                # but there currently aren't any specific options
+                args_json[arg] = None
             elif arg == 'ontology':
-                if args_json[arg] == 'wm':
-                    args_json[arg] = world_ontology
-                else:
-                    args_json[arg] = bio_ontology
+                # Here we could handle various string values of args_json[arg]
+                # but there currently aren't any specific options
+                args_json[arg] = bio_ontology
             elif arg == 'whitelist' or arg == 'mutations':
                 args_json[arg] = {
                     gene: [tuple(mod) for mod in mods]
@@ -513,44 +509,6 @@ class TripsProcessText(Resource):
         return _stmts_from_proc(tp)
 
 
-# Sofia
-text_auth_model = api.inherit('TextAuth', wm_text_model, {
-    'auth': fields.List(fields.String, example=['USER', 'PASS'])})
-
-
-# Hide documentation because webservice is unresponsive
-@sources_ns.expect(text_auth_model)
-@sources_ns.route('/sofia/process_text', doc=False)
-class SofiaProcessText(Resource):
-    @api.doc(False)
-    def options(self):
-        return {}
-
-    def post(self):
-        """Process text with Sofia and return INDRA Statements.
-
-        Parameters
-        ----------
-        text : str
-            A string containing the text to be processed with Sofia.
-
-        auth : Optional[list]
-            A username/password pair for the Sofia web service. If not given,
-            the SOFIA_USERNAME and SOFIA_PASSWORD values are loaded from either
-            the INDRA config or the environment.
-
-        Returns
-        -------
-        statements : list[indra.statements.Statement.to_json()]
-            A list of extracted INDRA Statements.
-        """
-        args = request.json
-        text = args.get('text')
-        auth = args.get('auth')
-        sp = sofia.process_text(text, auth=auth)
-        return _stmts_from_proc(sp)
-
-
 # Eidos
 eidos_text_model = api.inherit('EidosText', wm_text_model, {
     'webservice': fields.String,
@@ -635,61 +593,6 @@ class EidosProcessJsonld(Resource):
         grounding_ns = args.get('grounding_ns')
         ep = eidos.process_json_str(eidos_json, grounding_ns=grounding_ns)
         return _stmts_from_proc(ep)
-
-
-# Hume
-@sources_ns.expect(jsonld_model)
-@sources_ns.route('/hume/process_jsonld')
-class HumeProcessJsonld(Resource):
-    @api.doc(False)
-    def options(self):
-        return {}
-
-    def post(self):
-        """Process Hume JSON-LD and return INDRA Statements.
-
-        Parameters
-        ----------
-        jsonld : str
-            The JSON-LD string to be processed.
-
-        Returns
-        -------
-        statements : list[indra.statements.Statement.to_json()]
-            A list of extracted INDRA Statements.
-        """
-        args = request.json
-        jsonld_str = args.get('jsonld')
-        jsonld = json.loads(jsonld_str)
-        hp = hume.process_jsonld(jsonld)
-        return _stmts_from_proc(hp)
-
-
-# CWMS
-@sources_ns.expect(wm_text_model)
-@sources_ns.route('/cwms/process_text')
-class CwmsProcessText(Resource):
-    @api.doc(False)
-    def options(self):
-        return {}
-
-    def post(self):
-        """Process text with CWMS and return INDRA Statements.
-
-        Parameters
-        ----------
-        text : str
-            Text to process
-
-        Returns
-        -------
-        statements : list[indra.statements.Statement.to_json()]
-            A list of extracted INDRA Statements.
-        """
-        args = request.json
-        text = args.get('text')
-        cp = cwms.process_text(text)
-        return _stmts_from_proc(cp)
 
 
 # BEL
