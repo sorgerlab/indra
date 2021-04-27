@@ -1,3 +1,8 @@
+__all__ = ['_run_eidos_on_text', 'process_text_bio',
+           'process_json_bio', 'process_json_bio_entities',
+           'process_text_bio_entities', 'eidos_reader',
+           'initialize_reader']
+
 import json
 import logging
 from indra.sources.eidos import client as eidos_client
