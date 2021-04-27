@@ -30,8 +30,8 @@ General Purpose Reading Systems
    sofia/index
    hume/index
 
-Standard Molecular Pathway Databases
-------------------------------------
+Molecular Pathway Databases
+---------------------------
 .. toctree::
    :maxdepth: 3
 
