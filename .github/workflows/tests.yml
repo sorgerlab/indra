@@ -66,14 +66,8 @@ jobs:
         # Download adeft models
         python -m adeft.download
         # Get INDRA World
-        git clone https://github.com/indralab/indra_world.git
+        git clone --branch refactor https://github.com/indralab/indra_world.git
         wget -nv https://bigmech.s3.amazonaws.com/travis/reach-82631d-biores-e9ee36.jar
-        wget -nv https://bigmech.s3.amazonaws.com/travis/eidos.jar
-        wget -nv https://bigmech.s3.amazonaws.com/travis/geonames%2Bworedas.zip
-        mkdir -p /home/runner/work/indra/indra/cache/geonames/index
-        mv geonames+woredas.zip /home/runner/work/indra/indra/cache/geonames/index
-        cd /home/runner/work/indra/indra/cache/geonames/index
-        unzip geonames+woredas.zip
     - name: Run unit tests
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -101,14 +95,10 @@ jobs:
         echo $NOSEATTR
         #- cd $TRAVIS_BUILD_DIR
         # Now run all INDRA tests
-        nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --exclude='.*eidos.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
+        nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
         # TEES tests
         #- python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
         #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
-        # Eidos tests
-        export EIDOSPATH=`pwd`/eidos.jar
-        export CLASSPATH=$EIDOSPATH
-        nosetests -v -a $NOSEATTR indra/tests/test_eidos.py
         # Run NL model examples only when the environmental variable
         # RUN_NL_MODELS is set to true in the Travis build
         # NOTE: if blocks in Travis DO NOT FAIL even if there is

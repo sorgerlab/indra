@@ -12,7 +12,6 @@ Assemblers of model output (:py:mod:`indra.assemblers`)
    index_card_assembler
    sbgn_assembler
    cyjs_assembler
-   cag_assembler
    tsv_assembler
    html_assembler
    bmi_wrapper

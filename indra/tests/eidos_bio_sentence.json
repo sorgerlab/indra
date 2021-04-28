@@ -1,0 +1,440 @@
+{
+  "@context": {
+    "Argument": "https://w3id.org/wm/cag/argument",
+    "Grounding": "https://w3id.org/wm/cag/grounding",
+    "Interval": "https://w3id.org/wm/cag/interval",
+    "Extraction": "https://w3id.org/wm/cag/extraction",
+    "Provenance": "https://w3id.org/wm/cag/provenance",
+    "Groundings": "https://w3id.org/wm/cag/groundings",
+    "State": "https://w3id.org/wm/cag/state",
+    "Dependency": "https://w3id.org/wm/cag/dependency",
+    "Corpus": "https://w3id.org/wm/cag/corpus",
+    "Trigger": "https://w3id.org/wm/cag/trigger",
+    "Sentence": "https://w3id.org/wm/cag/sentence",
+    "Word": "https://w3id.org/wm/cag/word",
+    "Document": "https://w3id.org/wm/cag/document"
+  },
+  "@type": "Corpus",
+  "documents": [
+    {
+      "@type": "Document",
+      "@id": "_:Document_1",
+      "text": "virus increases death",
+      "sentences": [
+        {
+          "text": "virus increases death .",
+          "words": [
+            {
+              "endOffset": 5,
+              "chunk": "B-NP",
+              "lemma": "virus",
+              "tag": "NN",
+              "text": "virus",
+              "norm": "O",
+              "entity": "O",
+              "startOffset": 0,
+              "@type": "Word",
+              "@id": "_:Word_1"
+            },
+            {
+              "endOffset": 15,
+              "chunk": "B-VP",
+              "lemma": "increase",
+              "tag": "VBZ",
+              "text": "increases",
+              "norm": "O",
+              "entity": "O",
+              "startOffset": 6,
+              "@type": "Word",
+              "@id": "_:Word_2"
+            },
+            {
+              "endOffset": 21,
+              "chunk": "B-NP",
+              "lemma": "death",
+              "tag": "NN",
+              "text": "death",
+              "norm": "O",
+              "entity": "O",
+              "startOffset": 16,
+              "@type": "Word",
+              "@id": "_:Word_3"
+            },
+            {
+              "endOffset": 21,
+              "chunk": "O",
+              "lemma": ".",
+              "tag": ".",
+              "text": ".",
+              "norm": "O",
+              "entity": "O",
+              "startOffset": 21,
+              "@type": "Word",
+              "@id": "_:Word_4"
+            }
+          ],
+          "@type": "Sentence",
+          "dependencies": [
+            {
+              "@type": "Dependency",
+              "source": {
+                "@id": "_:Word_2"
+              },
+              "destination": {
+                "@id": "_:Word_4"
+              },
+              "relation": "punct"
+            },
+            {
+              "@type": "Dependency",
+              "source": {
+                "@id": "_:Word_2"
+              },
+              "destination": {
+                "@id": "_:Word_3"
+              },
+              "relation": "dobj"
+            },
+            {
+              "@type": "Dependency",
+              "source": {
+                "@id": "_:Word_2"
+              },
+              "destination": {
+                "@id": "_:Word_1"
+              },
+              "relation": "nsubj"
+            }
+          ],
+          "@id": "_:Sentence_1"
+        }
+      ]
+    }
+  ],
+  "extractions": [
+    {
+      "subtype": "entity",
+      "rule": "simple-np",
+      "text": "virus",
+      "canonicalName": "virus",
+      "labels": [
+        "Concept",
+        "Entity"
+      ],
+      "relevance": 0.7458953261375427,
+      "provenance": [
+        {
+          "documentCharPositions": [
+            {
+              "@type": "Interval",
+              "start": 0,
+              "end": 4
+            }
+          ],
+          "document": {
+            "@id": "_:Document_1"
+          },
+          "sentenceWordPositions": [
+            {
+              "@type": "Interval",
+              "start": 1,
+              "end": 1
+            }
+          ],
+          "@type": "Provenance",
+          "sentence": {
+            "@id": "_:Sentence_1"
+          }
+        }
+      ],
+      "@type": "Extraction",
+      "type": "concept",
+      "groundings": [
+        {
+          "name": "wm_flattened",
+          "versionDate": "2020-08-19T14:42:58Z",
+          "version": "4a840f1a7a3b4c1a9d085fe3c3870417e4acbaf6",
+          "values": [
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/health_and_life/disease/covid_virus",
+              "value": 0.7617160081863403
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/health_and_life/disease/transmission",
+              "value": 0.6889584064483643
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/health_and_life/disease/human_disease",
+              "value": 0.6832671761512756
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/interventions/provide/medical_inputs/vaccine",
+              "value": 0.6554377675056458
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/crisis_and_disaster/health/pandemic",
+              "value": 0.6127969622612
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/health_and_life/disease/",
+              "value": 0.5610367059707642
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/agriculture/plant_disease/",
+              "value": 0.5112934112548828
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/agriculture/livestock_disease",
+              "value": 0.4669911861419678
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/social_and_political/threat/",
+              "value": 0.44557806849479675
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/agriculture/pests/locust_related/gregarious/locust_swarm",
+              "value": 0.44427189230918884
+            }
+          ],
+          "@type": "Groundings"
+        }
+      ],
+      "@id": "_:Extraction_1"
+    },
+    {
+      "subtype": "causation",
+      "rule": "ported_syntax_1_verb-Causal",
+      "text": "virus increases death",
+      "canonicalName": "virus increases death",
+      "labels": [
+        "Causal",
+        "DirectedRelation",
+        "EntityLinker",
+        "Event"
+      ],
+      "relevance": 0.7458953261375427,
+      "provenance": [
+        {
+          "documentCharPositions": [
+            {
+              "@type": "Interval",
+              "start": 0,
+              "end": 20
+            }
+          ],
+          "document": {
+            "@id": "_:Document_1"
+          },
+          "sentenceWordPositions": [
+            {
+              "@type": "Interval",
+              "start": 1,
+              "end": 3
+            }
+          ],
+          "@type": "Provenance",
+          "sentence": {
+            "@id": "_:Sentence_1"
+          }
+        }
+      ],
+      "@type": "Extraction",
+      "type": "relation",
+      "groundings": [
+        {
+          "@type": "Groundings",
+          "name": "wm_flattened",
+          "version": "4a840f1a7a3b4c1a9d085fe3c3870417e4acbaf6",
+          "versionDate": "2020-08-19T14:42:58Z"
+        }
+      ],
+      "arguments": [
+        {
+          "@type": "Argument",
+          "type": "source",
+          "value": {
+            "@id": "_:Extraction_1"
+          }
+        },
+        {
+          "@type": "Argument",
+          "type": "destination",
+          "value": {
+            "@id": "_:Extraction_3"
+          }
+        }
+      ],
+      "@id": "_:Extraction_2",
+      "trigger": {
+        "@type": "Trigger",
+        "text": "increases",
+        "provenance": [
+          {
+            "documentCharPositions": [
+              {
+                "@type": "Interval",
+                "start": 6,
+                "end": 14
+              }
+            ],
+            "document": {
+              "@id": "_:Document_1"
+            },
+            "sentenceWordPositions": [
+              {
+                "@type": "Interval",
+                "start": 2,
+                "end": 2
+              }
+            ],
+            "@type": "Provenance",
+            "sentence": {
+              "@id": "_:Sentence_1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "subtype": "entity",
+      "rule": "simple-np++Increase_ported_syntax_1_verb",
+      "text": "death",
+      "canonicalName": "death",
+      "labels": [
+        "Concept",
+        "Entity"
+      ],
+      "relevance": 0.7458953261375427,
+      "provenance": [
+        {
+          "documentCharPositions": [
+            {
+              "@type": "Interval",
+              "start": 16,
+              "end": 20
+            }
+          ],
+          "document": {
+            "@id": "_:Document_1"
+          },
+          "sentenceWordPositions": [
+            {
+              "@type": "Interval",
+              "start": 3,
+              "end": 3
+            }
+          ],
+          "@type": "Provenance",
+          "sentence": {
+            "@id": "_:Sentence_1"
+          }
+        }
+      ],
+      "@type": "Extraction",
+      "type": "concept",
+      "groundings": [
+        {
+          "name": "wm_flattened",
+          "versionDate": "2020-08-19T14:42:58Z",
+          "version": "4a840f1a7a3b4c1a9d085fe3c3870417e4acbaf6",
+          "values": [
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/health_and_life/death",
+              "value": 0.8831727504730225
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/health_and_life/birth",
+              "value": 0.5673803091049194
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/health_and_life/injury",
+              "value": 0.567070484161377
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/social_and_political/conflict/attack",
+              "value": 0.5617344975471497
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/health_and_life/",
+              "value": 0.5568368434906006
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/social_and_political/criminal/crime",
+              "value": 0.5458176732063293
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/interventions/provide/information_services/human_rights_monitoring/violations",
+              "value": 0.540966272354126
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/interventions/provide/information_services/human_rights_monitoring/victims",
+              "value": 0.5246220827102661
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/social_and_political/conflict/war",
+              "value": 0.5199212431907654
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "wm/concept/causal_factor/social_and_political/criminal/abduction",
+              "value": 0.5146043300628662
+            }
+          ],
+          "@type": "Groundings"
+        }
+      ],
+      "states": [
+        {
+          "@type": "State",
+          "type": "INC",
+          "text": "increases",
+          "provenance": [
+            {
+              "documentCharPositions": [
+                {
+                  "@type": "Interval",
+                  "start": 6,
+                  "end": 14
+                }
+              ],
+              "document": {
+                "@id": "_:Document_1"
+              },
+              "sentenceWordPositions": [
+                {
+                  "@type": "Interval",
+                  "start": 2,
+                  "end": 2
+                }
+              ],
+              "@type": "Provenance",
+              "sentence": {
+                "@id": "_:Sentence_1"
+              }
+            }
+          ]
+        }
+      ],
+      "@id": "_:Extraction_3"
+    }
+  ]
+}
