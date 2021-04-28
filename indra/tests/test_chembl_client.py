@@ -33,7 +33,7 @@ def test_get_inhibitions():
         assert ev.source_id
 
 
-@attr('webservice')
+@attr('webservice', 'notravis')
 def test_activity_query():
     res = chembl_client.send_query(query_dict_vem_activity)
     assert res['page_meta']['total_count'] == len(res['activities'])
