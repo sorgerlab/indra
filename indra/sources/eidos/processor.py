@@ -264,8 +264,6 @@ class EidosDocument(object):
         self.entities = {}
         self.documents = {}
         self.coreferences = {}
-        self.timexes = {}
-        self.geolocs = {}
         self.dct = None
         self._preprocess_extractions()
 
