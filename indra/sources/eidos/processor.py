@@ -21,9 +21,8 @@ class EidosProcessor(object):
     statements : list[indra.statements.Statement]
         A list of INDRA Statements that were extracted by the processor.
     """
-    def __init__(self, json_dict, grounding_ns=None):
+    def __init__(self, json_dict):
         self.doc = EidosDocument(json_dict)
-        self.grounding_ns = grounding_ns
         self.statements = []
 
     def extract_causal_relations(self):
