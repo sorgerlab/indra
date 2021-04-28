@@ -39,4 +39,4 @@ class CrogProcessor(RemoteProcessor):
             # have the EC prefix in their name
             for agent in stmt.real_agent_list():
                 if agent.name == agent.db_refs.get('ECCODE'):
-                    agent.name = 'EC%s' % agent.name
+                    agent.name = 'EC %s' % agent.name
