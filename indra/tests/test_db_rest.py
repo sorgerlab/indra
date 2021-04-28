@@ -306,3 +306,31 @@ def test_filter_ev():
 
     assert incorrect_source == 0,\
         f"{incorrect_source} unfiltered sources vs. {correct_source} filtered."
+
+
+@attr('nonpublic')
+def test_sort_by_belief():
+    p = dbr.get_statements(object="MEK", stmt_type="Inhibition",
+                                  sort_by='belief', limit=10)
+    assert p.statements
+    beliefs = [s.belief for s in p.statements]
+    assert beliefs == sorted(beliefs, reverse=True)
+
+
+@attr('nonpublic')
+def test_sort_by_ev_count():
+    p = dbr.get_statements(object="MEK", stmt_type="Inhibition",
+                           sort_by='ev_count', limit=10, ev_limit=None)
+    assert p.statements
+    counts = [len(s.evidence) for s in p.statements]
+    assert counts == sorted(counts, reverse=True)
+
+
+@attr('nonpublic')
+def test_namespace_only_agent_query():
+    q = HasAgent("MEK") & HasAgent(namespace="CHEBI")
+    p = dbr.get_statements_from_query(q, limit=10)
+    assert p.statements
+    assert all(any("CHEBI" in ag.db_refs for ag in s.agent_list())
+               and any(ag.db_refs.get("FPLX") == "MEK" for ag in s.agent_list())
+               for s in p.statements)
