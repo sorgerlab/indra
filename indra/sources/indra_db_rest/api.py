@@ -1,62 +1,65 @@
 """
-INDRA has been used to generate and maintain a massive database of causal
-relations as INDRA Statements. The contents of this database can be most easily
+INDRA has been used to generate and maintain a database of causal
+relations as INDRA Statements. The contents of the INDRA Database can be
 accessed programmatically through this API.
 
-The API includes 3 helpful "starter" functions, useful for quickly making a
-few simple kinds of query:
+The API includes three high-level query functions that cover many common use
+cases:
 
   :func:`get_statements`:
       Get statements by agent information and Statement type,  e.g. "Statements
-      with object MEK and type Inhibition" (The generic name is as it is for
-      historical reasons).
+      with object MEK and type Inhibition" (This query function has a generic
+      name to maintain backward compatibility.)
 
   :func:`get_statements_for_paper`:
-      Get Statements based on what papers support those statements, for instance
+      Get Statements based on the papers they are drawn from, for instance
       "Statements from the paper with PMID 12345".
 
   :func:`get_statements_by_hash`:
-      INDRA Statements have a (effectively) unique hash that identifies each
-      Statement based on its meaning. You can use this endpoint to query more
-      details for some specific Statements.
+      Distinct INDRA Statements are associated with a unique numeric hash.
+      This endpoint can be used to query the database for provenance
 
-and it includes the more general and powerful tool function with which you can
-make any query that is possible:
+Queries with more complex constraints can be made using the query language
+API in :py:module:`indra.sources.indra_db_rest.query` along with this function:
 
   :func:`get_statements_from_query`:
       This function works alongside the Query "language" to execute arbitrary
-      requests for Statements based on nearly any piece of metadata indexed on
+      requests for Statements based on statement metadata indexed in
       the Database.
 
 There are also two functions relating to the submission and retrieval of
-curations. It is possible to enter feedback on the quality and particular errors
-found in our Statements, which we call "curations". :func:`submit_curations`
+curations.  It is possible to enter feedback the correctness of text-mined
+Statements, which we call "curations". :func:`submit_curations`
 allows you to submit your curations, and :func:`get_curations` allows you to
-retrieve existing curations (there are access limitations that will require an
-API key in these functions).
+retrieve existing curations (an API key is required).
 
+Limits, timeouts and threading
+------------------------------
 
-Timing Control
---------------
+Some queries may return a large number of statements, requiring the client to
+assemble results from multiple successive requests to the REST API. The
+behavior of the client can be controlled by several parameters to the query
+functions.
 
-Consider the case in which you want to get Statements whose subject is TNF,
-you could simply enter:
+For example, consider the query for Statements whose subject is TNF:
 
 >>>
 >> from indra.sources.indra_db_rest.api import get_statements
 >> p = get_statements("TNF")
 >> stmts = p.statements
 
-However there are a LOT of Statements for TNF, and the query will need to page
-over many separate requests to get all the results. To mitigate this you could
-limit the number of results you request:
+Because there are many Statements associated with TNF, the client will make
+multiple paged requests to get all the results. The maximum number of
+Statements returned can be limited using the `limit` argument:
 
 >>>
 >> p = get_statements("TNF", limit=1000)
 >> stmts = p.statements
 
-Alternatively, if you want all the statements eventually but perhaps don't need
-them all right this moment, you could set a timeout:
+For longer requests the client can work in a background thread after a timeout
+is reached. This can be done by specifying a timeout (in seconds) using the
+`timeout` argument. While the client continues retrieval, the first page
+of the statement results is available in the `statements_sample` attribute:
 
 >>>
 >> p = get_statements("TNF", timeout=5)
@@ -68,10 +71,10 @@ them all right this moment, you could set a timeout:
 >> p.wait_until_done()
 >> stmts = p.statements
 
-It is important to note that the timeout applies to how long block for the
+Note that the timeout specifies how long the client should block for the
 result, but that the result will continue to be retrieved until it is completed
-on a background thread. For that matter, you can supply a timeout of 0 and get
-the processor immediately, leaving the entire query to happen in the background.
+on a background thread. If desired one can supply a timeout of 0 and get the
+processor immediately, leaving the entire query to happen in the background.
 
 You can check if the process is still running using the `is_working` method:
 
@@ -80,27 +83,26 @@ You can check if the process is still running using the `is_working` method:
 >> p.is_working()
 True
 
-If you don't want to make multiple requests, and just want to get whatever the
-server returns on the first request, you can set "persist" to False (The job can
-still be put in the background with `timeout=0`).
+If you don't want the client to make multiple paged requests and instead want
+to get only the results from the first request, you can set "persist" to False
+(the request job can still be put in the background with `timeout=0`).
 
 >>>
 >> p = get_statements("TNF", persist=False)
 >> stmts = p.statements
 
-There are several other options that let you control both the search parameters
-and the way the query is executed. The function documentation is recommended for
-further details.
+For additional details on these and other parameters controlling statement
+retrieval see the function documentation.
 
 
 Using the Query Language
 ------------------------
 
 There are several metadata and data values indexed in the INDRA Database
-allowing for efficient searches, and those metadata values can be combined in
-arbitrary ways. For example, you may want to find Statements where MEK is
-inhibited that were found in papers related to breast cancer and also have more
-than 10 evidence. You can do that!
+allowing for complex queries. Using the Query language these attributes can be
+combined in arbitrary ways using logical operators. For example, you may want
+to find Statements that MEK is inhibited found in papers related to breast
+cancer and that also have more than 10 evidence:
 
 >>>
 >> from indra.sources.indra_db_rest.api import get_statements_from_query
@@ -134,13 +136,13 @@ For more details and examples of the Query architecture, see
 Evidence Filtering
 ------------------
 
-If your query constrains results based on a property of the original evidence
+Queries can constrain results based on a property of the original evidence
 text, so anything from the text references (like pmid) to the readers included
-and whether the evidence is from a reading or a database, can all have an effect
-on the evidences included in the result. By default, the queries you make also
-filter the evidence so that, for example, if you query for Statements from a
-given paper, all the evidences returned with the Statements you queried are also
-from that paper.
+and whether the evidence is from a reading or a database, can all have an
+effect on the evidences included in the result. By default, such queries filter
+not only the statements but also their associated evidence, so that, for
+example, if you query for Statements from a given paper, the evidences
+returned with the Statements you queried are only from that paper.
 
 >>>
 >> p = get_statements_for_papers([('pmid', '20471474'),
@@ -166,8 +168,8 @@ Curation Submission
 
 Suppose you run a query and get some Statements with some evidence; you look
 through the results and find an evidence that does not really support the
-Statement. This happens with our machine reading systems, and you can give
-feedback by submitting a curation.
+Statement. Using the API it is possible to provide feedback by submitting a
+curation.
 
 >>>
 >> from indra.statements import pretty_print_stmts
@@ -231,7 +233,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     Parameters
     ----------
     subject/object : str
-        Optionally specify the subject and/or object of the statements in
+        Optionally specify the subject and/or object of the statements
         you wish to get from the database. By default, the namespace is assumed
         to be HGNC gene names, however you may specify another namespace by
         including "@<namespace>" at the end of the name string. For example, if
