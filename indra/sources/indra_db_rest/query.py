@@ -243,23 +243,21 @@ class Query:
 
         Other Parameters
         ----------------
-        'statements'
         filter_ev : bool
-            Indicate whether evidence should have the same filters applied as
-            the statements themselves, where appropriate (e.g. in the case of a
-            filter by paper).
+            (for ``result_type='statements'``) Indicate whether evidence should
+            have the same filters applied as the statements themselves, where
+            appropriate (e.g. in the case of a filter by paper).
         ev_limit : int
-            Limit the number of evidence returned per Statement.
-
-        'relations' and 'agents'
+            (for ``result_type='statements'``) Limit the number of evidence
+            returned per Statement.
         with_hashes : bool
-            Choose whether the hashes for each Statement be included along with
-            each grouped heading.
-
-        'agents'
+            (for ``result_type='relations'`` or ``result_type='agents'``) Choose
+            whether the hashes for each Statement be included along with each
+            grouped heading.
         complexes_covered : list[int]
-            A list (or set) of complexes that have already come up in the agent
-            groups returned. This prevents duplication.
+            (for ``result_type='agents'``) A list (or set) of complexes that
+            have already come up in the agent groups returned. This prevents
+            duplication.
         """
         simple = self.__compiled_json is None
         if simple:

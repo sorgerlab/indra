@@ -6,16 +6,16 @@ accessed programmatically through this API.
 The API includes 3 helpful "starter" functions, useful for quickly making a
 few simple kinds of query:
 
-  `get_statements`:
+  :func:`get_statements`:
       Get statements by agent information and Statement type,  e.g. "Statements
       with object MEK and type Inhibition" (The generic name is as it is for
       historical reasons).
 
-  `get_statements_for_paper`:
+  :func:`get_statements_for_paper`:
       Get Statements based on what papers support those statements, for instance
       "Statements from the paper with PMID 12345".
 
-  `get_statements_by_hash`:
+  :func:`get_statements_by_hash`:
       INDRA Statements have a (effectively) unique hash that identifies each
       Statement based on its meaning. You can use this endpoint to query more
       details for some specific Statements.
@@ -23,17 +23,17 @@ few simple kinds of query:
 and it includes the more general and powerful tool function with which you can
 make any query that is possible:
 
-  `get_statements_from_query`:
+  :func:`get_statements_from_query`:
       This function works alongside the Query "language" to execute arbitrary
       requests for Statements based on nearly any piece of metadata indexed on
       the Database.
 
 There are also two functions relating to the submission and retrieval of
 curations. It is possible to enter feedback on the quality and particular errors
-found in our Statements, which we call "curations". `submit_curations` allows
-you to submit your curations, and `get_curations` allows you to retrieve
-existing curations (there are access limitations that will require an API key in
-these functions).
+found in our Statements, which we call "curations". :func:`submit_curations`
+allows you to submit your curations, and :func:`get_curations` allows you to
+retrieve existing curations (there are access limitations that will require an
+API key in these functions).
 
 
 Timing Control
@@ -42,28 +42,31 @@ Timing Control
 Consider the case in which you want to get Statements whose subject is TNF,
 you could simply enter:
 
->>> from indra.sources.indra_db_rest.api import get_statements
->>> p = get_statements("TNF")
->>> stmts = p.statements
+>>>
+>> from indra.sources.indra_db_rest.api import get_statements
+>> p = get_statements("TNF")
+>> stmts = p.statements
 
 However there are a LOT of Statements for TNF, and the query will need to page
 over many separate requests to get all the results. To mitigate this you could
 limit the number of results you request:
 
->>> p = get_statements("TNF", limit=1000)
->>> stmts = p.statements
+>>>
+>> p = get_statements("TNF", limit=1000)
+>> stmts = p.statements
 
 Alternatively, if you want all the statements eventually but perhaps don't need
 them all right this moment, you could set a timeout:
 
->>> p = get_statements("TNF", timeout=5)
->>> some_stmts = p.statements_sample
 >>>
->>> # ...Do some other work...
->>>
->>> # Wait for the requests to finish before getting the final result.
->>> p.wait_until_done()
->>> stmts = p.statements
+>> p = get_statements("TNF", timeout=5)
+>> some_stmts = p.statements_sample
+>>
+>> # ...Do some other work...
+>>
+>> # Wait for the requests to finish before getting the final result.
+>> p.wait_until_done()
+>> stmts = p.statements
 
 It is important to note that the timeout applies to how long block for the
 result, but that the result will continue to be retrieved until it is completed
@@ -72,16 +75,18 @@ the processor immediately, leaving the entire query to happen in the background.
 
 You can check if the process is still running using the `is_working` method:
 
->>> p = get_statements("TNF", timeout=0)
->>> p.is_working()
+>>>
+>> p = get_statements("TNF", timeout=0)
+>> p.is_working()
 True
 
 If you don't want to make multiple requests, and just want to get whatever the
 server returns on the first request, you can set "persist" to False (The job can
 still be put in the background with `timeout=0`).
 
->>> p = get_statements("TNF", persist=False)
->>> stmts = p.statements
+>>>
+>> p = get_statements("TNF", persist=False)
+>> stmts = p.statements
 
 There are several other options that let you control both the search parameters
 and the way the query is executed. The function documentation is recommended for
@@ -97,28 +102,30 @@ arbitrary ways. For example, you may want to find Statements where MEK is
 inhibited that were found in papers related to breast cancer and also have more
 than 10 evidence. You can do that!
 
->>> from indra.sources.indra_db_rest.api import get_statements_from_query
->>> from indra.sources.indra_db_rest.query import HasAgent, HasType, \
->>>     FromMeshIds, HasEvidenceBound
 >>>
->>> query = (HasAgent("MEK", namespace="FPLX") & HasType(["Inhibition"])
->>>          & FromMeshIds(["D001943"]) & HasEvidenceBound(["> 10"]))
->>>
->>> p = get_statements_from_query(query)
->>> stmts = p.statements
+>> from indra.sources.indra_db_rest.api import get_statements_from_query
+>> from indra.sources.indra_db_rest.query import HasAgent, HasType, \\
+>>     FromMeshIds, HasEvidenceBound
+>>
+>> query = (HasAgent("MEK", namespace="FPLX") & HasType(["Inhibition"])
+>>          & FromMeshIds(["D001943"]) & HasEvidenceBound(["> 10"]))
+>>
+>> p = get_statements_from_query(query)
+>> stmts = p.statements
 
 In addition to joining constraints with "&" (an intersection, an "and") as shown
 above, you can also form unions (a.k.a. "or"s) using "|":
 
->>> query = (
->>>     (
->>>         HasAgent("MEK", namespace="FPLX")
->>>         | HasAgent("MAP2K1", namespace="HGNC-SYMBOL")
->>>     )
->>>     & HasType(['Inhibition'])
->>> )
 >>>
->>> p = get_statements_from_query(query, limit=10)
+>> query = (
+>>     (
+>>         HasAgent("MEK", namespace="FPLX")
+>>         | HasAgent("MAP2K1", namespace="HGNC-SYMBOL")
+>>     )
+>>     & HasType(['Inhibition'])
+>> )
+>>
+>> p = get_statements_from_query(query, limit=10)
 
 For more details and examples of the Query architecture, see
 :py:mod:`query <indra.sources.indra_db_rest.query>`.
@@ -135,20 +142,22 @@ filter the evidence so that, for example, if you query for Statements from a
 given paper, all the evidences returned with the Statements you queried are also
 from that paper.
 
->>> p = get_statements_for_papers([('pmid', '20471474'),
->>>                                ('pmcid', 'PMC3640704')])
->>> all(ev.text_refs['PMID'] == '20471474'
->>>     or ev.text_refs['PMCID'] == 'PMC3640704'
->>>     for s in p.statements for ev in s.evidence)
+>>>
+>> p = get_statements_for_papers([('pmid', '20471474'),
+>>                                ('pmcid', 'PMC3640704')])
+>> all(ev.text_refs['PMID'] == '20471474'
+>>     or ev.text_refs['PMCID'] == 'PMC3640704'
+>>     for s in p.statements for ev in s.evidence)
 True
 
 You can deactivate this feature by setting `filter_ev` to False:
 
->>> p = get_statements_for_papers([('pmid', '20471474'),
->>>                                ('pmcid', 'PMC3640704')], filter_ev=False)
->>> all(ev.text_refs['PMID'] == '20471474'
->>>     or ev.text_refs['PMCID'] == 'PMC3640704'
->>>     for s in p.statements for ev in s.evidence)
+>>>
+>> p = get_statements_for_papers([('pmid', '20471474'),
+>>                                ('pmcid', 'PMC3640704')], filter_ev=False)
+>> all(ev.text_refs['PMID'] == '20471474'
+>>     or ev.text_refs['PMCID'] == 'PMC3640704'
+>>     for s in p.statements for ev in s.evidence)
 False
 
 
@@ -160,9 +169,10 @@ through the results and find an evidence that does not really support the
 Statement. This happens with our machine reading systems, and you can give
 feedback by submitting a curation.
 
->>> from indra.statements import pretty_print_stmts
->>> p = get_statements(agents=["TNF"], ev_limit=3, limit=1)
->>> pretty_print_stmts(p.statements)
+>>>
+>> from indra.statements import pretty_print_stmts
+>> p = get_statements(agents=["TNF"], ev_limit=3, limit=1)
+>> pretty_print_stmts(p.statements)
 [LIST INDEX: 0] Activation(TNF(), apoptotic process())
 ================================================================================
 EV INDEX: 0       These published reports in their aggregate support that TNFR2
@@ -182,9 +192,10 @@ PMID: 28824543    in a mfat-1 transgenic mouse model whose islets contained
                   of n-6 PUFAs compared to the wild type, were resistant to
                   apoptosis induced by TNF-alpha, IL-1beta, and gamma-IFN.
 --------------------------------------------------------------------------------
->>> submit_curation(p.statements[0].get_hash(), "correct", "usr@bogusemail.com",
->>>                 pa_json=p.statements[0].to_json(),
->>>                 ev_json=p.statements[0].evidence[1].to_json())
+>>
+>> submit_curation(p.statements[0].get_hash(), "correct", "usr@bogusemail.com",
+>>                 pa_json=p.statements[0].to_json(),
+>>                 ev_json=p.statements[0].evidence[1].to_json())
 {'ref': {'id': 11919}, 'result': 'success'}
 """
 
@@ -207,14 +218,15 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                    use_exact_type=False, limit=None, persist=True, timeout=None,
                    strict_stop=False, ev_limit=10, sort_by='ev_count', tries=3,
                    api_key=None):
-    """Get a processor for the INDRA DB web API matching given agents and type.
+    """Get Statements from the INDRA DB web API matching given agents and type.
 
-    You get an DBQueryStatementProcessor object, which allow Statements to be
-    loaded in a background thread, providing a sample of the "best" content
-    available promptly in the sample_statements attribute, and populates the
-    statements attribute when the paged load is complete. The "best" is
-    determined by the `sort_by` attribute, which may be either 'belief' or
-    'ev_count' or None.
+    You get a :py:class:`DBQueryStatementProcessor
+    <indra.sources.indra_db_rest.processor.DBQueryStatementProcessor>`
+    object, which allow Statements to be loaded in a background thread,
+    providing a sample of the "best" content available promptly in the
+    ``sample_statements`` attribute, and populates the statements attribute when
+    the paged load is complete. The "best" is determined by the ``sort_by``
+    attribute, which may be either 'belief' or 'ev_count' or None.
 
     Parameters
     ----------
@@ -222,9 +234,9 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         Optionally specify the subject and/or object of the statements in
         you wish to get from the database. By default, the namespace is assumed
         to be HGNC gene names, however you may specify another namespace by
-        including `@<namespace>` at the end of the name string. For example, if
-        you want to specify an agent by chebi, you could use `CHEBI:6801@CHEBI`,
-        or if you wanted to use the HGNC id, you could use `6871@HGNC`.
+        including "@<namespace>" at the end of the name string. For example, if
+        you want to specify an agent by chebi, you could use "CHEBI:6801@CHEBI",
+        or if you wanted to use the HGNC id, you could use "6871@HGNC".
     agents : list[str]
         A list of agents, specified in the same manner as subject and object,
         but without specifying their grammatical position.
@@ -242,7 +254,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     use_exact_type : bool
         If stmt_type is given, and you only want to search for that specific
         statement type, set this to True. Default is False.
-    limit : int or None
+    limit : Optional[int]
         Select the maximum number of statements to return. When set less than
         500 the effect is much the same as setting persist to false, and will
         guarantee a faster response. Default is None.
@@ -263,26 +275,26 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         thread to join for `timeout` seconds before returning, allowing other
         work to continue while the query runs in the background. The default is
         False.
-    ev_limit : int or None
+    ev_limit : Optional[int]
         Limit the amount of evidence returned per Statement. Default is 10.
-    sort_by : str or None
+    sort_by : Optional[str]
         Str options are currently 'ev_count' or 'belief'. Results will return in
         order of the given parameter. If None, results will be turned in an
         arbitrary order.
-    tries : int > 0
+    tries : Optional[int]
         Set the number of times to try the query. The database often caches
         results, so if a query times out the first time, trying again after a
         timeout will often succeed fast enough to avoid a timeout. This can also
         help gracefully handle an unreliable connection, if you're willing to
         wait. Default is 3.
-    api_key : str or None
+    api_key : Optional[str]
         Override or use in place of the API key given in the INDRA config file.
 
     Returns
     -------
     processor : :py:class:`DBQueryStatementProcessor`
         An instance of the DBQueryStatementProcessor, which has an attribute
-        `statements` which will be populated when the query/queries are done.
+        ``statements`` which will be populated when the query/queries are done.
     """
     query = EmptyQuery()
 
@@ -320,19 +332,19 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
 def get_statements_by_hash(hash_list, limit=None, ev_limit=10,
                            sort_by='ev_count', persist=True, timeout=None,
                            strict_stop=False, tries=3, api_key=None):
-    """Get fully formed statements from a list of hashes.
+    """Get Statements from a list of hashes.
 
     Parameters
     ----------
     hash_list : list[int or str]
         A list of statement hashes.
-    limit : int or None
+    limit : Optional[int]
         Select the maximum number of statements to return. When set less than
         500 the effect is much the same as setting persist to false, and will
         guarantee a faster response. Default is None.
-    ev_limit : int or None
+    ev_limit : Optional[int]
         Limit the amount of evidence returned per Statement. Default is 100.
-    sort_by : str or None
+    sort_by : Optional[str]
         Options are currently 'ev_count' or 'belief'. Results will return in
         order of the given parameter. If None, results will be turned in an
         arbitrary order.
@@ -356,7 +368,7 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10,
         timeout will often succeed fast enough to avoid a timeout. This can
         also help gracefully handle an unreliable connection, if you're
         willing to wait. Default is 3.
-    api_key : str or None
+    api_key : Optional[str]
         Override or use in place of the API key given in the INDRA config file.
 
     Returns
@@ -383,25 +395,26 @@ def get_statements_for_paper(*args, **kwargs):
 def get_statements_for_papers(ids, limit=None, ev_limit=10, sort_by='ev_count',
                               persist=True, timeout=None, strict_stop=False,
                               tries=3, filter_ev=True, api_key=None):
-    """Get the set of raw Statements extracted from a paper given by the id.
+    """Get Statements extracted from the papers with the given ref ids.
 
     Parameters
     ----------
-    ids : list[(<id type>, <id value>)]
-        A list of tuples with ids and their type. The type can be any one of
-        'pmid', 'pmcid', 'doi', 'pii', 'manuscript id', or 'trid', which is the
-        primary key id of the text references in the database.
-    limit : int or None
+    ids : list[str, str]
+        A list of tuples with ids and their type. For example:
+        ``[('pmid', '12345'), ('pmcid', 'PMC12345')]`` The type can be any one
+        of 'pmid', 'pmcid', 'doi', 'pii', 'manuscript_id', or 'trid', which is
+        the primary key id of the text references in the database.
+    limit : Optional[int]
         Select the maximum number of statements to return. When set less than
         500 the effect is much the same as setting persist to false, and will
         guarantee a faster response. Default is None.
-    ev_limit : int or None
+    ev_limit : Optional[int]
         Limit the amount of evidence returned per Statement. Default is 10.
     filter_ev : bool
         Indicate whether evidence should have the same filters applied as
         the statements themselves, where appropriate (e.g. in the case of a
         filter by paper).
-    sort_by : str or None
+    sort_by : Optional[str]
         Options are currently 'ev_count' or 'belief'. Results will return in
         order of the given parameter. If None, results will be turned in an
         arbitrary order.
@@ -425,7 +438,7 @@ def get_statements_for_papers(ids, limit=None, ev_limit=10, sort_by='ev_count',
         timeout will often succeed fast enough to avoid a timeout. This can also
         help gracefully handle an unreliable connection, if you're willing to
         wait. Default is 3.
-    api_key : str or None
+    api_key : Optional[str]
         Override or use in place of the API key given in the INDRA config file.
 
     Returns
@@ -446,23 +459,32 @@ def get_statements_from_query(query, limit=None, ev_limit=10,
                               sort_by='ev_count', persist=True, timeout=None,
                               strict_stop=False, tries=3, filter_ev=True,
                               api_key=None):
-    """Get the set of raw Statements extracted from a paper given by the id.
+    """Get Statements using a Query.
+
+    Example
+    -------
+
+    >>>
+    >> from indra.sources.indra_db_rest.query import HasAgent, FromMeshIds
+    >> query = HasAgent("MEK", "FPLX") & FromMeshIds(["D001943"])
+    >> p = get_statements_from_query(query, limit=100)
+    >> stmts = p.statements
 
     Parameters
     ----------
     query : :py:class:`Query`
         The query to be evaluated in return for statements.
-    limit : int or None
+    limit : Optional[int]
         Select the maximum number of statements to return. When set less than
         500 the effect is much the same as setting persist to false, and will
         guarantee a faster response. Default is None.
-    ev_limit : int or None
+    ev_limit : Optional[int]
         Limit the amount of evidence returned per Statement. Default is 10.
     filter_ev : bool
         Indicate whether evidence should have the same filters applied as
         the statements themselves, where appropriate (e.g. in the case of a
         filter by paper).
-    sort_by : str or None
+    sort_by : Optional[str]
         Options are currently 'ev_count' or 'belief'. Results will return in
         order of the given parameter. If None, results will be turned in an
         arbitrary order.
@@ -472,7 +494,7 @@ def get_statements_from_query(query, limit=None, ev_limit=10,
         Otherwise, make further queries to get the rest of the data (which may
         take some time).
     timeout : positive int or None
-        If an int, return after `timeout` seconds, even if query is not done.
+        If an int, return after ``timeout`` seconds, even if query is not done.
         Default is None.
     strict_stop : bool
         If True, the query will only be given `timeout` time to complete before
@@ -480,13 +502,13 @@ def get_statements_from_query(query, limit=None, ev_limit=10,
         thread to join for `timeout` seconds before returning, allowing other
         work to continue while the query runs in the background. The default is
         False.
-    tries : int > 0
+    tries : Optional[int]
         Set the number of times to try the query. The database often caches
         results, so if a query times out the first time, trying again after a
         timeout will often succeed fast enough to avoid a timeout. This can also
         help gracefully handle an unreliable connection, if you're willing to
         wait. Default is 3.
-    api_key : str or None
+    api_key : Optional[str]
         Override or use in place of the API key given in the INDRA config file.
 
     Returns
@@ -532,7 +554,7 @@ def submit_curation(hash_val, tag, curator_email, text=None,
     ev_json : None or dict
         The JSON of an evidence you wish to curate. If not given, it cannot be
         inferred.
-    api_key : str or None
+    api_key : Optional[str]
         Override or use in place of the API key given in the INDRA config file.
     is_test : bool
         Used in testing. If True, no curation will actually be added to the
@@ -558,12 +580,12 @@ def get_curations(hash_val=None, source_hash=None, api_key=None):
 
     Parameters
     ----------
-    hash_val : int or None
+    hash_val : Optional[int]
         The hash of a statement whose curations you want to retrieve.
-    source_hash : int or None
+    source_hash : Optional[int]
         The hash generated for a piece of evidence for which you want curations.
         The `hash_val` must be provided to use the `source_hash`.
-    api_key : str or None
+    api_key : Optional[str]
         Override or use in place of the API key given in the INDRA config file.
 
     Returns

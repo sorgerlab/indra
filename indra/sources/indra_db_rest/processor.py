@@ -1,6 +1,12 @@
 """
-Here is defined the Processor for the INDRA Database REST service. For common
-usage, please see the API in :py:mod:`indra.sources.indra_db_rest.api`.
+Handling the requests from the API elegantly is a complicated task, and a great
+deal of work is done behind the scenes to enable the return of large results
+that take time to load in a timely manner.
+
+Thus, we have defined a Processor for the INDRA Database REST service. An API is
+defined which returns these processor objects: please see the API in
+:py:mod:`indra.sources.indra_db_rest.api`. The documentation here is intended
+to provide help with the method API of the Processors.
 """
 
 
@@ -104,33 +110,6 @@ class IndraDBQueryProcessor:
         """Get the source counts as a dict per statement hash."""
         return deepcopy(self._source_counts)
 
-    def _get_next_offset(self):
-        """Get the offset of the next web request that will be made."""
-        return self.__offset
-
-    def _get_next_limit(self):
-        """Get the limit of the next web request that will be made."""
-        return self.__quota
-
-    def _mark_start(self):
-        self.__start_time = datetime.now()
-
-    def _time_since_start(self):
-        dt = datetime.now() - self.__start_time
-        return dt.total_seconds()
-
-    def _strict_time_is_up(self):
-        if self.__start_time is not None and self.__strict_stop:
-            if self._time_since_start() > self.__timeout:
-                return True
-        return False
-
-    def _done(self):
-        return (self.__canceled
-                or self.__offset is None
-                or self.__offset > 0 and self.__quota == 0
-                or self._strict_time_is_up())
-
     # Process control methods
 
     def cancel(self):
@@ -161,11 +140,39 @@ class IndraDBQueryProcessor:
             ret = True
         return ret
 
-    def print_background_logs(self):
-        """Print any logs that may have been stashed in the background."""
-        print(self.query.get_quiet_request_logs())
+    @staticmethod
+    def print_quiet_logs():
+        """Print the logs that were suppressed during the query."""
+        print(request_logger.get_quiet_logs())
 
     # Helper methods
+
+    def _get_next_offset(self):
+        """Get the offset of the next web request that will be made."""
+        return self.__offset
+
+    def _get_next_limit(self):
+        """Get the limit of the next web request that will be made."""
+        return self.__quota
+
+    def _mark_start(self):
+        self.__start_time = datetime.now()
+
+    def _time_since_start(self):
+        dt = datetime.now() - self.__start_time
+        return dt.total_seconds()
+
+    def _strict_time_is_up(self):
+        if self.__start_time is not None and self.__strict_stop:
+            if self._time_since_start() > self.__timeout:
+                return True
+        return False
+
+    def _done(self):
+        return (self.__canceled
+                or self.__offset is None
+                or self.__offset > 0 and self.__quota == 0
+                or self._strict_time_is_up())
 
     def _set_special_params(self, **params):
         self.__special_params = params
@@ -267,10 +274,6 @@ class IndraDBQueryProcessor:
                             "method.")
         return
 
-    @staticmethod
-    def print_quiet_logs():
-        print(request_logger.get_quiet_logs())
-
     # Child defined methods
 
     def _compile_results(self):
@@ -280,52 +283,11 @@ class IndraDBQueryProcessor:
         raise NotImplementedError()
 
 
-class DBQueryHashProcessor(IndraDBQueryProcessor):
-    """A processor to get hashes from the server.
-
-    Parameters
-    ----------
-    query : :py:class:`Query`
-        The query to be evaluated in return for statements.
-    limit : int or None
-        Select the maximum number of statements to return. When set less than
-        500 the effect is much the same as setting persist to false, and will
-        guarantee a faster response. Default is None.
-    sort_by : str or None
-        Options are currently 'ev_count' or 'belief'. Results will return in
-        order of the given parameter. If None, results will be turned in an
-        arbitrary order.
-    persist : bool
-        Default is True. When False, if a query comes back limited (not all
-        results returned), just give up and pass along what was returned.
-        Otherwise, make further queries to get the rest of the data (which may
-        take some time).
-    timeout : positive int or None
-        If an int, return after `timeout` seconds, even if query is not done.
-        Default is None.
-    tries : int > 0
-        Set the number of times to try the query. The database often caches
-        results, so if a query times out the first time, trying again after a
-        timeout will often succeed fast enough to avoid a timeout. This can
-        also help gracefully handle an unreliable connection, if you're
-        willing to wait. Default is 3.
-    """
-    result_type = 'hashes'
-
-    def __init__(self, *args, **kwargs):
-        self.hashes = []
-        super(DBQueryHashProcessor, self).__init__(*args, **kwargs)
-
-    def _handle_new_result(self, result, source_counts):
-        source_counts.update(result.source_counts)
-        self.hashes.extend(result.results)
-
-    def _compile_results(self):
-        pass
-
-
 class DBQueryStatementProcessor(IndraDBQueryProcessor):
     """A Processor to get Statements from the server.
+
+    For information on thread control and other methods, see the docs for
+    :py:class:`IndraDBQueryProcessor`.
 
     Parameters
     ----------
@@ -474,3 +436,47 @@ class DBQueryStatementProcessor(IndraDBQueryProcessor):
         if self.use_obtained_counts:
             self.__source_counts = get_available_source_counts(self.statements)
             self.__evidence_counts = get_available_ev_counts(self.statements)
+
+
+class DBQueryHashProcessor(IndraDBQueryProcessor):
+    """A processor to get hashes from the server.
+
+    Parameters
+    ----------
+    query : :py:class:`Query`
+        The query to be evaluated in return for statements.
+    limit : int or None
+        Select the maximum number of statements to return. When set less than
+        500 the effect is much the same as setting persist to false, and will
+        guarantee a faster response. Default is None.
+    sort_by : str or None
+        Options are currently 'ev_count' or 'belief'. Results will return in
+        order of the given parameter. If None, results will be turned in an
+        arbitrary order.
+    persist : bool
+        Default is True. When False, if a query comes back limited (not all
+        results returned), just give up and pass along what was returned.
+        Otherwise, make further queries to get the rest of the data (which may
+        take some time).
+    timeout : positive int or None
+        If an int, return after `timeout` seconds, even if query is not done.
+        Default is None.
+    tries : int > 0
+        Set the number of times to try the query. The database often caches
+        results, so if a query times out the first time, trying again after a
+        timeout will often succeed fast enough to avoid a timeout. This can
+        also help gracefully handle an unreliable connection, if you're
+        willing to wait. Default is 3.
+    """
+    result_type = 'hashes'
+
+    def __init__(self, *args, **kwargs):
+        self.hashes = []
+        super(DBQueryHashProcessor, self).__init__(*args, **kwargs)
+
+    def _handle_new_result(self, result, source_counts):
+        source_counts.update(result.source_counts)
+        self.hashes.extend(result.results)
+
+    def _compile_results(self):
+        pass
