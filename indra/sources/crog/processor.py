@@ -29,7 +29,8 @@ class CrogProcessor(RemoteProcessor):
     def __init__(self, url: Optional[str] = None):
         super().__init__(url=url or CROG_URL)
 
-        new_stmts = []
+    def extract_statements(self):
+        super().extract_statements()
         for stmt in self.statements:
             # We remap the source API to crog to align with the belief model
             for ev in stmt.evidence:
@@ -39,5 +40,3 @@ class CrogProcessor(RemoteProcessor):
             for agent in stmt.real_agent_list():
                 if agent.name == agent.db_refs.get('ECCODE'):
                     agent.name = 'EC%s' % agent.name
-            new_stmts.append(stmt)
-        self.statements = new_stmts
