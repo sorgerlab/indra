@@ -160,5 +160,11 @@
         "link": "https://github.com/chemical-roles/chemical-roles",
         "type": "database",
         "domain": "biology"
+    },
+    "conib": {
+        "name": "CONIB",
+        "link": "https://pharmacome.github.io/conib/",
+        "type": "database",
+        "domain": "biology"
     }
 }

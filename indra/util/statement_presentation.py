@@ -119,7 +119,7 @@ logger = logging.getLogger(__name__)
 
 db_sources = ['psp', 'cbn', 'pc', 'bel_lc', 'signor', 'biogrid', 'lincs_drug',
               'tas', 'hprd', 'trrust', 'ctd', 'virhostnet', 'pe', 'drugbank',
-              'omnipath']
+              'omnipath', 'conib', 'crog', 'dgi']
 
 reader_sources = ['geneways', 'tees', 'isi', 'trips', 'rlimsp', 'medscan',
                   'sparser', 'eidos', 'reach']
