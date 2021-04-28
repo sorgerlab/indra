@@ -525,24 +525,56 @@ class HasHash(Query):
 class HasAgent(Query):
     """Find Statements with the given agent in the given position.
 
+    **NOTE:** At this time 2 agent queries do NOT necessarily imply that the 2
+    agents are different. For example:
+
+    >>>
+    >> HasAgent("MEK") & HasAgent("MEK")
+
+    will get any Statements that have agent with name MEK, **not** Statements
+    with two agents called MEK. This may change in the future, however in the
+    meantime you can get around this fairly well by specifying the roles:
+
+    >>>
+    >> HasAgent("MEK", role="SUBJECT") & HasAgent("MEK", role="OBJECT")
+
+    Or for a more complicated case, consider a query for Statements where one
+    agent is MEK and the other has namespace FPLX. Naturally any agent labeled
+    as MEK will also have a namespace FPLX (MEK is a famplex identifier), and
+    in general you will not want to constrain which role is MEK and which is the
+    "other" agent. To accomplish this you need to use ``|``:
+
+    >>>
+    >> (
+    >>   HasAgent("MEK", role="SUBJECT")
+    >>   & HasAgent(namespace="FPLX", role="OBJECT")
+    >> ) | (
+    >>   HasAgent("MEK", role="OBJECT")
+    >>   & HasAgent(namespace="FPLX", role="SUBJECT")
+    >> )
+
     Parameters
     ----------
-    agent_id : str
+    agent_id : Optional[str]
         The ID string naming the agent, for example 'ERK' (FPLX or NAME) or
-        'plx' (TEXT), and so on.
-    namespace : str
-        (optional) By default, this is AUTO, indicating GILDA will be used to
-        to try and guess the proper namespace and agent ID. Other options
-        include NAME (the canonical name of the agent), FPLX (FamPlex), CHEBI,
-        CHEMBL, HGNC, UP (UniProt), TEXT (for raw text mentions), and many more.
-    role : str or None
-        (optional) None by default. Options are "SUBJECT", "OBJECT", or "OTHER".
-    agent_num : int or None
-        (optional) None by default. The regularized position of the agent in the
+        'plx' (TEXT), and so on. If None, the query must then be constrained by
+        the ``namespace``.
+    namespace : Optional[str]
+        By default, this is NAME, indicating the agents canonical,
+        grounded, name will be used. Other options include, but are not limited
+        to: AUTO (in which case GILDA will be used to guess the proper grounding
+        of the entity), FPLX (FamPlex), CHEBI, CHEMBL, HGNC, UP (UniProt),
+        and TEXT (for raw text mentions). If ``agent_id`` is ``None``, namespace
+        must be specified and must **not** be NAME, TEXT, or AUTO.
+    role : Optional[str]
+        None by default. Options are "SUBJECT", "OBJECT", or "OTHER".
+    agent_num : Optionals[int]
+        None by default. The regularized position of the agent in the
         Statement's list of agents.
     """
 
-    def __init__(self, agent_id, namespace='NAME', role=None, agent_num=None):
+    def __init__(self, agent_id=None, namespace='NAME', role=None,
+                 agent_num=None):
         self.agent_id = agent_id
         self.namespace = namespace
         self.role = role
