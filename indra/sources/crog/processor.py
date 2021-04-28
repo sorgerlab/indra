@@ -28,3 +28,15 @@ class CrogProcessor(RemoteProcessor):
 
     def __init__(self, url: Optional[str] = None):
         super().__init__(url=url or CROG_URL)
+
+    def extract_statements(self):
+        super().extract_statements()
+        for stmt in self.statements:
+            # We remap the source API to crog to align with the belief model
+            for ev in stmt.evidence:
+                ev.source_api = 'crog'
+            # We also change the name of targets whose names are ECCODEs to
+            # have the EC prefix in their name
+            for agent in stmt.real_agent_list():
+                if agent.name == agent.db_refs.get('ECCODE'):
+                    agent.name = 'EC %s' % agent.name
