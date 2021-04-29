@@ -163,7 +163,7 @@
     },
     "conib": {
         "name": "CONIB",
-        "link": "https://pharmacome.github.io/conib/",
+        "link": "https://github.com/pharmacome/conib",
         "type": "database",
         "domain": "biology"
     }
