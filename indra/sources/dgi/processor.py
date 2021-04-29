@@ -9,6 +9,7 @@ import pandas as pd
 
 from ...ontology.standardize import get_standard_agent
 from ...statements import (
+    default_ns_order,
     Activation,
     Complex,
     DecreaseAmount,
@@ -107,6 +108,8 @@ class DGIProcessor:
 
         drug_agent = get_standard_agent(
             drug_name, {drug_namespace: drug_identifier},
+            # This allows a bit more name standardization to happen
+            ns_order=default_ns_order + ['DRUGBANK', 'CHEMBL']
         )
 
         annotations = {
