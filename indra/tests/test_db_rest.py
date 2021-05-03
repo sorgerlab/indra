@@ -324,7 +324,7 @@ def test_sort_by_ev_count():
     p = dbr.get_statements(object="MEK", stmt_type="Inhibition",
                            sort_by='ev_count', limit=10, ev_limit=None)
     assert p.statements
-    counts = [len(s.evidence) for s in p.statements]
+    counts = [p.get_ev_count(s) for s in p.statements]
     assert counts == sorted(counts, reverse=True),\
         f"Counts mis-ordered!\ncounts: {counts}\nev_counts: {p.get_ev_counts()}"
 
