@@ -3,7 +3,7 @@ The Query architecture allows the construction of arbitrary queries for content
 from the INDRA Database.
 
 Specifically, the query constructed using this language of classes is converted
-into sophisticated and optimized SQL the by INDRA Database REST API.  Different
+into sophisticated and optimized SQL by the INDRA Database REST API.  Different
 classes represent different types of constraint and are named as much as
 possible to fit together when spoken aloud in English. For example:
 
