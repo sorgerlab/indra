@@ -314,7 +314,9 @@ def test_sort_by_belief():
                                   sort_by='belief', limit=10)
     assert p.statements
     beliefs = [s.belief for s in p.statements]
-    assert beliefs == sorted(beliefs, reverse=True)
+    assert beliefs == sorted(beliefs, reverse=True), \
+        f"Beliefs mis-ordered!\nbeliefs: {beliefs}\n" \
+        f"belief_dict: {p.get_belief_scores()}"
 
 
 @attr('nonpublic')
@@ -323,7 +325,8 @@ def test_sort_by_ev_count():
                            sort_by='ev_count', limit=10, ev_limit=None)
     assert p.statements
     counts = [len(s.evidence) for s in p.statements]
-    assert counts == sorted(counts, reverse=True)
+    assert counts == sorted(counts, reverse=True),\
+        f"Counts mis-ordered!\ncounts: {counts}\nev_counts: {p.get_ev_counts()}"
 
 
 @attr('nonpublic')
