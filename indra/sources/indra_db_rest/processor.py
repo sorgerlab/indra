@@ -1,14 +1,10 @@
 """
-Handling the requests from the API elegantly is a complicated task, and a great
-deal of work is done behind the scenes to enable the return of large results
-that take time to load in a timely manner.
-
-Thus, we have defined a Processor for the INDRA Database REST service. An API is
-defined which returns these processor objects: please see the API in
-:py:mod:`indra.sources.indra_db_rest.api`. The documentation here is intended
-to provide help with the method API of the Processors.
+Retrieving the results of large queries from the INDRA Database REST API
+generally involves multiple individual calls. The Processor classes
+defined here manage the retrieval process for results of two types, Statements
+and Statement hashes. Instances of these Processors are returned by the query
+functions in :py:mod:`indra.sources.indra_db_rest.api`.
 """
-
 
 import logging
 from copy import deepcopy
@@ -333,9 +329,10 @@ class DBQueryStatementProcessor(IndraDBQueryProcessor):
     """
     result_type = 'statements'
 
-    def __init__(self, query: Query, limit=None, sort_by='ev_count', ev_limit=10,
-                 filter_ev=True, timeout=None, strict_stop=False, persist=True,
-                 use_obtained_counts=False, tries=3, api_key=None):
+    def __init__(self, query: Query, limit=None, sort_by='ev_count',
+                 ev_limit=10, filter_ev=True, timeout=None, strict_stop=False,
+                 persist=True, use_obtained_counts=False, tries=3,
+                 api_key=None):
 
         self.statements = []
         self.statements_sample = None
