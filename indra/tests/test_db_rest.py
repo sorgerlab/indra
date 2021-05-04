@@ -241,13 +241,13 @@ def test_get_statement_queries():
 
 @attr('nonpublic')
 def test_get_statements_end_on_limit():
-    p = dbr.get_statements(subject="TNF", limit=1000, timeout=1)
+    p = dbr.get_statements(subject="TNF", limit=1400, timeout=1)
     try:
         t = 0
         while p.is_working():
             assert t < 100
             limit = p._get_next_limit()
-            assert limit != 0, limit
+            assert limit != 0 or not p.is_working(), limit
             sleep(1)
             t += 1
     finally:
