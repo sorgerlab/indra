@@ -334,8 +334,12 @@ class BeliefEngine(object):
             by this function.
         """
         self.scorer.check_prior_probs(statements)
-        for st in statements:
-            st.belief = self.scorer.score_statement(st)
+        prior_probs = self.scorer.score_statements(statements)
+        assert len(prior_probs) == len(statements), \
+                "prior_probs and statements should be the same length"
+        for ix, st in enumerate(statements):
+            st.belief = prior_probs[ix]
+
 
     def get_refinement_prob(self, stmt, refiners=None):
         """Return the full belief of a statement given its refiners.
@@ -399,6 +403,9 @@ class BeliefEngine(object):
 
         logger.debug('Start belief calculation over refinements graph')
         beliefs = {}
+        # TODO: Change this to collect supporters data
+        # structure (indexed by hash?) and score statements with the
+        # accumulated evidence in one go.
         for node in self.refinements_graph.nodes():
             stmt = self.refinements_graph.nodes[node]['stmt']
             supporters = \
