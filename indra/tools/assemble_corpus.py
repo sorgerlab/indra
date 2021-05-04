@@ -2105,6 +2105,10 @@ def run_mechlinker(
             ml.gather_explicit_activities()
         ml.replace_activations()
     if require_active_forms:
+        if implicit:
+            ml.gather_implicit_activities()
+        else:
+            ml.gather_explicit_activities()
         ml.require_active_forms()
     return ml.statements
 
