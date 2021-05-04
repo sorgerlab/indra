@@ -22,6 +22,22 @@ class SklearnBase(object):
     def __init__(self, model):
         self.model = model
 
+    @staticmethod
+    def get_all_sources(stmts):
+        """Get a list of all the source_apis supporting the statements.
+
+        Parameters
+        ----------
+        stmts : list of INDRA Statements
+            A list of INDRA Statements to collect source APIs for.
+
+        Returns
+        -------
+        list of str
+            A list of (unique) source_apis found in the set of statements.
+        """
+        return list(set([ev.source_api for s in stmts for ev in s.evidence]))
+
     def stmts_to_matrix(self, stmts, *args, **kwargs):
         raise NotImplementedError('Need to implement the stmts_to_matrix '
                                    'method')

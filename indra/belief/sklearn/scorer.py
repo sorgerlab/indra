@@ -9,8 +9,9 @@ class SklearnScorer(BeliefScorer):
 
     Parameters
     ----------
-    model_pkl : str
-        Pickle file containing the sklearn classifier.
+    model_wrap : <indra.belief.sklearn.wrapper.SklearnBase>
+        An instance of a Sklearn wrapper around an sklearn classifier.
+
     source_list : list of str
         Source API types in the same order that the model was trained on.
     prior_probs : dict
@@ -18,15 +19,18 @@ class SklearnScorer(BeliefScorer):
         model was not trained on to error parameters for the source. These
         error parameters are treated as independent.
     """
-    def __init__(self, model):
-        self.model = model
-        #self.source_list = source_list
-        #self.correct_ix = correct_ix
-        # Load the model from file
-        #with open(self.model_pkl, 'rb') as f:
-        #    self.model = pickle.load(f)
+    def __init__(self, model_wrap):
+        self.model_wrap = model_wrap
 
     def score_statement(self, st, extra_evidence=None):
+        belief_arr = self.score_statements[st]
+        return belief_arr[0]
+
+    def check_prior_probs(self, statements):
+        # TODO: Implement this
+        return
+
+    """
         # Combine the evidences
         if extra_evidence is None:
             extra_evidence = []
@@ -42,18 +46,9 @@ class SklearnScorer(BeliefScorer):
         # Predict!
         belief = self.model.predict_proba(counts)[0][self.correct_ix]
         return belief
+    """
 
     def score_statements(self, statements):
         """Run predictions."""
-        # Build training data matrix
-        num_cols = len(self.source_list)
-        num_rows = len(statements)
-        arr = np.zeros((num_rows, num_cols))
-        for stmt_ix, stmt in enumerate(statements):
-            sources = [ev.source_api for ev in stmt.evidence]
-            src_ctr = Counter(sources)
-            for src_ix, src in enumerate(self.source_list):
-                arr[stmt_ix, src_ix] = src_ctr.get(src, 0)
-        scores = self.model.predict_proba(arr)
-        for stmt_ix, stmt in enumerate(statements):
-            stmt.belief = scores[stmt_ix, self.correct_ix]
+        belief_arr = self.model_wrap.predict_proba(statements)[:, 1]
+        return belief_arr

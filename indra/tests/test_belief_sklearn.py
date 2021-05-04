@@ -1,22 +1,33 @@
 import random
 import pickle
 import numpy as np
+from copy import copy
 from collections import defaultdict
 from os.path import join, abspath, dirname
 from nose.tools import raises
 from sklearn.linear_model import LogisticRegression
 from indra.sources import signor
+from indra.belief import BeliefEngine
 from indra.belief.sklearn.wrapper import CountsModel
+from indra.belief.sklearn.scorer import SklearnScorer
 
-
+# A set of test statements derived from SIGNOR only
 test_stmt_path = join(dirname(abspath(__file__)),
                       'belief_sklearn_test_stmts.pkl')
 
+# An alternative set of test statements derived from the curated stmt dataset
+test_stmt_cur_path = join(dirname(abspath(__file__)),
+                          'belief_sklearn_test_stmts_cur.pkl')
+
+# A statement dataframe sample
 test_df_path = join(dirname(abspath(__file__)),
                     'belief_sklearn_test_df.pkl')
 
 with open(test_stmt_path, 'rb') as f:
     test_stmts, y_arr_stmts = pickle.load(f)
+
+with open(test_stmt_cur_path, 'rb') as f:
+    test_stmts_cur, y_arr_stmts_cur = pickle.load(f)
 
 with open(test_df_path, 'rb') as f:
     test_df, y_arr_df = pickle.load(f)
@@ -244,3 +255,34 @@ def test_use_members_with_stmts():
     assert x_arr.shape == (len(test_stmts), len(source_list)+1), \
             'stmt matrix dimensions should match test stmts plus num_members'
 
+
+# Update simple_scorer and belief engine tests to work with change to
+# score statements
+
+def test_set_prior_probs():
+    # Make a model
+    lr = LogisticRegression()
+    # Get all the sources
+    source_list = CountsModel.get_all_sources(test_stmts_cur)
+    cw = CountsModel(lr, source_list)
+    # Train on curated stmt data
+    cw.fit(test_stmts_cur, y_arr_stmts_cur)
+    # Run predictions on test statements
+    probs = cw.predict_proba(test_stmts_cur)[:, 1]
+    # Now check if we get these same beliefs set on the statements when we
+    # run with the belief engine:
+    # Get scorer and belief engine instances for trained model
+    skls = SklearnScorer(cw)
+    be = BeliefEngine(scorer=skls)
+    # Make a shallow copy of the test stmts so that we don't change beliefs
+    # of the global instances as a side-effect of this test
+    test_stmts_copy = copy(test_stmts_cur)
+    # Set beliefs
+    be.set_prior_probs(test_stmts_copy)
+    beliefs = [s.belief for s in test_stmts_copy]
+    # Check that they match
+    assert np.allclose(beliefs, probs), \
+           "Statement beliefs should be set to predicted probabilities."
+
+if __name__ == '__main__':
+    test_set_prior_probs()
