@@ -286,7 +286,7 @@ class Query:
             self.__compiled_str = None
         return self.__compiled_json
 
-    def get_query_english(self):
+    def get_query_english(self, timeout=None):
         """Get the string representation of the query."""
         if self.__compiled_str is None:
             if self.__compiled_json is None:
@@ -297,7 +297,8 @@ class Query:
                 simple = False
             resp = make_db_rest_request('post', 'compile/string',
                                         data=query_json,
-                                        params=dict(simple=simple))
+                                        params=dict(simple=simple),
+                                        timeout=timeout)
             self.__compiled_str = resp.content.decode('utf-8')
         return self.__compiled_str
 

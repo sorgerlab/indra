@@ -91,7 +91,6 @@ class IndraDBQueryProcessor:
 
         if limit != 0:
             self._run(persist=persist)
-        logger.debug("Done with processor __init__.")
 
     # Metadata Retrieval methods.
 
@@ -247,9 +246,15 @@ class IndraDBQueryProcessor:
         return
 
     def _run(self, persist=True):
+        # Quiet the lowest level logger.
         util_logger.quiet()
-        query_english = self.query.get_query_english()
-        logger.info(f"Retrieving {self.result_type} that {query_english}.")
+
+        # Only get the query english if we aren't on a time constraint.
+        if self.__timeout is None:
+            query_english = self.query.get_query_english()
+            logger.info(f"Retrieving {self.result_type} that {query_english}.")
+        else:
+            logger.info(f"Retrieving {self.result_type} for {self.query}.")
 
         # Handle the content if we were limited.
         self.__th = Thread(target=self._run_queries,
@@ -266,15 +271,11 @@ class IndraDBQueryProcessor:
                              f"thread to complete...")
                 self.__th.join(self.__timeout)
                 end_time = datetime.now()
-                logger.debug(f"After {end_time - start_time}, joined thread is "
-                             f"{'' if self.__th.is_alive() else 'not'} alive.")
             if not self._done():
                 request_logger.quiet()
                 logger.info("Leaving request to background thread. Logs "
                             "may be viewed using the `print_quiet_logs()` "
                             "method.")
-
-        logger.debug(f"After {datetime.now() - start_time}, leaving _run.")
         return
 
     # Child defined methods
