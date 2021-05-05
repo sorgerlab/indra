@@ -283,13 +283,14 @@ def test_get_statements_strict_stop_short():
 
 @attr('nonpublic')
 def test_get_statements_strict_stop_long():
+    timeout = 15
     start = datetime.now()
-    p = dbr.get_statements("TNF", timeout=10, strict_stop=True)
+    p = dbr.get_statements("TNF", timeout=timeout, strict_stop=True)
     end = datetime.now()
-    sleep(1)
+    sleep(2)
     assert not p.is_working()
     dt = (end - start).total_seconds()
-    assert 10 <= dt < 10.5, dt
+    assert timeout <= dt < (timeout + 0.5), dt
     assert p.statements
 
 
