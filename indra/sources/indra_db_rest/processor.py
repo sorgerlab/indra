@@ -259,7 +259,6 @@ class IndraDBQueryProcessor:
         # Handle the content if we were limited.
         self.__th = Thread(target=self._run_queries,
                            args=[persist])
-        start_time = datetime.now()
         self.__th.start()
 
         if self.__timeout is None:
@@ -270,7 +269,6 @@ class IndraDBQueryProcessor:
                 logger.debug(f"Waiting at most {self.__timeout} seconds for "
                              f"thread to complete...")
                 self.__th.join(self.__timeout)
-                end_time = datetime.now()
             if not self._done():
                 request_logger.quiet()
                 logger.info("Leaving request to background thread. Logs "
