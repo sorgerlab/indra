@@ -256,10 +256,7 @@ def test_use_members_with_stmts():
             'stmt matrix dimensions should match test stmts plus num_members'
 
 
-# Update simple_scorer and belief engine tests to work with change to
-# score statements
-
-def test_set_prior_probs():
+def setup_belief():
     # Make a model
     lr = LogisticRegression()
     # Get all the sources
@@ -277,6 +274,12 @@ def test_set_prior_probs():
     # Make a shallow copy of the test stmts so that we don't change beliefs
     # of the global instances as a side-effect of this test
     test_stmts_copy = copy(test_stmts_cur)
+    return be, test_stmts_copy, probs
+
+
+def test_set_prior_probs():
+    # Get probs for a set of statements, and a belief engine instance
+    be, test_stmts_copy, probs = setup_belief()
     # Set beliefs
     be.set_prior_probs(test_stmts_copy)
     beliefs = [s.belief for s in test_stmts_copy]
@@ -284,5 +287,27 @@ def test_set_prior_probs():
     assert np.allclose(beliefs, probs), \
            "Statement beliefs should be set to predicted probabilities."
 
+# Write test for set_hierarchy_probs
+
+# Update score_statements method and wrapper class to take lists of extra
+# evidence
+
+# get_refinement_prob takes list of statements, returns list of values
+
+# Update simple_scorer and belief engine tests to work with change to
+# score statements
+
+def test_set_hierarchy_probs():
+    # Get probs for a set of statements, and a belief engine instance
+    be, test_stmts_copy, probs = setup_belief()
+    # Set beliefs on the flattened statements
+    be.set_hierarchy_probs(test_stmts_copy)
+    beliefs = np.array([s.belief for s in test_stmts_copy])
+    # Presumably the hierarchy probabilities should always be greater
+    # than the prior probs
+    assert np.all(np.greater_equal(beliefs, probs)), \
+           "Beliefs with hierarchy should be >= to prior probs only."
+
+
 if __name__ == '__main__':
-    test_set_prior_probs()
+    test_set_hierarchy_probs()

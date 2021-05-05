@@ -341,32 +341,43 @@ class BeliefEngine(object):
             st.belief = prior_probs[ix]
 
 
-    def get_refinement_prob(self, stmt, refiners=None):
+    def get_refinement_probs(self, statements, refiners_list=None):
         """Return the full belief of a statement given its refiners.
 
         Parameters
         ----------
-        stmt : indra.statements.Statement
-            The statement whose belief is calculated.
-        refiners: list[int]
-            A list of statement hashes for statements that are refinements
-            (i.e., more specific versions) of this statement.
+        statements : list of indra.statements.Statement
+            Statements to calculate beliefs for.
+        refiners_list : list[list[int]]
+            A list corresponding to the list of statements, where each entry
+            is a list of statement hashes for the statements that are
+            refinements (i.e., more specific versions) of the corresponding
+            statement in the statements list. If there are no refiner
+            statements the entry should be an empty list.
 
         Returns
         -------
-        float
-            The belief score for this statement.
+        ****FIXME FIXME FIXME
+        iterable of floats
+            Belief scores for the list of statements.
         """
-        all_evidences = set()
-        refiners = [] if not refiners else refiners
-        for supp in refiners:
-            all_evidences |= \
-                set(self.refinements_graph.nodes[supp]['stmt'].evidence)
+        all_extra_evs = []
+        for stmt, refiners in zip(statements, refiners_list):
+            extra_ev_for_stmt = set()
+            for supp in refiners:
+                extra_ev_for_stmt |= \
+                    set(self.refinements_graph.nodes[supp]['stmt'].evidence)
+            # Exclude any negated evidences
+            extra_ev_for_stmt = list({ev for ev in extra_ev_for_stmt
+                                         if not ev.epistemics.get('negated')})
+            all_extra_evs.append(extra_ev_for_stmt)
 
-        all_evidences = {ev for ev in all_evidences if
-                         not ev.epistemics.get('negated')}
-        belief = self.scorer.score_statement(stmt, list(all_evidences))
-        return belief
+        # TODO
+        #beliefs = self.scorer.score_statements(statements, all_extra_evs)
+        beliefs = self.scorer.score_statements(statements)
+        hashes = [s.get_hash(self.matches_fun) for s in statements]
+        beliefs_by_hash = dict(zip(hashes, beliefs))
+        return beliefs_by_hash
 
     def set_hierarchy_probs(self, statements):
         """Sets hierarchical belief probabilities for INDRA Statements.
@@ -394,26 +405,41 @@ class BeliefEngine(object):
         # We only re-build the refinements graph if one wasn't provided
         # as an argument
         if self.refinements_graph is None:
-            stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun): stmt
-                             for stmt in statements}
+            # Collect all the hashes and relevant statements, including
+            # those that may not be in the given list but that are more
+            # generic and in stmt.supported_by:
+            stmts_by_hash = {}
+            for stmt in statements:
+                # The hash of *this* statement
+                stmts_by_hash[stmt.get_hash(self.matches_fun)] = stmt
+                for sb in stmt.supported_by:
+                    stmts_by_hash[sb.get_hash(self.matches_fun)] = sb
+            # Build the graph
             self.refinements_graph = \
                 build_refinements_graph(stmts_by_hash=stmts_by_hash,
                                         matches_fun=self.matches_fun)
             assert_no_cycle(self.refinements_graph)
-
         logger.debug('Start belief calculation over refinements graph')
-        beliefs = {}
         # TODO: Change this to collect supporters data
         # structure (indexed by hash?) and score statements with the
         # accumulated evidence in one go.
+        refiners_list = []
+        # Note here that in collecting the list of statements that we pass
+        # to get_refinement_probs, we build up a (potentially larger) list
+        # of statements that includes the refined/supported_by statements of
+        # the given statements
+        graph_stmts = []
         for node in self.refinements_graph.nodes():
+            # Get the statement
             stmt = self.refinements_graph.nodes[node]['stmt']
-            supporters = \
-                list(networkx.descendants(self.refinements_graph, node))
-            belief = self.get_refinement_prob(stmt, supporters)
-            beliefs[node] = belief
+            graph_stmts.append(stmt)
+            # Get the refiners/more specific stmts, if any
+            refiners = list(networkx.descendants(self.refinements_graph, node))
+            refiners_list.append(refiners)
+        # Get dictionary mapping hashes to belief values
+        beliefs_by_hash = self.get_refinement_probs(graph_stmts, refiners_list)
         logger.debug('Finished belief calculation over refinements graph')
-        return beliefs
+        return beliefs_by_hash
 
     def set_linked_probs(self, linked_statements):
         """Sets the belief probabilities for a list of linked INDRA Statements.

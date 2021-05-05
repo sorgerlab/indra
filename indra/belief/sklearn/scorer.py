@@ -48,7 +48,7 @@ class SklearnScorer(BeliefScorer):
         return belief
     """
 
-    def score_statements(self, statements):
+    def score_statements(self, statements, extra_evidence=None):
         """Run predictions."""
         belief_arr = self.model_wrap.predict_proba(statements)[:, 1]
         return belief_arr
