@@ -3,7 +3,7 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
-from indra.statements import get_all_descendants, Statement
+from indra.statements import get_all_descendants, Statement, Evidence
 
 
 logger = logging.getLogger(__name__)
@@ -46,17 +46,20 @@ class SklearnBase(object):
         raise NotImplementedError('Need to implement the df_to_matrix '
                                    'method')
 
-    def to_matrix(self, stmt_data, *args, **kwargs):
+    def to_matrix(self, stmt_data, extra_evidence=None):
         # If we got a Numpy array, just use it!
         if isinstance(stmt_data, np.ndarray):
             stmt_arr = stmt_data
         # Otherwise check if we have a dataframe or a list of statements
         # and call the appropriate *_to_matrix method
         elif isinstance(stmt_data, pd.DataFrame):
+            if extra_evidence is not None:
+                raise ValueError('extra_evidence cannot be used with a '
+                                 'statement DataFrame.')
             stmt_arr = self.df_to_matrix(stmt_data)
         # If not a DataFrame, assume have a list of stmts
         else:
-            stmt_arr = self.stmts_to_matrix(stmt_data)
+            stmt_arr = self.stmts_to_matrix(stmt_data, extra_evidence)
         return stmt_arr
 
     def fit(self, stmt_data, y_arr, *args, **kwargs):
@@ -70,17 +73,17 @@ class SklearnBase(object):
         self.model.fit(stmt_arr, y_arr, *args, **kwargs)
         return self
 
-    def predict_proba(self, stmt_data):
+    def predict_proba(self, stmt_data, extra_evidence=None):
         # Call the prediction method of the internal sklearn model
-        stmt_arr = self.to_matrix(stmt_data)
+        stmt_arr = self.to_matrix(stmt_data, extra_evidence)
         return self.model.predict_proba(stmt_arr)
 
-    def predict(self, stmt_data):
-        stmt_arr = self.to_matrix(stmt_data)
+    def predict(self, stmt_data, extra_evidence=None):
+        stmt_arr = self.to_matrix(stmt_data, extra_evidence)
         return self.model.predict(stmt_arr)
 
-    def predict_log_proba(self, stmt_data):
-        stmt_arr = self.to_matrix(stmt_data)
+    def predict_log_proba(self, stmt_data, extra_evidence=None):
+        stmt_arr = self.to_matrix(stmt_data, extra_evidence)
         return self.model.predict_log_proba(stmt_arr)
 
 
@@ -129,7 +132,20 @@ class CountsModel(SklearnBase):
             self.stmt_type_map = {t.__name__: ix
                                   for ix, t in enumerate(all_stmt_types)}
 
-    def stmts_to_matrix(self, stmts):
+    def stmts_to_matrix(self, stmts, extra_evidence=None):
+        # If given, check the extra_evidence list
+        if extra_evidence is not None:
+            if len(stmts) != len(extra_evidence):
+                raise ValueError("extra_evidence must be a list of the same "
+                                 "length as stmts.")
+            for entry in extra_evidence:
+                # Check that the first member in every internal list is
+                # an Evidence object
+                if not (isinstance(extra_evidence, list) and
+                        isinstance(extra_evidence[0], Evidence)):
+                    raise ValueError("extra_evidence must be a list of lists "
+                                     "of Evidence objects.")
+            
         # Add categorical features and collect source_apis
         cat_features = []
         stmt_sources = set()

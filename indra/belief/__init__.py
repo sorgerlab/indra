@@ -374,7 +374,7 @@ class BeliefEngine(object):
 
         # TODO
         #beliefs = self.scorer.score_statements(statements, all_extra_evs)
-        beliefs = self.scorer.score_statements(statements)
+        beliefs = self.scorer.score_statements(statements, all_extra_evs)
         hashes = [s.get_hash(self.matches_fun) for s in statements]
         beliefs_by_hash = dict(zip(hashes, beliefs))
         return beliefs_by_hash

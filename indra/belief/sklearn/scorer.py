@@ -22,9 +22,11 @@ class SklearnScorer(BeliefScorer):
     def __init__(self, model_wrap):
         self.model_wrap = model_wrap
 
+    """
     def score_statement(self, st, extra_evidence=None):
         belief_arr = self.score_statements[st]
         return belief_arr[0]
+    """
 
     def check_prior_probs(self, statements):
         # TODO: Implement this
@@ -50,5 +52,6 @@ class SklearnScorer(BeliefScorer):
 
     def score_statements(self, statements, extra_evidence=None):
         """Run predictions."""
-        belief_arr = self.model_wrap.predict_proba(statements)[:, 1]
+        belief_arr = self.model_wrap.predict_proba(
+                                statements, extra_evidence)[:, 1]
         return belief_arr

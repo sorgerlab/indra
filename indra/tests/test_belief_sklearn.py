@@ -8,14 +8,18 @@ from nose.tools import raises
 from sklearn.linear_model import LogisticRegression
 from indra.sources import signor
 from indra.belief import BeliefEngine
+from indra.tools import assemble_corpus as ac
+from indra.statements import Evidence
 from indra.belief.sklearn.wrapper import CountsModel
 from indra.belief.sklearn.scorer import SklearnScorer
 
 # A set of test statements derived from SIGNOR only
+# (these include many different stmt types)
 test_stmt_path = join(dirname(abspath(__file__)),
                       'belief_sklearn_test_stmts.pkl')
 
 # An alternative set of test statements derived from the curated stmt dataset
+# (these include supports/supported_by)
 test_stmt_cur_path = join(dirname(abspath(__file__)),
                           'belief_sklearn_test_stmts_cur.pkl')
 
@@ -299,15 +303,67 @@ def test_set_prior_probs():
 
 def test_set_hierarchy_probs():
     # Get probs for a set of statements, and a belief engine instance
-    be, test_stmts_copy, probs = setup_belief()
+    be, test_stmts_copy, prior_probs = setup_belief()
     # Set beliefs on the flattened statements
     be.set_hierarchy_probs(test_stmts_copy)
-    beliefs = np.array([s.belief for s in test_stmts_copy])
+    #beliefs = np.array([s.belief for s in test_stmts_copy])
     # Presumably the hierarchy probabilities should always be greater
     # than the prior probs
-    assert np.all(np.greater_equal(beliefs, probs)), \
-           "Beliefs with hierarchy should be >= to prior probs only."
+    # Check that the top-level statements beliefs have not changed
+    top_level = ac.filter_top_level(test_stmts_copy)
+    for stmt, prior_prob in zip(test_stmts_copy, prior_probs):
+        if stmt in top_level:
+            assert stmt.belief == prior_prob
+        else:
+            if stmt.belief > prior_prob:
+                import ipdb; ipdb.set_trace()
+            assert stmt.belief >= prior_prob
+
+    #assert np.all(np.greater_equal(beliefs, probs)), \
+    #       "Beliefs with hierarchy should be >= to prior probs only."
+
+
+@raises(ValueError)
+def test_df_extra_ev_value_error():
+    """to_matrix should raise ValueError if given a DataFrame and extra
+       evidence (for now)."""
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list)
+    cw.to_matrix(test_df, extra_evidence=[[5]])
+
+
+@raises(ValueError)
+def test_extra_evidence_length():
+    """Should raise ValueError because the extra_evidence list is not the
+    same length as the list of statements."""
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list)
+    extra_ev = [[5]]
+    x_arr = cw.stmts_to_matrix(test_stmts, extra_evidence=extra_ev)
+
+@raises(ValueError)
+def test_extra_evidence_length():
+    """Should raise ValueError because the extra_evidence list is not the
+    same length as the list of statements."""
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list)
+    extra_ev = [[5]]
+    x_arr = cw.stmts_to_matrix(test_stmts, extra_evidence=extra_ev)
+
+@raises(ValueError)
+def test_extra_evidence_content():
+    """Should raise ValueError if extra_evidence list entries are not
+    Evidence objects."""
+    lr = LogisticRegression()
+    source_list = ['reach', 'sparser', 'signor']
+    cw = CountsModel(lr, source_list)
+    extra_ev = [[5]] * len(test_stmts)
+    x_arr = cw.stmts_to_matrix(test_stmts, extra_evidence=extra_ev)
 
 
 if __name__ == '__main__':
-    test_set_hierarchy_probs()
+    test_extra_evidence_content()
+    #test_set_hierarchy_probs()
