@@ -139,20 +139,33 @@ class CountsModel(SklearnBase):
                 raise ValueError("extra_evidence must be a list of the same "
                                  "length as stmts.")
             for entry in extra_evidence:
-                # Check that the first member in every internal list is
-                # an Evidence object
-                if not (isinstance(extra_evidence, list) and
-                        isinstance(extra_evidence[0], Evidence)):
-                    raise ValueError("extra_evidence must be a list of lists "
-                                     "of Evidence objects.")
-            
+                if not (isinstance(entry, list)):
+                    raise ValueError("extra_evidence must be a list of lists.")
+                # The entry is empty, that's fine
+                if entry == []:
+                    continue
+                elif not isinstance(entry[0], Evidence):
+                    raise ValueError("extra_evidence list entries must "
+                                     "contain Evidence objects.")
+
+        # Handy internal func to combine stmt's own evidence with any
+        # extra evidence provided.
+        def get_stmt_ev(stmt, ix):
+            if extra_evidence:
+                extra_ev_for_stmt = extra_evidence[ix]
+                stmt_ev = set(stmt.evidence) | set(extra_ev_for_stmt)
+            else:
+                stmt_ev = set(stmt.evidence)
+            return stmt_ev
+
         # Add categorical features and collect source_apis
         cat_features = []
         stmt_sources = set()
-        for stmt in stmts:
+        for ix, stmt in enumerate(stmts):
+            stmt_ev = get_stmt_ev(stmt, ix)
             # Collect all source_apis from stmt evidences
             pmids = set()
-            for ev in stmt.evidence:
+            for ev in stmt_ev:
                 stmt_sources.add(ev.source_api)
                 pmids.add(ev.pmid)
             # Collect non-source count features (e.g. type) from stmts
@@ -184,7 +197,8 @@ class CountsModel(SklearnBase):
         num_rows = len(stmts)
         x_arr = np.zeros((num_rows, num_cols))
         for stmt_ix, stmt in enumerate(stmts):
-            sources = [ev.source_api for ev in stmt.evidence]
+            stmt_ev = get_stmt_ev(stmt, stmt_ix)
+            sources = [ev.source_api for ev in stmt_ev]
             src_ctr = Counter(sources)
             for src_ix, src in enumerate(self.source_list):
                 x_arr[stmt_ix, src_ix] = src_ctr.get(src, 0)

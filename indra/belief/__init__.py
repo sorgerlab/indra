@@ -4,6 +4,7 @@ import numpy
 import logging
 import networkx
 from os import path, pardir
+from indra.preassembler import flatten_stmts
 
 
 logger = logging.getLogger(__name__)
@@ -371,7 +372,6 @@ class BeliefEngine(object):
             extra_ev_for_stmt = list({ev for ev in extra_ev_for_stmt
                                          if not ev.epistemics.get('negated')})
             all_extra_evs.append(extra_ev_for_stmt)
-
         # TODO
         #beliefs = self.scorer.score_statements(statements, all_extra_evs)
         beliefs = self.scorer.score_statements(statements, all_extra_evs)
@@ -406,38 +406,29 @@ class BeliefEngine(object):
         # as an argument
         if self.refinements_graph is None:
             # Collect all the hashes and relevant statements, including
-            # those that may not be in the given list but that are more
-            # generic and in stmt.supported_by:
-            stmts_by_hash = {}
-            for stmt in statements:
-                # The hash of *this* statement
-                stmts_by_hash[stmt.get_hash(self.matches_fun)] = stmt
-                for sb in stmt.supported_by:
-                    stmts_by_hash[sb.get_hash(self.matches_fun)] = sb
+            # those that may not be in the given list by getting those
+            # that are more specific than the given statements (the "supports")
+            # statements:
             # Build the graph
             self.refinements_graph = \
-                build_refinements_graph(stmts_by_hash=stmts_by_hash,
+                build_refinements_graph(statements,
+                        #,stmts_by_hash=stmts_by_hash,
                                         matches_fun=self.matches_fun)
             assert_no_cycle(self.refinements_graph)
         logger.debug('Start belief calculation over refinements graph')
-        # TODO: Change this to collect supporters data
-        # structure (indexed by hash?) and score statements with the
-        # accumulated evidence in one go.
         refiners_list = []
-        # Note here that in collecting the list of statements that we pass
-        # to get_refinement_probs, we build up a (potentially larger) list
-        # of statements that includes the refined/supported_by statements of
-        # the given statements
         graph_stmts = []
-        for node in self.refinements_graph.nodes():
-            # Get the statement
-            stmt = self.refinements_graph.nodes[node]['stmt']
-            graph_stmts.append(stmt)
+        # Collect belief predictions for the specific set of statements we've
+        # been given (which may be smaller than the full set of flattened
+        # statements
+        for stmt in statements:
+            stmt_hash = stmt.get_hash(self.matches_fun)
             # Get the refiners/more specific stmts, if any
-            refiners = list(networkx.descendants(self.refinements_graph, node))
+            refiners = list(networkx.descendants(self.refinements_graph,
+                                                 stmt_hash))
             refiners_list.append(refiners)
         # Get dictionary mapping hashes to belief values
-        beliefs_by_hash = self.get_refinement_probs(graph_stmts, refiners_list)
+        beliefs_by_hash = self.get_refinement_probs(statements, refiners_list)
         logger.debug('Finished belief calculation over refinements graph')
         return beliefs_by_hash
 
@@ -557,7 +548,7 @@ def tag_evidence_subtype(evidence):
     return (source_api, subtype)
 
 
-def build_refinements_graph(stmts_by_hash, matches_fun=None):
+def build_refinements_graph(statements, matches_fun=None):
     """Return a DiGraph based on matches hashes and Statement refinements.
 
     Parameters
@@ -577,14 +568,22 @@ def build_refinements_graph(stmts_by_hash, matches_fun=None):
         to another statement that refines it).
     """
     logger.debug('Building refinements graph')
+    """
+    stmts_by_hash = {}
+        # The hash of *this* statement
+        stmts_by_hash[stmt.get_hash(self.matches_fun)] = stmt
+        # The hash of the more *specific* statements
+        for supp in stmt.supports:
+            stmts_by_hash[supp.get_hash(self.matches_fun)] = supp
+    """
     g = networkx.DiGraph()
-    for sh1, st1 in stmts_by_hash.items():
+    for st1 in statements:
+        sh1 = st1.get_hash(matches_fun)
         g.add_node(sh1, stmt=st1)
-        for st2 in st1.supported_by:
+        for st2 in st1.supports:
             sh2 = st2.get_hash(matches_fun=matches_fun)
-            st2 = stmts_by_hash[sh2]
             g.add_node(sh2, stmt=st2)
-            g.add_edge(sh2, sh1)
+            g.add_edge(sh1, sh2)
     logger.debug('Finished building refinements graph')
     return g
 

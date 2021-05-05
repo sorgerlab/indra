@@ -301,27 +301,8 @@ def test_set_prior_probs():
 # Update simple_scorer and belief engine tests to work with change to
 # score statements
 
-def test_set_hierarchy_probs():
-    # Get probs for a set of statements, and a belief engine instance
-    be, test_stmts_copy, prior_probs = setup_belief()
-    # Set beliefs on the flattened statements
-    be.set_hierarchy_probs(test_stmts_copy)
-    #beliefs = np.array([s.belief for s in test_stmts_copy])
-    # Presumably the hierarchy probabilities should always be greater
-    # than the prior probs
-    # Check that the top-level statements beliefs have not changed
-    top_level = ac.filter_top_level(test_stmts_copy)
-    for stmt, prior_prob in zip(test_stmts_copy, prior_probs):
-        if stmt in top_level:
-            assert stmt.belief == prior_prob
-        else:
-            if stmt.belief > prior_prob:
-                import ipdb; ipdb.set_trace()
-            assert stmt.belief >= prior_prob
-
-    #assert np.all(np.greater_equal(beliefs, probs)), \
-    #       "Beliefs with hierarchy should be >= to prior probs only."
-
+# This new approach may cause error if the BE is called over again with
+# a new set of statements without rebuilding the stmts graph
 
 @raises(ValueError)
 def test_df_extra_ev_value_error():
@@ -343,27 +324,40 @@ def test_extra_evidence_length():
     extra_ev = [[5]]
     x_arr = cw.stmts_to_matrix(test_stmts, extra_evidence=extra_ev)
 
-@raises(ValueError)
-def test_extra_evidence_length():
-    """Should raise ValueError because the extra_evidence list is not the
-    same length as the list of statements."""
-    lr = LogisticRegression()
-    source_list = ['reach', 'sparser', 'signor']
-    cw = CountsModel(lr, source_list)
-    extra_ev = [[5]]
-    x_arr = cw.stmts_to_matrix(test_stmts, extra_evidence=extra_ev)
 
 @raises(ValueError)
 def test_extra_evidence_content():
     """Should raise ValueError if extra_evidence list entries are not
-    Evidence objects."""
+    Evidence objects or empty lists."""
     lr = LogisticRegression()
     source_list = ['reach', 'sparser', 'signor']
     cw = CountsModel(lr, source_list)
-    extra_ev = [[5]] * len(test_stmts)
+    extra_ev = ([[5]] * (len(test_stmts) - 1)) + [[]]
     x_arr = cw.stmts_to_matrix(test_stmts, extra_evidence=extra_ev)
 
 
+def test_set_hierarchy_probs():
+    # Get probs for a set of statements, and a belief engine instance
+    be, test_stmts_copy, prior_probs = setup_belief()
+    # Set beliefs on the flattened statements
+    top_level = ac.filter_top_level(test_stmts_copy)
+    not_top_level = [s for s in test_stmts_copy if s not in top_level]
+    be.set_hierarchy_probs(test_stmts_copy)
+    #beliefs = np.array([s.belief for s in test_stmts_copy])
+    # Presumably the hierarchy probabilities should always be greater
+    # than the prior probs
+    # Check that the top-level statements beliefs have not changed
+    for stmt, prior_prob in zip(test_stmts_copy, prior_probs):
+        if stmt in top_level:
+            assert stmt.belief == prior_prob
+        else:
+            if stmt.belief != prior_prob:
+                import ipdb; ipdb.set_trace()
+            assert stmt.belief >= prior_prob
+
+
 if __name__ == '__main__':
-    test_extra_evidence_content()
-    #test_set_hierarchy_probs()
+    #test_df_extra_ev_value_error()
+    #test_extra_evidence_length()
+    #test_extra_evidence_content()
+    test_set_hierarchy_probs()
