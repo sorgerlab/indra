@@ -77,6 +77,7 @@ class IndraDBQueryProcessor:
         self.tries = tries
         self.__strict_stop = strict_stop
         self.__timeout = timeout
+        self.__timed_out = False
         self.__offset = 0
         self.__quota = limit
         self.__api_key = api_key
@@ -117,6 +118,10 @@ class IndraDBQueryProcessor:
         if not self.__th:
             return False
         return self.__th.is_alive()
+
+    def timed_out(self):
+        """Check if the processor timed out."""
+        return self.__timed_out
 
     def wait_until_done(self, timeout=None):
         """Wait for the background load to complete."""
@@ -201,10 +206,13 @@ class IndraDBQueryProcessor:
                                     **self.__special_params)
         except Timeout:
             # Make sure this is the timeout we think it is.
+            self.__timed_out = True
             if not self.__strict_stop or not self._strict_time_is_up():
                 raise
-            logger.debug(f"Query timed out after {self._time_since_start()} "
-                         f"seconds.")
+            logger.info(f"Query timed out after {self._time_since_start()} "
+                        f"seconds, {self.requests_completed} requests, and "
+                        f"after retrieving {len(self._evidence_counts)} "
+                        f"results, with {self.__quota} remaining.")
             return
 
         # Update results
@@ -252,6 +260,7 @@ class IndraDBQueryProcessor:
         util_logger.quiet()
 
         # Only get the query english if we aren't on a time constraint.
+        self.__timed_out = False
         if self.__timeout is None:
             query_english = self.query.get_query_english()
             logger.info(f"Retrieving {self.result_type} that {query_english}.")
