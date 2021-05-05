@@ -342,14 +342,23 @@ def test_set_hierarchy_probs():
                 print(stmt, prior_prob, stmt.belief)
                 assert stmt.belief >= prior_prob
 
+# Refactor BeliefScorer and SimpleScorer to support score_statements
+
 # Add docstrings and type hints to all functions
 
 # To separate scorer from wrapper? Or combine?
+
+# Implement model training via belief engine to allow collection of
+# supp/supp_by evidence? (raises question of whether the supp/supp_by
+# statements will have been curated as well
 
 # Note that 1) statements that are explicitly in the list will not have
 # beliefs estimated and 2) calling set_hierarchy_probs a second time
 # with a different set of statements will cause error from the re-used
 # refinements graph
+
+# Set linked_probs seems wacky--shouldn't be an instance method. Maybe make
+# a staticmethod?
 
 # Refactor BE tools to be able to collect extra evidence for statements
 # outside of the belief engine hierarchy_probs, by using build_refinements

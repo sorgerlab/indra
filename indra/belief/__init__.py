@@ -4,7 +4,7 @@ import numpy
 import logging
 import networkx
 from os import path, pardir
-from indra.preassembler import flatten_stmts
+from indra.statements import Evidence
 
 
 logger = logging.getLogger(__name__)
@@ -27,28 +27,29 @@ class BeliefScorer(object):
 
     To use with the belief engine, make a subclass with methods implemented.
     """
-    def score_statement(self, st, extra_evidence=None):
-        """Computes the prior belief probability for an INDRA Statement.
+    def score_statements(self, statements, extra_evidence=None):
+        """Computes belief probabilities for a list of INDRA Statements.
 
-        The Statement is assumed to be de-duplicated. In other words,
-        the Statement is assumed to have
-        a list of Evidence objects that supports it. The prior probability of
-        the Statement is calculated based on the number of Evidences it has
-        and their sources.
+        The Statements are assumed to be de-duplicated. In other words, each
+        Statement is assumed to have a list of Evidence objects that supports
+        it. The probability of correctness of the Statement is generally
+        calculated based on the number of Evidences it has, their sources, and
+        other features depending on the subclass implementation.
 
         Parameters
         ----------
-        st : indra.statements.Statement
-            An INDRA Statements whose belief scores are to
-            be calculated.
-        extra_evidence : list[indra.statements.Evidence]
-            A list of Evidences that are supporting the Statement (that aren't
-            already included in the Statement's own evidence list.
+        statements : list of indra.statements.Statement
+            INDRA Statements whose belief scores are to be calculated.
+        extra_evidence : list[list[indra.statements.Evidence]]
+            A list corresponding to the given list of statements, where
+            each entry is a list of Evidence objects providing additional
+            support for the corresponding statement (i.e., Evidences that
+            aren't already included in the Statement's own evidence list).
 
         Returns
         -------
-        belief_score : float
-            The computed prior probability for the statement
+        belief_scores : list of floats
+            The computed prior probabilities for each statement.
         """
         raise NotImplementedError('Need to subclass BeliefScorer and '
                                   'implement methods.')
@@ -150,34 +151,38 @@ class SimpleScorer(BeliefScorer):
         score = pp * (1 - np)
         return score
 
-    def score_statement(self, st, extra_evidence=None):
-        """Computes the prior belief probability for an INDRA Statement.
+    def score_statements(self, statements, extra_evidence=None):
+        """Computes belief probabilities for a list of INDRA Statements.
 
-        The Statement is assumed to be de-duplicated. In other words,
-        the Statement is assumed to have
-        a list of Evidence objects that supports it. The prior probability of
-        the Statement is calculated based on the number of Evidences it has
-        and their sources.
+        The Statements are assumed to be de-duplicated. In other words, each
+        Statement is assumed to have a list of Evidence objects that supports
+        it. The probability of correctness of the Statement is generally
+        calculated based on the number of Evidences it has, their sources, and
+        other features depending on the subclass implementation.
 
         Parameters
         ----------
-        st : indra.statements.Statement
-            An INDRA Statements whose belief scores are to
-            be calculated.
-        extra_evidence : list[indra.statements.Evidence]
-            A list of Evidences that are supporting the Statement (that aren't
-            already included in the Statement's own evidence list.
+        statements : list of indra.statements.Statement
+            INDRA Statements whose belief scores are to be calculated.
+        extra_evidence : list[list[indra.statements.Evidence]]
+            A list corresponding to the given list of statements, where
+            each entry is a list of Evidence objects providing additional
+            support for the corresponding statement (i.e., Evidences that
+            aren't already included in the Statement's own evidence list).
 
         Returns
         -------
-        belief_score : float
-            The computed prior probability for the statement
+        belief_scores : list of floats
+            The computed prior probabilities for each statement.
         """
-        if extra_evidence is None:
-            extra_evidence = []
-        # We remove instance duplicates here
-        all_evidence = set(st.evidence) | set(extra_evidence)
-        return self.score_evidence_list(all_evidence)
+        # Check our list of extra evidences
+        check_extra_evidence(extra_evidence, len(statements))
+        # Get beliefs for each statement
+        beliefs = []
+        for ix, stmt in enumerate(statements):
+            all_evidence = get_stmt_evidence(stmt, ix, extra_evidence)
+            beliefs.append(self.score_evidence_list(all_evidence))
+        return beliefs
 
     def check_prior_probs(self, statements):
         """Throw Exception if BeliefEngine parameter is missing.
@@ -405,29 +410,21 @@ class BeliefEngine(object):
         # We only re-build the refinements graph if one wasn't provided
         # as an argument
         if self.refinements_graph is None:
-            # Collect all the hashes and relevant statements, including
-            # those that may not be in the given list by getting those
-            # that are more specific than the given statements (the "supports")
-            # statements:
-            # Build the graph
-            self.refinements_graph = \
-                build_refinements_graph(statements,
-                        #,stmts_by_hash=stmts_by_hash,
-                                        matches_fun=self.matches_fun)
+            # Build the graph for the given set of statements
+            self.refinements_graph = build_refinements_graph(statements,
+                                                   matches_fun=self.matches_fun)
             assert_no_cycle(self.refinements_graph)
         logger.debug('Start belief calculation over refinements graph')
+        # Collect corresponding lists of refiners for the statements
         refiners_list = []
-        graph_stmts = []
-        # Collect belief predictions for the specific set of statements we've
-        # been given (which may be smaller than the full set of flattened
-        # statements
         for stmt in statements:
             stmt_hash = stmt.get_hash(self.matches_fun)
-            # Get the refiners/more specific stmts, if any
+            # Get the refiners/more specific stmts, if any (the edges in the
+            # graph point from general to specific):
             refiners = list(networkx.descendants(self.refinements_graph,
                                                  stmt_hash))
             refiners_list.append(refiners)
-        # Get dictionary mapping hashes to belief values
+        # Get and return a dictionary mapping stmt hashes to belief values
         beliefs_by_hash = self.get_refinement_probs(statements, refiners_list)
         logger.debug('Finished belief calculation over refinements graph')
         return beliefs_by_hash
@@ -637,3 +634,39 @@ def get_ranked_stmts(g):
     node_ranks = reversed(list(node_ranks))
     stmts = [g.nodes[n]['stmt'] for n in node_ranks]
     return stmts
+
+
+def check_extra_evidence(extra_evidence, num_stmts):
+    """Check whether extra evidence list has correct length/contents.
+
+    Raises ValueError if the extra_evidence list does not match the length
+    num_stmts, or if it contains items other than empty lists or lists
+    of Evidence objects.
+    """
+    # If given, check the extra_evidence list
+    if extra_evidence is not None:
+        if num_stmts != len(extra_evidence):
+            raise ValueError("extra_evidence must be a list of the same "
+                             "length as stmts.")
+        for entry in extra_evidence:
+            if not (isinstance(entry, list)):
+                raise ValueError("extra_evidence must be a list of lists.")
+            # The entry is empty, that's fine
+            if entry == []:
+                continue
+            elif not isinstance(entry[0], Evidence):
+                raise ValueError("extra_evidence list entries must "
+                                 "contain Evidence objects.")
+
+
+def get_stmt_evidence(stmt, ix, extra_evidence):
+    """Combine stmt's own evidence with any extra evidence provided."""
+    if extra_evidence:
+        extra_ev_for_stmt = extra_evidence[ix]
+        stmt_ev = set(stmt.evidence) | set(extra_ev_for_stmt)
+    else:
+        stmt_ev = set(stmt.evidence)
+    return stmt_ev
+
+
+

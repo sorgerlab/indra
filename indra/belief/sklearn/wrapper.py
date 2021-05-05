@@ -3,6 +3,7 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
+from indra.belief import check_extra_evidence, get_stmt_evidence
 from indra.statements import get_all_descendants, Statement, Evidence
 
 
@@ -133,36 +134,15 @@ class CountsModel(SklearnBase):
                                   for ix, t in enumerate(all_stmt_types)}
 
     def stmts_to_matrix(self, stmts, extra_evidence=None):
-        # If given, check the extra_evidence list
-        if extra_evidence is not None:
-            if len(stmts) != len(extra_evidence):
-                raise ValueError("extra_evidence must be a list of the same "
-                                 "length as stmts.")
-            for entry in extra_evidence:
-                if not (isinstance(entry, list)):
-                    raise ValueError("extra_evidence must be a list of lists.")
-                # The entry is empty, that's fine
-                if entry == []:
-                    continue
-                elif not isinstance(entry[0], Evidence):
-                    raise ValueError("extra_evidence list entries must "
-                                     "contain Evidence objects.")
+        # Check our list of extra evidences
+        check_extra_evidence(extra_evidence, len(stmts))
 
-        # Handy internal func to combine stmt's own evidence with any
-        # extra evidence provided.
-        def get_stmt_ev(stmt, ix):
-            if extra_evidence:
-                extra_ev_for_stmt = extra_evidence[ix]
-                stmt_ev = set(stmt.evidence) | set(extra_ev_for_stmt)
-            else:
-                stmt_ev = set(stmt.evidence)
-            return stmt_ev
 
         # Add categorical features and collect source_apis
         cat_features = []
         stmt_sources = set()
         for ix, stmt in enumerate(stmts):
-            stmt_ev = get_stmt_ev(stmt, ix)
+            stmt_ev = get_stmt_evidence(stmt, ix, extra_evidence)
             # Collect all source_apis from stmt evidences
             pmids = set()
             for ev in stmt_ev:
@@ -197,7 +177,7 @@ class CountsModel(SklearnBase):
         num_rows = len(stmts)
         x_arr = np.zeros((num_rows, num_cols))
         for stmt_ix, stmt in enumerate(stmts):
-            stmt_ev = get_stmt_ev(stmt, stmt_ix)
+            stmt_ev = get_stmt_evidence(stmt, ix, extra_evidence)
             sources = [ev.source_api for ev in stmt_ev]
             src_ctr = Counter(sources)
             for src_ix, src in enumerate(self.source_list):
