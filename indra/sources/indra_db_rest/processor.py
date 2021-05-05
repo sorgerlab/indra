@@ -203,6 +203,8 @@ class IndraDBQueryProcessor:
             # Make sure this is the timeout we think it is.
             if not self.__strict_stop or not self._strict_time_is_up():
                 raise
+            logger.debug(f"Query timed out after {self._time_since_start()} "
+                         f"seconds.")
             return
 
         # Update results
