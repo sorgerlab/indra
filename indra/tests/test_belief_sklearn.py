@@ -291,18 +291,6 @@ def test_set_prior_probs():
     assert np.allclose(beliefs, probs), \
            "Statement beliefs should be set to predicted probabilities."
 
-# Write test for set_hierarchy_probs
-
-# Update score_statements method and wrapper class to take lists of extra
-# evidence
-
-# get_refinement_prob takes list of statements, returns list of values
-
-# Update simple_scorer and belief engine tests to work with change to
-# score statements
-
-# This new approach may cause error if the BE is called over again with
-# a new set of statements without rebuilding the stmts graph
 
 @raises(ValueError)
 def test_df_extra_ev_value_error():
@@ -341,23 +329,31 @@ def test_set_hierarchy_probs():
     be, test_stmts_copy, prior_probs = setup_belief()
     # Set beliefs on the flattened statements
     top_level = ac.filter_top_level(test_stmts_copy)
-    not_top_level = [s for s in test_stmts_copy if s not in top_level]
     be.set_hierarchy_probs(test_stmts_copy)
-    #beliefs = np.array([s.belief for s in test_stmts_copy])
-    # Presumably the hierarchy probabilities should always be greater
-    # than the prior probs
-    # Check that the top-level statements beliefs have not changed
+    # Compare hierarchy probs to prior probs
     for stmt, prior_prob in zip(test_stmts_copy, prior_probs):
+        # Check that the top-level statements beliefs have not changed
         if stmt in top_level:
             assert stmt.belief == prior_prob
+        # Presumably the hierarchy probabilities should always be greater
+        # than the prior probs
         else:
             if stmt.belief != prior_prob:
-                import ipdb; ipdb.set_trace()
-            assert stmt.belief >= prior_prob
+                print(stmt, prior_prob, stmt.belief)
+                assert stmt.belief >= prior_prob
 
+# Add docstrings and type hints to all functions
+
+# To separate scorer from wrapper? Or combine?
+
+# Note that 1) statements that are explicitly in the list will not have
+# beliefs estimated and 2) calling set_hierarchy_probs a second time
+# with a different set of statements will cause error from the re-used
+# refinements graph
+
+# Refactor BE tools to be able to collect extra evidence for statements
+# outside of the belief engine hierarchy_probs, by using build_refinements
+# _graph and get_hierarchy_probs, etc.
 
 if __name__ == '__main__':
-    #test_df_extra_ev_value_error()
-    #test_extra_evidence_length()
-    #test_extra_evidence_content()
     test_set_hierarchy_probs()

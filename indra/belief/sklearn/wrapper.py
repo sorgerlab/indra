@@ -24,7 +24,7 @@ class SklearnBase(object):
 
     @staticmethod
     def get_all_sources(stmts):
-        """Get a list of all the source_apis supporting the statements.
+        """Get a list of all the source_apis supporting the given statements.
 
         Parameters
         ----------
