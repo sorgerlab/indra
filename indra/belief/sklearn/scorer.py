@@ -1,7 +1,10 @@
 import pickle
 from collections import Counter
+from typing import Sequence, Optional, List
 import numpy as np
 from indra.belief import BeliefScorer
+from indra.statements import Evidence, Statement
+from .wrapper import SklearnBase
 
 
 class SklearnScorer(BeliefScorer):
@@ -9,30 +12,27 @@ class SklearnScorer(BeliefScorer):
 
     Parameters
     ----------
-    model_wrap : <indra.belief.sklearn.wrapper.SklearnBase>
+    model_wrap :
         An instance of a Sklearn wrapper around an sklearn classifier.
-
-    source_list : list of str
-        Source API types in the same order that the model was trained on.
-    prior_probs : dict
-        Dictionary mapping source APIs (usually curated databases) that the
-        model was not trained on to error parameters for the source. These
-        error parameters are treated as independent.
     """
-    def __init__(self, model_wrap):
+    def __init__(
+        self,
+        model_wrap: SklearnBase
+    ):
         self.model_wrap = model_wrap
 
-    """
-    def score_statement(self, st, extra_evidence=None):
-        belief_arr = self.score_statements[st]
-        return belief_arr[0]
-    """
+    def check_prior_probs(
+        self,
+        statements: Sequence[Statement],
+    ) -> None:
+        """Empty implementation for now."""
+        pass
 
-    def check_prior_probs(self, statements):
-        # TODO: Implement this
-        return
-
-    def score_statements(self, statements, extra_evidence=None):
+    def score_statements(
+        self,
+        statements: Sequence[Statement],
+        extra_evidence: Optional[List[List[Evidence]]] = None,
+    ) -> Sequence[float]:
         """Run predictions."""
         belief_arr = self.model_wrap.predict_proba(
                                 statements, extra_evidence)[:, 1]
