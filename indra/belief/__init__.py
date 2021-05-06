@@ -298,19 +298,19 @@ class BeliefEngine(object):
     ----------
     scorer : Optional[BeliefScorer]
         A BeliefScorer object that computes the prior probability of a
-        statement given its its statment type and evidence.
-        Must implement the `score_statement` method which takes
-        Statements and computes the belief score of a statement, and the
-        `check_prior_probs` method which takes a list of INDRA Statements and
-        verifies that the scorer has all the information it needs to score
-        every statement in the list, and raises an exception if not.
+        statement given its its statment type, evidence, or other feaatures.
+        Must implement the `score_statements` method which takes Statements and
+        computes the belief score of a statement, and the `check_prior_probs`
+        method which takes a list of INDRA Statements and verifies that the
+        scorer has all the information it needs to score every statement in the
+        list, and raises an exception if not.
     matches_fun : Optional[function]
-        A function handle for a custom matches key if a non-deafult one is
+        A function handle for a custom matches key if a non-default one is
         used. Default: None
     refinements_graph : Optional[networkx.DiGraph]
-        A graph whose nodes are statement hashes, and edges point from
-        a more specific to a less specific statement representing
-        a refinement. If not given, a new graph is constructed here.
+        A graph whose nodes are statement hashes, and edges point from a more
+        specific to a less specific statement representing a refinement. If not
+        given, a new graph is constructed here.
     """
     def __init__(self, scorer=None, matches_fun=None, refinements_graph=None):
         if scorer is None:
@@ -363,9 +363,9 @@ class BeliefEngine(object):
 
         Returns
         -------
-        ****FIXME FIXME FIXME
-        iterable of floats
-            Belief scores for the list of statements.
+        dict
+            A dictionary mapping statement hashes to corresponding belief
+            scores.
         """
         all_extra_evs = []
         for stmt, refiners in zip(statements, refiners_list):
@@ -377,8 +377,6 @@ class BeliefEngine(object):
             extra_ev_for_stmt = list({ev for ev in extra_ev_for_stmt
                                          if not ev.epistemics.get('negated')})
             all_extra_evs.append(extra_ev_for_stmt)
-        # TODO
-        #beliefs = self.scorer.score_statements(statements, all_extra_evs)
         beliefs = self.scorer.score_statements(statements, all_extra_evs)
         hashes = [s.get_hash(self.matches_fun) for s in statements]
         beliefs_by_hash = dict(zip(hashes, beliefs))
@@ -389,10 +387,9 @@ class BeliefEngine(object):
 
         The Statements are assumed to be in a hierarchical relation graph with
         the supports and supported_by attribute of each Statement object having
-        been set.
-        The hierarchical belief probability of each Statement is calculated
-        based on its prior probability and the probabilities propagated from
-        Statements refining it in the hierarchy graph.
+        been set. The hierarchical belief probability of each Statement is
+        calculated based the accumulated evidence from both itself and its more
+        specific statements in the hierarchy graph.
 
         Parameters
         ----------
@@ -642,6 +639,16 @@ def check_extra_evidence(extra_evidence, num_stmts):
     Raises ValueError if the extra_evidence list does not match the length
     num_stmts, or if it contains items other than empty lists or lists
     of Evidence objects.
+
+    Parameters
+    ----------
+    extra_evidence : list[list[indra.statements.Evidence]]
+        A list of length num_stmts where each entry is a list of Evidence
+        objects, or None. If extra_evidence is None, the function returns
+        without raising an error.
+    num_stmts : int
+        An integer giving the required length of the extra_evidence list
+        (which should correspond to a list of statements)
     """
     # If given, check the extra_evidence list
     if extra_evidence is not None:

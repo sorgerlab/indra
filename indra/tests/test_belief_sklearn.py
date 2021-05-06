@@ -348,6 +348,10 @@ def test_set_hierarchy_probs():
 
 # To separate scorer from wrapper? Or combine?
 
+# build_refinements_graph now takes a list of statements rather than a list
+# of statements by hash. However, the structure of the graph itself is the
+# same, so any code that extends or otherwise uses the graph will still work.
+
 # Implement model training via belief engine to allow collection of
 # supp/supp_by evidence? (raises question of whether the supp/supp_by
 # statements will have been curated as well

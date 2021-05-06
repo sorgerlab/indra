@@ -48,6 +48,22 @@ class SklearnBase(object):
                                    'method')
 
     def to_matrix(self, stmt_data, extra_evidence=None):
+        """Gets stmt data matrix by calling appropriate method in subclass.
+
+        If `stmt_data` is already a matrix, it is returned directly; if
+        a DataFrame of Statement metadata, `self.df_to_matrix` is called;
+        if a list of Statements, `self.stmts_to_matrix` is called.
+
+        Parameters
+        ----------
+        stmt_data : numpy.ndarray, pandas.DataFrame, or list[Statement]
+            Statement content to be used to generate a feature matrix.
+
+        Returns
+        -------
+        numpy.ndarray
+            Feature matrix for the statement data.
+        """
         # If we got a Numpy array, just use it!
         if isinstance(stmt_data, np.ndarray):
             stmt_arr = stmt_data
@@ -64,7 +80,19 @@ class SklearnBase(object):
         return stmt_arr
 
     def fit(self, stmt_data, y_arr, *args, **kwargs):
-        """Preprocess the stmt data and pass to sklearn model fit method."""
+        """Preprocess the stmt data and pass to sklearn model fit method.
+
+        Additional `args` and `kwargs` are passed to the `fit` method of the
+        wrapped sklearn model.
+
+        Parameters
+        ----------
+        stmt_data : numpy.ndarray, pandas.DataFrame, or list[Statement]
+            Statement content to be used to generate a feature matrix.
+        y_arr : numpy.ndarray
+            
+        
+        """
         # Check dimensions of stmts (x) and y_arr
         if len(stmt_data) != len(y_arr):
             raise ValueError("Number of stmts/rows must match length of y_arr.")
