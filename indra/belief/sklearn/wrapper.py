@@ -47,7 +47,10 @@ class SklearnBase(object):
         raise NotImplementedError('Need to implement the df_to_matrix '
                                    'method')
 
-    def to_matrix(self, stmt_data, extra_evidence=None):
+    def to_matrix(self,
+        stmt_data: Union[np.ndarray, List[Statement], pd.DataFrame]
+        extra_evidence: Optional[List[List[Evidence]] = None
+    ) -> np.ndarray:
         """Gets stmt data matrix by calling appropriate method in subclass.
 
         If `stmt_data` is already a matrix, it is returned directly; if
@@ -74,9 +77,13 @@ class SklearnBase(object):
                 raise ValueError('extra_evidence cannot be used with a '
                                  'statement DataFrame.')
             stmt_arr = self.df_to_matrix(stmt_data)
-        # If not a DataFrame, assume have a list of stmts
-        else:
+        # Check if stmt_data is a list (i.e., of Statements):
+        elif isinstance(stmt_data, list)
             stmt_arr = self.stmts_to_matrix(stmt_data, extra_evidence)
+        # If it's something else, error
+        else:
+            raise TypeError('stmt_data must be a numpy array, DataFrame, or '
+                            'list of Statements')
         return stmt_arr
 
     def fit(self, stmt_data, y_arr, *args, **kwargs):
@@ -90,8 +97,6 @@ class SklearnBase(object):
         stmt_data : numpy.ndarray, pandas.DataFrame, or list[Statement]
             Statement content to be used to generate a feature matrix.
         y_arr : numpy.ndarray
-            
-        
         """
         # Check dimensions of stmts (x) and y_arr
         if len(stmt_data) != len(y_arr):
@@ -164,7 +169,6 @@ class CountsModel(SklearnBase):
     def stmts_to_matrix(self, stmts, extra_evidence=None):
         # Check our list of extra evidences
         check_extra_evidence(extra_evidence, len(stmts))
-
 
         # Add categorical features and collect source_apis
         cat_features = []

@@ -4,8 +4,9 @@ import numpy
 import logging
 import networkx
 from os import path, pardir
-from indra.statements import Evidence
-
+from typing import List, Optional, Dict, Callable, Tuple, Set
+from indra.mechlinker import LinkedStatement
+from indra.statements import Evidence, Statement
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 THIS_DIR = path.dirname(path.abspath(__file__))
 
 
-def load_default_probs():
+def load_default_probs() -> Dict[str, Dict[str, float]]:
     json_path = path.join(THIS_DIR, pardir, 'resources',
                           'default_belief_probs.json') 
     with open(json_path, 'r') as f:
@@ -27,7 +28,11 @@ class BeliefScorer(object):
 
     To use with the belief engine, make a subclass with methods implemented.
     """
-    def score_statements(self, statements, extra_evidence=None):
+    def score_statements(
+        self,
+        statements: List[Statement],
+        extra_evidence: Optional[List[List[Evidence]]] = None,
+    ) -> List[float]:
         """Computes belief probabilities for a list of INDRA Statements.
 
         The Statements are assumed to be de-duplicated. In other words, each
@@ -38,9 +43,9 @@ class BeliefScorer(object):
 
         Parameters
         ----------
-        statements : list of indra.statements.Statement
+        statements :
             INDRA Statements whose belief scores are to be calculated.
-        extra_evidence : list[list[indra.statements.Evidence]]
+        extra_evidence :
             A list corresponding to the given list of statements, where
             each entry is a list of Evidence objects providing additional
             support for the corresponding statement (i.e., Evidences that
@@ -48,20 +53,23 @@ class BeliefScorer(object):
 
         Returns
         -------
-        belief_scores : list of floats
+        list of floats
             The computed prior probabilities for each statement.
         """
         raise NotImplementedError('Need to subclass BeliefScorer and '
                                   'implement methods.')
 
-    def check_prior_probs(self, statements):
+    def check_prior_probs(
+        self,
+        statements: List[Statement],
+    ) -> None:
         """Make sure the scorer has all the information needed to compute
         belief scores of each statement in the provided list, and raises an
         exception otherwise.
 
         Parameters
         ----------
-        statements : list<indra.statements.Statement>
+        statements :
             List of statements to check
         """
         raise NotImplementedError('Need to subclass BeliefScorer and '
@@ -74,29 +82,37 @@ class SimpleScorer(BeliefScorer):
 
     Parameters
     ----------
-    prior_probs : dict[dict]
-        A dictionary of prior probabilities used to override/extend the
-        default ones. There are two types of prior probabilities: rand and syst
+    prior_probs :
+        A dictionary of prior probabilities used to override/extend the default
+        ones. There are two types of prior probabilities: rand and syst,
         corresponding to random error and systematic error rate for each
         knowledge source. The prior_probs dictionary has the general structure
-        {'rand': {'s1': pr1, ..., 'sn': prn},
-        'syst': {'s1': ps1, ..., 'sn': psn}}
-        where 's1' ... 'sn' are names of input sources and pr1 ... prn and
-        ps1 ... psn are error probabilities.
-        Examples: {'rand': {'some_source': 0.1}} sets the random error rate
-        for some_source to 0.1; {'rand': {''}}
-    subtype_probs : dict[dict]
+        {'rand': {'s1': pr1, ..., 'sn': prn}, 'syst': {'s1': ps1, ..., 'sn':
+        psn}} where 's1' ... 'sn' are names of input sources and pr1 ... prn
+        and ps1 ... psn are error probabilities.  Examples: {'rand':
+        {'some_source': 0.1}} sets the random error rate for some_source to
+        0.1; {'rand': {''}}
+    subtype_probs :
         A dictionary of random error probabilities for knowledge sources.
         When a subtype random error probability is not specified, will just
         use the overall type prior in prior_probs. If None, will
         only use the priors for each rule.
     """
-    def __init__(self, prior_probs=None, subtype_probs=None):
+    def __init__(
+        self,
+        prior_probs: Optional[Dict[str, Dict[str, float]]] = None,
+        subtype_probs: Optional[Dict[str, Dict[str, float]]] = None,
+    ):
         self.prior_probs = load_default_probs()
         self.subtype_probs = {}
         self.update_probs(prior_probs, subtype_probs)
 
-    def update_probs(self, prior_probs=None, subtype_probs=None):
+    def update_probs(
+        self,
+        prior_probs: Optional[Dict[str, Dict[str, float]]] = None,
+        subtype_probs: Optional[Dict[str, Dict[str, float]]] = None,
+    ) -> None:
+        """Update Scorer's prior probablities with the given dictionaries."""
         if prior_probs:
             for key in ('rand', 'syst'):
                 self.prior_probs[key].update(prior_probs.get(key, {}))
@@ -105,8 +121,22 @@ class SimpleScorer(BeliefScorer):
                          % (err_type, source_dict))
         self.subtype_probs = subtype_probs
 
-    def score_evidence_list(self, evidences):
-        """Return belief score given a list of supporting evidences."""
+    def score_evidence_list(
+        self,
+        evidences: List[Evidence],
+    ) -> float:
+        """Return belief score given a list of supporting evidences.
+
+        Parameters
+        ----------
+        evidences :
+            List of evidences to use for calculating a statement's belief.
+
+        Returns
+        -------
+        float
+            Belief value based on the evidences.
+        """
         def _score(evidences):
             if not evidences:
                 return 0
@@ -151,7 +181,11 @@ class SimpleScorer(BeliefScorer):
         score = pp * (1 - np)
         return score
 
-    def score_statements(self, statements, extra_evidence=None):
+    def score_statements(
+        self,
+        statements: List[Statement],
+        extra_evidence: Optional[List[List[Evidence]]] = None,
+    ) -> List[float]:
         """Computes belief probabilities for a list of INDRA Statements.
 
         The Statements are assumed to be de-duplicated. In other words, each
@@ -162,9 +196,9 @@ class SimpleScorer(BeliefScorer):
 
         Parameters
         ----------
-        statements : list of indra.statements.Statement
+        statements :
             INDRA Statements whose belief scores are to be calculated.
-        extra_evidence : list[list[indra.statements.Evidence]]
+        extra_evidence :
             A list corresponding to the given list of statements, where
             each entry is a list of Evidence objects providing additional
             support for the corresponding statement (i.e., Evidences that
@@ -184,7 +218,10 @@ class SimpleScorer(BeliefScorer):
             beliefs.append(self.score_evidence_list(all_evidence))
         return beliefs
 
-    def check_prior_probs(self, statements):
+    def check_prior_probs(
+        self,
+        statements: List[Statement],
+    ) -> None:
         """Throw Exception if BeliefEngine parameter is missing.
 
         Make sure the scorer has all the information needed to compute
@@ -312,7 +349,12 @@ class BeliefEngine(object):
         specific to a less specific statement representing a refinement. If not
         given, a new graph is constructed here.
     """
-    def __init__(self, scorer=None, matches_fun=None, refinements_graph=None):
+    def __init__(
+        self,
+        scorer: Optional[BeliefScorer] = None,
+        matches_fun: Optional[Callable[[Statement], str]] = None,
+        refinements_graph: Optional[networkx.DiGraph] = None,
+    ):
         if scorer is None:
             scorer = default_scorer
         assert isinstance(scorer, BeliefScorer)
@@ -323,7 +365,10 @@ class BeliefEngine(object):
 
         self.refinements_graph = refinements_graph
 
-    def set_prior_probs(self, statements):
+    def set_prior_probs(
+        self,
+        statements: List[Statement],
+    ) -> None:
         """Sets the prior belief probabilities for a list of INDRA Statements.
 
         The Statements are assumed to be de-duplicated. In other words,
@@ -334,7 +379,7 @@ class BeliefEngine(object):
 
         Parameters
         ----------
-        statements : list[indra.statements.Statement]
+        statements :
             A list of INDRA Statements whose belief scores are to
             be calculated. Each Statement object's belief attribute is updated
             by this function.
@@ -346,8 +391,11 @@ class BeliefEngine(object):
         for ix, st in enumerate(statements):
             st.belief = prior_probs[ix]
 
-
-    def get_refinement_probs(self, statements, refiners_list=None):
+    def get_refinement_probs(
+        self,
+        statements: List[Statement],
+        refiners_list: List[List[int]],
+    ) -> Dict[int, float]:
         """Return the full belief of a statement given its refiners.
 
         Parameters
@@ -382,7 +430,10 @@ class BeliefEngine(object):
         beliefs_by_hash = dict(zip(hashes, beliefs))
         return beliefs_by_hash
 
-    def set_hierarchy_probs(self, statements):
+    def set_hierarchy_probs(
+        self,
+        statements: List[Statement],
+    ) -> None:
         """Sets hierarchical belief probabilities for INDRA Statements.
 
         The Statements are assumed to be in a hierarchical relation graph with
@@ -403,7 +454,10 @@ class BeliefEngine(object):
             sh = stmt.get_hash(self.matches_fun)
             stmt.belief = beliefs[sh]
 
-    def get_hierarchy_probs(self, statements):
+    def get_hierarchy_probs(
+        self,
+        statements: List[Statement],
+    ) -> Dict[int, float]:
         # We only re-build the refinements graph if one wasn't provided
         # as an argument
         if self.refinements_graph is None:
@@ -426,7 +480,10 @@ class BeliefEngine(object):
         logger.debug('Finished belief calculation over refinements graph')
         return beliefs_by_hash
 
-    def set_linked_probs(self, linked_statements):
+    def set_linked_probs(
+        self,
+        linked_statements: List[LinkedStatement],
+    ) -> None:
         """Sets the belief probabilities for a list of linked INDRA Statements.
 
         The list of LinkedStatement objects is assumed to come from the
@@ -445,13 +502,15 @@ class BeliefEngine(object):
             st.inferred_stmt.belief = numpy.prod(source_probs)
 
 
-def sample_statements(stmts, seed=None):
+def sample_statements(
+    stmts: List[LinkedStatement],
+    seed: Optional[int] = None,
+) -> List[Statement]:
     """Return statements sampled according to belief.
 
-    Statements are sampled independently according to their
-    belief scores. For instance, a Staement with a belief
-    score of 0.7 will end up in the returned Statement list
-    with probability 0.7.
+    Statements are sampled independently according to their belief scores. For
+    instance, a Statement with a belief score of 0.7 will end up in the returned
+    Statement list with probability 0.7.
 
     Parameters
     ----------
@@ -476,8 +535,12 @@ def sample_statements(stmts, seed=None):
     return new_stmts
 
 
-def evidence_random_noise_prior(evidence, type_probs, subtype_probs):
-    """Determines the random-noise prior probability for this evidence.
+def evidence_random_noise_prior(
+    evidence: Evidence,
+    type_probs: Optional[Dict[str, Dict[str, float]]] = None,
+    subtype_probs: Optional[Dict[str, Dict[str, float]]] = None,
+) -> float:
+    """Gets the random-noise prior probability for this evidence.
 
     If the evidence corresponds to a subtype, and that subtype has a curated
     prior noise probability, use that.
@@ -497,7 +560,9 @@ def evidence_random_noise_prior(evidence, type_probs, subtype_probs):
     return type_probs[stype]
 
 
-def tag_evidence_subtype(evidence):
+def tag_evidence_subtype(
+    evidence: Evidence,
+) -> Tuple[str, Optional[str]]:
     """Returns the type and subtype of an evidence object as a string,
     typically the extraction rule or database from which the statement
     was generated.
@@ -542,7 +607,10 @@ def tag_evidence_subtype(evidence):
     return (source_api, subtype)
 
 
-def build_refinements_graph(statements, matches_fun=None):
+def build_refinements_graph(
+    statements: List[Statement],
+    matches_fun: Optional[Callable[[Statement], str]] = None,
+) -> networkx.DiGraph:
     """Return a DiGraph based on matches hashes and Statement refinements.
 
     Parameters
@@ -562,14 +630,6 @@ def build_refinements_graph(statements, matches_fun=None):
         to another statement that refines it).
     """
     logger.debug('Building refinements graph')
-    """
-    stmts_by_hash = {}
-        # The hash of *this* statement
-        stmts_by_hash[stmt.get_hash(self.matches_fun)] = stmt
-        # The hash of the more *specific* statements
-        for supp in stmt.supports:
-            stmts_by_hash[supp.get_hash(self.matches_fun)] = supp
-    """
     g = networkx.DiGraph()
     for st1 in statements:
         sh1 = st1.get_hash(matches_fun)
@@ -582,7 +642,12 @@ def build_refinements_graph(statements, matches_fun=None):
     return g
 
 
-def extend_refinements_graph(g, stmt, less_specifics, matches_fun=None):
+def extend_refinements_graph(
+    g: networkx.DiGraph,
+    stmt: Statement,
+    less_specifics: List[int],
+    matches_fun: Optional[Callable[[Statement], str]] = None,
+) -> networkx.DiGraph:
     """Extend refinements graph with a new statement and its refinements.
 
     Parameters
@@ -605,7 +670,9 @@ def extend_refinements_graph(g, stmt, less_specifics, matches_fun=None):
     return g
 
 
-def assert_no_cycle(g):
+def assert_no_cycle(
+    g: networkx.Diagraph
+) -> None:
     """If the graph has cycles, throws AssertionError.
 
     This can be used to make sure that a refinements graph is a DAG.
@@ -633,7 +700,10 @@ def get_ranked_stmts(g):
     return stmts
 
 
-def check_extra_evidence(extra_evidence, num_stmts):
+def check_extra_evidence(
+    extra_evidence: List[List[Evidence]],
+    num_stmts: int,
+) -> None:
     """Check whether extra evidence list has correct length/contents.
 
     Raises ValueError if the extra_evidence list does not match the length
@@ -666,7 +736,11 @@ def check_extra_evidence(extra_evidence, num_stmts):
                                  "contain Evidence objects.")
 
 
-def get_stmt_evidence(stmt, ix, extra_evidence):
+def get_stmt_evidence(
+    stmt: Statement,
+    ix: int,
+    extra_evidence: List[List[Evidence]],
+) -> Set[Evidence]:
     """Combine stmt's own evidence with any extra evidence provided."""
     if extra_evidence:
         extra_ev_for_stmt = extra_evidence[ix]
