@@ -145,7 +145,6 @@ def test_df_to_matrix():
     source_list = ['reach', 'sparser', 'signor']
     cw = CountsModel(lr, source_list)
     x_arr = cw.df_to_matrix(test_df)
-    #import ipdb; ipdb.set_trace()
     assert isinstance(x_arr, np.ndarray), 'x_arr should be a numpy array'
     assert x_arr.shape == (len(test_df), len(source_list)), \
             'stmt matrix dimensions should match test stmts'
@@ -363,6 +362,9 @@ def test_set_hierarchy_probs():
 
 # Set linked_probs seems wacky--shouldn't be an instance method. Maybe make
 # a staticmethod?
+
+# Negated evidence excluded in get_refinement_probs but is actually factored
+# in 
 
 # Refactor BE tools to be able to collect extra evidence for statements
 # outside of the belief engine hierarchy_probs, by using build_refinements

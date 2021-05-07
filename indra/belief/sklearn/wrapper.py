@@ -250,7 +250,7 @@ class CountsModel(SklearnBase):
         num_rows = len(stmts)
         x_arr = np.zeros((num_rows, num_cols))
         for stmt_ix, stmt in enumerate(stmts):
-            stmt_ev = get_stmt_evidence(stmt, ix, extra_evidence)
+            stmt_ev = get_stmt_evidence(stmt, stmt_ix, extra_evidence)
             sources = [ev.source_api for ev in stmt_ev]
             src_ctr = Counter(sources)
             for src_ix, src in enumerate(self.source_list):
