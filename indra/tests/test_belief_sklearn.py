@@ -343,6 +343,4 @@ def test_set_hierarchy_probs():
         # Presumably the hierarchy probabilities should always be greater
         # than the prior probs
         else:
-            if stmt.belief != prior_prob:
-                print(stmt, prior_prob, stmt.belief)
-                assert stmt.belief >= prior_prob
+            assert stmt.belief >= prior_prob

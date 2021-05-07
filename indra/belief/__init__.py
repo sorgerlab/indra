@@ -124,7 +124,7 @@ class SimpleScorer(BeliefScorer):
         prior_probs: Optional[Dict[str, Dict[str, float]]] = None,
         subtype_probs: Optional[Dict[str, Dict[str, float]]] = None,
     ) -> None:
-        """Update Scorer's prior probablities with the given dictionaries."""
+        """Update Scorer's prior probabilities with the given dictionaries."""
         if prior_probs:
             for key in ('rand', 'syst'):
                 self.prior_probs[key].update(prior_probs.get(key, {}))
