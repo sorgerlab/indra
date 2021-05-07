@@ -148,6 +148,25 @@ def test_default_probs_override():
                 assert default_probs[err_type][k] == v
 
 
+def test_score_statement():
+    """Check that we can correctly score a single statement."""
+    prior_probs = {'rand': {'reach': 0.1, 'trips': 0.2},
+                   'syst': {'reach': 0,   'trips': 0}}
+
+    scorer = SimpleScorer(prior_probs)
+    # ev1 is from "reach"
+    st1 = Phosphorylation(None, Agent('a'), evidence=[ev1])
+    belief = scorer.score_statement(st1)
+    assert belief == 0.9
+    # try extra_evidence empty list:
+    belief = scorer.score_statement(st1, extra_evidence=[])
+    assert belief == 0.9
+    # Now we try extra_evidence from trips.
+    # Expected result is 1 - (0.1 * 0.2) = 0.98
+    belief = scorer.score_statement(st1, extra_evidence=[ev2])
+    assert belief == 0.98
+
+
 def test_default_probs_extend():
     """Make sure default probs are extended by constructor argument."""
     prior_probs = {'rand': {'new_source': 0.1},
