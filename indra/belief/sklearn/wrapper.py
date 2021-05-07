@@ -1,8 +1,9 @@
 import logging
-from collections import Counter
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
+from collections import Counter
+from typing import Union, Optional, List, Sequence
+from sklearn.base import BaseEstimator
 from indra.belief import check_extra_evidence, get_stmt_evidence
 from indra.statements import get_all_descendants, Statement, Evidence
 
@@ -15,41 +16,52 @@ class SklearnBase(object):
 
     Parameters
     ----------
-    model : sklearn or similar model
+    model :
         Any instance of a classifier object supporting the methods `fit`
         and `predict_proba`.
 
     """
-    def __init__(self, model):
-        self.model = model
+    def __init__(
+        self,
+        model: BaseEstimator,
+    ):
+        self.model: BaseEstimator = model
 
     @staticmethod
-    def get_all_sources(stmts):
+    def get_all_sources(
+        stmts: Sequence[Statement]
+    ) -> List[str]:
         """Get a list of all the source_apis supporting the given statements.
 
         Parameters
         ----------
-        stmts : list of INDRA Statements
+        stmts :
             A list of INDRA Statements to collect source APIs for.
 
         Returns
         -------
-        list of str
-            A list of (unique) source_apis found in the set of statements.
+        A list of (unique) source_apis found in the set of statements.
         """
         return list(set([ev.source_api for s in stmts for ev in s.evidence]))
 
-    def stmts_to_matrix(self, stmts, *args, **kwargs):
+    def stmts_to_matrix(
+        self,
+        stmts: Sequence[Statement],
+        extra_evidence: Optional[List[List[Evidence]]] = None,
+    ) -> np.ndarray:
         raise NotImplementedError('Need to implement the stmts_to_matrix '
                                    'method')
 
-    def df_to_matrix(self, df, *args, **kwargs):
+    def df_to_matrix(
+        self,
+        df: pd.DataFrame,
+    ) -> np.ndarray:
         raise NotImplementedError('Need to implement the df_to_matrix '
                                    'method')
 
     def to_matrix(self,
-        stmt_data: Union[np.ndarray, List[Statement], pd.DataFrame]
-        extra_evidence: Optional[List[List[Evidence]] = None
+        stmt_data: Union[np.ndarray, Sequence[Statement], pd.DataFrame],
+        extra_evidence: Optional[List[List[Evidence]]] = None,
     ) -> np.ndarray:
         """Gets stmt data matrix by calling appropriate method in subclass.
 
@@ -59,13 +71,12 @@ class SklearnBase(object):
 
         Parameters
         ----------
-        stmt_data : numpy.ndarray, pandas.DataFrame, or list[Statement]
+        stmt_data :
             Statement content to be used to generate a feature matrix.
 
         Returns
         -------
-        numpy.ndarray
-            Feature matrix for the statement data.
+        Feature matrix for the statement data.
         """
         # If we got a Numpy array, just use it!
         if isinstance(stmt_data, np.ndarray):
@@ -78,15 +89,21 @@ class SklearnBase(object):
                                  'statement DataFrame.')
             stmt_arr = self.df_to_matrix(stmt_data)
         # Check if stmt_data is a list (i.e., of Statements):
-        elif isinstance(stmt_data, list)
+        elif isinstance(stmt_data, (list, tuple)):
             stmt_arr = self.stmts_to_matrix(stmt_data, extra_evidence)
         # If it's something else, error
         else:
-            raise TypeError('stmt_data must be a numpy array, DataFrame, or '
+            raise TypeError(f'stmt_data is type {type(stmt_data)}: '
+                            'must be a numpy array, DataFrame, or '
                             'list of Statements')
         return stmt_arr
 
-    def fit(self, stmt_data, y_arr, *args, **kwargs):
+    def fit(self,
+        stmt_data: Union[np.ndarray, Sequence[Statement], pd.DataFrame],
+        y_arr: Sequence[float],
+        *args,
+        **kwargs,
+    ):
         """Preprocess the stmt data and pass to sklearn model fit method.
 
         Additional `args` and `kwargs` are passed to the `fit` method of the
@@ -94,9 +111,11 @@ class SklearnBase(object):
 
         Parameters
         ----------
-        stmt_data : numpy.ndarray, pandas.DataFrame, or list[Statement]
+        stmt_data :
             Statement content to be used to generate a feature matrix.
-        y_arr : numpy.ndarray
+        y_arr :
+            Class values for the statements (e.g., a vector of 0s and 1s
+            indicating correct or incorrect).
         """
         # Check dimensions of stmts (x) and y_arr
         if len(stmt_data) != len(y_arr):
@@ -105,18 +124,29 @@ class SklearnBase(object):
         stmt_arr = self.to_matrix(stmt_data)
         # Call the fit method of the internal sklearn model
         self.model.fit(stmt_arr, y_arr, *args, **kwargs)
-        return self
 
-    def predict_proba(self, stmt_data, extra_evidence=None):
+    def predict_proba(
+        self,
+        stmt_data: Union[np.ndarray, Sequence[Statement], pd.DataFrame],
+        extra_evidence: Optional[List[List[Evidence]]] = None,
+    ) -> np.ndarray:
         # Call the prediction method of the internal sklearn model
         stmt_arr = self.to_matrix(stmt_data, extra_evidence)
         return self.model.predict_proba(stmt_arr)
 
-    def predict(self, stmt_data, extra_evidence=None):
+    def predict(
+        self,
+        stmt_data: Union[np.ndarray, Sequence[Statement], pd.DataFrame],
+        extra_evidence: Optional[List[List[Evidence]]] = None,
+    ) -> np.ndarray:
         stmt_arr = self.to_matrix(stmt_data, extra_evidence)
         return self.model.predict(stmt_arr)
 
-    def predict_log_proba(self, stmt_data, extra_evidence=None):
+    def predict_log_proba(
+        self,
+        stmt_data: Union[np.ndarray, Sequence[Statement], pd.DataFrame],
+        extra_evidence: Optional[List[List[Evidence]]] = None,
+    ) -> np.ndarray:
         stmt_arr = self.to_matrix(stmt_data, extra_evidence)
         return self.model.predict_log_proba(stmt_arr)
 
@@ -152,8 +182,14 @@ class CountsModel(SklearnBase):
     Alternatively, if the DataFrame doesn't have a source_counts column,
     it should have columns with names matching the sources in source list.
     """
-    def __init__(self, model, source_list, use_stmt_type=False,
-                 use_num_members=False, use_num_pmids=False):
+    def __init__(
+        self,
+        model: BaseEstimator,
+        source_list: List[str],
+        use_stmt_type: bool = False,
+        use_num_members: bool = False,
+        use_num_pmids: bool = False
+    ):
         # Call superclass constructor to store the model
         super(CountsModel, self).__init__(model)
         self.use_stmt_type = use_stmt_type
@@ -166,7 +202,12 @@ class CountsModel(SklearnBase):
             self.stmt_type_map = {t.__name__: ix
                                   for ix, t in enumerate(all_stmt_types)}
 
-    def stmts_to_matrix(self, stmts, extra_evidence=None):
+    def stmts_to_matrix(
+        self,
+        stmts: Sequence[Statement],
+        extra_evidence: Optional[List[List[Evidence]]] = None,
+    ) -> np.ndarray:
+        """TODO: Doc"""
         # Check our list of extra evidences
         check_extra_evidence(extra_evidence, len(stmts))
 
@@ -223,7 +264,11 @@ class CountsModel(SklearnBase):
         return x_arr
 
 
-    def df_to_matrix(self, df):
+    def df_to_matrix(
+        self,
+        df: pd.DataFrame,
+    ) -> np.ndarray:
+        """TODO: Doc"""
         required_cols = {'agA_id', 'agA_name', 'agA_ns', 'agB_id', 'agB_name',
                          'agB_ns', 'stmt_hash', 'stmt_type'}
         # Currently, statement DataFrames are not expected to contain
