@@ -341,8 +341,6 @@ def test_set_hierarchy_probs():
                 print(stmt, prior_prob, stmt.belief)
                 assert stmt.belief >= prior_prob
 
-# Refactor BeliefScorer and SimpleScorer to support score_statements
-
 # Add docstrings and type hints to all functions
 
 # To separate scorer from wrapper? Or combine?
