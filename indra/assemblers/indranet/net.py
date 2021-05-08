@@ -321,7 +321,8 @@ def _simple_scorer_update(G, edge):
                 evidence_list.append(Evidence(source_api=s))
 
     try:
-        ag_belief = simple_scorer.score_statement(st=Statement(evidence=evidence_list))
+        ag_belief = simple_scorer.score_statement(
+                                            Statement(evidence=evidence_list))
     # Catch underflow
     except FloatingPointError as err:
         # Numpy precision
