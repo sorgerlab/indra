@@ -340,7 +340,6 @@ def test_set_hierarchy_probs():
         # Check that the top-level statements beliefs have not changed
         if stmt in top_level:
             assert stmt.belief == prior_prob
-        # Presumably the hierarchy probabilities should always be greater
-        # than the prior probs
+        # We expect the belief to change if including more evidence
         else:
-            assert stmt.belief >= prior_prob
+            assert stmt.belief != prior_prob

@@ -280,7 +280,9 @@ class CountsScorer(SklearnScorer):
 
     @staticmethod
     def get_all_sources(
-        stmts: Sequence[Statement]
+        stmts: Sequence[Statement],
+        include_more_specific: bool = True,
+        include_less_specific: bool = True,
     ) -> List[str]:
         """Get a list of all the source_apis supporting the given statements.
 
@@ -291,13 +293,30 @@ class CountsScorer(SklearnScorer):
         ----------
         stmts :
             A list of INDRA Statements to collect source APIs for.
+        include_more_specific :
+            If True (default), then includes the source APIs for the more
+            specific statements in the `supports` attribute of each statement.
+        include_less_specific :
+            If True (default), then includes the source APIs for the less
+            specific statements in the `supported_by` attribute of each
+            statement.
 
         Returns
         -------
         A list of (unique) source_apis found in the set of statements.
         """
-        return list(set([ev.source_api for s in stmts for ev in s.evidence]))
-
+        stmt_sources = set([ev.source_api for s in stmts for ev in s.evidence])
+        if include_more_specific:
+            stmt_sources.update([ev.source_api
+                                 for stmt in stmts
+                                 for supp_stmt in stmt.supports
+                                 for ev in supp_stmt.evidence])
+        if include_less_specific:
+            stmt_sources.update([ev.source_api
+                                 for stmt in stmts
+                                 for supp_by_stmt in stmt.supported_by
+                                 for ev in supp_by_stmt.evidence])
+        return list(stmt_sources)
 
     def stmts_to_matrix(
         self,

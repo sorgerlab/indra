@@ -66,9 +66,8 @@ class BeliefScorer(object):
     ) -> float:
         """Score a single statement by passing arguments to `score_statements`.
         """
-        extra_evidence_wrap = extra_evidence
-        if extra_evidence_wrap is not None:
-            extra_evidence_wrap = [extra_evidence]
+        extra_evidence_wrap = None if extra_evidence is None \
+                                   else [extra_evidence]
         return self.score_statements([statement], extra_evidence_wrap)[0]
 
     def check_prior_probs(
