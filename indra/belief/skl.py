@@ -163,9 +163,11 @@ class SklearnScorer(BeliefScorer):
         ----------
         stmt_data :
             Statement content to be used to generate a feature matrix.
-        y_arr :
-            Class values for the statements (e.g., a vector of 0s and 1s
-            indicating correct or incorrect).
+        extra_evidence :
+            A list corresponding to the given list of statements, where
+            each entry is a list of Evidence objects providing additional
+            support for the corresponding statement (i.e., Evidences that
+            aren't already included in the Statement's own evidence list).
         """
         # Call the prediction method of the internal sklearn model
         stmt_arr = self.to_matrix(stmt_data, extra_evidence)
@@ -185,9 +187,11 @@ class SklearnScorer(BeliefScorer):
         ----------
         stmt_data :
             Statement content to be used to generate a feature matrix.
-        y_arr :
-            Class values for the statements (e.g., a vector of 0s and 1s
-            indicating correct or incorrect).
+        extra_evidence :
+            A list corresponding to the given list of statements, where
+            each entry is a list of Evidence objects providing additional
+            support for the corresponding statement (i.e., Evidences that
+            aren't already included in the Statement's own evidence list).
         """
         stmt_arr = self.to_matrix(stmt_data, extra_evidence)
         return self.model.predict(stmt_arr)
@@ -206,16 +210,18 @@ class SklearnScorer(BeliefScorer):
         ----------
         stmt_data :
             Statement content to be used to generate a feature matrix.
-        y_arr :
-            Class values for the statements (e.g., a vector of 0s and 1s
-            indicating correct or incorrect).
+        extra_evidence :
+            A list corresponding to the given list of statements, where
+            each entry is a list of Evidence objects providing additional
+            support for the corresponding statement (i.e., Evidences that
+            aren't already included in the Statement's own evidence list).
         """
         stmt_arr = self.to_matrix(stmt_data, extra_evidence)
         return self.model.predict_log_proba(stmt_arr)
 
 
 class CountsScorer(SklearnScorer):
-    """Learned model based on source evidence counts and other stmt properties.
+    """Belief model learned from evidence counts and other stmt properties.
 
     Parameters
     ----------
