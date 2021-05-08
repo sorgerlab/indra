@@ -223,6 +223,15 @@ class SklearnScorer(BeliefScorer):
 class CountsScorer(SklearnScorer):
     """Belief model learned from evidence counts and other stmt properties.
 
+    If using a DataFrame for Statement data, it should have the following
+    columns:
+
+    * `stmt_type`
+    * `source_counts`
+
+    Alternatively, if the DataFrame doesn't have a `source_counts` column, it
+    should have columns with names matching the sources in `self.source_list`.
+
     Parameters
     ----------
     model :
@@ -243,14 +252,6 @@ class CountsScorer(SklearnScorer):
         supporting each statement. Cannot be used for statement passed in as a
         DataFrame.
 
-    If using a DataFrame, it should have the following columns:
-
-    * `stmt_type`
-    * `source_counts`
-
-    Alternatively, if the DataFrame doesn't have a `source_counts` column, it
-    should have columns with names matching the sources in `self.source_list`.
-
     Example
     -------
     .. code-block:: python
@@ -259,7 +260,7 @@ class CountsScorer(SklearnScorer):
         clf = LogisticRegression()
         all_stmt_sources = CountsScorer.get_all_sources(stmts)
         scorer = CountsScorer(clf, all_stmt_sources, use_stmt_type=True,
-                                 use_num_pmids=True)
+                              use_num_pmids=True)
         scorer.fit(stmts, y_arr)
         be = BeliefEngine(scorer)
         be.set_hierarchy_probs(stmts)
