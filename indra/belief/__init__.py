@@ -437,6 +437,9 @@ class BeliefEngine(object):
         all_extra_evs = []
         for stmt, refiners in zip(statements, refiners_list):
             # Collect evidence from all refiners while excluding any negated
+            # evidence. Negated evidence for a more specific statement
+            # isn't currently considered as counting against the believability
+            # of a more general statement.
             extra_ev_for_stmt = list(set(
                 ev
                 for supp in refiners

@@ -36,7 +36,8 @@ def main():
                       'plot': ['matplotlib'],
                       'isi': ['nltk<3.6', 'unidecode'],
                       'api': ['flask', 'flask_restx', 'flask_cors',
-                              'docstring-parser']
+                              'docstring-parser'],
+                      'sklearn_belief': ['scikit-learn'],
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
                                   for dep in deps})
