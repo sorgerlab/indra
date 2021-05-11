@@ -37,7 +37,7 @@ def test_format_evidence_text():
     assert isinstance(ev, dict)
     assert set(ev.keys()) == {'source_api', 'text_refs', 'text', 'source_hash',
                               'pmid', 'num_curations', 'num_correct',
-                              'num_incorrect'}
+                              'num_incorrect', 'original_json'}
     assert ev['source_api'] == 'test'
     assert ev['text_refs']['PMID'] == '1234567'
     assert ev['text'] == ('We noticed that the '

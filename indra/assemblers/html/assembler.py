@@ -634,6 +634,7 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
                         'text_refs': text_refs,
                         'text': format_text,
                         'source_hash': str(ev.source_hash),
+                        'original_json': ev.to_json(),
                         'num_curations': num_curations,
                         'num_correct': num_correct,
                         'num_incorrect': num_incorrect

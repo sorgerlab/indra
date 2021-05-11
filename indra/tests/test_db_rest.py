@@ -1,11 +1,13 @@
 import random
 import unittest
 from datetime import datetime
+from time import sleep
 from unittest import SkipTest
 
 from nose.plugins.attrib import attr
 from indra.sources import indra_db_rest as dbr
 from indra.sources.indra_db_rest.api import get_statement_queries
+from indra.sources.indra_db_rest.query import HasAgent, HasEvidenceBound
 from indra.statements import Agent, Phosphorylation
 
 
@@ -14,17 +16,11 @@ EXPECTED_BATCH_SIZE = 500
 
 def __check_request(seconds, *args, **kwargs):
     check_stmts = kwargs.pop('check_stmts', True)
-    simple_response = kwargs.pop('simple_response', True)
-    kwargs['simple_response'] = simple_response
     now = datetime.now()
     resp = dbr.get_statements(*args, **kwargs)
     time_taken = datetime.now() - now
     if check_stmts:
-        if kwargs.get('simple_response', True):
-            stmts = resp
-        else:
-            stmts = resp.statements
-        assert stmts, "Got no statements."
+        assert resp.statements, "Got no statements."
     return resp
 
 
@@ -84,8 +80,7 @@ def test_timeout_no_persist_type_object():
 
 @attr('nonpublic', 'slow')
 def test_too_big_request_no_persist():
-    resp_some = __check_request(60, agents=['TP53'], persist=False,
-                                simple_response=False)
+    resp_some = __check_request(60, agents=['TP53'], persist=False)
     assert sum(resp_some.get_ev_count(s) is not None
                for s in resp_some.statements) == len(resp_some.statements), \
         "Counts dict was improperly handled."
@@ -95,8 +90,8 @@ def test_too_big_request_no_persist():
 @attr('nonpublic', 'slow', 'notravis')
 @unittest.skip('skippping')
 def test_too_big_request_persist_and_block():
-    resp_all1 = __check_request(200, agents=['TP53'], persist=True, timeout=None,
-                                simple_response=False)
+    resp_all1 = __check_request(200, agents=['TP53'], persist=True,
+                                timeout=None)
     assert sum(resp_all1.get_ev_count(s) is not None
                for s in resp_all1.statements) > 0.9*len(resp_all1.statements), \
         "Counts dict was improperly handled."
@@ -108,8 +103,7 @@ def test_too_big_request_persist_no_block():
     resp_some = test_too_big_request_no_persist()
     resp_all1 = test_too_big_request_persist_and_block()
     resp_all2 = __check_request(60, agents=['TP53'], persist=True,
-                                timeout=10, check_stmts=False,
-                                simple_response=False)
+                                timeout=10, check_stmts=False)
     num_counts = sum(resp_all2.get_ev_count(s) is not None
                      for s in resp_all2.statements)
     num_stmts = len(resp_all2.statements)
@@ -137,8 +131,8 @@ def test_too_big_request_persist_no_block():
 
 @attr('nonpublic')
 def test_famplex_namespace():
-    stmts = dbr.get_statements('PDGF@FPLX', 'FOS', stmt_type='IncreaseAmount',
-                               simple_response=True)
+    p = dbr.get_statements('PDGF@FPLX', 'FOS', stmt_type='IncreaseAmount')
+    stmts = p.statements
     print(len(stmts))
     print(stmts)
     assert all([s.agent_list()[0].db_refs.get('FPLX') == 'PDGF' for s in stmts]),\
@@ -150,13 +144,13 @@ def test_famplex_namespace():
 
 @attr('nonpublic', 'notravis')
 def test_paper_query():
-    stmts_1 = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
-                                            ('pmid', '27014235')],
-                                           simple_response=True)
+    p = dbr.get_statements_for_papers([('pmcid', 'PMC5770457'),
+                                       ('pmid', '27014235')])
+    stmts_1 = p.statements
     assert len(stmts_1)
 
-    p = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
-                                      ('pmid', '27014235')])
+    p = dbr.get_statements_for_papers([('pmcid', 'PMC5770457'),
+                                       ('pmid', '27014235')])
     assert len(p.statements)
     assert len(p.get_source_counts())
     assert len(p.get_ev_counts())
@@ -164,8 +158,7 @@ def test_paper_query():
 
 @attr('nonpublic')
 def test_regulate_amount():
-    idbp = dbr.get_statements('FOS', stmt_type='RegulateAmount',
-                              simple_response=False)
+    idbp = dbr.get_statements('FOS', stmt_type='RegulateAmount')
     stmts = idbp.statements
     stmt_types = {type(s).__name__ for s in stmts}
     counts = idbp.get_source_counts()
@@ -178,7 +171,8 @@ def test_regulate_amount():
 @attr('nonpublic')
 def test_get_statements_by_hash():
     hash_list = [30674674032092136, -22289282229858243, -25056605420392180]
-    stmts = dbr.get_statements_by_hash(hash_list, simple_response=True)
+    p = dbr.get_statements_by_hash(hash_list)
+    stmts = p.statements
     print({s.get_hash(shallow=True): s for s in stmts})
     assert len(stmts) >= 2, \
         "Wrong number of statements: %s vs. %s" % (len(stmts), len(hash_list))
@@ -192,15 +186,34 @@ def test_get_statements_by_hash():
 
 @attr('nonpublic')
 def test_get_statements_by_hash_no_hash():
-    stmts = dbr.get_statements_by_hash([], simple_response=True)
-    assert not stmts, "Got statements without giving a hash."
+    p = dbr.get_statements_by_hash([])
+    assert not p.statements, "Got statements without giving a hash."
 
 
 @attr('nonpublic')
 def test_curation_submission():
-    raise SkipTest("Curation currently not working.")
-    dbr.submit_curation(32760831642168299, 'TEST', 'This is a test.',
-                        'tester', is_test=True)
+    from indra.config import get_config
+    api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
+    if not api_key:
+        raise SkipTest("No API Key, this test will not work.")
+    res = dbr.submit_curation(32760831642168299, 'TEST', 'This is a test.',
+                              'tester', is_test=True)
+    assert res['result'] == 'test passed', res
+
+
+@attr('nonpublic')
+def test_get_curations():
+    from indra.config import get_config
+    api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
+    if not api_key:
+        raise SkipTest("No API Key, this test will not work.")
+    stmt_hash = -13159234982749425
+    src_hash = 3817298406742073624
+    res = dbr.get_curations(stmt_hash, src_hash)
+    assert isinstance(res, list)
+    assert len(res) > 0
+    assert all(c['pa_hash'] == stmt_hash and c['source_hash'] == src_hash
+               for c in res)
 
 
 @attr('nonpublic')
@@ -224,3 +237,108 @@ def test_get_statement_queries():
     urls = get_statement_queries([stmt],
                                  pick_ns_fun=lambda x: '%s@%s' %
                                                        (x.name, 'XXX'))
+
+
+@attr('nonpublic')
+def test_get_statements_end_on_limit():
+    p = dbr.get_statements(subject="TNF", limit=1400, timeout=1)
+    try:
+        t = 0
+        violations = 0
+        violations_allowed = 3
+        while p.is_working():
+            assert t < 100
+            limit = p._get_next_limit()
+            if limit == 0 and p.is_working():
+                violations += 1
+                assert violations <= violations_allowed
+            sleep(1)
+            t += 1
+    finally:
+        p.cancel()
+        p.wait_until_done()
+
+
+@attr('nonpublic')
+def test_get_statements_evidence_bounded():
+    query = HasAgent('MEK') & HasEvidenceBound(["< 10"])
+    p = dbr.get_statements_from_query(query, limit=10)
+    stmts = p.statements
+    assert len(stmts) == 10
+    assert all(c < 10 for c in p.get_ev_counts().values())
+
+
+@attr('nonpublic')
+def test_get_statements_strict_stop_short():
+    start = datetime.now()
+    p = dbr.get_statements("TNF", timeout=1, strict_stop=True)
+    end = datetime.now()
+    sleep(0.1)
+    assert not p.is_working()
+    dt = (end - start).total_seconds()
+    assert 1 <= dt < 1.5, dt
+    assert not p.statements
+    assert not p.statements_sample
+
+
+@attr('nonpublic')
+def test_get_statements_strict_stop_long():
+    timeout = 31
+    start = datetime.now()
+    p = dbr.get_statements("TNF", timeout=timeout, strict_stop=True)
+    end = datetime.now()
+    sleep(2)
+    assert not p.is_working()
+    dt = (end - start).total_seconds()
+    assert timeout <= dt < (timeout + 0.5), dt
+    assert p.statements
+
+
+@attr('nonpublic')
+def test_filter_ev():
+    ids = [('pmcid', 'PMC5770457'), ('pmid', '27014235')]
+    p = dbr.get_statements_for_papers(ids)
+    assert p.statements
+
+    correct_source = 0
+    incorrect_source = 0
+    for s in p.statements:
+        for ev in s.evidence:
+            if any(ev.text_refs.get(t.upper()) == v for t, v in ids):
+                correct_source += 1
+            else:
+                incorrect_source += 1
+
+    assert incorrect_source == 0,\
+        f"{incorrect_source} unfiltered sources vs. {correct_source} filtered."
+
+
+@attr('nonpublic')
+def test_sort_by_belief():
+    p = dbr.get_statements(object="MEK", stmt_type="Inhibition",
+                                  sort_by='belief', limit=10)
+    assert p.statements
+    beliefs = [s.belief for s in p.statements]
+    assert beliefs == sorted(beliefs, reverse=True), \
+        f"Beliefs mis-ordered!\nbeliefs: {beliefs}\n" \
+        f"belief_dict: {p.get_belief_scores()}"
+
+
+@attr('nonpublic')
+def test_sort_by_ev_count():
+    p = dbr.get_statements(object="MEK", stmt_type="Inhibition",
+                           sort_by='ev_count', limit=10, ev_limit=None)
+    assert p.statements
+    counts = [p.get_ev_count(s) for s in p.statements]
+    assert counts == sorted(counts, reverse=True),\
+        f"Counts mis-ordered!\ncounts: {counts}\nev_counts: {p.get_ev_counts()}"
+
+
+@attr('nonpublic')
+def test_namespace_only_agent_query():
+    q = HasAgent("MEK") & HasAgent(namespace="CHEBI")
+    p = dbr.get_statements_from_query(q, limit=10)
+    assert p.statements
+    assert all(any("CHEBI" in ag.db_refs for ag in s.agent_list())
+               and any(ag.db_refs.get("FPLX") == "MEK" for ag in s.agent_list())
+               for s in p.statements)

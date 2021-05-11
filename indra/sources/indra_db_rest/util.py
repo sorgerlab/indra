@@ -1,11 +1,65 @@
 import json
 import logging
+from io import StringIO
+from contextlib import contextmanager
+
 import requests
 
 from indra import get_config
 from indra.sources.indra_db_rest.exceptions import IndraDBRestAPIError
 
-logger = logging.getLogger(__name__)
+
+class RecordableLogger:
+    def __init__(self, name):
+        self.__logger = logging.getLogger(name)
+
+        # Set up redirection of the logs surrounding requests.
+        self.__logstream = StringIO()
+        self.__logstream_handler = logging.StreamHandler(self.__logstream)
+        fmt = "%(levelname)s: [%(asctime)s] %(name)s - %(message)s"
+        self.__logstream_handler.setFormatter(logging.Formatter(fmt))
+        self.__quieted = False
+
+    def __getattr__(self, item):
+        # If the attribute could not be retrieved by standard means, try passing
+        # the method on to the backend logger.
+        return getattr(self.__logger, item)
+
+    def get_quiet_logs(self):
+        """Get the logstream string for the quieted request logs."""
+        return self.__logstream.getvalue()
+
+    def quiet(self):
+        """Stop printing logging messages to stdout/stderr.
+
+        The log messages are preserved, and can still be accessed using the
+        `get_quiet_logs` method.
+        """
+        if not self.__quieted:
+            self.__logger.addHandler(self.__logstream_handler)
+            self.__logger.propagate = False
+            self.__quieted = True
+
+    def unquiet(self):
+        """Allow the logs to print to stdout/stderr.
+
+        Log messages will no longer be stored in the StringIO buffer.
+        """
+        if self.__quieted:
+            self.__logger.removeHandler(self.__logstream_handler)
+            self.__logger.propagate = True
+            self.__quieted = False
+
+    @contextmanager
+    def quieted(self):
+        self.quiet()
+        try:
+            yield
+        finally:
+            self.unquiet()
+
+
+logger = RecordableLogger(__name__)
 
 
 def submit_query_request(end_point, *args, **kwargs):
@@ -35,8 +89,8 @@ def submit_statement_request(meth, end_point, query_str='', data=None,
                                 params, tries, timeout)
 
 
-def make_db_rest_request(meth, end_point, query_str, data=None, params=None,
-                         tries=2, timeout=None):
+def make_db_rest_request(meth, end_point, query_str='', data=None, params=None,
+                         tries=2, timeout=None, api_key=None):
     if params is None:
         params = {}
 
@@ -45,7 +99,8 @@ def make_db_rest_request(meth, end_point, query_str, data=None, params=None,
                      % str([meth, end_point, query_str, data, params, tries]))
         raise ValueError("end_point cannot be None.")
     url_path = get_url_base(end_point)
-    api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
+    if api_key is None:
+        api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
     url_path += query_str
     headers = {}
     if data:
@@ -56,11 +111,15 @@ def make_db_rest_request(meth, end_point, query_str, data=None, params=None,
     else:
         json_data = None
     params['api_key'] = api_key
-    logger.info('query: %s', url_path.replace(str(api_key), '[api-key]'))
-    logger.info('params: %s', str(params).replace(str(api_key), '[api-key]'))
-    logger.debug('headers: %s', str(headers).replace(str(api_key),
-                                                     '[api-key]'))
-    logger.debug('data: %s', str(data).replace(str(api_key), '[api-key]'))
+
+    def remove_api_key(s):
+        if api_key:
+            return s.replace(str(api_key), '[api-key]')
+
+    logger.info(f'query: {remove_api_key(url_path)}')
+    logger.info(f'params: {remove_api_key(str(params))}')
+    logger.info(f'data: {remove_api_key(str(data))}')
+    logger.debug(f'headers: {remove_api_key(str(headers))}')
     method_func = getattr(requests, meth.lower())
     while tries > 0:
         tries -= 1
@@ -72,6 +131,14 @@ def make_db_rest_request(meth, end_point, query_str, data=None, params=None,
             logger.warning("Endpoint timed out. Trying again...")
         else:
             raise IndraDBRestAPIError(resp)
+
+
+def jsonify_args(d):
+    new_d = d.copy()
+    for key, val in d.items():
+        if isinstance(val, set):
+            new_d[key] = list(val)
+    return new_d
 
 
 def get_url_base(end_point):

@@ -1080,9 +1080,9 @@ class GetEvidence(Resource):
                 if not any(kwargs.values()):
                     return []
                 print(agent_list)
-            stmts = get_statements(agents=agent_list, stmt_type=stmt_type,
-                                   simple_response=True, **kwargs)
-            return stmts
+            ip = get_statements(agents=agent_list, stmt_type=stmt_type,
+                                **kwargs)
+            return ip.statements
 
         stmts_out = _get_matching_stmts(stmt)
         agent_name_list = [ag.name for ag in stmt.agent_list()]
