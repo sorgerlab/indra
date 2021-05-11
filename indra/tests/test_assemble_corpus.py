@@ -678,3 +678,104 @@ def test_map_db_refs():
     assert regr_stmt.subj.db_refs['db2'] == 'a2'
     assert regr_stmt.obj.db_refs['db1'] == 'b1'
     assert regr_stmt.obj.db_refs['db2'] == 'B2'
+
+
+def test_strip_supports():
+    stmts = [deepcopy(st14), deepcopy(st15)]
+    assert stmts[0].supports
+    assert stmts[1].supported_by
+    no_support = ac.strip_supports(stmts)
+    assert not no_support[0].supports
+    assert not no_support[0].supported_by
+    assert not no_support[1].supports
+    assert not no_support[1].supported_by
+
+
+def test_normalize_active_forms():
+    af1 = ActiveForm(Agent('a',
+                     mods=[ModCondition('phosphorylation', 'T', 93),
+                           ModCondition('phosphorylation', 'T', 63)]),
+                     'activity', True)
+    af2 = ActiveForm(Agent('a',
+                     mods=[ModCondition('phosphorylation', 'T', 63),
+                           ModCondition('phosphorylation', 'T', 93)]),
+                     'activity', True)
+    af3 = ActiveForm(Agent('a',
+                     mods=[ModCondition('phosphorylation')]),
+                     'activity', True)
+    ph = Phosphorylation(Agent('a'), Agent('b'))
+    act = Activation(Agent('b'), Agent('a'))
+    stmts = [af1, af2, af3, ph, act]
+    norm_stmts = ac.normalize_active_forms(stmts)
+    assert len(norm_stmts) == 3
+    norm_stmt_hashes = [stmt.get_hash() for stmt in norm_stmts]
+    assert af1.get_hash() in norm_stmt_hashes
+    assert af3.get_hash() not in norm_stmt_hashes
+    assert ph.get_hash() in norm_stmt_hashes
+    assert act.get_hash() in norm_stmt_hashes
+
+
+def test_run_mechlinker():
+    # Reduce activities
+    a1 = Agent('a', location='cytoplasm')
+    a2 = Agent('a', location='nucleus')
+    af1 = ActiveForm(a1, 'activity', True)
+    af2 = ActiveForm(a2, 'kinase', True)
+    af3 = ActiveForm(a1, 'catalytic',True)
+    stmts = [af1, af2, af3]
+    stmts_out = ac.run_mechlinker(stmts, reduce_activities=True)
+    for st in stmts_out:
+        assert st.activity == 'kinase'
+    # Reduce modifications
+    phos1 = Phosphorylation(Agent('b'), Agent('a'))
+    phos2 = Phosphorylation(Agent('c'), Agent('a'), 'T')
+    phos3 = Phosphorylation(Agent('d'), Agent('a'), 'T', '143')
+    stmts = [phos1, phos2, phos3]
+    stmts_out = ac.run_mechlinker(stmts, reduce_modifications=True)
+    assert len(stmts_out) == 3
+    for st in stmts_out:
+        assert st.residue == 'T'
+        assert st.position == '143'
+    # Replace activations
+    af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
+                    'activity', True)
+    phos = Phosphorylation(Agent('b'), Agent('a'))
+    act = Activation(Agent('b'), Agent('a'))
+    stmts = [af, phos, act]
+    stmts_out = ac.run_mechlinker(stmts, replace_activations=True)
+    assert len(stmts_out) == 2
+    # Require active forms
+    af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
+                    'activity', True)
+    ph = Phosphorylation(Agent('a'), Agent('b'))
+    stmts = [af, ph]
+    stmts_out = ac.run_mechlinker(stmts, require_active_forms=True)
+    assert len(stmts_out) == 2
+    assert stmts_out[1].enz.mods, stmts_out
+
+
+def test_filter_inconsequential():
+    mc = ModCondition('phosphorylation', None, None, True)
+    phos1 = Phosphorylation(None, Agent('a'))
+    phos2 = Phosphorylation(Agent('a', mods=[mc]), Agent('b'))
+    act1 = Activation(Agent('a', activity=ActivityCondition('kinase', True)),
+                      Agent('b'), 'activity')
+    act2 = Activation(Agent('c'), Agent('a'), 'kinase')
+    stmts = [phos1, phos2, act1, act2]
+    stmts_out = ac.filter_inconsequential(stmts)
+    assert len(stmts_out) == 0, stmts_out
+    mod_whitelist = {'b': [('phosphorylation', 'S', '315')]}
+    act_whitelist = {'a': ['kinase']}
+    stmts_out = ac.filter_inconsequential(
+        stmts, acts=False, mod_whitelist=mod_whitelist)
+    assert len(stmts_out) == 3, stmts_out
+    stmts_out = ac.filter_inconsequential(stmts, mod_whitelist=mod_whitelist)
+    assert len(stmts_out) == 1, stmts_out
+    stmts_out = ac.filter_inconsequential(
+        stmts, mods=False, act_whitelist=act_whitelist)
+    assert len(stmts_out) == 3, stmts_out
+    stmts_out = ac.filter_inconsequential(stmts, act_whitelist=act_whitelist)
+    assert len(stmts_out) == 1, stmts_out
+    stmts_out = ac.filter_inconsequential(
+        stmts, mod_whitelist=mod_whitelist, act_whitelist=act_whitelist)
+    assert len(stmts_out) == 2, stmts_out

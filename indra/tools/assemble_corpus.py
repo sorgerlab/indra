@@ -2052,3 +2052,153 @@ def map_db_refs(stmts_in, db_refs_map=None):
                 ag.db_refs = update_agent_db_refs(ag.db_refs, db_refs_map)
         stmts_out.append(new_stmt)
     return stmts_out
+
+
+@register_pipeline
+def strip_supports(stmts):
+    """Remove supports and supported by from statements."""
+    logger.info('Removing supports and supported by from statements')
+    for stmt in stmts:
+        stmt.supports = []
+        stmt.supported_by = []
+    return stmts
+
+
+@register_pipeline
+def normalize_active_forms(stmts_in):
+    """Run preassembly of ActiveForms only and keep other statements
+    unchanged.
+
+    This is specifically useful in the special case of mechanism linking
+    (that is run after preassembly) producing ActiveForm statements that are
+    redundant. Otherwise, general preassembly deduplicates ActiveForms
+    as expected.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of INDRA Statements among which ActiveForms should be
+        normalized.
+
+    Returns
+    -------
+    list[indra.statements.Statement]
+        A list of INDRA Statements in which ActiveForms are normalized.
+    """
+    logger.info('Normalizing ActiveForms')
+    af_stmts = filter_by_type(stmts_in, ActiveForm)
+    relevant_af_stmts = []
+    for stmt in af_stmts:
+        if (not stmt.agent.mods) and (not stmt.agent.mutations):
+            continue
+        relevant_af_stmts.append(stmt)
+    logger.info('%d relevant ActiveForms' % len(relevant_af_stmts))
+    non_af_stmts = filter_by_type(stmts_in, ActiveForm, invert=True)
+    af_stmts = run_preassembly(relevant_af_stmts)
+    stmts_out = af_stmts + non_af_stmts
+    return stmts_out
+
+
+@register_pipeline
+def run_mechlinker(
+        stmts_in, reduce_activities=False, reduce_modifications=False,
+        replace_activations=False, require_active_forms=False, implicit=False):
+    """Instantiate MechLinker and run its methods in defined order.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of INDRA Statements to run mechanism linking on.
+    reduce_activities : Optional[bool]
+        If True, agent activities are reduced to their most specific,
+        unambiguous form. Default: False
+    reduce_modifications : Optional[bool]
+        If True, agent modifications are reduced to their most specific,
+        unambiguous form. Default: False
+    replace_activations : Optional[bool]
+        If True, if there is compatible pair of Modification(X, Y) and
+        ActiveForm(Y) statements, then any Activation(X,Y) statements
+        are filtered out. Default: False
+    require_active_forms : Optional[bool]
+        If True, agents in active positions are rewritten to be in their
+        active forms. Default: False
+    implicit : Optional[bool]
+        If True, active forms of an agent are inferred from multiple statement
+        types implicitly, otherwise only explicit ActiveForm statements
+        are taken into account. Default: False
+
+    Returns
+    -------
+    list[indra.statements.Statement]
+        A list of INDRA Statements that have gone through mechanism linking.
+    """
+    ml = MechLinker(stmts_in)
+    if reduce_activities:
+        if implicit:
+            ml.gather_implicit_activities()
+        else:
+            ml.gather_explicit_activities()
+        ml.reduce_activities()
+    if reduce_modifications:
+        ml.gather_modifications()
+        ml.reduce_modifications()
+    if replace_activations:
+        if implicit:
+            ml.gather_implicit_activities()
+        else:
+            ml.gather_explicit_activities()
+        ml.replace_activations()
+    if require_active_forms:
+        if implicit:
+            ml.gather_implicit_activities()
+        else:
+            ml.gather_explicit_activities()
+        ml.require_active_forms()
+    return ml.statements
+
+
+@register_pipeline
+def filter_inconsequential(
+        stmts, mods=True, mod_whitelist=None, acts=True, act_whitelist=None):
+    """Keep filtering inconsequential modifications and activities until there
+    is nothing else to filter.
+
+    Parameters
+    ----------
+    stmts : list[indra.statements.Statement]
+        A list of INDRA Statements to filter.
+    mods : Optional[bool]
+        If True, inconsequential modifications are filtered out.
+        Default: True
+    mod_whitelist : Optional[dict]
+        A whitelist containing agent modification sites whose
+        modifications should be preserved even if no other statement
+        refers to them. The whitelist parameter is a dictionary in which
+        the key is a gene name and the value is a list of tuples of
+        (modification_type, residue, position). Example:
+        whitelist = {'MAP2K1': [('phosphorylation', 'S', '222')]}
+    acts : Optional[bool]
+        If True, inconsequential activations are filtered out.
+        Default: True
+    act_whitelist : Optional[dict]
+        A whitelist containing agent activity types which  should be preserved
+        even if no other statement refers to them.
+        The whitelist parameter is a dictionary in which
+        the key is a gene name and the value is a list of activity types.
+        Example: whitelist = {'MAP2K1': ['kinase']}
+
+    Returns
+    -------
+    list[indra.statements.Statement]
+        The filtered list of statements.
+    """
+    num_stmts = len(stmts)
+    while True:
+        if mods:
+            stmts = filter_inconsequential_mods(stmts, mod_whitelist)
+        if acts:
+            stmts = filter_inconsequential_acts(stmts, act_whitelist)
+        if num_stmts == len(stmts):
+            break
+        num_stmts = len(stmts)
+    return stmts
