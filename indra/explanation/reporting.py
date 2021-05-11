@@ -144,7 +144,8 @@ def stmts_from_indranet_path(path, model, signed, from_db=True, stmts=None):
             stmt_data = model[source[0]][target[0]]['statements']
         hashes = [stmt['stmt_hash'] for stmt in stmt_data]
         if from_db:
-            statements = get_statements_by_hash(hashes, simple_response=True)
+            p = get_statements_by_hash(hashes)
+            statements = p.statements
         else:
             statements = [
                 stmt for stmt in stmts if stmt.get_hash() in hashes]
@@ -264,8 +265,8 @@ def stmts_from_pybel_path(path, model, from_db=True, stmts=None):
         # If we have hashes, retrieve statements from them
         else:
             if from_db:
-                statements = get_statements_by_hash(list(hashes),
-                                                    simple_response=True)
+                p = get_statements_by_hash(list(hashes))
+                statements = p.statements
             else:
                 statements = [
                     stmt for stmt in stmts if stmt.get_hash() in hashes]
