@@ -68,8 +68,6 @@ stmts_model = api.model('Statements', {
         }])})
 bio_text_model = api.model('BioText', {
     'text': fields.String(example='GRB2 binds SHC.')})
-wm_text_model = api.model('WMText', {
-    'text': fields.String(example='Rainfall causes floods.')})
 jsonld_model = api.model('jsonld', {
     'jsonld': fields.String(example='{}')})
 genes_model = api.model('Genes', {
@@ -510,10 +508,9 @@ class TripsProcessText(Resource):
 
 
 # Eidos
-eidos_text_model = api.inherit('EidosText', wm_text_model, {
+eidos_text_model = api.inherit('EidosText', bio_text_model, {
     'webservice': fields.String
 })
-eidos_jsonld_model = api.inherit('EidosJsonld', jsonld_model, {})
 
 
 # Hide docs until webservice is available
@@ -551,7 +548,7 @@ class EidosProcessText(Resource):
         return _stmts_from_proc(ep)
 
 
-@sources_ns.expect(eidos_jsonld_model)
+@sources_ns.expect(jsonld_model)
 @sources_ns.route('/eidos/process_jsonld')
 class EidosProcessJsonld(Resource):
     @api.doc(False)
