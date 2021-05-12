@@ -35,7 +35,7 @@ def main():
                       'graph': ['pygraphviz'],
                       'plot': ['matplotlib'],
                       'isi': ['nltk<3.6', 'unidecode'],
-                      'api': ['flask', 'flask_restx', 'flask_cors',
+                      'api': ['flask', 'flask_restx<0.4', 'flask_cors',
                               'docstring-parser'],
                       'sklearn_belief': ['scikit-learn'],
                       }
