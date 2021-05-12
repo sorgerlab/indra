@@ -273,7 +273,7 @@ def test_get_statements_strict_stop_short():
     start = datetime.now()
     p = dbr.get_statements("TNF", timeout=1, strict_stop=True)
     end = datetime.now()
-    sleep(0.1)
+    sleep(5)
     assert not p.is_working()
     dt = (end - start).total_seconds()
     assert 1 <= dt < 1.5, dt
@@ -282,7 +282,6 @@ def test_get_statements_strict_stop_short():
 
 
 @attr('nonpublic')
-@unittest.skip('skipping')
 def test_get_statements_strict_stop_long():
     timeout = 31
     start = datetime.now()
