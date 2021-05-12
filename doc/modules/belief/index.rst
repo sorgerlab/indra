@@ -1,5 +1,8 @@
-Belief Engine (:py:mod:`indra.belief`)
---------------------------------------
+Belief prediction (:py:mod:`indra.belief`)
+==========================================
 
-.. automodule:: indra.belief
-    :members:
+.. toctree::
+   :maxdepth: 3
+
+   belief_engine
+   skl_belief

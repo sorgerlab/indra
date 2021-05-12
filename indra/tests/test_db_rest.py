@@ -88,7 +88,7 @@ def test_too_big_request_no_persist():
 
 
 @attr('nonpublic', 'slow', 'notravis')
-@unittest.skip('skippping')
+@unittest.skip('skipping')
 def test_too_big_request_persist_and_block():
     resp_all1 = __check_request(200, agents=['TP53'], persist=True,
                                 timeout=None)
@@ -273,7 +273,7 @@ def test_get_statements_strict_stop_short():
     start = datetime.now()
     p = dbr.get_statements("TNF", timeout=1, strict_stop=True)
     end = datetime.now()
-    sleep(0.1)
+    sleep(5)
     assert not p.is_working()
     dt = (end - start).total_seconds()
     assert 1 <= dt < 1.5, dt
@@ -287,7 +287,7 @@ def test_get_statements_strict_stop_long():
     start = datetime.now()
     p = dbr.get_statements("TNF", timeout=timeout, strict_stop=True)
     end = datetime.now()
-    sleep(2)
+    sleep(5)
     assert not p.is_working()
     dt = (end - start).total_seconds()
     assert timeout <= dt < (timeout + 0.5), dt

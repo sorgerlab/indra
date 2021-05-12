@@ -35,8 +35,9 @@ def main():
                       'graph': ['pygraphviz'],
                       'plot': ['matplotlib'],
                       'isi': ['nltk<3.6', 'unidecode'],
-                      'api': ['flask', 'flask_restx', 'flask_cors',
-                              'docstring-parser']
+                      'api': ['flask<2.0', 'flask_restx<0.4', 'flask_cors',
+                              'docstring-parser'],
+                      'sklearn_belief': ['scikit-learn'],
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
                                   for dep in deps})

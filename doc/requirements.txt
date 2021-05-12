@@ -18,3 +18,4 @@ obonet
 pybel
 unidecode
 pybiopax
+scikit-learn
