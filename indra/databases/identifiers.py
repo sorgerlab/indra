@@ -292,7 +292,7 @@ def namespace_embedded(db_ns: str) -> bool:
 
     Returns
     -------
-    embedded :
+    :
         True if the namespace is known to be embedded in IDs of this
         namespace. False if unknown or known not to be embedded.
     """
@@ -316,7 +316,7 @@ def ensure_prefix_if_needed(db_ns: str, db_id: str) -> str:
 
     Returns
     -------
-    db_id :
+    :
         The identifier with namespace embedded if needed.
     """
     if namespace_embedded(db_ns):
