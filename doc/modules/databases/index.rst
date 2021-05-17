@@ -4,8 +4,8 @@ Database clients (:py:mod:`indra.databases`)
 .. automodule:: indra.databases
     :members:
 
-Generate and parse identifiers.org URLs (:py:mod:`indra.databases.identifiers`)
--------------------------------------------------------------------------------
+identifiers.org mappings and URLs (:py:mod:`indra.databases.identifiers`)
+-------------------------------------------------------------------------
 
 .. automodule:: indra.databases.identifiers
     :members:

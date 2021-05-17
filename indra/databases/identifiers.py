@@ -106,7 +106,6 @@ def get_ns_id_from_identifiers(identifiers_ns, identifiers_id):
     identifiers_id : str
         An identifiers.org standard ID in the given namespace.
 
-
     Returns
     -------
     (str, str)
@@ -278,11 +277,59 @@ def parse_identifiers_url(url):
     return None, None
 
 
+def namespace_embedded(db_ns: str) -> bool:
+    """Return true if this namespace requires IDs to have namespace embedded.
+
+    This function first maps the given namespace to an identifiers.org
+    namespace and then checks the registry to see if namespaces need
+    to be embedded in IDs. If yes, it returns True. If not, or the ID can't
+    be mapped to identifiers.org, it returns False
+
+    Parameters
+    ----------
+    db_ns :
+        The namespace to check.
+
+    Returns
+    -------
+    :
+        True if the namespace is known to be embedded in IDs of this
+        namespace. False if unknown or known not to be embedded.
+    """
+    identifiers_ns = get_identifiers_ns(db_ns)
+    if identifiers_ns:
+        identifiers_entry = identifiers_registry.get(identifiers_ns)
+        if identifiers_entry['namespace_embedded']:
+            return True
+    return False
+
+
+def ensure_prefix_if_needed(db_ns: str, db_id: str) -> str:
+    """Return an ID ensuring a namespace prefix if known to be needed.
+
+    Parameters
+    ----------
+    db_ns :
+        The namespace associated with the identifier.
+    db_id :
+        The original identifier.
+
+    Returns
+    -------
+    :
+        The identifier with namespace embedded if needed.
+    """
+    if namespace_embedded(db_ns):
+        return ensure_prefix(db_ns, db_id)
+    return db_id
+
 def ensure_prefix(db_ns, db_id, with_colon=True):
-    """Return a valid ID that has the appropriate prefix.
+    """Return a valid ID that has the given namespace embedded.
 
     This is useful for namespaces such as CHEBI, GO or BTO that require
-    the namespace to be part of the ID.
+    the namespace to be part of the ID. Note that this function always
+    ensures that the given db_ns is embedded in the ID and can handle the
+    case whene it's already present.
 
     Parameters
     ----------
