@@ -1,6 +1,7 @@
 from indra.databases.identifiers import get_identifiers_url, \
     parse_identifiers_url, get_ns_from_identifiers,\
-    get_ns_id_from_identifiers, get_identifiers_ns
+    get_ns_id_from_identifiers, get_identifiers_ns, namespace_embedded, \
+    ensure_prefix_if_needed
 
 
 def test_map_ns():
@@ -173,3 +174,18 @@ def test_parse_identifiers_url():
         for url in urls:
             ns, db_id = parse_identifiers_url(url)
             assert (ns, db_id) == ns_tuple, (url, ns, db_id)
+
+
+def test_namespace_embedded():
+    assert namespace_embedded('CHEBI') is True
+    assert namespace_embedded('GO') is True
+    assert namespace_embedded('EFO') is False
+    assert namespace_embedded('XXXXX') is False
+
+
+def test_ensure_prefix_if_needed():
+    assert ensure_prefix_if_needed('CHEBI', 'CHEBI:123') == 'CHEBI:123'
+    assert ensure_prefix_if_needed('CHEBI', '123') == 'CHEBI:123'
+    assert ensure_prefix_if_needed('GO', '00004') == 'GO:00004'
+    assert ensure_prefix_if_needed('EFO', '1234') == '1234'
+    assert ensure_prefix_if_needed('XXXX', '1234') == '1234'
