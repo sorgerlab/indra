@@ -125,6 +125,7 @@ class SklearnScorer(BeliefScorer):
     def fit(self,
         stmt_data: Union[np.ndarray, Sequence[Statement], pd.DataFrame],
         y_arr: Sequence[float],
+        extra_evidence: Optional[List[List[Evidence]]] = None,
         *args,
         **kwargs,
     ):
@@ -140,12 +141,17 @@ class SklearnScorer(BeliefScorer):
         y_arr :
             Class values for the statements (e.g., a vector of 0s and 1s
             indicating correct or incorrect).
+        extra_evidence :
+            A list corresponding to the given list of statements, where
+            each entry is a list of Evidence objects providing additional
+            support for the corresponding statement (i.e., Evidences that
+            aren't already included in the Statement's own evidence list).
         """
         # Check dimensions of stmts (x) and y_arr
         if len(stmt_data) != len(y_arr):
             raise ValueError("Number of stmts/rows must match length of y_arr.")
         # Get the data matrix based on the stmt list or stmt DataFrame
-        stmt_arr = self.to_matrix(stmt_data)
+        stmt_arr = self.to_matrix(stmt_data, extra_evidence)
         # Call the fit method of the internal sklearn model
         self.model.fit(stmt_arr, y_arr, *args, **kwargs)
 
