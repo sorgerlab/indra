@@ -1,0 +1,8 @@
+{% for category, data in source_colors %}
+{% for source, font_color in data['sources'].items() %}
+.source-{{ source }} {
+    background-color: {{ font_color }};
+    color: {{ data['color'] }};
+}
+{% endfor %}
+{% endfor %}
