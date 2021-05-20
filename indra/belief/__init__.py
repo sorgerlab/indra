@@ -434,21 +434,14 @@ class BeliefEngine(object):
         """
         if self.refinements_graph is None:
             raise ValueError("refinements_graph not initialized.")
-        all_extra_evs = []
-        for stmt, refiners in zip(statements, refiners_list):
-            # Collect evidence from all refiners while excluding any negated
-            # evidence. Negated evidence for a more specific statement
-            # isn't currently considered as counting against the believability
-            # of a more general statement.
-            extra_ev_for_stmt = list(set(
-                ev
-                for supp in refiners
-                for ev in self.refinements_graph.nodes[supp]['stmt'].evidence
-                if not ev.epistemics.get('negated')
-            ))
-            # Add the extra evidences for the statement to the full list
-            all_extra_evs.append(extra_ev_for_stmt)
+        # Get the evidences from the more specific (supports) statements
+        all_extra_evs = get_ev_for_stmts_from_hashes(statements,
+                                                     refiners_list,
+                                                     self.refinements_graph)
+        # TODO Refactor
+        # Get the list of beliefs matching the statements we passed in
         beliefs = self.scorer.score_statements(statements, all_extra_evs)
+        # Convert to a dict of beliefs keyed by hash and return
         hashes = [s.get_hash(self.matches_fun) for s in statements]
         beliefs_by_hash = dict(zip(hashes, beliefs))
         return beliefs_by_hash
@@ -487,19 +480,15 @@ class BeliefEngine(object):
             # Build the graph for the given set of statements
             self.refinements_graph = build_refinements_graph(statements,
                                                    matches_fun=self.matches_fun)
-            assert_no_cycle(self.refinements_graph)
-        logger.debug('Start belief calculation over refinements graph')
-        # Collect corresponding lists of refiners for the statements
-        refiners_list = []
-        for stmt in statements:
-            stmt_hash = stmt.get_hash(self.matches_fun)
-            # Get the refiners/more specific stmts, if any (the edges in the
-            # graph point from general to specific):
-            refiners = list(networkx.descendants(self.refinements_graph,
-                                                 stmt_hash))
-            refiners_list.append(refiners)
-        # Get and return a dictionary mapping stmt hashes to belief values
-        beliefs_by_hash = self.get_refinement_probs(statements, refiners_list)
+        # Get the evidences from the more specific (supports) statements
+        all_extra_evs = get_ev_for_stmts_from_supports(statements,
+                                                   self.refinements_graph)
+        # TODO Refactor
+        # Get the list of beliefs matching the statements we passed in
+        beliefs = self.scorer.score_statements(statements, all_extra_evs)
+        # Convert to a dict of beliefs keyed by hash and return
+        hashes = [s.get_hash(self.matches_fun) for s in statements]
+        beliefs_by_hash = dict(zip(hashes, beliefs))
         logger.debug('Finished belief calculation over refinements graph')
         return beliefs_by_hash
 
@@ -523,6 +512,53 @@ class BeliefEngine(object):
         for st in linked_statements:
             source_probs = [s.belief for s in st.source_stmts]
             st.inferred_stmt.belief = numpy.prod(source_probs)
+
+
+def get_ev_for_stmts_from_supports(
+    statements: Sequence[Statement],
+    refinements_graph: Optional[networkx.DiGraph] = None,
+    matches_fun: Optional[Callable[[Statement], str]] = None,
+) -> List[List[Evidence]]:
+    # If the refinements_graph was not given, build it for this set of
+    # statements
+    if refinements_graph is None:
+        # Build the graph for the given set of statements
+        refinements_graph = build_refinements_graph(statements,
+                                                    matches_fun=matches_fun)
+    assert_no_cycle(refinements_graph)
+    # Use graph to collect corresponding lists of refiners for the statements
+    refiners_list = []
+    for stmt in statements:
+        stmt_hash = stmt.get_hash(matches_fun=matches_fun)
+        # Get the refiners/more specific stmts, if any (the edges in the
+        # graph point from general to specific):
+        refiners = list(networkx.descendants(refinements_graph, stmt_hash))
+        refiners_list.append(refiners)
+    # Use the refiners hashes to get the evidences
+    return get_ev_for_stmts_from_hashes(statements, refiners_list,
+                                        refinements_graph)
+
+def get_ev_for_stmts_from_hashes(
+    statements: Sequence[Statement],
+    refiners_list: List[List[int]],
+    refinements_graph: networkx.DiGraph,
+) -> List[List[Evidence]]:
+    """TODO TODO TODO"""
+    all_extra_evs = []
+    for stmt, refiners in zip(statements, refiners_list):
+        # Collect evidence from all refiners while excluding any negated
+        # evidence. Negated evidence for a more specific statement
+        # isn't currently considered as counting against the believability
+        # of a more general statement.
+        extra_ev_for_stmt = list(set(
+            ev
+            for supp in refiners
+            for ev in refinements_graph.nodes[supp]['stmt'].evidence
+            if not ev.epistemics.get('negated')
+        ))
+        # Add the extra evidences for the statement to the full list
+        all_extra_evs.append(extra_ev_for_stmt)
+    return all_extra_evs
 
 
 def sample_statements(
