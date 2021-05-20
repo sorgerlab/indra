@@ -409,43 +409,6 @@ class BeliefEngine(object):
         for ix, st in enumerate(statements):
             st.belief = prior_probs[ix]
 
-    def get_refinement_probs(
-        self,
-        statements: Sequence[Statement],
-        refiners_list: List[List[int]],
-    ) -> Dict[int, float]:
-        """Return the full belief of a statement given its refiners.
-
-        Parameters
-        ----------
-        statements :
-            Statements to calculate beliefs for.
-        refiners_list :
-            A list corresponding to the list of statements, where each entry
-            is a list of statement hashes for the statements that are
-            refinements (i.e., more specific versions) of the corresponding
-            statement in the statements list. If there are no refiner
-            statements the entry should be an empty list.
-
-        Returns
-        -------
-        A dictionary mapping statement hashes to corresponding belief
-        scores.
-        """
-        if self.refinements_graph is None:
-            raise ValueError("refinements_graph not initialized.")
-        # Get the evidences from the more specific (supports) statements
-        all_extra_evs = get_ev_for_stmts_from_hashes(statements,
-                                                     refiners_list,
-                                                     self.refinements_graph)
-        # TODO Refactor
-        # Get the list of beliefs matching the statements we passed in
-        beliefs = self.scorer.score_statements(statements, all_extra_evs)
-        # Convert to a dict of beliefs keyed by hash and return
-        hashes = [s.get_hash(self.matches_fun) for s in statements]
-        beliefs_by_hash = dict(zip(hashes, beliefs))
-        return beliefs_by_hash
-
     def set_hierarchy_probs(
         self,
         statements: Sequence[Statement],
@@ -492,6 +455,43 @@ class BeliefEngine(object):
         logger.debug('Finished belief calculation over refinements graph')
         return beliefs_by_hash
 
+    def get_refinement_probs(
+        self,
+        statements: Sequence[Statement],
+        refiners_list: List[List[int]],
+    ) -> Dict[int, float]:
+        """Return the full belief of a statement given its refiners.
+
+        Parameters
+        ----------
+        statements :
+            Statements to calculate beliefs for.
+        refiners_list :
+            A list corresponding to the list of statements, where each entry
+            is a list of statement hashes for the statements that are
+            refinements (i.e., more specific versions) of the corresponding
+            statement in the statements list. If there are no refiner
+            statements the entry should be an empty list.
+
+        Returns
+        -------
+        A dictionary mapping statement hashes to corresponding belief
+        scores.
+        """
+        if self.refinements_graph is None:
+            raise ValueError("refinements_graph not initialized.")
+        # Get the evidences from the more specific (supports) statements
+        all_extra_evs = get_ev_for_stmts_from_hashes(statements,
+                                                     refiners_list,
+                                                     self.refinements_graph)
+        # TODO Refactor
+        # Get the list of beliefs matching the statements we passed in
+        beliefs = self.scorer.score_statements(statements, all_extra_evs)
+        # Convert to a dict of beliefs keyed by hash and return
+        hashes = [s.get_hash(self.matches_fun) for s in statements]
+        beliefs_by_hash = dict(zip(hashes, beliefs))
+        return beliefs_by_hash
+
     def set_linked_probs(
         self,
         linked_statements: List[LinkedStatement],
@@ -519,6 +519,7 @@ def get_ev_for_stmts_from_supports(
     refinements_graph: Optional[networkx.DiGraph] = None,
     matches_fun: Optional[Callable[[Statement], str]] = None,
 ) -> List[List[Evidence]]:
+    """TODO TODO TODO"""
     # If the refinements_graph was not given, build it for this set of
     # statements
     if refinements_graph is None:
@@ -537,6 +538,7 @@ def get_ev_for_stmts_from_supports(
     # Use the refiners hashes to get the evidences
     return get_ev_for_stmts_from_hashes(statements, refiners_list,
                                         refinements_graph)
+
 
 def get_ev_for_stmts_from_hashes(
     statements: Sequence[Statement],
