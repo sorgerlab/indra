@@ -430,7 +430,7 @@ class BeliefEngine(object):
         """
         beliefs = self.get_hierarchy_probs(statements)
         for stmt in statements:
-            sh = stmt.get_hash(self.matches_fun)
+            sh = stmt.get_hash(matches_fun=self.matches_fun)
             stmt.belief = beliefs[sh]
 
     def get_hierarchy_probs(
@@ -503,7 +503,7 @@ class BeliefEngine(object):
         # Get the list of beliefs matching the statements we passed in
         beliefs = self.scorer.score_statements(statements, extra_evidences)
         # Convert to a dict of beliefs keyed by hash and return
-        hashes = [s.get_hash(self.matches_fun) for s in statements]
+        hashes = [s.get_hash(matches_fun=self.matches_fun) for s in statements]
         beliefs_by_hash = dict(zip(hashes, beliefs))
         return beliefs_by_hash
 
@@ -762,7 +762,7 @@ def build_refinements_graph(
     logger.debug('Building refinements graph')
     g = networkx.DiGraph()
     for st1 in statements:
-        sh1 = st1.get_hash(matches_fun)
+        sh1 = st1.get_hash(matches_fun=matches_fun)
         g.add_node(sh1, stmt=st1)
         for st2 in st1.supports:
             sh2 = st2.get_hash(matches_fun=matches_fun)
