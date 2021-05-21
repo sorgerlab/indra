@@ -92,8 +92,16 @@ def main():
           install_requires=install_list,
           extras_require=extras_require,
           include_package_data=True,
-          keywords=['systems', 'biology', 'model', 'pathway', 'assembler',
-                    'nlp', 'mechanism', 'biochemistry', 'network'],
+          keywords=[
+            'systems', 'biology', 'model', 'pathway', 'assembler',
+            'nlp', 'mechanism', 'biochemistry', 'network',
+            'big mechanism', 'bigmech',
+            'world modelers',
+            'communicating with computers', 'cwc',
+            'automated scientific discovery framework', 'asdf',
+            'automating scientific knowledge extraction', 'aske',
+            'panacea',
+          ],
           classifiers=[
             'Development Status :: 4 - Beta',
             'Environment :: Console',
