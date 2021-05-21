@@ -277,7 +277,8 @@ class CountsScorer(SklearnScorer):
         source_list: List[str],
         use_stmt_type: bool = False,
         use_num_members: bool = False,
-        use_num_pmids: bool = False
+        use_num_pmids: bool = False,
+        use_top_level: bool = False,
     ):
         # Call superclass constructor to store the model
         super(CountsScorer, self).__init__(model)
@@ -285,6 +286,7 @@ class CountsScorer(SklearnScorer):
         self.use_num_members = use_num_members
         self.source_list = source_list
         self.use_num_pmids = use_num_pmids
+        self.use_top_level = use_top_level
         # Build dictionary mapping INDRA Statement types to integers
         if use_stmt_type:
             all_stmt_types = get_all_descendants(Statement)
@@ -375,12 +377,17 @@ class CountsScorer(SklearnScorer):
         cat_features = []
         stmt_sources = set()
         for ix, stmt in enumerate(stmts):
-            stmt_ev = get_stmt_evidence(stmt, ix, extra_evidence)
+            #stmt_ev = get_stmt_evidence(stmt, ix, extra_evidence)
             # Collect all source_apis from stmt evidences
-            pmids = set()
-            for ev in stmt_ev:
+            dir_pmids = set()
+            for ev in stmt.evidence:
                 stmt_sources.add(ev.source_api)
-                pmids.add(ev.pmid)
+                dir_pmids.add(ev.pmid)
+            indir_pmids = set()
+            if extra_evidence is not None:
+                for ev in extra_evidence[ix]:
+                    stmt_sources.add(ev.source_api)
+                    indir_pmids.add(ev.pmid)
             # Collect non-source count features (e.g. type) from stmts
             feature_row = []
             # One-hot encoding of stmt type
@@ -394,7 +401,13 @@ class CountsScorer(SklearnScorer):
                 feature_row.append(len(stmt.agent_list()))
             # Add field with number of unique PMIDs
             if self.use_num_pmids:
-                feature_row.append(len(pmids))
+                feature_row.append(len(dir_pmids))
+                if extra_evidence is not None:
+                    feature_row.append(len(indir_pmids))
+            # Add field for whether stmt is top-level (i.e., no supports)
+            if self.use_top_level:
+                is_top_level = False if stmt.supports else True
+                feature_row.append(is_top_level)
             # Only add a feature row if we're using some of the features.
             if feature_row:
                 cat_features.append(feature_row)
@@ -406,15 +419,28 @@ class CountsScorer(SklearnScorer):
                              "in the statement data.")
 
         # Get source count features
-        num_cols = len(self.source_list)
+        # If we have extra_evidence, we double the source count features
+        if extra_evidence is None:
+            num_cols = len(self.source_list)
+        else:
+            num_cols = len(self.source_list) * 2
         num_rows = len(stmts)
         x_arr = np.zeros((num_rows, num_cols))
         for stmt_ix, stmt in enumerate(stmts):
-            stmt_ev = get_stmt_evidence(stmt, stmt_ix, extra_evidence)
-            sources = [ev.source_api for ev in stmt_ev]
-            src_ctr = Counter(sources)
+            #stmt_ev = get_stmt_evidence(stmt, stmt_ix, extra_evidence)
+            # Source from the stmt itself
+            direct_sources = [ev.source_api for ev in stmt.evidence]
+            dsrc_ctr = Counter(direct_sources)
             for src_ix, src in enumerate(self.source_list):
-                x_arr[stmt_ix, src_ix] = src_ctr.get(src, 0)
+                x_arr[stmt_ix, src_ix] = dsrc_ctr.get(src, 0)
+            # Get indirect evidences
+            if extra_evidence is not None:
+                indirect_sources = [ev.source_api
+                                    for ev in extra_evidence[stmt_ix]]
+                idsrc_ctr = Counter(indirect_sources)
+                for src_ix, src in enumerate(self.source_list):
+                    x_arr[stmt_ix, src_ix + len(self.source_list)] = \
+                                            idsrc_ctr.get(src, 0)
 
         # If we have any categorical features, turn them into an array and
         # add them to matrix
