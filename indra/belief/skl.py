@@ -159,6 +159,8 @@ class SklearnScorer(BeliefScorer):
         self,
         stmt_data: Union[np.ndarray, Sequence[Statement], pd.DataFrame],
         extra_evidence: Optional[List[List[Evidence]]] = None,
+        *args,
+        **kwargs,
     ) -> np.ndarray:
         """Preprocess stmt data and run sklearn model `predict_proba` method.
 
@@ -177,12 +179,14 @@ class SklearnScorer(BeliefScorer):
         """
         # Call the prediction method of the internal sklearn model
         stmt_arr = self.to_matrix(stmt_data, extra_evidence)
-        return self.model.predict_proba(stmt_arr)
+        return self.model.predict_proba(stmt_arr, *args, **kwargs)
 
     def predict(
         self,
         stmt_data: Union[np.ndarray, Sequence[Statement], pd.DataFrame],
         extra_evidence: Optional[List[List[Evidence]]] = None,
+        *args,
+        **kwargs,
     ) -> np.ndarray:
         """Preprocess stmt data and run sklearn model `predict` method.
 
@@ -200,12 +204,14 @@ class SklearnScorer(BeliefScorer):
             aren't already included in the Statement's own evidence list).
         """
         stmt_arr = self.to_matrix(stmt_data, extra_evidence)
-        return self.model.predict(stmt_arr)
+        return self.model.predict(stmt_arr, *args, **kwargs)
 
     def predict_log_proba(
         self,
         stmt_data: Union[np.ndarray, Sequence[Statement], pd.DataFrame],
         extra_evidence: Optional[List[List[Evidence]]] = None,
+        *args,
+        **kwargs,
     ) -> np.ndarray:
         """Preprocess stmt data and run sklearn model `predict_log_proba`.
 
@@ -223,7 +229,7 @@ class SklearnScorer(BeliefScorer):
             aren't already included in the Statement's own evidence list).
         """
         stmt_arr = self.to_matrix(stmt_data, extra_evidence)
-        return self.model.predict_log_proba(stmt_arr)
+        return self.model.predict_log_proba(stmt_arr, *args, **kwargs)
 
 
 class CountsScorer(SklearnScorer):
