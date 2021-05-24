@@ -55,7 +55,8 @@ def test_assembler():
     # Read from the template file and make sure the beginning and end of the
     # content matches
     template, _, _ = loader.get_source(None, 'indra/template.html')
-    assert result.startswith(template[0:100])
+    jinja_ix = template.find('%}') + 2
+    assert result.startswith(template[jinja_ix:jinja_ix+100])
     # Make sure assembler works with other parameters provided
     stmt2 = make_bad_stmt()
     ha = HtmlAssembler(
