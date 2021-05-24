@@ -1,98 +1,98 @@
 {% from "source_style_template.css" import source_badge_style %}
 
 {% macro base_template_style_macro(source_colors, simple) %}
-    a, .parent-a {
-      color: #256DC5;
-      target-new: tab;
-    }
-    h1 {
-      margin-bottom: 0;
-    }
-    .page-header {
-      padding-top: 1em;
-      padding-bottom: 1em;
-    }
+a, .parent-a {
+  color: #256DC5;
+  target-new: tab;
+}
+h1 {
+  margin-bottom: 0;
+}
+.page-header {
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
 
-    /* The sidebar menu */
-    .side-info {
-      height: 100%; /* Full-height: remove this if you want "auto" height */
-      z-index: 1; /* Stay on top */
-      position: fixed; /* Fixed Sidebar (stay in place on scroll) */
-      top: 0; /* Stay at the top */
-      background-color: #000000; /* Black */
-      color: #606060;
-      overflow-x: hidden; /* Disable horizontal scroll */
-      padding-top: 85px;
-      padding-left: 1em;
-      padding-right: 1em;
-    }
+/* The sidebar menu */
+.side-info {
+  height: 100%; /* Full-height: remove this if you want "auto" height */
+  z-index: 1; /* Stay on top */
+  position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+  top: 0; /* Stay at the top */
+  background-color: #000000; /* Black */
+  color: #606060;
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 85px;
+  padding-left: 1em;
+  padding-right: 1em;
+}
 
-    .left {
-      width: 20em;
-      left: 0;
-    }
+.left {
+  width: 20em;
+  left: 0;
+}
 
-    .right {
-      width: 20em;
-      right: 0;
-    }
+.right {
+  width: 20em;
+  right: 0;
+}
 
-    /* The navigation menu links */
-    .side-info .il-nav-link {
-      font-size: 12pt;
-      target-new: tab;
-      display: block;
-    }
+/* The navigation menu links */
+.side-info .il-nav-link {
+  font-size: 12pt;
+  target-new: tab;
+  display: block;
+}
 
-    .side-info h4 {
-      font-size: 14pt;
-      display: block;
-      text-decoration: none;
-    }
+.side-info h4 {
+  font-size: 14pt;
+  display: block;
+  text-decoration: none;
+}
 
-    .side-info-block {
-      padding: 1em 8px 1em 16px;
-    }
+.side-info-block {
+  padding: 1em 8px 1em 16px;
+}
 
-    .source-desc {
-      border-radius: 4px;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-      margin: 4px;
-    }
+.source-desc {
+  border-radius: 4px;
+  padding: 0.25em 0.5em 0.25em 0.5em;
+  margin: 4px;
+}
 
-    {% if not simple %}
-    .content {
-      padding-top:85px;
-    }
+{% if not simple %}
+.content {
+  padding-top:85px;
+}
 
-    @media (max-width: 1800px) {
-      .left {
-        display: none;
-      }
-      .right {
-        width: 20%;
-      }
-      .container {
-        float: left;
-      }
-    }
+@media (max-width: 1800px) {
+  .left {
+    display: none;
+  }
+  .right {
+    width: 20%;
+  }
+  .container {
+    float: left;
+  }
+}
 
-    @media (max-width: 1500px) {
-      .container {
-        max-width: 960px;
-      }
-      .right {
-        width: 15%;
-      }
-    }
+@media (max-width: 1500px) {
+  .container {
+    max-width: 960px;
+  }
+  .right {
+    width: 15%;
+  }
+}
 
-    @media (max-width: 1100px) {
-      .right {
-        display: none;
-      }
-    }
-    {% endif %}
+@media (max-width: 1100px) {
+  .right {
+    display: none;
+  }
+}
+{% endif %}
 
-    {{ source_badge_style(source_colors) }}
+{{ source_badge_style(source_colors) }}
 
 {% endmacro %}
