@@ -3,7 +3,7 @@ from indra.statements import *
 from indra.assemblers.english import AgentWithCoordinates
 from indra.assemblers.html.assembler import HtmlAssembler, tag_text, loader, \
     _format_evidence_text, tag_agents
-from indra.util.statement_presentation import AveAggregator, StmtStat, StmtGroup
+from indra.util.statement_presentation import AveAggregator, StmtStat
 
 
 def make_stmt():
