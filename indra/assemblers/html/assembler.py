@@ -30,7 +30,8 @@ logger = logging.getLogger(__name__)
 HERE = dirname(abspath(__file__))
 
 
-loader = FileSystemLoader(join(HERE, 'templates'))
+loader = FileSystemLoader([join(HERE, 'templates'),
+                           join(HERE, 'templates', 'macros')])
 env = Environment(loader=loader)
 
 default_template = env.get_template('indra/statements_view.html')
