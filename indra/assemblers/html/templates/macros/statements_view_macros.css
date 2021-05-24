@@ -1,0 +1,87 @@
+{% macro stmts_view_stylesheet_macro() %}
+
+    .badge-source {
+      font-size: 8pt;
+      margin: 0;
+    }
+
+    .statements-header {
+      position: -webkit-sticky;
+      position: sticky;
+      top: 0;
+      background-color: white;
+      z-index: 10;
+      padding-top: 5px;
+    }
+
+    .nvp {
+    }
+
+    .nvm {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .src-api {
+        overflow-x: hidden;
+    }
+
+    .group, .group-shown {
+    }
+
+    .group {
+        display: none;
+    }
+
+    .bars {
+      border-right: #0d5aa7 solid 1px;
+    }
+
+    .super_group_heading, .group_heading, .statement, .evidence {
+    }
+
+    .evidence, .evidence-text {
+        margin-bottom: 10px;
+    }
+
+    .evidence-text {
+      margin-right: 5px;
+      margin-left: 5px;
+    }
+
+    .super_group_heading, .group_heading {
+        cursor: pointer;
+    }
+
+    .super_group_heading:hover, .group_heading:hover {
+        background-color: #f2f2f2;
+    }
+
+    .badge-subject {
+        background-color: #4a36aa;
+        color: #FFFFFF;
+    }
+
+    .badge-object {
+        background-color: #2d8e4c;
+        color: #FFFFFF;
+    }
+
+    .badge-other {
+        background-color: #606060;
+        color: #FFFFFF;
+    }
+
+    .curation-row {
+        overflow-y: hidden;
+    }
+
+    .curation_toggle {
+        cursor: pointer;
+    }
+
+    .pmid_link, .pmcid_link, .doi_link {
+      display: block;
+    }
+
+{% endmacro %}
