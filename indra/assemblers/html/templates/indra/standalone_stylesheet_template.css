@@ -1,0 +1,19 @@
+{# Generates a single stylesheet from the provided macros if provided #}
+
+{% from "macros/source_style_template.css" import source_badge_style %}
+{% from "macros/template_stylesheet_macros.css" import
+        base_template_style_macro %}
+{% from "macros/statements_view_stylesheet_macros.css" import
+        stmts_view_stylesheet_macro %}
+
+{% if only_source_badges %}
+{{ source_badge_style(source_colors) }}
+
+{% elif base_template %}
+{{ base_template_style_macro(source_colors, simple) }}
+
+{% elif stmts_view %}
+{{ base_template_style_macro(source_colors, simple) }}
+{{ stmts_view_stylesheet_macro() }}
+
+{% endif %}
