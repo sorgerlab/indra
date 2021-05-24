@@ -67,7 +67,7 @@ class BaseTemplateStyleSheet(CSSAssembler):
 
 
 class StmtsViewStyleSheet(CSSAssembler):
-    """Stylesheet for the base template"""
+    """Stylesheet for the statements view template"""
 
     def __init__(self, simple: bool, source_colors=DEFAULT_SOURCE_COLORS,):
         super().__init__()
