@@ -1,3 +1,4 @@
+{% macro source_badge_style(source_colors) %}
 {% for category, data in source_colors %}
 {% for source, font_color in data['sources'].items() %}
 .source-{{ source }} {
@@ -6,3 +7,4 @@
 }
 {% endfor %}
 {% endfor %}
+{% endmacro %}
