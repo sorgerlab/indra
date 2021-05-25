@@ -25,7 +25,7 @@ stylesheet_template_file = 'standalone_stylesheet_template.css'
 
 
 class CSSAssembler:
-    """Create a stylesheet from a jinja2 template"""
+    """Base class to create a stylesheet from a jinja2 template"""
     template_file = stylesheet_template_file
 
     def __init__(self):
