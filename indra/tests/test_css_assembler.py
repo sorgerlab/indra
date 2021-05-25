@@ -5,6 +5,17 @@ from indra.assemblers.html.css_assembler import SourceBadgeStyleSheet, \
     StmtsViewStyleSheet, BaseTemplateStyleSheet
 
 
+def index_yielder(string: str, find: str):
+    """Yield indices of matched string, -1 if no match"""
+    match = 0
+    while string:
+        match = string.find(find, match)
+        if match <= -1:
+            raise StopIteration
+        yield match
+        match += len(find)
+
+
 def _source_badge_in_str(css_str: str,
                          source_colors: List[Tuple[str, Dict[str, Any]]]) ->\
         bool:
