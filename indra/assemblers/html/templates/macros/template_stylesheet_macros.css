@@ -1,4 +1,4 @@
-{% from "source_style_template.css" import source_badge_style %}
+{% from "source_style_macro.css" import source_badge_style %}
 
 {% macro base_template_style_macro(source_colors, simple) %}
 a, .parent-a {
