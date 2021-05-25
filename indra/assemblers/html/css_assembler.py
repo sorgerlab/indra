@@ -57,7 +57,7 @@ class SourceBadgeStyleSheet(CSSAssembler):
 class BaseTemplateStyleSheet(CSSAssembler):
     """Stylesheet for the base template"""
 
-    def __init__(self, simple: bool, source_colors=DEFAULT_SOURCE_COLORS,):
+    def __init__(self, simple: bool, source_colors=DEFAULT_SOURCE_COLORS):
         super().__init__()
         self.template_kwargs = {'source_colors': source_colors,
                                 'simple': simple,
@@ -69,7 +69,7 @@ class BaseTemplateStyleSheet(CSSAssembler):
 class StmtsViewStyleSheet(CSSAssembler):
     """Stylesheet for the statements view template"""
 
-    def __init__(self, simple: bool, source_colors=DEFAULT_SOURCE_COLORS,):
+    def __init__(self, simple: bool, source_colors=DEFAULT_SOURCE_COLORS):
         super().__init__()
         self.template_kwargs = {'source_colors': source_colors,
                                 'simple': simple,
