@@ -1,7 +1,7 @@
 from typing import List, Tuple, Dict, Any
 
 from indra.assemblers.html.assembler import DEFAULT_SOURCE_COLORS, loader
-from indra.assemblers.html.css_assembler import SourceBadgeStyleSheet, \
+from indra.assemblers.html.css_generator import SourceBadgeStyleSheet, \
     StmtsViewStyleSheet, BaseTemplateStyleSheet
 
 
