@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 HERE = dirname(abspath(__file__))
 
 
-# Note that if templates of the same exist in both 'templates/indra' and
+# Note that if templates of the same name exist in both 'templates/indra' and
 # 'templates/macros', the template in the first directory will be used.
 loader = FileSystemLoader([join(HERE, 'templates', 'indra'),
                            join(HERE, 'templates', 'macros')])
