@@ -59,3 +59,18 @@ def test_base_template_sheet():
 
     not_simple_str = template[iy_simple_start:iy_simple_end]
     assert not_simple_str in css_str
+
+
+def test_stmt_view_sheet():
+    svss = StmtsViewStyleSheet(simple=False)
+    css_str = svss.make_model()
+    assert _source_badge_in_str(css_str, DEFAULT_SOURCE_COLORS)
+
+    # Test base template styling
+    template, _, _ = loader.get_source(None,
+                                       'statements_view_stylesheet_macros.css')
+    assert isinstance(template, str)
+    iy_macro = index_yielder(template, '%}\n')
+    macro_start = next(iy_macro) + len('%}\n')
+
+    css_str.startswith(template[macro_start:macro_start+1000])
