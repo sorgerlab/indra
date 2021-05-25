@@ -50,8 +50,10 @@ class CSSAssembler:
 class SourceBadgeStyleSheet(CSSAssembler):
     """Stylesheet defining color, background-color for source count badges"""
 
-    def __init__(self, source_colors=DEFAULT_SOURCE_COLORS):
+    def __init__(self, source_colors=None):
         super().__init__()
+        if source_colors is None:
+            source_colors = DEFAULT_SOURCE_COLORS
         self.template_kwargs = {'source_colors': source_colors,
                                 'simple': False,
                                 'only_source_badges': True,
@@ -62,8 +64,10 @@ class SourceBadgeStyleSheet(CSSAssembler):
 class BaseTemplateStyleSheet(CSSAssembler):
     """Stylesheet for the base template"""
 
-    def __init__(self, simple: bool, source_colors=DEFAULT_SOURCE_COLORS):
+    def __init__(self, simple: bool, source_colors=None):
         super().__init__()
+        if source_colors is None:
+            source_colors = DEFAULT_SOURCE_COLORS
         self.template_kwargs = {'source_colors': source_colors,
                                 'simple': simple,
                                 'only_source_badges': False,
@@ -74,8 +78,10 @@ class BaseTemplateStyleSheet(CSSAssembler):
 class StmtsViewStyleSheet(CSSAssembler):
     """Stylesheet for the statements view template"""
 
-    def __init__(self, simple: bool, source_colors=DEFAULT_SOURCE_COLORS):
+    def __init__(self, simple: bool, source_colors=None):
         super().__init__()
+        if source_colors is None:
+            source_colors = DEFAULT_SOURCE_COLORS
         self.template_kwargs = {'source_colors': source_colors,
                                 'simple': simple,
                                 'only_source_badges': False,
