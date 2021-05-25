@@ -44,8 +44,18 @@ def test_base_template_sheet():
 
     # Test base template styling
     template, _, _ = loader.get_source(None, 'template_stylesheet_macros.css')
+    assert isinstance(template, str)
     iy_macro = index_yielder(template, '%}\n')
     _ = next(iy_macro)
     macro_start = next(iy_macro) + len('%}\n')
 
     css_str.startswith(template[macro_start:macro_start+900])
+
+    iy_simple_start = template.find('{% if not simple %}\n')
+    assert iy_simple_start > 0
+    iy_simple_start += len('{% if not simple %}\n')
+    iy_simple_end = template.find('{% endif %}\n')
+    assert iy_simple_end > 0
+
+    not_simple_str = template[iy_simple_start:iy_simple_end]
+    assert not_simple_str in css_str
