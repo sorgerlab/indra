@@ -1,6 +1,6 @@
 from typing import List, Tuple, Dict, Any
 
-from indra.assemblers.html.assembler import DEFAULT_SOURCE_COLORS
+from indra.assemblers.html.assembler import DEFAULT_SOURCE_COLORS, loader
 from indra.assemblers.html.css_assembler import SourceBadgeStyleSheet, \
     StmtsViewStyleSheet, BaseTemplateStyleSheet
 
@@ -34,7 +34,6 @@ def _source_badge_in_str(css_str: str,
 def test_source_badge_sheet():
     sbss = SourceBadgeStyleSheet()
     css_str = sbss.make_model()
-
     assert _source_badge_in_str(css_str, DEFAULT_SOURCE_COLORS)
 
 
@@ -42,3 +41,11 @@ def test_base_template_sheet():
     btss_simple = BaseTemplateStyleSheet(simple=False)
     css_str = btss_simple.make_model()
     assert _source_badge_in_str(css_str, DEFAULT_SOURCE_COLORS)
+
+    # Test base template styling
+    template, _, _ = loader.get_source(None, 'template_stylesheet_macros.css')
+    iy_macro = index_yielder(template, '%}\n')
+    _ = next(iy_macro)
+    macro_start = next(iy_macro) + len('%}\n')
+
+    css_str.startswith(template[macro_start:macro_start+900])
