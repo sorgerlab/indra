@@ -1,3 +1,8 @@
+"""
+Assemble CSS rules to be inserted in an HTML file's style tag or to be saved
+in a separate CSS file.
+"""
+
 import logging
 from typing import Optional, Dict
 from os.path import dirname, abspath, join
@@ -35,7 +40,7 @@ class CSSAssembler:
         return self.model
 
     def save_model(self, fname: str):
-        """Save the CSS stylesheet to a file"""
+        """Save the CSS rules to a file"""
         model = self.make_model()
 
         with open(fname, 'w') as fh:
