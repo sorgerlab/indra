@@ -24,7 +24,7 @@ env = Environment(loader=loader)
 stylesheet_template_file = 'standalone_stylesheet_template.css'
 
 
-class CSSAssembler:
+class CSSGenerator:
     """Base class to create a stylesheet from a jinja2 template"""
     template_file = stylesheet_template_file
 
@@ -47,7 +47,7 @@ class CSSAssembler:
             fh.write(model)
 
 
-class SourceBadgeStyleSheet(CSSAssembler):
+class SourceBadgeStyleSheet(CSSGenerator):
     """Stylesheet defining color, background-color for source count badges"""
 
     def __init__(self, source_colors=None):
@@ -61,7 +61,7 @@ class SourceBadgeStyleSheet(CSSAssembler):
                                 'stmts_view': False}
 
 
-class BaseTemplateStyleSheet(CSSAssembler):
+class BaseTemplateStyleSheet(CSSGenerator):
     """Stylesheet for the base template"""
 
     def __init__(self, simple: bool, source_colors=None):
@@ -75,7 +75,7 @@ class BaseTemplateStyleSheet(CSSAssembler):
                                 'stmts_view': False}
 
 
-class StmtsViewStyleSheet(CSSAssembler):
+class StmtsViewStyleSheet(CSSGenerator):
     """Stylesheet for the statements view template"""
 
     def __init__(self, simple: bool, source_colors=None):
