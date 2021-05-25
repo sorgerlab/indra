@@ -1,5 +1,5 @@
 {# Generates a single stylesheet from the provided macros if provided #}
-{% from "macros/source_style_macro.css" import source_badge_style %}
+{% from "source_style_macro.css" import source_badge_style %}
 {% from "template_stylesheet_macros.css" import
         base_template_style_macro %}
 {% from "statements_view_stylesheet_macros.css" import
