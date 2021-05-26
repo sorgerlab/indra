@@ -219,7 +219,7 @@ from indra.sources.indra_db_rest.util import make_db_rest_request, get_url_base
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                    use_exact_type=False, limit=None, persist=True, timeout=None,
                    strict_stop=False, ev_limit=10, sort_by='ev_count', tries=3,
-                   api_key=None):
+                   use_obtained_counts=False, api_key=None):
     """Get Statements from the INDRA DB web API matching given agents and type.
 
     You get a :py:class:`DBQueryStatementProcessor
@@ -289,6 +289,11 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         timeout will often succeed fast enough to avoid a timeout. This can also
         help gracefully handle an unreliable connection, if you're willing to
         wait. Default is 3.
+    use_obtained_counts : Optional[bool]
+        If True, evidence counts and source counts are reported based
+        on the actual evidences returned for each statement in this query
+        (as opposed to all existing evidences, even if not all were returned).
+        Default: False
     api_key : Optional[str]
         Override or use in place of the API key given in the INDRA config file.
 
@@ -327,7 +332,9 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     return DBQueryStatementProcessor(query, limit=limit, persist=persist,
                                      ev_limit=ev_limit, timeout=timeout,
                                      sort_by=sort_by, tries=tries,
-                                     strict_stop=strict_stop, api_key=api_key)
+                                     strict_stop=strict_stop,
+                                     use_obtained_counts=use_obtained_counts,
+                                     api_key=api_key)
 
 
 @clockit
