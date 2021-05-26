@@ -28,10 +28,14 @@ class CSSGenerator:
     """Base class to create a stylesheet from a jinja2 template"""
     template_file = stylesheet_template_file
 
+    template: Template
+    model: Optional[str]
+    template_kwargs: Dict
+
     def __init__(self):
-        self.template: Template = env.get_template(self.template_file)
-        self.model: Optional[str] = None  # Stylesheet as string
-        self.template_kwargs: Dict = NotImplemented
+        self.template = env.get_template(self.template_file)
+        self.model = None  # Stylesheet as string
+        self.template_kwargs = NotImplemented
 
     def make_model(self) -> str:
         """Render the template"""
