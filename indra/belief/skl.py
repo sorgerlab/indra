@@ -285,6 +285,7 @@ class CountsScorer(SklearnScorer):
         use_num_members: bool = False,
         use_num_pmids: bool = False,
         use_top_level: bool = False,
+        use_promoter: bool = False,
     ):
         # Call superclass constructor to store the model
         super(CountsScorer, self).__init__(model)
@@ -293,6 +294,7 @@ class CountsScorer(SklearnScorer):
         self.source_list = source_list
         self.use_num_pmids = use_num_pmids
         self.use_top_level = use_top_level
+        self.use_promoter = use_promoter
         # Build dictionary mapping INDRA Statement types to integers
         if use_stmt_type:
             all_stmt_types = get_all_descendants(Statement)
@@ -386,9 +388,12 @@ class CountsScorer(SklearnScorer):
             #stmt_ev = get_stmt_evidence(stmt, ix, extra_evidence)
             # Collect all source_apis from stmt evidences
             dir_pmids = set()
+            promoter_ct = 0
             for ev in stmt.evidence:
                 stmt_sources.add(ev.source_api)
                 dir_pmids.add(ev.pmid)
+                if ev.text is not None and 'promoter' in ev.text.lower():
+                    promoter_ct += 1
             indir_pmids = set()
             if extra_evidence is not None:
                 for ev in extra_evidence[ix]:
@@ -414,6 +419,11 @@ class CountsScorer(SklearnScorer):
             if self.use_top_level:
                 is_top_level = False if stmt.supports else True
                 feature_row.append(is_top_level)
+            # Add a field specifying the percentage of evidences containing
+            # the word "promoter":
+            if self.use_promoter:
+                promoter_pct = promoter_ct / len(stmt.evidence)
+                feature_row.append(promoter_pct)
             # Only add a feature row if we're using some of the features.
             if feature_row:
                 cat_features.append(feature_row)
