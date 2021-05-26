@@ -460,6 +460,7 @@ def get_statements_for_papers(ids, limit=None, ev_limit=10, sort_by='ev_count',
 def get_statements_from_query(query, limit=None, ev_limit=10,
                               sort_by='ev_count', persist=True, timeout=None,
                               strict_stop=False, tries=3, filter_ev=True,
+                              use_obtained_counts=False,
                               api_key=None):
     """Get Statements using a Query.
 
@@ -504,6 +505,11 @@ def get_statements_from_query(query, limit=None, ev_limit=10,
         thread to join for `timeout` seconds before returning, allowing other
         work to continue while the query runs in the background. The default is
         False.
+    use_obtained_counts : Optional[bool]
+        If True, evidence counts and source counts are reported based
+        on the actual evidences returned for each statement in this query
+        (as opposed to all existing evidences, even if not all were returned).
+        Default: False
     tries : Optional[int]
         Set the number of times to try the query. The database often caches
         results, so if a query times out the first time, trying again after a
@@ -523,7 +529,9 @@ def get_statements_from_query(query, limit=None, ev_limit=10,
                                      ev_limit=ev_limit, sort_by=sort_by,
                                      persist=persist, timeout=timeout,
                                      tries=tries, filter_ev=filter_ev,
-                                     strict_stop=strict_stop, api_key=api_key)
+                                     strict_stop=strict_stop,
+                                     use_obtained_counts=use_obtained_counts,
+                                     api_key=api_key)
 
 
 def submit_curation(hash_val, tag, curator_email, text=None,
