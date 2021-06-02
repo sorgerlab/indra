@@ -4,10 +4,12 @@ supports curation.
 """
 
 import re
+import json
 import uuid
 import logging
 import itertools
 from html import escape
+from typing import Union, Tuple, List, Dict
 from collections import OrderedDict, defaultdict
 from os.path import abspath, dirname, join
 
@@ -15,6 +17,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from indra.statements import *
 from indra.sources import SOURCE_INFO
+from indra.resources import RESOURCES_PATH
 from indra.statements.agent import default_ns_order
 from indra.statements.validate import validate_id
 from indra.databases.identifiers import get_identifiers_url, ensure_prefix
@@ -28,6 +31,10 @@ from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
 HERE = dirname(abspath(__file__))
+
+# Derived types
+SourceInfo = Dict[str, Dict[str, Union[str, Dict[str, str]]]]
+SourceColors = List[Tuple[str, Dict[str, Union[str, Dict[str, str]]]]]
 
 
 loader = FileSystemLoader(join(HERE, 'templates'))
@@ -59,6 +66,81 @@ def make_source_colors(databases, readers):
     db_colors = dict(zip(databases, color_gen('light')))
     return [('databases', {'color': 'black', 'sources': db_colors}),
             ('reading', {'color': 'white', 'sources': reader_colors})]
+
+
+def regenerate_default_source_styling(indent=4) -> SourceInfo:
+    """Overwrite the default styling of sources in source_info.json
+
+    This function is intended to be used to programmatically update the
+    default source styling for use in end-user facing application with a
+    graphical UI. The actual
+
+    Returns
+    -------
+    SourceInfo
+        The new source info writen to source_info.json
+
+    Notes
+    -----
+    - This function *will* update a source_info.json, which is tracked by git
+    - To get styling for (a) new source(s):
+        + Add the new source(s) to source_info.json, do *not* add the field
+          "default_styling".
+        + Run this function after the file has been updated and saved: this
+          function will open and assign color/background-color to all
+          sources and then overwrite the file.
+        + If this is a final update, also remember to 'git add' and commit
+          source_info.json to a branch so that it can be submitted for review
+          in PR.
+    """
+    # Load source info json
+    # Be aware of the 'hack' that lives in SOURCE_INFO but not in the
+    # actual file source_info.json:
+    # SOURCE_INFO['trips'] = SOURCE_INFO['drum']
+    # Also be aware of the INDRA - INDRA DB inconsistency in source api
+    # naming, the mapping of which lives in 'internal_source_mappings'
+    source_info_file = join(RESOURCES_PATH, 'source_info.json')
+    with open(source_info_file, 'r') as fh:
+        source_info_json = json.load(fh)
+
+    # Get databases and readers from source info, it is assumed to be the
+    # ground truth of which sources are handled by INDRA
+    databases = set()
+    readers = set()
+    for source, info in source_info_json.items():
+        if source in readers or source in databases:
+            logger.warning(f'Possible duplicate source found: {source}. '
+                           f'Skipping...')
+            continue
+
+        if info['type'] == 'database':
+            databases.add(source)
+        elif info['type'] == 'reader':
+            readers.add(source)
+        else:
+            raise ValueError(f'Unhandled source type {info["type"]}')
+
+    source_colors = make_source_colors(databases=list(databases),
+                                       readers=list(readers))
+    source_colors_dict = {src_type: defs for src_type, defs in source_colors}
+
+    # Overwrite 'default_style' used for CSS
+    for source, info in source_info_json.items():
+        src_type = 'reading' if info['type'] == 'reader' else 'databases'
+        bgcolor = source_colors_dict[src_type]['sources'][source]
+        color = source_colors_dict[src_type]['color']
+        try:
+            info['default_style']['color'] = color
+            info['default_style']['background-color'] = bgcolor
+        except KeyError:
+            info['default_style'] = {'color': color,
+                                     'background-color': bgcolor}
+
+    # Re-write source_info
+    with open(source_info_file, 'w') as fh:
+        json.dump(obj=source_info_json, fp=fh, indent=indent)
+
+    return source_info_json
 
 
 DEFAULT_SOURCE_COLORS = make_source_colors(db_sources, reader_sources)
