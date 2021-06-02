@@ -17,7 +17,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from indra.statements import *
 from indra.sources import SOURCE_INFO
-from indra.resources import RESOURCES_PATH
+from indra.resources import RESOURCES_PATH, load_resource_json
 from indra.statements.agent import default_ns_order
 from indra.statements.validate import validate_id
 from indra.databases.identifiers import get_identifiers_url, ensure_prefix
@@ -26,7 +26,7 @@ from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_relation_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
     get_available_ev_counts, standardize_counts, get_available_beliefs, \
-    StmtGroup, make_standard_stats, reverse_source_mappings
+    StmtGroup, make_standard_stats, internal_source_mappings, reverse_source_mappings
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
@@ -94,11 +94,6 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
           in PR.
     """
     # Load source info json
-    # Be aware of the 'hack' that lives in SOURCE_INFO but not in the
-    # actual file source_info.json:
-    # SOURCE_INFO['trips'] = SOURCE_INFO['drum']
-    # Also be aware of the INDRA - INDRA DB inconsistency in source api
-    # naming, the mapping of which lives in 'internal_source_mappings'
     source_info_file = join(RESOURCES_PATH, 'source_info.json')
     with open(source_info_file, 'r') as fh:
         source_info_json = json.load(fh)
@@ -143,7 +138,79 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
     return source_info_json
 
 
-DEFAULT_SOURCE_COLORS = make_source_colors(db_sources, reader_sources)
+def get_default_source_colors(force_reload: bool = False) -> SourceColors:
+    """
+
+    Parameters
+    ----------
+    force_reload
+
+
+    Returns
+    -------
+    SourceColors
+        A source to color style mapping with naming consistent with the
+        naming in INDRA DB
+    """
+    # Be aware of the 'hack' that lives in SOURCE_INFO but not in the
+    # actual file source_info.json:
+    # SOURCE_INFO['trips'] = SOURCE_INFO['drum'], we are only interested in
+    # 'trips', so will skip 'drum'
+    # Also be aware of the INDRA - INDRA DB inconsistency in source api
+    # naming, the mapping of which lives in 'internal_source_mappings'
+
+    # Load source_info.json - load actual file if force reload
+    if force_reload:
+        source_info_json = load_resource_json('source_info.json')
+    else:
+        source_info_json = SOURCE_INFO
+
+    # Get text colors
+    db_txt_color, rdr_text_color = '', ''
+    for source, info in source_info_json.items():
+        if source == 'databases':
+            db_txt_color = info['color']
+        elif source == 'reading':
+            rdr_text_color = info['color']
+
+        if db_txt_color and rdr_text_color:
+            break
+
+    # Initialize dicts for background-color for readers and databases
+    db_colors = {'color': db_txt_color, 'sources': {}}
+    rdr_colors = {'color': rdr_text_color, 'sources': {}}
+    for source, info in source_info_json.items():
+        # Map INDRA -> INDRA DB source api naming and skip 'drum' as source
+        if source in internal_source_mappings:
+            mapped_source = internal_source_mappings[source]
+        elif source == 'drum':
+            continue
+        else:
+            mapped_source = source
+
+        # Assign colors
+        try:
+            if info['type'] == 'reader':
+                rdr_colors['sources'][mapped_source] = \
+                    info['default_style']['background-color']
+            elif info['type'] == 'database':
+                db_colors['sources'][mapped_source] = \
+                    info['default_style']['background-color']
+        except KeyError:
+            logger.warning(f'Could not assign styling from source {source}. '
+                           f'If this is due to new source(s) added to '
+                           f'source_info.json, run '
+                           f'"regenerate_default_source_styling()" before '
+                           f'running'
+                           f'"get_default_source_colors(force_reload=True) '
+                           f'again"')
+            continue
+
+    # Create and return source color structure
+    return [('databases', db_colors), ('reading', rdr_colors)]
+
+
+DEFAULT_SOURCE_COLORS = get_default_source_colors()
 
 
 class HtmlAssembler(object):
