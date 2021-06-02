@@ -168,12 +168,12 @@ def get_default_source_colors(force_reload: bool = False) -> SourceColors:
     # Get text colors
     db_txt_color, rdr_text_color = '', ''
     for source, info in source_info_json.items():
-        if source == 'databases':
-            db_txt_color = info['color']
-        elif source == 'reading':
-            rdr_text_color = info['color']
+        if info['type'] == 'database':
+            db_txt_color = info['default_style']['color']
+        elif info['type'] == 'reader':
+            rdr_text_color = info['default_style']['color']
 
-        if db_txt_color and rdr_text_color:
+        if db_txt_color != '' and rdr_text_color != '':
             break
 
     # Initialize dicts for background-color for readers and databases
