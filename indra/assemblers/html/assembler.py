@@ -139,18 +139,18 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
 
 
 def get_default_source_colors(force_reload: bool = False) -> SourceColors:
-    """
+    """Get the default color theme from source_info.json
 
     Parameters
     ----------
-    force_reload
-
+    force_reload :
+        Forces a reload of source_info.json
 
     Returns
     -------
     SourceColors
-        A source to color style mapping with naming consistent with the
-        naming in INDRA DB
+        A source to color style mapping with naming of sources consistent
+        with the naming in INDRA DB
     """
     # Be aware of the 'hack' that lives in SOURCE_INFO but not in the
     # actual file source_info.json:
