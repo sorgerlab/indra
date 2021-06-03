@@ -172,14 +172,15 @@ def get_default_source_colors(force_reload: bool = False) -> SourceColors:
     """
     # Be aware of the 'hack' that lives in SOURCE_INFO but not in the
     # actual file source_info.json:
-    # SOURCE_INFO['trips'] = SOURCE_INFO['drum'], we are only interested in
-    # 'trips', so will skip 'drum'
+    # SOURCE_INFO['trips'] = SOURCE_INFO['drum']
     # Also be aware of the INDRA - INDRA DB inconsistency in source api
     # naming, the mapping of which lives in 'internal_source_mappings'
 
     # Load source_info.json - load actual file if force reload
     if force_reload:
         source_info_json = load_resource_json('source_info.json')
+        # Add trips entry
+        source_info_json['trips'] = source_info_json['drum']
     else:
         source_info_json = SOURCE_INFO
 
