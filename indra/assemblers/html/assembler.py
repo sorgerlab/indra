@@ -84,6 +84,7 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
     -----
     - This function *will* update a source_info.json, which is tracked by git
     - To get styling for (a) new source(s):
+
         + Add the new source(s) to source_info.json, do *not* add the field
           "default_styling".
         + Run this function after the file has been updated and saved: this
