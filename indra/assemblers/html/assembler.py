@@ -107,8 +107,8 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
 
     # Get databases and readers from source info, it is assumed to be the
     # ground truth of which sources are handled by INDRA
-    databases = set()
-    readers = set()
+    databases = []
+    readers = []
     for source, info in source_info_json.items():
         if source in readers or source in databases:
             logger.warning(f'Possible duplicate source found: {source}. '
@@ -116,14 +116,23 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
             continue
 
         if info['type'] == 'database':
-            databases.add(source)
+            databases.append(source)
         elif info['type'] == 'reader':
-            readers.add(source)
+            readers.append(source)
         else:
             raise ValueError(f'Unhandled source type {info["type"]}')
 
-    source_colors = make_source_colors(databases=list(databases),
-                                       readers=list(readers))
+    # Get the reverse translation: db naming -> indra naming
+    rsm = {v: k for k, v in internal_source_mappings.items()}
+
+    # Sort databases according to db_sources. Readers will be sorted inside
+    # make_source_colors
+    db_sources_tr = [rsm[s] if s in rsm else s for s in db_sources]
+    databases.sort(key=lambda s: db_sources_tr.index(s)
+                   if s in db_sources_tr else len(db_sources_tr))
+
+    source_colors = make_source_colors(databases=databases, readers=readers,
+                                       db_scheme='hues', read_scheme='hues')
     source_colors_dict = {src_type: defs for src_type, defs in source_colors}
 
     # Overwrite 'default_style' used for CSS
