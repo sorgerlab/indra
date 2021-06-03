@@ -75,16 +75,18 @@ def make_source_colors(databases, readers):
 
 
 def regenerate_default_source_styling(indent=4) -> SourceInfo:
-    """Overwrite the default styling of sources in source_info.json
+    """Update the default styling of sources in source_info.json
 
     This function is intended to be used to programmatically update the
     default source styling for use in end-user facing application with a
-    graphical UI. The actual
+    graphical UI. For getting the default color scheme, see
+    get_default_source_colors
+
 
     Returns
     -------
     SourceInfo
-        The new source info writen to source_info.json
+        The new source info written to source_info.json
 
     Notes
     -----
@@ -98,7 +100,7 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
           sources and then overwrite the file.
         + If this is a final update, also remember to 'git add' and commit
           source_info.json to a branch so that it can be submitted for review
-          in PR.
+          in a PR to the INDRA repository.
     """
     # Load source info json
     source_info_file = join(RESOURCES_PATH, 'source_info.json')
