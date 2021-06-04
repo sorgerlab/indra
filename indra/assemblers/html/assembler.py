@@ -155,8 +155,7 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
     readers = []
     for source, info in source_info_json.items():
         if source in readers or source in databases:
-            logger.warning(f'Possible duplicate source found: {source}. '
-                           f'Skipping...')
+            logger.warning(f'Duplicate source found: {source}, skipping...')
             continue
 
         if info['type'] == 'database':
