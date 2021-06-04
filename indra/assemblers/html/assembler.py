@@ -199,52 +199,33 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
     return source_info_json
 
 
-def _source_info_to_source_colors(source_info: SourceInfo) -> SourceColors:
-    # Get text colors
-    db_txt_color, rdr_text_color = '', ''
-    for source, info in source_info.items():
-        if db_txt_color == '' and info['type'] == 'database':
-            db_txt_color = info['default_style']['color']
-        elif rdr_text_color == '' and info['type'] == 'reader':
-            rdr_text_color = info['default_style']['color']
-
-        if db_txt_color != '' and rdr_text_color != '':
-            break
-
+def _source_info_to_source_colors(source_info: SourceInfo,
+                                  db_scheme: str,
+                                  reader_scheme: str) -> SourceColors:
     # Initialize dicts for background-color for readers and databases
-    db_colors = {'color': db_txt_color, 'sources': {}}
-    rdr_colors = {'color': rdr_text_color, 'sources': {}}
+    databases = []
+    readers = []
     for source, info in source_info.items():
         # Map INDRA -> INDRA DB source api naming and skip 'drum' as source
-        if source in internal_source_mappings:
-            mapped_source = internal_source_mappings[source]
-        elif source == 'drum':
+        if source == 'drum':
             continue
-        else:
-            mapped_source = source
+        mapped_source = internal_source_mappings.get(source, source)
 
-        # Assign colors
-        try:
-            if info['type'] == 'reader':
-                rdr_colors['sources'][mapped_source] = \
-                    info['default_style']['background-color']
-            elif info['type'] == 'database':
-                db_colors['sources'][mapped_source] = \
-                    info['default_style']['background-color']
-        except KeyError:
-            logger.warning(f'Could not assign styling from source {source}. '
-                           f'If this is due to new source(s) added to '
-                           f'source_info.json, run '
-                           f'"regenerate_default_source_styling()" and then '
-                           f'run "get_default_source_colors" with '
-                           f'force_reload=True')
-            continue
+        if info['type'] == 'reader':
+            readers.append(mapped_source)
+        elif info['type'] == 'database':
+            databases.append(mapped_source)
+
+    databases.sort(key=lambda s: db_sources.index(s)
+                   if s in db_sources else len(db_sources))
 
     # Create and return source color structure
-    return [('databases', db_colors), ('reading', rdr_colors)]
+    return make_source_colors(databases=databases, readers=readers,
+                              db_scheme=db_scheme, read_scheme=reader_scheme)
 
 
-def get_source_colors(sources: List[str]) -> SourceColors:
+def get_source_colors(sources: List[str], db_scheme: str,
+                      reader_scheme: str) -> SourceColors:
     """Get the color scheme for a list of sources
 
     Note: The input source names are assumed to be as they appear in INDRA,
@@ -255,6 +236,10 @@ def get_source_colors(sources: List[str]) -> SourceColors:
     ----------
     sources :
         A list of source names as they appear in source_info.json
+    db_scheme :
+        The color scheme to use for database sources
+    reader_scheme :
+        The color scheme to use for reader sources
 
     Returns
     -------
@@ -271,7 +256,7 @@ def get_source_colors(sources: List[str]) -> SourceColors:
         else:
             logger.warning(f'Source {source} not recognized')
 
-    return _source_info_to_source_colors(source_info)
+    return _source_info_to_source_colors(source_info, db_scheme, reader_scheme)
 
 
 def get_default_source_colors(force_reload: bool = False) -> SourceColors:
@@ -308,7 +293,9 @@ def get_default_source_colors(force_reload: bool = False) -> SourceColors:
     source_info_copy['biopax']['default_style'] = \
         source_info_copy['pc']['default_style']
 
-    return _source_info_to_source_colors(source_info_json)
+    return _source_info_to_source_colors(source_info_json,
+                                         db_scheme='qualitative',
+                                         reader_scheme='qualitative')
 
 
 DEFAULT_SOURCE_COLORS = get_default_source_colors()
