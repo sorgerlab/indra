@@ -197,34 +197,7 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
     return source_info_json
 
 
-def get_default_source_colors(force_reload: bool = False) -> SourceColors:
-    """Get the default color theme from source_info.json
-
-    Parameters
-    ----------
-    force_reload :
-        Forces a reload of source_info.json
-
-    Returns
-    -------
-    SourceColors
-        A source to color style mapping with naming of sources consistent
-        with the naming in INDRA DB
-    """
-    # Be aware of the 'hack' that lives in SOURCE_INFO but not in the
-    # actual file source_info.json:
-    # SOURCE_INFO['trips'] = SOURCE_INFO['drum']
-    # Also be aware of the INDRA - INDRA DB inconsistency in source api
-    # naming, the mapping of which lives in 'internal_source_mappings'
-
-    # Load source_info.json - load actual file if force reload
-    if force_reload:
-        source_info_json = load_resource_json('source_info.json')
-        # Add trips entry
-        source_info_json['trips'] = source_info_json['drum']
-    else:
-        source_info_json = SOURCE_INFO
-
+def _source_info_to_source_colors(source_info: SourceInfo) -> SourceColors:
     # Get text colors
     db_txt_color, rdr_text_color = '', ''
     for source, info in source_info_json.items():
@@ -239,7 +212,7 @@ def get_default_source_colors(force_reload: bool = False) -> SourceColors:
     # Initialize dicts for background-color for readers and databases
     db_colors = {'color': db_txt_color, 'sources': {}}
     rdr_colors = {'color': rdr_text_color, 'sources': {}}
-    for source, info in source_info_json.items():
+    for source, info in source_info.items():
         # Map INDRA -> INDRA DB source api naming and skip 'drum' as source
         if source in internal_source_mappings:
             mapped_source = internal_source_mappings[source]
@@ -268,6 +241,67 @@ def get_default_source_colors(force_reload: bool = False) -> SourceColors:
 
     # Create and return source color structure
     return [('databases', db_colors), ('reading', rdr_colors)]
+
+
+def get_source_colors(sources: List[str]) -> SourceColors:
+    """Get the color scheme for a list of sources
+
+    Note: The input source names are assumed to be as they appear in INDRA,
+    i.e. source_info.json, but will be translated to the names used in
+    INDRA DB in the source colors returned.
+
+    Parameters
+    ----------
+    sources :
+        A list of source names as they appear in source_info.json
+
+    Returns
+    -------
+    SourceColors
+        The source colors of the requested
+    """
+    # Pass the collected source info to _source_info_to_source_colors
+    source_info = {}
+    for source in sources:
+        if source in SOURCE_INFO:
+            # SOURCE_INFO contains the drum-trips duplication, so trips is
+            # allowed as source
+            source_info[source] = SOURCE_INFO[source]
+        else:
+            logger.warning(f'Source {source} not recognized')
+
+    return _source_info_to_source_colors(source_info)
+
+
+def get_default_source_colors(force_reload: bool = False) -> SourceColors:
+    """Get the default color theme from source_info.json
+
+    Parameters
+    ----------
+    force_reload :
+        Forces a reload of source_info.json
+
+    Returns
+    -------
+    SourceColors
+        A source to color style mapping with naming of sources consistent
+        with the naming in INDRA DB
+    """
+    # Be aware of the 'hack' that lives in SOURCE_INFO but not in the
+    # actual file source_info.json:
+    # SOURCE_INFO['trips'] = SOURCE_INFO['drum']
+    # Also be aware of the INDRA - INDRA DB inconsistency in source api
+    # naming, the mapping of which lives in 'internal_source_mappings'
+
+    # Load source_info.json - load actual file if force reload
+    if force_reload:
+        source_info_json = load_resource_json('source_info.json')
+        # Add trips entry
+        source_info_json['trips'] = source_info_json['drum']
+    else:
+        source_info_json = SOURCE_INFO
+
+    return _source_info_to_source_colors(source_info_json)
 
 
 DEFAULT_SOURCE_COLORS = get_default_source_colors()
