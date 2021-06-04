@@ -174,7 +174,8 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
                    if s in db_sources_tr else len(db_sources_tr))
 
     source_colors = make_source_colors(databases=databases, readers=readers,
-                                       db_scheme='hues', read_scheme='hues')
+                                       db_scheme='qualitative',
+                                       read_scheme='qualitative')
     source_colors_dict = {src_type: defs for src_type, defs in source_colors}
 
     # Overwrite 'default_style' used for CSS
