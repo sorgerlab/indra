@@ -55,14 +55,15 @@ color_schemes = {
              '#c7e9c0', '#a1d99b', '#74c476', '#41ab5d', '#238b45', '#006d2c',
              '#fdd0a2', '#fdae6b', '#fd8d3c', '#f16913', '#d94801', '#a63603',
              '#dadaeb', '#bcbddc', '#9e9ac8', '#807dba', '#6a51a3', '#54278f'],
-    # Picked from three of the four schemes for qualitative data, with some
-    # redactions to allow for good contrast with both black and white text:
+    # Picked from all four schemes for qualitative data, with some redactions
+    # to allow for good contrast with both black and white text:
     # https://colorbrewer2.org/#type=qualitative&scheme=Set3&n=9
     'qualitative': ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99',
                     '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#377eb8',
                     '#4daf4a', '#984ea3', '#a65628', '#f781bf', '#999999',
                     '#8dd3c7', '#bebada', '#fb8072', '#80b1d3', '#fdb462',
-                    '#b3de69', '#fccde5', '#d9d9d9']
+                    '#b3de69', '#fccde5', '#d9d9d9', '#fbb4ae', '#b3cde3',
+                    '#ccebc5', '#decbe4', '#fed9a6', '#e5d8bd']
 }
 
 
