@@ -234,10 +234,9 @@ def _source_info_to_source_colors(source_info: SourceInfo) -> SourceColors:
             logger.warning(f'Could not assign styling from source {source}. '
                            f'If this is due to new source(s) added to '
                            f'source_info.json, run '
-                           f'"regenerate_default_source_styling()" before '
-                           f'running'
-                           f'"get_default_source_colors(force_reload=True) '
-                           f'again"')
+                           f'"regenerate_default_source_styling()" and then '
+                           f'run "get_default_source_colors" with '
+                           f'force_reload=True')
             continue
 
     # Create and return source color structure
