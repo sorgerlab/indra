@@ -36,7 +36,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#1f78b4"
+            "background-color": "#2daaff"
         }
     },
     "tees": {
@@ -46,7 +46,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#e31a1c"
+            "background-color": "#ff595b"
         }
     },
     "medscan": {
@@ -126,7 +126,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#1f78b4"
+            "background-color": "#2daaff"
         }
     },
     "bel": {
@@ -156,7 +156,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#e31a1c"
+            "background-color": "#ff595b"
         }
     },
     "tas": {
@@ -216,7 +216,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#377eb8"
+            "background-color": "#8cde09"
         }
     },
     "drugbank": {
@@ -226,7 +226,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#a65628"
+            "background-color": "#a656289e"
         }
     },
     "omnipath": {
