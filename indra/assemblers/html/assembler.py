@@ -200,10 +200,10 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
 def _source_info_to_source_colors(source_info: SourceInfo) -> SourceColors:
     # Get text colors
     db_txt_color, rdr_text_color = '', ''
-    for source, info in source_info_json.items():
-        if info['type'] == 'database':
+    for source, info in source_info.items():
+        if db_txt_color == '' and info['type'] == 'database':
             db_txt_color = info['default_style']['color']
-        elif info['type'] == 'reader':
+        elif rdr_text_color == '' and info['type'] == 'reader':
             rdr_text_color = info['default_style']['color']
 
         if db_txt_color != '' and rdr_text_color != '':
