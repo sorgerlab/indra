@@ -48,12 +48,21 @@ color_schemes = {
     'light': ['#bebada', '#fdb462', '#b3de69', '#80b1d3', '#bc80bd', '#fccde5',
               '#fb8072', '#d9d9d9', '#8dd3c7', '#ffed6f', '#ccebc5', '#e0e03d',
               '#ffe8f4', '#acfcfc', '#dd99ff', '#00d4a6'],
-    # Picked from colors 3-8 of blue, green, purple and oranges of the
-    # colorbrewer: https://colorbrewer2.org/#type=sequential&scheme=Blues&n=9
+    # Picked from color classes 3-8 of blue, green, purple and oranges hues of
+    # the colorbrewer:
+    # https://colorbrewer2.org/#type=sequential&scheme=Blues&n=9
     'hues': ['#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#08519c',
              '#c7e9c0', '#a1d99b', '#74c476', '#41ab5d', '#238b45', '#006d2c',
              '#fdd0a2', '#fdae6b', '#fd8d3c', '#f16913', '#d94801', '#a63603',
-             '#dadaeb', '#bcbddc', '#9e9ac8', '#807dba', '#6a51a3', '#54278f']
+             '#dadaeb', '#bcbddc', '#9e9ac8', '#807dba', '#6a51a3', '#54278f'],
+    # Picked from three of the four schemes for qualitative data, with some
+    # redactions to allow for good contrast with both black and white text:
+    # https://colorbrewer2.org/#type=qualitative&scheme=Set3&n=9
+    'qualitative': ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99',
+                    '#e31a1c' '#fdbf6f', '#ff7f00', '#cab2d6',  '#377eb8',
+                    '#4daf4a', '#984ea3', '#a65628', '#f781bf', '#999999',
+                    '#8dd3c7', '#bebada', '#fb8072', '#80b1d3', '#fdb462',
+                    '#b3de69', '#fccde5', '#d9d9d9']
 }
 
 
