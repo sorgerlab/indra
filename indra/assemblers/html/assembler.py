@@ -2,7 +2,7 @@
 Format a set of INDRA Statements into an HTML-formatted report which also
 supports curation.
 """
-
+import copy
 import re
 import json
 import uuid
@@ -300,6 +300,12 @@ def get_default_source_colors(force_reload: bool = False) -> SourceColors:
         source_info_json['trips'] = source_info_json['drum']
     else:
         source_info_json = SOURCE_INFO
+
+    # Copy info for pc into biopax, as INDRA DB treats them as the same and
+    # uses pc for both
+    source_info_copy = copy.deepcopy(source_info_json)
+    source_info_copy['biopax']['default_style'] = \
+        source_info_copy['pc']['default_style']
 
     return _source_info_to_source_colors(source_info_json)
 
