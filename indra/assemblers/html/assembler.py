@@ -61,7 +61,7 @@ color_schemes = {
     # https://colorbrewer2.org/#type=qualitative&scheme=Set3&n=9
     'qualitative': ['#a6cee3', '#2daaff', '#b2df8a', '#33a02c', '#fb9a99',
                     '#ff595b', '#fdbf6f', '#ff7f00', '#cab2d6', '#8cde09',
-                    '#4daf4a', '#984ea3', '#a656289e', '#f781bf', '#999999',
+                    '#4daf4a', '#ea5eff', '#a656289e', '#f781bf', '#999999',
                     '#8dd3c7', '#bebada', '#fb8072', '#80b1d3', '#fdb462',
                     '#b3de69', '#fccde5', '#d9d9d9', '#fbb4ae', '#b3cde3',
                     '#ccebc5', '#decbe4', '#fed9a6', '#e5d8bd']
