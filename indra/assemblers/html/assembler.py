@@ -104,7 +104,8 @@ def make_source_colors(databases: List[str], readers: List[str],
                          f'{", ".join(color_schemes.keys())}')
 
     rdr_ord = ['reach', 'sparser', 'medscan', 'trips', 'eidos']
-    readers.sort(key=lambda r: rdr_ord.index(r) if r in rdr_ord else len(rdr_ord))
+    readers.sort(key=lambda r: rdr_ord.index(r)
+                 if r in rdr_ord else len(rdr_ord))
     reader_colors_list = list(zip(readers, color_gen(read_scheme)))
     reader_colors_list.reverse()
     reader_colors = dict(reader_colors_list)
