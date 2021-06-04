@@ -59,7 +59,7 @@ color_schemes = {
     # redactions to allow for good contrast with both black and white text:
     # https://colorbrewer2.org/#type=qualitative&scheme=Set3&n=9
     'qualitative': ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99',
-                    '#e31a1c' '#fdbf6f', '#ff7f00', '#cab2d6',  '#377eb8',
+                    '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#377eb8',
                     '#4daf4a', '#984ea3', '#a65628', '#f781bf', '#999999',
                     '#8dd3c7', '#bebada', '#fb8072', '#80b1d3', '#fdb462',
                     '#b3de69', '#fccde5', '#d9d9d9']
