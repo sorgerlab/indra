@@ -1,9 +1,13 @@
 import re
 from indra.statements import *
+from indra.resources import load_resource_json
 from indra.assemblers.english import AgentWithCoordinates
 from indra.assemblers.html.assembler import HtmlAssembler, tag_text, loader, \
     _format_evidence_text, tag_agents, src_url, SOURCE_INFO
 from indra.util.statement_presentation import AveAggregator, StmtStat, StmtGroup
+    _format_evidence_text, tag_agents, generate_source_css,\
+    _source_info_to_source_colors, color_schemes, DEFAULT_SOURCE_COLORS, \
+    StmtGroup, internal_source_mappings
 
 
 def make_stmt():
@@ -29,6 +33,29 @@ def make_bad_stmt():
                                'source_url': ''})
     st = Phosphorylation(subj, ras, 'tyrosine', '32', evidence=[ev])
     return st
+
+
+def source_json():
+    return {"srcA": {
+        "name": "Source A",
+        "link": "https://example.com/srcA",
+        "type": "reader",
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#000000"
+        }
+    },
+        "srcB": {
+            "name": "Source B",
+            "link": "https://example.org/srcB",
+            "type": "database",
+            "domain": "biology",
+            "default_style": {
+                "color": "black",
+                "background-color": "#FFFFFF"
+            }
+        }}
 
 
 def test_format_evidence_text():
@@ -110,6 +137,99 @@ def test_assembler():
     assert not ha.model
     ha.save_model('tempfile.html')
     assert ha.model
+
+
+def test_source_info_to_source_colors():
+    src_info_json = source_json()
+    src_colors = _source_info_to_source_colors(src_info_json)
+    assert isinstance(src_colors, list)
+    assert src_colors[0][0] == 'databases'
+    assert src_colors[0][1]['color'] == 'black'
+    assert src_colors[0][1]['sources']['srcB'] == '#FFFFFF'
+    assert src_colors[1][0] == 'reading'
+    assert src_colors[1][1]['color'] == 'white'
+    assert src_colors[1][1]['sources']['srcA'] == '#000000'
+
+
+def test_generate_source_css():
+    source_info = source_json()
+    src_col = _source_info_to_source_colors(source_info)
+    generate_source_css(fname='./temp.css', source_colors=src_col)
+    with open('./temp.css') as fh:
+        css_str = fh.read()
+
+    rule_string = '.source-{src} {{\n    background-color: {src_bg};\n    ' \
+                  'color: {src_txt};\n}}\n\n'
+    rule_a = rule_string.format(
+        src='srcA',
+        src_bg=source_info['srcA']['default_style']['background-color'],
+        src_txt=source_info['srcA']['default_style']['color']
+    )
+    assert rule_a in css_str
+
+    rule_b = rule_string.format(
+        src='srcB',
+        src_bg=source_info['srcB']['default_style']['background-color'],
+        src_txt=source_info['srcB']['default_style']['color']
+    )
+    assert rule_b in css_str
+
+
+def test_default_colors():
+    # Test if all the sources in source_info.json also exist in
+    # DEFAULT_SOURCE_COLORS (after translation); this will catch any commit
+    # that adds a source without also running
+    # regenerate_default_source_styling()
+
+    # Get sources in DEFAULT_SOURCE_COLORS
+    def_all_sources = set()
+    color_combos = []
+    for source_type, scheme in DEFAULT_SOURCE_COLORS:
+        txt_col = scheme['color']
+        for source in scheme['sources']:
+            def_all_sources.add(source)
+            color_combos.append((txt_col, scheme['sources'][source]))
+
+    source_info_json = load_resource_json('source_info.json')
+    # pc and biopax both map to pc here
+    src_inf_sources = {internal_source_mappings.get(s, s)
+                       for s in source_info_json.keys()}
+
+    # Trips is NOT in source_info, but exists in INDRA DB naming
+    # biopax and pathway commons are both in source_info, but are mapped to
+    # the same source in INDRA DB naming: pc
+    assert 'trips' in def_all_sources
+    assert 'pc' in def_all_sources
+    assert 'drum' not in def_all_sources
+    assert 'biopax' not in def_all_sources
+
+    assert 'trips' not in src_inf_sources
+    assert 'pc' in src_inf_sources
+    assert 'drum' in src_inf_sources
+    assert 'biopax' not in src_inf_sources  # biopax -> pc here
+    assert 'biopax' in source_info_json  # biopax still exists here
+
+    assert len(src_inf_sources) == len(def_all_sources)
+
+    # Test for equality but for the many
+    assert def_all_sources.difference(src_inf_sources) == {'trips'}
+    assert src_inf_sources.difference(def_all_sources) == {'drum'}
+    assert def_all_sources.symmetric_difference(src_inf_sources) == \
+           {'trips', 'drum'}
+
+    # Test if the color combinations set in source_info.json are unique
+    color_combos_set = set(color_combos)
+    assert len(color_combos_set) == len(color_combos)
+
+
+def test_color_schemes():
+    # Test for uniqueness in the schemes
+    for name, scheme in color_schemes.items():
+        n_items = len(scheme)
+        n_colors = len(set(scheme))
+        assert n_items > 0, f'Scheme {name} seems to be empty'
+        assert n_items == n_colors, \
+            f'Duplicate colors detected in scheme {name}'
 
 
 def test_tag_agents():
