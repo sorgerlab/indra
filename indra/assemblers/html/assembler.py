@@ -72,13 +72,43 @@ def color_gen(scheme):
             yield color
 
 
-def make_source_colors(databases, readers):
+def make_source_colors(databases: List[str], readers: List[str],
+                       db_scheme: str = 'light', read_scheme: str = 'light')\
+        -> SourceColors:
+    """Load a source color scheme for database and reader sources
+
+    Parameters
+    ----------
+    databases :
+        A list of database sources. The list is assumed to be ordered.
+    readers :
+        A list of reader sources. The list will be re-ordered to a set
+        priority of readers.
+    db_scheme :
+        The color scheme to use for database sources. Default: 'light'
+    read_scheme :
+        The color scheme to use for reader sources. Default: 'light'
+
+    Returns
+    -------
+    SourceColors
+        The color scheme
+    """
+    if db_scheme not in color_schemes:
+        raise ValueError(f'Color scheme for databases "{db_scheme}" not '
+                         f'recognized: has to be one of '
+                         f'{", ".join(color_schemes.keys())}')
+    if read_scheme not in color_schemes:
+        raise ValueError(f'Color scheme for readers "{read_scheme}" not '
+                         f'recognized: has to be one of '
+                         f'{", ".join(color_schemes.keys())}')
+
     rdr_ord = ['reach', 'sparser', 'medscan', 'trips', 'eidos']
     readers.sort(key=lambda r: rdr_ord.index(r) if r in rdr_ord else len(rdr_ord))
-    reader_colors_list = list(zip(readers, color_gen('light')))
+    reader_colors_list = list(zip(readers, color_gen(read_scheme)))
     reader_colors_list.reverse()
     reader_colors = dict(reader_colors_list)
-    db_colors = dict(zip(databases, color_gen('light')))
+    db_colors = dict(zip(databases, color_gen(db_scheme)))
     return [('databases', {'color': 'black', 'sources': db_colors}),
             ('reading', {'color': 'white', 'sources': reader_colors})]
 
