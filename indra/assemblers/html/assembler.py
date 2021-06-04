@@ -84,7 +84,7 @@ def make_source_colors(databases: List[str], readers: List[str],
     databases :
         A list of database sources. The list is assumed to be ordered.
     readers :
-        A list of reader sources. The list will be re-ordered to a set
+        A list of reader sources. The list will be re-ordered to a fixed
         priority of readers.
     db_scheme :
         The color scheme to use for database sources. Default: 'light'
