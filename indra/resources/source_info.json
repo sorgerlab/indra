@@ -6,7 +6,7 @@
         "domain": "general",
         "default_style": {
             "color": "white",
-            "background-color": "#80b1d3"
+            "background-color": "#33a02c"
         }
     },
     "drum": {
@@ -16,7 +16,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#fccde5"
+            "background-color": "#fb9a99"
         }
     },
     "reach": {
@@ -26,7 +26,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#bebada"
+            "background-color": "#a6cee3"
         }
     },
     "sparser": {
@@ -36,7 +36,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#fdb462"
+            "background-color": "#1f78b4"
         }
     },
     "tees": {
@@ -46,7 +46,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#bc80bd"
+            "background-color": "#e31a1c"
         }
     },
     "medscan": {
@@ -56,7 +56,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#b3de69"
+            "background-color": "#b2df8a"
         }
     },
     "rlimsp": {
@@ -66,7 +66,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#8dd3c7"
+            "background-color": "#fdbf6f"
         }
     },
     "isi": {
@@ -76,7 +76,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#d9d9d9"
+            "background-color": "#ff7f00"
         }
     },
     "geneways": {
@@ -86,7 +86,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#fb8072"
+            "background-color": "#cab2d6"
         }
     },
     "biopax": {
@@ -96,7 +96,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#8dd3c7"
+            "background-color": "#b2df8a"
         }
     },
     "pc": {
@@ -106,7 +106,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#bebada"
+            "background-color": "#fb8072"
         }
     },
     "phosphosite": {
@@ -116,7 +116,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#d9d9d9"
+            "background-color": "#a6cee3"
         }
     },
     "cbn": {
@@ -126,7 +126,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#ffe8f4"
+            "background-color": "#1f78b4"
         }
     },
     "bel": {
@@ -136,7 +136,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#fdb462"
+            "background-color": "#33a02c"
         }
     },
     "signor": {
@@ -146,7 +146,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#fb8072"
+            "background-color": "#fb9a99"
         }
     },
     "biogrid": {
@@ -156,7 +156,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#e0e03d"
+            "background-color": "#e31a1c"
         }
     },
     "tas": {
@@ -166,7 +166,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#b3de69"
+            "background-color": "#fdbf6f"
         }
     },
     "hprd": {
@@ -176,7 +176,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#fdb462"
+            "background-color": "#ff7f00"
         }
     },
     "trrust": {
@@ -186,7 +186,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#80b1d3"
+            "background-color": "#cab2d6"
         }
     },
     "phosphoelm": {
@@ -196,7 +196,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#fccde5"
+            "background-color": "#984ea3"
         }
     },
     "virhostnet": {
@@ -206,7 +206,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#00d4a6"
+            "background-color": "#4daf4a"
         }
     },
     "ctd": {
@@ -216,7 +216,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#acfcfc"
+            "background-color": "#377eb8"
         }
     },
     "drugbank": {
@@ -226,7 +226,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#dd99ff"
+            "background-color": "#a65628"
         }
     },
     "omnipath": {
@@ -236,7 +236,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#bebada"
+            "background-color": "#f781bf"
         }
     },
     "minerva": {
@@ -246,7 +246,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#ccebc5"
+            "background-color": "#80b1d3"
         }
     },
     "dgi": {
@@ -256,7 +256,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#ffed6f"
+            "background-color": "#bebada"
         }
     },
     "crog": {
@@ -266,7 +266,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#b3de69"
+            "background-color": "#8dd3c7"
         }
     },
     "conib": {
@@ -276,7 +276,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#bc80bd"
+            "background-color": "#999999"
         }
     },
     "gnbr": {
