@@ -227,12 +227,13 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
     return source_info_json
 
 
-def _source_info_to_source_colors(source_info: SourceInfo,
-                                  db_scheme: str,
-                                  reader_scheme: str) -> SourceColors:
-    # Initialize dicts for background-color for readers and databases
-    databases = []
-    readers = []
+def _source_info_to_source_colors(source_info: SourceInfo) -> SourceColors:
+    """Returns a source color data structure with source names as they
+    appear in INDRA DB"""
+    # Initialize dicts for source: background-color for readers and databases
+    database_colors = {}
+    reader_colors = {}
+
     for source, info in source_info.items():
         # Map INDRA -> INDRA DB source api naming and skip 'drum' as source
         if source == 'drum':
@@ -240,16 +241,17 @@ def _source_info_to_source_colors(source_info: SourceInfo,
         mapped_source = internal_source_mappings.get(source, source)
 
         if info['type'] == 'reader':
-            readers.append(mapped_source)
+            reader_colors[mapped_source] = \
+                info['default_styling']['background-color']
         elif info['type'] == 'database':
-            databases.append(mapped_source)
+            database_colors[mapped_source] = \
+                info['default_styling']['background-color']
 
-    databases.sort(key=lambda s: db_sources.index(s)
-                   if s in db_sources else len(db_sources))
+    return [('databases', {'color': db_text_color,
+                           'sources': database_colors}),
+            ('reading', {'color': reader_text_color,
+                         'sources': reader_colors})]
 
-    # Create and return source color structure
-    return make_source_colors(databases=databases, readers=readers,
-                              db_scheme=db_scheme, read_scheme=reader_scheme)
 
 
 def get_source_colors(sources: List[str], db_scheme: str,
