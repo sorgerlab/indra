@@ -181,23 +181,30 @@ def test_default_colors():
     # that adds a source without also running
     # regenerate_default_source_styling()
 
-    # Get sources in DEFAULT_SOURCE_COLORS
+    # Get sources and colors in DEFAULT_SOURCE_COLORS
     def_all_sources = set()
     color_combos = []
+    def_source_color = {}
     for source_type, scheme in DEFAULT_SOURCE_COLORS:
         txt_col = scheme['color']
         for source in scheme['sources']:
             def_all_sources.add(source)
             color_combos.append((txt_col, scheme['sources'][source]))
+            def_source_color[source] = scheme['sources'][source]
 
     source_info_json = load_resource_json('source_info.json')
     # pc and biopax both map to pc here
     src_inf_sources = {internal_source_mappings.get(s, s)
                        for s in source_info_json.keys()}
+    src_inf_colors = {
+        internal_source_mappings.get(source, source):
+            info['default_style']['background-color']
+        for source, info in source_info_json.items()
+    }
 
-    # Trips is NOT in source_info, but exists in INDRA DB naming
+    # Trips is NOT in source_info, but exists in INDRA DB naming.
     # biopax and pathway commons are both in source_info, but are mapped to
-    # the same source in INDRA DB naming: pc
+    # the same source in INDRA DB naming: pc.
     assert 'trips' in def_all_sources
     assert 'pc' in def_all_sources
     assert 'drum' not in def_all_sources
@@ -220,6 +227,17 @@ def test_default_colors():
     # Test if the color combinations set in source_info.json are unique
     color_combos_set = set(color_combos)
     assert len(color_combos_set) == len(color_combos)
+
+    # Test that the colors in DEFAULT_SOURCE_COLORS match what is set in
+    # source_info.json, after mapping of source names
+    for source, bg_color in def_source_color.items():
+        if source == 'trips':
+            mapped = 'drum'
+        else:
+            mapped = source
+
+        assert bg_color == src_inf_colors[mapped], \
+            f'{mapped}: default={bg_color}; json={src_inf_colors[mapped]}'
 
 
 def test_color_schemes():
