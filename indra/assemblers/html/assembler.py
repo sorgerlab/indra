@@ -56,6 +56,17 @@ def _sort_databases(database_list: List[str]):
                        if d else len(db_sources))
 
 
+def _get_source_info(force_reload: bool = False) -> SourceInfo:
+    # Load source_info.json - load actual file if force reload
+    if force_reload:
+        source_info_json = load_resource_json('source_info.json')
+        # Add trips entry as is done in indra/sources/__init__.py
+        source_info_json['trips'] = source_info_json['drum']
+    else:
+        source_info_json = SOURCE_INFO
+    return source_info_json
+
+
 color_schemes = {
     'dark': ['#b2df8a', '#000099', '#6a3d9a', '#1f78b4', '#fdbf6f', '#ff7f00',
              '#cab2d6', '#fb9a99', '#a6cee3', '#33a02c', '#b15928', '#e31a1c'],
