@@ -120,14 +120,14 @@ def make_source_colors(databases: List[str], readers: List[str],
                          f'recognized: has to be one of '
                          f'{", ".join(color_schemes.keys())}')
 
-    readers.sort(key=lambda r: reader_order.index(r)
-                 if r in reader_order else len(reader_order))
+    _sort_readers(readers)
     reader_colors_list = list(zip(readers, color_gen(read_scheme)))
-    reader_colors_list.reverse()
     reader_colors = dict(reader_colors_list)
     db_colors = dict(zip(databases, color_gen(db_scheme)))
-    return [('databases', {'color': 'black', 'sources': db_colors}),
-            ('reading', {'color': 'white', 'sources': reader_colors})]
+    return [('databases', {'color': db_text_color,
+                           'sources': db_colors}),
+            ('reading', {'color': reader_text_color,
+                         'sources': reader_colors})]
 
 
 def regenerate_default_source_styling(indent=4) -> SourceInfo:
