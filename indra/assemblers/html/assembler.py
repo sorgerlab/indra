@@ -56,8 +56,7 @@ color_schemes = {
              '#fdd0a2', '#fdae6b', '#fd8d3c', '#f16913', '#d94801', '#a63603',
              '#dadaeb', '#bcbddc', '#9e9ac8', '#807dba', '#6a51a3', '#54278f'],
     # Picked from all four schemes for qualitative data, with some redactions
-    # and modifications to allow for good contrast with both black and white
-    # text:
+    # and modifications for good contrast with both black and white text:
     # https://colorbrewer2.org/#type=qualitative&scheme=Set3&n=9
     'qualitative': ['#a6cee3', '#2daaff', '#b2df8a', '#33a02c', '#fb9a99',
                     '#ff595b', '#fdbf6f', '#ff7f00', '#cab2d6', '#8cde09',
@@ -135,8 +134,10 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
     - This function *will* update a source_info.json, which is tracked by git
     - To get styling for (a) new source(s):
 
-        + Add the new source(s) to source_info.json, do *not* add the field
-          "default_styling".
+        + Add the new source(s) to source_info.json, add the field
+          "default_styling" with a dict as its value. The dict can be empty.
+          The entries for "color" and "background-color" in it will be
+          overwritten.
         + Run this function after the file has been updated and saved: this
           function will open and assign color/background-color to all
           sources and then overwrite the file.
