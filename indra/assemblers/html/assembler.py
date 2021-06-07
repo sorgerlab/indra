@@ -79,6 +79,8 @@ color_schemes = {
                     '#b3de69', '#fccde5', '#d9d9d9', '#fbb4ae', '#b3cde3',
                     '#ccebc5', '#decbe4', '#fed9a6', '#e5d8bd']
 }
+db_text_color = 'black'
+reader_text_color = 'white'
 
 
 def color_gen(scheme):
