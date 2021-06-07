@@ -253,9 +253,8 @@ def _source_info_to_source_colors(source_info: SourceInfo) -> SourceColors:
                          'sources': reader_colors})]
 
 
-
-def get_source_colors(sources: List[str], db_scheme: str,
-                      reader_scheme: str) -> SourceColors:
+def get_source_colors(sources: List[str],
+                      force_reload: bool = False) -> SourceColors:
     """Get the color scheme for a list of sources
 
     Note: The input source names are assumed to be as they appear in INDRA,
@@ -266,10 +265,8 @@ def get_source_colors(sources: List[str], db_scheme: str,
     ----------
     sources :
         A list of source names as they appear in source_info.json
-    db_scheme :
-        The color scheme to use for database sources
-    reader_scheme :
-        The color scheme to use for reader sources
+    force_reload :
+        If True, reload source_info.json
 
     Returns
     -------
@@ -277,16 +274,17 @@ def get_source_colors(sources: List[str], db_scheme: str,
         The source colors of the requested
     """
     # Pass the collected source info to _source_info_to_source_colors
+    source_info_json = _get_source_info(force_reload)
     source_info = {}
     for source in sources:
         if source in SOURCE_INFO:
-            # SOURCE_INFO contains the drum-trips duplication, so trips is
-            # allowed as source
-            source_info[source] = SOURCE_INFO[source]
+            # source_info_json contains the drum-trips duplication, so trips
+            # is allowed as source
+            source_info[source] = source_info_json[source]
         else:
             logger.warning(f'Source {source} not recognized')
 
-    return _source_info_to_source_colors(source_info, db_scheme, reader_scheme)
+    return _source_info_to_source_colors(source_info)
 
 
 def get_default_source_colors(force_reload: bool = False) -> SourceColors:
