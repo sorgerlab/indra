@@ -307,23 +307,14 @@ def get_default_source_colors(force_reload: bool = False) -> SourceColors:
     # Also be aware of the INDRA - INDRA DB inconsistency in source api
     # naming, the mapping of which lives in 'internal_source_mappings'
 
-    # Load source_info.json - load actual file if force reload
-    if force_reload:
-        source_info_json = load_resource_json('source_info.json')
-        # Add trips entry
-        source_info_json['trips'] = source_info_json['drum']
-    else:
-        source_info_json = SOURCE_INFO
-
+    source_info_json = _get_source_info(force_reload)
     # Copy info for pc into biopax, as INDRA DB treats them as the same and
     # uses pc for both
     source_info_copy = copy.deepcopy(source_info_json)
     source_info_copy['biopax']['default_style'] = \
         source_info_copy['pc']['default_style']
 
-    return _source_info_to_source_colors(source_info_json,
-                                         db_scheme='qualitative',
-                                         reader_scheme='qualitative')
+    return _source_info_to_source_colors(source_info_json)
 
 
 DEFAULT_SOURCE_COLORS = get_default_source_colors()
