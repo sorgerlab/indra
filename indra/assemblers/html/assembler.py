@@ -138,6 +138,10 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
     graphical UI. For getting the default color scheme, see
     get_default_source_colors
 
+    Parameters
+    ----------
+    indent :
+        The indent used in the json file. Default: 4
 
     Returns
     -------
@@ -149,10 +153,8 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
     - This function *will* update a source_info.json, which is tracked by git
     - To get styling for (a) new source(s):
 
-        + Add the new source(s) to source_info.json, add the field
-          "default_styling" with a dict as its value. The dict can be empty.
-          The entries for "color" and "background-color" in it will be
-          overwritten.
+        + Add the new source(s) to source_info.json. The field
+          "default_styling" will be overwritten if it already exists.
         + Run this function after the file has been updated and saved: this
           function will open and assign color/background-color to all
           sources and then overwrite the file.
@@ -184,8 +186,8 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
     # Get the reverse translation: db naming -> indra naming
     rsm = {v: k for k, v in internal_source_mappings.items()}
 
-    # Sort databases according to db_sources. Readers will be sorted inside
-    # make_source_colors
+    # Sort databases according to db_sources (which contains db names)
+    # Readers will be sorted inside make_source_colors
     db_sources_tr = [rsm[s] if s in rsm else s for s in db_sources]
     databases.sort(key=lambda s: db_sources_tr.index(s)
                    if s in db_sources_tr else len(db_sources_tr))
