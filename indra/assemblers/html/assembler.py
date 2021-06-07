@@ -42,6 +42,7 @@ env = Environment(loader=loader)
 
 default_template = env.get_template('indra/statements_view.html')
 
+reader_order = ['reach', 'sparser', 'medscan', 'trips', 'eidos']
 color_schemes = {
     'dark': ['#b2df8a', '#000099', '#6a3d9a', '#1f78b4', '#fdbf6f', '#ff7f00',
              '#cab2d6', '#fb9a99', '#a6cee3', '#33a02c', '#b15928', '#e31a1c'],
@@ -104,9 +105,8 @@ def make_source_colors(databases: List[str], readers: List[str],
                          f'recognized: has to be one of '
                          f'{", ".join(color_schemes.keys())}')
 
-    rdr_ord = ['reach', 'sparser', 'medscan', 'trips', 'eidos']
-    readers.sort(key=lambda r: rdr_ord.index(r)
-                 if r in rdr_ord else len(rdr_ord))
+    readers.sort(key=lambda r: reader_order.index(r)
+                 if r in reader_order else len(reader_order))
     reader_colors_list = list(zip(readers, color_gen(read_scheme)))
     reader_colors_list.reverse()
     reader_colors = dict(reader_colors_list)
