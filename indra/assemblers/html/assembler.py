@@ -242,10 +242,10 @@ def _source_info_to_source_colors(source_info: SourceInfo) -> SourceColors:
 
         if info['type'] == 'reader':
             reader_colors[mapped_source] = \
-                info['default_styling']['background-color']
+                info['default_style']['background-color']
         elif info['type'] == 'database':
             database_colors[mapped_source] = \
-                info['default_styling']['background-color']
+                info['default_style']['background-color']
 
     return [('databases', {'color': db_text_color,
                            'sources': database_colors}),
