@@ -218,7 +218,7 @@ def test_default_colors():
 
     assert len(src_inf_sources) == len(def_all_sources)
 
-    # Test for equality but for the many
+    # Test for equality but for the mappings
     assert def_all_sources.difference(src_inf_sources) == {'trips'}
     assert src_inf_sources.difference(def_all_sources) == {'drum'}
     assert def_all_sources.symmetric_difference(src_inf_sources) == \
