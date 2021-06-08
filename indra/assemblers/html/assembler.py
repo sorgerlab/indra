@@ -828,6 +828,8 @@ class HtmlAssembler(object):
             template_kwargs['simple'] = True
         if 'available_sources' not in template_kwargs:
             template_kwargs['available_sources'] = list(self.available_sources)
+        template_kwargs['reverse_source_mapping'] = \
+            {v: k for k, v in internal_source_mappings.items()}
 
         self.model = template.render(stmt_data=tl_stmts,
                   metadata=metadata, title=self.title,
