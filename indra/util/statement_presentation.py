@@ -110,6 +110,7 @@ import logging
 from collections import defaultdict
 from itertools import permutations
 from numpy import array, zeros, maximum, concatenate, append
+from typing import List, Set, Dict
 
 from indra.assemblers.english import EnglishAssembler
 from indra.statements import Agent, Influence, Event, get_statement_by_name, \
@@ -982,6 +983,33 @@ def get_available_beliefs(stmts):
 def get_available_source_counts(stmts):
     return {stmt.get_hash(): _get_available_ev_source_counts(stmt.evidence)
             for stmt in stmts}
+
+
+def available_sources_stmts(stmts: List[Statement]) -> Set[str]:
+    """Returns the set of sources available in a list of statements"""
+    sources = set()
+    for stmt in stmts:
+        source_counts = _get_available_ev_source_counts(stmt.evidence)
+        for src, count in source_counts.items():
+            if count > 0:
+                sources.add(src)
+        # Break if all sources are present
+        if len(sources) == len(all_sources):
+            break
+    return sources
+
+
+def available_sources_src_counts(source_counts: Dict[int, Dict[str, int]]) \
+        -> Set[str]:
+    """Returns the set of sources available from a source counts dict"""
+    sources = set()
+    for _, src_count in source_counts.items():
+        for src, count in src_count.items():
+            if count > 0:
+                sources.add(src)
+        if len(sources) == len(all_sources):
+            break
+    return sources
 
 
 def _get_available_ev_source_counts(evidences):
