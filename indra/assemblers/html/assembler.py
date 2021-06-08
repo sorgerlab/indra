@@ -236,18 +236,33 @@ def _source_info_to_source_colors(source_info: SourceInfo) -> SourceColors:
     database_colors = {}
     reader_colors = {}
 
+    # Gather sources, then sort, then build the dicts
+    databases = []
+    readers = []
     for source, info in source_info.items():
         # Map INDRA -> INDRA DB source api naming and skip 'drum' as source
         if source == 'drum':
             continue
         mapped_source = internal_source_mappings.get(source, source)
+        bg_color = info['default_style']['background-color']
 
         if info['type'] == 'reader':
-            reader_colors[mapped_source] = \
-                info['default_style']['background-color']
+            readers.append((mapped_source, bg_color))
         elif info['type'] == 'database':
-            database_colors[mapped_source] = \
-                info['default_style']['background-color']
+            databases.append((mapped_source, bg_color))
+
+    # Sort
+    just_readers = [r[0] for r in readers]
+    _sort_readers(just_readers)
+    readers.sort(key=lambda r: just_readers.index(r[0]))
+
+    just_databases = [r[0] for r in databases]
+    _sort_databases(just_databases)
+    databases.sort(key=lambda d: just_databases.index(d[0]))
+
+    # Make dicts
+    database_colors = {s: c for s, c in databases}
+    reader_colors = {s: c for s, c in readers}
 
     return [('databases', {'color': db_text_color,
                            'sources': database_colors}),
