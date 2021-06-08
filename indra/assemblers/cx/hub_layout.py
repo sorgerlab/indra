@@ -21,31 +21,32 @@ def get_aspect(cx, aspect_name):
 
 def edge_type_to_class(edge_type):
     """Return the edge class for layout purposes based on the edge type"""
-    if 'Amount' in edge_type:
+    edge_type = edge_type.lower()
+    if 'amount' in edge_type:
         return 'amount'
-    if edge_type in ('Activation', 'Inhibition'):
+    if edge_type in ('activation', 'inhibition'):
         return 'activity'
-    if edge_type == 'Complex':
+    if edge_type == 'complex':
         return 'complex'
     else:
         return 'modification'
 
 
-def classify_nodes(graph, hub):
+def classify_nodes(graph, hub: int):
     """Classify each node based on its type and relationship to the hub."""
     node_stats = defaultdict(lambda: defaultdict(list))
     for u, v, data in graph.edges(data=True):
         # This means the node is downstream of the hub
         if hub == u:
             h, o = u, v
-            if data['i'] != 'Complex':
+            if data['i'] != 'complex':
                 node_stats[o]['up'].append(-1)
             else:
                 node_stats[o]['up'].append(0)
         # This means the node is upstream of the hub
         elif hub == v:
             h, o = v, u
-            if data['i'] != 'Complex':
+            if data['i'] != 'complex':
                 node_stats[o]['up'].append(1)
             else:
                 node_stats[o]['up'].append(0)
@@ -136,7 +137,7 @@ def get_node_by_name(graph, name):
             return id
 
 
-def add_semantic_hub_layout(cx, hub):
+def add_semantic_hub_layout(cx, hub: str):
     """Attach a layout aspect to a CX network given a hub node."""
     graph = cx_to_networkx(cx)
     hub_node = get_node_by_name(graph, hub)
