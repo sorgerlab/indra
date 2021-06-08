@@ -76,6 +76,29 @@ def test_format_evidence_text():
                           'Ras proteins</span>.'), ev['text']
 
 
+def test_colors_in_html():
+    ag_a = Agent('A')
+    ag_b = Agent('B')
+    evidences = []
+    colors = []
+    for source_type, info in DEFAULT_SOURCE_COLORS:
+        for source in info['sources']:
+            ev = Evidence(source_api=source, text=f'Evidence from {source}')
+            evidences.append(ev)
+            colors.append(info['sources'][source])
+
+    stmt = Activation(ag_a, ag_b, evidence=evidences)
+    ha = HtmlAssembler(statements=[stmt])
+    ha.save_model('./temp_simple.html')
+    ha.save_model('./temp_not_simple.html', simple=False)
+    with open('./temp_simple.html') as fh:
+        simple_html = fh.read()
+    with open('./temp_not_simple.html') as fh:
+        not_simple_html = fh.read()
+    assert all(color in simple_html for color in colors)
+    assert all(color in not_simple_html for color in colors)
+
+
 def test_source_url():
     # Test getting URL from annotations
     stmt = make_stmt()
