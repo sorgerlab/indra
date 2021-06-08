@@ -137,6 +137,9 @@ def test_assembler():
     assert isinstance(result, str)
     result = ha.make_model(grouping_level='statement')
     assert isinstance(result, str)
+    # Check simple=False
+    result = ha.make_model(grouping_level='statement', simple=False)
+    assert isinstance(result, str)
     # Test belief badges
     result = ha.make_model(grouping_level='statement', show_belief=True)
     assert isinstance(result, str)
