@@ -26,7 +26,9 @@ from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_relation_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
     get_available_ev_counts, standardize_counts, get_available_beliefs, \
-    StmtGroup, make_standard_stats, internal_source_mappings, reverse_source_mappings
+    StmtGroup, make_standard_stats, internal_source_mappings, \
+    available_sources_stmts, available_sources_src_counts, \
+    reverse_source_mappings
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
@@ -452,6 +454,9 @@ class HtmlAssembler(object):
             if not beliefs else standardize_counts(beliefs)
         self.source_counts = get_available_source_counts(self.statements) \
             if source_counts is None else standardize_counts(source_counts)
+        self.available_sources = available_sources_stmts(self.statements) if \
+            source_counts is None else \
+            available_sources_src_counts(source_counts)
         self.sort_by = sort_by
         self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
@@ -801,6 +806,8 @@ class HtmlAssembler(object):
             template_kwargs['source_info'] = SOURCE_INFO.copy()
         if 'simple' not in template_kwargs:
             template_kwargs['simple'] = True
+        if 'available_sources' not in template_kwargs:
+            template_kwargs['available_sources'] = list(self.available_sources)
 
         self.model = template.render(stmt_data=tl_stmts,
                   metadata=metadata, title=self.title,
