@@ -230,6 +230,7 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
     # Re-write source_info
     with open(source_info_file, 'w') as fh:
         json.dump(obj=source_info_json, fp=fh, indent=indent)
+        fh.write('\n')  # Add newline at the end of the file
 
     return source_info_json
 
