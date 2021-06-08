@@ -48,14 +48,19 @@ reader_order = ['reach', 'sparser', 'medscan', 'trips', 'eidos']
 
 
 def _sort_readers(reader_list: List[str]):
+    """Sort readers according to reader_order"""
     reader_list.sort(key=lambda r: reader_order.index(r)
                      if r in reader_order else len(reader_order))
     reader_list.reverse()
 
 
 def _sort_databases(database_list: List[str]):
+    """Sort databases according to db_sources
+
+    The names are assumed to be INDRA DB compatible
+    """
     database_list.sort(key=lambda d: db_sources.index(d)
-                       if d else len(db_sources))
+                       if d in db_sources else len(db_sources))
 
 
 def _get_source_info(force_reload: bool = False) -> SourceInfo:
