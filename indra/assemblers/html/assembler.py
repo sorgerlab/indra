@@ -340,7 +340,12 @@ def get_default_source_colors(force_reload: bool = False) -> SourceColors:
     return _source_info_to_source_colors(source_info_json)
 
 
-DEFAULT_SOURCE_COLORS = get_default_source_colors()
+try:
+    DEFAULT_SOURCE_COLORS = get_default_source_colors()
+except KeyError as err:
+    logger.info('source_info.json seems to have changed, regenerating...')
+    regenerate_default_source_styling()
+    DEFAULT_SOURCE_COLORS = get_default_source_colors(force_reload=True)
 
 
 def generate_source_css(fname: str,
