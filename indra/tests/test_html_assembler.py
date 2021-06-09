@@ -98,6 +98,37 @@ def test_colors_in_html():
     assert all(color in simple_html for color in colors)
     assert all(color in not_simple_html for color in colors)
 
+    # Check sources not in provided sources are excluded from generated
+    # template
+    evidences = []
+    colors = []
+    not_in_html = []
+    for source_type, info in DEFAULT_SOURCE_COLORS:
+        for n, source in enumerate(info['sources']):
+            # Only get 4 first sources for each type
+            if n < 4:
+                ev = Evidence(source_api=source, text=f'Evidence from {source}')
+                evidences.append(ev)
+                colors.append(info['sources'][source])
+            else:
+                not_in_html.append(source)
+    stmt = Activation(ag_a, ag_b, evidence=evidences)
+    ha = HtmlAssembler(statements=[stmt])
+    ha.save_model('./temp_simple.html')
+    ha.save_model('./temp_not_simple.html', simple=False)
+    with open('./temp_simple.html') as fh:
+        simple_html = fh.read()
+    with open('./temp_not_simple.html') as fh:
+        not_simple_html = fh.read()
+    assert all(color in simple_html for color in colors)
+    assert all(color in not_simple_html for color in colors)
+
+    badge_class = 'class ="badge badge-source source-{src}"'
+    assert all(badge_class.format(src=src) not in
+               simple_html for src in not_in_html)
+    assert all(badge_class.format(src=src) not in
+               not_simple_html for src in not_in_html)
+
 
 def test_source_url():
     # Test getting URL from annotations
