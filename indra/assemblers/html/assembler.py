@@ -126,8 +126,8 @@ def make_source_colors(databases: List[str], readers: List[str],
 
     Returns
     -------
-    SourceColors
-        The color scheme
+    :
+        The color scheme for the provided databases and readers
     """
     if db_scheme not in color_schemes:
         raise ValueError(f'Color scheme for databases "{db_scheme}" not '
@@ -163,7 +163,7 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
 
     Returns
     -------
-    SourceInfo
+    :
         The new source info written to source_info.json
 
     Notes
@@ -293,7 +293,7 @@ def get_source_colors(sources: List[str],
 
     Returns
     -------
-    SourceColors
+    :
         The source colors of the requested sources
     """
     # Pass the collected source info to _source_info_to_source_colors
@@ -320,7 +320,7 @@ def get_default_source_colors(force_reload: bool = False) -> SourceColors:
 
     Returns
     -------
-    SourceColors
+    :
         A source to color style mapping with naming of sources consistent
         with the naming in INDRA DB
     """
