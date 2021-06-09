@@ -168,7 +168,7 @@ def regenerate_default_source_styling(indent=4) -> SourceInfo:
 
     Notes
     -----
-    - This function *will* update a source_info.json, which is tracked by git
+    - This function *will* update source_info.json, which is tracked by git
     - To get styling for (a) new source(s):
 
         + Add the new source(s) to source_info.json. The field
@@ -294,7 +294,7 @@ def get_source_colors(sources: List[str],
     Returns
     -------
     SourceColors
-        The source colors of the requested
+        The source colors of the requested sources
     """
     # Pass the collected source info to _source_info_to_source_colors
     source_info_json = _get_source_info(force_reload)
@@ -357,7 +357,7 @@ def generate_source_css(fname: str,
     fname :
         Where to save the stylesheet
     source_colors :
-        Colors defining the styles
+        Colors defining the styles. Default: DEFAULT_SOURCE_COLORS.
     """
     if source_colors is None:
         source_colors = DEFAULT_SOURCE_COLORS
