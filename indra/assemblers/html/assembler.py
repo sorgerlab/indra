@@ -97,7 +97,7 @@ color_schemes = {
                     '#b3de69', '#fccde5', '#d9d9d9', '#fbb4ae', '#b3cde3',
                     '#ccebc5', '#decbe4', '#fed9a6', '#e5d8bd']
 }
-"""Defines color schemes available"""
+"""Defines the color schemes available"""
 
 DB_TEXT_COLOR = 'black'
 """The text color for database sources when shown as source count badges"""
