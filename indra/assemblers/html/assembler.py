@@ -99,9 +99,11 @@ color_schemes = {
                     '#ccebc5', '#decbe4', '#fed9a6', '#e5d8bd']
 }
 """Defines color schemes available"""
-db_text_color = 'black'
+
+DB_TEXT_COLOR = 'black'
 """The text color for database sources when shown as source count badges"""
-reader_text_color = 'white'
+
+READER_TEXT_COLOR = 'white'
 """The text color for reader sources when shown as source count badges"""
 
 
@@ -146,9 +148,9 @@ def make_source_colors(databases: List[str], readers: List[str],
     reader_colors_list = list(zip(readers, color_gen(read_scheme)))
     reader_colors = dict(reader_colors_list)
     db_colors = dict(zip(databases, color_gen(db_scheme)))
-    return [('databases', {'color': db_text_color,
+    return [('databases', {'color': DB_TEXT_COLOR,
                            'sources': db_colors}),
-            ('reading', {'color': reader_text_color,
+            ('reading', {'color': READER_TEXT_COLOR,
                          'sources': reader_colors})]
 
 
@@ -274,9 +276,9 @@ def _source_info_to_source_colors(source_info: SourceInfo) -> SourceColors:
     database_colors = {s: c for s, c in databases}
     reader_colors = {s: c for s, c in readers}
 
-    return [('databases', {'color': db_text_color,
+    return [('databases', {'color': DB_TEXT_COLOR,
                            'sources': database_colors}),
-            ('reading', {'color': reader_text_color,
+            ('reading', {'color': READER_TEXT_COLOR,
                          'sources': reader_colors})]
 
 
