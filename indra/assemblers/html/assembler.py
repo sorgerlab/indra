@@ -45,6 +45,7 @@ env = Environment(loader=loader)
 default_template = env.get_template('indra/statements_view.html')
 
 reader_order = ['reach', 'sparser', 'medscan', 'trips', 'eidos']
+"""Defines the reader order for display purposes"""
 
 
 def _sort_readers(reader_list: List[str]):
@@ -97,8 +98,11 @@ color_schemes = {
                     '#b3de69', '#fccde5', '#d9d9d9', '#fbb4ae', '#b3cde3',
                     '#ccebc5', '#decbe4', '#fed9a6', '#e5d8bd']
 }
+"""Defines color schemes available"""
 db_text_color = 'black'
+"""The text color for database sources when shown as source count badges"""
 reader_text_color = 'white'
+"""The text color for reader sources when shown as source count badges"""
 
 
 def color_gen(scheme):
