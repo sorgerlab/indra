@@ -334,6 +334,11 @@ class DBQueryStatementProcessor(IndraDBQueryProcessor):
         thread to join for `timeout` seconds before returning, allowing other
         work to continue while the query runs in the background. The default is
         False.
+    use_obtained_counts : Optional[bool]
+        If True, evidence counts and source counts are reported based
+        on the actual evidences returned for each statement in this query
+        (as opposed to all existing evidences, even if not all were returned).
+        Default: False
     tries : int > 0
         Set the number of times to try the query. The database often caches
         results, so if a query times out the first time, trying again after a
