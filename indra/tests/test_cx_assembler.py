@@ -175,5 +175,5 @@ def test_hub_layout():
     node_classes = hub_layout.classify_nodes(graph, erk)
     assert node_classes[hub_layout.get_node_by_name(graph, 'DUSP4')] == \
         (1, 'modification', 'other')
-    assert node_classes[hub_layout.get_node_by_name(graph, 'MAP2K1')] == \
-        (1, 'activity', 'protein')
+    assert node_classes[hub_layout.get_node_by_name(graph, 'MAP2K1')] in \
+        {(1, 'activity', 'protein'), (1, 'modification', 'protein')}
