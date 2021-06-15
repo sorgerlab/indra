@@ -130,7 +130,12 @@ def doi_query(pmid, search_limit=10):
         logger.info('PMID%s: no search results from CrossRef, code %d' %
                     (pmid, res.status_code))
         return None
-    raw_message = res.json()
+    # This is to handle a special case where we get a 200 status code but
+    # an error message in res.text that precludes json loading
+    try:
+        raw_message = res.json()
+    except ValueError:
+        return None
     mapped_doi = None
     # Iterate over the search results, looking up XREF metadata
     for result_ix, result in enumerate(raw_message):
