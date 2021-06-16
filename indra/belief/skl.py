@@ -286,6 +286,7 @@ class CountsScorer(SklearnScorer):
         use_num_pmids: bool = False,
         use_top_level: bool = False,
         use_promoter: bool = False,
+        use_avg_evidence_len: bool = False,
     ):
         # Call superclass constructor to store the model
         super(CountsScorer, self).__init__(model)
@@ -295,6 +296,7 @@ class CountsScorer(SklearnScorer):
         self.use_num_pmids = use_num_pmids
         self.use_top_level = use_top_level
         self.use_promoter = use_promoter
+        self.use_avg_evidence_len = use_avg_evidence_len
         # Build dictionary mapping INDRA Statement types to integers
         if use_stmt_type:
             all_stmt_types = get_all_descendants(Statement)
@@ -380,7 +382,6 @@ class CountsScorer(SklearnScorer):
         """
         # Check our list of extra evidences
         check_extra_evidence(extra_evidence, len(stmts))
-
         # Add categorical features and collect source_apis
         cat_features = []
         stmt_sources = set()
@@ -389,11 +390,15 @@ class CountsScorer(SklearnScorer):
             # Collect all source_apis from stmt evidences
             dir_pmids = set()
             promoter_ct = 0
+            evidence_lens = []
             for ev in stmt.evidence:
                 stmt_sources.add(ev.source_api)
                 dir_pmids.add(ev.pmid)
-                if ev.text is not None and 'promoter' in ev.text.lower():
-                    promoter_ct += 1
+                if ev.text is not None:
+                    evidence_lens.append(len(ev.text.split()))
+                    if 'promoter' in ev.text.lower():
+                        promoter_ct += 1
+
             indir_pmids = set()
             if extra_evidence is not None:
                 for ev in extra_evidence[ix]:
@@ -422,8 +427,14 @@ class CountsScorer(SklearnScorer):
             # Add a field specifying the percentage of evidences containing
             # the word "promoter":
             if self.use_promoter:
-                promoter_pct = promoter_ct / len(stmt.evidence)
+                promoter_pct = promoter_ct / len(stmt.evidence) \
+                                        if len(stmt.evidence) > 0 else 0
                 feature_row.append(promoter_pct)
+            # Add a field giving length of the sentence in words
+            if self.use_avg_evidence_len:
+                avg_evidence_len = np.mean(evidence_lens) if evidence_lens \
+                                                          else 0
+                feature_row.append(avg_evidence_len)
             # Only add a feature row if we're using some of the features.
             if feature_row:
                 cat_features.append(feature_row)
@@ -433,7 +444,6 @@ class CountsScorer(SklearnScorer):
         if stmt_sources.difference(set(self.source_list)):
             logger.info("source_list does not include all source_apis "
                              "in the statement data.")
-
         # Get source count features
         # If we have extra_evidence, we double the source count features
         if extra_evidence is None:
@@ -457,7 +467,6 @@ class CountsScorer(SklearnScorer):
                 for src_ix, src in enumerate(self.source_list):
                     x_arr[stmt_ix, src_ix + len(self.source_list)] = \
                                             idsrc_ctr.get(src, 0)
-
         # If we have any categorical features, turn them into an array and
         # add them to matrix
         if cat_features:
