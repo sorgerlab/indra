@@ -8,7 +8,16 @@ base_url = 'https://zenodo.org/record/3459420/files'
 logger = logging.getLogger(__name__)
 
 
-def process_gene_gene(part1_path, part2_path):
+def process_gene_gene(part1_path: str, part2_path: str) -> GnbrGeneGeneProcessor:
+    """Process gene-gene interactions.
+
+    Parameters
+    ----------
+    part1_path:
+        ...
+    part2_path:
+        ...
+    """
     logger.info(f'Loading part 1 table from {part1_path}')
     df1 = pandas.read_csv(part1_path, sep='\t')
     logger.info(f'Loading part 2 table from {part2_path}')
