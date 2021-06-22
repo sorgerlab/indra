@@ -2,6 +2,7 @@ from indra.statements import *
 from indra.statements import Agent
 from indra.ontology.standardize import standardize_agent_name
 
+
 class GnbrGeneGeneProcessor:
     def __init__(self, df1, df2):
         self.df1 = df1
@@ -18,8 +19,8 @@ class GnbrGeneGeneProcessor:
         df = df1_activations.join(self.df2.set_index('path'), on='path')
 
         for index, row in df.iterrows():
-            agent1 = standardize_agent_name(row['nm_1_raw'], row['nm_1_dbid'])
-            agent2 = standardize_agent_name(row['nm_2_raw'], row['nm_2_dbid'])
+            agent1 = self.standardize_agent(row['nm_1_raw'], row['nm_1_dbid'])
+            agent2 = self.standardize_agent(row['nm_2_raw'], row['nm_2_dbid'])
             self.statements.append(Activation(agent1, agent2))
 
     def standardize_agent(self, raw_string, db_id):
