@@ -23,7 +23,8 @@ class GnbrGeneGeneProcessor:
             agent2 = self.standardize_agent(row['nm_2_raw'], row['nm_2_dbid'])
             self.statements.append(Activation(agent1, agent2))
 
-    def standardize_agent(self, raw_string, db_id):
+    @staticmethod
+    def standardize_agent(raw_string, db_id):
         agent = Agent(raw_string, db_refs={'EGID': db_id, 'TEXT': raw_string})
         standardize_agent_name(agent)
         return agent
