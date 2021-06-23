@@ -14,9 +14,15 @@ def process_gene_gene(part1_path: str, part2_path: str) -> GnbrGeneGeneProcessor
     Parameters
     ----------
     part1_path:
-        ...
+        Path to the first dataset which contains dependency paths and themes.
     part2_path:
-        ...
+        Path to the second dataset which contains dependency paths and entity pairs.
+
+    Returns
+    -------
+    gp:
+        A GnbrGeneGeneProcessor object which contains a list of extracted INDRA
+        Statements in its statements attribute.
     """
     logger.info(f'Loading part 1 table from {part1_path}')
     df1 = pandas.read_csv(part1_path, sep='\t')
@@ -27,7 +33,10 @@ def process_gene_gene(part1_path: str, part2_path: str) -> GnbrGeneGeneProcessor
     return gp
 
 
-def process_gene_gene_from_web():
+def process_gene_gene_from_web() -> GnbrGeneGeneProcessor:
+    """
+    Call the process_gene_gene function with the paths to the GNBR datasets.
+    """
     fname1 = f'{base_url}/part-i-gene-gene-path-theme-distributions.txt.gz'
     fname2 = f'{base_url}/part-ii-dependency-paths-gene-gene-sorted-with-themes.txt.gz'
     return process_gene_gene(fname1, fname2)

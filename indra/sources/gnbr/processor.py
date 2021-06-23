@@ -16,6 +16,9 @@ class GnbrGeneGeneProcessor:
         self.statements = []
 
     def extract_activations(self) -> None:
+        """
+        Make Activation Statements from the themes and entities in the DataFrames.
+        """
         df1_activations = self.df1[(self.df1['V+.ind'] == 1) & (self.df1['V+'] > 0)]
         df = df1_activations.join(self.df2.set_index('path'), on='path')
 
@@ -26,6 +29,21 @@ class GnbrGeneGeneProcessor:
 
     @staticmethod
     def standardize_agent(raw_string: str, db_id: str) -> Agent:
+        """
+        Standardize agent names.
+
+        Parameters
+        ----------
+        raw_string:
+            Name of the agent in the GNBR dataset.
+        db_id:
+            Entrez identifier of the agent.
+
+        Returns
+        -------
+        agent:
+            A standardized Agent object.
+        """
         agent = Agent(raw_string, db_refs={'EGID': db_id, 'TEXT': raw_string})
         standardize_agent_name(agent)
         return agent
