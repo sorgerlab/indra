@@ -1,3 +1,6 @@
+"""This module contains the processors for GNBR. There are several, each corresponding
+to different kinds of interactions."""
+
 from indra.statements import *
 from indra.statements import Agent
 from indra.statements import Evidence
