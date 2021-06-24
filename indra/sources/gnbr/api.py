@@ -1,6 +1,6 @@
 __all__ = ['process_gene_gene', 'process_gene_gene_from_web']
 
-import pandas
+import pandas as pd
 import logging
 from .processor import GnbrGeneGeneProcessor
 
@@ -25,10 +25,10 @@ def process_gene_gene(part1_path: str, part2_path: str) -> GnbrGeneGeneProcessor
         Statements in its statements attribute.
     """
     logger.info(f'Loading part 1 table from {part1_path}')
-    df1 = pandas.read_csv(part1_path, sep='\t')
+    df1: pd.DataFrame = pd.read_csv(part1_path, sep='\t')
     logger.info(f'Loading part 2 table from {part2_path}')
-    df2 = pandas.read_csv(part2_path, sep='\t', header=None)
-    gp = GnbrGeneGeneProcessor(df1, df2)
+    df2: pd.DataFrame = pd.read_csv(part2_path, sep='\t', header=None)
+    gp: GnbrGeneGeneProcessor = GnbrGeneGeneProcessor(df1, df2)
     gp.extract_activations()
     return gp
 

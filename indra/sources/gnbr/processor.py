@@ -21,7 +21,6 @@ class GnbrGeneGeneProcessor:
         """
         df1_activations = self.df1[(self.df1['V+.ind'] == 1) & (self.df1['V+'] > 0)]
         df = df1_activations.join(self.df2.set_index('path'), on='path')
-
         for index, row in df.iterrows():
             agent1 = self.standardize_agent(row['nm_1_raw'], row['nm_1_dbid'])
             agent2 = self.standardize_agent(row['nm_2_raw'], row['nm_2_dbid'])
