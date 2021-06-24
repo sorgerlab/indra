@@ -1,5 +1,6 @@
 from indra.statements import *
 from indra.statements import Agent
+from indra.statements import Evidence
 from indra.ontology.standardize import standardize_agent_name
 import pandas as pd
 
@@ -23,23 +24,27 @@ class GnbrGeneGeneProcessor:
         for index, row in df.iterrows():
             agent1 = self.standardize_agent(row['nm_1_raw'], row['nm_1_dbid'])
             agent2 = self.standardize_agent(row['nm_2_raw'], row['nm_2_dbid'])
-            self.statements.append(Activation(agent1, agent2))
+            evidence = Evidence(source_api='gnbr',
+                                pmid=row['id'],
+                                text=row['sentence'],
+                                text_refs={'PMID': row['id']}
+                                )
+            self.statements.append(Activation(agent1, agent2, evidence))
 
     @staticmethod
     def standardize_agent(raw_string: str, db_id: str) -> Agent:
-        """
-        Standardize agent names.
+        """Standardize agent names.
 
         Parameters
         ----------
-        raw_string:
+        raw_string :
             Name of the agent in the GNBR dataset.
-        db_id:
+        db_id :
             Entrez identifier of the agent.
 
         Returns
         -------
-        agent:
+        agent :
             A standardized Agent object.
         """
         agent = Agent(raw_string, db_refs={'EGID': db_id, 'TEXT': raw_string})

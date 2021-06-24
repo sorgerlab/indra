@@ -36,9 +36,7 @@ def process_gene_gene(part1_path: str, part2_path: str) \
 
 
 def process_gene_gene_from_web() -> GnbrGeneGeneProcessor:
-    """
-    Call the process_gene_gene function with the paths to the GNBR datasets.
-    """
+    """Call process_gene_gene function on the GNBR datasets."""
     fname1 = f'{base_url}/part-i-gene-gene-path-theme-distributions.txt.gz'
     fname2 = (f'{base_url}/part-ii-dependency-paths-gene-gene-sorted-with-'
               'themes.txt.gz')
