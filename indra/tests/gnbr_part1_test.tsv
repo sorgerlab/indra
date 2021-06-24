@@ -1,0 +1,3 @@
+path	B	B.ind	W	W.ind	V+	V+.ind	E+	E+.ind	E	E.ind	I	I.ind	H	H.ind	Rg	Rg.ind	Q	Q.ind
+targeting|dobj|start_entity promotes|advcl|targeting promotes|nsubj|end_entity	33.000000	0	2.000000	0	282.000000	1	7.000000	0	0.000000	0	24.000000	0	2.000000	0	19.000000	0	4.000000	0
+signals|nsubj|start_entity signals|nmod|end_entity	118.000000	0	65.000000	0	326.000000	1	36.000000	0	4.000000	0	228.000000	0	38.000000	0	56.000000	0	61.000000	0
