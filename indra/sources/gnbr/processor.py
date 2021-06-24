@@ -6,6 +6,16 @@ import pandas as pd
 
 
 class GnbrGeneGeneProcessor:
+    """A processor for gene-gene interactions in the GNBR dataset.
+
+    Parameters
+    ----------
+    df1 :
+        Inner dataframe ...
+    df2 :
+        Outer dataframe ...
+    """
+
     def __init__(self, df1: pd.DataFrame, df2: pd.DataFrame) -> None:
         self.df1 = df1
         self.df2 = df2
