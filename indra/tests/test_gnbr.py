@@ -25,3 +25,4 @@ def test_process_gene_gene():
     assert isinstance(gp, GnbrGeneGeneProcessor)
     assert isinstance(gp.statements[0], Activation)
     assert isinstance(gp.statements[1], Activation)
+    assert isinstance(gp.statements[2], IncreaseAmount)

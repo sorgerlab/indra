@@ -31,6 +31,21 @@ class GnbrGeneGeneProcessor:
                                 )
             self.statements.append(Activation(agent1, agent2, evidence))
 
+    def extract_increase_amount(self) -> None:
+        """Make IncreaseAmount Statements from the DataFrames."""
+        df1_increase_amounts = self.df1[(self.df1['E+.ind'] == 1) &
+                                        (self.df1['E+'] > 0)]
+        df = df1_increase_amounts.join(self.df2.set_index('path'), on='path')
+        for index, row in df.iterrows():
+            agent1 = self.standardize_agent(row['nm_1_raw'], row['nm_1_dbid'])
+            agent2 = self.standardize_agent(row['nm_2_raw'], row['nm_2_dbid'])
+            evidence = Evidence(source_api='gnbr',
+                                pmid=row['id'],
+                                text=row['sentence'],
+                                text_refs={'PMID': row['id']}
+                                )
+            self.statements.append(IncreaseAmount(agent1, agent2, evidence))
+
     @staticmethod
     def standardize_agent(raw_string: str, db_id: str) -> Agent:
         """Standardize agent names.
