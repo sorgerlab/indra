@@ -17,9 +17,9 @@ def test_standardize_agent():
 
 def test_process_gene_gene():
     test_path1: str = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   'gnbr_part1_test.tsv')
+                                   'gnbr_gene_gene_part1_test.tsv')
     test_path2: str = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   'gnbr_part2_test.tsv')
+                                   'gnbr_gene_gene_part2_test.tsv')
     gp: GnbrGeneGeneProcessor = api.process_gene_gene(test_path1, test_path2)
     assert len(gp.statements) != 0
     assert isinstance(gp, GnbrGeneGeneProcessor)
