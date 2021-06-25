@@ -33,6 +33,7 @@ def process_gene_gene(part1_path: str, part2_path: str) \
     gp: GnbrGeneGeneProcessor = GnbrGeneGeneProcessor(df1, df2)
     gp.extract_activations()
     gp.extract_increase_amount()
+    gp.extract_complexes()
     return gp
 
 
