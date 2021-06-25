@@ -3,6 +3,7 @@ import os
 from indra.statements import *
 from indra.statements import Agent
 from indra.sources.gnbr.processor import GnbrGeneGeneProcessor
+from indra.sources.gnbr.processor import GnbrChemicalGeneProcessor
 import indra.sources.gnbr.api as api
 
 
@@ -20,7 +21,7 @@ def test_process_gene_gene():
                                    'gnbr_gene_gene_part1_test.tsv')
     test_path2: str = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    'gnbr_gene_gene_part2_test.tsv')
-    gp: GnbrGeneGeneProcessor = api.process_gene_gene(test_path1, test_path2)
+    gp = api.process_gene_gene(test_path1, test_path2)
     assert len(gp.statements) != 0
     assert isinstance(gp, GnbrGeneGeneProcessor)
     assert isinstance(gp.statements[0], Activation)
@@ -28,3 +29,15 @@ def test_process_gene_gene():
     assert isinstance(gp.statements[2], IncreaseAmount)
     assert isinstance(gp.statements[3], IncreaseAmount)
     assert isinstance(gp.statements[4], Complex)
+
+
+def test_process_chemical_gene():
+    test_path1: str = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   'gnbr_chemical_gene_part1_test.tsv')
+    test_path2: str = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   'gnbr_chemical_gene_part2_test.tsv')
+    gp = api.process_chemical_gene(test_path1, test_path2)
+    assert len(gp.statements) != 0
+    assert isinstance(gp, GnbrChemicalGeneProcessor)
+    assert isinstance(gp.statements[0], Activation)
+    assert isinstance(gp.statements[1], Inhibition)

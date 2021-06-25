@@ -1,0 +1,3 @@
+path	A+	A+.ind	A-	A-.ind	B	B.ind	E+	E+.ind	E-	E-.ind	E	E.ind	N	N.ind	O	O.ind	K	K.ind	Z	Z.ind
+start_entity|appos|agonist agonist|compound|end_entity	2234.000000	1	42.000000	0	1063.000000	0	239.000000	0	39.000000	0	738.000000	0	146.000000	0	233.000000	0	120.000000	0	1.000000	0
+start_entity|nsubj|effects effects|nmod|antagonist antagonist|amod|end_entity	3.000000	0	109.000000	1	12.000000	0	0.000000	0	15.000000	0	61.000000	0	27.000000	0	0.000000	0	27.000000	0	0.000000	0

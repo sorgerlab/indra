@@ -96,8 +96,9 @@ class GnbrGeneGeneProcessor:
         standardize_agent_name(agent)
         return agent
 
+
 class GnbrChemicalGeneProcessor:
-    """A processor for gene-gene interactions in the GNBR dataset.
+    """A processor for chemical-gene interactions in the GNBR dataset.
 
     Parameters
     ----------
@@ -122,7 +123,7 @@ class GnbrChemicalGeneProcessor:
                                    (self.df1['A+'] > 0)]
         df = df1_activations.join(self.df2.set_index('path'), on='path')
         for index, row in df.iterrows():
-            agent1 = self.std_gene(row['nm_1_raw'], row['nm_1_dbid'])
+            agent1 = self.std_chemical(row['nm_1_raw'], row['nm_1_dbid'])
             agent2 = self.std_gene(row['nm_2_raw'], row['nm_2_dbid'])
             evidence = Evidence(source_api='gnbr',
                                 pmid=row['id'],
@@ -147,6 +148,51 @@ class GnbrChemicalGeneProcessor:
                                 text_refs={'PMID': row['id']}
                                 )
             self.statements.append(Inhibition(agent1, agent2, evidence))
+
+    def extract_complexes(self):
+        """Make Complex Statements from the dataframes."""
+        df1_complexes = self.df1[(self.df1['B.ind'] == 1) &
+                                 (self.df1['B'] > 0)]
+        df = df1_complexes.join(self.df2.set_index('path'), on='path')
+        for index, row in df.iterrows():
+            agent1 = self.std_chemical(row['nm_1_raw'], row['nm_1_dbid'])
+            agent2 = self.std_gene(row['nm_2_raw'], row['nm_2_dbid'])
+            evidence = Evidence(source_api='gnbr',
+                                pmid=row['id'],
+                                text=row['sentence'],
+                                text_refs={'PMID': row['id']}
+                                )
+            self.statements.append(Complex([agent1, agent2], evidence))
+
+    def extract_increase_amount(self):
+        """Make IncreaseAmount Statements from the dataframes."""
+        df1_complexes = self.df1[(self.df1['E+.ind'] == 1) &
+                                 (self.df1['E+'] > 0)]
+        df = df1_complexes.join(self.df2.set_index('path'), on='path')
+        for index, row in df.iterrows():
+            agent1 = self.std_chemical(row['nm_1_raw'], row['nm_1_dbid'])
+            agent2 = self.std_gene(row['nm_2_raw'], row['nm_2_dbid'])
+            evidence = Evidence(source_api='gnbr',
+                                pmid=row['id'],
+                                text=row['sentence'],
+                                text_refs={'PMID': row['id']}
+                                )
+            self.statements.append(IncreaseAmount(agent1, agent2, evidence))
+
+    def extract_decrease_amount(self):
+        """Make DecreaseAmount Statements from the dataframes."""
+        df1_complexes = self.df1[(self.df1['E-.ind'] == 1) &
+                                 (self.df1['E-'] > 0)]
+        df = df1_complexes.join(self.df2.set_index('path'), on='path')
+        for index, row in df.iterrows():
+            agent1 = self.std_chemical(row['nm_1_raw'], row['nm_1_dbid'])
+            agent2 = self.std_gene(row['nm_2_raw'], row['nm_2_dbid'])
+            evidence = Evidence(source_api='gnbr',
+                                pmid=row['id'],
+                                text=row['sentence'],
+                                text_refs={'PMID': row['id']}
+                                )
+            self.statements.append(DecreaseAmount(agent1, agent2, evidence))
 
     @staticmethod
     def std_gene(raw_string: str, db_id: str) -> Agent:
