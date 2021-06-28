@@ -1,14 +1,15 @@
 """A client for OWL-sourced identifier mappings."""
 
 import json
+import os
 import pickle
 from collections import defaultdict
-from pathlib import Path
-from typing import Any, Mapping, Optional, TYPE_CHECKING, Union
+from typing import Any, Mapping, TYPE_CHECKING
 
 from tqdm import tqdm
 
-from indra.databases.obo_client import OntologyClient, RESOURCES, prune_empty_entries
+from indra.databases.obo_client import OntologyClient, prune_empty_entries
+from indra.resources import get_resource_path
 
 if TYPE_CHECKING:
     import pronto
@@ -70,7 +71,6 @@ class OwlClient(OntologyClient):
         cls,
         prefix: str,
         ontology: 'pronto.Ontology',
-        directory: Union[str, Path],
         skip_obsolete: bool = True,
     ):
         entries = cls.entries_from_ontology(prefix=prefix, ontology=ontology, skip_obsolete=skip_obsolete)
@@ -80,7 +80,7 @@ class OwlClient(OntologyClient):
         )
         entries = sorted(entries, key=lambda x: int(x['id']))
 
-        resource_path = cls._make_resource_path(directory=directory, prefix=prefix.lower())
+        resource_path = get_resource_path(f'{prefix.lower()}.json')
         with open(resource_path, 'w') as file:
             json.dump(entries, file, indent=1, sort_keys=True)
 
@@ -89,14 +89,11 @@ class OwlClient(OntologyClient):
         cls,
         prefix: str,
         extension: str = 'owl',
-        directory: Optional[str] = None,
         **kwargs,
     ):
-        if directory is None:
-            directory = RESOURCES
-        directory = Path(directory).resolve()
-        cache_path = directory.joinpath(f'{prefix.lower()}.{extension}.pkl')
-        if cache_path.is_file():
+        cache_path = get_resource_path(f'{prefix.lower()}.{extension}.pkl')
+
+        if os.path.exists(cache_path):
             with cache_path.open('rb') as file:
                 ontology = pickle.load(file)
         else:
@@ -111,14 +108,13 @@ class OwlClient(OntologyClient):
             with cache_path.open('wb') as file:
                 pickle.dump(ontology, file, protocol=pickle.HIGHEST_PROTOCOL)
 
-        cls.update_resource(prefix=prefix, ontology=ontology, directory=directory, **kwargs)
+        cls.update_resource(prefix=prefix, ontology=ontology, **kwargs)
 
     @classmethod
     def update_from_file(
         cls,
         prefix: str,
         file,
-        directory: Optional[str] = None,
         **kwargs,
     ):
         try:
@@ -129,7 +125,7 @@ class OwlClient(OntologyClient):
                 'install Pronto with `pip install pronto`.'
             )
         ontology = pronto.Ontology(file)
-        cls.update_resource(prefix=prefix, ontology=ontology, directory=directory, **kwargs)
+        cls.update_resource(prefix=prefix, ontology=ontology, **kwargs)
 
 
 if __name__ == '__main__':
