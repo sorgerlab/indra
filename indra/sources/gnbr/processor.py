@@ -192,6 +192,10 @@ def get_standard_chemical(raw_string: str, db_id: str) -> Agent:
         agent = Agent(raw_string, db_refs={'MESH': db_id.split(':')[1],
                                            'TEXT': raw_string})
         standardize_agent_name(agent)
+    elif db_id.contains('(Tax:'):
+        agent = Agent(raw_string, db_refs={'MESH': db_id.split('(')[0],
+                                           'TEXT': raw_string})
+        standardize_agent_name(agent)
     else:
         agent = Agent(raw_string, db_refs={'MESH': db_id,
                                            'TEXT': raw_string})
