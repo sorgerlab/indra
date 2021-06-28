@@ -10,6 +10,7 @@ from urllib.request import urlretrieve
 from xml.etree import ElementTree as ET
 from indra.util import read_unicode_csv, write_unicode_csv
 from indra.databases.obo_client import OboClient
+from indra.databases.owl_client import OwlClient
 from indra.databases import chebi_client, pubchem_client
 from indra.databases.lincs_client import load_lincs_csv
 from . import load_resource_json, get_resource_path
@@ -669,6 +670,11 @@ def update_drugbank_mappings():
     write_unicode_csv(fname, rows, delimiter='\t')
 
 
+def update_ido():
+    """Update infectious disease ontology (IDO)."""
+    OwlClient.update_from_obo_library('IDO')
+
+
 def update_identifiers_registry():
     """Update prefixes and patterns for identifiers namespaces."""
     url = \
@@ -790,6 +796,7 @@ def main():
     update_doid()
     update_efo()
     update_hpo()
+    update_ido()
     update_drugbank_mappings()
     update_identifiers_registry()
 
