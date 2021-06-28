@@ -2,15 +2,13 @@ __all__ = ['process_gene_gene', 'process_gene_gene_from_web']
 
 import pandas as pd
 import logging
-from .processor import GnbrGeneGeneProcessor
-from .processor import GnbrChemicalGeneProcessor
+from .processor import GnbrProcessor
 
 base_url = 'https://zenodo.org/record/3459420/files'
 logger = logging.getLogger(__name__)
 
 
-def process_gene_gene(part1_path: str, part2_path: str) \
-        -> GnbrGeneGeneProcessor:
+def process_gene_gene(part1_path: str, part2_path: str) -> GnbrProcessor:
     """Process gene-gene interactions.
 
     Parameters
@@ -31,13 +29,12 @@ def process_gene_gene(part1_path: str, part2_path: str) \
     df1: pd.DataFrame = pd.read_csv(part1_path, sep='\t')
     logger.info(f'Loading part 2 table from {part2_path}')
     df2: pd.DataFrame = pd.read_csv(part2_path, sep='\t', header=None)
-    gp: GnbrGeneGeneProcessor = GnbrGeneGeneProcessor(df1, df2)
-    gp.extract_statements()
+    gp: GnbrProcessor = GnbrProcessor(df1, df2, 'gene', 'gene')
+    gp.extract_stmts()
     return gp
 
 
-def process_chemical_gene(part1_path: str, part2_path: str) \
-        -> GnbrChemicalGeneProcessor:
+def process_chemical_gene(part1_path: str, part2_path: str) -> GnbrProcessor:
     """Process chemical-gene interactions.
 
     Parameters
@@ -57,16 +54,12 @@ def process_chemical_gene(part1_path: str, part2_path: str) \
     df1: pd.DataFrame = pd.read_csv(part1_path, sep='\t')
     logger.info(f'Loading part 2 table from {part2_path}')
     df2: pd.DataFrame = pd.read_csv(part2_path, sep='\t', header=None)
-    gp: GnbrChemicalGeneProcessor = GnbrChemicalGeneProcessor(df1, df2)
-    gp.extract_activations()
-    gp.extract_inhibition()
-    gp.extract_complexes()
-    gp.extract_increase_amount()
-    gp.extract_decrease_amount()
+    gp: GnbrProcessor = GnbrProcessor(df1, df2, 'chemical', 'gene')
+    gp.extract_stmts()
     return gp
 
 
-def process_gene_gene_from_web() -> GnbrGeneGeneProcessor:
+def process_gene_gene_from_web() -> GnbrProcessor:
     """Call process_gene_gene function on the GNBR datasets."""
     fname1 = f'{base_url}/part-i-gene-gene-path-theme-distributions.txt.gz'
     fname2 = (f'{base_url}/part-ii-dependency-paths-gene-gene-sorted-with-'

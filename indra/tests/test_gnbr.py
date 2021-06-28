@@ -2,13 +2,12 @@ import os
 
 from indra.statements import *
 from indra.statements import Agent
-from indra.sources.gnbr.processor import GnbrGeneGeneProcessor
-from indra.sources.gnbr.processor import GnbrChemicalGeneProcessor
+from indra.sources.gnbr.processor import GnbrProcessor
 import indra.sources.gnbr.api as api
 
 
 def test_standardize_agent():
-    agent = GnbrGeneGeneProcessor.standardize_agent('xxx', '673')
+    agent = GnbrProcessor.standardize_agent('xxx', '673')
     assert isinstance(agent, Agent)
     assert agent.name == 'BRAF'
     assert agent.db_refs.get('TEXT') == 'xxx'
@@ -23,7 +22,9 @@ def test_process_gene_gene():
                                    'gnbr_gene_gene_part2_test.tsv')
     gp = api.process_gene_gene(test_path1, test_path2)
     assert len(gp.statements) != 0
-    assert isinstance(gp, GnbrGeneGeneProcessor)
+    assert isinstance(gp, GnbrProcessor)
+    assert gp.first_type == 'gene'
+    assert gp.second_type == 'gene'
     assert isinstance(gp.statements[0], Activation)
     assert isinstance(gp.statements[1], Activation)
     assert isinstance(gp.statements[2], IncreaseAmount)
@@ -38,6 +39,8 @@ def test_process_chemical_gene():
                                    'gnbr_chemical_gene_part2_test.tsv')
     gp = api.process_chemical_gene(test_path1, test_path2)
     assert len(gp.statements) != 0
-    assert isinstance(gp, GnbrChemicalGeneProcessor)
+    assert isinstance(gp, GnbrProcessor)
+    assert gp.first_type == 'chemical'
+    assert gp.second_type == 'gene'
     assert isinstance(gp.statements[0], Activation)
     assert isinstance(gp.statements[1], Inhibition)
