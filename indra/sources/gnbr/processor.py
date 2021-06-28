@@ -32,13 +32,8 @@ class GnbrGeneGeneProcessor:
         """Make Activation Statements from the dataframes."""
         df1_activations = self.df1[(self.df1['V+.ind'] == 1) &
                                    (self.df1['V+'] > 0)]
-        df = df1_activations.join(self.df2.set_index('path'), on='path')
-        for index, row in df.iterrows():
-            agent1 = get_standard_gene(row['nm_1_raw'], row['nm_1_dbid'])
-            agent2 = get_standard_gene(row['nm_2_raw'], row['nm_2_dbid'])
-            evidence = get_evidence(row)
-            self.statements.append(Activation(agent1, agent2,
-                                              evidence=evidence))
+        self.statements.extend(self._extract_statements(df1_activations,
+                                                        Activation))
 
     def extract_increase_amount(self) -> None:
         """Make IncreaseAmount Statements from the dataframes."""
@@ -46,25 +41,26 @@ class GnbrGeneGeneProcessor:
                                          (self.df1['E+'] > 0)) |
                                         ((self.df1['Q.ind'] == 1) &
                                          (self.df1['Q'] > 0))]
-        df = df1_increase_amounts.join(self.df2.set_index('path'), on='path')
-        for index, row in df.iterrows():
-            agent1 = get_standard_gene(row['nm_1_raw'], row['nm_1_dbid'])
-            agent2 = get_standard_gene(row['nm_2_raw'], row['nm_2_dbid'])
-            evidence = get_evidence(row)
-            self.statements.append(IncreaseAmount(agent1, agent2,
-                                                  evidence=evidence))
+        self.statements.extend(self._extract_statements(df1_increase_amounts,
+                                                        IncreaseAmount))
 
     def extract_complexes(self):
         """Make Complex Statements from the dataframes."""
         df1_complexes = self.df1[(self.df1['H.ind'] == 1) &
                                  (self.df1['H'] > 0)]
-        df = df1_complexes.join(self.df2.set_index('path'), on='path')
-        for index, row in df.iterrows():
+        self.statements.extend(self._extract_statements(df1_complexes, Complex))
+
+    def _extract_statements(self, df, stmt_class):
+        df_joint = df.join(self.df2.set_index('path'), on='path')
+        for index, row in df_joint.iterrows():
             agent1 = get_standard_gene(row['nm_1_raw'], row['nm_1_dbid'])
             agent2 = get_standard_gene(row['nm_2_raw'], row['nm_2_dbid'])
             evidence = get_evidence(row)
-            self.statements.append(Complex([agent1, agent2],
-                                           evidence=evidence))
+            if stmt_class == Complex:
+                stmt = Complex([agent1, agent2], evidence=evidence)
+            else:
+                stmt = stmt_class(agent1, agent2, evidence=evidence)
+            yield stmt
 
 
 class GnbrChemicalGeneProcessor:
