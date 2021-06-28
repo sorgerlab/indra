@@ -672,7 +672,7 @@ def update_drugbank_mappings():
 
 def update_ido():
     """Update infectious disease ontology (IDO)."""
-    OwlClient.update_from_obo_library('IDO')
+    OwlClient.update_from_obo_library('ido')
 
 
 def update_identifiers_registry():

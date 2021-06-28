@@ -53,7 +53,7 @@ class OwlClient(OntologyClient):
         *,
         skip_obsolete: bool = True,
     ):
-        """"""
+        prefix = prefix.upper()
         rv = []
         for term in tqdm(ontology.terms(), desc=f"[{prefix}]"):
             if term.obsolete and skip_obsolete:
@@ -70,6 +70,7 @@ class OwlClient(OntologyClient):
         ontology: "pronto.Ontology",
         skip_obsolete: bool = True,
     ):
+        prefix = prefix.lower()
         entries = cls.entries_from_ontology(
             prefix=prefix, ontology=ontology, skip_obsolete=skip_obsolete
         )
@@ -79,7 +80,7 @@ class OwlClient(OntologyClient):
         )
         entries = sorted(entries, key=lambda x: int(x["id"]))
 
-        resource_path = get_resource_path(f"{prefix.lower()}.json")
+        resource_path = get_resource_path(f"{prefix}.json")
         with open(resource_path, "w") as file:
             json.dump(entries, file, indent=1, sort_keys=True)
 
@@ -90,7 +91,8 @@ class OwlClient(OntologyClient):
         extension: str = "owl",
         **kwargs,
     ):
-        cache_path = get_resource_path(f"{prefix.lower()}.{extension}.pkl")
+        prefix = prefix.lower()
+        cache_path = get_resource_path(f"{prefix}.{extension}.pkl")
 
         if os.path.exists(cache_path):
             with cache_path.open("rb") as file:
@@ -103,7 +105,7 @@ class OwlClient(OntologyClient):
                     "To use the INDRA OWL Client, you must first"
                     "install Pronto with `pip install pronto`."
                 )
-            ontology = pronto.Ontology.from_obo_library(f"{prefix}.{extension}")
+            ontology = pronto.Ontology.from_obo_library(f"{prefix.upper()}.{extension}")
             with cache_path.open("wb") as file:
                 pickle.dump(ontology, file, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -128,4 +130,4 @@ class OwlClient(OntologyClient):
 
 
 if __name__ == "__main__":
-    OwlClient.update_from_obo_library("IDO")
+    OwlClient.update_from_obo_library("ido")

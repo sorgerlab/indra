@@ -4,7 +4,7 @@ from typing import Optional
 
 from indra.databases.owl_client import OwlClient
 
-_client = OwlClient(prefix='IDO')
+_client = OwlClient('ido')
 
 
 def get_ido_name_from_ido_id(ido_id: str) -> Optional[str]:
