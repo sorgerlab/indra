@@ -1,0 +1,1689 @@
+[
+ {
+  "id": "0000400",
+  "name": "symbiont role",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000401",
+    "IDO:0000402",
+    "IDO:0000403"
+   ]
+  }
+ },
+ {
+  "id": "0000401",
+  "name": "mutualist role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000402",
+  "name": "commensal role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000403",
+  "name": "parasite role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000404",
+  "name": "infectious agent role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000405",
+  "name": "pathogen role",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000404"
+   ]
+  }
+ },
+ {
+  "id": "0000406",
+  "name": "opportunistic infectious disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000407",
+  "name": "primary infectious disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000408",
+  "name": "symbiont host role",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000409",
+    "IDO:0000410",
+    "IDO:0000411",
+    "IDO:0000412",
+    "IDO:0000413"
+   ]
+  }
+ },
+ {
+  "id": "0000409",
+  "name": "definitive host role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000410",
+  "name": "intermediate host role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000411",
+  "name": "paratenic host role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000412",
+  "name": "dead-end host role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000413",
+  "name": "parasite host role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000414",
+  "name": "infectious agent host role",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000416"
+   ]
+  }
+ },
+ {
+  "id": "0000415",
+  "name": "pathogen host role",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000414"
+   ]
+  }
+ },
+ {
+  "id": "0000416",
+  "name": "infectious agent carrier role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000417",
+  "name": "infectious agent transporter role",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000418",
+    "IDO:0000421"
+   ]
+  }
+ },
+ {
+  "id": "0000418",
+  "name": "infectious agent vector role",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000419",
+    "IDO:0000420"
+   ]
+  }
+ },
+ {
+  "id": "0000419",
+  "name": "mechanical vector of infectious agent role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000420",
+  "name": "biological vector of infectious agent role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000421",
+  "name": "infectious agent vehicle role",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000422",
+    "IDO:0000423"
+   ]
+  }
+ },
+ {
+  "id": "0000422",
+  "name": "biological vehicle of infectious agent role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000423",
+  "name": "fomite role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000424",
+  "name": "reservoir of infectious agent role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000425",
+  "name": "virulence factor disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000426",
+  "name": "toxin disposition",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000427",
+    "IDO:0000429"
+   ]
+  }
+ },
+ {
+  "id": "0000427",
+  "name": "exotoxin disposition",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000428"
+   ]
+  }
+ },
+ {
+  "id": "0000430",
+  "name": "infectious agent portal of entry role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000431",
+  "name": "infectious agent portal of exit role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000432",
+  "name": "disinfectant role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000433",
+  "name": "antiseptic role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000434",
+  "name": "primary infection role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000435",
+  "name": "secondary infection role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000436",
+  "name": "infectious disease",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000568",
+    "IDO:0000653"
+   ]
+  }
+ },
+ {
+  "id": "0000437",
+  "name": "adhesion disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000438",
+  "name": "invasion disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000439",
+  "name": "antimicrobial disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000440",
+  "name": "antiviral disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000441",
+  "name": "antifungal disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000442",
+  "name": "antibacterial disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000443",
+  "name": "antiparasitic disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000444",
+  "name": "protective resistance",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000445",
+    "IDO:0000446"
+   ]
+  }
+ },
+ {
+  "id": "0000445",
+  "name": "resistance to drug",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000581"
+   ]
+  }
+ },
+ {
+  "id": "0000446",
+  "name": "resistance to infectious agent",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000448",
+    "IDO:0000587"
+   ]
+  }
+ },
+ {
+  "id": "0000447",
+  "name": "herd immunity to infectious organism",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000448",
+  "name": "immunity to infectious agent",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000449",
+    "IDO:0000576",
+    "IDO:0000578",
+    "IDO:0000579",
+    "IDO:0000580",
+    "IDO:0000621"
+   ]
+  }
+ },
+ {
+  "id": "0000449",
+  "name": "sterilizing immunity to infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000450",
+  "name": "pathogenic disposition",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000452",
+    "IDO:0000666"
+   ]
+  }
+ },
+ {
+  "id": "0000451",
+  "name": "invasive disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000452",
+  "name": "infectious disposition",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000406",
+    "IDO:0000407",
+    "IDO:0000453",
+    "IDO:0000454",
+    "IDO:0000623"
+   ]
+  }
+ },
+ {
+  "id": "0000453",
+  "name": "zoonotic disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000454",
+  "name": "reverse zoonotic disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000455",
+  "name": "collective disposition",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000585",
+    "IDO:0000588"
+   ]
+  }
+ },
+ {
+  "id": "0000456",
+  "name": "immunosuppressed organism",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0001005"
+   ]
+  }
+ },
+ {
+  "id": "0000457",
+  "name": "immunocompetent organism",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000458",
+  "name": "contagiousness",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000459",
+  "name": "colonized host",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000460",
+  "name": "infected organism",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000461"
+   ]
+  }
+ },
+ {
+  "id": "0000461",
+  "name": "co-infected organism",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000463",
+  "name": "infectious agent transmissibility",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000464",
+  "name": "infectivity",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000466",
+  "name": "virulence",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000467",
+  "name": "susceptibility",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000468",
+    "IDO:0000469"
+   ]
+  }
+ },
+ {
+  "id": "0000468",
+  "name": "susceptibility to infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000469",
+  "name": "drug susceptibility",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000470"
+   ]
+  }
+ },
+ {
+  "id": "0000470",
+  "name": "drug susceptibility of infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000471",
+  "name": "complex infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000472",
+  "name": "extracellular infection",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000505",
+    "IDO:0000506"
+   ]
+  }
+ },
+ {
+  "id": "0000473",
+  "name": "intracellular infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000474",
+  "name": "systemic infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000475",
+  "name": "local infection",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000476"
+   ]
+  }
+ },
+ {
+  "id": "0000476",
+  "name": "focal infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000477",
+  "name": "acute infectious disease course",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000479",
+  "name": "infectious disease incidence",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000480",
+  "name": "infection incidence",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000481",
+  "name": "infectious disease incidence proportion",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000482",
+  "name": "infection incidence proportion",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000483",
+  "name": "infectious disease incidence rate",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000492"
+   ]
+  }
+ },
+ {
+  "id": "0000484",
+  "name": "infection incidence rate",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000485",
+  "name": "infectious disease prevalence",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000491"
+   ]
+  }
+ },
+ {
+  "id": "0000486",
+  "name": "infection prevalence",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000487",
+  "name": "infectious disease lifetime prevalence",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000488",
+  "name": "infectious agent seroprevalence",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000489",
+  "name": "infectious disease mortality rate",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000490",
+  "name": "infectious disease endemicity",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000493"
+   ]
+  }
+ },
+ {
+  "id": "0000491",
+  "name": "infectious disease endemic level",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000492",
+  "name": "infectious disease endemic rate",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000493",
+  "name": "infectious disease hyper-endemicity",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000494",
+  "name": "infectious disease sporadicity",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000495",
+  "name": "infectious disease course",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000477",
+    "IDO:0000590"
+   ]
+  }
+ },
+ {
+  "id": "0000496",
+  "name": "long-term non-progressing infectious disease course",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000497",
+  "name": "immunization against infectious agent",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000498",
+    "IDO:0000501"
+   ]
+  }
+ },
+ {
+  "id": "0000498",
+  "name": "active immunization against infectious agent",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000499",
+    "IDO:0000500"
+   ]
+  }
+ },
+ {
+  "id": "0000499",
+  "name": "vaccination against infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000500",
+  "name": "variolation",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000501",
+  "name": "passive immunization against infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000502",
+  "name": "infectious disease epidemic",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000503",
+  "name": "infectious disease pandemic",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000504",
+  "name": "infectious disorder",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000566",
+    "IDO:0000567",
+    "IDO:0000627"
+   ]
+  }
+ },
+ {
+  "id": "0000505",
+  "name": "viremia",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000506",
+  "name": "bacteremia",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000508",
+  "name": "virion",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000509",
+  "name": "organism population",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000511",
+    "IDO:0000512",
+    "IDO:0000513",
+    "IDO:0000514",
+    "IDO:0000515",
+    "IDO:0000592",
+    "IDO:0000615"
+   ]
+  }
+ },
+ {
+  "id": "0000511",
+  "name": "infected population",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000512",
+  "name": "diseased population",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000513",
+  "name": "infectious agent population",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000514",
+  "name": "susceptible population",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000515",
+  "name": "normal resident microbiota population",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000519",
+  "name": "incubation period",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000520",
+  "name": "communicability period",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000522",
+  "name": "symbiont",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000523",
+    "IDO:0000524",
+    "IDO:0000525",
+    "IDO:0000526"
+   ]
+  }
+ },
+ {
+  "id": "0000523",
+  "name": "obligatory symbiont",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000524",
+  "name": "mutualist",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000525",
+  "name": "commensal",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000526",
+  "name": "parasite",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000528",
+  "name": "pathogen",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000596"
+   ]
+  }
+ },
+ {
+  "id": "0000530",
+  "name": "primary pathogen",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000531",
+  "name": "host",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000532",
+    "IDO:0000533",
+    "IDO:0000534",
+    "IDO:0000535",
+    "IDO:0000536",
+    "IDO:0000538"
+   ]
+  }
+ },
+ {
+  "id": "0000532",
+  "name": "definitive host",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000533",
+  "name": "intermediate host",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000534",
+  "name": "paratenic host",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000535",
+  "name": "dead-end host",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000536",
+  "name": "parasite host",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000537",
+  "name": "infectious agent host",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000539",
+    "IDO:0000569",
+    "IDO:0000573"
+   ]
+  }
+ },
+ {
+  "id": "0000538",
+  "name": "pathogen host",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000537"
+   ]
+  }
+ },
+ {
+  "id": "0000539",
+  "name": "infectious agent carrier",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000572"
+   ]
+  }
+ },
+ {
+  "id": "0000540",
+  "name": "infectious agent vector",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000541",
+    "IDO:0000542"
+   ]
+  }
+ },
+ {
+  "id": "0000541",
+  "name": "mechanical vector of infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000542",
+  "name": "biological vector of infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000543",
+  "name": "vehicle of infectious agent",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000544"
+   ]
+  }
+ },
+ {
+  "id": "0000544",
+  "name": "fomite",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000545",
+  "name": "infectious agent reservoir",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000547",
+  "name": "virulence factor",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000548",
+  "name": "invasion factor",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000549",
+  "name": "toxin",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000550",
+    "IDO:0000552",
+    "IDO:0000584",
+    "IDO:0000632"
+   ]
+  }
+ },
+ {
+  "id": "0000550",
+  "name": "exotoxin",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000551"
+   ]
+  }
+ },
+ {
+  "id": "0000551",
+  "name": "enterotoxin",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000552",
+  "name": "endotoxin",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000553",
+  "name": "infectious agent portal of entry",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000554",
+  "name": "infectious agent portal of exit",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000555",
+  "name": "disinfectant",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000556",
+  "name": "antiseptic",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000557",
+  "name": "adhesion factor",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000558",
+  "name": "antimicrobial",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000563",
+    "IDO:0000565"
+   ]
+  }
+ },
+ {
+  "id": "0000559",
+  "name": "antiviral",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000564"
+   ]
+  }
+ },
+ {
+  "id": "0000560",
+  "name": "antifungal",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000561",
+  "name": "antiparasitic",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000562",
+  "name": "antibacterial",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000563",
+  "name": "microbicide",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000564",
+  "name": "viricide",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000565",
+  "name": "microbistatic",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000566",
+  "name": "primary infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000567",
+  "name": "secondary infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000568",
+  "name": "zoonosis",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000569",
+  "name": "asymptomatic host of infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000570",
+  "name": "subclinical infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000571",
+  "name": "resistant entity",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000572",
+  "name": "chronic carrier of infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000573",
+  "name": "symptomatic host of infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000576",
+  "name": "innate immunity to infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000578",
+  "name": "humoral immunity to infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000579",
+  "name": "leukocyte-mediated immunity to infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000580",
+  "name": "passive immunity to infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000581",
+  "name": "antibiotic resistance",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000582",
+  "name": "long-term non-progressor",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000583",
+  "name": "emerging pathogen",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000584",
+  "name": "cytotoxin",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000585",
+  "name": "collective pathogenic disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000586",
+  "name": "infection",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000471",
+    "IDO:0000472",
+    "IDO:0000473",
+    "IDO:0000474",
+    "IDO:0000475",
+    "IDO:0000504",
+    "IDO:0000570",
+    "IDO:0000628",
+    "IDO:0000630",
+    "IDO:0000631",
+    "IDO:0000633",
+    "IDO:0000638",
+    "IDO:0000642",
+    "IDO:0000645",
+    "IDO:0000646",
+    "IDO:0000647",
+    "IDO:0000648",
+    "IDO:0000649"
+   ]
+  }
+ },
+ {
+  "id": "0000587",
+  "name": "genetic resistance to infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000588",
+  "name": "collective resistance disposition",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000447"
+   ]
+  }
+ },
+ {
+  "id": "0000589",
+  "name": "immunodeficient organism",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000590",
+  "name": "chronic infectious disease course",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000496"
+   ]
+  }
+ },
+ {
+  "id": "0000592",
+  "name": "immune population",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000593",
+  "name": "transmission period",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000594",
+  "name": "direct host exposure to infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000595",
+  "name": "potential host of infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000596",
+  "name": "infectious agent",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000530",
+    "IDO:0000583",
+    "IDO:0000639",
+    "IDO:0000643",
+    "IDO:0000654"
+   ]
+  }
+ },
+ {
+  "id": "0000597",
+  "name": "host exposure to environment containing infectious agent",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000598",
+    "IDO:0000599",
+    "IDO:0000600",
+    "IDO:0000601",
+    "IDO:0000602"
+   ]
+  }
+ },
+ {
+  "id": "0000598",
+  "name": "host living with infected household contact",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000599",
+  "name": "host living in endemic area",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000600",
+  "name": "release of infectious human pathogen in laboratory",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000601",
+  "name": "host coming into contact with vector of infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000602",
+  "name": "host exposure to substance that might have infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000603",
+  "name": "process of establishing an infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000604",
+  "name": "colonization of host",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000606",
+    "IDO:0000650"
+   ]
+  }
+ },
+ {
+  "id": "0000606",
+  "name": "establishment of a clinically abnormal colony",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000607",
+  "name": "production",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000608"
+   ]
+  }
+ },
+ {
+  "id": "0000608",
+  "name": "replication",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000609",
+  "name": "colonization of human anterior nares",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000610",
+  "name": "immunosuppression",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000611",
+    "IDO:0000612",
+    "IDO:0000644"
+   ]
+  }
+ },
+ {
+  "id": "0000611",
+  "name": "physiologic immunosuppression",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000612",
+  "name": "pathologic immunosuppression",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0001003",
+    "IDO:0001009"
+   ]
+  }
+ },
+ {
+  "id": "0000615",
+  "name": "colony",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000616"
+   ]
+  }
+ },
+ {
+  "id": "0000616",
+  "name": "infectious agent colony",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000617",
+  "name": "immunodeficiency",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000640",
+    "IDO:0000651"
+   ]
+  }
+ },
+ {
+  "id": "0000618",
+  "name": "immunocompetence",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000619",
+  "name": "immunosuppressive disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000621",
+  "name": "acquired immunity to infectious agent",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000622",
+  "name": "disposition to form a non-parasitic colony",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000623",
+  "name": "communicability",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000625",
+  "name": "establishment of localization in host",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000604"
+   ]
+  }
+ },
+ {
+  "id": "0000626",
+  "name": "appearance of disorder",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000627",
+  "name": "acute infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000628",
+  "name": "chronic infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000629",
+  "name": "host role",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000408",
+    "IDO:0000415"
+   ]
+  }
+ },
+ {
+  "id": "0000630",
+  "name": "hospital-acquired infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000631",
+  "name": "community-acquired infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000632",
+  "name": "neurotoxin",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000633",
+  "name": "metatstatic infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000635",
+  "name": "source of infection role",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000636",
+  "name": "sepsis",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000637"
+   ]
+  }
+ },
+ {
+  "id": "0000637",
+  "name": "severe sepsis",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000638",
+  "name": "nursing-home acquired infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000639",
+  "name": "infectious human pathogen",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000640",
+  "name": "acquired immunodeficiency",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000642",
+  "name": "simple infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000643",
+  "name": "re-emerging pathogen",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000644",
+  "name": "pregnancy-induced immunosuppression",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000645",
+  "name": "candidiasis",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000646",
+  "name": "trichomoniasis",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000647",
+  "name": "leptospirosis",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000648",
+  "name": "Shigellosis",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000649",
+  "name": "amebiasis",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000650",
+  "name": "colonization of human",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000609",
+    "IDO:0000652"
+   ]
+  }
+ },
+ {
+  "id": "0000651",
+  "name": "primary immunodeficiency",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000652",
+  "name": "colonization of human perineum",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000653",
+  "name": "reverse zoonosis",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000654",
+  "name": "opportunistic pathogen",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000655",
+  "name": "transmissibility disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000656",
+  "name": "horizontal pathogen transmission process",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000657",
+  "name": "process that results in death",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000658",
+  "name": "host exposure to infectious agent",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0000594",
+    "IDO:0000597"
+   ]
+  }
+ },
+ {
+  "id": "0000659",
+  "name": "susceptible organism",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000662",
+  "name": "life-sustaining process",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000663",
+  "name": "negative regulation of life-sustaining process",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000665",
+  "name": "source of infection",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000666",
+  "name": "human pathogenicity disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0000667",
+  "name": "parasitic disposition",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0001002",
+  "name": "transition to clinical abnormality",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0001003",
+  "name": "infection-based immunosuppression",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0001004"
+   ]
+  }
+ },
+ {
+  "id": "0001004",
+  "name": "HIV-based immunosuppression",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0001005",
+  "name": "pathologically immunosuppressed organism",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0001006",
+    "IDO:0001011"
+   ]
+  }
+ },
+ {
+  "id": "0001006",
+  "name": "immunosuppressed organism experiencing infection-based immunosuppression",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0001007"
+   ]
+  }
+ },
+ {
+  "id": "0001007",
+  "name": "immunosuppressed organism experiencing HIV-based immunosuppression",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0001008"
+   ]
+  }
+ },
+ {
+  "id": "0001008",
+  "name": "immunosuppressed human experiencing HIV-based immunosuppression",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0001009",
+  "name": "drug-based immunosuppression",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0001010"
+   ]
+  }
+ },
+ {
+  "id": "0001010",
+  "name": "chronic systemic steroid use-based immunosuppression",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0001011",
+  "name": "immunosuppressed organism experiencing drug-based immunosuppression",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0001012",
+    "IDO:0001014"
+   ]
+  }
+ },
+ {
+  "id": "0001012",
+  "name": "immunosuppressed organism experiencing chronic systemic steroid use-based immunosuppression",
+  "namespace": "IDO",
+  "relations": {
+   "is_a": [
+    "IDO:0001013"
+   ]
+  }
+ },
+ {
+  "id": "0001013",
+  "name": "immunosuppressed human experiencing chronic systemic steroid use-based immunosuppression",
+  "namespace": "IDO"
+ },
+ {
+  "id": "0001014",
+  "name": "immunosuppressed human experiencing drug-based immunosuppression due to organ transplant",
+  "namespace": "IDO"
+ }
+]
