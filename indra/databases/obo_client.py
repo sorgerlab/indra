@@ -7,18 +7,17 @@ import pathlib
 import pickle
 import re
 from collections import Counter, defaultdict
-from typing import Optional, Union
+from typing import Optional
 
 import obonet
+from indra.resources import get_resource_path, load_resource_json
 
 __all__ = [
     'OntologyClient',
     'OboClient',
-    'RESOURCES',
 ]
 
 HERE = pathlib.Path(__file__).parent.resolve()
-RESOURCES = HERE.parent.joinpath('resources').resolve()
 
 logger = logging.getLogger(__name__)
 
@@ -27,13 +26,7 @@ class OntologyClient:
     def __init__(self, prefix, *, directory: Optional[str] = None):
         """Read the OBO file export at the given path."""
         self.prefix = prefix
-        self.directory = directory or RESOURCES
-        self.mapping_path = self._make_resource_path(directory=self.directory, prefix=self.prefix)
-
-        with open(self.mapping_path) as file:
-            entries = json.load(file)
-
-        self.entries = {entry['id']: entry for entry in entries}
+        self.entries = {entry['id']: entry for entry in load_resource_json(f'{prefix}.json')}
         self.alt_to_id = {}
         self.name_to_id = {}
         self.synonym_to_id = {}
@@ -64,10 +57,6 @@ class OntologyClient:
         # Remove all ambiguous synonyms
         self.synonym_to_id = {k: v for k, v in self.synonym_to_id.items()
                               if k not in ambig_synonyms}
-
-    @classmethod
-    def _make_resource_path(cls, *, directory: Union[str, pathlib.Path] = None, prefix: str) -> str:
-        return os.path.join(directory, '{prefix}.json'.format(prefix=prefix))
 
     def count_xrefs(self):
         """Count how many xrefs there are to each database."""
@@ -182,7 +171,6 @@ class OntologyClient:
         return self.entries.get(db_id, {}).get(rel_type, [])
 
 
-
 class OboClient(OntologyClient):
     """A base client for data that's been grabbed via OBO"""
 
@@ -285,7 +273,7 @@ class OboClient(OntologyClient):
     def update_resource(cls, directory, url, prefix, *args, remove_prefix=False,
                         allowed_synonyms=None, allowed_external_ns=None):
         """Write the OBO information to files in the given directory."""
-        resource_path = cls._make_resource_path(directory=directory, prefix=prefix)
+        resource_path = get_resource_path(f'{prefix}.json')
         obo_path = os.path.join(directory, '%s.obo.pkl' % prefix)
         if os.path.exists(obo_path):
             with open(obo_path, 'rb') as file:
@@ -318,7 +306,6 @@ class OboClient(OntologyClient):
         entries = sorted(entries, key=sort_key)
         with open(resource_path, 'w') as file:
             json.dump(entries, file, indent=1, sort_keys=True)
-
 
 
 def prune_empty_entries(entries, keys):
