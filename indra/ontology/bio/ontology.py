@@ -181,10 +181,10 @@ class BioOntology(IndraOntology):
 
     def add_obo_nodes(self):
         from indra.databases import obo_client
-        namespaces = ['go', 'efo', 'hp', 'doid', 'chebi']
+        namespaces = ['go', 'efo', 'hp', 'doid', 'chebi', 'ido']
         nodes = []
         for ns in namespaces:
-            oc = obo_client.OboClient(prefix=ns)
+            oc = obo_client.OntologyClient(prefix=ns)
             for db_id, entry in oc.entries.items():
                 label = self.label(ns.upper(), db_id)
                 # There may be more general ways of doing this but this
@@ -198,7 +198,7 @@ class BioOntology(IndraOntology):
 
     def add_obo_hierarchies(self):
         from indra.databases import obo_client
-        namespaces = ['go', 'efo', 'hp', 'doid', 'chebi']
+        namespaces = ['go', 'efo', 'hp', 'doid', 'chebi', 'ido']
         edges = []
         # Mapping various source relation types to standardized ones
         # in this ontology graph
@@ -220,7 +220,7 @@ class BioOntology(IndraOntology):
             'has_part',
         }
         for ns in namespaces:
-            oc = obo_client.OboClient(prefix=ns)
+            oc = obo_client.OntologyClient(prefix=ns)
             for db_id, entry in oc.entries.items():
                 for rel, targets in entry.get('relations', {}).items():
                     # Skip unknown relation types
