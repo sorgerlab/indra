@@ -32,9 +32,7 @@ def process_gene_gene(part1_path: str, part2_path: str) \
     logger.info(f'Loading part 2 table from {part2_path}')
     df2: pd.DataFrame = pd.read_csv(part2_path, sep='\t', header=None)
     gp: GnbrGeneGeneProcessor = GnbrGeneGeneProcessor(df1, df2)
-    gp.extract_activations()
-    gp.extract_increase_amount()
-    gp.extract_complexes()
+    gp.extract_statements()
     return gp
 
 

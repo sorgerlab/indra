@@ -8,6 +8,14 @@ from indra.ontology.standardize import standardize_agent_name
 import pandas as pd
 
 
+statement_mappings = {
+    'V+': Activation,
+    'E+': IncreaseAmount,
+    'Q': IncreaseAmount,
+    'H': Complex,
+}
+
+
 class GnbrGeneGeneProcessor:
     """A processor for gene-gene interactions in the GNBR dataset.
 
@@ -28,27 +36,11 @@ class GnbrGeneGeneProcessor:
         self.df2['path'] = df2['path'].str.lower()
         self.statements = []
 
-    def extract_activations(self) -> None:
-        """Make Activation Statements from the dataframes."""
-        df1_activations = self.df1[(self.df1['V+.ind'] == 1) &
-                                   (self.df1['V+'] > 0)]
-        self.statements.extend(self._extract_statements(df1_activations,
-                                                        Activation))
-
-    def extract_increase_amount(self) -> None:
-        """Make IncreaseAmount Statements from the dataframes."""
-        df1_increase_amounts = self.df1[((self.df1['E+.ind'] == 1) &
-                                         (self.df1['E+'] > 0)) |
-                                        ((self.df1['Q.ind'] == 1) &
-                                         (self.df1['Q'] > 0))]
-        self.statements.extend(self._extract_statements(df1_increase_amounts,
-                                                        IncreaseAmount))
-
-    def extract_complexes(self):
-        """Make Complex Statements from the dataframes."""
-        df1_complexes = self.df1[(self.df1['H.ind'] == 1) &
-                                 (self.df1['H'] > 0)]
-        self.statements.extend(self._extract_statements(df1_complexes, Complex))
+    def extract_statements(self):
+        for rel_type, stmt_type in statement_mappings.items():
+            df_part = self.df1[(self.df1['%s.ind' % rel_type] == 1) &
+                               (self.df1[rel_type] > 0)]
+            self.statements.extend(self._extract_statements(df_part, stmt_type))
 
     def _extract_statements(self, df, stmt_class):
         df_joint = df.join(self.df2.set_index('path'), on='path')
