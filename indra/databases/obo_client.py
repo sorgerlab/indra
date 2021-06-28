@@ -23,9 +23,9 @@ logger = logging.getLogger(__name__)
 
 
 class OntologyClient:
-    def __init__(self, prefix, *, directory: Optional[str] = None):
+    def __init__(self, prefix: str):
         """Read the OBO file export at the given path."""
-        self.prefix = prefix
+        self.prefix = prefix.lower()
         self.entries = {entry['id']: entry for entry in load_resource_json(f'{prefix}.json')}
         self.alt_to_id = {}
         self.name_to_id = {}
