@@ -33,11 +33,9 @@ class OwlClient(OntologyClient):
         for child in term.subclasses(distance=1, with_self=False):
             rels_dict["is_a"].append(child.id)
 
-        namespace, identifier = term.id.split(":")
-
         return {
-            "namespace": namespace,
-            "id": identifier,
+            "namespace": term.id.split(":")[0].lower(),
+            "id": term.id,
             "name": term.name,
             "synonyms": [s.description for s in term.synonyms],
             "xrefs": xrefs,
@@ -78,7 +76,7 @@ class OwlClient(OntologyClient):
             entries,
             {"synonyms", "xrefs", "alt_ids", "relations"},
         )
-        entries = sorted(entries, key=lambda x: int(x["id"]))
+        entries = sorted(entries, key=lambda x: int(x["id"].split(':')[1]))
 
         resource_path = get_resource_path(f"{prefix}.json")
         with open(resource_path, "w") as file:
