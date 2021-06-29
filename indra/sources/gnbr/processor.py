@@ -8,16 +8,24 @@ from indra.ontology.standardize import standardize_agent_name
 import pandas as pd
 
 
-statement_mappings = {
+gene_gene_stmt_mappings = {
     'V+': Activation,
     'E+': IncreaseAmount,
     'Q':  IncreaseAmount,
-    'H':  Complex,
+    'H':  Complex
+}
+
+chem_gene_stmt_mappings = {
     'A+': Activation,
     'A-': Inhibition,
     'N':  Inhibition,
     'B':  Complex,
-    'E-': DecreaseAmount,
+    'E-': DecreaseAmount
+}
+
+gene_disease_stmt_mappings = {
+    'Te': Inhibition,
+    'G':  Activation
 }
 
 
@@ -45,6 +53,10 @@ class GnbrProcessor:
         self.statements = []
 
     def extract_stmts(self):
+        if self.first_type == 'gene' and self.second_type == 'gene':
+            statement_mappings = gene_gene_stmt_mappings
+        elif self.first_type == 'chemical' and self.second_type == 'gene':
+            statement_mappings = chem_gene_stmt_mappings
         for rel_type, stmt_type in statement_mappings.items():
             df_part = self.df1[(self.df1['%s.ind' % rel_type] == 1) &
                                (self.df1[rel_type] > 0)]
@@ -53,19 +65,21 @@ class GnbrProcessor:
     def _extract_stmts(self, df, stmt_class):
         df_joint = df.join(self.df2.set_index('path'), on='path')
         for index, row in df_joint.iterrows():
+            agent1: Agent
+            agent2: Agent
             if self.first_type == 'gene':
                 agent1 = get_std_gene(row['nm_1_raw'], row['nm_1_dbid'])
             elif self.first_type == 'chemical':
                 agent1 = get_std_chemical(row['nm_1_raw'], row['nm_1_dbid'])
-            elif self.first_type == 'disease':
-                agent1 = get_std_disease(row['nm_1_raw'], row['nm_1_dbid'])
+            # elif self.first_type == 'disease':
+                # agent1 = get_std_disease(row['nm_1_raw'], row['nm_1_dbid'])
 
             if self.second_type == 'gene':
                 agent2 = get_std_gene(row['nm_2_raw'], row['nm_2_dbid'])
             elif self.second_type == 'chemical':
                 agent2 = get_std_chemical(row['nm_2_raw'], row['nm_2_dbid'])
-            elif self.second_type == 'disease':
-                agent2 = get_std_disease(row['nm_2_raw'], row['nm_2_dbid'])
+            # elif self.second_type == 'disease':
+                # agent2 = get_std_disease(row['nm_2_raw'], row['nm_2_dbid'])
 
             evidence = get_evidence(row)
             if stmt_class == Complex:
@@ -134,8 +148,8 @@ def get_std_chemical(raw_string: str, db_id: str) -> Agent:
     return agent
 
 
-def get_std_disease(raw_string: str, db_id: str):
-    """Standardize agent (chemical) names."""
+# def get_std_disease(raw_string: str, db_id: str):
+    # """Standardize agent (chemical) names."""
 
 
 def get_evidence(row):

@@ -2,12 +2,12 @@ import os
 
 from indra.statements import *
 from indra.statements import Agent
-from indra.sources.gnbr.processor import GnbrProcessor
+from indra.sources.gnbr.processor import *
 import indra.sources.gnbr.api as api
 
 
 def test_standardize_agent():
-    agent = GnbrProcessor.standardize_agent('xxx', '673')
+    agent = get_std_gene('xxx', '673')
     assert isinstance(agent, Agent)
     assert agent.name == 'BRAF'
     assert agent.db_refs.get('TEXT') == 'xxx'
