@@ -22,7 +22,7 @@ def process_gene_gene(part1_path: str, part2_path: str) -> GnbrProcessor:
     Returns
     -------
     gp :
-        A GnbrGeneGeneProcessor object which contains a list of extracted INDRA
+        A GnbrProcessor object which contains a list of extracted INDRA
         Statements in its statements attribute.
     """
     logger.info(f'Loading part 1 table from {part1_path}')
@@ -47,7 +47,7 @@ def process_chemical_gene(part1_path: str, part2_path: str) -> GnbrProcessor:
     Returns
     -------
     gp :
-        A GnbrChemicalGeneProcessor object which contains a list of extracted
+        A GnbrProcessor object which contains a list of extracted
         INDRA Statements in its statements attribute.
     """
     logger.info(f'Loading part 1 table from {part1_path}')
@@ -65,3 +65,10 @@ def process_gene_gene_from_web() -> GnbrProcessor:
     fname2 = (f'{base_url}/part-ii-dependency-paths-gene-gene-sorted-with-'
               'themes.txt.gz')
     return process_gene_gene(fname1, fname2)
+
+def process_chemical_gene_from_web() -> GnbrProcessor:
+
+    fname1 = f'{base_url}/part-i-chemical-gene-path-theme-distributions.txt.gz'
+    fname2 = f'{base_url}/part-ii-dependency-paths-chemical-gene-sorted-' \
+             f'with-themes.txt.gz'
+    return process_chemical_gene(fname1, fname2)

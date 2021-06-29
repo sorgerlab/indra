@@ -6,6 +6,7 @@ from indra.statements import Agent
 from indra.statements import Evidence
 from indra.ontology.standardize import standardize_agent_name
 import pandas as pd
+import re
 
 
 gene_gene_stmt_mappings = {
@@ -26,6 +27,13 @@ chem_gene_stmt_mappings = {
 gene_disease_stmt_mappings = {
     'Te': Inhibition,
     'G':  Activation
+}
+
+chem_disease_stmt_mappings = {
+    'T':  Inhibition,
+    'C':  Inhibition,
+    'Pr': Inhibition,
+    'Pa': Inhibition
 }
 
 
@@ -53,6 +61,7 @@ class GnbrProcessor:
         self.statements = []
 
     def extract_stmts(self):
+        """Extend the statements list with mappings."""
         if self.first_type == 'gene' and self.second_type == 'gene':
             statement_mappings = gene_gene_stmt_mappings
         elif self.first_type == 'chemical' and self.second_type == 'gene':
@@ -63,6 +72,20 @@ class GnbrProcessor:
             self.statements.extend(self._extract_stmts(df_part, stmt_type))
 
     def _extract_stmts(self, df, stmt_class):
+        """Make Statements from the dataframes.
+
+        Parameters
+        ----------
+        df :
+            Filtered dataframe to one particular relationship theme.
+        stmt_class :
+            Statement type matched to the type of the filtered dataframe.
+
+        Yields
+        ------
+        stmt :
+            Statements produced from the dataframes.
+        """
         df_joint = df.join(self.df2.set_index('path'), on='path')
         for index, row in df_joint.iterrows():
             agent1: Agent
@@ -90,7 +113,7 @@ class GnbrProcessor:
 
 
 def get_std_gene(raw_string: str, db_id: str) -> Agent:
-    """Standardize agent (gene) names.
+    """Standardize gene names.
 
     Parameters
     ----------
@@ -104,14 +127,20 @@ def get_std_gene(raw_string: str, db_id: str) -> Agent:
     agent :
         A standardized Agent object.
     """
-    agent: Agent = Agent(raw_string, db_refs={'EGID': db_id,
-                                              'TEXT': raw_string})
+    agent: Agent
+    if re.match('^\d+$', db_id):
+        agent = Agent(raw_string, db_refs={'EGID': db_id,
+                                           'TEXT': raw_string})
+    else:
+        match = re.match('^(\d+)\(Tax:(\d+)\)$', db_id)
+        agent = Agent(raw_string, db_refs={'EGID': match.groups()[0],
+                                           'TEXT': raw_string})
     standardize_agent_name(agent)
     return agent
 
 
 def get_std_chemical(raw_string: str, db_id: str) -> Agent:
-    """Standardize agent (chemical) names.
+    """Standardize chemical names.
 
     Parameters
     ----------
@@ -131,7 +160,7 @@ def get_std_chemical(raw_string: str, db_id: str) -> Agent:
     elif db_id.startswith('CHEBI:'):
         agent = Agent(raw_string, db_refs={'CHEBI': db_id,
                                            'TEXT': raw_string})
-        standardize_agent_name(agent)
+
     elif db_id.startswith('MESH:'):
         agent = Agent(raw_string, db_refs={'MESH': db_id.split(':')[1],
                                            'TEXT': raw_string})
@@ -148,11 +177,30 @@ def get_std_chemical(raw_string: str, db_id: str) -> Agent:
     return agent
 
 
-# def get_std_disease(raw_string: str, db_id: str):
-    # """Standardize agent (chemical) names."""
+def get_std_disease(raw_string: str, db_id: str):
+    """Standardize disease names."""
+    if re.match('^MESH:([A-Z]\d+)$', db_id):
+        match = re.match('^MESH:([A-Z]\d+)$', db_id)
+        agent = Agent(raw_string, db_refs={'MESH': db_id,
+                                           'TEXT': raw_string})
+        standardize_agent_name(agent)
+
 
 
 def get_evidence(row):
+    """Give evidence for a Statement.
+
+    Parameters
+    ----------
+    row :
+        Currently investigated row of the dataframe.
+
+    Returns
+    -------
+    evidence :
+        Evidence object with the source_api, the PMID and the original
+        sentence.
+    """
     pmid = str(row['id']) if row['id'] else None
     evidence = Evidence(source_api='gnbr',
                         pmid=pmid,

@@ -4,6 +4,7 @@ from indra.statements import *
 from indra.statements import Agent
 from indra.sources.gnbr.processor import *
 import indra.sources.gnbr.api as api
+from indra.statements.validate import assert_valid_statements
 
 
 def test_standardize_agent():
@@ -30,6 +31,7 @@ def test_process_gene_gene():
     assert isinstance(gp.statements[2], IncreaseAmount)
     assert isinstance(gp.statements[3], IncreaseAmount)
     assert isinstance(gp.statements[4], Complex)
+    assert_valid_statements(gp.statements)
 
 
 def test_process_chemical_gene():
@@ -44,3 +46,4 @@ def test_process_chemical_gene():
     assert gp.second_type == 'gene'
     assert isinstance(gp.statements[0], Activation)
     assert isinstance(gp.statements[1], Inhibition)
+    #assert_valid_statements(gp.statements)
