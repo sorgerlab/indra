@@ -6,7 +6,8 @@ from collections import Counter
 from typing import Union, Sequence, Optional, List
 from sklearn.base import BaseEstimator
 from indra.statements import Evidence, Statement, get_all_descendants
-from indra.belief import BeliefScorer, check_extra_evidence, get_stmt_evidence
+from indra.belief import BeliefScorer, check_extra_evidence, \
+                         get_stmt_evidence, SimpleScorer
 
 
 logger = logging.getLogger(__name__)
@@ -583,4 +584,56 @@ class CountsScorer(SklearnScorer):
             cat_arr = np.array(cat_features)
             x_arr = np.hstack((x_arr, cat_arr))
         return x_arr
+
+
+
+class HybridScorer(BeliefScorer):
+    """TODO: Docstring"""
+    def __init__(
+        self,
+        counts_scorer: CountsScorer,
+        simple_scorer: SimpleScorer,
+    ):
+        self.counts_scorer = counts_scorer
+        self.simple_scorer = simple_scorer
+
+    def check_prior_probs(
+        self,
+        statements: Sequence[Statement],
+    ) -> None:
+        """Empty implementation for now."""
+        # TODO Check that for a given list of statements, that all sources in
+        # the statements are either in the CountsScorer source_list, or in
+        # the prior dict from the SimpleScorer
+        pass
+
+    def score_statements(
+        self,
+        statements: Sequence[Statement],
+        extra_evidence: Optional[List[List[Evidence]]] = None,
+    ) -> Sequence[float]:
+        # Get beliefs from the sklearn model, using the sources in the
+        # CountScorer source_list as features
+        skl_beliefs = self.counts_scorer.predict_proba(statements,
+                                                       extra_evidence)[:, 1]
+        skl_sources = self.counts_scorer.source_list
+        hybrid_beliefs = []
+        # Iterate over the statements...
+        for ix, stmt in enumerate(statements):
+            # ...get both the statement's own evidence and the more-specific
+            # (extra) evidences
+            all_evidence = get_stmt_evidence(stmt, ix, extra_evidence)
+            # Next, filter out any evidences that have sources in the skl
+            # model source list, leaving behind the rest
+            filt_evidence = [ev for ev in all_evidence
+                                if ev.source_api not in skl_sources]
+            # Get the simple belief
+            simple_bel = self.simple_scorer.score_evidence_list(filt_evidence)
+            # Calculate hybrid belief: the probability that all sources, both
+            # those evaluated by the sklearn model and the simplescorer, are
+            # not jointly incorrect
+            hybrid_bel = 1 - (1 - skl_beliefs[ix]) * (1 - simple_bel)
+            hybrid_beliefs.append(hybrid_bel)
+        return hybrid_beliefs
+
 
