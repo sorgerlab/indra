@@ -95,7 +95,7 @@ class OwlClient(OntologyClient):
         cache_path = get_resource_path(f"{prefix}.{extension}.pkl")
 
         if os.path.exists(cache_path):
-            with cache_path.open("rb") as file:
+            with open(cache_path, "rb") as file:
                 ontology = pickle.load(file)
         else:
             try:
@@ -106,7 +106,7 @@ class OwlClient(OntologyClient):
                     "install Pronto with `pip install pronto`."
                 )
             ontology = pronto.Ontology.from_obo_library(f"{prefix.upper()}.{extension}")
-            with cache_path.open("wb") as file:
+            with open(cache_path, "wb") as file:
                 pickle.dump(ontology, file, protocol=pickle.HIGHEST_PROTOCOL)
 
         cls.update_resource(prefix=prefix, ontology=ontology, **kwargs)
