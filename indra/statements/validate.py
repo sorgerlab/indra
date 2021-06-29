@@ -27,11 +27,31 @@ text_ref_patterns = {
 
 
 class UnknownNamespace(ValueError):
-    pass
+    def __str__(self):
+        return f'Unknown namespace: {self.args[0]}'
+
+
+class MissingIdentifier(ValueError):
+    """Raised when the identifier is None."""
+
+    def __str__(self):
+        return f'Missing identifier for {self.args[0]}'
 
 
 class InvalidIdentifier(ValueError):
-    pass
+    """Raised when the identifier doesn't match the pattern."""
+
+    def __str__(self):
+        return f'Invalid identifier: {self.args[1]} for {self.args[0]} pattern {self.args[2]}'
+
+
+class UnknownIdentifier(ValueError):
+    """Raise when the database is neither registered with identifiers.org or
+    manually added to the :data:`indra.databases.identifiers.non_registry` list.
+    """
+
+    def __str__(self):
+        return f'Unknown identifier: {self.args[0]}:{self.args[1]}'
 
 
 class InvalidTextRefs(ValueError):
@@ -119,17 +139,18 @@ def assert_valid_id(db_ns, db_id):
         The ID.
     """
     if db_id is None:
-        raise InvalidIdentifier(f'{db_ns}:None')
+        raise MissingIdentifier(db_ns, None)
     identifiers_ns = identifiers_mappings.get(db_ns, db_ns.lower())
     if identifiers_ns in identifiers_registry:
-        if re.match(identifiers_registry[identifiers_ns]['pattern'], db_id):
+        pattern = identifiers_registry[identifiers_ns]['pattern']
+        if re.match(pattern, db_id):
             return
         else:
-            raise InvalidIdentifier(f'{db_ns}:{db_id}')
+            raise InvalidIdentifier(db_ns, db_id, pattern)
     elif db_ns in non_registry or db_ns in non_grounding:
         return
     else:
-        raise InvalidIdentifier(f'{db_ns}:{db_id}')
+        raise UnknownIdentifier(db_ns, db_id)
 
 
 def validate_db_refs(db_refs):

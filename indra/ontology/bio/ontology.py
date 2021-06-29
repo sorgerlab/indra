@@ -490,7 +490,7 @@ class BioOntology(IndraOntology):
         try:
             assert_valid_db_refs({db_ns: db_id})
         except Exception as e:
-            logger.warning('Invalid node: %s' % e)
+            logger.warning(e)
 
 
 CACHE_DIR = os.path.join((get_config('INDRA_RESOURCES') or
