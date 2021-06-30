@@ -128,8 +128,9 @@ def get_std_gene(raw_string: str, db_id: str) -> Agent:
         A standardized Agent object.
     """
     agent: Agent
-    if re.match('^\d+$', db_id):
-        agent = Agent(raw_string, db_refs={'EGID': db_id,
+    if re.match('^(\d+)$', db_id):
+        match = re.match('^(\d+)$', db_id)
+        agent = Agent(raw_string, db_refs={'EGID': match.groups()[0],
                                            'TEXT': raw_string})
     else:
         match = re.match('^(\d+)\(Tax:(\d+)\)$', db_id)
@@ -155,36 +156,52 @@ def get_std_chemical(raw_string: str, db_id: str) -> Agent:
         A standardized Agent object.
     """
     agent: Agent
-    if db_id == 'null':
+    if re.match('^CHEBI:(\d+)$', db_id):
+        match = re.match('^CHEBI:(\d+)$', db_id)
+        agent = Agent(raw_string, db_refs={'CHEBI': match.groups()[0],
+                                           'TEXT': raw_string})
+    elif re.match('^MESH:([A-Z]\d+)$', db_id):
+        match = re.match('^MESH:([A-Z]\d+)$', db_id)
+        agent = Agent(raw_string, db_refs={'MESH': match.groups()[0],
+                                           'TEXT': raw_string})
+    elif db_id == 'nan':
         agent = Agent(name=raw_string, db_refs={'TEXT': raw_string})
-    elif db_id.startswith('CHEBI:'):
-        agent = Agent(raw_string, db_refs={'CHEBI': db_id,
-                                           'TEXT': raw_string})
-
-    elif db_id.startswith('MESH:'):
-        agent = Agent(raw_string, db_refs={'MESH': db_id.split(':')[1],
-                                           'TEXT': raw_string})
-        standardize_agent_name(agent)
-    elif '(Tax:' in db_id:
-        agent = Agent(raw_string, db_refs={'MESH': db_id.split('(')[0],
-                                           'TEXT': raw_string})
-        standardize_agent_name(agent)
-    else:
-        agent = Agent(raw_string, db_refs={'MESH': db_id,
-                                           'TEXT': raw_string})
-        standardize_agent_name(agent)
 
     return agent
 
 
 def get_std_disease(raw_string: str, db_id: str):
-    """Standardize disease names."""
-    if re.match('^MESH:([A-Z]\d+)$', db_id):
-        match = re.match('^MESH:([A-Z]\d+)$', db_id)
-        agent = Agent(raw_string, db_refs={'MESH': db_id,
+    """Standardize disease names.
+
+    Parameters
+    ----------
+    raw_string :
+        Name of the agent in the GNBR dataset.
+    db_id :
+        Entrez identifier of the agent.
+
+    Returns
+    -------
+    agent :
+        A standardized Agent object.
+    """
+    if re.match('^(\d+)$', db_id):
+        match = re.match('^(\d+)$', db_id)
+        agent = Agent(raw_string, db_refs={'OMIM': match.groups()[0],
                                            'TEXT': raw_string})
         standardize_agent_name(agent)
-
+    elif re.match('^OMIM:(\d+)$', db_id):
+        match = re.match('^OMIM:(\d+)$', db_id)
+        agent = Agent(raw_string, db_refs={'OMIM': match.groups()[0],
+                                           'TEXT': raw_string})
+    elif re.match('^([A-Z]\d+)$', db_id):
+        match = re.match('^([A-Z]\d+)$', db_id)
+        agent = Agent(raw_string, db_refs={'MESH': match.groups()[0],
+                                           'TEXT': raw_string})
+    else:
+        match = re.match('^MESH:([A-Z]\d+)$', db_id)
+        agent = Agent(raw_string, db_refs={'MESH': match.groups()[0],
+                                           'TEXT': raw_string})
 
 
 def get_evidence(row):

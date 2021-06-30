@@ -46,4 +46,4 @@ def test_process_chemical_gene():
     assert gp.second_type == 'gene'
     assert isinstance(gp.statements[0], Activation)
     assert isinstance(gp.statements[1], Inhibition)
-    #assert_valid_statements(gp.statements)
+    assert_valid_statements(gp.statements)
