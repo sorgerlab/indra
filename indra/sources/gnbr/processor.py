@@ -66,6 +66,10 @@ class GnbrProcessor:
             statement_mappings = gene_gene_stmt_mappings
         elif self.first_type == 'chemical' and self.second_type == 'gene':
             statement_mappings = chem_gene_stmt_mappings
+        elif self.first_type == 'gene' and self.second_type == 'disease':
+            statement_mappings = gene_disease_stmt_mappings
+        else:
+            statement_mappings = chem_disease_stmt_mappings
         for rel_type, stmt_type in statement_mappings.items():
             df_part = self.df1[(self.df1['%s.ind' % rel_type] == 1) &
                                (self.df1[rel_type] > 0)]
@@ -92,17 +96,13 @@ class GnbrProcessor:
             agent2: Agent
             if self.first_type == 'gene':
                 agent1 = get_std_gene(row['nm_1_raw'], row['nm_1_dbid'])
-            elif self.first_type == 'chemical':
+            else:
                 agent1 = get_std_chemical(row['nm_1_raw'], row['nm_1_dbid'])
-            # elif self.first_type == 'disease':
-                # agent1 = get_std_disease(row['nm_1_raw'], row['nm_1_dbid'])
 
             if self.second_type == 'gene':
                 agent2 = get_std_gene(row['nm_2_raw'], row['nm_2_dbid'])
-            elif self.second_type == 'chemical':
-                agent2 = get_std_chemical(row['nm_2_raw'], row['nm_2_dbid'])
-            # elif self.second_type == 'disease':
-                # agent2 = get_std_disease(row['nm_2_raw'], row['nm_2_dbid'])
+            else:
+                agent2 = get_std_disease(row['nm_2_raw'], row['nm_2_dbid'])
 
             evidence = get_evidence(row)
             if stmt_class == Complex:
@@ -160,17 +160,18 @@ def get_std_chemical(raw_string: str, db_id: str) -> Agent:
         match = re.match('^CHEBI:(\d+)$', db_id)
         agent = Agent(raw_string, db_refs={'CHEBI': match.groups()[0],
                                            'TEXT': raw_string})
+        standardize_agent_name(agent)
     elif re.match('^MESH:([A-Z]\d+)$', db_id):
         match = re.match('^MESH:([A-Z]\d+)$', db_id)
         agent = Agent(raw_string, db_refs={'MESH': match.groups()[0],
                                            'TEXT': raw_string})
-    elif db_id == 'nan':
+        standardize_agent_name(agent)
+    else:
         agent = Agent(name=raw_string, db_refs={'TEXT': raw_string})
-
     return agent
 
 
-def get_std_disease(raw_string: str, db_id: str):
+def get_std_disease(raw_string: str, db_id: str) -> Agent:
     """Standardize disease names.
 
     Parameters
@@ -202,6 +203,8 @@ def get_std_disease(raw_string: str, db_id: str):
         match = re.match('^MESH:([A-Z]\d+)$', db_id)
         agent = Agent(raw_string, db_refs={'MESH': match.groups()[0],
                                            'TEXT': raw_string})
+    standardize_agent_name(agent)
+    return agent
 
 
 def get_evidence(row):
