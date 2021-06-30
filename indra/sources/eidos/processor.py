@@ -75,6 +75,19 @@ class EidosProcessor(object):
                 evidence.context = None
             self.statements.append(event)
 
+    def extract_all_events(self):
+        events = [e for e in self.doc.extractions if
+                  {'Concept', 'Concept-Expanded'} & set(e['labels'])]
+        for event_entry in events:
+            event = self.get_event(event_entry)
+            evidence = self.get_evidence(event_entry)
+            event.evidence = [evidence]
+            if not event.context and evidence.context:
+                event.context = copy.deepcopy(evidence.context)
+                evidence.context = None
+            self.statements.append(event)
+
+
     def get_event_by_id(self, event_id):
         # Resolve coreferences by ID
         event_id = self.doc.coreferences.get(event_id, event_id)
