@@ -133,7 +133,8 @@ def get_std_gene(raw_string: str, db_id: str) -> Agent:
     :
         A standardized Agent object.
     """
-    db_refs = {'TEXT': raw_string}
+    db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
+    name = raw_string if not pd.isna(raw_string) else db_id
     # TODO: Split into multiple agents if ; is encountered
     if not pd.isna(db_id) and ';' in db_id:
         db_id = db_id[0]
@@ -147,7 +148,7 @@ def get_std_gene(raw_string: str, db_id: str) -> Agent:
         if not match:
             raise ValueError('Unexpected gene identifier: %s' % db_id)
         db_refs['EGID'] = match.groups()[0]
-    return get_standard_agent(raw_string, db_refs)
+    return get_standard_agent(name, db_refs)
 
 
 def get_std_chemical(raw_string: str, db_id: str) -> Agent:
@@ -165,7 +166,8 @@ def get_std_chemical(raw_string: str, db_id: str) -> Agent:
     :
         A standardized Agent object.
     """
-    db_refs = {'TEXT': raw_string}
+    db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
+    name = raw_string if not pd.isna(raw_string) else db_id
     # TODO: the interpretation of multiple IDs separated by | should
     # be clarified
     if not pd.isna(db_id) and '|' in db_id:
@@ -181,7 +183,7 @@ def get_std_chemical(raw_string: str, db_id: str) -> Agent:
         db_refs['MESH'] = db_id
     else:
         raise ValueError('Unexpected chemical identifier: %s' % db_id)
-    return get_standard_agent(raw_string, db_refs)
+    return get_standard_agent(name, db_refs)
 
 
 def get_std_disease(raw_string: str, db_id: str) -> Agent:
@@ -199,7 +201,8 @@ def get_std_disease(raw_string: str, db_id: str) -> Agent:
     :
         A standardized Agent object.
     """
-    db_refs = {'TEXT': raw_string}
+    db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
+    name = raw_string if not pd.isna(raw_string) else db_id
     if pd.isna(db_id):
         pass
     elif re.match(r'^(\d+)$', db_id):
@@ -212,7 +215,7 @@ def get_std_disease(raw_string: str, db_id: str) -> Agent:
         db_refs['MESH'] = db_id[5:]
     else:
         raise ValueError('Unexpected disease identifier: %s' % db_id)
-    return get_standard_agent(raw_string, db_refs)
+    return get_standard_agent(name, db_refs)
 
 
 def get_evidence(row):
