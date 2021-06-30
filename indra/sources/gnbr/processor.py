@@ -43,9 +43,14 @@ class GnbrProcessor:
         Dataframe of dependency paths and themes.
     df2 :
         Dataframe of dependency paths and agents.
+    first_type :
+        The type of the first entity in the data frame.
+    second_type :
+        The type of the second entity in the data frame.
     """
     def __init__(self, df1: pd.DataFrame, df2: pd.DataFrame,
-                 first_type: str, second_type: str) -> None:
+                 first_type: str, second_type: str,
+                 indicator_only: bool = True) -> None:
         self.df1 = df1
         self.df2 = df2
         self.df2.columns = ['id', 'sentence_num', 'nm_1_form', 'nm_1_loc',
@@ -55,6 +60,7 @@ class GnbrProcessor:
         self.df2['path'] = df2['path'].str.lower()
         self.first_type = first_type
         self.second_type = second_type
+        self.indicator_only = indicator_only
         self.statements = []
 
     def extract_stmts(self):
@@ -68,12 +74,15 @@ class GnbrProcessor:
         else:
             statement_mappings = chem_disease_stmt_mappings
         for rel_type, stmt_type in statement_mappings.items():
-            df_part = self.df1[(self.df1['%s.ind' % rel_type] == 1) &
-                               (self.df1[rel_type] > 0)]
-            self.statements.extend(self._extract_stmts(df_part, stmt_type))
+            constraint = (self.df1[rel_type] > 0)
+            if self.indicator_only:
+                constraint &= (self.df1['%s.ind' % rel_type] == 1)
+            df_part = self.df1[constraint]
+            self.statements.extend(self._extract_stmts_by_class(df_part,
+                                                                stmt_type))
 
-    def _extract_stmts(self, df, stmt_class):
-        """Make Statements from the dataframes.
+    def _extract_stmts_by_class(self, df, stmt_class):
+        """Make a given class of Statements from a subset of the dataframe.
 
         Parameters
         ----------
