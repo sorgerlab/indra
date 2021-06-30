@@ -1,4 +1,7 @@
-__all__ = ['process_gene_gene', 'process_gene_gene_from_web']
+__all__ = ['process_gene_gene', 'process_gene_gene_from_web',
+           'process_gene_disease', 'process_gene_disease_from_web',
+           'process_chemical_disease', 'process_chemical_disease_from_web',
+           'process_chemical_gene', 'process_chemical_gene_from_web']
 
 import pandas as pd
 import logging
