@@ -586,6 +586,8 @@ class CountsScorer(SklearnScorer):
         return x_arr
 
 
+# TODO: Require CountsScorer arg to specify whether to add additional columns
+# for extra_evidence
 
 class HybridScorer(BeliefScorer):
     """TODO: Docstring"""
@@ -624,15 +626,24 @@ class HybridScorer(BeliefScorer):
             # (extra) evidences
             all_evidence = get_stmt_evidence(stmt, ix, extra_evidence)
             # Next, filter out any evidences that have sources in the skl
-            # model source list, leaving behind the rest
-            filt_evidence = [ev for ev in all_evidence
-                                if ev.source_api not in skl_sources]
+            # model source list, leaving behind the rest. At the same time,
+            # record whether we've found any sources the skl model source list.
+            filt_evidence = []
+            has_skl_source = False
+            for ev in all_evidence:
+                if ev.source_api in skl_sources:
+                    has_skl_source = True
+                else:
+                    filt_evidence.append(ev)
             # Get the simple belief
             simple_bel = self.simple_scorer.score_evidence_list(filt_evidence)
             # Calculate hybrid belief: the probability that all sources, both
             # those evaluated by the sklearn model and the simplescorer, are
-            # not jointly incorrect
-            hybrid_bel = 1 - (1 - skl_beliefs[ix]) * (1 - simple_bel)
+            # not jointly incorrect. If there are no sources from the skl
+            # model list, we set the skl belief to 0 so the probability comes
+            # only from the simple scorer
+            skl_bel = skl_beliefs[ix] if has_skl_source else 0
+            hybrid_bel = 1 - (1 - skl_bel) * (1 - simple_bel)
             hybrid_beliefs.append(hybrid_bel)
         return hybrid_beliefs
 

@@ -392,5 +392,3 @@ def test_hybrid_scorer():
 
     assert np.allclose(hybrid_beliefs, expected_beliefs)
 
-if __name__ == '__main__':
-    test_hybrid_scorer()
