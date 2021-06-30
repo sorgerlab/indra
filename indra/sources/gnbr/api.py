@@ -80,7 +80,7 @@ def process_gene_disease(part1_path: str, part2_path: str) -> GnbrProcessor:
     df1: pd.DataFrame = pd.read_csv(part1_path, sep='\t')
     logger.info(f'Loading part 2 table from {part2_path}')
     df2: pd.DataFrame = pd.read_csv(part2_path, sep='\t', header=None)
-    gp: GnbrProcessor = GnbrProcessor(df1, df2, 'chemical', 'disease')
+    gp: GnbrProcessor = GnbrProcessor(df1, df2, 'gene', 'disease')
     gp.extract_stmts()
     return gp
 
