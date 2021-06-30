@@ -1,12 +1,9 @@
 """This module contains the processor for GNBR. There are several, each
 corresponding to different kinds of interactions."""
-
-from indra.statements import *
-from indra.statements import Agent
-from indra.statements import Evidence
-from indra.ontology.standardize import standardize_agent_name
-import pandas as pd
 import re
+import pandas as pd
+from indra.statements import *
+from indra.ontology.standardize import get_standard_agent
 
 
 gene_gene_stmt_mappings = {
@@ -124,19 +121,24 @@ def get_std_gene(raw_string: str, db_id: str) -> Agent:
 
     Returns
     -------
-    agent :
+    :
         A standardized Agent object.
     """
-    agent: Agent
-    if re.match(r'^(\d+)$', db_id):
-        agent = Agent(raw_string, db_refs={'EGID': db_id,
-                                           'TEXT': raw_string})
+    db_refs = {'TEXT': raw_string}
+    # TODO: Split into multiple agents if ; is encountered
+    if not pd.isna(db_id) and ';' in db_id:
+        db_id = db_id[0]
+
+    if pd.isna(db_id):
+        pass
+    elif re.match(r'^(\d+)$', db_id):
+        db_refs['EGID'] = db_id
     else:
         match = re.match(r'^(\d+)\(Tax:(\d+)\)$', db_id)
-        agent = Agent(raw_string, db_refs={'EGID': match.groups()[0],
-                                           'TEXT': raw_string})
-    standardize_agent_name(agent)
-    return agent
+        if not match:
+            raise ValueError('Unexpected gene identifier: %s' % db_id)
+        db_refs['EGID'] = match.groups()[0]
+    return get_standard_agent(raw_string, db_refs)
 
 
 def get_std_chemical(raw_string: str, db_id: str) -> Agent:
@@ -151,21 +153,26 @@ def get_std_chemical(raw_string: str, db_id: str) -> Agent:
 
     Returns
     -------
-    agent :
+    :
         A standardized Agent object.
     """
-    agent: Agent
-    if re.match(r'^CHEBI:(\d+)$', db_id):
-        agent = Agent(raw_string, db_refs={'CHEBI': db_id,
-                                           'TEXT': raw_string})
-        standardize_agent_name(agent)
-    elif re.match(r'^MESH:([A-Z]\d+)$', db_id):
-        agent = Agent(raw_string, db_refs={'MESH': db_id[5:],
-                                           'TEXT': raw_string})
-        standardize_agent_name(agent)
+    db_refs = {'TEXT': raw_string}
+    # TODO: the interpretation of multiple IDs separated by | should
+    # be clarified
+    if not pd.isna(db_id) and '|' in db_id:
+        db_id = db_id.split('|')[0]
+
+    if pd.isna(db_id):
+        pass
+    elif re.match(r'^CHEBI:(\d+)$', db_id):
+        db_refs['CHEBI'] = db_id
+    elif re.match(r'^MESH:([CD]\d+)$', db_id):
+        db_refs['MESH'] = db_id[5:]
+    elif re.match(r'^[CD]\d+$', db_id):
+        db_refs['MESH'] = db_id
     else:
-        agent = Agent(name=raw_string, db_refs={'TEXT': raw_string})
-    return agent
+        raise ValueError('Unexpected chemical identifier: %s' % db_id)
+    return get_standard_agent(raw_string, db_refs)
 
 
 def get_std_disease(raw_string: str, db_id: str) -> Agent:
@@ -180,25 +187,23 @@ def get_std_disease(raw_string: str, db_id: str) -> Agent:
 
     Returns
     -------
-    agent :
+    :
         A standardized Agent object.
     """
-    if re.match(r'^(\d+)$', db_id):
-        agent = Agent(raw_string, db_refs={'OMIM': db_id,
-                                           'TEXT': raw_string})
-        standardize_agent_name(agent)
+    db_refs = {'TEXT': raw_string}
+    if pd.isna(db_id):
+        pass
+    elif re.match(r'^(\d+)$', db_id):
+        db_refs['OMIM'] = db_id
     elif re.match(r'^OMIM:(\d+)$', db_id):
-        agent = Agent(raw_string, db_refs={'OMIM': db_id[5:],
-                                           'TEXT': raw_string})
-    elif re.match(r'^([A-Z]\d+)$', db_id):
-        agent = Agent(raw_string, db_refs={'MESH': db_id,
-                                           'TEXT': raw_string})
+        db_refs['OMIM'] = db_id[5:]
+    elif re.match(r'^([CD]\d+)$', db_id):
+        db_refs['MESH'] = db_id
+    elif re.match(r'^MESH:([CD]\d+)$', db_id):
+        db_refs['MESH'] = db_id[5:]
     else:
-        match = re.match(r'^MESH:([A-Z]\d+)$', db_id)
-        agent = Agent(raw_string, db_refs={'MESH': match.groups()[0],
-                                           'TEXT': raw_string})
-    standardize_agent_name(agent)
-    return agent
+        raise ValueError('Unexpected disease identifier: %s' % db_id)
+    return get_standard_agent(raw_string, db_refs)
 
 
 def get_evidence(row):
