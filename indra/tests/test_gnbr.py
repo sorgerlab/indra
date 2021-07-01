@@ -7,11 +7,11 @@ from indra.statements.validate import assert_valid_statements
 
 def test_standardize_agent():
     agent = get_std_gene('xxx', '673')
-    assert isinstance(agent, Agent)
-    assert agent.name == 'BRAF'
-    assert agent.db_refs.get('TEXT') == 'xxx'
-    assert agent.db_refs.get('EGID') == '673'
-    assert agent.db_refs.get('HGNC') == '1097'
+    assert isinstance(agent[0], Agent)
+    assert agent[0].name == 'BRAF'
+    assert agent[0].db_refs.get('TEXT') == 'xxx'
+    assert agent[0].db_refs.get('EGID') == '673'
+    assert agent[0].db_refs.get('HGNC') == '1097'
 
 
 def test_process_gene_gene():
@@ -46,7 +46,6 @@ def test_process_chemical_gene():
     assert isinstance(gp.statements[1], Inhibition)
     assert isinstance(gp.statements[2], Complex)
     assert isinstance(gp.statements[3], DecreaseAmount)
-    # assert isinstance(gp.statements[4], Inhibition)
     assert_valid_statements(gp.statements)
 
 

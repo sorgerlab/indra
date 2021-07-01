@@ -1,7 +1,9 @@
 """This module contains the processor for GNBR. There are several, each
 corresponding to different kinds of interactions."""
+import itertools as it
 import re
 import pandas as pd
+from copy import deepcopy
 from indra.statements import *
 from indra.ontology.standardize import get_standard_agent
 
@@ -35,7 +37,6 @@ chem_disease_stmt_mappings = {
 
 
 cheby_pattern = re.compile(r'^CHEBI:(\d+)$')
-cheby_no_prefix_pattern = re.compile(r'^\d+$')
 
 mesh_pattern = re.compile(r'^MESH:([CD]\d+)$')
 mesh_no_prefix_pattern = re.compile(r'^[CD]\d+$')
@@ -111,27 +112,34 @@ class GnbrProcessor:
         """
         df_joint = df.join(self.df2.set_index('path'), on='path')
         for index, row in df_joint.iterrows():
-            agent1: Agent
-            agent2: Agent
             if self.first_type == 'gene':
-                agent1 = get_std_gene(row['nm_1_raw'], row['nm_1_dbid'])
+                first_agents = get_std_gene(row['nm_1_raw'],
+                                            row['nm_1_dbid'])
             else:
-                agent1 = get_std_chemical(row['nm_1_raw'], row['nm_1_dbid'])
+                first_agents = get_std_chemical(row['nm_1_raw'],
+                                                row['nm_1_dbid'])
 
             if self.second_type == 'gene':
-                agent2 = get_std_gene(row['nm_2_raw'], row['nm_2_dbid'])
+                second_agents = get_std_gene(row['nm_2_raw'],
+                                             row['nm_2_dbid'])
             else:
-                agent2 = get_std_disease(row['nm_2_raw'], row['nm_2_dbid'])
+                second_agents = get_std_disease(row['nm_2_raw'],
+                                                row['nm_2_dbid'])
 
             evidence = get_evidence(row)
-            if stmt_class == Complex:
-                stmt = Complex([agent1, agent2], evidence=evidence)
-            else:
-                stmt = stmt_class(agent1, agent2, evidence=evidence)
-            yield stmt
 
+            for first_agent, second_agent in it.product(first_agents,
+                                                        second_agents):
+                if stmt_class == Complex:
+                    stmt = stmt_class([first_agent, second_agent],
+                                      evidence=deepcopy(evidence))
+                else:
+                    stmt = stmt_class(first_agent, second_agent,
+                                      evidence=deepcopy(evidence))
+                yield stmt
+                
 
-def get_std_gene(raw_string: str, db_id: str) -> Agent:
+def get_std_gene(raw_string: str, db_id: str) -> list[Agent]:
     """Standardize gene names.
 
     Parameters
@@ -146,25 +154,26 @@ def get_std_gene(raw_string: str, db_id: str) -> Agent:
     :
         A standardized Agent object.
     """
-    db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
-    name = raw_string if not pd.isna(raw_string) else db_id
-    # TODO: Split into multiple agents if ; is encountered
-    if not pd.isna(db_id) and ';' in db_id:
-        db_id = db_id.split(';')[0]
+    agents = []
+    for single_db_id in db_id.split(';'):
+        db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
+        name = raw_string if not pd.isna(raw_string) else single_db_id
 
-    if pd.isna(db_id):
-        pass
-    elif entrez_pattern.match(db_id):
-        db_refs['EGID'] = db_id
-    else:
-        match = entrez_with_tax_pattern.match(db_id)
-        if not match:
-            raise ValueError('Unexpected gene identifier: %s' % db_id)
-        db_refs['EGID'] = match.groups()[0]
-    return get_standard_agent(name, db_refs)
+        if pd.isna(single_db_id):
+            pass
+        elif entrez_pattern.match(single_db_id):
+            db_refs['EGID'] = single_db_id
+        else:
+            match = entrez_with_tax_pattern.match(single_db_id)
+            if not match:
+                raise ValueError('Unexpected gene identifier: %s'
+                                 % single_db_id)
+            db_refs['EGID'] = match.groups()[0]
+        agents.append(get_standard_agent(name, db_refs))
+    return agents
 
 
-def get_std_chemical(raw_string: str, db_id: str) -> Agent:
+def get_std_chemical(raw_string: str, db_id: str) -> list[Agent]:
     """Standardize chemical names.
 
     Parameters
@@ -179,29 +188,26 @@ def get_std_chemical(raw_string: str, db_id: str) -> Agent:
     :
         A standardized Agent object.
     """
-    db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
-    name = raw_string if not pd.isna(raw_string) else db_id
-    # TODO: the interpretation of multiple IDs separated by | should
-    # be clarified
-    if not pd.isna(db_id) and '|' in db_id:
-        db_id = db_id.split('|')[0]
-
-    if pd.isna(db_id):
-        pass
-    elif cheby_pattern.match(db_id):
-        db_refs['CHEBI'] = db_id[6:]
-    elif cheby_no_prefix_pattern.match(db_id):
-        db_refs['CHEBI'] = db_id
-    elif mesh_pattern.match(db_id):
-        db_refs['MESH'] = db_id[5:]
-    elif mesh_no_prefix_pattern.match(db_id):
-        db_refs['MESH'] = db_id
-    else:
-        raise ValueError('Unexpected chemical identifier: %s' % db_id)
-    return get_standard_agent(name, db_refs)
+    agents = []
+    for single_db_id in db_id.split('|'):
+        db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
+        name = raw_string if not pd.isna(raw_string) else single_db_id
+        if pd.isna(single_db_id):
+            pass
+        elif cheby_pattern.match(single_db_id):
+            db_refs['CHEBI'] = single_db_id
+        elif mesh_pattern.match(single_db_id):
+            db_refs['MESH'] = single_db_id[5:]
+        elif mesh_no_prefix_pattern.match(single_db_id):
+            db_refs['MESH'] = single_db_id
+        else:
+            raise ValueError('Unexpected chemical identifier: %s'
+                             % single_db_id)
+        agents.append(get_standard_agent(name, db_refs))
+    return agents
 
 
-def get_std_disease(raw_string: str, db_id: str) -> Agent:
+def get_std_disease(raw_string: str, db_id: str) -> list[Agent]:
     """Standardize disease names.
 
     Parameters
@@ -216,6 +222,7 @@ def get_std_disease(raw_string: str, db_id: str) -> Agent:
     :
         A standardized Agent object.
     """
+    agents = []
     db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
     name = raw_string if not pd.isna(raw_string) else db_id
 
@@ -231,7 +238,8 @@ def get_std_disease(raw_string: str, db_id: str) -> Agent:
         db_refs['MESH'] = db_id[5:]
     else:
         raise ValueError('Unexpected disease identifier: %s' % db_id)
-    return get_standard_agent(name, db_refs)
+    agents.append(get_standard_agent(name, db_refs))
+    return agents
 
 
 def get_evidence(row):
