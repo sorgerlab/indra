@@ -34,6 +34,19 @@ chem_disease_stmt_mappings = {
 }
 
 
+cheby_pattern = re.compile(r'^CHEBI:(\d+)$')
+cheby_no_prefix_pattern = re.compile(r'^\d+$')
+
+mesh_pattern = re.compile(r'^MESH:([CD]\d+)$')
+mesh_no_prefix_pattern = re.compile(r'^[CD]\d+$')
+
+entrez_pattern = re.compile(r'^(\d+)$')
+entrez_with_tax_pattern = re.compile(r'^(\d+)\(Tax:(\d+)\)$')
+
+omim_pattern = re.compile(r'^OMIM:(\d+)$')
+omim_no_prefix_pattern = re.compile(r'^(\d+)$')
+
+
 class GnbrProcessor:
     """A processor for interactions in the GNBR dataset.
 
@@ -139,9 +152,6 @@ def get_std_gene(raw_string: str, db_id: str) -> Agent:
     if not pd.isna(db_id) and ';' in db_id:
         db_id = db_id.split(';')[0]
 
-    entrez_pattern = re.compile(r'^(\d+)$')
-    entrez_with_tax_pattern = re.compile(r'^(\d+)\(Tax:(\d+)\)$')
-
     if pd.isna(db_id):
         pass
     elif entrez_pattern.match(db_id):
@@ -176,11 +186,6 @@ def get_std_chemical(raw_string: str, db_id: str) -> Agent:
     if not pd.isna(db_id) and '|' in db_id:
         db_id = db_id.split('|')[0]
 
-    cheby_pattern = re.compile(r'^CHEBI:(\d+)$')
-    cheby_no_prefix_pattern = re.compile(r'^\d+$')
-    mesh_pattern = re.compile(r'^MESH:([CD]\d+)$')
-    mesh_no_prefix_pattern = re.compile(r'^[CD]\d+$')
-
     if pd.isna(db_id):
         pass
     elif cheby_pattern.match(db_id):
@@ -213,11 +218,6 @@ def get_std_disease(raw_string: str, db_id: str) -> Agent:
     """
     db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
     name = raw_string if not pd.isna(raw_string) else db_id
-
-    omim_pattern = re.compile(r'^OMIM:(\d+)$')
-    omim_no_prefix_pattern = re.compile(r'^(\d+)$')
-    mesh_pattern = re.compile(r'^MESH:([CD]\d+)$')
-    mesh_no_prefix_pattern = re.compile(r'^[CD]\d+$')
 
     if pd.isna(db_id):
         pass
