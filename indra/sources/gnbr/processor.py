@@ -137,14 +137,17 @@ def get_std_gene(raw_string: str, db_id: str) -> Agent:
     name = raw_string if not pd.isna(raw_string) else db_id
     # TODO: Split into multiple agents if ; is encountered
     if not pd.isna(db_id) and ';' in db_id:
-        db_id = db_id[0]
+        db_id = db_id.split(';')[0]
+
+    entrez_pattern = re.compile(r'^(\d+)$')
+    entrez_with_tax_pattern = re.compile(r'^(\d+)\(Tax:(\d+)\)$')
 
     if pd.isna(db_id):
         pass
-    elif re.match(r'^(\d+)$', db_id):
+    elif entrez_pattern.match(db_id):
         db_refs['EGID'] = db_id
     else:
-        match = re.match(r'^(\d+)\(Tax:(\d+)\)$', db_id)
+        match = entrez_with_tax_pattern.match(db_id)
         if not match:
             raise ValueError('Unexpected gene identifier: %s' % db_id)
         db_refs['EGID'] = match.groups()[0]
@@ -173,13 +176,20 @@ def get_std_chemical(raw_string: str, db_id: str) -> Agent:
     if not pd.isna(db_id) and '|' in db_id:
         db_id = db_id.split('|')[0]
 
+    cheby_pattern = re.compile(r'^CHEBI:(\d+)$')
+    cheby_no_prefix_pattern = re.compile(r'^\d+$')
+    mesh_pattern = re.compile(r'^MESH:([CD]\d+)$')
+    mesh_no_prefix_pattern = re.compile(r'^[CD]\d+$')
+
     if pd.isna(db_id):
         pass
-    elif re.match(r'^CHEBI:(\d+)$', db_id):
+    elif cheby_pattern.match(db_id):
+        db_refs['CHEBI'] = db_id[6:]
+    elif cheby_no_prefix_pattern.match(db_id):
         db_refs['CHEBI'] = db_id
-    elif re.match(r'^MESH:([CD]\d+)$', db_id):
+    elif mesh_pattern.match(db_id):
         db_refs['MESH'] = db_id[5:]
-    elif re.match(r'^[CD]\d+$', db_id):
+    elif mesh_no_prefix_pattern.match(db_id):
         db_refs['MESH'] = db_id
     else:
         raise ValueError('Unexpected chemical identifier: %s' % db_id)
@@ -203,15 +213,21 @@ def get_std_disease(raw_string: str, db_id: str) -> Agent:
     """
     db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
     name = raw_string if not pd.isna(raw_string) else db_id
+
+    omim_pattern = re.compile(r'^OMIM:(\d+)$')
+    omim_no_prefix_pattern = re.compile(r'^(\d+)$')
+    mesh_pattern = re.compile(r'^MESH:([CD]\d+)$')
+    mesh_no_prefix_pattern = re.compile(r'^[CD]\d+$')
+
     if pd.isna(db_id):
         pass
-    elif re.match(r'^(\d+)$', db_id):
+    elif omim_no_prefix_pattern.match(db_id):
         db_refs['OMIM'] = db_id
-    elif re.match(r'^OMIM:(\d+)$', db_id):
+    elif omim_pattern.match(db_id):
         db_refs['OMIM'] = db_id[5:]
-    elif re.match(r'^([CD]\d+)$', db_id):
+    elif mesh_no_prefix_pattern.match(db_id):
         db_refs['MESH'] = db_id
-    elif re.match(r'^MESH:([CD]\d+)$', db_id):
+    elif mesh_pattern.match(db_id):
         db_refs['MESH'] = db_id[5:]
     else:
         raise ValueError('Unexpected disease identifier: %s' % db_id)
