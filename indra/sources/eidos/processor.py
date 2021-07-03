@@ -39,6 +39,7 @@ class EidosProcessor(object):
                 self.statements.append(stmt)
 
     def extract_correlations(self):
+        """Extract correlations as Assocation statements."""
         events = [e for e in self.doc.extractions if
                   'UndirectedRelation' in e['labels'] and
                   'Correlation' in e['labels']]
@@ -64,20 +65,24 @@ class EidosProcessor(object):
             self.statements.append(st)
 
     def extract_events(self):
-        events = [e for e in self.doc.extractions if
-                  'Concept-Expanded' in e['labels']]
-        for event_entry in events:
-            event = self.get_event(event_entry)
-            evidence = self.get_evidence(event_entry)
-            event.evidence = [evidence]
-            if not event.context and evidence.context:
-                event.context = copy.deepcopy(evidence.context)
-                evidence.context = None
-            self.statements.append(event)
+        """Extract Events that are not arguments of other statements."""
+        self._extract_event_by_label({'Concept-Expanded'})
 
     def extract_all_events(self):
+        """Extract all events, including ones that are arguments of other
+        statements.
+
+        The goal of this method is to extract events as standalone statements
+        with their own dedicated evidence. This is different from the
+        get_all_events method in that it extracts the event-specific evidence
+        for each Event statement instead of propagating causal relation
+        evidence into the Event after initial extraction.
+        """
+        self._extract_event_by_label({'Concept', 'Concept-Expanded'})
+
+    def _extract_event_by_label(self, event_labels):
         events = [e for e in self.doc.extractions if
-                  {'Concept', 'Concept-Expanded'} & set(e['labels'])]
+                  event_labels & set(e['labels'])]
         for event_entry in events:
             event = self.get_event(event_entry)
             evidence = self.get_evidence(event_entry)
@@ -86,7 +91,6 @@ class EidosProcessor(object):
                 event.context = copy.deepcopy(evidence.context)
                 evidence.context = None
             self.statements.append(event)
-
 
     def get_event_by_id(self, event_id):
         # Resolve coreferences by ID
@@ -245,8 +249,21 @@ class EidosProcessor(object):
         return concept
 
     def get_all_events(self):
-        """Return a list of all standalone events from a list
-        of statements."""
+        """Return a list of all standalone events from the existing list
+        of extracted statements.
+
+        Note that this method only operates on statements already extracted
+        into the processor's statements attribute. Note also that the evidences
+        for events created from Influences and Assocations here are propagated
+        from those statements; they are not equivalent to the original
+        evidences for the events themselves (see extract_all_events method).
+
+        Returns
+        -------
+        events : list[indra.statements.Event]
+            A list of Events from original Events, and unrolled from
+            Influences and Associations.
+        """
         events = []
         for stmt in self.statements:
             stmt = copy.deepcopy(stmt)
