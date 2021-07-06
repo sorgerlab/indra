@@ -19,3 +19,4 @@ pybel
 unidecode
 pybiopax
 scikit-learn
+pronto
