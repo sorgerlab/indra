@@ -20,8 +20,11 @@ class OwlClient(OntologyClient):
     """A base client for data that's been grabbed via OWL."""
 
     @staticmethod
-    def entry_from_term(term: "pronto.Term", prefix,
-                        remove_prefix: bool = False) -> Mapping[str, Any]:
+    def entry_from_term(
+        term: "pronto.Term",
+        prefix: str,
+        remove_prefix: bool = False,
+    ) -> Mapping[str, Any]:
         """Create a data dictionary from a Pronto term."""
         rels_dict = defaultdict(list)
         xrefs = []
