@@ -219,6 +219,11 @@
         color: #FFFFFF;
     }
 
+    .badge-belief {
+        background-color: #ffc266;
+        color: #FFFFFF;
+    }
+
     .curation-row {
         overflow-y: hidden;
     }
@@ -251,6 +256,13 @@
       {% endfor %}
     {% endfor %}
   {% endif %}
+{%- endmacro %}
+
+{% macro belief_badge(belief_score) -%}
+  <small
+      class="badge badge-pill badge-belief"
+      title="Belief score for this statement"
+  >{{ belief_score }}</small>
 {%- endmacro %}
 
 {% block header_desc %}
