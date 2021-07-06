@@ -35,7 +35,3 @@ def get_hp_id_from_hp_name(hp_name):
         The HP identifier corresponding to the given HP name.
     """
     return _client.get_id_from_name(hp_name)
-
-
-if __name__ == '__main__':
-    print(*_client.count_xrefs().most_common(), sep='\n')

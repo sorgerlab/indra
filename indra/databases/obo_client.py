@@ -3,45 +3,39 @@
 import json
 import logging
 import os
+import pathlib
 import pickle
 import re
 from collections import Counter, defaultdict
+from typing import List, Mapping, Optional
 
 import obonet
 
+from indra.resources import get_resource_path, load_resource_json
+
 __all__ = [
+    'OntologyClient',
     'OboClient',
-    'RESOURCES',
 ]
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-RESOURCES = os.path.join(HERE, os.pardir, 'resources')
+HERE = pathlib.Path(__file__).parent.resolve()
 
 logger = logging.getLogger(__name__)
 
 
-def _make_resource_path(directory, prefix):
-    return os.path.join(directory, '{prefix}.json'.format(prefix=prefix))
+class OntologyClient:
+    """A base client class for OBO and OWL ontologies."""
 
-
-class OboClient:
-    """A base client for data that's been grabbed via OBO"""
-
-    def __init__(self, prefix, *, directory=RESOURCES):
+    def __init__(self, prefix: str):
         """Read the OBO file export at the given path."""
-        self.prefix = prefix
-        self.directory = directory
-        self.mapping_path = _make_resource_path(self.directory, self.prefix)
-
-        self.entries = {}
+        self.prefix = prefix.lower()
+        self.entries = {
+            entry['id']: entry for entry
+            in load_resource_json(f'{prefix}.json')
+        }
         self.alt_to_id = {}
         self.name_to_id = {}
         self.synonym_to_id = {}
-
-        with open(self.mapping_path) as file:
-            entries = json.load(file)
-
-        self.entries = {entry['id']: entry for entry in entries}
 
         ambig_synonyms = set()
         for db_id, entry in self.entries.items():
@@ -69,6 +63,113 @@ class OboClient:
         # Remove all ambiguous synonyms
         self.synonym_to_id = {k: v for k, v in self.synonym_to_id.items()
                               if k not in ambig_synonyms}
+
+    def get_name_from_id(self, db_id: str) -> Optional[str]:
+        """Return the database name corresponding to the given database ID.
+
+        Parameters
+        ----------
+        db_id :
+            The ID to be converted.
+
+        Returns
+        -------
+        :
+            The name corresponding to the given ID.
+        """
+        return self.entries.get(db_id, {}).get('name')
+
+    def get_id_from_name(self, db_name: str) -> Optional[str]:
+        """Return the database identifier corresponding to the given name.
+
+        Parameters
+        ----------
+        db_name :
+            The name to be converted.
+
+        Returns
+        -------
+        :
+            The ID corresponding to the given name.
+        """
+        return self.name_to_id.get(db_name)
+
+    def get_id_from_name_or_synonym(self, txt: str) -> Optional[str]:
+        """Return the database id corresponding to the given name or synonym.
+
+        Note that the way the OboClient is constructed, ambiguous synonyms are
+        filtered out. Further, this function prioritizes names over synonyms
+        (i.e., it first looks up the ID by name, and only if that fails,
+        it attempts a synonym-based lookup). Overall, these mappings are
+        guaranteed to be many-to-one.
+
+        Parameters
+        ----------
+        txt :
+            The name or synonym to be converted.
+
+        Returns
+        -------
+        :
+            The ID corresponding to the given name or synonym.
+        """
+        name_id = self.get_id_from_name(txt)
+        if name_id:
+            return name_id
+        return self.synonym_to_id.get(txt)
+
+    def get_id_from_alt_id(self, db_alt_id: str) -> Optional[str]:
+        """Return the canonical database id corresponding to the alt id.
+
+        Parameters
+        ----------
+        db_alt_id :
+            The alt id to be converted.
+
+        Returns
+        -------
+        :
+            The ID corresponding to the given alt id.
+        """
+        return self.alt_to_id.get(db_alt_id)
+
+    def get_relations(self, db_id: str) -> Mapping[str, List[str]]:
+        """Return the isa relationships corresponding to a given ID.
+
+        Parameters
+        ----------
+        db_id :
+            The ID whose isa relationships should be returned
+
+        Returns
+        -------
+        :
+            A dict keyed by relation type with each entry a list of IDs of the
+            terms that are in the given relation with the given ID.
+        """
+        return self.entries.get(db_id, {})
+
+    def get_relation(self, db_id: str, rel_type: str) -> List[str]:
+        """Return the isa relationships corresponding to a given ID.
+
+        Parameters
+        ----------
+        db_id :
+            The ID whose isa relationships should be returned
+        rel_type :
+            The type of relationships to get, e.g., is_a, part_of
+
+        Returns
+        -------
+        :
+            The IDs of the terms that are in the given relation with the given
+            ID.
+        """
+        return self.entries.get(db_id, {}).get(rel_type, [])
+
+
+class OboClient(OntologyClient):
+    """A base client for data that's been grabbed via OBO"""
 
     @staticmethod
     def entries_from_graph(obo_graph, prefix, remove_prefix=False,
@@ -165,11 +266,11 @@ class OboClient:
             })
         return entries
 
-    @staticmethod
-    def update_resource(directory, url, prefix, *args, remove_prefix=False,
+    @classmethod
+    def update_resource(cls, directory, url, prefix, *args, remove_prefix=False,
                         allowed_synonyms=None, allowed_external_ns=None):
         """Write the OBO information to files in the given directory."""
-        resource_path = _make_resource_path(directory, prefix)
+        resource_path = get_resource_path(f'{prefix}.json')
         obo_path = os.path.join(directory, '%s.obo.pkl' % prefix)
         if os.path.exists(obo_path):
             with open(obo_path, 'rb') as file:
@@ -202,118 +303,6 @@ class OboClient:
         entries = sorted(entries, key=sort_key)
         with open(resource_path, 'w') as file:
             json.dump(entries, file, indent=1, sort_keys=True)
-
-    def count_xrefs(self):
-        """Count how many xrefs there are to each database."""
-        return Counter(
-            xref_db
-            for db_id, xref_map in self.id_to_xrefs.items()
-            for xref_db, xref_db_ids in xref_map.items()
-            for _ in xref_db_ids
-        )
-
-    def get_name_from_id(self, db_id):
-        """Return the database name corresponding to the given database ID.
-
-        Parameters
-        ----------
-        db_id : str
-            The ID to be converted.
-
-        Returns
-        -------
-        db_name : str or None
-            The name corresponding to the given ID.
-        """
-        return self.entries.get(db_id, {}).get('name')
-
-    def get_id_from_name(self, db_name):
-        """Return the database identifier corresponding to the given name.
-
-        Parameters
-        ----------
-        db_name : str
-            The name to be converted.
-
-        Returns
-        -------
-        db_id : str
-            The ID corresponding to the given name.
-        """
-        return self.name_to_id.get(db_name)
-
-    def get_id_from_name_or_synonym(self, txt):
-        """Return the database id corresponding to the given name or synonym.
-
-        Note that the way the OboClient is constructed, ambiguous synonyms are
-        filtered out. Further, this function prioritizes names over synonyms
-        (i.e., it first looks up the ID by name, and only if that fails,
-        it attempts a synonym-based lookup). Overall, these mappings are
-        guaranteed to be many-to-one.
-
-        Parameters
-        ----------
-        txt : str
-            The name or synonym to be converted.
-
-        Returns
-        -------
-        db_id : str
-            The ID corresponding to the given name or synonym.
-        """
-        name_id = self.get_id_from_name(txt)
-        if name_id:
-            return name_id
-        return self.synonym_to_id.get(txt)
-
-    def get_id_from_alt_id(self, db_alt_id):
-        """Return the canonical database id corresponding to the alt id.
-
-        Parameters
-        ----------
-        db_alt_id : str
-            The alt id to be converted.
-
-        Returns
-        -------
-        db_id : str or None
-            The ID corresponding to the given alt id.
-        """
-        return self.alt_to_id.get(db_alt_id)
-
-    def get_relations(self, db_id):
-        """Return the isa relationships corresponding to a given ID.
-
-        Parameters
-        ----------
-        db_id : str
-            The ID whose isa relationships should be returned
-
-        Returns
-        -------
-        dict
-            A dict keyed by relation type with each entry a list of IDs of the
-            terms that are in the given relation with the given ID.
-        """
-        return self.entries.get(db_id, {})
-
-    def get_relation(self, db_id, rel_type):
-        """Return the isa relationships corresponding to a given ID.
-
-        Parameters
-        ----------
-        db_id : str
-            The ID whose isa relationships should be returned
-        rel_type : str
-            The type of relationships to get, e.g., is_a, part_of
-
-        Returns
-        -------
-        list of str
-            The IDs of the terms that are in the given relation with the given
-            ID.
-        """
-        return self.entries.get(db_id, {}).get(rel_type, [])
 
 
 def prune_empty_entries(entries, keys):

@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.12'
+    version = '1.13'
 
     def __init__(self):
         super().__init__()
@@ -181,10 +181,10 @@ class BioOntology(IndraOntology):
 
     def add_obo_nodes(self):
         from indra.databases import obo_client
-        namespaces = ['go', 'efo', 'hp', 'doid', 'chebi']
+        namespaces = ['go', 'efo', 'hp', 'doid', 'chebi', 'ido']
         nodes = []
         for ns in namespaces:
-            oc = obo_client.OboClient(prefix=ns)
+            oc = obo_client.OntologyClient(prefix=ns)
             for db_id, entry in oc.entries.items():
                 label = self.label(ns.upper(), db_id)
                 # There may be more general ways of doing this but this
@@ -198,7 +198,7 @@ class BioOntology(IndraOntology):
 
     def add_obo_hierarchies(self):
         from indra.databases import obo_client
-        namespaces = ['go', 'efo', 'hp', 'doid', 'chebi']
+        namespaces = ['go', 'efo', 'hp', 'doid', 'chebi', 'ido']
         edges = []
         # Mapping various source relation types to standardized ones
         # in this ontology graph
@@ -220,7 +220,7 @@ class BioOntology(IndraOntology):
             'has_part',
         }
         for ns in namespaces:
-            oc = obo_client.OboClient(prefix=ns)
+            oc = obo_client.OntologyClient(prefix=ns)
             for db_id, entry in oc.entries.items():
                 for rel, targets in entry.get('relations', {}).items():
                     # Skip unknown relation types
@@ -490,7 +490,7 @@ class BioOntology(IndraOntology):
         try:
             assert_valid_db_refs({db_ns: db_id})
         except Exception as e:
-            logger.warning('Invalid node: %s' % e)
+            logger.warning(e)
 
 
 CACHE_DIR = os.path.join((get_config('INDRA_RESOURCES') or

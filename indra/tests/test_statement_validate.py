@@ -1,5 +1,4 @@
 from nose.tools import assert_raises
-from indra.statements import *
 from indra.statements.validate import *
 
 
@@ -15,7 +14,7 @@ def test_db_refs_validate():
 
     assert_valid_id('NXPFA', '1234')
     assert_valid_id('TEXT', 'hello')
-    assert_raises(InvalidIdentifier, assert_valid_id,
+    assert_raises(UnknownIdentifier, assert_valid_id,
                   'XXX', 'ABCD1')
 
 

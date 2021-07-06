@@ -10,6 +10,7 @@ from urllib.request import urlretrieve
 from xml.etree import ElementTree as ET
 from indra.util import read_unicode_csv, write_unicode_csv
 from indra.databases.obo_client import OboClient
+from indra.databases.owl_client import OwlClient
 from indra.databases import chebi_client, pubchem_client
 from indra.databases.lincs_client import load_lincs_csv
 from . import load_resource_json, get_resource_path
@@ -642,6 +643,11 @@ def update_chebi_obo():
     OboClient.update_resource(path, url, 'chebi', remove_prefix=False)
 
 
+def update_ido():
+    """Update infectious disease ontology (IDO)."""
+    OwlClient.update_from_obo_library('ido', remove_prefix=True)
+
+
 def update_drugbank_mappings():
     """Update mappings from DrugBank to CHEBI/CHEMBL"""
     # Note that for this to work, PyOBO (https://github.com/pyobo/pyobo) has
@@ -790,6 +796,7 @@ def main():
     update_doid()
     update_efo()
     update_hpo()
+    update_ido()
     update_drugbank_mappings()
     update_identifiers_registry()
 

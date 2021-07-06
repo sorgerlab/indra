@@ -96,6 +96,11 @@ Disease Ontology (DOID) client (:py:mod:`indra.databases.doid_client`)
 .. automodule:: indra.databases.doid_client
     :members:
 
+Infectious Disease Ontology client (:py:mod:`indra.databases.ido_client`)
+-------------------------------------------------------------------------
+.. automodule:: indra.databases.ido_client
+    :members:
+
 Taxonomy client (:py:mod:`indra.databases.taxonomy_client`)
 -----------------------------------------------------------
 .. automodule:: indra.databases.taxonomy_client
@@ -109,4 +114,9 @@ DrugBank client (:py:mod:`indra.databases.drugbank_client`)
 OBO client (:py:mod:`indra.databases.obo_client`)
 -------------------------------------------------
 .. automodule:: indra.databases.obo_client
+    :members:
+
+OWL client (:py:mod:`indra.databases.owl_client`)
+-------------------------------------------------
+.. automodule:: indra.databases.owl_client
     :members:
