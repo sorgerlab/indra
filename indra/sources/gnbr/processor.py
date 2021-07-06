@@ -1,9 +1,10 @@
 """This module contains the processor for GNBR. There are several, each
 corresponding to different kinds of interactions."""
-import itertools as it
 import re
-import pandas as pd
+import itertools as it
+from typing import List
 from copy import deepcopy
+import pandas as pd
 from indra.statements import *
 from indra.ontology.standardize import get_standard_agent
 
@@ -137,9 +138,9 @@ class GnbrProcessor:
                     stmt = stmt_class(first_agent, second_agent,
                                       evidence=deepcopy(evidence))
                 yield stmt
-                
 
-def get_std_gene(raw_string: str, db_id: str) -> list[Agent]:
+
+def get_std_gene(raw_string: str, db_id: str) -> List[Agent]:
     """Standardize gene names.
 
     Parameters
@@ -154,22 +155,31 @@ def get_std_gene(raw_string: str, db_id: str) -> list[Agent]:
     :
         A standardized Agent object.
     """
-    agents = []
+    # If neither a name nor a DB ID is given, we return empty
+    if pd.isna(db_id) and pd.isna(raw_string):
+        return []
+    # We add TEXT to db_refs if there is a raw_string
     db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
-    name = raw_string if not pd.isna(raw_string) else db_id
+    # In this case we know that there is no db_id but we have raw_string that
+    # we can use as a name and we return with that agent
     if pd.isna(db_id):
+        return [Agent(raw_string, db_refs=db_refs)]
+    # Otherwise we have a db_id that we can process
+    else:
+        agents = []
         for single_db_id in db_id.split(';'):
+            single_db_refs = deepcopy(db_refs)
             name = raw_string if not pd.isna(raw_string) else single_db_id
 
             if entrez_pattern.match(single_db_id):
-                db_refs['EGID'] = single_db_id
+                single_db_refs['EGID'] = single_db_id
             else:
                 match = entrez_with_tax_pattern.match(single_db_id)
                 if not match:
                     raise ValueError('Unexpected gene identifier: %s'
                                      % single_db_id)
-                db_refs['EGID'] = match.groups()[0]
-    agents.append(get_standard_agent(name, db_refs))
+                single_db_refs['EGID'] = match.groups()[0]
+            agents.append(get_standard_agent(name, single_db_refs))
     return agents
 
 
@@ -207,7 +217,7 @@ def get_std_chemical(raw_string: str, db_id: str) -> list[Agent]:
     return agents
 
 
-def get_std_disease(raw_string: str, db_id: str) -> list[Agent]:
+def get_std_disease(raw_string: str, db_id: str) -> List[Agent]:
     """Standardize disease names.
 
     Parameters
@@ -242,8 +252,8 @@ def get_std_disease(raw_string: str, db_id: str) -> list[Agent]:
     return agents
 
 
-def get_evidence(row):
-    """Give evidence for a Statement.
+def get_evidence(row: pd.Series) -> Evidence:
+    """Return evidence for a Statement.
 
     Parameters
     ----------
@@ -252,7 +262,7 @@ def get_evidence(row):
 
     Returns
     -------
-    evidence :
+    :
         Evidence object with the source_api, the PMID and the original
         sentence.
     """
