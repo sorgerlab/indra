@@ -33,8 +33,6 @@ jobs:
         pip install pydot jsonschema coverage nose-timer doctest-ignore-unicode awscli pycodestyle
         mkdir -p $HOME/.pybel/data
         wget -nv https://bigmech.s3.amazonaws.com/travis/pybel_cache.db -O $HOME/.pybel/data/pybel_cache.db
-        mkdir -p $HOME/.indra/bio_ontology/1.12
-        wget -nv https://bigmech.s3.amazonaws.com/travis/bio_ontology/1.12/mock_ontology.pkl -O $HOME/.indra/bio_ontology/1.12/bio_ontology.pkl
         # PySB and dependencies
         wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
         tar xzf bionetgen.tar.gz
@@ -68,6 +66,10 @@ jobs:
         # Get INDRA World
         git clone https://github.com/indralab/indra_world.git
         wget -nv https://bigmech.s3.amazonaws.com/travis/reach-82631d-biores-e9ee36.jar
+        # Get INDRA Bioontology
+        BIOONTOLOGY_VERSION=$(python -m indra.ontology.bio version)
+        mkdir -p $HOME/.indra/bio_ontology/$BIOONTOLOGY_VERSION
+        wget -nv https://bigmech.s3.amazonaws.com/travis/bio_ontology/$BIOONTOLOGY_VERSION/mock_ontology.pkl -O $HOME/.indra/bio_ontology/$BIOONTOLOGY_VERSION/bio_ontology.pkl
     - name: Run unit tests
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
