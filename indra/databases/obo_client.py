@@ -26,7 +26,8 @@ class OntologyClient:
     def __init__(self, prefix: str):
         """Read the OBO file export at the given path."""
         self.prefix = prefix.lower()
-        self.entries = {entry['id']: entry for entry in load_resource_json(f'{prefix}.json')}
+        self.entries = {entry['id']: entry for entry
+                        in load_resource_json(f'{prefix}.json')}
         self.alt_to_id = {}
         self.name_to_id = {}
         self.synonym_to_id = {}

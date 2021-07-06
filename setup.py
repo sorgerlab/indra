@@ -38,6 +38,7 @@ def main():
                       'api': ['flask<2.0', 'flask_restx<0.4', 'flask_cors',
                               'docstring-parser'],
                       'sklearn_belief': ['scikit-learn'],
+                      'owl': ['pronto'],
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
                                   for dep in deps})

@@ -362,7 +362,3 @@ def ensure_chembl_prefix(chembl_id):
 
 
 identifiers_registry = load_resource_json('identifiers_patterns.json')
-identifiers_registry['ido'].update(
-    pattern=r'^IDO:[0-9]+$',
-    namespace_embedded=True,
-)
