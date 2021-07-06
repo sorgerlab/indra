@@ -7,8 +7,10 @@ import pathlib
 import pickle
 import re
 from collections import Counter, defaultdict
+from typing import List, Mapping, Optional
 
 import obonet
+
 from indra.resources import get_resource_path, load_resource_json
 
 __all__ = [
@@ -22,6 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 class OntologyClient:
+    """A base client class for OBO and OWL ontologies."""
+
     def __init__(self, prefix: str):
         """Read the OBO file export at the given path."""
         self.prefix = prefix.lower()
@@ -69,37 +73,37 @@ class OntologyClient:
             for _ in xref_db_ids
         )
 
-    def get_name_from_id(self, db_id):
+    def get_name_from_id(self, db_id: str) -> Optional[str]:
         """Return the database name corresponding to the given database ID.
 
         Parameters
         ----------
-        db_id : str
+        db_id :
             The ID to be converted.
 
         Returns
         -------
-        db_name : str or None
+        :
             The name corresponding to the given ID.
         """
         return self.entries.get(db_id, {}).get('name')
 
-    def get_id_from_name(self, db_name):
+    def get_id_from_name(self, db_name: str) -> Optional[str]:
         """Return the database identifier corresponding to the given name.
 
         Parameters
         ----------
-        db_name : str
+        db_name :
             The name to be converted.
 
         Returns
         -------
-        db_id : str
+        :
             The ID corresponding to the given name.
         """
         return self.name_to_id.get(db_name)
 
-    def get_id_from_name_or_synonym(self, txt):
+    def get_id_from_name_or_synonym(self, txt: str) -> Optional[str]:
         """Return the database id corresponding to the given name or synonym.
 
         Note that the way the OboClient is constructed, ambiguous synonyms are
@@ -110,12 +114,12 @@ class OntologyClient:
 
         Parameters
         ----------
-        txt : str
+        txt :
             The name or synonym to be converted.
 
         Returns
         -------
-        db_id : str
+        :
             The ID corresponding to the given name or synonym.
         """
         name_id = self.get_id_from_name(txt)
@@ -123,50 +127,50 @@ class OntologyClient:
             return name_id
         return self.synonym_to_id.get(txt)
 
-    def get_id_from_alt_id(self, db_alt_id):
+    def get_id_from_alt_id(self, db_alt_id: str) -> Optional[str]:
         """Return the canonical database id corresponding to the alt id.
 
         Parameters
         ----------
-        db_alt_id : str
+        db_alt_id :
             The alt id to be converted.
 
         Returns
         -------
-        db_id : str or None
+        :
             The ID corresponding to the given alt id.
         """
         return self.alt_to_id.get(db_alt_id)
 
-    def get_relations(self, db_id):
+    def get_relations(self, db_id: str) -> Mapping[str, List[str]]:
         """Return the isa relationships corresponding to a given ID.
 
         Parameters
         ----------
-        db_id : str
+        db_id :
             The ID whose isa relationships should be returned
 
         Returns
         -------
-        dict
+        :
             A dict keyed by relation type with each entry a list of IDs of the
             terms that are in the given relation with the given ID.
         """
         return self.entries.get(db_id, {})
 
-    def get_relation(self, db_id, rel_type):
+    def get_relation(self, db_id: str, rel_type: str) -> List[str]:
         """Return the isa relationships corresponding to a given ID.
 
         Parameters
         ----------
-        db_id : str
+        db_id :
             The ID whose isa relationships should be returned
-        rel_type : str
+        rel_type :
             The type of relationships to get, e.g., is_a, part_of
 
         Returns
         -------
-        list of str
+        :
             The IDs of the terms that are in the given relation with the given
             ID.
         """
