@@ -170,7 +170,7 @@
     "gnbr": {
         "name": "Global Network of Biomedical Relationships",
         "link": "https://zenodo.org/record/3459420",
-        "type": "database",
+        "type": "reader",
         "domain": "biology"
     }
 }

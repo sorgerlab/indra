@@ -23,6 +23,9 @@ def process_gene_gene(part1_path: str, part2_path: str,
     part2_path :
         Path to the second dataset which contains dependency paths and entity
         pairs.
+    indicator_only :
+        A switch to filter the data which is part of the flagship path set
+        for each theme.
 
     Returns
     -------
@@ -44,6 +47,9 @@ def process_chemical_gene(part1_path: str, part2_path: str,
         Path to the first dataset of dependency paths and themes.
     part2_path :
         Path to the second dataset of dependency paths and entity pairs.
+    indicator_only :
+        A switch to filter the data which is part of the flagship path set
+        for each theme.
 
     Returns
     -------
@@ -66,6 +72,9 @@ def process_gene_disease(part1_path: str, part2_path: str,
     part2_path :
         Path to the second dataset which contains dependency paths and entity
         pairs.
+    indicator_only :
+        A switch to filter the data which is part of the flagship path set
+        for each theme.
 
     Returns
     -------
@@ -89,6 +98,9 @@ def process_chemical_disease(part1_path: str, part2_path: str,
     part2_path :
         Path to the second dataset which contains dependency paths and entity
         pairs.
+    indicator_only :
+        A switch to filter the data which is part of the flagship path set
+        for each theme.
 
     Returns
     -------
@@ -103,6 +115,28 @@ def process_chemical_disease(part1_path: str, part2_path: str,
 def process_from_files(part1_path: str, part2_path: str, first_type: str,
                        second_type: str, indicator_only: bool = True) \
         -> GnbrProcessor:
+    """Loading the databases from the given files.
+
+    Parameters
+    ----------
+    part1_path :
+        Path to the first dataset which contains dependency paths and themes.
+    part2_path :
+        Path to the second dataset which contains dependency paths and themes.
+    first_type :
+        Type of the first agent.
+    second_type :
+        Type of the second agent.
+    indicator_only :
+        A switch to filter the data which is part of the flagship path set
+        for each theme.
+
+    Returns
+    -------
+    :
+        A GnbrProcessor object which contains a list of extracted INDRA
+        Statements in its statements attribute.
+    """
     logger.info(f'Loading part 1 table from {part1_path}')
     df1: pd.DataFrame = pd.read_csv(part1_path, sep='\t')
     logger.info(f'Loading part 2 table from {part2_path}')
@@ -114,29 +148,100 @@ def process_from_files(part1_path: str, part2_path: str, first_type: str,
 
 
 def process_gene_gene_from_web(indicator_only: bool = True) -> GnbrProcessor:
-    """Call process_gene_gene function on the GNBR datasets."""
+    """Call process_gene_gene function on the GNBR datasets.
+
+    Parameters
+    ----------
+    indicator_only :
+        A switch to filter the data which is part of the flagship path set
+        for each theme.
+
+    Returns
+    -------
+    :
+        A GnbrProcessor object which contains a list of extracted INDRA
+        Statements in its statements attribute.
+    """
     return process_from_web('gene', 'gene', indicator_only=indicator_only)
 
 
 def process_chemical_gene_from_web(indicator_only: bool = True) \
         -> GnbrProcessor:
-    """Call process_chemical_gene function on the GNBR datasets."""
+    """Call process_chemical_gene function on the GNBR datasets.
+
+    Parameters
+    ----------
+    indicator_only :
+        A switch to filter the data which is part of the flagship path set
+        for each theme.
+
+    Returns
+    -------
+    :
+        A GnbrProcessor object which contains a list of extracted INDRA
+        Statements in its statements attribute.
+    """
     return process_from_web('chemical', 'gene', indicator_only=indicator_only)
 
 
 def process_gene_disease_from_web(indicator_only: bool = True) -> GnbrProcessor:
-    """Call process_gene_disease function on the GNBR datasets."""
+    """Call process_gene_disease function on the GNBR datasets.
+
+    Parameters
+    ----------
+    indicator_only :
+        A switch to filter the data which is part of the flagship path set
+        for each theme.
+
+    Returns
+    -------
+    :
+        A GnbrProcessor object which contains a list of extracted INDRA
+        Statements in its statements attribute.
+    """
     return process_from_web('gene', 'disease', indicator_only=indicator_only)
 
 
 def process_chemical_disease_from_web(indicator_only: bool = True)\
         -> GnbrProcessor:
-    """Call process_chemical_disease function on the GNBR datasets."""
+    """Call process_chemical_disease function on the GNBR datasets.
+
+    Parameters
+    ----------
+    indicator_only :
+        A switch to filter the data which is part of the flagship path set
+        for each theme.
+
+    Returns
+    -------
+    :
+        A GnbrProcessor object which contains a list of extracted INDRA
+        Statements in its statements attribute.
+    """
     return process_from_web('chemical', 'disease',
                              indicator_only=indicator_only)
 
 
-def process_from_web(first_type, second_type, indicator_only: bool = True):
+def process_from_web(first_type, second_type, indicator_only: bool = True)\
+        -> GnbrProcessor:
+    """Loading the databases from the given urls.
+
+    Parameters
+    ----------
+    first_type :
+        Type of the first agent.
+    second_type :
+        Type of the second agent.
+    indicator_only :
+        A switch to filter the data which is part of the flagship path set
+        for each theme.
+
+    Returns
+    -------
+    :
+        A GnbrProcessor object which contains a list of extracted INDRA
+        Statements in its statements attribute.
+    """
     fname1 = (f'{base_url}/part-i-{first_type}-{second_type}-path-theme-'
               f'distributions.txt.gz')
     fname2 = (f'{base_url}/part-ii-dependency-paths-{first_type}-{second_type}'

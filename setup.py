@@ -13,8 +13,7 @@ def main():
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2', 'pandas<1.3', 'ndex2==2.0.1', 'jinja2',
                     'protmapper>=0.0.21', 'obonet', 'sympy==1.3',
-                    'tqdm', 'pybiopax>=0.0.5', 'copy', 'itertools', 're',
-                    'logging']
+                    'tqdm', 'pybiopax>=0.0.5']
 
     extras_require = {
                       # Inputs and outputs
@@ -75,8 +74,8 @@ def main():
                     'indra.sources.biopax', 'indra.sources.ctd',
                     'indra.sources.crog', 'indra.sources.dgi',
                     'indra.sources.drugbank', 'indra.sources.eidos',
-                    'indra.sources.geneways', 'indra.sources.hprd',
-                    'indra.sources.hypothesis',
+                    'indra.sources.geneways', 'indra.sources.gnbr',
+                    'indra.sources.hprd', 'indra.sources.hypothesis',
                     'indra.sources.index_cards',
                     'indra.sources.indra_db_rest', 'indra.sources.isi',
                     'indra.sources.minerva', 'indra.sources.ndex_cx',
