@@ -643,6 +643,11 @@ def update_chebi_obo():
     OboClient.update_resource(path, url, 'chebi', remove_prefix=False)
 
 
+def update_ido():
+    """Update infectious disease ontology (IDO)."""
+    OwlClient.update_from_obo_library('ido', remove_prefix=True)
+
+
 def update_drugbank_mappings():
     """Update mappings from DrugBank to CHEBI/CHEMBL"""
     # Note that for this to work, PyOBO (https://github.com/pyobo/pyobo) has
@@ -668,11 +673,6 @@ def update_drugbank_mappings():
     header = ['DRUGBANK_ID', 'NAMESPACE', 'ID', 'SOURCE']
     rows = [header] + sorted(rows)
     write_unicode_csv(fname, rows, delimiter='\t')
-
-
-def update_ido():
-    """Update infectious disease ontology (IDO)."""
-    OwlClient.update_from_obo_library('ido')
 
 
 def update_identifiers_registry():
