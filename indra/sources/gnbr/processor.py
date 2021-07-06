@@ -198,22 +198,31 @@ def get_std_chemical(raw_string: str, db_id: str) -> list[Agent]:
     :
         A standardized Agent object.
     """
-    agents = []
+    # If neither a name nor a DB ID is given, we return empty
+    if pd.isna(db_id) and pd.isna(raw_string):
+        return []
+    # We add TEXT to db_refs if there is a raw_string
     db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
-    name = raw_string if not pd.isna(raw_string) else db_id
+    # In this case we know that there is no db_id but we have raw_string that
+    # we can use as a name and we return with that agent
     if pd.isna(db_id):
+        return [Agent(raw_string, db_refs=db_refs)]
+    # Otherwise we have a db_id that we can process
+    else:
+        agents = []
         for single_db_id in db_id.split('|'):
+            single_db_refs = deepcopy(db_refs)
             name = raw_string if not pd.isna(raw_string) else single_db_id
             if cheby_pattern.match(single_db_id):
-                db_refs['CHEBI'] = single_db_id
+                single_db_refs['CHEBI'] = single_db_id
             elif mesh_pattern.match(single_db_id):
-                db_refs['MESH'] = single_db_id[5:]
+                single_db_refs['MESH'] = single_db_id[5:]
             elif mesh_no_prefix_pattern.match(single_db_id):
-                db_refs['MESH'] = single_db_id
+                single_db_refs['MESH'] = single_db_id
             else:
                 raise ValueError('Unexpected chemical identifier: %s'
                                  % single_db_id)
-    agents.append(get_standard_agent(name, db_refs))
+            agents.append(get_standard_agent(name, single_db_refs))
     return agents
 
 
