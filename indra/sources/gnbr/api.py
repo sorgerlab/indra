@@ -26,7 +26,7 @@ def process_gene_gene(part1_path: str, part2_path: str,
 
     Returns
     -------
-    gp :
+    :
         A GnbrProcessor object which contains a list of extracted INDRA
         Statements in its statements attribute.
     """
@@ -47,7 +47,7 @@ def process_chemical_gene(part1_path: str, part2_path: str,
 
     Returns
     -------
-    gp :
+    :
         A GnbrProcessor object which contains a list of extracted
         INDRA Statements in its statements attribute.
     """
@@ -69,7 +69,7 @@ def process_gene_disease(part1_path: str, part2_path: str,
 
     Returns
     -------
-    gp :
+    :
         A GnbrProcessor object which contains a list of extracted INDRA
         Statements in its statements attribute.
     """
@@ -92,7 +92,7 @@ def process_chemical_disease(part1_path: str, part2_path: str,
 
     Returns
     -------
-    gp :
+    :
         A GnbrProcessor object which contains a list of extracted INDRA
         Statements in its statements attribute.
     """
