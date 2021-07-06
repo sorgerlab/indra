@@ -128,20 +128,20 @@ class CTDChemicalGeneProcessor(CTDProcessor):
 
         # We now map the relations to INDRA Statements
         mapped_rels = {rel: rel_mapping[rel]
-                        for rel in rels if rel in rel_mapping}
+                       for rel in rels if rel in rel_mapping}
 
         # If we have a decreases^reaction and we know that the chemical name
         # is the first one in the description then we have something like
         # A-|[B->C] meaning that we will have to flip the polarity to
         # capture the fact that the reaction is decreased.
-        if 'decreses^reaction' in reactions:
+        if 'decreases^reaction' in reactions:
             mapped_rels = {rel: get_inverse_stmt(stmt_type)
                            for rel, stmt_type in mapped_rels.items()}
         return mapped_rels
 
 
 def get_inverse_stmt(stmt_type):
-    if isinstance(stmt_type, Modification):
+    if issubclass(stmt_type, Modification):
         return modclass_to_inverse[stmt_type]
     elif stmt_type == Activation:
         return Inhibition
@@ -151,7 +151,7 @@ def get_inverse_stmt(stmt_type):
         return DecreaseAmount
     elif stmt_type == DecreaseAmount:
         return IncreaseAmount
-    raise ValueError('Unexpected statement type')
+    raise ValueError('Unexpected statement type %s' % stmt_type)
 
 
 def get_context(organism_name, organism_tax_id):

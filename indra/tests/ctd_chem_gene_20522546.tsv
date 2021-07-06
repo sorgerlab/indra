@@ -1,0 +1,5 @@
+Wortmannin	D000077191	19545-26-7	MAPK1	5594	protein	Homo sapiens	9606	[bisindolylmaleimide I co-treated with Wortmannin] inhibits the reaction [Zinc results in increased phosphorylation of MAPK1 protein]	affects^cotreatment|decreases^reaction|increases^phosphorylation	20522546
+Wortmannin	D000077191	19545-26-7	MAPK1	5594	protein	Homo sapiens	9606	Wortmannin inhibits the reaction [Zinc results in increased phosphorylation of MAPK1 protein]	decreases^reaction|increases^phosphorylation	20522546
+YM-254890	C475455		MAPK1	5594	protein	Homo sapiens	9606	YM-254890 inhibits the reaction [Zinc results in increased phosphorylation of MAPK1 protein]	decreases^reaction|increases^phosphorylation	20522546
+Zinc	D015032	7440-66-6	MAPK1	5594	protein	Homo sapiens	9606	Wortmannin inhibits the reaction [Zinc results in increased phosphorylation of MAPK1 protein]	decreases^reaction|increases^phosphorylation	20522546
+Zinc	D015032	7440-66-6	MAPK3	5595	protein	Homo sapiens	9606	Zinc results in increased phosphorylation of MAPK3 protein	increases^phosphorylation	12915106|15880691|16373669|16606632|20522546|22317921
