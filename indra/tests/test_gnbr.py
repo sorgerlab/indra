@@ -78,4 +78,5 @@ def test_process_chemical_disease():
     assert isinstance(gp.statements[1], Inhibition)
     assert isinstance(gp.statements[2], Inhibition)
     assert isinstance(gp.statements[3], Inhibition)
+    assert isinstance(gp.statements[4], Inhibition)
     assert_valid_statements(gp.statements)
