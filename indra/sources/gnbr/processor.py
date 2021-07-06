@@ -184,7 +184,7 @@ def get_std_gene(raw_string: str, db_id: str) -> List[Agent]:
     return agents
 
 
-def get_std_chemical(raw_string: str, db_id: str) -> list[Agent]:
+def get_std_chemical(raw_string: str, db_id: str) -> List[Agent]:
     """Standardize chemical names.
 
     Parameters
