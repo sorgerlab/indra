@@ -37,7 +37,3 @@ def get_ido_id_from_ido_name(ido_name):
         The IDO identifier corresponding to the given IDO name.
     """
     return _client.get_id_from_name(ido_name)
-
-
-if __name__ == '__main__':
-    print(*_client.count_xrefs().most_common(), sep='\n')

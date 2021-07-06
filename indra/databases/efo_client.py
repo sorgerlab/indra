@@ -35,7 +35,3 @@ def get_efo_id_from_efo_name(efo_name):
         The EFO identifier corresponding to the given EFO name.
     """
     return _client.get_id_from_name(efo_name)
-
-
-if __name__ == '__main__':
-    print(*_client.count_xrefs().most_common(), sep='\n')

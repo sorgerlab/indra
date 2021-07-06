@@ -64,15 +64,6 @@ class OntologyClient:
         self.synonym_to_id = {k: v for k, v in self.synonym_to_id.items()
                               if k not in ambig_synonyms}
 
-    def count_xrefs(self):
-        """Count how many xrefs there are to each database."""
-        return Counter(
-            xref_db
-            for db_id, xref_map in self.id_to_xrefs.items()
-            for xref_db, xref_db_ids in xref_map.items()
-            for _ in xref_db_ids
-        )
-
     def get_name_from_id(self, db_id: str) -> Optional[str]:
         """Return the database name corresponding to the given database ID.
 
