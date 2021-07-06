@@ -4,6 +4,7 @@ import json
 import os
 import pickle
 from collections import defaultdict
+from operator import attrgetter
 from typing import Any, Mapping, TYPE_CHECKING
 
 from tqdm import tqdm
@@ -87,9 +88,10 @@ class OwlClient(OntologyClient):
             entries,
             {"synonyms", "xrefs", "alt_ids", "relations"},
         )
-        sort_fun = (lambda x: x['id']) if remove_prefix else \
-            (lambda x: int(x["id"].split(':')[1]))
-        entries = sorted(entries, key=sort_fun)
+        entries = sorted(
+            entries,
+            key=attrgetter("id") if remove_prefix else _id_key,
+        )
 
         resource_path = get_resource_path(f"{prefix}.json")
         with open(resource_path, "w") as file:
@@ -139,6 +141,10 @@ class OwlClient(OntologyClient):
             )
         ontology = pronto.Ontology(file)
         cls.update_resource(prefix=prefix, ontology=ontology, **kwargs)
+
+
+def _id_key(x):
+    return int(x["id"].split(':')[1])
 
 
 if __name__ == "__main__":
