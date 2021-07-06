@@ -21,4 +21,10 @@ def test_statement_type_mapping():
 def test_chemical_gene():
     fname = os.path.join(HERE, 'ctd_chem_gene_20522546.tsv')
     cp = ctd.process_tsv(fname, 'chemical_gene')
-    assert len(cp.statements) == 4, cp.statements
+    assert len(cp.statements) == 3, cp.statements
+    assert isinstance(cp.statements[0], Dephosphorylation)
+    assert cp.statements[0].enz.name == 'wortmannin'
+    assert isinstance(cp.statements[1], Dephosphorylation)
+    assert cp.statements[1].enz.name == 'YM-254890'
+    assert isinstance(cp.statements[2], Phosphorylation)
+    assert cp.statements[2].enz.name == 'zinc atom'
