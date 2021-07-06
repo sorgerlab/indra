@@ -155,21 +155,21 @@ def get_std_gene(raw_string: str, db_id: str) -> list[Agent]:
         A standardized Agent object.
     """
     agents = []
-    for single_db_id in db_id.split(';'):
-        db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
-        name = raw_string if not pd.isna(raw_string) else single_db_id
+    db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
+    name = raw_string if not pd.isna(raw_string) else db_id
+    if pd.isna(db_id):
+        for single_db_id in db_id.split(';'):
+            name = raw_string if not pd.isna(raw_string) else single_db_id
 
-        if pd.isna(single_db_id):
-            pass
-        elif entrez_pattern.match(single_db_id):
-            db_refs['EGID'] = single_db_id
-        else:
-            match = entrez_with_tax_pattern.match(single_db_id)
-            if not match:
-                raise ValueError('Unexpected gene identifier: %s'
-                                 % single_db_id)
-            db_refs['EGID'] = match.groups()[0]
-        agents.append(get_standard_agent(name, db_refs))
+            if entrez_pattern.match(single_db_id):
+                db_refs['EGID'] = single_db_id
+            else:
+                match = entrez_with_tax_pattern.match(single_db_id)
+                if not match:
+                    raise ValueError('Unexpected gene identifier: %s'
+                                     % single_db_id)
+                db_refs['EGID'] = match.groups()[0]
+    agents.append(get_standard_agent(name, db_refs))
     return agents
 
 
@@ -189,21 +189,21 @@ def get_std_chemical(raw_string: str, db_id: str) -> list[Agent]:
         A standardized Agent object.
     """
     agents = []
-    for single_db_id in db_id.split('|'):
-        db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
-        name = raw_string if not pd.isna(raw_string) else single_db_id
-        if pd.isna(single_db_id):
-            pass
-        elif cheby_pattern.match(single_db_id):
-            db_refs['CHEBI'] = single_db_id
-        elif mesh_pattern.match(single_db_id):
-            db_refs['MESH'] = single_db_id[5:]
-        elif mesh_no_prefix_pattern.match(single_db_id):
-            db_refs['MESH'] = single_db_id
-        else:
-            raise ValueError('Unexpected chemical identifier: %s'
-                             % single_db_id)
-        agents.append(get_standard_agent(name, db_refs))
+    db_refs = {'TEXT': raw_string} if not pd.isna(raw_string) else {}
+    name = raw_string if not pd.isna(raw_string) else db_id
+    if pd.isna(db_id):
+        for single_db_id in db_id.split('|'):
+            name = raw_string if not pd.isna(raw_string) else single_db_id
+            if cheby_pattern.match(single_db_id):
+                db_refs['CHEBI'] = single_db_id
+            elif mesh_pattern.match(single_db_id):
+                db_refs['MESH'] = single_db_id[5:]
+            elif mesh_no_prefix_pattern.match(single_db_id):
+                db_refs['MESH'] = single_db_id
+            else:
+                raise ValueError('Unexpected chemical identifier: %s'
+                                 % single_db_id)
+    agents.append(get_standard_agent(name, db_refs))
     return agents
 
 
