@@ -4,7 +4,7 @@ import json
 import os
 import pickle
 from collections import defaultdict
-from operator import attrgetter
+from operator import itemgetter
 from typing import Any, Mapping, TYPE_CHECKING
 
 from tqdm import tqdm
@@ -93,7 +93,7 @@ class OwlClient(OntologyClient):
         )
         entries = sorted(
             entries,
-            key=attrgetter("id") if remove_prefix else _id_key,
+            key=itemgetter("id") if remove_prefix else _id_key,
         )
 
         resource_path = get_resource_path(f"{prefix}.json")
