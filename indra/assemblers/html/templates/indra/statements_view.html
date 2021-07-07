@@ -261,8 +261,7 @@
 {% macro belief_badge(belief_score) -%}
   <small
       class="badge badge-pill badge-belief"
-      title="Belief score for this statement"
-  >{{ belief_score }}</small>
+      title="Belief score for this statement">{{ belief_score }}</small>
 {%- endmacro %}
 
 {% block header_desc %}
@@ -384,6 +383,9 @@
                              {% if db_rest_url %}target="_blank"{% endif %}>
                             <small class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</small>
                           </a>
+                          {% if show_belief %}
+                            {{ belief_badge(stmt_info['belief']) }}
+                          {% endif %}
                         </h5>
                       </div>
                       <div class="col text-right nvp">
