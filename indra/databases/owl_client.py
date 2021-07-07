@@ -35,12 +35,12 @@ class OwlClient(OntologyClient):
                 continue
             else:
                 xrefs.append(dict(namespace=xref_db, id=xref_id))
-        for child in term.subclasses(distance=1, with_self=False):
-            child_db, child_id = child.id.split(':', maxsplit=1)
-            if remove_prefix and child_db.lower() == prefix.lower():
-                rels_dict["is_a"].append(child_id)
+        for parent in term.superclasses(distance=1, with_self=False):
+            parent_db, parent_id = parent.id.split(':', maxsplit=1)
+            if remove_prefix and parent_db.lower() == prefix.lower():
+                rels_dict["is_a"].append(parent_id)
             else:
-                rels_dict["is_a"].append(child.id)
+                rels_dict["is_a"].append(parent.id)
 
         term_ns, term_id = term.id.split(':', maxsplit=1)
         term_ns = term_ns.lower()
