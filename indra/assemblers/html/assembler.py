@@ -371,6 +371,7 @@ class HtmlAssembler(object):
 
                 ret.append({'hash': str(key), 'english': english,
                             'evidence': ev_list,
+                            'belief': stmt.belief,
                             'evidence_count': evidence_count_str,
                             'source_count': src_counts})
             return ret, all_level_hashes
