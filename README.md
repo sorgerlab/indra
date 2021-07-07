@@ -61,6 +61,7 @@ Reading systems:
 | RLIMS-P    | [`indra.sources.rlimsp`](https://indra.readthedocs.io/en/latest/modules/sources/rlimsp/index.html)  | https://research.bioinformatics.udel.edu/rlimsp |
 | ISI/AMR    | [`indra.sources.isi`](https://indra.readthedocs.io/en/latest/modules/sources/isi/index.html)     | https://github.com/sgarg87/big_mech_isi_gg      |
 | Geneways   | [`indra.sources.geneways`](https://indra.readthedocs.io/en/latest/modules/sources/geneways/index.html) | https://www.ncbi.nlm.nih.gov/pubmed/15016385    |
+| GNBR       | [`indra.sources.gnbr`](https://indra.readthedocs.io/en/latest/modules/sources/gnbr/index.html) | https://zenodo.org/record/3459420 |
 
 Biological pathway databases:
 

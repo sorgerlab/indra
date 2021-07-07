@@ -20,6 +20,7 @@ Reading Systems
    geneways/index
    rlimsp/index
    eidos/index
+   gnbr/index
 
 Molecular Pathway Databases
 ---------------------------

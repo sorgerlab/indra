@@ -1,0 +1,2 @@
+27004934	0	4-1BBL	91,97	tumor	43,48	4-1BBL	tumor	21950(Tax:10090)	MESH:D009369	Gene	Disease	associated|nmod|START_ENTITY END_ENTITY|acl|associated	An adenoviral_cancer vaccine co-encoding a tumor associated antigen together with secreted 4-1BBL leads to delayed tumor progression .
+22235481	0	ACE	5,8	motility_disorders	60,78	ACE	motility disorders	1636	MESH:D015835	Gene	Disease	START_ENTITY|dep|role role|nmod|END_ENTITY	From ACE to replace : role of surgery and transplantation in motility_disorders .
