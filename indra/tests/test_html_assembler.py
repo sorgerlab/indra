@@ -68,6 +68,17 @@ def test_assembler():
     assert isinstance(result, str)
     result = ha.make_model(grouping_level='statement')
     assert isinstance(result, str)
+    # Test belief badges
+    result = ha.make_model(grouping_level='statement', show_belief=True)
+    assert isinstance(result, str)
+    assert '<small\n' \
+           '      class="badge badge-pill badge-belief"\n' \
+           '      title="Belief score for this statement">1</small>' in result
+    result = ha.make_model(grouping_level='statement', show_belief=False)
+    assert isinstance(result, str)
+    assert '<small\n' \
+           '      class="badge badge-pill badge-belief"\n' \
+           '      title="Belief score for this statement">1</small>' not in result
     # Make sure warning can be appended
     ha.append_warning('warning')
     assert ('\t<span style="color:red;">(CAUTION: warning occurred when '
