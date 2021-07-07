@@ -14,6 +14,16 @@ def test_standardize_agent():
     assert agent[0].db_refs.get('HGNC') == '1097'
 
 
+def test_multiple_genes():
+    agents = get_std_gene('Erk1/2', '5594;5595')
+    assert agents[0].name == 'MAPK1'
+    assert agents[1].name == 'MAPK3'
+    assert agents[0].db_refs['TEXT'] == 'Erk1/2'
+    assert agents[1].db_refs['TEXT'] == 'Erk1/2'
+    assert agents[0].db_refs['HGNC'] == '6871'
+    assert agents[1].db_refs['HGNC'] == '6877'
+
+
 def test_process_gene_gene():
     test_path1: str = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    'gnbr_gene_gene_part1_test.tsv')
