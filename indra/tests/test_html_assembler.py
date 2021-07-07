@@ -13,7 +13,8 @@ def make_stmt():
                        "phosphorylate Ras proteins.",
                   source_api='test', pmid='1234567',
                   annotations={'agents': {'raw_text': ['Src kinase',
-                                                       'Ras proteins']}})
+                                                       'Ras proteins']},
+                               'source_url': 'http://www.causalbionet.com/'})
     st = Phosphorylation(src, ras, 'tyrosine', '32', evidence=[ev])
     return st
 
@@ -24,7 +25,8 @@ def make_bad_stmt():
     ras = Agent('', db_refs={'FPLX': {'RAS', 'Ras'}, 'TEXT': 'RAS'})
     ev = Evidence(text="Ras is phosphorylated",
                   source_api='test', pmid='1234',
-                  annotations={'agents': {'raw_text': [None, None]}})  # no raw
+                  annotations={'agents': {'raw_text': [None, None]},  # no raw
+                               'source_url': ''})
     st = Phosphorylation(subj, ras, 'tyrosine', '32', evidence=[ev])
     return st
 
@@ -78,7 +80,10 @@ def test_assembler():
     assert isinstance(result, str)
     assert '<small\n' \
            '      class="badge badge-pill badge-belief"\n' \
-           '      title="Belief score for this statement">1</small>' not in result
+           '      title="Belief score for this statement">1</small>' \
+           not in result
+    # Test if source URL exists
+    assert 'http://www.causalbionet.com/' in result
     # Make sure warning can be appended
     ha.append_warning('warning')
     assert ('\t<span style="color:red;">(CAUTION: warning occurred when '
