@@ -414,10 +414,19 @@
                                           &#10166;
                                       </a>
                                   </div>
-                                  <div class="col-9 nvm src-api"
-                                       title="{{ ev['source_api'] }}">
+                                {% if ev.annotations.get('source_url') %}
+                                  <a href="{{ ev.annotations['source_url'] }}">
+                                {% else %}
+                                  <div
+                                {% endif %}
+                                      class="col-9 nvm src-api"
+                                      title="{{ ev['source_api'] }}">
                                       {{ ev['source_api'] }}
+                                {% if evidence.annotations.get('source_url') %}
+                                  </a>
+                                {% else %}
                                   </div>
+                                {% endif %}
                                 </div>
                               </div>
 
