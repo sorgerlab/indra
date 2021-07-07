@@ -6,7 +6,7 @@
         "domain": "general",
         "default_style": {
             "color": "white",
-            "background-color": "#ff595b"
+            "background-color": "#fdbf6f"
         }
     },
     "drum": {
@@ -16,7 +16,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#fb9a99"
+            "background-color": "#ff595b"
         }
     },
     "reach": {
@@ -26,7 +26,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#cab2d6"
+            "background-color": "#8cde09"
         }
     },
     "sparser": {
@@ -36,7 +36,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#ff7f00"
+            "background-color": "#cab2d6"
         }
     },
     "tees": {
@@ -46,7 +46,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#33a02c"
+            "background-color": "#fb9a99"
         }
     },
     "medscan": {
@@ -56,7 +56,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#fdbf6f"
+            "background-color": "#ff7f00"
         }
     },
     "rlimsp": {
@@ -66,7 +66,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#b2df8a"
+            "background-color": "#33a02c"
         }
     },
     "isi": {
@@ -76,7 +76,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#2daaff"
+            "background-color": "#b2df8a"
         }
     },
     "geneways": {
@@ -86,7 +86,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#a6cee3"
+            "background-color": "#2daaff"
         }
     },
     "biopax": {
@@ -283,12 +283,20 @@
         "name": "Global Network of Biomedical Relationships",
         "link": "https://zenodo.org/record/3459420",
         "type": "reader",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#a6cee3"
+        }
     },
     "creeds": {
         "name": "CRowd Extracted Expression of Differential Signatures",
         "link": "https://maayanlab.cloud/CREEDS/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#f68ee1"
+        }
     }
 }
