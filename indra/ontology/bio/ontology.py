@@ -187,10 +187,11 @@ class BioOntology(IndraOntology):
             oc = obo_client.OntologyClient(prefix=ns)
             for db_id, entry in oc.entries.items():
                 label = self.label(ns.upper(), db_id)
-                # There may be more general ways of doing this but this
-                # handles the special case of BFO nodes in the EFO
-                # ontology.
-                if ns == 'efo' and db_id.startswith('BFO'):
+                # Here we handle and isa relationships that point
+                # to an entry outside this ontology. The logic for recognizing
+                # these here is: if there is a : in the ID but the prefix is
+                # not for this namespace then we assume it's another namespace
+                if ':' in db_id and not db_id.startswith(ns.upper()):
                     label = db_id
                 nodes.append((label,
                               {'name': entry['name']}))
@@ -227,13 +228,15 @@ class BioOntology(IndraOntology):
                     mapped_rel = rel_mappings.get(rel)
                     if not mapped_rel:
                         continue
-                    source_label = self.label(ns.upper(), db_id)
-                    if ns == 'efo' and db_id.startswith('BFO'):
+                    if ':' in db_id and not db_id.startswith(ns.upper()):
                         source_label = db_id
+                    else:
+                        source_label = self.label(ns.upper(), db_id)
                     for target in targets:
-                        target_label = self.label(ns.upper(), target)
-                        if ns == 'efo' and target.startswith('BFO'):
+                        if ':' in target and not target.startswith(ns.upper()):
                             target_label = target
+                        else:
+                            target_label = self.label(ns.upper(), target)
                         if rel in reverse_rel:
                             av = (target_label,
                                   source_label,
