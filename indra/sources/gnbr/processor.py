@@ -6,6 +6,7 @@ from typing import List
 from copy import deepcopy
 import pandas as pd
 from indra.statements import *
+from indra.databases import mesh_client
 from indra.ontology.bio import bio_ontology
 from indra.ontology.standardize import get_standard_agent
 
@@ -220,14 +221,14 @@ def get_std_chemical(raw_string: str, db_id: str) -> List[Agent]:
                 mesh_id = single_db_id[5:]
                 # There are often non-existent MESH IDs here for some reason
                 # that can be filtered out with this technique
-                if not bio_ontology.get_name('MESH', mesh_id):
+                if not mesh_client.get_mesh_name(mesh_id, offline=True):
                     continue
                 single_db_refs['MESH'] = mesh_id
             elif mesh_no_prefix_pattern.match(single_db_id):
                 mesh_id = single_db_id
                 # There are often non-existent MESH IDs here for some reason
                 # that can be filtered out with this technique
-                if not bio_ontology.get_name('MESH', mesh_id):
+                if not mesh_client.get_mesh_name(mesh_id, offline=True):
                     continue
                 single_db_refs['MESH'] = single_db_id
             else:
