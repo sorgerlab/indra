@@ -638,7 +638,8 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
                         'original_json': ev.to_json(),
                         'num_curations': num_curations,
                         'num_correct': num_correct,
-                        'num_incorrect': num_incorrect
+                        'num_incorrect': num_incorrect,
+                        'source_url': ev.annotations.get('source_url', '')
                         })
 
     return ev_list
