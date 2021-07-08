@@ -134,6 +134,7 @@ internal_source_mappings = {
     'virhostnet': 'vhn',
     'phosphosite': 'psp',
 }
+reverse_source_mappings = {v: k for k, v in internal_source_mappings.items()}
 
 all_sources = db_sources + reader_sources
 
