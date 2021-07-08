@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.14'
+    version = '1.15'
 
     def __init__(self):
         super().__init__()
@@ -458,7 +458,7 @@ class BioOntology(IndraOntology):
             label = self.label('LSPCI', lspcid)
             nodes_to_add.append((label, {'name': data['name']}))
             edges_to_add += [(self.label(*mapping), label, {'type': 'isa'})
-                             for mapping in data['mappings']]
+                             for mapping in data['members']]
         self.add_nodes_from(nodes_to_add)
         self.add_edges_from(edges_to_add)
 
