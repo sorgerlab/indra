@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.14'
+    version = '1.15'
 
     def __init__(self):
         super().__init__()
@@ -81,6 +81,9 @@ class BioOntology(IndraOntology):
         self.add_activity_hierarchy()
         self.add_modification_hierarchy()
         self.add_uppro_hierarchy()
+        self.add_lspci()
+
+        # The graph is now initialized
         self._initialized = True
         # Build name to ID lookup
         logger.info('Building name lookup...')
@@ -446,6 +449,22 @@ class BioOntology(IndraOntology):
             nodes.append((self.label('DRUGBANK', db_id),
                           {'name': db_name}))
         self.add_nodes_from(nodes)
+
+    def add_lspci(self):
+        lspci = read_unicode_csv(get_resource_path('lspci.tsv'),
+                                 delimiter='\t')
+        nodes_to_add = []
+        edges_to_add = []
+        next(lspci)
+        for (lspcid, name, members_str) in lspci:
+            label = self.label('LSPCI', lspcid)
+            nodes_to_add.append((label, {'name': name}))
+            members = [member.split(':', maxsplit=1)
+                       for member in members_str.split('|')]
+            edges_to_add += [(self.label(*member), label, {'type': 'isa'})
+                             for member in members]
+        self.add_nodes_from(nodes_to_add)
+        self.add_edges_from(edges_to_add)
 
     def add_activity_hierarchy(self):
         rels = [

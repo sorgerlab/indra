@@ -336,3 +336,14 @@ def test_standardize_hgnc_fplx_mesh_bug():
 def test_ido_parents():
     parents = bio_ontology.get_parents('IDO', '0000514')
     assert ('IDO', '0000509') in parents
+
+
+def test_lspci():
+    assert bio_ontology.get_name('LSPCI', '18') == 'Pentane-1,5-Diamine'
+    members = bio_ontology.get_children('LSPCI', '18')
+    # These are some of the members, not all
+    expected_members = {('CAS', '462-94-2'),
+                        ('CHEBI', 'CHEBI:18127'),
+                        ('CHEMBL', 'CHEMBL119296'),
+                        ('PUBCHEM', '273')}
+    assert expected_members < set(members)

@@ -59,6 +59,7 @@ url_prefixes = {
     # Biology namespaces
     'NXPFA': 'https://www.nextprot.org/term/FA-',
     'SIGNOR': 'https://signor.uniroma2.it/relation_result.php?id=',
+    'LSPCI': 'https://labsyspharm.github.io/lspci/',
     # WM namespaces
     'UN': 'https://github.com/clulab/eidos/wiki/JSON-LD#Grounding/',
     'WDI': 'https://github.com/clulab/eidos/wiki/JSON-LD#Grounding/',
@@ -322,6 +323,7 @@ def ensure_prefix_if_needed(db_ns: str, db_id: str) -> str:
     if namespace_embedded(db_ns):
         return ensure_prefix(db_ns, db_id)
     return db_id
+
 
 def ensure_prefix(db_ns, db_id, with_colon=True):
     """Return a valid ID that has the given namespace embedded.
