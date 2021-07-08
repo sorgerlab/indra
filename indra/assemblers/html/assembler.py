@@ -23,7 +23,7 @@ from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_relation_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
     get_available_ev_counts, standardize_counts, get_available_beliefs, \
-    StmtGroup, make_standard_stats
+    StmtGroup, make_standard_stats, reverse_source_mappings
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
@@ -734,6 +734,19 @@ def id_url(ag):
                 continue
             # Finally, we return a valid identifiers.org URL
             return get_identifiers_url(db_name, db_id)
+
+
+def src_url(ev: Evidence) -> str:
+    """Given an Evidence object, provide the URL for the source"""
+    # Get source url from evidence or from SOURCE_INFO as backup.
+    # SOURCE_INFO contains the names as they are in INDRA,
+    # while source_api is as the source name appear in the database
+
+    url = ev.annotations.get('source_url')
+    if not url:
+        rev_src = reverse_source_mappings.get(ev.source_api, ev.source_api)
+        url = SOURCE_INFO.get(rev_src, {}).get('link', '')
+    return url
 
 
 def tag_text(text, tag_info_list):
