@@ -774,6 +774,40 @@ def update_biomappings():
                       delimiter='\t')
 
 
+def update_lspci():
+    # We first create a dict of LSPCIs and their members but only for ones
+    # that actually have TAS statements corresponding to them
+    from indra.sources import tas
+    tp = tas.process_from_web(affinity_class_limit=10)
+    lspci_members = defaultdict(set)
+    for stmt in tp.statements:
+        if 'LSPCI'not in stmt.subj.db_refs:
+            continue
+        for k, v in stmt.subj.db_refs.items():
+            if k in {'TEXT', 'LSPCI'}:
+                continue
+            lspci_members[stmt.subj.db_refs.get('LSPCI')].add((k, v))
+
+    # We then process the names table in a way that we always prioritize the
+    # first row for each LSPCI since the table is pre-sorted by priority
+    df = pandas.read_csv('lsp_compound_names.csv')
+    lspcid_names = {}
+    for _, row in df.iterrows():
+        if str(row['lspci_id']) not in lspcid_names:
+            lspcid_names[str(row['lspci_id'])] = row['name']
+
+    # We can now combine the two sources filtering to only entries that have
+    # names
+    data = {}
+    for lspcid, members in lspci_members.items():
+        if lspcid not in lspcid_names:
+            continue
+        data[lspcid] = {'members': sorted(list(members)),
+                        'name': lspcid_names[lspcid]}
+    with open(get_resource_path('lspci.json'), 'w') as fh:
+        json.dump(data, fh, indent=1)
+
+
 def main():
     update_famplex()
     update_famplex_map()
@@ -799,6 +833,7 @@ def main():
     update_ido()
     update_drugbank_mappings()
     update_identifiers_registry()
+    update_lspci()
 
 
 if __name__ == '__main__':
