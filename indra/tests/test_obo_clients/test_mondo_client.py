@@ -11,12 +11,18 @@ def test_invalid_id():
 
 
 def test_mondo_id_lookup():
-    assert EXAMPLE_NAME == mondo_client.get_name_from_id(EXAMPLE_ID)
+    name = mondo_client.get_name_from_id(EXAMPLE_ID)
+    assert name is not None
+    assert EXAMPLE_NAME == name
 
 
 def test_mondo_label_to_id():
-    assert EXAMPLE_ID == mondo_client.get_id_from_name(EXAMPLE_NAME)
+    identifier = mondo_client.get_id_from_name(EXAMPLE_NAME)
+    assert identifier is not None
+    assert EXAMPLE_ID == identifier
 
 
 def test_mondo_secondary_to_primary():
-    assert EXAMPLE_ID == mondo_client.get_id_from_alt_id(EXAMPLE_ALT_ID)
+    identifier = mondo_client.get_id_from_alt_id('MONDO:0018220')
+    assert identifier is not None
+    assert '0002413' == identifier
