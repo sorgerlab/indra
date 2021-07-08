@@ -5,7 +5,7 @@ from indra.config import get_config
 from ..ontology_graph import IndraOntology
 from indra.util import read_unicode_csv
 from indra.statements import modtype_conditions
-from indra.resources import get_resource_path
+from indra.resources import get_resource_path, load_resource_json
 from indra.statements.validate import assert_valid_db_refs
 
 
@@ -81,6 +81,9 @@ class BioOntology(IndraOntology):
         self.add_activity_hierarchy()
         self.add_modification_hierarchy()
         self.add_uppro_hierarchy()
+        self.add_lspci()
+
+        # The graph is now initialized
         self._initialized = True
         # Build name to ID lookup
         logger.info('Building name lookup...')
@@ -446,6 +449,18 @@ class BioOntology(IndraOntology):
             nodes.append((self.label('DRUGBANK', db_id),
                           {'name': db_name}))
         self.add_nodes_from(nodes)
+
+    def add_lspci(self):
+        lspci = load_resource_json('lspci.json')
+        nodes_to_add = []
+        edges_to_add = []
+        for lspcid, data in lspci.items():
+            label = self.label('LSPCI', lspcid)
+            nodes_to_add.append((label, {'name': data['name']}))
+            edges_to_add += [(self.label(*mapping), label, {'type': 'isa'})
+                             for mapping in data['mappings']]
+        self.add_nodes_from(nodes_to_add)
+        self.add_edges_from(edges_to_add)
 
     def add_activity_hierarchy(self):
         rels = [
