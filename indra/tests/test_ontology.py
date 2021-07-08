@@ -331,3 +331,8 @@ def test_standardize_hgnc_fplx_mesh_bug():
     assert refs['MESH'] == 'D044169'
     assert refs['HGNC_GROUP'] == '279'
     assert 'HGNC' not in refs
+
+
+def test_ido_parents():
+    parents = bio_ontology.get_parents('IDO', '0000514')
+    assert ('IDO', '0000509') in parents

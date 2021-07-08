@@ -5,7 +5,7 @@ import os
 import pickle
 from collections import defaultdict
 from operator import itemgetter
-from typing import Any, Mapping, TYPE_CHECKING
+from typing import Any, Collection, Mapping, TYPE_CHECKING
 
 from tqdm import tqdm
 
@@ -24,6 +24,7 @@ class OwlClient(OntologyClient):
         term: "pronto.Term",
         prefix: str,
         remove_prefix: bool = False,
+        allowed_external_ns: Collection = None,
     ) -> Mapping[str, Any]:
         """Create a data dictionary from a Pronto term."""
         rels_dict = defaultdict(list)
@@ -35,12 +36,18 @@ class OwlClient(OntologyClient):
                 continue
             else:
                 xrefs.append(dict(namespace=xref_db, id=xref_id))
-        for child in term.subclasses(distance=1, with_self=False):
-            child_db, child_id = child.id.split(':', maxsplit=1)
-            if remove_prefix and child_db.lower() == prefix.lower():
-                rels_dict["is_a"].append(child_id)
+        for parent in term.superclasses(distance=1, with_self=False):
+            parent_db, parent_id = parent.id.split(':', maxsplit=1)
+            # If the parent here is not from this namespace and not one of the
+            # allowed external namespaces then we skip the parent
+            if parent_db.lower() != prefix.lower() and \
+                    (not allowed_external_ns or
+                     parent_db not in allowed_external_ns):
+                continue
+            if remove_prefix and parent_db.lower() == prefix.lower():
+                rels_dict["is_a"].append(parent_id)
             else:
-                rels_dict["is_a"].append(child.id)
+                rels_dict["is_a"].append(parent.id)
 
         term_ns, term_id = term.id.split(':', maxsplit=1)
         term_ns = term_ns.lower()
@@ -62,6 +69,7 @@ class OwlClient(OntologyClient):
         *,
         skip_obsolete: bool = True,
         remove_prefix: bool = False,
+        allowed_external_ns: Collection = None,
     ):
         prefix = prefix.upper()
         rv = []
