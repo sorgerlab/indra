@@ -20,6 +20,10 @@ class BioOntology(IndraOntology):
     # with the underlying resource files.
     name = 'bio'
     version = '1.19'
+    ontology_namespaces = [
+        'go', 'efo', 'hp', 'doid', 'chebi', 'ido',
+        'mondo',
+    ]
 
     def __init__(self):
         super().__init__()
@@ -202,7 +206,6 @@ class BioOntology(IndraOntology):
 
     def add_obo_nodes(self):
         from indra.databases import obo_client
-        namespaces = ['go', 'efo', 'hp', 'doid', 'chebi', 'ido']
         nodes = []
         type_functions = {
             'go': _get_go_type,
@@ -212,7 +215,7 @@ class BioOntology(IndraOntology):
             'chebi': lambda x: 'small_molecule',
             'ido': lambda x: 'infectious_disease_concept'
         }
-        for ns in namespaces:
+        for ns in self.ontology_namespaces:
             oc = obo_client.OntologyClient(prefix=ns)
             for db_id, entry in oc.entries.items():
                 label = self.label(ns.upper(), db_id)
@@ -229,7 +232,6 @@ class BioOntology(IndraOntology):
 
     def add_obo_hierarchies(self):
         from indra.databases import obo_client
-        namespaces = ['go', 'efo', 'hp', 'doid', 'chebi', 'ido']
         edges = []
         # Mapping various source relation types to standardized ones
         # in this ontology graph
@@ -250,7 +252,7 @@ class BioOntology(IndraOntology):
         reverse_rel = {
             'has_part',
         }
-        for ns in namespaces:
+        for ns in self.ontology_namespaces:
             oc = obo_client.OntologyClient(prefix=ns)
             for db_id, entry in oc.entries.items():
                 for rel, targets in entry.get('relations', {}).items():

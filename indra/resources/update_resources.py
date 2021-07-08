@@ -660,6 +660,11 @@ def update_ido():
     OwlClient.update_from_obo_library('ido', remove_prefix=True)
 
 
+def update_mondo():
+    """Update the Monarch disease ontology (MONDO)."""
+    OwlClient.update_from_obo_library('mondo', remove_prefix=True)
+
+
 def update_drugbank_mappings():
     """Update mappings from DrugBank to CHEBI/CHEMBL"""
     # Note that for this to work, PyOBO (https://github.com/pyobo/pyobo) has
@@ -857,6 +862,7 @@ def main():
     update_efo()
     update_hpo()
     update_ido()
+    update_mondo()
     update_drugbank_mappings()
     update_identifiers_registry()
     update_lspci()
