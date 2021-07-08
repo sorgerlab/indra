@@ -11,7 +11,7 @@ from typing import List, Mapping, Optional
 
 import obonet
 
-from indra.resources import get_resource_path, load_resource_json
+from indra.resources import get_resource_path, load_resource_json, RESOURCES_PATH
 
 __all__ = [
     'OntologyClient',
@@ -303,6 +303,22 @@ class OboClient(OntologyClient):
         entries = sorted(entries, key=sort_key)
         with open(resource_path, 'w') as file:
             json.dump(entries, file, indent=1, sort_keys=True)
+
+    @classmethod
+    def update_from_obo_library(
+        cls,
+        prefix: str,
+        *,
+        name: Optional[str] = None,
+        path: Optional[str] = None,
+        remove_prefix: bool = False,
+    ) -> None:
+        if name is None:
+            name = f'{prefix}.obo'
+        if path is None:
+            path = RESOURCES_PATH
+        url = f'http://purl.obolibrary.org/obo/{name}'
+        cls.update_resource(path, url, prefix, remove_prefix=remove_prefix)
 
 
 def prune_empty_entries(entries, keys):

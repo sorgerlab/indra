@@ -2,9 +2,9 @@
 
 from typing import Optional
 
-from indra.databases.owl_client import OwlClient
+from indra.databases.obo_client import OboClient
 
-# _client = OwlClient(prefix='mondo')
+_client = OboClient(prefix='mondo')
 
 
 def get_name_from_id(mondo_id: str) -> Optional[str]:
@@ -60,4 +60,4 @@ def get_id_from_alt_id(mondo_alt_id: str) -> Optional[str]:
 
 
 if __name__ == '__main__':
-    OwlClient.update_from_obo_library('mondo', remove_prefix=True)
+    OboClient.update_from_obo_library('mondo', remove_prefix=True)

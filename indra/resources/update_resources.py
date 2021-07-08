@@ -655,14 +655,14 @@ def update_chebi_obo():
     OboClient.update_resource(path, url, 'chebi', remove_prefix=False)
 
 
+def update_mondo():
+    """Update the Monarch disease ontology (MONDO)."""
+    OboClient.update_from_obo_library('mondo', remove_prefix=True)
+
+
 def update_ido():
     """Update infectious disease ontology (IDO)."""
     OwlClient.update_from_obo_library('ido', remove_prefix=True)
-
-
-def update_mondo():
-    """Update the Monarch disease ontology (MONDO)."""
-    OwlClient.update_from_obo_library('mondo', remove_prefix=True)
 
 
 def update_drugbank_mappings():
