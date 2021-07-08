@@ -2,7 +2,7 @@ import re
 from indra.statements import *
 from indra.assemblers.english import AgentWithCoordinates
 from indra.assemblers.html.assembler import HtmlAssembler, tag_text, loader, \
-    _format_evidence_text, tag_agents
+    _format_evidence_text, tag_agents, src_url, SOURCE_INFO
 from indra.util.statement_presentation import AveAggregator, StmtStat, StmtGroup
 
 
@@ -47,6 +47,23 @@ def test_format_evidence_text():
                           'was able to phosphorylate '
                           '<span class="badge badge-object">'
                           'Ras proteins</span>.'), ev['text']
+
+
+def test_source_url():
+    # Test getting URL from annotations
+    stmt = make_stmt()
+    url = src_url(stmt.evidence[0])
+    assert url == 'http://www.causalbionet.com/'
+
+    # Test getting from SOURCE_INFO
+    ev = Evidence(source_api='trrust')
+    url = src_url(ev)
+    assert url == SOURCE_INFO['trrust']['link']
+
+    # Test getting from source that needs reverse mapping
+    ev = Evidence(source_api='vhn')  # vhn => virhostnet
+    url = src_url(ev)
+    assert url == SOURCE_INFO['virhostnet']['link']
 
 
 def test_assembler():
