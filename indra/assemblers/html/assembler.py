@@ -630,6 +630,7 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
             [cur for cur in curations if cur['error_type'] in correct_tags])
         num_incorrect = num_curations - num_correct
         text_refs = {k.upper(): v for k, v in ev.text_refs.items()}
+        source_url = src_url(ev)
         ev_list.append({'source_api': source_api,
                         'pmid': ev.pmid,
                         'text_refs': text_refs,
@@ -639,7 +640,7 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
                         'num_curations': num_curations,
                         'num_correct': num_correct,
                         'num_incorrect': num_incorrect,
-                        'source_url': ev.annotations.get('source_url', '')
+                        'source_url': source_url
                         })
 
     return ev_list
