@@ -803,7 +803,7 @@ def update_lspci():
         if lspcid not in lspcid_names:
             continue
         row = [lspcid, lspcid_names[lspcid],
-               '|'.join(['%s:%s' % member for member in members])]
+               '|'.join(sorted(['%s:%s' % member for member in members]))]
         rows.append(row)
     write_unicode_csv(get_resource_path('lspci.tsv'), rows, delimiter='\t')
 

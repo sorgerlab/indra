@@ -5,7 +5,7 @@ from indra.config import get_config
 from ..ontology_graph import IndraOntology
 from indra.util import read_unicode_csv
 from indra.statements import modtype_conditions
-from indra.resources import get_resource_path, load_resource_json
+from indra.resources import get_resource_path
 from indra.statements.validate import assert_valid_db_refs
 
 
