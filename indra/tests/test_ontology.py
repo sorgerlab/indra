@@ -340,7 +340,7 @@ def test_ido_parents():
 
 def test_lspci():
     assert bio_ontology.get_name('LSPCI', '18') == 'Pentane-1,5-Diamine'
-    members = bio_ontology.get_children('LSPCI', 18)
+    members = bio_ontology.get_children('LSPCI', '18')
     # These are some of the members, not all
     expected_members = {('CAS', '462-94-2'),
                         ('CHEBI', 'CHEBI:18127'),
