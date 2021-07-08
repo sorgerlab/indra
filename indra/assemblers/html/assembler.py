@@ -739,14 +739,18 @@ def id_url(ag):
 
 def src_url(ev: Evidence) -> str:
     """Given an Evidence object, provide the URL for the source"""
-    # Get source url from evidence or from SOURCE_INFO as backup.
+    # Get source url from evidence or from SOURCE_INFO as backup if source
+    # is a database.
     # SOURCE_INFO contains the names as they are in INDRA,
     # while source_api is as the source name appear in the database
 
     url = ev.annotations.get('source_url')
     if not url:
         rev_src = reverse_source_mappings.get(ev.source_api, ev.source_api)
-        url = SOURCE_INFO.get(rev_src, {}).get('link', '')
+        if SOURCE_INFO.get(rev_src, {}).get('type', '') == 'database':
+            url = SOURCE_INFO[rev_src]['link']
+        else:
+            url = ''
     return url
 
 
