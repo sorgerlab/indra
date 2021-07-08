@@ -781,7 +781,7 @@ def update_lspci():
     tp = tas.process_from_web(affinity_class_limit=10)
     lspci_members = defaultdict(set)
     for stmt in tp.statements:
-        if 'LSPCI'not in stmt.subj.db_refs:
+        if 'LSPCI' not in stmt.subj.db_refs:
             continue
         for k, v in stmt.subj.db_refs.items():
             if k in {'TEXT', 'LSPCI'}:
@@ -790,22 +790,22 @@ def update_lspci():
 
     # We then process the names table in a way that we always prioritize the
     # first row for each LSPCI since the table is pre-sorted by priority
-    df = pandas.read_csv('lsp_compound_names.csv')
+    df = pandas.read_csv('lsp_compound_names.csv', dtype={'lspci_id': str})
     lspcid_names = {}
     for _, row in df.iterrows():
-        if str(row['lspci_id']) not in lspcid_names:
-            lspcid_names[str(row['lspci_id'])] = row['name']
+        if row['lspci_id'] not in lspcid_names:
+            lspcid_names[row['lspci_id']] = row['name']
 
     # We can now combine the two sources filtering to only entries that have
     # names
-    data = {}
+    rows = [['lspcid', 'name', 'members']]
     for lspcid, members in lspci_members.items():
         if lspcid not in lspcid_names:
             continue
-        data[lspcid] = {'members': sorted(list(members)),
-                        'name': lspcid_names[lspcid]}
-    with open(get_resource_path('lspci.json'), 'w') as fh:
-        json.dump(data, fh, indent=1)
+        row = [lspcid, lspcid_names[lspcid],
+               '|'.join(['%s:%s' % member for member in members])]
+        rows.append(row)
+    write_unicode_csv(get_resource_path('lspci.tsv'), rows, delimiter='\t')
 
 
 def main():

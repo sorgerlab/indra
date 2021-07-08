@@ -451,14 +451,18 @@ class BioOntology(IndraOntology):
         self.add_nodes_from(nodes)
 
     def add_lspci(self):
-        lspci = load_resource_json('lspci.json')
+        lspci = read_unicode_csv(get_resource_path('lspci.tsv'),
+                                 delimiter='\t')
         nodes_to_add = []
         edges_to_add = []
-        for lspcid, data in lspci.items():
+        next(lspci)
+        for (lspcid, name, members_str) in lspci:
             label = self.label('LSPCI', lspcid)
-            nodes_to_add.append((label, {'name': data['name']}))
-            edges_to_add += [(self.label(*mapping), label, {'type': 'isa'})
-                             for mapping in data['members']]
+            nodes_to_add.append((label, {'name': name}))
+            members = [member.split(':', maxsplit=1)
+                       for member in members_str.split('|')]
+            edges_to_add += [(self.label(*member), label, {'type': 'isa'})
+                             for member in members]
         self.add_nodes_from(nodes_to_add)
         self.add_edges_from(edges_to_add)
 
