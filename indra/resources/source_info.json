@@ -97,7 +97,7 @@
     },
     "tas": {
         "name": "Target Affinity Spectrum",
-        "link": "https://doi.org/10.1101/358978",
+        "link": "https://labsyspharm.shinyapps.io/smallmoleculesuite/",
         "type": "database",
         "domain": "biology"
     },
