@@ -219,6 +219,11 @@
         color: #FFFFFF;
     }
 
+    .badge-belief {
+        background-color: #ffc266;
+        color: #FFFFFF;
+    }
+
     .curation-row {
         overflow-y: hidden;
     }
@@ -251,6 +256,12 @@
       {% endfor %}
     {% endfor %}
   {% endif %}
+{%- endmacro %}
+
+{% macro belief_badge(belief_score) -%}
+  <small
+      class="badge badge-pill badge-belief"
+      title="Belief score for this statement">{{ belief_score }}</small>
 {%- endmacro %}
 
 {% block header_desc %}
@@ -372,6 +383,9 @@
                              {% if db_rest_url %}target="_blank"{% endif %}>
                             <small class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</small>
                           </a>
+                          {% if show_belief %}
+                            {{ belief_badge(stmt_info['belief']) }}
+                          {% endif %}
                         </h5>
                       </div>
                       <div class="col text-right nvp">
@@ -400,10 +414,19 @@
                                           &#10166;
                                       </a>
                                   </div>
-                                  <div class="col-9 nvm src-api"
-                                       title="{{ ev['source_api'] }}">
+                                {% if ev.get('source_url') %}
+                                  <a href="{{ ev['source_url'] }}" target="_blank"
+                                {% else %}
+                                  <div
+                                {% endif %}
+                                      class="col-9 nvm src-api"
+                                      title="{{ ev['source_api'] }}">
                                       {{ ev['source_api'] }}
+                                {% if ev.get('source_url') %}
+                                  </a>
+                                {% else %}
                                   </div>
+                                {% endif %}
                                 </div>
                               </div>
 

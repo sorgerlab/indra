@@ -2004,3 +2004,10 @@ def test_real_agent_list():
     agents = Phosphorylation(None, x).real_agent_list()
     assert len(agents) == 1
     assert agents[0] == x
+
+
+def test_make_generic_copy():
+    stmt = Activation(Agent('x'), Agent('y'))
+    stmt.belief = 0.55
+    new_stmt = stmt.make_generic_copy()
+    assert new_stmt.belief == 0.55

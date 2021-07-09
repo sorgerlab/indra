@@ -23,7 +23,7 @@ from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_relation_key, \
     reader_sources, db_sources, all_sources, get_available_source_counts, \
     get_available_ev_counts, standardize_counts, get_available_beliefs, \
-    StmtGroup, make_standard_stats
+    StmtGroup, make_standard_stats, reverse_source_mappings
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
@@ -371,6 +371,7 @@ class HtmlAssembler(object):
 
                 ret.append({'hash': str(key), 'english': english,
                             'evidence': ev_list,
+                            'belief': float('%.4f' % stmt.belief),  # => 0.1234
                             'evidence_count': evidence_count_str,
                             'source_count': src_counts})
             return ret, all_level_hashes
@@ -629,6 +630,7 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
             [cur for cur in curations if cur['error_type'] in correct_tags])
         num_incorrect = num_curations - num_correct
         text_refs = {k.upper(): v for k, v in ev.text_refs.items()}
+        source_url = src_url(ev)
         ev_list.append({'source_api': source_api,
                         'pmid': ev.pmid,
                         'text_refs': text_refs,
@@ -637,7 +639,8 @@ def _format_evidence_text(stmt, curation_dict=None, correct_tags=None):
                         'original_json': ev.to_json(),
                         'num_curations': num_curations,
                         'num_correct': num_correct,
-                        'num_incorrect': num_incorrect
+                        'num_incorrect': num_incorrect,
+                        'source_url': source_url
                         })
 
     return ev_list
@@ -732,6 +735,23 @@ def id_url(ag):
                 continue
             # Finally, we return a valid identifiers.org URL
             return get_identifiers_url(db_name, db_id)
+
+
+def src_url(ev: Evidence) -> str:
+    """Given an Evidence object, provide the URL for the source"""
+    # Get source url from evidence or from SOURCE_INFO as backup if source
+    # is a database.
+    # SOURCE_INFO contains the names as they are in INDRA,
+    # while source_api is as the source name appear in the database
+
+    url = ev.annotations.get('source_url')
+    if not url:
+        rev_src = reverse_source_mappings.get(ev.source_api, ev.source_api)
+        if SOURCE_INFO.get(rev_src, {}).get('type', '') == 'database':
+            url = SOURCE_INFO[rev_src]['link']
+        else:
+            url = ''
+    return url
 
 
 def tag_text(text, tag_info_list):

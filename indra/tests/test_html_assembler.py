@@ -2,7 +2,7 @@ import re
 from indra.statements import *
 from indra.assemblers.english import AgentWithCoordinates
 from indra.assemblers.html.assembler import HtmlAssembler, tag_text, loader, \
-    _format_evidence_text, tag_agents
+    _format_evidence_text, tag_agents, src_url, SOURCE_INFO
 from indra.util.statement_presentation import AveAggregator, StmtStat, StmtGroup
 
 
@@ -13,7 +13,8 @@ def make_stmt():
                        "phosphorylate Ras proteins.",
                   source_api='test', pmid='1234567',
                   annotations={'agents': {'raw_text': ['Src kinase',
-                                                       'Ras proteins']}})
+                                                       'Ras proteins']},
+                               'source_url': 'http://www.causalbionet.com/'})
     st = Phosphorylation(src, ras, 'tyrosine', '32', evidence=[ev])
     return st
 
@@ -24,7 +25,8 @@ def make_bad_stmt():
     ras = Agent('', db_refs={'FPLX': {'RAS', 'Ras'}, 'TEXT': 'RAS'})
     ev = Evidence(text="Ras is phosphorylated",
                   source_api='test', pmid='1234',
-                  annotations={'agents': {'raw_text': [None, None]}})  # no raw
+                  annotations={'agents': {'raw_text': [None, None]},  # no raw
+                               'source_url': ''})
     st = Phosphorylation(subj, ras, 'tyrosine', '32', evidence=[ev])
     return st
 
@@ -37,7 +39,7 @@ def test_format_evidence_text():
     assert isinstance(ev, dict)
     assert set(ev.keys()) == {'source_api', 'text_refs', 'text', 'source_hash',
                               'pmid', 'num_curations', 'num_correct',
-                              'num_incorrect', 'original_json'}
+                              'num_incorrect', 'original_json', 'source_url'}
     assert ev['source_api'] == 'test'
     assert ev['text_refs']['PMID'] == '1234567'
     assert ev['text'] == ('We noticed that the '
@@ -45,6 +47,23 @@ def test_format_evidence_text():
                           'was able to phosphorylate '
                           '<span class="badge badge-object">'
                           'Ras proteins</span>.'), ev['text']
+
+
+def test_source_url():
+    # Test getting URL from annotations
+    stmt = make_stmt()
+    url = src_url(stmt.evidence[0])
+    assert url == 'http://www.causalbionet.com/'
+
+    # Test getting from SOURCE_INFO
+    ev = Evidence(source_api='trrust')
+    url = src_url(ev)
+    assert url == SOURCE_INFO['trrust']['link']
+
+    # Test getting from source that needs reverse mapping
+    ev = Evidence(source_api='vhn')  # vhn => virhostnet
+    url = src_url(ev)
+    assert url == SOURCE_INFO['virhostnet']['link']
 
 
 def test_assembler():
@@ -68,6 +87,20 @@ def test_assembler():
     assert isinstance(result, str)
     result = ha.make_model(grouping_level='statement')
     assert isinstance(result, str)
+    # Test belief badges
+    result = ha.make_model(grouping_level='statement', show_belief=True)
+    assert isinstance(result, str)
+    assert '<small\n' \
+           '      class="badge badge-pill badge-belief"\n' \
+           '      title="Belief score for this statement">1.0</small>' in result
+    result = ha.make_model(grouping_level='statement', show_belief=False)
+    assert isinstance(result, str)
+    assert '<small\n' \
+           '      class="badge badge-pill badge-belief"\n' \
+           '      title="Belief score for this statement">1</small>' \
+           not in result
+    # Test if source URL exists
+    assert 'http://www.causalbionet.com/' in result
     # Make sure warning can be appended
     ha.append_warning('warning')
     assert ('\t<span style="color:red;">(CAUTION: warning occurred when '

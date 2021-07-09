@@ -594,7 +594,7 @@ class Statement(object):
     def make_generic_copy(self, deeply=False):
         """Make a new matching Statement with no provenance.
 
-        All agents and other attributes besides evidence, belief, supports, and
+        All agents and other attributes besides evidence, uuid, supports, and
         supported_by will be copied over, and a new uuid will be assigned.
         Thus, the new Statement will satisfy `new_stmt.matches(old_stmt)`.
 
@@ -606,9 +606,10 @@ class Statement(object):
             kwargs = deepcopy(self.__dict__)
         else:
             kwargs = self.__dict__.copy()
-        for attr in ['evidence', 'belief', 'uuid', 'supports', 'supported_by',
+        for attr in ['evidence', 'uuid', 'supports', 'supported_by',
                      'is_activation']:
             kwargs.pop(attr, None)
+        my_belief = kwargs.pop('belief', 1)
         my_hash = kwargs.pop('_full_hash', None)
         my_shallow_hash = kwargs.pop('_shallow_hash', None)
         for attr in self._agent_order:
@@ -618,6 +619,7 @@ class Statement(object):
         new_instance = self.__class__(**kwargs)
         new_instance._full_hash = my_hash
         new_instance._shallow_hash = my_shallow_hash
+        new_instance.belief = my_belief
         return new_instance
 
     def flip_polarity(self, agent_idx=None):
