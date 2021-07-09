@@ -92,7 +92,7 @@ def test_assembler():
     assert isinstance(result, str)
     assert '<small\n' \
            '      class="badge badge-pill badge-belief"\n' \
-           '      title="Belief score for this statement">1</small>' in result
+           '      title="Belief score for this statement">1.0</small>' in result
     result = ha.make_model(grouping_level='statement', show_belief=False)
     assert isinstance(result, str)
     assert '<small\n' \
