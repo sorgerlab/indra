@@ -264,6 +264,14 @@ class CountsScorer(SklearnScorer):
         Whether to include a feature for the total number of unique PMIDs
         supporting each statement. Cannot be used for statement passed in as a
         DataFrame.
+    use_promoter :
+        Whether to include a feature giving the fraction of evidence (0 to 1)
+        containing the (case-insensitive) word "promoter". Tends to improve
+        misclassification of Complex statements that actually refer to
+        protein-DNA binding.
+    use_avg_evidence_len :
+        Whether to include a feature giving the average evidence sentence
+        length (in space-separated tokens).
 
     Example
     -------
@@ -448,7 +456,6 @@ class CountsScorer(SklearnScorer):
         num_rows = len(stmts)
         x_arr = np.zeros((num_rows, num_cols))
         for stmt_ix, stmt in enumerate(stmts):
-            #stmt_ev = get_stmt_evidence(stmt, stmt_ix, extra_evidence)
             # Source from the stmt itself
             direct_sources = [ev.source_api for ev in stmt.evidence]
             dsrc_ctr = Counter(direct_sources)
