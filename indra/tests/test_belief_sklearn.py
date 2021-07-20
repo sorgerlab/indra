@@ -266,15 +266,24 @@ def test_use_members_with_stmts():
             'stmt matrix dimensions should match test stmts plus num_members'
 
 
-def setup_belief():
+def setup_belief(include_more_specific=False):
     # Make a model
     lr = LogisticRegression()
     # Get all the sources
     source_list = CountsScorer.get_all_sources(test_stmts_cur)
-    cs = CountsScorer(lr, source_list)
+    cs = CountsScorer(lr, source_list,
+                      include_more_specific=include_more_specific)
     # Train on curated stmt data
-    cs.fit(test_stmts_cur, y_arr_stmts_cur)
-    # Run predictions on test statements
+    if include_more_specific:
+        extra_evidence = [[ev for supp in stmt.supports
+                              for ev in supp.evidence]
+                          for stmt in test_stmts_cur]
+    else:
+        extra_evidence = None
+    # Fit with extra evidence, if any
+    cs.fit(test_stmts_cur, y_arr_stmts_cur, extra_evidence)
+    # Run predictions on test statements without extra evidence to get prior
+    # probs
     probs = cs.predict_proba(test_stmts_cur)[:, 1]
     # Now check if we get these same beliefs set on the statements when we
     # run with the belief engine:
@@ -331,7 +340,7 @@ def test_extra_evidence_content():
 
 def test_set_hierarchy_probs():
     # Get probs for a set of statements, and a belief engine instance
-    be, test_stmts_copy, prior_probs = setup_belief()
+    be, test_stmts_copy, prior_probs = setup_belief(include_more_specific=True)
     # Set beliefs on the flattened statements
     top_level = ac.filter_top_level(test_stmts_copy)
     be.set_hierarchy_probs(test_stmts_copy)
