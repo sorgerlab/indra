@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 from collections import Counter
-from typing import Union, Sequence, Optional, List
+from typing import Union, Sequence, Optional, List, Any
 from sklearn.base import BaseEstimator
 from indra.statements import Evidence, Statement, get_all_descendants
 from indra.belief import BeliefScorer, check_extra_evidence, \
@@ -426,12 +426,12 @@ class CountsScorer(SklearnScorer):
                         promoter_ct += 1
 
             indir_pmids = set()
-            if self.include_more_specific:
+            if self.include_more_specific and extra_evidence:
                 for ev in extra_evidence[ix]:
                     stmt_sources.add(ev.source_api)
                     indir_pmids.add(ev.pmid)
             # Collect non-source count features (e.g. type) from stmts
-            feature_row = []
+            feature_row: List[Any] = [] # Appease the Type Hint Gods
             # One-hot encoding of stmt type
             if self.use_stmt_type:
                 stmt_type_ix = self.stmt_type_map[type(stmt).__name__]
@@ -444,7 +444,7 @@ class CountsScorer(SklearnScorer):
             # Add field with number of unique PMIDs
             if self.use_num_pmids:
                 feature_row.append(len(dir_pmids))
-                if self.include_more_specific:
+                if self.include_more_specific and extra_evidence:
                     feature_row.append(len(indir_pmids))
             # Add a field specifying the percentage of evidences containing
             # the word "promoter":
@@ -481,7 +481,7 @@ class CountsScorer(SklearnScorer):
             for src_ix, src in enumerate(self.source_list):
                 x_arr[stmt_ix, src_ix] = dsrc_ctr.get(src, 0)
             # Get indirect evidences
-            if self.include_more_specific:
+            if self.include_more_specific and extra_evidence:
                 indirect_sources = [ev.source_api
                                     for ev in extra_evidence[stmt_ix]]
                 idsrc_ctr = Counter(indirect_sources)
@@ -607,7 +607,22 @@ class CountsScorer(SklearnScorer):
 
 
 class HybridScorer(BeliefScorer):
-    """TODO: Docstring"""
+    """Use CountsScorer for known sources, SimpleScorer priors for any others.
+
+    Allows the use of a CountsScorer to make belief predictions based on
+    sources seen in training data, while falling back to SimpleScorer
+    priors for any sources not accounted for by the CountsScorer.
+    Like the SimpleScorer, uses an independence assumption to combine
+    beliefs from the two scorers (i.e., `hybrid_bel = 1 - (1 - cs_bel) *
+    (1 - ss_bel)`).
+
+    Parameters
+    ----------
+    counts_scorer :
+        Instance of CountsScorer.
+    simple_scorer :
+        Instance of SimpleScorer.
+    """
     def __init__(
         self,
         counts_scorer: CountsScorer,
@@ -620,17 +635,34 @@ class HybridScorer(BeliefScorer):
         self,
         statements: Sequence[Statement],
     ) -> None:
-        """Empty implementation for now."""
-        # TODO Check that for a given list of statements, that all sources in
-        # the statements are either in the CountsScorer source_list, or in
-        # the prior dict from the SimpleScorer
-        pass
+        """Check that sources in the set of statements are accounted for."""
+        # Get all sources for the set of statements
+        sources = CountsScorer.get_all_sources(statements,
+                                               include_more_specific=True)
+        non_cs_sources = set(sources).difference(
+                                        set(self.counts_scorer.source_list))
+        return self.simple_scorer._check_sources(non_cs_sources)
 
     def score_statements(
         self,
         statements: Sequence[Statement],
         extra_evidence: Optional[List[List[Evidence]]] = None,
     ) -> Sequence[float]:
+        """
+        Parameters
+        ----------
+        statements :
+            INDRA Statements whose belief scores are to be calculated.
+        extra_evidence :
+            A list corresponding to the given list of statements, where
+            each entry is a list of Evidence objects providing additional
+            support for the corresponding statement (i.e., Evidences that
+            aren't already included in the Statement's own evidence list).
+
+        Returns
+        -------
+        The computed probabilities for each statement.
+        """
         # Get beliefs from the sklearn model, using the sources in the
         # CountScorer source_list as features
         skl_beliefs = self.counts_scorer.predict_proba(statements,
