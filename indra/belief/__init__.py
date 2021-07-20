@@ -4,7 +4,7 @@ import numpy
 import logging
 import networkx
 from os import path, pardir
-from typing import List, Optional, Dict, Callable, Tuple, Sequence
+from typing import List, Optional, Dict, Callable, Tuple, Sequence, Iterable
 from indra.mechlinker import LinkedStatement
 from indra.statements import Evidence, Statement
 
@@ -246,6 +246,13 @@ class SimpleScorer(BeliefScorer):
         sources = set()
         for stmt in statements:
             sources |= set([ev.source_api for ev in stmt.evidence])
+        return self._check_sources(sources)
+
+    def _check_sources(
+        self,
+        sources: Iterable[str],
+    ) -> None:
+        """Make sure all sources have entries for prior parameters."""
         for err_type in ('rand', 'syst'):
             for source in sources:
                 if source not in self.prior_probs[err_type]:

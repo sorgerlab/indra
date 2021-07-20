@@ -376,6 +376,8 @@ def test_hybrid_scorer():
     hprd_syst = ss.prior_probs['syst']['hprd']
     # Now instantiate a HybridScorer
     hs = HybridScorer(cs, ss)
+    # Check that sources are accounted for
+    hs.check_prior_probs(test_stmts_cur)
     # Score the statements with the HybridScorer
     hybrid_beliefs = hs.score_statements(test_stmts_cur)
     # Look at each statement and check that the belief is what's expected
