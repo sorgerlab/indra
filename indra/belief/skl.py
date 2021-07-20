@@ -285,7 +285,6 @@ class CountsScorer(SklearnScorer):
         use_stmt_type: bool = False,
         use_num_members: bool = False,
         use_num_pmids: bool = False,
-        use_top_level: bool = False,
         use_promoter: bool = False,
         use_avg_evidence_len: bool = False,
     ):
@@ -295,7 +294,6 @@ class CountsScorer(SklearnScorer):
         self.use_num_members = use_num_members
         self.source_list = source_list
         self.use_num_pmids = use_num_pmids
-        self.use_top_level = use_top_level
         self.use_promoter = use_promoter
         self.use_avg_evidence_len = use_avg_evidence_len
         # Build dictionary mapping INDRA Statement types to integers
@@ -421,10 +419,6 @@ class CountsScorer(SklearnScorer):
                 feature_row.append(len(dir_pmids))
                 if extra_evidence is not None:
                     feature_row.append(len(indir_pmids))
-            # Add field for whether stmt is top-level (i.e., no supports)
-            if self.use_top_level:
-                is_top_level = False if stmt.supports else True
-                feature_row.append(is_top_level)
             # Add a field specifying the percentage of evidences containing
             # the word "promoter":
             if self.use_promoter:
