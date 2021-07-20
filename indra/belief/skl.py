@@ -253,6 +253,14 @@ class CountsScorer(SklearnScorer):
     source_list :
         List of strings denoting the evidence sources (evidence.source_api
         values) to be used for prediction.
+    include_more_specific :
+        If True, will add extra columns to the statement data matrix for the
+        source counts drawn from more specific evidences; if use_num_pmids is
+        True, will also add an additional column for the number of PMIDs from
+        more specific evidences. If False, these columns will not be included
+        even if the `extra_evidence` argument is passed to the
+        `stmts_to_matrix` method. This is to ensure that the featurization of
+        statements is consistent between training and prediction.
     use_stmt_type :
         Whether to include statement type as a feature.
     use_num_members :
@@ -290,6 +298,7 @@ class CountsScorer(SklearnScorer):
         self,
         model: BaseEstimator,
         source_list: List[str],
+        include_more_specific: bool = False,
         use_stmt_type: bool = False,
         use_num_members: bool = False,
         use_num_pmids: bool = False,
@@ -298,9 +307,10 @@ class CountsScorer(SklearnScorer):
     ):
         # Call superclass constructor to store the model
         super(CountsScorer, self).__init__(model)
+        self.source_list = source_list
+        self.include_more_specific = include_more_specific
         self.use_stmt_type = use_stmt_type
         self.use_num_members = use_num_members
-        self.source_list = source_list
         self.use_num_pmids = use_num_pmids
         self.use_promoter = use_promoter
         self.use_avg_evidence_len = use_avg_evidence_len
@@ -361,8 +371,9 @@ class CountsScorer(SklearnScorer):
 
         * One column for every source listed in `self.source_list`, containing
           the number of statement evidences from that source. If
-          `extra_evidence` is provided, these are used in combination with the
-          Statement's own evidence in determining source counts.
+          `self.include_more_specific` is True and `extra_evidence` is
+          provided, these are used in combination with the Statement's own
+          evidence in determining source counts.
         * If `self.use_stmt_type` is set, statement type is included via
           one-hot encoding, with one column for each statement type.
         * If `self.use_num_members` is set, a column is added for the number
@@ -387,13 +398,21 @@ class CountsScorer(SklearnScorer):
         -------
         Feature matrix for the statement data.
         """
+        # Check arguments for including more specific evidences
+        if self.include_more_specific and extra_evidence is None:
+            logger.info("CountScorer is set to include_more_specific "
+                        "evidences but no extra_evidence was included.")
+            extra_evidence = [[] for stmt in stmts]
+        elif not self.include_more_specific and extra_evidence is not None:
+            logger.warning("extra_evidence was included but CountScorer "
+                           "instance is not set to include_more_specific "
+                           "evidences so extra_evidence will be ignored.")
         # Check our list of extra evidences
         check_extra_evidence(extra_evidence, len(stmts))
         # Add categorical features and collect source_apis
         cat_features = []
         stmt_sources = set()
         for ix, stmt in enumerate(stmts):
-            #stmt_ev = get_stmt_evidence(stmt, ix, extra_evidence)
             # Collect all source_apis from stmt evidences
             dir_pmids = set()
             promoter_ct = 0
@@ -407,7 +426,7 @@ class CountsScorer(SklearnScorer):
                         promoter_ct += 1
 
             indir_pmids = set()
-            if extra_evidence is not None:
+            if self.include_more_specific:
                 for ev in extra_evidence[ix]:
                     stmt_sources.add(ev.source_api)
                     indir_pmids.add(ev.pmid)
@@ -425,7 +444,7 @@ class CountsScorer(SklearnScorer):
             # Add field with number of unique PMIDs
             if self.use_num_pmids:
                 feature_row.append(len(dir_pmids))
-                if extra_evidence is not None:
+                if self.include_more_specific:
                     feature_row.append(len(indir_pmids))
             # Add a field specifying the percentage of evidences containing
             # the word "promoter":
@@ -462,7 +481,7 @@ class CountsScorer(SklearnScorer):
             for src_ix, src in enumerate(self.source_list):
                 x_arr[stmt_ix, src_ix] = dsrc_ctr.get(src, 0)
             # Get indirect evidences
-            if extra_evidence is not None:
+            if self.include_more_specific:
                 indirect_sources = [ev.source_api
                                     for ev in extra_evidence[stmt_ix]]
                 idsrc_ctr = Counter(indirect_sources)
@@ -586,9 +605,6 @@ class CountsScorer(SklearnScorer):
             x_arr = np.hstack((x_arr, cat_arr))
         return x_arr
 
-
-# TODO: Require CountsScorer arg to specify whether to add additional columns
-# for extra_evidence
 
 class HybridScorer(BeliefScorer):
     """TODO: Docstring"""
