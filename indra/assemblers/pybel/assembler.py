@@ -337,11 +337,14 @@ class PybelAssembler(object):
                 node = _get_agent_grounding(agent)
                 # TODO check for missing grounding?
                 pybel_list.append(node)
+        try:
+            rxn_node_data = reaction(
+                reactants=pybel_lists[0],
+                products=pybel_lists[1],
+            )
+        except:
+            return
 
-        rxn_node_data = reaction(
-            reactants=pybel_lists[0],
-            products=pybel_lists[1],
-        )
         self.model.add_node_from_data(rxn_node_data)
         obj_edge = None  # TODO: Any edge information possible here?
         # Add node for controller, if there is one
@@ -440,6 +443,7 @@ def _combine_edge_data(relation, subj_edge, obj_edge, stmt):
         pc.RELATION: relation,
         pc.ANNOTATIONS: _get_annotations_from_stmt(stmt),
     }
+
     if subj_edge:
         edge_data[pc.SUBJECT] = subj_edge
     if obj_edge:
@@ -461,6 +465,7 @@ def _update_edge_data_from_evidence(evidence, edge_data):
         pc.EVIDENCE: evidence,
     })
     edge_data_one[pc.ANNOTATIONS].update(annotations)
+
     return edge_data_one
 
 
@@ -653,6 +658,55 @@ def _get_evidence(evidence):
             annotations[key] = {v: True for v in value}
         else:
             annotations[key] = {value: True}
+
+    if evidence.context:
+
+        context_annotations = []
+
+        if evidence.context.location:
+            for key, value in evidence.context.location.db_refs.items():
+                context_annotations.append(('location', value))
+        if evidence.context.cell_line:
+            for key, value in evidence.context.cell_line.db_refs.items():
+                context_annotations.append(('cell_line', value))
+        if evidence.context.cell_type:
+            for key, value in evidence.context.cell_type.db_refs.items():
+                context_annotations.append(('cell_type', value))
+        if evidence.context.organ:
+            for key, value in evidence.context.organ.db_refs.items():
+                context_annotations.append(('organ', value))
+        if evidence.context.disease:
+            for key, value in evidence.context.disease.db_refs.items():
+                context_annotations.append(('disease', value))
+        if evidence.context.species:
+            for key, value in evidence.context.species.db_refs.items():
+                context_annotations.append(('species', value))
+
+        # Add the annotations
+        for key, value in context_annotations:
+            annotations[key] = {value: True}
+
+
+    if evidence.annotations:
+
+        # Add the annotations
+        for key, value in evidence.annotations.items():
+
+            # BLACKLIST or not value
+            if key in {
+                "agents", "raw_grounding", "bel", "prior_uuids", "provenance", "found_by", "text_refs",
+                "obj_polarity", "obj_adjectives", "ANNOTATOR", "obj_adjectives", "SEQUENCE",
+                "subj_context", "obj_context", ""
+            } or not value:
+                continue
+
+            if isinstance(value, (list, set, tuple)):
+                annotations[key] = {v: True for v in value}
+            elif isinstance(value, (dict)):
+                continue
+            else:
+                annotations[key] = {value: True}
+
     return citation, text, annotations
 
 
