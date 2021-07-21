@@ -660,49 +660,33 @@ def _get_evidence(evidence):
             annotations[key] = {value: True}
 
     if evidence.context:
-
         context_annotations = []
 
-        if evidence.context.location:
-            for key, value in evidence.context.location.db_refs.items():
-                context_annotations.append(('location', value))
-        if evidence.context.cell_line:
-            for key, value in evidence.context.cell_line.db_refs.items():
-                context_annotations.append(('cell_line', value))
-        if evidence.context.cell_type:
-            for key, value in evidence.context.cell_type.db_refs.items():
-                context_annotations.append(('cell_type', value))
-        if evidence.context.organ:
-            for key, value in evidence.context.organ.db_refs.items():
-                context_annotations.append(('organ', value))
-        if evidence.context.disease:
-            for key, value in evidence.context.disease.db_refs.items():
-                context_annotations.append(('disease', value))
-        if evidence.context.species:
-            for key, value in evidence.context.species.db_refs.items():
-                context_annotations.append(('species', value))
+        attrs = ['location', 'cell_line', 'cell_type', 'organ',
+                 'disease', 'species']
+        for attr_key in attrs:
+            attr_val = evidence.context.__dict__.get(attr_key)
+            if attr_val:
+                for key, value in attr_val.db_refs.items():
+                    context_annotations.append((attr_key, f'{key}:{value}'))
 
         # Add the annotations
         for key, value in context_annotations:
             annotations[key] = {value: True}
 
-
     if evidence.annotations:
-
+        ignore_keys = {"agents", "raw_grounding", "bel", "prior_uuids",
+                       "provenance", "found_by", "text_refs", "obj_polarity",
+                       "obj_adjectives", "ANNOTATOR", "obj_adjectives",
+                       "SEQUENCE", "subj_context", "obj_context", ""}
         # Add the annotations
         for key, value in evidence.annotations.items():
-
             # BLACKLIST or not value
-            if key in {
-                "agents", "raw_grounding", "bel", "prior_uuids", "provenance", "found_by", "text_refs",
-                "obj_polarity", "obj_adjectives", "ANNOTATOR", "obj_adjectives", "SEQUENCE",
-                "subj_context", "obj_context", ""
-            } or not value:
+            if key in ignore_keys or not value:
                 continue
-
             if isinstance(value, (list, set, tuple)):
                 annotations[key] = {v: True for v in value}
-            elif isinstance(value, (dict)):
+            elif isinstance(value, dict):
                 continue
             else:
                 annotations[key] = {value: True}
