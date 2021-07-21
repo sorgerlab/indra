@@ -54,7 +54,8 @@ class BeliefScorer(object):
 
         Returns
         -------
-        The computed prior probabilities for each statement.
+        :
+            The computed prior probabilities for each statement.
         """
         raise NotImplementedError('Need to subclass BeliefScorer and '
                                   'implement methods.')
@@ -145,7 +146,8 @@ class SimpleScorer(BeliefScorer):
 
         Returns
         -------
-        Belief value based on the evidences.
+        :
+            Belief value based on the evidences.
         """
         def _score(evidences):
             if not evidences:
@@ -217,7 +219,8 @@ class SimpleScorer(BeliefScorer):
 
         Returns
         -------
-        The computed prior probabilities for each statement.
+        :
+            The computed prior probabilities for each statement.
         """
         # Check our list of extra evidences
         check_extra_evidence(extra_evidence, len(statements))
@@ -455,8 +458,9 @@ class BeliefEngine(object):
 
         Returns
         -------
-        A dictionary mapping statement hashes to corresponding belief
-        scores. Hashes are calculated using the instance's `self.matches_fun`.
+        :
+            A dictionary mapping statement hashes to corresponding belief
+            scores. Hashes are calculated using the instance's `self.matches_fun`.
         """
         # We only re-build the refinements graph if one wasn't provided
         # as an argument
@@ -489,8 +493,9 @@ class BeliefEngine(object):
 
         Returns
         -------
-        A dictionary mapping statement hashes to corresponding belief
-        scores.
+        :
+            A dictionary mapping statement hashes to corresponding belief
+            scores.
         """
         if self.refinements_graph is None:
             raise ValueError("refinements_graph not initialized.")
@@ -562,10 +567,11 @@ def get_ev_for_stmts_from_supports(
 
     Returns
     -------
-    A list corresponding to the given list of statements, where each entry is a
-    list of Evidence objects providing additional support for the corresponding
-    statement (i.e., Evidences that aren't already included in the Statement's
-    own evidence list).
+    :
+        A list corresponding to the given list of statements, where each entry
+        is a list of Evidence objects providing additional support for the
+        corresponding statement (i.e., Evidences that aren't already included
+        in the Statement's own evidence list).
     """
     # If the refinements_graph was not given, build it for this set of
     # statements
@@ -620,10 +626,11 @@ def get_ev_for_stmts_from_hashes(
 
     Returns
     -------
-    A list corresponding to the given list of statements, where each entry is a
-    list of Evidence objects providing additional support for the corresponding
-    statement (i.e., Evidences that aren't already included in the Statement's
-    own evidence list).
+    :
+        A list corresponding to the given list of statements, where each entry
+        is a list of Evidence objects providing additional support for the
+        corresponding statement (i.e., Evidences that aren't already included
+        in the Statement's own evidence list).
     """
     all_extra_evs = []
     for stmt, refiners in zip(statements, refiners_list):
@@ -661,8 +668,9 @@ def sample_statements(
 
     Returns
     -------
-    A list of INDRA Statements that were chosen by random sampling
-    according to their respective belief scores.
+    :
+        A list of INDRA Statements that were chosen by random sampling
+        according to their respective belief scores.
     """
     if seed:
         numpy.random.seed(seed)
@@ -715,8 +723,9 @@ def tag_evidence_subtype(
 
     Returns
     -------
-    A tuple with (type, subtype), both strings. Returns (type, None) if the
-    type of statement is not yet handled in this function.
+    :
+        A tuple with (type, subtype), both strings. Returns (type, None) if the
+        type of statement is not yet handled in this function.
     """
     source_api = evidence.source_api
     annotations = evidence.annotations
@@ -761,10 +770,11 @@ def build_refinements_graph(
 
     Returns
     -------
-    A networkx graph whose nodes are statement hashes carrying a stmt attribute
-    with the actual statement object. Edges point from less detailed to more
-    detailed statements (i.e., from a statement to another statement that
-    refines it).
+    :
+        A networkx graph whose nodes are statement hashes carrying a stmt
+        attribute with the actual statement object. Edges point from less
+        detailed to more detailed statements (i.e., from a statement to another
+        statement that refines it).
     """
     logger.debug('Building refinements graph')
     g = networkx.DiGraph()

@@ -98,7 +98,8 @@ class SklearnScorer(BeliefScorer):
 
         Returns
         -------
-        Feature matrix for the statement data.
+        :
+            Feature matrix for the statement data.
         """
         # If we got a Numpy array, just use it!
         if isinstance(stmt_data, np.ndarray):
@@ -345,7 +346,8 @@ class CountsScorer(SklearnScorer):
 
         Returns
         -------
-        A list of (unique) source_apis found in the set of statements.
+        :
+            A list of (unique) source_apis found in the set of statements.
         """
         stmt_sources = set([ev.source_api for s in stmts for ev in s.evidence])
         if include_more_specific:
@@ -396,7 +398,8 @@ class CountsScorer(SklearnScorer):
 
         Returns
         -------
-        Feature matrix for the statement data.
+        :
+            Feature matrix for the statement data.
         """
         # Check arguments for including more specific evidences
         if self.include_more_specific and extra_evidence is None:
@@ -526,7 +529,8 @@ class CountsScorer(SklearnScorer):
 
         Returns
         -------
-        Feature matrix for the statement data.
+        :
+            Feature matrix for the statement data.
         """
         required_cols = {'stmt_type'}
         # Currently, statement DataFrames are not expected to contain
@@ -661,7 +665,8 @@ class HybridScorer(BeliefScorer):
 
         Returns
         -------
-        The computed probabilities for each statement.
+        :
+            The computed probabilities for each statement.
         """
         # Get beliefs from the sklearn model, using the sources in the
         # CountScorer source_list as features
