@@ -68,6 +68,7 @@ jobs:
         wget -nv https://bigmech.s3.amazonaws.com/travis/reach-82631d-biores-e9ee36.jar
         # Get INDRA Bioontology
         BIOONTOLOGY_VERSION=$(python -m indra.ontology.bio version)
+        echo $BIOONTOLOGY_VERSION
         mkdir -p $HOME/.indra/bio_ontology/$BIOONTOLOGY_VERSION
         wget -nv https://bigmech.s3.amazonaws.com/travis/bio_ontology/$BIOONTOLOGY_VERSION/mock_ontology.pkl -O $HOME/.indra/bio_ontology/$BIOONTOLOGY_VERSION/bio_ontology.pkl
     - name: Run unit tests
