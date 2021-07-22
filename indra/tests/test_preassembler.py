@@ -7,7 +7,8 @@ from indra.sources import reach
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
 try:
-    from indra_world.ontology import world_ontology
+    from indra_world.ontology import load_world_ontology
+    world_ontology = load_world_ontology(default_type='flat')
     has_indra_world = True
 except ImportError:
     has_indra_world = False
