@@ -2,15 +2,15 @@ import random
 import pickle
 import numpy as np
 from copy import copy
-from collections import defaultdict
 from os.path import join, abspath, dirname
+from collections import defaultdict, Counter
 from nose.tools import raises
 from sklearn.linear_model import LogisticRegression
 from indra.sources import signor
-from indra.belief import BeliefEngine
+from indra.belief import BeliefEngine, default_scorer
 from indra.tools import assemble_corpus as ac
 from indra.statements import Evidence
-from indra.belief.skl import CountsScorer
+from indra.belief.skl import CountsScorer, HybridScorer
 
 
 # A set of test statements derived from SIGNOR only
@@ -266,15 +266,24 @@ def test_use_members_with_stmts():
             'stmt matrix dimensions should match test stmts plus num_members'
 
 
-def setup_belief():
+def setup_belief(include_more_specific=False):
     # Make a model
     lr = LogisticRegression()
     # Get all the sources
     source_list = CountsScorer.get_all_sources(test_stmts_cur)
-    cs = CountsScorer(lr, source_list)
+    cs = CountsScorer(lr, source_list,
+                      include_more_specific=include_more_specific)
     # Train on curated stmt data
-    cs.fit(test_stmts_cur, y_arr_stmts_cur)
-    # Run predictions on test statements
+    if include_more_specific:
+        extra_evidence = [[ev for supp in stmt.supports
+                              for ev in supp.evidence]
+                          for stmt in test_stmts_cur]
+    else:
+        extra_evidence = None
+    # Fit with extra evidence, if any
+    cs.fit(test_stmts_cur, y_arr_stmts_cur, extra_evidence)
+    # Run predictions on test statements without extra evidence to get prior
+    # probs
     probs = cs.predict_proba(test_stmts_cur)[:, 1]
     # Now check if we get these same beliefs set on the statements when we
     # run with the belief engine:
@@ -331,7 +340,7 @@ def test_extra_evidence_content():
 
 def test_set_hierarchy_probs():
     # Get probs for a set of statements, and a belief engine instance
-    be, test_stmts_copy, prior_probs = setup_belief()
+    be, test_stmts_copy, prior_probs = setup_belief(include_more_specific=True)
     # Set beliefs on the flattened statements
     top_level = ac.filter_top_level(test_stmts_copy)
     be.set_hierarchy_probs(test_stmts_copy)
@@ -343,3 +352,54 @@ def test_set_hierarchy_probs():
         # We expect the belief to change if including more evidence
         else:
             assert stmt.belief != prior_prob
+
+
+def test_hybrid_scorer():
+    # First instantiate and train the SimpleScorer on readers
+    # Make a model
+    lr = LogisticRegression()
+    # Get all the sources
+    source_list = CountsScorer.get_all_sources(test_stmts_cur)
+    # The sources for this sample (test_stmts_cur) include only: trips,
+    # sparser, medscan, hprd, and reach. Of these, we'll set aside hprd to be
+    # scored by the simplescorer and the other to be scored by the CountsScorer
+    skl_sources = ['trips', 'sparser', 'medscan', 'reach']
+    cs = CountsScorer(lr, skl_sources)
+    # Train on curated stmt data
+    cs.fit(test_stmts_cur, y_arr_stmts_cur)
+    # Run predictions on test statements for later comparison
+    cs_beliefs = cs.predict_proba(test_stmts_cur)[:, 1]
+    # Next, get the default SimpleScorer:
+    ss = default_scorer
+    # Let's check the prior probability associated with HPRD
+    hprd_rand = ss.prior_probs['rand']['hprd']
+    hprd_syst = ss.prior_probs['syst']['hprd']
+    # Now instantiate a HybridScorer
+    hs = HybridScorer(cs, ss)
+    # Check that sources are accounted for
+    hs.check_prior_probs(test_stmts_cur)
+    # Score the statements with the HybridScorer
+    hybrid_beliefs = hs.score_statements(test_stmts_cur)
+    # Look at each statement and check that the belief is what's expected
+    # based on the skl-predicted belief and the HPRD evidence from the
+    # simple scorer
+    expected_beliefs = []
+    for ix, stmt in enumerate(test_stmts_cur):
+        # Check the sources
+        stmt_sources = Counter([ev.source_api for ev in stmt.evidence])
+        # If statement has no HPRD evidence, we expect the belief to be
+        # the same as the skl-predicted belief
+        if 'hprd' not in stmt_sources:
+            expected_beliefs.append(cs_beliefs[ix])
+        # Otherwise, calculate belief incorporating HPRD evidences
+        else:
+            # How many HPRD evidences?
+            hprd_count = stmt_sources['hprd']
+            print("hprd_count", hprd_count)
+            hprd_belief = 1 - (hprd_syst + hprd_rand ** hprd_count)
+            expected_beliefs.append(1 - (1 - cs_beliefs[ix]) *
+                                        (1 - hprd_belief))
+            print(expected_beliefs[ix], hybrid_beliefs[ix])
+
+    assert np.allclose(hybrid_beliefs, expected_beliefs)
+

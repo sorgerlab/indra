@@ -4,7 +4,7 @@ import numpy
 import logging
 import networkx
 from os import path, pardir
-from typing import List, Optional, Dict, Callable, Tuple, Sequence
+from typing import List, Optional, Dict, Callable, Tuple, Sequence, Iterable
 from indra.mechlinker import LinkedStatement
 from indra.statements import Evidence, Statement
 
@@ -54,7 +54,8 @@ class BeliefScorer(object):
 
         Returns
         -------
-        The computed prior probabilities for each statement.
+        :
+            The computed prior probabilities for each statement.
         """
         raise NotImplementedError('Need to subclass BeliefScorer and '
                                   'implement methods.')
@@ -145,7 +146,8 @@ class SimpleScorer(BeliefScorer):
 
         Returns
         -------
-        Belief value based on the evidences.
+        :
+            Belief value based on the evidences.
         """
         def _score(evidences):
             if not evidences:
@@ -217,7 +219,8 @@ class SimpleScorer(BeliefScorer):
 
         Returns
         -------
-        The computed prior probabilities for each statement.
+        :
+            The computed prior probabilities for each statement.
         """
         # Check our list of extra evidences
         check_extra_evidence(extra_evidence, len(statements))
@@ -246,6 +249,13 @@ class SimpleScorer(BeliefScorer):
         sources = set()
         for stmt in statements:
             sources |= set([ev.source_api for ev in stmt.evidence])
+        return self._check_sources(sources)
+
+    def _check_sources(
+        self,
+        sources: Iterable[str],
+    ) -> None:
+        """Make sure all sources have entries for prior parameters."""
         for err_type in ('rand', 'syst'):
             for source in sources:
                 if source not in self.prior_probs[err_type]:
@@ -409,50 +419,6 @@ class BeliefEngine(object):
         for ix, st in enumerate(statements):
             st.belief = prior_probs[ix]
 
-    def get_refinement_probs(
-        self,
-        statements: Sequence[Statement],
-        refiners_list: List[List[int]],
-    ) -> Dict[int, float]:
-        """Return the full belief of a statement given its refiners.
-
-        Parameters
-        ----------
-        statements :
-            Statements to calculate beliefs for.
-        refiners_list :
-            A list corresponding to the list of statements, where each entry
-            is a list of statement hashes for the statements that are
-            refinements (i.e., more specific versions) of the corresponding
-            statement in the statements list. If there are no refiner
-            statements the entry should be an empty list.
-
-        Returns
-        -------
-        A dictionary mapping statement hashes to corresponding belief
-        scores.
-        """
-        if self.refinements_graph is None:
-            raise ValueError("refinements_graph not initialized.")
-        all_extra_evs = []
-        for stmt, refiners in zip(statements, refiners_list):
-            # Collect evidence from all refiners while excluding any negated
-            # evidence. Negated evidence for a more specific statement
-            # isn't currently considered as counting against the believability
-            # of a more general statement.
-            extra_ev_for_stmt = list(set(
-                ev
-                for supp in refiners
-                for ev in self.refinements_graph.nodes[supp]['stmt'].evidence
-                if not ev.epistemics.get('negated')
-            ))
-            # Add the extra evidences for the statement to the full list
-            all_extra_evs.append(extra_ev_for_stmt)
-        beliefs = self.scorer.score_statements(statements, all_extra_evs)
-        hashes = [s.get_hash(self.matches_fun) for s in statements]
-        beliefs_by_hash = dict(zip(hashes, beliefs))
-        return beliefs_by_hash
-
     def set_hierarchy_probs(
         self,
         statements: Sequence[Statement],
@@ -474,33 +440,83 @@ class BeliefEngine(object):
         """
         beliefs = self.get_hierarchy_probs(statements)
         for stmt in statements:
-            sh = stmt.get_hash(self.matches_fun)
+            sh = stmt.get_hash(matches_fun=self.matches_fun)
             stmt.belief = beliefs[sh]
 
     def get_hierarchy_probs(
         self,
         statements: Sequence[Statement],
     ) -> Dict[int, float]:
+        """Gets hierarchical belief probabilities for INDRA Statements.
+
+        Parameters
+        ----------
+        statements :
+            A list of INDRA Statements whose belief scores are to
+            be calculated. Each Statement object's belief attribute is updated
+            by this function.
+
+        Returns
+        -------
+        :
+            A dictionary mapping statement hashes to corresponding belief
+            scores. Hashes are calculated using the instance's `self.matches_fun`.
+        """
         # We only re-build the refinements graph if one wasn't provided
         # as an argument
         if self.refinements_graph is None:
             # Build the graph for the given set of statements
             self.refinements_graph = build_refinements_graph(statements,
                                                    matches_fun=self.matches_fun)
-            assert_no_cycle(self.refinements_graph)
-        logger.debug('Start belief calculation over refinements graph')
-        # Collect corresponding lists of refiners for the statements
-        refiners_list = []
-        for stmt in statements:
-            stmt_hash = stmt.get_hash(self.matches_fun)
-            # Get the refiners/more specific stmts, if any (the edges in the
-            # graph point from general to specific):
-            refiners = list(networkx.descendants(self.refinements_graph,
-                                                 stmt_hash))
-            refiners_list.append(refiners)
-        # Get and return a dictionary mapping stmt hashes to belief values
-        beliefs_by_hash = self.get_refinement_probs(statements, refiners_list)
-        logger.debug('Finished belief calculation over refinements graph')
+        # Get the evidences from the more specific (supports) statements
+        all_extra_evs = get_ev_for_stmts_from_supports(statements,
+                                                   self.refinements_graph)
+        return self._hierarchy_probs_from_evidences(statements, all_extra_evs)
+
+    def get_hierarchy_probs_from_hashes(
+        self,
+        statements: Sequence[Statement],
+        refiners_list: List[List[int]],
+    ) -> Dict[int, float]:
+        """Return the full belief of a statement with refiners given as hashes.
+
+        Parameters
+        ----------
+        statements :
+            Statements to calculate beliefs for.
+        refiners_list :
+            A list corresponding to the list of statements, where each entry
+            is a list of statement hashes for the statements that are
+            refinements (i.e., more specific versions) of the corresponding
+            statement in the statements list. If there are no refiner
+            statements the entry should be an empty list.
+
+        Returns
+        -------
+        :
+            A dictionary mapping statement hashes to corresponding belief
+            scores.
+        """
+        if self.refinements_graph is None:
+            raise ValueError("refinements_graph not initialized.")
+        # Get the evidences from the more specific (supports) statements
+        all_extra_evs = get_ev_for_stmts_from_hashes(statements,
+                                                     refiners_list,
+                                                     self.refinements_graph)
+        # Return beliefs using all the evidences
+        return self._hierarchy_probs_from_evidences(statements, all_extra_evs)
+
+    def _hierarchy_probs_from_evidences(
+        self,
+        statements: Sequence[Statement],
+        extra_evidences: List[List[Evidence]],
+    ) -> Dict[int, float]:
+        """Use the Scorer to get stmt beliefs with supports evidences."""
+        # Get the list of beliefs matching the statements we passed in
+        beliefs = self.scorer.score_statements(statements, extra_evidences)
+        # Convert to a dict of beliefs keyed by hash and return
+        hashes = [s.get_hash(matches_fun=self.matches_fun) for s in statements]
+        beliefs_by_hash = dict(zip(hashes, beliefs))
         return beliefs_by_hash
 
     def set_linked_probs(
@@ -525,6 +541,114 @@ class BeliefEngine(object):
             st.inferred_stmt.belief = numpy.prod(source_probs)
 
 
+def get_ev_for_stmts_from_supports(
+    statements: Sequence[Statement],
+    refinements_graph: Optional[networkx.DiGraph] = None,
+    matches_fun: Optional[Callable[[Statement], str]] = None,
+) -> List[List[Evidence]]:
+    """
+    Collect evidence from the more specific statements of a list of statements.
+
+    Parameters
+    ----------
+    statements :
+        A list of Statements with `supports` Statements.
+    refinements_graph :
+        A networkx graph whose nodes are statement hashes carrying a stmt
+        attribute with the actual statement object. Edges point from less
+        detailed to more detailed statements (i.e., from a statement to another
+        statement that refines it). If not provided, the graph is generated
+        from `statements` using the function
+        :py:func:`build_refinements_graph`.
+    matches_fun :
+        An optional function to calculate the matches key and hash of a
+        given statement. If not provided, the default matches function is
+        used. Default: None.
+
+    Returns
+    -------
+    :
+        A list corresponding to the given list of statements, where each entry
+        is a list of Evidence objects providing additional support for the
+        corresponding statement (i.e., Evidences that aren't already included
+        in the Statement's own evidence list).
+    """
+    # If the refinements_graph was not given, build it for this set of
+    # statements
+    if refinements_graph is None:
+        # Build the graph for the given set of statements
+        refinements_graph = build_refinements_graph(statements,
+                                                    matches_fun=matches_fun)
+    assert_no_cycle(refinements_graph)
+    # Use graph to collect corresponding lists of refiners for the statements
+    refiners_list = []
+    for stmt in statements:
+        stmt_hash = stmt.get_hash(matches_fun=matches_fun)
+        # Get the refiners/more specific stmts, if any (the edges in the
+        # graph point from general to specific):
+        refiners = list(networkx.descendants(refinements_graph, stmt_hash))
+        refiners_list.append(refiners)
+    # Use the refiners hashes to get the evidences
+    return get_ev_for_stmts_from_hashes(statements, refiners_list,
+                                        refinements_graph)
+
+
+def get_ev_for_stmts_from_hashes(
+    statements: Sequence[Statement],
+    refiners_list: List[List[int]],
+    refinements_graph: networkx.DiGraph,
+) -> List[List[Evidence]]:
+    """
+    Collect evidence from the more specific statements of a list of statements.
+
+    Similar to :py:func:`get_ev_for_stmts_from_supports`, but the more specific
+    statements are specified explicitly by the hashes in `refiners_list` rather
+    than obtained from the `supports` attribute of each statement. In addition,
+    the `refinements_graph` argument is expected to have been pre-calculated
+    (using the same matches key function used to generate the hashes in
+    `refiners_list`) and hence is not optional.
+
+    Parameters
+    ----------
+    statements :
+        A list of Statements with `supports` Statements.
+    refiners_list :
+        A list corresponding to the list of statements, where each entry
+        is a list of statement hashes for the statements that are
+        refinements (i.e., more specific versions) of the corresponding
+        statement in the statements list. If there are no refiner
+        statements for a statement the entry should be an empty list.
+    refinements_graph :
+        A networkx graph whose nodes are statement hashes carrying a stmt
+        attribute with the actual statement object. Edges point from less
+        detailed to more detailed statements (i.e., from a statement to another
+        statement that refines it).
+
+    Returns
+    -------
+    :
+        A list corresponding to the given list of statements, where each entry
+        is a list of Evidence objects providing additional support for the
+        corresponding statement (i.e., Evidences that aren't already included
+        in the Statement's own evidence list).
+    """
+    all_extra_evs = []
+    for stmt, refiners in zip(statements, refiners_list):
+        # Collect evidence from all refiners while excluding any negated
+        # evidence. Negated evidence for a more specific statement
+        # isn't currently considered as counting against the believability
+        # of a more general statement.
+        extra_ev_for_stmt = list(set(
+            ev
+            for supp in refiners
+            for ev in refinements_graph.nodes[supp]['stmt'].evidence
+            if not ev.epistemics.get('negated')
+        ))
+        # Add the extra evidences for the statement to the full list
+        all_extra_evs.append(extra_ev_for_stmt)
+    return all_extra_evs
+
+
 def sample_statements(
     stmts: Sequence[Statement],
     seed: Optional[int] = None,
@@ -544,8 +668,9 @@ def sample_statements(
 
     Returns
     -------
-    A list of INDRA Statements that were chosen by random sampling
-    according to their respective belief scores.
+    :
+        A list of INDRA Statements that were chosen by random sampling
+        according to their respective belief scores.
     """
     if seed:
         numpy.random.seed(seed)
@@ -598,8 +723,9 @@ def tag_evidence_subtype(
 
     Returns
     -------
-    A tuple with (type, subtype), both strings. Returns (type, None) if the
-    type of statement is not yet handled in this function.
+    :
+        A tuple with (type, subtype), both strings. Returns (type, None) if the
+        type of statement is not yet handled in this function.
     """
     source_api = evidence.source_api
     annotations = evidence.annotations
@@ -635,23 +761,25 @@ def build_refinements_graph(
 
     Parameters
     ----------
-    stmts_by_hash :
-        A dict of statements keyed by their hashes.
+    statements :
+        A list of Statements with `supports` Statements, used to generate the
+        refinements graph.
     matches_fun :
         An optional function to calculate the matches key and hash of a
         given statement. Default: None
 
     Returns
     -------
-    A networkx graph whose nodes are statement hashes carrying a stmt attribute
-    with the actual statement object. Edges point from less detailed to more
-    detailed statements (i.e., from a statement to another statement that
-    refines it).
+    :
+        A networkx graph whose nodes are statement hashes carrying a stmt
+        attribute with the actual statement object. Edges point from less
+        detailed to more detailed statements (i.e., from a statement to another
+        statement that refines it).
     """
     logger.debug('Building refinements graph')
     g = networkx.DiGraph()
     for st1 in statements:
-        sh1 = st1.get_hash(matches_fun)
+        sh1 = st1.get_hash(matches_fun=matches_fun)
         g.add_node(sh1, stmt=st1)
         for st2 in st1.supports:
             sh2 = st2.get_hash(matches_fun=matches_fun)
