@@ -64,7 +64,7 @@ class BioOntology(IndraOntology):
         self.add_drugbank_nodes()
         # Add xrefs
         logger.info('Adding xrefs...')
-        self.add_hgnc_uniprot_xrefs()
+        self.add_hgnc_uniprot_entrez_xrefs()
         self.add_hgnc_entrez_xrefs()
         self.add_famplex_xrefs()
         self.add_chemical_xrefs()
@@ -138,8 +138,8 @@ class BioOntology(IndraOntology):
                  for uid, egid in uniprot_client.um.uniprot_entrez.items()]
         edges += [(self.label('EGID', egid), self.label('UP', uid),
                   {'type': 'xref', 'source': 'uniprot'})
-                  for uid, egid in uniprot_client.um.entrez_uniprot.items()]
-        self.add_nodes_from(edges)
+                  for egid, uid in uniprot_client.um.entrez_uniprot.items()]
+        self.add_edges_from(edges)
 
     def add_hgnc_entrez_xrefs(self):
         from indra.databases import hgnc_client
