@@ -351,6 +351,5 @@ def test_lspci():
 
 def test_nonhuman_entrez():
     name, db_refs = standardize_name_db_refs({'EGID': '109880'})
-    assert name == 'BRAF', name
-    assert db_refs['HGNC'] == '', db_refs
-    assert db_refs['UP'] == '', db_refs
+    assert name == 'Braf', name
+    assert db_refs['UP'] == 'P28028', db_refs
