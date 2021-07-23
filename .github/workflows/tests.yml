@@ -68,6 +68,7 @@ jobs:
         wget -nv https://bigmech.s3.amazonaws.com/travis/reach-82631d-biores-e9ee36.jar
         # Get INDRA Bioontology
         BIOONTOLOGY_VERSION=$(python -m indra.ontology.bio version)
+        echo $BIOONTOLOGY_VERSION
         mkdir -p $HOME/.indra/bio_ontology/$BIOONTOLOGY_VERSION
         wget -nv https://bigmech.s3.amazonaws.com/travis/bio_ontology/$BIOONTOLOGY_VERSION/mock_ontology.pkl -O $HOME/.indra/bio_ontology/$BIOONTOLOGY_VERSION/bio_ontology.pkl
     - name: Run unit tests
@@ -97,7 +98,8 @@ jobs:
         echo $NOSEATTR
         #- cd $TRAVIS_BUILD_DIR
         # Now run all INDRA tests
-        nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
+        nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --exclude='.*test_reach.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
+        nosetests -v -a $NOSEATTR indra/tests/test_reach.py
         # TEES tests
         #- python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
         #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
