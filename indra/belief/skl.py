@@ -471,10 +471,10 @@ class CountsScorer(SklearnScorer):
                              "in the statement data.")
         # Get source count features
         # If we have extra_evidence, we double the source count features
-        if extra_evidence is None:
-            num_cols = len(self.source_list)
-        else:
+        if self.include_more_specific: 
             num_cols = len(self.source_list) * 2
+        else:
+            num_cols = len(self.source_list)
         num_rows = len(stmts)
         x_arr = np.zeros((num_rows, num_cols))
         for stmt_ix, stmt in enumerate(stmts):

@@ -354,6 +354,19 @@ def test_set_hierarchy_probs():
             assert stmt.belief != prior_prob
 
 
+def test_set_hierarchy_probs_specific_false():
+    # Get probs for a set of statements, and a belief engine instance
+    be, test_stmts_copy, prior_probs = setup_belief(include_more_specific=False)
+    # Set beliefs on the flattened statements
+    top_level = ac.filter_top_level(test_stmts_copy)
+    be.set_hierarchy_probs(test_stmts_copy)
+    # Compare hierarchy probs to prior probs
+    for stmt, prior_prob in zip(test_stmts_copy, prior_probs):
+        # Because we haven't included any supports, the beliefs should
+        # not have changed
+        assert stmt.belief == prior_prob
+
+
 def test_hybrid_scorer():
     # First instantiate and train the SimpleScorer on readers
     # Make a model
@@ -402,4 +415,3 @@ def test_hybrid_scorer():
             print(expected_beliefs[ix], hybrid_beliefs[ix])
 
     assert np.allclose(hybrid_beliefs, expected_beliefs)
-
