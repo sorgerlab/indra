@@ -509,11 +509,11 @@ class BeliefEngine(object):
     def _hierarchy_probs_from_evidences(
         self,
         statements: Sequence[Statement],
-        extra_evidences: List[List[Evidence]],
+        extra_evidence: List[List[Evidence]],
     ) -> Dict[int, float]:
         """Use the Scorer to get stmt beliefs with supports evidences."""
         # Get the list of beliefs matching the statements we passed in
-        beliefs = self.scorer.score_statements(statements, extra_evidences)
+        beliefs = self.scorer.score_statements(statements, extra_evidence)
         # Convert to a dict of beliefs keyed by hash and return
         hashes = [s.get_hash(matches_fun=self.matches_fun) for s in statements]
         beliefs_by_hash = dict(zip(hashes, beliefs))
