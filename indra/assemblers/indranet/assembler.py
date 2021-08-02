@@ -1,7 +1,11 @@
 import logging
+import networkx as nx
 import pandas as pd
-from .net import IndraNet
+from .net import IndraNet, default_sign_dict
 from indra.statements import *
+from indra.tools import assemble_corpus as ac
+from indra.preassembler.custom_preassembly import agent_name_stmt_matches, \
+    agent_name_polarity_matches
 from itertools import permutations
 from collections import OrderedDict, defaultdict
 
@@ -280,6 +284,98 @@ class IndraNetAssembler():
         df = pd.DataFrame.from_dict(rows)
         df = df.where((pd.notnull(df)), None)
         return df
+
+    def make_model_from_stmts(self, exclude_stmts=None, complex_members=3,
+                              graph_type='multi_graph', sign_dict=None,
+                              belief_scorer=None, weight_flattening=None,
+                              extra_columns=None):
+        """Assemble an IndraNet graph object.
+
+        Parameters
+        ----------
+        exclude_stmts : list[str]
+            A list of statement type names to not include in the graph.
+        complex_members : int
+            Maximum allowed size of a complex to be included in the graph.
+            All complexes larger than complex_members will be rejected. For
+            accepted complexes, all permutations of their members will be added
+            as edges. Default is `3`.
+        graph_type : str
+            Specify the type of graph to assemble. Chose from 'multi_graph'
+            (default), 'digraph', 'signed'. Default is `multi_graph`.
+        sign_dict : dict
+            A dictionary mapping a Statement type to a sign to be used for
+            the edge. This parameter is only used with the 'signed' option.
+            See IndraNet.to_signed_graph for more info.
+        belief_scorer : Optional[indra.belief.BeliefScorer]
+            Instance of BeliefScorer class to use in calculating edge
+            probabilities. If None is provided (default), then the default
+            scorer is used.
+        weight_flattening : function(networkx.DiGraph)
+            A function taking at least the graph G as an argument and
+            returning G after adding edge weights as an edge attribute to the
+            flattened edges using the reserved keyword 'weight'.
+
+            Example:
+
+            >>> def weight_flattening(G):
+            ...     # Sets the flattened weight to the average of the
+            ...     # inverse source count
+            ...     for edge in G.edges:
+            ...         w = [1/s['evidence_count']
+            ...             for s in G.edges[edge]['statements']]
+            ...         G.edges[edge]['weight'] = sum(w)/len(w)
+            ...     return G
+
+        Returns
+        -------
+        model : IndraNet
+            IndraNet graph object.
+        """
+        # Filter out statements with one agent or with None subject
+        stmts = [stmt for stmt in self.statements if len(
+            [ag for ag in stmt.agent_list() if ag is not None]) > 1]
+        if graph_type == 'signed':
+            graph_stmts = ac.filter_by_type(stmts, RegulateActivity) + \
+                ac.filter_by_type(stmts, RegulateAmount)
+            graph_stmts = ac.run_preassembly(
+                graph_stmts, return_toplevel=False,
+                matches_fun=agent_name_polarity_matches)
+            G = nx.MultiDiGraph()
+        elif graph_type in ['unsigned', 'multi_graph']:
+            complex_stmts = ac.filter_by_type(stmts, Complex)
+            conv_stmts = ac.filter_by_type(stmts, Conversion)
+            graph_stmts = [stmt for stmt in stmts if stmt not in complex_stmts
+                           and stmt not in conv_stmts]
+            for stmt in complex_stmts:
+                agents = [ag for ag in stmt.agent_list() if ag is not None]
+                if len(agents) > complex_members:
+                    continue
+                for a, b in permutations(agents, 2):
+                    graph_stmts.append(IncreaseAmount(a, b, stmt.evidence))
+            for stmt in conv_stmts:
+                for obj in stmt.obj_from:
+                    graph_stmts.append(DecreaseAmount(stmt.subj, obj))
+                for obj in stmt.obj_to:
+                    graph_stmts.append(IncreaseAmount(stmt.subj, obj))
+            if graph_type == 'unsigned':
+                graph_stmts = ac.run_preassembly(
+                    graph_stmts, return_toplevel=False,
+                    matches_fun=agent_name_stmt_matches)
+                G = nx.DiGraph()
+            else:
+                G = nx.MultiGraph()
+        for stmt in graph_stmts:
+            agents = stmt.agent_list()
+            for ag in agents:
+                ag_ns, ag_id = get_ag_ns_id(ag)
+                G.add_node(ag.name, ns=ag_ns, id=ag_id)
+            if graph_type == 'signed':
+                sign = default_sign_dict[type(stmt).__name__]
+                G.add_edge(agents[0].name, agents[1].name, sign)
+            else:
+                G.add_edge(agents[0].name, agents[1].name)
+        return G
 
 
 def _get_source_counts(stmt):
