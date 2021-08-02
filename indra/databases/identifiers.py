@@ -363,4 +363,11 @@ def ensure_chembl_prefix(chembl_id):
     return ensure_prefix('CHEMBL', chembl_id, with_colon=False)
 
 
-identifiers_registry = load_resource_json('identifiers_patterns.json')
+def _load_identifiers_registry():
+    identifiers_registry = load_resource_json('identifiers_patterns.json')
+    # Override pattern otherwise patterns like 1.1 can't be used
+    identifiers_registry['ec-code']['pattern'] = '^\\d{1,2}(\\.\\d{0,3}){0,3}$'
+    return identifiers_registry
+
+
+identifiers_registry = _load_identifiers_registry()

@@ -1,7 +1,8 @@
+import re
 from indra.databases.identifiers import get_identifiers_url, \
     parse_identifiers_url, get_ns_from_identifiers,\
     get_ns_id_from_identifiers, get_identifiers_ns, namespace_embedded, \
-    ensure_prefix_if_needed
+    ensure_prefix_if_needed, identifiers_registry
 
 
 def test_map_ns():
@@ -189,3 +190,7 @@ def test_ensure_prefix_if_needed():
     assert ensure_prefix_if_needed('GO', '00004') == 'GO:00004'
     assert ensure_prefix_if_needed('EFO', '1234') == '1234'
     assert ensure_prefix_if_needed('XXXX', '1234') == '1234'
+
+
+def test_eccode_override():
+    assert re.match(identifiers_registry['ec-code']['pattern'], '1')
