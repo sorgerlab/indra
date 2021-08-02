@@ -37,3 +37,24 @@ def agent_name_stmt_type_matches(stmt):
     agents = [agent_name_matches(a) for a in stmt.agent_list()]
     key = str((stmt.__class__.__name__, agents))
     return key
+
+
+@register_pipeline
+def agent_name_stmt_matches(stmt):
+    """Return the normalized agent names."""
+    agents = [agent_name_matches(a) for a in stmt.agent_list()]
+    key = str(agents)
+    return key
+
+
+@register_pipeline
+def agent_name_polarity_matches(stmt):
+    """Return a key for normalized agent names and polarity."""
+    default_sign_dict = {'Activation': 0,
+                         'Inhibition': 1,
+                         'IncreaseAmount': 0,
+                         'DecreaseAmount': 1}
+    agents = [agent_name_matches(a) for a in stmt.agent_list()]
+    pol = default_sign_dict[type(stmt).__name__]
+    key = str((agents, pol))
+    return key
