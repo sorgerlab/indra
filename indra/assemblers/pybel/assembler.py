@@ -335,15 +335,12 @@ class PybelAssembler(object):
                             zip(pybel_lists, (stmt.obj_from, stmt.obj_to)):
             for agent in agent_list:
                 node = _get_agent_grounding(agent)
-                # TODO check for missing grounding?
-                pybel_list.append(node)
-        try:
-            rxn_node_data = reaction(
-                reactants=pybel_lists[0],
-                products=pybel_lists[1],
-            )
-        except:
-            return
+                if node is not None:
+                    pybel_list.append(node)
+        rxn_node_data = reaction(
+            reactants=pybel_lists[0],
+            products=pybel_lists[1],
+        )
 
         self.model.add_node_from_data(rxn_node_data)
         obj_edge = None  # TODO: Any edge information possible here?
