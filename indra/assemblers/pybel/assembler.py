@@ -65,6 +65,9 @@ class PybelAssembler(object):
         Copyright information for the network.
     disclaimer : str
         Any disclaimers for the network.
+    annotations_to_include : Optional[list[str]]
+        A list of evidence annotation keys that should be added to the
+        assembled PyBEL graph. Default: None
 
     Examples
     --------
@@ -83,7 +86,7 @@ class PybelAssembler(object):
     """
     def __init__(self, stmts=None, name=None, description=None, version=None,
                  authors=None, contact=None, license=None, copyright=None,
-                 disclaimer=None):
+                 disclaimer=None, annotations_to_include=None):
         if stmts is None:
             self.statements = []
         else:
@@ -123,6 +126,7 @@ class PybelAssembler(object):
         }
         self.model.namespace_url.update(ns_dict)
         self.model.namespace_pattern['PUBCHEM'] = '\d+'
+        self.annotations_to_include = annotations_to_include
 
     def add_statements(self, stmts_to_add):
         self.statements += stmts_to_add
@@ -249,6 +253,7 @@ class PybelAssembler(object):
             subj_edge=subj_edge,
             obj_edge=obj_edge,
             stmt=stmt,
+            annotations_to_include=self.annotations_to_include,
         )
         for edge_data in edge_data_list:
             self.model.add_edge(subj_data, obj_data, **edge_data)
@@ -353,6 +358,7 @@ class PybelAssembler(object):
                 subj_edge=subj_edge,
                 obj_edge=obj_edge,
                 stmt=stmt,
+                annotations_to_include=self.annotations_to_include,
             )
             for edge_data in edge_data_list:
                 self.model.add_edge(subj_attr, rxn_node_data, **edge_data)
@@ -435,7 +441,8 @@ def belgraph_to_signed_graph(
     return graph
 
 
-def _combine_edge_data(relation, subj_edge, obj_edge, stmt):
+def _combine_edge_data(relation, subj_edge, obj_edge, stmt,
+                       annotations_to_include=None):
     edge_data = {
         pc.RELATION: relation,
         pc.ANNOTATIONS: _get_annotations_from_stmt(stmt),
@@ -449,14 +456,17 @@ def _combine_edge_data(relation, subj_edge, obj_edge, stmt):
         return [edge_data]
 
     return [
-        _update_edge_data_from_evidence(evidence, edge_data)
+        _update_edge_data_from_evidence(evidence, edge_data,
+            annotations_to_include=annotations_to_include)
         for evidence in stmt.evidence
     ]
 
 
-def _update_edge_data_from_evidence(evidence, edge_data):
+def _update_edge_data_from_evidence(evidence, edge_data,
+                                    annotations_to_include=None):
     edge_data_one = copy(edge_data)
-    citation, evidence, annotations = _get_evidence(evidence)
+    citation, evidence, annotations = \
+        _get_evidence(evidence, annotations_to_include=annotations_to_include)
     edge_data_one.update({
         pc.CITATION: citation,
         pc.EVIDENCE: evidence,
@@ -621,7 +631,7 @@ def _get_agent_activity(agent):
     return activity(**_indra_pybel_act_map[ac.activity_type])
 
 
-def _get_evidence(evidence):
+def _get_evidence(evidence, annotations_to_include=None):
     text = evidence.text if evidence.text else 'No evidence text.'
 
     # If there is a PMID, use it as the citation
@@ -671,22 +681,24 @@ def _get_evidence(evidence):
         for key, value in context_annotations:
             annotations[key] = {value: True}
 
-    if evidence.annotations:
-        ignore_keys = {"agents", "raw_grounding", "bel", "prior_uuids",
-                       "provenance", "found_by", "text_refs", "obj_polarity",
-                       "obj_adjectives", "ANNOTATOR", "obj_adjectives",
-                       "SEQUENCE", "subj_context", "obj_context", ""}
+    if annotations_to_include and evidence.annotations:
         # Add the annotations
-        for key, value in evidence.annotations.items():
-            # BLACKLIST or not value
-            if key in ignore_keys or not value:
+        for annotation_key in annotations_to_include:
+            value = evidence.annotations.get(annotation_key)
+            # Skip if not in annotations or value is None
+            if not value:
                 continue
+            # For simple lists, sets, tuples, we add all the elements
+            # as annotations
             if isinstance(value, (list, set, tuple)):
-                annotations[key] = {v: True for v in value}
+                annotations[annotation_key] = {v: True for v in value}
+            # We don't handle dicts and skip them
             elif isinstance(value, dict):
                 continue
+            # Otherwise, the value is a simple type like str and we use
+            # it directly
             else:
-                annotations[key] = {value: True}
+                annotations[annotation_key] = {value: True}
 
     return citation, text, annotations
 
