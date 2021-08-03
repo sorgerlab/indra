@@ -338,11 +338,13 @@ class IndraNetAssembler():
         if graph_type == 'signed':
             graph_stmts = ac.filter_by_type(stmts, RegulateActivity) + \
                 ac.filter_by_type(stmts, RegulateAmount)
+            graph_stmts = _store_edge_data(graph_stmts, extra_columns)
             graph_stmts = ac.run_preassembly(
                 graph_stmts, return_toplevel=False,
                 matches_fun=agent_name_polarity_matches)
             G = nx.MultiDiGraph()
         elif graph_type in ['unsigned', 'multi_graph']:
+            stmts = _store_edge_data(stmts, extra_columns)
             complex_stmts = ac.filter_by_type(stmts, Complex)
             conv_stmts = ac.filter_by_type(stmts, Conversion)
             graph_stmts = [stmt for stmt in stmts if stmt not in complex_stmts
@@ -355,9 +357,11 @@ class IndraNetAssembler():
                     graph_stmts.append(IncreaseAmount(a, b, stmt.evidence))
             for stmt in conv_stmts:
                 for obj in stmt.obj_from:
-                    graph_stmts.append(DecreaseAmount(stmt.subj, obj))
+                    graph_stmts.append(
+                        DecreaseAmount(stmt.subj, obj, stmt.evidence))
                 for obj in stmt.obj_to:
-                    graph_stmts.append(IncreaseAmount(stmt.subj, obj))
+                    graph_stmts.append(
+                        IncreaseAmount(stmt.subj, obj, stmt.evidence))
             if graph_type == 'unsigned':
                 graph_stmts = ac.run_preassembly(
                     graph_stmts, return_toplevel=False,
@@ -370,11 +374,19 @@ class IndraNetAssembler():
             for ag in agents:
                 ag_ns, ag_id = get_ag_ns_id(ag)
                 G.add_node(ag.name, ns=ag_ns, id=ag_id)
+            unique_stmts = {}
+            for evid in stmt.evidence:
+                edge_data = evid.annotations['indranet_edge']
+                if edge_data['stmt_hash'] not in unique_stmts:
+                    unique_stmts[edge_data['stmt_hash']] = edge_data
+            statement_data = list(unique_stmts.values())
             if graph_type == 'signed':
                 sign = default_sign_dict[type(stmt).__name__]
-                G.add_edge(agents[0].name, agents[1].name, sign)
+                G.add_edge(agents[0].name, agents[1].name, sign,
+                           statements=statement_data)
             else:
-                G.add_edge(agents[0].name, agents[1].name)
+                G.add_edge(agents[0].name, agents[1].name,
+                           statements=statement_data)
         return G
 
 
@@ -383,3 +395,31 @@ def _get_source_counts(stmt):
     for ev in stmt.evidence:
         source_counts[ev.source_api] += 1
     return dict(source_counts)
+
+
+def _store_edge_data(stmts, extra_columns=None):
+    for stmt in stmts:
+        stmt_type = type(stmt).__name__
+        try:
+            res = stmt.residue
+        except AttributeError:
+            res = None
+        try:
+            pos = stmt.position
+        except AttributeError:
+            pos = None
+        edge_data = {
+            'residue': res,
+            'position': pos,
+            'stmt_type': stmt_type,
+            'evidence_count': len(stmt.evidence),
+            'stmt_hash': stmt.get_hash(refresh=True),
+            'belief': stmt.belief,
+            'source_counts': _get_source_counts(stmt)
+        }
+        if extra_columns:
+            for col_name, func in extra_columns:
+                edge_data[col_name] = func(stmt)
+        for evid in stmt.evidence:
+            evid.annotations['indranet_edge'] = edge_data
+    return stmts
