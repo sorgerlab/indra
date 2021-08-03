@@ -655,3 +655,35 @@ def test_belgraph_to_signed_graph():
     assert 'belief' in edge_dict
     assert isinstance(edge_dict['belief'], (float, int))
     assert stmt.belief == edge_dict['belief']
+
+
+def test_context_and_annotations():
+    braf_no_act = Agent('BRAF', db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
+    ev = Evidence(source_api='reach',
+                  annotations={'string_val': 'x',
+                               'int_val': 5,
+                               'dict_val': {'x': 5},
+                               'list_val': ['a', 'b']},
+                  context=BioContext(
+                      cell_type=RefContext('HCC366',
+                                           db_refs={'EFO': '0003131'})))
+    stmt = Activation(braf_no_act, mek, evidence=[ev])
+
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    _, _, data = list(belgraph.edges(data=True))[0]
+    assert data['annotations']['cell_type'] == {'EFO:0003131': True}
+    assert 'string_val' not in data['annotations']
+
+    pba = pa.PybelAssembler([stmt], annotations_to_include=['string_val',
+                                                            'int_val',
+                                                            'dict_val',
+                                                            'list_val'])
+    belgraph = pba.make_model()
+    _, _, data = list(belgraph.edges(data=True))[0]
+    assert data['annotations']['cell_type'] == {'EFO:0003131': True}
+    assert data['annotations']['string_val'] == {'x': True}
+    assert data['annotations']['int_val'] == {5: True}
+    assert 'dict_val' not in data['annotations']
+    assert data['annotations']['list_val'] == {'a': True, 'b': True}

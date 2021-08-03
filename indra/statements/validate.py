@@ -332,7 +332,9 @@ def assert_valid_text_refs(text_refs):
 
     for ns, pattern in text_ref_patterns.items():
         if ns in text_refs:
-            if not re.match(pattern, text_refs[ns]):
+            if text_refs[ns] is None:
+                raise InvalidTextRefs(f'{ns}:{text_refs[ns]}')
+            elif not re.match(pattern, text_refs[ns]):
                 raise InvalidTextRefs(f'{ns}:{text_refs[ns]}')
 
 
