@@ -8,7 +8,9 @@ try:
 except ImportError:
     # Python 3
     import pickle
+
 import logging
+from typing import List
 from collections import defaultdict
 from copy import deepcopy, copy
 from indra.statements import *
@@ -2207,12 +2209,40 @@ def filter_inconsequential(
 
 
 @register_pipeline
-def fix_invalidities(stmts, print_report_before=False,
-                     print_report_after=False):
+def fix_invalidities(stmts: List[Statement],
+                     in_place: bool = False,
+                     print_report_before: bool = False,
+                     print_report_after: bool = False) -> List[Statement]:
+    """Fix invalidities in a list of statements.
+
+    Parameters
+    ----------
+    stmts :
+        A list of statements to fix invalidities in
+    in_place :
+        If True, the statement objects are changed in place if an invalidity
+        is fixed. Otherwise, a deepcopy is done before running fixes.
+    print_report_before :
+        Run and print a validation report on the statements before running
+        fixing.
+    print_report_after :
+        Run and print a validation report on the statements after running
+        fixing to check if any issues remain that weren't handled by the
+        fixing module.
+
+    Returns
+    -------
+    :
+        The list of statements with validation issues fixed and some
+        invalid statements filtered out.
+    """
     logger.info('Fixing invalidities in %d statements' % len(stmts))
     if print_report_before:
         logger.info('Any invalidities detected before fixing are printed below')
         print_validation_report(stmts)
+    if not in_place:
+        logger.info('Making deepcopy of statements')
+        stmts = deepcopy(stmts)
     stmts_out = indra.tools.fix_invalidities.fix_invalidities(stmts)
     if print_report_after:
         logger.info('Any remaining detected invalidities are printed below')
