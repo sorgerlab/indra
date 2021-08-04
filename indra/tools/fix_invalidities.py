@@ -57,9 +57,9 @@ def fix_invalidities_evidence(ev: Evidence):
             ev.text_refs.pop(k)
             ev.text_refs[k.upper()] = v
 
-    if ev.pmid and not re.match(r'^\d+$', ev.pmid):
+    if ev.pmid and not re.match(text_ref_patterns['PMID'], ev.pmid):
         ev.pmid = None
-    if ev.text_refs.get('PMID') and not re.match(r'^\d+$',
+    if ev.text_refs.get('PMID') and not re.match(text_ref_patterns['PMID'],
                                                  ev.text_refs['PMID']):
         ev.text_refs.pop('PMID', None)
 
@@ -71,6 +71,9 @@ def fix_invalidities_evidence(ev: Evidence):
     if 'DOI' in ev.text_refs and not re.match(text_ref_patterns['DOI'],
                                               ev.text_refs['DOI']):
         ev.text_refs.pop('DOI', None)
+    if 'PMC' in ev.text_refs and not re.match(text_ref_patterns['PMC'],
+                                              ev.text_refs['PMC']):
+        ev.text_refs.pop('PMC', None)
 
     if ev.context is not None:
         fix_invalidities_context(ev.context)
@@ -121,12 +124,14 @@ def fix_invalidities_db_refs(db_refs: Mapping[str, str]) -> Mapping[str, str]:
             db_refs.pop('TAXONOMY', None)
         elif k == 'LINCS' and re.match(r'\d+-\d+', v):
             db_refs['HMS-LINCS'] = db_refs.pop('LINCS')
-        elif k == 'CVCL' and re.match(r'^\d+$', v):
+        elif k == 'CVCL' and re.match(r'^[A-Z0-9]{4}$', v):
             db_refs['CVCL'] = 'CVCL_%s' % v
         elif k == 'CO':
             db_refs['CL'] = 'CL:%s' % db_refs.pop('CO')
         elif k == 'FPLX' and '-' in v:
             db_refs['FPLX'] = v.replace('-', '_')
+        elif k == 'DRUGBANK' and v.startswith('DBSALT'):
+            db_refs['DRUGBANK.SALT'] = db_refs.pop('DRUGBANK')
         else:
             new_val = ensure_prefix_if_needed(k, v)
             db_refs[k] = new_val
