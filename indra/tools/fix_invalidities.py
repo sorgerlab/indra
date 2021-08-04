@@ -1,6 +1,10 @@
+__all__ = ['fix_invalidities', 'fix_invalidities_db_refs',
+           'fix_invalidities_agent', 'fix_invalidities_context',
+           'fix_invalidities_stmt', 'fix_invalidities_evidence']
+
 import re
 import copy
-from typing import List
+from typing import List, Mapping
 from indra.databases.identifiers import ensure_prefix_if_needed
 from indra.statements import Evidence, Statement, Agent, BioContext, \
     Translocation
@@ -9,6 +13,22 @@ from indra.pipeline import register_pipeline
 
 @register_pipeline
 def fix_invalidities(stmts: List[Statement]) -> List[Statement]:
+    """Fix invalidities in a list of Statements.
+
+    Note that in some cases statements can be filtered out if there is a known
+    issue to which there is no fix, e.g., a Translocation statements
+    missing both location parameters.
+
+    Parameters
+    ----------
+    stmts :
+        A list of INDRA Statements.
+
+    Returns
+    -------
+    :
+        The list of statements with invalidities fixed.
+    """
     new_stmts = []
     for stmt in stmts:
         if isinstance(stmt, Translocation) and not stmt.from_location and \
@@ -20,6 +40,7 @@ def fix_invalidities(stmts: List[Statement]) -> List[Statement]:
 
 
 def fix_invalidities_stmt(stmt: Statement):
+    """Fix invalidities of a single INDRA Statement in place."""
     for ev in stmt.evidence:
         fix_invalidities_evidence(ev)
     for agent in stmt.real_agent_list():
@@ -27,6 +48,7 @@ def fix_invalidities_stmt(stmt: Statement):
 
 
 def fix_invalidities_evidence(ev: Evidence):
+    """Fix invalidities of a single INDRA Evidence in place."""
     for k, v in copy.deepcopy(ev.text_refs).items():
         if v is None:
             ev.text_refs.pop(k, None)
@@ -50,10 +72,12 @@ def fix_invalidities_evidence(ev: Evidence):
 
 
 def fix_invalidities_agent(agent: Agent):
+    """Fix invalidities of a single INDRA Agent in place."""
     agent.db_refs = fix_invalidities_db_refs(agent.db_refs)
 
 
-def fix_invalidities_db_refs(db_refs):
+def fix_invalidities_db_refs(db_refs: Mapping[str, str]) -> Mapping[str, str]:
+    """Return a fixed version of a db_refs grounding dict."""
     if 'PUBCHEM' in db_refs and \
             db_refs['PUBCHEM'].startswith('CID'):
         db_refs['PUBCHEM'] = \
@@ -84,6 +108,7 @@ def fix_invalidities_db_refs(db_refs):
 
 
 def fix_invalidities_context(context: BioContext):
+    """Fix invalidities of a single INDRA BioContext in place."""
     entries = [context.species, context.cell_line, context.disease,
                context.cell_type, context.organ, context.location]
     for entry in entries:
