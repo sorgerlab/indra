@@ -20,6 +20,8 @@ from indra.databases import hgnc_client
 from indra.ontology.bio import bio_ontology
 from indra.preassembler import Preassembler, flatten_evidence
 from indra.resources import get_resource_path
+from indra.statements.validate import print_validation_report
+import indra.tools.fix_invalidities
 
 
 logger = logging.getLogger(__name__)
@@ -2202,3 +2204,18 @@ def filter_inconsequential(
             break
         num_stmts = len(stmts)
     return stmts
+
+
+@register_pipeline
+def fix_invalidities(stmts, print_report_before=False,
+                     print_report_after=False):
+    logger.info('Fixing invalidities in %d statements' % len(stmts))
+    if print_report_before:
+        logger.info('Any invalidities detected before fixing are printed below')
+        print_validation_report(stmts)
+    stmts_out = indra.tools.fix_invalidities.fix_invalidities(stmts)
+    if print_report_after:
+        logger.info('Any remaining detected invalidities are printed below')
+        print_validation_report(stmts_out)
+    logger.info('%d statements after validity fixing' % len(stmts_out))
+    return stmts_out

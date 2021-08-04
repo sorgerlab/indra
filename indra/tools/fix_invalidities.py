@@ -10,10 +10,8 @@ from indra.databases.identifiers import ensure_prefix_if_needed, \
 from indra.statements.validate import text_ref_patterns
 from indra.statements import Evidence, Statement, Agent, BioContext, \
     Translocation
-from indra.pipeline import register_pipeline
 
 
-@register_pipeline
 def fix_invalidities(stmts: List[Statement]) -> List[Statement]:
     """Fix invalidities in a list of Statements.
 

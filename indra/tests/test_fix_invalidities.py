@@ -1,5 +1,6 @@
 from indra.statements import Agent, Evidence, Translocation, Phosphorylation
 from indra.tools.fix_invalidities import *
+import indra.tools.assemble_corpus as ac
 
 
 def test_fix_db_refs():
@@ -32,6 +33,11 @@ def test_fix_stmts():
     stmts = [Translocation(Agent('x'), to_location=None, from_location=None),
              Phosphorylation(Agent('a', db_refs={'TEXT': None,
                                                  'FPLX': 'ERK'}), Agent('b'))]
-    stmts = fix_invalidities(stmts)
-    assert len(stmts) == 1
-    assert stmts[0].enz.db_refs == {'FPLX': 'ERK'}
+    stmts_out = fix_invalidities(stmts)
+    assert len(stmts_out) == 1
+    assert stmts_out[0].enz.db_refs == {'FPLX': 'ERK'}
+
+    stmts_out = ac.fix_invalidities(stmts)
+
+    assert len(stmts_out) == 1
+    assert stmts_out[0].enz.db_refs == {'FPLX': 'ERK'}
