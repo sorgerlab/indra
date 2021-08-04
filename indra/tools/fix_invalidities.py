@@ -6,6 +6,7 @@ import re
 import copy
 from typing import List, Mapping
 from indra.databases.identifiers import ensure_prefix_if_needed
+from indra.statements.validate import text_ref_patterns
 from indra.statements import Evidence, Statement, Agent, BioContext, \
     Translocation
 from indra.pipeline import register_pipeline
@@ -67,6 +68,10 @@ def fix_invalidities_evidence(ev: Evidence):
     elif ev.text_refs.get('PMID') is None and ev.pmid is not None:
         ev.text_refs['PMID'] = ev.pmid
 
+    if 'DOI' in ev.text_refs and not re.match(text_ref_patterns['DOI'],
+                                              ev.text_refs['DOI']):
+        ev.text_refs.pop('DOI', None)
+
     if ev.context is not None:
         fix_invalidities_context(ev.context)
 
@@ -106,6 +111,8 @@ def fix_invalidities_db_refs(db_refs: Mapping[str, str]) -> Mapping[str, str]:
             # Sometimes we have two IDs separated by a comma
             if ',' in v:
                 db_refs['UP'] = v.split(',')[0]
+            if v.startswith('SL-'):
+                db_refs['UPLOC'] = db_refs.pop('UP')
         elif k == 'UAZ':
             db_refs.pop('UAZ')
             if v.startswith('CVCL'):
@@ -118,6 +125,8 @@ def fix_invalidities_db_refs(db_refs: Mapping[str, str]) -> Mapping[str, str]:
             db_refs['CVCL'] = 'CVCL_%s' % v
         elif k == 'CO':
             db_refs['CL'] = 'CL:%s' % db_refs.pop('CO')
+        elif k == 'FPLX' and '-' in v:
+            db_refs['FPLX'] = v.replace('-', '_')
         else:
             new_val = ensure_prefix_if_needed(k, v)
             db_refs[k] = new_val
