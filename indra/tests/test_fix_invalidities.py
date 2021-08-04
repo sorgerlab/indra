@@ -15,6 +15,10 @@ def test_fix_db_refs():
            {'UP': 'P12345'}
     assert fix_invalidities_db_refs({'UNIPROT': 'SL-123'}) == \
            {'UPLOC': 'SL-123'}
+    assert fix_invalidities_db_refs({'MGI': 'Mgi:Abcd1'}) == \
+           {}
+    assert fix_invalidities_db_refs({'RGD': 'Abcd1'}) == \
+           {}
 
 
 def test_fix_evidence():

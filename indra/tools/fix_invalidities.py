@@ -5,7 +5,8 @@ __all__ = ['fix_invalidities', 'fix_invalidities_db_refs',
 import re
 import copy
 from typing import List, Mapping
-from indra.databases.identifiers import ensure_prefix_if_needed
+from indra.databases.identifiers import ensure_prefix_if_needed, \
+    identifiers_registry
 from indra.statements.validate import text_ref_patterns
 from indra.statements import Evidence, Statement, Agent, BioContext, \
     Translocation
@@ -132,6 +133,15 @@ def fix_invalidities_db_refs(db_refs: Mapping[str, str]) -> Mapping[str, str]:
             db_refs['FPLX'] = v.replace('-', '_')
         elif k == 'DRUGBANK' and v.startswith('DBSALT'):
             db_refs['DRUGBANK.SALT'] = db_refs.pop('DRUGBANK')
+        # For MGI and RGD some sources added names as IDs that are invalid
+        # and not easily fixable without reverse lookups so we rather
+        # remove these.
+        elif k == 'MGI' and not re.match(
+                identifiers_registry['mgi']['pattern'], v):
+            db_refs.pop('MGI', None)
+        elif k == 'RGD' and not re.match(
+                identifiers_registry['rgd']['pattern'], v):
+            db_refs.pop('RGD', None)
         else:
             new_val = ensure_prefix_if_needed(k, v)
             db_refs[k] = new_val
