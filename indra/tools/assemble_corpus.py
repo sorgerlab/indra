@@ -2212,7 +2212,8 @@ def filter_inconsequential(
 def fix_invalidities(stmts: List[Statement],
                      in_place: bool = False,
                      print_report_before: bool = False,
-                     print_report_after: bool = False) -> List[Statement]:
+                     print_report_after: bool = False,
+                     prior_hash_annots: bool = False) -> List[Statement]:
     """Fix invalidities in a list of statements.
 
     Parameters
@@ -2229,6 +2230,13 @@ def fix_invalidities(stmts: List[Statement],
         Run and print a validation report on the statements after running
         fixing to check if any issues remain that weren't handled by the
         fixing module.
+    prior_hash_annots :
+        If True, an annotation is added to each evidence of a statement
+        with the hash of the statement prior to any fixes being applied.
+        This is useful if this function is applied as a post-processing
+        step on assembled statements and it is necessary to refer back
+        to the original hash of statements before an invalidity fix
+        here potentially changes it. Default: False
 
     Returns
     -------
@@ -2243,6 +2251,12 @@ def fix_invalidities(stmts: List[Statement],
     if not in_place:
         logger.info('Making deepcopy of statements')
         stmts = deepcopy(stmts)
+    # If desired, we add prior hash annotations to each evidence
+    if prior_hash_annots:
+        for stmt in stmts:
+            for ev in stmt.evidence:
+                ev.annotations['prior_hash'] = stmt.get_hash()
+    # And now apply the fixing function
     stmts_out = indra.tools.fix_invalidities.fix_invalidities(stmts)
     if print_report_after:
         logger.info('Any remaining detected invalidities are printed below')
