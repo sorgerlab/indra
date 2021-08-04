@@ -35,7 +35,7 @@ identifiers_mappings = {
 # identifiers.org entries
 non_registry = {
     'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'SIGNOR', 'HMS-LINCS', 'NXPFA',
-    'OMIM', 'LSPCI', 'UPLOC', 'BFO', 'CCLE'
+    'OMIM', 'LSPCI', 'UPLOC', 'BFO', 'CCLE', 'CLO'
 }
 
 # These are namespaces that can appear in db_refs but are actually not

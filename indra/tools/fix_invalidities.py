@@ -93,14 +93,31 @@ def fix_invalidities_db_refs(db_refs: Mapping[str, str]) -> Mapping[str, str]:
             db_refs['ECCODE'] = db_refs['ECCODE'].replace('.-', '')
         elif k == 'UNIPROT':
             db_refs.pop(k)
+            # This is really a location
             if v.startswith('SL-'):
                 db_refs['UPLOC'] = v
+            # Otherwise we just fix the invalid key
             else:
                 db_refs['UP'] = v
+        elif k == 'UP':
+            # There are cases where this is an empty string
+            if not v.strip():
+                db_refs.pop('UP', None)
+            # Sometimes we have two IDs separated by a comma
+            if ',' in v:
+                db_refs['UP'] = v.split(',')[0]
         elif k == 'UAZ':
             db_refs.pop('UAZ')
             if v.startswith('CVCL'):
                 db_refs['CVCL'] = v
+        elif k == 'TAXONOMY' and v == '-1':
+            db_refs.pop('TAXONOMY', None)
+        elif k == 'LINCS' and re.match(r'\d+-\d+', v):
+            db_refs['HMS-LINCS'] = db_refs.pop('LINCS')
+        elif k == 'CVCL' and re.match(r'^\d+$', v):
+            db_refs['CVCL'] = 'CVCL_%s' % v
+        elif k == 'CO':
+            db_refs['CL'] = 'CL:%s' % db_refs.pop('CO')
         else:
             new_val = ensure_prefix_if_needed(k, v)
             db_refs[k] = new_val
