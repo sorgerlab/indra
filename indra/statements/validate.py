@@ -22,7 +22,7 @@ text_ref_patterns = {
     # See https://www.crossref.org/blog/dois-and-matching-regular-expressions/
     # here I added a-z to allow non-capitalized DOI text, we could
     # change this is we want strict capital letters in the DOI
-    'DOI':  re.compile(r'^10.\d{4,9}/[-._;()/:A-Za-z0-9]+$'),
+    'DOI':  re.compile(r'^10.\d{4,9}/[-._;()/:A-Za-z0-9]+'),
 }
 
 

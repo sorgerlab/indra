@@ -8,7 +8,9 @@ try:
 except ImportError:
     # Python 3
     import pickle
+
 import logging
+from typing import List
 from collections import defaultdict
 from copy import deepcopy, copy
 from indra.statements import *
@@ -20,6 +22,8 @@ from indra.databases import hgnc_client
 from indra.ontology.bio import bio_ontology
 from indra.preassembler import Preassembler, flatten_evidence
 from indra.resources import get_resource_path
+from indra.statements.validate import print_validation_report
+import indra.tools.fix_invalidities
 
 
 logger = logging.getLogger(__name__)
@@ -2202,3 +2206,60 @@ def filter_inconsequential(
             break
         num_stmts = len(stmts)
     return stmts
+
+
+@register_pipeline
+def fix_invalidities(stmts: List[Statement],
+                     in_place: bool = False,
+                     print_report_before: bool = False,
+                     print_report_after: bool = False,
+                     prior_hash_annots: bool = False) -> List[Statement]:
+    """Fix invalidities in a list of statements.
+
+    Parameters
+    ----------
+    stmts :
+        A list of statements to fix invalidities in
+    in_place :
+        If True, the statement objects are changed in place if an invalidity
+        is fixed. Otherwise, a deepcopy is done before running fixes.
+    print_report_before :
+        Run and print a validation report on the statements before running
+        fixing.
+    print_report_after :
+        Run and print a validation report on the statements after running
+        fixing to check if any issues remain that weren't handled by the
+        fixing module.
+    prior_hash_annots :
+        If True, an annotation is added to each evidence of a statement
+        with the hash of the statement prior to any fixes being applied.
+        This is useful if this function is applied as a post-processing
+        step on assembled statements and it is necessary to refer back
+        to the original hash of statements before an invalidity fix
+        here potentially changes it. Default: False
+
+    Returns
+    -------
+    :
+        The list of statements with validation issues fixed and some
+        invalid statements filtered out.
+    """
+    logger.info('Fixing invalidities in %d statements' % len(stmts))
+    if print_report_before:
+        logger.info('Any invalidities detected before fixing are printed below')
+        print_validation_report(stmts)
+    if not in_place:
+        logger.info('Making deepcopy of statements')
+        stmts = deepcopy(stmts)
+    # If desired, we add prior hash annotations to each evidence
+    if prior_hash_annots:
+        for stmt in stmts:
+            for ev in stmt.evidence:
+                ev.annotations['prior_hash'] = stmt.get_hash()
+    # And now apply the fixing function
+    stmts_out = indra.tools.fix_invalidities.fix_invalidities(stmts)
+    if print_report_after:
+        logger.info('Any remaining detected invalidities are printed below')
+        print_validation_report(stmts_out)
+    logger.info('%d statements after validity fixing' % len(stmts_out))
+    return stmts_out
