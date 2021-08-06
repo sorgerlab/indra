@@ -290,10 +290,10 @@ def test_drugbank_mappings():
 def test_standardize_up_isoform():
     refs = standardize_db_refs({'UP': 'Q99490'})
     assert refs == {'UP': 'Q99490', 'HGNC': '16921',
-                    'EGID': '116986', 'MESH': 'C485997'}, refs
+                    'EGID': '116986'}, refs
     refs = standardize_db_refs({'UP': 'Q99490-123'})
     assert refs == {'UP': 'Q99490-123', 'HGNC': '16921',
-                    'EGID': '116986', 'MESH': 'C485997'}, refs
+                    'EGID': '116986'}, refs
 
 
 def test_standardize_chembl():
@@ -324,11 +324,9 @@ def test_chebi_refinements():
 def test_standardize_hgnc_fplx_mesh_bug():
     refs = standardize_db_refs({'HGNC': '1514'})
     assert refs['UP'] == 'P41180'
-    assert refs['MESH'] == 'C095550'
     assert 'FPLX' not in refs
 
     refs = standardize_db_refs({'FPLX': 'Calcium_sensing_receptors'})
-    assert refs['MESH'] == 'D044169'
     assert refs['HGNC_GROUP'] == '279'
     assert 'HGNC' not in refs
 
