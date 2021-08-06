@@ -192,9 +192,12 @@ class BioOntology(IndraOntology):
             edges.append((self.label(ref_ns, ref_id),
                           self.label('FPLX', fplx_id),
                           {'type': 'xref', 'source': 'fplx'}))
-            edges.append((self.label('FPLX', fplx_id),
-                          self.label(ref_ns, ref_id),
-                          {'type': 'xref', 'source': 'fplx'}))
+            # We avoid FPLX->MESH mappings in this direction due to
+            # species-specificity issues
+            if ref_ns != 'MESH':
+                edges.append((self.label('FPLX', fplx_id),
+                              self.label(ref_ns, ref_id),
+                              {'type': 'xref', 'source': 'fplx'}))
         self.add_edges_from(edges)
 
     def add_obo_nodes(self):
@@ -331,6 +334,12 @@ class BioOntology(IndraOntology):
                           self.label(db_ns, db_id),
                           data))
         for (db_ns, db_id), mesh_id in mesh_client.db_to_mesh.items():
+            # There are a variety of namespaces that are being mapped to MeSH
+            # here but we specifically avoid UP and HGNC mappings since
+            # they can lead to inconsistencies in this direction due to
+            # gene vs protein and species-specificity issues.
+            if db_ns in {'UP', 'HGNC'}:
+                continue
             edges.append((self.label(db_ns, db_id),
                           self.label('MESH', mesh_id),
                           data))
