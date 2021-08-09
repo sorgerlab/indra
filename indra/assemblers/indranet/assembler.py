@@ -335,12 +335,18 @@ class IndraNetAssembler():
         # Filter out statements with one agent or with None subject
         stmts = [stmt for stmt in self.statements if len(
             [ag for ag in stmt.agent_list() if ag is not None]) > 1]
+        if exclude_stmts:
+            exclude_types = tuple(
+                get_statement_by_name(st_type) for st_type in exclude_stmts)
+            stmts = [stmt for stmt in stmts
+                     if not isinstance(stmt, exclude_types)]
         if graph_type == 'signed':
             graph_stmts = ac.filter_by_type(stmts, RegulateActivity) + \
                 ac.filter_by_type(stmts, RegulateAmount)
             graph_stmts = _store_edge_data(graph_stmts, extra_columns)
             graph_stmts = ac.run_preassembly(
                 graph_stmts, return_toplevel=False,
+                belief_scorer=belief_scorer,
                 matches_fun=agent_name_polarity_matches)
             G = nx.MultiDiGraph()
         elif graph_type in ['unsigned', 'multi_graph']:
@@ -365,6 +371,7 @@ class IndraNetAssembler():
             if graph_type == 'unsigned':
                 graph_stmts = ac.run_preassembly(
                     graph_stmts, return_toplevel=False,
+                    belief_scorer=belief_scorer,
                     matches_fun=agent_name_stmt_matches)
                 G = nx.DiGraph()
             else:
@@ -387,6 +394,8 @@ class IndraNetAssembler():
             else:
                 G.add_edge(agents[0].name, agents[1].name,
                            statements=statement_data)
+        if weight_flattening:
+            G = weight_flattening(G)
         return G
 
 
