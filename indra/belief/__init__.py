@@ -580,7 +580,15 @@ def get_ev_for_stmts_from_supports(
         # Build the graph for the given set of statements
         refinements_graph = build_refinements_graph(statements,
                                                     matches_fun=matches_fun)
-    assert_no_cycle(refinements_graph)
+    try:
+        assert_no_cycle(refinements_graph)
+    except AssertionError as err:
+        cycle_file = path.join(THIS_DIR, 'refinement_cycles')
+        logger.debug(f'Cycles found. Saving them to {cycle_file}, '
+                     f'then raising error')
+        find_cycles(g=refinements_graph, fpath=cycle_file)
+        raise err
+
     # Use graph to collect corresponding lists of refiners for the statements
     refiners_list = []
     for stmt in statements:
