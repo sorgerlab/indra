@@ -52,10 +52,93 @@ class IndraNetAssembler():
         """
         self.statements += stmts
 
-    def make_model(self, exclude_stmts=None, complex_members=3,
+    def make_model(self, method='df', exclude_stmts=None, complex_members=3,
                    graph_type='multi_graph', sign_dict=None,
-                   belief_flattening=None, weight_flattening=None,
-                   extra_columns=None):
+                   belief_flattening=None, belief_scorer=None,
+                   weight_flattening=None, extra_columns=None):
+        """Assemble an IndraNet graph object.
+
+        Parameters
+        ----------
+        method : str
+            Method for assembling an IndraNet graph. Accepted values: `df` and
+            `preassembly`.
+        exclude_stmts : list[str]
+            A list of statement type names to not include in the graph.
+        complex_members : int
+            Maximum allowed size of a complex to be included in the graph.
+            All complexes larger than complex_members will be rejected. For
+            accepted complexes, all permutations of their members will be added
+            as edges. Default is `3`.
+        graph_type : str
+            Specify the type of graph to assemble. Chose from 'multi_graph'
+            (default), 'digraph', 'signed'. Default is `multi_graph`.
+        sign_dict : dict
+            A dictionary mapping a Statement type to a sign to be used for
+            the edge. This parameter is only used with the 'signed' option.
+            See IndraNet.to_signed_graph for more info.
+        belief_flattening : str or function(networkx.DiGraph, edge)
+            Only needed when method is set to `df`.
+            The method to use when updating the belief for the flattened edge.
+
+            If a string is provided, it must be one of the predefined options
+            'simple_scorer' or 'complementary_belief'.
+
+            If a function is provided, it must take the flattened graph 'G'
+            and an edge 'edge' to perform the belief flattening on and return
+            a number:
+
+            >>> def belief_flattening(G, edge):
+            ...     # Return the average belief score of the constituent edges
+            ...     all_beliefs = [s['belief']
+            ...         for s in G.edges[edge]['statements']]
+            ...     return sum(all_beliefs)/len(all_beliefs)
+
+        belief_scorer : Optional[indra.belief.BeliefScorer]
+            Only needed when method is set to `preassembly`.
+            Instance of BeliefScorer class to use in calculating edge
+            probabilities. If None is provided (default), then the default
+            scorer is used.
+        weight_flattening : function(networkx.DiGraph)
+            A function taking at least the graph G as an argument and
+            returning G after adding edge weights as an edge attribute to the
+            flattened edges using the reserved keyword 'weight'.
+
+            Example:
+
+            >>> def weight_flattening(G):
+            ...     # Sets the flattened weight to the average of the
+            ...     # inverse source count
+            ...     for edge in G.edges:
+            ...         w = [1/s['evidence_count']
+            ...             for s in G.edges[edge]['statements']]
+            ...         G.edges[edge]['weight'] = sum(w)/len(w)
+            ...     return G
+
+        Returns
+        -------
+        model : IndraNet
+            IndraNet graph object.
+        """
+        if method == 'df':
+            return self.make_model_from_df(
+                exclude_stmts=exclude_stmts, complex_members=complex_members,
+                graph_type=graph_type, sign_dict=sign_dict,
+                belief_flattening=belief_flattening,
+                weight_flattening=weight_flattening,
+                extra_columns=extra_columns)
+        elif method == 'preassembly':
+            return self.make_model_by_preassembly(
+                exclude_stmts=exclude_stmts, complex_members=complex_members,
+                graph_type=graph_type, sign_dict=sign_dict,
+                belief_scorer=belief_scorer,
+                weight_flattening=weight_flattening,
+                extra_columns=extra_columns)
+
+    def make_model_from_df(self, exclude_stmts=None, complex_members=3,
+                           graph_type='multi_graph', sign_dict=None,
+                           belief_flattening=None, weight_flattening=None,
+                           extra_columns=None):
         """Assemble an IndraNet graph object.
 
         Parameters
@@ -285,10 +368,10 @@ class IndraNetAssembler():
         df = df.where((pd.notnull(df)), None)
         return df
 
-    def make_model_from_stmts(self, exclude_stmts=None, complex_members=3,
-                              graph_type='multi_graph', sign_dict=None,
-                              belief_scorer=None, weight_flattening=None,
-                              extra_columns=None):
+    def make_model_by_preassembly(self, exclude_stmts=None, complex_members=3,
+                                  graph_type='multi_graph', sign_dict=None,
+                                  belief_scorer=None, weight_flattening=None,
+                                  extra_columns=None):
         """Assemble an IndraNet graph object.
 
         Parameters
