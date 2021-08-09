@@ -467,6 +467,8 @@ class BioOntology(IndraOntology):
                 continue
             refs = lc.get_small_molecule_refs(hmsl_id)
             for ref_ns, ref_id in refs.items():
+                if ref_ns == 'HMS-LINCS':
+                    continue
                 edges.append((self.label('HMS-LINCS', hmsl_base_id),
                               self.label(ref_ns, ref_id),
                               {'type': 'xref', 'source': 'hms-lincs'}))
