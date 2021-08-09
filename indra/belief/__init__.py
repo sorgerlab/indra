@@ -1,5 +1,6 @@
 import copy
 import json
+import tqdm
 import numpy
 import logging
 import networkx
@@ -836,6 +837,27 @@ def assert_no_cycle(
         return
     msg = 'Cycle found in hierarchy graph: %s' % cyc
     assert False, msg
+
+
+def find_cycles(g: networkx.DiGraph, fpath: str) -> None:
+    logger.debug('Looking for cycles')
+
+    # Create cycle generator, see:
+    # https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.cycles.simple_cycles.html#networkx.algorithms.cycles.simple_cycles
+    cyc_gen = networkx.algorithms.cycles.simple_cycles(g)
+    cycles = []
+    for cyc in tqdm.tqdm(cyc_gen):
+        cycles.append(cyc)
+
+    if cycles:
+        with open(fpath, 'w') as fp:
+            for c in cycles:
+                # Each cycle is a list of lists
+                cs = ','.join([str(sc) for sc in c])
+                fp.write(f'{cs}\n')
+        logger.debug(f'Cycles written to {fpath}')
+    else:
+        logger.debug('No cycles were found')
 
 
 def get_ranked_stmts(g):
