@@ -8,6 +8,7 @@ from indra.preassembler.custom_preassembly import agent_name_stmt_matches, \
     agent_name_polarity_matches
 from itertools import permutations
 from collections import OrderedDict, defaultdict
+from functools import partial
 
 
 logger = logging.getLogger(__name__)
@@ -424,13 +425,17 @@ class IndraNetAssembler():
             stmts = [stmt for stmt in stmts
                      if not isinstance(stmt, exclude_types)]
         if graph_type == 'signed':
-            graph_stmts = ac.filter_by_type(stmts, RegulateActivity) + \
-                ac.filter_by_type(stmts, RegulateAmount)
+            if not sign_dict:
+                sign_dict = default_sign_dict
+            graph_stmts = []
+            for stmt_type in sign_dict:
+                graph_stmts += ac.filter_by_type(stmts, stmt_type)
             graph_stmts = _store_edge_data(graph_stmts, extra_columns)
             graph_stmts = ac.run_preassembly(
                 graph_stmts, return_toplevel=False,
                 belief_scorer=belief_scorer,
-                matches_fun=agent_name_polarity_matches)
+                matches_fun=partial(agent_name_polarity_matches,
+                                    sign_dict=sign_dict))
             G = nx.MultiDiGraph()
         elif graph_type in ['unsigned', 'multi_graph']:
             stmts = _store_edge_data(stmts, extra_columns)
@@ -471,7 +476,7 @@ class IndraNetAssembler():
                     unique_stmts[edge_data['stmt_hash']] = edge_data
             statement_data = list(unique_stmts.values())
             if graph_type == 'signed':
-                sign = default_sign_dict[type(stmt).__name__]
+                sign = sign_dict[type(stmt).__name__]
                 G.add_edge(agents[0].name, agents[1].name, sign,
                            statements=statement_data)
             else:

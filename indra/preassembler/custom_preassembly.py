@@ -2,8 +2,12 @@
 useful for building custom preassembly logic for some applications.
 They are typically used as matches_fun or refinement_fun arguments
 to the Preassembler and other modules."""
+import logging
 from indra.statements import *
 from indra.pipeline import register_pipeline
+
+
+logger = logging.getLogger(__name__)
 
 
 @register_pipeline
@@ -48,13 +52,11 @@ def agent_name_stmt_matches(stmt):
 
 
 @register_pipeline
-def agent_name_polarity_matches(stmt):
+def agent_name_polarity_matches(stmt, sign_dict):
     """Return a key for normalized agent names and polarity."""
-    default_sign_dict = {'Activation': 0,
-                         'Inhibition': 1,
-                         'IncreaseAmount': 0,
-                         'DecreaseAmount': 1}
     agents = [agent_name_matches(a) for a in stmt.agent_list()]
-    pol = default_sign_dict[type(stmt).__name__]
+    pol = sign_dict.get(type(stmt).__name__)
+    if not pol:
+        logger.debug('Unknown polarity for %s' % type(stmt).__name__)
     key = str((agents, pol))
     return key
