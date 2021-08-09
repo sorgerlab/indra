@@ -3,7 +3,7 @@ import pytest
 from indra.statements import *
 from indra.belief import BeliefEngine, load_default_probs, \
     sample_statements, evidence_random_noise_prior, tag_evidence_subtype, \
-    SimpleScorer
+    SimpleScorer, build_refinements_graph, find_cycles
 from indra.belief import BayesianScorer
 
 default_probs = load_default_probs()
@@ -351,6 +351,28 @@ def test_cycle():
         st2.supported_by = [st1]
         engine = BeliefEngine()
         engine.set_hierarchy_probs([st1, st2])
+
+
+def test_write_cycles():
+    st1 = Phosphorylation(Agent('B'), Agent('A1'))
+    st2 = Phosphorylation(None, Agent('A1'))
+    st1.supports = [st2]
+    st1.supported_by = [st2]
+    st2.supports = [st1]
+    st2.supported_by = [st1]
+
+    sh1 = st1.get_hash()
+    sh2 = st2.get_hash()
+
+    refinements_graph = build_refinements_graph(statements=[st1, st2])
+    find_cycles(g=refinements_graph, fpath='./cycles_test')
+    with open('./cycles_test') as f:
+        cycles = f.readlines()
+    cyc_sets = [set([int(h) for h in cl.split(',')]) for cl in cycles]
+
+    # Check that st1-st2 form a cycle and that it is the only cycle
+    assert len(cyc_sets) == 1
+    assert cyc_sets[0] == {sh1, sh2}
 
 
 def assert_close_enough(b1, b2):
