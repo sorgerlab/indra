@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.15'
+    version = '1.16'
 
     def __init__(self):
         super().__init__()
@@ -64,7 +64,7 @@ class BioOntology(IndraOntology):
         self.add_drugbank_nodes()
         # Add xrefs
         logger.info('Adding xrefs...')
-        self.add_hgnc_uniprot_xrefs()
+        self.add_hgnc_uniprot_entrez_xrefs()
         self.add_hgnc_entrez_xrefs()
         self.add_famplex_xrefs()
         self.add_chemical_xrefs()
@@ -117,7 +117,7 @@ class BioOntology(IndraOntology):
                 nodes.append((node, data))
         self.add_nodes_from(nodes)
 
-    def add_hgnc_uniprot_xrefs(self):
+    def add_hgnc_uniprot_entrez_xrefs(self):
         from indra.databases import hgnc_client
         from indra.databases import uniprot_client
         edges = []
@@ -131,6 +131,14 @@ class BioOntology(IndraOntology):
         edges = [(self.label('UP', uid), self.label('HGNC', hid),
                   {'type': 'xref', 'source': 'hgnc'})
                  for uid, hid in uniprot_client.um.uniprot_hgnc.items()]
+        self.add_edges_from(edges)
+
+        edges = [(self.label('UP', uid), self.label('EGID', egid),
+                  {'type': 'xref', 'source': 'uniprot'})
+                 for uid, egid in uniprot_client.um.uniprot_entrez.items()]
+        edges += [(self.label('EGID', egid), self.label('UP', uid),
+                  {'type': 'xref', 'source': 'uniprot'})
+                  for egid, uid in uniprot_client.um.entrez_uniprot.items()]
         self.add_edges_from(edges)
 
     def add_hgnc_entrez_xrefs(self):
