@@ -270,21 +270,6 @@ def test_up_id_with_no_hgnc_id():
     assert mapped_gag.db_refs['UP'] == 'P04585'
 
 
-def test_up_id_with_no_gene_name():
-    """Expect no HGNC entry; no error raised."""
-    no_gn = Agent('NoGNname', db_refs={'TEXT': 'NoGN'})
-    stmt = Phosphorylation(None, no_gn)
-    g_map = {'NoGN': {'TEXT': 'NoGN', 'UP': 'A0K5Q6'}}
-    gm = GroundingMapper(g_map)
-    mapped_stmts = gm.map_stmts([stmt])
-    assert len(mapped_stmts) == 1
-    mapped_ag = mapped_stmts[0].sub
-    assert mapped_ag.name == 'NoGNname'
-    assert mapped_ag.db_refs['TEXT'] == 'NoGN'
-    assert mapped_ag.db_refs.get('HGNC') is None
-    assert mapped_ag.db_refs['UP'] == 'A0K5Q6'
-
-
 def test_in_place_overwrite_of_gm():
     """Make sure HGNC lookups don't modify the original grounding map by adding
     keys."""
@@ -311,8 +296,7 @@ def test_map_entry_hgnc_and_up():
     ms = mapped_stmts[0]
     assert ms.sub.db_refs == \
            {'TEXT': 'NF-kappaB p65', 'UP': 'Q04206',
-            'HGNC': '9955', 'MESH': 'D051996',
-            'EGID': '5970'}, ms.sub.db_refs
+            'HGNC': '9955', 'EGID': '5970'}, ms.sub.db_refs
 
 
 def test_map_agent():
