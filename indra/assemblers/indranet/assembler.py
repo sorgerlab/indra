@@ -479,9 +479,15 @@ class IndraNetAssembler():
                 sign = sign_dict[type(stmt).__name__]
                 G.add_edge(agents[0].name, agents[1].name, sign,
                            statements=statement_data)
-            else:
+            elif graph_type == 'unsigned':
                 G.add_edge(agents[0].name, agents[1].name,
                            statements=statement_data)
+            else:
+                if statement_data:
+                    edge_data = statement_data[0]
+                else:
+                    edge_data = _get_edge_data(stmt, extra_columns)
+                G.add_edge(agents[0].name, agents[1].name, **edge_data)
         if weight_flattening:
             G = weight_flattening(G)
         return G
@@ -494,29 +500,34 @@ def _get_source_counts(stmt):
     return dict(source_counts)
 
 
+def _get_edge_data(stmt, extra_columns=None):
+    stmt_type = type(stmt).__name__
+    try:
+        res = stmt.residue
+    except AttributeError:
+        res = None
+    try:
+        pos = stmt.position
+    except AttributeError:
+        pos = None
+    edge_data = {
+        'residue': res,
+        'position': pos,
+        'stmt_type': stmt_type,
+        'evidence_count': len(stmt.evidence),
+        'stmt_hash': stmt.get_hash(refresh=True),
+        'belief': stmt.belief,
+        'source_counts': _get_source_counts(stmt)
+    }
+    if extra_columns:
+        for col_name, func in extra_columns:
+            edge_data[col_name] = func(stmt)
+    return edge_data
+
+
 def _store_edge_data(stmts, extra_columns=None):
     for stmt in stmts:
-        stmt_type = type(stmt).__name__
-        try:
-            res = stmt.residue
-        except AttributeError:
-            res = None
-        try:
-            pos = stmt.position
-        except AttributeError:
-            pos = None
-        edge_data = {
-            'residue': res,
-            'position': pos,
-            'stmt_type': stmt_type,
-            'evidence_count': len(stmt.evidence),
-            'stmt_hash': stmt.get_hash(refresh=True),
-            'belief': stmt.belief,
-            'source_counts': _get_source_counts(stmt)
-        }
-        if extra_columns:
-            for col_name, func in extra_columns:
-                edge_data[col_name] = func(stmt)
+        edge_data = _get_edge_data(stmt, extra_columns)
         for evid in stmt.evidence:
             evid.annotations['indranet_edge'] = edge_data
     return stmts
