@@ -424,13 +424,22 @@ class IndraNetAssembler():
                 get_statement_by_name(st_type) for st_type in exclude_stmts)
             stmts = [stmt for stmt in stmts
                      if not isinstance(stmt, exclude_types)]
+        stmts = _store_edge_data(stmts, extra_columns)
         if graph_type == 'signed':
             if not sign_dict:
                 sign_dict = default_sign_dict
             graph_stmts = []
             for stmt_type in sign_dict:
                 graph_stmts += ac.filter_by_type(stmts, stmt_type)
-            graph_stmts = _store_edge_data(graph_stmts, extra_columns)
+            # Conversion statements can also be turned into two types of signed
+            conv_stmts = ac.filter_by_type(stmts, Conversion)
+            for stmt in conv_stmts:
+                for obj in stmt.obj_from:
+                    graph_stmts.append(
+                        DecreaseAmount(stmt.subj, obj, stmt.evidence))
+                for obj in stmt.obj_to:
+                    graph_stmts.append(
+                        IncreaseAmount(stmt.subj, obj, stmt.evidence))
             graph_stmts = ac.run_preassembly(
                 graph_stmts, return_toplevel=False,
                 belief_scorer=belief_scorer,
@@ -438,7 +447,6 @@ class IndraNetAssembler():
                                     sign_dict=sign_dict))
             G = nx.MultiDiGraph()
         elif graph_type in ['unsigned', 'multi_graph']:
-            stmts = _store_edge_data(stmts, extra_columns)
             complex_stmts = ac.filter_by_type(stmts, Complex)
             conv_stmts = ac.filter_by_type(stmts, Conversion)
             graph_stmts = [stmt for stmt in stmts if stmt not in complex_stmts
