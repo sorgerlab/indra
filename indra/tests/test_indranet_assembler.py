@@ -27,7 +27,26 @@ st9 = Phosphorylation(Agent('MEK'), Agent('MAPK'),
 # Test assembly from assembler side
 def test_simple_assembly():
     ia = IndraNetAssembler([st1, st2, st3, st4, st5, st6, st7])
-    g = ia.make_model()
+    # First assemble with dataframe method
+    g = ia.make_model(method='df')
+    assert len(g.nodes) == 6
+    assert len(g.edges) == 9
+    # Stmt with 1 agent should not be added
+    assert 'e' not in g.nodes
+    # Complex with more than 3 agents should not be added
+    assert ('f', 'g', 0) in g.edges
+    assert ('h', 'i', 0) not in g.edges
+    # Test node attributes
+    assert g.nodes['a']['ns'] == 'HGNC', g.nodes['a']['ns']
+    assert g.nodes['a']['id'] == '1'
+    # Test edge attributes
+    e = g['a']['c'][0]
+    assert e['stmt_type'] == 'Inhibition'
+    assert e['belief'] == 0.76
+    assert e['evidence_count'] == 3
+    assert g['b']['d'][0]['evidence_count'] == 0
+    # Get same result assembling with preassembly
+    g = ia.make_model(method='preassembly')
     assert len(g.nodes) == 6
     assert len(g.edges) == 9
     # Stmt with 1 agent should not be added
@@ -48,7 +67,14 @@ def test_simple_assembly():
 
 def test_exclude_stmts():
     ia = IndraNetAssembler([st1, st2, st3])
-    g = ia.make_model(exclude_stmts=['Inhibition'])
+    # First assemble with dataframe method
+    g = ia.make_model(method='df', exclude_stmts=['Inhibition'])
+    assert len(g.nodes) == 3
+    assert len(g.edges) == 2
+    assert 'c' not in g.nodes
+    assert ('a', 'c', 0) not in g.edges
+    # Get same result assembling with preassembly
+    g = ia.make_model(method='preassembly', exclude_stmts=['Inhibition'])
     assert len(g.nodes) == 3
     assert len(g.edges) == 2
     assert 'c' not in g.nodes
@@ -57,7 +83,14 @@ def test_exclude_stmts():
 
 def test_complex_members():
     ia = IndraNetAssembler([st1, st6])
-    g = ia.make_model(complex_members=4)
+    # First assemble with dataframe method
+    g = ia.make_model(method='df', complex_members=4)
+    assert len(g.nodes) == 5
+    assert len(g.edges) == 13, len(g.edges)
+    assert ('h', 'i', 0) in g.edges
+    assert ('i', 'h', 0) in g.edges
+    # Get same result assembling with preassembly
+    g = ia.make_model(method='preassembly', complex_members=4)
     assert len(g.nodes) == 5
     assert len(g.edges) == 13, len(g.edges)
     assert ('h', 'i', 0) in g.edges
@@ -210,11 +243,21 @@ def test_initial_signs():
 
 def test_conversion():
     ia = IndraNetAssembler([st8])
-    ug = ia.make_model(graph_type='multi_graph')
+    # First assemble with dataframe method
+    ug = ia.make_model(method='df', graph_type='multi_graph')
     assert len(ug.nodes) == 3
     assert len(ug.edges) == 2, ug.edges
-    sg = ia.make_model(graph_type='signed')
+    sg = ia.make_model(method='df', graph_type='signed')
     assert len(sg.nodes) == 3
+    assert len(sg.edges) == 2, sg.edges
+    assert ('PI3K', 'PIP3', 0) in sg.edges, sg.edges
+    assert ('PI3K', 'PIP2', 1) in sg.edges, sg.edges
+    # Get same result assembling with preassembly
+    ug = ia.make_model(method='preassembly', graph_type='multi_graph')
+    assert len(ug.nodes) == 3
+    assert len(ug.edges) == 2, ug.edges
+    sg = ia.make_model(method='preassembly', graph_type='signed')
+    assert len(sg.nodes) == 3, sg.nodes
     assert len(sg.edges) == 2, sg.edges
     assert ('PI3K', 'PIP3', 0) in sg.edges, sg.edges
     assert ('PI3K', 'PIP2', 1) in sg.edges, sg.edges
