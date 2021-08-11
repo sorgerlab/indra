@@ -905,12 +905,6 @@ def check_extra_evidence(
         for entry in extra_evidence:
             if not (isinstance(entry, list)):
                 raise ValueError("extra_evidence must be a list of lists.")
-            # The entry is empty, that's fine
-            if entry == []:
-                continue
-            elif not isinstance(entry[0], Evidence):
-                raise ValueError("extra_evidence list entries must "
-                                 "contain Evidence objects.")
 
 
 def get_stmt_evidence(
