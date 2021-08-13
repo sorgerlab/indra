@@ -288,8 +288,7 @@ class IndraNetAssembler():
                 logger.debug('Skipping a statement of a type %s.'
                              % type(stmt).__name__)
                 continue
-            agents = stmt.agent_list()
-            not_none_agents = [a for a in agents if a is not None]
+            not_none_agents = stmt.real_agent_list()
 
             # Exclude statements with less than 2 agents
             if len(not_none_agents) < 2:
@@ -417,8 +416,8 @@ class IndraNetAssembler():
             IndraNet graph object.
         """
         # Filter out statements with one agent or with None subject
-        stmts = [stmt for stmt in self.statements if len(
-            [ag for ag in stmt.agent_list() if ag is not None]) > 1]
+        stmts = [stmt for stmt in self.statements
+                 if len(stmt.real_agent_list()) > 1]
         if exclude_stmts:
             exclude_types = tuple(
                 get_statement_by_name(st_type) for st_type in exclude_stmts)
@@ -452,7 +451,7 @@ class IndraNetAssembler():
             graph_stmts = [stmt for stmt in stmts if stmt not in complex_stmts
                            and stmt not in conv_stmts]
             for stmt in complex_stmts:
-                agents = [ag for ag in stmt.agent_list() if ag is not None]
+                agents = stmt.real_agent_list()
                 if len(agents) > complex_members:
                     continue
                 for a, b in permutations(agents, 2):
