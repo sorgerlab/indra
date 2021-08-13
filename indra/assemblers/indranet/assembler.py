@@ -472,12 +472,13 @@ class IndraNetAssembler():
                 for a, b in permutations(agents, 2):
                     graph_stmts.append(IncreaseAmount(a, b, stmt.evidence))
             for stmt in conv_stmts:
-                for obj in stmt.obj_from:
-                    graph_stmts.append(
-                        DecreaseAmount(stmt.subj, obj, stmt.evidence))
-                for obj in stmt.obj_to:
-                    graph_stmts.append(
-                        IncreaseAmount(stmt.subj, obj, stmt.evidence))
+                if stmt.subj:
+                    for obj in stmt.obj_from:
+                        graph_stmts.append(
+                            DecreaseAmount(stmt.subj, obj, stmt.evidence))
+                    for obj in stmt.obj_to:
+                        graph_stmts.append(
+                            IncreaseAmount(stmt.subj, obj, stmt.evidence))
             if graph_type == 'unsigned':
                 # Merge statements by agent names
                 graph_stmts = ac.run_preassembly(
