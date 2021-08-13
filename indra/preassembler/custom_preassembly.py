@@ -46,7 +46,7 @@ def agent_name_stmt_type_matches(stmt):
 @register_pipeline
 def agent_name_stmt_matches(stmt):
     """Return the normalized agent names."""
-    agents = [agent_name_matches(a) for a in stmt.agent_list()]
+    agents = [ag.name for ag in stmt.real_agent_list()]
     key = str(agents)
     return key
 
@@ -54,7 +54,7 @@ def agent_name_stmt_matches(stmt):
 @register_pipeline
 def agent_name_polarity_matches(stmt, sign_dict):
     """Return a key for normalized agent names and polarity."""
-    agents = [agent_name_matches(a) for a in stmt.agent_list()]
+    agents = [ag.name for ag in stmt.real_agent_list()]
     pol = sign_dict.get(type(stmt).__name__)
     if not pol:
         logger.debug('Unknown polarity for %s' % type(stmt).__name__)
