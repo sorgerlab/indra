@@ -63,7 +63,16 @@ class IndraNetAssembler():
         ----------
         method : str
             Method for assembling an IndraNet graph. Accepted values: `df` and
-            `preassembly`.
+            `preassembly`. With the `df` method, the statements are converted
+            into pandas DataFrame first where each row corresponds to an edge
+            in unflattened MultiDiGraph IndraNet. Then the IndraNet can be
+            flattened into signed and unsigned graphs. The beliefs can be
+            calculated on the new edges by providing belief_flattening
+            function. With the `preassembly` option, the statements are merged
+            together and the beliefs are calculated by leveraging the
+            preassembly functionality with custom matches functions
+            (the matches functions are applied depending on the graph type).
+            This method ensures the more robust belief calculation.
         exclude_stmts : list[str]
             A list of statement type names to not include in the graph.
         complex_members : int
@@ -140,7 +149,8 @@ class IndraNetAssembler():
                            graph_type='multi_graph', sign_dict=None,
                            belief_flattening=None, weight_flattening=None,
                            extra_columns=None):
-        """Assemble an IndraNet graph object.
+        """Assemble an IndraNet graph object by constructing a pandas
+        Dataframe first.
 
         Parameters
         ----------
@@ -372,7 +382,8 @@ class IndraNetAssembler():
                                   graph_type='multi_graph', sign_dict=None,
                                   belief_scorer=None, weight_flattening=None,
                                   extra_columns=None):
-        """Assemble an IndraNet graph object.
+        """Assemble an IndraNet graph object by preassembling the statements
+        according to selected graph type.
 
         Parameters
         ----------
@@ -423,11 +434,13 @@ class IndraNetAssembler():
                 get_statement_by_name(st_type) for st_type in exclude_stmts)
             stmts = [stmt for stmt in stmts
                      if not isinstance(stmt, exclude_types)]
+        # Store edge data in statement annotations
         stmts = _store_edge_data(stmts, extra_columns)
         if graph_type == 'signed':
             if not sign_dict:
                 sign_dict = default_sign_dict
             graph_stmts = []
+            # Only keep statements with explicit signs
             for stmt_type in sign_dict:
                 graph_stmts += ac.filter_by_type(stmts, stmt_type)
             # Conversion statements can also be turned into two types of signed
@@ -439,6 +452,7 @@ class IndraNetAssembler():
                 for obj in stmt.obj_to:
                     graph_stmts.append(
                         IncreaseAmount(stmt.subj, obj, stmt.evidence))
+            # Merge statements by agent name and polarity
             graph_stmts = ac.run_preassembly(
                 graph_stmts, return_toplevel=False,
                 belief_scorer=belief_scorer,
@@ -446,6 +460,7 @@ class IndraNetAssembler():
                                     sign_dict=sign_dict))
             G = nx.MultiDiGraph()
         elif graph_type in ['unsigned', 'multi_graph']:
+            # Keep Complex and Conversion aside
             complex_stmts = ac.filter_by_type(stmts, Complex)
             conv_stmts = ac.filter_by_type(stmts, Conversion)
             graph_stmts = [stmt for stmt in stmts if stmt not in complex_stmts
@@ -464,6 +479,7 @@ class IndraNetAssembler():
                     graph_stmts.append(
                         IncreaseAmount(stmt.subj, obj, stmt.evidence))
             if graph_type == 'unsigned':
+                # Merge statements by agent names
                 graph_stmts = ac.run_preassembly(
                     graph_stmts, return_toplevel=False,
                     belief_scorer=belief_scorer,
@@ -476,6 +492,9 @@ class IndraNetAssembler():
             for ag in agents:
                 ag_ns, ag_id = get_ag_ns_id(ag)
                 G.add_node(ag.name, ns=ag_ns, id=ag_id)
+            # We merged some different statements together based on their
+            # agent names and polarity, we can retrieve the original
+            # statements data back from annotations
             unique_stmts = {}
             for evid in stmt.evidence:
                 edge_data = evid.annotations['indranet_edge']
