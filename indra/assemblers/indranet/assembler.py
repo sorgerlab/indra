@@ -457,7 +457,8 @@ class IndraNetAssembler():
                 graph_stmts, return_toplevel=False,
                 belief_scorer=belief_scorer,
                 matches_fun=partial(agent_name_polarity_matches,
-                                    sign_dict=sign_dict))
+                                    sign_dict=sign_dict),
+                run_refinement=False)
             G = nx.MultiDiGraph()
         elif graph_type in ['unsigned', 'multi_graph']:
             # Keep Complex and Conversion aside
@@ -484,7 +485,8 @@ class IndraNetAssembler():
                 graph_stmts = ac.run_preassembly(
                     graph_stmts, return_toplevel=False,
                     belief_scorer=belief_scorer,
-                    matches_fun=agent_name_stmt_matches)
+                    matches_fun=agent_name_stmt_matches,
+                    run_refinement=False)
                 G = nx.DiGraph()
             else:
                 G = nx.MultiGraph()
