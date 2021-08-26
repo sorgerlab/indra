@@ -291,10 +291,8 @@ You can run the INDRA REST API using the container as
 docker run -id -p 8080:8080 --entrypoint python labsyspharm/indra /sw/indra/rest_api/api.py
 ```
 
-To build the image locally, there are currently two Dockerfiles for
-INDRA and its dependencies. They are available in the following repositories:
-- https://github.com/indralab/indra_docker
-- https://github.com/indralab/indra_deps_docker
+The Dockerfile to build the image locally is available in a separate repository
+at https://github.com/indralab/indra_docker.
 
 ## Using INDRA
 
