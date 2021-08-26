@@ -53,8 +53,8 @@ class IndraNetAssembler():
         """
         self.statements += stmts
 
-    def make_model(self, method='df', exclude_stmts=None, complex_members=3,
-                   graph_type='multi_graph', sign_dict=None,
+    def make_model(self, method='preassembly', exclude_stmts=None,
+                   complex_members=3, graph_type='multi_graph', sign_dict=None,
                    belief_flattening=None, belief_scorer=None,
                    weight_flattening=None, extra_columns=None):
         """Assemble an IndraNet graph object.
