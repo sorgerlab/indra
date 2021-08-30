@@ -443,6 +443,7 @@ class IndraNetAssembler():
             # Only keep statements with explicit signs
             for stmt_type in sign_dict:
                 graph_stmts += ac.filter_by_type(stmts, stmt_type)
+            graph_stmts += ac.filter_by_type(stmts, Influence)
             # Conversion statements can also be turned into two types of signed
             conv_stmts = ac.filter_by_type(stmts, Conversion)
             for stmt in conv_stmts:
@@ -505,7 +506,16 @@ class IndraNetAssembler():
                     unique_stmts[edge_data['stmt_hash']] = edge_data
             statement_data = list(unique_stmts.values())
             if graph_type == 'signed':
-                sign = sign_dict[type(stmt).__name__]
+                if isinstance(stmt, Influence):
+                    stmt_pol = stmt.overall_polarity()
+                    if stmt_pol == 1:
+                        sign = 0
+                    elif stmt_pol == -1:
+                        sign = 1
+                    else:
+                        continue
+                else:
+                    sign = sign_dict[type(stmt).__name__]
                 G.add_edge(agents[0].name, agents[1].name, sign,
                            statements=statement_data)
             elif graph_type == 'unsigned':
