@@ -1566,6 +1566,8 @@ st7 = DecreaseAmount(Agent('B', db_refs={'HGNC': '2'}),
 st8 = IncreaseAmount(Agent('E', db_refs={'HGNC': '5'}),
                      Agent('B', db_refs={'HGNC': '2'}))
 statements = [st1, st2, st3, st4, st5, st6, st7, st8]
+for stmt in statements:
+    stmt.evidence = [Evidence(source_api='assertion')]
 
 test_st1 = Activation(Agent('A', db_refs={'HGNC': '1'}),
                       Agent('E', db_refs={'HGNC': '5'}))
@@ -1726,8 +1728,11 @@ def test_refinements():
     mek = Agent('MEK', db_refs={'TEXT': 'MEK', 'FPLX': 'MEK'})
     erk = Agent('ERK', db_refs={'TEXT': 'ERK', 'FPLX': 'ERK'})
     # Model statements are refined versions of test statements
-    model_stmts = [Phosphorylation(prkcb, gsk3b, 'S', '9'),
-                   Phosphorylation(map2k1, mapk1)]
+    model_stmts = [
+        Phosphorylation(prkcb, gsk3b, 'S', '9',
+                        evidence=[Evidence(source_api='assertion')]),
+        Phosphorylation(map2k1, mapk1,
+                        evidence=[Evidence(source_api='assertion')])]
     test_stmts = [Phosphorylation(prkcb, gsk3b, 'S'),
                   Phosphorylation(mek, erk)]
     gsk3b_s_phos = deepcopy(gsk3b)
@@ -1792,7 +1797,8 @@ def test_refinements():
     assert path_stmts == [[mek_ref], [model_stmts[1]], [erk_ref]], path_stmts
     # Test signed graph
     # Can't use phosphorylations for signed graph, using activations
-    model_stmts = [Activation(map2k1, mapk1)]
+    model_stmts = [Activation(map2k1, mapk1,
+                              evidence=[Evidence(source_api='assertion')])]
     test_stmts = [Activation(mek, erk)]
     ia = IndraNetAssembler(model_stmts)
     signed_model = ia.make_model(graph_type='signed')
