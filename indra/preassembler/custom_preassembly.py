@@ -2,8 +2,12 @@
 useful for building custom preassembly logic for some applications.
 They are typically used as matches_fun or refinement_fun arguments
 to the Preassembler and other modules."""
+import logging
 from indra.statements import *
 from indra.pipeline import register_pipeline
+
+
+logger = logging.getLogger(__name__)
 
 
 @register_pipeline
@@ -36,4 +40,32 @@ def agent_name_stmt_type_matches(stmt):
     """Return True if the statement type and normalized agent name matches."""
     agents = [agent_name_matches(a) for a in stmt.agent_list()]
     key = str((stmt.__class__.__name__, agents))
+    return key
+
+
+@register_pipeline
+def agent_name_stmt_matches(stmt):
+    """Return the normalized agent names."""
+    agents = [ag.name for ag in stmt.real_agent_list()]
+    key = str(agents)
+    return key
+
+
+@register_pipeline
+def agent_name_polarity_matches(stmt, sign_dict):
+    """Return a key for normalized agent names and polarity."""
+    agents = [ag.name for ag in stmt.real_agent_list()]
+    if isinstance(stmt, Influence):
+        stmt_pol = stmt.overall_polarity()
+        if stmt_pol == 1:
+            pol = 0
+        elif stmt_pol == -1:
+            pol = 1
+        else:
+            pol = None
+    else:
+        pol = sign_dict.get(type(stmt).__name__)
+    if not pol:
+        logger.debug('Unknown polarity for %s' % type(stmt).__name__)
+    key = str((agents, pol))
     return key
