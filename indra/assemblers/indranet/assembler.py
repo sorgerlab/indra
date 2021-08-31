@@ -461,7 +461,7 @@ class IndraNetAssembler():
                                     sign_dict=sign_dict),
                 run_refinement=False)
             G = nx.MultiDiGraph()
-        elif graph_type in ['unsigned', 'multi_graph']:
+        elif graph_type in ['digraph', 'multi_graph']:
             # Keep Complex and Conversion aside
             complex_stmts = ac.filter_by_type(stmts, Complex)
             conv_stmts = ac.filter_by_type(stmts, Conversion)
@@ -481,7 +481,7 @@ class IndraNetAssembler():
                     for obj in stmt.obj_to:
                         graph_stmts.append(
                             IncreaseAmount(stmt.subj, obj, stmt.evidence))
-            if graph_type == 'unsigned':
+            if graph_type == 'digraph':
                 # Merge statements by agent names
                 graph_stmts = ac.run_preassembly(
                     graph_stmts, return_toplevel=False,
@@ -518,7 +518,7 @@ class IndraNetAssembler():
                     sign = sign_dict[type(stmt).__name__]
                 G.add_edge(agents[0].name, agents[1].name, sign,
                            statements=statement_data)
-            elif graph_type == 'unsigned':
+            elif graph_type == 'digraph':
                 G.add_edge(agents[0].name, agents[1].name,
                            statements=statement_data)
             else:
