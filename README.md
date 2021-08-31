@@ -394,3 +394,4 @@ The development of INDRA has been funded from the following sources:
 | DARPA Automated Scientific Discovery Framework   | W911NF-18-1-0124     |
 | DARPA Automating Scientific Knowledge Extraction | HR00111990009        |
 | DARPA Panacea                                    | HR00111920022        |
+| DARPA Young Faculty Award                        | W911NF-20-1-0255     |
