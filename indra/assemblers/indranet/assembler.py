@@ -517,10 +517,10 @@ class IndraNetAssembler():
                 else:
                     sign = sign_dict[type(stmt).__name__]
                 G.add_edge(agents[0].name, agents[1].name, sign,
-                           statements=statement_data)
+                           statements=statement_data, belief=stmt.belief)
             elif graph_type == 'digraph':
                 G.add_edge(agents[0].name, agents[1].name,
-                           statements=statement_data)
+                           statements=statement_data, belief=stmt.belief)
             else:
                 if statement_data:
                     edge_data = statement_data[0]
