@@ -282,7 +282,7 @@ def test_getting_started9_10():
     # Chunk 10
     from indra.assemblers.indranet import IndraNetAssembler
     indranet_assembler = IndraNetAssembler(statements=gn_stmts)
-    indranet = indranet_assembler.make_model()
+    indranet = indranet_assembler.make_model(method='df')
     assert len(indranet.nodes) > 0, 'indranet contains no nodes'
     assert len(indranet.edges) > 0, 'indranet contains no edges'
 
