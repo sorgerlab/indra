@@ -19,7 +19,8 @@ simple_scorer = SimpleScorer()
 default_sign_dict = {'Activation': 0,
                      'Inhibition': 1,
                      'IncreaseAmount': 0,
-                     'DecreaseAmount': 1}
+                     'DecreaseAmount': 1,
+                     'GtpActivation': 0}
 
 INDRA_ROOT = path.abspath(path.dirname(path.abspath(indra.__file__)))
 INDRA_RESOURCES = path.join(INDRA_ROOT, 'resources')
