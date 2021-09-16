@@ -548,8 +548,12 @@ def update_mesh_supplementary_names():
     for record in supp_et.iterfind('SupplementalRecord'):
         uid = record.find('SupplementalRecordUI').text
         name = record.find('SupplementalRecordName/String').text
+        mapped_to_terms = record.findall('HeadingMappedToList/HeadingMappedTo/'
+                                         'DescriptorReferredTo/DescriptorUI')
+        mapped_to = ','.join([term.text.replace('*', '')
+                              for term in mapped_to_terms])
         term_name_str = _get_term_name_str(record, name)
-        supp_rows.append((uid, name, term_name_str))
+        supp_rows.append((uid, name, term_name_str, mapped_to))
 
     fname = os.path.join(path, 'mesh_supp_id_label_mappings.tsv')
     write_unicode_csv(fname, supp_rows, delimiter='\t')
