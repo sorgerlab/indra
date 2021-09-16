@@ -19,13 +19,15 @@ mesh_id_to_name = {}
 mesh_name_to_id = {}
 mesh_name_to_id_name = {}
 mesh_id_to_tree_numbers = {}
+mesh_supp_to_primary = {}
 
 
-def _load_mesh_file(path):
+def _load_mesh_file(path, supplementary):
     it = read_unicode_csv(path, delimiter='\t')
     for terms in it:
-        if len(terms) == 3:
-            mesh_id, mesh_label, mesh_terms_str = terms
+        if supplementary:
+            mesh_id, mesh_label, mesh_terms_str, mapped_to_str = terms
+            mesh_supp_to_primary[mesh_id] = mapped_to_str.split(',')
         else:
             mesh_id, mesh_label, mesh_terms_str, tree_number_str = terms
             # This is a rare corner case where an entry is outside the
