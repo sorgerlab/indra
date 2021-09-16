@@ -567,9 +567,9 @@ def _get_mesh_type(mesh_client, mesh_id):
             mesh_client.has_tree_prefix(mesh_id, 'D12'):
         return 'human_gene_protein'
     # We classify the remainder as small molecules
-    elif mesh_client.has_tree_prefix('D'):
+    elif mesh_client.has_tree_prefix(mesh_id, 'D'):
         return 'small_molecule'
-    elif mesh_client.has_tree_prefix('A'):
+    elif mesh_client.has_tree_prefix(mesh_id, 'A'):
         return 'anatomical_region'
     elif mesh_client.has_tree_prefix(mesh_id, 'B'):
         return 'organism'
