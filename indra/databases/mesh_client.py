@@ -271,6 +271,10 @@ def mesh_isa_web(mesh_id1, mesh_id2):
 def get_mesh_tree_numbers(mesh_id):
     """Return MeSH tree IDs associated with a MeSH ID from the resource file.
 
+    This function can handle supplementary concepts by first mapping them
+    to primary terms and then collecting all the tree numbers for the mapped
+    primary terms.
+
     Parameters
     ----------
     mesh_id : str
@@ -281,7 +285,16 @@ def get_mesh_tree_numbers(mesh_id):
     list[str]
         A list of MeSH tree IDs.
     """
-    return mesh_id_to_tree_numbers.get(mesh_id, [])
+    # Handle supplementary concepts
+    if mesh_id and mesh_id.startswith('C'):
+        primary_ids = get_primary_mappings(mesh_id)
+        all_tree_ids = set()
+        for primary_id in primary_ids:
+            all_tree_ids |= set(mesh_id_to_tree_numbers.get(primary_id, []))
+        return list(all_tree_ids)
+    # Handle primary terms
+    else:
+        return mesh_id_to_tree_numbers.get(mesh_id, [])
 
 
 def get_mesh_tree_numbers_from_web(mesh_id):

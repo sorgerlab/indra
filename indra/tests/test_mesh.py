@@ -124,3 +124,8 @@ def test_supplementary_to_primary():
             assert_valid_id('MESH', primary)
     mesh_client.get_primary_mappings('C009879') == ['D011140']
     mesh_client.get_primary_mappings('C114158') == ['D005063', 'D009942']
+
+
+def test_supplementary_tree_number():
+    tree_numbers = mesh_client.get_mesh_tree_numbers('C009879')
+    assert 'D25.720.327.782' in tree_numbers
