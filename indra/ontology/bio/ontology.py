@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.16'
+    version = '1.17'
 
     def __init__(self):
         super().__init__()
@@ -94,13 +94,17 @@ class BioOntology(IndraOntology):
         from indra.databases import hgnc_client
         withdrawns = set(hgnc_client.hgnc_withdrawn)
         nodes = [(self.label('HGNC', hid),
-                  {'name': hname, 'obsolete': (hid in withdrawns)})
+                  {'name': hname, 'obsolete': (hid in withdrawns),
+                   'type': 'human_gene_protein'})
                  for (hid, hname) in hgnc_client.hgnc_names.items()]
         self.add_nodes_from(nodes)
 
     def add_uniprot_nodes(self):
         from indra.databases import uniprot_client
-        nodes = [(self.label('UP', uid), {'name': uname})
+
+        nodes = [(self.label('UP', uid),
+                  {'name': uname,
+                   'type': _get_uniprot_type(uniprot_client, uid)})
                  for (uid, uname)
                  in uniprot_client.um.uniprot_gene_name.items()]
         self.add_nodes_from(nodes)
@@ -109,11 +113,13 @@ class BioOntology(IndraOntology):
         from indra.databases import uniprot_client
         nodes = []
         for prot_id, features in uniprot_client.um.features.items():
+            parent_type = _get_uniprot_type(uniprot_client, prot_id)
             for feature in features:
                 if feature.id is None:
                     continue
                 node = self.label('UPPRO', feature.id)
-                data = {'name': feature.name}
+                data = {'name': feature.name,
+                        'type': parent_type + '_fragment'}
                 nodes.append((node, data))
         self.add_nodes_from(nodes)
 
@@ -157,7 +163,8 @@ class BioOntology(IndraOntology):
                 os.path.join('famplex', 'entities.csv')), delimiter=','):
             entity = row[0]
             nodes.append((self.label('FPLX', entity),
-                          {'name': entity}))
+                          {'name': entity,
+                           'type': 'protein_family_complex'}))
         self.add_nodes_from(nodes)
 
     def add_famplex_hierarchy(self):
@@ -194,6 +201,14 @@ class BioOntology(IndraOntology):
         from indra.databases import obo_client
         namespaces = ['go', 'efo', 'hp', 'doid', 'chebi', 'ido']
         nodes = []
+        type_functions = {
+            'go': _get_go_type,
+            'efo': lambda x: 'experimental_factor',
+            'hp': lambda x: 'disease',
+            'doid': lambda x: 'disease',
+            'chebi': lambda x: 'small_molecule',
+            'ido': lambda x: 'infectious_disease_concept'
+        }
         for ns in namespaces:
             oc = obo_client.OntologyClient(prefix=ns)
             for db_id, entry in oc.entries.items():
@@ -205,7 +220,8 @@ class BioOntology(IndraOntology):
                 if ':' in db_id and not db_id.startswith(ns.upper()):
                     label = db_id
                 nodes.append((label,
-                              {'name': entry['name']}))
+                              {'name': entry['name'],
+                               'type': type_functions[ns](db_id)}))
         self.add_nodes_from(nodes)
 
     def add_obo_hierarchies(self):
@@ -269,7 +285,6 @@ class BioOntology(IndraOntology):
             (chebi_client.cas_chebi, 'CAS', 'CHEBI', True),
             (drugbank_client.drugbank_to_db, 'DRUGBANK', None, False),
             (drugbank_client.db_to_drugbank, None, 'DRUGBANK', False),
-
         ]
         edges = []
         data = {'type': 'xref', 'source': 'chebi'}
@@ -301,7 +316,8 @@ class BioOntology(IndraOntology):
     def add_mesh_nodes(self):
         from indra.databases import mesh_client
         nodes = [(self.label('MESH', mesh_id),
-                  {'name': name})
+                  {'name': name,
+                   'type': _get_mesh_type(mesh_client, mesh_id)})
                  for mesh_id, name in
                  mesh_client.mesh_id_to_name.items()]
         self.add_nodes_from(nodes)
@@ -466,7 +482,8 @@ class BioOntology(IndraOntology):
         next(lspci)
         for (lspcid, name, members_str) in lspci:
             label = self.label('LSPCI', lspcid)
-            nodes_to_add.append((label, {'name': name}))
+            nodes_to_add.append((label, {'name': name,
+                                         'type': 'small_molecule'}))
             members = [member.split(':', maxsplit=1)
                        for member in members_str.split('|')]
             edges_to_add += [(self.label(*member), label, {'type': 'isa'})
@@ -521,6 +538,49 @@ class BioOntology(IndraOntology):
             assert_valid_db_refs({db_ns: db_id})
         except Exception as e:
             logger.warning(e)
+
+
+def _get_uniprot_type(uc, uid):
+    mnem = uc.get_mnemonic(uid)
+    if mnem and mnem.endswith('HUMAN'):
+        return 'human_gene_protein'
+    else:
+        return 'nonhuman_gene_protein'
+
+
+def _get_go_type(go_id):
+    from indra.databases import go_client
+    go_namespace = go_client.get_namespace(go_id)
+    term_name = go_client.get_go_label(go_id)
+    if go_namespace == 'cellular_component':
+        if 'complex' in term_name:
+            return 'protein_family_complex'
+        else:
+            return 'cellular_location'
+    elif go_namespace in {'biological_process', 'molecular_function'}:
+        return 'biological_process'
+
+
+def _get_mesh_type(mesh_client, mesh_id):
+    # These subtrees under D are for proteins
+    if mesh_client.has_tree_prefix(mesh_id, 'D08') or \
+            mesh_client.has_tree_prefix(mesh_id, 'D12'):
+        return 'human_gene_protein'
+    # We classify the remainder as small molecules
+    elif mesh_client.has_tree_prefix('D'):
+        return 'small_molecule'
+    elif mesh_client.has_tree_prefix('A'):
+        return 'anatomical_region'
+    elif mesh_client.has_tree_prefix(mesh_id, 'B'):
+        return 'organism'
+    elif mesh_client.has_tree_prefix(mesh_id, 'C'):
+        return 'disease'
+    elif mesh_client.has_tree_prefix(mesh_id, 'E'):
+        return 'experimental_factor'
+    elif mesh_client.has_tree_prefix(mesh_id, 'G'):
+        return 'biological_process'
+    else:
+        return 'other'
 
 
 CACHE_DIR = os.path.join((get_config('INDRA_RESOURCES') or
