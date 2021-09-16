@@ -3,6 +3,7 @@ import re
 import json
 import requests
 import itertools
+from typing import List
 from functools import lru_cache
 from os.path import abspath, dirname, join, pardir
 from indra.util import read_unicode_csv
@@ -42,9 +43,9 @@ def _load_mesh_file(path, supplementary):
             mesh_name_to_id_name[term] = [mesh_id, mesh_label]
 
 
-_load_mesh_file(MESH_FILE)
+_load_mesh_file(MESH_FILE, supplementary=False)
 if os.path.exists(MESH_SUPP_FILE):
-    _load_mesh_file(MESH_SUPP_FILE)
+    _load_mesh_file(MESH_SUPP_FILE, supplementary=True)
 
 
 def _load_db_mappings(path):
@@ -415,6 +416,25 @@ def get_mesh_id_from_db_id(db_ns, db_id):
         otherwise None.
     """
     return db_to_mesh.get((db_ns, db_id))
+
+
+def get_primary_mappings(db_id: str) -> List[str]:
+    """Return the list of primary terms a supplementary term is mapped to.
+
+    See https://www.nlm.nih.gov/mesh/xml_data_elements.html#HeadingMappedTo.
+
+    Parameters
+    ----------
+    db_id :
+        A supplementary MeSH ID.
+
+    Returns
+    -------
+    :
+        The list of primary MeSH terms that the supplementary concept
+        is heading-mapped to.
+    """
+    return mesh_supp_to_primary.get(db_id, [])
 
 
 mesh_rdf_prefixes = """
