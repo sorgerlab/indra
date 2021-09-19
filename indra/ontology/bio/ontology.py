@@ -95,7 +95,7 @@ class BioOntology(IndraOntology):
         withdrawns = set(hgnc_client.hgnc_withdrawn)
         nodes = [(self.label('HGNC', hid),
                   {'name': hname, 'obsolete': (hid in withdrawns),
-                   'type': 'human_gene_protein'})
+                   'type': _get_hgnc_type(hgnc_client, hid)})
                  for (hid, hname) in hgnc_client.hgnc_names.items()]
         self.add_nodes_from(nodes)
 
@@ -174,7 +174,7 @@ class BioOntology(IndraOntology):
                 os.path.join('famplex', 'relations.csv')), delimiter=','):
             ns1, id1, rel, ns2, id2 = row
             if ns1 == 'HGNC':
-                id1 = hgnc_client.get_hgnc_id(id1)
+                id1 = hgnc_client.get_current_hgnc_id(id1)
             edges.append((self.label(ns1, id1),
                           self.label(ns2, id2),
                           {'type': rel}))
@@ -547,6 +547,15 @@ def _get_uniprot_type(uc, uid):
     else:
         return 'nonhuman_gene_protein'
 
+
+def _get_hgnc_type(hc, hgnc_id):
+    locus_type = hc.get_gene_type(hgnc_id)
+    if locus_type == 'gene with protein product':
+        return 'human_gene_protein'
+    elif locus_type.startswith('RNA'):
+        return 'human_rna'
+    else:
+        return 'human_gene_other'
 
 def _get_go_type(go_id):
     from indra.databases import go_client
