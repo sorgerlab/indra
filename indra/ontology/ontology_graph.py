@@ -455,6 +455,26 @@ class IndraOntology(networkx.DiGraph):
         return self.get_node_property(ns, id, property='name')
 
     @with_initialize
+    def get_type(self, ns, id):
+        """Return the type of a given entity.
+
+        Parameters
+        ----------
+        ns : str
+            An entity's name space.
+        id : str
+            An entity's ID.
+
+        Returns
+        -------
+        str or None
+            The type associated with the given entity or None
+            if the node is not in the ontology or doesn't
+            have a type annotation.
+        """
+        return self.get_node_property(ns, id, 'type')
+
+    @with_initialize
     def get_polarity(self, ns, id):
         """Return the polarity of a given entity.
 
