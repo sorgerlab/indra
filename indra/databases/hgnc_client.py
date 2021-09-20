@@ -2,6 +2,7 @@ import os
 import re
 import logging
 import requests
+from typing import Union
 import xml.etree.ElementTree as ET
 from functools import lru_cache
 
@@ -268,6 +269,25 @@ def get_hgnc_entry(hgnc_id):
     return xml_tree
 
 
+def get_gene_type(hgnc_id: str) -> Union[str, None]:
+    """Return the locus type of the genve with the given HGNC ID.
+
+    See more under Locus type at
+    https://www.genenames.org/help/symbol-report/#!/#tocAnchor-1-2
+
+    Parameters
+    ----------
+    hgnc_id :
+        The HGNC ID of the gene to get the locus type of.
+
+    Returns
+    -------
+    :
+        The locus type of the given gene.
+    """
+    return gene_type.get(hgnc_id)
+
+
 def is_kinase(gene_name):
     """Return True if the given gene name is a kinase.
 
@@ -334,6 +354,7 @@ def _read_hgnc_maps():
     ensembl_ids = {}
     ensembl_ids_reverse = {}
     hgnc_withdrawn_new_ids = {}
+    gene_types = {}
     # Skip the header
     next(csv_rows)
     for row in csv_rows:
@@ -400,17 +421,20 @@ def _read_hgnc_maps():
         if ensembl_id:
             ensembl_ids[hgnc_id] = ensembl_id
             ensembl_ids_reverse[ensembl_id] = hgnc_id
+        gene_type = row[11]
+        if gene_type:
+            gene_types[hgnc_id] = gene_type
     for old_id, new_id in hgnc_withdrawn_new_ids.items():
         hgnc_names[old_id] = hgnc_names[new_id]
 
     return (hgnc_names, hgnc_ids, hgnc_withdrawn,
             uniprot_ids, entrez_ids, entrez_ids_reverse, mouse_map, rat_map,
-            prev_sym_map, ensembl_ids, ensembl_ids_reverse)
+            prev_sym_map, ensembl_ids, ensembl_ids_reverse, gene_types)
 
 
 (hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids,
  entrez_ids_reverse, mouse_map, rat_map, prev_sym_map, ensembl_ids,
- ensembl_ids_reverse) = _read_hgnc_maps()
+ ensembl_ids_reverse, gene_type) = _read_hgnc_maps()
 
 
 def _read_kinases():

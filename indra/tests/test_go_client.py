@@ -44,3 +44,10 @@ def test_isa():
 def test_xrefs():
     xr = go_client._client.entries['GO:0008463']['xrefs']['KEGG_REACTION']
     assert xr == ['R00653'], xr
+
+
+def test_namespace():
+    assert go_client.get_namespace('xxx') is None
+    assert go_client.get_namespace('GO:0000015') == 'cellular_component'
+    assert go_client.get_namespace('GO:0000017') == 'biological_process'
+    assert go_client.get_namespace('GO:0000009') == 'molecular_function'

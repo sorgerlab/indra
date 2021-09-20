@@ -89,3 +89,8 @@ def test_get_current_id():
     ids = hgnc_client.get_current_hgnc_id('HOX1')
     assert len(ids) == 10
     assert '5101' in ids
+
+
+def test_gene_type():
+    assert hgnc_client.get_gene_type('1097') == 'gene with protein product'
+    assert hgnc_client.get_gene_type('31547') == 'RNA, micro'

@@ -52,7 +52,9 @@ def update_hgnc_entries():
     # Select relevant columns and parameters
     cols = ['gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_status',
             'gd_aliases', 'md_eg_id', 'md_prot_id',
-            'md_mgd_id', 'md_rgd_id', 'gd_prev_sym', 'gd_pub_ensembl_id']
+            'md_mgd_id', 'md_rgd_id', 'gd_prev_sym', 'gd_pub_ensembl_id',
+            'gd_locus_type']
+
     statuses = ['Approved', 'Entry%20Withdrawn']
     params = {
             'hgnc_dbtag': 'on',
@@ -548,8 +550,12 @@ def update_mesh_supplementary_names():
     for record in supp_et.iterfind('SupplementalRecord'):
         uid = record.find('SupplementalRecordUI').text
         name = record.find('SupplementalRecordName/String').text
+        mapped_to_terms = record.findall('HeadingMappedToList/HeadingMappedTo/'
+                                         'DescriptorReferredTo/DescriptorUI')
+        mapped_to = ','.join([term.text.replace('*', '')
+                              for term in mapped_to_terms])
         term_name_str = _get_term_name_str(record, name)
-        supp_rows.append((uid, name, term_name_str))
+        supp_rows.append((uid, name, term_name_str, mapped_to))
 
     fname = os.path.join(path, 'mesh_supp_id_label_mappings.tsv')
     write_unicode_csv(fname, supp_rows, delimiter='\t')

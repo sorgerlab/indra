@@ -3,6 +3,7 @@ import re
 import json
 import requests
 import itertools
+from typing import List
 from functools import lru_cache
 from os.path import abspath, dirname, join, pardir
 from indra.util import read_unicode_csv
@@ -19,13 +20,15 @@ mesh_id_to_name = {}
 mesh_name_to_id = {}
 mesh_name_to_id_name = {}
 mesh_id_to_tree_numbers = {}
+mesh_supp_to_primary = {}
 
 
-def _load_mesh_file(path):
+def _load_mesh_file(path, supplementary):
     it = read_unicode_csv(path, delimiter='\t')
     for terms in it:
-        if len(terms) == 3:
-            mesh_id, mesh_label, mesh_terms_str = terms
+        if supplementary:
+            mesh_id, mesh_label, mesh_terms_str, mapped_to_str = terms
+            mesh_supp_to_primary[mesh_id] = mapped_to_str.split(',')
         else:
             mesh_id, mesh_label, mesh_terms_str, tree_number_str = terms
             # This is a rare corner case where an entry is outside the
@@ -40,9 +43,9 @@ def _load_mesh_file(path):
             mesh_name_to_id_name[term] = [mesh_id, mesh_label]
 
 
-_load_mesh_file(MESH_FILE)
+_load_mesh_file(MESH_FILE, supplementary=False)
 if os.path.exists(MESH_SUPP_FILE):
-    _load_mesh_file(MESH_SUPP_FILE)
+    _load_mesh_file(MESH_SUPP_FILE, supplementary=True)
 
 
 def _load_db_mappings(path):
@@ -268,6 +271,10 @@ def mesh_isa_web(mesh_id1, mesh_id2):
 def get_mesh_tree_numbers(mesh_id):
     """Return MeSH tree IDs associated with a MeSH ID from the resource file.
 
+    This function can handle supplementary concepts by first mapping them
+    to primary terms and then collecting all the tree numbers for the mapped
+    primary terms.
+
     Parameters
     ----------
     mesh_id : str
@@ -278,7 +285,16 @@ def get_mesh_tree_numbers(mesh_id):
     list[str]
         A list of MeSH tree IDs.
     """
-    return mesh_id_to_tree_numbers.get(mesh_id, [])
+    # Handle supplementary concepts
+    if mesh_id and mesh_id.startswith('C'):
+        primary_ids = get_primary_mappings(mesh_id)
+        all_tree_ids = set()
+        for primary_id in primary_ids:
+            all_tree_ids |= set(mesh_id_to_tree_numbers.get(primary_id, []))
+        return list(all_tree_ids)
+    # Handle primary terms
+    else:
+        return mesh_id_to_tree_numbers.get(mesh_id, [])
 
 
 def get_mesh_tree_numbers_from_web(mesh_id):
@@ -413,6 +429,25 @@ def get_mesh_id_from_db_id(db_ns, db_id):
         otherwise None.
     """
     return db_to_mesh.get((db_ns, db_id))
+
+
+def get_primary_mappings(db_id: str) -> List[str]:
+    """Return the list of primary terms a supplementary term is mapped to.
+
+    See https://www.nlm.nih.gov/mesh/xml_data_elements.html#HeadingMappedTo.
+
+    Parameters
+    ----------
+    db_id :
+        A supplementary MeSH ID.
+
+    Returns
+    -------
+    :
+        The list of primary MeSH terms that the supplementary concept
+        is heading-mapped to.
+    """
+    return mesh_supp_to_primary.get(db_id, [])
 
 
 mesh_rdf_prefixes = """
