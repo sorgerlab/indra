@@ -130,6 +130,8 @@ class IndraNetAssembler():
         model : IndraNet
             IndraNet graph object.
         """
+        logger.info('Assembling %s model with %s method'
+                    % (graph_type, method))
         if method == 'df':
             return self.make_model_from_df(
                 exclude_stmts=exclude_stmts, complex_members=complex_members,
@@ -447,12 +449,13 @@ class IndraNetAssembler():
             # Conversion statements can also be turned into two types of signed
             conv_stmts = ac.filter_by_type(stmts, Conversion)
             for stmt in conv_stmts:
-                for obj in stmt.obj_from:
-                    graph_stmts.append(
-                        DecreaseAmount(stmt.subj, obj, stmt.evidence))
-                for obj in stmt.obj_to:
-                    graph_stmts.append(
-                        IncreaseAmount(stmt.subj, obj, stmt.evidence))
+                if stmt.subj:
+                    for obj in stmt.obj_from:
+                        graph_stmts.append(
+                            DecreaseAmount(stmt.subj, obj, stmt.evidence))
+                    for obj in stmt.obj_to:
+                        graph_stmts.append(
+                            IncreaseAmount(stmt.subj, obj, stmt.evidence))
             # Merge statements by agent name and polarity
             graph_stmts = ac.run_preassembly(
                 graph_stmts, return_toplevel=False,
