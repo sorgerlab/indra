@@ -130,6 +130,8 @@ class IndraNetAssembler():
         model : IndraNet
             IndraNet graph object.
         """
+        logger.info('Assembling %s model with %s method'
+                    % (graph_type, method))
         if method == 'df':
             return self.make_model_from_df(
                 exclude_stmts=exclude_stmts, complex_members=complex_members,
