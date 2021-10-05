@@ -94,14 +94,6 @@ def tag_instance(instance_id, **tags):
     # Remove None's from `tags`
     filtered_tags = {k: v for k, v in tags.items() if v and k}
 
-    # Check for existing tags
-    if instance.tags is not None:
-        existing_tags = {tag.get('Key'): tag.get('Value')
-                         for tag in instance.tags}
-        logger.debug("Ignoring existing tags; %s" % str(existing_tags))
-        for tag_key in existing_tags.keys():
-            filtered_tags.pop(tag_key, None)
-
     # If we have new tags to add, add them.
     tag_list = [{'Key': k, 'Value': v} for k, v in filtered_tags.items()]
     if len(tag_list):
@@ -114,6 +106,8 @@ def tag_instance(instance_id, **tags):
                 vol.create_tags(Tags=tag_list)
     else:
         logger.info('No new tags from: %s' % str(tags))
+    instance_tags = {tag.get('Key'): tag.get('Value') for tag in instance.tags}
+    logger.info('Updated instance tags: %s' % instance_tags)
     return
 
 
