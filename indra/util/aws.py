@@ -91,22 +91,12 @@ def tag_instance(instance_id, **tags):
     ec2 = boto3.resource('ec2')
     instance = ec2.Instance(instance_id)
 
-    # Remove None's from `tags`
-    filtered_tags = {k: v for k, v in tags.items() if v and k}
-
-    # Check for existing tags
-    if instance.tags is not None:
-        existing_tags = {tag.get('Key'): tag.get('Value')
-                         for tag in instance.tags}
-        logger.debug("Ignoring existing tags; %s" % str(existing_tags))
-        for tag_key in existing_tags.keys():
-            filtered_tags.pop(tag_key, None)
-
-    # If we have new tags to add, add them.
-    tag_list = [{'Key': k, 'Value': v} for k, v in filtered_tags.items()]
-    if len(tag_list):
+    # Remove None's from `tags` and reformat to the list format that
+    # boto3 expects
+    tag_list = [{'Key': k, 'Value': v} for k, v in tags.items() if k and v]
+    if tag_list:
         logger.info('Adding project tags "%s" to instance %s'
-                    % (filtered_tags, instance_id))
+                    % (str(tag_list), instance_id))
         instance.create_tags(Tags=tag_list)
         vols = instance.volumes.all()
         for page in vols.pages():
@@ -114,6 +104,8 @@ def tag_instance(instance_id, **tags):
                 vol.create_tags(Tags=tag_list)
     else:
         logger.info('No new tags from: %s' % str(tags))
+    instance_tags = {tag.get('Key'): tag.get('Value') for tag in instance.tags}
+    logger.info('Updated instance tags: %s' % instance_tags)
     return
 
 
