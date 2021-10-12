@@ -40,8 +40,8 @@ NewsAPI client (:py:mod:`indra.literature.newsapi_client`)
 .. automodule:: indra.literature.newsapi_client
     :members:
 
-Deft Tools (:py:mod:`indra.literature.adeft_tools`)
----------------------------------------------------
+Adeft Tools (:py:mod:`indra.literature.adeft_tools`)
+----------------------------------------------------
 
 .. automodule:: indra.literature.adeft_tools
     :members:

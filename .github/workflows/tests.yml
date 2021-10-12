@@ -75,7 +75,7 @@ jobs:
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        INDRA_DB_REST_URL: ${{ secrets.INDRA_DB_REST_URL }}/dev
+        INDRA_DB_REST_URL: ${{ secrets.INDRA_DB_REST_URL }}
         INDRA_DB_REST_API_KEY: ${{ secrets.INDRA_DB_REST_API_KEY }}
         ELSEVIER_API_KEY: ${{ secrets.ELSEVIER_API_KEY }}
         ELSEVIER_INST_KEY: ${{ secrets.ELSEVIER_INST_KEY }}
