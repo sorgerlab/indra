@@ -1,11 +1,16 @@
 Tools (:py:mod:`indra.tools`)
 =============================
 
-
 Run assembly components in a pipeline (:py:mod:`indra.tools.assemble_corpus`)
 -----------------------------------------------------------------------------
 
 .. automodule:: indra.tools.assemble_corpus
+    :members:
+
+Fix common invalidities in Statements (:py:mod:`indra.tools.fix_invalidities`)
+------------------------------------------------------------------------------
+
+.. automodule:: indra.tools.fix_invalidities
     :members:
 
 Annotate websites with INDRA through hypothes.is (:py:mod:`indra.tools.hypothesis_annotator`)
