@@ -2,17 +2,38 @@
 
 """Processor for remote INDRA JSON files."""
 
-import requests
 from typing import List
+
+import requests
 
 from ..statements import Statement, print_stmt_summary, stmts_from_json
 
 __all__ = [
+    "Processor",
     'RemoteProcessor',
 ]
 
 
-class RemoteProcessor:
+class Processor:
+    """A base class for processors."""
+
+    def extract_statements(self) -> List[Statement]:
+        """Extract statements from the remote JSON file."""
+        raise NotImplementedError
+
+    @classmethod
+    def cli(cls):
+        import click
+        @click.command()
+        def _main():
+            inst = cls()
+            stmts = inst.extract_statements()
+            print_stmt_summary(stmts)
+
+        _main()
+
+
+class RemoteProcessor(Processor):
     """A processor for INDRA JSON file to be retrieved by URL.
 
     Parameters
