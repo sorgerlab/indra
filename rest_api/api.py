@@ -305,7 +305,7 @@ reach_text_model = api.inherit('ReachText', bio_text_model, {
 })
 reach_json_model = api.model('ReachJSON', {'json': fields.String(example='{}')})
 reach_pmc_model = api.model('ReachPMC', {
-    'pmcid': fields.String(example='PMC3717945'),
+    'pmc_id': fields.String(example='PMC3717945'),
     'offline': fields.Boolean(default=False),
     'url': fields.String(example=reach_nxml_url)
 })
@@ -428,7 +428,7 @@ class ReachProcessPmc(Resource):
             A list of extracted INDRA Statements.
         """
         args = request.json
-        pmcid = args.get('pmcid')
+        pmcid = args.get('pmc_id')
         offline = True if args.get('offline') else False
         given_url = args.get('url')
         config_url = get_config('REACH_NXML_URL', failure_ok=True)
