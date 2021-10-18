@@ -142,8 +142,8 @@ def assert_valid_id(db_ns, db_id):
         raise MissingIdentifier(db_ns, None)
     identifiers_ns = identifiers_mappings.get(db_ns, db_ns.lower())
     if identifiers_ns in identifiers_registry:
-        pattern = identifiers_registry[identifiers_ns]['pattern']
-        if re.match(pattern, db_id):
+        pattern = identifiers_registry[identifiers_ns]['pattern_compiled']
+        if pattern.match(db_id):
             return
         else:
             raise InvalidIdentifier(db_ns, db_id, pattern)
