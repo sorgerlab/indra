@@ -55,14 +55,14 @@ Reading a PubMed Central article with REACH
 ```````````````````````````````````````````
 In this example, a full paper from `PubMed
 Central <http://www.ncbi.nlm.nih.gov/pmc/>`_ is processed. The paper's PMC ID is
-`PMC3717945 <http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3717945/>`_.
+`PMC8511698 <http://www.ncbi.nlm.nih.gov/pmc/articles/PMC8511698/>`_.
 
 .. Also update code in tests/test_docs_code.py:test_getting_started
 
 .. code:: python
 
     from indra.sources import reach
-    reach_processor = reach.process_pmc('3717945')
+    reach_processor = reach.process_pmc('PMC8511698')
 
 The `reach_processor` object has a `statements` attribute which contains a list
 of INDRA Statements extracted from the paper.
