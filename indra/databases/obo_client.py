@@ -268,11 +268,11 @@ class OboClient(OntologyClient):
 
     @classmethod
     def update_resource(cls, directory, url, prefix, *args, remove_prefix=False,
-                        allowed_synonyms=None, allowed_external_ns=None):
+                        allowed_synonyms=None, allowed_external_ns=None, force: bool = False):
         """Write the OBO information to files in the given directory."""
         resource_path = get_resource_path(f'{prefix}.json')
         obo_path = os.path.join(directory, '%s.obo.pkl' % prefix)
-        if os.path.exists(obo_path):
+        if os.path.exists(obo_path) and not force:
             with open(obo_path, 'rb') as file:
                 g = pickle.load(file)
         else:
@@ -312,13 +312,15 @@ class OboClient(OntologyClient):
         name: Optional[str] = None,
         path: Optional[str] = None,
         remove_prefix: bool = False,
+        force: bool = False,
     ) -> None:
         if name is None:
             name = f'{prefix}.obo'
         if path is None:
             path = RESOURCES_PATH
         url = f'http://purl.obolibrary.org/obo/{name}'
-        cls.update_resource(path, url, prefix, remove_prefix=remove_prefix)
+        cls.update_resource(path, url, prefix, remove_prefix=remove_prefix,
+                            force=force)
 
 
 def prune_empty_entries(entries, keys):
