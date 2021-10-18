@@ -2,7 +2,8 @@
 
 """Processor for remote INDRA JSON files."""
 
-from typing import List
+import pickle
+from typing import ClassVar, List
 
 import requests
 
@@ -17,6 +18,8 @@ __all__ = [
 class Processor:
     """A base class for processors."""
 
+    name: ClassVar[str]
+
     def extract_statements(self) -> List[Statement]:
         """Extract statements from the remote JSON file."""
         raise NotImplementedError
@@ -24,10 +27,16 @@ class Processor:
     @classmethod
     def cli(cls):
         import click
+
         @click.command()
-        def _main():
+        @click.option('--save', is_flag=True)
+        def _main(save: bool):
             inst = cls()
             stmts = inst.extract_statements()
+            if save:
+                import pystow
+                with pystow.join("indra", cls.name, name="stmts.pkl").open("wb") as file:
+                    pickle.dump(stmts, file, protocol=pickle.HIGHEST_PROTOCOL)
             print_stmt_summary(stmts)
 
         _main()
