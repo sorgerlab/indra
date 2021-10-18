@@ -39,10 +39,7 @@ def process_from_web(entity_type: str) -> CREEDSProcessor:
     processor : SimpleProcessor
         A processor with pre-extracted statements.
     """
-    processor_cls = processors[entity_type]
-    processor = processor_cls()
-    processor.extract_statements()
-    return processor
+    return _load(entity_type)
 
 
 def process_from_file(path: Union[str, Path], entity_type: str) -> CREEDSProcessor:
@@ -61,9 +58,15 @@ def process_from_file(path: Union[str, Path], entity_type: str) -> CREEDSProcess
     processor : SimpleProcessor
         A processor with pre-extracted statements.
     """
-    processor_cls = processors[entity_type]
     with open(path) as file:
         records = json.load(file)
+    if len(records) != 1:
+        raise ValueError
+    return _load(entity_type, records)
+
+
+def _load(entity_type, records=None):
+    processor_cls = processors[entity_type]
     processor = processor_cls(records)
     processor.extract_statements()
     return processor
