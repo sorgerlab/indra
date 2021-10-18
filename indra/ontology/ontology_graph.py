@@ -2,6 +2,7 @@ import logging
 import networkx
 import functools
 from collections import deque
+from typing import Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -547,7 +548,7 @@ class IndraOntology(networkx.DiGraph):
         return self._check_path(ns1, id1, ns2, id2, {'is_opposite'})
 
     @with_initialize
-    def get_id_from_name(self, ns, name):
+    def get_id_from_name(self, ns, name) -> Optional[Tuple[str, str]]:
         """Return an entity's ID given its name space and standard name.
 
         Parameters
@@ -559,9 +560,9 @@ class IndraOntology(networkx.DiGraph):
 
         Returns
         -------
-        str
-            The ID corresponding to the given standard name in
-            the given name space or None if it's not available.
+        :
+            The pair of namespace and ID corresponding to the given
+            standard name in the given name space or None if it's not available.
         """
         if not self.name_to_grounding:
             self._build_name_lookup()
