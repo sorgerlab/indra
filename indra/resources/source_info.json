@@ -6,7 +6,7 @@
         "domain": "general",
         "default_style": {
             "color": "white",
-            "background-color": "#fdbf6f"
+            "background-color": "#bc80bd"
         }
     },
     "drum": {
@@ -16,7 +16,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#ff595b"
+            "background-color": "#80b1d3"
         }
     },
     "reach": {
@@ -26,7 +26,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#8cde09"
+            "background-color": "#bebada"
         }
     },
     "sparser": {
@@ -36,7 +36,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#cab2d6"
+            "background-color": "#fdb462"
         }
     },
     "tees": {
@@ -46,7 +46,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#fb9a99"
+            "background-color": "#8dd3c7"
         }
     },
     "medscan": {
@@ -56,7 +56,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#ff7f00"
+            "background-color": "#b3de69"
         }
     },
     "rlimsp": {
@@ -66,7 +66,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#33a02c"
+            "background-color": "#fccde5"
         }
     },
     "isi": {
@@ -76,7 +76,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#b2df8a"
+            "background-color": "#fb8072"
         }
     },
     "geneways": {
@@ -86,7 +86,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#2daaff"
+            "background-color": "#d9d9d9"
         }
     },
     "biopax": {
@@ -96,7 +96,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#b2df8a"
+            "background-color": "#b3de69"
         }
     },
     "pc": {
@@ -106,7 +106,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#fb8072"
+            "background-color": "#b3de69"
         }
     },
     "phosphosite": {
@@ -116,7 +116,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#a6cee3"
+            "background-color": "#bc80bd"
         }
     },
     "cbn": {
@@ -126,7 +126,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#2daaff"
+            "background-color": "#d9d9d9"
         }
     },
     "bel": {
@@ -136,7 +136,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#33a02c"
+            "background-color": "#fb8072"
         }
     },
     "signor": {
@@ -146,7 +146,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#fb9a99"
+            "background-color": "#bebada"
         }
     },
     "biogrid": {
@@ -156,7 +156,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#ff595b"
+            "background-color": "#8dd3c7"
         }
     },
     "tas": {
@@ -166,7 +166,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#fdbf6f"
+            "background-color": "#e0e03d"
         }
     },
     "hprd": {
@@ -176,7 +176,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#ff7f00"
+            "background-color": "#80b1d3"
         }
     },
     "trrust": {
@@ -186,7 +186,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#cab2d6"
+            "background-color": "#fccde5"
         }
     },
     "phosphoelm": {
@@ -196,7 +196,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#ea5eff"
+            "background-color": "#ffe8f4"
         }
     },
     "virhostnet": {
@@ -206,7 +206,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#4daf4a"
+            "background-color": "#ccebc5"
         }
     },
     "ctd": {
@@ -216,7 +216,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#8cde09"
+            "background-color": "#ffed6f"
         }
     },
     "drugbank": {
@@ -226,7 +226,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#a656289e"
+            "background-color": "#fdb462"
         }
     },
     "omnipath": {
@@ -236,7 +236,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#f781bf"
+            "background-color": "#acfcfc"
         }
     },
     "minerva": {
@@ -246,7 +246,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#80b1d3"
+            "background-color": "#dd99ff"
         }
     },
     "dgi": {
@@ -266,7 +266,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#8dd3c7"
+            "background-color": "#00d4a6"
         }
     },
     "conib": {
@@ -286,7 +286,7 @@
         "domain": "biology",
         "default_style": {
             "color": "white",
-            "background-color": "#a6cee3"
+            "background-color": "#ffed6f"
         }
     },
     "creeds": {
