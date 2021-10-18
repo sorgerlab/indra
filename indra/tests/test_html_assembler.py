@@ -1,13 +1,14 @@
 import re
-from indra.statements import *
-from indra.resources import load_resource_json
+
 from indra.assemblers.english import AgentWithCoordinates
 from indra.assemblers.html.assembler import HtmlAssembler, tag_text, loader, \
-    _format_evidence_text, tag_agents, src_url, SOURCE_INFO
-from indra.util.statement_presentation import AveAggregator, StmtStat, StmtGroup
-    _format_evidence_text, tag_agents, generate_source_css,\
-    _source_info_to_source_colors, color_schemes, DEFAULT_SOURCE_COLORS, \
-    StmtGroup, internal_source_mappings
+    _format_evidence_text, tag_agents, src_url, SOURCE_INFO, \
+    DEFAULT_SOURCE_COLORS, generate_source_css, \
+    _source_info_to_source_colors, color_schemes
+from indra.resources import load_resource_json
+from indra.statements import *
+from indra.util.statement_presentation import AveAggregator, StmtStat, \
+    internal_source_mappings
 
 
 def make_stmt():
