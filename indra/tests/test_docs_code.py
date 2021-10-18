@@ -55,7 +55,7 @@ def test_readme_using_indra1():
 @attr('notravis')  # This test takes 10+ minutes, stalling Travis
 def test_readme_using_indra2():
     from indra.sources import reach
-    reach_processor = reach.process_pmc('3717945', url=reach.local_nxml_url)
+    reach_processor = reach.process_pmc('PMC8511698', url=reach.local_nxml_url)
     assert reach_processor.statements
 
 
