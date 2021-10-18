@@ -46,22 +46,27 @@ ORGANISMS_TO_NS = {
 #: CREEDS data to normalized keys. Several are not curated
 #: because they do not readily map to an INDRA statement
 PERTURBATIONS = {
+    # knockout
     "ko": "knockout",
     "deletion": "knockout",
-    "kd": "knockdown",
     "null mutation": "knockout",
+    # knockdown
+    "kd": "knockdown",
     "deficiency (mutation)": "knockdown",
     "silencing": "knockdown",
     "heterozygotic knockout (nf1+/-)": "knockout",
+    # increase
     "induction": "increase",
     "knock-in": "increase",
     "oe": "increase",
     "overexpression": "increase",
     "stimulation of gene product": "increase",
+    # activation
     "agonist activation": "activation",
     "drugactivation": "activation",
     "activemutant": "activation",
     "activation (deltanb-cateniner transgenics)": "activation",
+    # inhibition
     "druginhibition": "inhibition",
     "inhibition": "inhibition",
     "inactivation  (ikk inhibition)": "inhibition",
@@ -156,6 +161,7 @@ def _get_evidence(record: Mapping[str, Any]) -> Evidence:
         annotations={
             "organism": organism,
             "cell": cell_type,
+            "geo": geo_id,
         },
     )
 
@@ -213,6 +219,9 @@ class CREEDSProcessor(Processor):
         raise NotImplementedError
 
 
+LOGGED_MISSING_PART = set()
+
+
 class CREEDSGeneProcessor(CREEDSProcessor):
     """A processor for single gene perturbation experiments in CREEDS."""
 
@@ -244,11 +253,13 @@ class CREEDSGeneProcessor(CREEDSProcessor):
         if subject is None:
             return
 
-        pert_type = record["pert_type"]
+        pert_type = _process_pert_type(record["pert_type"])
         up_stmt_cls = UP_MAP.get(pert_type)
         down_stmt_cls = DOWN_MAP.get(pert_type)
         if up_stmt_cls is None or down_stmt_cls is None:
-            # The perturbation wasn't readily mappable to an INDRA-like statement class
+            if pert_type not in LOGGED_MISSING_PART:
+                tqdm.write(f"Could not look up pert_type {pert_type}")
+                LOGGED_MISSING_PART.add(pert_type)
             return
 
         yield from _process_record_helper(record, subject, up_stmt_cls, down_stmt_cls)
