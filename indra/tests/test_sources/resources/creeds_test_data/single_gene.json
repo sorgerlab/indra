@@ -1,0 +1,46 @@
+[
+  {
+    "cell_type": "heart",
+    "pert_ids": [
+      "GSM1080534",
+      "GSM1080535",
+      "GSM1080536",
+      "GSM1080537"
+    ],
+    "hs_gene_symbol": "PLIN5",
+    "curator": "dsurujon",
+    "geo_id": "GSE44192",
+    "platform": "GPL6246",
+    "version": "1.0",
+    "ctrl_ids": [
+      "GSM1080530",
+      "GSM1080531",
+      "GSM1080532",
+      "GSM1080533"
+    ],
+    "down_genes": [
+      [
+        "Pdk4",
+        -0.15385428071022034
+      ],
+      [
+        "Acaa2",
+        -0.12200647592544556
+      ]
+    ],
+    "up_genes": [
+      [
+        "Acta1",
+        0.2369437962770462
+      ],
+      [
+        "Plin5",
+        0.2143503874540329
+      ]
+    ],
+    "pert_type": "OE",
+    "organism": "mouse",
+    "id": "gene:509",
+    "mm_gene_symbol": "Plin5"
+  }
+]

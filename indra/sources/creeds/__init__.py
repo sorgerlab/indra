@@ -15,5 +15,9 @@ from the Gene Expression Omnibus due to three types of perturbations:
    *Nature Communications*, **7**(1), 12846.
 """
 
-from .api import process_from_web
-from .processor import CREEDSChemicalProcessor, CREEDSDiseaseProcessor, CREEDSGeneProcessor
+from .api import process_from_file, process_from_web
+from .processor import (
+    CREEDSChemicalProcessor,
+    CREEDSDiseaseProcessor,
+    CREEDSGeneProcessor,
+)

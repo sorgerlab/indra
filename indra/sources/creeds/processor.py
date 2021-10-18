@@ -3,7 +3,7 @@
 """Processors for CREEDS data."""
 
 from copy import copy
-from typing import Any, Iterable, List, Mapping, Optional, Tuple, Type
+from typing import Any, ClassVar, Iterable, List, Mapping, Optional, Tuple, Type
 
 import click
 import pandas as pd
@@ -14,7 +14,7 @@ from indra import statements
 from indra.databases import hgnc_client
 from indra.ontology.bio import bio_ontology
 from indra.ontology.standardize import get_standard_agent
-from indra.sources.utils import SimpleProcessor
+from indra.sources.utils import Processor
 from indra.statements import Agent, Evidence, Statement
 
 __all__ = [
@@ -25,10 +25,10 @@ __all__ = [
 
 CREEDS_MODULE = pystow.module("bio", "creeds")
 BASE_URL = "http://amp.pharm.mssm.edu/CREEDS/download"
-GENE_PERTURBATIONS_METADATA_URL = f'{BASE_URL}/single_gene_perturbations-v1.0.csv'
-GENE_PERTURBATIONS_DATA_URL = f'{BASE_URL}/single_gene_perturbations-v1.0.json'
-DISEASE_DATA_URL = f'{BASE_URL}/disease_signatures-v1.0.json'
-CHEMICAL_DATA_URL = f'{BASE_URL}/single_drug_perturbations-v1.0.json'
+GENE_PERTURBATIONS_METADATA_URL = f"{BASE_URL}/single_gene_perturbations-v1.0.csv"
+GENE_PERTURBATIONS_DATA_URL = f"{BASE_URL}/single_gene_perturbations-v1.0.json"
+DISEASE_DATA_URL = f"{BASE_URL}/disease_signatures-v1.0.json"
+CHEMICAL_DATA_URL = f"{BASE_URL}/single_drug_perturbations-v1.0.json"
 
 #: Organism label to NCBI Taxonomy Identifier
 ORGANISMS = {
@@ -53,18 +53,15 @@ PERTURBATIONS = {
     "deficiency (mutation)": "knockdown",
     "silencing": "knockdown",
     "heterozygotic knockout (nf1+/-)": "knockout",
-
     "induction": "increase",
     "knock-in": "increase",
     "oe": "increase",
     "overexpression": "increase",
     "stimulation of gene product": "increase",
-
     "agonist activation": "activation",
     "drugactivation": "activation",
     "activemutant": "activation",
     "activation (deltanb-cateniner transgenics)": "activation",
-
     "druginhibition": "inhibition",
     "inhibition": "inhibition",
     "inactivation  (ikk inhibition)": "inhibition",
@@ -75,7 +72,6 @@ PERTURBATIONS = {
     "defectivemutant": "inhibition",
     "inactivation": "inhibition",
     "drug": "inhibition",
-
     # misc
     "mutant": "mutation",
     "rd1 mutation": "mutation",
@@ -88,21 +84,21 @@ PERTURBATIONS = {
 #: genes whose gene expression increases from the given perturbation
 #: of the subject gene
 UP_MAP: Mapping[str, Type[statements.RegulateAmount]] = {
-    'knockout': statements.DecreaseAmount,
-    'knockdown': statements.DecreaseAmount,
-    'inhibition': statements.DecreaseAmount,
-    'increase': statements.IncreaseAmount,
-    'activation': statements.IncreaseAmount,
+    "knockout": statements.DecreaseAmount,
+    "knockdown": statements.DecreaseAmount,
+    "inhibition": statements.DecreaseAmount,
+    "increase": statements.IncreaseAmount,
+    "activation": statements.IncreaseAmount,
 }
 #: A mapping of perturbation types to statement types for the target
 #: genes whose gene expression decreases from the given perturbation
 #: of the subject gene
 DOWN_MAP: Mapping[str, Type[statements.RegulateAmount]] = {
-    'knockout': statements.IncreaseAmount,
-    'knockdown': statements.IncreaseAmount,
-    'inhibition': statements.IncreaseAmount,
-    'increase': statements.DecreaseAmount,
-    'activation': statements.DecreaseAmount,
+    "knockout": statements.IncreaseAmount,
+    "knockdown": statements.IncreaseAmount,
+    "inhibition": statements.IncreaseAmount,
+    "increase": statements.DecreaseAmount,
+    "activation": statements.DecreaseAmount,
 }
 
 
@@ -114,9 +110,11 @@ def _process_pert_type(s: str) -> str:
 def preprocess_metadata(force: bool = False) -> pd.DataFrame:
     # TODO not technically necessary, but good for reference.
     #  Might delete before finishing the PR
-    metadata = CREEDS_MODULE.ensure_csv(url=GENE_PERTURBATIONS_METADATA_URL, force=force, read_csv_kwargs=dict(sep=","))
+    metadata = CREEDS_MODULE.ensure_csv(
+        url=GENE_PERTURBATIONS_METADATA_URL, force=force, read_csv_kwargs=dict(sep=",")
+    )
     metadata = metadata[metadata.pert_type.notna()]
-    metadata.id = metadata.id.map(lambda s: s[len("gene:"):])
+    metadata.id = metadata.id.map(lambda s: s[len("gene:") :])
     metadata.organism = metadata.id.map(ORGANISMS, na_action="ignore")
     metadata.pert_type = metadata.pert_type.map(_process_pert_type, na_action="ignore")
     return metadata
@@ -172,7 +170,9 @@ def _get_regulations(
     return up_genes, down_genes
 
 
-def _st(record, subject, up_stmt_cls, down_stmt_cls) -> Iterable[Statement]:
+def _process_record_helper(
+    record, subject, up_stmt_cls, down_stmt_cls
+) -> Iterable[Statement]:
     up_genes, down_genes = _get_regulations(record)
     evidence = _get_evidence(record)
     for prefix, identifier, name in up_genes:
@@ -183,19 +183,45 @@ def _st(record, subject, up_stmt_cls, down_stmt_cls) -> Iterable[Statement]:
         yield down_stmt_cls(subject, target, copy(evidence))
 
 
-class CREEDSGeneProcessor(SimpleProcessor):
+class CREEDSProcessor(Processor):
+    """A base processor for CREEDS, which can either take records directly,
+    or looks for it on the web using the given class variable ``url`` in
+    combination with :mod:`pystow`.
+    """
+
+    #: The URL of the remote JSON file
+    url: ClassVar[str]
+    #: The processed statements (after ``extract_statements()`` is run)
+    statements: List[Statement]
+
+    def __init__(self, records: Optional[List[Mapping[str, Any]]] = None):
+        self.records = records or CREEDS_MODULE.ensure_json(url=self.url)
+        self.statements = []
+
+    def extract_statements(self) -> List[Statement]:
+        """Generate and store statements if not pre-cached, then return then."""
+        if not self.statements:
+            self.statements = list(self.iter_statements())
+        return self.statements
+
+    def iter_statements(self) -> Iterable[Statement]:
+        for record in tqdm(self.records, desc=f"Processing {self.name}"):
+            yield from self.process_record(record)
+
+    @classmethod
+    def process_record(cls, record: Mapping[str, Any]) -> Iterable[Statement]:
+        raise NotImplementedError
+
+
+class CREEDSGeneProcessor(CREEDSProcessor):
     """A processor for single gene perturbation experiments in CREEDS."""
 
     name = "creeds_gene"
-
-    def iter_statements(self) -> Iterable[Statement]:
-        records = CREEDS_MODULE.ensure_json(url=GENE_PERTURBATIONS_DATA_URL)
-        for record in tqdm(records, desc=f'Processing {self.name}'):
-            yield from self.process_record(record)
+    url = GENE_PERTURBATIONS_DATA_URL
 
     @staticmethod
     def get_subject(record) -> Optional[Agent]:
-        perturbed_ncbigene_id = record["id"][len("gene:"):]
+        perturbed_ncbigene_id = record["id"][len("gene:") :]
         organism = record["organism"]
         if organism == "human":
             name = record["hs_gene_symbol"]
@@ -225,18 +251,14 @@ class CREEDSGeneProcessor(SimpleProcessor):
             # The perturbation wasn't readily mappable to an INDRA-like statement class
             return
 
-        yield from _st(record, subject, up_stmt_cls, down_stmt_cls)
+        yield from _process_record_helper(record, subject, up_stmt_cls, down_stmt_cls)
 
 
-class CREEDSDiseaseProcessor(SimpleProcessor):
+class CREEDSDiseaseProcessor(CREEDSProcessor):
     """A processor for disease perturbation experiments in CREEDS."""
 
     name = "creeds_disease"
-
-    def iter_statements(self) -> Iterable[Statement]:
-        records = CREEDS_MODULE.ensure_json(url=DISEASE_DATA_URL)
-        for record in tqdm(records, desc=f'Processing {self.name}'):
-            yield from self.process_record(record)
+    url = DISEASE_DATA_URL
 
     @staticmethod
     def get_subject(record) -> Agent:
@@ -253,22 +275,19 @@ class CREEDSDiseaseProcessor(SimpleProcessor):
     @classmethod
     def process_record(cls, record) -> Iterable[Statement]:
         subject = cls.get_subject(record)
-        yield from _st(
-            record, subject,
+        yield from _process_record_helper(
+            record,
+            subject,
             up_stmt_cls=statements.IncreaseAmount,
             down_stmt_cls=statements.DecreaseAmount,
         )
 
 
-class CREEDSChemicalProcessor(SimpleProcessor):
+class CREEDSChemicalProcessor(CREEDSProcessor):
     """A processor for chemical perturbation experiments in CREEDS."""
 
     name = "creeds_chemical"
-
-    def iter_statements(self) -> Iterable[Statement]:
-        records = CREEDS_MODULE.ensure_json(url=CHEMICAL_DATA_URL)
-        for record in tqdm(records, desc=f'Processing {self.name}'):
-            yield from self.process_record(record)
+    url = CHEMICAL_DATA_URL
 
     @staticmethod
     def get_subject(record) -> Agent:
@@ -288,8 +307,9 @@ class CREEDSChemicalProcessor(SimpleProcessor):
     @classmethod
     def process_record(cls, record) -> Iterable[Statement]:
         subject = cls.get_subject(record)
-        yield from _st(
-            record, subject,
+        yield from _process_record_helper(
+            record,
+            subject,
             up_stmt_cls=statements.IncreaseAmount,
             down_stmt_cls=statements.DecreaseAmount,
         )
@@ -303,5 +323,5 @@ def _main(ctx: click.Context):
     ctx.invoke(CREEDSDiseaseProcessor.get_cli())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _main()

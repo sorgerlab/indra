@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 __all__ = [
     "Processor",
     'RemoteProcessor',
-    "SimpleProcessor",
 ]
 
 
@@ -87,23 +86,3 @@ class RemoteProcessor(Processor):
     def print_summary(self) -> None:
         """Print a summary of the statements."""
         print_stmt_summary(self.statements)
-
-
-class SimpleProcessor(Processor):
-    """A processor that is implemented by creating an iterator over statements."""
-
-    #: A list of INDRA statements extracted by the processor
-    statements: List[Statement]
-
-    def __init__(self):
-        self.statements = []
-
-    def iter_statements(self) -> Iterable[Statement]:
-        """Generate statements with an iterable."""
-        raise NotImplementedError
-
-    def extract_statements(self) -> List[Statement]:
-        """Generate and store statements if not pre-cached, then return then."""
-        if not self.statements:
-            self.statements = list(self.iter_statements())
-        return self.statements
