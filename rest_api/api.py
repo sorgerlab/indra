@@ -305,7 +305,7 @@ reach_text_model = api.inherit('ReachText', bio_text_model, {
 })
 reach_json_model = api.model('ReachJSON', {'json': fields.String(example='{}')})
 reach_pmc_model = api.model('ReachPMC', {
-    'pmc_id': fields.String(example='PMC3717945'),
+    'pmc_id': fields.String(example='PMC8511698'),
     'offline': fields.Boolean(default=False),
     'url': fields.String(example=reach_nxml_url)
 })
@@ -407,7 +407,7 @@ class ReachProcessPmc(Resource):
         pmc_id : str
             The ID of a PubmedCentral article. The string may start with PMC
             but passing just the ID also works.
-            Examples: 3717945, PMC3717945
+            Examples: 8511698, PMC8511698
             https://www.ncbi.nlm.nih.gov/pmc/
 
         offline : Optional[bool]

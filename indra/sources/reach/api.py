@@ -45,7 +45,7 @@ def process_pmc(pmc_id, offline=False, url=None,
     pmc_id : str
         The ID of a PubmedCentral article. The string may start with PMC but
         passing just the ID also works.
-        Examples: 3717945, PMC3717945
+        Examples: 8511698, PMC8511698
         https://www.ncbi.nlm.nih.gov/pmc/
     offline : Optional[bool]
         If set to True, the REACH system is run offline via a JAR file.
