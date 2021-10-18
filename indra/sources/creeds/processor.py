@@ -1,19 +1,22 @@
-from collections import Counter
-from typing import Iterable
+"""Processors for CREEDS data."""
+
+from copy import copy
+from typing import Any, Iterable, List, Literal, Mapping, Optional, Tuple, Type
 
 import pandas as pd
 import pystow
-from tabulate import tabulate
+from tqdm import tqdm
 
+from indra import statements
+from indra.databases import hgnc_client
 from indra.ontology.bio import bio_ontology
 from indra.ontology.standardize import get_standard_agent
 from indra.sources.utils import Processor
+from indra.statements import Evidence, Statement
 
 __all__ = [
     "GeneProcessor",
 ]
-
-from indra.statements import Statement
 
 CREEDS_MODULE = pystow.module("bio", "creeds")
 BASE_URL = "http://amp.pharm.mssm.edu/CREEDS/download"
@@ -26,6 +29,9 @@ ORGANISMS = {
     "human": "9606",
     "rat": "10116",
 }
+#: A mapping of strings used in the "pert_type" entries in
+#: CREEDS data to normalized keys. Several are not curated
+#: because they do not readily map to an INDRA statement
 PERTURBATIONS = {
     "ko": "knockout",
     "deletion": "knockout",
@@ -65,75 +71,137 @@ PERTURBATIONS = {
     "g93a mutation": "mutation",
 }
 
+#: A mapping of perturbation types to statement types for the target
+#: genes whose gene expression increases from the given perturbation
+#: of the subject gene
+UP_MAP: Mapping[str, Type[statements.RegulateAmount]] = {
+    'knockout': statements.DecreaseAmount,
+    'knockdown': statements.DecreaseAmount,
+    'inhibition': statements.DecreaseAmount,
+    'increase': statements.IncreaseAmount,
+    'activation': statements.IncreaseAmount,
+}
+#: A mapping of perturbation types to statement types for the target
+#: genes whose gene expression decreases from the given perturbation
+#: of the subject gene
+DOWN_MAP: Mapping[str, Type[statements.RegulateAmount]] = {
+    'knockout': statements.IncreaseAmount,
+    'knockdown': statements.IncreaseAmount,
+    'inhibition': statements.IncreaseAmount,
+    'increase': statements.DecreaseAmount,
+    'activation': statements.DecreaseAmount,
+}
+
+
+def _process_pert_type(s: str) -> str:
+    x = s.strip().lower()
+    return PERTURBATIONS.get(x, x)
+
 
 def preprocess_metadata(force: bool = False) -> pd.DataFrame:
+    # TODO not technically necessary, but good for reference.
+    #  Might delete before finishing the PR
     metadata = CREEDS_MODULE.ensure_csv(url=GENE_PERTURBATIONS_METADATA_URL, force=force, read_csv_kwargs=dict(sep=","))
     metadata = metadata[metadata.pert_type.notna()]
     metadata.id = metadata.id.map(lambda s: s[len("gene:"):])
     metadata.organism = metadata.id.map(ORGANISMS, na_action="ignore")
-
-    metadata.pert_type = metadata.pert_type.map(str.strip)
-    metadata.pert_type = metadata.pert_type.map(str.lower)
-    for key in metadata.pert_type.unique():
-        if key not in PERTURBATIONS and pd.notna(key):
-            PERTURBATIONS[key] = key
-    metadata.pert_type = metadata.pert_type.map(PERTURBATIONS)
+    metadata.pert_type = metadata.pert_type.map(_process_pert_type, na_action="ignore")
     return metadata
 
 
-def preprocess_records() -> Iterable[Statement]:
-    records = CREEDS_MODULE.ensure_json(url=GENE_PERTURBATIONS_DATA_URL)
-    for record in records:
-        yield from process_record(record)
+def _get_genes(
+    record: Mapping[str, Any],
+    prefix: str,
+    key: Literal["down_genes", "up_genes"],
+) -> List[Tuple[str, str, str]]:
+    rv = []
+    #: A list of 2-tuples with the gene symbol then the expression value
+    expressions = record[key]
+    for symbol, _ in expressions:
+        try:
+            _, identifier = bio_ontology.get_id_from_name(prefix, symbol)
+        except TypeError:
+            # "cannot unpack non-iterable NoneType object"
+            # This happens if none is returned and it can't unpack the tuple
+            continue
+        else:
+            rv.append((prefix, identifier, symbol))
+    return rv
 
 
-def x(record, ns, key):
-    return [
-        (ns, symbol, bio_ontology.get_id_from_name(ns, symbol))
-        for symbol, _ in record[key]
-    ]
+def _rat_name_from_human_name(human_name: str) -> Optional[str]:
+    _, human_id = bio_ontology.get_id_from_name("HGNC", human_name)
+    rat_id = hgnc_client.get_rat_id(human_id)
+    return bio_ontology.get_name("RGD", rat_id)
 
 
-def process_record(record):
+def process_record(record: Mapping[str, Any]) -> Iterable[Statement]:
     organism = record["organism"]
     perturbed_ncbigene_id = record["id"][len("gene:"):]
 
     if organism == "human":
         name = record["hs_gene_symbol"]
-        down_genes = x(record, "HGNC", "down_genes")
-        up_genes = x(record, "HGNC", "up_genes")
+        down_genes = _get_genes(record, "HGNC", "down_genes")
+        up_genes = _get_genes(record, "HGNC", "up_genes")
     elif organism == "rat":
-        name = record["rs_gene_symbol"]
-        down_genes = x(record, "RGD", "down_genes")
-        up_genes = x(record, "RGD", "up_genes")
+        name = record.get("rs_gene_symbol")
+        if name is None:
+            # they did not include consistent curation of rat gene symbols
+            name = _rat_name_from_human_name(record["hs_gene_symbol"])
+        if name is None:
+            return
+        down_genes = _get_genes(record, "RGD", "down_genes")
+        up_genes = _get_genes(record, "RGD", "up_genes")
     elif organism == "mouse":
         name = record["mm_gene_symbol"]
-        down_genes = x(record, "MGI", "down_genes")
-        up_genes = x(record, "MGI", "up_genes")
+        down_genes = _get_genes(record, "MGI", "down_genes")
+        up_genes = _get_genes(record, "MGI", "up_genes")
     else:
-        raise ValueError
+        raise ValueError(f"unhandled organism: {organism}")
+
+    pert_type = record["pert_type"]
+    up_stmt_cls = UP_MAP.get(pert_type)
+    down_stmt_cls = DOWN_MAP.get(pert_type)
+    if up_stmt_cls is None or down_stmt_cls is None:
+        # The perturbation wasn't readily mappable to an INDRA-like statement class
+        return
+
+    # TODO how to use the following metadata?
+    geo_id = record["geo_id"]
+    cell_type = record["cell_type"]
+    evidence = Evidence(
+        source_api="creeds",
+        annotations={
+            "organism": organism,
+            "cell": cell_type,
+        },
+    )
     subject = get_standard_agent(name, {"EGID": perturbed_ncbigene_id})
-    stmt_cls = ...
-    for ns, name, id in up_genes:
-        if id is None:
-            continue
-        target = get_standard_agent(name, {ns: id})
-        yield stmt_cls(subject, target)
+    for prefix, identifier, name in up_genes:
+        target = get_standard_agent(name, {prefix: identifier})
+        yield up_stmt_cls(subject, target, copy(evidence))
+    for prefix, identifier, name in down_genes:
+        target = get_standard_agent(name, {prefix: identifier})
+        yield down_stmt_cls(subject, target, copy(evidence))
+
 
 class GeneProcessor(Processor):
+    """A processor for single gene perturbation experiments in CREEDS."""
+
+    name = "creeds"
+
     def __init__(self):
-        self.metadata = preprocess_metadata()
+        self.statements = []
 
-        print(tabulate(Counter(self.metadata.pert_type).most_common(25)))
+    def extract_statements(self) -> List[Statement]:
+        if self.statements:
+            return self.statements
 
-        self.records = {}
+        records = CREEDS_MODULE.ensure_json(url=GENE_PERTURBATIONS_DATA_URL)
+        for record in tqdm(records, desc='Processing CREEDS'):
+            self.statements.extend(process_record(record))
 
-    def extract_statements(self):
-        return []
-
-    @staticmethod
-    def _process_record(record):
-        pass
+        return self.statements
 
 
 if __name__ == '__main__':
