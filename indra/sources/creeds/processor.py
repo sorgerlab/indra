@@ -135,73 +135,80 @@ def _rat_name_from_human_name(human_name: str) -> Optional[str]:
     return bio_ontology.get_name("RGD", rat_id)
 
 
-def process_record(record: Mapping[str, Any]) -> Iterable[Statement]:
-    organism = record["organism"]
-    perturbed_ncbigene_id = record["id"][len("gene:"):]
-
-    if organism == "human":
-        name = record["hs_gene_symbol"]
-        down_genes = _get_genes(record, "HGNC", "down_genes")
-        up_genes = _get_genes(record, "HGNC", "up_genes")
-    elif organism == "rat":
-        name = record.get("rs_gene_symbol")
-        if name is None:
-            # they did not include consistent curation of rat gene symbols
-            name = _rat_name_from_human_name(record["hs_gene_symbol"])
-        if name is None:
-            return
-        down_genes = _get_genes(record, "RGD", "down_genes")
-        up_genes = _get_genes(record, "RGD", "up_genes")
-    elif organism == "mouse":
-        name = record["mm_gene_symbol"]
-        down_genes = _get_genes(record, "MGI", "down_genes")
-        up_genes = _get_genes(record, "MGI", "up_genes")
-    else:
-        raise ValueError(f"unhandled organism: {organism}")
-
-    pert_type = record["pert_type"]
-    up_stmt_cls = UP_MAP.get(pert_type)
-    down_stmt_cls = DOWN_MAP.get(pert_type)
-    if up_stmt_cls is None or down_stmt_cls is None:
-        # The perturbation wasn't readily mappable to an INDRA-like statement class
-        return
-
-    # TODO how to use the following metadata?
-    geo_id = record["geo_id"]
-    cell_type = record["cell_type"]
-    evidence = Evidence(
-        source_api="creeds",
-        annotations={
-            "organism": organism,
-            "cell": cell_type,
-        },
-    )
-    subject = get_standard_agent(name, {"EGID": perturbed_ncbigene_id})
-    for prefix, identifier, name in up_genes:
-        target = get_standard_agent(name, {prefix: identifier})
-        yield up_stmt_cls(subject, target, copy(evidence))
-    for prefix, identifier, name in down_genes:
-        target = get_standard_agent(name, {prefix: identifier})
-        yield down_stmt_cls(subject, target, copy(evidence))
-
-
-class GeneProcessor(Processor):
-    """A processor for single gene perturbation experiments in CREEDS."""
-
-    name = "creeds"
+class SimpleProcesor(Processor):
+    statements: List[Statement]
 
     def __init__(self):
         self.statements = []
 
-    def extract_statements(self) -> List[Statement]:
-        if self.statements:
-            return self.statements
+    def iter_statements(self) -> Iterable[Statement]:
+        raise NotImplementedError
 
+    def extract_statements(self) -> List[Statement]:
+        if not self.statements:
+            self.statements = list(self.iter_statements())
+        return self.statements
+
+
+class GeneProcessor(SimpleProcesor):
+    """A processor for single gene perturbation experiments in CREEDS."""
+
+    name = "creeds"
+
+    def iter_statements(self) -> Iterable[Statement]:
         records = CREEDS_MODULE.ensure_json(url=GENE_PERTURBATIONS_DATA_URL)
         for record in tqdm(records, desc='Processing CREEDS'):
-            self.statements.extend(process_record(record))
+            yield from self.process_record(record)
 
-        return self.statements
+    @staticmethod
+    def process_record(record: Mapping[str, Any]) -> Iterable[Statement]:
+        organism = record["organism"]
+        perturbed_ncbigene_id = record["id"][len("gene:"):]
+
+        if organism == "human":
+            name = record["hs_gene_symbol"]
+            down_genes = _get_genes(record, "HGNC", "down_genes")
+            up_genes = _get_genes(record, "HGNC", "up_genes")
+        elif organism == "rat":
+            name = record.get("rs_gene_symbol")
+            if name is None:
+                # they did not include consistent curation of rat gene symbols
+                name = _rat_name_from_human_name(record["hs_gene_symbol"])
+            if name is None:
+                return
+            down_genes = _get_genes(record, "RGD", "down_genes")
+            up_genes = _get_genes(record, "RGD", "up_genes")
+        elif organism == "mouse":
+            name = record["mm_gene_symbol"]
+            down_genes = _get_genes(record, "MGI", "down_genes")
+            up_genes = _get_genes(record, "MGI", "up_genes")
+        else:
+            raise ValueError(f"unhandled organism: {organism}")
+
+        pert_type = record["pert_type"]
+        up_stmt_cls = UP_MAP.get(pert_type)
+        down_stmt_cls = DOWN_MAP.get(pert_type)
+        if up_stmt_cls is None or down_stmt_cls is None:
+            # The perturbation wasn't readily mappable to an INDRA-like statement class
+            return
+
+        # TODO how to use the following metadata?
+        geo_id = record["geo_id"]
+        cell_type = record["cell_type"]
+        evidence = Evidence(
+            source_api="creeds",
+            annotations={
+                "organism": organism,
+                "cell": cell_type,
+            },
+        )
+        subject = get_standard_agent(name, {"EGID": perturbed_ncbigene_id})
+        for prefix, identifier, name in up_genes:
+            target = get_standard_agent(name, {prefix: identifier})
+            yield up_stmt_cls(subject, target, copy(evidence))
+        for prefix, identifier, name in down_genes:
+            target = get_standard_agent(name, {prefix: identifier})
+            yield down_stmt_cls(subject, target, copy(evidence))
 
 
 if __name__ == '__main__':
