@@ -3,11 +3,14 @@
 """Processor for remote INDRA JSON files."""
 
 import pickle
-from typing import ClassVar, List
+from typing import ClassVar, List, TYPE_CHECKING
 
 import requests
 
 from ..statements import Statement, print_stmt_summary, stmts_from_json
+
+if TYPE_CHECKING:
+    import click
 
 __all__ = [
     "Processor",
@@ -25,7 +28,8 @@ class Processor:
         raise NotImplementedError
 
     @classmethod
-    def cli(cls):
+    def get_cli(cls) -> "click.Command":
+        """Get the CLI for this processor."""
         import click
 
         @click.command()
@@ -39,6 +43,12 @@ class Processor:
                     pickle.dump(stmts, file, protocol=pickle.HIGHEST_PROTOCOL)
             print_stmt_summary(stmts)
 
+        return _main
+
+    @classmethod
+    def cli(cls) -> None:
+        """Run the CLI for this processor."""
+        _main = cls.get_cli()
         _main()
 
 

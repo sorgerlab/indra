@@ -3,6 +3,7 @@
 from copy import copy
 from typing import Any, Iterable, List, Literal, Mapping, Optional, Tuple, Type
 
+import click
 import pandas as pd
 import pystow
 from tqdm import tqdm
@@ -12,7 +13,7 @@ from indra.databases import hgnc_client
 from indra.ontology.bio import bio_ontology
 from indra.ontology.standardize import get_standard_agent
 from indra.sources.utils import Processor
-from indra.statements import Evidence, Statement
+from indra.statements import Agent, Evidence, Statement
 
 __all__ = [
     "GeneProcessor",
@@ -22,12 +23,19 @@ CREEDS_MODULE = pystow.module("bio", "creeds")
 BASE_URL = "http://amp.pharm.mssm.edu/CREEDS/download"
 GENE_PERTURBATIONS_METADATA_URL = f'{BASE_URL}/single_gene_perturbations-v1.0.csv'
 GENE_PERTURBATIONS_DATA_URL = f'{BASE_URL}/single_gene_perturbations-v1.0.json'
+DISEASE_DATA_URL = f'{BASE_URL}/disease_signatures-v1.0.json'
 
 #: Organism label to NCBI Taxonomy Identifier
 ORGANISMS = {
     "mouse": "10090",
     "human": "9606",
     "rat": "10116",
+}
+
+ORGANISMS_TO_NS = {
+    "mouse": "MGI",
+    "human": "HGNC",
+    "rat": "RGD",
 }
 #: A mapping of strings used in the "pert_type" entries in
 #: CREEDS data to normalized keys. Several are not curated
@@ -135,7 +143,7 @@ def _rat_name_from_human_name(human_name: str) -> Optional[str]:
     return bio_ontology.get_name("RGD", rat_id)
 
 
-class SimpleProcesor(Processor):
+class SimpleProcessor(Processor):
     statements: List[Statement]
 
     def __init__(self):
@@ -150,25 +158,57 @@ class SimpleProcesor(Processor):
         return self.statements
 
 
-class GeneProcessor(SimpleProcesor):
+def _get_evidence(record: Mapping[str, Any]) -> Evidence:
+    # TODO how to use the following metadata?
+    geo_id = record["geo_id"]
+    cell_type = record["cell_type"]
+    organism = record["organism"]
+    return Evidence(
+        source_api="creeds",
+        annotations={
+            "organism": organism,
+            "cell": cell_type,
+        },
+    )
+
+
+def _get_regulations(
+    record: Mapping[str, Any],
+) -> Tuple[List[Tuple[str, str, str]], List[Tuple[str, str, str]]]:
+    organism = record["organism"]
+    prefix = ORGANISMS_TO_NS[organism]
+    up_genes = _get_genes(record, prefix, "up_genes")
+    down_genes = _get_genes(record, prefix, "down_genes")
+    return up_genes, down_genes
+
+
+def _st(record, subject, up_stmt_cls, down_stmt_cls) -> Iterable[Statement]:
+    up_genes, down_genes = _get_regulations(record)
+    evidence = _get_evidence(record)
+    for prefix, identifier, name in up_genes:
+        target = get_standard_agent(name, {prefix: identifier})
+        yield up_stmt_cls(subject, target, copy(evidence))
+    for prefix, identifier, name in down_genes:
+        target = get_standard_agent(name, {prefix: identifier})
+        yield down_stmt_cls(subject, target, copy(evidence))
+
+
+class GeneProcessor(SimpleProcessor):
     """A processor for single gene perturbation experiments in CREEDS."""
 
-    name = "creeds"
+    name = "creeds_gene"
 
     def iter_statements(self) -> Iterable[Statement]:
         records = CREEDS_MODULE.ensure_json(url=GENE_PERTURBATIONS_DATA_URL)
-        for record in tqdm(records, desc='Processing CREEDS'):
+        for record in tqdm(records, desc=f'Processing {self.name}'):
             yield from self.process_record(record)
 
     @staticmethod
-    def process_record(record: Mapping[str, Any]) -> Iterable[Statement]:
-        organism = record["organism"]
+    def get_subject(record) -> Optional[Agent]:
         perturbed_ncbigene_id = record["id"][len("gene:"):]
-
+        organism = record["organism"]
         if organism == "human":
             name = record["hs_gene_symbol"]
-            down_genes = _get_genes(record, "HGNC", "down_genes")
-            up_genes = _get_genes(record, "HGNC", "up_genes")
         elif organism == "rat":
             name = record.get("rs_gene_symbol")
             if name is None:
@@ -176,14 +216,17 @@ class GeneProcessor(SimpleProcesor):
                 name = _rat_name_from_human_name(record["hs_gene_symbol"])
             if name is None:
                 return
-            down_genes = _get_genes(record, "RGD", "down_genes")
-            up_genes = _get_genes(record, "RGD", "up_genes")
         elif organism == "mouse":
             name = record["mm_gene_symbol"]
-            down_genes = _get_genes(record, "MGI", "down_genes")
-            up_genes = _get_genes(record, "MGI", "up_genes")
         else:
             raise ValueError(f"unhandled organism: {organism}")
+        return get_standard_agent(name, {"EGID": perturbed_ncbigene_id})
+
+    @classmethod
+    def process_record(cls, record: Mapping[str, Any]) -> Iterable[Statement]:
+        subject = cls.get_subject(record)
+        if subject is None:
+            return
 
         pert_type = record["pert_type"]
         up_stmt_cls = UP_MAP.get(pert_type)
@@ -192,24 +235,49 @@ class GeneProcessor(SimpleProcesor):
             # The perturbation wasn't readily mappable to an INDRA-like statement class
             return
 
-        # TODO how to use the following metadata?
-        geo_id = record["geo_id"]
-        cell_type = record["cell_type"]
-        evidence = Evidence(
-            source_api="creeds",
-            annotations={
-                "organism": organism,
-                "cell": cell_type,
-            },
+        yield from _st(record, subject, up_stmt_cls, down_stmt_cls)
+
+
+class DiseaseProcessor(SimpleProcessor):
+    """A processor for disease perturbation experiments in CREEDS."""
+
+    name = "creeds_disease"
+
+    def iter_statements(self) -> Iterable[Statement]:
+        records = CREEDS_MODULE.ensure_json(url=DISEASE_DATA_URL)
+        for record in tqdm(records, desc=f'Processing {self.name}'):
+            yield from self.process_record(record)
+
+    @staticmethod
+    def get_subject(record) -> Agent:
+        xrefs = {}
+        doid = record["do_id"]
+        if doid:
+            xrefs["DOID"] = doid
+        umls_id = record["umls_cui"]
+        if umls_id:
+            xrefs["UMLS"] = umls_id
+        name = record["disease_name"]
+        return get_standard_agent(name, xrefs)
+
+    @classmethod
+    def process_record(cls, record) -> Iterable[Statement]:
+        subject = cls.get_subject(record)
+        yield from _st(
+            record, subject,
+            up_stmt_cls=statements.IncreaseAmount,
+            down_stmt_cls=statements.DecreaseAmount,
         )
-        subject = get_standard_agent(name, {"EGID": perturbed_ncbigene_id})
-        for prefix, identifier, name in up_genes:
-            target = get_standard_agent(name, {prefix: identifier})
-            yield up_stmt_cls(subject, target, copy(evidence))
-        for prefix, identifier, name in down_genes:
-            target = get_standard_agent(name, {prefix: identifier})
-            yield down_stmt_cls(subject, target, copy(evidence))
+
+
+@click.command()
+@click.pass_context
+def _main(ctx: click.Context):
+    click.secho(GeneProcessor.name, fg='blue')
+    ctx.invoke(GeneProcessor.get_cli())
+    click.secho(DiseaseProcessor.name, fg='blue')
+    ctx.invoke(DiseaseProcessor.get_cli())
 
 
 if __name__ == '__main__':
-    GeneProcessor.cli()
+    _main()
