@@ -3,7 +3,7 @@
 """Processor for remote INDRA JSON files."""
 
 import pickle
-from typing import ClassVar, List, TYPE_CHECKING
+from typing import ClassVar, Iterable, List, TYPE_CHECKING
 
 import requests
 
@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 __all__ = [
     "Processor",
     'RemoteProcessor',
+    "SimpleProcessor",
 ]
 
 
@@ -35,6 +36,7 @@ class Processor:
         @click.command()
         @click.option('--save', is_flag=True)
         def _main(save: bool):
+            click.secho(cls.name, fg='green', bold=True)
             inst = cls()
             stmts = inst.extract_statements()
             if save:
@@ -85,3 +87,23 @@ class RemoteProcessor(Processor):
     def print_summary(self) -> None:
         """Print a summary of the statements."""
         print_stmt_summary(self.statements)
+
+
+class SimpleProcessor(Processor):
+    """A processor that is implemented by creating an iterator over statements."""
+
+    #: A list of INDRA statements extracted by the processor
+    statements: List[Statement]
+
+    def __init__(self):
+        self.statements = []
+
+    def iter_statements(self) -> Iterable[Statement]:
+        """Generate statements with an iterable."""
+        raise NotImplementedError
+
+    def extract_statements(self) -> List[Statement]:
+        """Generate and store statements if not pre-cached, then return then."""
+        if not self.statements:
+            self.statements = list(self.iter_statements())
+        return self.statements

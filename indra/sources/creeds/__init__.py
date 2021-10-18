@@ -9,9 +9,7 @@ from the Gene Expression Omnibus due to three types of perturbations:
 1. Single gene knockdown/knockout
 2. Drug
 3. Disease
-
-* `Extension of Roles in the ChEBI Ontology
-  <https://doi.org/10.26434/chemrxiv.12591221>`_.
-  Hoyt, C. T., *et al.* (2020). *ChemRxiv*, 12591221.
-
 """
+
+from .api import process_from_web
+from .processor import CREEDSChemicalProcessor, CREEDSDiseaseProcessor, CREEDSGeneProcessor

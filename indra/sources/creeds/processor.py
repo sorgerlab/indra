@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
+
 """Processors for CREEDS data."""
 
 from copy import copy
-from typing import Any, Iterable, List, Literal, Mapping, Optional, Tuple, Type
+from typing import Any, Iterable, List, Mapping, Optional, Tuple, Type
 
 import click
 import pandas as pd
@@ -12,11 +14,13 @@ from indra import statements
 from indra.databases import hgnc_client
 from indra.ontology.bio import bio_ontology
 from indra.ontology.standardize import get_standard_agent
-from indra.sources.utils import Processor
+from indra.sources.utils import SimpleProcessor
 from indra.statements import Agent, Evidence, Statement
 
 __all__ = [
-    "GeneProcessor",
+    "CREEDSGeneProcessor",
+    "CREEDSChemicalProcessor",
+    "CREEDSDiseaseProcessor",
 ]
 
 CREEDS_MODULE = pystow.module("bio", "creeds")
@@ -24,6 +28,7 @@ BASE_URL = "http://amp.pharm.mssm.edu/CREEDS/download"
 GENE_PERTURBATIONS_METADATA_URL = f'{BASE_URL}/single_gene_perturbations-v1.0.csv'
 GENE_PERTURBATIONS_DATA_URL = f'{BASE_URL}/single_gene_perturbations-v1.0.json'
 DISEASE_DATA_URL = f'{BASE_URL}/disease_signatures-v1.0.json'
+CHEMICAL_DATA_URL = f'{BASE_URL}/single_drug_perturbations-v1.0.json'
 
 #: Organism label to NCBI Taxonomy Identifier
 ORGANISMS = {
@@ -120,7 +125,7 @@ def preprocess_metadata(force: bool = False) -> pd.DataFrame:
 def _get_genes(
     record: Mapping[str, Any],
     prefix: str,
-    key: Literal["down_genes", "up_genes"],
+    key: str,
 ) -> List[Tuple[str, str, str]]:
     rv = []
     #: A list of 2-tuples with the gene symbol then the expression value
@@ -141,21 +146,6 @@ def _rat_name_from_human_name(human_name: str) -> Optional[str]:
     _, human_id = bio_ontology.get_id_from_name("HGNC", human_name)
     rat_id = hgnc_client.get_rat_id(human_id)
     return bio_ontology.get_name("RGD", rat_id)
-
-
-class SimpleProcessor(Processor):
-    statements: List[Statement]
-
-    def __init__(self):
-        self.statements = []
-
-    def iter_statements(self) -> Iterable[Statement]:
-        raise NotImplementedError
-
-    def extract_statements(self) -> List[Statement]:
-        if not self.statements:
-            self.statements = list(self.iter_statements())
-        return self.statements
 
 
 def _get_evidence(record: Mapping[str, Any]) -> Evidence:
@@ -193,7 +183,7 @@ def _st(record, subject, up_stmt_cls, down_stmt_cls) -> Iterable[Statement]:
         yield down_stmt_cls(subject, target, copy(evidence))
 
 
-class GeneProcessor(SimpleProcessor):
+class CREEDSGeneProcessor(SimpleProcessor):
     """A processor for single gene perturbation experiments in CREEDS."""
 
     name = "creeds_gene"
@@ -238,7 +228,7 @@ class GeneProcessor(SimpleProcessor):
         yield from _st(record, subject, up_stmt_cls, down_stmt_cls)
 
 
-class DiseaseProcessor(SimpleProcessor):
+class CREEDSDiseaseProcessor(SimpleProcessor):
     """A processor for disease perturbation experiments in CREEDS."""
 
     name = "creeds_disease"
@@ -270,13 +260,47 @@ class DiseaseProcessor(SimpleProcessor):
         )
 
 
+class CREEDSChemicalProcessor(SimpleProcessor):
+    """A processor for chemical perturbation experiments in CREEDS."""
+
+    name = "creeds_chemical"
+
+    def iter_statements(self) -> Iterable[Statement]:
+        records = CREEDS_MODULE.ensure_json(url=CHEMICAL_DATA_URL)
+        for record in tqdm(records, desc=f'Processing {self.name}'):
+            yield from self.process_record(record)
+
+    @staticmethod
+    def get_subject(record) -> Agent:
+        xrefs = {}
+        smiles = record["smiles"]
+        if smiles:
+            xrefs["SMILES"] = smiles
+        pubchem_compound_id = record["pubchem_cid"]
+        if pubchem_compound_id:
+            xrefs["PUBCHEM"] = str(pubchem_compound_id)
+        drugbank_id = record["drugbank_id"]
+        if drugbank_id:
+            xrefs["DRUGBANK"] = drugbank_id
+        name = record["drug_name"]
+        return get_standard_agent(name, xrefs)
+
+    @classmethod
+    def process_record(cls, record) -> Iterable[Statement]:
+        subject = cls.get_subject(record)
+        yield from _st(
+            record, subject,
+            up_stmt_cls=statements.IncreaseAmount,
+            down_stmt_cls=statements.DecreaseAmount,
+        )
+
+
 @click.command()
 @click.pass_context
 def _main(ctx: click.Context):
-    click.secho(GeneProcessor.name, fg='blue')
-    ctx.invoke(GeneProcessor.get_cli())
-    click.secho(DiseaseProcessor.name, fg='blue')
-    ctx.invoke(DiseaseProcessor.get_cli())
+    ctx.invoke(CREEDSChemicalProcessor.get_cli())
+    ctx.invoke(CREEDSGeneProcessor.get_cli())
+    ctx.invoke(CREEDSDiseaseProcessor.get_cli())
 
 
 if __name__ == '__main__':
