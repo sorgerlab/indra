@@ -36,7 +36,7 @@ identifiers_mappings = {
 non_registry = {
     'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'SIGNOR', 'HMS-LINCS', 'NXPFA',
     'OMIM', 'LSPCI', 'UPLOC', 'BFO', 'CCLE', 'CLO', 'GENBANK',
-    'DRUGBANK.SALT'
+    'DRUGBANK.SALT', 'SMILES',
 }
 
 # These are namespaces that can appear in db_refs but are actually not
