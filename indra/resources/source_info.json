@@ -9,7 +9,7 @@
             "background-color": "#bc80bd"
         }
     },
-    "drum": {
+    "trips": {
         "name": "TRIPS/DRUM",
         "link": "http://trips.ihmc.us/parser/cgi/drum",
         "type": "reader",
