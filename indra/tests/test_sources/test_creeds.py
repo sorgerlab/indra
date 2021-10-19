@@ -6,7 +6,7 @@ import pathlib
 
 from indra.sources.creeds import process_from_file
 from indra.sources.creeds.processor import LOGGED_MISSING_PART, _get_regulations
-from indra.statements import DecreaseAmount, IncreaseAmount, RegulateAmount
+from indra.statements import DecreaseAmount, IncreaseAmount, RegulateAmount, BioContext
 
 HERE = pathlib.Path(__file__).parent.resolve()
 CREEDS_FOLDER = HERE.joinpath("resources", "creeds_test_data")
@@ -40,10 +40,11 @@ def test_creeds_gene_processor():
     evidence = statement.evidence[0]
     assert evidence.pmid is None
     assert evidence.annotations == {
-        "organism": "human",
-        "cell": "heart",
+        "cell_type": "heart",
         "geo": "GSE40601",
     }
+    assert isinstance(evidence.context, BioContext)
+    assert evidence.context.species.db_refs["TAXONOMY"] == "9606"
 
     statement = processor.statements[1]
     assert statement.subj.name == "CDK7"
@@ -71,8 +72,10 @@ def test_creeds_chemical_processor():
     assert statement.subj.name == "mitomycin C"
     assert statement.subj.db_refs["DRUGBANK"] == "DB00305"
     assert statement.subj.db_refs["PUBCHEM"] == "5746"
-    assert statement.subj.db_refs["SMILES"] == \
-           "[H][C@]12CN3C4=C([C@@H](COC(N)=O)[C@@]3(OC)[C@@]1([H])N2)C(=O)C(N)=C(C)C4=O"
+    assert (
+        statement.subj.db_refs["SMILES"]
+        == "[H][C@]12CN3C4=C([C@@H](COC(N)=O)[C@@]3(OC)[C@@]1([H])N2)C(=O)C(N)=C(C)C4=O"
+    )
     assert statement.obj.name == "SHC3"
     assert statement.obj.db_refs["HGNC"] == "18181"
     assert isinstance(statement, IncreaseAmount)
@@ -80,17 +83,20 @@ def test_creeds_chemical_processor():
     evidence = statement.evidence[0]
     assert evidence.pmid is None
     assert evidence.annotations == {
-        "organism": "human",
-        "cell": "bone",
+        "cell_type": "bone",
         "geo": "GSE1559",
     }
+    assert isinstance(evidence.context, BioContext)
+    assert evidence.context.species.db_refs["TAXONOMY"] == "9606"
 
     statement = processor.statements[1]
     assert statement.subj.name == "mitomycin C"
     assert statement.subj.db_refs["DRUGBANK"] == "DB00305"
     assert statement.subj.db_refs["PUBCHEM"] == "5746"
-    assert statement.subj.db_refs["SMILES"] == \
-           "[H][C@]12CN3C4=C([C@@H](COC(N)=O)[C@@]3(OC)[C@@]1([H])N2)C(=O)C(N)=C(C)C4=O"
+    assert (
+        statement.subj.db_refs["SMILES"]
+        == "[H][C@]12CN3C4=C([C@@H](COC(N)=O)[C@@]3(OC)[C@@]1([H])N2)C(=O)C(N)=C(C)C4=O"
+    )
     assert statement.obj.name == "KRAS"
     assert statement.obj.db_refs["HGNC"] == "6407"
     assert isinstance(statement, DecreaseAmount)
@@ -122,10 +128,11 @@ def test_creeds_disease_processor():
     evidence = statement.evidence[0]
     assert evidence.pmid is None
     assert evidence.annotations == {
-        "organism": "human",
-        "cell": "Muscle - Striated (Skeletal) (MMHCC)",
+        "cell_type": "Muscle - Striated (Skeletal) (MMHCC)",
         "geo": "GSE466",
     }
+    assert isinstance(evidence.context, BioContext)
+    assert evidence.context.species.db_refs["TAXONOMY"] == "9606"
 
     statement = processor.statements[1]
     assert statement.subj.name == "Shellfish Hypersensitivity"

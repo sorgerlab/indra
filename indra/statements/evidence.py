@@ -39,6 +39,8 @@ class Evidence(object):
     epistemics : dict
         A dictionary describing various forms of epistemic
         certainty associated with the statement.
+    context: Context or None
+        A context object
     text_refs : dict
         A dictionary of various reference ids to the source text, e.g.
         DOI, PMID, URL, etc.

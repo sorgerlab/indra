@@ -6,7 +6,6 @@ from copy import copy
 from typing import Any, ClassVar, Iterable, List, Mapping, Optional, Tuple, Type
 
 import click
-import pandas as pd
 import pystow
 from tqdm import tqdm
 
@@ -15,7 +14,7 @@ from indra.databases import hgnc_client
 from indra.ontology.bio import bio_ontology
 from indra.ontology.standardize import get_standard_agent
 from indra.sources.utils import Processor
-from indra.statements import Agent, Evidence, Statement
+from indra.statements import Agent, BioContext, Evidence, RefContext, Statement
 
 __all__ = [
     "CREEDSGeneProcessor",
@@ -29,6 +28,12 @@ GENE_DATA_URL = f"{BASE_URL}/single_gene_perturbations-v1.0.json"
 DISEASE_DATA_URL = f"{BASE_URL}/disease_signatures-v1.0.json"
 CHEMICAL_DATA_URL = f"{BASE_URL}/single_drug_perturbations-v1.0.json"
 
+#: Organism label to NCBI Taxonomy Identifier
+ORGANISMS = {
+    "mouse": "10090",
+    "human": "9606",
+    "rat": "10116",
+}
 #: A mapping from labels used in CREEDS for species to their
 #: organism-specific nomenclature name
 ORGANISMS_TO_NS = {
@@ -106,7 +111,6 @@ def _process_pert_type(s: str) -> str:
     return PERTURBATIONS.get(x, x)
 
 
-
 def _get_genes(
     record: Mapping[str, Any],
     prefix: str,
@@ -142,10 +146,13 @@ def _get_evidence(record: Mapping[str, Any]) -> Evidence:
     return Evidence(
         source_api="creeds",
         annotations={
-            "organism": organism,
-            "cell": cell_type,
+            # TODO use Gilda for grounding and put in BioContext?
+            "cell_type": cell_type,
             "geo": geo_id,
         },
+        context=BioContext(
+            species=RefContext(name=organism, db_refs={"TAXONOMY": ORGANISMS[organism]})
+        ),
     )
 
 
