@@ -1,0 +1,23 @@
+[
+  {
+    "smiles": "C1=C(C(=O)NC(=O)N1)F",
+    "cell_type": "bone",
+    "drugbank_id": "DB00544",
+    "geo_id": "GSE1559",
+    "pubchem_cid": 3385,
+    "drug_name": "Fluorouracil",
+    "down_genes": [
+      [
+        "KRAS",
+        -0.11020442098379135
+      ]
+    ],
+    "up_genes": [
+      [
+        "SHC3",
+        -0.11020442098379135
+      ]
+    ],
+    "organism": "human"
+  }
+]
