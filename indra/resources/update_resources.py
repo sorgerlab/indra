@@ -9,7 +9,7 @@ from collections import defaultdict
 from urllib.request import urlretrieve
 from xml.etree import ElementTree as ET
 from indra.util import read_unicode_csv, write_unicode_csv
-from indra.databases.obo_client import OboClient
+from indra.databases.obo_client import OboClient, PyOboClient
 from indra.databases.owl_client import OwlClient
 from indra.databases import chebi_client, pubchem_client
 from indra.databases.lincs_client import load_lincs_csv
@@ -654,6 +654,11 @@ def update_ido():
     OwlClient.update_from_obo_library('ido', remove_prefix=True)
 
 
+def update_mgi():
+    """Update the Mouse Genome Informatics (MGI) resource."""
+    PyOboClient.update_by_prefix("mgi")
+
+
 def update_drugbank_mappings():
     """Update mappings from DrugBank to CHEBI/CHEMBL"""
     # Note that for this to work, PyOBO (https://github.com/pyobo/pyobo) has
@@ -840,6 +845,7 @@ def main():
     update_drugbank_mappings()
     update_identifiers_registry()
     update_lspci()
+    update_mgi()
 
 
 if __name__ == '__main__':

@@ -16,6 +16,7 @@ from indra.resources import get_resource_path, load_resource_json
 __all__ = [
     'OntologyClient',
     'OboClient',
+    "PyOboClient",
 ]
 
 HERE = pathlib.Path(__file__).parent.resolve()
@@ -303,6 +304,15 @@ class OboClient(OntologyClient):
         entries = sorted(entries, key=sort_key)
         with open(resource_path, 'w') as file:
             json.dump(entries, file, indent=1, sort_keys=True)
+
+
+class PyOboClient(OntologyClient):
+    """A base client for data that's been grabbed via PyOBO."""
+
+    @classmethod
+    def update_by_prefix(cls, prefix: str):
+        """Update the JSON data by looking up the ontology through PyOBO."""
+        raise NotImplementedError
 
 
 def prune_empty_entries(entries, keys):
