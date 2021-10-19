@@ -99,8 +99,11 @@ def test_colors_in_html():
     assert all(color in simple_html for color in colors)
     assert all(color in not_simple_html for color in colors)
 
-    # Check sources not in provided sources are excluded from generated
-    # template
+
+def test_skip_sources_not_in_evidences():
+    # Check sources not in provided sources are excluded from generated template
+    ag_a = Agent('A')
+    ag_b = Agent('B')
     evidences = []
     colors = []
     not_in_html = []
@@ -116,15 +119,17 @@ def test_colors_in_html():
     stmt = Activation(ag_a, ag_b, evidence=evidences)
     ha = HtmlAssembler(statements=[stmt])
     ha.save_model('./temp_simple.html')
+    with open('./temp_simple.html') as fh:
+        simple_html = fh.read()
+
     ha = HtmlAssembler(statements=[stmt])
     ha.save_model('./temp_not_simple.html', simple=False)
+    with open('./temp_not_simple.html') as fh:
+        not_simple_no_show_html = fh.read()
+
     ha = HtmlAssembler(statements=[stmt])
     ha.save_model('./temp_not_simple_no_show.html',
                   show_only_available=True)
-    with open('./temp_simple.html') as fh:
-        simple_html = fh.read()
-    with open('./temp_not_simple.html') as fh:
-        not_simple_no_show_html = fh.read()
     with open('./temp_not_simple_no_show.html') as fh:
         not_simple_html = fh.read()
     assert all(color in simple_html for color in colors)
@@ -133,6 +138,64 @@ def test_colors_in_html():
     badge_class = 'class="badge badge-source source-{src}"'
     assert all(badge_class.format(src=src) not in
                not_simple_no_show_html for src in not_in_html)
+
+
+def test_readers_only():
+    # Check sources not in provided sources are excluded from generated template
+    ag_a = Agent('A')
+    ag_b = Agent('B')
+    evidences = []
+    colors = []
+    not_in_html = []
+    for source_type, info in DEFAULT_SOURCE_COLORS:
+        for n, source in enumerate(info['sources']):
+            # Only get 4 first sources for each type
+            if n < 4 and source_type == 'reading':
+                ev = Evidence(source_api=source, text=f'Evidence from {source}')
+                evidences.append(ev)
+                colors.append(info['sources'][source])
+            else:
+                not_in_html.append(source)
+    stmt = Activation(ag_a, ag_b, evidence=evidences)
+    ha = HtmlAssembler(statements=[stmt])
+    ha.save_model('./temp_no_show_rd_only.html',
+                  show_only_available=True)
+    with open('./temp_no_show_rd_only.html') as fh:
+        no_show_html = fh.read()
+    assert all(color in no_show_html for color in colors)
+
+    badge_class = 'class="badge badge-source source-{src}"'
+    assert all(badge_class.format(src=src) not in
+               no_show_html for src in not_in_html)
+
+
+def test_databases_only():
+    # Check sources not in provided sources are excluded from generated template
+    ag_a = Agent('A')
+    ag_b = Agent('B')
+    evidences = []
+    colors = []
+    not_in_html = []
+    for source_type, info in DEFAULT_SOURCE_COLORS:
+        for n, source in enumerate(info['sources']):
+            # Only get 4 first sources for each type
+            if n < 4 and source_type == 'databases':
+                ev = Evidence(source_api=source, text=f'Evidence from {source}')
+                evidences.append(ev)
+                colors.append(info['sources'][source])
+            else:
+                not_in_html.append(source)
+    stmt = Activation(ag_a, ag_b, evidence=evidences)
+    ha = HtmlAssembler(statements=[stmt])
+    ha.save_model('./temp_no_show_db_only.html',
+                  show_only_available=True)
+    with open('./temp_no_show_db_only.html') as fh:
+        no_show_html = fh.read()
+    assert all(color in no_show_html for color in colors)
+
+    badge_class = 'class="badge badge-source source-{src}"'
+    assert all(badge_class.format(src=src) not in
+               no_show_html for src in not_in_html)
 
 
 def test_source_url():
