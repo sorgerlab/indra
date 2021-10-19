@@ -122,8 +122,8 @@ db_sources = ['psp', 'cbn', 'pc', 'bel_lc', 'signor', 'biogrid', 'lincs_drug',
               'tas', 'hprd', 'trrust', 'ctd', 'vhn', 'pe', 'drugbank',
               'omnipath', 'conib', 'crog', 'dgi']
 
-reader_sources = ['geneways', 'tees', 'isi', 'trips', 'rlimsp', 'medscan',
-                  'sparser', 'eidos', 'reach']
+reader_sources = ['geneways', 'tees', 'gnbr', 'isi', 'trips', 'rlimsp',
+                  'medscan', 'eidos', 'sparser', 'reach']
 
 # These are mappings where the actual INDRA source, as it appears
 # in the evidence source_api is inconsistent with the colors here and

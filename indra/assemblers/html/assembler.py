@@ -56,7 +56,12 @@ def _source_info_to_source_colors(source_info: SourceInfo) -> SourceColors:
     # Initialize dicts for source: background-color for readers and databases
     database_colors = {}
     reader_colors = {}
-    for source, info in source_info.items():
+    for source in all_sources:
+        mapped_source = reverse_source_mappings.get(source, source)
+        info = SOURCE_INFO.get(mapped_source)
+        if not info:
+            logger.error('Source info missing for %s' % source)
+            continue
         color = info['default_style']['background-color']
         mapped_source = internal_source_mappings.get(source, source)
         if info['type'] == 'reader':
@@ -68,6 +73,8 @@ def _source_info_to_source_colors(source_info: SourceInfo) -> SourceColors:
                            'sources': database_colors}),
             ('reading', {'color': READER_TEXT_COLOR,
                          'sources': reader_colors})]
+
+DEFAULT_SOURCE_COLORS = _source_info_to_source_colors(SOURCE_INFO)
 
 def generate_source_css(fname: str,
                         source_colors: SourceColors = None):
@@ -555,6 +562,8 @@ class HtmlAssembler(object):
             template_kwargs['simple'] = True
         if 'available_sources' not in template_kwargs:
             template_kwargs['available_sources'] = list(self.available_sources)
+        if 'show_only_available' not in template_kwargs:
+            template_kwargs['show_only_available'] = False
         template_kwargs['reverse_source_mapping'] = \
             {v: k for k, v in internal_source_mappings.items()}
 

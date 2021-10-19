@@ -240,14 +240,14 @@
 {% endblock %}
 
 
-{% macro badges(src_counts, available_sources) -%}
+{% macro badges(src_counts, available_sources, show_only_available=false) -%}
   {% if src_counts %}
     {% for _, color_dict in source_colors %}
       {% if loop.index0 > 0 %}
         <span class="badge badge-source">|</span>
       {% endif %}
       {% for src in color_dict['sources'].keys() %}
-        {% if src_counts.get(src) and src in available_sources %}
+        {% if src_counts.get(src) and ((not show_only_available) or (src in available_sources)) %}
           <span class="badge badge-source source-{{ src }}"
               title="{{ src }}">
           {{ src_counts.get(src) }}
@@ -298,7 +298,7 @@
         {{ source_colors[0][0] }}
       </div>
       <div class="col col-auto text-center">
-        {{ badges(source_key_dict, available_sources) }}
+        {{ badges(source_key_dict, available_sources, show_available_only) }}
       </div>
       <div class="col-1 text-left">
         {{ source_colors[1][0] }}
