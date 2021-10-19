@@ -123,7 +123,7 @@ def test_colors_in_html():
     assert all(color in simple_html for color in colors)
     assert all(color in not_simple_html for color in colors)
 
-    badge_class = 'class ="badge badge-source source-{src}"'
+    badge_class = 'class="badge badge-source source-{src}"'
     assert all(badge_class.format(src=src) not in
                simple_html for src in not_in_html)
     assert all(badge_class.format(src=src) not in
