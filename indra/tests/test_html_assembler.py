@@ -3,8 +3,7 @@ import re
 from indra.assemblers.english import AgentWithCoordinates
 from indra.assemblers.html.assembler import HtmlAssembler, tag_text, loader, \
     _format_evidence_text, tag_agents, src_url, SOURCE_INFO, \
-    DEFAULT_SOURCE_COLORS, generate_source_css, \
-    _source_info_to_source_colors, color_schemes
+    DEFAULT_SOURCE_COLORS, generate_source_css, _source_info_to_source_colors
 from indra.resources import load_resource_json
 from indra.statements import *
 from indra.util.statement_presentation import AveAggregator, StmtStat, \
@@ -296,16 +295,6 @@ def test_default_colors():
 
         assert bg_color == src_inf_colors[mapped], \
             f'{mapped}: default={bg_color}; json={src_inf_colors[mapped]}'
-
-
-def test_color_schemes():
-    # Test for uniqueness in the schemes
-    for name, scheme in color_schemes.items():
-        n_items = len(scheme)
-        n_colors = len(set(scheme))
-        assert n_items > 0, f'Scheme {name} seems to be empty'
-        assert n_items == n_colors, \
-            f'Duplicate colors detected in scheme {name}'
 
 
 def test_tag_agents():
