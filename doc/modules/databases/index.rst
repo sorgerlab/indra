@@ -16,7 +16,7 @@ HGNC client (:py:mod:`indra.databases.hgnc_client`)
 .. automodule:: indra.databases.hgnc_client
     :members:
 
-Uniprot client (:py:mod:`indra.databases.uniprot_client`)
+UniProt client (:py:mod:`indra.databases.uniprot_client`)
 ---------------------------------------------------------
 
 .. automodule:: indra.databases.uniprot_client
@@ -109,6 +109,11 @@ Taxonomy client (:py:mod:`indra.databases.taxonomy_client`)
 DrugBank client (:py:mod:`indra.databases.drugbank_client`)
 -----------------------------------------------------------
 .. automodule:: indra.databases.drugbank_client
+    :members:
+
+MGI client (:py:mod:`indra.databases.mgi_client`)
+-------------------------------------------------
+.. automodule:: indra.databases.mgi_client
     :members:
 
 OBO client (:py:mod:`indra.databases.obo_client`)
