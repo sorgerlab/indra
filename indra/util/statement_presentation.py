@@ -118,7 +118,7 @@ from indra.statements import Agent, Influence, Event, get_statement_by_name, \
 
 logger = logging.getLogger(__name__)
 
-db_sources = ['psp', 'cbn', 'pc', 'bel_lc', 'signor', 'biogrid', 'lincs_drug',
+db_sources = ['psp', 'cbn', 'pc', 'bel_lc', 'signor', 'biogrid',
               'tas', 'hprd', 'trrust', 'ctd', 'vhn', 'pe', 'drugbank',
               'omnipath', 'conib', 'crog', 'dgi']
 
