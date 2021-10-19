@@ -6,12 +6,16 @@ import os
 import pathlib
 import pickle
 import re
-from collections import Counter, defaultdict
-from typing import List, Mapping, Optional
+from collections import defaultdict
+from operator import attrgetter
+from typing import List, Mapping, Optional, TYPE_CHECKING
 
 import obonet
 
 from indra.resources import get_resource_path, load_resource_json
+
+if TYPE_CHECKING:
+    import pyobo
 
 __all__ = [
     'OntologyClient',
@@ -287,9 +291,7 @@ class OboClient(OntologyClient):
                 remove_prefix=remove_prefix,
                 allowed_synonyms=allowed_synonyms,
                 allowed_external_ns=allowed_external_ns)
-        entries = prune_empty_entries(entries,
-                                      {'synonyms', 'xrefs',
-                                       'alt_ids', 'relations'})
+        entries = prune_standard(entries)
 
         def sort_key(x):
             val = x['id']
@@ -312,7 +314,49 @@ class PyOboClient(OntologyClient):
     @classmethod
     def update_by_prefix(cls, prefix: str):
         """Update the JSON data by looking up the ontology through PyOBO."""
-        raise NotImplementedError
+        import pyobo
+
+        ontology = pyobo.get_ontology(prefix)
+        terms: List[pyobo.Term] = sorted(ontology, key=attrgetter("identifier"))
+        entries = [
+            {
+                'namespace': term.prefix,
+                'id': term.identifier,
+                'name': term.name,
+                'synonyms': [synonym.name for synonym in term.synonyms],
+                'xrefs': [
+                    dict(namespace=xref.prefix, id=xref.identifier)
+                    for xref in term.xrefs
+                ],
+                'alt_ids': [
+                    alt_id.identifier
+                    for alt_id in term.alt_ids
+                ],
+                'relations': _get_pyobo_rels(term),
+            }
+            for term in terms
+        ]
+        entries = prune_standard(entries)
+        resource_path = get_resource_path(f'{prefix}.json')
+        with open(resource_path, 'w') as file:
+            json.dump(entries, fp=file, indent=1, sort_keys=True)
+
+
+def _get_pyobo_rels(term: "pyobo.Term"):
+    rv = defaultdict(list)
+    for parent in term.parents:
+        rv["is_a"].append(parent.curie)
+    for type_def, references in term.relationships.items():
+        for reference in references:
+            rv[type_def.curie].append(reference.curie)
+    return dict(rv)
+
+
+def prune_standard(entries):
+    return prune_empty_entries(
+        entries,
+        {'synonyms', 'xrefs', 'alt_ids', 'relations'},
+    )
 
 
 def prune_empty_entries(entries, keys):
