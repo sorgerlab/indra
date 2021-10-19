@@ -240,11 +240,14 @@
 {% endblock %}
 
 
-{% macro badges(src_counts, available_sources, show_only_available=false) -%}
+{% macro badges(src_counts, available_sources, show_only_available=false, header=false) -%}
   {% if src_counts %}
     {% for _, color_dict in source_colors %}
       {% if loop.index0 > 0 %}
         <span class="badge badge-source">|</span>
+        {% if header %}
+          <br><span class="badge badge-source">|</span>
+        {% endif %}
       {% endif %}
       {% for src in color_dict['sources'].keys() %}
         {% if src_counts.get(src) and ((not show_only_available) or (src in available_sources)) %}
@@ -295,13 +298,15 @@
 
     <div class="row justify-content-md-center">
       <div class="col-1 text-right">
-        {{ source_colors[0][0] }}
+        {# Intentionally empty span makes two rows in column #}
+        {{ source_colors[0][0] }}<br><span>&nbsp;</span>
       </div>
       <div class="col col-auto text-center">
-        {{ badges(source_key_dict, available_sources, show_available_only) }}
+        {{ badges(source_key_dict, available_sources, show_available_only, header=true) }}
       </div>
       <div class="col-1 text-left">
-        {{ source_colors[1][0] }}
+        {# Intentionally empty span makes two rows in column #}
+        <span>&nbsp;</span><br>{{ source_colors[1][0] }}
       </div>
     </div>
 
