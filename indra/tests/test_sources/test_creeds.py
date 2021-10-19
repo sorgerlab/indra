@@ -12,6 +12,7 @@ HERE = pathlib.Path(__file__).parent.resolve()
 CREEDS_FOLDER = HERE.joinpath("resources", "creeds_test_data")
 GENE_TEST_PATH = CREEDS_FOLDER.joinpath("single_gene.json")
 DRUG_TEST_PATH = CREEDS_FOLDER.joinpath("single_drug.json")
+DISEASE_TEST_PATH = CREEDS_FOLDER.joinpath("diseases.json")
 
 
 def test_creeds_gene_processor():
@@ -64,14 +65,14 @@ def test_creeds_chemical_processor():
     up_genes, down_genes = _get_regulations(record)
     assert 1 == len(up_genes)
     assert 1 == len(down_genes)
-
     assert 2 == len(processor.statements), LOGGED_MISSING_PART
     assert all(isinstance(stmt, RegulateAmount) for stmt in processor.statements)
     statement = processor.statements[0]
-    assert statement.subj.name == "5-fluorouracil"
-    assert statement.subj.db_refs["DRUGBANK"] == "DB00544"
-    assert statement.subj.db_refs["PUBCHEM"] == "3385"
-    assert statement.subj.db_refs["SMILES"] == "C1=C(C(=O)NC(=O)N1)F"
+    assert statement.subj.name == "mitomycin C"
+    assert statement.subj.db_refs["DRUGBANK"] == "DB00305"
+    assert statement.subj.db_refs["PUBCHEM"] == "5746"
+    assert statement.subj.db_refs["SMILES"] == \
+           "[H][C@]12CN3C4=C([C@@H](COC(N)=O)[C@@]3(OC)[C@@]1([H])N2)C(=O)C(N)=C(C)C4=O"
     assert statement.obj.name == "SHC3"
     assert statement.obj.db_refs["HGNC"] == "18181"
     assert isinstance(statement, IncreaseAmount)
@@ -85,9 +86,51 @@ def test_creeds_chemical_processor():
     }
 
     statement = processor.statements[1]
-    assert statement.subj.name == "5-fluorouracil"
-    assert statement.subj.db_refs["DRUGBANK"] == "DB00544"
-    assert statement.subj.db_refs["PUBCHEM"] == "3385"
+    assert statement.subj.name == "mitomycin C"
+    assert statement.subj.db_refs["DRUGBANK"] == "DB00305"
+    assert statement.subj.db_refs["PUBCHEM"] == "5746"
+    assert statement.subj.db_refs["SMILES"] == \
+           "[H][C@]12CN3C4=C([C@@H](COC(N)=O)[C@@]3(OC)[C@@]1([H])N2)C(=O)C(N)=C(C)C4=O"
+    assert statement.obj.name == "KRAS"
+    assert statement.obj.db_refs["HGNC"] == "6407"
+    assert isinstance(statement, DecreaseAmount)
+
+
+def test_creeds_disease_processor():
+    """Test the CREEDS disease processor."""
+    processor = process_from_file(DISEASE_TEST_PATH, "disease")
+    assert 1 == len(processor.records)
+    record = processor.records[0]
+    assert record["cell_type"] == "Muscle - Striated (Skeletal) (MMHCC)"
+    assert record["geo_id"] == "GSE466"
+    assert record["down_genes"][0][0] == "KRAS"
+    assert record["up_genes"][0][0] == "SHC3"
+    up_genes, down_genes = _get_regulations(record)
+    assert 1 == len(up_genes)
+    assert 1 == len(down_genes)
+
+    assert 2 == len(processor.statements), LOGGED_MISSING_PART
+    assert all(isinstance(stmt, RegulateAmount) for stmt in processor.statements)
+    statement = processor.statements[0]
+    assert statement.subj.name == "Shellfish Hypersensitivity"
+    assert statement.subj.db_refs["DOID"] == "DOID:0060495"
+    assert statement.subj.db_refs["UMLS"] == "C0577625"
+    assert statement.obj.name == "SHC3"
+    assert statement.obj.db_refs["HGNC"] == "18181"
+    assert isinstance(statement, IncreaseAmount)
+    assert 1 == len(statement.evidence)
+    evidence = statement.evidence[0]
+    assert evidence.pmid is None
+    assert evidence.annotations == {
+        "organism": "human",
+        "cell": "Muscle - Striated (Skeletal) (MMHCC)",
+        "geo": "GSE466",
+    }
+
+    statement = processor.statements[1]
+    assert statement.subj.name == "Shellfish Hypersensitivity"
+    assert statement.subj.db_refs["DOID"] == "DOID:0060495"
+    assert statement.subj.db_refs["UMLS"] == "C0577625"
     assert statement.obj.name == "KRAS"
     assert statement.obj.db_refs["HGNC"] == "6407"
     assert isinstance(statement, DecreaseAmount)
@@ -96,3 +139,4 @@ def test_creeds_chemical_processor():
 if __name__ == "__main__":
     test_creeds_gene_processor()
     test_creeds_drug_processor()
+    test_creeds_disease_processor()

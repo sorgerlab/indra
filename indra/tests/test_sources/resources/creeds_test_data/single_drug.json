@@ -1,11 +1,11 @@
 [
   {
-    "smiles": "C1=C(C(=O)NC(=O)N1)F",
+    "smiles": "[H][C@]12CN3C4=C([C@@H](COC(N)=O)[C@@]3(OC)[C@@]1([H])N2)C(=O)C(N)=C(C)C4=O",
     "cell_type": "bone",
-    "drugbank_id": "DB00544",
+    "drugbank_id": "DB00305",
     "geo_id": "GSE1559",
-    "pubchem_cid": 3385,
-    "drug_name": "Fluorouracil",
+    "pubchem_cid": 5746,
+    "drug_name": "mitomycin",
     "down_genes": [
       [
         "KRAS",

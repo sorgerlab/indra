@@ -1,0 +1,24 @@
+[
+  {
+    "do_id": "DOID:0060495",
+    "cell_type": "Muscle - Striated (Skeletal) (MMHCC)",
+    "umls_cui": "C0577625",
+    "geo_id": "GSE466",
+    "down_genes": [
+      [
+        "KRAS",
+        -0.11020442098379135
+      ]
+    ],
+    "up_genes": [
+      [
+        "SHC3",
+        -0.11020442098379135
+      ]
+    ],
+    "disease_name": "shellfish allergy",
+    "organism": "human",
+    "id": "dz:328",
+    "curator": "Joel.Dudley"
+  }
+]
