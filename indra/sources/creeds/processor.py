@@ -25,18 +25,12 @@ __all__ = [
 
 CREEDS_MODULE = pystow.module("bio", "creeds")
 BASE_URL = "http://amp.pharm.mssm.edu/CREEDS/download"
-GENE_PERTURBATIONS_METADATA_URL = f"{BASE_URL}/single_gene_perturbations-v1.0.csv"
-GENE_PERTURBATIONS_DATA_URL = f"{BASE_URL}/single_gene_perturbations-v1.0.json"
+GENE_DATA_URL = f"{BASE_URL}/single_gene_perturbations-v1.0.json"
 DISEASE_DATA_URL = f"{BASE_URL}/disease_signatures-v1.0.json"
 CHEMICAL_DATA_URL = f"{BASE_URL}/single_drug_perturbations-v1.0.json"
 
-#: Organism label to NCBI Taxonomy Identifier
-ORGANISMS = {
-    "mouse": "10090",
-    "human": "9606",
-    "rat": "10116",
-}
-
+#: A mapping from labels used in CREEDS for species to their
+#: organism-specific nomenclature name
 ORGANISMS_TO_NS = {
     "mouse": "MGI",
     "human": "HGNC",
@@ -112,18 +106,6 @@ def _process_pert_type(s: str) -> str:
     return PERTURBATIONS.get(x, x)
 
 
-def preprocess_metadata(force: bool = False) -> pd.DataFrame:
-    # TODO not technically necessary, but good for reference.
-    #  Might delete before finishing the PR
-    metadata = CREEDS_MODULE.ensure_csv(
-        url=GENE_PERTURBATIONS_METADATA_URL, force=force, read_csv_kwargs=dict(sep=",")
-    )
-    metadata = metadata[metadata.pert_type.notna()]
-    metadata.id = metadata.id.map(lambda s: s[len("gene:") :])
-    metadata.organism = metadata.id.map(ORGANISMS, na_action="ignore")
-    metadata.pert_type = metadata.pert_type.map(_process_pert_type, na_action="ignore")
-    return metadata
-
 
 def _get_genes(
     record: Mapping[str, Any],
@@ -135,6 +117,7 @@ def _get_genes(
     expressions = record[key]
     for symbol, _ in expressions:
         try:
+            # FIXME this doesn't currently succeed for MGI nor RGD
             _, identifier = bio_ontology.get_id_from_name(prefix, symbol)
         except TypeError:
             # "cannot unpack non-iterable NoneType object"
@@ -226,7 +209,7 @@ class CREEDSGeneProcessor(CREEDSProcessor):
     """A processor for single gene perturbation experiments in CREEDS."""
 
     name = "creeds_gene"
-    url = GENE_PERTURBATIONS_DATA_URL
+    url = GENE_DATA_URL
 
     @staticmethod
     def get_subject(record) -> Optional[Agent]:
