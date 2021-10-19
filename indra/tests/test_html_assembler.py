@@ -90,6 +90,7 @@ def test_colors_in_html():
     stmt = Activation(ag_a, ag_b, evidence=evidences)
     ha = HtmlAssembler(statements=[stmt])
     ha.save_model('./temp_simple.html')
+    ha = HtmlAssembler(statements=[stmt])
     ha.save_model('./temp_not_simple.html', simple=False)
     with open('./temp_simple.html') as fh:
         simple_html = fh.read()
@@ -115,19 +116,23 @@ def test_colors_in_html():
     stmt = Activation(ag_a, ag_b, evidence=evidences)
     ha = HtmlAssembler(statements=[stmt])
     ha.save_model('./temp_simple.html')
+    ha = HtmlAssembler(statements=[stmt])
     ha.save_model('./temp_not_simple.html', simple=False)
+    ha = HtmlAssembler(statements=[stmt])
+    ha.save_model('./temp_not_simple_no_show.html',
+                  show_only_available=True)
     with open('./temp_simple.html') as fh:
         simple_html = fh.read()
     with open('./temp_not_simple.html') as fh:
+        not_simple_no_show_html = fh.read()
+    with open('./temp_not_simple_no_show.html') as fh:
         not_simple_html = fh.read()
     assert all(color in simple_html for color in colors)
     assert all(color in not_simple_html for color in colors)
 
     badge_class = 'class="badge badge-source source-{src}"'
     assert all(badge_class.format(src=src) not in
-               simple_html for src in not_in_html)
-    assert all(badge_class.format(src=src) not in
-               not_simple_html for src in not_in_html)
+               not_simple_no_show_html for src in not_in_html)
 
 
 def test_source_url():
