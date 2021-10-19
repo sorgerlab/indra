@@ -242,7 +242,10 @@
 
 {% macro badges(src_counts, available_sources, show_only_available=false, header=false) -%}
   {% if src_counts %}
-    {% for _, color_dict in source_colors %}
+    {% for source_type, color_dict in source_colors %}
+      {% if header and loop.index0 == 0 %}
+        {{ source_type }}
+      {% endif %}
       {% if loop.index0 > 0 %}
         <span class="badge badge-source">|</span>
         {% if header %}
@@ -257,6 +260,9 @@
           </span>
         {% endif %}
       {% endfor %}
+      {% if header and loop.index0 > 0 %}
+        {{ source_type }}
+      {% endif %}
     {% endfor %}
   {% endif %}
 {%- endmacro %}
@@ -297,16 +303,10 @@
   {% if source_key_dict and simple %}
 
     <div class="row justify-content-md-center">
-      <div class="col-1 text-right">
-        {# Intentionally empty span makes two rows in column #}
-        {{ source_colors[0][0] }}<br><span>&nbsp;</span>
-      </div>
+    {# Might want to have a look at
+       https://getbootstrap.com/docs/4.5/layout/grid/#stacked-to-horizontal #}
       <div class="col col-auto text-center">
         {{ badges(source_key_dict, available_sources, show_only_available, header=true) }}
-      </div>
-      <div class="col-1 text-left">
-        {# Intentionally empty span makes two rows in column #}
-        <span>&nbsp;</span><br>{{ source_colors[1][0] }}
       </div>
     </div>
 
