@@ -8,7 +8,7 @@ import pickle
 import re
 from collections import defaultdict
 from operator import attrgetter
-from typing import List, Mapping, Optional, TYPE_CHECKING
+from typing import Callable, List, Mapping, Optional, TYPE_CHECKING
 
 import obonet
 
@@ -312,15 +312,21 @@ class PyOboClient(OntologyClient):
     """A base client for data that's been grabbed via PyOBO."""
 
     @classmethod
-    def update_by_prefix(cls, prefix: str):
+    def update_by_prefix(
+        cls,
+        prefix: str,
+        include_relations: bool = False,
+        predicate: Optional[Callable[["pyobo.Term"], bool]] = None,
+    ):
         """Update the JSON data by looking up the ontology through PyOBO."""
         import pyobo
 
-        ontology = pyobo.get_ontology(prefix)
-        terms: List[pyobo.Term] = sorted(ontology, key=attrgetter("identifier"))
+        terms = iter(pyobo.get_ontology(prefix))
+        if predicate:
+            terms = filter(predicate, terms)
+        terms = sorted(terms, key=attrgetter("identifier"))
         entries = [
             {
-                'namespace': term.prefix,
                 'id': term.identifier,
                 'name': term.name,
                 'synonyms': [synonym.name for synonym in term.synonyms],
@@ -332,7 +338,7 @@ class PyOboClient(OntologyClient):
                     alt_id.identifier
                     for alt_id in term.alt_ids
                 ],
-                'relations': _get_pyobo_rels(term),
+                'relations': _get_pyobo_rels(term) if include_relations else {},
             }
             for term in terms
         ]

@@ -656,7 +656,11 @@ def update_ido():
 
 def update_mgi():
     """Update the Mouse Genome Informatics (MGI) resource."""
-    PyOboClient.update_by_prefix("mgi")
+    PyOboClient.update_by_prefix(
+        "mgi",
+        # MGI has not only genes, but all sorts of other things.
+        predicate=lambda term: any("ncbigene" == xref.prefix for xref in term.xrefs),
+    )
 
 
 def update_drugbank_mappings():
