@@ -2011,3 +2011,21 @@ def test_make_generic_copy():
     stmt.belief = 0.55
     new_stmt = stmt.make_generic_copy()
     assert new_stmt.belief == 0.55
+
+
+def test_none_values_from_json():
+    # Get statement even if some values in JSON are set to None
+    sj = {'type': 'Activation',
+          'subj': {'name': 'A', 'db_refs': None},
+          'obj': {'name': 'B', 'db_refs': None},
+          'obj_activity': 'activity',
+          'belief': 1,
+          'evidence': [{'source_api': 'assertion',
+                        'annotations': None,
+                        'epistemics': None,
+                        'text_refs': None,
+                        'source_hash': 6767101576055176278}],
+          'id': '04ab2992-4c93-4441-bed1-cca44ce0679e',
+          'matches_hash': '-15231783235137984'}
+    s = Statement._from_json(sj)
+    assert s
