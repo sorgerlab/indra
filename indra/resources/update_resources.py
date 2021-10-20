@@ -706,7 +706,7 @@ def update_biomappings():
     biomappings = defaultdict(list)
     mappings = load_mappings()
     predictions = load_predictions()
-    exclude_ns = {'kegg.pathway'}
+    exclude_ns = {'kegg.pathway', 'depmap', 'ccle', 'reactome'}
     for mappings, mapping_type in ((mappings, 'curated'),
                                    (predictions, 'predicted')):
         for mapping in mappings:
