@@ -272,10 +272,10 @@ def test_source_info_to_source_colors():
     assert isinstance(src_colors, list)
     assert src_colors[0][0] == 'databases'
     assert src_colors[0][1]['color'] == 'black'
-    assert src_colors[0][1]['sources']['srcB'] == '#FFFFFF'
+    assert src_colors[0][1]['sources']['psp'] == '#FFFFFF'
     assert src_colors[1][0] == 'reading'
     assert src_colors[1][1]['color'] == 'white'
-    assert src_colors[1][1]['sources']['srcA'] == '#000000'
+    assert src_colors[1][1]['sources']['eidos'] == '#000000'
 
 
 def test_generate_source_css():
@@ -288,16 +288,16 @@ def test_generate_source_css():
     rule_string = '.source-{src} {{\n    background-color: {src_bg};\n    ' \
                   'color: {src_txt};\n}}\n\n'
     rule_a = rule_string.format(
-        src='srcA',
-        src_bg=source_info['srcA']['default_style']['background-color'],
-        src_txt=source_info['srcA']['default_style']['color']
+        src='eidos',
+        src_bg=source_info['eidos']['default_style']['background-color'],
+        src_txt=source_info['eidos']['default_style']['color']
     )
     assert rule_a in css_str
 
     rule_b = rule_string.format(
-        src='srcB',
-        src_bg=source_info['srcB']['default_style']['background-color'],
-        src_txt=source_info['srcB']['default_style']['color']
+        src='psp',
+        src_bg=source_info['phosphosite']['default_style']['background-color'],
+        src_txt=source_info['phosphosite']['default_style']['color']
     )
     assert rule_b in css_str
 
