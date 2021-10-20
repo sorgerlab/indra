@@ -309,59 +309,59 @@ def test_default_colors():
     # regenerate_default_source_styling()
 
     # Get sources and colors in DEFAULT_SOURCE_COLORS
-    def_all_sources = set()
-    color_combos = []
+    # Sources in DEFAULT_SOURCE_COLORS follow DB naming
+    default_colors_sources = set()
+    color_combos = []  # List tuples or (text color, background color)
     def_source_color = {}
-    for source_type, scheme in DEFAULT_SOURCE_COLORS:
-        txt_col = scheme['color']
-        for source in scheme['sources']:
-            def_all_sources.add(source)
-            color_combos.append((txt_col, scheme['sources'][source]))
-            def_source_color[source] = scheme['sources'][source]
+    for source_type, styles in DEFAULT_SOURCE_COLORS:
+        txt_col = styles['color']
+        for src_colors_source in styles['sources']:
+            default_colors_sources.add(src_colors_source)
+            color_combos.append((txt_col, styles['sources'][src_colors_source]))
+            def_source_color[src_colors_source] = styles['sources'][src_colors_source]
 
+    # source_info_json has INDRA naming and need to be mapped to DB naming
     source_info_json = load_resource_json('source_info.json')
     # pc and biopax both map to pc here
     src_inf_sources = {internal_source_mappings.get(s, s)
                        for s in source_info_json.keys()}
     src_inf_colors = {
-        internal_source_mappings.get(source, source):
+        internal_source_mappings.get(si_source, si_source):
             info['default_style']['background-color']
-        for source, info in source_info_json.items()
+        for si_source, info in source_info_json.items()
     }
 
-    # Trips is NOT in source_info, but exists in INDRA DB naming.
     # biopax and pathway commons are both in source_info, but are mapped to
     # the same source in INDRA DB naming: pc.
-    assert 'trips' in def_all_sources
-    assert 'pc' in def_all_sources
-    assert 'drum' not in def_all_sources
-    assert 'biopax' not in def_all_sources
+    assert 'trips' in default_colors_sources
+    assert 'pc' in default_colors_sources
+    assert 'drum' not in default_colors_sources
+    assert 'biopax' not in default_colors_sources
 
-    assert 'trips' not in src_inf_sources
+    assert 'trips' in src_inf_sources
     assert 'pc' in src_inf_sources
-    assert 'drum' in src_inf_sources
+    assert 'drum' not in src_inf_sources
     assert 'biopax' not in src_inf_sources  # biopax -> pc here
     assert 'biopax' in source_info_json  # biopax still exists here
 
-    assert len(src_inf_sources) == len(def_all_sources)
-
-    # Test for equality but for the mappings
-    assert def_all_sources.difference(src_inf_sources) == {'trips'}
-    assert src_inf_sources.difference(def_all_sources) == {'drum'}
-    assert def_all_sources.symmetric_difference(src_inf_sources) == \
-           {'trips', 'drum'}
+    # Test for equality
+    assert len(src_inf_sources) == len(default_colors_sources)
+    assert default_colors_sources.difference(src_inf_sources) == set(), \
+        default_colors_sources.difference(src_inf_sources)
+    assert src_inf_sources.difference(default_colors_sources) == set(), \
+           src_inf_sources.difference(default_colors_sources)
+    assert default_colors_sources.symmetric_difference(src_inf_sources) == \
+           set(), default_colors_sources.symmetric_difference(src_inf_sources)
 
     # Test if the color combinations set in source_info.json are unique
     color_combos_set = set(color_combos)
-    assert len(color_combos_set) == len(color_combos)
+    assert len(color_combos_set) == len(color_combos), \
+        'text + background colors are not unique'
 
     # Test that the colors in DEFAULT_SOURCE_COLORS match what is set in
     # source_info.json, after mapping of source names
-    for source, bg_color in def_source_color.items():
-        if source == 'trips':
-            mapped = 'drum'
-        else:
-            mapped = source
+    for src_colors_source, bg_color in def_source_color.items():
+        mapped = src_colors_source
 
         assert bg_color == src_inf_colors[mapped], \
             f'{mapped}: default={bg_color}; json={src_inf_colors[mapped]}'
