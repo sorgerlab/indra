@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
+from copy import copy
 
 
 __all__ = ['Evidence']
@@ -157,10 +158,10 @@ class Evidence(object):
         source_id = json_dict.get('source_id')
         pmid = json_dict.get('pmid')
         text = json_dict.get('text')
-        annotations = json_dict.get('annotations', {}).copy()
-        epistemics = json_dict.get('epistemics', {}).copy()
+        annotations = copy(json_dict.get('annotations', {}))
+        epistemics = copy(json_dict.get('epistemics', {}))
         context_entry = json_dict.get('context')
-        text_refs = json_dict.get('text_refs', {}).copy()
+        text_refs = copy(json_dict.get('text_refs', {}))
         if context_entry:
             context = Context.from_json(context_entry)
         else:
