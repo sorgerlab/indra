@@ -37,26 +37,26 @@ def make_bad_stmt():
 
 def source_json():
     return {
-        "srcA": {
-            "name": "Source A",
-            "link": "https://example.com/srcA",
+        "eidos": {
+            "name": "Eidos",
+            "link": "https://github.com/clulab/eidos",
             "type": "reader",
-            "domain": "biology",
+            "domain": "general",
             "default_style": {
                 "color": "white",
                 "background-color": "#000000"
             }
         },
-        "srcB": {
-            "name": "Source B",
-            "link": "https://example.org/srcB",
+        "phosphosite": {
+            "name": "Phosphosite Plus",
+            "link": "https://www.phosphosite.org/homeAction.action",
             "type": "database",
             "domain": "biology",
             "default_style": {
                 "color": "black",
                 "background-color": "#FFFFFF"
             }
-        }
+        },
     }
 
 
