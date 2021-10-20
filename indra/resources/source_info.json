@@ -256,7 +256,7 @@
         "domain": "biology",
         "default_style": {
             "color": "black",
-            "background-color": "#bebada"
+            "background-color": "#00e8ff"
         }
     },
     "crog": {
