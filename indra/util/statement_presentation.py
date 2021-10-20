@@ -137,7 +137,7 @@ internal_source_mappings = {
     'virhostnet': 'vhn',
     'phosphosite': 'psp',
 }
-"""Maps from source_info.json names db names"""
+"""Maps from source_info.json names to DB names"""
 
 
 reverse_source_mappings = {v: k for k, v in internal_source_mappings.items()}
