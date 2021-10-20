@@ -121,9 +121,11 @@ logger = logging.getLogger(__name__)
 db_sources = ['psp', 'cbn', 'pc', 'bel_lc', 'signor', 'biogrid',
               'tas', 'hprd', 'trrust', 'ctd', 'vhn', 'pe', 'drugbank',
               'omnipath', 'conib', 'crog', 'dgi']
+"""Database source names as they appear in the DB"""
 
 reader_sources = ['geneways', 'tees', 'gnbr', 'isi', 'trips', 'rlimsp',
                   'medscan', 'eidos', 'sparser', 'reach']
+"""Reader source names as they appear in the DB"""
 
 # These are mappings where the actual INDRA source, as it appears
 # in the evidence source_api is inconsistent with the colors here and
@@ -135,9 +137,15 @@ internal_source_mappings = {
     'virhostnet': 'vhn',
     'phosphosite': 'psp',
 }
+"""Maps from source_info.json names db names"""
+
+
 reverse_source_mappings = {v: k for k, v in internal_source_mappings.items()}
+"""Maps from db names to source_info.json names"""
+
 
 all_sources = db_sources + reader_sources
+"""Source names as they appear in the DB"""
 
 
 def _get_relation_keyed_stmts(stmt_list, expand_nary=True):
