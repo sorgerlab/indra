@@ -36,16 +36,17 @@ def make_bad_stmt():
 
 
 def source_json():
-    return {"srcA": {
-        "name": "Source A",
-        "link": "https://example.com/srcA",
-        "type": "reader",
-        "domain": "biology",
-        "default_style": {
-            "color": "white",
-            "background-color": "#000000"
-        }
-    },
+    return {
+        "srcA": {
+            "name": "Source A",
+            "link": "https://example.com/srcA",
+            "type": "reader",
+            "domain": "biology",
+            "default_style": {
+                "color": "white",
+                "background-color": "#000000"
+            }
+        },
         "srcB": {
             "name": "Source B",
             "link": "https://example.org/srcB",
@@ -55,7 +56,8 @@ def source_json():
                 "color": "black",
                 "background-color": "#FFFFFF"
             }
-        }}
+        }
+    }
 
 
 def test_format_evidence_text():
