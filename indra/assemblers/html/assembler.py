@@ -74,7 +74,9 @@ def _source_info_to_source_colors(source_info: SourceInfo) -> SourceColors:
             ('reading', {'color': READER_TEXT_COLOR,
                          'sources': reader_colors})]
 
+
 DEFAULT_SOURCE_COLORS = _source_info_to_source_colors(SOURCE_INFO)
+
 
 def generate_source_css(fname: str,
                         source_colors: SourceColors = None):
