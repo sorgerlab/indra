@@ -3,6 +3,7 @@
 """Processors for CREEDS data."""
 
 from copy import copy
+from functools import lru_cache
 from typing import Any, ClassVar, Iterable, List, Mapping, Optional, Tuple, Type
 
 import click
@@ -15,6 +16,7 @@ from indra.ontology.bio import bio_ontology
 from indra.ontology.standardize import get_standard_agent
 from indra.sources.utils import Processor
 from indra.statements import Agent, BioContext, Evidence, RefContext, Statement
+from protmapper import uniprot_client
 
 __all__ = [
     "CREEDSGeneProcessor",
@@ -106,9 +108,30 @@ DOWN_MAP: Mapping[str, Type[statements.RegulateAmount]] = {
 }
 
 
+@lru_cache(maxsize=1)
+def _get_mouse_lookup() -> Mapping[str, str]:
+    return {
+        gene_name.casefold(): up_id
+        for up_id, gene_name in uniprot_client.um.uniprot_gene_name.items()
+        if uniprot_client.is_mouse(up_id)
+    }
+
+
+@lru_cache(maxsize=1)
+def _get_rat_lookup() -> Mapping[str, str]:
+    return {
+        gene_name.casefold(): up_id
+        for up_id, gene_name in uniprot_client.um.uniprot_gene_name.items()
+        if uniprot_client.is_rat(up_id)
+    }
+
+
 def _process_pert_type(s: str) -> str:
     x = s.strip().lower()
     return PERTURBATIONS.get(x, x)
+
+
+MISSING_NAMES = set()
 
 
 def _get_genes(
@@ -120,22 +143,27 @@ def _get_genes(
     #: A list of 2-tuples with the gene symbol then the expression value
     expressions = record[key]
     for symbol, _ in expressions:
-        try:
-            # FIXME this doesn't currently succeed for MGI nor RGD
-            _, identifier = bio_ontology.get_id_from_name(prefix, symbol)
-        except TypeError:
-            # "cannot unpack non-iterable NoneType object"
-            # This happens if none is returned and it can't unpack the tuple
-            continue
+        if prefix == "HGNC":
+            try:
+                _prefix, identifier = bio_ontology.get_id_from_name(prefix, symbol)
+            except TypeError:
+                if (prefix, symbol) not in MISSING_NAMES:
+                    tqdm.write(f"could not look up DEG by name {prefix} ! {symbol}")
+                    MISSING_NAMES.add((prefix, symbol))
+                continue  # name lookup unsuccessful
+        elif prefix == "MGI":
+            _prefix, identifier = "UP", _get_mouse_lookup().get(symbol.casefold())
+        elif prefix == "RGD":
+            _prefix, identifier = "UP", _get_rat_lookup().get(symbol.casefold())
         else:
-            rv.append((prefix, identifier, symbol))
+            raise ValueError(f"invalid prefix: {prefix} ! {symbol}")
+        if identifier is None:
+            if (prefix, symbol) not in MISSING_NAMES:
+                tqdm.write(f"could not look up DEG by name {prefix} ! {symbol}")
+                MISSING_NAMES.add((prefix, symbol))
+            continue
+        rv.append((_prefix, identifier, symbol))
     return rv
-
-
-def _rat_name_from_human_name(human_name: str) -> Optional[str]:
-    _, human_id = bio_ontology.get_id_from_name("HGNC", human_name)
-    rat_id = hgnc_client.get_rat_id(human_id)
-    return bio_ontology.get_name("RGD", rat_id)
 
 
 def _get_evidence(record: Mapping[str, Any]) -> Evidence:
@@ -220,22 +248,19 @@ class CREEDSGeneProcessor(CREEDSProcessor):
 
     @staticmethod
     def get_subject(record) -> Optional[Agent]:
-        perturbed_ncbigene_id = record["id"][len("gene:") :]
-        organism = record["organism"]
-        if organism == "human":
-            name = record["hs_gene_symbol"]
-        elif organism == "rat":
-            name = record.get("rs_gene_symbol")
-            if name is None:
-                # they did not include consistent curation of rat gene symbols
-                name = _rat_name_from_human_name(record["hs_gene_symbol"])
-            if name is None:
-                return
-        elif organism == "mouse":
-            name = record["mm_gene_symbol"]
-        else:
-            raise ValueError(f"unhandled organism: {organism}")
-        return get_standard_agent(name, {"EGID": perturbed_ncbigene_id})
+        ncbigene_id = record["id"][len("gene:") :]
+        uniprot_id = uniprot_client.get_id_from_entrez(ncbigene_id)
+        if uniprot_id is None:
+            tqdm.write(f"could not look up ncbigene:{uniprot_id}")
+            return
+        name = uniprot_client.get_gene_name(uniprot_id)
+        return get_standard_agent(
+            name,
+            {
+                "EGID": ncbigene_id,
+                "UP": uniprot_id,
+            },
+        )
 
     @classmethod
     def process_record(cls, record: Mapping[str, Any]) -> Iterable[Statement]:
@@ -248,7 +273,7 @@ class CREEDSGeneProcessor(CREEDSProcessor):
         down_stmt_cls = DOWN_MAP.get(pert_type)
         if up_stmt_cls is None or down_stmt_cls is None:
             if pert_type not in LOGGED_MISSING_PART:
-                tqdm.write(f"Could not look up pert_type {pert_type}")
+                tqdm.write(f"could not look up pert_type {record['pert_type']}")
                 LOGGED_MISSING_PART.add(pert_type)
             return
 

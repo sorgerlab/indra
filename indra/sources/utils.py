@@ -40,7 +40,9 @@ class Processor:
             stmts = inst.extract_statements()
             if save:
                 import pystow
-                with pystow.join("indra", cls.name, name="stmts.pkl").open("wb") as file:
+
+                stmts_path = pystow.join("indra", cls.name, name="stmts.pkl")
+                with stmts_path.open("wb") as file:
                     pickle.dump(stmts, file, protocol=pickle.HIGHEST_PROTOCOL)
             print_stmt_summary(stmts)
 
