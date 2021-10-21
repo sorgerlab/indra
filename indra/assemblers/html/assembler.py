@@ -2,14 +2,12 @@
 Format a set of INDRA Statements into an HTML-formatted report which also
 supports curation.
 """
-import copy
 import re
-import json
 import uuid
 import logging
 import itertools
 from html import escape
-from typing import Union, Tuple, List, Dict, Optional
+from typing import Union, Dict, Optional
 from collections import OrderedDict, defaultdict
 from os.path import abspath, dirname, join
 
@@ -17,17 +15,16 @@ from jinja2 import Environment, FileSystemLoader
 
 from indra.statements import *
 from indra.sources import SOURCE_INFO
-from indra.resources import RESOURCES_PATH, load_resource_json
 from indra.statements.agent import default_ns_order
 from indra.statements.validate import validate_id
 from indra.databases.identifiers import get_identifiers_url, ensure_prefix
 from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_relation_key, \
-    db_sources, all_sources, get_available_source_counts, \
+    all_sources, get_available_source_counts, \
     get_available_ev_counts, standardize_counts, get_available_beliefs, \
     make_standard_stats, internal_source_mappings, available_sources_stmts,\
-    available_sources_src_counts, StmtGroup, reverse_source_mappings, \
+    available_sources_src_counts, reverse_source_mappings, \
     SourceColors
 from indra.literature import id_lookup
 
