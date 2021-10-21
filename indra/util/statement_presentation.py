@@ -1053,11 +1053,3 @@ def _get_initial_source_counts(custom_sources: Optional[List[str]] = None):
         return {s: 0 for s in all_sources}
     else:
         return {s: 0 for s in custom_sources}
-
-
-def get_all_sources_custom_colors(custom_colors: SourceColors) -> List[str]:
-    sources = []
-    for source_type, source_info in custom_colors:
-        for source in source_info['sources']:
-            sources.append(source)
-    return sources
