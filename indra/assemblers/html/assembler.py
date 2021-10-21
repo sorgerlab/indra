@@ -58,11 +58,16 @@ def _source_info_to_source_colors(
     """
     if source_info is None:
         source_info = SOURCE_INFO
+        every_source = all_sources
+    else:
+        every_source = []
+        for source in source_info:
+            every_source.append(source)
 
     # Initialize dicts for source: background-color for readers and databases
     database_colors = {}
     reader_colors = {}
-    for source in all_sources:
+    for source in every_source:
         # Get name as it is registered in source_info.json and get info
         src_info_name = reverse_source_mappings.get(source, source)
         info = source_info.get(src_info_name)
