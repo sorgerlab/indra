@@ -110,7 +110,7 @@ import logging
 from collections import defaultdict
 from itertools import permutations
 from numpy import array, zeros, maximum, concatenate, append
-from typing import List, Set, Dict
+from typing import List, Set, Dict, Optional, Union, Tuple
 
 from indra.assemblers.english import EnglishAssembler
 from indra.statements import Agent, Influence, Event, get_statement_by_name, \
@@ -146,6 +146,10 @@ reverse_source_mappings = {v: k for k, v in internal_source_mappings.items()}
 
 all_sources = db_sources + reader_sources
 """Source names as they appear in the DB"""
+
+
+# Dervied types
+SourceColors = List[Tuple[str, Dict[str, Union[str, Dict[str, str]]]]]
 
 
 def _get_relation_keyed_stmts(stmt_list, expand_nary=True):

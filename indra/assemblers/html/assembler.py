@@ -27,7 +27,8 @@ from indra.util.statement_presentation import group_and_sort_statements, \
     db_sources, all_sources, get_available_source_counts, \
     get_available_ev_counts, standardize_counts, get_available_beliefs, \
     make_standard_stats, internal_source_mappings, available_sources_stmts,\
-    available_sources_src_counts, StmtGroup, reverse_source_mappings
+    available_sources_src_counts, StmtGroup, reverse_source_mappings, \
+    SourceColors
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,6 @@ HERE = dirname(abspath(__file__))
 
 # Derived types
 SourceInfo = Dict[str, Dict[str, Union[str, Dict[str, str]]]]
-SourceColors = List[Tuple[str, Dict[str, Union[str, Dict[str, str]]]]]
 
 
 loader = FileSystemLoader(join(HERE, 'templates'))
