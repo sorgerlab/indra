@@ -28,7 +28,7 @@ from indra.util.statement_presentation import group_and_sort_statements, \
     get_available_ev_counts, standardize_counts, get_available_beliefs, \
     make_standard_stats, internal_source_mappings, available_sources_stmts,\
     available_sources_src_counts, StmtGroup, reverse_source_mappings, \
-    SourceColors
+    SourceColors, get_all_sources_custom_colors
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
@@ -187,6 +187,24 @@ class HtmlAssembler(object):
     custom_stats : Optional[list]
         A list of StmtStat objects containing custom statement statistics to be
         used in sorting of statements and statement groups.
+    custom_source_colors : SourceColors
+        If provided, use a custom set of colors instead of the default.
+        These colors are used in the source badges in the html document to
+        distinguish different sources. The structure of the input must
+        conform to:
+
+        [('databases',
+          {'color': <text color>,
+           'sources': {<source name>: <badge color>,
+                       ...}}),
+         ('reading',
+          {'color': <text color>,
+           'sources': {<source name>: <badge color>,
+                       ...}})]
+
+        Where <text color> and <badge color> must be color names or codes
+        allowed in an html document per the CSS3 specification:
+        https://www.w3.org/TR/css-color-3/#svg-color
 
     Attributes
     ----------
@@ -209,7 +227,13 @@ class HtmlAssembler(object):
     def __init__(self, statements=None, summary_metadata=None,
                  ev_counts=None, beliefs=None, source_counts=None,
                  curation_dict=None, title='INDRA Results', db_rest_url=None,
-                 sort_by='default', custom_stats=None):
+                 sort_by='default', custom_stats=None,
+                 custom_source_colors: Optional[SourceColors] = None):
+        if custom_source_colors is not None:
+            custom_sources = get_all_sources_custom_colors(custom_source_colors)
+        else:
+            custom_sources = None
+        self.custom_sources = custom_sources
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
@@ -218,16 +242,19 @@ class HtmlAssembler(object):
             if ev_counts is None else standardize_counts(ev_counts)
         self.beliefs = get_available_beliefs(self.statements) \
             if not beliefs else standardize_counts(beliefs)
-        self.source_counts = get_available_source_counts(self.statements) \
+        self.source_counts = get_available_source_counts(self.statements,
+                                                         custom_sources) \
             if source_counts is None else standardize_counts(source_counts)
-        self.available_sources = available_sources_stmts(self.statements) if \
-            source_counts is None else \
-            available_sources_src_counts(source_counts)
+        self.available_sources = available_sources_stmts(self.statements,
+                                                         custom_sources) if \
+            source_counts is None else available_sources_src_counts(
+            source_counts, custom_sources)
         self.sort_by = sort_by
         self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
         self.model = None
         self.custom_stats = [] if custom_stats is None else custom_stats
+        self.source_colors: Optional[SourceColors] = custom_source_colors
 
     def add_statements(self, statements):
         """Add a list of Statements to the assembler.
@@ -564,10 +591,16 @@ class HtmlAssembler(object):
         if template is None:
             template = default_template
         if self.source_counts and 'source_key_dict' not in template_kwargs:
-            template_kwargs['source_key_dict'] = \
-                {src: src for src in all_sources}
+            if self.custom_sources is not None:
+                sources = self.custom_sources
+            else:
+                sources = all_sources
+            template_kwargs['source_key_dict'] = {src: src for src in sources}
         if 'source_colors' not in template_kwargs:
-            template_kwargs['source_colors'] = DEFAULT_SOURCE_COLORS
+            if self.source_colors is not None:
+                template_kwargs['source_colors'] = self.source_colors
+            else:
+                template_kwargs['source_colors'] = DEFAULT_SOURCE_COLORS
         if 'source_info' not in template_kwargs:
             template_kwargs['source_info'] = SOURCE_INFO.copy()
         if 'simple' not in template_kwargs:
