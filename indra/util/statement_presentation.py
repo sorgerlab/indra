@@ -114,7 +114,7 @@ from typing import List, Set, Dict, Optional, Union, Tuple
 
 from indra.assemblers.english import EnglishAssembler
 from indra.statements import Agent, Influence, Event, get_statement_by_name, \
-    Statement
+    Statement, Evidence
 
 logger = logging.getLogger(__name__)
 
@@ -992,16 +992,23 @@ def get_available_beliefs(stmts):
     return {stmt.get_hash(): stmt.belief for stmt in stmts}
 
 
-def get_available_source_counts(stmts):
-    return {stmt.get_hash(): _get_available_ev_source_counts(stmt.evidence)
-            for stmt in stmts}
+def get_available_source_counts(
+        stmts: List[Statement],
+        custom_sources: Optional[List[str]] = None
+) -> Dict[int, Dict[str, int]]:
+    return {stmt.get_hash(): _get_available_ev_source_counts(
+        stmt.evidence, custom_sources) for stmt in stmts}
 
 
-def available_sources_stmts(stmts: List[Statement]) -> Set[str]:
+def available_sources_stmts(
+        stmts: List[Statement],
+        custom_sources: Optional[List[str]] = None
+) -> Set[str]:
     """Returns the set of sources available in a list of statements"""
     sources = set()
     for stmt in stmts:
-        source_counts = _get_available_ev_source_counts(stmt.evidence)
+        source_counts = _get_available_ev_source_counts(stmt.evidence,
+                                                        custom_sources)
         for src, count in source_counts.items():
             if count > 0:
                 sources.add(src)
@@ -1011,21 +1018,27 @@ def available_sources_stmts(stmts: List[Statement]) -> Set[str]:
     return sources
 
 
-def available_sources_src_counts(source_counts: Dict[int, Dict[str, int]]) \
-        -> Set[str]:
+def available_sources_src_counts(
+        source_counts: Dict[int, Dict[str, int]],
+        custom_sources: Optional[List[str]] = None
+) -> Set[str]:
     """Returns the set of sources available from a source counts dict"""
+    every_source = all_sources if custom_sources is None else custom_sources
     sources = set()
     for _, src_count in source_counts.items():
         for src, count in src_count.items():
             if count > 0:
                 sources.add(src)
-        if len(sources) == len(all_sources):
+        if len(sources) == len(every_source):
             break
     return sources
 
 
-def _get_available_ev_source_counts(evidences):
-    counts = _get_initial_source_counts()
+def _get_available_ev_source_counts(
+        evidences: List[Evidence],
+        custom_sources: Optional[List[str]] = None
+) -> Dict[str, int]:
+    counts = _get_initial_source_counts(custom_sources)
     for ev in evidences:
         sa = internal_source_mappings.get(ev.source_api, ev.source_api)
         try:
@@ -1035,5 +1048,16 @@ def _get_available_ev_source_counts(evidences):
     return counts
 
 
-def _get_initial_source_counts():
-    return {s: 0 for s in all_sources}
+def _get_initial_source_counts(custom_sources: Optional[List[str]] = None):
+    if custom_sources is None:
+        return {s: 0 for s in all_sources}
+    else:
+        return {s: 0 for s in custom_sources}
+
+
+def get_all_sources_custom_colors(custom_colors: SourceColors) -> List[str]:
+    sources = []
+    for source_type, source_info in custom_colors:
+        for source in source_info['sources']:
+            sources.append(source)
+    return sources
