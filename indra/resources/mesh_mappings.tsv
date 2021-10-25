@@ -486,7 +486,6 @@ MESH	C000606514	ZP1 protein, human	UP	P60852	ZP1
 MESH	C000606515	ZP2 protein, human	UP	Q05996	ZP2
 MESH	C000606517	ZP3 protein, human	UP	P21754	ZP3
 MESH	C000606551	remdesivir	CHEBI	CHEBI:145994	remdesivir
-MESH	C000606551	remdesivir	NCIT	C152185	Remdesivir
 MESH	C000606578	DVL1 protein, human	UP	O14640	DVL1
 MESH	C000606581	DVL2 protein, human	UP	O14641	DVL2
 MESH	C000606584	DVL3 protein, human	UP	Q92997	DVL3
@@ -2689,7 +2688,6 @@ MESH	C098179	FLII protein, human	UP	Q13045	FLII
 MESH	C098304	CNTN4 protein, human	UP	Q8IWV2	CNTN4
 MESH	C098319	E2F3 protein, human	UP	O00716	E2F3
 MESH	C098320	efavirenz	CHEBI	CHEBI:119486	efavirenz
-MESH	C098320	efavirenz	NCIT	C29027	Efavirenz
 MESH	C098339	ADAM9 protein, human	UP	Q13443	ADAM9
 MESH	C098415	BRD2 protein, human	UP	P25440	BRD2
 MESH	C098487	DHX9 protein, human	UP	Q08211	DHX9
@@ -11369,7 +11367,6 @@ MESH	C549198	TMEM126A protein, human	UP	Q9H061	TMEM126A
 MESH	C549212	EMG1 protein, human	UP	Q92979	EMG1
 MESH	C549244	TMEM174 protein, human	UP	Q8WUU8	TMEM174
 MESH	C549273	daclatasvir	CHEBI	CHEBI:82977	daclatasvir
-MESH	C549273	daclatasvir	NCIT	C114981	Daclatasvir
 MESH	C549328	MFSD2A protein, human	UP	Q8NA29	MFSD2A
 MESH	C549402	SPDL1 protein, human	UP	Q96EA4	SPDL1
 MESH	C549451	ACBD4 protein, human	UP	Q8NC06	ACBD4
@@ -13223,7 +13220,6 @@ MESH	C588309	CNR2 protein, human	UP	P34972	CNR2
 MESH	C588418	KCNMB2 protein, human	UP	Q9Y691	KCNMB2
 MESH	D000001	Calcimycin	CHEBI	CHEBI:3305	Calcimycin
 MESH	D000002	Temefos	CHEBI	CHEBI:38954	temephos
-MESH	D000002	Temefos	NCIT	C80606	Temefos
 MESH	D000007	Abdominal Injuries	EFO	0009502	abdominal injury
 MESH	D000012	Abetalipoproteinemia	DOID	DOID:1386	abetalipoproteinemia
 MESH	D000012	Abetalipoproteinemia	HP	HP:0008181	Abetalipoproteinemia
@@ -13289,7 +13285,6 @@ MESH	D000068656	Mometasone Furoate	CHEBI	CHEBI:47564	mometasone furoate
 MESH	D000068677	Sildenafil Citrate	CHEBI	CHEBI:58987	sildenafil citrate
 MESH	D000068679	Emtricitabine	CHEBI	CHEBI:31536	emtricitabine
 MESH	D000068696	Rilpivirine	CHEBI	CHEBI:68606	rilpivirine
-MESH	D000068696	Rilpivirine	NCIT	C76929	Rilpivirine
 MESH	D000068698	Tenofovir	NCIT	C29490	Tenofovir
 MESH	D000068718	Rosuvastatin Calcium	CHEBI	CHEBI:77249	rosuvastatin calcium
 MESH	D000068737	Tolterodine Tartrate	CHEBI	CHEBI:32245	tolterodine tartrate
@@ -13321,7 +13316,6 @@ MESH	D000069396	Mitochondrial Ribosomes	GO	GO:0005761	mitochondrial ribosome
 MESH	D000069438	Ezetimibe	CHEBI	CHEBI:49040	ezetimibe
 MESH	D000069445	Atomoxetine Hydrochloride	CHEBI	CHEBI:331697	atomoxetine hydrochloride
 MESH	D000069446	Atazanavir Sulfate	CHEBI	CHEBI:31243	atazanavir sulfate
-MESH	D000069446	Atazanavir Sulfate	NCIT	C28835	Atazanavir Sulfate
 MESH	D000069447	Tiotropium Bromide	CHEBI	CHEBI:90959	tiotropium bromide
 MESH	D000069449	Cinacalcet	CHEBI	CHEBI:48390	cinacalcet
 MESH	D000069450	Liraglutide	CHEBI	CHEBI:71193	liraglutide
@@ -13333,7 +13327,6 @@ MESH	D000069465	Febuxostat	CHEBI	CHEBI:31596	febuxostat
 MESH	D000069470	Venlafaxine Hydrochloride	CHEBI	CHEBI:9944	venlafaxine hydrochloride
 MESH	D000069472	Colesevelam Hydrochloride	CHEBI	CHEBI:59599	colesevelam hydrochloride
 MESH	D000069474	Sofosbuvir	CHEBI	CHEBI:85083	sofosbuvir
-MESH	D000069474	Sofosbuvir	NCIT	C101263	Sofosbuvir
 MESH	D000069476	Linagliptin	CHEBI	CHEBI:68610	linagliptin
 MESH	D000069501	Abiraterone Acetate	CHEBI	CHEBI:68639	abiraterone acetate
 MESH	D000069503	Vilazodone Hydrochloride	CHEBI	CHEBI:70705	vilazodone hydrochloride
@@ -13347,7 +13340,6 @@ MESH	D000069583	Pregabalin	CHEBI	CHEBI:64356	pregabalin
 MESH	D000069604	Dabigatran	CHEBI	CHEBI:70752	dabigatran
 MESH	D000069605	Olopatadine Hydrochloride	CHEBI	CHEBI:31933	Olopatadine hydrochloride
 MESH	D000069616	Simeprevir	CHEBI	CHEBI:134743	simeprevir
-MESH	D000069616	Simeprevir	NCIT	C129015	Simeprevir
 MESH	D000070	Acebutolol	CHEBI	CHEBI:2379	acebutolol
 MESH	D000070558	Talipes	HP	HP:0001883	Talipes
 MESH	D000070558	Talipes	HP	HP:0008124	Talipes calcaneovarus
@@ -13477,7 +13469,6 @@ MESH	D000071960	Breast Carcinoma In Situ	HP	HP:0030076	Lobular carcinoma in situ
 MESH	D000071999	S100 Calcium-Binding Protein A4	HGNC	10494	S100A4
 MESH	D000072	Acedapsone	CHEBI	CHEBI:139474	acedapsone
 MESH	D000072000	NF-KappaB Inhibitor alpha	HGNC	7797	NFKBIA
-MESH	D000072000	NF-KappaB Inhibitor alpha	NCIT	C17678	NF-Kappa-B Inhibitor Alpha
 MESH	D000072002	Prion Proteins	HGNC	9449	PRNP
 MESH	D000072019	Kelch-Like ECH-Associated Protein 1	HGNC	23177	KEAP1
 MESH	D000072040	Apolipoprotein A-V	HGNC	17288	APOA5
@@ -13505,9 +13496,7 @@ MESH	D000072483	Placenta Growth Factor	HGNC	8893	PGF
 MESH	D000072516	Retinoic Acid 4-Hydroxylase	HGNC	2603	CYP26A1
 MESH	D000072576	Homeobox Protein Nkx-2.5	HGNC	2488	NKX2-5
 MESH	D000072596	Hepatitis A Virus Cellular Receptor 1	HGNC	17866	HAVCR1
-MESH	D000072596	Hepatitis A Virus Cellular Receptor 1	NCIT	C116608	Hepatitis A Virus Cellular Receptor 1
 MESH	D000072597	Hepatitis A Virus Cellular Receptor 2	HGNC	18437	HAVCR2
-MESH	D000072597	Hepatitis A Virus Cellular Receptor 2	NCIT	C104278	Hepatitis A Virus Cellular Receptor 2
 MESH	D000072598	Tumor Necrosis Factor alpha-Induced Protein 3	HGNC	11896	TNFAIP3
 MESH	D000072621	Peptidyl-Prolyl Cis-Trans Isomerase NIMA-Interacting 4	HGNC	8992	PIN4
 MESH	D000072622	Cyclophilin C	HGNC	9256	PPIC
@@ -13638,7 +13627,6 @@ MESH	D000075803	Angiopoietin-like 4 Protein	HGNC	16039	ANGPTL4
 MESH	D000075906	Chemokine CCL26	HGNC	10625	CCL26
 MESH	D000075924	X-linked Nuclear Protein	HGNC	886	ATRX
 MESH	D000075927	KRIT1 Protein	HGNC	1573	KRIT1
-MESH	D000075927	KRIT1 Protein	NCIT	C25772	Krev Interaction Trapped Protein 1
 MESH	D000075944	Apolipoprotein L1	HGNC	618	APOL1
 MESH	D000076023	Inhibitor of Growth Protein 1	HGNC	6062	ING1
 MESH	D000076084	Ubiquitin-Specific Peptidase 7	HGNC	12630	USP7
@@ -13735,7 +13723,6 @@ MESH	D000077384	Anastrozole	CHEBI	CHEBI:2704	anastrozole
 MESH	D000077402	Pantoprazole	CHEBI	CHEBI:7915	pantoprazole
 MESH	D000077403	Orlistat	CHEBI	CHEBI:94686	orlistat
 MESH	D000077404	Cidofovir	CHEBI	CHEBI:3696	cidofovir anhydrous
-MESH	D000077404	Cidofovir	NCIT	C1600	Cidofovir
 MESH	D000077405	Irbesartan	CHEBI	CHEBI:5959	irbesartan
 MESH	D000077407	Cilostazol	CHEBI	CHEBI:31401	cilostazol
 MESH	D000077408	Modafinil	CHEBI	CHEBI:31859	modafinil
@@ -13752,7 +13739,6 @@ MESH	D000077463	Carbamide Peroxide	CHEBI	CHEBI:75178	urea hydrogen peroxide
 MESH	D000077465	Cabergoline	CHEBI	CHEBI:3286	cabergoline
 MESH	D000077466	Tirofiban	CHEBI	CHEBI:9605	tirofiban
 MESH	D000077483	Valacyclovir	CHEBI	CHEBI:35854	valacyclovir
-MESH	D000077483	Valacyclovir	NCIT	C28235	Valacyclovir
 MESH	D000077484	Vemurafenib	CHEBI	CHEBI:63637	vemurafenib
 MESH	D000077486	Ticagrelor	CHEBI	CHEBI:68558	ticagrelor
 MESH	D000077487	Pramipexole	CHEBI	CHEBI:8356	pramipexole
@@ -13771,9 +13757,7 @@ MESH	D000077553	Edaravone	CHEBI	CHEBI:31530	edaravone
 MESH	D000077554	Levobupivacaine	CHEBI	CHEBI:6149	levobupivacaine
 MESH	D000077556	Alitretinoin	CHEBI	CHEBI:50648	9-cis-retinoic acid
 MESH	D000077560	Enfuvirtide	CHEBI	CHEBI:608828	enfuvirtide
-MESH	D000077560	Enfuvirtide	NCIT	C2105	Enfuvirtide
 MESH	D000077562	Valganciclovir	CHEBI	CHEBI:63635	valganciclovir
-MESH	D000077562	Valganciclovir	NCIT	C2629	Valganciclovir
 MESH	D000077563	Norethindrone Acetate	CHEBI	CHEBI:7628	norethisterone acetate
 MESH	D000077582	Amisulpride	CHEBI	CHEBI:64045	amisulpride
 MESH	D000077583	Quinapril	CHEBI	CHEBI:8713	quinapril
@@ -13784,7 +13768,6 @@ MESH	D000077589	Sulfathiazole	CHEBI	CHEBI:9337	sulfathiazole
 MESH	D000077590	Mivacurium	CHEBI	CHEBI:6958	Mivacurium
 MESH	D000077591	Eucalyptol	CHEBI	CHEBI:27961	1,8-cineole
 MESH	D000077592	Maraviroc	CHEBI	CHEBI:63608	maraviroc
-MESH	D000077592	Maraviroc	NCIT	C73144	Maraviroc
 MESH	D000077593	Reboxetine	CHEBI	CHEBI:135342	reboxetine
 MESH	D000077595	Famciclovir	NCIT	C29044	Famciclovir
 MESH	D000077596	Thymalfasin	CHEBI	CHEBI:135915	thymalfasin
@@ -13968,7 +13951,6 @@ MESH	D000200	Action Potentials	GO	GO:0001508	action potential
 MESH	D000205	Actomyosin	GO	GO:0042641	actomyosin
 MESH	D000210	Acute-Phase Reaction	GO	GO:0006953	acute-phase response
 MESH	D000212	Acyclovir	CHEBI	CHEBI:2453	acyclovir
-MESH	D000212	Acyclovir	NCIT	C205	Acyclovir
 MESH	D000216	N-Acylneuraminate Cytidylyltransferase	HGNC	18290	CMAS
 MESH	D000218	Adamantane	CHEBI	CHEBI:38223	diamantane
 MESH	D000224	Addison Disease	DOID	DOID:13774	Addison's disease
@@ -14406,7 +14388,6 @@ MESH	D000993	Antitreponemal Agents	CHEBI	CHEBI:36050	antitreponemal drug
 MESH	D000995	Antitubercular Agents	CHEBI	CHEBI:33231	antitubercular agent
 MESH	D000996	Antitussive Agents	CHEBI	CHEBI:51177	antitussive
 MESH	D000998	Antiviral Agents	CHEBI	CHEBI:22587	antiviral agent
-MESH	D000998	Antiviral Agents	NCIT	C281	Antiviral Agent
 MESH	D001002	Anuria	DOID	DOID:2983	anuria
 MESH	D001002	Anuria	EFO	0009530	anuria
 MESH	D001002	Anuria	HP	HP:0100519	Anuria
@@ -16841,7 +16822,6 @@ MESH	D005622	Friend murine leukemia virus	NCIT	C14362	Friend Murine Leukemia Vir
 MESH	D005624	Frontal Bone	NCIT	C32635	Frontal Bone
 MESH	D005625	Frontal Lobe	NCIT	C23287	Frontal Lobe
 MESH	D005627	Frostbite	EFO	0009527	frostbite
-MESH	D005627	Frostbite	NCIT	C34627	Frostbite
 MESH	D005630	Fructans	CHEBI	CHEBI:28796	fructan
 MESH	D005632	Fructose	CHEBI	CHEBI:28757	fructose
 MESH	D005633	Fructose Intolerance	DOID	DOID:9869	hereditary fructose intolerance syndrome
@@ -16878,7 +16858,6 @@ MESH	D005674	Fusobacterium Infections	NCIT	C84722	Fusobacterium Infection
 MESH	D005675	Fusobacterium necrophorum	NCIT	C86401	Fusobacterium necrophorum
 MESH	D005677	G(M1) Ganglioside	CHEBI	CHEBI:61048	ganglioside GM1
 MESH	D005678	G(M2) Ganglioside	CHEBI	CHEBI:60327	ganglioside GM2 (18:0)
-MESH	D005678	G(M2) Ganglioside	NCIT	C516	Ganglioside GM2
 MESH	D005679	G(M3) Ganglioside	CHEBI	CHEBI:15681	alpha-N-acetylneuraminyl-(2->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
 MESH	D005680	gamma-Aminobutyric Acid	CHEBI	CHEBI:16865	gamma-aminobutyric acid
 MESH	D005681	Gabon	NCIT	C16596	Gabon
@@ -16909,7 +16888,6 @@ MESH	D005706	Gallbladder Neoplasms	DOID	DOID:3121	gallbladder cancer
 MESH	D005706	Gallbladder Neoplasms	HP	HP:0100575	Neoplasm of the gallbladder
 MESH	D005707	Gallic Acid	NCIT	C63648	Gallic Acid
 MESH	D005708	Gallium	CHEBI	CHEBI:49631	gallium atom
-MESH	D005708	Gallium	NCIT	C66798	Gallium
 MESH	D005711	Gallopamil	CHEBI	CHEBI:34772	Gallopamil
 MESH	D005715	Gambling	DOID	DOID:12399	pathological gambling
 MESH	D005715	Gambling	EFO	0004699	gambling behaviour
@@ -16941,7 +16919,6 @@ MESH	D005756	Gastritis	EFO	0000217	gastritis
 MESH	D005756	Gastritis	EFO	0000337	chronic gastritis
 MESH	D005756	Gastritis	HP	HP:0005231	Chronic gastritis
 MESH	D005756	Gastritis	HP	HP:0005263	Gastritis
-MESH	D005756	Gastritis	NCIT	C26780	Gastritis
 MESH	D005757	Gastritis, Atrophic	DOID	DOID:8929	atrophic gastritis
 MESH	D005757	Gastritis, Atrophic	EFO	1000826	atrophic gastritis
 MESH	D005757	Gastritis, Atrophic	HP	HP:0002582	Chronic atrophic gastritis
@@ -18223,7 +18200,6 @@ MESH	D007984	Leydig Cell Tumor	EFO	1000321	Leydig Cell Tumor
 MESH	D007986	Luteinizing Hormone	CHEBI	CHEBI:81568	Luteinizing hormone
 MESH	D008010	Lichen Planus	DOID	DOID:9201	lichen planus
 MESH	D008010	Lichen Planus	EFO	1000726	lichen planus
-MESH	D008012	Lidocaine	CHEBI	CHEBI:6456	lidocaine
 MESH	D008012	Lidocaine	CHEBI	CHEBI:6456	lidocaine
 MESH	D008017	Life Expectancy	EFO	0004299	life expectancy
 MESH	D008018	Life Cycle Stages	EFO	0000399	developmental stage
@@ -20146,7 +20122,6 @@ MESH	D011441	Propylthiouracil	CHEBI	CHEBI:8502	6-propyl-2-thiouracil
 MESH	D011442	Proscillaridin	CHEBI	CHEBI:32065	Proscillaridin
 MESH	D011448	Prostaglandin Antagonists	CHEBI	CHEBI:49023	prostaglandin antagonist
 MESH	D011453	Prostaglandins	CHEBI	CHEBI:26333	prostaglandin
-MESH	D011453	Prostaglandins	NCIT	C782	Prostaglandin
 MESH	D011454	Prostaglandins A	CHEBI	CHEBI:26334	prostaglandins A
 MESH	D011456	Prostaglandins B	CHEBI	CHEBI:26335	prostaglandins B
 MESH	D011457	Prostaglandins D	CHEBI	CHEBI:26337	prostaglandins D
@@ -20550,7 +20525,6 @@ MESH	D012238	Rhodium	CHEBI	CHEBI:33359	rhodium atom
 MESH	D012243	Rhodopsin	HGNC	10012	RHO
 MESH	D012253	Rib Fractures	EFO	0009620	rib fracture
 MESH	D012254	Ribavirin	CHEBI	CHEBI:63580	ribavirin
-MESH	D012254	Ribavirin	NCIT	C807	Ribavirin
 MESH	D012255	Ribitol	CHEBI	CHEBI:15963	ribitol
 MESH	D012256	Riboflavin	CHEBI	CHEBI:17015	riboflavin
 MESH	D012257	Riboflavin Deficiency	DOID	DOID:8454	riboflavin deficiency
@@ -22756,7 +22730,6 @@ MESH	D017129	Anisakiasis	NCIT	C128393	Anisakiasis
 MESH	D017130	Angioplasty	NCIT	C51999	Angioplasty
 MESH	D017131	Thrombectomy	NCIT	C52003	Thrombectomy
 MESH	D017135	Desogestrel	CHEBI	CHEBI:4453	desogestrel
-MESH	D017135	Desogestrel	NCIT	C47476	Desogestrel
 MESH	D017136	Ion Transport	GO	GO:0006811	ion transport
 MESH	D017144	Focus Groups	NCIT	C154589	Focus Group
 MESH	D017147	Defibrillators, Implantable	EFO	0010674	cardioverter defibrillator
@@ -22796,7 +22769,6 @@ MESH	D017241	MELAS Syndrome	NCIT	C84885	MELAS Syndrome
 MESH	D017242	Complement Factor H	NCIT	C97211	Complement Factor H
 MESH	D017243	MERRF Syndrome	DOID	DOID:310	MERRF syndrome
 MESH	D017245	Foscarnet	CHEBI	CHEBI:127780	phosphonoformic acid
-MESH	D017245	Foscarnet	NCIT	C71630	Foscarnet
 MESH	D017246	Ophthalmoplegia, Chronic Progressive External	DOID	DOID:12558	chronic progressive external ophthalmoplegia
 MESH	D017246	Ophthalmoplegia, Chronic Progressive External	EFO	0002509	progressive external ophthalmoplegia
 MESH	D017246	Ophthalmoplegia, Chronic Progressive External	HP	HP:0000544	External ophthalmoplegia
@@ -22807,7 +22779,6 @@ MESH	D017253	Neurofibromatoses	DOID	DOID:8712	neurofibromatosis
 MESH	D017253	Neurofibromatoses	EFO	0008514	neurofibromatosis
 MESH	D017253	Neurofibromatoses	HP	HP:0001067	Neurofibromas
 MESH	D017255	Acitretin	CHEBI	CHEBI:50173	all-trans-acitretin
-MESH	D017255	Acitretin	NCIT	C985	Acitretin
 MESH	D017256	Technetium Tc 99m Sestamibi	CHEBI	CHEBI:9423	Technetium tc 99m sestamibi
 MESH	D017257	Ramipril	CHEBI	CHEBI:8774	ramipril
 MESH	D017258	Medroxyprogesterone Acetate	CHEBI	CHEBI:6716	medroxyprogesterone acetate
@@ -25951,10 +25922,8 @@ MESH	D058746	Gestational Sac	NCIT	C82951	Gestational Sac
 MESH	D058747	CHARGE Syndrome	DOID	DOID:0050834	CHARGE syndrome
 MESH	D058747	CHARGE Syndrome	NCIT	C75100	CHARGE Syndrome
 MESH	D058750	Epithelial-Mesenchymal Transition	GO	GO:0001837	epithelial to mesenchymal transition
-MESH	D058750	Epithelial-Mesenchymal Transition	NCIT	C97304	Epithelial-to-Mesenchymal Transition
 MESH	D058765	Neurofeedback	NCIT	C93302	Neurofeedback
 MESH	D058766	Levoleucovorin	CHEBI	CHEBI:63606	(6S)-5-formyltetrahydrofolic acid
-MESH	D058766	Levoleucovorin	NCIT	C1559	Levoleucovorin
 MESH	D058767	Protein Unfolding	GO	GO:0043335	protein unfolding
 MESH	D058785	GABA-A Receptor Agonists	CHEBI	CHEBI:91016	GABAA receptor agonist
 MESH	D058786	GABA-B Receptor Agonists	CHEBI	CHEBI:143001	GABAB receptor agonist
@@ -25996,7 +25965,6 @@ MESH	D058975	Folate Receptor 1	HGNC	3791	FOLR1
 MESH	D058976	Folate Receptor 2	HGNC	3793	FOLR2
 MESH	D058978	Reduced Folate Carrier Protein	HGNC	10937	SLC19A1
 MESH	D058979	Proton-Coupled Folate Transporter	HGNC	30521	SLC46A1
-MESH	D058979	Proton-Coupled Folate Transporter	NCIT	C107468	Proton-Coupled Folate Transporter
 MESH	D058986	Phosphodiesterase 5 Inhibitors	CHEBI	CHEBI:71942	EC 3.1.4.35 (3',5'-cyclic-GMP phosphodiesterase) inhibitor
 MESH	D058988	Phosphodiesterase 4 Inhibitors	CHEBI	CHEBI:68844	phosphodiesterase IV inhibitor
 MESH	D059004	Topoisomerase I Inhibitors	CHEBI	CHEBI:50276	EC 5.99.1.2 (DNA topoisomerase) inhibitor
@@ -26016,7 +25984,6 @@ MESH	D059228	Renal Nutcracker Syndrome	EFO	1001838	renal nutcracker syndrome
 MESH	D059245	Transient Tachypnea of the Newborn	NCIT	C101037	Transient Tachypnea of the Newborn
 MESH	D059246	Tachypnea	EFO	0009840	tachypnea
 MESH	D059246	Tachypnea	HP	HP:0002789	Tachypnea
-MESH	D059246	Tachypnea	NCIT	C50767	Tachypnea
 MESH	D059247	Fertility Preservation	NCIT	C71326	Fertility Preservation
 MESH	D059248	Chemoradiotherapy	NCIT	C94626	Chemoradiotherapy
 MESH	D059249	Otomycosis	DOID	DOID:0050147	otomycosis
@@ -26037,10 +26004,8 @@ MESH	D059350	Chronic Pain	HP	HP:0012532	Chronic pain
 MESH	D059350	Chronic Pain	NCIT	C26940	Chronic Pain
 MESH	D059352	Musculoskeletal Pain	NCIT	C3244	Musculoskeletal Pain
 MESH	D059370	RNA Folding	GO	GO:0034337	RNA folding
-MESH	D059370	RNA Folding	NCIT	C19017	RNA Folding
 MESH	D059373	Mastodynia	EFO	1001366	Mastodynia
 MESH	D059390	Breakthrough Pain	HP	HP:0032149	Breakthrough pain
-MESH	D059390	Breakthrough Pain	NCIT	C9203	Breakthrough Pain
 MESH	D059405	Sun Protection Factor	NCIT	C18317	Sun Protection Factor
 MESH	D059407	Pinguecula	DOID	DOID:11029	pinguecula
 MESH	D059407	Pinguecula	EFO	1001824	pinguecula
@@ -26055,9 +26020,7 @@ MESH	D059446	Heterotaxy Syndrome	HP	HP:0001696	Situs inversus totalis
 MESH	D059446	Heterotaxy Syndrome	HP	HP:0011536	Right atrial isomerism
 MESH	D059446	Heterotaxy Syndrome	HP	HP:0011537	Left atrial isomerism
 MESH	D059446	Heterotaxy Syndrome	HP	HP:0030853	Heterotaxy
-MESH	D059446	Heterotaxy Syndrome	NCIT	C117273	Heterotaxy Syndrome
 MESH	D059447	Cell Cycle Checkpoints	GO	GO:0000075	cell cycle checkpoint
-MESH	D059447	Cell Cycle Checkpoints	NCIT	C18689	Cell Cycle Checkpoint
 MESH	D059467	Transcriptome	EFO	0004421	transcriptome
 MESH	D059467	Transcriptome	NCIT	C153194	Transcriptome
 MESH	D059472	Exome	EFO	0004422	exome
@@ -26069,16 +26032,13 @@ MESH	D059608	Laryngocele	NCIT	C97062	Laryngocele
 MESH	D059611	Balamuthia mandrillaris	NCIT	C122184	Balamuthia mandrillaris
 MESH	D059629	Signal-To-Noise Ratio	NCIT	C94983	Signal to Noise Ratio
 MESH	D059630	Mesenchymal Stem Cells	EFO	0000586	mesenchymal stem cell
-MESH	D059630	Mesenchymal Stem Cells	NCIT	C43423	Mesenchymal Stem Cell
 MESH	D059645	Mutation Rate	NCIT	C167282	Mutation Rate
 MESH	D059647	Gene-Environment Interaction	NCIT	C18092	Gene-Environment Interaction
 MESH	D059666	Lysosomal-Associated Membrane Protein 3	HGNC	14582	LAMP3
 MESH	D059685	Herniorrhaphy	NCIT	C168249	Herniorrhaphy
 MESH	D059747	Nasal Surgical Procedures	NCIT	C157931	Nasal Surgery
 MESH	D059748	Proteolysis	GO	GO:0006508	proteolysis
-MESH	D059748	Proteolysis	NCIT	C18105	Proteolysis
 MESH	D059765	Homologous Recombination	GO	GO:0035825	homologous recombination
-MESH	D059765	Homologous Recombination	NCIT	C18144	Homologous Recombination
 MESH	D059767	Recombinational DNA Repair	GO	GO:0000725	recombinational repair
 MESH	D059785	Karyotype	EFO	0004426	karyotype
 MESH	D059786	Abnormal Karyotype	NCIT	C168875	Abnormal Karyotype
@@ -26168,7 +26128,6 @@ MESH	D061307	Human Umbilical Vein Endothelial Cells	EFO	0002451	HUVEC cell
 MESH	D061325	Hereditary Breast and Ovarian Cancer Syndrome	DOID	DOID:5683	hereditary breast ovarian cancer syndrome
 MESH	D061330	Multidetector Computed Tomography	NCIT	C157337	Multi-detector Computed Tomography
 MESH	D061346	Laser Capture Microdissection	EFO	0009111	laser capture microdissection
-MESH	D061346	Laser Capture Microdissection	NCIT	C19263	Laser Capture Microdissection
 MESH	D061354	Acinar Cells	NCIT	C23979	Acinar Cells
 MESH	D061405	Insulin, Lente	NCIT	C29122	Insulin, Lente
 MESH	D061406	Insulin, Ultralente	NCIT	C29126	Insulin, Ultralente
@@ -26182,7 +26141,6 @@ MESH	D061888	Craniospinal Irradiation	NCIT	C116437	Craniospinal Irradiation
 MESH	D061965	Matrix Metalloproteinase Inhibitors	CHEBI	CHEBI:50664	matrix metalloproteinase inhibitor
 MESH	D061986	MCF-7 Cells	NCIT	C18096	MCF7
 MESH	D061988	Proteasome Inhibitors	CHEBI	CHEBI:52726	proteasome inhibitor
-MESH	D061988	Proteasome Inhibitors	NCIT	C2160	Proteasome Inhibitor
 MESH	D062025	Organophosphate Poisoning	EFO	0010581	organophosphate poisoning
 MESH	D062027	Linear IgA Bullous Dermatosis	EFO	0009313	Linear IgA Dermatosis
 MESH	D062048	Narrow Band Imaging	NCIT	C116496	Narrow Band Imaging
@@ -26215,7 +26173,6 @@ MESH	D062685	Steatocystoma Multiplex	HP	HP:0012035	Steatocystoma multiplex
 MESH	D062689	Lipoblastoma	NCIT	C27483	Lipoblastoma
 MESH	D062727	Coxsackie and Adenovirus Receptor-Like Membrane Protein	HGNC	24039	CLMP
 MESH	D062745	Junctional Adhesion Molecule A	HGNC	14685	F11R
-MESH	D062745	Junctional Adhesion Molecule A	NCIT	C118593	Junctional Adhesion Molecule A
 MESH	D062765	Junctional Adhesion Molecule B	HGNC	14686	JAM2
 MESH	D062786	Junctional Adhesion Molecule C	HGNC	15532	JAM3
 MESH	D062788	Adenomyosis	DOID	DOID:288	endometriosis of uterus
@@ -26268,17 +26225,13 @@ MESH	D064030	S100 Calcium Binding Protein G	HGNC	1436	S100G
 MESH	D064032	Calbindin 2	HGNC	1435	CALB2
 MESH	D064047	Spindle Poles	GO	GO:0000922	spindle pole
 MESH	D064048	Spindle Pole Bodies	GO	GO:0005816	spindle pole body
-MESH	D064048	Spindle Pole Bodies	NCIT	C13365	Spindle Pole Body
 MESH	D064068	Collagenous Sprue	NCIT	C45426	Collagenous Sprue
 MESH	D064090	Intraocular Lymphoma	DOID	DOID:775	intraocular lymphoma
 MESH	D064090	Intraocular Lymphoma	NCIT	C9184	Intraocular Lymphoma
 MESH	D064094	Interleukin-27	HGNC	5984	IL17D
 MESH	D064096	Aurora Kinase A	HGNC	11393	AURKA
-MESH	D064096	Aurora Kinase A	NCIT	C30006	Aurora Kinase A
 MESH	D064098	Esomeprazole	CHEBI	CHEBI:50275	esomeprazole
-MESH	D064098	Esomeprazole	NCIT	C65538	Esomeprazole
 MESH	D064107	Aurora Kinase B	HGNC	11390	AURKB
-MESH	D064107	Aurora Kinase B	NCIT	C68596	Aurora Kinase B
 MESH	D064108	Aurora Kinase C	NCIT	C95267	Aurora Kinase C
 MESH	D064111	Minichromosome Maintenance Complex Component 2	HGNC	6944	MCM2
 MESH	D064113	CRISPR-Cas Systems	GO	GO:0099048	CRISPR-cas system
@@ -26314,7 +26267,6 @@ MESH	D064507	Solute Carrier Family 12, Member 4	HGNC	10913	SLC12A4
 MESH	D064527	Etiolation	EFO	0007589	etiolation
 MESH	D064527	Etiolation	GO	GO:0009647	skotomorphogenesis
 MESH	D064529	Receptor, Metabotropic Glutamate 5	HGNC	4597	GRM5
-MESH	D064529	Receptor, Metabotropic Glutamate 5	NCIT	C26241	Metabotropic Glutamate Receptor 5
 MESH	D064546	Protein Kinase C beta	HGNC	9395	PRKCB
 MESH	D064549	Myeloid Cell Leukemia Sequence 1 Protein	HGNC	6943	MCL1
 MESH	D064568	S100 Calcium Binding Protein beta Subunit	HGNC	10500	S100B
@@ -26326,23 +26278,18 @@ MESH	D064650	Home Health Nursing	NCIT	C20883	Home Health Nursing
 MESH	D064652	Basal Bodies	NCIT	C32183	Basal Body
 MESH	D064690	Wakefulness-Promoting Agents	CHEBI	CHEBI:77567	eugeroic
 MESH	D064692	Hyoscyamine	CHEBI	CHEBI:17486	(S)-atropine
-MESH	D064692	Hyoscyamine	NCIT	C29104	Hyoscyamine
 MESH	D064695	Enclomiphene	NCIT	C28211	Enclomiphene
 MESH	D064696	Zuclomiphene	NCIT	C66870	Zuclomiphene
 MESH	D064697	Racemethionine	CHEBI	CHEBI:16811	methionine
 MESH	D064703	Family Nurse Practitioners	NCIT	C71290	Family Nurse Practitioner
 MESH	D064704	Levofloxacin	CHEBI	CHEBI:63598	levofloxacin
-MESH	D064704	Levofloxacin	NCIT	C1586	Levofloxacin
 MESH	D064705	Racepinephrine	NCIT	C76546	Racepinephrine
 MESH	D064706	Vocal Cord Dysfunction	HP	HP:0031801	Vocal cord dysfunction
 MESH	D064726	Triple Negative Breast Neoplasms	DOID	DOID:0060081	triple-receptor negative breast cancer
 MESH	D064726	Triple Negative Breast Neoplasms	EFO	0005537	triple-negative breast cancer
 MESH	D064730	Dexrazoxane	CHEBI	CHEBI:50223	(+)-dexrazoxane
-MESH	D064730	Dexrazoxane	NCIT	C1333	Dexrazoxane
 MESH	D064747	Lansoprazole	CHEBI	CHEBI:6375	lansoprazole
-MESH	D064747	Lansoprazole	NCIT	C29150	Lansoprazole
 MESH	D064748	Dexlansoprazole	CHEBI	CHEBI:135931	dexlansoprazole
-MESH	D064748	Dexlansoprazole	NCIT	C73192	Dexlansoprazole
 MESH	D064750	Rabeprazole	CHEBI	CHEBI:8768	rabeprazole
 MESH	D064751	Ammonium Compounds	CHEBI	CHEBI:35276	ammonium compound
 MESH	D064753	Ammonium Hydroxide	CHEBI	CHEBI:18219	ammonium hydroxide
@@ -26413,12 +26360,10 @@ MESH	D065727	Cytochrome P-450 CYP2C8	HGNC	2622	CYP2C8
 MESH	D065729	Cytochrome P-450 CYP2C9	HGNC	2623	CYP2C9
 MESH	D065731	Cytochrome P-450 CYP2C19	HGNC	2621	CYP2C19
 MESH	D065766	Atypical Hemolytic Uremic Syndrome	DOID	DOID:0080301	atypical hemolytic-uremic syndrome
-MESH	D065766	Atypical Hemolytic Uremic Syndrome	NCIT	C123223	Atypical Hemolytic Uremic Syndrome
 MESH	D065808	Prepulse Inhibition	GO	GO:0060134	prepulse inhibition
 MESH	D065817	Congenital Microtia	HP	HP:0008551	Microtia
 MESH	D065817	Congenital Microtia	HP	HP:0009892	Anotia
 MESH	D065819	Voriconazole	CHEBI	CHEBI:10023	voriconazole
-MESH	D065819	Voriconazole	NCIT	C1707	Voriconazole
 MESH	D065842	Pars Compacta	NCIT	C97341	Pars Compacta
 MESH	D065843	Cerebral Crus	NCIT	C32409	Crus Cerebri
 MESH	D065850	Cerebral Peduncle	NCIT	C32291	Cerebral Peduncle
@@ -26450,10 +26395,8 @@ MESH	D066249	Craving	NCIT	C41365	Craving
 MESH	D066257	Heparin-binding EGF-like Growth Factor	HGNC	3059	HBEGF
 MESH	D066258	Amphiregulin	HGNC	651	AREG
 MESH	D066259	Betacellulin	HGNC	1121	BTC
-MESH	D066259	Betacellulin	NCIT	C20432	Betacellulin
 MESH	D066260	Epiregulin	HGNC	3443	EREG
 MESH	D066261	Epigen	HGNC	17470	EPGN
-MESH	D066261	Epigen	NCIT	C105920	Epigen
 MESH	D066270	Social Capital	NCIT	C93209	Social Capital
 MESH	D066271	External Capsule	NCIT	C32550	External Capsule
 MESH	D066292	Lipid Droplets	GO	GO:0005811	lipid droplet

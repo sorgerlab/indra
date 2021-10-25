@@ -736,7 +736,13 @@ def update_biomappings():
             biomappings[(target_ns, target_id, mapping['target name'])].append(
                 (source_ns, source_id, mapping['source name']))
 
-    mesh_mappings = {k: v for k, v in biomappings.items()
+    def _filter_ncit(values):
+        if len(values) > 1 and 'NCIT' in {v[0] for v in values}:
+            return [v for v in values if v[0] != 'NCIT']
+        else:
+            return values
+
+    mesh_mappings = {k: _filter_ncit(v) for k, v in biomappings.items()
                      if k[0] == 'MESH'}
     non_mesh_mappings = {k: [vv for vv in v if vv[0] != 'MESH']
                          for k, v in biomappings.items()
