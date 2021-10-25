@@ -706,7 +706,7 @@ def update_biomappings():
     biomappings = defaultdict(list)
     mappings = load_mappings()
     predictions = load_predictions()
-    exclude_ns = {'kegg.pathway'}
+    exclude_ns = {'kegg.pathway', 'depmap', 'ccle', 'reactome'}
     for mappings, mapping_type in ((mappings, 'curated'),
                                    (predictions, 'predicted')):
         for mapping in mappings:
@@ -736,7 +736,13 @@ def update_biomappings():
             biomappings[(target_ns, target_id, mapping['target name'])].append(
                 (source_ns, source_id, mapping['source name']))
 
-    mesh_mappings = {k: v for k, v in biomappings.items()
+    def _filter_ncit(values):
+        if len(values) > 1 and 'NCIT' in {v[0] for v in values}:
+            return [v for v in values if v[0] != 'NCIT']
+        else:
+            return values
+
+    mesh_mappings = {k: _filter_ncit(v) for k, v in biomappings.items()
                      if k[0] == 'MESH'}
     non_mesh_mappings = {k: [vv for vv in v if vv[0] != 'MESH']
                          for k, v in biomappings.items()
@@ -766,10 +772,18 @@ def update_biomappings():
                 if not mesh_name:
                     continue
                 key = ('MESH', mesh_id, mesh_name)
-                if key not in mesh_mappings:
-                    mesh_mappings[key] = [(db, db_id, entry['name'])]
+                if db_id.startswith('BFO'):
+                    db_to_use = 'BFO'
+                    db_id_to_use = db_id[4:]
                 else:
-                    mesh_mappings[key].append((db, db_id, entry['name']))
+                    db_to_use = db
+                    db_id_to_use = db_id
+                if key not in mesh_mappings:
+                    mesh_mappings[key] = [(db_to_use, db_id_to_use,
+                                           entry['name'])]
+                else:
+                    mesh_mappings[key].append((db_to_use, db_id_to_use,
+                                               entry['name']))
 
     rows = []
     for k, v in mesh_mappings.items():
