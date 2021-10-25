@@ -766,10 +766,18 @@ def update_biomappings():
                 if not mesh_name:
                     continue
                 key = ('MESH', mesh_id, mesh_name)
-                if key not in mesh_mappings:
-                    mesh_mappings[key] = [(db, db_id, entry['name'])]
+                if db_id.startswith('BFO'):
+                    db_to_use = 'BFO'
+                    db_id_to_use = db_id[4:]
                 else:
-                    mesh_mappings[key].append((db, db_id, entry['name']))
+                    db_to_use = db
+                    db_id_to_use = db_id
+                if key not in mesh_mappings:
+                    mesh_mappings[key] = [(db_to_use, db_id_to_use,
+                                           entry['name'])]
+                else:
+                    mesh_mappings[key].append((db_to_use, db_id_to_use,
+                                               entry['name']))
 
     rows = []
     for k, v in mesh_mappings.items():
