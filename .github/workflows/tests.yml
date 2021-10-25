@@ -41,6 +41,8 @@ jobs:
         pip install cython
         # Now install INDRA with all its extras
         pip install .[all]
+        # Fixing rdflib 5 issue
+        pip install "pyparsing<3"
         wget -nv https://bigmech.s3.amazonaws.com/travis/Phosphorylation_site_dataset.tsv -O indra/resources/Phosphorylation_site_dataset.tsv
         # Run slow tests only if we're in the cron setting
         #- |

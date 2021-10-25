@@ -285,9 +285,15 @@ def update_chebi_accessions():
                        inplace=True)
     # Here we need to map to primary ChEBI IDs
     from indra.databases.chebi_client import get_primary_id
-    df_cas.COMPOUND_ID.replace(get_primary_id, inplace=True)
+    # This is a wrapper just to strip off the CHEBI prefix to
+    # keep the existing convetions
+    def _get_primary_id_wrapper(chebi_id):
+        return get_primary_id(chebi_id)[6:]
+    df_cas.COMPOUND_ID = df_cas.COMPOUND_ID.apply(_get_primary_id_wrapper)
     df_cas.drop_duplicates(subset=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                            inplace=True)
+    # Temporary fix, see https://github.com/ebi-chebi/ChEBI/issues/4149
+    df_cas = df_cas[~df_cas['ACCESSION_NUMBER'].str.contains('/')]
     df_cas.to_csv(fname, sep='\t',
                   columns=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                   header=['CAS', 'CHEBI'], index=False)
