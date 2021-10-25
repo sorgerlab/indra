@@ -20604,7 +20604,7 @@ MESH	D012366	RNA, Transfer, Val	CHEBI	CHEBI:29183	tRNA(Val)
 MESH	D012373	Rocky Mountain Spotted Fever	DOID	DOID:0050052	Rocky Mountain spotted fever
 MESH	D012374	Rod Cell Outer Segment	GO	GO:0120200	rod photoreceptor outer segment
 MESH	D012378	Rodenticides	CHEBI	CHEBI:33288	rodenticide
-MESH	D012380	Role	EFO	BFO:0000023	role
+MESH	D012380	Role	BFO	0000023	role
 MESH	D012382	Rolitetracycline	CHEBI	CHEBI:63334	rolitetracycline
 MESH	D012385	Ronidazole	CHEBI	CHEBI:141154	ronidazole
 MESH	D012391	Root Resorption	DOID	DOID:14550	root resorption
