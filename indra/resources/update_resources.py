@@ -292,6 +292,8 @@ def update_chebi_accessions():
     df_cas.COMPOUND_ID = df_cas.COMPOUND_ID.apply(_get_primary_id_wrapper)
     df_cas.drop_duplicates(subset=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                            inplace=True)
+    # Temporary fix, see https://github.com/ebi-chebi/ChEBI/issues/4149
+    df_cas = df_cas[~df_cas['ACCESSION_NUMBER'].str.contains('/')]
     df_cas.to_csv(fname, sep='\t',
                   columns=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                   header=['CAS', 'CHEBI'], index=False)
