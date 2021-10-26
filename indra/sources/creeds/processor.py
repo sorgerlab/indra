@@ -63,6 +63,7 @@ PERTURBATIONS = {
     "deficiency (mutation)": "knockdown",
     "silencing": "knockdown",
     "heterozygotic knockout (nf1+/-)": "knockout",
+    "shrna": "knockdown",
     # increase
     "induction": "increase",
     "knock-in": "increase",
@@ -76,6 +77,7 @@ PERTURBATIONS = {
     "activation (deltanb-cateniner transgenics)": "activation",
     # inhibition
     "druginhibition": "inhibition",
+    "drug inhibition": "inhibition",
     "inhibition": "inhibition",
     "inactivation  (ikk inhibition)": "inhibition",
     "deficiency": "inhibition",
@@ -133,8 +135,14 @@ def _get_genes(
     expressions = record[key]
     for symbol, _ in expressions:
         if prefix == "HGNC":
-            prefix, identifier = \
-                "HGNC", hgnc_client.get_current_hgnc_id(symbol)
+            current_ids = hgnc_client.get_current_hgnc_id(symbol)
+            # We may get no current IDs or more than one current IDs
+            # in which case we skip this gene
+            if not current_ids or len(current_ids) != 1:
+                identifier = None
+            else:
+                identifier = current_ids[0]
+            _prefix = "HGNC"
         elif prefix == "MGI":
             _prefix, identifier = "UP", get_id_from_mgi_name(symbol)
         elif prefix == "RGD":
@@ -256,7 +264,7 @@ class CREEDSGeneProcessor(CREEDSProcessor):
         down_stmt_cls = DOWN_MAP.get(pert_type)
         if up_stmt_cls is None or down_stmt_cls is None:
             if pert_type not in LOGGED_MISSING_PART:
-                logger.info(f"Could not look up pert_type {record['pert_type']}")
+                logger.debug(f"Could not look up pert_type {record['pert_type']}")
                 LOGGED_MISSING_PART.add(pert_type)
             return
 
@@ -275,15 +283,15 @@ class CREEDSDiseaseProcessor(CREEDSProcessor):
 
     @staticmethod
     def get_subject(record) -> Agent:
-        xrefs = {}
+        db_refs = {}
         doid = record["do_id"]
         if doid:
-            xrefs["DOID"] = doid
+            db_refs["DOID"] = doid
         umls_id = record["umls_cui"]
         if umls_id:
-            xrefs["UMLS"] = umls_id
+            db_refs["UMLS"] = umls_id
         name = record["disease_name"]
-        return get_standard_agent(name, xrefs)
+        return get_standard_agent(name, db_refs)
 
     @classmethod
     def process_record(cls, record) -> Iterable[Statement]:
@@ -303,18 +311,18 @@ class CREEDSChemicalProcessor(CREEDSProcessor):
 
     @staticmethod
     def get_subject(record) -> Agent:
-        xrefs = {}
+        db_refs = {}
         smiles = record["smiles"]
         if smiles:
-            xrefs["SMILES"] = smiles
+            db_refs["SMILES"] = smiles
         pubchem_compound_id = record["pubchem_cid"]
         if pubchem_compound_id:
-            xrefs["PUBCHEM"] = str(pubchem_compound_id)
+            db_refs["PUBCHEM"] = str(pubchem_compound_id)
         drugbank_id = record["drugbank_id"]
         if drugbank_id:
-            xrefs["DRUGBANK"] = drugbank_id
+            db_refs["DRUGBANK"] = drugbank_id
         name = record["drug_name"]
-        return get_standard_agent(name, xrefs)
+        return get_standard_agent(name, db_refs)
 
     @classmethod
     def process_record(cls, record) -> Iterable[Statement]:
