@@ -63,4 +63,4 @@ def get_id_from_alt_id(mondo_alt_id: str) -> Optional[str]:
 
 
 if __name__ == '__main__':
-    OboClient.update_from_obo_library('mondo', remove_prefix=False, force=True)
+    OboClient.update_from_obo_library('mondo', remove_prefix=True, force=True)
