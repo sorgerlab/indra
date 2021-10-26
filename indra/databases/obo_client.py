@@ -11,7 +11,9 @@ from typing import List, Mapping, Optional
 
 import obonet
 
-from indra.resources import get_resource_path, load_resource_json
+from indra.resources import (
+    get_resource_path, load_resource_json, RESOURCES_PATH,
+)
 
 __all__ = [
     'OntologyClient',
@@ -253,6 +255,13 @@ class OboClient(OntologyClient):
                 if status in allowed_synonyms:
                     synonyms.append(syn)
 
+            alts = []
+            for alt in data.get('alt_id', []):
+                # Skipped external alt logic
+                if remove_prefix:
+                    alt = alt[len(prefix) + 1:]
+                alts.append(alt)
+
             namespace = data.get('namespace', prefix)
 
             entries.append({
@@ -261,18 +270,20 @@ class OboClient(OntologyClient):
                 'name': data['name'],
                 'synonyms': synonyms,
                 'xrefs': xrefs,
-                'alt_ids': data.get('alt_id', []),
+                'alt_ids': alts,
                 'relations': rels_dict,
             })
         return entries
 
     @classmethod
-    def update_resource(cls, directory, url, prefix, *args, remove_prefix=False,
-                        allowed_synonyms=None, allowed_external_ns=None):
+    def update_resource(
+        cls, directory, url, prefix, *args, remove_prefix=False,
+        allowed_synonyms=None, allowed_external_ns=None, force: bool = False,
+    ):
         """Write the OBO information to files in the given directory."""
         resource_path = get_resource_path(f'{prefix}.json')
         obo_path = os.path.join(directory, '%s.obo.pkl' % prefix)
-        if os.path.exists(obo_path):
+        if os.path.exists(obo_path) and not force:
             with open(obo_path, 'rb') as file:
                 g = pickle.load(file)
         else:
@@ -303,6 +314,27 @@ class OboClient(OntologyClient):
         entries = sorted(entries, key=sort_key)
         with open(resource_path, 'w') as file:
             json.dump(entries, file, indent=1, sort_keys=True)
+
+    @classmethod
+    def update_from_obo_library(
+        cls,
+        prefix: str,
+        *,
+        name: Optional[str] = None,
+        path: Optional[str] = None,
+        remove_prefix: bool = False,
+        force: bool = False,
+    ) -> None:
+        if name is None:
+            name = f'{prefix}.obo'
+        if path is None:
+            path = RESOURCES_PATH
+        url = f'http://purl.obolibrary.org/obo/{name}'
+        cls.update_resource(
+            path, url, prefix,
+            remove_prefix=remove_prefix,
+            force=force,
+        )
 
 
 def prune_empty_entries(entries, keys):
