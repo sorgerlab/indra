@@ -253,6 +253,13 @@ class OboClient(OntologyClient):
                 if status in allowed_synonyms:
                     synonyms.append(syn)
 
+            alts = []
+            for alt in data.get('alt_id', []):
+                # Skipped external alt logic
+                if remove_prefix:
+                    alt = alt[len(prefix) + 1:]
+                alts.append(alt)
+
             namespace = data.get('namespace', prefix)
 
             entries.append({
@@ -261,7 +268,7 @@ class OboClient(OntologyClient):
                 'name': data['name'],
                 'synonyms': synonyms,
                 'xrefs': xrefs,
-                'alt_ids': data.get('alt_id', []),
+                'alt_ids': alts,
                 'relations': rels_dict,
             })
         return entries
