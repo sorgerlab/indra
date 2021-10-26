@@ -57,8 +57,8 @@ def get_id_from_alt_id(mondo_alt_id: str) -> Optional[str]:
         The MONDO identifier corresponding to the given alt id.
 
     >>> from indra.databases import mondo_client
-    >>> mondo_client.get_id_from_alt_id('0002399')
-    '0024812'
+    >>> mondo_client.get_id_from_alt_id('0018220')
+    '0002413'
     """
     return _client.get_id_from_alt_id(mondo_alt_id)
 
