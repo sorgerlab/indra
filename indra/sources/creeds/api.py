@@ -42,7 +42,10 @@ def process_from_web(entity_type: str) -> CREEDSProcessor:
     return _load(entity_type)
 
 
-def process_from_file(path: Union[str, Path], entity_type: str) -> CREEDSProcessor:
+def process_from_file(
+    path: Union[str, Path],
+    entity_type: str,
+) -> CREEDSProcessor:
     """Process statements from CREEDS in a file.
 
     Parameters

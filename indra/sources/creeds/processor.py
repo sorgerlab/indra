@@ -3,7 +3,16 @@
 """Processors for CREEDS data."""
 
 from copy import copy
-from typing import Any, ClassVar, Iterable, List, Mapping, Optional, Tuple, Type
+from typing import (
+    Any,
+    ClassVar,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Type,
+)
 
 import click
 import pystow
@@ -15,6 +24,7 @@ from indra.ontology.standardize import get_standard_agent
 from indra.sources.utils import Processor
 from indra.statements import Agent, BioContext, Evidence, RefContext, Statement
 from protmapper import uniprot_client
+from protmapper.uniprot_client import get_id_from_mgi_name, get_id_from_rgd_name
 
 __all__ = [
     "CREEDSGeneProcessor",
@@ -125,22 +135,28 @@ def _get_genes(
     for symbol, _ in expressions:
         if prefix == "HGNC":
             try:
-                _prefix, identifier = bio_ontology.get_id_from_name(prefix, symbol)
+                _prefix, identifier = bio_ontology.get_id_from_name(
+                    prefix,
+                    symbol,
+                )
             except TypeError:
                 if (prefix, symbol) not in MISSING_NAMES:
-                    tqdm.write(f"could not look up DEG by name {prefix} ! {symbol}")
+                    tqdm.write(
+                        f"could not look up DEG by name {prefix} ! {symbol}",
+                    )
                     MISSING_NAMES.add((prefix, symbol))
                 continue  # name lookup unsuccessful
         elif prefix == "MGI":
-
-            _prefix, identifier = "UP", uniprot_client.get_id_from_mgi_name(symbol)
+            _prefix, identifier = "UP", get_id_from_mgi_name(symbol)
         elif prefix == "RGD":
-            _prefix, identifier = "UP", uniprot_client.get_id_from_rgd_name(symbol)
+            _prefix, identifier = "UP", get_id_from_rgd_name(symbol)
         else:
             raise ValueError(f"invalid prefix: {prefix} ! {symbol}")
         if identifier is None:
             if (prefix, symbol) not in MISSING_NAMES:
-                tqdm.write(f"could not look up DEG by name {prefix} ! {symbol}")
+                tqdm.write(
+                    f"could not look up DEG by name {prefix} ! {symbol}",
+                )
                 MISSING_NAMES.add((prefix, symbol))
             continue
         rv.append((_prefix, identifier, symbol))
@@ -160,7 +176,10 @@ def _get_evidence(record: Mapping[str, Any]) -> Evidence:
             "geo": geo_id,
         },
         context=BioContext(
-            species=RefContext(name=organism, db_refs={"TAXONOMY": ORGANISMS[organism]})
+            species=RefContext(
+                name=organism,
+                db_refs={"TAXONOMY": ORGANISMS[organism]},
+            )
         ),
     )
 
@@ -204,7 +223,7 @@ class CREEDSProcessor(Processor):
         self.statements = []
 
     def extract_statements(self) -> List[Statement]:
-        """Generate and store statements if not pre-cached, then return then."""
+        """Generate/store statements if not pre-cached, then return then."""
         if not self.statements:
             self.statements = list(self.iter_statements())
         return self.statements
@@ -258,7 +277,12 @@ class CREEDSGeneProcessor(CREEDSProcessor):
                 LOGGED_MISSING_PART.add(pert_type)
             return
 
-        yield from _process_record_helper(record, subject, up_stmt_cls, down_stmt_cls)
+        yield from _process_record_helper(
+            record,
+            subject,
+            up_stmt_cls,
+            down_stmt_cls,
+        )
 
 
 class CREEDSDiseaseProcessor(CREEDSProcessor):

@@ -562,7 +562,8 @@ class IndraOntology(networkx.DiGraph):
         -------
         :
             The pair of namespace and ID corresponding to the given
-            standard name in the given name space or None if it's not available.
+            standard name in the given name space or None if it's not
+            available.
         """
         if not self.name_to_grounding:
             self._build_name_lookup()
