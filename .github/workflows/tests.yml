@@ -29,7 +29,8 @@ jobs:
         echo $GITHUB_EVENT_NAME
         sudo apt-get update
         sudo apt-get install libstdc++6 graphviz python3-dev libgraphviz-dev pkg-config
-        # Install test/Travis-specific dependencies not covered elsewhere
+        # Install test/CI-specific dependencies not covered elsewhere
+        pip install --upgrade pip setuptools wheel
         pip install pydot jsonschema coverage nose-timer doctest-ignore-unicode awscli pycodestyle
         mkdir -p $HOME/.pybel/data
         wget -nv https://bigmech.s3.amazonaws.com/travis/pybel_cache.db -O $HOME/.pybel/data/pybel_cache.db
