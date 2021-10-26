@@ -34,7 +34,7 @@ identifiers_mappings = {
 # These are namespaces used by INDRA that don't have corresponding
 # identifiers.org entries
 non_registry = {
-    'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'SIGNOR', 'HMS-LINCS', 'NXPFA',
+    'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'HMS-LINCS', 'NXPFA',
     'OMIM', 'LSPCI', 'UPLOC', 'BFO', 'CCLE', 'CLO', 'GENBANK',
     'DRUGBANK.SALT', 'SMILES',
 }
