@@ -47,6 +47,7 @@ Chemical Information Databases
    dgi/index
    tas/index
    crog/index
+   creeds/index
 
 Custom Knowledge Bases
 ----------------------
