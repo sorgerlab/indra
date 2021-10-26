@@ -124,7 +124,7 @@ ns_mapping = {
         'http://identifiers.org/uniprot:P01019#PRO_0000032458'),
     ('NXPFA', '00880'): ('https://www.nextprot.org/term/FA-00880', ),
     ('SIGNOR', 'SIGNOR-PF15'): (
-        'https://signor.uniroma2.it/relation_result.php?id=SIGNOR-PF15', ),
+        'https://identifiers.org/signor:SIGNOR-PF15', ),
     ('HGNC_GROUP', '643'): (
         'https://identifiers.org/hgnc.genefamily:643', ),
     ('PR', 'PR:000000019'): (
@@ -159,7 +159,7 @@ def test_chembl():
 def test_signor():
     sid = 'SIGNOR-PF15'
     assert get_identifiers_url('SIGNOR', sid) == \
-        'https://signor.uniroma2.it/relation_result.php?id=%s' % sid
+        'https://identifiers.org/signor:%s' % sid
 
 
 def test_get_identifiers_url():
