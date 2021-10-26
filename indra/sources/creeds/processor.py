@@ -3,7 +3,6 @@
 """Processors for CREEDS data."""
 
 from copy import copy
-from functools import lru_cache
 from typing import Any, ClassVar, Iterable, List, Mapping, Optional, Tuple, Type
 
 import click
@@ -11,7 +10,6 @@ import pystow
 from tqdm import tqdm
 
 from indra import statements
-from indra.databases import hgnc_client
 from indra.ontology.bio import bio_ontology
 from indra.ontology.standardize import get_standard_agent
 from indra.sources.utils import Processor
@@ -108,24 +106,6 @@ DOWN_MAP: Mapping[str, Type[statements.RegulateAmount]] = {
 }
 
 
-@lru_cache(maxsize=1)
-def _get_mouse_lookup() -> Mapping[str, str]:
-    return {
-        gene_name.casefold(): up_id
-        for up_id, gene_name in uniprot_client.um.uniprot_gene_name.items()
-        if uniprot_client.is_mouse(up_id)
-    }
-
-
-@lru_cache(maxsize=1)
-def _get_rat_lookup() -> Mapping[str, str]:
-    return {
-        gene_name.casefold(): up_id
-        for up_id, gene_name in uniprot_client.um.uniprot_gene_name.items()
-        if uniprot_client.is_rat(up_id)
-    }
-
-
 def _process_pert_type(s: str) -> str:
     x = s.strip().lower()
     return PERTURBATIONS.get(x, x)
@@ -152,9 +132,10 @@ def _get_genes(
                     MISSING_NAMES.add((prefix, symbol))
                 continue  # name lookup unsuccessful
         elif prefix == "MGI":
-            _prefix, identifier = "UP", _get_mouse_lookup().get(symbol.casefold())
+
+            _prefix, identifier = "UP", uniprot_client.get_id_from_mgi_name(symbol)
         elif prefix == "RGD":
-            _prefix, identifier = "UP", _get_rat_lookup().get(symbol.casefold())
+            _prefix, identifier = "UP", uniprot_client.get_id_from_rgd_name(symbol)
         else:
             raise ValueError(f"invalid prefix: {prefix} ! {symbol}")
         if identifier is None:
