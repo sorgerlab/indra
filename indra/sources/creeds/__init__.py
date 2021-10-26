@@ -17,4 +17,4 @@ from the Gene Expression Omnibus due to three types of perturbations:
    12846.
 """
 
-from .api import process_from_file, process_from_web
+from .api import process_from_file, process_from_web, process_records

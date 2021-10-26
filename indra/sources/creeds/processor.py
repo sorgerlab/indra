@@ -3,6 +3,7 @@
 """Processors for CREEDS data."""
 
 from copy import copy
+import logging
 from typing import (
     Any,
     ClassVar,
@@ -15,14 +16,19 @@ from typing import (
 )
 
 from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 from indra import statements
+from indra.databases import hgnc_client
 from indra.ontology.bio import bio_ontology
 from indra.ontology.standardize import get_standard_agent
 from indra.sources.utils import Processor
 from indra.statements import Agent, BioContext, Evidence, RefContext, Statement
 from protmapper import uniprot_client
 from protmapper.uniprot_client import get_id_from_mgi_name, get_id_from_rgd_name
+
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "CREEDSGeneProcessor",
@@ -127,28 +133,18 @@ def _get_genes(
     expressions = record[key]
     for symbol, _ in expressions:
         if prefix == "HGNC":
-            try:
-                _prefix, identifier = bio_ontology.get_id_from_name(
-                    prefix,
-                    symbol,
-                )
-            except TypeError:
-                if (prefix, symbol) not in MISSING_NAMES:
-                    tqdm.write(
-                        f"could not look up DEG by name {prefix} ! {symbol}",
-                    )
-                    MISSING_NAMES.add((prefix, symbol))
-                continue  # name lookup unsuccessful
+            prefix, identifier = \
+                "HGNC", hgnc_client.get_current_hgnc_id(symbol)
         elif prefix == "MGI":
             _prefix, identifier = "UP", get_id_from_mgi_name(symbol)
         elif prefix == "RGD":
             _prefix, identifier = "UP", get_id_from_rgd_name(symbol)
         else:
-            raise ValueError(f"invalid prefix: {prefix} ! {symbol}")
+            raise ValueError(f"Invalid prefix: {prefix} ! {symbol}")
         if identifier is None:
             if (prefix, symbol) not in MISSING_NAMES:
-                tqdm.write(
-                    f"could not look up DEG by name {prefix} ! {symbol}",
+                logger.debug(
+                    f"Could not look up {symbol} by name in {prefix}",
                 )
                 MISSING_NAMES.add((prefix, symbol))
             continue
@@ -238,8 +234,8 @@ class CREEDSGeneProcessor(CREEDSProcessor):
         ncbigene_id = record["id"][len("gene:") :]
         uniprot_id = uniprot_client.get_id_from_entrez(ncbigene_id)
         if uniprot_id is None:
-            tqdm.write(f"could not look up ncbigene:{uniprot_id}")
-            return
+            logger.debug(f"Could not convert ncbigene:{ncbigene_id} to UniProt")
+            return None
         name = uniprot_client.get_gene_name(uniprot_id)
         return get_standard_agent(
             name,
@@ -260,7 +256,7 @@ class CREEDSGeneProcessor(CREEDSProcessor):
         down_stmt_cls = DOWN_MAP.get(pert_type)
         if up_stmt_cls is None or down_stmt_cls is None:
             if pert_type not in LOGGED_MISSING_PART:
-                tqdm.write(f"could not look up pert_type {record['pert_type']}")
+                logger.info(f"Could not look up pert_type {record['pert_type']}")
                 LOGGED_MISSING_PART.add(pert_type)
             return
 
