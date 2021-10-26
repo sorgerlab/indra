@@ -12,7 +12,7 @@ def main():
     install_list = ['pysb>=1.3.0,<=1.9.1', 'objectpath',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2', 'pandas<1.3', 'ndex2==2.0.1', 'jinja2',
-                    'protmapper>=0.0.22', 'obonet', 'sympy==1.3',
+                    'protmapper>=0.0.23', 'obonet', 'sympy==1.3',
                     'tqdm', 'pybiopax>=0.0.5']
 
     extras_require = {
