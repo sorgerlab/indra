@@ -32,7 +32,8 @@ def get_id_from_name(mondo_name: str) -> Optional[str]:
     Parameters
     ----------
     mondo_name :
-        The MONDO name to be converted. Example: "tenosynovial giant cell tumor, localized type"
+        The MONDO name to be converted. Example: "tenosynovial giant
+        cell tumor, localized type"
 
     Returns
     -------
