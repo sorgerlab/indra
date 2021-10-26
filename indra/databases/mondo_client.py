@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """A client to the Monarch Disease Ontology (MONDO)."""
 
 from typing import Optional
@@ -24,12 +26,12 @@ def get_name_from_id(mondo_id: str) -> Optional[str]:
     return _client.get_name_from_id(mondo_id)
 
 
-def get_id_from_name(mondo_name):
+def get_id_from_name(mondo_name: str) -> Optional[str]:
     """Return the identifier corresponding to the given MONDO name.
 
     Parameters
     ----------
-    mondo_name : str
+    mondo_name :
         The MONDO name to be converted. Example: "tenosynovial giant cell tumor, localized type"
 
     Returns
