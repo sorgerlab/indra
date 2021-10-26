@@ -135,13 +135,13 @@ def _get_genes(
     expressions = record[key]
     for symbol, _ in expressions:
         if prefix == "HGNC":
-            current_ids = hgnc_client.get_current_hgnc_id(symbol)
+            current_id = hgnc_client.get_current_hgnc_id(symbol)
             # We may get no current IDs or more than one current IDs
             # in which case we skip this gene
-            if not current_ids or len(current_ids) != 1:
+            if not current_id or isinstance(current_id, list):
                 identifier = None
             else:
-                identifier = current_ids[0]
+                identifier = current_id
             _prefix = "HGNC"
         elif prefix == "MGI":
             _prefix, identifier = "UP", get_id_from_mgi_name(symbol)

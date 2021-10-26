@@ -64,7 +64,7 @@ def test_creeds_chemical_processor():
     assert record["down_genes"][0][0] == "KRAS"
     assert record["up_genes"][0][0] == "SHC3"
     up_genes, down_genes = _get_regulations(record)
-    assert 1 == len(up_genes)
+    assert 1 == len(up_genes), up_genes
     assert 1 == len(down_genes)
     assert 2 == len(processor.statements), LOGGED_MISSING_PART
     assert all(isinstance(stmt, RegulateAmount) for stmt in processor.statements)
@@ -145,5 +145,5 @@ def test_creeds_disease_processor():
 
 if __name__ == "__main__":
     test_creeds_gene_processor()
-    test_creeds_drug_processor()
+    test_creeds_chemical_processor()
     test_creeds_disease_processor()
