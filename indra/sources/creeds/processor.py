@@ -14,8 +14,6 @@ from typing import (
     Type,
 )
 
-import click
-import pystow
 from tqdm import tqdm
 
 from indra import statements
@@ -32,11 +30,6 @@ __all__ = [
     "CREEDSDiseaseProcessor",
 ]
 
-CREEDS_MODULE = pystow.module("bio", "creeds")
-BASE_URL = "http://amp.pharm.mssm.edu/CREEDS/download"
-GENE_DATA_URL = f"{BASE_URL}/single_gene_perturbations-v1.0.json"
-DISEASE_DATA_URL = f"{BASE_URL}/disease_signatures-v1.0.json"
-CHEMICAL_DATA_URL = f"{BASE_URL}/single_drug_perturbations-v1.0.json"
 
 #: Organism label to NCBI Taxonomy Identifier
 ORGANISMS = {
@@ -208,18 +201,13 @@ def _process_record_helper(
 
 
 class CREEDSProcessor(Processor):
-    """A base processor for CREEDS, which can either take records directly,
-    or looks for it on the web using the given class variable ``url`` in
-    combination with :mod:`pystow`.
-    """
+    """A base processor for CREEDS, which takes records as input."""
 
-    #: The URL of the remote JSON file
-    url: ClassVar[str]
     #: The processed statements (after ``extract_statements()`` is run)
     statements: List[Statement]
 
-    def __init__(self, records: Optional[List[Mapping[str, Any]]] = None):
-        self.records = records or CREEDS_MODULE.ensure_json(url=self.url)
+    def __init__(self, records: List[Mapping[str, Any]]):
+        self.records = records
         self.statements = []
 
     def extract_statements(self) -> List[Statement]:
@@ -244,7 +232,6 @@ class CREEDSGeneProcessor(CREEDSProcessor):
     """A processor for single gene perturbation experiments in CREEDS."""
 
     name = "creeds_gene"
-    url = GENE_DATA_URL
 
     @staticmethod
     def get_subject(record) -> Optional[Agent]:
@@ -289,7 +276,6 @@ class CREEDSDiseaseProcessor(CREEDSProcessor):
     """A processor for disease perturbation experiments in CREEDS."""
 
     name = "creeds_disease"
-    url = DISEASE_DATA_URL
 
     @staticmethod
     def get_subject(record) -> Agent:
@@ -318,7 +304,6 @@ class CREEDSChemicalProcessor(CREEDSProcessor):
     """A processor for chemical perturbation experiments in CREEDS."""
 
     name = "creeds_chemical"
-    url = CHEMICAL_DATA_URL
 
     @staticmethod
     def get_subject(record) -> Agent:
@@ -344,15 +329,3 @@ class CREEDSChemicalProcessor(CREEDSProcessor):
             up_stmt_cls=statements.IncreaseAmount,
             down_stmt_cls=statements.DecreaseAmount,
         )
-
-
-@click.command()
-@click.pass_context
-def _main(ctx: click.Context):
-    ctx.invoke(CREEDSChemicalProcessor.get_cli())
-    ctx.invoke(CREEDSGeneProcessor.get_cli())
-    ctx.invoke(CREEDSDiseaseProcessor.get_cli())
-
-
-if __name__ == "__main__":
-    _main()

@@ -3,6 +3,7 @@
 """API for CREEDS."""
 
 import json
+import requests
 from pathlib import Path
 from typing import Union
 
@@ -12,6 +13,13 @@ from .processor import (
     CREEDSGeneProcessor,
     CREEDSProcessor,
 )
+
+BASE_URL = "http://amp.pharm.mssm.edu/CREEDS/download"
+urls = {
+    "gene": f"{BASE_URL}/single_gene_perturbations-v1.0.json",
+    "disease": f"{BASE_URL}/disease_signatures-v1.0.json",
+    "chemical": f"{BASE_URL}/single_drug_perturbations-v1.0.json",
+}
 
 processors = {
     "gene": CREEDSGeneProcessor,
@@ -39,7 +47,11 @@ def process_from_web(entity_type: str) -> CREEDSProcessor:
     :
         A processor with pre-extracted statements.
     """
-    return _load(entity_type)
+    url = urls[entity_type]
+    res = requests.get(url)
+    res.raise_for_status()
+    records = res.json()
+    return process_records(records, entity_type)
 
 
 def process_from_file(
@@ -65,10 +77,25 @@ def process_from_file(
         records = json.load(file)
     if len(records) != 1:
         raise ValueError
-    return _load(entity_type, records)
+    return process_records(records, entity_type)
 
 
-def _load(entity_type, records=None):
+def process_records(records, entity_type):
+    """Process statements from CREEDS records.
+
+    Parameters
+    ----------
+    records :
+        A list of records from the CREEDS data
+    entity_type :
+        Either 'gene', 'disease', or 'chemical' to specify
+        which dataset the records represent.
+
+    Returns
+    -------
+    :
+        A processor with pre-extracted statements.
+    """
     processor_cls = processors[entity_type]
     processor = processor_cls(records)
     processor.extract_statements()

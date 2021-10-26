@@ -18,8 +18,3 @@ from the Gene Expression Omnibus due to three types of perturbations:
 """
 
 from .api import process_from_file, process_from_web
-from .processor import (
-    CREEDSChemicalProcessor,
-    CREEDSDiseaseProcessor,
-    CREEDSGeneProcessor,
-)
