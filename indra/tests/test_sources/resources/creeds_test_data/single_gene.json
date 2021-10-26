@@ -1,0 +1,23 @@
+[
+  {
+    "cell_type": "heart",
+    "hs_gene_symbol": "CDK7",
+    "curator": "gszeto",
+    "geo_id": "GSE40601",
+    "down_genes": [
+      [
+        "KRAS",
+        -0.11020442098379135
+      ]
+    ],
+    "up_genes": [
+      [
+        "SHC3",
+        -0.11020442098379135
+      ]
+    ],
+    "pert_type": "OE",
+    "organism": "human",
+    "id": "gene:1022"
+  }
+]

@@ -30,7 +30,8 @@
     "minerva": 0.01,
     "dgi": 0.01,
     "crog": 0.01,
-    "gnbr": 0.1
+    "gnbr": 0.1,
+    "creeds": 0.01
   },
   "rand": {
     "eidos": 0.3,
@@ -63,6 +64,7 @@
     "minerva": 0.1,
     "dgi": 0.1,
     "crog": 0.01,
-    "gnbr": 0.3
+    "gnbr": 0.3,
+    "creeds": 0.1
   }
 }

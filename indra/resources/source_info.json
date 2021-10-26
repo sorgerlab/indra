@@ -172,5 +172,11 @@
         "link": "https://zenodo.org/record/3459420",
         "type": "reader",
         "domain": "biology"
+    },
+    "creeds": {
+        "name": "CRowd Extracted Expression of Differential Signatures",
+        "link": "https://maayanlab.cloud/CREEDS/",
+        "type": "database",
+        "domain": "biology"
     }
 }

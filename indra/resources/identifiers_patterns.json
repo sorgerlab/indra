@@ -3,6 +3,10 @@
   "pattern": "^B\\d{5}$",
   "namespace_embedded": false
  },
+ "4dn": {
+  "pattern": "^4DN[A-Z]{2}[A-Z0-9]{7}$",
+  "namespace_embedded": false
+ },
  "abs": {
   "pattern": "^A\\d+$",
   "namespace_embedded": false
@@ -121,6 +125,10 @@
  },
  "aspgd.protein": {
   "pattern": "^[A-Za-z_0-9]+$",
+  "namespace_embedded": false
+ },
+ "assembly": {
+  "pattern": "^[a-zA-Z0-9_\\.]+$",
   "namespace_embedded": false
  },
  "atc": {
@@ -271,6 +279,14 @@
   "pattern": "^SAM[NED](\\w)?\\d+$",
   "namespace_embedded": false
  },
+ "biosimulations": {
+  "pattern": "^[a-zA-Z0-9_-]{3,}$",
+  "namespace_embedded": false
+ },
+ "biosimulators": {
+  "pattern": "[a-zA-Z0-9-_]+",
+  "namespace_embedded": false
+ },
  "biostudies": {
   "pattern": "^S-[A-Z]{4}[A-Z\\d\\-]+$",
   "namespace_embedded": false
@@ -344,7 +360,7 @@
   "namespace_embedded": false
  },
  "cath": {
-  "pattern": "^[1-4]\\.[0-9]+\\.[0-9]+\\.[0-9]+$",
+  "pattern": "^[1-6]\\.[0-9]+\\.[0-9]+\\.[0-9]+$",
   "namespace_embedded": false
  },
  "cath.domain": {
@@ -365,6 +381,10 @@
  },
  "cbioportal": {
   "pattern": "^[a-z0-9\\_]+$",
+  "namespace_embedded": false
+ },
+ "ccdc": {
+  "pattern": "^\\d{6,7}$",
   "namespace_embedded": false
  },
  "ccds": {
@@ -388,7 +408,11 @@
   "namespace_embedded": false
  },
  "cellosaurus": {
-  "pattern": "CVCL_[A-Z0-9]{4}",
+  "pattern": "^CVCL_[A-Z0-9]{4}$",
+  "namespace_embedded": false
+ },
+ "cellrepo": {
+  "pattern": "^[0-9]+$",
   "namespace_embedded": false
  },
  "cgd": {
@@ -406,6 +430,10 @@
  "chebi": {
   "pattern": "^CHEBI:\\d+$",
   "namespace_embedded": true
+ },
+ "chembl": {
+  "pattern": "^CHEMBL\\d+$",
+  "namespace_embedded": false
  },
  "chembl.compound": {
   "pattern": "^CHEMBL\\d+$",
@@ -429,6 +457,14 @@
  },
  "chickenqtldb": {
   "pattern": "^\\d+$",
+  "namespace_embedded": false
+ },
+ "civic.aid": {
+  "pattern": "^[0-9]+$",
+  "namespace_embedded": false
+ },
+ "civic.eid": {
+  "pattern": "^[0-9]+$",
   "namespace_embedded": false
  },
  "cl": {
@@ -459,6 +495,10 @@
   "pattern": "^SCV\\d+(\\.\\d+)?$",
   "namespace_embedded": false
  },
+ "clinvar.submitter": {
+  "pattern": "^\\d+$",
+  "namespace_embedded": false
+ },
  "combine.specifications": {
   "pattern": "^\\w+(\\-|\\.|\\w)*$",
   "namespace_embedded": false
@@ -483,12 +523,20 @@
   "pattern": "^[A-Z]{2}\\d+$",
   "namespace_embedded": false
  },
+ "corrdb": {
+  "pattern": "^[0-9]+$",
+  "namespace_embedded": false
+ },
  "corum": {
   "pattern": "^\\d+$",
   "namespace_embedded": false
  },
  "cosmic": {
   "pattern": "^[A-Z0-9]+$",
+  "namespace_embedded": false
+ },
+ "covid19": {
+  "pattern": "^\\w+_COVID19_[-\\w]+$",
   "namespace_embedded": false
  },
  "cpc": {
@@ -505,6 +553,10 @@
  },
  "csa": {
   "pattern": "^[0-9][A-Za-z0-9]{3}$",
+  "namespace_embedded": false
+ },
+ "csd": {
+  "pattern": "^[A-Z]{6}(\\d{2})?$",
   "namespace_embedded": false
  },
  "cst": {
@@ -540,7 +592,7 @@
   "namespace_embedded": false
  },
  "dandi": {
-  "pattern": "^\\d{6}(/\\d+\\.\\d+\\.\\d+)?$",
+  "pattern": "^\\d{6}(\\/\\d+\\.\\d+\\.\\d+)?$",
   "namespace_embedded": false
  },
  "darc": {
@@ -561,6 +613,10 @@
  },
  "datanator.metabolite": {
   "pattern": "^[A-Z\\-]+$",
+  "namespace_embedded": false
+ },
+ "datanator.reaction": {
+  "pattern": "^.*?--%3E.*?$",
   "namespace_embedded": false
  },
  "datf": {
@@ -601,6 +657,22 @@
  },
  "dev.ga4ghdos": {
   "pattern": "^[a-zA-Z0-9\\-:#\\.]+$",
+  "namespace_embedded": false
+ },
+ "dg.4503": {
+  "pattern": "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.4dfc": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.6vts": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.anv0": {
+  "pattern": "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
   "namespace_embedded": false
  },
  "dictybase.est": {
@@ -792,7 +864,7 @@
   "namespace_embedded": false
  },
  "envo": {
-  "pattern": "^ENVO:\\d{8}$",
+  "pattern": "^ENVO:\\d{7,8}$",
   "namespace_embedded": true
  },
  "eo": {
@@ -887,6 +959,10 @@
   "pattern": "^\\d+$",
   "namespace_embedded": false
  },
+ "funderregistry": {
+  "pattern": "^\\d{9,9}$",
+  "namespace_embedded": false
+ },
  "fungidb": {
   "pattern": "^[A-Za-z_0-9]+$",
   "namespace_embedded": false
@@ -897,6 +973,10 @@
  },
  "gabi": {
   "pattern": "^\\w+$",
+  "namespace_embedded": false
+ },
+ "gateway": {
+  "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
   "namespace_embedded": false
  },
  "gcst": {
@@ -947,8 +1027,16 @@
   "pattern": "^G(PL|SM|SE|DS)\\d+$",
   "namespace_embedded": false
  },
+ "geogeo": {
+  "pattern": "^GEO_[0-9]{9}$",
+  "namespace_embedded": false
+ },
  "giardiadb": {
   "pattern": "^\\w+$",
+  "namespace_embedded": false
+ },
+ "github": {
+  "pattern": "^[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+$",
   "namespace_embedded": false
  },
  "glida.gpcr": {
@@ -965,6 +1053,14 @@
  },
  "glycomedb": {
   "pattern": "^\\w+$",
+  "namespace_embedded": false
+ },
+ "glyconavi": {
+  "pattern": "^GN_[A-Za-z0-9]+$",
+  "namespace_embedded": false
+ },
+ "glycopost": {
+  "pattern": "^GPST[0-9]{6}$",
   "namespace_embedded": false
  },
  "glytoucan": {
@@ -1067,6 +1163,10 @@
   "pattern": "^\\d+$",
   "namespace_embedded": false
  },
+ "gsso": {
+  "pattern": "^GSSO:\\d{6}$",
+  "namespace_embedded": true
+ },
  "gtex": {
   "pattern": "^\\w.+$",
   "namespace_embedded": false
@@ -1080,7 +1180,7 @@
   "namespace_embedded": false
  },
  "gwascentral.phenotype": {
-  "pattern": "^HGVP\\d+$",
+  "pattern": "^HGVPM\\d+$",
   "namespace_embedded": false
  },
  "gwascentral.study": {
@@ -1207,6 +1307,10 @@
   "pattern": "^[A-Z]\\d+(\\.[-\\d+])?$",
   "namespace_embedded": false
  },
+ "icdc": {
+  "pattern": "^ICDC[0-9][0-9][0-9][0-9][0-9][0-9]$",
+  "namespace_embedded": false
+ },
  "iceberg.element": {
   "pattern": "^\\d+$",
   "namespace_embedded": false
@@ -1217,6 +1321,10 @@
  },
  "ideal": {
   "pattern": "^IID\\d+$",
+  "namespace_embedded": false
+ },
+ "identifiers.namespace": {
+  "pattern": "^[a-z_\\.]+$",
   "namespace_embedded": false
  },
  "ido": {
@@ -1233,6 +1341,18 @@
  },
  "idr": {
   "pattern": "^[0-9]{4}$",
+  "namespace_embedded": false
+ },
+ "iedb": {
+  "pattern": "^[0-9]+$",
+  "namespace_embedded": false
+ },
+ "igsn": {
+  "pattern": "^[A-Za-z]{2,4}[A-Za-z0-9.-]{1,71}$",
+  "namespace_embedded": false
+ },
+ "ilx": {
+  "pattern": "^[0-9]+$",
   "namespace_embedded": false
  },
  "imex": {
@@ -1313,6 +1433,10 @@
  },
  "issn": {
   "pattern": "^\\d{4}-\\d{3}[\\dX]$",
+  "namespace_embedded": false
+ },
+ "ito": {
+  "pattern": "^.+$",
   "namespace_embedded": false
  },
  "iuphar.family": {
@@ -1415,6 +1539,10 @@
   "pattern": "^[0-9A-Z]{4}[0-9A-Z]{14}[0-9A-Z]{2}$",
   "namespace_embedded": false
  },
+ "lgai.cede": {
+  "pattern": "^LGCEDe-S-\\d{9}$",
+  "namespace_embedded": false
+ },
  "lgic": {
   "pattern": "^\\w+$",
   "namespace_embedded": false
@@ -1428,7 +1556,7 @@
   "namespace_embedded": false
  },
  "ligandbox": {
-  "pattern": "^D\\d{5}",
+  "pattern": "^(HTS|KSH)[0-9]{4}-[0-9]{8}|PDB_[0-9,A-Z]{2,3}|[CD][0-9]{5}$",
   "namespace_embedded": false
  },
  "ligandexpo": {
@@ -1449,6 +1577,10 @@
  },
  "lincs.smallmolecule": {
   "pattern": "^LSM-\\d+$",
+  "namespace_embedded": false
+ },
+ "linguist": {
+  "pattern": "^[a-zA-Z0-9 +#'*]+$",
   "namespace_embedded": false
  },
  "lipidbank": {
@@ -1536,23 +1668,23 @@
   "namespace_embedded": false
  },
  "metacyc.compound": {
-  "pattern": "^CPD-\\d{5}$",
+  "pattern": "^[A-Za-z0-9+_.%-:]+$",
   "namespace_embedded": false
  },
  "metacyc.reaction": {
-  "pattern": "^RXN-\\d{5}$",
+  "pattern": "^[A-Za-z0-9+_.%-:]+$",
   "namespace_embedded": false
  },
  "metanetx.chemical": {
-  "pattern": "^(MNXM\\d+|BIOMASS)$",
+  "pattern": "^(MNXM\\d+|BIOMASS|WATER)$",
   "namespace_embedded": false
  },
  "metanetx.compartment": {
-  "pattern": "^(MNX[CD]\\d+|BOUNDARY)$",
+  "pattern": "^(MNX[CD]\\d+|BOUNDARY|IN|OUT)$",
   "namespace_embedded": false
  },
  "metanetx.reaction": {
-  "pattern": "^MNXR\\d+$",
+  "pattern": "^(MNXR\\d+|EMPTY)$",
   "namespace_embedded": false
  },
  "metlin": {
@@ -1647,6 +1779,10 @@
   "pattern": "^MIRT\\d{6}$",
   "namespace_embedded": false
  },
+ "mlc": {
+  "pattern": "^[0-9a-zA-Z\\.\\-\\_]+$",
+  "namespace_embedded": false
+ },
  "mmdb": {
   "pattern": "^\\d{1,5}$",
   "namespace_embedded": false
@@ -1697,6 +1833,10 @@
  },
  "molmedb": {
   "pattern": "^[m,M]{2}[0-9]{5}[0-9]*$",
+  "namespace_embedded": false
+ },
+ "morpheus": {
+  "pattern": "^M[0-9]{4,}$",
   "namespace_embedded": false
  },
  "mp": {
@@ -1839,6 +1979,10 @@
   "pattern": "^\\w\\d{4}\\w\\d{2}(\\-[35])?$",
   "namespace_embedded": false
  },
+ "nmdc": {
+  "pattern": "^[A-Za-z0-9._~\\-\\:]+$",
+  "namespace_embedded": false
+ },
  "nmr": {
   "pattern": "^NMR:\\d+$",
   "namespace_embedded": true
@@ -1867,6 +2011,10 @@
   "pattern": "^\\w+\\_\\w+$",
   "namespace_embedded": false
  },
+ "nucleotide": {
+  "pattern": "^[a-zA-Z0-9_\\.]+$",
+  "namespace_embedded": false
+ },
  "obi": {
   "pattern": "(^OBI:\\d{7}$)|(^OBI_\\d{7}$)",
   "namespace_embedded": false
@@ -1891,6 +2039,14 @@
   "pattern": "^[A-Za-z0-9]+$",
   "namespace_embedded": false
  },
+ "odc.sci": {
+  "pattern": "^[0-9]*$",
+  "namespace_embedded": false
+ },
+ "odc.tbi": {
+  "pattern": "^[0-9]*$",
+  "namespace_embedded": false
+ },
  "odor": {
   "pattern": "^\\d+$",
   "namespace_embedded": false
@@ -1902,6 +2058,10 @@
  "oma.grp": {
   "pattern": "^[A-Z]+$",
   "namespace_embedded": false
+ },
+ "oma.hog": {
+  "pattern": "^HOG:[0-9]{7}(\\.[0-9a-z.]+)?(_[0-9]+)?$",
+  "namespace_embedded": true
  },
  "oma.protein": {
   "pattern": "^[A-Z0-9]{5}\\d+$",
@@ -2039,6 +2199,14 @@
   "pattern": "^[A-Za-z0-9]+$",
   "namespace_embedded": false
  },
+ "ped": {
+  "pattern": "^PED\\d{5}$",
+  "namespace_embedded": false
+ },
+ "ped.ensemble": {
+  "pattern": "^PED\\d{5}e\\d{3}$",
+  "namespace_embedded": false
+ },
  "peptideatlas": {
   "pattern": "^PAp[0-9]{8}$",
   "namespace_embedded": false
@@ -2060,7 +2228,7 @@
   "namespace_embedded": false
  },
  "pgx": {
-  "pattern": "^[\\w\\-:,]{3,64}$",
+  "pattern": "^\\w{3,15}[-_]\\w[\\w.-]{3,128}$",
   "namespace_embedded": false
  },
  "pharmgkb.disease": {
@@ -2127,6 +2295,10 @@
   "pattern": "^PIRSF\\d{6}$",
   "namespace_embedded": false
  },
+ "pkdb": {
+  "pattern": "^PKDB[0-9]{5}$",
+  "namespace_embedded": false
+ },
  "planttfdb": {
   "pattern": "^[A-Z][a-z]{2}_([A-Za-z]{3}[0-9]{6})|([A-Za-z0-9\\._\\-#]*)$",
   "namespace_embedded": false
@@ -2153,6 +2325,10 @@
  },
  "pmp": {
   "pattern": "^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])$",
+  "namespace_embedded": false
+ },
+ "pmr": {
+  "pattern": "^[a-z0-9]{32,32}$",
   "namespace_embedded": false
  },
  "po": {
@@ -2259,6 +2435,14 @@
   "pattern": "^(R)?PXD\\d{6}$",
   "namespace_embedded": false
  },
+ "pypi": {
+  "pattern": "^[a-zA-Z_][a-zA-Z0-9\\-_]+$",
+  "namespace_embedded": false
+ },
+ "qtldb": {
+  "pattern": "^\\d+$",
+  "namespace_embedded": false
+ },
  "rapdb.locus": {
   "pattern": "^Os\\S+g\\d{7}$",
   "namespace_embedded": false
@@ -2271,6 +2455,10 @@
   "pattern": "^[-0-9a-zA-Z]+(@[-0-9a-zA-Z]+)?$",
   "namespace_embedded": false
  },
+ "re3data": {
+  "pattern": "^r3d\\d{9,9}$",
+  "namespace_embedded": false
+ },
  "reactome": {
   "pattern": "(^R-[A-Z]{3}-\\d+(-\\d+)?(\\.\\d+)?$)|(^REACT_\\d+(\\.\\d+)?$)",
   "namespace_embedded": false
@@ -2281,6 +2469,14 @@
  },
  "refseq": {
   "pattern": "^(((AC|AP|NC|NG|NM|NP|NR|NT|NW|XM|XP|XR|YP|ZP)_\\d+)|(NZ\\_[A-Z]{2,4}\\d+))(\\.\\d+)?$",
+  "namespace_embedded": false
+ },
+ "repeatsdb.protein": {
+  "pattern": "^[OPQopq][0-9][A-Za-z0-9]{3}[0-9]|[A-Na-nR-Zr-z][0-9]([A-Za-z][A-Za-z0-9]{2}[0-9]){1,2}$",
+  "namespace_embedded": false
+ },
+ "repeatsdb.structure": {
+  "pattern": "^[0-9][A-Za-z0-9]{3}[A-Za-z0-9][A-Za-z0-9]?[0-9]?[0-9]?$",
   "namespace_embedded": false
  },
  "resid": {
@@ -2351,6 +2547,10 @@
   "pattern": "^RRID:[a-zA-Z]+.+$",
   "namespace_embedded": true
  },
+ "runbiosimulations": {
+  "pattern": "[0-9a-z]{24,24}",
+  "namespace_embedded": false
+ },
  "sabiork.compound": {
   "pattern": "^\\d+$",
   "namespace_embedded": false
@@ -2385,6 +2585,14 @@
  },
  "sdbs": {
   "pattern": "\\d+$",
+  "namespace_embedded": false
+ },
+ "sedml.format": {
+  "pattern": "^[a-z]+(\\..*?)?$",
+  "namespace_embedded": false
+ },
+ "sedml.language": {
+  "pattern": "^[a-z]+(\\..*?)?$",
   "namespace_embedded": false
  },
  "seed": {
@@ -2425,6 +2633,14 @@
  },
  "signaling-gateway": {
   "pattern": "A\\d{6}$",
+  "namespace_embedded": false
+ },
+ "signor": {
+  "pattern": "^SIGNOR\\-[A-Z]+\\d+$",
+  "namespace_embedded": false
+ },
+ "sio": {
+  "pattern": "^SIO_\\d{6,6}$",
   "namespace_embedded": false
  },
  "sisu": {
@@ -2512,7 +2728,7 @@
   "namespace_embedded": false
  },
  "swh": {
-  "pattern": "^swh:[1-9]:[a-z][a-z][a-z]:[a-f0-9]+$",
+  "pattern": "^swh:[1-9]:(cnt|dir|rel|rev|snp):[0-9a-f]+(;(origin|visit|anchor|path|lines)=\\S+)*$",
   "namespace_embedded": true
  },
  "swiss-model": {
@@ -2608,7 +2824,7 @@
   "namespace_embedded": false
  },
  "uberon": {
-  "pattern": "^UBERON\\:\\d+$",
+  "pattern": "^UBERON:\\d+$",
   "namespace_embedded": true
  },
  "ubio.namebank": {
@@ -2673,6 +2889,10 @@
  },
  "uniprot.isoform": {
   "pattern": "^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])(\\-\\d+)$",
+  "namespace_embedded": false
+ },
+ "uniref": {
+  "pattern": "^UniRef(100|90|50)_([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}|UPI[A-F0-9]{10})$",
   "namespace_embedded": false
  },
  "unists": {
@@ -2747,6 +2967,10 @@
   "pattern": "^virsi\\d+$",
   "namespace_embedded": false
  },
+ "vmhgene": {
+  "pattern": "^[0-9]+\\.[0-9]+",
+  "namespace_embedded": false
+ },
  "vmhmetabolite": {
   "pattern": "[a-zA-Z0-9_\\(\\_\\)\\[\\]]+",
   "namespace_embedded": false
@@ -2764,7 +2988,7 @@
   "namespace_embedded": false
  },
  "wikidata": {
-  "pattern": "^Q\\d+$",
+  "pattern": "^(Q|P)\\d+$",
   "namespace_embedded": false
  },
  "wikigenes": {
