@@ -36,7 +36,7 @@ def process_from_web(entity_type: str) -> CREEDSProcessor:
 
     Returns
     -------
-    processor : SimpleProcessor
+    :
         A processor with pre-extracted statements.
     """
     return _load(entity_type)
@@ -58,7 +58,7 @@ def process_from_file(
 
     Returns
     -------
-    processor : SimpleProcessor
+    :
         A processor with pre-extracted statements.
     """
     with open(path) as file:
