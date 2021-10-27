@@ -566,6 +566,20 @@ def test_simple_paths_with_constraints():
                       ('A3', 'B2', 'C1', 'D1')}
     assert expected_paths == set(paths), set(paths)
 
+    # Test strict depth vs upper cutoff
+    paths = tuple([tuple(p) for p in simple_paths_with_constraints(
+        dg, 'A3', 'D1', cutoff=4, allow_shorter=True)])
+    assert len(paths) == 3
+    expected_paths = {('A3', 'B2', 'B1', 'D1'),
+                      ('A3', 'B2', 'C1', 'D1'),
+                      ('A3', 'B2', 'B1', 'C1', 'D1')}
+    assert expected_paths == set(paths), set(paths)
+    paths = tuple([tuple(p) for p in simple_paths_with_constraints(
+        dg, 'A3', 'D1', cutoff=4, allow_shorter=False)])
+    assert len(paths) == 1
+    expected_paths = {('A3', 'B2', 'B1', 'C1', 'D1')}
+    assert expected_paths == set(paths), set(paths)
+
     # Test constraints
     def _isC(n):
         # Filter out nodes starting with C
