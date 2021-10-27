@@ -230,7 +230,8 @@ class ModelChecker(object):
         self.statements += stmts
 
     def check_model(self, max_paths=1, max_path_length=5,
-                    agent_filter_func=None, edge_filter_func=None):
+                    agent_filter_func=None, edge_filter_func=None,
+                    allow_direct=False):
         """Check all the statements added to the ModelChecker.
 
         Parameters
@@ -266,13 +267,14 @@ class ModelChecker(object):
             result = self.check_statement(
                 stmt, max_paths, max_path_length,
                 node_filter_func=node_filter_func,
-                edge_filter_func=edge_filter_func)
+                edge_filter_func=edge_filter_func,
+                allow_direct=allow_direct)
             results.append((stmt, result))
         return results
 
     def check_statement(self, stmt, max_paths=1, max_path_length=5,
                         agent_filter_func=None, node_filter_func=None,
-                        edge_filter_func=None):
+                        edge_filter_func=None, allow_direct=False):
         """Check a single Statement against the model.
 
         Parameters
@@ -336,7 +338,8 @@ class ModelChecker(object):
 
         result = self.find_paths(subj_nodes, obj_nodes, max_paths,
                                  max_path_length, loop,
-                                 filter_func=node_filter_func)
+                                 filter_func=node_filter_func,
+                                 allow_direct=allow_direct)
         if common_target:
             self.graph.remove_node(common_target)
 
@@ -350,7 +353,7 @@ class ModelChecker(object):
                                       max_paths, max_path_length)
 
     def find_paths(self, subj, obj, max_paths=1, max_path_length=5,
-                   loop=False, filter_func=None):
+                   loop=False, filter_func=None, allow_direct=False):
         """Check for a source/target path in the model.
 
         Parameters
@@ -422,9 +425,9 @@ class ModelChecker(object):
             return pr
         elif path_metrics:
             min_path_length = min(path_lengths)
-            if min_path_length == 1:
-                if len(path_lengths) > 1:
-                    min_path_length = min([pl for pl in path_lengths if pl != 1])
+            if not allow_direct and min_path_length == 1 and \
+                    len(path_lengths) > 1:
+                min_path_length = min([pl for pl in path_lengths if pl != 1])
             if min_path_length <= max_path_length:
                 if dummy_target and not loop:
                     search_path_length = min_path_length + 1
