@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.19'
+    version = '1.20'
     ontology_namespaces = [
         'go', 'efo', 'hp', 'doid', 'chebi', 'ido',
         'mondo',
@@ -213,7 +213,8 @@ class BioOntology(IndraOntology):
             'hp': lambda x: 'disease',
             'doid': lambda x: 'disease',
             'chebi': lambda x: 'small_molecule',
-            'ido': lambda x: 'infectious_disease_concept'
+            'ido': lambda x: 'infectious_disease_concept',
+            'mondo': lambda x: 'disease',
         }
         for ns in self.ontology_namespaces:
             oc = obo_client.OntologyClient(prefix=ns)
