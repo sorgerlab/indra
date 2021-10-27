@@ -421,11 +421,15 @@ class ModelChecker(object):
             pr.path_metrics = path_metrics
             return pr
         elif path_metrics:
-            if min(path_lengths) <= max_path_length:
+            min_path_length = min(path_lengths)
+            if min_path_length == 1:
+                if len(path_lengths) > 1:
+                    min_path_length = min([pl for pl in path_lengths if pl != 1])
+            if min_path_length <= max_path_length:
                 if dummy_target and not loop:
-                    search_path_length = min(path_lengths) + 1
+                    search_path_length = min_path_length + 1
                 else:
-                    search_path_length = min(path_lengths)
+                    search_path_length = min_path_length
                 pr = PathResult(True, 'PATHS_FOUND',
                                 max_paths, max_path_length)
                 pr.path_metrics = path_metrics
