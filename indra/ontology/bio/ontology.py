@@ -213,7 +213,8 @@ class BioOntology(IndraOntology):
             'hp': lambda x: 'disease',
             'doid': lambda x: 'disease',
             'chebi': lambda x: 'small_molecule',
-            'ido': lambda x: 'infectious_disease_concept'
+            'ido': lambda x: 'infectious_disease_concept',
+            'mondo': lambda x: 'disease',
         }
         for ns in self.ontology_namespaces:
             oc = obo_client.OntologyClient(prefix=ns)
