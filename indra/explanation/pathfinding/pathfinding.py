@@ -516,7 +516,7 @@ def get_path_iter(graph, source, target, path_length, loop, dummy_target,
         A generator of the paths between source and target.
     """
     path_iter = simple_paths_with_constraints(
-        graph, source, target, path_length, filter_func)
+        graph, source, target, path_length, False, filter_func)
     try:
         for p in path_iter:
             path = deepcopy(p)
@@ -897,7 +897,7 @@ def open_dijkstra_search(g, start, reverse=False, path_limit=None,
 
 # This code is adapted from nx.algorithms.simple_paths._all_simple_paths_graph
 def simple_paths_with_constraints(G, source, target, cutoff=None,
-                                  filter_func=None):
+                                  allow_shorter=False, filter_func=None):
     """Find all simple paths between source and target with given constraints.
 
     Parameters
@@ -909,7 +909,11 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
     target : node
         Ending node for path.
     cutoff : Optional[int]
-        Maximum depth of the paths.
+        Maximum (if allow_shorter=False) or desired (if allow_shorter=True)
+        depth of the paths.
+    allow_shorter : Optional[bool]
+        If cutoff is provided, whether to allow paths shorter than cutoff.
+        NOTE: If cutoff is not provided, this is always reset to True.
     filter_func : Optional[function]
         A function to constrain the intermediate nodes in the path. A
         function should take a node as a parameter and return True if the node
@@ -922,6 +926,8 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
     """
     if cutoff is None:
         cutoff = len(G) - 1
+        # If we didn't have a set cutoff, allow any paths
+        allow_shorter = True
     # Update filter function to not filter target
     filter_func = filter_except(filter_func, {target})
     visited = OrderedDict.fromkeys([source])
@@ -936,7 +942,8 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
             stack.pop()
             visited.popitem()
         elif len(visited) < cutoff:
-            if child == target:
+            # Get paths shorter than cutoff if allowed
+            if allow_shorter and child == target:
                 yield list(visited) + [target]
             elif child not in visited:
                 visited[child] = None
@@ -945,6 +952,7 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
                     new_nodes = filter(filter_func, new_nodes)
                 stack.append(new_nodes)
         else:  # len(visited) == cutoff:
+            # This path will be exactly of cutoff length
             if child == target or target in children:
                 yield list(visited) + [target]
             stack.pop()

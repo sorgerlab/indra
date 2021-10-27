@@ -230,7 +230,8 @@ class ModelChecker(object):
         self.statements += stmts
 
     def check_model(self, max_paths=1, max_path_length=5,
-                    agent_filter_func=None, edge_filter_func=None):
+                    agent_filter_func=None, edge_filter_func=None,
+                    allow_direct=True):
         """Check all the statements added to the ModelChecker.
 
         Parameters
@@ -249,6 +250,9 @@ class ModelChecker(object):
             take nodes (and key in case of MultiGraph) as parameters and
             return True if an edge can be in the graph and False if it should
             be filtered out.
+        allow_direct : Optional[bool]
+            Whether to allow direct path of length 1 (edge between source and
+            target) to be returned as a result. Default: True.
 
         Returns
         -------
@@ -266,13 +270,14 @@ class ModelChecker(object):
             result = self.check_statement(
                 stmt, max_paths, max_path_length,
                 node_filter_func=node_filter_func,
-                edge_filter_func=edge_filter_func)
+                edge_filter_func=edge_filter_func,
+                allow_direct=allow_direct)
             results.append((stmt, result))
         return results
 
     def check_statement(self, stmt, max_paths=1, max_path_length=5,
                         agent_filter_func=None, node_filter_func=None,
-                        edge_filter_func=None):
+                        edge_filter_func=None, allow_direct=True):
         """Check a single Statement against the model.
 
         Parameters
@@ -297,6 +302,9 @@ class ModelChecker(object):
             take nodes (and key in case of MultiGraph) as parameters and
             return True if an edge can be in the graph and False if it should
             be filtered out.
+        allow_direct : Optional[bool]
+            Whether to allow direct path of length 1 (edge between source and
+            target) to be returned as a result. Default: True.
 
         Returns
         -------
@@ -336,7 +344,8 @@ class ModelChecker(object):
 
         result = self.find_paths(subj_nodes, obj_nodes, max_paths,
                                  max_path_length, loop,
-                                 filter_func=node_filter_func)
+                                 filter_func=node_filter_func,
+                                 allow_direct=allow_direct)
         if common_target:
             self.graph.remove_node(common_target)
 
@@ -350,7 +359,7 @@ class ModelChecker(object):
                                       max_paths, max_path_length)
 
     def find_paths(self, subj, obj, max_paths=1, max_path_length=5,
-                   loop=False, filter_func=None):
+                   loop=False, filter_func=None, allow_direct=True):
         """Check for a source/target path in the model.
 
         Parameters
@@ -369,6 +378,9 @@ class ModelChecker(object):
             A function to constrain the search. A function should take a node
             as a parameter and return True if the node is allowed to be in a
             path and False otherwise. If None, then no filtering is done.
+        allow_direct : Optional[bool]
+            Whether to allow direct path of length 1 (edge between source and
+            target) to be returned as a result. Default: True.
 
         Returns
         -------
@@ -421,11 +433,18 @@ class ModelChecker(object):
             pr.path_metrics = path_metrics
             return pr
         elif path_metrics:
-            if min(path_lengths) <= max_path_length:
+            min_path_length = min(path_lengths)
+            # If we don't want to get direct connections as paths, we need
+            # to increase the desired path length to get paths with
+            # intermediate nodes (if they exist)
+            if not allow_direct and min_path_length == 1 and \
+                    len(path_lengths) > 1:
+                min_path_length = min([pl for pl in path_lengths if pl != 1])
+            if min_path_length <= max_path_length:
                 if dummy_target and not loop:
-                    search_path_length = min(path_lengths) + 1
+                    search_path_length = min_path_length + 1
                 else:
-                    search_path_length = min(path_lengths)
+                    search_path_length = min_path_length
                 pr = PathResult(True, 'PATHS_FOUND',
                                 max_paths, max_path_length)
                 pr.path_metrics = path_metrics
