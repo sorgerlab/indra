@@ -2002,6 +2002,34 @@ def test_get_nodes_to_agents():
     assert pmc.nodes_to_agents['GSK3B_S9_p_obs'].mods[0].position == '9'
 
 
+def test_direct_indirect_paths():
+    # This graph has direct edge A -> C and 2-edge path A -> B -> C
+    model_stmts = [
+        IncreaseAmount(Agent('A', db_refs={'HGNC': '1'}),
+                       Agent('B', db_refs={'HGNC': '2'})),
+        IncreaseAmount(Agent('B', db_refs={'HGNC': '2'}),
+                       Agent('C', db_refs={'HGNC': '3'})),
+        IncreaseAmount(Agent('A', db_refs={'HGNC': '1'}),
+                       Agent('C', db_refs={'HGNC': '3'})),
+    ]
+    test_stmt = IncreaseAmount(Agent('A', db_refs={'HGNC': 1}),
+                               Agent('C', db_refs={'HGNC': 3}))
+    ia = IndraNetAssembler(model_stmts)
+    unsigned_model = ia.make_model(graph_type='digraph')
+    umc = UnsignedGraphModelChecker(unsigned_model)
+    # First allow direct paths between source and target
+    res = umc.check_statement(test_stmt, max_paths=1, max_path_length=5,
+                              allow_direct=True)
+    assert res.path_found
+    assert len(res.paths) == 1, len(res.paths)
+    assert len(res.paths[0]) == 2  # 2 nodes = 1 edge
+    # Now not allow direct and should get a 2-edge path
+    res = umc.check_statement(test_stmt, max_paths=1, max_path_length=5,
+                              allow_direct=False)
+    assert res.path_found
+    assert len(res.paths) == 1, len(res.paths)
+    assert len(res.paths[0]) == 3  # 3 nodes = 2 edges
+
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
 
