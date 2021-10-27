@@ -176,7 +176,7 @@ def test_two_step_phosphorylation():
     #generate_equations(model)
     # Now check the model
     mc = PysbModelChecker(model, [st])
-    results = mc.check_model()
+    results = mc.check_model(allow_direct=True)
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
@@ -193,7 +193,7 @@ def test_pysb_assembler_phospho_policies():
     # Try two step
     pa.make_model(policies='two_step')
     mc = PysbModelChecker(pa.model, [st])
-    results = mc.check_model()
+    results = mc.check_model(allow_direct=True)
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
@@ -203,7 +203,7 @@ def test_pysb_assembler_phospho_policies():
     # Try one step
     pa.make_model(policies='one_step')
     mc = PysbModelChecker(pa.model, [st])
-    results = mc.check_model()
+    results = mc.check_model(allow_direct=True)
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
@@ -214,7 +214,7 @@ def test_pysb_assembler_phospho_policies():
     # Try interactions_only
     pa.make_model(policies='interactions_only')
     mc = PysbModelChecker(pa.model, [st])
-    results = mc.check_model()
+    results = mc.check_model(allow_direct=True)
     assert len(results) == 1
     assert isinstance(results[0], tuple)
     assert results[0][0] == st
@@ -358,7 +358,7 @@ def test_dephosphorylation():
         pysba.add_statements([stmt])
         pysba.make_model(policies=policy)
         mc = PysbModelChecker(pysba.model, [stmt])
-        checks = mc.check_model()
+        checks = mc.check_model(allow_direct=True)
         assert len(checks) == 1
         assert isinstance(checks[0], tuple)
         assert checks[0][0] == stmt
@@ -439,7 +439,7 @@ def test_distinguish_path_polarity1():
     # Create the model checker
     stmts = _path_polarity_stmt_list()
     mc = PysbModelChecker(model, stmts)
-    results = mc.check_model()
+    results = mc.check_model(allow_direct=True)
     assert len(results) == len(stmts)
     assert isinstance(results[0], tuple)
     path_results = [res[1] for res in results]
