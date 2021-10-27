@@ -896,7 +896,7 @@ def open_dijkstra_search(g, start, reverse=False, path_limit=None,
 
 
 # This code is adapted from nx.algorithms.simple_paths._all_simple_paths_graph
-def simple_paths_with_constraints(G, source, target, cutoff=None,
+def simple_paths_with_constraints(G, source, target, depth=None,
                                   filter_func=None):
     """Find all simple paths between source and target with given constraints.
 
@@ -908,8 +908,8 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
         Starting node for path.
     target : node
         Ending node for path.
-    cutoff : Optional[int]
-        Maximum depth of the paths.
+    depth : Optional[int]
+        Desired depth of the paths.
     filter_func : Optional[function]
         A function to constrain the intermediate nodes in the path. A
         function should take a node as a parameter and return True if the node
@@ -920,8 +920,8 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
     path_generator: generator
         A generator of the paths between source and target.
     """
-    if cutoff is None:
-        cutoff = len(G) - 1
+    if depth is None:
+        depth = len(G) - 1
     # Update filter function to not filter target
     filter_func = filter_except(filter_func, {target})
     visited = OrderedDict.fromkeys([source])
@@ -935,16 +935,14 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
         if child is None:
             stack.pop()
             visited.popitem()
-        elif len(visited) < cutoff:
-            if child == target:
-                yield list(visited) + [target]
-            elif child not in visited:
+        elif len(visited) < depth:
+            if child not in visited:
                 visited[child] = None
                 new_nodes = iter(G[child])
                 if filter_func:
                     new_nodes = filter(filter_func, new_nodes)
                 stack.append(new_nodes)
-        else:  # len(visited) == cutoff:
+        else:  # len(visited) == depth:
             if child == target or target in children:
                 yield list(visited) + [target]
             stack.pop()
