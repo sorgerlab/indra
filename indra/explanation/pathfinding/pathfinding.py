@@ -926,6 +926,7 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
     """
     if cutoff is None:
         cutoff = len(G) - 1
+        # If we didn't have a set cutoff, allow any paths
         allow_shorter = True
     # Update filter function to not filter target
     filter_func = filter_except(filter_func, {target})
@@ -941,6 +942,7 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
             stack.pop()
             visited.popitem()
         elif len(visited) < cutoff:
+            # Get paths shorter than cutoff if allowed
             if allow_shorter and child == target:
                 yield list(visited) + [target]
             elif child not in visited:
@@ -950,6 +952,7 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
                     new_nodes = filter(filter_func, new_nodes)
                 stack.append(new_nodes)
         else:  # len(visited) == cutoff:
+            # This path will be exactly of cutoff length
             if child == target or target in children:
                 yield list(visited) + [target]
             stack.pop()

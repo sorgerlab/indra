@@ -434,6 +434,9 @@ class ModelChecker(object):
             return pr
         elif path_metrics:
             min_path_length = min(path_lengths)
+            # If we don't want to get direct connections as paths, we need
+            # to increase the desired path length to get paths with
+            # intermediate nodes (if they exist)
             if not allow_direct and min_path_length == 1 and \
                     len(path_lengths) > 1:
                 min_path_length = min([pl for pl in path_lengths if pl != 1])
