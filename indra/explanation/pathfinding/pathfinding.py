@@ -516,7 +516,7 @@ def get_path_iter(graph, source, target, path_length, loop, dummy_target,
         A generator of the paths between source and target.
     """
     path_iter = simple_paths_with_constraints(
-        graph, source, target, path_length, filter_func)
+        graph, source, target, path_length, False, filter_func)
     try:
         for p in path_iter:
             path = deepcopy(p)
@@ -896,8 +896,8 @@ def open_dijkstra_search(g, start, reverse=False, path_limit=None,
 
 
 # This code is adapted from nx.algorithms.simple_paths._all_simple_paths_graph
-def simple_paths_with_constraints(G, source, target, depth=None,
-                                  filter_func=None):
+def simple_paths_with_constraints(G, source, target, cutoff=None,
+                                  allow_shorter=False, filter_func=None):
     """Find all simple paths between source and target with given constraints.
 
     Parameters
@@ -908,8 +908,9 @@ def simple_paths_with_constraints(G, source, target, depth=None,
         Starting node for path.
     target : node
         Ending node for path.
-    depth : Optional[int]
-        Desired depth of the paths.
+    cutoff : Optional[int]
+        Maximum (if allow_shorter=False) or desired (if allow_shorter=True)
+        depth of the paths.
     filter_func : Optional[function]
         A function to constrain the intermediate nodes in the path. A
         function should take a node as a parameter and return True if the node
@@ -920,8 +921,9 @@ def simple_paths_with_constraints(G, source, target, depth=None,
     path_generator: generator
         A generator of the paths between source and target.
     """
-    if depth is None:
-        depth = len(G) - 1
+    if cutoff is None:
+        cutoff = len(G) - 1
+        allow_shorter = True
     # Update filter function to not filter target
     filter_func = filter_except(filter_func, {target})
     visited = OrderedDict.fromkeys([source])
@@ -935,14 +937,16 @@ def simple_paths_with_constraints(G, source, target, depth=None,
         if child is None:
             stack.pop()
             visited.popitem()
-        elif len(visited) < depth:
+        elif len(visited) < cutoff:
+            if allow_shorter and child == target:
+                yield list(visited) + [target]
             if child not in visited:
                 visited[child] = None
                 new_nodes = iter(G[child])
                 if filter_func:
                     new_nodes = filter(filter_func, new_nodes)
                 stack.append(new_nodes)
-        else:  # len(visited) == depth:
+        else:  # len(visited) == cutoff:
             if child == target or target in children:
                 yield list(visited) + [target]
             stack.pop()
