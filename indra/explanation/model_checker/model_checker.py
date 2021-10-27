@@ -231,7 +231,7 @@ class ModelChecker(object):
 
     def check_model(self, max_paths=1, max_path_length=5,
                     agent_filter_func=None, edge_filter_func=None,
-                    allow_direct=False):
+                    allow_direct=True):
         """Check all the statements added to the ModelChecker.
 
         Parameters
@@ -250,6 +250,9 @@ class ModelChecker(object):
             take nodes (and key in case of MultiGraph) as parameters and
             return True if an edge can be in the graph and False if it should
             be filtered out.
+        allow_direct : Optional[bool]
+            Whether to allow direct path of length 1 (edge between source and
+            target) to be returned as a result. Default: True.
 
         Returns
         -------
@@ -274,7 +277,7 @@ class ModelChecker(object):
 
     def check_statement(self, stmt, max_paths=1, max_path_length=5,
                         agent_filter_func=None, node_filter_func=None,
-                        edge_filter_func=None, allow_direct=False):
+                        edge_filter_func=None, allow_direct=True):
         """Check a single Statement against the model.
 
         Parameters
@@ -299,6 +302,9 @@ class ModelChecker(object):
             take nodes (and key in case of MultiGraph) as parameters and
             return True if an edge can be in the graph and False if it should
             be filtered out.
+        allow_direct : Optional[bool]
+            Whether to allow direct path of length 1 (edge between source and
+            target) to be returned as a result. Default: True.
 
         Returns
         -------
@@ -353,7 +359,7 @@ class ModelChecker(object):
                                       max_paths, max_path_length)
 
     def find_paths(self, subj, obj, max_paths=1, max_path_length=5,
-                   loop=False, filter_func=None, allow_direct=False):
+                   loop=False, filter_func=None, allow_direct=True):
         """Check for a source/target path in the model.
 
         Parameters
@@ -372,6 +378,9 @@ class ModelChecker(object):
             A function to constrain the search. A function should take a node
             as a parameter and return True if the node is allowed to be in a
             path and False otherwise. If None, then no filtering is done.
+        allow_direct : Optional[bool]
+            Whether to allow direct path of length 1 (edge between source and
+            target) to be returned as a result. Default: True.
 
         Returns
         -------
