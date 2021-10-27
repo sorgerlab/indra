@@ -911,6 +911,9 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
     cutoff : Optional[int]
         Maximum (if allow_shorter=False) or desired (if allow_shorter=True)
         depth of the paths.
+    allow_shorter : Optional[bool]
+        If cutoff is provided, whether to allow paths shorter than cutoff.
+        NOTE: If cutoff is not provided, this is always reset to True.
     filter_func : Optional[function]
         A function to constrain the intermediate nodes in the path. A
         function should take a node as a parameter and return True if the node
@@ -940,7 +943,7 @@ def simple_paths_with_constraints(G, source, target, cutoff=None,
         elif len(visited) < cutoff:
             if allow_shorter and child == target:
                 yield list(visited) + [target]
-            if child not in visited:
+            elif child not in visited:
                 visited[child] = None
                 new_nodes = iter(G[child])
                 if filter_func:
