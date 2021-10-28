@@ -120,7 +120,7 @@ logger = logging.getLogger(__name__)
 
 db_sources = ['psp', 'cbn', 'pc', 'bel_lc', 'signor', 'biogrid',
               'tas', 'hprd', 'trrust', 'ctd', 'vhn', 'pe', 'drugbank',
-              'omnipath', 'conib', 'crog', 'dgi', 'minerva']
+              'omnipath', 'conib', 'crog', 'dgi', 'minerva', 'creeds']
 """Database source names as they appear in the DB"""
 
 reader_sources = ['geneways', 'tees', 'gnbr', 'isi', 'trips', 'rlimsp',
