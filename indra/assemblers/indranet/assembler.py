@@ -57,7 +57,7 @@ class IndraNetAssembler():
                    complex_members=3, graph_type='multi_graph', sign_dict=None,
                    belief_flattening=None, belief_scorer=None,
                    weight_flattening=None, extra_columns=None,
-                   keep_self_loops=False):
+                   keep_self_loops=True):
         """Assemble an IndraNet graph object.
 
         Parameters
@@ -156,7 +156,7 @@ class IndraNetAssembler():
     def make_model_from_df(self, exclude_stmts=None, complex_members=3,
                            graph_type='multi_graph', sign_dict=None,
                            belief_flattening=None, weight_flattening=None,
-                           extra_columns=None, keep_self_loops=False):
+                           extra_columns=None, keep_self_loops=True):
         """Assemble an IndraNet graph object by constructing a pandas
         Dataframe first.
 
@@ -237,7 +237,7 @@ class IndraNetAssembler():
         return model
 
     def make_df(self, exclude_stmts=None, complex_members=3,
-                extra_columns=None, keep_self_loops=False):
+                extra_columns=None, keep_self_loops=True):
         """Create a dataframe containing information extracted from assembler's
         list of statements necessary to build an IndraNet.
 
@@ -398,7 +398,7 @@ class IndraNetAssembler():
     def make_model_by_preassembly(self, exclude_stmts=None, complex_members=3,
                                   graph_type='multi_graph', sign_dict=None,
                                   belief_scorer=None, weight_flattening=None,
-                                  extra_columns=None, keep_self_loops=False):
+                                  extra_columns=None, keep_self_loops=True):
         """Assemble an IndraNet graph object by preassembling the statements
         according to selected graph type.
 
