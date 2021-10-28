@@ -56,7 +56,8 @@ class IndraNetAssembler():
     def make_model(self, method='preassembly', exclude_stmts=None,
                    complex_members=3, graph_type='multi_graph', sign_dict=None,
                    belief_flattening=None, belief_scorer=None,
-                   weight_flattening=None, extra_columns=None):
+                   weight_flattening=None, extra_columns=None,
+                   keep_self_loops=True):
         """Assemble an IndraNet graph object.
 
         Parameters
@@ -125,6 +126,9 @@ class IndraNetAssembler():
             ...         G.edges[edge]['weight'] = sum(w)/len(w)
             ...     return G
 
+        keep_self_loops : Optional[bool]
+            Whether to keep the self-loops when constructing the graph.
+
         Returns
         -------
         model : IndraNet
@@ -138,19 +142,21 @@ class IndraNetAssembler():
                 graph_type=graph_type, sign_dict=sign_dict,
                 belief_flattening=belief_flattening,
                 weight_flattening=weight_flattening,
-                extra_columns=extra_columns)
+                extra_columns=extra_columns,
+                keep_self_loops=keep_self_loops)
         elif method == 'preassembly':
             return self.make_model_by_preassembly(
                 exclude_stmts=exclude_stmts, complex_members=complex_members,
                 graph_type=graph_type, sign_dict=sign_dict,
                 belief_scorer=belief_scorer,
                 weight_flattening=weight_flattening,
-                extra_columns=extra_columns)
+                extra_columns=extra_columns,
+                keep_self_loops=keep_self_loops)
 
     def make_model_from_df(self, exclude_stmts=None, complex_members=3,
                            graph_type='multi_graph', sign_dict=None,
                            belief_flattening=None, weight_flattening=None,
-                           extra_columns=None):
+                           extra_columns=None, keep_self_loops=True):
         """Assemble an IndraNet graph object by constructing a pandas
         Dataframe first.
 
@@ -202,12 +208,16 @@ class IndraNetAssembler():
             ...         G.edges[edge]['weight'] = sum(w)/len(w)
             ...     return G
 
+        keep_self_loops : Optional[bool]
+            Whether to keep the self-loops when constructing the graph.
+
         Returns
         -------
         model : IndraNet
             IndraNet graph object.
         """
-        df = self.make_df(exclude_stmts, complex_members, extra_columns)
+        df = self.make_df(exclude_stmts, complex_members, extra_columns,
+                          keep_self_loops)
         if graph_type == 'multi_graph':
             model = IndraNet.from_df(df)
         elif graph_type == 'digraph':
@@ -227,7 +237,7 @@ class IndraNetAssembler():
         return model
 
     def make_df(self, exclude_stmts=None, complex_members=3,
-                extra_columns=None):
+                extra_columns=None, keep_self_loops=True):
         """Create a dataframe containing information extracted from assembler's
         list of statements necessary to build an IndraNet.
 
@@ -244,6 +254,8 @@ class IndraNetAssembler():
             A list of tuples defining columns to add to the dataframe in
             addition to the required columns. Each tuple contains the column
             name and a function to generate a value from a statement.
+        keep_self_loops : Optional[bool]
+            Whether to keep the self-loops when constructing the graph.
 
         Returns
         -------
@@ -346,6 +358,9 @@ class IndraNetAssembler():
             else:
                 edges = [(not_none_agents[0], not_none_agents[1], None)]
             for (agA, agB, sign) in edges:
+                # Filter out self-loops
+                if not keep_self_loops and agA.name == agB.name:
+                    continue
                 agA_ns, agA_id = get_ag_ns_id(agA)
                 agB_ns, agB_id = get_ag_ns_id(agB)
                 stmt_type = type(stmt).__name__
@@ -383,7 +398,7 @@ class IndraNetAssembler():
     def make_model_by_preassembly(self, exclude_stmts=None, complex_members=3,
                                   graph_type='multi_graph', sign_dict=None,
                                   belief_scorer=None, weight_flattening=None,
-                                  extra_columns=None):
+                                  extra_columns=None, keep_self_loops=True):
         """Assemble an IndraNet graph object by preassembling the statements
         according to selected graph type.
 
@@ -422,6 +437,9 @@ class IndraNetAssembler():
             ...             for s in G.edges[edge]['statements']]
             ...         G.edges[edge]['weight'] = sum(w)/len(w)
             ...     return G
+
+        keep_self_loops : Optional[bool]
+            Whether to keep the self-loops when constructing the graph.
 
         Returns
         -------
@@ -496,6 +514,9 @@ class IndraNetAssembler():
                 G = nx.MultiGraph()
         for stmt in graph_stmts:
             agents = stmt.agent_list()
+            # Filter out self-loops
+            if not keep_self_loops and agents[0].name == agents[1].name:
+                continue
             for ag in agents:
                 ag_ns, ag_id = get_ag_ns_id(ag)
                 G.add_node(ag.name, ns=ag_ns, id=ag_id)
