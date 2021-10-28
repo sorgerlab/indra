@@ -1,9 +1,14 @@
 import re
-from indra.statements import *
+
 from indra.assemblers.english import AgentWithCoordinates
 from indra.assemblers.html.assembler import HtmlAssembler, tag_text, loader, \
-    _format_evidence_text, tag_agents, src_url, SOURCE_INFO
-from indra.util.statement_presentation import AveAggregator, StmtStat, StmtGroup
+    _format_evidence_text, tag_agents, src_url, SOURCE_INFO, \
+    DEFAULT_SOURCE_COLORS, generate_source_css, _source_info_to_source_colors, \
+    SourceInfo
+from indra.resources import load_resource_json
+from indra.statements import *
+from indra.util.statement_presentation import AveAggregator, StmtStat, \
+    internal_source_mappings
 
 
 def make_stmt():
@@ -31,6 +36,31 @@ def make_bad_stmt():
     return st
 
 
+def source_json():
+    return {
+        "eidos": {
+            "name": "Eidos",
+            "link": "https://github.com/clulab/eidos",
+            "type": "reader",
+            "domain": "general",
+            "default_style": {
+                "color": "white",
+                "background-color": "#000000"
+            }
+        },
+        "phosphosite": {
+            "name": "Phosphosite Plus",
+            "link": "https://www.phosphosite.org/homeAction.action",
+            "type": "database",
+            "domain": "biology",
+            "default_style": {
+                "color": "black",
+                "background-color": "#FFFFFF"
+            }
+        },
+    }
+
+
 def test_format_evidence_text():
     stmt = make_stmt()
     ev_list = _format_evidence_text(stmt)
@@ -47,6 +77,182 @@ def test_format_evidence_text():
                           'was able to phosphorylate '
                           '<span class="badge badge-object">'
                           'Ras proteins</span>.'), ev['text']
+
+
+def test_colors_in_html():
+    ag_a = Agent('A')
+    ag_b = Agent('B')
+    evidences = []
+    colors = []
+    for source_type, info in DEFAULT_SOURCE_COLORS:
+        for source in info['sources']:
+            ev = Evidence(source_api=source, text=f'Evidence from {source}')
+            evidences.append(ev)
+            colors.append(info['sources'][source])
+
+    stmt = Activation(ag_a, ag_b, evidence=evidences)
+    ha = HtmlAssembler(statements=[stmt])
+    ha.save_model('./temp_simple.html')
+    ha = HtmlAssembler(statements=[stmt])
+    ha.save_model('./temp_not_simple.html', simple=False)
+    with open('./temp_simple.html') as fh:
+        simple_html = fh.read()
+    with open('./temp_not_simple.html') as fh:
+        not_simple_html = fh.read()
+    assert all(color in simple_html for color in colors)
+    assert all(color in not_simple_html for color in colors)
+
+
+def test_custom_colors_in_html():
+    ag_a = Agent('A')
+    ag_b = Agent('B')
+    custom_sources: SourceInfo = {
+        "src_a": {
+            "name": "Src A",
+            "link": "https://example.com/src_a",
+            "type": "reader",
+            "domain": "general",
+            "default_style": {
+                "color": "white",
+                "background-color": "blue"
+            }
+        },
+        "src_b": {
+            "name": "Src B",
+            "link": "https://example.com/src_b",
+            "type": "database",
+            "domain": "general",
+            "default_style": {
+                "color": "black",
+                "background-color": "#bebada"
+            }
+        },
+    }
+
+    evidences = []
+    colors = []
+    sources = []
+    for source, source_info in custom_sources.items():
+        sources.append(source)
+        ev = Evidence(source_api=source, text=f'Evidence from {source}')
+        evidences.append(ev)
+        colors.append(source_info['default_style']['background-color'])
+
+    stmt = Activation(ag_a, ag_b, evidence=evidences)
+    ha = HtmlAssembler(statements=[stmt], custom_sources=custom_sources)
+    ha.save_model('./temp_custom_colors_simple.html')
+    with open('./temp_custom_colors_simple.html') as fh:
+        simple_html = fh.read()
+
+    ha = HtmlAssembler(statements=[stmt], custom_sources=custom_sources)
+    ha.save_model('./temp_not_simple.html', simple=False)
+    with open('./temp_custom_colors_simple.html') as fh:
+        not_simple_html = fh.read()
+
+    # Check if style rule appears
+    assert all(color in simple_html for color in colors)
+
+    # Test if badge appears
+    badge_str = 'class="badge badge-source source-{src}"'
+    assert all(badge_str.format(src=src) in simple_html for src in sources)
+
+
+def test_skip_sources_not_in_evidences():
+    # Check sources not in provided sources are excluded from generated template
+    ag_a = Agent('A')
+    ag_b = Agent('B')
+    evidences = []
+    colors = []
+    not_in_html = []
+    for source_type, info in DEFAULT_SOURCE_COLORS:
+        for n, source in enumerate(info['sources']):
+            # Only get 4 first sources for each type
+            if n < 4:
+                ev = Evidence(source_api=source, text=f'Evidence from {source}')
+                evidences.append(ev)
+                colors.append(info['sources'][source])
+            else:
+                not_in_html.append(source)
+    stmt = Activation(ag_a, ag_b, evidence=evidences)
+    ha = HtmlAssembler(statements=[stmt])
+    ha.save_model('./temp_simple.html')
+    with open('./temp_simple.html') as fh:
+        simple_html = fh.read()
+
+    ha = HtmlAssembler(statements=[stmt])
+    ha.save_model('./temp_not_simple.html', simple=False)
+    with open('./temp_not_simple.html') as fh:
+        not_simple_no_show_html = fh.read()
+
+    ha = HtmlAssembler(statements=[stmt])
+    ha.save_model('./temp_not_simple_no_show.html',
+                  show_only_available=True)
+    with open('./temp_not_simple_no_show.html') as fh:
+        not_simple_html = fh.read()
+    assert all(color in simple_html for color in colors)
+    assert all(color in not_simple_html for color in colors)
+
+    badge_class = 'class="badge badge-source source-{src}"'
+    assert all(badge_class.format(src=src) not in
+               not_simple_no_show_html for src in not_in_html)
+
+
+def test_readers_only():
+    # Check sources not in provided sources are excluded from generated template
+    ag_a = Agent('A')
+    ag_b = Agent('B')
+    evidences = []
+    colors = []
+    not_in_html = []
+    for source_type, info in DEFAULT_SOURCE_COLORS:
+        for n, source in enumerate(info['sources']):
+            # Only get 4 first sources for each type
+            if n < 4 and source_type == 'reading':
+                ev = Evidence(source_api=source, text=f'Evidence from {source}')
+                evidences.append(ev)
+                colors.append(info['sources'][source])
+            else:
+                not_in_html.append(source)
+    stmt = Activation(ag_a, ag_b, evidence=evidences)
+    ha = HtmlAssembler(statements=[stmt])
+    ha.save_model('./temp_no_show_rd_only.html',
+                  show_only_available=True)
+    with open('./temp_no_show_rd_only.html') as fh:
+        no_show_html = fh.read()
+    assert all(color in no_show_html for color in colors)
+
+    badge_class = 'class="badge badge-source source-{src}"'
+    assert all(badge_class.format(src=src) not in
+               no_show_html for src in not_in_html)
+
+
+def test_databases_only():
+    # Check sources not in provided sources are excluded from generated template
+    ag_a = Agent('A')
+    ag_b = Agent('B')
+    evidences = []
+    colors = []
+    not_in_html = []
+    for source_type, info in DEFAULT_SOURCE_COLORS:
+        for n, source in enumerate(info['sources']):
+            # Only get 4 first sources for each type
+            if n < 4 and source_type == 'databases':
+                ev = Evidence(source_api=source, text=f'Evidence from {source}')
+                evidences.append(ev)
+                colors.append(info['sources'][source])
+            else:
+                not_in_html.append(source)
+    stmt = Activation(ag_a, ag_b, evidence=evidences)
+    ha = HtmlAssembler(statements=[stmt])
+    ha.save_model('./temp_no_show_db_only.html',
+                  show_only_available=True)
+    with open('./temp_no_show_db_only.html') as fh:
+        no_show_html = fh.read()
+    assert all(color in no_show_html for color in colors)
+
+    badge_class = 'class="badge badge-source source-{src}"'
+    assert all(badge_class.format(src=src) not in
+               no_show_html for src in not_in_html)
 
 
 def test_source_url():
@@ -87,6 +293,9 @@ def test_assembler():
     assert isinstance(result, str)
     result = ha.make_model(grouping_level='statement')
     assert isinstance(result, str)
+    # Check simple=False
+    result = ha.make_model(grouping_level='statement', simple=False)
+    assert isinstance(result, str)
     # Test belief badges
     result = ha.make_model(grouping_level='statement', show_belief=True)
     assert isinstance(result, str)
@@ -110,6 +319,107 @@ def test_assembler():
     assert not ha.model
     ha.save_model('tempfile.html')
     assert ha.model
+
+
+def test_source_info_to_source_colors():
+    src_info_json = source_json()
+    src_colors = _source_info_to_source_colors(src_info_json)
+    assert isinstance(src_colors, list)
+    assert src_colors[0][0] == 'databases'
+    assert src_colors[0][1]['color'] == 'black'
+    assert src_colors[0][1]['sources']['psp'] == '#FFFFFF'
+    assert src_colors[1][0] == 'reading'
+    assert src_colors[1][1]['color'] == 'white'
+    assert src_colors[1][1]['sources']['eidos'] == '#000000'
+
+
+def test_generate_source_css():
+    source_info = source_json()
+    src_col = _source_info_to_source_colors(source_info)
+    generate_source_css(fname='./temp.css', source_colors=src_col)
+    with open('./temp.css') as fh:
+        css_str = fh.read()
+
+    rule_string = '.source-{src} {{\n    background-color: {src_bg};\n    ' \
+                  'color: {src_txt};\n}}\n\n'
+    rule_a = rule_string.format(
+        src='eidos',
+        src_bg=source_info['eidos']['default_style']['background-color'],
+        src_txt=source_info['eidos']['default_style']['color']
+    )
+    assert rule_a in css_str
+
+    rule_b = rule_string.format(
+        src='psp',
+        src_bg=source_info['phosphosite']['default_style']['background-color'],
+        src_txt=source_info['phosphosite']['default_style']['color']
+    )
+    assert rule_b in css_str
+
+
+def test_default_colors():
+    # Test if all the sources in source_info.json also exist in
+    # DEFAULT_SOURCE_COLORS (after translation); this will catch any commit
+    # that adds a source without also running
+    # regenerate_default_source_styling()
+
+    # Get sources and colors in DEFAULT_SOURCE_COLORS
+    # Sources in DEFAULT_SOURCE_COLORS follow DB naming
+    default_colors_sources = set()
+    color_combos = []  # List tuples or (text color, background color)
+    def_source_color = {}
+    for source_type, styles in DEFAULT_SOURCE_COLORS:
+        txt_col = styles['color']
+        for src_colors_source in styles['sources']:
+            default_colors_sources.add(src_colors_source)
+            color_combos.append((txt_col, styles['sources'][src_colors_source]))
+            def_source_color[src_colors_source] = styles['sources'][src_colors_source]
+
+    # source_info_json has INDRA naming and need to be mapped to DB naming
+    source_info_json = load_resource_json('source_info.json')
+    # pc and biopax both map to pc here
+    src_inf_sources = {internal_source_mappings.get(s, s)
+                       for s in source_info_json.keys()}
+    src_inf_colors = {
+        internal_source_mappings.get(si_source, si_source):
+            info['default_style']['background-color']
+        for si_source, info in source_info_json.items()
+    }
+
+    # biopax and pathway commons are both in source_info, but are mapped to
+    # the same source in INDRA DB naming: pc.
+    assert 'trips' in default_colors_sources
+    assert 'pc' in default_colors_sources
+    assert 'drum' not in default_colors_sources
+    assert 'biopax' not in default_colors_sources
+
+    assert 'trips' in src_inf_sources
+    assert 'pc' in src_inf_sources
+    assert 'drum' not in src_inf_sources
+    assert 'biopax' not in src_inf_sources  # biopax -> pc here
+    assert 'biopax' in source_info_json  # biopax still exists here
+
+    # Test for equality
+    assert len(src_inf_sources) == len(default_colors_sources)
+    assert default_colors_sources.difference(src_inf_sources) == set(), \
+        default_colors_sources.difference(src_inf_sources)
+    assert src_inf_sources.difference(default_colors_sources) == set(), \
+           src_inf_sources.difference(default_colors_sources)
+    assert default_colors_sources.symmetric_difference(src_inf_sources) == \
+           set(), default_colors_sources.symmetric_difference(src_inf_sources)
+
+    # Test if the color combinations set in source_info.json are unique
+    color_combos_set = set(color_combos)
+    assert len(color_combos_set) == len(color_combos), \
+        'text + background colors are not unique'
+
+    # Test that the colors in DEFAULT_SOURCE_COLORS match what is set in
+    # source_info.json, after mapping of source names
+    for src_colors_source, bg_color in def_source_color.items():
+        mapped = src_colors_source
+
+        assert bg_color == src_inf_colors[mapped], \
+            f'{mapped}: default={bg_color}; json={src_inf_colors[mapped]}'
 
 
 def test_tag_agents():

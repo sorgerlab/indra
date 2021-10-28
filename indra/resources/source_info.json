@@ -3,180 +3,300 @@
         "name": "Eidos",
         "link": "https://github.com/clulab/eidos",
         "type": "reader",
-        "domain": "general"
+        "domain": "general",
+        "default_style": {
+            "color": "white",
+            "background-color": "#bc80bd"
+        }
     },
-    "drum": {
+    "trips": {
         "name": "TRIPS/DRUM",
         "link": "http://trips.ihmc.us/parser/cgi/drum",
         "type": "reader",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#80b1d3"
+        }
     },
     "reach": {
         "name": "REACH",
         "link": "https://github.com/clulab/reach",
         "type": "reader",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#bebada"
+        }
     },
     "sparser": {
         "name": "Sparser",
         "link": "https://github.com/ddmcdonald/sparser",
         "type": "reader",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#fdb462"
+        }
     },
     "tees": {
         "name": "TEES",
         "link": "https://github.com/jbjorne/TEES",
         "type": "reader",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#8dd3c7"
+        }
     },
     "medscan": {
         "name": "MedScan",
         "link": "https://doi.org/10.1093/bioinformatics/btg207",
         "type": "reader",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#b3de69"
+        }
     },
     "rlimsp": {
         "name": "RLIMS-P",
         "link": "https://research.bioinformatics.udel.edu/rlimsp",
         "type": "reader",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#fccde5"
+        }
     },
     "isi": {
         "name": "ISI/AMR",
         "link": "https://github.com/sgarg87/big_mech_isi_gg",
         "type": "reader",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#fb8072"
+        }
     },
     "geneways": {
         "name": "Geneways",
         "link": "https://www.ncbi.nlm.nih.gov/pubmed/15016385",
         "type": "reader",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#d9d9d9"
+        }
     },
     "biopax": {
         "name": "BioPax",
         "link": "http://www.biopax.org/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#b3de69"
+        }
     },
     "pc": {
         "name": "PathwayCommons",
         "link": "http://pathwaycommons.org/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#b3de69"
+        }
     },
     "phosphosite": {
         "name": "Phosphosite Plus",
         "link": "https://www.phosphosite.org/homeAction.action",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#bc80bd"
+        }
     },
     "cbn": {
         "name": "Causal Bionet",
         "link": "http://causalbionet.com/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#d9d9d9"
+        }
     },
     "bel": {
         "name": "BEL",
         "link": "https://github.com/pybel/pybel",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#fb8072"
+        }
     },
     "signor": {
         "name": "Signor",
         "link": "https://signor.uniroma2.it/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#bebada"
+        }
     },
     "biogrid": {
         "name": "BioGRID",
         "link": "https://thebiogrid.org/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#8dd3c7"
+        }
     },
     "tas": {
         "name": "Target Affinity Spectrum",
         "link": "https://labsyspharm.shinyapps.io/smallmoleculesuite/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#e0e03d"
+        }
     },
     "hprd": {
         "name": "HPRD",
         "link": "http://www.hprd.org",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#80b1d3"
+        }
     },
     "trrust": {
         "name": "TRRUST",
         "link": "https://www.grnpedia.org/trrust/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#fccde5"
+        }
     },
     "phosphoelm": {
         "name": "Phospho.ELM",
         "link": "http://phospho.elm.eu.org/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#ffe8f4"
+        }
     },
     "virhostnet": {
         "name": "VirHostNet",
         "link": "http://virhostnet.prabi.fr/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#ccebc5"
+        }
     },
     "ctd": {
         "name": "CTD",
         "link": "http://ctdbase.org",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#ffed6f"
+        }
     },
     "drugbank": {
         "name": "DrugBank",
         "link": "https://www.drugbank.ca/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#fdb462"
+        }
     },
     "omnipath": {
         "name": "OmniPath",
         "link": "https://omnipathdb.org/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#acfcfc"
+        }
     },
     "minerva": {
         "name": "MINERVA",
         "link": "https://covid19map.elixir-luxembourg.org/minerva/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#dd99ff"
+        }
     },
     "dgi": {
         "name": "DGI",
         "link": "https://www.dgidb.org/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#00e8ff"
+        }
     },
     "crog": {
         "name": "Chemical Relations Graph",
         "link": "https://github.com/chemical-roles/chemical-roles",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#00d4a6"
+        }
     },
     "conib": {
         "name": "CONIB",
         "link": "https://github.com/pharmacome/conib",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "black",
+            "background-color": "#999999"
+        }
     },
     "gnbr": {
         "name": "Global Network of Biomedical Relationships",
         "link": "https://zenodo.org/record/3459420",
         "type": "reader",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#ffed6f"
+        }
     },
     "creeds": {
         "name": "CRowd Extracted Expression of Differential Signatures",
         "link": "https://maayanlab.cloud/CREEDS/",
         "type": "database",
-        "domain": "biology"
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#f68ee1"
+        }
     }
 }

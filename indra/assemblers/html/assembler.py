@@ -2,12 +2,12 @@
 Format a set of INDRA Statements into an HTML-formatted report which also
 supports curation.
 """
-
 import re
 import uuid
 import logging
 import itertools
 from html import escape
+from typing import Union, Dict, Optional
 from collections import OrderedDict, defaultdict
 from os.path import abspath, dirname, join
 
@@ -21,13 +21,18 @@ from indra.databases.identifiers import get_identifiers_url, ensure_prefix
 from indra.assemblers.english import EnglishAssembler, AgentWithCoordinates
 from indra.util.statement_presentation import group_and_sort_statements, \
     make_top_level_label_from_names_key, make_stmt_from_relation_key, \
-    reader_sources, db_sources, all_sources, get_available_source_counts, \
+    all_sources, get_available_source_counts, \
     get_available_ev_counts, standardize_counts, get_available_beliefs, \
-    StmtGroup, make_standard_stats, reverse_source_mappings
+    make_standard_stats, internal_source_mappings, available_sources_stmts,\
+    available_sources_src_counts, reverse_source_mappings, \
+    SourceColors
 from indra.literature import id_lookup
 
 logger = logging.getLogger(__name__)
 HERE = dirname(abspath(__file__))
+
+# Derived types
+SourceInfo = Dict[str, Dict[str, Union[str, Dict[str, str]]]]
 
 
 loader = FileSystemLoader(join(HERE, 'templates'))
@@ -35,33 +40,83 @@ env = Environment(loader=loader)
 
 default_template = env.get_template('indra/statements_view.html')
 
-color_schemes = {
-    'dark': ['#b2df8a', '#000099', '#6a3d9a', '#1f78b4', '#fdbf6f', '#ff7f00',
-             '#cab2d6', '#fb9a99', '#a6cee3', '#33a02c', '#b15928', '#e31a1c'],
-    'light': ['#bebada', '#fdb462', '#b3de69', '#80b1d3', '#bc80bd', '#fccde5',
-              '#fb8072', '#d9d9d9', '#8dd3c7', '#ffed6f', '#ccebc5', '#e0e03d',
-              '#ffe8f4', '#acfcfc', '#dd99ff', '#00d4a6']
-}
+DB_TEXT_COLOR = 'black'
+"""The text color for database sources when shown as source count badges"""
+
+READER_TEXT_COLOR = 'white'
+"""The text color for reader sources when shown as source count badges"""
 
 
-def color_gen(scheme):
-    while True:
-        for color in color_schemes[scheme]:
-            yield color
+def _source_info_to_source_colors(
+        source_info: Optional[SourceInfo] = None
+) -> SourceColors:
+    """Returns a source color data structure with source names as they
+    appear in INDRA DB
+    """
+    if source_info is None:
+        source_info = SOURCE_INFO
+        every_source = all_sources
+    else:
+        every_source = []
+        for source in source_info:
+            every_source.append(source)
+
+    # Initialize dicts for source: background-color for readers and databases
+    database_colors = {}
+    reader_colors = {}
+    for source in every_source:
+        # Get name as it is registered in source_info.json and get info
+        src_info_name = reverse_source_mappings.get(source, source)
+        info = source_info.get(src_info_name)
+        if not info:
+            logger.error('Source info missing for %s' % source)
+            continue
+        # Get color from info
+        color = info['default_style']['background-color']
+
+        # Map back to db name, use original name from all_sources as default
+        mapped_source = internal_source_mappings.get(src_info_name, source)
+        if info['type'] == 'reader':
+            reader_colors[mapped_source] = color
+        else:
+            database_colors[mapped_source] = color
+
+    return [('databases', {'color': DB_TEXT_COLOR,
+                           'sources': database_colors}),
+            ('reading', {'color': READER_TEXT_COLOR,
+                         'sources': reader_colors})]
 
 
-def make_source_colors(databases, readers):
-    rdr_ord = ['reach', 'sparser', 'medscan', 'trips', 'eidos']
-    readers.sort(key=lambda r: rdr_ord.index(r) if r in rdr_ord else len(rdr_ord))
-    reader_colors_list = list(zip(readers, color_gen('light')))
-    reader_colors_list.reverse()
-    reader_colors = dict(reader_colors_list)
-    db_colors = dict(zip(databases, color_gen('light')))
-    return [('databases', {'color': 'black', 'sources': db_colors}),
-            ('reading', {'color': 'white', 'sources': reader_colors})]
+DEFAULT_SOURCE_COLORS = _source_info_to_source_colors(SOURCE_INFO)
 
 
-DEFAULT_SOURCE_COLORS = make_source_colors(db_sources, reader_sources)
+def generate_source_css(fname: str,
+                        source_colors: SourceColors = None):
+    """Save a stylesheet defining color, background-color for the given sources
+
+    Parameters
+    ----------
+    fname :
+        Where to save the stylesheet
+    source_colors :
+        Colors defining the styles. Default: DEFAULT_SOURCE_COLORS.
+    """
+    if source_colors is None:
+        source_colors = DEFAULT_SOURCE_COLORS
+
+    rule_string = '.source-{src} {{\n    background-color: {src_bg};\n    ' \
+                  'color: {src_txt};\n}}\n\n'
+
+    stylesheet_str = ''
+    for _, info in source_colors:
+        text_color = info['color']
+        for source_name, bg_color in info['sources'].items():
+            stylesheet_str += rule_string.format(src=source_name,
+                                                 src_bg=bg_color,
+                                                 src_txt=text_color)
+
+    with open(fname, 'w') as fh:
+        fh.write(stylesheet_str)
 
 
 class HtmlAssembler(object):
@@ -134,6 +189,28 @@ class HtmlAssembler(object):
     custom_stats : Optional[list]
         A list of StmtStat objects containing custom statement statistics to be
         used in sorting of statements and statement groups.
+    custom_sources : SourceInfo
+        Use this if the sources in the statements are from sources other than
+        the default ones present in indra/resources/source_info.json
+        The structure of the input must conform to:
+
+        {
+            "source_key": {
+                "name": "Source Name",
+                "link": "<url>",
+                "type": "reader|database",
+                "domain": "<domain>",
+                "default_style": {
+                    "color": "<text color>",
+                    "background-color": "<badge color>"
+                }
+            },
+            ...
+        }
+
+        Where <text color> and <badge color> must be color names or color
+        codes allowed in an html document per the CSS3 specification:
+        https://www.w3.org/TR/css-color-3/#svg-color
 
     Attributes
     ----------
@@ -156,7 +233,13 @@ class HtmlAssembler(object):
     def __init__(self, statements=None, summary_metadata=None,
                  ev_counts=None, beliefs=None, source_counts=None,
                  curation_dict=None, title='INDRA Results', db_rest_url=None,
-                 sort_by='default', custom_stats=None):
+                 sort_by='default', custom_stats=None,
+                 custom_sources: Optional[SourceInfo] = None):
+        if custom_sources is not None:
+            custom_source_list = list(custom_sources)
+        else:
+            custom_source_list = None
+        self.custom_sources = custom_sources
         self.title = title
         self.statements = [] if statements is None else statements
         self.metadata = {} if summary_metadata is None \
@@ -165,13 +248,20 @@ class HtmlAssembler(object):
             if ev_counts is None else standardize_counts(ev_counts)
         self.beliefs = get_available_beliefs(self.statements) \
             if not beliefs else standardize_counts(beliefs)
-        self.source_counts = get_available_source_counts(self.statements) \
+        self.source_counts = get_available_source_counts(self.statements,
+                                                         custom_source_list) \
             if source_counts is None else standardize_counts(source_counts)
+        self.available_sources = available_sources_stmts(self.statements,
+                                                         custom_source_list) if \
+            source_counts is None else available_sources_src_counts(
+            source_counts, custom_source_list)
         self.sort_by = sort_by
         self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
         self.model = None
         self.custom_stats = [] if custom_stats is None else custom_stats
+        self.source_colors: Optional[SourceColors] = \
+            _source_info_to_source_colors(custom_sources)
 
     def add_statements(self, statements):
         """Add a list of Statements to the assembler.
@@ -508,14 +598,29 @@ class HtmlAssembler(object):
         if template is None:
             template = default_template
         if self.source_counts and 'source_key_dict' not in template_kwargs:
-            template_kwargs['source_key_dict'] = \
-                {src: src for src in all_sources}
+            if self.custom_sources is not None:
+                sources = list(self.custom_sources)
+            else:
+                sources = all_sources
+            template_kwargs['source_key_dict'] = {src: src for src in sources}
         if 'source_colors' not in template_kwargs:
-            template_kwargs['source_colors'] = DEFAULT_SOURCE_COLORS
+            if self.source_colors is not None:
+                template_kwargs['source_colors'] = self.source_colors
+            else:
+                template_kwargs['source_colors'] = DEFAULT_SOURCE_COLORS
         if 'source_info' not in template_kwargs:
-            template_kwargs['source_info'] = SOURCE_INFO.copy()
+            if self.custom_sources:
+                template_kwargs['source_info'] = self.custom_sources
+            else:
+                template_kwargs['source_info'] = SOURCE_INFO.copy()
         if 'simple' not in template_kwargs:
             template_kwargs['simple'] = True
+        if 'available_sources' not in template_kwargs:
+            template_kwargs['available_sources'] = list(self.available_sources)
+        if 'show_only_available' not in template_kwargs:
+            template_kwargs['show_only_available'] = False
+        template_kwargs['reverse_source_mapping'] = \
+            {v: k for k, v in internal_source_mappings.items()}
 
         self.model = template.render(stmt_data=tl_stmts,
                   metadata=metadata, title=self.title,

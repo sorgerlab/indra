@@ -242,21 +242,23 @@
     <div class="side-info-block">
       <h4>{{ category|capitalize }}</h4>
       {%  for source in data['sources'].keys() %}
+        {% set mapped_source = reverse_source_mapping.get(source, source) %}
         <button class="source-desc source-{{ source }} btn"
                 type="button"
                 data-toggle="collapse" data-target="#source-info-{{ source }}">
           {% if source_info %}
-            <a href="{{ source_info[source]['link'] }}"
+            <a href="{{ source_info[mapped_source]['link'] }}"
               target="_blank">
-              {{ source_info[source]['name'] }}
+              {{ source_info[mapped_source]['name'] }}
             </a>
           {% else %}
             {{ source }}
           {% endif %}
         </button>
-        {% if source_info and 'desc' in source_info[source] and source_info[source]['desc'] %}
+        {% if source_info and 'desc' in source_info[mapped_source] and
+        source_info[mapped_source]['desc'] %}
         <div id="source-info-{{ source }}" class="source-desc collapse">
-          {{ source_info[source]['desc'] }}
+          {{ source_info[mapped_source]['desc'] }}
         </div>
         {% endif %}
       {% endfor %}

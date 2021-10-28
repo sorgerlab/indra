@@ -110,19 +110,22 @@ import logging
 from collections import defaultdict
 from itertools import permutations
 from numpy import array, zeros, maximum, concatenate, append
+from typing import List, Set, Dict, Optional, Union, Tuple
 
 from indra.assemblers.english import EnglishAssembler
 from indra.statements import Agent, Influence, Event, get_statement_by_name, \
-    Statement
+    Statement, Evidence
 
 logger = logging.getLogger(__name__)
 
-db_sources = ['psp', 'cbn', 'pc', 'bel_lc', 'signor', 'biogrid', 'lincs_drug',
+db_sources = ['psp', 'cbn', 'pc', 'bel_lc', 'signor', 'biogrid',
               'tas', 'hprd', 'trrust', 'ctd', 'vhn', 'pe', 'drugbank',
-              'omnipath', 'conib', 'crog', 'dgi']
+              'omnipath', 'conib', 'crog', 'dgi', 'minerva', 'creeds']
+"""Database source names as they appear in the DB"""
 
-reader_sources = ['geneways', 'tees', 'isi', 'trips', 'rlimsp', 'medscan',
-                  'sparser', 'eidos', 'reach']
+reader_sources = ['geneways', 'tees', 'gnbr', 'isi', 'trips', 'rlimsp',
+                  'medscan', 'eidos', 'sparser', 'reach']
+"""Reader source names as they appear in the DB"""
 
 # These are mappings where the actual INDRA source, as it appears
 # in the evidence source_api is inconsistent with the colors here and
@@ -134,9 +137,19 @@ internal_source_mappings = {
     'virhostnet': 'vhn',
     'phosphosite': 'psp',
 }
+"""Maps from source_info.json names to DB names"""
+
+
 reverse_source_mappings = {v: k for k, v in internal_source_mappings.items()}
+"""Maps from db names to source_info.json names"""
+
 
 all_sources = db_sources + reader_sources
+"""Source names as they appear in the DB"""
+
+
+# Dervied types
+SourceColors = List[Tuple[str, Dict[str, Union[str, Dict[str, str]]]]]
 
 
 def _get_relation_keyed_stmts(stmt_list, expand_nary=True):
@@ -979,13 +992,53 @@ def get_available_beliefs(stmts):
     return {stmt.get_hash(): stmt.belief for stmt in stmts}
 
 
-def get_available_source_counts(stmts):
-    return {stmt.get_hash(): _get_available_ev_source_counts(stmt.evidence)
-            for stmt in stmts}
+def get_available_source_counts(
+        stmts: List[Statement],
+        custom_sources: Optional[List[str]] = None
+) -> Dict[int, Dict[str, int]]:
+    return {stmt.get_hash(): _get_available_ev_source_counts(
+        stmt.evidence, custom_sources) for stmt in stmts}
 
 
-def _get_available_ev_source_counts(evidences):
-    counts = _get_initial_source_counts()
+def available_sources_stmts(
+        stmts: List[Statement],
+        custom_sources: Optional[List[str]] = None
+) -> Set[str]:
+    """Returns the set of sources available in a list of statements"""
+    sources = set()
+    for stmt in stmts:
+        source_counts = _get_available_ev_source_counts(stmt.evidence,
+                                                        custom_sources)
+        for src, count in source_counts.items():
+            if count > 0:
+                sources.add(src)
+        # Break if all sources are present
+        if len(sources) == len(all_sources):
+            break
+    return sources
+
+
+def available_sources_src_counts(
+        source_counts: Dict[int, Dict[str, int]],
+        custom_sources: Optional[List[str]] = None
+) -> Set[str]:
+    """Returns the set of sources available from a source counts dict"""
+    every_source = all_sources if custom_sources is None else custom_sources
+    sources = set()
+    for _, src_count in source_counts.items():
+        for src, count in src_count.items():
+            if count > 0:
+                sources.add(src)
+        if len(sources) == len(every_source):
+            break
+    return sources
+
+
+def _get_available_ev_source_counts(
+        evidences: List[Evidence],
+        custom_sources: Optional[List[str]] = None
+) -> Dict[str, int]:
+    counts = _get_initial_source_counts(custom_sources)
     for ev in evidences:
         sa = internal_source_mappings.get(ev.source_api, ev.source_api)
         try:
@@ -995,5 +1048,8 @@ def _get_available_ev_source_counts(evidences):
     return counts
 
 
-def _get_initial_source_counts():
-    return {s: 0 for s in all_sources}
+def _get_initial_source_counts(custom_sources: Optional[List[str]] = None):
+    if custom_sources is None:
+        return {s: 0 for s in all_sources}
+    else:
+        return {s: 0 for s in custom_sources}

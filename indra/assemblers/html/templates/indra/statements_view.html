@@ -240,20 +240,29 @@
 {% endblock %}
 
 
-{% macro badges(src_counts) -%}
+{% macro badges(src_counts, available_sources, show_only_available=false, header=false) -%}
   {% if src_counts %}
-    {% for _, color_dict in source_colors %}
+    {% for source_type, color_dict in source_colors %}
+      {% if header and loop.index0 == 0 %}
+        {{ source_type }}
+      {% endif %}
       {% if loop.index0 > 0 %}
         <span class="badge badge-source">|</span>
+        {% if header %}
+          <br><span class="badge badge-source">|</span>
+        {% endif %}
       {% endif %}
       {% for src in color_dict['sources'].keys() %}
-        {% if src_counts.get(src) %}
+        {% if src_counts.get(src) and ((not show_only_available) or (src in available_sources)) %}
           <span class="badge badge-source source-{{ src }}"
               title="{{ src }}">
-      {{ src_counts.get(src) }}
-      </span>
+          {{ src_counts.get(src) }}
+          </span>
         {% endif %}
       {% endfor %}
+      {% if header and loop.index0 > 0 %}
+        {{ source_type }}
+      {% endif %}
     {% endfor %}
   {% endif %}
 {%- endmacro %}
@@ -294,14 +303,10 @@
   {% if source_key_dict and simple %}
 
     <div class="row justify-content-md-center">
-      <div class="col-1 text-right">
-        {{ source_colors[0][0] }}
-      </div>
+    {# Might want to have a look at
+       https://getbootstrap.com/docs/4.5/layout/grid/#stacked-to-horizontal #}
       <div class="col col-auto text-center">
-        {{ badges(source_key_dict) }}
-      </div>
-      <div class="col-1 text-left">
-        {{ source_colors[1][0] }}
+        {{ badges(source_key_dict, available_sources, show_only_available, header=true) }}
       </div>
     </div>
 
@@ -324,7 +329,7 @@
         <h5 class="align-middle">{{ results['label'] }}</h5>
       </div>
       <div class="col text-right nvp">
-        {{ badges(results['source_counts']) }}
+        {{ badges(results['source_counts'], available_sources) }}
       </div>
     </div>
     <div class="row">
@@ -355,7 +360,7 @@
                     <h5>{{ group_dict['short_name'] }}</h5>
                 </div>
                 <div class="col text-right nvp">
-                  {{ badges(group_dict['src_counts']) }}
+                  {{ badges(group_dict['src_counts'], available_sources) }}
                 </div>
               </div>
               <div class="row group" id="{{ group_dict['short_name_key'] }}_group">
@@ -389,7 +394,7 @@
                         </h5>
                       </div>
                       <div class="col text-right nvp">
-                        {{ badges(stmt_info['source_count']) }}
+                        {{ badges(stmt_info['source_count'], available_sources) }}
                       </div>
                     </div>  <!-- end statement heading row -->
                     <div class="row group"
