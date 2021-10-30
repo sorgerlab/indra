@@ -120,3 +120,9 @@ OWL client (:py:mod:`indra.databases.owl_client`)
 -------------------------------------------------
 .. automodule:: indra.databases.owl_client
     :members:
+
+Biolookup client (:py:mod:`indra.databases.biolookup_client`)
+-------------------------------------------------------------
+.. automodule:: indra.databases.biolookup_client
+    :members:
+
