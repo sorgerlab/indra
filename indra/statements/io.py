@@ -5,8 +5,10 @@ __all__ = ['stmts_from_json', 'stmts_from_json_file', 'stmts_to_json',
 
 import json
 import logging
+import os
+import pathlib
 from collections import Counter
-from typing import Collection, List, Optional
+from typing import Collection, List, Optional, Union
 
 from indra.statements.statements import Statement, Unresolved
 
@@ -65,12 +67,14 @@ def stmts_from_json(json_in, on_missing_support='handle'):
     return stmts
 
 
-def stmts_from_json_file(fname, format='json'):
+def stmts_from_json_file(
+    fname: Union[str, pathlib.Path, os.PathLike], format='json',
+):
     """Return a list of statements loaded from a JSON file.
 
     Parameters
     ----------
-    fname : str
+    fname :
         Path to the JSON file to load statements from.
     format : Optional[str]
         One of 'json' to assume regular JSON formatting or
@@ -89,14 +93,19 @@ def stmts_from_json_file(fname, format='json'):
                                     for line in fh.readlines()])
 
 
-def stmts_to_json_file(stmts, fname, format='json', **kwargs):
+def stmts_to_json_file(
+    stmts,
+    fname: Union[str, pathlib.Path, os.PathLike],
+    format='json',
+    **kwargs,
+):
     """Serialize a list of INDRA Statements into a JSON file.
 
     Parameters
     ----------
     stmts : list[indra.statement.Statements]
         The list of INDRA Statements to serialize into the JSON file.
-    fname : str
+    fname :
         Path to the JSON file to serialize Statements into.
     format : Optional[str]
         One of 'json' to use regular JSON with indent=1 formatting or

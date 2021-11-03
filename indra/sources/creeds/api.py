@@ -75,8 +75,6 @@ def process_from_file(
     """
     with open(path) as file:
         records = json.load(file)
-    if len(records) != 1:
-        raise ValueError
     return process_records(records, entity_type)
 
 
