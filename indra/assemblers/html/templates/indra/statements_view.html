@@ -102,8 +102,15 @@
       });
     }
 
-    {% if add_full_text_search_link %}
     window.onload = function() {
+      // Check if expand_all is true in query string
+      let query_string = window.location.search;
+      let url_params = new URLSearchParams(query_string);
+      let expand_all = url_params.get('expand_all');
+      if (expand_all === 'true') {
+        expandCollapseAll();
+      }
+      {% if add_full_text_search_link %}
       // Populate text fragment in Full Text search for PMC journal
       var elements = document.querySelectorAll('.full_text_search');
       for (elem_idx = 0 ;elem_idx < elements.length ;elem_idx++ ) {
@@ -134,8 +141,8 @@
         }
         element.href += "#:~:text="+ searchText.trim()        
       }
+      {% endif %}
     };
-    {% endif %}
   </script>
   <style>
     {% for category, data in source_colors %}
