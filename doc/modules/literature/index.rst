@@ -28,6 +28,12 @@ CrossRef client (:py:mod:`indra.literature.crossref_client`)
 .. automodule:: indra.literature.crossref_client
     :members:
 
+COCI client (:py:mod:`indra.literature.coci_client`)
+----------------------------------------------------
+
+.. automodule:: indra.literature.coci_client
+    :members:
+
 Elsevier client (:py:mod:`indra.literature.elsevier_client`)
 ------------------------------------------------------------
 
