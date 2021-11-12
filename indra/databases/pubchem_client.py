@@ -74,3 +74,25 @@ def get_preferred_compound_ids(pubchem_cid):
                 pref_ids |= set(pref_cpd['Value']['Number'])
     pref_ids = sorted([str(pid) for pid in pref_ids])
     return pref_ids
+
+
+def get_pmids(pubchem_cid):
+    """Return xref PMIDs for a given PubChem CID.
+
+    Parameters
+    ----------
+    pubchem_cid : str
+        The PubChem CID whose xref PubMedID's will be returned.
+
+    Returns
+    -------
+    list
+        PubMedIDs corresponding to the given PubChem CID. If none present,
+        an empty list is returned.
+    """
+    url = '%s/compound/cid/%s/xrefs/PubMedID/JSON' % \
+          (pubchem_url, pubchem_cid)
+    res = requests.get(url)
+    res_json = res.json()
+    pmids_list = res_json['InformationList']['Information'][0]['PubMedID']
+    return pmids_list
