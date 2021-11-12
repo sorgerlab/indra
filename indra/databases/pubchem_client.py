@@ -87,7 +87,7 @@ def get_pmids(pubchem_cid: str) -> List[str]:
 
     Returns
     -------
-    list
+    list of str
         PubMedIDs corresponding to the given PubChem CID. If none present,
         an empty list is returned.
     """
@@ -98,5 +98,5 @@ def get_pmids(pubchem_cid: str) -> List[str]:
         logger.error('Could not retrieve PMIDs for %s' % pubchem_cid)
         return []
     res_json = res.json()
-    pmids_list = res_json['InformationList']['Information'][0]['PubMedID']
+    pmids_list = [str(pmid) for pmid in res_json['InformationList']['Information'][0]['PubMedID']]
     return pmids_list
