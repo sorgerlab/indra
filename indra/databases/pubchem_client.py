@@ -82,7 +82,7 @@ def get_pmids(pubchem_cid: str) -> List[str]:
 
     Parameters
     ----------
-    pubchem_cid : str
+    pubchem_cid :
         The PubChem CID whose xref PubMedID's will be returned.
 
     Returns
