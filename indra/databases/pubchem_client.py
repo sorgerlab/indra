@@ -93,6 +93,9 @@ def get_pmids(pubchem_cid):
     url = '%s/compound/cid/%s/xrefs/PubMedID/JSON' % \
           (pubchem_url, pubchem_cid)
     res = requests.get(url)
+    if res.status_code != 200:
+        logger.error('Could not retrieve PMIDs for %s' % pubchem_cid)
+        return None
     res_json = res.json()
     pmids_list = res_json['InformationList']['Information'][0]['PubMedID']
     return pmids_list
