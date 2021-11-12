@@ -1,5 +1,6 @@
 import logging
 import requests
+from typing import List
 from functools import lru_cache
 
 
@@ -76,7 +77,7 @@ def get_preferred_compound_ids(pubchem_cid):
     return pref_ids
 
 
-def get_pmids(pubchem_cid):
+def get_pmids(pubchem_cid: str) -> List[str]:
     """Return xref PMIDs for a given PubChem CID.
 
     Parameters
@@ -95,7 +96,7 @@ def get_pmids(pubchem_cid):
     res = requests.get(url)
     if res.status_code != 200:
         logger.error('Could not retrieve PMIDs for %s' % pubchem_cid)
-        return None
+        return []
     res_json = res.json()
     pmids_list = res_json['InformationList']['Information'][0]['PubMedID']
     return pmids_list
