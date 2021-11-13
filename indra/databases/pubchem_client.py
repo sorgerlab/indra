@@ -78,18 +78,21 @@ def get_preferred_compound_ids(pubchem_cid):
 
 
 def get_pmids(pubchem_cid: str) -> List[str]:
-    """Return xref PMIDs for a given PubChem CID.
+    """Return depositor provided PMIDs for a given PubChem CID.
+
+    Note that this information can also be obtained via PubMed
+    at https://www.ncbi.nlm.nih.gov/sites/entrez?LinkName=pccompound_pubmed&db=pccompound&cmd=Link&from_uid=<pubchem_cid>.
 
     Parameters
     ----------
     pubchem_cid :
-        The PubChem CID whose xref PubMedID's will be returned.
+        The PubChem CID whose PMIDs will be returned.
 
     Returns
     -------
-    list of str
-        PubMedIDs corresponding to the given PubChem CID. If none present,
-        an empty list is returned.
+    :
+        PMIDs corresponding to the given PubChem CID. If none present,
+        or the query fails, an empty list is returned.
     """
     url = '%s/compound/cid/%s/xrefs/PubMedID/JSON' % \
           (pubchem_url, pubchem_cid)
@@ -98,5 +101,6 @@ def get_pmids(pubchem_cid: str) -> List[str]:
         logger.error('Could not retrieve PMIDs for %s' % pubchem_cid)
         return []
     res_json = res.json()
-    pmids_list = [str(pmid) for pmid in res_json['InformationList']['Information'][0]['PubMedID']]
+    pmids_list = [str(pmid) for pmid in
+                  res_json['InformationList']['Information'][0]['PubMedID']]
     return pmids_list
