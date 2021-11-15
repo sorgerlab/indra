@@ -5,7 +5,7 @@ import pandas
 import logging
 import requests
 from zipfile import ZipFile
-from collections import defaultdict
+from collections import defaultdict, Counter
 from urllib.request import urlretrieve
 from xml.etree import ElementTree as ET
 from indra.util import read_unicode_csv, write_unicode_csv
@@ -13,6 +13,7 @@ from indra.databases.obo_client import OboClient
 from indra.databases.owl_client import OwlClient
 from indra.databases import chebi_client, pubchem_client
 from indra.databases.lincs_client import load_lincs_csv
+from indra.ontology.bio import bio_ontology
 from . import load_resource_json, get_resource_path
 
 path = os.path.dirname(__file__)
@@ -363,6 +364,41 @@ def update_bel_chebi_map():
                                            key=lambda x: x[0]):
             fh.write(('%s\tCHEBI:%s\n' %
                       (chebi_name, chebi_id)).encode('utf-8'))
+
+
+def update_pubchem_mesh_map():
+    url = 'https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/Extras/CID-MeSH'
+    res = requests.get(url)
+
+    # We first get mapping pairs from the table
+    mappings = []
+    for line in res.text:
+        parts = line.strip().split('\t')
+        for part in parts[1:]:
+            mappings.append((parts[0], part))
+    # The table has (1) rows with multiple MeSH terms separated by tabs,
+    # (2) multiple rows with the same PubChem CID and (3) multiple rows
+    # with the same MeSH term. We retain only one-to-one mappings here.
+    pc_count = Counter([m[0] for m in mappings])
+    mesh_count = Counter([m[1] for m in mappings])
+    unique_mappings = [m for m in mappings if pc_count[m[0]] == 1
+                       and mesh_count[m[1]] == 1]
+
+    # The mappings table is given using MeSH term names so we need
+    # to convert these to IDs. Lookups can fail for several reasons:
+    # some entries are simply not valid MeSH names, others are not
+    # yet included in the INDRA MeSH resources/ontology.
+    unique_with_id = []
+    for pcid, meshname in unique_mappings:
+        mesh_id = bio_ontology.get_id_from_name('MESH', meshname)
+        if not mesh_id:
+            print(meshname)
+        else:
+            unique_with_id.append((pcid, mesh_id))
+
+    fname = os.path.join(path, 'pubchem_mesh_map.tsv')
+    logger.info('Saving into %s' % fname)
+    write_unicode_csv(fname, unique_with_id, delimiter='\t')
 
 
 def update_famplex_map():
@@ -866,6 +902,7 @@ def main():
     update_drugbank_mappings()
     update_identifiers_registry()
     update_lspci()
+    update_pubchem_mesh_map()
 
 
 if __name__ == '__main__':
