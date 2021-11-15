@@ -1,7 +1,9 @@
 import logging
 import requests
-from typing import List
+from typing import List, Union
 from functools import lru_cache
+from indra.resources import get_resource_path
+from indra.util import read_unicode_csv
 
 
 pubchem_url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug'
@@ -104,3 +106,30 @@ def get_pmids(pubchem_cid: str) -> List[str]:
     pmids_list = [str(pmid) for pmid in
                   res_json['InformationList']['Information'][0]['PubMedID']]
     return pmids_list
+
+
+def get_mesh_id(pubchem_cid: str) -> Union[str, None]:
+    """Return the MeSH ID for a given PubChem CID.
+
+    Parameters
+    ----------
+    pubchem_cid :
+        The PubChem CID whose MeSH ID should be returned.
+
+    Returns
+    -------
+    :
+        The MeSH ID corresponding to the PubChem CID or None
+        if not available.
+    """
+    return pubchem_mesh_map.get(pubchem_cid)
+
+
+def _load_pubchem_mesh_map():
+    rows = read_unicode_csv(get_resource_path('pubchem_mesh_map.tsv'),
+                            delimiter='\t')
+    mappings = {row[0]: row[1] for row in rows}
+    return mappings
+
+
+pubchem_mesh_map = _load_pubchem_mesh_map()
