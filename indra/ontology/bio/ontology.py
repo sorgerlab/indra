@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.20'
+    version = '1.21'
     ontology_namespaces = [
         'go', 'efo', 'hp', 'doid', 'chebi', 'ido',
         'mondo',
@@ -76,6 +76,7 @@ class BioOntology(IndraOntology):
         self.add_mesh_xrefs()
         self.add_mirbase_xrefs()
         self.add_hms_lincs_xrefs()
+        self.add_pubchem_xrefs()
         self.add_biomappings()
         # Add hierarchies
         logger.info('Adding hierarchy...')
@@ -478,6 +479,15 @@ class BioOntology(IndraOntology):
                 edges.append((self.label(ref_ns, ref_id),
                               self.label('HMS-LINCS', hmsl_base_id),
                               {'type': 'xref', 'source': 'hms-lincs'}))
+        self.add_edges_from(edges)
+
+    def add_pubchem_xrefs(self):
+        from indra.databases import pubchem_client
+        edges = []
+        for pubchem_id, mesh_id in pubchem_client.pubchem_mesh_map.items():
+            edges.append((self.label('PUBCHEM', pubchem_id),
+                          self.label('MESH', mesh_id),
+                          {'type': 'xref', 'source': 'pubchem'}))
         self.add_edges_from(edges)
 
     def add_drugbank_nodes(self):
