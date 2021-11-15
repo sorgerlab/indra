@@ -372,8 +372,8 @@ def update_pubchem_mesh_map():
 
     # We first get mapping pairs from the table
     mappings = []
-    for line in res.text:
-        parts = line.strip().split('\t')
+    for line in res.text.split('\n'):
+        parts = line.split('\t')
         for part in parts[1:]:
             mappings.append((parts[0], part))
     # The table has (1) rows with multiple MeSH terms separated by tabs,
@@ -390,11 +390,9 @@ def update_pubchem_mesh_map():
     # yet included in the INDRA MeSH resources/ontology.
     unique_with_id = []
     for pcid, meshname in unique_mappings:
-        mesh_id = bio_ontology.get_id_from_name('MESH', meshname)
-        if not mesh_id:
-            print(meshname)
-        else:
-            unique_with_id.append((pcid, mesh_id))
+        mesh_ns_id_tuple = bio_ontology.get_id_from_name('MESH', meshname)
+        if mesh_ns_id_tuple:
+            unique_with_id.append((pcid, mesh_ns_id_tuple[1]))
 
     fname = os.path.join(path, 'pubchem_mesh_map.tsv')
     logger.info('Saving into %s' % fname)
