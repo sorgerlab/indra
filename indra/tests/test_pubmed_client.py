@@ -204,3 +204,13 @@ def test_get_supplementary_annotations():
     assert supp_ann['type'] == 'supplementary'
     assert supp_ann['mesh'] == 'C000623891'
     assert supp_ann['text'] == 'Tomato yellow leaf curl virus'
+
+
+@attr('webservice')
+def test_get_substance_mesh_id():
+    pmid = '27959613'
+    mesh_ids = pubmed_client.get_substance_mesh_id(pmid)
+    example_mesh_id = 'D009570'
+    wrong_mesh_id = 'D0074447'
+    assert example_mesh_id in mesh_ids
+    assert wrong_mesh_id not in mesh_ids
