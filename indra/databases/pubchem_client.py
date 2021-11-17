@@ -2,12 +2,13 @@ import logging
 import requests
 from typing import List, Union
 from functools import lru_cache
+import xml.etree.ElementTree as ET
 from indra.resources import get_resource_path
 from indra.util import read_unicode_csv
 
 
 pubchem_url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug'
-
+eutils_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?'
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +124,38 @@ def get_mesh_id(pubchem_cid: str) -> Union[str, None]:
         if not available.
     """
     return pubchem_mesh_map.get(pubchem_cid)
+
+
+def get_substance_mesh_id(pubmed_id: str) -> List[str]:
+    """Return substance MeSH ID for a given PubMedID.
+
+    Parameters
+    ----------
+    pubmed_id :
+        PubMedID ID whose substance MeSH ID will be returned
+
+    Returns
+    -------
+    :
+        Substance MeSH ID's corresponding to the given PubMed paper or
+        if None present or a failed query, an empty list will be returned.
+
+    """
+    url = '%sdb=%s&id=%s&retmode=text&rettype=XML' % (eutils_url, 'pubmed', pubmed_id)
+    res = requests.get(url)
+    root = ET.fromstring(res.content)
+    nodes = root.findall('.//MedlineCitation/ChemicalList')
+    if len(nodes) == 0:
+        logger.error('Could not retrieve substance MeSH IDs for %s' % pubmed_id)
+        return []
+
+    uid = []
+    for node in nodes:
+        for c in list(node):
+            for b in c.iter('*'):
+                if 'UI' in b.attrib:
+                    uid.append(b.attrib.get('UI'))
+    return uid
 
 
 def _load_pubchem_mesh_map():
