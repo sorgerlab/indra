@@ -8,7 +8,6 @@ from indra.util import read_unicode_csv
 
 
 pubchem_url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug'
-eutils_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?'
 
 logger = logging.getLogger(__name__)
 
