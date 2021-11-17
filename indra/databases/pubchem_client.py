@@ -2,7 +2,6 @@ import logging
 import requests
 from typing import List, Union
 from functools import lru_cache
-import xml.etree.ElementTree as ET
 from indra.resources import get_resource_path
 from indra.util import read_unicode_csv
 
