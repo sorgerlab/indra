@@ -8,6 +8,7 @@ from indra.util import read_unicode_csv
 
 pubchem_url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug'
 
+
 logger = logging.getLogger(__name__)
 
 

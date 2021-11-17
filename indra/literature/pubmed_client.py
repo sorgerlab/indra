@@ -609,20 +609,23 @@ def expand_pagination(pages):
         return pages
 
 
-def get_substance_mesh_id(pubmed_id: str) -> List[str]:
+def get_substance_annotations(pubmed_id: str) -> List[str]:
     """Return substance MeSH ID for a given PubMedID.
+
+    Note that substance annotations often overlap with MeSH annotations,
+    however, there are cases where a substance annotation is not available
+    under MeSH annotations.
 
     Parameters
     ----------
     pubmed_id :
-        PubMedID ID whose substance MeSH ID will be returned
+        PubMedID ID whose substance MeSH ID will be returned.
 
     Returns
     -------
     :
-        Substance MeSH ID's corresponding to the given PubMed paper or
+        Substance MeSH IDs corresponding to the given PubMed paper or
         if None present or a failed query, an empty list will be returned.
-
     """
     root = get_full_xml(pubmed_id)
     nodes = root.findall('.//MedlineCitation/ChemicalList')

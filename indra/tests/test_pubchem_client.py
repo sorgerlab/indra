@@ -18,4 +18,3 @@ def test_mesh_mappings():
     mesh_id = pubchem_client.get_mesh_id('56649450')  # Alpelisib
     assert mesh_id == 'C585539', mesh_id
     assert pubchem_client.get_mesh_id('abcd') is None
-
