@@ -1,12 +1,14 @@
 """
 Search and get metadata for articles in Pubmed.
 """
-import xml.etree.ElementTree as ET
-import requests
 import logging
-from functools import lru_cache
+import requests
 from time import sleep
+from typing import List
+from functools import lru_cache
+import xml.etree.ElementTree as ET
 from indra.util import UnicodeXMLTreeBuilder as UTB
+
 
 logger = logging.getLogger(__name__)
 
@@ -606,3 +608,32 @@ def expand_pagination(pages):
         logger.warning("Multiple hyphens in page number: %s" % pages)
         return pages
 
+
+def get_substance_annotations(pubmed_id: str) -> List[str]:
+    """Return substance MeSH ID for a given PubMedID.
+
+    Note that substance annotations often overlap with MeSH annotations,
+    however, there are cases where a substance annotation is not available
+    under MeSH annotations.
+
+    Parameters
+    ----------
+    pubmed_id :
+        PubMedID ID whose substance MeSH ID will be returned.
+
+    Returns
+    -------
+    :
+        Substance MeSH IDs corresponding to the given PubMed paper or
+        if None present or a failed query, an empty list will be returned.
+    """
+    root = get_full_xml(pubmed_id)
+    nodes = root.findall('.//MedlineCitation/ChemicalList')
+    if len(nodes) == 0:
+        logger.error('Could not retrieve substance MeSH IDs for %s' % pubmed_id)
+        return []
+
+    uid = [b.attrib.get('UI') for node in nodes
+           for c in list(node) for b in c.iter('*')
+           if 'UI' in b.attrib]
+    return uid
