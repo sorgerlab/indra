@@ -20,3 +20,4 @@ unidecode
 pybiopax
 scikit-learn
 pronto
+docutils<0.18
