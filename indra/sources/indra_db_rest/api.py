@@ -352,7 +352,7 @@ def get_statements_by_hash(hash_list, limit=None, ev_limit=10,
         500 the effect is much the same as setting persist to false, and will
         guarantee a faster response. Default is None.
     ev_limit : Optional[int]
-        Limit the amount of evidence returned per Statement. Default is 100.
+        Limit the amount of evidence returned per Statement. Default is 10.
     sort_by : Optional[str]
         Options are currently 'ev_count' or 'belief'. Results will return in
         order of the given parameter. If None, results will be turned in an
