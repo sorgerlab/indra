@@ -23,8 +23,8 @@ def run_eidos(endpoint, *args):
     ----------
     endpoint : str
         The class within the Eidos package to run, for instance
-        'apps.ExtractFromDirectory' will run
-        'org.clulab.wm.eidos.apps.ExtractFromDirectory'
+        'apps.extract.ExtractFromDirectory' will run
+        'org.clulab.wm.eidos.apps.extract.ExtractFromDirectory'
     *args
         Any further arguments to be passed as inputs to the class
         being run.
@@ -54,7 +54,7 @@ def extract_from_directory(path_in, path_out):
     path_in = os.path.realpath(os.path.expanduser(path_in))
     path_out = os.path.realpath(os.path.expanduser(path_out))
     logger.info('Running Eidos on input folder %s' % path_in)
-    run_eidos('apps.ExtractFromDirectory', path_in, path_out)
+    run_eidos('apps.extract.ExtractFromDirectory', path_in, path_out)
 
 
 def extract_and_process(path_in, path_out, process_fun):
