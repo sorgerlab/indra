@@ -383,11 +383,13 @@ class SplitGroupFilter(RefinementFilter):
         # return all of them of possibly_related is None (i.e., there
         # was no previous filter), or if the given statement is
         # also possibly related
-        related = {stmt_hash for stmt_hash
-                   in self.shared_data['stmts_by_hash']
-                   if self.split_groups[stmt_hash] != group
-                   and (possibly_related is None
-                        or stmt_hash in possibly_related)}
+        if possibly_related is not None:
+            related = {stmt_hash for stmt_hash in possibly_related
+                       if self.split_groups[stmt_hash] != group}
+        else:
+            related = {stmt_hash for stmt_hash
+                       in self.shared_data['stmts_by_hash']
+                       if self.split_groups[stmt_hash] != group}
         return related
 
 
