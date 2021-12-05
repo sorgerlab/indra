@@ -380,14 +380,14 @@ class SplitGroupFilter(RefinementFilter):
         sh = stmt.get_hash()
         group = self.split_groups.get(sh)
         # We take all the hashes that are in a different group, and
-        # return all of them of possibly_related is None (i.e., there
+        # return all of them if possibly_related is None (i.e., there
         # was no previous filter), or if the given statement is
         # also possibly related
-        related = {stmt_hash for stmt_hash
-                   in self.shared_data['stmts_by_hash']
-                   if self.split_groups[stmt_hash] != group
-                   and (possibly_related is None
-                        or stmt_hash in possibly_related)}
+        possibly_related_prior = possibly_related \
+            if possibly_related is not None \
+            else self.shared_data['stmts_by_hash']
+        related = {stmt_hash for stmt_hash in possibly_related_prior
+                   if self.split_groups[stmt_hash] != group}
         return related
 
 
