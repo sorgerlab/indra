@@ -1,5 +1,7 @@
 import requests
 import csv
+import re
+import requests
 from collections import defaultdict
 
 default_map_name = 'covid19map'
@@ -21,6 +23,22 @@ def get_project_id_from_config(config):
         if option.get('type') == 'DEFAULT_MAP':
             return option.get('value')
     return None
+
+
+def get_latest_project_id(map_name=default_map_name):
+    url = (base_url % map_name) + 'projects/'
+    res = requests.get(url)
+    projects = res.json()
+    if '_' not in map_name:
+        map_name = map_name.replace('map', '_map')
+    # Find projects that start with the map name and end with the date
+    p = '%s_\d{2}[a-zA-Z]{3}\d{2}$' % map_name
+    # Pick project with latest creation date
+    latest_project = max(
+        [pr for pr in projects if re.match(p, pr['projectId'])],
+        key=lambda pr: pr['creationDate'])
+    project_id = latest_project['projectId']
+    return project_id
 
 
 def get_models(project_id, map_name=default_map_name):
@@ -58,8 +76,7 @@ def get_element_references(element):
 
 
 def get_all_valid_element_refs(map_name=default_map_name):
-    config = get_config(map_name)
-    project_id = get_project_id_from_config(config)
+    project_id = get_latest_project_id(map_name)
     models = get_models(project_id, map_name)
     all_model_elements = get_all_model_elements(models, project_id,
                                                 map_name)
@@ -70,8 +87,7 @@ def get_all_valid_element_refs(map_name=default_map_name):
 
 
 def get_ids_to_refs(model_id, map_name=default_map_name):
-    config = get_config(map_name)
-    project_id = get_project_id_from_config(config)
+    project_id = get_latest_project_id(map_name)
     model_elements = get_model_elements(model_id, project_id, map_name)
     object_ids_to_element_ids = {}
     ids_to_refs = {}
@@ -91,8 +107,7 @@ def get_ids_to_refs(model_id, map_name=default_map_name):
 
 
 def get_model_ids(map_name=default_map_name):
-    config = get_config(map_name)
-    project_id = get_project_id_from_config(config)
+    project_id = get_latest_project_id(map_name)
     models = get_models(project_id, map_name)
     model_names_to_ids = {}
     for model in models:
