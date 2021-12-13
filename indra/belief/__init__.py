@@ -864,6 +864,11 @@ def find_cycles(g: networkx.DiGraph, fpath: str) -> None:
                 cs = ','.join([str(sc) for sc in c])
                 fp.write(f'{cs}\n')
         logger.debug(f'Cycles written to {fpath}')
+        from indra.util.aws import get_s3_client
+        s3 = get_s3_client(unsigned=False)
+        s3.upload_file(fpath, 'bigmech', 'indra-db/dumps/refinement_cycles')
+        logger.debug(
+            f'Cycles uploaded to s3://bigmech/indra-db/dumps/refinement_cycles')
     else:
         logger.debug('No cycles were found')
 
