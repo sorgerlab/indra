@@ -7,14 +7,6 @@ from collections import defaultdict
 from indra.statements.statements import stmts_from_json
 
 
-def make_stmts(subj, obj, pmid, stmt_type):
-    stmt = {'type': stmt_type,
-            'subj': {'name': subj, 'db_refs': {'TEXT': 'kappa'}},
-            'obj': {'name': obj, 'db_refs': {'TEXT': 'delta receptor'}},
-            'obj_activity': 'activity',
-            'evidence': [{'text_refs': {'PMID': pmid}}]}
-
-
 HERE = os.path.join(os.path.realpath(os.path.dirname(__file__)))
 acsn_df = pd.read_csv(os.path.join(HERE, 'ACSN2_binary_relations_between_proteins_with_PMID.txt'),
                       sep='\t')
@@ -84,12 +76,12 @@ for v in acsn_df.values:
                 'evidence': [{'text_refs': {}}]}
         stmts.append(stmt)
     else:
-        for t in text_ref.split(';'):
+        for id in text_ref.split(';'):
             stmt = {'type': stmt_type,
                     'subj': {'name': subj, 'db_refs': {subj_db_ref: subj}},
                     'obj': {'name': obj, 'db_refs': {obj_db_ref: obj}},
                     'obj_activity': 'activity',
-                    'evidence': [{'text_refs': {'PMID': t}}]}
+                    'evidence': [{'text_refs': {'PMID': id}}]}
             stmts.append(stmt)
 
 interaction_counts = Counter(acsn_df['INTERACTION_TYPE'])
