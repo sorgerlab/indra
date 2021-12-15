@@ -1,19 +1,27 @@
 import os
-import gilda
 import pandas as pd
-from collections import Counter
-from famplex import load_relations
-from collections import defaultdict
-from indra.statements.statements import stmts_from_json
+from collections import defaultdict, Counter
 
+from indra.ontology.bio import bio_ontology
+
+
+def get_famplex_lookup():
+    fplx_lookup = {}
+    bio_ontology.initialize()
+    for node in bio_ontology.nodes:
+        ns, id = bio_ontology.get_ns_id(node)
+        if ns == 'FPLX':
+            children = bio_ontology.get_children(ns, id)
+            hgnc_children = [bio_ontology.get_name(*c)
+                             for c in children if c[0] == 'HGNC']
+            fplx_lookup[tuple(sorted(hgnc_children))] = id
+
+fplx_lookup = get_famplex_lookup()
 
 HERE = os.path.join(os.path.realpath(os.path.dirname(__file__)))
 acsn_df = pd.read_csv(os.path.join(HERE, 'ACSN2_binary_relations_between_proteins_with_PMID.txt'),
                       sep='\t')
 acsn_gmt = os.path.join(HERE, 'ACSN2_HUGO_Correspondence.gmt')
-famplex_df = pd.DataFrame(load_relations())
-famplex_df.rename({0: 'ns_1', 1: 'subj', 2: 'relation', 3: 'ns_2', 4: 'obj'}, axis=1,
-                  inplace=True)
 
 # Convert the GMT file into a dictionary
 acsn_gmt_dict = defaultdict(set)
@@ -44,13 +52,9 @@ for v in acsn_df.values:
             agents[ag] = (grounded_gene, grounded_db)
 
         elif ag in acsn_gmt_dict and len(acsn_gmt_dict[ag]) > 1:
-            for gene in acsn_gmt_dict[ag]:
-                if gene in list(famplex_df.subj):
-                    idx = list(famplex_df.subj).index(gene)
-                    grounded_gene = famplex_df.obj[idx]
-                    grounded_db = 'FPLX'
-                    agents[ag] = (grounded_gene, grounded_db)
-                    break
+            fplx_id = fplx_lookup.get(tuple(sorted(acsn_gmt_dict[ag])))
+            if fplx_id:
+                agents[ag] = (fplx_id, 'FPLX')
 
     # Check for the unmapped agents and exclude that statement
     if agents[int_1] == 'NA' or agents[int_2] == 'NA':
