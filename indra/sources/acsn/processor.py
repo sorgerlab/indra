@@ -53,13 +53,13 @@ def get_agent(ag_name, correspondence_dict, fplx_lookup):
         if hgnc_id:
             db_refs['HGNC'] = hgnc_id
         db_refs['TEXT'] = grounded_gene
-        return get_standard_agent(grounded_gene, db_refs)
+        return Agent(grounded_gene, db_refs=db_refs)
 
     elif ag_name in correspondence_dict and len(correspondence_dict) > 1:
         fplx_rel = fplx_lookup.get(tuple(sorted(correspondence_dict[ag_name])))
         if fplx_rel:
             db_refs['FPLX'] = fplx_rel
-            return get_standard_agent(fplx_rel, db_refs)
+            return Agent(fplx_rel, db_refs=db_refs)
 
 
 def get_stmt_type(stmt_type):
