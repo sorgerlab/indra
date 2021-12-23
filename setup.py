@@ -36,7 +36,7 @@ def main():
                       'plot': ['matplotlib'],
                       'isi': ['nltk<3.6', 'unidecode'],
                       'api': ['flask<2.0', 'flask_restx<0.4', 'flask_cors',
-                              'docstring-parser'],
+                              'docstring-parser', 'gunicorn'],
                       'sklearn_belief': ['scikit-learn'],
                       'owl': ['pronto'],
                       }
