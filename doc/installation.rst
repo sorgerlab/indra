@@ -14,7 +14,7 @@ using `Homebrew <http://brew.sh/>`_.
 
     brew install python
 
-On Windows, we recommend using `Anaconda <https://www.continuum.io/downloads>`_
+On Windows, we recommend using `Anaconda <https://www.anaconda.com/products/individual>`_
 which contains compiled distributions of the scientific packages that INDRA
 depends on (numpy, scipy, pandas, etc).
 
