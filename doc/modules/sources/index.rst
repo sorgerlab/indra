@@ -36,7 +36,7 @@ Molecular Pathway Databases
    phosphoelm/index
    virhostnet/index
    omnipath/index
-   ubibrowser/index
+   ubibrowser
 
 Chemical Information Databases
 ------------------------------
