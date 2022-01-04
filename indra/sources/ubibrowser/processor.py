@@ -21,8 +21,6 @@ class UbiBrowserProcessor:
     def _process_row(row, stmt_type):
         # Note that even in the DUB table the subject of the statement
         # is called "E3"
-        assert row['E3AC'], row
-        assert row['SUBAC'], row
         # There are some examples where a complex is implied (e.g., BMI1-RNF2),
         # for simplicity we just ignore these
         if '-' in row['E3AC']:
@@ -30,7 +28,8 @@ class UbiBrowserProcessor:
         subj_agent = get_standard_agent(row['E3GENE'], {'UP': row['E3AC']})
         obj_agent = get_standard_agent(row['SUBGENE'], {'UP': row['SUBAC']})
         if row['SOURCE'] == 'MEDLINE' and row['SOURCEID'] != 'UNIPROT':
-            pmid = row['SOURCEID']
+            # Note: we sometimes get int here
+            pmid = str(row['SOURCEID'])
             text = row['SENTENCE']
         else:
             pmid = None
