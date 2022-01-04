@@ -3,6 +3,7 @@ from indra.ontology.standardize import get_standard_agent
 
 
 class UbiBrowserProcessor:
+    """Processor for UbiBrowser data."""
     def __init__(self, e3_df, dub_df):
         self.e3_df = e3_df
         self.dub_df = dub_df
