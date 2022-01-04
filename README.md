@@ -82,7 +82,7 @@ Biological pathway databases:
 | DGI                  | [`indra.sources.dgi`](https://indra.readthedocs.io/en/latest/modules/sources/dgi/index.html) | https://www.dgidb.org/ |
 | CRoG                  | [`indra.sources.crog`](https://indra.readthedocs.io/en/latest/modules/sources/crog/index.html) | https://github.com/chemical-roles/chemical-roles |
 | CREEDS                     | [`indra.sources.creeds`](https://indra.readthedocs.io/en/latest/modules/sources/creeds/index.html) | https://maayanlab.cloud/CREEDS/ |
-
+| UbiBrowser                 | [`indra.sources.ubibrowser`](https://indra.readthedocs.io/en/latest/modules/sources/ubibrowser/index.html) | http://ubibrowser.ncpsb.org.cn/ |
 
 Custom knowledge bases:
 
