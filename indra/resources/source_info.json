@@ -297,6 +297,15 @@
         "default_style": {
             "color": "white",
             "background-color": "#f68ee1"
+        },
+    "ubibrowser": {
+        "name": "UbiBrowser",
+        "link": "http://ubibrowser.ncpsb.org.cn/",
+        "type": "database",
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#d8b865"
         }
     }
 }
