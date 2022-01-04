@@ -39,5 +39,5 @@ def test_extract_statements():
     assert dub_stmt.sub.db_refs['UP'] == 'P49407'
     assert len(dub_stmt.evidence) == 1
     assert dub_stmt.evidence[0].source_api == 'ubibrowser'
-    assert dub_stmt.evidence[0].pmid == '19363159', "XX%sXX" % dub_stmt.evidence[0].pmid
+    assert dub_stmt.evidence[0].pmid == '19363159'
     assert dub_stmt.evidence[0].text.startswith('We now report the discovery that')
