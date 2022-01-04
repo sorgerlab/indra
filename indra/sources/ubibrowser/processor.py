@@ -28,7 +28,7 @@ class UbiBrowserProcessor:
             return None
         subj_agent = get_standard_agent(row['E3GENE'], {'UP': row['E3AC']})
         obj_agent = get_standard_agent(row['SUBGENE'], {'UP': row['SUBAC']})
-        if row['SOURCE'] == 'MEDLINE':
+        if row['SOURCE'] == 'MEDLINE' and row['SOURCEID'] != 'UNIPROT':
             pmid = row['SOURCEID']
             text = row['SENTENCE']
         else:
@@ -37,4 +37,3 @@ class UbiBrowserProcessor:
         ev = Evidence(source_api='ubibrowser', pmid=pmid, text=text)
         stmt = stmt_type(subj_agent, obj_agent, evidence=[ev])
         return stmt
-
