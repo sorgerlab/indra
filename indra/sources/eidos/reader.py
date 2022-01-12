@@ -116,7 +116,7 @@ class EidosReader(object):
         # ag = EidosAdjectiveGrounder.fromConfig(
         #   EidosSystem.defaultConfig.getConfig("adjectiveGrounder"))
         # We now create a JSON-LD corpus
-        jc = autoclass(eidos_package + '.serialization.json.JLDCorpus')
+        jc = autoclass(eidos_package + '.serialization.jsonld.JLDCorpus')
         corpus = jc(ml)
         # Finally, serialize the corpus into JSON string
         mentions_json = corpus.toJsonStr()
