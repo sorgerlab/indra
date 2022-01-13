@@ -1,7 +1,6 @@
 __all__ = ['process_from_web', 'process_df']
 
-import os
-import csv
+
 import pandas
 import requests
 from .processor import AcsnProcessor
@@ -23,7 +22,7 @@ def process_files(relations_path: str, correspondence_path: str):
     relations_df = pandas.read_csv(relations_path)
     with open(correspondence_path, 'r') as fh:
         correspondence_dict = _transform_gmt(fh)
-    return process_df(relations_df, correspondence_df)
+    return process_df(relations_df, correspondence_dict)
 
 
 def process_df(relations_df, correspondence_dict):
@@ -39,5 +38,3 @@ def _transform_gmt(gmt):
         parts = line.strip().split('\t')
         acsn_hgnc_dict[parts[0]] = parts[2:]
     return acsn_hgnc_dict
-
-
