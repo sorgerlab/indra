@@ -636,6 +636,23 @@ def test_filter_by_curation():
     assert new_belief[0].belief == 1
     assert new_belief[1].belief == 1
     assert new_belief[2].belief == 0.7
+    # Make sure that if all evidence are incorrect, statement is filtered out
+    # (even if the overall statement is correct according to external
+    # evidence curation)
+    external_ev = Evidence(text='a activates b', source_api='external')
+    external_cur = {'pa_hash': new_st1.get_hash(),
+                    'source_hash': external_ev.get_source_hash(),
+                    'tag': 'correct'}
+    correct_external = ac.filter_by_curation(
+        [new_st1], [cur1, cur2, external_cur], 'any')
+    assert len(correct_external) == 0
+    # If we add the external correct evidence, statement is not filtered out
+    new_st1.evidence.append(external_ev)
+    updated = ac.filter_by_curation(
+        [new_st1], [cur1, cur2, external_cur], 'any')
+    assert len(updated) == 1
+    assert new_st1 in updated
+    assert len(new_st1.evidence) == 1
 
 
 def test_eidos_ungrounded():

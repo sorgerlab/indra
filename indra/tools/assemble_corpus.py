@@ -1733,6 +1733,9 @@ def filter_by_curation(stmts_in, curations, incorrect_policy='any',
                     continue
                 else:
                     evidence.append(evid)
+            # If no evidence left, skip the statement
+            if len(evidence) == 0:
+                return
             stmt.evidence = evidence
         # Set belief to one for statements with correct curations
         if update_belief and stmt_hash in correct:
