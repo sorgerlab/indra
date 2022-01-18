@@ -21,11 +21,10 @@ class AcsnProcessor:
         A tab-separated data frame which consists of binary relationship between
         proteins with PMIDs
     correspondence_dict : dict
-        A tab separated data frame which consists of Correspondence between ACSN2 entities
-        and HUGO names (GMT format)
+        A dictionary with Correspondence between ACSN entities and its HUGO names
     """
     def __init__(self, relations_df, correspondence_dict):
-        """The constructor for AcsnProcessor class"""
+        """Constructor for AcsnProcessor class"""
         self.relations_df = relations_df
         self.correspondence_dict = correspondence_dict
         self.fplx_lookup = _make_famplex_lookup()
@@ -56,7 +55,20 @@ class AcsnProcessor:
 
     def get_agent(self, acsn_agent):
         """Look for HGNC and Famplex groundings for a given ACSN agent
-        and get a INDRA agent"""
+        and get a INDRA agent
+
+        Parameters
+        ----------
+        acsn_agent : str
+            Agent extracted from the relations statement data frame
+
+        Returns
+        -------
+        indra.statements.agent.Agent
+            Returns INDRA agent with HGNC or FAMPLEX ID in db_refs
+        None : NoneType
+            Returns None if there are no HGNC or FAMPLEX mappings
+        """
         mapping = self.correspondence_dict.get(acsn_agent)
         if not mapping:
             return None

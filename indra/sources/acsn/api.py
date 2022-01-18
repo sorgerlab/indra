@@ -40,7 +40,10 @@ def process_df(relations_df, correspondence_dict):
     Parameters
     ----------
     relations_df : pandas.DataFrame
+        A tab-separated data frame which consists of binary relationship between
+        proteins with PMIDs
     correspondence_dict : dict
+        A dictionary with Correspondence between ACSN entities and its HUGO names
 
     Returns
     -------
