@@ -37,6 +37,7 @@ Molecular Pathway Databases
    virhostnet/index
    omnipath/index
    ubibrowser
+   acsn
 
 Chemical Information Databases
 ------------------------------
