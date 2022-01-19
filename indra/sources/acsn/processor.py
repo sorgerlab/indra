@@ -1,3 +1,5 @@
+from typing import Union
+
 from indra.statements import *
 from indra.ontology.bio import bio_ontology
 from indra.databases.hgnc_client import get_hgnc_id
@@ -12,16 +14,17 @@ rel_mapping = {
 
 
 class AcsnProcessor:
-    """Processes Atlas of cancer signalling network (ACSN) statements
-    to INDRA statements
+    """Processes Atlas of cancer signalling network (ACSN) relationships
+    into INDRA statements
 
     Attributes
     ----------
     relations_df : pandas.DataFrame
         A tab-separated data frame which consists of binary relationship between
-        proteins with PMIDs
+        proteins with PMIDs.
     correspondence_dict : dict
-        A dictionary with Correspondence between ACSN entities and its HUGO names
+        A dictionary with correspondences between ACSN entities and their
+        HGNC symbols.
     """
     def __init__(self, relations_df, correspondence_dict):
         """Constructor for AcsnProcessor class"""
@@ -31,7 +34,7 @@ class AcsnProcessor:
         self.statements = []
 
     def extract_statements(self):
-        """Extract statements from ACSN relations dataframe and build INDRA statements"""
+        """Return INDRA Statements Extracted from ACSN relations."""
         for _, row in self.relations_df.iterrows():
             acsn_agent_a, stmt_types, acsn_agent_b, pmids = list(row)
             stmt_type = get_stmt_type(stmt_types)
@@ -53,21 +56,19 @@ class AcsnProcessor:
 
                     self.statements.append(stmt)
 
-    def get_agent(self, acsn_agent):
-        """Look for HGNC and Famplex groundings for a given ACSN agent
-        and get a INDRA agent
+    def get_agent(self, acsn_agent: str) -> Union[Agent, None]:
+        """Return an INDRA Agent corresponding to an ACSN agent.
 
         Parameters
         ----------
-        acsn_agent : str
+        acsn_agent :
             Agent extracted from the relations statement data frame
 
         Returns
         -------
-        indra.statements.agent.Agent
-            Returns INDRA agent with HGNC or FAMPLEX ID in db_refs
-        None : NoneType
-            Returns None if there are no HGNC or FAMPLEX mappings
+        :
+            Returns INDRA agent with HGNC or FamPlex ID in db_refs. If there
+            are no groundings available, we return None.
         """
         mapping = self.correspondence_dict.get(acsn_agent)
         if not mapping:
@@ -86,22 +87,19 @@ class AcsnProcessor:
         return None
 
 
-def get_stmt_type(stmt_type):
-    """Function to take ACSN relations statement type as input
-    and map it to its respective INDRA statement type
+def get_stmt_type(stmt_type: str) -> Union[None, Statement]:
+    """Return INDRA statement type from ACSN relation.
 
     Parameters
     ----------
-    stmt_type : str
-        An ACSN relationship statement type
+    stmt_type :
+        An ACSN relationship type
 
     Returns
     -------
-    mapped_stmt_type : type
-        INDRA equivalent ACSN statement type
-    None : NoneType
-        Returns None, If the given statement type is not
-        in the rel_mapping dictionary
+    :
+        INDRA equivalent of the ACSN relation type or None if a mappings
+        is not available.
     """
     if stmt_type in rel_mapping:
         mapped_stmt_type = rel_mapping[stmt_type]
@@ -109,13 +107,12 @@ def get_stmt_type(stmt_type):
 
 
 def _make_famplex_lookup():
-    """Create a famplex lookup dictionary, where keys are
-    sorted tuple of hgnc genes and values are its Famplex ID
+    """Create a famplex lookup dictionary.
 
-    Returns
-    -------
-    fplx_lookup : dict
+    Keys are sorted tuples of HGNC gene names and values are
+    the corresponding FamPlex ID.
     """
+
     fplx_lookup = {}
     bio_ontology.initialize()
     for node in bio_ontology.nodes:
