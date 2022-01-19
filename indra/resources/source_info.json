@@ -308,5 +308,15 @@
             "color": "white",
             "background-color": "#d8b865"
         }
+    },
+    "acsn": {
+        "name": "ACSN",
+        "link": "https://acsn.curie.fr/ACSN2/ACSN2.html",
+        "type": "database",
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#bf98eb"
+        }
     }
 }

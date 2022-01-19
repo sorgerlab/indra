@@ -72,17 +72,18 @@ Biological pathway databases:
 | Signor                     | [`indra.sources.signor`](https://indra.readthedocs.io/en/latest/modules/sources/signor/index.html)     | https://signor.uniroma2.it/                                     |
 | BioGRID                    | [`indra.sources.biogrid`](https://indra.readthedocs.io/en/latest/modules/sources/biogrid/index.html)    | https://thebiogrid.org/                                         |
 | Target Affinity Spectrum   | [`indra.sources.tas`](https://indra.readthedocs.io/en/latest/modules/sources/tas/index.html#)        | https://doi.org/10.1101/358978                                  |
-| HPRD                       | [`indra.sources.hprd`](https://indra.readthedocs.io/en/latest/modules/sources/hprd/index.html) | http://www.hprd.org          |                   |
-| TRRUST                     | [`indra.sources.trrust`](https://indra.readthedocs.io/en/latest/modules/sources/trrust.html) | https://www.grnpedia.org/trrust/          |                   |
-| Phospho.ELM                | [`indra.sources.phosphoelm`](https://indra.readthedocs.io/en/latest/modules/sources/phosphoelm/index.html) | http://phospho.elm.eu.org/ |
-| VirHostNet                | [`indra.sources.virhostnet`](https://indra.readthedocs.io/en/latest/modules/sources/virhostnet/index.html) | http://virhostnet.prabi.fr/ |
-| CTD                  | [`indra.sources.ctd`](https://indra.readthedocs.io/en/latest/modules/sources/ctd/index.html) | http://ctdbase.org |
-| DrugBank                  | [`indra.sources.drugbank`](https://indra.readthedocs.io/en/latest/modules/sources/drugbank/index.html) | https://www.drugbank.ca/ |
-| OmniPath                  | [`indra.sources.omnipath`](https://indra.readthedocs.io/en/latest/modules/sources/omnipath/index.html) | https://omnipathdb.org/ |
-| DGI                  | [`indra.sources.dgi`](https://indra.readthedocs.io/en/latest/modules/sources/dgi/index.html) | https://www.dgidb.org/ |
-| CRoG                  | [`indra.sources.crog`](https://indra.readthedocs.io/en/latest/modules/sources/crog/index.html) | https://github.com/chemical-roles/chemical-roles |
-| CREEDS                     | [`indra.sources.creeds`](https://indra.readthedocs.io/en/latest/modules/sources/creeds/index.html) | https://maayanlab.cloud/CREEDS/ |
-| UbiBrowser                 | [`indra.sources.ubibrowser`](https://indra.readthedocs.io/en/latest/modules/sources/ubibrowser/index.html) | http://ubibrowser.ncpsb.org.cn/ |
+| HPRD                       | [`indra.sources.hprd`](https://indra.readthedocs.io/en/latest/modules/sources/hprd/index.html) | http://www.hprd.org                                             |                   |
+| TRRUST                     | [`indra.sources.trrust`](https://indra.readthedocs.io/en/latest/modules/sources/trrust.html) | https://www.grnpedia.org/trrust/                                |                   |
+| Phospho.ELM                | [`indra.sources.phosphoelm`](https://indra.readthedocs.io/en/latest/modules/sources/phosphoelm/index.html) | http://phospho.elm.eu.org/                                      |
+| VirHostNet                | [`indra.sources.virhostnet`](https://indra.readthedocs.io/en/latest/modules/sources/virhostnet/index.html) | http://virhostnet.prabi.fr/                                     |
+| CTD                  | [`indra.sources.ctd`](https://indra.readthedocs.io/en/latest/modules/sources/ctd/index.html) | http://ctdbase.org                                              |
+| DrugBank                  | [`indra.sources.drugbank`](https://indra.readthedocs.io/en/latest/modules/sources/drugbank/index.html) | https://www.drugbank.ca/                                        |
+| OmniPath                  | [`indra.sources.omnipath`](https://indra.readthedocs.io/en/latest/modules/sources/omnipath/index.html) | https://omnipathdb.org/                                         |
+| DGI                  | [`indra.sources.dgi`](https://indra.readthedocs.io/en/latest/modules/sources/dgi/index.html) | https://www.dgidb.org/                                          |
+| CRoG                  | [`indra.sources.crog`](https://indra.readthedocs.io/en/latest/modules/sources/crog/index.html) | https://github.com/chemical-roles/chemical-roles                |
+| CREEDS                     | [`indra.sources.creeds`](https://indra.readthedocs.io/en/latest/modules/sources/creeds/index.html) | https://maayanlab.cloud/CREEDS/                                 |
+| UbiBrowser                 | [`indra.sources.ubibrowser`](https://indra.readthedocs.io/en/latest/modules/sources/ubibrowser/index.html) | http://ubibrowser.ncpsb.org.cn/                |
+| ACSN                       | [`indra.sources.acsn`](https://indra.readthedocs.io/en/latest/modules/sources/acsn/index.html) | https://acsn.curie.fr/ACSN2/ACSN2.html   |
 
 Custom knowledge bases:
 
