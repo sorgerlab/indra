@@ -70,6 +70,7 @@ def main():
                     'indra.ontology.app', 'indra.pipeline',
                     'indra.preassembler',
                     'indra.preassembler.grounding_mapper', 'indra.sources',
+                    'indra.sources.acsn',
                     'indra.sources.bel', 'indra.sources.biofactoid',
                     'indra.sources.biopax', 'indra.sources.creeds',
                     'indra.sources.crog', 'indra.sources.ctd',
