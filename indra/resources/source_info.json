@@ -260,7 +260,7 @@
         }
     },
     "crog": {
-        "name": "Chemical Relations Graph",
+        "name": "CRoG",
         "link": "https://github.com/chemical-roles/chemical-roles",
         "type": "database",
         "domain": "biology",
