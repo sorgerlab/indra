@@ -3,7 +3,6 @@ from typing import Any, Callable, Mapping, Optional
 from indra.statements import Agent
 from indra.statements import Activation, Inhibition
 from indra.ontology.standardize import standardize_agent_name
-from indra.preassembler.grounding_mapper.gilda import get_grounding
 from .processor import EidosProcessor
 
 GrounderResult = Mapping[str, str]
@@ -73,5 +72,7 @@ def get_agent_bio(concept, context=None, grounder: Optional[Grounder] = None):
 
 
 def default_grounder_wrapper(text: str, context: Optional[str]) -> GrounderResult:
+    # Import here to avoid this when working in INDRA World context
+    from indra.preassembler.grounding_mapper.gilda import get_grounding
     grounding, _ = get_grounding(text, context=context)
     return grounding
