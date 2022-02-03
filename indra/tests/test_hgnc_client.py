@@ -94,3 +94,10 @@ def test_get_current_id():
 def test_gene_type():
     assert hgnc_client.get_gene_type('1097') == 'gene with protein product'
     assert hgnc_client.get_gene_type('31547') == 'RNA, micro'
+
+
+def test_ec_code():
+    assert not hgnc_client.get_enzymes("41022"), "RNA is not an enzyme"
+    assert "41022" not in hgnc_client.get_hgncs_from_enzyme('2.4.1.228')
+    assert "2.4.1.228" in hgnc_client.get_enzymes('18149')
+    assert "18149" in hgnc_client.get_hgncs_from_enzyme("2.4.1.228")
