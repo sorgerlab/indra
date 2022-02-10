@@ -239,8 +239,8 @@ class BioOntology(IndraOntology):
             # Add nodes for secondary IDs as obsolete
             for alt_id in oc.alt_to_id:
                 if alt_id.startswith(ns.upper()):
-                    nodes.append(self.label(ns.upper(), alt_id),
-                                 {'obsolete': True})
+                    nodes.append((self.label(ns.upper(), alt_id),
+                                  {'obsolete': True}))
         self.add_nodes_from(nodes)
 
     def add_obo_replacements(self):
