@@ -88,6 +88,11 @@ def standardize_db_refs(db_refs, ontology=None, ns_order=None):
     # We iterate over all the db_refs entries that currently exist
     for source_db_ns, source_db_id in deepcopy(db_refs).items():
         source_db_id = _preprocess_for_mapping(source_db_ns, source_db_id)
+        # If there is a replacement for this entry, we apply it
+        replacement = ontology.get_replacement(source_db_ns, source_db_id)
+        if replacement:
+            source_db_ns, source_db_id = replacement
+            db_refs[source_db_ns] = source_db_id
         # For the entry we get all its xref mappings as a list
         # of tuples and turn it into a dict keyed by namespace
         mappings = _get_mappings_dict(

@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.21'
+    version = '1.22'
     ontology_namespaces = [
         'go', 'efo', 'hp', 'doid', 'chebi', 'ido',
         'mondo',
@@ -87,6 +87,10 @@ class BioOntology(IndraOntology):
         self.add_modification_hierarchy()
         self.add_uppro_hierarchy()
         self.add_lspci()
+        # Add replacements
+        logger.info('Adding replacements...')
+        self.add_uniprot_replacements()
+        self.add_obo_replacements()
 
         # The graph is now initialized
         self._initialized = True
@@ -112,6 +116,8 @@ class BioOntology(IndraOntology):
                    'type': _get_uniprot_type(uniprot_client, uid)})
                  for (uid, uname)
                  in uniprot_client.um.uniprot_gene_name.items()]
+        for sec_id in uniprot_client.um.uniprot_sec:
+            nodes.append((self.label('UP', sec_id), {'obsolete': True}))
         self.add_nodes_from(nodes)
 
     def add_uppro_nodes(self):
@@ -230,7 +236,25 @@ class BioOntology(IndraOntology):
                 nodes.append((label,
                               {'name': entry['name'],
                                'type': type_functions[ns](db_id)}))
+            # Add nodes for secondary IDs as obsolete
+            for alt_id in oc.alt_to_id:
+                if alt_id.startswith(ns.upper()):
+                    nodes.append((self.label(ns.upper(), alt_id),
+                                  {'obsolete': True}))
         self.add_nodes_from(nodes)
+
+    def add_obo_replacements(self):
+        from indra.databases import obo_client
+        edges = []
+        for ns in self.ontology_namespaces:
+            oc = obo_client.OntologyClient(prefix=ns)
+            for alt_id, prim_id in oc.alt_to_id.items():
+                if alt_id.startswith(ns.upper()) and \
+                        prim_id.startswith(ns.upper()):
+                    edges.append((self.label(ns.upper(), alt_id),
+                                 self.label(ns.upper(), prim_id),
+                                 {'type': 'replaced_by'}))
+        self.add_edges_from(edges)
 
     def add_obo_hierarchies(self):
         from indra.databases import obo_client
@@ -368,6 +392,12 @@ class BioOntology(IndraOntology):
                 edges.append((self.label('MESH', mesh_id),
                               self.label('MESH', parent_id),
                               {'type': 'isa'}))
+        # Handle any replacements
+        replacements = [('C000657245', 'D000086382')]
+        for mesh_id, replacement_id in replacements:
+            edges.append((self.label('MESH', mesh_id),
+                          self.label('MESH', replacement_id),
+                          {'type': 'replaced_by'}))
         self.add_edges_from(edges)
 
     def add_biomappings(self):
@@ -408,6 +438,16 @@ class BioOntology(IndraOntology):
                 feat_node = self.label('UPPRO', feature.id)
                 edges.append((feat_node, prot_node,
                               {'type': 'partof'}))
+        self.add_edges_from(edges)
+
+    def add_uniprot_replacements(self):
+        from indra.databases import uniprot_client
+        edges = []
+        for sec_id, prim_ids in uniprot_client.um.uniprot_sec.items():
+            if len(prim_ids) == 1:
+                edges.append((self.label('UP', sec_id),
+                              self.label('UP', prim_ids[0]),
+                              {'type': 'replaced_by'}))
         self.add_edges_from(edges)
 
     def add_mirbase_nodes(self):

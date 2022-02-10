@@ -356,3 +356,31 @@ def test_nonhuman_entrez():
 def test_pubchem_mesh():
     db_refs = standardize_db_refs({'PUBCHEM': '56649450'})
     assert db_refs.get('MESH') == 'C585539'
+
+
+def test_mesh_replacements():
+    assert bio_ontology.get_name('MESH', 'D000086382') == 'COVID-19'
+    assert bio_ontology.isrel('MESH', 'C000657245', 'MESH', 'D000086382',
+                               {'replaced_by'})
+    assert bio_ontology.get_replacement('MESH', 'C000657245') == \
+        ('MESH', 'D000086382')
+    assert standardize_db_refs({'MESH': 'C000657245'}).get('MESH') == \
+        'D000086382'
+
+
+def test_uniprot_replacements():
+    assert bio_ontology.get_node_property(
+        'UP', 'A0A059MHB0', 'obsolete') is True
+    assert bio_ontology.get_replacement('UP', 'A0A059MHB0') == \
+        ('UP', 'C7U1M6')
+    assert standardize_db_refs({'UP': 'A0A059MHB0'}).get('UP') == \
+        'C7U1M6'
+
+
+def test_obo_replacements():
+    assert bio_ontology.get_node_property(
+        'GO', 'GO:0036442', 'obsolete') is True
+    assert bio_ontology.get_replacement('GO', 'GO:0036442') == \
+        ('GO', 'GO:0008553')
+    assert standardize_db_refs({'GO': 'GO:0036442'}).get('GO') == \
+        'GO:0008553'
