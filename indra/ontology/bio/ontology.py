@@ -87,6 +87,8 @@ class BioOntology(IndraOntology):
         self.add_modification_hierarchy()
         self.add_uppro_hierarchy()
         self.add_lspci()
+        # Add replacements
+        self.add_uniprot_replacements()
 
         # The graph is now initialized
         self._initialized = True
@@ -112,6 +114,8 @@ class BioOntology(IndraOntology):
                    'type': _get_uniprot_type(uniprot_client, uid)})
                  for (uid, uname)
                  in uniprot_client.um.uniprot_gene_name.items()]
+        for sec_id in uniprot_client.um.uniprot_sec:
+            nodes.append((self.label('UP', sec_id), {'obsolete': True}))
         self.add_nodes_from(nodes)
 
     def add_uppro_nodes(self):
@@ -414,6 +418,16 @@ class BioOntology(IndraOntology):
                 feat_node = self.label('UPPRO', feature.id)
                 edges.append((feat_node, prot_node,
                               {'type': 'partof'}))
+        self.add_edges_from(edges)
+
+    def add_uniprot_replacements(self):
+        from indra.databases import uniprot_client
+        edges = []
+        for sec_id, prim_ids in uniprot_client.um.uniprot_sec.items():
+            if len(prim_ids) == 1:
+                edges.append((self.label('UP', sec_id),
+                              self.label('UP', prim_ids[0]),
+                              {'type': 'replaced_by'}))
         self.add_edges_from(edges)
 
     def add_mirbase_nodes(self):
