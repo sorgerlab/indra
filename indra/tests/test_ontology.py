@@ -364,6 +364,8 @@ def test_mesh_replacements():
                                {'replaced_by'})
     assert bio_ontology.get_replacement('MESH', 'C000657245') == \
         ('MESH', 'D000086382')
+    assert standardize_db_refs({'MESH': 'C000657245'}).get('MESH') == \
+        'D000086382'
 
 
 def test_uniprot_replacements():
@@ -371,6 +373,8 @@ def test_uniprot_replacements():
         'UP', 'A0A059MHB0', 'obsolete') is True
     assert bio_ontology.get_replacement('UP', 'A0A059MHB0') == \
         ('UP', 'C7U1M6')
+    assert standardize_db_refs({'UP': 'A0A059MHB0'}).get('UP') == \
+        'C7U1M6'
 
 
 def test_obo_replacements():
@@ -378,3 +382,5 @@ def test_obo_replacements():
         'GO', 'GO:0036442', 'obsolete') is True
     assert bio_ontology.get_replacement('GO', 'GO:0036442') == \
         ('GO', 'GO:0008553')
+    assert standardize_db_refs({'GO': 'GO:0036442'}).get('GO') == \
+        'GO:0008553'
