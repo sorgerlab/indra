@@ -473,7 +473,7 @@ def _read_hgnc_maps():
         hgnc_names, hgnc_ids, hgnc_withdrawn,
         uniprot_ids, entrez_ids, entrez_ids_reverse, mouse_map, rat_map,
         prev_sym_map, ensembl_ids, ensembl_ids_reverse, gene_types,
-        hgnc_to_enzymes, enzyme_to_hgncs,
+        dict(hgnc_to_enzymes), dict(enzyme_to_hgncs),
     )
 
 
