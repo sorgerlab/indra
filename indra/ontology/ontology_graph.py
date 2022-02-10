@@ -436,6 +436,30 @@ class IndraOntology(networkx.DiGraph):
         return self.descendants_rel(ns, id, {'xref'})
 
     @with_initialize
+    def get_replacement(self, ns, id):
+        """Return a replacement for a given entity or None if no replacement.
+
+        A replacement is typically necessary if the given entity is obsolete
+        and has been replaced by another entry.
+
+        Parameters
+        ----------
+        ns : str
+            An entity's name space.
+        id : str
+            An entity's ID.
+
+        Returns
+        -------
+        : tuple
+            A tuple of the form (ns, id) of the replacement entity
+            or None if no replacement.
+        """
+        rep = list(self.child_rel(ns, id, {'replaced_by'}))
+        if rep:
+            return rep[0]
+
+    @with_initialize
     def get_name(self, ns, id):
         """Return the standard name of a given entity.
 

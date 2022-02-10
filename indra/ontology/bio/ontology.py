@@ -19,7 +19,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.21'
+    version = '1.22'
     ontology_namespaces = [
         'go', 'efo', 'hp', 'doid', 'chebi', 'ido',
         'mondo',
@@ -368,6 +368,12 @@ class BioOntology(IndraOntology):
                 edges.append((self.label('MESH', mesh_id),
                               self.label('MESH', parent_id),
                               {'type': 'isa'}))
+        # Handle any replacements
+        replacements = [('C000657245', 'D000086382')]
+        for mesh_id, replacement_id in replacements:
+            edges.append((self.label('MESH', mesh_id),
+                          self.label('MESH', replacement_id),
+                          {'type': 'replaced_by'}))
         self.add_edges_from(edges)
 
     def add_biomappings(self):
