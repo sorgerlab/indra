@@ -88,7 +88,9 @@ class BioOntology(IndraOntology):
         self.add_uppro_hierarchy()
         self.add_lspci()
         # Add replacements
+        logger.info('Adding replacements...')
         self.add_uniprot_replacements()
+        self.add_obo_replacements()
 
         # The graph is now initialized
         self._initialized = True
@@ -234,7 +236,25 @@ class BioOntology(IndraOntology):
                 nodes.append((label,
                               {'name': entry['name'],
                                'type': type_functions[ns](db_id)}))
+            # Add nodes for secondary IDs as obsolete
+            for alt_id in oc.alt_to_id:
+                if alt_id.startswith(ns.upper()):
+                    nodes.append(self.label(ns.upper(), alt_id),
+                                 {'obsolete': True})
         self.add_nodes_from(nodes)
+
+    def add_obo_replacements(self):
+        from indra.databases import obo_client
+        edges = []
+        for ns in self.ontology_namespaces:
+            oc = obo_client.OntologyClient(prefix=ns)
+            for alt_id, prim_id in oc.alt_to_id.items():
+                if alt_id.startswith(ns.upper()) and \
+                        prim_id.startswith(ns.upper()):
+                    edges.append((self.label(ns.upper(), alt_id),
+                                 self.label(ns.upper(), prim_id),
+                                 {'type': 'replaced_by'}))
+        self.add_edges_from(edges)
 
     def add_obo_hierarchies(self):
         from indra.databases import obo_client
