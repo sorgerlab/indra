@@ -1,12 +1,15 @@
 import os
 import re
 import logging
+from collections import defaultdict
+
 import requests
-from typing import Union
+from typing import Set, Union
 import xml.etree.ElementTree as ET
 from functools import lru_cache
 
 from indra.util import read_unicode_csv, UnicodeXMLTreeBuilder as UTB
+from indra.resources import get_resource_path
 
 logger = logging.getLogger(__name__)
 
@@ -338,9 +341,40 @@ def is_phosphatase(gene_name):
     return gene_name in phosphatases
 
 
+def get_enzymes(hgnc_id: str) -> Set[str]:
+    """Return the EC codes corresponding to the given HGNC ID.
+
+    Parameters
+    ----------
+    hgnc_id :
+        The HGNC ID to be converted.
+
+    Returns
+    -------
+    :
+        A set of EC codes
+    """
+    return hgnc_to_enzymes.get(hgnc_id, set())
+
+
+def get_hgncs_from_enzyme(ec_code: str) -> Set[str]:
+    """Return the HGNC ids associated with a given enzyme.
+
+    Parameters
+    ----------
+    ec_code :
+        The EC code (e.g., 2.4.1.228)
+
+    Returns
+    -------
+    :
+        A set of HGNC identifiers
+    """
+    return enzyme_to_hgncs.get(ec_code, set())
+
+
 def _read_hgnc_maps():
-    hgnc_file = os.path.dirname(os.path.abspath(__file__)) + \
-                '/../resources/hgnc_entries.tsv'
+    hgnc_file = get_resource_path("hgnc_entries.tsv")
     csv_rows = read_unicode_csv(hgnc_file, delimiter='\t', encoding='utf-8')
     hgnc_names = {}
     hgnc_ids = {}
@@ -355,6 +389,8 @@ def _read_hgnc_maps():
     ensembl_ids_reverse = {}
     hgnc_withdrawn_new_ids = {}
     gene_types = {}
+    hgnc_to_enzymes = defaultdict(set)
+    enzyme_to_hgncs = defaultdict(set)
     # Skip the header
     next(csv_rows)
     for row in csv_rows:
@@ -424,17 +460,29 @@ def _read_hgnc_maps():
         gene_type = row[11]
         if gene_type:
             gene_types[hgnc_id] = gene_type
+        enyzyme_ids = row[12]
+        if enyzyme_ids:
+            for enzyme_id in enyzyme_ids.split(", "):
+                hgnc_to_enzymes[hgnc_id].add(enzyme_id)
+                enzyme_to_hgncs[enzyme_id].add(hgnc_id)
+
     for old_id, new_id in hgnc_withdrawn_new_ids.items():
         hgnc_names[old_id] = hgnc_names[new_id]
 
-    return (hgnc_names, hgnc_ids, hgnc_withdrawn,
-            uniprot_ids, entrez_ids, entrez_ids_reverse, mouse_map, rat_map,
-            prev_sym_map, ensembl_ids, ensembl_ids_reverse, gene_types)
+    return (
+        hgnc_names, hgnc_ids, hgnc_withdrawn,
+        uniprot_ids, entrez_ids, entrez_ids_reverse, mouse_map, rat_map,
+        prev_sym_map, ensembl_ids, ensembl_ids_reverse, gene_types,
+        dict(hgnc_to_enzymes), dict(enzyme_to_hgncs),
+    )
 
 
-(hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids,
- entrez_ids_reverse, mouse_map, rat_map, prev_sym_map, ensembl_ids,
- ensembl_ids_reverse, gene_type) = _read_hgnc_maps()
+(
+    hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids,
+    entrez_ids_reverse, mouse_map, rat_map, prev_sym_map, ensembl_ids,
+    ensembl_ids_reverse, gene_type,
+    hgnc_to_enzymes, enzyme_to_hgncs,
+) = _read_hgnc_maps()
 
 
 def _read_kinases():

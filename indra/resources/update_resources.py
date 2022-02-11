@@ -51,10 +51,13 @@ def update_hgnc_entries():
     logger.info('--Updating HGNC entries-----')
 
     # Select relevant columns and parameters
-    cols = ['gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_status',
-            'gd_aliases', 'md_eg_id', 'md_prot_id',
-            'md_mgd_id', 'md_rgd_id', 'gd_prev_sym', 'gd_pub_ensembl_id',
-            'gd_locus_type']
+    cols = [
+        'gd_hgnc_id', 'gd_app_sym', 'gd_app_name', 'gd_status',
+        'gd_aliases', 'md_eg_id', 'md_prot_id',
+        'md_mgd_id', 'md_rgd_id', 'gd_prev_sym', 'gd_pub_ensembl_id',
+        'gd_locus_type',
+        'gd_enz_ids',
+    ]
 
     statuses = ['Approved', 'Entry%20Withdrawn']
     params = {
