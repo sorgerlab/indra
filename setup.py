@@ -39,6 +39,7 @@ def main():
                               'docstring-parser', 'gunicorn'],
                       'sklearn_belief': ['scikit-learn'],
                       'owl': ['pronto'],
+                      'ideogram': ['pydeogram'],
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
                                   for dep in deps})
@@ -60,6 +61,7 @@ def main():
                     'indra.assemblers.kami', 'indra.assemblers.pybel',
                     'indra.assemblers.pysb', 'indra.assemblers.sbgn',
                     'indra.assemblers.sif', 'indra.assemblers.tsv',
+                    'indra.assemblers.gene',
                     'indra.belief',
                     'indra.benchmarks', 'indra.databases',
                     'indra.explanation', 'indra.explanation.model_checker',
