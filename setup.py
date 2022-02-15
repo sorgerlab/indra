@@ -61,7 +61,7 @@ def main():
                     'indra.assemblers.kami', 'indra.assemblers.pybel',
                     'indra.assemblers.pysb', 'indra.assemblers.sbgn',
                     'indra.assemblers.sif', 'indra.assemblers.tsv',
-                    'indra.assemblers.gene',
+                    'indra.assemblers.genes',
                     'indra.belief',
                     'indra.benchmarks', 'indra.databases',
                     'indra.explanation', 'indra.explanation.model_checker',
