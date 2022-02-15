@@ -18,3 +18,4 @@ Assemblers of model output (:py:mod:`indra.assemblers`)
    pybel_assembler
    kami_assembler
    indranet_assembler
+   gene_assembler
