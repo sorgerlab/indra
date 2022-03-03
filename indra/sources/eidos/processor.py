@@ -306,8 +306,8 @@ class EidosDocument(object):
         self.extractions = list(extractions)
 
         # Build a dictionary of entities
-        entities = [e for e in self.extractions if 'Concept' in
-                    e.get('labels', [])]
+        entities = [e for e in self.extractions if {'Concept', 'Quantifier'} &
+                    set(e.get('labels', set()))]
         self.entities = {entity['@id']: entity for entity in entities}
 
         # Build a dictionary of sentences and document creation times (DCTs)
