@@ -53,7 +53,7 @@ class OwlClient(OntologyClient):
         term_ns = term_ns.lower()
         return {
             "namespace": term_ns,
-            "id": term_id,
+            "id": term_id if remove_prefix else term.id,
             "name": term.name,
             "synonyms": [s.description for s in term.synonyms],
             "xrefs": xrefs,
