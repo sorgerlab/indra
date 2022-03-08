@@ -702,6 +702,11 @@ def update_ido():
     OwlClient.update_from_obo_library('ido', remove_prefix=True)
 
 
+def update_fma():
+    """Update FMA ontology."""
+    OwlClient.update_from_obo_library('fma', remove_prefix=False)
+
+
 def update_drugbank_mappings():
     """Update mappings from DrugBank to CHEBI/CHEMBL"""
     # Note that for this to work, PyOBO (https://github.com/pyobo/pyobo) has
@@ -899,6 +904,7 @@ def main():
     update_efo()
     update_hpo()
     update_ido()
+    update_fma()
     update_mondo()
     update_drugbank_mappings()
     update_identifiers_registry()
