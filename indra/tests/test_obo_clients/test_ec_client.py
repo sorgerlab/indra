@@ -21,6 +21,15 @@ def test_ec_client_lookup():
     assert "1.1.1.1" == identifier, identifier
 
 
+def test_ec_parents():
+    """Test EC parent lookup."""
+    assert "relations" in ec_client._client.entries["1.1.1.1"]
+    assert "is_a" in ec_client._client.entries["1.1.1.1"]["relations"]
+    assert ec_client._client.entries["1.1.1.1"]["relations"]["is_a"] == ["1.1.1"]
+    assert ec_client.get_parents("1.1.1.1") == ["1.1.1"]
+
+
 if __name__ == '__main__':
     test_ec_client_loaded()
     test_ec_client_lookup()
+    test_ec_parents()

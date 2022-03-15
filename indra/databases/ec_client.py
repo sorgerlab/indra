@@ -2,7 +2,7 @@
 
 """A client to EC-code via an ontology client."""
 
-from typing import Optional
+from typing import List, Optional
 
 from indra.databases.obo_client import PyOboClient
 
@@ -53,3 +53,23 @@ def get_id_from_name(name: str) -> Optional[str]:
     '1.1.1.1'
     """
     return _client.get_id_from_name(name)
+
+
+def get_parents(ec_code: str) -> List[str]:
+    """Return parents of the given enzyme class code.
+
+    Parameters
+    ----------
+    ec_code :
+        The enzyme class code to looked up. Example: "1.1.1.1"
+
+    Returns
+    -------
+    :
+        The parents of given enzyme class code
+
+    >>> from indra.databases import ec_client
+    >>> ec_client.get_parents("1.1.1.1")
+    ["1.1.1"]
+    """
+    return _client.get_parents(ec_code)

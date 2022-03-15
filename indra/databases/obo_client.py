@@ -158,7 +158,7 @@ class OntologyClient:
         return self.entries.get(db_id, {})
 
     def get_relation(self, db_id: str, rel_type: str) -> List[str]:
-        """Return the isa relationships corresponding to a given ID.
+        """Return the relationships corresponding to a given ID.
 
         Parameters
         ----------
@@ -173,7 +173,23 @@ class OntologyClient:
             The IDs of the terms that are in the given relation with the given
             ID.
         """
-        return self.entries.get(db_id, {}).get(rel_type, [])
+        return self.entries.get(db_id, {}).get("relations").get(rel_type, [])
+
+    def get_parents(self, db_id) -> List[str]:
+        """Return the isa relationships corresponding to a given ID.
+
+        Parameters
+        ----------
+        db_id :
+            The ID whose isa relationships should be returned
+
+        Returns
+        -------
+        :
+            The IDs of the terms that are in the given relation with the given
+            ID.
+        """
+        return self.get_relation(db_id, "is_a")
 
 
 class OboClient(OntologyClient):
@@ -350,7 +366,6 @@ class PyOboClient(OntologyClient):
         prefix: str,
         include_relations: bool = False,
         predicate: Optional[Callable[["pyobo.Term"], bool]] = None,
-        remapping: Optional[Mapping[str, str]] = None,
     ):
         """Update the JSON data by looking up the ontology through PyOBO."""
         import pyobo
@@ -375,7 +390,6 @@ class PyOboClient(OntologyClient):
                 'relations': _get_pyobo_rels(
                     term,
                     include_relations=include_relations,
-                    remapping=remapping,
                 ),
             }
             for term in terms
@@ -390,15 +404,11 @@ def _get_pyobo_rels(
     term: "pyobo.Term",
     *,
     include_relations: bool = False,
-    remapping: Optional[Mapping[str, str]] = None,
 ):
     rv = defaultdict(list)
     for parent in term.parents:
-        if remapping is not None:
-            _prefix = remapping.get(parent.prefix, parent.prefix)
-            rv["is_a"].append(f"{_prefix}:{parent.identifier}")
-        else:
-            rv["is_a"].append(parent.curie)
+        # TODO what if parent is from different namespace?
+        rv["is_a"].append(parent.identifier)
     if include_relations:
         for type_def, references in term.relationships.items():
             for reference in references:
