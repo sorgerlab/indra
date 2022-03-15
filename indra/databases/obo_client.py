@@ -350,6 +350,7 @@ class PyOboClient(OntologyClient):
         prefix: str,
         include_relations: bool = False,
         predicate: Optional[Callable[["pyobo.Term"], bool]] = None,
+        remapping: Optional[Mapping[str, str]] = None,
     ):
         """Update the JSON data by looking up the ontology through PyOBO."""
         import pyobo
@@ -371,7 +372,11 @@ class PyOboClient(OntologyClient):
                     alt_id.identifier
                     for alt_id in term.alt_ids
                 ],
-                'relations': _get_pyobo_rels(term, include_relations=include_relations),
+                'relations': _get_pyobo_rels(
+                    term,
+                    include_relations=include_relations,
+                    remapping=remapping,
+                ),
             }
             for term in terms
         ]
@@ -381,10 +386,19 @@ class PyOboClient(OntologyClient):
             json.dump(entries, fp=file, indent=1, sort_keys=True)
 
 
-def _get_pyobo_rels(term: "pyobo.Term", include_relations: bool = False):
+def _get_pyobo_rels(
+    term: "pyobo.Term",
+    *,
+    include_relations: bool = False,
+    remapping: Optional[Mapping[str, str]] = None,
+):
     rv = defaultdict(list)
     for parent in term.parents:
-        rv["is_a"].append(parent.curie)
+        if remapping is not None:
+            _prefix = remapping.get(parent.prefix, parent.prefix)
+            rv["is_a"].append(f"{_prefix}:{parent.identifier}")
+        else:
+            rv["is_a"].append(parent.curie)
     if include_relations:
         for type_def, references in term.relationships.items():
             for reference in references:

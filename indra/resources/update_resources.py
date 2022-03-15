@@ -878,7 +878,12 @@ def update_lspci():
 
 def update_ec_code():
     """Update the EC Code resource."""
-    PyOboClient.update_by_prefix("eccode")
+    PyOboClient.update_by_prefix(
+        "ec-code",
+        # necessary since the Bioregistry/PyOBO hvae a
+        # different prefix for ec-code than INDRA
+        remapping={"eccode": "ec-code"},
+    )
 
 
 def main():

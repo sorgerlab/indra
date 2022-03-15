@@ -11,7 +11,7 @@ __all__ = [
     "get_id_from_name",
 ]
 
-_client = PyOboClient('eccode')
+_client = PyOboClient("ec-code")
 
 
 def get_name_from_id(ec_code: str) -> Optional[str]:
