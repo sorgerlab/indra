@@ -371,7 +371,7 @@ class PyOboClient(OntologyClient):
                     alt_id.identifier
                     for alt_id in term.alt_ids
                 ],
-                'relations': _get_pyobo_rels(term) if include_relations else {},
+                'relations': _get_pyobo_rels(term, include_relations=include_relations),
             }
             for term in terms
         ]
@@ -381,13 +381,14 @@ class PyOboClient(OntologyClient):
             json.dump(entries, fp=file, indent=1, sort_keys=True)
 
 
-def _get_pyobo_rels(term: "pyobo.Term"):
+def _get_pyobo_rels(term: "pyobo.Term", include_relations: bool = False):
     rv = defaultdict(list)
     for parent in term.parents:
         rv["is_a"].append(parent.curie)
-    for type_def, references in term.relationships.items():
-        for reference in references:
-            rv[type_def.curie].append(reference.curie)
+    if include_relations:
+        for type_def, references in term.relationships.items():
+            for reference in references:
+                rv[type_def.curie].append(reference.curie)
     return dict(rv)
 
 
