@@ -27,12 +27,13 @@ class DisambManager(object):
     of this class uses a single database connection.
     """
     def __init__(self):
+        self.has_local_text_db = False
         if has_config('INDRA_DB_LITE_LOCATION'):
             try:
                 from indra_db_lite import get_plaintexts_for_text_ref_ids
                 self.has_local_text_db = True
             except Exception as e:
-                self.has_local_text_db = False
+                pass
         try:
             from indra_db.util.content_scripts import TextContentSessionHandler
             self.__tc = TextContentSessionHandler()

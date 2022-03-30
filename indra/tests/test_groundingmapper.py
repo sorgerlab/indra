@@ -444,7 +444,6 @@ def test_gilda_disambiguation():
     stmt2 = Inhibition(None, er2,
                        evidence=[Evidence(pmid=pmid2,
                                           text_refs={'PMID': pmid2})])
-
     mapped_stmts1 = gm.map_stmts([stmt1])
     assert mapped_stmts1[0].sub.name == 'STK38', mapped_stmts1[0].sub.name
     assert mapped_stmts1[0].sub.db_refs['HGNC'] == '17847', \
