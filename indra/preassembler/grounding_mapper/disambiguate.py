@@ -237,14 +237,24 @@ class DisambManager(object):
         # available since this is the fastest option
         if self.has_local_text_db:
             try:
-                from indra_db_lite import get_plaintexts_for_text_ref_ids
+                from indra_db_lite import get_plaintexts_for_text_ref_ids, \
+                    get_text_ref_ids_for_pmids
                 refs = stmt.evidence[0].text_refs
                 trid = refs.get('TRID')
+                pmid = refs.get('PMID')
                 if trid:
                     text_content = get_plaintexts_for_text_ref_ids([trid])
                     _, content = next(text_content.trid_content_pairs())
                     if content:
                         return content
+                elif pmid:
+                    mappings = get_text_ref_ids_for_pmids([int(pmid)])
+                    if int(pmid) in mappings:
+                        trid = mappings[int(pmid)]
+                        text_content = get_plaintexts_for_text_ref_ids([trid])
+                        _, content = next(text_content.trid_content_pairs())
+                        if content:
+                            return content
             except Exception as e:
                 logger.info('Could not get text from local DB: %s' % e)
         # If the above is not available or fails, we try the INDRA DB
