@@ -1,4 +1,5 @@
 import logging
+from indra.config import get_config, has_config
 from indra.ontology.standardize \
     import standardize_agent_name
 
@@ -26,6 +27,13 @@ class DisambManager(object):
     of this class uses a single database connection.
     """
     def __init__(self):
+        self.has_local_text_db = False
+        if has_config('INDRA_DB_LITE_LOCATION'):
+            try:
+                from indra_db_lite import get_plaintexts_for_text_ref_ids
+                self.has_local_text_db = True
+            except Exception as e:
+                pass
         try:
             from indra_db.util.content_scripts import TextContentSessionHandler
             self.__tc = TextContentSessionHandler()
@@ -225,7 +233,32 @@ class DisambManager(object):
             Text for Adeft disambiguation
         """
         text = None
-        # First we will try to get content from the DB
+        # First we will try to get content from a local text content DB if
+        # available since this is the fastest option
+        if self.has_local_text_db:
+            try:
+                from indra_db_lite import get_plaintexts_for_text_ref_ids, \
+                    get_text_ref_ids_for_pmids
+                refs = stmt.evidence[0].text_refs
+                trid = refs.get('TRID')
+                pmid = refs.get('PMID')
+                if trid:
+                    text_content = get_plaintexts_for_text_ref_ids([trid])
+                    _, content = next(text_content.trid_content_pairs())
+                    if content:
+                        return content
+                elif pmid:
+                    mappings = get_text_ref_ids_for_pmids([int(pmid)])
+                    if int(pmid) in mappings:
+                        trid = mappings[int(pmid)]
+                        text_content = get_plaintexts_for_text_ref_ids([trid])
+                        _, content = next(text_content.trid_content_pairs())
+                        if content:
+                            return content
+            except Exception as e:
+                logger.info('Could not get text from local DB: %s' % e)
+        # If the above is not available or fails, we try the INDRA DB
+        # if available.
         if self.__tc is not None:
             try:
                 from indra.literature.adeft_tools import universal_extract_text
@@ -244,7 +277,7 @@ class DisambManager(object):
             except Exception as e:
                 logger.info('Could not get text for disambiguation from DB: %s'
                             % e)
-        # If that doesn't work, we try PubMed next
+        # If that doesn't work, we try PubMed next trying to fetch an abstract
         if text is None:
             from indra.literature import pubmed_client
             pmid = stmt.evidence[0].pmid
