@@ -294,7 +294,7 @@ def test_get_statements_strict_stop_long():
     assert p.statements
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'notravis')
 def test_filter_ev():
     ids = [('pmcid', 'PMC5770457'), ('pmid', '27014235')]
     p = dbr.get_statements_for_papers(ids)
