@@ -368,7 +368,8 @@ def _load_identifiers_registry():
     identifiers_registry = load_resource_json('identifiers_patterns.json')
     # Override pattern otherwise patterns like 1.1 can't be used
     # TODO should we allow identifiers like 6.3.2.n3?
-    identifiers_registry['ec-code']['pattern'] = '^\\d{1,2}(\\.\\d{0,3}){0,3}$'
+    identifiers_registry['ec-code']['pattern'] = \
+        '^\\d{1,2}(\\.[n]?\\d{0,3}){0,3}$'
     identifiers_registry['mondo'] = {
         "pattern": "^\\d+$",
         "namespace_embedded": False,
