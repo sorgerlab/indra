@@ -49,7 +49,7 @@ def get_id_from_name(name: str) -> Optional[str]:
 
     >>> from indra.databases import ec_client
 
-    >>> ec_client.get_name_from_id("Alcohol dehydrogenase")
+    >>> ec_client.get_id_from_name("Alcohol dehydrogenase")
     '1.1.1.1'
     """
     return _client.get_id_from_name(name)
@@ -70,6 +70,6 @@ def get_parents(ec_code: str) -> List[str]:
 
     >>> from indra.databases import ec_client
     >>> ec_client.get_parents("1.1.1.1")
-    ["1.1.1"]
+    ['1.1.1']
     """
     return _client.get_parents(ec_code)
