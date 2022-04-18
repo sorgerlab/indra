@@ -173,7 +173,7 @@ class OntologyClient:
             The IDs of the terms that are in the given relation with the given
             ID.
         """
-        return self.entries.get(db_id, {}).get("relations").get(rel_type, [])
+        return self.entries.get(db_id, {}).get("relations", {}).get(rel_type, [])
 
     def get_parents(self, db_id) -> List[str]:
         """Return the isa relationships corresponding to a given ID.
