@@ -387,7 +387,8 @@ def test_obo_replacements():
 
 
 def test_eccode_isa():
-    assert set(bio_ontology.get_parents('EC-CODE', '1.1.1.1')) == {
+    parents = set(bio_ontology.get_parents('EC-CODE', '1.1.1.1'))
+    assert parents == {
         ('EC-CODE', '1.1.1'), ('EC-CODE', '1.1'), ('EC-CODE', '1')
-    }
+    }, parents
     assert bio_ontology.isa('EC-CODE', '1.1.1.1', 'EC-CODE', '1.1.1')

@@ -21,9 +21,7 @@ class BioOntology(IndraOntology):
     name = 'bio'
     version = '1.23'
     ontology_namespaces = [
-        'go', 'efo', 'hp', 'doid', 'chebi', 'ido',
-        'mondo',
-        "ec-code",
+        'go', 'efo', 'hp', 'doid', 'chebi', 'ido', 'mondo', 'eccode',
     ]
 
     def __init__(self):
@@ -223,7 +221,7 @@ class BioOntology(IndraOntology):
             'chebi': lambda x: 'small_molecule',
             'ido': lambda x: 'infectious_disease_concept',
             'mondo': lambda x: 'disease',
-            'ec-code': lambda x: 'molecular_function',
+            'eccode': lambda x: 'molecular_function',
         }
         for ns in self.ontology_namespaces:
             oc = obo_client.OntologyClient(prefix=ns)

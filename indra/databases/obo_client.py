@@ -366,6 +366,7 @@ class PyOboClient(OntologyClient):
         prefix: str,
         include_relations: bool = False,
         predicate: Optional[Callable[["pyobo.Term"], bool]] = None,
+        indra_prefix: str = None,
     ):
         """Update the JSON data by looking up the ontology through PyOBO."""
         import pyobo
@@ -395,7 +396,8 @@ class PyOboClient(OntologyClient):
             for term in terms
         ]
         entries = prune_standard(entries)
-        resource_path = get_resource_path(f'{prefix}.json')
+        indra_prefix = prefix if not indra_prefix else indra_prefix
+        resource_path = get_resource_path(f'{indra_prefix}.json')
         with open(resource_path, 'w') as file:
             json.dump(entries, fp=file, indent=1, sort_keys=True)
 

@@ -878,7 +878,7 @@ def update_lspci():
 
 def update_ec_code():
     """Update the EC Code resource."""
-    PyOboClient.update_by_prefix("ec-code")
+    PyOboClient.update_by_prefix("ec-code", indra_prefix='eccode')
 
 
 def main():
