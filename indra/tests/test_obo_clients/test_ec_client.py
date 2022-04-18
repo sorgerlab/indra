@@ -7,7 +7,7 @@ from indra.databases import ec_client
 
 def test_ec_client_loaded():
     """Test the EC client is loaded."""
-    assert 'ec-code' == ec_client._client.prefix
+    assert 'eccode' == ec_client._client.prefix
     assert ec_client._client.entries
     assert ec_client._client.name_to_id
 
