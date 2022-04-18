@@ -384,3 +384,11 @@ def test_obo_replacements():
         ('GO', 'GO:0008553')
     assert standardize_db_refs({'GO': 'GO:0036442'}).get('GO') == \
         'GO:0008553'
+
+
+def test_eccode_isa():
+    parents = set(bio_ontology.get_parents('ECCODE', '1.1.1.1'))
+    assert parents == {
+        ('ECCODE', '1.1.1'), ('ECCODE', '1.1'), ('ECCODE', '1')
+    }, parents
+    assert bio_ontology.isa('ECCODE', '1.1.1.1', 'ECCODE', '1.1.1')

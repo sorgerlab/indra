@@ -9,7 +9,7 @@ from collections import defaultdict, Counter
 from urllib.request import urlretrieve
 from xml.etree import ElementTree as ET
 from indra.util import read_unicode_csv, write_unicode_csv
-from indra.databases.obo_client import OboClient
+from indra.databases.obo_client import OboClient, PyOboClient
 from indra.databases.owl_client import OwlClient
 from indra.databases import chebi_client, pubchem_client
 from indra.databases.lincs_client import load_lincs_csv
@@ -876,6 +876,11 @@ def update_lspci():
     write_unicode_csv(get_resource_path('lspci.tsv'), rows, delimiter='\t')
 
 
+def update_ec_code():
+    """Update the EC Code resource."""
+    PyOboClient.update_by_prefix("ec-code", indra_prefix='eccode')
+
+
 def main():
     update_famplex()
     update_famplex_map()
@@ -904,6 +909,7 @@ def main():
     update_identifiers_registry()
     update_lspci()
     update_pubchem_mesh_map()
+    update_ec_code()
 
 
 if __name__ == '__main__':
