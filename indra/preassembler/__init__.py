@@ -326,7 +326,6 @@ class Preassembler(object):
             relation_tuples |= {(refiner, refined) for refined in relations}
         return relation_tuples
 
-
     def _generate_relations(self, unique_stmts, split_idx=None,
                             filters=None):
         ts = time.time()

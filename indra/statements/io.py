@@ -67,6 +67,15 @@ def stmts_from_json(json_in, on_missing_support='handle'):
     return stmts
 
 
+def stmt_from_json(json_in):
+    stmt = stmts_from_json([json_in], on_missing_support='ignore')
+    return stmt[0]
+
+
+def stmt_from_json_str(json_in):
+    return stmts_from_json(json.loads(json_in))
+
+
 def stmts_from_json_file(
     fname: Union[str, pathlib.Path, os.PathLike], format='json',
 ):
