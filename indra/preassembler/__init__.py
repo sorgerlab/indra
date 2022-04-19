@@ -316,6 +316,68 @@ class Preassembler(object):
         else:
             return unique_stmts
 
+    def _generate_relation_tuples(self, unique_stmts, split_idx=None,
+                                  filters=None):
+        relations = self._generate_relations(unique_stmts=unique_stmts,
+                                             split_idx=split_idx,
+                                             filters=filters)
+        relation_tuples = set()
+        for refiner, refineds in relations.items():
+            relation_tuples |= {(refiner, refined) for refined in relations}
+        return relation_tuples
+
+
+    def _generate_relations(self, unique_stmts, split_idx=None,
+                            filters=None):
+        ts = time.time()
+        # Statements keyed by their hashes
+        stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun):
+                             stmt for stmt in unique_stmts}
+        # Here we apply any additional filters to cut down the number of
+        # potential comparisons before actually making comparisons
+        if not filters:
+            filters = [OntologyRefinementFilter(ontology=self.ontology)]
+
+        # Here we handle split_idx to allow finding refinements between
+        # two distinct groups of statements (identified by an index at which we
+        # split the unique_statements list) rather than globally across
+        # all unique statements.
+        if split_idx:
+            stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
+                           for idx, stmt in enumerate(unique_stmts)}
+            split_groups = {sh: (idx <= split_idx)
+                            for sh, idx in stmt_to_idx.items()}
+            sgf = SplitGroupFilter(split_groups=split_groups)
+            filters.append(sgf)
+
+        # We can now append the confirmation filter
+        confirm_filter = \
+            RefinementConfirmationFilter(ontology=self.ontology,
+                                         refinement_fun=self.refinement_fun)
+        filters.append(confirm_filter)
+
+        # Initialize all filters
+        for filt in filters:
+            filt.initialize(stmts_by_hash=stmts_by_hash)
+
+        # This is the core of refinement finding. Here we apply filter functions
+        # per statement, sequentially.
+        # Since the actual comparison which evaluates the refinement_fun on
+        # potentially related statements is the last filter, we don't need to
+        # do any further operations after this loop.
+        relations = {}
+        for stmt_hash, stmt in tqdm.tqdm(stmts_by_hash.items(),
+                                         desc='Finding refinement relations'):
+            relations[stmt_hash] = \
+                find_refinements_for_statement(stmt, filters)
+
+        te = time.time()
+        logger.info('Found %d refinements in %.2fs' %
+                    (sum([len(v) for v in relations.values()]), te-ts))
+        self._comparison_counter = confirm_filter.comparison_counter
+        logger.info('Total comparisons: %d' % self._comparison_counter)
+        return relations
+
     # Note that the kwargs here are just there for backwards compatibility
     # with old code that uses arguments related to multiprocessing.
     def _generate_id_maps(self, unique_stmts, split_idx=None,
@@ -350,10 +412,9 @@ class Preassembler(object):
             which refines the statement whose index is the second
             element of the tuple.
         """
-        ts = time.time()
-        # Make a list of Statement types
         stmt_to_idx = {stmt.get_hash(matches_fun=self.matches_fun): idx
                        for idx, stmt in enumerate(unique_stmts)}
+        # Make a list of Statement types
         if len(unique_stmts) != len(stmt_to_idx):
             raise ValueError('The unique statements used as an input for '
                              'finding refinements do not all have distinct '
@@ -361,54 +422,12 @@ class Preassembler(object):
                              'hashes being outdated or hashes not having been '
                              'calculated according to a custom matches key '
                              'function used for refinement finding.')
-        # Statements keyed by their hashes
-        stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun):
-                         stmt for stmt in unique_stmts}
-        # Here we apply any additional filters to cut down the number of
-        # potential comparisons before actually making comparisons
-        if not filters:
-            filters = [OntologyRefinementFilter(ontology=self.ontology)]
-
-        # Here we handle split_idx to allow finding refinements between
-        # two distinct groups of statements (identified by an index at which we
-        # split the unique_statements list) rather than globally across
-        # all unique statements.
-        if split_idx:
-            split_groups = {sh: (idx <= split_idx)
-                            for sh, idx in stmt_to_idx.items()}
-            sgf = SplitGroupFilter(split_groups=split_groups)
-            filters.append(sgf)
-
-        # We can now append the confirmation filter
-        confirm_filter = \
-            RefinementConfirmationFilter(ontology=self.ontology,
-                                         refinement_fun=self.refinement_fun)
-        filters.append(confirm_filter)
-
-        # Initialize all filters
-        for filt in filters:
-            filt.initialize(stmts_by_hash=stmts_by_hash)
-
-        # This is the core of refinement finding. Here we apply filter functions
-        # per statement, sequentially.
-        # Since the actual comparison which evaluates the refinement_fun on
-        # potentially related statements is the last filter, we don't need to
-        # do any further operations after this loop.
-        relations = {}
-        for stmt_hash, stmt in tqdm.tqdm(stmts_by_hash.items(),
-                                         desc='Finding refinement relations'):
-            relations[stmt_hash] = \
-                find_refinements_for_statement(stmt, filters)
-
-        te = time.time()
-        logger.info('Found all refinements in %.2fs' % (te-ts))
-        self._comparison_counter = confirm_filter.comparison_counter
-        logger.info('Total comparisons: %d' % self._comparison_counter)
-
-        idx_maps = []
-        for refiner, refineds in relations.items():
-            idx_maps += [(stmt_to_idx[refiner], stmt_to_idx[refined])
-                         for refined in refineds]
+        relation_tuples = \
+            self._generate_relation_tuples(unique_stmts,
+                                           split_idx=split_idx,
+                                           filters=filters)
+        idx_maps = [(stmt_to_idx[refiner], stmt_to_idx[refined])
+                    for refiner, refined in relation_tuples]
         return idx_maps
 
     def find_contradicts(self):
