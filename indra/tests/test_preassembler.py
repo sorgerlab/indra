@@ -1040,6 +1040,17 @@ def test_split_idx():
     assert (1, 0) not in maps, maps
     assert pa._comparison_counter == 1
 
+    # Test other endpoints
+    refinements = pa._generate_relations([st1, st2, st3])
+    assert refinements == \
+        {st2.get_hash(): {st1.get_hash()},
+         st3.get_hash(): {st1.get_hash()}}, refinements
+
+    refinements = pa._generate_relation_tuples([st1, st2, st3])
+    assert refinements == \
+        {(st2.get_hash(), st1.get_hash()),
+         (st3.get_hash(), st1.get_hash())}
+
 
 def test_refinement_filters():
     ras = Agent('RAS', db_refs={'FPLX': 'RAS'})

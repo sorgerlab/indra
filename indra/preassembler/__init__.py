@@ -324,7 +324,7 @@ class Preassembler(object):
                                              filters=filters)
         relation_tuples = set()
         for refiner, refineds in relations.items():
-            relation_tuples |= {(refiner, refined) for refined in relations}
+            relation_tuples |= {(refiner, refined) for refined in refineds}
         return relation_tuples
 
     def _generate_relations(self, unique_stmts, split_idx=None,
@@ -369,8 +369,9 @@ class Preassembler(object):
         relations = {}
         for stmt_hash, stmt in tqdm.tqdm(stmts_by_hash.items(),
                                          desc='Finding refinement relations'):
-            relations[stmt_hash] = \
-                find_refinements_for_statement(stmt, filters)
+            rels = find_refinements_for_statement(stmt, filters)
+            if rels:
+                relations[stmt_hash] = rels
 
         te = time.time()
         logger.info('Found %d refinements in %.2fs' %
