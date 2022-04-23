@@ -318,6 +318,7 @@ class Preassembler(object):
 
     def _generate_relation_tuples(self, unique_stmts, split_idx=None,
                                   filters=None):
+        """Return refinement relations as a set of statement hash tuples."""
         relations = self._generate_relations(unique_stmts=unique_stmts,
                                              split_idx=split_idx,
                                              filters=filters)
@@ -328,6 +329,7 @@ class Preassembler(object):
 
     def _generate_relations(self, unique_stmts, split_idx=None,
                             filters=None):
+        """Return refinement relations as a dict using statement hashes."""
         ts = time.time()
         # Statements keyed by their hashes
         stmts_by_hash = {stmt.get_hash(matches_fun=self.matches_fun):
