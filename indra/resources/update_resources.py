@@ -590,6 +590,7 @@ def update_mesh_supplementary_names():
         logging.info('Parsing MeSH supplement')
         supp_et = ET.parse(supp_file)
     supp_rows = []
+    reg_number_mappings = []
     for record in supp_et.iterfind('SupplementalRecord'):
         uid = record.find('SupplementalRecordUI').text
         name = record.find('SupplementalRecordName/String').text
@@ -598,10 +599,18 @@ def update_mesh_supplementary_names():
         mapped_to = ','.join([term.text.replace('*', '')
                               for term in mapped_to_terms])
         term_name_str = _get_term_name_str(record, name)
+        reg_number_tags = record.findall('ConceptList/Concept/RegistryNumber')
+        if len(reg_number_tags) == 1:
+            reg_number = reg_number_tags[0].text
+            from indra.statements import validate
+            if validate.validate_id('CAS', reg_number):
+                reg_number_mappings.append([uid, reg_number])
         supp_rows.append((uid, name, term_name_str, mapped_to))
 
     fname = os.path.join(path, 'mesh_supp_id_label_mappings.tsv')
     write_unicode_csv(fname, supp_rows, delimiter='\t')
+    fname = os.path.join(path, 'mesh_cas_mappings.tsv')
+    write_unicode_csv(fname, reg_number_mappings, delimiter='\t')
 
 
 def _get_term_name_str(record, name):
