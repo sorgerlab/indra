@@ -1,7 +1,8 @@
 __all__ = ['stmts_from_json', 'stmts_from_json_file', 'stmts_to_json',
            'stmts_to_json_file', 'draw_stmt_graph', 'pretty_print_stmts',
            'UnresolvedUuidError', 'InputError',
-           'set_pretty_print_max_width', 'print_stmt_summary']
+           'set_pretty_print_max_width', 'print_stmt_summary',
+           'stmt_from_json', 'stmt_from_json_str']
 
 import json
 import logging
@@ -68,12 +69,36 @@ def stmts_from_json(json_in, on_missing_support='handle'):
 
 
 def stmt_from_json(json_in):
+    """Deserialize a single statement JSON into a Statement object.
+
+    Parameters
+    ----------
+    json_in : dict
+        A JSON representation of the INDRA Statement.
+
+    Returns
+    -------
+    stmt : :py:class:`Statement`
+        The INDRA Statement.
+    """
     stmt = stmts_from_json([json_in], on_missing_support='ignore')
     return stmt[0]
 
 
 def stmt_from_json_str(json_in):
-    return stmts_from_json(json.loads(json_in))
+    """Deserialize a single statement JSON string into a Statement object.
+
+    Parameters
+    ----------
+    json_in : str
+        A JSON-string serialized INDRA Statement.
+
+    Returns
+    -------
+    stmt : :py:class:`Statement`
+        The deserialized INDRA Statement.
+    """
+    return stmt_from_json(json.loads(json_in))
 
 
 def stmts_from_json_file(

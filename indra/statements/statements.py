@@ -222,7 +222,8 @@ __all__ = [
 
     # Functions and values
     'stmts_from_json', 'get_unresolved_support_uuids', 'stmts_to_json',
-    'stmts_from_json_file', 'stmts_to_json_file', 'get_valid_residue',
+    'stmts_from_json_file', 'stmts_to_json_file', 'stmt_from_json',
+    'stmt_from_json_str', 'get_valid_residue',
     'draw_stmt_graph', 'get_all_descendants','make_statement_camel',
     'amino_acids', 'amino_acids_reverse', 'activity_types',
     'modtype_to_modclass',
