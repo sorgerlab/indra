@@ -14,6 +14,7 @@ RESOURCES = join(HERE, pardir, 'resources')
 MESH_FILE = join(RESOURCES, 'mesh_id_label_mappings.tsv')
 MESH_SUPP_FILE = join(RESOURCES, 'mesh_supp_id_label_mappings.tsv')
 DB_MAPPINGS = join(RESOURCES, 'mesh_mappings.tsv')
+CAS_MAPPINGS = join(RESOURCES, 'mesh_cas_mappings.tsv')
 
 
 mesh_id_to_name = {}
@@ -48,13 +49,22 @@ if os.path.exists(MESH_SUPP_FILE):
     _load_mesh_file(MESH_SUPP_FILE, supplementary=True)
 
 
-def _load_db_mappings(path):
+def _load_db_mappings(db_mappings_path, cas_mappings_path):
+    def db_iter():
+        for _, mesh_id, _, db_ns, db_id, _ in \
+                read_unicode_csv(db_mappings_path, delimiter='\t'):
+            yield mesh_id, db_ns, db_id
+
+    def cas_iter():
+        for mesh_id, cas_id in read_unicode_csv(cas_mappings_path,
+                                                delimiter='\t'):
+            yield mesh_id, 'CAS', cas_id
+
     mesh_to_db = {}
     db_to_mesh = {}
     to_db_ambigs = set()
     db_to_ambigs = set()
-    for _, mesh_id, _, db_ns, db_id, _ in \
-            read_unicode_csv(path, delimiter='\t'):
+    for mesh_id, db_ns, db_id in itertools.chain(db_iter(), cas_iter()):
         # Make sure we don't add any one-to-many mappings
         if mesh_id in mesh_to_db:
             to_db_ambigs.add(mesh_id)
@@ -70,7 +80,7 @@ def _load_db_mappings(path):
     return mesh_to_db, db_to_mesh
 
 
-mesh_to_db, db_to_mesh = _load_db_mappings(DB_MAPPINGS)
+mesh_to_db, db_to_mesh = _load_db_mappings(DB_MAPPINGS, CAS_MAPPINGS)
 
 
 @lru_cache(maxsize=1000)
