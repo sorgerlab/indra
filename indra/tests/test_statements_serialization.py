@@ -394,3 +394,14 @@ def test_file_serialization_json_lines():
     stmts_to_json_file([stmt], 'test_indra_stmts.json', format='jsonl')
     stmts = stmts_from_json_file('test_indra_stmts.json', format='jsonl')
     assert stmts[0].matches(stmt)
+
+
+def test_single_stmt_serialization():
+    stmt = IncreaseAmount(Agent('a'), Agent('b'), evidence=[ev])
+    stmt_json = stmt.to_json()
+    stmt1 = stmt_from_json(stmt_json)
+    assert stmt.matches(stmt1)
+
+    sjs = json.dumps(stmt_json)
+    stmt2 = stmt_from_json_str(sjs)
+    assert stmt.matches(stmt2)
