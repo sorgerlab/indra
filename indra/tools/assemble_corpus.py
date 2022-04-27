@@ -2221,19 +2221,19 @@ def fix_invalidities(stmts: List[Statement],
 
     Parameters
     ----------
-    stmts :
+    stmts : list[indra.statements.Statement]
         A list of statements to fix invalidities in
-    in_place :
+    in_place : Optional[bool]
         If True, the statement objects are changed in place if an invalidity
         is fixed. Otherwise, a deepcopy is done before running fixes.
-    print_report_before :
+    print_report_before : Optional[bool]
         Run and print a validation report on the statements before running
         fixing.
-    print_report_after :
+    print_report_after : Optional[bool]
         Run and print a validation report on the statements after running
         fixing to check if any issues remain that weren't handled by the
         fixing module.
-    prior_hash_annots :
+    prior_hash_annots : Optional[bool]
         If True, an annotation is added to each evidence of a statement
         with the hash of the statement prior to any fixes being applied.
         This is useful if this function is applied as a post-processing
@@ -2243,7 +2243,7 @@ def fix_invalidities(stmts: List[Statement],
 
     Returns
     -------
-    :
+    statements : list[indra.statements.Statement]
         The list of statements with validation issues fixed and some
         invalid statements filtered out.
     """
