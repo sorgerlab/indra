@@ -80,7 +80,9 @@ boolean_args = [
     'do_rename', 'use_adeft', 'do_methionine_offset', 'do_orthology_mapping',
     'do_isoform_mapping', 'use_cache', 'return_toplevel', 'flatten_evidence',
     'normalize_equivalences', 'normalize_opposites', 'invert', 'remove_bound',
-    'specific_only', 'allow_families', 'match_suffix', 'update_belief']
+    'specific_only', 'allow_families', 'match_suffix', 'update_belief',
+    'in_place', 'print_report_before', 'print_report_after',
+    'prior_hash_annots']
 list_args = [
     'gene_list', 'name_list', 'values', 'source_apis', 'uuids', 'curations',
     'correct_tags', 'ignores', 'deletions']
