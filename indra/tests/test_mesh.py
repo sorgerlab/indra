@@ -111,10 +111,10 @@ def test_tree_prefixes():
 
 
 def test_mesh_mapping():
-    assert mesh_client.get_mesh_id_from_db_id('CHEBI', 'CHEBI:4672') == \
-        'D000077143'
-    assert mesh_client.get_db_mapping('D000077143') == \
-        ('CHEBI', 'CHEBI:4672')
+    assert mesh_client.get_mesh_id_from_db_id('CHEBI', 'CHEBI:90943') == \
+        'C000596361'
+    assert mesh_client.get_db_mapping('C000596361') == \
+        ('CHEBI', 'CHEBI:90943')
 
 
 def test_supplementary_to_primary():
