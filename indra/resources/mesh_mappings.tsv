@@ -17861,6 +17861,8 @@ MESH	C588309	CNR2 protein, human	UP	P34972	CNR2
 MESH	C588418	KCNMB2 protein, human	UP	Q9Y691	KCNMB2
 MESH	D000001	Calcimycin	CHEBI	CHEBI:3305	Calcimycin
 MESH	D000002	Temefos	CHEBI	CHEBI:38954	temephos
+MESH	D000007	Abdominal Injuries	EFO	0009502	abdominal injury
+MESH	D000009	Abdominal Muscles	NCIT	C32040	Abdominal Muscle
 MESH	D000012	Abetalipoproteinemia	DOID	DOID:1386	abetalipoproteinemia
 MESH	D000012	Abetalipoproteinemia	HP	HP:0008181	Abetalipoproteinemia
 MESH	D000016	Abnormalities, Radiation-Induced	EFO	0009565	radiation-induced disorder
@@ -18991,6 +18993,7 @@ MESH	D001008	Anxiety Disorders	DOID	DOID:2030	anxiety disorder
 MESH	D001008	Anxiety Disorders	EFO	0006788	anxiety disorder
 MESH	D001010	Anxiety, Separation	DOID	DOID:10685	separation anxiety disorder
 MESH	D001010	Anxiety, Separation	EFO	1001916	separation anxiety disorder
+MESH	D001012	Aorta, Abdominal	NCIT	C32038	Abdominal Aorta
 MESH	D001014	Aortic Aneurysm	EFO	0001666	aortic aneurysm
 MESH	D001014	Aortic Aneurysm	HP	HP:0004942	Aortic aneurysm
 MESH	D001016	Aortic Bodies	UBERON	UBERON:0034971	aortic body
@@ -23536,6 +23539,7 @@ MESH	D011818	Rabies	DOID	DOID:11260	rabies
 MESH	D011839	Radiation, Ionizing	NCIT	C17052	Ionizing Radiation
 MESH	D011842	Radicular Cyst	HP	HP:0000700	Periapical bone loss
 MESH	D011843	Radiculopathy	DOID	DOID:4306	radiculopathy
+MESH	D011860	Radiography, Abdominal	NCIT	C38102	Abdominal Radiography
 MESH	D011885	Radius Fractures	EFO	0003957	radius fracture
 MESH	D011885	Radius Fractures	HP	HP:0003978	Fractured radius
 MESH	D011885	Radius Fractures	NCIT	C99039	Radius Fracture
@@ -25448,6 +25452,7 @@ MESH	D017527	Receptor, IGF Type 2	HGNC	5467	IGF2R
 MESH	D017541	Aneurysm, False	EFO	1001265	Aneurysm, False
 MESH	D017544	Aortic Aneurysm, Abdominal	DOID	DOID:7693	abdominal aortic aneurysm
 MESH	D017544	Aortic Aneurysm, Abdominal	EFO	0004214	Abdominal Aortic Aneurysm
+MESH	D017544	Aortic Aneurysm, Abdominal	NCIT	C27000	Abdominal Aortic Aneurysm
 MESH	D017545	Aortic Aneurysm, Thoracic	DOID	DOID:14004	thoracic aortic aneurysm
 MESH	D017545	Aortic Aneurysm, Thoracic	EFO	0004282	thoracic aortic aneurysm
 MESH	D017545	Aortic Aneurysm, Thoracic	HP	HP:0012727	Thoracic aortic aneurysm
@@ -26751,6 +26756,7 @@ MESH	D034801	Mastocytoma	DOID	DOID:3664	mast cell neoplasm
 MESH	D034801	Mastocytoma	DOID	DOID:4659	extracutaneous mastocytoma
 MESH	D034801	Mastocytoma	EFO	1000932	extracutaneous mastocytoma
 MESH	D034802	RNA-Binding Protein EWS	HGNC	3508	EWSR1
+MESH	D034861	Abdominal Wall	NCIT	C77608	Abdominal Wall
 MESH	D034881	Nuclear Lamina	GO	GO:0005652	nuclear lamina
 MESH	D035581	Transcription Factor TFIIB	HGNC	4648	GTF2B
 MESH	D035582	Transcription Factor TFIIIA	HGNC	4662	GTF3A
@@ -26985,6 +26991,7 @@ MESH	D046290	Liver Abscess, Pyogenic	EFO	1001836	pyogenic liver abscess
 MESH	D046349	Coproporphyria, Hereditary	DOID	DOID:13269	hereditary coproporphyria
 MESH	D046350	Porphyria, Variegate	DOID	DOID:4346	variegate porphyria
 MESH	D046351	Protoporphyria, Erythropoietic	DOID	DOID:13270	erythropoietic protoporphyria
+MESH	D046449	Hernia, Abdominal	NCIT	C98700	Abdominal Hernia
 MESH	D046548	Pubic Symphysis Diastasis	EFO	1001833	Pubic Symphysis Diastasis
 MESH	D046589	CADASIL	DOID	DOID:13945	CADASIL
 MESH	D046628	Sphincter of Oddi Dysfunction	HP	HP:0012441	Sphincter of Oddi dyskinesia

@@ -212,6 +212,7 @@ NCIT	C2160	Proteasome Inhibitor	CHEBI	CHEBI:52726	proteasome inhibitor
 UMLS	C2349994	Tinea barbae	DOID	DOID:0050096	tinea barbae
 UMLS	C2609129	Autoimmune Pancreatitis	DOID	DOID:0040091	autoimmune pancreatitis
 NCIT	C29150	Lansoprazole	CHEBI	CHEBI:6375	lansoprazole
+UMLS	C2930930	Abdominal obesity metabolic syndrome	DOID	DOID:0060611	abdominal obesity-metabolic syndrome
 UMLS	C2931130	Clark-Baraitser syndrome	DOID	DOID:0080234	Clark-Baraitser syndrome
 UMLS	C2931142	Qazi Markouizos syndrome	DOID	DOID:0050740	Qazi Markouizos syndrome
 UMLS	C2931404	Albright's hereditary osteodystrophy	DOID	DOID:0080053	Albright's hereditary osteodystrophy
@@ -226,9 +227,11 @@ UMLS	C3695063	Charcot-Marie-Tooth disease type 4B3	DOID	DOID:0110194	Charcot-Mar
 UMLS	C3711374	Nonsyndromic Deafness	DOID	DOID:0050563	nonsyndromic deafness
 UMLS	C3887639	Autoimmune gastritis	DOID	DOID:0040090	autoimmune gastritis
 UMLS	C3888523	Autoimmune uveitis	DOID	DOID:0040088	autoimmune uveitis
+UMLS	C4014361	ABDOMINAL OBESITY-METABOLIC SYNDROME 3	DOID	DOID:0060612	abdominal obesity-metabolic syndrome 3
 UMLS	C4040879	STING-associated vasculopathy with onset in infancy	DOID	DOID:0111457	STING-associated vasculopathy with onset in infancy
 UMLS	C4048705	Hypermethioninemia	DOID	DOID:0050544	hypermethioninemia
 UMLS	C4082197	Charcot-Marie-Tooth disease type 4	DOID	DOID:0050541	Charcot-Marie-Tooth disease type 4
+UMLS	C4087490	Abdominal tuberculosis	DOID	DOID:0050599	abdominal tuberculosis
 UMLS	C4274434	Chapare hemorrhagic fever	DOID	DOID:0050198	Chapare hemorrhagic fever
 UMLS	C4289581	RELA fusion-positive ependymoma	DOID	DOID:0080892	RELA fusion-positive ependymoma
 UMLS	C4303789	Ehlers-Danlos syndrome cardiac valvular type	DOID	DOID:0080730	Ehlers-Danlos syndrome cardiac valvular type
@@ -345,6 +348,7 @@ DOID	DOID:0050575	D-2-hydroxyglutaric aciduria	UMLS	C1833429	D-2-hydroxyglutaric
 DOID	DOID:0050577	cranioectodermal dysplasia	UMLS	C4551571	Cranioectodermal dysplasia
 DOID	DOID:0050578	occult macular dystrophy	UMLS	C3150833	OCCULT MACULAR DYSTROPHY
 DOID	DOID:0050579	glycogen storage disease XV	UMLS	C3150754	GLYCOGEN STORAGE DISEASE XV
+DOID	DOID:0050599	abdominal tuberculosis	UMLS	C4087490	Abdominal tuberculosis
 DOID	DOID:0050600	ABCD syndrome	UMLS	C1838099	ABCD syndrome
 DOID	DOID:0050608	Askin's tumor	UMLS	C0877849	Askin's tumor
 DOID	DOID:0050615	respiratory system cancer	UMLS	C0814136	respiratory system cancer
@@ -377,6 +381,8 @@ DOID	DOID:0060325	cervical polyp	EFO	0009475	cervical polyp
 DOID	DOID:0060428	SATB2-associated syndrome	UMLS	C5243581	SATB2-associated syndrome
 DOID	DOID:0060502	gastrointestinal allergy	UMLS	C0221034	gastrointestinal allergy
 DOID	DOID:0060538	purpura fulminans	EFO	1001913	Purpura Fulminans
+DOID	DOID:0060611	abdominal obesity-metabolic syndrome	UMLS	C2930930	Abdominal obesity metabolic syndrome
+DOID	DOID:0060612	abdominal obesity-metabolic syndrome 3	UMLS	C4014361	ABDOMINAL OBESITY-METABOLIC SYNDROME 3
 DOID	DOID:0060693	Brunner Syndrome	UMLS	C0796275	Brunner Syndrome
 DOID	DOID:0060743	methylmalonic acidemia cblB type	UMLS	C1855102	Methylmalonic aciduria cblB type
 DOID	DOID:0060768	Smith-Magenis syndrome	UMLS	C0795864	Smith-Magenis syndrome

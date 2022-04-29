@@ -44,7 +44,6 @@ def test_bio_entity_extract():
     assert all(isinstance(a, Agent) for a in agents)
     ag = [a for a in agents if a.name == 'Therapeutics'][0]
     assert ag.db_refs['MESH'] == 'D013812'
-    assert ag.db_refs['EFO'] == '0000727'
 
 
 def test_get_agent_bio():
