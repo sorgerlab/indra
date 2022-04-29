@@ -1,3 +1,4 @@
+EFO	0000218	acute erythroleukemia	DOID	DOID:0080780	acute erythroid leukemia
 EFO	0000330	childhood acute myeloid leukemia	DOID	DOID:0070323	childhood acute myeloid leukemia
 EFO	0000736	well-differentiated liposarcoma	DOID	DOID:5690	well-differentiated liposarcoma
 EFO	0002501	anaplastic oligodendroglioma	DOID	DOID:7154	anaplastic oligodendroglioma
@@ -5,12 +6,14 @@ EFO	0003029	acute basophilic leukemia	DOID	DOID:0080795	acute basophilic leukemi
 EFO	0003063	polymyositis	DOID	DOID:0080745	polymyositis
 EFO	0003085	dedifferentiated liposarcoma	DOID	DOID:0080531	dedifferentiated liposarcoma
 EFO	0003103	urinary tract infection	DOID	DOID:0080784	urinary tract infection
+EFO	0004591	childhood onset asthma	DOID	DOID:0080815	childhood-onset asthma
 EFO	0005140	autoimmune disease	DOID	DOID:417	autoimmune disease
 EFO	0006928	motion sickness	DOID	DOID:2951	motion sickness
 EFO	0007940	chronic venous insufficiency	DOID	DOID:0050853	chronic venous insufficiency
 EFO	0008601	pemphigus foliaceus	DOID	DOID:0080850	pemphigus foliaceus
 EFO	0008602	paraneoplastic pemphigus	DOID	DOID:0080852	paraneoplastic pemphigus
 EFO	0008604	IgA pemphigus	DOID	DOID:0080851	IgA pemphigus
+EFO	0008620	Polycystic Kidney Disease	DOID	DOID:0080322	polycystic kidney disease
 EFO	0009006	hyperandrogenism	DOID	DOID:11613	hyperandrogenism
 EFO	0009021	Bardet-Biedl syndrome 1	DOID	DOID:0110123	Bardet-Biedl syndrome 1
 EFO	0009022	Bardet-Biedl syndrome 10	DOID	DOID:0110132	Bardet-Biedl syndrome 10
@@ -19,10 +22,14 @@ EFO	0009024	Bardet-Biedl syndrome 4	DOID	DOID:0110126	Bardet-Biedl syndrome 4
 EFO	0009025	Bardet-Biedl syndrome 5	DOID	DOID:0110127	Bardet-Biedl syndrome 5
 EFO	0009026	Bardet-Biedl syndrome 7	DOID	DOID:0110129	Bardet-Biedl syndrome 7
 EFO	0009027	Bardet-Biedl syndrome 9	DOID	DOID:0110131	Bardet-Biedl syndrome 9
+EFO	0009030	Cerebellar-facial-dental syndrome	DOID	DOID:0080898	cerebellofaciodental syndrome
 EFO	0009044	Fanconi anemia complementation group A	DOID	DOID:0111095	Fanconi anemia complementation group A
 EFO	0009045	Fanconi anemia complementation group F	DOID	DOID:0111088	Fanconi anemia complementation group F
 EFO	0009046	Fanconi anemia complementation group G	DOID	DOID:0111086	Fanconi anemia complementation group G
+EFO	0009048	Intrahepatic cholestasis of pregnancy	DOID	DOID:0070227	intrahepatic cholestasis of pregnancy
 EFO	0009055	RIDDLE syndrome	DOID	DOID:0090113	RIDDLE syndrome
+EFO	0009056	Spinocerebellar ataxia type 38	DOID	DOID:0050985	spinocerebellar ataxia type 38
+EFO	0009057	Spinocerebellar ataxia type 40	DOID	DOID:0050986	spinocerebellar ataxia type 40
 EFO	0009104	hyperuricemia	DOID	DOID:1920	hyperuricemia
 EFO	0009159	combined oxidative phosphorylation deficiency 33	DOID	DOID:0111495	combined oxidative phosphorylation deficiency 33
 EFO	0009365	vaginal discharge	DOID	DOID:3767	vaginal discharge
@@ -38,12 +45,23 @@ EFO	0010269	amenorrhea	DOID	DOID:13938	amenorrhea
 EFO	0010278	Shukla-Vernon syndrome	DOID	DOID:0111841	Shukla-Vernon syndrome
 EFO	0010561	neurodevelopmental disorder with cataracts, poor growth, and dysmorphic facies	DOID	DOID:0070346	neurodevelopmental disorder with cataracts, poor growth, and dysmorphic facies
 EFO	0010663	neurooculocardiogenitourinary syndrome	DOID	DOID:0111675	neurooculocardiogenitourinary syndrome
+EFO	1000177	Choroid Plexus Papilloma	DOID	DOID:2626	choroid plexus papilloma
+EFO	1000241	Endometrial Stromal Nodule	DOID	DOID:1373	endometrial stromal nodule
+EFO	1000336	Lung Sarcomatoid Carcinoma	DOID	DOID:0080777	lung sarcomatoid carcinoma
+EFO	1000410	Osteoblastoma	DOID	DOID:0060098	osteoblastoma
+EFO	1000467	Peritoneal Mesothelioma	DOID	DOID:1788	peritoneal mesothelioma
+EFO	1000527	Sinonasal Undifferentiated Carcinoma	DOID	DOID:0080799	sinonasal undifferentiated carcinoma
+EFO	1000614	Uterine Corpus Lipoleiomyoma	DOID	DOID:13957	uterine corpus lipoleiomyoma
 EFO	1001248	non-alcoholic fatty liver	DOID	DOID:0080546	non-alcoholic fatty liver
 EFO	1001249	non-alcoholic steatohepatitis	DOID	DOID:0080547	non-alcoholic steatohepatitis
+EFO	1001502	rasopathy	DOID	DOID:0080690	RASopathy
 EFO	1001516	ovarian serous carcinoma	DOID	DOID:0050933	ovarian serous carcinoma
 EFO	1001898	mucositis	DOID	DOID:0080178	mucositis
+EFO	1001913	Purpura Fulminans	DOID	DOID:0060538	purpura fulminans
 EFO	1001943	childhood acute megakaryoblastic leukemia	DOID	DOID:0080794	childhood acute megakaryoblastic leukemia
 EFO	1001964	pancreatic somatostatinoma	DOID	DOID:4432	pancreatic somatostatinoma
+EFO	1001982	Antisynthetase syndrome	DOID	DOID:0080744	antisynthetase syndrome
+EFO	1001992	Scapuloperoneal spinal muscular atrophy	DOID	DOID:0111552	scapuloperoneal spinal muscular atrophy
 EFO	1002001	core binding factor acute myeloid leukemia	DOID	DOID:0080796	core binding factor acute myeloid leukemia
 EFO	1002027	osteomalacia	DOID	DOID:10573	osteomalacia
 UMLS	C0003078	Aniseikonia	DOID	DOID:0050304	aniseikonia
@@ -70,6 +88,7 @@ UMLS	C0040255	Tinea imbricata	DOID	DOID:0050116	tinea imbricata
 UMLS	C0042470	Venezuelan hemorrhagic fever	DOID	DOID:0050196	Venezuelan hemorrhagic fever
 UMLS	C0149782	Squamous cell carcinoma of lung	DOID	DOID:3907	lung squamous cell carcinoma
 UMLS	C0149925	Small cell carcinoma of lung	DOID	DOID:5409	lung small cell carcinoma
+UMLS	C0151650	Renal fibrosis	DOID	DOID:0050855	renal fibrosis
 UMLS	C0152013	Adenocarcinoma of lung (disorder)	DOID	DOID:3910	lung adenocarcinoma
 UMLS	C0155862	Streptococcal pneumonia	DOID	DOID:0040084	Streptococcus pneumonia
 UMLS	C0155889	Mushroom Worker's Lung	DOID	DOID:2708	mushroom workers' lung
@@ -153,6 +172,7 @@ UMLS	C0814136	respiratory system cancer	DOID	DOID:0050615	respiratory system can
 UMLS	C0877849	Askin's tumor	DOID	DOID:0050608	Askin's tumor
 UMLS	C1274167	IgA pemphigus	DOID	DOID:0080851	IgA pemphigus
 UMLS	C1290358	Neoplasm of hilus of lung	DOID	DOID:5767	hilar lung neoplasm
+UMLS	C1302995	Congenital Fibrosis of the Extraocular Muscles	DOID	DOID:0080143	congenital fibrosis of the extraocular muscles
 UMLS	C1306794	Wound Botulism	DOID	DOID:0050353	wound botulism
 UMLS	C1320317	African Tick-Bite Fever	DOID	DOID:0050035	African tick-bite fever
 UMLS	C1332137	Lung Acinar Adenocarcinoma	DOID	DOID:6482	lung acinar adenocarcinoma
@@ -169,6 +189,7 @@ NCIT	C1586	Levofloxacin	CHEBI	CHEBI:63598	levofloxacin
 UMLS	C1696946	Polyomavirus-associated nephropathy	DOID	DOID:0040086	Polyomavirus-associated nephropathy
 NCIT	C1707	Voriconazole	CHEBI	CHEBI:10023	voriconazole
 UMLS	C1711397	Lung Pleomorphic Carcinoma	DOID	DOID:0080899	lung pleomorphic carcinoma
+UMLS	C1739108	Latent Autoimmune Diabetes in Adults	DOID	DOID:0080846	latent autoimmune diabetes in adults
 UMLS	C1832600	Naxos disease	DOID	DOID:0080551	Naxos disease
 UMLS	C1832916	Timothy syndrome	DOID	DOID:0060173	Timothy syndrome
 UMLS	C1832918	Brody myopathy	DOID	DOID:0050692	Brody myopathy
@@ -179,10 +200,13 @@ UMLS	C1843181	Noonan syndrome-like disorder with loose anagen hair	DOID	DOID:008
 UMLS	C1850055	PEHO syndrome	DOID	DOID:0080539	PEHO syndrome
 UMLS	C1850191	Posterior polar cataract	DOID	DOID:0050537	posterior polar cataract
 UMLS	C1853959	Birdshot Chorioretinopathy	DOID	DOID:0111079	birdshot chorioretinopathy
+UMLS	C1855102	Methylmalonic aciduria cblB type	DOID	DOID:0060743	methylmalonic acidemia cblB type
 UMLS	C1855995	L-2-HYDROXYGLUTARIC ACIDURIA	DOID	DOID:0050574	L-2-hydroxyglutaric aciduria
 UMLS	C1856728	Fuhrmann syndrome	DOID	DOID:0090067	Fuhrmann syndrome
 UMLS	C1859564	Bardet-Biedl syndrome 3	DOID	DOID:0110125	Bardet-Biedl syndrome 3
 UMLS	C1859817	2-aminoadipic 2-oxoadipic aciduria	DOID	DOID:0111453	2-aminoadipic 2-oxoadipic aciduria
+UMLS	C1865343	OSSIFICATION OF THE POSTERIOR LONGITUDINAL LIGAMENT OF SPINE	DOID	DOID:0060887	ossification of the posterior longitudinal ligament of spine
+UMLS	C1970005	Asphyxiating Thoracic Dystrophy 2	DOID	DOID:0110086	asphyxiating thoracic dystrophy 2
 UMLS	C2108396	Japanese Spotted Fever	DOID	DOID:0050050	Japanese spotted fever
 NCIT	C2160	Proteasome Inhibitor	CHEBI	CHEBI:52726	proteasome inhibitor
 UMLS	C2349994	Tinea barbae	DOID	DOID:0050096	tinea barbae
@@ -216,6 +240,7 @@ UMLS	C4551568	Joubert syndrome 1	DOID	DOID:0110980	Joubert syndrome 1
 UMLS	C4551571	Cranioectodermal dysplasia	DOID	DOID:0050577	cranioectodermal dysplasia
 UMLS	C4551771	Kleefstra syndrome	DOID	DOID:0080597	Kleefstra syndrome
 UMLS	C4551777	Brown-Vialetto-Van Laere syndrome	DOID	DOID:0050694	Brown-Vialetto-Van Laere syndrome
+UMLS	C4551856	Asphyxiating Thoracic Dystrophy 1	DOID	DOID:0110085	asphyxiating thoracic dystrophy 1
 UMLS	C4551860	Ullrich congenital muscular dystrophy	DOID	DOID:0050558	Ullrich congenital muscular dystrophy
 UMLS	C4693357	NK cell deficiency	DOID	DOID:0080709	NK cell deficiency
 UMLS	C4706575	Larsen-like syndrome B3GAT3 type	DOID	DOID:0080575	Larsen-like syndrome B3GAT3 type
@@ -333,12 +358,16 @@ DOID	DOID:0050760	X-linked myopathy with excessive autophagy	UMLS	C1839615	X-lin
 DOID	DOID:0050769	N syndrome	UMLS	C2936859	N syndrome
 DOID	DOID:0050781	Ogden syndrome	UMLS	C3275447	Ogden syndrome
 DOID	DOID:0050853	chronic venous insufficiency	EFO	0007940	chronic venous insufficiency
+DOID	DOID:0050855	renal fibrosis	UMLS	C0151650	Renal fibrosis
 DOID	DOID:0050858	Marshall-Smith syndrome	UMLS	C0265211	Marshall-Smith syndrome
 DOID	DOID:0050871	fibroma	UMLS	C0016045	fibroma
 DOID	DOID:0050886	Troyer syndrome	UMLS	C0393559	Troyer syndrome
 DOID	DOID:0050933	ovarian serous carcinoma	EFO	1001516	ovarian serous carcinoma
+DOID	DOID:0050985	spinocerebellar ataxia type 38	EFO	0009056	Spinocerebellar ataxia type 38
+DOID	DOID:0050986	spinocerebellar ataxia type 40	EFO	0009057	Spinocerebellar ataxia type 40
 DOID	DOID:0060038	specific developmental disorder	UMLS	C0037785	specific developmental disorder
 DOID	DOID:0060077	progesterone-receptor positive breast cancer	EFO	0009782	progesterone-receptor positive breast cancer
+DOID	DOID:0060098	osteoblastoma	EFO	1000410	Osteoblastoma
 DOID	DOID:0060173	Timothy syndrome	UMLS	C1832916	Timothy syndrome
 DOID	DOID:0060175	succinic semialdehyde dehydrogenase deficiency	UMLS	C0268631	succinic semialdehyde dehydrogenase deficiency
 DOID	DOID:0060231	Bruck syndrome	UMLS	C0432253	Bruck syndrome
@@ -347,16 +376,22 @@ DOID	DOID:0060319	cardiac arrest	EFO	0009492	cardiac arrest
 DOID	DOID:0060325	cervical polyp	EFO	0009475	cervical polyp
 DOID	DOID:0060428	SATB2-associated syndrome	UMLS	C5243581	SATB2-associated syndrome
 DOID	DOID:0060502	gastrointestinal allergy	UMLS	C0221034	gastrointestinal allergy
+DOID	DOID:0060538	purpura fulminans	EFO	1001913	Purpura Fulminans
 DOID	DOID:0060693	Brunner Syndrome	UMLS	C0796275	Brunner Syndrome
+DOID	DOID:0060743	methylmalonic acidemia cblB type	UMLS	C1855102	Methylmalonic aciduria cblB type
 DOID	DOID:0060768	Smith-Magenis syndrome	UMLS	C0795864	Smith-Magenis syndrome
+DOID	DOID:0060887	ossification of the posterior longitudinal ligament of spine	UMLS	C1865343	OSSIFICATION OF THE POSTERIOR LONGITUDINAL LIGAMENT OF SPINE
 DOID	DOID:0070007	Seckel syndrome 1	UMLS	C4551474	Seckel syndrome 1
+DOID	DOID:0070227	intrahepatic cholestasis of pregnancy	EFO	0009048	Intrahepatic cholestasis of pregnancy
 DOID	DOID:0070323	childhood acute myeloid leukemia	EFO	0000330	childhood acute myeloid leukemia
 DOID	DOID:0070346	neurodevelopmental disorder with cataracts, poor growth, and dysmorphic facies	EFO	0010561	neurodevelopmental disorder with cataracts, poor growth, and dysmorphic facies
 DOID	DOID:0080045	Kniest dysplasia	UMLS	C0265279	Kniest dysplasia
 DOID	DOID:0080053	Albright's hereditary osteodystrophy	UMLS	C2931404	Albright's hereditary osteodystrophy
+DOID	DOID:0080143	congenital fibrosis of the extraocular muscles	UMLS	C1302995	Congenital Fibrosis of the Extraocular Muscles
 DOID	DOID:0080178	mucositis	EFO	1001898	mucositis
 DOID	DOID:0080195	Marinesco-Sjogren syndrome	UMLS	C0024814	Marinesco-Sjogren syndrome
 DOID	DOID:0080234	Clark-Baraitser syndrome	UMLS	C2931130	Clark-Baraitser syndrome
+DOID	DOID:0080322	polycystic kidney disease	EFO	0008620	Polycystic Kidney Disease
 DOID	DOID:0080531	dedifferentiated liposarcoma	EFO	0003085	dedifferentiated liposarcoma
 DOID	DOID:0080539	PEHO syndrome	UMLS	C1850055	PEHO syndrome
 DOID	DOID:0080546	non-alcoholic fatty liver	EFO	1001248	non-alcoholic fatty liver
@@ -364,28 +399,38 @@ DOID	DOID:0080547	non-alcoholic steatohepatitis	EFO	1001249	non-alcoholic steato
 DOID	DOID:0080551	Naxos disease	UMLS	C1832600	Naxos disease
 DOID	DOID:0080575	Larsen-like syndrome B3GAT3 type	UMLS	C4706575	Larsen-like syndrome B3GAT3 type
 DOID	DOID:0080597	Kleefstra syndrome	UMLS	C4551771	Kleefstra syndrome
+DOID	DOID:0080690	RASopathy	EFO	1001502	rasopathy
 DOID	DOID:0080691	Noonan syndrome-like disorder with loose anagen hair	UMLS	C1843181	Noonan syndrome-like disorder with loose anagen hair
 DOID	DOID:0080709	NK cell deficiency	UMLS	C4693357	NK cell deficiency
 DOID	DOID:0080724	Kenny-Caffey syndrome	UMLS	C0265291	Kenny-Caffey syndrome
 DOID	DOID:0080730	Ehlers-Danlos syndrome cardiac valvular type	UMLS	C4303789	Ehlers-Danlos syndrome cardiac valvular type
+DOID	DOID:0080744	antisynthetase syndrome	EFO	1001982	Antisynthetase syndrome
 DOID	DOID:0080745	polymyositis	EFO	0003063	polymyositis
+DOID	DOID:0080777	lung sarcomatoid carcinoma	EFO	1000336	Lung Sarcomatoid Carcinoma
+DOID	DOID:0080780	acute erythroid leukemia	EFO	0000218	acute erythroleukemia
 DOID	DOID:0080784	urinary tract infection	EFO	0003103	urinary tract infection
 DOID	DOID:0080794	childhood acute megakaryoblastic leukemia	EFO	1001943	childhood acute megakaryoblastic leukemia
 DOID	DOID:0080795	acute basophilic leukemia	EFO	0003029	acute basophilic leukemia
 DOID	DOID:0080796	core binding factor acute myeloid leukemia	EFO	1002001	core binding factor acute myeloid leukemia
+DOID	DOID:0080799	sinonasal undifferentiated carcinoma	EFO	1000527	Sinonasal Undifferentiated Carcinoma
+DOID	DOID:0080815	childhood-onset asthma	EFO	0004591	childhood onset asthma
 DOID	DOID:0080835	TORCH syndrome	UMLS	C0270173	TORCH syndrome
 DOID	DOID:0080846	latent autoimmune diabetes in adults	EFO	0009706	latent autoimmune diabetes in adults
+DOID	DOID:0080846	latent autoimmune diabetes in adults	UMLS	C1739108	Latent Autoimmune Diabetes in Adults
 DOID	DOID:0080850	pemphigus foliaceus	EFO	0008601	pemphigus foliaceus
 DOID	DOID:0080851	IgA pemphigus	EFO	0008604	IgA pemphigus
 DOID	DOID:0080851	IgA pemphigus	UMLS	C1274167	IgA pemphigus
 DOID	DOID:0080852	paraneoplastic pemphigus	EFO	0008602	paraneoplastic pemphigus
 DOID	DOID:0080892	RELA fusion-positive ependymoma	UMLS	C4289581	RELA fusion-positive ependymoma
+DOID	DOID:0080898	cerebellofaciodental syndrome	EFO	0009030	Cerebellar-facial-dental syndrome
 DOID	DOID:0080899	lung pleomorphic carcinoma	UMLS	C1711397	Lung Pleomorphic Carcinoma
 DOID	DOID:0090002	Tietz syndrome	UMLS	C0391816	Tietz syndrome
 DOID	DOID:0090060	Wolcott-Rallison syndrome	UMLS	C0432217	Wolcott-Rallison syndrome
 DOID	DOID:0090067	Fuhrmann syndrome	UMLS	C1856728	Fuhrmann syndrome
 DOID	DOID:0090113	RIDDLE syndrome	EFO	0009055	RIDDLE syndrome
 DOID	DOID:0090125	COL4A1-related familial vascular leukoencephalopathy	UMLS	C4755307	COL4A1-related familial vascular leukoencephalopathy
+DOID	DOID:0110085	asphyxiating thoracic dystrophy 1	UMLS	C4551856	Asphyxiating Thoracic Dystrophy 1
+DOID	DOID:0110086	asphyxiating thoracic dystrophy 2	UMLS	C1970005	Asphyxiating Thoracic Dystrophy 2
 DOID	DOID:0110123	Bardet-Biedl syndrome 1	EFO	0009021	Bardet-Biedl syndrome 1
 DOID	DOID:0110125	Bardet-Biedl syndrome 3	UMLS	C1859564	Bardet-Biedl syndrome 3
 DOID	DOID:0110126	Bardet-Biedl syndrome 4	EFO	0009024	Bardet-Biedl syndrome 4
@@ -404,6 +449,7 @@ DOID	DOID:0111095	Fanconi anemia complementation group A	EFO	0009044	Fanconi ane
 DOID	DOID:0111453	2-aminoadipic 2-oxoadipic aciduria	UMLS	C1859817	2-aminoadipic 2-oxoadipic aciduria
 DOID	DOID:0111457	STING-associated vasculopathy with onset in infancy	UMLS	C4040879	STING-associated vasculopathy with onset in infancy
 DOID	DOID:0111495	combined oxidative phosphorylation deficiency 33	EFO	0009159	combined oxidative phosphorylation deficiency 33
+DOID	DOID:0111552	scapuloperoneal spinal muscular atrophy	EFO	1001992	Scapuloperoneal spinal muscular atrophy
 DOID	DOID:0111560	Charcot-Marie-Tooth disease type 1G	EFO	0010266	Charcot-Marie-Tooth disease type 1G
 DOID	DOID:0111675	neurooculocardiogenitourinary syndrome	EFO	0010663	neurooculocardiogenitourinary syndrome
 DOID	DOID:0111754	Leber plus disease	UMLS	C4304725	Leber plus disease
@@ -419,12 +465,16 @@ DOID	DOID:0112194	Filippi syndrome	UMLS	C0795940	Filippi syndrome
 DOID	DOID:10032	hyperlucent lung	UMLS	C0524799	Lung, Hyperlucent
 DOID	DOID:10573	osteomalacia	EFO	1002027	osteomalacia
 DOID	DOID:11613	hyperandrogenism	EFO	0009006	hyperandrogenism
+DOID	DOID:1373	endometrial stromal nodule	EFO	1000241	Endometrial Stromal Nodule
 DOID	DOID:13891	bird fancier's lung	UMLS	C0005592	Bird Fancier's Lung
 DOID	DOID:13938	amenorrhea	EFO	0010269	amenorrhea
+DOID	DOID:13957	uterine corpus lipoleiomyoma	EFO	1000614	Uterine Corpus Lipoleiomyoma
 DOID	DOID:14453	farmer's lung	UMLS	C0015634	Farmer's Lung
 DOID	DOID:14764	Larsen syndrome	UMLS	C0175778	Larsen syndrome
+DOID	DOID:1788	peritoneal mesothelioma	EFO	1000467	Peritoneal Mesothelioma
 DOID	DOID:1920	hyperuricemia	EFO	0009104	hyperuricemia
 DOID	DOID:2001	neuroma	EFO	0009619	neuroma
+DOID	DOID:2626	choroid plexus papilloma	EFO	1000177	Choroid Plexus Papilloma
 DOID	DOID:2708	mushroom workers' lung	UMLS	C0155889	Mushroom Worker's Lung
 DOID	DOID:2784	lung sarcoma	UMLS	C0598790	Sarcoma of lung
 DOID	DOID:2951	motion sickness	EFO	0006928	motion sickness
