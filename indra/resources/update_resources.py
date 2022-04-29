@@ -779,6 +779,24 @@ def update_biomappings():
                     (mapping['source prefix'] == 'ncit' or
                      mapping['target prefix'] == 'ncit'):
                 continue
+            # We accept predicted mappings under the following conditions:
+            # MESH-CHEBI If the names match except for capitalization conventions
+            # that are systematically different between MESH and CHEBI.
+            # MESH-UP/HGNC accepted since these are reliable mappings and
+            # are only applied in one direction (from MESH) and can be accepted
+            # even without manual review.
+            # Or any other case in which the standard names match exactly.
+            if mapping_type == 'predicted':
+                if ({mapping['source prefix'],
+                    mapping['target prefix']} == {'chebi', 'mesh'}) and \
+                        (mapping['source name'].lower() !=
+                         mapping['target name'].lower()):
+                    continue
+                elif mapping['source name'] != mapping['target name']:
+                    if not (mapping['source prefix'] == 'mesh' and
+                            mapping['target prefix'] in {'hgnc', 'uniprot'}):
+                        continue
+
             source_ns, source_id = \
                 get_ns_id_from_identifiers(mapping['source prefix'],
                                            mapping['source identifier'])
