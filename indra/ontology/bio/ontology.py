@@ -261,7 +261,8 @@ class BioOntology(IndraOntology):
     def add_obo_xrefs(self):
         from indra.databases import obo_client
         edges = []
-        xref_namespaces = {ns.upper() for ns in self.ontology_namespaces}
+        xref_namespaces = {ns.upper() for ns in self.ontology_namespaces} | \
+            {'MESH'}
         for ns in self.ontology_namespaces:
             oc = obo_client.OntologyClient(prefix=ns)
             for db_id, entry in oc.entries.items():
