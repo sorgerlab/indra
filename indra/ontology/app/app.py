@@ -59,6 +59,15 @@ def get_component_label():
         **{k: v for k, v in request.json.items() if k in kwargs}))
 
 
+@app.route('/get_xrefs', methods=['GET'])
+def get_xrefs():
+    ont = request.json.get('ontology')
+    ontology = ontologies.get(ont)
+    kwargs = ('ns', 'id')
+    return jsonify(ontology.get_mappings(
+        **{k: v for k, v in request.json.items() if k in kwargs}))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Run the INDRA Ontology service.')
