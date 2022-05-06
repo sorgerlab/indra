@@ -268,10 +268,23 @@ class BioOntology(IndraOntology):
             for db_id, entry in oc.entries.items():
                 label = self.label(ns.upper(), db_id)
                 for xref_ns, xref_ids in entry.get('xrefs', {}).items():
-                    if xref_ns not in xref_namespaces or len(xref_ids) > 1:
+                    # If the namespace is not in our OBO set, we don't
+                    # consider it. If the set of IDs for a given namespace
+                    # is > 1 in size, it's not a one-to-one mapping so we
+                    # don't take it. Finally, there are sometimes xrefs to the
+                    # namespace itself which we don't consider here.
+                    if xref_ns not in xref_namespaces or len(xref_ids) > 1 or \
+                            xref_ns == ns:
                         continue
                     xref_id = ensure_prefix_if_needed(xref_ns, xref_ids[0])
                     xref_label = self.label(xref_ns, xref_id)
+                    # In many cases, obsolete nodes are referred to in
+                    # xrefs, and a simple way to control for this is to
+                    # check if the given node is in the graph. If it is,
+                    # then it is either non-obsolete, or there is an explicit
+                    # edge from it to a non-obsolete node.
+                    if xref_label not in self:
+                        continue
                     edges.append((label, xref_label, {'type': 'xref'}))
         self.add_edges_from(edges)
 
