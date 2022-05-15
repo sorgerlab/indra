@@ -8,4 +8,5 @@ def process_xml_file(fname, use_gilda_grounding=False, predicate_mappings=None):
     tree = ET.parse(fname)
     sp = SemRepXmlProcessor(tree, use_gilda_grounding=use_gilda_grounding,
                             predicate_mappings=predicate_mappings)
+    sp.process_statements()
     return sp

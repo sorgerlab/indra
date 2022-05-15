@@ -1,3 +1,5 @@
+__all__ = ['SemRepXmlProcessor', 'default_predicate_mappings']
+
 from indra.ontology.standardize import get_standard_agent, \
     standardize_agent_name
 from indra.statements import *

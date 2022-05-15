@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE SemRepAnnotation PUBLIC "-//NLM//DTD SemRep Output//EN" "http://semrep.nlm.nih.gov/DTD/SemRepXML_v1.8.dtd">
+<SemRepAnnotation>
+ <Document id="Dtest" text="Among v-raf murine sarcoma viral oncogene homolog B1 inhibitors, vemurafenib causes a higher incidence of nephrotoxicity. Bai et al. reported that vemurafenib-induced nephrotoxicity is not directly caused by viral oncogene homolog B1 inhibition but is partly caused by ferrochelatase inhibition in renal tubular epithelial cells. Because several other protein kinase inhibitors are also known to cause ferrochelatase inhibition, further studies are needed to elucidate the role of ferrochelatase in renal function and injury." >
+ <Utterance id="Dtest.txt.tx.1" section="tx" number="1" begin="0" end="122" text="Among v-raf murine sarcoma viral oncogene homolog B1 inhibitors, vemurafenib causes a higher incidence of nephrotoxicity.">
+  <Entity id="Dtest.txt.E1" cui="C0812241" name="BRAF gene" semtypes="gngm" entrezID="673" entrezName="BRAF" text="v-raf murine sarcoma viral oncogene homolog B1" score="956" negated="false" begin="6" end="52" />
+  <Entity id="Dtest.txt.E2" cui="C0243077" name="inhibitors" semtypes="chvf" text="inhibitors" score="956" negated="false" begin="53" end="63" />
+  <Entity id="Dtest.txt.E3" cui="C3192263" name="Vemurafenib" semtypes="orch,phsu" text="vemurafenib" score="1000" negated="false" begin="65" end="76" />
+  <Entity id="Dtest.txt.E4" cui="C0205250" name="High" semtypes="qlco" text="higher" score="888" negated="false" begin="86" end="92" />
+  <Entity id="Dtest.txt.E5" cui="C0021149" name="Incidence" semtypes="qnco" text="incidence" score="888" negated="false" begin="93" end="102" />
+  <Entity id="Dtest.txt.E6" cui="C0599918" name="nephrotoxicity" semtypes="inpo" text="nephrotoxicity" score="1000" negated="false" begin="106" end="120" />
+  <Predication id="Dtest.txt.P1" negated="false" inferred="false">
+   <Subject maxDist="2" dist="1" entityID="Dtest.txt.E3" relSemType="orch" />
+   <Predicate type="CAUSES" indicatorType="VERB" begin="77" end="83" />
+   <Object maxDist="2" dist="2" entityID="Dtest.txt.E6" relSemType="inpo" />
+  </Predication>
+ </Utterance>
+ <Utterance id="Dtest.txt.tx.2" section="tx" number="2" begin="122" end="330" text="Bai et al. reported that vemurafenib-induced nephrotoxicity is not directly caused by viral oncogene homolog B1 inhibition but is partly caused by ferrochelatase inhibition in renal tubular epithelial cells.">
+  <Entity id="Dtest.txt.E7" cui="C0234880" name="Baying" semtypes="inbe" text="Bai" score="851" negated="false" begin="122" end="125" />
+  <Entity id="Dtest.txt.E8" cui="C3192263" name="Vemurafenib" semtypes="orch,phsu" text="vemurafenib" score="851" negated="false" begin="147" end="158" />
+  <Entity id="Dtest.txt.E9" cui="C0205263" name="Induce (action)" semtypes="ftcn" text="induced" score="851" negated="false" begin="159" end="166" />
+  <Entity id="Dtest.txt.E10" cui="C0599918" name="nephrotoxicity" semtypes="inpo" text="nephrotoxicity" score="851" negated="false" begin="167" end="181" />
+  <Entity id="Dtest.txt.E11" cui="C1518422" name="Negation" semtypes="ftcn" text="not" score="1000" negated="false" begin="185" end="188" />
+  <Entity id="Dtest.txt.E12" cui="C1947931" name="Direct (qualifier)" semtypes="qlco" text="directly" score="1000" negated="false" begin="189" end="197" />
+  <Entity id="Dtest.txt.E13" cui="C1336966" name="Viral Oncogene" semtypes="gngm" text="viral oncogene" score="840" negated="false" begin="208" end="222" />
+  <Entity id="Dtest.txt.E14" cui="C1334043" name="Homologous Gene" semtypes="gngm" text="homolog" score="840" negated="false" begin="223" end="230" />
+  <Entity id="Dtest.txt.E15" cui="C1628982" name="Percent inhibition" semtypes="qnco" text="inhibition" score="840" negated="false" begin="234" end="244" />
+  <Entity id="Dtest.txt.E16" cui="C0015880" name="FERROCHELATASE" semtypes="aapp,enzy" text="ferrochelatase" score="888" negated="false" begin="269" end="283" />
+  <Entity id="Dtest.txt.E17" cui="C1628982" name="Percent inhibition" semtypes="qnco" text="inhibition" score="888" negated="false" begin="284" end="294" />
+  <Entity id="Dtest.txt.E18" cui="C2700087" name="Tubular Epithelial Cell Count" semtypes="lbpr" text="renal tubular epithelial cells" score="1000" negated="false" begin="298" end="328" />
+  <Predication id="Dtest.txt.P2" negated="false" inferred="false">
+   <Subject maxDist="1" dist="0" entityID="Dtest.txt.E8" relSemType="orch" />
+   <Predicate type="CAUSES" indicatorType="ADJ" begin="159" end="166" />
+   <Object maxDist="1" dist="0" entityID="Dtest.txt.E10" relSemType="inpo" />
+  </Predication>
+ </Utterance>
+ <Utterance id="Dtest.txt.tx.3" section="tx" number="3" begin="330" end="525" text="Because several other protein kinase inhibitors are also known to cause ferrochelatase inhibition, further studies are needed to elucidate the role of ferrochelatase in renal function and injury.">
+  <Entity id="Dtest.txt.E19" cui="C0439064" name="Numerous" semtypes="qnco" text="several" score="1000" negated="false" begin="338" end="345" />
+  <Entity id="Dtest.txt.E20" cui="C1449702" name="Protein Kinase Inhibitors" semtypes="aapp,phsu" text="protein kinase inhibitors" score="1000" negated="false" begin="352" end="377" />
+  <Entity id="Dtest.txt.E21" cui="C0015880" name="FERROCHELATASE" semtypes="aapp,enzy" text="ferrochelatase" score="888" negated="false" begin="402" end="416" />
+  <Entity id="Dtest.txt.E22" cui="C1628982" name="Percent inhibition" semtypes="qnco" text="inhibition" score="888" negated="false" begin="417" end="427" />
+  <Entity id="Dtest.txt.E23" cui="C1517331" name="Further" semtypes="spco" text="further" score="888" negated="false" begin="429" end="436" />
+  <Entity id="Dtest.txt.E24" cui="C3871154" name="{Role}" semtypes="inpr" text="role" score="1000" negated="false" begin="473" end="477" />
+  <Entity id="Dtest.txt.E25" cui="C0015880" name="FERROCHELATASE" semtypes="aapp,enzy" text="ferrochelatase" score="1000" negated="false" begin="481" end="495" />
+  <Entity id="Dtest.txt.E26" cui="C0232804" name="Renal function" semtypes="ortf" text="renal function" score="1000" negated="false" begin="499" end="513" />
+  <Predication id="Dtest.txt.P3" negated="false" inferred="false">
+   <Subject maxDist="2" dist="1" entityID="Dtest.txt.E20" relSemType="aapp" />
+   <Predicate type="INHIBITS" indicatorType="NOM" begin="417" end="427" />
+   <Object maxDist="2" dist="0" entityID="Dtest.txt.E21" relSemType="aapp" />
+  </Predication>
+  <Predication id="Dtest.txt.P4" negated="false" inferred="false">
+   <Subject maxDist="3" dist="1" entityID="Dtest.txt.E25" relSemType="aapp" />
+   <Predicate type="AFFECTS" indicatorType="NOM" begin="473" end="477" />
+   <Object maxDist="3" dist="2" entityID="Dtest.txt.E26" relSemType="ortf" />
+  </Predication>
+ </Utterance>
+</Document>
+</SemRepAnnotation>
