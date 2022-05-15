@@ -1,12 +1,17 @@
-from indra.ontology.standardize import get_standard_agent
+from indra.ontology.standardize import get_standard_agent, \
+    standardize_agent_name
 from indra.statements import *
 
 
 class SemRepXmlProcessor:
-    def __init__(self, tree):
+    def __init__(self, tree, use_gilda_grounding=False,
+                 predicate_mappings=None):
         self.tree = tree
         self.entities = self.make_entity_lookup()
         self.statements = []
+        self.use_gilda_grounding = use_gilda_grounding
+        self.predicate_mappings = predicate_mappings if predicate_mappings \
+            else default_predicate_mappings
 
     def process_statements(self):
         for doc in self.tree.findall('Document'):
@@ -22,7 +27,7 @@ class SemRepXmlProcessor:
         pred = predication.find('Predicate')
         negated = predication.attrib.get('negated')
         predicate_type = pred.attrib.get('type')
-        stmt_type = predicate_stmt_mapping.get(predicate_type)
+        stmt_type = self.predicate_mappings.get(predicate_type)
         if not stmt_type:
             return
         subj_agent = self.get_agent_from_entity(
@@ -55,10 +60,20 @@ class SemRepXmlProcessor:
         name = entity.attrib['name']
         db_refs = {'TEXT': entity.attrib['text'],
                    'UMLS': entity.attrib['cui']}
-        return get_standard_agent(name, db_refs)
+        agent = get_standard_agent(name, db_refs)
+        # We optionally add groundings from Gilda if standardization didn't
+        # yield and additional references beyond UMLS.
+        if self.use_gilda_grounding and set(db_refs) == {'TEXT', 'UMLS'}:
+            import gilda
+            matches = gilda.ground(name)
+            if matches:
+                db_refs[matches[0].term.db] = matches[0].term.id
+                standardize_agent_name(agent, standardize_refs=True)
+        return agent
 
 
-predicate_stmt_mapping = {
+# Default mappings from SemRep predicates to INDRA Statement types
+default_predicate_mappings = {
     'TREATS': Inhibition,
     'INHIBITS': Inhibition,
     'PREVENTS': Inhibition,
