@@ -289,6 +289,16 @@
             "background-color": "#ffed6f"
         }
     },
+    "semrep": {
+        "name": "SemRep",
+        "link": "https://github.com/lhncbc/SemRep",
+        "type": "reader",
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#6600cc"
+        }
+    },
     "creeds": {
         "name": "CREEDS",
         "link": "https://maayanlab.cloud/CREEDS/",

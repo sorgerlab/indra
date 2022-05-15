@@ -50,18 +50,20 @@ systems and structured databases. These input modules (available in
 
 Reading systems:
 
-| Reader     | Module                | Reference                                 |
-|------------|-----------------------|-------------------------------------------|
-| TRIPS/DRUM | [`indra.sources.trips`](https://indra.readthedocs.io/en/latest/modules/sources/trips/index.html)   | http://trips.ihmc.us/parser/cgi/drum            |
-| REACH      | [`indra.sources.reach`](https://indra.readthedocs.io/en/latest/modules/sources/reach/index.html)   | https://github.com/clulab/reach                 |
-| Sparser    | [`indra.sources.sparser`](https://indra.readthedocs.io/en/latest/modules/sources/sparser/index.html#) | https://github.com/ddmcdonald/sparser           |
-| Eidos      | [`indra.sources.eidos`](https://indra.readthedocs.io/en/latest/modules/sources/eidos/index.html#) | https://github.com/clulab/eidos           |
-| TEES       | [`indra.sources.tees`](https://indra.readthedocs.io/en/latest/modules/sources/tees/index.html)   | https://github.com/jbjorne/TEES                 |
-| MedScan    | [`indra.sources.medscan`](https://indra.readthedocs.io/en/latest/modules/sources/medscan/index.html) | https://doi.org/10.1093/bioinformatics/btg207   |
-| RLIMS-P    | [`indra.sources.rlimsp`](https://indra.readthedocs.io/en/latest/modules/sources/rlimsp/index.html)  | https://research.bioinformatics.udel.edu/rlimsp |
-| ISI/AMR    | [`indra.sources.isi`](https://indra.readthedocs.io/en/latest/modules/sources/isi/index.html)     | https://github.com/sgarg87/big_mech_isi_gg      |
+| Reader     | Module                                                                                                 | Reference                                       |
+|------------|--------------------------------------------------------------------------------------------------------|-------------------------------------------------|
+| TRIPS/DRUM | [`indra.sources.trips`](https://indra.readthedocs.io/en/latest/modules/sources/trips/index.html)       | http://trips.ihmc.us/parser/cgi/drum            |
+| REACH      | [`indra.sources.reach`](https://indra.readthedocs.io/en/latest/modules/sources/reach/index.html)       | https://github.com/clulab/reach                 |
+| Sparser    | [`indra.sources.sparser`](https://indra.readthedocs.io/en/latest/modules/sources/sparser/index.html#)  | https://github.com/ddmcdonald/sparser           |
+| Eidos      | [`indra.sources.eidos`](https://indra.readthedocs.io/en/latest/modules/sources/eidos/index.html#)      | https://github.com/clulab/eidos                 |
+| TEES       | [`indra.sources.tees`](https://indra.readthedocs.io/en/latest/modules/sources/tees/index.html)         | https://github.com/jbjorne/TEES                 |
+| MedScan    | [`indra.sources.medscan`](https://indra.readthedocs.io/en/latest/modules/sources/medscan/index.html)   | https://doi.org/10.1093/bioinformatics/btg207   |
+| RLIMS-P    | [`indra.sources.rlimsp`](https://indra.readthedocs.io/en/latest/modules/sources/rlimsp/index.html)     | https://research.bioinformatics.udel.edu/rlimsp |
+| ISI/AMR    | [`indra.sources.isi`](https://indra.readthedocs.io/en/latest/modules/sources/isi/index.html)           | https://github.com/sgarg87/big_mech_isi_gg      |
 | Geneways   | [`indra.sources.geneways`](https://indra.readthedocs.io/en/latest/modules/sources/geneways/index.html) | https://www.ncbi.nlm.nih.gov/pubmed/15016385    |
-| GNBR       | [`indra.sources.gnbr`](https://indra.readthedocs.io/en/latest/modules/sources/gnbr/index.html) | https://zenodo.org/record/3459420 |
+| GNBR       | [`indra.sources.gnbr`](https://indra.readthedocs.io/en/latest/modules/sources/gnbr/index.html)         | https://zenodo.org/record/3459420               |
+| SemRep     | [`indra.sources.semrep`](https://indra.readthedocs.io/en/latest/modules/sources/semrep/index.html)     | https://github.com/lhncbc/SemRep                |
+
 
 Biological pathway databases:
 
