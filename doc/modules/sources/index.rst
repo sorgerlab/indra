@@ -21,6 +21,7 @@ Reading Systems
    rlimsp/index
    eidos/index
    gnbr/index
+   semrep
 
 Molecular Pathway Databases
 ---------------------------
