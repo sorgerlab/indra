@@ -44,10 +44,6 @@ class VirtualOntology(IndraOntology):
         return _send_request(self.url, 'get_id_from_name',
                              ns=ns, name=name, ontology=self.ontology)
 
-    def get_component_label(self, ns, id):
-        return _send_request(self.url, 'get_component_label',
-                             ns=ns, id=id, ontology=self.ontology)
-
 
 def _send_request(base_url, endpoint, **kwargs):
     url = '%s/%s' % (base_url, endpoint)

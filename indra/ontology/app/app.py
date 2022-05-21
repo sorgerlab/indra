@@ -50,12 +50,12 @@ def get_id_from_name():
         **{k: v for k, v in request.json.items() if k in kwargs}))
 
 
-@app.route('/get_component_label', methods=['GET'])
-def get_component_label():
+@app.route('/get_xrefs', methods=['GET'])
+def get_xrefs():
     ont = request.json.get('ontology')
     ontology = ontologies.get(ont)
     kwargs = ('ns', 'id')
-    return jsonify(ontology.get_component_label(
+    return jsonify(ontology.get_mappings(
         **{k: v for k, v in request.json.items() if k in kwargs}))
 
 
