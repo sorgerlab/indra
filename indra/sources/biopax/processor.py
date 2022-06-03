@@ -350,6 +350,8 @@ class BiopaxProcessor(object):
                         obj_list.append(agent)
 
             # Make statements
+            if not obj_from and not obj_to:
+                continue
             st = Conversion(subj, obj_from, obj_to, evidence=ev)
             self.statements.append(st)
 

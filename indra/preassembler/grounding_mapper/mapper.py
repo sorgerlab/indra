@@ -108,7 +108,9 @@ class GroundingMapper(object):
         mapped_stmts = []
         num_skipped = 0
         # Iterate over the statements
-        for stmt in stmts:
+        import tqdm
+        it = tqdm.tqdm(stmts) if len(stmts) > 1e5 else stmts
+        for stmt in it:
             mapped_stmt = self.map_agents_for_stmt(stmt, do_rename)
             # Check if we should skip the statement
             if mapped_stmt is not None:
