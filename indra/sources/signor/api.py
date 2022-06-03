@@ -62,7 +62,7 @@ def process_from_file(signor_data_file, signor_complexes_file=None):
         SignorProcessor containing Statements extracted from the Signor data.
     """
     # Get generator over the CSV file
-    data_iter = read_unicode_csv(signor_data_file, delimiter=';', skiprows=1)
+    data_iter = read_unicode_csv(signor_data_file, delimiter='\t', skiprows=1)
     complexes_iter = None
     if signor_complexes_file:
         complexes_iter = read_unicode_csv(signor_complexes_file, delimiter=';',
