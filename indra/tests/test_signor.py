@@ -33,7 +33,8 @@ test_complexes_file = join(dirname(__file__), 'signor_test_complexes.csv')
 
 def test_parse_csv_from_file():
     # Should work with both data file and complexes
-    sp = process_from_file(test_data_file, test_complexes_file)
+    sp = process_from_file(test_data_file, test_complexes_file,
+                           delimiter=';')
     assert isinstance(sp._data, list)
     assert isinstance(sp._data[0], _SignorRow_)
     assert isinstance(sp.statements, list)
@@ -45,7 +46,7 @@ def test_parse_csv_from_file():
     assert isinstance(sp.complex_map['SIGNOR-C1'], list)
     assert sp.complex_map['SIGNOR-C1'] == ['P23511', 'P25208', 'Q13952']
     # Make sure we don't error if Complexes data is not provided
-    sp = process_from_file(test_data_file)
+    sp = process_from_file(test_data_file, delimiter=';')
     assert isinstance(sp.statements[0], Statement)
     assert sp.complex_map == {}
 
