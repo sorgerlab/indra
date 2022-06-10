@@ -1,9 +1,8 @@
 __all__ = ['process_archive', 'process_flat_files']
 
-
+import requests
 import tarfile
 import pandas as pd
-from collections import namedtuple
 from protmapper.uniprot_client import load_fasta_sequences, \
     load_fasta_sequence_lines
 from indra.sources.hprd.processor import HprdProcessor
@@ -24,14 +23,32 @@ _ppi_cols = ['HGNC_SYMBOL_A', 'HPRD_ID_A', 'REFSEQ_PROTEIN_A',
              'EVIDENCE', 'PMIDS']
 
 
+file_mappings = {
+    'id_mappings_file': 'HPRD_ID_MAPPINGS.txt',
+    'complexes_file': 'PROTEIN_COMPLEXES.txt',
+    'ptm_file': 'POST_TRANSLATIONAL_MODIFICATIONS.txt',
+    'ppi_file': 'BINARY_PROTEIN_PROTEIN_INTERACTIONS.txt',
+    'seq_file': 'PROTEIN_SEQUENCES.txt',
+}
+
+
 def process_archive(fname):
-    file_mappings = {
-        'id_mappings_file': 'HPRD_ID_MAPPINGS.txt',
-        'complexes_file': 'PROTEIN_COMPLEXES.txt',
-        'ptm_file': 'POST_TRANSLATIONAL_MODIFICATIONS.txt',
-        'ppi_file': 'BINARY_PROTEIN_PROTEIN_INTERACTIONS.txt',
-        'seq_file': 'PROTEIN_SEQUENCES.txt',
-    }
+    """Get INDRA Statements from HPRD data in a single tar.gz file.
+
+    The latest release, HPRD_FLAT_FILES_041310.tar.gz can be downloaded from
+    http://hprd.org/download after registration.
+
+    Parameters
+    ----------
+    fname : str
+        Path to HPRD tar.gz file.
+
+    Returns
+    -------
+    HprdProcessor
+        An HprdProcessor object which contains a list of extracted INDRA
+        Statements in its statements attribute.
+    """
     with tarfile.open(fname, "r:gz") as fh:
         prefix = fh.next().name.split('/')[0]
         files = {k: fh.extractfile(prefix + '/' + v) for k, v in
@@ -41,7 +58,7 @@ def process_archive(fname):
 
 def process_flat_files(id_mappings_file, complexes_file=None, ptm_file=None,
                        ppi_file=None, seq_file=None, motif_window=7):
-    """Get INDRA Statements from HPRD data.
+    """Get INDRA Statements from HPRD data in individual files.
 
     Of the arguments, `id_mappings_file` is required, and at least one of
     `complexes_file`, `ptm_file`, and `ppi_file` must also be given.  If
