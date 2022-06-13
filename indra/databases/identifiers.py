@@ -39,12 +39,6 @@ non_registry = {
     'DRUGBANK.SALT', 'SMILES',
 }
 
-# These are namespaces that can appear in db_refs but are actually not
-# representing grounding.
-non_grounding = {
-    'TEXT', 'TEXT_NORM'
-}
-
 # These are reverse mappings from identifiers.org namespaces to INDRA
 # namespaces
 identifiers_reverse = {

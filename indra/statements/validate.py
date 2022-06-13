@@ -4,7 +4,11 @@ raise custom exceptions derived from ValueError if an invalidity is
 found. These come with a helpful error message that can be caught
 and printed to learn about the specific issue. Another set of functions
 do not raise exceptions, rather, return True or False depending on whether
-the given input is valid or invalid."""
+the given input is valid or invalid.
+
+For validating namespaces and identifiers, there are two validators available,
+one that uses data from identifiers.org and another for Bioregistry.
+"""
 
 import re
 import logging
@@ -78,8 +82,63 @@ class InvalidStatement(ValueError):
 
 class IdentifiersValidator:
     """A class that can be used to validate INDRA Statements."""
-    def __init__(self):
-        pass
+
+    @staticmethod
+    def assert_valid_ns(db_ns):
+        if db_ns in non_grounding or db_ns in identifiers.non_registry:
+            return
+        identifiers_ns = \
+            identifiers.identifiers_mappings.get(db_ns, db_ns.lower())
+        if identifiers_ns in identifiers.identifiers_registry:
+            return
+        raise UnknownNamespace(db_ns)
+
+    @staticmethod
+    def assert_valid_id(db_ns, db_id):
+        if db_id is None:
+            raise MissingIdentifier(db_ns, None)
+        if db_ns in non_grounding or db_ns in identifiers.non_registry:
+            return
+        identifiers_ns = \
+            identifiers.identifiers_mappings.get(db_ns, db_ns.lower())
+        if identifiers_ns in identifiers.identifiers_registry:
+            pattern = identifiers.identifiers_registry[
+                identifiers_ns]['pattern_compiled']
+            if pattern.match(db_id):
+                return
+            else:
+                raise InvalidIdentifier(db_ns, db_id, pattern.pattern)
+        else:
+            raise UnknownIdentifier(db_ns, db_id)
+
+
+class BioregistryValidator:
+    """A class that can be used to validate INDRA Statements."""
+
+    @staticmethod
+    def assert_valid_ns(db_ns):
+        if db_ns in non_grounding:
+            return
+        prefix = bioregistry.bioregistry_overrides.get(db_ns, db_ns.lower())
+        if prefix in bioregistry.registry:
+            return
+        raise UnknownNamespace(db_ns)
+
+    @staticmethod
+    def assert_valid_id(db_ns, db_id):
+        if db_id is None:
+            raise MissingIdentifier(db_ns, None)
+        if db_ns in non_grounding:
+            return
+        prefix = bioregistry.bioregistry_overrides.get(db_ns, db_ns.lower())
+        if prefix in bioregistry.registry:
+            pattern = bioregistry.registry[prefix].get('pattern_compiled')
+            if not pattern or pattern.match(db_id):
+                return
+            else:
+                raise InvalidIdentifier(db_ns, db_id, pattern.pattern)
+        else:
+            raise UnknownIdentifier(db_ns, db_id)
 
 
 default_validator = IdentifiersValidator()
@@ -113,11 +172,7 @@ def assert_valid_ns(db_ns, validator=default_validator):
     db_ns : str
         The namespace.
     """
-    identifiers_ns = identifiers_mappings.get(db_ns, db_ns.lower())
-    if identifiers_ns in identifiers_registry or db_ns in non_registry \
-            or db_ns in non_grounding:
-        return
-    raise UnknownNamespace(db_ns)
+    return validator.assert_valid_ns(db_ns)
 
 
 def validate_id(db_ns, db_id, validator=default_validator):
@@ -153,19 +208,7 @@ def assert_valid_id(db_ns, db_id, validator=default_validator):
     db_id : str
         The ID.
     """
-    if db_id is None:
-        raise MissingIdentifier(db_ns, None)
-    identifiers_ns = identifiers_mappings.get(db_ns, db_ns.lower())
-    if identifiers_ns in identifiers_registry:
-        pattern = identifiers_registry[identifiers_ns]['pattern_compiled']
-        if pattern.match(db_id):
-            return
-        else:
-            raise InvalidIdentifier(db_ns, db_id, pattern)
-    elif db_ns in non_registry or db_ns in non_grounding:
-        return
-    else:
-        raise UnknownIdentifier(db_ns, db_id)
+    return validator.assert_valid_id(db_ns, db_id)
 
 
 def validate_db_refs(db_refs, validator=default_validator):
