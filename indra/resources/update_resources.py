@@ -753,6 +753,18 @@ def update_identifiers_registry():
         json.dump(patterns, fh, indent=1)
 
 
+def update_bioregistry():
+    url = 'https://raw.githubusercontent.com/biopragmatics/bioregistry/main/' \
+        'exports/registry/registry.json'
+    res = requests.get(url)
+    entries = {}
+    keys = ['pattern', 'banana', 'synonyms']
+    for prefix, data in res.json().items():
+        entries[prefix] = {k: data[k] for k in keys if k in data}
+    with open(os.path.join(path, 'bioregistry.json'), 'w') as fh:
+        json.dump(entries, fh, indent=1)
+
+
 def update_biomappings():
     """Update mappings from the BioMappings project."""
     from indra.databases import mesh_client
