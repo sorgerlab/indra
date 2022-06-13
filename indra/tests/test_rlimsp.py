@@ -30,7 +30,7 @@ def test_ungrounded_endpoint_with_pmids():
 def test_tyrosine_grounding():
     here = os.path.dirname(os.path.abspath(__file__))
     fname = os.path.join(here, 'rlimsp_site.json')
-    rp = rlimsp.process_from_json_file(fname)
+    rp = rlimsp.process_jsonl_file(fname)
     assert len(rp.statements) == 1
     stmt = rp.statements[0]
     assert stmt.residue == 'Y'
