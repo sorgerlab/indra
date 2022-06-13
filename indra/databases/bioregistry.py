@@ -6,10 +6,27 @@ from indra.resources import load_resource_json
 # Additional mappings that we need for getting a bioregistry prefix
 # corresponding to an INDRA namespace, not covered by synonyms.
 bioregistry_overrides = {
-    'CTD': 'ctd.chemical',
-    'NCBI': 'ncbi.gene',
+    'UP': 'uniprot',
+    'UPPRO': 'uniprot.chain',
+    'UPISO': 'uniprot.isoform',
+    'UPLOC': 'uniprot.location',
+    'REFSEQ_PROT': 'refseq',
+    'PF': 'pfam',
+    'IP': 'interpro',
     'NONCODE': 'noncodev4.rna',
+    'LNCRNADB': 'rnacentral',
+    'MIRBASEM': 'mirbase.mature',
+    'EGID': 'ncbigene',
+    'NCBI': 'ncbigene',
+    'HGNC_GROUP': 'hgnc.genefamily',
+    'LINCS': 'lincs.smallmolecule',
     'PUBCHEM': 'pubchem.compound',
+    'CHEMBL': 'chembl.compound',
+    'CTD': 'ctd.chemical',
+    'CVCL': 'cellosaurus',
+    'HMS-LINCS': 'hms.lincs.compound',
+    'NXPFA': 'nextprot.family',
+    'TAXONOMY': 'ncbitaxon',
 }
 
 
@@ -97,7 +114,9 @@ def _load_bioregistry():
             pattern = entry['pattern']
             # If there is a banana, we need to add it to the pattern
             if 'banana' in entry:
-                pattern = entry['banana'] + ':' + pattern
+                pattern = '^%s:%s' % (entry['banana'],
+                                      pattern[1:] if pattern.startswith('^')
+                                      else pattern)
             entry['pattern_compiled'] = re.compile(pattern)
         for synonym in entry.get('synonyms', []):
             synonym_reverse[synonym] = prefix
