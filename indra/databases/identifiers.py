@@ -22,7 +22,7 @@ identifiers_mappings = {
     'LNCRNADB': 'rnacentral',
     'MIRBASEM': 'mirbase.mature',
     'EGID': 'ncbigene',
-    'NCBI': 'ncibgene',
+    'NCBI': 'ncbigene',
     'HGNC_GROUP': 'hgnc.genefamily',
     'LINCS': 'lincs.smallmolecule',
     'PUBCHEM': 'pubchem.compound',
