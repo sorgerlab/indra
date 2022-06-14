@@ -6,6 +6,7 @@ from ..ontology_graph import IndraOntology
 from indra.util import read_unicode_csv
 from indra.statements import modtype_conditions
 from indra.resources import get_resource_path
+from indra.databases.identifiers import ensure_prefix_if_needed
 from indra.statements.validate import assert_valid_db_refs
 
 
@@ -19,7 +20,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.25'
+    version = '1.26'
     ontology_namespaces = [
         'go', 'efo', 'hp', 'doid', 'chebi', 'ido', 'mondo', 'eccode',
     ]
@@ -77,6 +78,7 @@ class BioOntology(IndraOntology):
         self.add_hms_lincs_xrefs()
         self.add_pubchem_xrefs()
         self.add_biomappings()
+        self.add_obo_xrefs()
         # Add hierarchies
         logger.info('Adding hierarchy...')
         self.add_famplex_hierarchy()
@@ -256,13 +258,42 @@ class BioOntology(IndraOntology):
                                  {'type': 'replaced_by'}))
         self.add_edges_from(edges)
 
+    def add_obo_xrefs(self):
+        from indra.databases import obo_client
+        edges = []
+        xref_namespaces = {ns.upper() for ns in self.ontology_namespaces} | \
+            {'MESH'}
+        for ns in self.ontology_namespaces:
+            oc = obo_client.OntologyClient(prefix=ns)
+            for db_id, entry in oc.entries.items():
+                label = self.label(ns.upper(), db_id)
+                for xref_ns, xref_ids in entry.get('xrefs', {}).items():
+                    # If the namespace is not in our OBO set, we don't
+                    # consider it. If the set of IDs for a given namespace
+                    # is > 1 in size, it's not a one-to-one mapping so we
+                    # don't take it. Finally, there are sometimes xrefs to the
+                    # namespace itself which we don't consider here.
+                    if xref_ns not in xref_namespaces or len(xref_ids) > 1 or \
+                            xref_ns == ns:
+                        continue
+                    xref_id = ensure_prefix_if_needed(xref_ns, xref_ids[0])
+                    xref_label = self.label(xref_ns, xref_id)
+                    # In many cases, obsolete nodes are referred to in
+                    # xrefs, and a simple way to control for this is to
+                    # check if the given node is in the graph. If it is,
+                    # then it is either non-obsolete, or there is an explicit
+                    # edge from it to a non-obsolete node.
+                    if xref_label not in self:
+                        continue
+                    edges.append((label, xref_label, {'type': 'xref'}))
+        self.add_edges_from(edges)
+
     def add_obo_hierarchies(self):
         from indra.databases import obo_client
         edges = []
         # Mapping various source relation types to standardized ones
         # in this ontology graph
         rel_mappings = {
-            'xref': 'xref',
             'isa': 'isa',
             'partof': 'partof',
             'is_a': 'isa',
