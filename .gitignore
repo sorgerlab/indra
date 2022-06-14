@@ -122,3 +122,4 @@ indra/tests/tempfile.html
 .pytest_cache
 .DS_Store
 .noseids
+.venv
