@@ -46,3 +46,14 @@ def test_get_bioregistry_curie():
 def test_get_bioregistry_url():
     assert bioregistry_client.get_bioregistry_url('PUBCHEM', '100101') == \
         'https://bioregistry.io/pubchem.compound:100101'
+
+
+def test_ensure_prefix_if_needed():
+    assert bioregistry_client.ensure_prefix_if_needed('PUBCHEM', '100101') == \
+        '100101'
+    assert bioregistry_client.ensure_prefix_if_needed('CHEBI', '3696') == \
+        'CHEBI:3696'
+    assert bioregistry_client.ensure_prefix_if_needed('CHEBI', 'CHEBI:3696') == \
+        'CHEBI:3696'
+    assert bioregistry_client.ensure_prefix_if_needed('CLO', '0008395') == \
+        'CLO:0008395'

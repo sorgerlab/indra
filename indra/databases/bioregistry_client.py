@@ -103,6 +103,17 @@ def get_bioregistry_url(db_ns, db_id):
     return 'https://bioregistry.io/%s' % curie
 
 
+def ensure_prefix_if_needed(db_ns, db_id):
+    """Return an ID ensuring a namespace prefix if known to be needed."""
+    prefix = get_bioregistry_prefix(db_ns)
+    if not prefix:
+        return db_id
+    banana = registry[prefix].get('banana')
+    if banana and not db_id.startswith(f'{banana}:'):
+        return f'{banana}:{db_id}'
+    return db_id
+
+
 def _load_bioregistry():
     registry = load_resource_json('bioregistry.json')
     synonym_reverse = {}
