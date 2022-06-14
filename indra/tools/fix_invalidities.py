@@ -115,6 +115,12 @@ def fix_invalidities_db_refs(db_refs: Mapping[str, str]) -> Mapping[str, str]:
                 db_refs['UP'] = v.split(',')[0]
             if v.startswith('SL-'):
                 db_refs['UPLOC'] = db_refs.pop('UP')
+            # There are cases where an isoform is under the UP key, we
+            # standardize these
+            if '-' in v:
+                parts = v.split('-')
+                db_refs['UP'] = parts[0]
+                db_refs['UPISO'] = v
         elif k == 'UAZ':
             db_refs.pop('UAZ')
             if v.startswith('CVCL'):
