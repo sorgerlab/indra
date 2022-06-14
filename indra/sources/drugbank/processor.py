@@ -206,6 +206,7 @@ inhibition_actions = {
     'chelator',
     'inhibitory allosteric modulator',
     'translocation inhibitor',
+    'inhibits downstream inflammation cascades',
     'nucleotide exchange blocker',
     # Antagonists can either bind to the receptor and do nothing and prevent
     # physiologic agonists to bind (which can be overcome with higher agonist
@@ -231,7 +232,11 @@ decrease_amount_actions = {
     'antisense oligonucleotide',
 }
 
-increase_amount_actions = {'stabilization', 'chaperone'}
+increase_amount_actions = {
+    'stabilization',
+    'chaperone',
+    'gene replacement',
+}
 
 neutral_actions = {
     'binder',
@@ -255,6 +260,7 @@ neutral_actions = {
     'allosteric modulator',
     'deoxidizer',
     'cross-linking/alkylation',  # e.g. Busulfan (DB01008) alkalytes DNA
+    'multitarget',
 }
 
 skip_actions = {
