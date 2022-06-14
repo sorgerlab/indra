@@ -1,5 +1,7 @@
 import logging
+import tqdm
 from collections import Counter
+from indra.statements.validate import assert_valid_statements
 from indra.databases import hgnc_client, uniprot_client
 from indra.statements import Agent, Phosphorylation, Autophosphorylation, \
     Evidence, BioContext, RefContext, get_valid_residue, \
@@ -20,11 +22,13 @@ class RlimspProcessor(object):
 
     def extract_statements(self):
         """Extract the statements from the json."""
-        for p_info in self._json:
+        for p_info in tqdm.tqdm(self._json, desc='Processing RLIMS-P JSON'):
             para = RlimspParagraph(p_info, self.doc_id_type)
             if para._text not in self.processed_texts:
                 self.processed_texts.append(para._text)
-                self.statements.extend(para.get_statements())
+                stmts = para.get_statements()
+                assert_valid_statements(stmts)
+                self.statements.extend(stmts)
         return
 
 
@@ -40,11 +44,13 @@ class RlimspParagraph(object):
             self._sentences.append(self._text[start:stop])
             self._sentence_starts.append(start)
         if 'pmid' in p_info and 'pmcid' in p_info:
-            self._text_refs = {n.upper(): p_info[n] for n in ['pmid', 'pmcid']}
+            self._text_refs = {n.upper(): p_info[n] for n in ['pmid', 'pmcid']
+                               if p_info[n]}
         elif doc_id_type:
             self._text_refs = {doc_id_type.upper(): p_info['docId']}
         else:
             logger.info('Could not establish text refs for paragraph.')
+            breakpoint()
             self._text_refs = {}
         self._relations = p_info['relation']
         self._entity_dict = p_info['entity']
@@ -194,7 +200,7 @@ def get_agent_from_entity_info(entity_info):
     # Get the db refs.
     refs = {'TEXT': raw_text}
     entries = entity_info['entityId']
-    if entries is None:
+    if entries is None or entries == {'$undefined': True}:
         entries = []
     ref_counts = Counter([entry['source'] for entry in entries])
     for source, count in ref_counts.items():
@@ -239,12 +245,18 @@ def get_agent_from_entity_info(entity_info):
                 if gene_name is not None:
                     name = gene_name
         elif id_dict['source'] in ('Tax', 'NCBI'):
+            # Note that TAX is non-standard but it's popped out later in the
+            # extraction process
             refs['TAX'] = id_dict['idString']
         elif id_dict['source'] == 'CHEBI':
             refs['CHEBI'] = 'CHEBI:%s' % id_dict['idString']
         # These we take as is
-        elif id_dict['source'] in ('MESH', 'OMIM', 'CTD'):
+        elif id_dict['source'] in ('MESH', 'OMIM'):
             refs[id_dict['source']] = id_dict['idString']
+        # CTD is sometimes used for MESH chemical IDs but can also be just '-'
+        elif id_dict['source'] == 'CTD':
+            if id_dict['idString'] != '-':
+                refs['MESH'] = id_dict['idString']
         # Handle mutations
         elif id_dict['source'] == 'Unk' and \
                 id_dict['entityType'] == 'ProteinMutation':
