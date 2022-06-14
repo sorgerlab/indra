@@ -50,7 +50,6 @@ class RlimspParagraph(object):
             self._text_refs = {doc_id_type.upper(): p_info['docId']}
         else:
             logger.info('Could not establish text refs for paragraph.')
-            breakpoint()
             self._text_refs = {}
         self._relations = p_info['relation']
         self._entity_dict = p_info['entity']
