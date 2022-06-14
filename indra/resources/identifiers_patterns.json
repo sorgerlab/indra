@@ -3,8 +3,16 @@
   "pattern": "^B\\d{5}$",
   "namespace_embedded": false
  },
+ "4503": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
  "4dn": {
   "pattern": "^4DN[A-Z]{2}[A-Z0-9]{7}$",
+  "namespace_embedded": false
+ },
+ "6vts": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
   "namespace_embedded": false
  },
  "abs": {
@@ -167,6 +175,14 @@
   "pattern": "^\\d{7}$",
   "namespace_embedded": false
  },
+ "bbkg": {
+  "pattern": "^[-\\w]+(?:\\/[-\\w]+)(?:\\/\\b[0-9a-f]{8}\\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\\b[0-9a-f]{12}\\b)$",
+  "namespace_embedded": false
+ },
+ "bbtp": {
+  "pattern": "\\b[0-9a-f]{8}\\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\\b[0-9a-f]{12}\\b",
+  "namespace_embedded": false
+ },
  "bdgp.est": {
   "pattern": "^\\w+(\\.)?(\\d+)?$",
   "namespace_embedded": false
@@ -297,6 +313,10 @@
  },
  "biotools": {
   "pattern": "^[A-Za-z0-9\\_]*$",
+  "namespace_embedded": false
+ },
+ "bitbucket": {
+  "pattern": "^[0-9A-Za-z-_\\.]+/[0-9A-Za-z-_\\.]+$",
   "namespace_embedded": false
  },
  "bitterdb.cpd": {
@@ -467,6 +487,14 @@
   "pattern": "^[0-9]+$",
   "namespace_embedded": false
  },
+ "civic.gid": {
+  "pattern": "^[0-9]+$",
+  "namespace_embedded": false
+ },
+ "civic.vid": {
+  "pattern": "^[0-9]+$",
+  "namespace_embedded": false
+ },
  "cl": {
   "pattern": "^CL:\\d{7}$",
   "namespace_embedded": true
@@ -545,6 +573,10 @@
  },
  "crisprdb": {
   "pattern": "^[0-9]+$",
+  "namespace_embedded": false
+ },
+ "crop2ml": {
+  "pattern": "^[0-9]{9}$",
   "namespace_embedded": false
  },
  "cryptodb": {
@@ -659,11 +691,27 @@
   "pattern": "^[a-zA-Z0-9\\-:#\\.]+$",
   "namespace_embedded": false
  },
+ "dg.373f": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
  "dg.4503": {
   "pattern": "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
   "namespace_embedded": false
  },
+ "dg.4825": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
  "dg.4dfc": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.5b0d": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.63d5": {
   "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
   "namespace_embedded": false
  },
@@ -671,8 +719,64 @@
   "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
   "namespace_embedded": false
  },
+ "dg.712c": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.7c5b": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.80b6": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
  "dg.anv0": {
   "pattern": "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.c78ne": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.ea80": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.f738": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.f82a1a": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.h34l": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.h35l": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.md1r": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.nacd": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.nci35": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.um33r90": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
+ "dg.vp07": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
   "namespace_embedded": false
  },
  "dictybase.est": {
@@ -903,6 +1007,10 @@
   "pattern": "^\\d{1,2}\\-\\d+\\-[GATC]\\-[GATC]$",
   "namespace_embedded": false
  },
+ "f82a1a": {
+  "pattern": "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}",
+  "namespace_embedded": false
+ },
  "facebase": {
   "pattern": "^FB\\d{8}$",
   "namespace_embedded": false
@@ -917,6 +1025,10 @@
  },
  "fbol": {
   "pattern": "^\\d+$",
+  "namespace_embedded": false
+ },
+ "fcb": {
+  "pattern": "^FCB\\d{3}",
   "namespace_embedded": false
  },
  "flowrepository": {
@@ -1037,6 +1149,10 @@
  },
  "github": {
   "pattern": "^[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+$",
+  "namespace_embedded": false
+ },
+ "gitlab": {
+  "pattern": "^[0-9A-Za-z_][0-9A-Za-z-_()\\. ]*/[0-9A-Za-z_][0-9A-Za-z-_\\. ]*$",
   "namespace_embedded": false
  },
  "glida.gpcr": {
@@ -1308,7 +1424,7 @@
   "namespace_embedded": false
  },
  "icdc": {
-  "pattern": "^ICDC[0-9][0-9][0-9][0-9][0-9][0-9]$",
+  "pattern": "^\\d{6}$",
   "namespace_embedded": false
  },
  "iceberg.element": {
@@ -1827,6 +1943,10 @@
   "pattern": "^\\d+$",
   "namespace_embedded": false
  },
+ "modeldb.concept": {
+  "pattern": "\\d+",
+  "namespace_embedded": false
+ },
  "molbase": {
   "pattern": "^(\\d{1,7}\\-\\d{2}\\-\\d)|([A-Za-z0-9\\+\\-\\_]+)$",
   "namespace_embedded": false
@@ -2192,7 +2312,7 @@
   "namespace_embedded": false
  },
  "pdb-ccd": {
-  "pattern": "^\\w{3}$",
+  "pattern": "^\\w{1,3}$",
   "namespace_embedded": false
  },
  "pdb.ligand": {
@@ -2331,6 +2451,10 @@
   "pattern": "^[a-z0-9]{32,32}$",
   "namespace_embedded": false
  },
+ "pmr.workspace": {
+  "pattern": "^[a-zA-Z0-9_\\-]+(/.*?)?$",
+  "namespace_embedded": false
+ },
  "po": {
   "pattern": "^PO:\\d+$",
   "namespace_embedded": true
@@ -2397,6 +2521,10 @@
  },
  "protonet.proteincard": {
   "pattern": "^\\d+$",
+  "namespace_embedded": false
+ },
+ "ps": {
+  "pattern": "N:package:[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}",
   "namespace_embedded": false
  },
  "pscdb": {
@@ -2525,6 +2653,10 @@
  },
  "ricenetdb.reaction": {
   "pattern": "^OSR\\d{4}$",
+  "namespace_embedded": false
+ },
+ "rism": {
+  "pattern": "^[a-z]+/[0-9]+$",
   "namespace_embedded": false
  },
  "rnacentral": {
@@ -2925,6 +3057,10 @@
  },
  "vbrc": {
   "pattern": "^\\d+$",
+  "namespace_embedded": false
+ },
+ "vcell": {
+  "pattern": "^\\d{5,}$",
   "namespace_embedded": false
  },
  "vectorbase": {
